@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMAND_ROOT = REPO_ROOT / "packages/task/commands"
 ROUTING_PATH = REPO_ROOT / "packages/task/configs/command-routing.json"
 PLUGIN_PATH = REPO_ROOT / "packages/task/.claude-plugin/plugin.json"
-CONTRACT_PATH = (REPO_ROOT / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/"
+CONTRACT_PATH = (REPO_ROOT / "plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/"
                  "provider-command-routing-contract.md")
 FIXTURE_PATH = (REPO_ROOT / "packages/task/tests/fixtures_data/"
                 "provider-command-parity.json")

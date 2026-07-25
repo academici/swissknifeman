@@ -7,8 +7,14 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
 
 ## Codex bootstrap
 
-- Treat `.agents/skills/*` as thin Codex adapters. Canonical content stays under
-  `packages/skiller/skills/` and `packages/task/commands/`; never fork it into adapters.
+- `.agents/skills/*` holds only generator-owned bootstrap-only projections for identities
+  not served by any authoritative installed bundle (skiller `registry.py` → `publication.py`
+  `repository-bootstrap` renderer); canonical sources live in the private
+  `packages/skiller/skills/repository-bootstrap/` bucket, never a hand-authored adapter.
+  Cold recovery reads/checks canonical package paths (`packages/skiller/skills/`,
+  `packages/task/commands/`) plus both repository marketplaces
+  (`.agents/plugins/marketplace.json`, `.claude-plugin/marketplace.json`) — never a root
+  adapter as its own source of truth.
 - In an isolated worktree, never invoke a bare/global write-capable package CLI. Use the
   worktree-local `./packages/<name>/bin/<cli>` and verify its real repo root before writes.
 - Use the `maind` MCP server for project memory and ecosystem/code-graph queries when

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Plan Exec"
-  short_description: "Исполнение item мастер-плана по полному протоколу"
-  default_prompt: "Use $task-plan-exec to execute the selected plan item."

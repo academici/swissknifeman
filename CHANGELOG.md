@@ -20,6 +20,17 @@
 - **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
   vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
   dry-runs never invoke the native user-global installer.
+- **task/harness — root task-adapter dedup (P1.3, D28/D40).** `task` publication bumps to
+  `0.3.1`: regenerated Codex adapter tree (24 artifacts), `provider-artifacts.lock.json` and
+  `publication-lock.json` via a new stdlib CLI front
+  (`packages/task/scripts/render-provider-commands.py --write --repair-owned` /
+  `--check`) wrapping the existing `command_render.py` planning/apply API — no new
+  translation logic. Six duplicate root task identities
+  (`task-design`, `task-plan-{audit,close,design,exec,run}`) removed from `.agents/skills/`
+  after proving the generated `task@0.3.1` bundle covers them. `harness` package bumps to
+  `0.3.0` (plugin `0.2.0`) alongside. `AGENTS.md` now describes `.agents/skills/*` as
+  generator-owned bootstrap-only projections for identities not served by an authoritative
+  installed bundle, sourced from the private `repository-bootstrap` bucket.
 - **skiller — root-bootstrap class-A publication (P1.2, D31/D38).** 13 private/source-only
   bilingual canonical skills (`skills/repository-bootstrap/<id>/{SKILL.ru.md,SKILL.md}`)
   replace the 13 hand-maintained duplicate root copies with 26 thin generated

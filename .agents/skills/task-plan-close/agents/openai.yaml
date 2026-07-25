@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Plan Close"
-  short_description: "Сверка и закрытие item, фазы или плана"
-  default_prompt: "Use $task-plan-close to reconcile and close the selected plan scope."

@@ -48,6 +48,9 @@ PROVIDERS = {
         "marketplace": ".claude-plugin/marketplace.json",
         "roots": ".claude/skills",
         "plugin_manifest": ".claude-plugin/plugin.json",
+        "hook_registration": ".claude/settings.json",
+        "hook_bindings": "packages/harness/configs/claude-code/hooks/"
+                         "lifecycle-context-bindings.json",
         # No read-only command publishes the Claude enabled set; the plan carries
         # this as named debt (plan.md §10), so the capture records `unknown`.
         "enabled_command": (),
@@ -56,10 +59,14 @@ PROVIDERS = {
         "marketplace": ".agents/plugins/marketplace.json",
         "roots": ".agents/skills",
         "plugin_manifest": ".codex-plugin/plugin.json",
+        "hook_registration": ".codex/hooks.json",
+        "hook_bindings": "packages/harness/configs/codex/hooks/"
+                         "lifecycle-context-bindings.json",
         "enabled_command": ("codex", "plugin", "list", "--json"),
     },
 }
 MARKETPLACE_NAME = "swissknifeman"
+PROVIDER_ARTIFACT_LOCK = ".swissknifeman/provider-artifacts.lock.json"
 
 # --- Frozen class-A repository-bootstrap set (D31/D38) ------------------------
 CLASS_A_IDENTITIES = (
@@ -571,6 +578,103 @@ def command_capabilities(repo: Path) -> dict[str, dict[str, object]]:
     return result
 
 
+def hook_state(repo: Path, provider_key: str, *, home: str) -> dict[str, object]:
+    """Repo-derived hook ownership: registration, handler locality and lock owner.
+
+    Only repository files are read.  A handler that lives outside the repository
+    (a global provider home) is classified ``outside-repo`` with an ``unknown``
+    content state — never scanned, never assumed present.
+    """
+    declaration = PROVIDERS[provider_key]
+    registration_rel = declaration["hook_registration"]
+    registration_path = repo / registration_rel
+    owners = {}
+    lock_path = repo / PROVIDER_ARTIFACT_LOCK
+    if lock_path.is_file():
+        lock = load_json(lock_path)
+        for record in lock.get("records", ()):
+            if record.get("provider_id") == provider_key:
+                owners[record.get("target_path")] = {
+                    "adapter_id": record.get("adapter_id"),
+                    "artifact_id": record.get("artifact_id"),
+                    "rendered_hash": record.get("rendered_hash"),
+                }
+    registrations: list[dict[str, object]] = []
+    state = "read"
+    if not registration_path.is_file():
+        state = "absent"
+    else:
+        payload = load_json(registration_path)
+        events = payload.get("hooks") if isinstance(payload, dict) else None
+        if not isinstance(events, dict):
+            state = "no-hooks-declared"
+            events = {}
+        for event in sorted(events):
+            for group in events[event] or ():
+                if not isinstance(group, dict):
+                    continue
+                for entry in group.get("hooks", ()) or ():
+                    raw = str(entry.get("command", ""))
+                    # Locality is decided on the RAW command against the real
+                    # repository path; sanitisation happens only for the output,
+                    # so a repo-local absolute path is never mistaken for a home path.
+                    if "$(git rev-parse --show-toplevel)" in raw or str(repo) in raw:
+                        locality, content = "repo-local", "readable"
+                    elif raw.lstrip().startswith("~") or "~/" in raw or str(Path.home()) in raw:
+                        locality, content = "outside-repo", "unknown"
+                    else:
+                        locality, content = "unresolved", "unknown"
+                    registrations.append({
+                        "event": event,
+                        "matcher": group.get("matcher", ""),
+                        "type": entry.get("type"),
+                        "command": _sanitize(raw, home),
+                        "handler_locality": locality,
+                        "content_state": content,
+                    })
+    bindings_rel = declaration["hook_bindings"]
+    bindings_path = repo / bindings_rel
+    surfaces = []
+    if bindings_path.is_file():
+        payload = load_json(bindings_path)
+        for binding in payload.get("bindings", ()):
+            surfaces.append({
+                "surface_id": binding.get("surface_id"),
+                "support_level": binding.get("support_level"),
+                "activation": binding.get("activation"),
+                "diagnostic_code": binding.get("diagnostic_code") or "",
+            })
+    else:
+        # A provider without its own bindings file declares its lifecycle/context
+        # surfaces in the common catalog; the source is recorded, never guessed.
+        bindings_rel = "packages/harness/configs/common/profile-catalog.json"
+        bindings_path = repo / bindings_rel
+        if bindings_path.is_file():
+            payload = load_json(bindings_path)
+            for surface in payload.get("surfaces", ()):
+                if surface.get("kind") in ("lifecycle", "context"):
+                    surfaces.append({
+                        "surface_id": surface.get("id"),
+                        "support_level": "common-catalog",
+                        "activation": surface.get("ownership"),
+                        "diagnostic_code": "",
+                    })
+    return {
+        "registration_source": registration_rel,
+        "registration_state": state,
+        "registrations": registrations,
+        "declared_surfaces": sorted(surfaces, key=lambda item: item["surface_id"] or ""),
+        "declared_surfaces_source": bindings_rel if bindings_path.is_file() else None,
+        "managed_artifacts": dict(sorted(owners.items())),
+        "unmanaged_registration_targets": (
+            [] if registration_rel in owners or state != "read"
+            else [registration_rel]),
+        "note": ("registration is a repository file; a handler outside the repository is "
+                 "recorded `unknown` and never scanned (execution never reads a provider "
+                 "home or profile)"),
+    }
+
+
 def carrier_literal_gaps(repo: Path, commands: dict, support: dict) -> list[dict[str, object]]:
     """Compare what each canonical command carrier actually spells to what it declares."""
     gaps: list[dict[str, object]] = []
@@ -750,7 +854,9 @@ def provenance_record(path: Path) -> dict[str, object]:
 
 
 # --- builders -----------------------------------------------------------------
-def build_inventory(repo: Path, observed: dict, provenance: Path) -> dict[str, object]:
+def build_inventory(repo: Path, observed: dict, provenance: Path, *,
+                    home: str | None = None) -> dict[str, object]:
+    home = home if home is not None else str(Path.home())
     support = capability_support(repo)
     commands = command_capabilities(repo)
     providers: dict[str, object] = {}
@@ -801,6 +907,7 @@ def build_inventory(repo: Path, observed: dict, provenance: Path) -> dict[str, o
                       for unit in state["units"]],
             "identity_count": len(identities),
             "identities": identities,
+            "hooks": hook_state(repo, provider_key, home=home),
             "collisions": {
                 "repo_derived_worst_case": {
                     "authoritative": True,

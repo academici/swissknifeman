@@ -111,6 +111,136 @@
           ]
         }
       },
+      "hooks": {
+        "declared_surfaces": [
+          {
+            "activation": "harness.context.observer",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "context.observer"
+          },
+          {
+            "activation": "harness.context.output-style",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "context.output-style"
+          },
+          {
+            "activation": "harness.context.plans-directory",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "context.plans-directory"
+          },
+          {
+            "activation": "harness.lifecycle.auto-approval",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.auto-approval"
+          },
+          {
+            "activation": "harness.lifecycle.changelog-gate",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.changelog-gate"
+          },
+          {
+            "activation": "harness.lifecycle.command-log",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.command-log"
+          },
+          {
+            "activation": "harness.lifecycle.daemon-safety",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.daemon-safety"
+          },
+          {
+            "activation": "harness.lifecycle.git-guardrails",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.git-guardrails"
+          },
+          {
+            "activation": "harness.lifecycle.memory",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.memory"
+          },
+          {
+            "activation": "harness.lifecycle.notification",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.notification"
+          },
+          {
+            "activation": "harness.lifecycle.pack-guard",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.pack-guard"
+          },
+          {
+            "activation": "harness.lifecycle.review-gate",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.review-gate"
+          },
+          {
+            "activation": "harness.lifecycle.router",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.router"
+          },
+          {
+            "activation": "harness.lifecycle.run-report",
+            "diagnostic_code": "",
+            "support_level": "common-catalog",
+            "surface_id": "lifecycle.run-report"
+          }
+        ],
+        "declared_surfaces_source": "packages/harness/configs/common/profile-catalog.json",
+        "managed_artifacts": {},
+        "note": "registration is a repository file; a handler outside the repository is recorded `unknown` and never scanned (execution never reads a provider home or profile)",
+        "registration_source": ".claude/settings.json",
+        "registration_state": "read",
+        "registrations": [
+          {
+            "command": "~/.claude/hooks/auto-approve/auto-approve.sh",
+            "content_state": "unknown",
+            "event": "PreToolUse",
+            "handler_locality": "outside-repo",
+            "matcher": "Bash",
+            "type": "command"
+          },
+          {
+            "command": "~/.claude/hooks/auto-approve/auto-approve.sh",
+            "content_state": "unknown",
+            "event": "PreToolUse",
+            "handler_locality": "outside-repo",
+            "matcher": "ExitPlanMode",
+            "type": "command"
+          },
+          {
+            "command": "python3 ~/.claude/hooks/run-report/run-report.py",
+            "content_state": "unknown",
+            "event": "SessionEnd",
+            "handler_locality": "outside-repo",
+            "matcher": "",
+            "type": "command"
+          },
+          {
+            "command": "bash $HOME/projects/packages/swissknifeman/.claude/maind-memory.sh",
+            "content_state": "readable",
+            "event": "SessionStart",
+            "handler_locality": "repo-local",
+            "matcher": "",
+            "type": "command"
+          }
+        ],
+        "unmanaged_registration_targets": [
+          ".claude/settings.json"
+        ]
+      },
       "identities": [
         {
           "canonical_owner": "unit:founder",
@@ -9826,6 +9956,129 @@
             "workflow-craft"
           ]
         }
+      },
+      "hooks": {
+        "declared_surfaces": [
+          {
+            "activation": "trusted-project-hook-review-new-session",
+            "diagnostic_code": "",
+            "support_level": "hook-native",
+            "surface_id": "context.observer"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "context.output-style"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "context.plans-directory"
+          },
+          {
+            "activation": "P5.2-config-security-projection",
+            "diagnostic_code": "",
+            "support_level": "config-native",
+            "surface_id": "lifecycle.auto-approval"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.changelog-gate"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.command-log"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.daemon-safety"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.git-guardrails"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.memory"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.notification"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.pack-guard"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.review-gate"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.router"
+          },
+          {
+            "activation": "none",
+            "diagnostic_code": "HARNESS_ACTIVATION_UNSUPPORTED",
+            "support_level": "unsupported",
+            "surface_id": "lifecycle.run-report"
+          }
+        ],
+        "declared_surfaces_source": "packages/harness/configs/codex/hooks/lifecycle-context-bindings.json",
+        "managed_artifacts": {
+          ".codex/hooks.json": {
+            "adapter_id": "maind.d104.bootstrap-transfer",
+            "artifact_id": "harness.codex.lifecycle.hooks",
+            "rendered_hash": "sha256:29ff242eaddc67964584b53abba361e0c384aa1d7d799520f9e8b75deaed43f7"
+          },
+          ".codex/hooks/lifecycle.py": {
+            "adapter_id": "maind.d104.bootstrap-transfer",
+            "artifact_id": "harness.codex.lifecycle.handler",
+            "rendered_hash": "sha256:467e207ff17d912215cbdb912ea378d004dfa1bdecb50df0278b014a4d48ca51"
+          }
+        },
+        "note": "registration is a repository file; a handler outside the repository is recorded `unknown` and never scanned (execution never reads a provider home or profile)",
+        "registration_source": ".codex/hooks.json",
+        "registration_state": "read",
+        "registrations": [
+          {
+            "command": "bash $HOME/projects/packages/swissknifeman/.claude/maind-memory.sh",
+            "content_state": "readable",
+            "event": "SessionStart",
+            "handler_locality": "repo-local",
+            "matcher": "",
+            "type": "command"
+          },
+          {
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\" --surface context.observer",
+            "content_state": "readable",
+            "event": "SessionStart",
+            "handler_locality": "repo-local",
+            "matcher": "startup|resume|clear|compact",
+            "type": "command"
+          }
+        ],
+        "unmanaged_registration_targets": []
       },
       "identities": [
         {

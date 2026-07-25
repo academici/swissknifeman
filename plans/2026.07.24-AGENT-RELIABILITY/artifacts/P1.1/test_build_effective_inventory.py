@@ -493,6 +493,76 @@ class ObservedCaptureTest(unittest.TestCase):
             self.assertEqual(inventory["providers"]["codex"]["observed"]["enabled_units"], [])
 
 
+class HookSourceTest(unittest.TestCase):
+    """Hook identities are owned like any other carrier — repo-derived, never scanned."""
+
+    def test_absent_registration_is_stated_not_assumed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = fixture_repo(Path(directory))
+            state = tool.hook_state(repo, "codex", home=str(Path.home()))
+        self.assertEqual(state["registration_state"], "absent")
+        self.assertEqual(state["registrations"], [])
+
+    def test_repo_local_and_outside_repo_handlers_are_classified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = fixture_repo(Path(directory))
+            write(repo / ".codex/hooks.json", json.dumps({"hooks": {"SessionStart": [
+                {"hooks": [{"type": "command",
+                            "command": 'python3 "$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py"'}],
+                 "matcher": "startup"},
+                {"hooks": [{"type": "command", "command": "bash ~/.claude/hooks/memory.sh"}]},
+            ]}}))
+            state = tool.hook_state(repo, "codex", home=str(Path.home()))
+        localities = [item["handler_locality"] for item in state["registrations"]]
+        self.assertEqual(sorted(localities), ["outside-repo", "repo-local"])
+        outside = next(item for item in state["registrations"]
+                       if item["handler_locality"] == "outside-repo")
+        self.assertEqual(outside["content_state"], "unknown")
+
+    def test_absolute_repo_path_is_repo_local_not_a_home_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = fixture_repo(Path(directory))
+            write(repo / ".codex/hooks.json", json.dumps({"hooks": {"SessionStart": [
+                {"hooks": [{"type": "command", "command": f"bash {repo}/.claude/memory.sh"}]}]}}))
+            state = tool.hook_state(repo, "codex", home=str(repo.parent))
+        self.assertEqual(state["registrations"][0]["handler_locality"], "repo-local")
+        self.assertIn("$HOME", state["registrations"][0]["command"])
+
+    def test_lock_owner_marks_a_managed_registration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = fixture_repo(Path(directory))
+            write(repo / ".codex/hooks.json", json.dumps({"hooks": {"SessionStart": []}}))
+            write(repo / tool.PROVIDER_ARTIFACT_LOCK, json.dumps({"records": [
+                {"provider_id": "codex", "target_path": ".codex/hooks.json",
+                 "adapter_id": "maind.d104.bootstrap-transfer",
+                 "artifact_id": "harness.codex.lifecycle.hooks", "rendered_hash": "sha256:x"}]}))
+            state = tool.hook_state(repo, "codex", home=str(Path.home()))
+        self.assertIn(".codex/hooks.json", state["managed_artifacts"])
+        self.assertEqual(state["unmanaged_registration_targets"], [])
+
+    def test_registration_without_lock_owner_is_reported_unmanaged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = fixture_repo(Path(directory))
+            write(repo / ".codex/hooks.json", json.dumps({"hooks": {"SessionStart": []}}))
+            state = tool.hook_state(repo, "codex", home=str(Path.home()))
+        self.assertEqual(state["unmanaged_registration_targets"], [".codex/hooks.json"])
+
+    def test_real_repository_hook_ownership(self):
+        codex = tool.hook_state(REPO, "codex", home=str(Path.home()))
+        claude = tool.hook_state(REPO, "claude-code", home=str(Path.home()))
+        # P0.4 restored the composed Codex lifecycle under one adapter owner…
+        self.assertEqual(sorted(codex["managed_artifacts"]),
+                         [".codex/hooks.json", ".codex/hooks/lifecycle.py"])
+        self.assertEqual(codex["unmanaged_registration_targets"], [])
+        # …while the Claude registration still points at global handlers, which is the
+        # "effective hook set spans global and project sources" fact of findings/04.
+        self.assertEqual(claude["unmanaged_registration_targets"], [".claude/settings.json"])
+        self.assertTrue(any(item["handler_locality"] == "outside-repo"
+                            for item in claude["registrations"]))
+        for record in codex["registrations"] + claude["registrations"]:
+            self.assertNotIn(str(Path.home()), record["command"])
+
+
 class CapabilityAndReferenceTest(unittest.TestCase):
     def test_carrier_literal_without_capability_is_a_gap(self):
         with tempfile.TemporaryDirectory() as directory:

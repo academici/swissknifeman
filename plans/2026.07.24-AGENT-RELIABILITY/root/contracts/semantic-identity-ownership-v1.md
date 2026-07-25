@@ -164,6 +164,28 @@ outside this scope, so a parity test must assert the asymmetry as declared. Dele
 `general` — is forbidden by invariant (ii). Class-B acceptance lives in the P1.5-owned
 extension map, so the class-A map above stays byte-for-byte unchanged.
 
+## Hook identities
+
+A hook is an identity like any other and gets the same three answers — who owns the
+registration, who owns the handler, and what the discovery state is — computed from
+repository files only:
+
+- **registration source** is a repository file (`.codex/hooks.json`,
+  `.claude/settings.json`), never a provider home;
+- **handler locality** is `repo-local` (readable) or `outside-repo` (content state
+  `unknown`, never scanned — execution does not read a provider home, profile or cache);
+- **managed owner** comes from `.swissknifeman/provider-artifacts.lock.json`: a registration
+  target with a lock record is managed by exactly one named adapter, and a target without
+  one is reported `unmanaged`, not assumed fine.
+
+Measured today: the Codex lifecycle (`.codex/hooks.json` + `.codex/hooks/lifecycle.py`) is
+managed by the single adapter `maind.d104.bootstrap-transfer` (P0.4), while the Claude
+registration `.claude/settings.json` has no lock owner and three of its four commands point
+at handlers outside the repository. That is the machine form of the
+`findings/04-runtime-preflight.md` observation «the effective hook set spans global and
+project sources», and it is recorded rather than repaired: hook lifecycle ownership belongs
+to P0.4 and the harness/maind adapter seam, not to this item.
+
 ## Record shape
 
 Each identity record names: semantic ID · canonical owner and source (with SHA-256) ·

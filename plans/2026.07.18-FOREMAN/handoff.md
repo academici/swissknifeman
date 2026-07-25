@@ -1,28 +1,44 @@
-# HANDOFF — 2026-07-18 — after P1.3
+# HANDOFF — 2026-07-25 — after P1.4
 
-**Next:** ОЖИДАНИЕ: `2026.07.19-DUAL-PROVIDER` P7.4 GREEN + provider-neutral runner reconcile → /task:plan-run 2026.07.18-FOREMAN P1.4
+**P1.4 закрыт 🟠 по git-фактам** (D50): его работа была исполнена ещё 2026-07-19
+(`c37b3379` — plan-protocol 2.9.0 с journal/index + lint + snippets; bootstrap-журнал
+`9844f499`), но осталась незакрытой из-за перехвата ACTIVE планом DUAL-PROVIDER.
+Не выполнен один Deliverable — re-пин контракта P0.2; он вынесен в новый item **P1.5**.
+
+**Мёртвый гейт снят.** Прежний `Next` ждал «`2026.07.19-DUAL-PROVIDER` P7.4 GREEN» —
+тот план терминален со статусом **🟠**, его P7.4 остался literal `ATTENTION`, условие
+не наступит никогда. Заменено реальной зависимостью (D49).
+
+**Очередь экосистемы (D49):** этот план идёт ПОСЛЕ `2026.07.24-AGENT-RELIABILITY`
+(`Paused By` обновлён). Регистр очереди и владения поверхностями —
+`plans/README.md` § «Очередь планов и владение поверхностями».
+
+**Next:** run-items: task:plan-run 2026.07.18-FOREMAN P1.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Sonnet |
-| Thinking | high — контрибьюция в канон plan-protocol (SKILL.ru.md/SKILL.md/lint/snippets), нужен обзор владельца |
-| Context | continue (/clear) — ручной item; запускать ИЗ `~/projects/packages/swissknifeman` (SSOT плана при exec P1.4 = репо, §12) |
-| Суть | После снятия dual-provider gate выполнить P1.4 и reconcile канона с provider-neutral task command contract |
+| Model | Sonnet (`implementation`) |
+| Thinking | high — сверка якорей parse-контракта против канона, вердикт breaking/non-breaking |
+| Context | `NEW SESSION`, запускать ИЗ репо `~/projects/packages/swissknifeman` |
+| Гейт | **fail closed, пока фаза P2 плана `2026.07.24-AGENT-RELIABILITY` не терминальна** — она уводит `plan-protocol` на `2.12.0` и переписывает все пять команд; пин на промежуточную версию запрещён |
+| Суть | Re-пин `root/contracts/driver-plan-protocol.md` (сейчас отстал: `v2.8.0 @ 2cf26e8` против живых `2.11.0`) + построчная сверка четырёх якорей §1–§4 |
 
 ```
-# НЕ раньше: plans/2026.07.19-DUAL-PROVIDER P7.4 имеет GREEN verdict и зафиксирован runner reconcile
-/task:plan-run 2026.07.18-FOREMAN P1.4
+# НЕ раньше: фаза P2 плана 2026.07.24-AGENT-RELIABILITY терминальна (🟢/🟠 в её Status Board)
+/task:plan-run 2026.07.18-FOREMAN P1.5
 ```
 
-(Cold-start reads: plan.md §5 D20/D22/D23/D24/D47 + §7 Exported (журнал/индекс sealed v1);
-phases/P1.md P1.4 (все 16 полей) + P1.3 Completion Notes (журнал реально пишется — формат для
-lint-фикстур); root/contracts/plan-journal-schema.md (P1.1) + plan-index-schema.md (P1.2);
-`packages/task/lib/task/plan_lint.py` (образцы soft-гейта `_lint_plan_brief_20`/
-`_lint_plan_roadmap_20`); `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §2 +
-`check-translations.sh`. P1.4 — manual/sonnet/high: plan-run сверит фактическую модель сессии с
-§3 Routing. **Запускать из репо swissknifeman**, не из Brain. **Внимание:** `packages/task/
-commands/plan-audit.md` несёт в дереве НЕЗАКОММИЧЕННЫЙ параллельный дифф владельца (scope-payload
-launch-block) — не трогать/не коммитить, дожидается владельца.)
+(Cold-start reads: `phases/P1.md` P1.5 (все 16 полей) + P1.4 Completion Notes/Known Deviations;
+`root/contracts/driver-plan-protocol.md` целиком; `packages/skiller/skills/general/plan-protocol/SKILL.md`
+frontmatter + §§1–4; `plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md` P2.2 Completion Notes;
+`plan.md` §5 D47/D49/D50.)
+
+**Пере-скоуп P2/P5 — решение владельца от 2026-07-25 (D49), исполняется отдельным заходом.**
+Artifex становится ТОНКОЙ обвязкой над контрактами `2026.07.24-AGENT-RELIABILITY`
+(`execution-state-machine-v1`, `risk-review-loop-budget-v1`, `unified-agent-trace-v1`), а не
+собственным движком решений: CLI-запуск headless-сессий и Telegram-эскалация остаются, движок
+next/retry/escalate — потребляется. Design-заход по P2/P5 запускать только когда те контракты
+заморожены (после P2/P3.1 того плана), иначе проектирование против движущейся цели.
 
 **Done:** **P1.3 закрыт 🟢** (Exec под sonnet/high, plan-run):
 - Реализован `lib/task/journal.py` (stdlib-only): `validate_entry`/`new_entry`/`append`
@@ -42,8 +58,9 @@ launch-block) — не трогать/не коммитить, дожидает�
 Ранее: **P1.1/P1.2 закрыты 🟢** (схемы журнала/индекса sealed v1, исполнялись в Brain); **P1
 reconcile** (D46/D47); **P0 6/6 ТЕРМИНАЛЬНА**.
 
-**Remaining:** exec P1.4 (канон+lint+snippets+bootstrap journal.jsonl — ЗАКРЫВАЕТ фазу P1,
-manual sonnet/high, **ИЗ репо swissknifeman**, §12). Затем P2→P7 phase-first по roadmap.md.
+**Remaining:** P1.5 (re-пин P0.2 — закрывает фазу P1) → пере-скоуп P2/P5 отдельным
+design-заходом → P2→P7 phase-first по roadmap.md. Всё — после терминальной P2 плана
+`2026.07.24-AGENT-RELIABILITY` (D49). Открыто 24 items из 33.
 
 **Sources of truth:** исполнительская карта — `roadmap.md`; фаза — `phases/P1.md`; журнал —
 `root/contracts/plan-journal-schema.md` (P1.1 sealed v1) + `lib/task/journal.py` (реализация,

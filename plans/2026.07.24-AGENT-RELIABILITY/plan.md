@@ -187,7 +187,12 @@ audit/fix-loop без продукта, который план создан л�
 - Каждый item recovery carrier требует `command.subagents`; если cold-start
   preflight не подтверждает capability как `native`/`adapted`, execution
   fail-closed до mutation без silent solo fallback.
-- `plans/2026.07.18-FOREMAN` не исполнять и не менять.
+- `plans/2026.07.18-FOREMAN` не исполнять: продолжение его фаз — за владельцем
+  (G1). Bookkeeping-синхронизация его доски разрешена явным Owner-решением от
+  2026-07-25 и уже выполнена (его D49/D50: P1.4 закрыт по git-фактам, открыт
+  P1.5 re-пин, `Paused By` → этот план); ни один его item не исполнялся.
+  Межплановая очередь и владение поверхностями — `plans/README.md`
+  § «Очередь планов и владение поверхностями».
 
 ## 3. Routing
 

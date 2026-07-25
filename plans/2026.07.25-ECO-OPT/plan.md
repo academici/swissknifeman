@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | supersedes | 2026.07.15-TOKEN-ECON-P6 |
-| Paused By | — |
+| Paused By | 2026.07.24-AGENT-RELIABILITY, 2026-07-25 (частично: сцепленные фазы P1.2/P2.2/P3.1/P6/P7 ждут его терминальные P1/P2; независимые P1.1/P2.1/P3.3/P4/P5 идут параллельно — D11) |
 | Design Passes | 1/2 — 7 фаз/16 items → N=2; pass 1 = скелеты+контракты+RAG-финдинги+детализация P1; pass 2 = детализация P2–P7 до DoR + finish + roadmap |
 
 ## 1. Context
@@ -31,11 +31,13 @@
 сюда, supersedes) и `2026.07.12-CONTEXT-ECONOMY` (терминален, архив).
 RAG-разведка выполнена в pass 1 (`findings/rag-2026-07-25.md`): все 5 реп
 верифицированы GitHub API, Opus 5 гайд прочитан first-party, Claude Code
-факты по контексту/compact сняты по доке. Очередь исполнения: план идёт
-ПОСЛЕ ремонта `2026.07.24-AGENT-RELIABILITY` (ACTIVE, там A1-аудит →
-G-EXEC → exec) — кроме независимых P1/P4, которые могут идти параллельно;
-`2026.07.18-FOREMAN` — после обоих (гейт G1 AGENT-RELIABILITY решает его
-продолжение). Итог плана — работающие механизмы, не доки-ради-док.
+факты по контексту/compact сняты по доке. Очередь исполнения (D10, уточнена
+D11 2026-07-25): план идёт ПОСЛЕ `2026.07.24-AGENT-RELIABILITY` — там ремонт A3
+закрыт и `G-EXEC` выдан (его D50), исполнение начинается с P0.1. Параллельно
+идут независимые P1.1/P2.1/P3.3/P4/P5; терминальной P1 того плана ждут
+P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN` — после
+терминальных P1/P2 (не после G1: тот гейт про раскатку наружу, а не про канон).
+Итог плана — работающие механизмы, не доки-ради-док.
 
 ## 2. Execution Rules
 
@@ -103,6 +105,8 @@ G-EXEC → exec) — кроме независимых P1/P4, которые м�
 | D8 | 2026-07-25 | i-have-adhd — skip как зависимость (дублирует lean output style + `core:compact-responses`); 1–2 правила (answer-first, no closers) — кандидаты в правку compact-responses при P6.2, по месту. wshobson/agents — reference: паттерны quality-gates (LLM judge + Monte Carlo) и `make garden` drift-детект — кандидаты в skiller eval (не в этот план, roadmap). | RAG:✅ 2026-07-25 GitHub API + README (`findings/rag-2026-07-25.md` §1–2). |
 | D9 | 2026-07-25 | Инцидент «Codex тупил неделю»: по RAG — не «SKM вреден», а (а) duplicate-identity коллизии (чинит AGENT-RELIABILITY P1) и (б) отсутствие enforcement (его P2); спецнастройка Codex = тонкий слоёный AGENTS.md + dedup. Поэтому P7 (делегирование Codex) гейтится на терминальность P1/P2 AGENT-RELIABILITY. | RAG:✅ 2026-07-25 perplexity web+social (`findings/rag-2026-07-25.md` §4.1). |
 | D10 | 2026-07-25 | Очередь планов: AGENT-RELIABILITY (ACTIVE) → ECO-OPT (P1/P4 могут идти параллельно — не трогают task/skiller канон) → FOREMAN (после G1; его P1.4 разблокирован терминальностью DUAL-PROVIDER — waiting-условие снято). | RAG:— (repo-grounded: DUAL-PROVIDER handoff «план закрыт»; FOREMAN handoff waiting-условие; AGENT-RELIABILITY Execution Rules «FOREMAN не исполнять»). |
+| D11 | 2026-07-25 | **Уточняет D10 по факту сверки трёх досок (не отменяет её).** Три поправки: (1) гейт FOREMAN — НЕ `G1` того плана (это самый конец, P4.3), а терминальность его **P2** для канона `plan-protocol`/task-команд и терминальность **P1** для публикации skiller (от неё зависит FOREMAN P6); ждать G1 = избыточная сериализация. (2) Формулировка «P1.4 FOREMAN разблокирован» была неточна: item не был заблокирован — он был **исполнен** 2026-07-19 (`c37b3379`) и не закрыт; 2026-07-25 закрыт 🟠 по git-фактам, а его невыполненный re-пин P0.2 вынесен в новый item FOREMAN P1.5, который как раз ждёт терминальную P2 AGENT-RELIABILITY. (3) Разбиение параллельного окна уточнено пофазно: параллельно идут **P1.1, P2.1, P3.3, P4 (все три item'а), P5**; ждут терминальную P1 AGENT-RELIABILITY — **P3.1, P6, P7** (регенерация registry/бюджета, harness-хук, Codex-поверхность); ждут терминальную P2 — **P1.2, P2.2, P7.1** (канон-правки, уже загейчены §2). Регистр — `plans/README.md` § «Очередь планов и владение поверхностями». | RAG:— (owner-grounded: директива 2026-07-25 «выстроить глобальный план разработки»; repo-grounded: `plans/2026.07.18-FOREMAN/phases/P1.md` P1.4 Completion Notes + D50 там же; `plans/2026.07.24-AGENT-RELIABILITY/plan.md` §7 Exported; `git log c37b3379`). |
+| D12 | 2026-07-25 | Дубль супервизора разведён владельцем: `2026.07.18-FOREMAN` (Artifex) переопределён как **тонкая обвязка** над контрактами AGENT-RELIABILITY (`execution-state-machine-v1`, `risk-review-loop-budget-v1`, `unified-agent-trace-v1`) вместо собственного движка решений. Для этого плана следствий по скоупу нет, но фиксируется как контекст: единый источник семантики исполнения — контракты AGENT-RELIABILITY, а не rulebook Artifex. | RAG:— (owner-grounded: выбор варианта 2026-07-25; repo-grounded: `plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md` P2.2 «Root supervisor dispatches each next item to a fresh subagent» ↔ `plans/2026.07.18-FOREMAN/plan.md` §4 P2/P5). |
 
 Coupling-поверхность: канон plan-protocol/task-команды (P2.2, P6.2, P6.3 ↔
 AGENT-RELIABILITY P2.2 — самый горячий hotspot, cross-plan gate в §2);
@@ -114,6 +118,7 @@ agent-packs); maind (P3.2 ↔ P4.2 — оба правят lib/maind, после
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-25 | plan-design/Claude Fable 5 | Design pass 1/2: brief + RAG-финдинги (5 реп GitHub API, Opus 5 guide, CC-факты, 2 perplexity-синтеза), 7 фаз/16 items (P1 детализирована, P2–P7 скелеты с контрактами), Обсуждение (7 развилок), D1–D10. Supersedes TOKEN-ECON-P6. |
+| 2026-07-25 | plan-design/Claude Opus 5/high (межплановая очередь) | D11/D12: очередь уточнена пофазно, гейт FOREMAN — терминальные P1/P2 AGENT-RELIABILITY, а не G1; `Paused By` проставлен частично (независимые фазы идут параллельно). |
 
 ## Обсуждение
 

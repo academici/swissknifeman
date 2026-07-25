@@ -6,8 +6,9 @@
 |:--|:--|
 | Plan ID | 2026.07.15-TOKEN-ECON-P6 |
 | Title | Дожим ROI-backlog токен-экономии: MCP-прополка, сжатие описаний, maind-тримминг + owner-решения |
-| Version | 0.2.0 |
-| Status | 🟡 In progress |
+| Version | 0.3.0 |
+| Status | 🟠 Done with deviations |
+| superseded-by | 2026.07.25-ECO-OPT |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
 | Last Updated | 2026-07-15 (P6.1 закрыт) |
@@ -101,3 +102,4 @@
 | 2026-07-15 | plan-design/opus | P6 детализирована (2 items, DoR-пройден); дизайн-RAG снял `[UNVERIFIED]` L3 → D4 (tool-search default-on first-party, L3 вероятно moot), D5 (L1 = guidance-only scope). Финдинг `findings/P6-tool-search-precheck.md`. Version 0.1.0→0.2.0 |
 | 2026-07-15 | plan-exec/sonnet | P6.1 закрыт: инвентарь 22 проектов + guidance-правка `mcp-advisor` — детали см. `phases/P6.md` P6.1 Completion Notes |
 | 2026-07-18 | plan-design/fable | ACTIVE перехвачен планом 2026.07.18-FOREMAN (Paused By проставлен); план не закрыт, резюм — после FOREMAN или по решению владельца |
+| 2026-07-25 | plan-design/Claude Fable 5 | План закрыт переносом (директива владельца): supersedes → 2026.07.25-ECO-OPT (P6.2→P1.1, P7→P3.1, P8→P3.2, P9→P3.3); статус 🟠 Done with deviations (P6 1/2, P7–P9 не исполнялись здесь); в архив |

@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.8.0 (neutral Routing SSOT; current recovery renderer — Codex, D35)
+**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.10.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; bounded A3 repair и Owner authority E — D50–D55)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -14,14 +14,18 @@ carrier (D22); provider mapping проверяется в cold-start preflight �
 `native`/`adapted`. Любое несовпадение fail-closed до mutation без solo
 fallback. D33 остаётся историческим Claude assignment; D35 его supersedes.
 
-**Pre-exec boundary:** historical cap `2/2`, exceptional attempt 3 и
-authority-C A1 на pre-redesign `fe3e1646` исчерпаны RED. Latest Owner option
-B (D35) разрешает Pass 5 только по `findings/09` F1–F3 и ровно один
-post-redesign independent design audit A2 (`0/1`, frontier/xhigh; current
-Codex recovery block is in `handoff.md`). Ни один item ниже, включая P0.1,
-не исполняется до literal GREEN A2 И
-отдельного explicit Owner execution approval `G-EXEC`. Любой non-GREEN
-возвращает Owner decision без автоматического repair/audit.
+**Exec boundary (действует с v1.10.0, Owner authority E / D50):** `G-EXEC`
+**выдан** для self-host — P0–P3 исполняются без отдельного человеческого гейта,
+старт с P0.1 по `handoff.md`. G0 (заморозка Acceptance после P0.3) принимает
+агент D-записью. За владельцем остаётся ровно **G1** в P4.3: tag/push/release,
+fleet и 17 подключённых проектов, запись в consumer-репозитории, продолжение
+`2026.07.18-FOREMAN`. Персональное рационирование audit-слотов снято: шесть
+исторических design-вердиктов (cap `2/2`, exceptional attempt 3, A1, A2, A3)
+остаются literal RED как факты, а дальше действует канон plan-protocol «два
+аудита на фазу, третий → решение», и вердикт выносит агент. Открытый названный
+долг (три находки A2, A1 F11, зеркальная `Consumed`-строка ECO-OPT,
+Claude-проекция `workflow-craft`, read-only измерение Claude enabled-set) старт
+не блокирует и ведётся в `handoff.md`.
 
 ## Provider-neutral carrier и deterministic rendering
 
@@ -42,7 +46,7 @@ Required Reads или authority gate.
 
 All canonical paths are repository-relative and visible to either provider.
 `plans/<ID>/root/` is the plan's long-lived artifact directory, not OS
-`/root`. The 21 Codex blocks remain mandatory local recovery projections
+`/root`. The 22 Codex blocks remain mandatory local recovery projections
 under root `AGENTS.md`; Claude renders the adjacent semantic `Next` through
 this table instead of copying a Codex shell command. All execution-required
 historical evidence is committed under `artifacts/source-evidence/`; origin
@@ -52,14 +56,15 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
-| P0.1 | solo | task:plan-exec | implementation/medium | A2 literal GREEN + отдельный explicit Owner `G-EXEC` | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
+| P0.1 | solo | task:plan-exec | implementation/medium | — (`G-EXEC` выдан authority E, D50) | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
 | P0.2 | solo | task:plan-run | frontier/high | — | Нельзя объединить: frozen Task Contract, Review=full |
-| P0.3 | solo | task:plan-run | frontier/high | G0 — approve bank/grader/baseline hashes and floors | Нельзя объединить: frozen Acceptance + реальный Owner decision в конце |
+| P0.3 | solo | task:plan-run | frontier/high | G0 — принимает агент D-записью (D50): bank/grader/baseline hashes и floors §8 с квалификатором D53 | Нельзя объединить: frozen Acceptance — терминальный freeze фазы |
 | P0.4 | solo | task:plan-run | implementation/high | G0 precondition from P0.3, not a new stop | Нельзя объединить: первая live behavior mutation, hook rollback |
 | P1.1 | solo | task:plan-run | frontier/high | — | Нельзя объединить: identity/ownership freeze, Review=full |
 | P1.2 | solo | task:plan-run | implementation/high | — | Нельзя объединить: 13 bilingual private sources + 26 root projections + core publication form one versioned generator transaction, Review=full |
 | P1.3 | solo | task:plan-run | implementation/high | — | Нельзя объединить: task/harness effective catalog changes after P1.2 |
-| P1.4 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: terminal cold conformance independently proves 13 private source/projection closures and 12 installed-bundle dedups |
+| P1.5 | solo | task:plan-run | implementation/high | — | Нельзя объединить: закрытие newly measured collisions (4 `architect` root-дубля, class-B `workflow-craft`, core↔donor детектор) — отдельная versioned generator transaction; **исполняется ПЕРЕД P1.4** (D41) |
+| P1.4 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: terminal cold conformance independently proves class-A/B source/projection closures и catalog-wide uniqueness; **последний item фазы, стартует только после green P1.5** |
 | P2.1 | solo | task:plan-run | frontier/high | — | Нельзя объединить: state/authority contract freeze, Review=full |
 | P2.2 | solo | task:plan-run | implementation/high | — | Нельзя объединить: central compiler/root dispatch seam, Review=full |
 | P2.3 | solo | task:plan-run | implementation/high | — | Нельзя объединить: audit/reopen/cap enforcement must be isolated from compiler |
@@ -98,7 +103,7 @@ Semantic `Next`/neutral Routing остаются SSOT; другой provider р�
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight and plan-lint. Verify both gates are committed: post-redesign A2 under D35 has literal GREEN and Dmitry Vostrikov has separately granted explicit G-EXEC authority to execute P0.1 after that verdict; historical A0/A1 RED do not satisfy either gate. Otherwise do no writes and return the Owner execution boundary. Read plan.md, roadmap.md, handoff.md, the A2 audit report, phases/P0.md and P0.1 Required Reads. Root delegates only P0.1 to a fresh grounded subagent. Keep artifacts/source-evidence byte-identical; run all four immutable verifier modes, then implement the P0.1-owned source-evidence semantic contract/verifier/tests/report. Recompute only facts derivable from committed inputs and label excluded raw-session dedup/classifier claims pinned-not-recomputable or unknown, never verified. Never scan tmp, profiles, mAInd or foreign repositories; do not mutate packages/hooks/consumers/FOREMAN. Close only after bundle diff is empty and tests are green, then continue according to roadmap.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight and plan-lint. Execution authority: G-EXEC was granted by Owner authority E and is recorded as D50 in plan.md and in plan.md section 10 — verify that record is committed and that plan.md is at version 1.10.0 or later before writing anything; if D50 is absent from the committed tree, stop and return the Owner boundary instead of executing. The six historical RED design verdicts are facts and do not block this item. As the first action of this item, capture the plan rollback baseline artifacts/P0.1/pre-plan-sha.txt per D45 (idempotent on resume, validated as a 40-hex commit and ancestor of HEAD) and commit it with the item Files. Otherwise do no writes and return the Owner execution boundary. Read plan.md, roadmap.md, handoff.md, the A2 audit report, phases/P0.md and P0.1 Required Reads. Root delegates only P0.1 to a fresh grounded subagent. Keep artifacts/source-evidence byte-identical; run all four immutable verifier modes, then implement the P0.1-owned source-evidence semantic contract/verifier/tests/report. Recompute only facts derivable from committed inputs and label excluded raw-session dedup/classifier claims pinned-not-recomputable or unknown, never verified. Never scan tmp, profiles, mAInd or foreign repositories; do not mutate packages/hooks/consumers/FOREMAN. Close only after bundle diff is empty and tests are green, then continue according to roadmap.'
 ```
 
 ### P0.2 — Task Contract v1
@@ -203,7 +208,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.2. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.2 Required Reads; verify committed P1.1. Root delegates only P1.2 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P1.2 baseline --capture-or-verify command from Implementation Rules; on resume reuse the existing carrier byte-for-byte, never recapture, and fail closed on owner dirt/invalid SHA. Materialize exactly 13 private repository-bootstrap SKILL.ru.md sources from pinned seeds, generate/stamp their EN canons, and test that registry indexes them but normal bucket/core/marketplaces and consumer vendor/connect selection exclude them. Version first: skiller/core/skm 0.4.1 and root-bootstrap 0.1.0. Extend the existing publication.py seam; registry.py must generate exactly 13 thin Claude plus 13 thin Codex root pointers and one combined source/rendered lock, never full copied bodies or skillset.py output; skillset.py may only enforce source-only consumer rejection. Regenerate the complete owned tree, prove registry --check no-op/unaffected units byte-identical, then delete exact six core root collisions after proof. Obtain ITEM_BASE_SHA only through baseline --verify-and-print, run unchanged-strength generated-scope validation, close, continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.2. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.2 Required Reads; verify committed P1.1. Root delegates only P1.2 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P1.2 baseline --capture-or-verify command from Implementation Rules; on resume reuse the existing carrier byte-for-byte, never recapture, and fail closed on owner dirt/invalid SHA. Materialize exactly 13 private repository-bootstrap SKILL.ru.md sources from pinned seeds, generate/stamp their EN canons, and test that registry indexes them but normal bucket/core/marketplaces and consumer vendor/connect selection exclude them. Version first: skiller/core/skm 0.4.1 and root-bootstrap 0.1.0. Extend the existing publication.py seam; registry.py must generate exactly 13 thin Claude plus 13 thin Codex root pointers and one combined source/rendered lock, never full copied bodies or skillset.py output; skillset.py may only enforce source-only consumer rejection. Regenerate the complete owned tree, prove registry --check no-op/unaffected units byte-identical, then delete exact six core root collisions after proof. Obtain ITEM_BASE_SHA only through baseline --verify-and-print, run unchanged-strength generated-scope validation, close, continue. Treat every seam produced by plan 2026.07.19-DUAL-PROVIDER as a low-trust input per D54: its terminal status is orange with an ATTENTION item and it introduced the hand-written root adapters outside the generator, so prove current behaviour with a characterization test here before changing it and never inherit green from that plan.'
 ```
 
 ### P1.3 — task/harness projection and dedup
@@ -224,10 +229,31 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.3. Read AGENTS.md, CLAUDE.md, packages/task/CLAUDE.md, packages/harness/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.3 Required Reads; verify committed P1.2. Root delegates P1.3 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P1.3 baseline --capture-or-verify command from Implementation Rules; on resume reuse bytes and fail closed rather than recapturing. Reuse existing command_render APIs through the thin worktree-local front; bump task to 0.3.1 and harness versions per D27, regenerate complete task locks/tree/marketplaces, prove a read-only second check, then delete all six exact root task collision directories and update AGENTS bootstrap ownership. Obtain ITEM_BASE_SHA only through baseline --verify-and-print, preserve task semantics and Claude compatibility, run unchanged-strength generated-scope validation, close, continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.3. Read AGENTS.md, CLAUDE.md, packages/task/CLAUDE.md, packages/harness/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.3 Required Reads; verify committed P1.2. Root delegates P1.3 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P1.3 baseline --capture-or-verify command from Implementation Rules; on resume reuse bytes and fail closed rather than recapturing. Reuse existing command_render APIs through the thin worktree-local front; bump task to 0.3.1 and harness versions per D27, regenerate complete task locks/tree/marketplaces, prove a read-only second check, then delete all six exact root task collision directories and update AGENTS bootstrap ownership. Obtain ITEM_BASE_SHA only through baseline --verify-and-print, preserve task semantics and Claude compatibility, run unchanged-strength generated-scope validation, close, continue. Treat every seam produced by plan 2026.07.19-DUAL-PROVIDER as a low-trust input per D54: its terminal status is orange with an ATTENTION item and it introduced the hand-written root adapters outside the generator, so prove current behaviour with a characterization test here before changing it and never inherit green from that plan.'
 ```
 
-### P1.4 — effective-runtime conformance
+### P1.5 — newly measured collision closure (перед P1.4)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P1.5
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | `gpt-5.6-terra` |
+| Thinking | `high` |
+| Approval policy | `never` |
+| Sandbox | `danger-full-access` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.5. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, findings/10-design-audit-a1-attempt-4.md F1, findings/12-effective-collision-remeasure.md, phases/P1.md and P1.5 Required Reads; verify committed green P1.2 and P1.3. This item executes BEFORE P1.4 per D41. Root delegates only P1.5 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P1.5 baseline --capture-or-verify command from Implementation Rules; on resume reuse the carrier byte-for-byte and fail closed on owner dirt or invalid SHA. Prove ownership by frontmatter identity equality for architecture, codebase-design, domain-modeling and package-contribution-protocol against the enabled architect bundle, then delete exactly those four .agents/skills directories with no suppression metadata. Add the class-B workflow-craft root-bootstrap record (public-bucket canonical source, Codex-only declared asymmetry, precondition no enabled unit serves it) in configs plus the P1.5 extension map; never touch the class-A 13 canonical sources, their 26 projections or repository-bootstrap-map.json bytes. Version first: skiller API 0.4.2 and repository-bootstrap 0.2.0, every other unit byte-identical. Extend only the existing publication.py root-bootstrap renderer through registry.py, emit the thin Codex projection and the combined 27-target lock, add the completeness check that each provider root set equals exactly the declared target set, and add the read-only core-versus-donor-bucket mutual exclusion diagnostic to doctor.py without reading or writing any live profile or cache. Regenerate the full owned tree and both repository marketplaces, prove registry --check is a no-op, obtain ITEM_BASE_SHA only through baseline --verify-and-print, run generated-scope with owner P1.5, write findings/P1.5-collision-closure.md, close and continue to P1.4. Treat every seam produced by plan 2026.07.19-DUAL-PROVIDER as a low-trust input per D54: its terminal status is orange with an ATTENTION item and it introduced the hand-written root adapters outside the generator, so prove current behaviour with a characterization test here before changing it and never inherit green from that plan.'
+```
+
+### P1.4 — effective-runtime conformance (терминальный item, после P1.5)
 
 **Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P1.4
 
@@ -245,7 +271,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.4. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.4 Required Reads; verify P1.2/P1.3 committed green. Root delegates P1.4 to a fresh grounded subagent. In explicit stdlib temporary roots, materialize each provider root projection, cold-install only normal repository marketplace bundles, discover/activate/resolve and behavior-smoke. Require 13 repository-bootstrap IDs exactly once from thin roots with canonical path/hash/version matching the lock and zero private marketplace entries; require six core plus six task IDs exactly once from installed bundles with all 12 duplicate roots absent. Do not write live fleet/cache; close through task-plan-exec and continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.4. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.4 Required Reads; verify P1.2, P1.3 and P1.5 committed green — P1.5 runs before this item per D41 and a missing findings/P1.5-collision-closure.md fails closed before any fixture work. Root delegates P1.4 to a fresh grounded subagent. First declare the fixture composition per D51: write artifacts/P1.4/fixture-unit-set.json listing, for each provider, ALL publishable units of that repository marketplace MINUS exactly the three donor buckets general, research and oss-dev (reason d42-donor-bucket), and fail closed if the file is missing, if the unit set does not equal that rule recomputed from the manifest, or if curated core and any donor end up enabled together. Narrowing beyond those three names is a failure, not a green run. In explicit stdlib temporary roots, materialize each provider root projection, cold-install exactly the declared fixture bundles, discover/activate/resolve and behavior-smoke; build the identity-to-carrier map from the generated publication catalog/lock, never by recursive globbing of source trees. Require 13 class-A repository-bootstrap IDs exactly once from thin roots plus the class-B workflow-craft Codex projection, with canonical path/hash/version matching the combined 27-target lock and zero private marketplace entries; require six core, six task and four architect IDs exactly once from installed bundles with all 16 measured duplicate roots absent — the expected exactly-once total is derived by the formula 13 + 1 + 6 + 6 + 4 = 30, not written as a bare literal. Verify catalog-wide: fail on ANY identity with two or more carriers and on ANY undeclared root directory in the declared fixture, not only on the enumerated ones. Then run the SEPARATE negative fixture with core plus a donor bucket enabled and require exactly nine named core-versus-donor D42 diagnostics with non-empty safe_owner_action (anti-drift, compact-responses, context-economy, mcp-advisor, plan-protocol, session-handoff, verify-claims, gh-review, query-craft) plus the class-B workflow-craft precondition error; silence there fails the item. Do not write live fleet/cache or any user profile; close through task-plan-exec and continue.'
 ```
 
 ### P2.1 — state/authority contract
@@ -287,7 +313,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P2.2. Read AGENTS.md, CLAUDE.md, packages/task/CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P2.md and P2.2 Required Reads; verify committed P2.1. Root delegates P2.2 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P2.2 baseline --capture-or-verify command from Implementation Rules; on resume validate/reuse, never recapture. Implement the independently-green compiler/fresh-item dispatch and the sole canonical protocol/command edit. Version first: plan-protocol 2.12.0, skiller API plus general/core units 0.5.0, task 0.4.0; regenerate exact full owned trees/locks/marketplaces, prove second checks, obtain ITEM_BASE_SHA only through baseline --verify-and-print and run unchanged-strength generated-scope guard. Do not depend on P2.3 or add duplicate prose logic; close and continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P2.2. Read AGENTS.md, CLAUDE.md, packages/task/CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P2.md and P2.2 Required Reads; verify committed P2.1. Root delegates P2.2 to a fresh grounded subagent. After Required Reads and before any other item-owned write, run the exact D36 P2.2 baseline --capture-or-verify command from Implementation Rules; on resume validate/reuse, never recapture. Implement the independently-green compiler/fresh-item dispatch and the sole canonical protocol/command edit. Version first: plan-protocol 2.12.0, skiller API plus general/core units 0.5.0, task 0.4.0; keep repository-bootstrap 0.2.0 byte-identical. Regenerate exact full owned trees/locks/marketplaces, prove second checks, obtain ITEM_BASE_SHA only through baseline --verify-and-print and run the generated-scope guard including its D47 foreign-commit attribution. Self-conformance per D47 is mandatory: the new tier rules must be applied to THIS plan inside the item — run plan-lint on plans/2026.07.24-AGENT-RELIABILITY and require zero errors before commit, classify brief tmp references as provenance rather than execution inputs, and fix either the plan text or the rule inside this item with a D-record instead of deferring the debt to P2.3. Notify the consumer plan 2026.07.25-ECO-OPT before close. Do not depend on P2.3 or add duplicate prose logic; close and continue.'
 ```
 
 ### P2.3 — finding/review enforcement
@@ -434,7 +460,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P3.4. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P3.md and P3.4 Required Reads; verify committed P3.1-P3.3. Root delegates P3.4 to a fresh grounded subagent. Complete predecessor reads first, then author/validate canary-cases.json as a same-item File; never treat it as a cold-start prerequisite. Use only task-specific CANARY_ROOT/CANARY_WT and codex -C with explicit native flags; never set HOME/CODEX_HOME or mutate global registries. Persist each detached case SHA+patch, rehearse clean switch rollback, refuse dirty cleanup, close only on exact evidence.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P3.4. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P3.md and P3.4 Required Reads; verify committed P3.1-P3.3. Root delegates P3.4 to a fresh grounded subagent. Complete predecessor reads first, then author/validate canary-cases.json as a same-item File; never treat it as a cold-start prerequisite. Read PRE_PLAN_SHA only from plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/pre-plan-sha.txt per D45 and validate it is a 40-hex commit and an ancestor of CANDIDATE_SHA before creating the worktree; never invent a pre-plan ref and never substitute CANDIDATE_SHA. Use only task-specific CANARY_ROOT/CANARY_WT and pin both routed axes by flag per D46 — Codex: -C plus -m and model_reasoning_effort=high; Claude form: claude -p with --model and --effort high; unknown actual effort fails the dispatch instead of running on a session default. Never set HOME/CODEX_HOME or mutate global registries. Persist each detached case SHA+patch and the applied provider/model/effort with its source, rehearse clean switch rollback to PRE_PLAN_SHA, refuse dirty cleanup, close only on exact evidence.'
 ```
 
 ### P3.5 — terminal reliability audit
@@ -525,8 +551,8 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 
 | Gate | Где | Что утверждает | Блокирует |
 |:--|:--|:--|:--|
-| A0/A1 | historical | A0 attempt 3 и authority-C A1 на pre-redesign `fe3e1646` оба CONSUMED RED; не удовлетворяют execution gate | никакой automatic repair/audit authority |
-| A2 | до G-EXEC | ровно один post-redesign independent design audit under D35 (`0/1` до старта); любой verdict завершает audit session | любой следующий repair/audit без новой Owner authority |
-| G-EXEC | после A2 GREEN, до P0.1 | explicit Owner execution approval; option B и GREEN audit его не подразумевают | все 21 items |
-| G0 | после P0.3 | exact bank/grader/baseline hashes and metric floors | P0.4–P4 |
+| A0/A1/A2/A3 | historical | четыре персональных audit-слота CONSUMED RED (`findings/09`–`findings/11`, `findings/13`) + два исторических вердикта cap 2/2 (`findings/07`, `findings/08`); факты, не действующий механизм (D50) | ничего: рационирование снято, действует канон «два аудита на фазу» |
+| Authority C/D/E | consumed / **действует E** | C (D32) и D (D39) — CONSUMED, их скоупы закрыты. **E (D50)** — стоячая делегация решений агенту: развилки, скоуп, пороги закрываются записью | E не блокирует ничего; C/D исторические |
+| G-EXEC | **выдан** authority E (D50) | self-host P0–P3 исполняются без отдельного человеческого гейта | — (снят) |
+| G0 | после P0.3 | exact bank/grader/baseline hashes and metric floors — **принимает агент** D-записью (D50) | P0.4–P4 до записи решения |
 | G1 | после P4.3 packet | exact external targets/actions: fleet, consumers, FOREMAN, tag, push, release — либо hold | external work outside this plan |

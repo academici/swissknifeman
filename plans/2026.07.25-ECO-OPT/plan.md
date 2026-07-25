@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.25-ECO-OPT |
 | Title | Волна оптимизаций: закрытие хвостов TOKEN-ECON/CONTEXT-ECONOMY, Claude 5 guidance, cross-machine память mAInd, пилот code-review-graph, контекст-гигиена, Codex-делегирование |
-| Version | 0.1.0 |
+| Version | 0.3.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) |
@@ -48,14 +48,17 @@ P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN`
 - Внешние факты — RAG-лестница (context7 → perplexity-web агрессивно →
   WebSearch); репы — только GitHub API/прямое чтение (дисциплина D19
   FOREMAN); поведение Claude Code — только first-party дока.
-- Coupling с AGENT-RELIABILITY: его P2.2 бампает plan-protocol/task-команды —
-  items P2.2 и P7.1 этого плана НЕ стартуют, пока фаза P2 AGENT-RELIABILITY
-  не терминальна (cross-plan gate — эта же секция §2 + D10/D11; секции §11 в плане нет,
-  ссылка исправлена 2026-07-25); при конфликте эскалация, не мерж.
+- Coupling с AGENT-RELIABILITY: его P2.2/P2.3 переписывают `plan-*.md` и скилл
+  plan-protocol — items **P2.3** и P7.1 этого плана НЕ стартуют, пока фаза P2
+  AGENT-RELIABILITY не терминальна (cross-plan gate — эта же секция §2 + D10/D11/D14;
+  секции §11 в плане нет, ссылка исправлена 2026-07-25); при конфликте эскалация, не мерж.
+  P2.2 (интент-команды + agent-packs) гейтом НЕ накрыт: этих файлов нет в его `Files` (D14).
 - Правки скиллов: SKILL.ru.md → SKILL.md → `check-translations.sh --stamp` →
   `skiller registry`; после always-on правок — `skiller budget --first-turn`.
-- Owner-гейты: P3.3 (решения OQ-4/OQ-5), P4.1 (ADR памяти), P5.2 (adopt/skip
-  код-графа), P7.2 (Codex-профиль). Остальное — без остановок.
+- Owner-гейты: P3.3 (решения OQ-4/OQ-5 **плана `2026.07.15-TELEMETRY-OPT`** —
+  не OQ-4 этого плана, D17), P4.1 (ADR памяти), P5.2 (adopt/skip код-графа),
+  P7.2 (Codex-профиль); P2.2/P2.3 — гейт ТОЛЬКО на изменение model/effort-пинов
+  (D16: без замера пин не меняется). Остальное — без остановок.
 - Коммиты — Conventional Commits (рус.), item-топология из plan-protocol §8.
 
 ## 3. Routing
@@ -64,8 +67,9 @@ P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN`
 |:--|:--|:--|:--|:--|:--|
 | | P1.1 | frontier/high | manual | full | GATED-вердикт по first-party доке (перенос TOKEN-ECON P6.2) |
 | B1 | P1.2 | implementation/medium | plan-exec | light | канон-строка + механический бэкфилл ссылок |
-| | P2.1 | implementation/medium | plan-exec | light | выжимка first-party гайда в Brain — компиляция, решений нет |
-| | P2.2 | frontier/high | manual | full | правка канон-команд task под Opus 5 — несущие директивы, cross-plan gate |
+| | P2.1 | implementation/medium | plan-exec | light | две ноты (Opus 5 + Sonnet 5) в Brain — компиляция по захвату findings, решений нет |
+| | P2.2 | frontier/high | manual | full | ревизия интент-команд/agent-packs: открытые решения A/B/C + owner-гейт по пинам |
+| | P2.3 | frontier/high | manual | full | те же решения по `plan-*.md` — носители канон-литералов + cross-plan gate |
 | B2 | P3.1 | implementation/medium | plan-exec | full | замер N + сжатие описаний (экс-P7 TOKEN-ECON), детерминированные гейты |
 | B2 | P3.2 | implementation/medium | plan-exec | full | maind trimming (экс-P8), stdlib, детерминированная Validation |
 | | P3.3 | frontier/high | manual | full | owner-решения OQ-4/OQ-5 (экс-P9) — не выводятся агентом |
@@ -85,7 +89,7 @@ P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN`
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 0/2 | ⬜ Not started |
-| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 0/2 | ⬜ Not started |
+| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 0/3 | ⬜ Not started |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения | 0/3 | ⬜ Not started |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
 | P5 | Пилот code-review-graph vs Serena | 0/2 | ⬜ Not started |
@@ -109,8 +113,15 @@ P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN`
 | D11 | 2026-07-25 | **Уточняет D10 по факту сверки трёх досок (не отменяет её).** Три поправки: (1) гейт FOREMAN — НЕ `G1` того плана (это самый конец, P4.3), а терминальность его **P2** для канона `plan-protocol`/task-команд и терминальность **P1** для публикации skiller (от неё зависит FOREMAN P6); ждать G1 = избыточная сериализация. (2) Формулировка «P1.4 FOREMAN разблокирован» была неточна: item не был заблокирован — он был **исполнен** 2026-07-19 (`c37b3379`) и не закрыт; 2026-07-25 закрыт 🟠 по git-фактам, а его невыполненный re-пин P0.2 вынесен в новый item FOREMAN P1.5, который как раз ждёт терминальную P2 AGENT-RELIABILITY. (3) Разбиение параллельного окна уточнено пофазно: параллельно идут **P1.1, P2.1, P3.3, P4 (все три item'а), P5**; ждут терминальную P1 AGENT-RELIABILITY — **P3.1, P6, P7** (регенерация registry/бюджета, harness-хук, Codex-поверхность); ждут терминальную P2 — **P1.2, P2.2, P7.1** (канон-правки, уже загейчены §2). Регистр — `plans/README.md` § «Очередь планов и владение поверхностями». | RAG:— (owner-grounded: директива 2026-07-25 «выстроить глобальный план разработки»; repo-grounded: `plans/2026.07.18-FOREMAN/phases/P1.md` P1.4 Completion Notes + D50 там же; `plans/2026.07.24-AGENT-RELIABILITY/plan.md` §7 Exported; `git log c37b3379`). |
 | D12 | 2026-07-25 | Дубль супервизора разведён владельцем: `2026.07.18-FOREMAN` (Artifex) переопределён как **тонкая обвязка** над контрактами AGENT-RELIABILITY (`execution-state-machine-v1`, `risk-review-loop-budget-v1`, `unified-agent-trace-v1`) вместо собственного движка решений. Для этого плана следствий по скоупу нет, но фиксируется как контекст: единый источник семантики исполнения — контракты AGENT-RELIABILITY, а не rulebook Artifex. | RAG:— (owner-grounded: выбор варианта 2026-07-25; repo-grounded: `plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md` P2.2 «Root supervisor dispatches each next item to a fresh subagent» ↔ `plans/2026.07.18-FOREMAN/plan.md` §4 P2/P5). |
 | D13 | 2026-07-25 | **Этот план — этап A программы (директива владельца 2026-07-25, design-first).** ACTIVE передан сюда: исполнение `2026.07.24-AGENT-RELIABILITY` отложено до завершения проектировки всех живых планов (его D56). Практически: design pass 2 детализирует P2–P7 (шесть скелетных фаз, 14 items) до DoR, затем `finish` + roadmap; только после этого — этап B (машинная сверка `Files` через `plans/cross-plan-files.py`) и этап C (финальный аудит под Fable). Причина приоритета: 15 из 17 items этого плана не несут `Files`, то есть именно он создаёт слепую зону межплановой карты конфликтов — на двух его спроектированных items гейт уже нашёл живое пересечение с AGENT-RELIABILITY P0.4 по `run-report/_lib.py`. | RAG:— (owner-grounded: директива 2026-07-25; repo-grounded: прогон `plans/cross-plan-files.py`; `plans/README.md` § «Программа: этапы A–D»). |
+| D14 | 2026-07-25 | **Фаза P2 разделена на 3 items со сплитом по cross-plan гейту** (уточняет D11 в части P2, не отменяет её). Замер `Files` items P2.2/P2.3 плана AGENT-RELIABILITY показал: он переписывает ровно `packages/task/commands/plan-{design,exec,run,close,audit}.md` + скилл `plan-protocol`, а интент-команд (`design/research/review/dev/fix/make-workflow`) и каталога `agent-packs/` в его `Files` НЕТ. Поэтому: P2.2 (интент-команды + agent-packs) исполним в параллельном окне D11 без гейта, P2.3 (плановые команды) ждёт терминальную его P2. Сплошной гейт на всю P2 был избыточной сериализацией; альтернатива «одна карта на все поверхности до гейта» отклонена — анкеры плановых команд протухли бы целиком. | RAG:— (repo-grounded: `plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md:55,74` — списки `Files`; синтез — `research/01-P2-opus5-revision-map.md` §3). |
+| D15 | 2026-07-25 | **Правило классификации A/B/C** для ревизии под Opus 5. Класс A (убирать) — содержательно-пустой ритуал самопроверки СОБСТВЕННОГО вывода («перепроверь себя», «финальный шаг верификации», «используй субагента для проверки своей работы») и леса вокруг него. Класс B (сохранять, даже если в строке есть слово «проверь») — доменный acceptance-чеклист (DoR, чеклист ревьюера), детерминированная Validation, ОТДЕЛЬНАЯ adversarial-сессия (`plan-audit`/`task:review`), RAG-верификация ВНЕШНИХ фактов (`verify-claims`). Класс C (не трогать, в карту) — всё неоднозначное; дефолт при сомнении — оставить. Обратная сторона правила: где гайд предписывает ДОБАВИТЬ (капы делегирования, scope-constraint, калибровка длины деливераблов) — добавляем дословными блоками гайда. | RAG:✅ 2026-07-25 first-party (`findings/P2-opus5-guide.md` §5–§7, §9: анти-паттерн сформулирован про самопроверку, про доменные гейты и эпистемику источников в гайде нет ни строки). |
+| D16 | 2026-07-25 | **Effort/model-пины по умолчанию НЕ меняются.** Гайд предписывает по effort ровно процесс — «run a fresh effort sweep on your evals» — а сравнимого бенчмарка команд у нас нет (`skiller eval` тестирует СКИЛЛ, не команду). Изменение пина легально только (а) с приложенным замером или (б) по явной D-записи владельца; всё прочее уходит в раздел «предложения владельцу» карты и в roadmap как кандидат на замер. Названный кандидат (наблюдение, не вердикт): `xhigh` у `review.md`/`plan-audit.md` при том, что точность ревью Opus 5 «holds at lower effort», а `xhigh` описан как «long-running agentic … over 30 minutes». Второй носитель пина — `packages/task/configs/command-routing.json`: правка frontmatter без него = красные parity-тесты. | RAG:✅ 2026-07-25 first-party (`findings/P2-opus5-guide.md` §10, док `/docs/en/build-with-claude/effort`) + RAG:— (repo-grounded: `packages/task/configs/command-routing.json` `routing.{model_class,effort}`; `packages/task/scripts/validate.sh` frontmatter-гейт). |
+| D17 | 2026-07-25 | **OQ-4 этого плана (`raytsystem-public-os`) фазой P2 НЕ адресуется**: P2 — про модель-специфичную настройку промптов, а OQ-4 — про архитектуру инструкционного слоя (3 корневых файла + operation→skill router вместо always-on `description` ~50 плагинов); адресат остаётся P7.2 (+ бюджетный аспект). Заодно снята коллизия идентификаторов: «OQ-4/OQ-5» в §2/§3 (item P3.3) — это открытые вопросы плана `2026.07.15-TELEMETRY-OPT` (research-routing A/B и permission-friction), а НЕ OQ-4 этого плана; ссылки квалифицированы полным PLAN-ID по канону D3. | RAG:— (repo-grounded: `plans/archive/2026.07.15-TOKEN-ECON-P6/plan.md:40,85` — «P9 — Owner-решения из TELEMETRY-OPT (OQ-4, OQ-5)»; `open-questions.md` этого плана OQ-4). |
+| D18 | 2026-07-25 | **Кросс-репо item (P2.1): топология коммитов §8 применяется ПО РЕПО.** Brain — отдельный git-репозиторий (`/home/vostrikov/Vaults/Brain`), поэтому item-коммит делается дважды: файлы ноты — в Brain (короткий хеш в Completion Notes), `docs/reference.md` — в swissknifeman; bookkeeping-коммит плана — только в swissknifeman. `git add -A`/`commit -a` запрещены в обоих. Прецедент раскладки — архивный `2026.07.10-SKM-ROADMAP-005` P4 (Files с абсолютными путями валта). | RAG:— (repo-grounded: `git -C /home/vostrikov/Vaults/Brain rev-parse --is-inside-work-tree` = true; `plans/archive/2026.07.10-SKM-ROADMAP-005/phases/P4.md:440`). |
+| D19 | 2026-07-25 | **Рамка P2 расширена с «Opus 5» до «Claude 5 family» (расширяет D15/D5, не отменяет).** Дочитанный first-party гайд Sonnet 5 показал: (1) Sonnet 5 «will reach for tools and run **self-verification loops** more readily» ⇒ класс A применим и к Sonnet-пиненным поверхностям (`dev`/`fix`/`make-workflow`/`plan-exec`/`plan-close`), а не только к Opus-пиненным; (2) появляется второй подкласс A — леса принудительных статус-апдейтов («After every 3 tool calls, summarize progress» → «try removing it»); (3) в класс «добавить» входит `confidence` рядом с `severity` в ревью-находках (у нас есть только severity); (4) Sonnet 5 трактует инструкции БУКВАЛЬНО и не обобщает правило с одного объекта на другие — область действия правил в ТЗ item'ов надо называть явно; (5) новый токенайзер Sonnet 5 даёт ~+30% токенов на том же тексте ⇒ пороги `skiller budget --first-turn` (3–7K/10K) откалиброваны по прежней шкале — сравнение «до/после» законно, абсолютный вердикт «в бюджете» требует оговорки (калибровка — кандидат для P3.1). Следствие по скоупу: P2.1 производит ДВЕ ноты (Opus 5 + Sonnet 5), P2.2/P2.3 работают по расширенному правилу. | RAG:✅ 2026-07-25 first-party (`findings/P2-claude5-family-and-migration.md` §1–§2: гайд Sonnet 5 + кросс-модельный `claude-prompting-best-practices`, WebFetch). |
+| D20 | 2026-07-25 | **Полевой кейс неполноты RAG зафиксирован как вход для P6.3** (замечание владельца: «RAG важен при проектировании» + «найти слабости, почему это не было выполнено»). Первопричина — не пробел канона, а тихое сужение рамки: скелет нёс item «Brain model-notes: Opus 5 **(+Claude 5 family)** выжимка», при детализации хвост был молча уронен. Усилители, которые стоит починить: (а) лестница RAG описана по классу ОТДЕЛЬНОГО факта, а не по полноте множества фактов фазы; (б) формулировка «на промах context7 → perplexity» задаёт фолбэчную интонацию, тогда как perplexity несёт ДРУГОЙ класс знания (полевая практика, «что ломается»), который first-party дока не покрывает по определению; (в) DoR-чеклист проверяет ФОРМУ маркеров, а не покрытие. Кандидаты правок (`verify-claims`, CLAUDE.md § «Методология решений», DoR-чеклист `plan-design`) + готовый pressure-сценарий для `skiller eval` перечислены в `research/02-P2-rag-coverage-postmortem.md` §4; исполнение — P6.3, здесь ничего не правится. | RAG:— (repo-grounded: `plans/2026.07.25-ECO-OPT/research/02-P2-rag-coverage-postmortem.md`; `CLAUDE.md` § «Методология решений»; `brief/00-brief.md` идея 9). |
 
-Coupling-поверхность: канон plan-protocol/task-команды (P2.2, P6.2, P6.3 ↔
+Coupling-поверхность: канон plan-protocol/task-команды (P2.3, P6.2, P6.3 ↔
 AGENT-RELIABILITY P2.2 — самый горячий hotspot, cross-plan gate в §2);
 скилл `mcp-advisor` (P5.2 ↔ P6-правки скиллов); harness configs (P6.1 ↔
 agent-packs); maind (P3.2 ↔ P4.2 — оба правят lib/maind, последовательно).
@@ -122,6 +133,8 @@ agent-packs); maind (P3.2 ↔ P4.2 — оба правят lib/maind, после
 | 2026-07-25 | plan-design/Claude Fable 5 | Design pass 1/2: brief + RAG-финдинги (5 реп GitHub API, Opus 5 guide, CC-факты, 2 perplexity-синтеза), 7 фаз/16 items (P1 детализирована, P2–P7 скелеты с контрактами), Обсуждение (7 развилок), D1–D10. Supersedes TOKEN-ECON-P6. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (межплановая очередь) | D11/D12: очередь уточнена пофазно, гейт FOREMAN — терминальные P1/P2 AGENT-RELIABILITY, а не G1; `Paused By` проставлен частично (независимые фазы идут параллельно). |
 | 2026-07-25 | plan-design/Claude Opus 5/high (программный гейт) | D13: план стал этапом A программы design-first, ACTIVE передан сюда; следующий шаг — детализация P2. |
+| 2026-07-25 | plan-design/Claude Opus 5/high (P2) | P2 детализирована до DoR: 2→3 items (сплит по cross-plan гейту), D14–D18; слой 1 — `findings/P2-opus5-guide.md` (полный first-party гайд Opus 5 + док effort), слой 2 — `research/01-P2-opus5-revision-map.md` (правило A/B/C, инвентарь поверхностей, разбиение по гейту). |
+| 2026-07-25 | plan-design/Claude Opus 5/high (P2, добор RAG) | D19: рамка P2 расширена до Claude 5 family (гайд Sonnet 5 + кросс-модельный док + перплексити → `findings/P2-claude5-family-and-migration.md`). D20: постмортем неполноты RAG → вход P6.3. |
 
 ## Обсуждение
 
@@ -162,3 +175,14 @@ agent-packs); maind (P3.2 ↔ P4.2 — оба правят lib/maind, после
 - **Вариант B. Делегировать сразу.** Минусы: повторит инцидент — усилители не устранены.
 - **Вариант C. Отказаться от Codex.** Минусы: теряется дешёвый слой для рутины; ресурсы Claude важнее (директива владельца).
 **Статус:** Exploration (вердикт — P7.1) — см. open-questions.md OQ-2.
+
+### 8 — Ревизия под Opus 5: сплошной гейт на всю P2 vs сплит по поверхностям
+- **(рекоменд.) Сплит по гейту.** Интент-команды и agent-packs — вне `Files` AGENT-RELIABILITY P2 ⇒ P2.2 идёт сразу; `plan-*.md` ждут (P2.3). Плюсы: половина фазы разблокирована в параллельном окне D11; карта анкеров снимается по актуальному тексту. Минусы: +1 item, две карты вместо одной.
+- **Вариант B. Сплошной гейт (как в скелете pass 1).** Плюсы: одна карта, один заход. Минусы: избыточная сериализация — фаза стоит из-за файлов, которых чужой план не касается.
+- **Вариант C. Одна карта на все поверхности ДО гейта.** Минусы: анкеры плановых команд протухают целиком (их P2.2/P2.3 переписывают эти файлы) — работа выброшена.
+**Статус:** Resolved → D14.
+
+### 9 — Effort-пины: понижать по гайду vs не трогать без замера
+- **(рекоменд.) Не трогать без замера.** Гайд предписывает не уровни, а ПРОЦЕСС — «run a fresh effort sweep on your evals». Плюсы: нет спекулятивной деградации последних гейтов качества (`review`/`plan-audit`); кандидаты названы явно. Минусы: экономия отложена до появления замера.
+- **Вариант B. Понизить `xhigh`→`high` на ревью-командах сразу** («accuracy holds at lower effort»). Минусы: утверждение гайда про модель вообще, не про наши промпты; асимметричная цена ошибки; пин живёт в двух носителях — тихая правка ломает parity-тесты.
+**Статус:** Resolved → D16 (кандидат на замер — в roadmap при `finish`).

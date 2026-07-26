@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.21.2 |
+| Version | 1.21.3 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (**P4.4 закрыт 🟢**: машинный гейт `plan_lint` для напечатанных кодов границ `pre_mutation`/`pre_final` — ремонт находки Ф2 (D91); `plan-protocol@2.15.0`/`skiller@0.8.0`; детали — `phases/P4.md` P4.4 Completion Notes) | Предыдущее: 2026-07-26 (**Фаза P4 доведена до DoR** заходом `plan-design … P4`: входной гейт «не стартует до GREEN» переопределён **D89** — принят measured-scope Owner packet, план НЕ терминируется на `🟠`; приёмка объявлена формально НЕ выполненной, floors не повышаются, замороженные контракты не правятся. Состав фазы — **5 items** (D90, порядок `P4.4 → P4.5 → P4.1 → P4.2 → P4.3`): три исходных с переписанной по фактическому входу премисой + два носителя названного долга, у которых носителя не было — **P4.4** машинный гейт напечатанных кодов `pre_mutation`/`pre_final` в `plan_lint` (ремонт Ф2, `PROMOTE-CANDIDATE`, событие 2/2; границы закрыты **D91**: якорь — дата item'а с cutoff `2026.07.27`, ERROR внутри скоупа, молчание вне) и **P4.5** оплата Contribution gate D23 (бампы `analyst 0.1.0→0.2.0`, `harness 0.3.0→0.4.0`, owed с P3.1). Долги, которые фаза сознательно не чинит, названы с носителями и обязаны попасть в packet (**D92**); оркестрация объявлена (**D93**) — carrier `workflows/wf-agent-reliability-p4.js`, строго последовательный pipeline. Синтез — `research/10-p4-entry-gate-and-composition.md`; следующий шаг — прогон carrier'а фазы) | Предыдущее: 2026-07-26 (Фаза **P3 закрыта 🟠 Done with deviations** по git-фактам: 5/11 items
+| Last Updated | 2026-07-26 (**P4.5 закрыт 🟢**: Contribution gate (D23) оплачен — `analyst@0.2.0`/`harness@0.4.0`, нулевой дрейф публикаций подтверждён `registry --check`; детали — `phases/P4.md` P4.5 Completion Notes) | Предыдущее: 2026-07-26 (**P4.4 понижен 🟢→🟠 Done with deviations**: ревью нашло Major+Minor дефект точности предиката `_lint_write_site_codes_44` — детали `phases/P4.md` P4.4 Known Deviations) | Предыдущее: 2026-07-26 (**Фаза P4 доведена до DoR** заходом `plan-design … P4`: входной гейт «не стартует до GREEN» переопределён **D89** — принят measured-scope Owner packet, план НЕ терминируется на `🟠`; приёмка объявлена формально НЕ выполненной, floors не повышаются, замороженные контракты не правятся. Состав фазы — **5 items** (D90, порядок `P4.4 → P4.5 → P4.1 → P4.2 → P4.3`): три исходных с переписанной по фактическому входу премисой + два носителя названного долга, у которых носителя не было — **P4.4** машинный гейт напечатанных кодов `pre_mutation`/`pre_final` в `plan_lint` (ремонт Ф2, `PROMOTE-CANDIDATE`, событие 2/2; границы закрыты **D91**: якорь — дата item'а с cutoff `2026.07.27`, ERROR внутри скоупа, молчание вне) и **P4.5** оплата Contribution gate D23 (бампы `analyst 0.1.0→0.2.0`, `harness 0.3.0→0.4.0`, owed с P3.1). Долги, которые фаза сознательно не чинит, названы с носителями и обязаны попасть в packet (**D92**); оркестрация объявлена (**D93**) — carrier `workflows/wf-agent-reliability-p4.js`, строго последовательный pipeline. Синтез — `research/10-p4-entry-gate-and-composition.md`; следующий шаг — прогон carrier'а фазы) | Предыдущее: 2026-07-26 (Фаза **P3 закрыта 🟠 Done with deviations** по git-фактам: 5/11 items
 🟢, audit cap фазы исчерпан (2/2), приёмка недостижима на этом инструментальном поколении —
 названный долг **D88**. `Phase Handoff` переписан: что фаза доказала (unified trace, метрики,
 eval-адаптер, канарейка, измеренный layer-2 5/31) и что не доказала (F1=0.96, F10=unknown, 26/31
@@ -297,7 +297,7 @@ audit/fix-loop без продукта, который план создан л�
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
 | P3 | Unified traces, evals и isolated self-host canary | 5/11 | 🟠 Done with deviations |
-| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 0/5 | 🟡 In progress |
+| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 1/5 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -480,6 +480,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-design/Claude Opus 5/high | `roadmap.md` пересобран под фазу P4: три отдельных launch-block'а P4.* заменены carrier'ом `wf-P4` (D93), строки items — в порядке исполнения D90. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P4.4 закрыт 🟢: машинный гейт `plan_lint` для напечатанных кодов границ `pre_mutation`/`pre_final` (ремонт Ф2, D91), `plan-protocol@2.15.0`/`skiller@0.8.0` — детали см. `phases/P4.md` P4.4 Completion Notes. Version 1.21.0 → 1.21.1. |
 | 2026-07-26 | plan-close/Claude Sonnet 5 | P4.4 понижен 🟢→🟠 Done with deviations: ревью нашло Major+Minor дефект точности предиката `_lint_write_site_codes_44` (ложный ERROR/ложное молчание при цитировании чужих кодов) — детали см. `phases/P4.md` P4.4 Known Deviations. Version 1.21.1 → 1.21.2. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P4.5 закрыт 🟢: Contribution gate (D23) оплачен — `analyst@0.2.0`/`harness@0.4.0`, нулевой дрейф публикаций подтверждён `registry --check` — детали см. `phases/P4.md` P4.5 Completion Notes. Version 1.21.2 → 1.21.3. |
 
 ## 7. Contracts
 

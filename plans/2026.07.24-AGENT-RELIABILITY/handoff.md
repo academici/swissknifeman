@@ -1,19 +1,19 @@
-# HANDOFF — 2026-07-26 — after P4.4
+# HANDOFF — 2026-07-26 — after P4.5
 
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.5
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.1
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | `implementation` |
-| Effort | `medium` |
+| Effort | `high` |
 | Capabilities | — |
 | Model | `sonnet` |
-| Thinking | `medium` |
+| Thinking | `high` |
 | Context | `same-session — item` |
-| Суть | Оплатить Contribution gate D23: минорные бампы `analyst 0.1.0 → 0.2.0` и `harness 0.3.0 → 0.4.0`, owed с P3.1; печать кодов границ ОБЯЗАТЕЛЬНА (канон P2.7/P2.11), но машинный гейт P4.4 этот item НЕ диагностирует (`Updated` < cutoff `2026-07-27`, см. Open risk 2) |
+| Суть | Вынести вердикт по external provider/core hypotheses по коду — read-only проверка гипотез, следующая по D90 после оплаты Contribution gate |
 
 ```
-task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.5
+task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
 ```
 
 **Done:**
@@ -42,16 +42,30 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.5
   item без собственных кодов проходит зелёным, цитируя чужие `allow`/`allow` (класс P3.11).
   Ни один из шести тестов эти случаи не покрывает. Детали и полная запись Known Deviations —
   `phases/P4.md` P4.4 Completion Notes / Known Deviations.
+- **P4.5 закрыт 🟢** (item-коммит `e45d0f8f`). Contribution gate D23 (`unified-agent-trace-v1.md`
+  § Contribution gate) оплачен ровно двумя полями `version` + `CHANGELOG.md`: `analyst`
+  `0.1.0 → 0.2.0` (новый публичный модуль `analyst.trace`/`analyst.metrics`, P3.1/P3.2),
+  `harness` `0.3.0 → 0.4.0` (новый публичный модуль `harness.provider_trace`, P3.1) — долг,
+  записанный P3.1 Pending Work/P3.2 Completion Notes как owed, но не применённый, потому что
+  `package.json` лежал вне `Files` тех items. `plugin.json` обоих пакетов НЕ тронут (измеренная
+  граница `research/10 § 4`: `harness` package `0.3.0` уже лежал против plugin `0.2.0` до этого
+  бампа). Отсутствие дрейфа доказано командой: `skiller registry --check` — «артефакты
+  актуальны», `git diff --exit-code` по generated-путям — пусто; `plan-lint.py` — 0 ERROR (1
+  унаследованный WARN, не этот item). Boundary codes: `pre_mutation: allow`, `pre_final: allow`
+  (тот же `content_hash`, состояние item'а между границами не менялось) — печать обязательна
+  предсуществующим каноном P2.7/P2.11, машинный гейт P4.4 этот item НЕ диагностирует (`Updated`
+  `2026-07-26` < cutoff `2026-07-27`, D91 — спроектированное forward-only поведение). Детали —
+  `phases/P4.md` P4.5 Completion Notes.
 
 **Remaining:**
 
-- **Четыре items фазы P4** — P4.5 (следующий, D90), P4.1, P4.2, P4.3 — ни один не стартовал
-  (`⬜`). Ручной фолбэк по items описан в `roadmap.md` § «Фаза P4 — carrier оркестрации»; carrier
-  `wf-agent-reliability-p4.js` остаётся доступным как альтернативный launch-путь (P4.4 закрыт
-  этим заходом маршрутом `task:plan-run`, не carrier'ом).
-- **Ремонт предиката `_lint_write_site_codes_44`** (Major/Minor находки ревью) — не носитель
-  этого bookkeeping-прохода; остаётся долгом с носителем «будущий проход по `plan_lint.py`»,
-  ОБЯЗАН попасть в P4.3 Owner packet поимённо (D92-класс, `research/10 § 6`).
+- **Три items фазы P4** — P4.1 (следующий, D90), P4.2, P4.3 — ни один не стартовал (`⬜`).
+  Ручной фолбэк по items описан в `roadmap.md` § «Фаза P4 — carrier оркестрации»; carrier
+  `wf-agent-reliability-p4.js` остаётся доступным как альтернативный launch-путь (P4.4/P4.5
+  закрыты этим/предыдущим заходом маршрутом `task:plan-run`, не carrier'ом).
+- **Ремонт предиката `_lint_write_site_codes_44`** (Major/Minor находки ревью P4.4) — не
+  носитель ни одного из последующих items; остаётся долгом с носителем «будущий проход по
+  `plan_lint.py`», ОБЯЗАН попасть в P4.3 Owner packet поимённо (D92-класс, `research/10 § 6`).
 - **G1** — единственный действующий Owner-гейт: принимается ВЛАДЕЛЬЦЕМ после packet'а P4.3
   (fleet/consumers/FOREMAN/tag/push/release либо hold). Ни один агент прогона наружу не выходит.
 - **Строка доски P0** остаётся `🟡` при терминальных items — снимается `task:plan-close … P0`
@@ -60,8 +74,9 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.5
 **Sources of truth:**
 
 - `phases/P4.md` — `## Phase Context` (переопределённый вход, контракт фазы, порядок),
-  `## Phase Status` (5 items, P4.4 `🟠`), P4.4 ТЗ + Completion Notes + Known Deviations.
-- `plan.md` — §0 Meta (v1.21.2), §3 Routing (строки P4.1–P4.5), §4 Status Board (`P4 0/5`),
+  `## Phase Status` (5 items, P4.4 `🟠`, P4.5 `🟢`), P4.4/P4.5 ТЗ + Completion Notes + Known
+  Deviations.
+- `plan.md` — §0 Meta (v1.21.3), §3 Routing (строки P4.1–P4.5), §4 Status Board (`P4 1/5`),
   §7 Contracts Exported (`plan-protocol@2.15.0`, `skiller@0.8.0`, item-коммит `4ca7af67`),
   D89–D93 (§5), §6 Update Log.
 - `research/10-p4-entry-gate-and-composition.md` — основание решений захода, в т.ч. § 6
@@ -80,7 +95,8 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.5
    самоприменением), НЕ автоматическая гарантия. Печать кодов границ у этих items остаётся
    ручной дисциплиной по предсуществующему канону (P2.7/P2.11), не машинно проверяемой в
    этом прогоне — исполнитель следующего item обязан напечатать `pre_mutation:`/`pre_final:`
-   сам, а не полагаться на молчание линтера как на подтверждение.
+   сам, а не полагаться на молчание линтера как на подтверждение. P4.5 напечатал коды по
+   этой самой дисциплине.
 3. **Предикат `_lint_write_site_codes_44` несёт подтверждённый дефект точности** (ревью,
    ATTENTION): ложный ERROR при цитировании чужого `block:*`, ложное молчание при цитировании
    чужих `allow`/`allow` — оба класса воспроизведены на реальном тексте плана (P3.10/P3.11).

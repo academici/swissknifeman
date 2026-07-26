@@ -4,6 +4,44 @@
 
 ### Added
 
+- **docs/plan — canonical docs synchronised and the measured-scope Owner decision
+  packet assembled (P4.3, `2026.07.24-AGENT-RELIABILITY`).** Terminal item of the plan.
+  Docs now state the three source layers explicitly — canonical (hand-written), generated
+  (`skiller registry` / `render-provider-commands.py`, never hand-edited, drift repaired by
+  regeneration) and effective (what the runtime actually resolves, read via
+  `skiller doctor --effective-source`) — and print measured quality rather than rounding it
+  to `ok` (`docs/control-surface.md`). `docs/task/plan-structure.md` gains the compiled
+  portability tiers (`brief-acceptance` / `committed-bundle`), the classification rule and
+  who applies it, the five lint rejections, the provenance-vs-execution-input test **by role
+  rather than by spelling**, the five `committed-bundle` requirements (minimisation with
+  named excluded classes; a deterministic manifest AND a committed verifier whose hashes are
+  recomputed rather than trusted; complete dependency closure; one neutral semantic carrier
+  whose Claude/Codex renderings are projections, never the source of truth; the proof-class
+  rule) and the closed proof-class enum — plus the P4.4 machine gate on printed
+  `pre_mutation:`/`pre_final:` codes. `docs/task/methodology.md` separates an audit verdict
+  from plan acceptance, so a clean record can no longer be read as a met floor.
+  `docs/reference.md` records the external `core`/provider architecture audit as adjudicated
+  (3 accept → future proposals, 11 reject, 2 unknown) and `docs/rejected-optimizations.md`
+  carries its three load-bearing rejections with the code that refutes them.
+  `packages/analyst/docs/architecture.md` documents the two public modules the Contribution
+  gate was paid for (`analyst.trace`, `analyst.metrics`) and why `plugin.json` does not
+  follow `package.json`. Publication closure is proven by command, not by prose: task render
+  `--check` and `skiller registry --check` both no-op, the diff-scope guard over adapters /
+  bootstrap trees / both marketplaces exits clean, and the private
+  `repository-bootstrap@0.2.0` unit is recounted from its own lock — 27 thin root
+  projections (26 class-A + class-B `workflow-craft`), one combined lock, **zero** ordinary
+  marketplace entries. The packet
+  (`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P4.3/owner-decision-packet.md`) states in
+  its first sentence that acceptance is formally NOT met, prints what is unproven as numbers
+  (`F1 = 0.96`, `F10 = unknown`, declared subset 5/31, F6 on a denominator of 1, Codex side
+  never attempted), lists every residual debt with a named carrier, records the rehearsed
+  rollback and its measured cost (2/5 → 5/5 first-pass success would be destroyed), and asks
+  exactly one owner decision (G1 go/hold) with a **hold** recommendation and falsifiable
+  criteria that would change it. One honest gap is recorded rather than repaired:
+  `scripts/provider-docs.py` — the generator/checker behind `docs/provider-support.md` —
+  still reads `plans/2026.07.19-DUAL-PROVIDER/...` after that plan was archived, so it fails
+  closed with `FileNotFoundError` and is wired into no `validate.sh`; that page is therefore
+  **not** claimed proven closed, and the repair belongs to the script's owner (D27/D31).
 - **skiller — read-only composed effective-source doctor
   (P4.2, `2026.07.24-AGENT-RELIABILITY`).** `skiller doctor --effective-source [--json]`
   composes five read-only diagnostics — active semantic owner/provenance/collisions

@@ -17,7 +17,16 @@ analyst — детерминированный (stdlib-only, on-demand) слой
 | `recompute.py` | пересчёт confidence из `events.ndjson` → числовая state-machine (P3) |
 | `review.py` | уроки по state + structured diff (read-only) |
 | `promote.py` | конвейер + **человеко-гейт** curated + surfacing в память mAInd (subprocess, graceful) |
+| `trace.py` | **Unified Agent Trace v1** — единственный владелец схемы `TraceRecord`: сборка/валидация записи (провенанс + sha256), fail-closed на любом сыром ключе, потенциально несущем chain-of-thought/tool-payload/секрет, `quality.completeness` по шести группам полей с причиной на каждую недостающую, дедуп resume/fork по натуральному ключу |
+| `metrics.py` | парные метрики надёжности поверх закоммиченных `TraceRecord` и замороженного банка: `numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-class` в каждой записи; отсутствующий кандидат — `deferred`, а не тихий ноль; baseline класса `pinned-not-recomputable`/`unknown` не может обосновывать сравнение (fail closed) |
 | `doctor.py` | диагностика окружения |
+
+Таблица называет несущие модули; полная карта пакета (включая `capture`/`events`/`readers`/
+`runs`/`ingest`/`proposals`/`sessions`/`status`/`token_report`) — в `packages/analyst/CLAUDE.md`.
+Публичный package-API пакета — `0.2.0`: минорный бамп оплачен по Contribution gate контракта
+Unified Agent Trace v1 ровно за два новых публичных модуля выше (`trace`, `metrics`).
+Версия `.claude-plugin/plugin.json` из `package.json` **не** выводится — это отдельная
+поверхность публикации.
 
 ## Инварианты (за них не выходим)
 

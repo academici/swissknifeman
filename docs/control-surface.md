@@ -72,6 +72,30 @@ health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 **самих инструментов** (PATH, реестр, демон, пресеты). Это про машину/установку, а
 `swissknifeman status` — про **состояние конкретного проекта/флота**.
 
+## Три слоя источника: canonical → generated → effective
+
+Слои выше отвечают «что подключено». Отдельная ось — «откуда это взялось и что реально
+активно»; путать её со слоями нельзя, потому что чинятся они разными командами:
+
+| Слой | Что это | Кто владеет | Как проверить (read-only) |
+|:--|:--|:--|:--|
+| **canonical** | рукописный источник истины: `packages/*/skills/**`, `packages/task/commands/*.md`, конфиги пакетов | человек/пакет | обычный `git diff`, ревью |
+| **generated** | проекции канона: `skills.json`, оба `marketplace.json`, `adapters/**`, `.claude/skills`+`.agents/skills`, publication-locks, часть страниц доков | генератор (`skiller registry`, `render-provider-commands.py`) — **руками не правится** | `skiller registry --check` · `python3 packages/task/scripts/render-provider-commands.py --check --root .` |
+| **effective** | что реально видит агент в сессии: активная семантическая идентичность, её провенанс, коллизии, владелец хука, качество трассы | рантайм провайдера | `skiller doctor --effective-source [--json]` |
+
+**Правило:** дрейф `generated` чинится **перегенерацией владеющей командой**, а не правкой
+файла; ручная правка сгенерированного — дефект, который поймает `--check`. Диагноз слоя
+`effective` — только чтение: `skiller doctor --effective-source` ничего не пишет (доказано
+сравнением `git status --porcelain=v1` до и после) и печатает по каждому диагносту
+`owner/source/status/evidence/quality/next_command` со статусом `ok`/`degraded`/`unknown`/`n/a`.
+
+**Качество печатается измеренным, а не округлённым.** Там, где источник неполон, диагностика
+даёт число и причину вместо «ok»: например, `trace-quality` печатает измеренное подмножество
+`5/31` наблюдаемых кейсов, `F1 = 0.96`, `F10 = unknown` (снапшот последнего закоммиченного
+измерения плана `2026.07.24-AGENT-RELIABILITY`, а не живой инструмент — при архивации плана
+диагностика деградирует к `unknown` с названным пробелом). Детали и разбор частых случаев —
+[диагностика skiller](/skiller/guide/troubleshooting).
+
 ## Полная настройка проекта
 
 Порядок «дать проекту всё» (все 4 слоя) — операционный раннбук `project-tooling-runbook`

@@ -1,94 +1,116 @@
-# HANDOFF — 2026-07-26 — after P4.2
+# HANDOFF — 2026-07-26 — after P4.3
 
-**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.3
+**Next:** close: task:plan-close 2026.07.24-AGENT-RELIABILITY P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | `frontier` |
-| Effort | `high` |
+| Model class | `implementation` |
+| Effort | `low` |
 | Capabilities | — |
-| Model | `opus` |
-| Thinking | `high` |
+| Model | `sonnet` |
+| Thinking | `low` |
 | Context | `НОВАЯ сессия` |
-| Суть | Последний item фазы: синхронизировать docs и собрать Owner rollout/release packet на ИЗМЕРЕННОМ скоупе (D89) — приёмка объявляется формально НЕ выполненной, слово GREEN не появляется; packet поимённо несёт долги без носителя (D92) и вход для решения G1 |
+| Суть | Все пять items фазы P4 терминальны (3 🟢 / 2 🟠). Закрыть фазу по git-фактам: таблицы, `## Phase Handoff`, docs-sync решение, lint. Слово GREEN о приёмке не появляется — приёмка формально НЕ выполнена (D88/D89). Затем терминальный `task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия) |
 
 ```
-task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.3
-```
-
-Альтернативно — дозапуск хвоста фазы carrier'ом (`START_FROM = 'P4.3'` уже выставлен в скрипте):
-
-```
-Workflow({scriptPath: "plans/2026.07.24-AGENT-RELIABILITY/workflows/wf-agent-reliability-p4.js"})
+task:plan-close 2026.07.24-AGENT-RELIABILITY P4
 ```
 
 **Done:**
 
-- **Фаза P4 доведена до DoR** заходом `plan-design … P4`. Входной гейт «P4 не стартует до
-  GREEN» (D81) переопределён **D89**: принят measured-scope Owner packet; план НЕ терминируется
-  на `🟠`. Приёмка объявлена формально НЕ выполненной. Состав — 5 items (D90, порядок
-  `P4.4 → P4.5 → P4.1 → P4.2 → P4.3`); оркестрация объявлена (D93).
-- **P4.4 закрыт 🟠 Done with deviations** (item-коммит `4ca7af67`) — машинный гейт `plan_lint`
-  напечатанных кодов границ (ремонт Ф2), ревью ATTENTION: подтверждён Major/Minor дефект
-  точности предиката `_lint_write_site_codes_44`.
-- **P4.5 закрыт 🟢** (item-коммит `e45d0f8f`) — Contribution gate D23 оплачен: `analyst`
-  `0.1.0 → 0.2.0`, `harness` `0.3.0 → 0.4.0`; `registry --check` — «артефакты актуальны».
-- **P4.1 закрыт 🟠 Done with deviations** (item-коммит `a376a64e`) — code-grounded вердикт по
-  16 несущим гипотезам: 3 accept (FP-1/FP-2/FP-3), 11 reject, 2 unknown (H15/H16). Ревью
-  ATTENTION: H06 mis-cite несуществующего теста, гейт `verify_claim_verdicts.py` не проверяет
-  символ после `::`, Minor — правило `observation_upheld` нарушено в H05 без проверки гейтом.
-- **P4.2 закрыт 🟢** (item-коммит `1e9006f4`) — read-only композитный effective-source doctor:
-  пять диагностик поверх замороженных интерфейсов P1/P3, новой публичной подкоманды нет,
-  `trace-quality` печатает измеренное (`5/31`, F1 = 0.96, F10 = unknown) без округления до «ok».
-  Validation перепрогнана целиком на закрытии (8/8 юнит-тестов, `validate.sh` 474 теста,
-  no-write доказан сравнением `git status` до/после, `plan-lint` 0 ERROR); коды границ
-  `pre_mutation: allow` / `pre_final: allow` измерены дважды (исполнителем и на закрытии).
-- **Ложный `🔴 Blocked` на P4.2 снят.** Прогон carrier'а остановился на ревью P4.2, потребовав
-  заполненных Status/Completion Notes/journal — которые по конструкции пайплайна пишутся
-  стадией `Close` ПОСЛЕ ревью. Продукт item'а ревьюер признал корректным. Носитель дефекта —
-  `workflows/wf-agent-reliability-p4.js`: ревьюеру теперь явно объявлена граница его предмета
-  (bookkeeping — не его находка; находка — только НЕпосчитанные коды или код ≠ `allow`),
-  посчитанные исполнителем коды передаются ему в промпт, добавлен `START_FROM` для дозапуска
-  хвоста фазы без переисполнения закрытых items.
+- **P4.3 закрыт 🟢** (item-коммит `e0c7269c`) — терминальный item фазы и плана.
+  - **Доки:** `docs/control-surface.md` — три слоя источника (canonical → generated →
+    effective), кто владеет каждым, чем проверяется read-only, правило «дрейф `generated`
+    чинится перегенерацией, а не правкой файла»; измеренное качество (`5/31`, `F1 = 0.96`,
+    `F10 = unknown`) печатается числом, не «ok». `docs/task/plan-structure.md` — компилируемые
+    тиры портируемости, правило классификации и его владелец, пять отказов линтера, провенанс
+    против execution input **по роли**, пять требований `committed-bundle`, закрытый enum
+    proof-классов, машинный гейт кодов границ (P4.4). `docs/task/methodology.md` — «вердикт
+    аудита ≠ приёмка плана». `docs/reference.md` — одна своя строка: внешний аудит
+    `core`/provider адъюдицирован по коду (3 accept / 11 reject / 2 unknown), соседние разделы
+    не переформатированы (И2). `docs/rejected-optimizations.md` — три несущих отклонения с
+    опровергающим их кодом. `packages/analyst/docs/architecture.md` — публичные `analyst.trace`
+    и `analyst.metrics`, package-API `0.2.0`.
+  - **Не правлено сознательно (все прочитаны, причина названа на файл):**
+    `docs/provider-support.md`, `packages/task/docs/reference/provider-commands.md`,
+    `packages/harness/docs/reference/provider-harness.md` — generated;
+    `packages/skiller/docs/guide/troubleshooting.md` — владелец текста P4.2, сверен и актуален;
+    `docs/routing.md` — расхождений с деревом нет.
+  - **Owner packet** — `artifacts/P4.3/owner-decision-packet.md`: приёмка объявлена формально
+    НЕ выполненной первым предложением; недоказанное — первым разделом и числами; каждый
+    остаточный долг — с носителем; отрепетированный откат и его измеренная цена; **ровно одно**
+    решение G1 с рекомендацией **HOLD** и четырьмя фальсифицируемыми критериями, которые её
+    изменят. Слово GREEN в packet'е не употребляется.
+  - **Закрытость публикаций доказана командами** (не фразой): render `--check` и
+    `registry --check` — no-op; diff-scope guard по адаптерам/bootstrap-деревьям/обоим
+    marketplace'ам — пусто; приватный `repository-bootstrap@0.2.0` пересчитан из своего lock'а —
+    **27** проекций (26 class-A + class-B `workflow-craft`), один общий lock, **0** обычных
+    marketplace-записей. Ничего не перегенерировано и не сверсионировано.
+  - **Validation** — восемь команд, все зелёные: четыре `validate.sh` (skiller 474 теста, task
+    «plan-lint: OK (14 планов, 0 ошибок)», harness, analyst 256 тестов), два `--check`,
+    diff-guard, `plan-lint` по плану (0 ERROR / 1 унаследованный WARN).
+  - **Коды границ:** `pre_mutation: allow`, `pre_final: allow`
+    (`content_hash 503f71945702b101503be3d4a0a924224b805e59b11555d8e7aa5503d24c6a47`, EXIT=0),
+    маршрут исполнителя `frontier/high` (D75).
 
 **Remaining:**
 
-- **P4.3** — единственный незакрытый item фазы (`⬜ Not started`): docs-синхронизация + Owner
-  rollout/release packet. По D90 — последний по порядку, все его Inputs (P4.1/P4.2/P4.4/P4.5)
-  терминальны.
-- **Ремонт предиката `_lint_write_site_codes_44`** (находки ревью P4.4) — долг, ОБЯЗАН попасть
-  в P4.3 Owner packet поимённо.
+- **Закрытие фазы P4** — `task:plan-close … P4` (таблицы, `## Phase Handoff`, docs-sync
+  решение), затем терминальный `task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия).
+- **G1 — единственный действующий Owner-гейт.** Вход для ответа собран:
+  `artifacts/P4.3/owner-decision-packet.md` § 6. Рекомендация агента — **HOLD**. Решение
+  принимает ВЛАДЕЛЕЦ; агент его не исполняет. Ни `push`, ни `tag`, ни релиз, ни раскатка на
+  флот/consumers, ни `plans/2026.07.18-FOREMAN` этим прогоном не тронуты (ветка
+  `codex/provider-project-sync` — 117 коммитов впереди `origin`, тегов не добавлено).
+- **Новая находка P4.3 (долг с носителем):** `scripts/provider-docs.py` —
+  генератор/чекер `docs/provider-support.md` — читает `plans/2026.07.19-DUAL-PROVIDER/…` после
+  архивации плана и падает `FileNotFoundError`; `scripts/test-provider-docs.py` — 4 ошибки;
+  скрипт не подключён ни к одному `validate.sh`, поэтому был невидим CI. Соседи путь уже
+  обновили (`packages/task/tests/test_provider_command_parity.py:24` → `plans/archive/…`), то
+  есть это изолированный пропуск архивации. Ремонт — владельцу скрипта, не этому item'у
+  (D27/D31). Следствие: `docs/provider-support.md` доказанно закрытой НЕ объявляется.
+- **Ремонт предиката `_lint_write_site_codes_44`** (Major ложный ERROR + Minor ложный пропуск,
+  находки ревью P4.4) — в packet'е § 4.3, носитель назван.
 - **Ремонт гейта `verify_claim_verdicts.py`** (не проверяет символ после `::`) и **исправление
-  цитаты H06** — долг, ОБЯЗАН попасть в P4.3 packet поимённо.
-- **FP-1/FP-2/FP-3 и H15/H16** — обязаны попасть в P4.3 Owner packet поимённо с владельцами.
-- **G1** — единственный действующий Owner-гейт, принимается ВЛАДЕЛЬЦЕМ после packet'а P4.3.
-- **Строка доски P0** остаётся `🟡` при терминальных items — вне фазы P4, не тронута.
-- После P4.3: `close: task:plan-close 2026.07.24-AGENT-RELIABILITY P4` (implementation/low),
-  затем `audit-phase: task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия).
+  цитаты H06** — в packet'е § 4.3, носитель назван.
+- **FP-1/FP-2/FP-3 и H15/H16** — в packet'е §§ 4.5/4.6 с владельцами и названным недостающим
+  доказательством.
+- **Долги измерения D88 п. 6а–6г** (producer для F1, расширение знаменателя 5/31, канал для
+  F10, Codex-сторона) — packet § 4.1, носитель у всех один: будущий план.
+- **Строка доски P0** остаётся `🟡` при терминальных items — снимается `task:plan-close … P0`,
+  вне фазы P4.
+- **Архивация** — после терминального закрытия, независимо от go или hold по G1.
 
 **Sources of truth:**
 
-- `phases/P4.md` — `## Phase Status` (P4.1 `🟠`, P4.2 `🟢`, P4.3 `⬜`, P4.4 `🟠`, P4.5 `🟢`),
-  `### P4.2` Completion Notes/Known Deviations — полная запись закрытия и снятия ложного Blocked.
-- `plan.md` — §4 Status Board (`P4 2/5, 🟡 In progress`), §6 Update Log, §0 Meta `Version 1.21.5`.
-- `journal.jsonl` — последняя запись `item_id: "P4.2", command: "plan-close", result: "closed-green"`.
+- `phases/P4.md` — `## Phase Status` (P4.1 `🟠`, P4.2 `🟢`, P4.3 `🟢`, P4.4 `🟠`, P4.5 `🟢`),
+  `### P4.3` Completion Notes/Known Deviations — полная запись закрытия.
+- `artifacts/P4.3/owner-decision-packet.md` — терминальное измеренное свидетельство и вход G1.
+- `plan.md` — §4 Status Board (`P4 3/5, 🟡 In progress`), §6 Update Log, §0 Meta `Version 1.21.6`.
+- `journal.jsonl` — последняя запись `item_id: "P4.3", command: "plan-exec", result: "closed-green"`.
 - `research/10-p4-entry-gate-and-composition.md` — основание решений захода (D89–D93).
-- `workflows/wf-agent-reliability-p4.js` — carrier фазы (D93), `START_FROM = 'P4.3'`.
 
 **Open risks:**
 
-1. **Приёмка формально не выполнена и не будет выполнена этим планом** (D88/D89) — P4.3 обязан
-   объявить это прямо, слово GREEN не появляется ни в доках, ни в packet'е.
-2. **Гейт P4.4 не покрывает items этой фазы** (cutoff `2026-07-27` в будущем относительно даты
-   закрытия `2026-07-26`, D91) — печать кодов границ остаётся ручной дисциплиной; именно этот
-   разрыв и породил остановку на P4.2.
-3. **Севериность одного и того же структурного признака разошлась между ревьюерами прогона**
-   (Minor у P4.1 против Blocker у P4.2) — правка carrier'а снимает причину, но класс риска
-   «ревьюер судит то, что ещё не наступило» стоит проверить и на других carrier'ах плана.
-4. Долги без носителя (D92, полный список — предыдущие handoff'ы) не изменились.
+1. **Приёмка формально не выполнена и этим планом выполнена не будет** (D88/D89): `F1 = 0.96`
+   при `== 1.0`, `F10 = unknown`, layer-2 измерен на `5/31`. Packet объявляет это первым
+   предложением; риск — что при пересказе скоуп потеряется и packet прочитают как «плагин
+   надёжен».
+2. **`docs/provider-support.md` не подтверждена командой** — её чекер неисполним (см. выше).
+   До ремонта нельзя утверждать, что ВСЕ generated-страницы закрыты; закрыты те, что
+   перечислены в Scope Included P4.3 и доказаны выводом `--check`.
+3. **Гейт P4.4 не покрывает items этой фазы** (cutoff `2026-07-27` в будущем относительно даты
+   закрытия `2026-07-26`, D91) — печать кодов границ остаётся ручной дисциплиной; плюс сам
+   предикат несёт названный дефект точности.
+4. **`pre_mutation` P4.3 посчитан не строго до первой мутации** (раскрыто в Known Deviations 1);
+   значение проверяемо идентично досмутационному — спека item'а на момент замера была
+   байт-в-байт равна HEAD.
+5. Долги без носителя (D92) не изменились; полный список — packet § 4.
 
 **Workarounds / Deferred / Open questions:**
 
 - Посторонний untracked-каталог `.swissknife/` в рабочем дереве — не тронут этим заходом.
-- `docs-sync` follow-up (`packages/task/CLAUDE.md`) — долг P3.1, ближайший носитель — P4.3.
-- H15/H16 — недостающее доказательство названо поимённо в `hypothesis-verdicts.json`.
+- `docs-sync` follow-up (`packages/task/CLAUDE.md` про compiler/enforcement seam) — долг P3.1,
+  в `Files` P4.3 не входил; носитель — ближайший будущий item, трогающий этот файл (packet § 4.3).
+- Литерал `GREEN` в `docs/task/methodology.md` — имя вердикта аудита в enum `plan-audit`, а не
+  утверждение о приёмке; вместо правки канона добавлен разделяющий абзац.

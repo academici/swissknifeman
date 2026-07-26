@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.7 |
+| Version | 1.16.8 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P3.1 закрыт 🟠 Done with deviations: `unified-agent-trace-v1.md` заморожен v1, `analyst.trace`/`harness.provider_trace` реализованы, `task.journal` несёт аддитивный `trace_ref`, live F6-число деферится на P3.2/P3.3 записью D80; следующий — `phases/P3.md` P3.2) |
+| Last Updated | 2026-07-26 (P3.2 закрыт 🟢 Done: `analyst.metrics` — paired reliability metric arithmetic над committed `TraceRecord`s + frozen P0.3 bank, D30 proof-class enforcement, resume/fork dedup; F1/F7/F13/F14 re-expressed as deferred pairs, F6 record shape without a fabricated number, `findings/P3.2-metric-reconciliation.md`; следующий — `phases/P3.md` P3.3) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -252,7 +252,7 @@ audit/fix-loop без продукта, который план создан л�
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
-| P3 | Unified traces, evals и isolated self-host canary | 0/5 | 🟡 In progress |
+| P3 | Unified traces, evals и isolated self-host canary | 1/5 | 🟡 In progress |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -406,6 +406,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-close/Claude Sonnet 5/low | Фаза P2 закрыта 🟠 Done with deviations: все 11 items терминальны (6 🟢 / 5 🟠), `## Phase Handoff` перезаписан целиком (маркер «УСТАРЕЛ — реопенена D70» снят), агрегат Known Deviations сведён по всем items. Version 1.16.4 → 1.16.5. |
 | 2026-07-26 | plan-close/Claude Sonnet 5/low | Реконсиляция ЗАПИСИ фазы P2 (8 находок захода 2, статусы items не менялись) — см. `phases/P2.md` Phase Handoff/Completion Notes. Version 1.16.5 → 1.16.6. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.1 закрыт 🟠: новый контракт `unified-agent-trace-v1.md` + `analyst.trace`/`harness.provider_trace`/`task.journal` trace_ref, 55 тестов зелёных — F6-число деферится на P3.2/P3.3 (D80) — детали см. `phases/P3.md` P3.1 Completion Notes. Version 1.16.6 → 1.16.7. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.2 закрыт 🟢: `analyst.metrics` — paired metric arithmetic над committed trace+bank, 21 тестов зелёных — детали см. `phases/P3.md` P3.2 Completion Notes. Version 1.16.7 → 1.16.8. |
 
 ## 7. Contracts
 

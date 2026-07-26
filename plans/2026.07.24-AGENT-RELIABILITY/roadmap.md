@@ -752,28 +752,32 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 /task:plan-run 2026.07.24-AGENT-RELIABILITY P3.10
 ```
 
-### P3.11 — терминальный аудит фазы P3, заход 2/2
+### P3.11 — терминальный аудит фазы P3, заход 2/2 — ✅ ИСПОЛНЕН (`7601110f`, 2026-07-26)
 
 > Последний заход из бюджета `risk-review-loop-budget-v1.md`; третий = решение владельца или
 > INCIDENT, а не четвёртый фикс-луп. Вердикт выносит НЕ тот, кто ремонтировал.
+> **Результат:** вердикт фазы **ATTENTION**, item enum — **REMEDIATE с адресом ремонта ВНЕ петли
+> фазы**; **потолок аудитов фазы P3 исчерпан (2/2)**. Развилка layer-2 закрыта записью **D88**:
+> полная приёмка недостижима на этом инструментальном поколении (измерено), измерение 5/31
+> остаётся финальным layer-2 этого плана. Отчёт — `findings/P3.11-terminal-audit-2.md`.
 
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.11
+**Next:** close: task:plan-close 2026.07.24-AGENT-RELIABILITY P3
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | `frontier` |
-| Effort | `xhigh` |
-| Capabilities | `command.subagents` |
+| Model class | `implementation` |
+| Effort | `low` |
+| Capabilities | `—` |
 | Plan context | `same-session — item` |
-| Model | `opus`/`fable` (Claude) или `gpt-5.6-sol` (Codex) |
-| Thinking | `xhigh` |
-| Context | `NEW SESSION` |
+| Model | `sonnet` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `low` |
+| Context | `NEW SESSION — шаг-не-item` |
 
 ```
-/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.11
+/task:plan-close 2026.07.24-AGENT-RELIABILITY P3
 ```
 
-### P4.1 — code-grounded hypothesis verdict (гейтится GREEN'ом P3.5 — сейчас НЕ достигнут)
+### P4.1 — code-grounded hypothesis verdict (гейт «P4 не стартует до GREEN» НЕ удовлетворим на этом инструментальном поколении, D88 — вход переопределяет отдельный заход `plan-design` над P4)
 
 **Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.1
 

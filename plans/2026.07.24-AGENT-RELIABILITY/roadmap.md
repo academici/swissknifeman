@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.15.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; **фаза P2 реопенена D70** — carrier'ы ремонтных items P2.6–P2.9 добавлены, порядок строго последовательный)
+**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.16.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; **фаза P2 реопенена D70** — ремонтные items P2.6–P2.9; после разбора остановки P2.7 добавлены **P2.10/P2.11** (D75–D79), порядок строго последовательный: P2.6 → P2.7 → **P2.10 → P2.11** → P2.8 → P2.9)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -72,7 +72,9 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | P2.5 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: terminal immutable-bank proof after all P2 code |
 | P2.6 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): достройка compiler seam — producer/bundle-предикат/межсессионный cap/actor + versioned `task@0.6.0` publication; канон не трогает |
 | P2.7 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): единственная правка канона флота + исполняемый write-site; стартует ТОЛЬКО после терминального P2.6 (без producer'а нечего звать) |
-| P2.8 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): воспроизводимость доказательства 30/31; считается ПОСЛЕ появления предикатов P2.6/P2.7 |
+| P2.10 | solo | task:plan-run | implementation/high | — | Нельзя объединить (D78): правка `lib/**` + versioned publication `task@0.8.0`; отдельная поверхность мутации от P2.11 (иначе два бампа и два ритуала регенерации в одном заходе) |
+| P2.11 | solo | task:plan-run | implementation/high | — | Нельзя объединить (D75–D77/D79): единственная правка канона флота + гейт закрытия + публикация `plan-protocol@2.14.0`; стартует ТОЛЬКО после терминального P2.10 (без типизированного отказа граница падает `ValueError`) |
+| P2.8 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): воспроизводимость доказательства 30/31; считается ПОСЛЕ появления предикатов P2.6/P2.7 и истинного канона P2.11 |
 | P2.9 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить (реопен D70): реконсиляция записи фазы без мутаций кода; последний item реопена, отчитывается о фактах P2.6–P2.8 |
 | P3.1 | solo | task:plan-run | implementation/high | — | Нельзя объединить: cross-provider trace schema/version, Review=full |
 | P3.2 | solo | task:plan-run | implementation/high | — | Нельзя объединить: metric arithmetic consumes frozen trace |
@@ -91,7 +93,7 @@ Semantic `Next`/neutral Routing остаются SSOT; другой provider р�
 
 **Провайдер рендера по items.** P0.*–P2.5, P3.*, P4.* несут native
 Codex-проекции (написаны в Codex-авторские заходы). Ремонтные items реопена
-**P2.6–P2.9 несут Claude-форму** (`/task:…`) — acting provider этих items
+**P2.6–P2.11 несут Claude-форму** (`/task:…`) — acting provider этих items
 Claude, а payload между провайдерами не меняется по построению (D12: neutral
 Routing — SSOT, native selectors живут только в carrier'ах).
 
@@ -440,6 +442,61 @@ PRECONDITION до первой записи: P2.6 закоммичен и тер
 ПУБЛИКАЦИЯ (порядок дословно как в P2.2): сначала версии — plan-protocol → 2.13.0, skiller package + units {core,general} → 0.6.0, task plugin/routing → 0.7.0; затем полная регенерация обеих публикаций, оба вторых прогона обязаны быть no-op; repository-bootstrap@0.2.0 и его 27 проекций байт-идентичны.
 НЕ трогать: packages/task/lib/** (владелец — P2.6; расхождение → D#-запись и реопен P2.6, не тихая правка), tiered-portability lint и D69, remediation-map.json; assert_generated_scope.py не запускать, base-sha не создавать.
 SELF-CONFORMANCE обязательна: прогнать новый write-site на минимум трёх реальных items ЭТОГО плана (один закрытый 🟢, один закрытый 🟠, текущий) и вписать вердикт каждого с точным кодом отказа. Красный вердикт на закрытом 🟠 — ПРАВИЛЬНЫЙ исход, а не повод ослабить предикат. Если обязательный шаг реально ломает поток закрытия — стоп и эскалация D#-записью; тихая замена обязательности на условность запрещена.
+```
+
+### P2.10 — типизированный отказ компилятора и легаси-форма §3 (D78)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.10
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Компилятор перестаёт ронять `ValueError` и подставлять пустой `required`: закрытый набор заголовков §3, имя модели → класс по committed-карте, типизированный отказ, probe охвата, `task@0.8.0` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.10
+
+РЕМОНТ D78 (разбор остановки P2.7). Читай ПЕРВЫМИ: findings/14-write-site-boundary-measurement.md целиком (М4/М4.1 — traceback и охват 11/14) и research/08-pre-final-boundary-semantics.md §4/§5/§7, затем остальные Required Reads P2.10 в объявленном порядке.
+PRECONDITION до первой записи: P2.6 и P2.7 закоммичены и терминальны; `git status --porcelain` пуст по packages/task/**; BASELINE охвата снят и записан ДО правок.
+СУТЬ: (1) `_find_routing_row` читает колонку маршрута по ЗАКРЫТОМУ литеральному набору заголовков (`Model class/effort` + легаси `Model/effort`, `Model/Effort`) — без фаззи-матчинга. (2) Неразбираемая ячейка → `TaskContractBuildError` с item'ом, полем и фактическим значением; пустая пара в контракт не попадает НИКОГДА. (3) Имя модели (`opus/high`) → класс ТОЛЬКО по committed-карте `command-routing.json::mappings.*.class_selectors` через существующий `command_catalog.load_routing_metadata`; собственный словарь имён ЗАПРЕЩЁН (второй носитель). (4) `_rank` перестаёт быть источником `ValueError` по обеим осям и обеим сторонам маршрута — проверка принадлежности лестнице ДО предиката; `try/except` вокруг `_rank` как форма ремонта ЗАПРЕЩЁН (маскировка, не типизация). (5) Probe `artifacts/P2.10/routing_form_coverage.py` печатает исход по каждому плану корня и выходит 1 на любом `EXC`.
+НЕ трогать: packages/task/commands/** и канон plan-protocol (владелец — P2.11; расхождение → D#-запись, не тихая правка), замороженную схему task-contract-v1 и лестницы P0.2, содержимое class_selectors, §3 Routing чужих планов корня (FOREMAN, plans/archive/** — чужая поверхность И2: компилятор подстраивается под §9, не планы под компилятор), tiered-portability lint и D69, remediation-map.json; assert_generated_scope.py не запускать, base-sha не создавать.
+КРАСНОЕ ОСТАЁТСЯ КРАСНЫМ: план с реально неоднозначной §3 (прозаический хвост ячейки, «A ИЛИ B», нет таблицы) обязан получить ТИПИЗИРОВАННЫЙ ОТКАЗ — §9 предписывает СТОП на неоднозначном Routing. Довести охват до 14/14 подгонкой эвристик — провал item'а. Каждый новый негативный тест обязан краснеть на СТАРОМ коде (`git show <до>:<path>`), иначе он ничего не защищает (D79).
+ПУБЛИКАЦИЯ (порядок дословно как в P2.6): сначала `plugin_version` → 0.8.0 в обоих plugin.json и command-routing.json; затем полная регенерация, второй прогон `--check` обязан быть no-op; claude-command-golden/plugin.json синхронизируется вручную.
+```
+
+### P2.11 — замкнутая граница pre-final и истинный канон 2.14.0 (D75–D77, D79)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.11
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Гейт закрытия падает закрыто на любом коде кроме `allow`; маршрут ИСПОЛНИТЕЛЯ на pre-final; граница пересекается на штатном пути exec'а; тест на различающий предикат; `plan-protocol@2.14.0`/`skiller@0.7.0`/`task@0.9.0` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.11
+
+РЕМОНТ D75–D77/D79 (разбор остановки P2.7). Читай ПЕРВЫМИ: research/08-pre-final-boundary-semantics.md §§1–5 и §7, findings/14-write-site-boundary-measurement.md целиком, D75–D79 в plan.md §5, затем остальные Required Reads P2.11.
+PRECONDITION до первой записи: P2.10 закоммичен и терминален; `PYTHONPATH=packages/task/lib python3 plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.10/routing_form_coverage.py --plans-root plans` завершается exit 0; `git status --porcelain` пуст по packages/task/** и packages/skiller/**.
+СУТЬ: (1) plan-close.md шаг 4 — гейт РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` получает строку в таблице код→действие с расшифровкой контракт-SSOT («сессия заблокирована, объявлять сдачу нечего» → item НЕ закрывается). (2) Маршрут на pre-final — маршрут ИСПОЛНИТЕЛЯ item'а по лестнице D75 (Completion Notes → сверка с journal `actor` через class_selectors → неразрешимо/расхождение = СТОП с названным ПРОХОДОМ); подстановка пина команды, `unknown` и «продолжай как раньше» ЗАПРЕЩЕНЫ. (3) plan-exec.md ШАГ 7 получает тот же исполняемый вызов (D77б — на штатном пути граница сегодня не пересекается ни разу); ШАГ 2 НЕ ТРОГАТЬ. (4) plan-run.md — синхронизация формулировки; plan-audit.md — чек-строка «оба кода напечатаны, код ≠ allow при 🟢 = находка». (5) В тексте ОБОИХ чекпоинтов названа граница предиката (D77а): pre_final утверждает форму спеки, а не качество исполнения. (6) §13 обеих языковых версий под починенный факт, plan-protocol → 2.14.0.
+ТЕСТ (D79): каждый новый ассершен обязан краснеть на СТАРОМ тексте команды (`git show d11c3b74:packages/task/commands/plan-close.md`); зелёный и до правки ассершен НЕ добавляется. Минимум: негативный (ни одна команда не несёт `("allow", "n/a")` и синонимов), позитивный (обе несут `== "allow"`-гейт и строку `n/a`), канонический (§13 в ОБОИХ языках).
+НЕ трогать: packages/task/lib/** (владелец — P2.10; расхождение → D#-запись и реопен P2.10, не тихая правка), plan-exec.md ШАГ 2 (pre-mutation работает честно), замороженную схему/лестницы P0.2, tiered-portability lint и D69, remediation-map.json, статус P2.7 (уже переклассифицирован D75–D79); assert_generated_scope.py не запускать, base-sha не создавать.
+SELF-CONFORMANCE обязательна: прогнать новую границу на ≥3 реальных items ЭТОГО плана (🟢, 🟠, текущий) И ≥1 легаси-плане корня; вывод каждого — дословно в Completion Notes. Типизированный отказ на легаси-плане — ПРАВИЛЬНЫЙ исход, не повод ослабить гейт. Если честный гейт ломает поток закрытия на большинстве реальных items — стоп и эскалация D#-записью; тихая замена обязательности на условность запрещена.
+ПУБЛИКАЦИЯ (порядок дословно как в P2.7): plan-protocol → 2.14.0, skiller package + units {core,general} → 0.7.0, task plugin/routing → 0.9.0; затем полная регенерация обеих публикаций, оба вторых прогона обязаны быть no-op; repository-bootstrap и skm байт-идентичны.
 ```
 
 ### P2.8 — воспроизводимое доказательство P2.5 (реопен D70)

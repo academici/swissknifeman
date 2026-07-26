@@ -1,19 +1,19 @@
 # Индекс — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-25 (plan.md v1.10.0; bounded A3 repair под Owner authority E, D50–D55; `G-EXEC` выдан для self-host, за владельцем только G1)
+**Обновлён:** 2026-07-26 (plan.md v1.16.0; фаза P2 реопенена D70 — ремонт P2.6–P2.9; разбор остановки P2.7 добавил D75–D79 и items P2.10/P2.11)
 
 ## Карта директорий
 
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | master plan, routing, decisions, contracts и metrics |
-| `phases/` | 5 исполнимых фаз, 22 items (P1 несёт 5: порядок P1.1→P1.2→P1.3→P1.5→P1.4) |
+| `phases/` | 5 исполнимых фаз, 28 items (P1 несёт 5: порядок P1.1→P1.2→P1.3→P1.5→P1.4; P2 несёт 11: порядок P2.1–P2.7 → P2.10 → P2.11 → P2.8 → P2.9) |
 | `handoff.md` | rolling exact-next carrier |
 | `journal.jsonl` | append-only plan operations |
 | `brief/` | исходный запрос и границы (00 бриф · 01 refinements, включая Owner options B, authority D и **authority E** · 02 historical authority C) |
 | `findings/` | первичная evidence и вердикты аудитов без проектных выводов |
 | `research/` | root-cause, target operating model и experiment design |
-| `roadmap.md` | canonical execution table + 22 native Codex recovery carriers |
+| `roadmap.md` | canonical execution table + native Codex recovery carriers (P2.6–P2.11 — Claude-форма) |
 | `artifacts/source-evidence/` | immutable committed bundle (по D30 не меняется) |
 
 ## Evidence routing
@@ -35,7 +35,9 @@
 | `findings/11-design-audit-owner-b-a2.md` | RED A2 (option B, committed `916acdb5`) → D49; 2 Blocker + 1 Major вне скоупа authority D — открытый долг |
 | `findings/12-effective-collision-remeasure.md` | D40–D44, P1.1 before-state и P1.5 scope |
 | `findings/13-design-audit-a3.md` | RED A3 (6-й заход) → bounded repair под authority E (D50–D55) |
+| `findings/14-write-site-boundary-measurement.md` | М1–М6: репро `("allow","n/a")`, охват 11/14 планов корня, непересечённая граница pre-final, слепой литеральный тест → D75–D79, items P2.10/P2.11 |
 | `research/01-root-cause-analysis.md` | P0/P2 |
 | `research/02-target-operating-model.md` | P0.3, P1, P2 |
 | `research/03-metrics-and-experiment.md` | P0.3, P3 |
 | `research/04-p1.4-fixture-composition.md` | D51/D53, состав фикстуры P1.4 и негативный D42-прогон |
+| `research/08-pre-final-boundary-semantics.md` | семантика границы pre-final, отклонённые варианты, раскладка P2.10/P2.11, pre-mortem → D75–D79 |

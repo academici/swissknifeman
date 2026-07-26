@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.13.0 |
+| Version | 1.13.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P1.4 доведён до DoR: D62 — терминальный 🟠 P1.5 принят как вход + компенсирующий post-remediation перезамер; D63 — новый гейт committed-консистентности после измеренного расхождения канона class B) |
+| Last Updated | 2026-07-26 (P1.4 закрыт 🟢: effective-runtime conformance gate — фаза P1 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -244,7 +244,7 @@ audit/fix-loop без продукта, который план создан л�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
-| P1 | Единственный semantic source и runtime uniqueness | 2/5 | 🟡 In progress |
+| P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 0/5 | ⬜ Not started |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
@@ -352,6 +352,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | plan-run/Claude Sonnet 5/high | P1.3 закрыт 🟢: task@0.3.1/harness 0.3.0 projection перегенерирована, шесть root task-коллизий удалены — детали см. phases/P1.md P1.3 Completion Notes. Version 1.12.7 → 1.12.8. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P1.5 закрыт 🟠: четыре root-дубля `architect` удалены по ownership, `workflow-craft` class-B проекция (repository-bootstrap 0.2.0/skiller 0.4.2), root-set completeness + D42 detector — детали см. phases/P1.md P1.5 Completion Notes/Known Deviations. Version 1.12.8 → 1.12.9. |
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | P1.4 доведён до DoR: D62 — терминальный 🟠 P1.5 принят как вход + компенсирующий post-remediation перезамер `effective-carrier-set.json`; D63 — измеренное расхождение committed-канона class B → новый гейт committed-консистентности (0b); `roadmap.md` carrier P1.4 синхронизирован. Version 1.12.9 → 1.13.0. |
+| 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P1.4 закрыт 🟢: cold effective-runtime conformance gate (`skiller doctor --effective-runtime`), D62-сверка 0 unowned-or-unexplained — фаза P1 терминальна. Детали — phases/P1.md P1.4 Completion Notes. Version 1.13.0 → 1.13.1. |
 
 ## 7. Contracts
 

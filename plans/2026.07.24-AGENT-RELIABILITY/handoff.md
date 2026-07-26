@@ -1,20 +1,28 @@
-# HANDOFF — 2026-07-26 — after P4.3
+# HANDOFF — 2026-07-26 — after P4
 
-**Next:** close: task:plan-close 2026.07.24-AGENT-RELIABILITY P4
+**Next:** audit-phase: task:plan-audit 2026.07.24-AGENT-RELIABILITY P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | `implementation` |
-| Effort | `low` |
+| Model class | `frontier` |
+| Effort | `xhigh` |
 | Capabilities | — |
-| Model | `sonnet` |
-| Thinking | `low` |
+| Model | `opus` |
+| Thinking | `xhigh` |
 | Context | `НОВАЯ сессия` |
-| Суть | Все пять items фазы P4 терминальны (2 🟢 / 3 🟠). Закрыть фазу по git-фактам: таблицы, `## Phase Handoff`, docs-sync решение, lint. Слово GREEN о приёмке не появляется — приёмка формально НЕ выполнена (D88/D89). Затем терминальный `task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия) |
+| Суть | Фаза P4 закрыта `🟠 Done with deviations` (2/5 🟢). Терминальный adversarial-аудит закрытой фазы: сверить каждый 🟢/🟠 с кодом и git-фактами, проверить no-op/scope drift/handoff, отдельно — снятие ложного `🔴 Blocked` на P4.2 и правку носителя (carrier). Слово GREEN о приёмке не появляется: приёмка формально НЕ выполнена (D88/D89) |
 
 ```
-task:plan-close 2026.07.24-AGENT-RELIABILITY P4
+task:plan-audit 2026.07.24-AGENT-RELIABILITY P4
 ```
+
+**Решение владельца (G1) — не исполняется агентом.** `artifacts/P4.3/owner-decision-packet.md`
+§ 6: рекомендация **HOLD** на любую запись наружу (push ветки `codex/provider-project-sync`,
+тег/релиз, раскатка на флот и 17 подключённых проектов, consumer-репозитории, наружные части
+`plans/2026.07.18-FOREMAN`). Основания: приёмка не выполнена (F1 = 0.96, F10 = unknown),
+доказательство self-host'ное (одно репо, один провайдер, 5/31 кейсов), новый гейт
+`_lint_write_site_codes_44` несёт названный дефект точности. Что изменило бы рекомендацию —
+названо фальсифицируемо там же (а–г).
 
 **Done:**
 

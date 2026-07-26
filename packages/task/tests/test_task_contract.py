@@ -349,5 +349,33 @@ class EvaluateTests(unittest.TestCase):
         self.assertEqual(result["pre_final"], "n/a")
 
 
+class EvaluateFindingHookTests(unittest.TestCase):
+    """`evaluate_finding` (P2.3) — the ONE new call-site this compiler gains for
+    `task.review_policy`, lazily imported so the predicate tests above never need
+    it importable. Behavioural coverage of the policy itself lives in
+    `test_review_policy.py`; this class only proves the hook actually delegates."""
+
+    def test_delegates_to_review_policy_review_transition(self):
+        finding = {
+            "type": "product", "severity": "major", "file": "f.py",
+            "rule_or_contract_locus": "rule:1", "defect_class": "bug",
+        }
+        result = task_contract.evaluate_finding("VERIFYING", finding, profile="self-host")
+        self.assertEqual(result["decision"], "retry-fix")
+        self.assertEqual(result["to_state"], "FIXING")
+
+    def test_shared_budget_across_calls_reaches_the_cap(self):
+        from task.review_policy import LoopBudget
+        budget = LoopBudget()
+        finding = {
+            "type": "product", "severity": "major", "file": "f.py",
+            "rule_or_contract_locus": "rule:1", "defect_class": "bug",
+        }
+        decisions = [task_contract.evaluate_finding("VERIFYING", finding, budget=budget,
+                                                     profile="owner-gated")["decision"]
+                    for _ in range(3)]
+        self.assertEqual(decisions, ["retry-fix", "retry-fix", "incident"])
+
+
 if __name__ == "__main__":
     unittest.main()

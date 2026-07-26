@@ -278,6 +278,27 @@ def main(argv=None) -> int:
     return 0 if result["pre_mutation"] == "allow" else 1
 
 
+
+# --------------------------------------------------------------------------
+# Review/loop-budget policy hook (P2.3) — the one extension point
+# `root/contracts/risk-review-loop-budget-v1.md`'s Contribution gate names:
+# this compiler owns the pre-mutation/pre-final boundaries above and nothing
+# about what happens to an item BETWEEN them when a typed finding is raised
+# against it. `task.review_policy` owns that lifecycle; this function is the
+# only place this module knows the module exists — a lazy import, so
+# `pre_mutation`/`pre_final`/`evaluate` above stay untouched and this
+# compiler's own test suite never needs `review_policy` importable.
+# --------------------------------------------------------------------------
+
+def evaluate_finding(state: str, finding: dict, *, budget=None, profile: str) -> dict:
+    """Delegates one `typed-finding` event to `task.review_policy.review_transition`
+    (P2.3). `budget` defaults to a fresh `LoopBudget` when the caller tracks no
+    cross-finding state of its own; passing the same `LoopBudget` across calls is
+    what lets `same_finding_max` count occurrences across an item's fix rounds."""
+    from task.review_policy import LoopBudget, review_transition
+    return review_transition(state, finding, budget=budget or LoopBudget(), profile=profile)
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(main())

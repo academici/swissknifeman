@@ -1,0 +1,374 @@
+"""Tests for `task.review_policy` — the P2.3 typed finding/review enforcement and
+loop breaker over `root/contracts/risk-review-loop-budget-v1.md` (P2.1, frozen).
+
+Covers the reopen predicate, seam-derived finding identity (split-ban), the
+authority-profile-parameterized cap subject, the `same_finding_max = 2` loop budget
+across every state the frozen machine declares a `typed-finding`/`same-finding-third`
+transition for (`execution-state-machine-v1.md`, `state-transition-cases.json`), and
+the historical `five-audit-loop` corpus scenario end to end
+(`artifacts/source-evidence/precomputed/corpus.json`).
+
+Run: cd packages/task && python3 -m unittest discover -s tests
+"""
+import unittest
+
+import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
+from task import review_policy  # noqa: E402
+from task.review_policy import (  # noqa: E402
+    AUTHORITY_PROFILES, CAP_SUBJECT_BY_PROFILE, SAME_FINDING_MAX, LoopBudget,
+    ReviewPolicyError, cap_subject, finding_id, identity_of, reopens_product,
+    review_transition, same_finding_third, validation_cadence,
+)
+
+
+def _finding(**overrides):
+    base = {
+        "type": "process",
+        "severity": "minor",
+        "file": "packages/task/lib/task/plan_lint.py",
+        "rule_or_contract_locus": "plan-portability-v1.md §Classification rule",
+        "defect_class": "tier-misclassification",
+        "invalidates_acceptance": False,
+    }
+    base.update(overrides)
+    return base
+
+
+class FindingIdentityTests(unittest.TestCase):
+    def test_same_seam_gives_same_id(self):
+        a = finding_id(file="f.py", rule_or_contract_locus="rule:1", defect_class="bug")
+        b = finding_id(file="f.py", rule_or_contract_locus="rule:1", defect_class="bug")
+        self.assertEqual(a, b)
+
+    def test_different_seam_gives_different_id(self):
+        a = finding_id(file="f.py", rule_or_contract_locus="rule:1", defect_class="bug")
+        b = finding_id(file="g.py", rule_or_contract_locus="rule:1", defect_class="bug")
+        self.assertNotEqual(a, b)
+
+    def test_split_ban_rewording_does_not_change_identity(self):
+        """Splitting one seam into differently-worded reports must not create
+        several identities — the id never reads report wording at all."""
+        seam = dict(file="f.py", rule_or_contract_locus="rule:1", defect_class="bug")
+        first = finding_id(**seam)
+        second = finding_id(**seam)  # a second, differently-phrased report of the same seam
+        self.assertEqual(first, second)
+
+    def test_empty_seam_field_is_unstable(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            finding_id(file="", rule_or_contract_locus="rule:1", defect_class="bug")
+        self.assertEqual(ctx.exception.code, "FINDING_IDENTITY_UNSTABLE")
+
+    def test_identity_of_uses_reopen_of_as_the_stable_pair(self):
+        original = _finding(finding_id="abc123")
+        reopened = _finding(reopen_of="abc123")
+        self.assertEqual(identity_of(original), "abc123")
+        self.assertEqual(identity_of(reopened), "abc123")
+
+    def test_identity_of_derives_when_no_explicit_id(self):
+        f = _finding()
+        expected = finding_id(file=f["file"], rule_or_contract_locus=f["rule_or_contract_locus"],
+                              defect_class=f["defect_class"])
+        self.assertEqual(identity_of(f), expected)
+
+
+class ReopensProductPredicateTests(unittest.TestCase):
+    def test_product_type_reopens(self):
+        self.assertTrue(reopens_product(_finding(type="product", severity="nit")))
+
+    def test_security_blocker_reopens(self):
+        self.assertTrue(reopens_product(_finding(type="process", severity="blocker")))
+
+    def test_evidence_invalidating_acceptance_reopens(self):
+        self.assertTrue(reopens_product(
+            _finding(type="evidence", severity="minor", invalidates_acceptance=True)))
+
+    def test_plain_evidence_does_not_reopen(self):
+        self.assertFalse(reopens_product(
+            _finding(type="evidence", severity="minor", invalidates_acceptance=False)))
+
+    def test_plain_process_nit_does_not_reopen(self):
+        self.assertFalse(reopens_product(_finding(type="process", severity="nit")))
+
+    def test_unknown_type_is_unstable(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            reopens_product(_finding(type="cosmetic"))
+        self.assertEqual(ctx.exception.code, "FINDING_IDENTITY_UNSTABLE")
+
+    def test_unknown_severity_is_unstable(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            reopens_product(_finding(severity="urgent"))
+        self.assertEqual(ctx.exception.code, "FINDING_IDENTITY_UNSTABLE")
+
+
+class CapSubjectTests(unittest.TestCase):
+    def test_owner_gated_subject_is_owner(self):
+        self.assertEqual(cap_subject("owner-gated"), "owner")
+
+    def test_self_host_subject_is_agent(self):
+        self.assertEqual(cap_subject("self-host"), "agent")
+
+    def test_all_declared_profiles_resolve(self):
+        for profile in AUTHORITY_PROFILES:
+            self.assertIn(cap_subject(profile), CAP_SUBJECT_BY_PROFILE.values())
+
+    def test_undeclared_profile_fails_closed(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            cap_subject("owner-decides-by-vibe")
+        self.assertEqual(ctx.exception.code, "AUTHORITY_PROFILE_UNDECLARED")
+
+
+class LoopBudgetTests(unittest.TestCase):
+    def test_occurrences_start_at_zero(self):
+        budget = LoopBudget()
+        self.assertEqual(budget.occurrences(_finding()), 0)
+
+    def test_record_fix_round_increments_per_identity(self):
+        budget = LoopBudget()
+        f = _finding(type="product")
+        self.assertEqual(budget.record_fix_round(f), 1)
+        self.assertEqual(budget.record_fix_round(f), 2)
+        self.assertEqual(budget.occurrences(f), 2)
+
+    def test_different_identities_track_independently(self):
+        budget = LoopBudget()
+        a = _finding(type="product", file="a.py")
+        b = _finding(type="product", file="b.py")
+        budget.record_fix_round(a)
+        self.assertEqual(budget.occurrences(a), 1)
+        self.assertEqual(budget.occurrences(b), 0)
+
+    def test_reopen_of_pair_counts_as_one_identity(self):
+        budget = LoopBudget()
+        first = _finding(type="product", finding_id="stable-1")
+        second = _finding(type="product", reopen_of="stable-1")
+        budget.record_fix_round(first)
+        budget.record_fix_round(second)
+        self.assertEqual(budget.occurrences(first), 2)
+        self.assertEqual(budget.occurrences(second), 2)
+
+
+class ReviewTransitionVerifyingTests(unittest.TestCase):
+    """`state-transition-cases.json` cells for `state=VERIFYING event=typed-finding`
+    and `same-finding-third` — the load-bearing bounded-repair path."""
+
+    def test_non_reopening_finding_stays_in_verifying(self):
+        result = review_transition("VERIFYING", _finding(type="process"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "VERIFYING")
+        self.assertFalse(result["reopened"])
+
+    def test_first_reopening_finding_enters_fixing(self):
+        result = review_transition("VERIFYING", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "retry-fix")
+        self.assertEqual(result["to_state"], "FIXING")
+        self.assertEqual(result["occurrence"], 1)
+
+    def test_second_reopening_finding_still_retries(self):
+        budget = LoopBudget()
+        f = _finding(type="product", finding_id="dup-1")
+        review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        result = review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        self.assertEqual(result["decision"], "retry-fix")
+        self.assertEqual(result["occurrence"], 2)
+
+    def test_third_occurrence_of_same_finding_is_incident(self):
+        budget = LoopBudget()
+        f = _finding(type="product", finding_id="dup-2")
+        review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        result = review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        self.assertEqual(result["decision"], "incident")
+        self.assertEqual(result["to_state"], "INCIDENT")
+        self.assertEqual(result["journal"], "blocked")
+        self.assertEqual(result["occurrence"], SAME_FINDING_MAX + 1)
+
+    def test_third_occurrence_cap_subject_is_profile_parameterized(self):
+        budget_owner = LoopBudget()
+        budget_self = LoopBudget()
+        f = _finding(type="product", finding_id="dup-3")
+        for _ in range(SAME_FINDING_MAX):
+            review_transition("VERIFYING", f, budget=budget_owner, profile="owner-gated")
+            review_transition("VERIFYING", f, budget=budget_self, profile="self-host")
+        owner_result = review_transition("VERIFYING", f, budget=budget_owner, profile="owner-gated")
+        self_result = review_transition("VERIFYING", f, budget=budget_self, profile="self-host")
+        self.assertEqual(owner_result["cap_subject"], "owner")
+        self.assertEqual(self_result["cap_subject"], "agent")
+
+    def test_third_occurrence_without_declared_profile_fails_closed(self):
+        budget = LoopBudget()
+        f = _finding(type="product", finding_id="dup-4")
+        for _ in range(SAME_FINDING_MAX):
+            review_transition("VERIFYING", f, budget=budget, profile="self-host")
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            review_transition("VERIFYING", f, budget=budget, profile="undeclared")
+        self.assertEqual(ctx.exception.code, "AUTHORITY_PROFILE_UNDECLARED")
+
+    def test_reopen_of_pair_counts_toward_the_same_cap(self):
+        budget = LoopBudget()
+        first = _finding(type="product", finding_id="seam-x")
+        second = _finding(type="product", reopen_of="seam-x")
+        third = _finding(type="product", reopen_of="seam-x")
+        review_transition("VERIFYING", first, budget=budget, profile="self-host")
+        review_transition("VERIFYING", second, budget=budget, profile="self-host")
+        result = review_transition("VERIFYING", third, budget=budget, profile="self-host")
+        self.assertEqual(result["decision"], "incident")
+
+
+class ReviewTransitionOtherStatesTests(unittest.TestCase):
+    def test_ready_reopening_finding_escalates_to_design(self):
+        result = review_transition("READY", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "escalate-design")
+        self.assertEqual(result["to_state"], "ESCALATED")
+        self.assertEqual(result["journal"], "escalated")
+
+    def test_ready_non_reopening_finding_is_a_no_op(self):
+        result = review_transition("READY", _finding(type="process"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "READY")
+        self.assertEqual(result["journal"], "no-op")
+
+    def test_done_reopening_finding_escalates_to_design(self):
+        result = review_transition("DONE", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "escalate-design")
+        self.assertEqual(result["to_state"], "ESCALATED")
+
+    def test_done_non_reopening_finding_is_a_no_op(self):
+        result = review_transition("DONE", _finding(type="evidence"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "DONE")
+
+    def test_executing_absorbs_any_finding_inline(self):
+        for finding in (_finding(type="product"), _finding(type="process")):
+            result = review_transition("EXECUTING", finding, budget=LoopBudget(),
+                                       profile="self-host")
+            self.assertEqual(result["decision"], "continue-next")
+            self.assertEqual(result["to_state"], "EXECUTING")
+
+    def test_fixing_absorbs_any_finding_inline(self):
+        result = review_transition("FIXING", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "FIXING")
+
+    def test_incident_records_further_findings_without_a_second_incident(self):
+        result = review_transition("INCIDENT", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "INCIDENT")
+
+    def test_reopen_evaluated_outside_a_guarded_state_is_refused(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            review_transition("OWNER_BOUNDARY", _finding(type="product"),
+                              budget=LoopBudget(), profile="self-host")
+        self.assertEqual(ctx.exception.code, "REOPEN_WITHOUT_PRODUCT_FINDING")
+
+
+class SameFindingThirdEventTests(unittest.TestCase):
+    """`state-transition-cases.json` cells for `event = same-finding-third`."""
+
+    def test_incident_from_every_open_loop_state(self):
+        for state in ("EXECUTING", "VERIFYING", "FIXING", "DONE", "OWNER_BOUNDARY", "ESCALATED"):
+            result = same_finding_third(state, _finding(type="product"),
+                                        budget=LoopBudget(), profile="self-host")
+            self.assertEqual(result["decision"], "incident")
+            self.assertEqual(result["to_state"], "INCIDENT")
+            self.assertEqual(result["journal"], "blocked")
+
+    def test_incident_state_self_loops_without_a_second_incident(self):
+        result = same_finding_third("INCIDENT", _finding(type="product"),
+                                    budget=LoopBudget(), profile="self-host")
+        self.assertEqual(result["decision"], "continue-next")
+        self.assertEqual(result["to_state"], "INCIDENT")
+
+    def test_ready_and_skipped_carry_no_fix_round_to_close(self):
+        for state in ("READY", "SKIPPED"):
+            with self.assertRaises(ReviewPolicyError) as ctx:
+                same_finding_third(state, _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+            self.assertEqual(ctx.exception.code, "REOPEN_WITHOUT_PRODUCT_FINDING")
+
+    def test_cap_subject_is_profile_parameterized_here_too(self):
+        owner = same_finding_third("VERIFYING", _finding(type="product"),
+                                   budget=LoopBudget(), profile="owner-gated")
+        agent = same_finding_third("VERIFYING", _finding(type="product"),
+                                   budget=LoopBudget(), profile="self-host")
+        self.assertEqual(owner["cap_subject"], "owner")
+        self.assertEqual(agent["cap_subject"], "agent")
+
+
+class ValidationCadenceTests(unittest.TestCase):
+    def test_terminal_item_gets_full_validation(self):
+        self.assertEqual(validation_cadence(is_phase_terminal_item=True), "full")
+
+    def test_non_terminal_item_gets_targeted_validation(self):
+        self.assertEqual(validation_cadence(is_phase_terminal_item=False), "targeted")
+
+
+class FiveAuditLoopHistoricalScenarioTests(unittest.TestCase):
+    """Machine form of the corpus case `five-audit-loop`
+    (`artifacts/source-evidence/precomputed/corpus.json`): a product-blocking
+    finding raised repeatedly past the declared cap must become an INCIDENT
+    routed to a bounded next action instead of a fourth audit round — the exact
+    field failure this plan exists to enforce as a runtime transition."""
+
+    def test_third_audit_round_of_the_same_finding_becomes_incident_not_a_fourth_loop(self):
+        budget = LoopBudget()
+        recurring_finding = _finding(
+            type="product", severity="blocker",
+            file="packages/task/commands/plan-audit.md",
+            rule_or_contract_locus="plan-audit.md:45-58 audit cap",
+            defect_class="premature-stop-recurrence",
+        )
+        outcomes = []
+        for _round in range(3):
+            outcomes.append(review_transition("VERIFYING", recurring_finding,
+                                               budget=budget, profile="self-host"))
+        first, second, third = outcomes
+        self.assertEqual(first["decision"], "retry-fix")
+        self.assertEqual(second["decision"], "retry-fix")
+        self.assertEqual(third["decision"], "incident")
+        self.assertEqual(third["to_state"], "INCIDENT")
+        self.assertEqual(third["cap_subject"], "agent")
+        # A fifth audit attempt over the same finding stays inside the incident —
+        # it never reopens a fourth independent fix loop.
+        fourth = same_finding_third("INCIDENT", recurring_finding, budget=budget,
+                                    profile="self-host")
+        self.assertEqual(fourth["decision"], "continue-next")
+        self.assertEqual(fourth["to_state"], "INCIDENT")
+
+    def test_cosmetically_reworded_recurrence_still_trips_the_cap(self):
+        """Split-ban in situ: re-filing the same seam under different wording must
+        not reset the counter — the whole reason `finding_id` reads the seam."""
+        budget = LoopBudget()
+        seam = dict(file="packages/task/commands/plan-audit.md",
+                   rule_or_contract_locus="plan-audit.md:45-58 audit cap",
+                   defect_class="premature-stop-recurrence")
+        wordings = ("stops before evidence is complete", "returns early on partial evidence",
+                   "exits the loop before the cap")
+        outcomes = [review_transition("VERIFYING",
+                                      _finding(type="product", **seam, note=wording),
+                                      budget=budget, profile="owner-gated")
+                   for wording in wordings]
+        self.assertEqual([o["decision"] for o in outcomes],
+                         ["retry-fix", "retry-fix", "incident"])
+        self.assertEqual(outcomes[-1]["cap_subject"], "owner")
+
+
+class ReviewPolicyErrorMessageTests(unittest.TestCase):
+    def test_error_message_carries_its_code(self):
+        try:
+            cap_subject("nonsense")
+        except ReviewPolicyError as error:
+            self.assertIn("AUTHORITY_PROFILE_UNDECLARED", str(error))
+        else:
+            self.fail("expected ReviewPolicyError")
+
+
+if __name__ == "__main__":
+    unittest.main()

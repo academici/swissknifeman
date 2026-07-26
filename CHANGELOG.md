@@ -4,6 +4,18 @@
 
 ### Added
 
+- **task — typed finding/review enforcement and loop breaker (P2.3,
+  `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/review_policy.py`
+  implements `risk-review-loop-budget-v1.md` as executable policy: seam-derived
+  `finding_id` (file/rule-locus/defect-class, split-ban — cosmetic re-wording never
+  resets the loop-budget cap), the `reopens_product` predicate (product-typed, security
+  blocker, or evidence invalidating acceptance), and `same_finding_max = 2` — the third
+  occurrence of one stable identity becomes an `INCIDENT` with no inline repair, its cap
+  subject parameterized by authority profile (`owner-gated` → owner, `self-host` → agent,
+  never hardcoded). `task_contract.py` (P2.2) gains one lazy-imported hook,
+  `evaluate_finding`, so the independently-green compiler's own tests never need the new
+  module importable. Task plugin/routing bumps `0.4.0` → `0.5.0`; full adapter/lock/golden
+  regeneration proven no-op on the second check.
 - **task — Task Contract v1 compiler and tiered-portability lint (P2.2,
   `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/task_contract.py`: the
   single checked seam owning content-hash recomputation, the precedence/conflict-resolution

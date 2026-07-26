@@ -97,10 +97,18 @@ def required_route(record: CommandRecord, *, inherited_minimum: tuple | None = N
     return {"model_class": model_class, "effort": effort, "source": "command-routing.json", "ts": None}
 
 
-def capture_actual(model_class, effort, *, source: str, ts: str | None = None) -> dict:
+def capture_actual(model_class, effort, *, source: str, ts: str | None = None,
+                   model: str | None = None) -> dict:
     """The ACTUAL side — supplied by the caller from one named, real source. Never
     inferred here: an omitted axis (`None`) is evidence of absence, not a guess, and
-    survives unchanged into `classify`/`dispatch_guard` as `unknown`."""
+    survives unchanged into `classify`/`dispatch_guard` as `unknown`.
+
+    `model` (P2.6/D72) — optional concrete provider model name (e.g. `"sonnet"`),
+    a SEPARATE axis from `model_class`: the class stays the frozen P0.2 route axis
+    `dispatch_guard`/`classify` compare against Required; `model` is new evidence
+    `canonical_actor` reads instead of stripping the actor spelling down to the
+    class (F8 — `required` and `actual` had collapsed to the same string once the
+    class was all `canonical_actor` had to work with)."""
     if source not in SOURCES:
         raise RouteEvidenceError(
             "ROUTE_ACTUAL_SOURCE_UNDECLARED", f"undeclared route evidence source {source!r}")
@@ -110,7 +118,8 @@ def capture_actual(model_class, effort, *, source: str, ts: str | None = None) -
             raise RouteEvidenceError(
                 "ROUTE_ACTUAL_SOURCE_UNDECLARED",
                 f"actual {axis} {value!r} is outside the frozen ladder")
-    return {"model_class": model_class, "effort": effort, "source": source, "ts": ts or _now_iso()}
+    return {"model_class": model_class, "effort": effort, "source": source,
+           "ts": ts or _now_iso(), "model": model}
 
 
 def classify(required: dict, actual: dict) -> str:
@@ -189,16 +198,23 @@ def capture_budget(**axes) -> dict:
     return {axis: axes.get(axis) for axis in BUDGET_AXES}
 
 
-def canonical_actor(model_class: str, effort) -> str:
-    """The one canonical `<model_class>/<effort>` journal `actor` spelling
-    (`findings/02` — 34 observed spellings). `effort` outside the frozen ladder
-    (including `None`) renders literally as `unknown` — a reader sees the gap, never
-    a guess dressed up as a value."""
-    if model_class not in MODEL_CLASS_ORDER:
-        raise RouteEvidenceError(
-            "ROUTE_ACTUAL_SOURCE_UNDECLARED", f"unknown model class {model_class!r}")
+def canonical_actor(model, effort) -> str:
+    """The one canonical `<model>/<effort>` journal `actor` spelling (D72/F8
+    repair of `findings/02`'s 34 observed spellings). `model_class` remains a
+    SEPARATE route-evidence axis (`capture_actual`'s own field, `route.actual.
+    model_class` in the compiled contract) — this function never derives a
+    model from it: that was exactly F8 (`journal.jsonl` P2.4/P2.5 rows carry
+    `"implementation/high"` instead of `"sonnet/high"` — `required` and
+    `actual` collapsed to the same string once the class was all this
+    function had). An absent or non-string `model` renders the literal
+    `unknown` — the same principle `effort` already uses — never a class
+    substituted for a missing model.
+
+    Breaking signature change (D23/D72): the ONE internal consumer,
+    `journal.py --route-evidence`, is repaired in this same item (P2.6)."""
+    model_part = model if isinstance(model, str) and model else "unknown"
     effort_part = effort if effort in EFFORT_ORDER else "unknown"
-    return f"{model_class}/{effort_part}"
+    return f"{model_part}/{effort_part}"
 
 
 def build_task_contract_route(required: dict, actual: dict, capabilities) -> dict:

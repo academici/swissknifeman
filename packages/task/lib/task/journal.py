@@ -328,7 +328,7 @@ def _build_arg_parser():
     ap.add_argument(
         "--route-evidence", default=None,
         help="альтернатива --actor: путь к JSON `task.route_evidence.capture_actual()` "
-            "(P2.4) — actor выводится канонической `<model_class>/<effort>`-спеллинг-формой "
+            "(P2.4/P2.6) — actor выводится канонической `<model>/<effort>`-спеллинг-формой "
             "(`findings/02` — 34 наблюдённых написания), а не собирается руками по месту")
     ap.add_argument("--session-id", default=None)
     ap.add_argument("--run-id", default=None)
@@ -390,7 +390,10 @@ def main(argv=None):
         from task.route_evidence import RouteEvidenceError, canonical_actor
         try:
             evidence = json.loads(Path(args.route_evidence).read_text(encoding="utf-8"))
-            actor = canonical_actor(evidence["model_class"], evidence.get("effort"))
+            # D72/F8: canonical_actor now reads the concrete `model` evidence field
+            # (P2.6), never `model_class` — a historical evidence blob predating
+            # this item simply lacks "model" and renders `unknown/<effort>`.
+            actor = canonical_actor(evidence.get("model"), evidence.get("effort"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError,
                RouteEvidenceError) as exc:
             print(f"ERROR: --route-evidence не читается: {exc}", file=sys.stderr)

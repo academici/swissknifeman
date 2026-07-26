@@ -219,16 +219,29 @@ class CaptureBudgetTests(unittest.TestCase):
 
 
 class CanonicalActorTests(unittest.TestCase):
+    """D72/F8 repair: `canonical_actor` now carries the concrete MODEL
+    (`sonnet/high`), never the route-evidence class — `model_class` stays a
+    separate axis in `route.actual`/`capture_actual`'s own field."""
+
     def test_known_pair_formats_verbatim(self):
-        self.assertEqual(re.canonical_actor("implementation", "high"), "implementation/high")
+        self.assertEqual(re.canonical_actor("sonnet", "high"), "sonnet/high")
 
     def test_unknown_effort_renders_the_literal_unknown(self):
-        self.assertEqual(re.canonical_actor("frontier", None), "frontier/unknown")
-        self.assertEqual(re.canonical_actor("frontier", "guessed"), "frontier/unknown")
+        self.assertEqual(re.canonical_actor("opus", None), "opus/unknown")
+        self.assertEqual(re.canonical_actor("opus", "guessed"), "opus/unknown")
 
-    def test_unknown_model_class_fails_closed(self):
-        with self.assertRaises(re.RouteEvidenceError):
-            re.canonical_actor("sonnet", "high")
+    def test_absent_model_renders_the_literal_unknown(self):
+        self.assertEqual(re.canonical_actor(None, "high"), "unknown/high")
+
+    def test_non_string_model_renders_the_literal_unknown(self):
+        self.assertEqual(re.canonical_actor(123, "high"), "unknown/high")
+
+    def test_model_class_is_a_separate_axis_never_substituted_for_model(self):
+        # F8's exact defect: required/actual collapsing to the same class string.
+        # A caller passing the CLASS instead of a concrete model gets it back
+        # verbatim — canonical_actor never validates or maps it, it is free-form
+        # provider evidence, not the frozen P0.2 route ladder.
+        self.assertEqual(re.canonical_actor("implementation", "high"), "implementation/high")
 
 
 class BuildTaskContractRouteTests(unittest.TestCase):
@@ -294,7 +307,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
     def test_route_evidence_flag_derives_the_canonical_actor(self):
         evidence_path = self._write_evidence(
-            re.capture_actual("implementation", "high", source="self-attested"))
+            re.capture_actual("implementation", "high", source="self-attested", model="sonnet"))
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
@@ -302,7 +315,20 @@ class JournalActorIntegrationTests(unittest.TestCase):
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
-        self.assertEqual(entry["actor"], "implementation/high")
+        self.assertEqual(entry["actor"], "sonnet/high")
+
+    def test_historical_evidence_without_a_model_field_renders_the_literal_unknown(self):
+        # Backward-compat (D72): an evidence blob predating this item's `model`
+        # field must not crash the CLI — `.get("model")` renders `unknown`.
+        evidence_path = self._write_evidence({"model_class": "implementation", "effort": "high"})
+        rc = journal.main([
+            "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
+            "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
+            "--result", "closed-green",
+        ])
+        self.assertEqual(rc, 0)
+        entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
+        self.assertEqual(entry["actor"], "unknown/high")
 
     def test_actor_and_route_evidence_are_mutually_exclusive(self):
         rc = journal.main([
@@ -331,7 +357,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
     def test_unknown_effort_in_evidence_still_derives_a_canonical_unknown_actor(self):
         evidence_path = self._write_evidence(
-            re.capture_actual("implementation", None, source="self-attested"))
+            re.capture_actual("implementation", None, source="self-attested", model="sonnet"))
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
@@ -339,7 +365,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
-        self.assertEqual(entry["actor"], "implementation/unknown")
+        self.assertEqual(entry["actor"], "sonnet/unknown")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,9 @@ stdlib-only.
 from __future__ import annotations
 
 import hashlib
+import json
+import re
+from pathlib import Path
 
 # risk-review-loop-budget-v1.md §Declared sets (D51/D65) — closed enums, cited not re-minted.
 FINDING_TYPES = ("product", "evidence", "process")
@@ -49,6 +52,24 @@ CAP_SUBJECT_BY_PROFILE = {
 # policy call (impossibility classes I1/I10/I13/I16/I17).
 _READY_OR_DONE_REOPEN_TARGET = "ESCALATED"
 _VERIFYING_REOPEN_TARGET = "FIXING"
+
+# `LoopBudget.from_committed` (P2.6, F5) — locates each `## Audit <phase_id>` block
+# in a committed phase file, the same append-only audit region `plan-audit.md`'s
+# own two-round-cap grep already reads.
+_AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
+
+
+def _audit_blocks(phase_lines, phase_id: str):
+    """Yields `(start, end)` slice bounds for each `## Audit <phase_id>` block in
+    `phase_lines` — `phase_lines[start:end]` is that block's full text, header
+    included, up to (not including) the next top-level `## ` heading or EOF."""
+    section_starts = [i for i, ln in enumerate(phase_lines) if ln.startswith("## ")]
+    boundaries = sorted(set(section_starts) | {len(phase_lines)})
+    for i, ln in enumerate(phase_lines):
+        m = _AUDIT_BLOCK_HEADER_RE.match(ln.strip())
+        if m and m.group(1) == phase_id:
+            end = min(b for b in boundaries if b > i)
+            yield i, end
 
 
 class ReviewPolicyError(ValueError):
@@ -131,6 +152,66 @@ class LoopBudget:
         identity = identity_of(finding)
         self._rounds[identity] = self._rounds.get(identity, 0) + 1
         return self._rounds[identity]
+
+    @classmethod
+    def from_committed(cls, plan_dir, phase_id: str, finding: dict, *,
+                       same_finding_max: int = SAME_FINDING_MAX):
+        """§Loop budget and cadence + F5 (P2.6) — reconstructs ONE finding's
+        cross-session occurrence count from the two committed carriers this
+        contract already names: `journal.jsonl` `command == "plan-audit"`
+        entries and `## Audit <phase_id>` blocks in the phase file.
+        `LoopBudget._rounds` alone cannot survive a process restart — F5's
+        exact failure scenario is three independent `plan-audit` sessions
+        each observing `occurrences() == 0` for the identical recurring
+        finding, so the cap never trips.
+
+        Returns `(budget, count)`. `count` is either a non-negative int (both
+        carriers were checked — a verified zero IS a real zero) or the
+        literal `"unknown"` (the phase file itself is absent — nothing to
+        check against, never silently coerced to `0`; that coercion is
+        exactly F5's defect: an invisible count passed off as zero).
+
+        `finding` must carry `rule_or_contract_locus` — the same seam field
+        `finding_id`/`identity_of` already require (no second identity
+        vocabulary): it is used, verbatim, as the substring searched for in
+        both carriers. Distinct from `task_contract._count_audit_rounds`
+        (phase-level `authority.observed_rounds`, not per-finding) —
+        `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+        """
+        locus = finding.get("rule_or_contract_locus")
+        if not isinstance(locus, str) or not locus:
+            raise ReviewPolicyError(
+                "FINDING_IDENTITY_UNSTABLE",
+                f"rule_or_contract_locus must be a non-empty str, got {locus!r}")
+        budget = cls(same_finding_max=same_finding_max)
+        plan_dir = Path(plan_dir)
+        phase_path = plan_dir / "phases" / f"{phase_id}.md"
+        try:
+            phase_lines = phase_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return budget, "unknown"
+
+        phase_count = 0
+        for start, end in _audit_blocks(phase_lines, phase_id):
+            if any(locus in ln for ln in phase_lines[start:end]):
+                phase_count += 1
+
+        journal_count = 0
+        journal_path = plan_dir / "journal.jsonl"
+        if journal_path.is_file():
+            for line in journal_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if entry.get("command") == "plan-audit" and locus in (entry.get("note") or ""):
+                    journal_count += 1
+
+        count = max(phase_count, journal_count)
+        budget._rounds[identity_of(finding)] = count
+        return budget, count
 
 
 def review_transition(state: str, finding: dict, *, budget: LoopBudget, profile: str) -> dict:

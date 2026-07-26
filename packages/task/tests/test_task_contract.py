@@ -10,6 +10,7 @@ test, never a hand-authored contract that could silently satisfy the wrong branc
 """
 import copy
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from task import task_contract  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[3]
 EXAMPLES_PATH = (REPO_ROOT / "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.2/"
                  "task-contract-examples.json")
+PLAN_ROOT = REPO_ROOT / "plans/2026.07.24-AGENT-RELIABILITY"
 
 
 def _load_base_contract():
@@ -375,6 +377,206 @@ class EvaluateFindingHookTests(unittest.TestCase):
                                                      profile="owner-gated")["decision"]
                     for _ in range(3)]
         self.assertEqual(decisions, ["retry-fix", "retry-fix", "incident"])
+
+
+class BuildSelfConformanceTests(unittest.TestCase):
+    """P2.6 F1 — `build()` self-conformance over REAL, already-closed items of
+    this same plan: P2.1 (a terminal P2 item), P2.6 (this item, live), and
+    P0.1 (a terminal P0 item) — Implementation Rules' own anti-self-deception
+    requirement (не только собранный самим item свежий кейс)."""
+
+    def test_builds_over_three_real_items_with_nonempty_required_arrays(self):
+        for item_id in ("P0.1", "P2.1", "P2.6"):
+            with self.subTest(item=item_id):
+                contract = task_contract.build(PLAN_ROOT, item_id)
+                self.assertGreaterEqual(len(contract["must"]), 1)
+                self.assertGreaterEqual(len(contract["never"]), 1)
+                self.assertGreaterEqual(len(contract["evidence"]), 1)
+                self.assertGreaterEqual(len(contract["done"]["public_acceptance"]), 1)
+                self.assertEqual(contract["version"]["content_hash"],
+                                task_contract.content_hash(contract))
+
+    def test_build_is_byte_deterministic_across_two_calls(self):
+        first = json.dumps(task_contract.build(PLAN_ROOT, "P2.6"), sort_keys=True)
+        second = json.dumps(task_contract.build(PLAN_ROOT, "P2.6"), sort_keys=True)
+        self.assertEqual(first, second)
+
+    def test_default_actual_route_is_unresolved_and_dispatch_guard_denies_it(self):
+        from task import route_evidence as re_
+        contract = task_contract.build(PLAN_ROOT, "P2.6")
+        required, actual = contract["route"]["required"], contract["route"]["actual"]
+        self.assertIsNone(actual["model_class"])
+        self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
+                         "ROUTE_UNDERSHOOT")
+
+    def test_live_actual_route_matching_required_allows_both_predicates(self):
+        from task import route_evidence as re_
+        for item_id in ("P0.1", "P2.1", "P2.6"):
+            with self.subTest(item=item_id):
+                contract = task_contract.build(PLAN_ROOT, item_id)
+                required = contract["route"]["required"]
+                actual = re_.capture_actual(required["model_class"], required["effort"],
+                                           source="self-attested", ts="t", model="sonnet")
+                caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
+                contract["route"] = re_.build_task_contract_route(required, actual, caps)
+                contract["version"]["content_hash"] = task_contract.content_hash(contract)
+                self.assertIsNone(task_contract.pre_mutation(contract))
+                self.assertIsNone(task_contract.pre_final(contract))
+
+    def test_unknown_item_id_fails_closed(self):
+        with self.assertRaises(task_contract.TaskContractBuildError):
+            task_contract.build(PLAN_ROOT, "P2.999")
+
+
+def _routing_row(model_effort="implementation/medium"):
+    return (f"\n\n| Items | Model class/effort | Exec | Почему |\n"
+           f"|:--|:--|:--|:--|\n"
+           f"| P1.1 | {model_effort} | plan-exec | test |\n")
+
+
+class BuildFixtureTests(unittest.TestCase):
+    """Synthetic minimal plan (fixtures.py) — proves the negative anti-padding
+    path Implementation Rules (2) demands directly, without depending on this
+    plan's own (always-populated) fields ever going empty by accident."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        plan_md = fixtures.plan_md("DEMO-1").replace("## 3. Routing\n\n", "## 3. Routing" + _routing_row())
+        self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-1")
+        (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_minimal_valid_item_builds_successfully(self):
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(len(contract["must"]), 1)
+        self.assertEqual(len(contract["never"]), 1)
+        self.assertEqual(contract["route"]["required"],
+                         {"model_class": "implementation", "effort": "medium"})
+
+    def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
+        phase_path = self.plan_dir / "phases" / "P1.md"
+        phase_path.write_text(
+            fixtures.phase_md().replace(
+                "**Validation:** bash scripts/test.sh — зелёный.", "**Validation:** —"),
+            encoding="utf-8")
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Validation")
+        self.assertEqual(ctx.exception.item_id, "P1.1")
+
+    def test_missing_routing_row_fails_closed(self):
+        # fixtures.plan_md() leaves §3 Routing empty; P1.1's default row was added in
+        # setUp only for THIS plan.md, so an item absent from it (P1.2) has no row.
+        (self.plan_dir / "phases" / "P1.md").write_text(
+            fixtures.phase_md(item_id="P1.2"), encoding="utf-8")
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.2")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_routing_range_row_matches_an_item_inside_the_range(self):
+        plan_md = fixtures.plan_md("DEMO-1").replace(
+            "## 3. Routing\n\n", "## 3. Routing" + _routing_row("frontier/high").replace(
+                "P1.1", "P1.1–P1.3"))
+        (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(contract["route"]["required"],
+                         {"model_class": "frontier", "effort": "high"})
+
+
+class BundleLintTests(unittest.TestCase):
+    """P2.6 F2/F4 — `bundle_lint` COMPUTES minimization/content-class evidence
+    from actual bundle bytes instead of trusting a self-declared block."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bundle_dir = Path(self._tmp.name)
+        self.manifest_path = self.bundle_dir / "manifest.json"
+        self.verifier_path = self.bundle_dir / "verify.py"
+        self.verifier_path.write_text("# stdlib-only verifier stub\n", encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write_manifest(self, files):
+        self.manifest_path.write_text(json.dumps({"files": files}), encoding="utf-8")
+
+    def test_missing_manifest_fails_closed(self):
+        (self.bundle_dir / "a.txt").write_text("clean", encoding="utf-8")
+        self.assertEqual(
+            task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
+                                      verifier_path=self.verifier_path,
+                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+            task_contract.BUNDLE_ARTIFACT_MISSING)
+
+    def test_missing_verifier_fails_closed(self):
+        self._write_manifest(["a.txt"])
+        (self.bundle_dir / "a.txt").write_text("clean", encoding="utf-8")
+        self.verifier_path.unlink()
+        self.assertEqual(
+            task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
+                                      verifier_path=self.verifier_path,
+                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+            task_contract.BUNDLE_ARTIFACT_MISSING)
+
+    def test_clean_bundle_matching_declaration_allows(self):
+        self._write_manifest(["a.txt"])
+        (self.bundle_dir / "a.txt").write_text("clean committed content", encoding="utf-8")
+        self.assertIsNone(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy={"minimized": True, "excluded_classes": ["secrets"]}))
+
+    def test_extra_undeclared_file_breaks_minimization(self):
+        self._write_manifest(["a.txt"])
+        (self.bundle_dir / "a.txt").write_text("clean", encoding="utf-8")
+        (self.bundle_dir / "extra.txt").write_text("undeclared", encoding="utf-8")
+        self.assertEqual(
+            task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
+                                      verifier_path=self.verifier_path,
+                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+            task_contract.BUNDLE_PRIVACY_MISMATCH)
+
+    def test_secret_signature_found_despite_declared_exclusion(self):
+        self._write_manifest(["creds.txt"])
+        (self.bundle_dir / "creds.txt").write_text(
+            "aws_secret_key: \"AKIAABCDEFGHIJKLMNOP\"", encoding="utf-8")
+        self.assertEqual(
+            task_contract.bundle_lint(
+                self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+                declared_privacy={"minimized": True, "excluded_classes": ["secrets"]}),
+            task_contract.BUNDLE_PRIVACY_MISMATCH)
+
+    def test_raw_transcript_body_needs_repeated_turn_markers_not_one_stray_line(self):
+        self._write_manifest(["note.md"])
+        (self.bundle_dir / "note.md").write_text(
+            "See the incident where Human: reported the bug once.", encoding="utf-8")
+        # One stray "Human:"-shaped line is not a transcript (false-positive guard).
+        self.assertIsNone(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy={"minimized": True, "excluded_classes": ["raw-transcript-bodies"]}))
+
+    def test_repeated_turn_markers_are_flagged_as_raw_transcript_bodies(self):
+        self._write_manifest(["rollout.txt"])
+        (self.bundle_dir / "rollout.txt").write_text(
+            "Human: hi\nAssistant: hello\nHuman: again\nAssistant: sure\n", encoding="utf-8")
+        self.assertEqual(
+            task_contract.bundle_lint(
+                self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+                declared_privacy={"minimized": True, "excluded_classes": ["raw-transcript-bodies"]}),
+            task_contract.BUNDLE_PRIVACY_MISMATCH)
+
+    def test_undeclared_class_present_is_not_flagged(self):
+        # The declaration only asserts what it claims excluded; a class present
+        # but never claimed excluded is not this predicate's concern (it only
+        # verifies the declared claims are true, never invents a stricter one).
+        self._write_manifest(["rollout.txt"])
+        (self.bundle_dir / "rollout.txt").write_text(
+            "Human: hi\nAssistant: hello\nHuman: again\nAssistant: sure\n", encoding="utf-8")
+        self.assertIsNone(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy={"minimized": True, "excluded_classes": []}))
 
 
 if __name__ == "__main__":

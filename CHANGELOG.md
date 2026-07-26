@@ -4,6 +4,33 @@
 
 ### Added
 
+- **task — compiler producer, bundle predicate, cross-session cap, actor repair
+  (P2.6 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.6.0`).**
+  `packages/task/lib/task/task_contract.py` gains `build(plan_dir, item_id, …)`
+  — the Task Contract v1 PRODUCER a transaction can actually call before
+  `pre_mutation`/`pre_final` existed only as predicates over a hand-authored
+  JSON: compiles `phases/Pn.md` + `plan.md` §3 fields into the exact 15-key
+  schema, deterministic across repeat calls on the same committed tree, and
+  fails closed with a typed `TaskContractBuildError` on an empty item field
+  rather than fabricating a placeholder. Full field mapping:
+  `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+  `bundle_lint(bundle_dir, …)` computes minimization and content-class evidence
+  (secrets/chain-of-thought/tool-payloads/raw-transcript-bodies, by signature
+  scan over actual bundle bytes) instead of trusting a self-declared
+  `portability.privacy` block, two new reason codes
+  `BUNDLE_ARTIFACT_MISSING`/`BUNDLE_PRIVACY_MISMATCH`.
+  `packages/task/lib/task/review_policy.py`'s `LoopBudget` gains
+  `from_committed(plan_dir, phase_id, finding)` — reconstructs one finding's
+  cross-session occurrence count from `journal.jsonl` + `## Audit Pn` blocks
+  instead of always starting a fresh in-process counter at zero (the exact
+  defect that let three independent `plan-audit` rounds each see
+  `occurrences() == 0` for the same recurring finding). `canonical_actor`
+  (`route_evidence.py`) is a breaking signature change: it now carries the
+  concrete provider MODEL (`sonnet/high`), never the route-evidence class —
+  `model_class` stays a separate `route.actual` axis; `capture_actual` gains
+  an optional `model` evidence field; `journal.py --route-evidence` repaired
+  to match (a historical evidence blob lacking `model` renders `unknown/…`,
+  never crashes).
 - **task — route/budget evidence (P2.4, `2026.07.24-AGENT-RELIABILITY`).** New
   `packages/task/lib/task/route_evidence.py`: normalized `required`/`actual` route
   capture with a named source (`self-attested`/`provider-doctor`/`cli-flag`) and

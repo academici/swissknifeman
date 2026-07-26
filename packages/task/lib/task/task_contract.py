@@ -28,6 +28,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 
 SCHEMA_VERSION = "task-contract/v1"
@@ -69,6 +70,431 @@ SLICE_ROOT_ONLY_REQUIRED = frozenset({"evidence", "portability", "conflicts"})
 # §Provenance vs execution input).
 _EXTERNAL_PREFIXES = ("/", "~", "../", "tmp/")
 _EXTERNAL_SUBSTRINGS = ("/../", "/tmp/", "://")
+
+# --------------------------------------------------------------------------
+# build() — Task Contract v1 producer (P2.6, F1). Field-mapping table lives in
+# `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+# --------------------------------------------------------------------------
+
+# New P2.6 reason codes — not pre-declared by P2.1's frozen
+# `artifacts/P2.1/state-transition-cases.json::new_reason_codes` (this item introduces
+# them directly, same authoring discipline: a distinct_from a frozen P0.2 code, never a
+# redefinition — D64).
+BUNDLE_ARTIFACT_MISSING = "BUNDLE_ARTIFACT_MISSING"
+BUNDLE_PRIVACY_MISMATCH = "BUNDLE_PRIVACY_MISMATCH"
+
+_SCOPE_CLAUSE_SPLIT_RE = re.compile(r";\s*")
+_INPUTS_SPLIT_RE = re.compile(r"\s*·\s*")
+_REQUIRED_READS_SPLIT_RE = re.compile(r"(?:^|\s)\d+\)\s+")
+_IMPL_RULE_SPLIT_RE = re.compile(r"\*\*\(\d+\)\*\*\s*")
+_ANTI_CLAUSE_SPLIT_RE = re.compile(r"\*{0,2}(?:Анти|Anti)[\w-]*\s*:\*{0,2}\s*")
+_BACKTICK_RE = re.compile(r"`([^`]+)`")
+_ROUTING_HEADER_RE = re.compile(r"^##\s+3\.\s+Routing\s*$")
+_ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
+_AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
+
+SLICE_SUBAGENT_KEYS = ("goal", "must", "never", "done", "authority", "next", "route", "version")
+SLICE_ROOT_ONLY_KEYS = ("evidence", "portability", "conflicts")
+
+
+class TaskContractBuildError(ValueError):
+    """A typed refusal to compile a Task Contract — never a fabricated
+    placeholder value (Implementation Rules P2.6 (2), anti-padding). Carries
+    the offending item and field name so the caller can act on it directly,
+    the same shape `RouteEvidenceError`/`ReviewPolicyError` already use."""
+
+    def __init__(self, item_id: str, field: str, message: str):
+        super().__init__(f"{item_id}: {field}: {message}")
+        self.item_id = item_id
+        self.field = field
+
+
+def _split_nonempty(text: str, pattern: "re.Pattern") -> list:
+    return [p.strip() for p in pattern.split(text or "") if p and p.strip()]
+
+
+def _first_backtick_or_text(clause: str) -> str:
+    m = _BACKTICK_RE.search(clause)
+    return m.group(1) if m else clause.strip()
+
+
+def _marker_clauses(text: str, marker_re: "re.Pattern") -> list:
+    """Splits `text` at each match of `marker_re` (a labelled/numbered marker —
+    `**(N)**`, `N) `, `**Анти-…:**`), discarding any text before the FIRST
+    marker (ordinary prose, not a clause of the marked kind). No marker
+    present → `[]`, never "the whole text as one accidental clause" (unlike
+    `_split_nonempty`'s `; `/`·` semicolon-style split, where a single
+    unmarked sentence legitimately IS one clause)."""
+    markers = list(marker_re.finditer(text or ""))
+    clauses = []
+    for i, m in enumerate(markers):
+        end = markers[i + 1].start() if i + 1 < len(markers) else len(text)
+        clause = text[m.end():end].strip()
+        if clause:
+            clauses.append(clause)
+    return clauses
+
+
+def _anti_clauses(code_guidance_text: str) -> list:
+    """Code Guidance anti-clauses (`**Анти-подгонка:** …` / `Anti-…:` — bold or
+    plain, both observed in the fleet) feeding `never[]`. An item that spells
+    no anti-clause at all yields `[]` — `never[]` still satisfies its
+    minItems via `Scope Excluded` alone."""
+    return _marker_clauses(code_guidance_text, _ANTI_CLAUSE_SPLIT_RE)
+
+
+def _require_field(item_id: str, fields: dict, name: str):
+    value, lineno = fields.get(name, ("", None))
+    value = (value or "").strip()
+    if not value or value == "—":
+        raise TaskContractBuildError(item_id, name,
+                                     "field is empty (\"—\") — build refuses to fabricate a value")
+    return value, lineno
+
+
+def _count_audit_rounds(phase_lines, phase_id: str) -> int:
+    """`authority.observed_rounds` — the audit-round cap counter
+    (`risk-review-loop-budget-v1.md` §Loop budget, `audit_rounds_max`),
+    reconstructed by counting `## Audit <phase_id>` block headers already
+    committed in the phase file — the exact grep `plan-audit.md:52-54`'s own
+    canon already performs, never a second parser. Distinct from
+    `review_policy.LoopBudget.from_committed` (per-finding, not phase-level) —
+    see `findings/P2.6-contract-mapping.md`."""
+    count = 0
+    for ln in phase_lines:
+        m = _AUDIT_BLOCK_HEADER_RE.match(ln.strip())
+        if m and m.group(1) == phase_id:
+            count += 1
+    return count
+
+
+def _find_routing_row(plan_lint_mod, plan_lines, item_id: str):
+    """Reuses `plan_lint`'s own generic table parser (`_find_section`/
+    `_parse_table` — already the SSOT for Meta/Status Board/Phase Status
+    tables) over the `## 3. Routing` section instead of a second parser."""
+    _, body, start = plan_lint_mod._find_section(plan_lines, _ROUTING_HEADER_RE)
+    if body is None:
+        return None
+    headers, rows, _ = plan_lint_mod._parse_table(body, start)
+    if headers is None:
+        return None
+    phase_token = item_id.split(".")[0]
+    try:
+        item_n = int(item_id.split(".")[1])
+    except (IndexError, ValueError):
+        item_n = None
+    for row, _lineno in rows:
+        cell = (row.get("Items", "") or "").strip().strip("`")
+        if cell == item_id:
+            model_effort = row.get("Model class/effort", "")
+            model_class, _, effort = model_effort.partition("/")
+            return model_class.strip(), effort.strip()
+        m = _ROUTING_RANGE_RE.match(cell)
+        if m and item_n is not None and m.group(1) == phase_token == m.group(3):
+            lo, hi = int(m.group(2)), int(m.group(4))
+            if lo <= item_n <= hi:
+                model_effort = row.get("Model class/effort", "")
+                model_class, _, effort = model_effort.partition("/")
+                return model_class.strip(), effort.strip()
+    return None
+
+
+def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_privacy=None,
+         authority_class="routine", authority_granted=True,
+         authority_granted_by="D50 (G-EXEC for self-host P0-P3)",
+         next_form="exec-items", next_context="same-session — item",
+         next_origin="approved-goal", next_changed_by=None, carrier=None) -> dict:
+    """Task Contract v1 producer (P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
+    §3/§0 fields for one item into the exact 15-key schema
+    `task-contract-v1.schema.json` declares. Full field-mapping table:
+    `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+
+    Reuses `task.plan_lint`'s own field parser (`parse_phase_md`/`parse_plan_md`,
+    plus its generic `_find_section`/`_parse_table` table reader for §3 Routing)
+    via a LAZY import — the same circular-import pattern `evaluate_finding`
+    already uses for `review_policy` (`plan_lint` imports `task_contract` at
+    module level; `task_contract` importing `plan_lint` back at module level
+    would be circular). Never a second parser of item fields (Code Guidance,
+    anti-duplicate-SSOT).
+
+    Deterministic by default: two calls over the same committed tree produce
+    byte-identical JSON (`content_hash` included) — `actual_route` is NOT
+    captured live unless the caller supplies one, since a bare CLI invocation
+    must be repeatable across processes/sessions.
+
+    Anti-padding (Implementation Rules (2)): an item field that is empty
+    (the canonical `"—"` placeholder) where the schema requires a value
+    raises `TaskContractBuildError` naming the field and item — never a
+    fabricated placeholder dressed up as data.
+    """
+    from task import plan_lint  # lazy — avoids a plan_lint↔task_contract circular import
+    from task import route_evidence  # lazy — same reasoning, route assembly only
+    from task import review_policy  # lazy — reuse of loop_budget constants only
+
+    plan_dir = Path(plan_dir)
+    phase_token = item_id.split(".")[0]
+    diag = plan_lint.Diagnostics()
+    plan_lint.parse_plan_md(plan_dir / "plan.md", diag)  # populates diag only; not consulted here
+    phase_path = plan_dir / "phases" / f"{phase_token}.md"
+    phase = plan_lint.parse_phase_md(phase_path, phase_token, diag)
+    occurrences = phase["items"].get(item_id) if phase else None
+    if not occurrences:
+        raise TaskContractBuildError(item_id, "item", f"no item block found in {phase_path}")
+    fields = occurrences[0]["fields"]
+
+    def field_text(name):
+        value, _ = fields.get(name, ("", None))
+        return (value or "").strip()
+
+    _require_field(item_id, fields, "Intent")
+    scope_included, scope_included_ln = _require_field(item_id, fields, "Scope Included")
+    scope_excluded, scope_excluded_ln = _require_field(item_id, fields, "Scope Excluded")
+    impl_rules_text = field_text("Implementation Rules")
+    impl_rules_ln = fields.get("Implementation Rules", ("", None))[1]
+    code_guidance_text = field_text("Code Guidance")
+    code_guidance_ln = fields.get("Code Guidance", ("", None))[1]
+    inputs_text = field_text("Inputs")
+    required_reads_text = field_text("Required Reads")
+    validation_text, _ = _require_field(item_id, fields, "Validation")
+    deliverables, _ = _require_field(item_id, fields, "Deliverables")
+
+    outcome = field_text("Intent")
+    non_goals = _split_nonempty(scope_excluded, _SCOPE_CLAUSE_SPLIT_RE)
+
+    must = []
+    for clause in _split_nonempty(scope_included, _SCOPE_CLAUSE_SPLIT_RE):
+        must.append({"id": f"M{len(must) + 1}", "requirement": clause,
+                    "source_ref": f"phases/{phase_token}.md:{scope_included_ln}"})
+    for clause in _marker_clauses(impl_rules_text, _IMPL_RULE_SPLIT_RE):
+        must.append({"id": f"M{len(must) + 1}", "requirement": clause,
+                    "source_ref": f"phases/{phase_token}.md:{impl_rules_ln}"})
+    if not must:
+        raise TaskContractBuildError(item_id, "Scope Included", "no requirement clause found")
+
+    never = []
+    for clause in non_goals:
+        never.append({"id": f"N{len(never) + 1}", "prohibition": clause,
+                     "source_ref": f"phases/{phase_token}.md:{scope_excluded_ln}"})
+    for clause in _anti_clauses(code_guidance_text):
+        never.append({"id": f"N{len(never) + 1}", "prohibition": clause,
+                     "source_ref": f"phases/{phase_token}.md:{code_guidance_ln}"})
+    if not never:
+        raise TaskContractBuildError(item_id, "Scope Excluded", "no prohibition clause found")
+
+    evidence = []
+    execution_inputs = []
+    for clause in _split_nonempty(inputs_text, _INPUTS_SPLIT_RE):
+        path = _first_backtick_or_text(clause)
+        evidence.append({"id": f"E{len(evidence) + 1}", "path": path,
+                         "proof_class": "unknown", "algorithm": "doc-citation"})
+        if _BACKTICK_RE.search(clause) and not is_external_path(path):
+            execution_inputs.append({"path": path, "kind": "committed", "producer": None})
+    required_reads_ids = []
+    for clause in _marker_clauses(required_reads_text, _REQUIRED_READS_SPLIT_RE):
+        path = _first_backtick_or_text(clause)
+        eid = f"E{len(evidence) + 1}"
+        evidence.append({"id": eid, "path": path, "proof_class": "unknown",
+                         "algorithm": "doc-citation"})
+        required_reads_ids.append(eid)
+        if _BACKTICK_RE.search(clause) and not is_external_path(path):
+            execution_inputs.append({"path": path, "kind": "committed", "producer": None})
+    if not evidence:
+        raise TaskContractBuildError(item_id, "Required Reads", "no evidence entry found")
+
+    public_acceptance = []
+    for clause in _split_nonempty(validation_text, _INPUTS_SPLIT_RE):
+        eid = f"E{len(evidence) + 1}"
+        evidence.append({"id": eid, "path": clause, "proof_class": "cross-checked",
+                         "algorithm": "shell-command"})
+        path_tokens = plan_lint.PORTABILITY_PATH_RE.findall(clause)
+        scope = "internal" if any(is_external_path(tok) for tok in path_tokens) else "public"
+        public_acceptance.append({"id": f"A{len(public_acceptance) + 1}", "predicate": deliverables,
+                                  "scope": scope, "check": clause, "evidence_ref": eid})
+    if not public_acceptance:
+        raise TaskContractBuildError(item_id, "Validation", "no check clause found")
+
+    plan_lines = plan_lint._read_lines(plan_dir / "plan.md") or []
+    routing = _find_routing_row(plan_lint, plan_lines, item_id)
+    if routing is None:
+        raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item")
+    required_route = {"model_class": routing[0], "effort": routing[1]}
+    if actual_route is None:
+        actual_route = route_evidence.capture_actual(
+            None, None, source="self-attested", ts="1970-01-01T00:00:00Z")
+    route = route_evidence.build_task_contract_route(required_route, actual_route, capabilities)
+
+    tier = "committed-bundle" if plan_lint._plan_declares_committed_bundle_tier(plan_dir) \
+        else "brief-acceptance"
+    if bundle_privacy is None:
+        bundle_privacy = {"minimized": True, "excluded_classes": []}
+
+    plan_id = plan_dir.name
+    if carrier is None:
+        carrier = f"task:plan-exec {plan_id} {item_id}"
+    claude_render = f"/task:plan-exec {plan_id} {item_id}"
+    codex_render = f"$ task:plan-exec {plan_id} {item_id}"
+
+    phase_lines = plan_lint._read_lines(phase_path) or []
+    observed_rounds = _count_audit_rounds(phase_lines, phase_token)
+
+    contract = {
+        "schema_version": SCHEMA_VERSION,
+        "contract_id": f"{plan_id.lower()}-{item_id.lower().replace('.', '-')}",
+        "version": {"revision": 1, "content_hash": "0" * 64, "supersedes": None},
+        "goal": {"outcome": outcome, "non_goals": non_goals},
+        "must": must,
+        "never": never,
+        "done": {"public_acceptance": public_acceptance},
+        "authority": {
+            "class": authority_class,
+            "granted": authority_granted,
+            "granted_by": authority_granted_by,
+            "auto_allowed": ["write the item's declared Files", "run the item's Validation",
+                            "close the item with the two-commit topology"],
+            "stop_boundaries": ["tag/push/release", "fleet rollout", "consumer repositories",
+                               "FOREMAN outward parts"],
+            "loop_budget": {"audit_rounds_max": review_policy.AUDIT_ROUNDS_MAX,
+                           "same_finding_max": review_policy.SAME_FINDING_MAX},
+            "observed_rounds": observed_rounds,
+        },
+        "next": {"form": next_form, "carrier": carrier, "context": next_context,
+                "origin": next_origin, "changed_by": next_changed_by},
+        "route": route,
+        "evidence": evidence,
+        "portability": {
+            "tier": tier,
+            "execution_inputs": execution_inputs,
+            "provenance_only": [],
+            "privacy": bundle_privacy,
+            "semantic_carrier": "task:plan-exec",
+            "provider_renderers": {"claude": claude_render, "codex": codex_render},
+        },
+        "conflicts": [],
+        "slice": {"subagent_keys": list(SLICE_SUBAGENT_KEYS),
+                 "root_only_keys": list(SLICE_ROOT_ONLY_KEYS)},
+        "cold_start": {"plan_id": plan_id, "item_id": item_id, "reads": required_reads_ids,
+                      "carrier": carrier},
+    }
+    contract["version"]["content_hash"] = content_hash(contract)
+    return contract
+
+
+# --------------------------------------------------------------------------
+# bundle_lint() — evidence-bundle privacy/minimization predicate (P2.6, F2/F4).
+# --------------------------------------------------------------------------
+
+_SECRET_PATTERNS = (
+    re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
+    re.compile(rb"AKIA[0-9A-Z]{16}"),
+    re.compile(rb"sk-[A-Za-z0-9]{20,}"),
+    re.compile(rb"(?i)(?:api|secret)[_-]?key[\"']?\s*[:=]\s*[\"'][A-Za-z0-9/+=_-]{16,}"),
+)
+_CHAIN_OF_THOUGHT_PATTERNS = (
+    re.compile(rb"<thinking>"),
+    re.compile(rb"<scratchpad>"),
+    re.compile(rb"(?i)chain[- ]of[- ]thought"),
+)
+_TOOL_PAYLOAD_PATTERNS = (
+    re.compile(rb'"tool_use"'),
+    re.compile(rb'"tool_result"'),
+    re.compile(rb"<tool_call>"),
+)
+_RAW_TRANSCRIPT_PATTERNS = (
+    re.compile(rb'"role"\s*:\s*"(?:user|assistant)"'),
+    re.compile(rb"(?m)^(?:Human|Assistant|User|System):\s"),
+)
+_CONTENT_CLASS_PATTERNS = (
+    ("secrets", _SECRET_PATTERNS),
+    ("chain-of-thought", _CHAIN_OF_THOUGHT_PATTERNS),
+    ("tool-payloads", _TOOL_PAYLOAD_PATTERNS),
+    ("raw-transcript-bodies", _RAW_TRANSCRIPT_PATTERNS),
+)
+# A single stray "Human:"-shaped line is not a transcript — require repetition
+# before calling it a raw conversational body (avoids a false positive on a
+# doc that merely quotes one line of dialogue).
+_RAW_TRANSCRIPT_MIN_HITS = 3
+
+
+def _scan_content_classes(data: bytes) -> set:
+    found = set()
+    for class_name, patterns in _CONTENT_CLASS_PATTERNS:
+        for pattern in patterns:
+            hits = len(pattern.findall(data))
+            if hits == 0:
+                continue
+            if class_name == "raw-transcript-bodies" and hits < _RAW_TRANSCRIPT_MIN_HITS:
+                continue
+            found.add(class_name)
+            break
+    return found
+
+
+def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -> str | None:
+    """plan-portability-v1.md §Bundle requirements (F2/F4) — COMPUTES, never
+    reads, the declaration: minimization is the actual bundle file set against
+    the manifest's own declared file list; content classes are found by
+    signature scan over the ACTUAL bytes on disk (secrets/chain-of-thought/
+    tool-payloads/raw-transcript-bodies), never by trusting
+    `declared_privacy` as ground truth (that was exactly F2/F4: the fields
+    were self-declared and self-read by the same generator).
+
+    New reason codes (P2.6 — not pre-declared by P2.1's frozen
+    `state-transition-cases.json::new_reason_codes`; this item introduces
+    them directly, same discipline as that file's own entries):
+
+      * `BUNDLE_ARTIFACT_MISSING` — distinct_from `PORTABILITY_INPUT_MISSING`
+        (that fires on an absent EXECUTION INPUT path already inside a
+        compiled contract; this fires on the bundle's own internal manifest
+        or verifier file being absent on disk — a different object, checked
+        before any Task Contract exists).
+      * `BUNDLE_PRIVACY_MISMATCH` — distinct_from `PORTABILITY_TIER_MISCLASSIFIED`
+        (that fires on the TIER assignment against the classification rule;
+        this fires on the computed content-class scan disagreeing with the
+        item's declared `privacy` block — never about tier).
+
+    `manifest_path` — a JSON file `{"files": [<bundle-relative path>, ...]}`
+    declaring the bundle's exact expected member set (this item's own minimal
+    manifest contract — no existing generic manifest schema is reusable
+    across the fleet's several bundle-specific formats, e.g. P0.1's
+    `manifests/bundle-manifest.json` vs P2.5's `result-manifest.json`).
+    `verifier_path` — existence-checked only (never executed: running an
+    arbitrary committed script from inside a library predicate is its own
+    hazard and outside this item's Scope).
+
+    Existing extension points surveyed first (D23): `is_external_path` (a
+    path-STRING test, reused nowhere here — bundle_lint scans byte CONTENT,
+    a different object) and `plan-portability-v1.md`'s bundle-requirements
+    prose (stated but never executable before this function). Alternatives
+    considered: (a) trust the declared `privacy` block as-is — rejected,
+    exactly F4's defect; (b) hash-only manifest check without content-class
+    scanning — rejected, leaves secrets/raw-bulk undetected even when file
+    counts match. Named consumers: P2.7 (write-site), P2.8 (P2.5 bundle
+    rerun). SemVer: new public function, additive to `task_contract`'s
+    surface.
+    """
+    bundle_dir = Path(bundle_dir)
+    manifest_path = Path(manifest_path)
+    verifier_path = Path(verifier_path)
+    if not manifest_path.is_file() or not verifier_path.is_file():
+        return BUNDLE_ARTIFACT_MISSING
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    declared_set = {entry["path"] if isinstance(entry, dict) else entry
+                    for entry in manifest["files"]}
+    exempt = {manifest_path.resolve(), verifier_path.resolve()}
+    actual_set = {str(p.relative_to(bundle_dir)) for p in bundle_dir.rglob("*")
+                 if p.is_file() and p.resolve() not in exempt}
+    minimized = actual_set == declared_set
+
+    found_classes = set()
+    for rel in actual_set:
+        found_classes |= _scan_content_classes((bundle_dir / rel).read_bytes())
+
+    declared_excluded = set(declared_privacy["excluded_classes"])
+    violated = found_classes & declared_excluded
+    if declared_privacy["minimized"] != minimized or violated:
+        return BUNDLE_PRIVACY_MISMATCH
+    return None
 
 
 def canonical_payload(contract: dict) -> dict:
@@ -249,6 +675,7 @@ def evaluate(contract: dict, *, work: dict | None = None) -> dict:
 
 # --------------------------------------------------------------------------
 # CLI — `python3 -m task.task_contract check --contract <path> [--work <path>]`
+#     · `python3 -m task.task_contract build --plan-dir <dir> --item <Pn.m>`
 # --------------------------------------------------------------------------
 
 def _load_json(path: str) -> dict:
@@ -267,7 +694,15 @@ def main(argv=None) -> int:
     check.add_argument("--work", default=None,
                        help="optional JSON {sessions,risk,handoff,audit} for the portability "
                             "tier-classification sub-check")
+    build_cmd = sub.add_parser("build", help="compile one item's Task Contract v1 JSON")
+    build_cmd.add_argument("--plan-dir", required=True, help="plans/<PLAN-ID>")
+    build_cmd.add_argument("--item", required=True, help="Pn.m")
     args = parser.parse_args(argv)
+
+    if args.cmd == "build":
+        contract = build(args.plan_dir, args.item)
+        print(json.dumps(contract, ensure_ascii=False, sort_keys=True))
+        return 0
 
     if args.cmd != "check":  # pragma: no cover - argparse already gates choices
         return 1

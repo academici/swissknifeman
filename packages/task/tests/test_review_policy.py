@@ -10,7 +10,10 @@ the historical `five-audit-loop` corpus scenario end to end
 
 Run: cd packages/task && python3 -m unittest discover -s tests
 """
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 from task import review_policy  # noqa: E402
@@ -358,6 +361,78 @@ class FiveAuditLoopHistoricalScenarioTests(unittest.TestCase):
         self.assertEqual([o["decision"] for o in outcomes],
                          ["retry-fix", "retry-fix", "incident"])
         self.assertEqual(outcomes[-1]["cap_subject"], "owner")
+
+
+class LoopBudgetFromCommittedTests(unittest.TestCase):
+    """P2.6 F5 — `LoopBudget.from_committed` reconstructs a finding's
+    cross-session occurrence count from `journal.jsonl` + `## Audit Pn`
+    blocks instead of always starting a fresh in-process counter at zero."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.plan_dir = Path(self._tmp.name)
+        (self.plan_dir / "phases").mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _finding(self, locus="lib/foo.py:10-20"):
+        return {"type": "product", "severity": "blocker", "file": "lib/foo.py",
+               "rule_or_contract_locus": locus, "defect_class": "no-persistence"}
+
+    def test_missing_phase_file_is_unknown_not_zero(self):
+        budget, count = LoopBudget.from_committed(self.plan_dir, "P9", self._finding())
+        self.assertEqual(count, "unknown")
+        self.assertIsInstance(budget, LoopBudget)
+
+    def test_no_matching_audit_block_is_a_real_verified_zero(self):
+        (self.plan_dir / "phases" / "P2.md").write_text(
+            "## Phase Status\n\n## Audit P2 — 2026-01-01\n\nno findings here\n",
+            encoding="utf-8")
+        budget, count = LoopBudget.from_committed(self.plan_dir, "P2", self._finding())
+        self.assertEqual(count, 0)
+
+    def test_finding_locus_repeated_across_two_audit_blocks_counts_both(self):
+        (self.plan_dir / "phases" / "P2.md").write_text(
+            "## Phase Status\n\n"
+            "## Audit P2 — 2026-01-01\n\nFinding at lib/foo.py:10-20 still present.\n\n"
+            "## Audit P2 — 2026-01-08\n\nFinding at lib/foo.py:10-20 STILL present.\n",
+            encoding="utf-8")
+        budget, count = LoopBudget.from_committed(self.plan_dir, "P2", self._finding())
+        self.assertEqual(count, 2)
+        self.assertEqual(budget.occurrences(self._finding()), 2)
+
+    def test_journal_plan_audit_notes_are_also_counted(self):
+        (self.plan_dir / "phases" / "P2.md").write_text(
+            "## Phase Status\n\n## Audit P2 — 2026-01-01\n\nno findings here\n",
+            encoding="utf-8")
+        entries = [
+            {"command": "plan-audit", "note": "recurring: lib/foo.py:10-20 unresolved"},
+            {"command": "plan-audit", "note": "recurring: lib/foo.py:10-20 unresolved (2)"},
+            {"command": "plan-exec", "note": "lib/foo.py:10-20 mentioned in passing"},
+        ]
+        with open(self.plan_dir / "journal.jsonl", "w", encoding="utf-8") as fh:
+            for e in entries:
+                fh.write(json.dumps(e) + "\n")
+        budget, count = LoopBudget.from_committed(self.plan_dir, "P2", self._finding())
+        self.assertEqual(count, 2)
+
+    def test_reconstructed_budget_reaches_the_incident_cap_on_the_next_round(self):
+        (self.plan_dir / "phases" / "P2.md").write_text(
+            "## Phase Status\n\n"
+            "## Audit P2 — 2026-01-01\n\nlib/foo.py:10-20\n\n"
+            "## Audit P2 — 2026-01-08\n\nlib/foo.py:10-20\n",
+            encoding="utf-8")
+        finding = self._finding()
+        budget, count = LoopBudget.from_committed(self.plan_dir, "P2", finding)
+        self.assertEqual(count, SAME_FINDING_MAX)
+        result = review_transition("VERIFYING", finding, budget=budget, profile="self-host")
+        self.assertEqual(result["decision"], "incident")
+
+    def test_empty_locus_is_unstable(self):
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            LoopBudget.from_committed(self.plan_dir, "P2", self._finding(locus=""))
+        self.assertEqual(ctx.exception.code, "FINDING_IDENTITY_UNSTABLE")
 
 
 class ReviewPolicyErrorMessageTests(unittest.TestCase):

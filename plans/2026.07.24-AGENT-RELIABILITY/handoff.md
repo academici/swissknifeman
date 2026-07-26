@@ -1,6 +1,6 @@
-# HANDOFF — 2026-07-26 — after P2
+# HANDOFF — 2026-07-26 — after P3.1
 
-**Next:** /task:plan-exec 2026.07.24-AGENT-RELIABILITY P3.1
+**Next:** /task:plan-run 2026.07.24-AGENT-RELIABILITY P3.2
 
 | Параметр | Значение |
 |:--|:--|
@@ -10,97 +10,78 @@
 | Context | `continue (/clear) — ручной item` |
 | Model | Claude Sonnet 5 |
 | Thinking | `high` |
-| Суть | Реализовать Unified Agent Trace v1 (P3.1) — versioned cross-provider trace schema и адаптеры; §3 Routing предписывает `implementation/high`, `Exec = manual` |
+| Суть | Реализовать reliability metrics/digest (P3.2) — paired reliability metrics derived only from the P3.1 trace; §3 Routing предписывает `implementation/high`, `Exec = manual` — используй `plan-run` (текущая сессия уже Sonnet/high, ритуал `/model`+`/effort` не нужен), НЕ `plan-exec` (тот пинит sonnet/medium и структурно отклонит `Exec = manual`) |
 
 ```
-/task:plan-exec 2026.07.24-AGENT-RELIABILITY P3.1
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.2
 ```
 
 **Done:**
 
-- **Фаза P2 закрыта 🟠 Done with deviations** — все **11** items терминальны
-  (🟢: P2.1, P2.3, P2.4, P2.6, P2.9, P2.11 · 🟠: P2.2, P2.5, P2.7, P2.8, P2.10).
-- **Аудит фазы P2, заход 2 из двух — вердикт ATTENTION** (`plan-audit`,
-  opus/xhigh, read-only): продукт фазы доставлен и проверен независимо
-  (write-site реально исполняется в обеих канонических точках, гейт бинарен,
-  `n/a` не зелёное, типизированный отказ подтверждён на 14 планах, 30/31
-  пересчитано из закоммиченных байтов). Восемь находок захода 2 — дефекты
-  ЗАПИСИ (числа, агрегат, строка §7, плейсхолдер, мёртвый литерал), не реопен
-  §3; блок `## Audit P2 — 2026-07-26 (заход 2)` в `phases/P2.md`.
-- **Реконсиляция записи фазы P2** (`plan-close`, режим `Pn`, эта сессия) —
-  все восемь находок захода 2 устранены записью, без мутации кода/тестов/
-  канона и без смены статусов items: агрегат `## Phase Handoff` для P2.7
-  пересобран с material-отклонением (D75–D79); `plan.md` §7 Exported —
-  добавлена строка `skiller@0.7.0` (P2.11, `abd53b4b`); хеш этого handoff'а
-  заменён с плейсхолдера на реальный `bfa5c62d` (D55); три ложных числа
-  (P2.7 10/10, P2.8 AFTER, P2.10 AFTER) перепрогнаны и исправлены; литерал
-  Validation P2.8 №7 получил явный `--results`, отклонение переклассифицировано
-  в material (статус `🟠` не изменился); Completion Notes P2.10 получили
-  напечатанные коды границы pre-mutation/pre-final.
-  `plan.md` §0 Meta — v1.16.5 → **1.16.6**; §6 Update Log — строка
-  реконсиляции.
-- Содержательно фаза сдала: compiler/enforcement seam
-  (`task_contract.py`/`review_policy.py`/`route_evidence.py`) **подключён к
-  write-site** команд (P2.6/P2.7), типизированный отказ по обеим осям маршрута
-  (P2.10), бинарный pre-final гейт с маршрутом ИСПОЛНИТЕЛЯ (P2.11, D75–D79),
-  доказательство 30/31 воспроизводимо из закоммиченных входов (P2.8),
-  бухгалтерия аудита F6/F7/F10–F15 сведена (P2.9).
-  Опубликовано `plan-protocol@2.14.0`, `skiller@0.7.0`, `task@0.9.0`.
+- **P3.1 закрыт 🟠 Done with deviations** — Unified Agent Trace v1 заморожен v1
+  (`root/contracts/unified-agent-trace-v1.md`, item-commit `3af26580`): closed
+  13-field `TraceRecord`, `trace_id`/dedup rule, analyst-owns-schema/harness-reads-
+  thin/journal-links-only split.
+- `packages/analyst/lib/analyst/trace.py` — schema owner (`build_trace_record`,
+  `trace_id`, `dedup_records`, `record_to_json`): provenance/sha256 check, fail-closed
+  privacy scan (`TRACE_PRIVACY_VIOLATION`), `quality.completeness` over six nullable
+  field groups with mandatory `reasons`, completeness-ranked resume/fork dedup — 22
+  tests green on `3af26580`.
+- `packages/harness/lib/harness/provider_trace.py` — thin Claude/Codex readers
+  (`build_claude_raw`, `build_codex_raw`): Claude reads the SCHEMA=2 run-report
+  presence + caller-supplied linkage; Codex degrades every uncaptured field to
+  `null` + `codex-hook-not-integrated` (no comparable Codex hook exists yet) — 9
+  tests green on `3af26580`.
+- `packages/task/lib/task/journal.py` — additive optional `trace_ref`/`--trace-ref`,
+  outside `REQUIRED_FIELDS`; omitted, entry stays byte-identical — 29 tests total (2
+  new) green on `3af26580`.
+- All three package `validate.sh` green: analyst 235 tests, harness 431 tests, task
+  407 tests + `plan-lint` 0 errors / 215 pre-existing warnings (unrelated plans).
+- `plan.md` §7 Exported row for `unified-agent-trace-v1.md`: `planned P3.1` →
+  `committed P3.1 (3af26580)`. §0 Meta v1.16.6 → **1.16.7**; §6 Update Log row; §4
+  Status Board P3 → `🟡 In progress` (0/5 🟢 — P3.1 is 🟠, doesn't count toward the
+  🟢 numerator).
 
 **Remaining:**
 
-- **P3–P4** ⬜ — граница P2 закрыта ATTENTION-вердиктом (не RED); третий
-  аудит-заход — решение владельца, не автоматический раунд, и сейчас не
-  назначается.
+- **P3.2–P3.5** ⬜ — metrics/digest, system eval bank, disposable-worktree canary,
+  fresh terminal audit. **P4** ⬜ waits for terminal P3.
 
 **Sources of truth:**
 
-- `plan.md` — §0 Meta (v1.16.6), §4 Status Board (P2 = `6/11`, `🟠 Done with
-  deviations`), §5 Decision Log (D70–D79 — реопен и его закрытие), §6 Update Log,
-  §7 Exported (донорская строка `skiller@0.7.0`).
-- `phases/P2.md` — `## Phase Status` (11 строк), `## Phase Handoff` (актуальный,
-  без маркера «УСТАРЕЛ», аггрегат P2.7 несёт material), `## Audit P2 —
-  2026-07-26` (заход 1, RED, F1–F15) и `## Audit P2 — 2026-07-26 (заход 2)`
-  (ATTENTION, A1–A8, оба блока append-only).
-- `findings/P2.5-scenario-results.md` — 30/31, item-commit `14b3e6ce`;
-  `artifacts/P2.5/generate_transcripts.py` — воспроизводимый вход (P2.8).
-- `roadmap.md` — carrier'ы items; `journal.jsonl` — прогоны, включая запись
-  закрытия фазы (`item = P2`).
-- **Дерево, на которое смотрит этот handoff (D55):** коммит закрытия фазы
-  `docs(plan): фаза P2 закрыта (2026.07.24-AGENT-RELIABILITY)` — `bfa5c62d`;
-  холодная сессия стартует с этого committed-дерева.
+- `plan.md` — §0 Meta (v1.16.7), §4 Status Board (P3 = `0/5`, `🟡 In progress`), §5
+  Decision Log (D80 — F6 deferral resolution), §6 Update Log, §7 Exported (this
+  item's row now `committed P3.1`).
+- `phases/P3.md` — `## Phase Status` (P3.1 row `🟠 Done with deviations`), P3.1 item
+  block (Completion Notes/Pending Work/Known Deviations carry the full record).
+- `root/contracts/unified-agent-trace-v1.md` — the frozen v1 schema P3.2/P3.3/P3.4
+  consume; §Boundaries names what is explicitly NOT owned here (D90 analytics
+  envelope, journal REQUIRED_FIELDS, Codex raw capture).
+- `journal.jsonl` — this item's start/final pair (`plan-run`, `item_id=P3.1`).
 
 **Open risks:**
 
-- **Cap аудитов исчерпан для этой границы.** Заход 2 был последним
-  автоматическим; третий заход — решение владельца (INCIDENT-класс), а не
-  новый ремонтный круг.
-- **Пять `🟠` в фазе** — материальные отклонения P2.2 (три недоставленные
-  позиции Scope, две из трёх закрыты P2.6/P2.7), P2.5 (dispatch/cold recovery
-  не разыграны буквально), P2.7 (D75–D79: Deliverable «падает закрыто»
-  выполнен наполовину на этом item'е, устранено P2.10/P2.11), P2.8 (пункт 7
-  Validation — красный литерал, D60/D61 регистр), P2.10 (дифф вне `Files`) —
-  все проверены аудитом захода 2, реопен не назначен.
-- **Дрейф генерируемых деревьев вне owner-карты.** P2.6–P2.9 отсутствуют в
-  `remediation-map.json::baseline_owners` → `assert_generated_scope.py` для них
-  не запускается (граница D63); компенсация — ручная сверка `git show --stat`
-  против `Files`.
-- **Предсуществующие дефекты вне фазы:** строка фазы P0 в `plan.md` §4
-  (владелец — `task:plan-close … P0`); WARN `plan-lint` на длине Update
-  Log-строки P1.4.
+- **F6 (`trace_completeness ≥99%`) has no live number yet** — P3.1 proved the
+  instrument only (D80); P3.2/P3.3 owe the first live paired-bank measurement
+  against `artifacts/reliability-bank-v1/`. A P3.2/P3.3 close that reports F6 green
+  without first running that live pass would be exactly the false-GREEN pattern this
+  plan exists to prevent.
+- **`analyst`/`harness` package-API minor bumps owed but not applied** (`0.1.0`→
+  `0.2.0`, `0.3.0`→`0.4.0`) — `package.json` sat outside P3.1's declared `Files`;
+  apply them in the next item that legitimately touches those manifests (P3.2 is the
+  natural candidate since it extends `analyst`).
+- **Predecessor items unchanged:** P0 phase-index row owner (`task:plan-close … P0`)
+  and the P1.4 Update Log WARN remain open from earlier handoffs, untouched by P3.1.
 
 **Workarounds / Deferred / Open questions:**
 
-- **Docs-sync — follow-up (исход «c»):** `packages/task/CLAUDE.md` не описывает
-  модули compiler/enforcement seam'а; правка шире одной фазы, владелец — **P3.1**.
-- **F9 (Minor)** — `PROMOTE-CANDIDATE` (атрибуция diff-scope guard по
-  автору/сессии), вне scope реопена.
-- **Обобщение D79** в канон `plan-protocol` — `PROMOTE-CANDIDATE`, владелец
-  продвижения назначается отдельной D-записью.
-- **A5 `PROMOTE-CANDIDATE`** (заход 2) — гейт исполнимости литералов Validation
-  на этапе `plan-design`, а не на этапе исполнителя; третье вхождение шва
-  D60/D61/F7 в этом плане.
-- **Fresh-subagent dispatch** — недоставленная позиция Scope P2.2 (c), владелец
-  **P3.4** (disposable-worktree canary).
-- **`trace-record-missing`** — единственный честный residual P2.5/P2.8,
-  владелец **P3.1/P3.2** (unified trace ещё не существует).
+- **`trace-record-missing` residual (P2.5/P2.8)** — now has an owner-in-progress:
+  P3.1 built the trace instrument; P3.2's live paired run is what actually closes
+  this residual.
+- **`docs-sync` follow-up** (`packages/task/CLAUDE.md` compiler/enforcement seam
+  description) — still owned by P3.1's original note; not touched by this item
+  (out of `Files`), carried forward.
+- **FOREMAN re-scope marker condition** (`execution-state-machine-v1.md` Exported
+  row: "снимается при терминальных P2.1 И P3.1") — both are now terminal; the
+  marker itself lives in `2026.07.18-FOREMAN`'s own files (И2 boundary — not edited
+  here), flagged for that plan's own bookkeeping to pick up.

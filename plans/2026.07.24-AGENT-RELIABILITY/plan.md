@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.15.1 |
+| Version | 1.15.2 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.6 закрыт 🟢 — компилятор получил producer/bundle-предикат/cap/actor, `task@0.6.0`; следующий — P2.7) |
+| Last Updated | 2026-07-26 (P2.7 закрыт 🟢 — write-site компилятора в `plan-exec`/`plan-close`, истинный канон §13, `source-evidence-template.md`, `plan-protocol@2.13.0`/`skiller@0.6.0`/`task@0.7.0`; следующий — P2.8) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -249,7 +249,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 4/9 | 🟡 In progress |
+| P2 | Checked outcome execution и bounded review | 5/9 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -346,6 +346,7 @@ audit/fix-loop без продукта, который план создан л�
 | D72 | 2026-07-26 | **`canonical_actor` возвращает модель, а не класс; исторические журнальные строки не переписываются.** Находка F8: `route_evidence.canonical_actor(model_class, effort)` возвращает КЛАСС, `journal.py --route-evidence` выводит `actor` из него, и записи P2.4/P2.5 несут `implementation/high`/`implementation/medium` против `sonnet/high`/`opus/high` у всех предыдущих. Проблема `findings/02` («34 написания actor») решена стиранием информации, а не нормализацией: `required` и `actual` стали одной строкой, и routing-adherence по журналу перестал быть проверкой — `implementation/high` одинаково покрывает и `sonnet/high`, и любую другую implementation-модель. Решение: нормализация ПРИВОДИТ написания к одной форме конкретной модели, класс остаётся отдельной осью route evidence (`model_class`), отсутствие модели рендерится литералом `unknown` — тем же принципом, что уже применён к `effort`. Владелец ремонта — P2.6. **Строки 45–46 `journal.jsonl` остаются как есть:** журнал append-only, D51 запрещает и переписывание, и компенсирующий event; строки schema-VALID (дефект семантический, не схемный), поэтому sidecar `journal-exceptions.jsonl` неприменим и не заводится — статус фиксируют эта запись и Known Deviations (P2.9). | RAG:— (repo-grounded: `packages/task/lib/task/route_evidence.py:192-201`; `packages/task/lib/task/journal.py:383-393`; `plans/2026.07.24-AGENT-RELIABILITY/journal.jsonl:45-46`; `findings/02-telemetry-2026-07-20-24.md`). |
 
 | D73 | 2026-07-26 | **Провайдер-ось route evidence сужена сознательно (недостающая D#-запись к P2.4).** Находка F15: Intent P2.4 обязывал захватывать «required and actual **provider**/model/effort», но `capture_actual` пишет только `model_class`+`effort`, а замороженная схема P0.2 `$defs/route` (`additionalProperties: false`) провайдер-оси не имеет вовсе. Сужение вынужденное и правильное: добавить ось значило бы править ЗАМОРОЖЕННЫЙ контракт P0.2 вне scope любого item'а — ровно тот класс правки, который D62 уже отклонил для `remediation-map.json`. Формально Known Deviations P2.4 не лгали (провайдер жил в Intent, не в Scope Included), но решение осталось незаписанным, и без записи оно неотличимо от недосмотра. Фиксируется: **ось провайдера в Task Contract v1 отсутствует по конструкции замороженной схемы; носитель провайдера — Routing/roadmap-carrier и `Target Operator Models` §0, а не route-запись.** Расширение оси возможно только версией контракта (`task-contract/v2`) в отдельном плане, не правкой v1. Владелец ссылки из Known Deviations P2.4 — P2.9. | RAG:— (repo-grounded: `root/contracts/task-contract-v1.schema.json` `$defs/route`/`$defs/route_pair`; `packages/task/lib/task/route_evidence.py` `capture_actual`; `phases/P2.md:88` Intent P2.4). |
+| D74 | 2026-07-26 | **P2.7 write-site зовёт `task_contract` через Python API (`build(..., actual_route=…)`+`evaluate`), не литеральный shell-пайп `build \| check`.** Измерено при исполнении: CLI-форма `task_contract build` держит `route.actual` неразрешённым (`model_class=None`) по конструкции — докстринг `build()` называет это байт-детерминированностью между процессами (P2.6). Питание такого контракта в `task_contract check` роняет `pre_mutation`'s `ROUTE_UNDERSHOOT`-проверку необработанным `ValueError: tuple.index(x): x not in tuple` (`_rank()`'s `.index(None)`), а не типизированным кодом — воспроизведено на живом контракте `P2.7`. У CLI `build` нет флага для живого route; добавить его значило бы править `packages/task/lib/**` — Scope Excluded P2.7 (владелец — P2.6, уже закрыт). Решение: write-site зовёт тот же компилятор его же документированным Python API (`task_contract.build(plan_dir, item_id, actual_route=route_evidence.capture_actual(...))` + `task_contract.evaluate(contract)`) — параметр `actual_route` уже существовал и именно так использовался self-conformance P2.6 (Completion Notes P2.6: `capture_actual(required.model_class, required.effort, source="self-attested", model="sonnet")`). Шаг остаётся ОБЯЗАТЕЛЬНЫМ и fail-closed для каждого прогона; заменена только форма вызова (Python-инвокация вместо shell-пайпа), не условие. Альтернатива «сузить шаг до `build`-only, без `check`» отклонена: это ослабило бы контроль ровно там, где F1 его уже ослабил. Альтернатива «чинить `build`'s CLI в P2.6» отклонена: P2.6 закрыт и вне Scope Included этого item'а; узкий CLI-флаг для одной route — новый публичный интерфейс, за пределами `Scope Excluded packages/task/lib/**`. | RAG:— (repo-grounded: `packages/task/lib/task/task_contract.py:202-232,574,599-601`; воспроизведено командой `PYTHONPATH=packages/task/lib python3 -m task.task_contract check --contract <build-produced-JSON>`; `phases/P2.md` P2.6 Completion Notes, self-conformance абзац). |
 
 ## 6. Update Log
 
@@ -388,6 +389,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-audit/Claude Opus 5/xhigh | Аудит фазы P2, заход 1/2 — вердикт **RED**: 15 находок (2 Blocker), сломан продукт фазы. Блок `## Audit P2 — 2026-07-26` в `phases/P2.md`. |
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | Фаза P2 реопенена (D70, 4 шага §3): D71 — P2.2 → 🟠 с названным долгом; D72 — actor возвращает модель; D73 — провайдер-ось сужена по конструкции v1. Добавлены ремонтные items P2.6–P2.9 (26 items всего). Слой 2 — `research/07`. Version 1.14.4 → 1.15.0. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.6 закрыт 🟢: `task_contract.build`/`bundle_lint`, `review_policy.LoopBudget.from_committed`, `canonical_actor` с моделью (D72), `task@0.6.0` — детали см. phases/P2.md P2.6 Completion Notes. Version 1.15.0 → 1.15.1. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.7 закрыт 🟢: write-site компилятора в `plan-exec`/`plan-close` (D74), истинный `plan-protocol` §13, `source-evidence-template.md`, `plan-protocol@2.13.0`/`skiller@0.6.0`/`task@0.7.0` — детали см. phases/P2.md P2.7 Completion Notes. Version 1.15.1 → 1.15.2. |
 
 ## 7. Contracts
 
@@ -407,9 +409,9 @@ audit/fix-loop без продукта, который план создан л�
 | `plan-protocol` skill canon | v2.12.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; долг зеркальной `Consumed`-строки снят D58 (его D85 — ECO-OPT решил не пинить) |
 | `skiller` package API + `general`/`core` units | v0.5.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
 | `task` plugin/routing (`plugin_version`) | v0.5.0 | committed P2.3 (`77b574b5`); **строка расходится с фактом** — P2.4 изменил `lib/` без бампа (F10, машинный гейт хеширует commands/adapters, не `lib/`), ремонт — P2.6 (бамп) и P2.9 (эта строка) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | task; тот же D58/D85 |
-| `task` plugin/routing (`plugin_version`) | v0.6.0 → v0.7.0 | planned P2.6 / P2.7 (реопен D70) | те же потребители | task; строка приводится к факту в P2.9 |
-| `plan-protocol` skill canon | v2.13.0 | planned P2.7 (реопен D70 — §13 приводится в соответствие с фактическим поведением, F1) | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2) |
-| `skiller` package API + `general`/`core` units | v0.6.0 | planned P2.7 (реопен D70 — новый `snippets/source-evidence-template.md` в unit `general`) | `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
+| `task` plugin/routing (`plugin_version`) | v0.6.0 → v0.7.0 | committed P2.6 (`a13614db`) / P2.7 (`d11c3b74`, реопен D70) | те же потребители | task; строка (v0.5.0) приводится к факту в P2.9 |
+| `plan-protocol` skill canon | v2.13.0 | committed P2.7 (`d11c3b74`, реопен D70 — §13 приведён в соответствие с фактическим поведением, F1) | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2) |
+| `skiller` package API + `general`/`core` units | v0.6.0 | committed P2.7 (`d11c3b74`, реопен D70 — новый `snippets/source-evidence-template.md` в unit `general`) | `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
 
 ### Consumed
 

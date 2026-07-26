@@ -1,0 +1,25 @@
+{
+  "base_sha": "802a8317a1c12f9609548854c99674948c631bf4",
+  "cli_flags": [
+    "--model",
+    "sonnet",
+    "--effort",
+    "high",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "bypassPermissions"
+  ],
+  "prompt_sha256": "0528567c9d954721beff24670028f20be6574150819f32737762521354b0801d",
+  "provider": "claude-code",
+  "returncode": 0,
+  "route": {
+    "effort": "high",
+    "model": "sonnet",
+    "model_class": "implementation",
+    "source": "cli-flag"
+  },
+  "schema_version": "p3.9-sanitized-raw/v1",
+  "stderr_class": "none"
+}

@@ -1,0 +1,57 @@
+{
+  "records": [
+    {
+      "contract_ref": {
+        "contract_id": "p3.10-probe",
+        "version_hash": "0000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "dispatch": {
+        "event": "dispatch",
+        "state": "DONE"
+      },
+      "finding_refs": [
+        "F-p3.10-probe"
+      ],
+      "occurred_at": "2026-07-26T00:00:00Z",
+      "plan_ref": {
+        "command": "plan-run",
+        "item_id": "P3.10",
+        "plan_id": "2026.07.24-AGENT-RELIABILITY"
+      },
+      "privacy": {
+        "excluded": [
+          "raw_transcript",
+          "chain_of_thought",
+          "tool_payload",
+          "secret"
+        ]
+      },
+      "provenance": {
+        "provider_id": "claude-code",
+        "raw_ref": "p3.10/probe",
+        "reader_id": "p3.10-probe",
+        "reader_version": "1.0.0",
+        "sha256": "240aef38dd010320bd47889bf861adf3cbd778de01d6d29f2d786a494031fe0c"
+      },
+      "public_outcome": {
+        "check": "p3.10 probe",
+        "evidence_ref": "p3.10/probe",
+        "scope": "internal"
+      },
+      "quality": {
+        "completeness": 1.0,
+        "degraded": false,
+        "missing": []
+      },
+      "reasons": {},
+      "route": {
+        "effort": "high",
+        "model": "sonnet",
+        "model_class": "implementation"
+      },
+      "schema_version": "unified-agent-trace/v1",
+      "trace_id": "5cf14d84c940f086dcf20347e4dbe386e2ff98b529163f15bb4addfab3734a22"
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

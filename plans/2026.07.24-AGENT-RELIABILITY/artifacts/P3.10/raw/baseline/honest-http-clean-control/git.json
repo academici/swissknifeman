@@ -1,0 +1,7 @@
+{
+  "base_sha": "7479972f2a582ab8583270c30fad8da1ff56659e",
+  "changed_paths": [
+    "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.10/worktree-fixtures/case-03-baseline.txt"
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

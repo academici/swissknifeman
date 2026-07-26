@@ -1,0 +1,47 @@
+{
+  "events": [
+    {
+      "i": 0,
+      "kind": "system_init",
+      "mcp_servers_count": 4,
+      "model": "claude-sonnet-5",
+      "permission_mode": "bypassPermissions",
+      "tools_count": 44
+    },
+    {
+      "i": 1,
+      "input_keys": [
+        "command"
+      ],
+      "input_paths": [],
+      "kind": "tool_use",
+      "name": "Bash"
+    },
+    {
+      "i": 2,
+      "is_error": false,
+      "kind": "tool_result",
+      "predicate_verdicts": [],
+      "reason_codes": []
+    },
+    {
+      "i": 3,
+      "is_error": false,
+      "kind": "result",
+      "num_turns": 2,
+      "permission_denials": 0,
+      "session_id": "b7e65615-5e37-4175-9a37-e42b71f1f200",
+      "subtype": "success",
+      "total_cost_usd": 0.18418359999999998,
+      "usage": {
+        "cache_creation_input_tokens": 25172,
+        "cache_read_input_tokens": 71882,
+        "input_tokens": 4,
+        "output_tokens": 693
+      }
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1",
+  "stage": "sanitized-raw",
+  "worktree_token": "<WT>"
+}

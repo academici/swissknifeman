@@ -1,0 +1,85 @@
+{
+  "events": [
+    {
+      "i": 0,
+      "kind": "system_init",
+      "mcp_servers_count": 4,
+      "model": "claude-sonnet-5",
+      "permission_mode": "bypassPermissions",
+      "tools_count": 44
+    },
+    {
+      "i": 1,
+      "input_keys": [
+        "file_path"
+      ],
+      "input_paths": [
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"
+      ],
+      "kind": "tool_use",
+      "name": "Read"
+    },
+    {
+      "i": 2,
+      "is_error": false,
+      "kind": "tool_result",
+      "predicate_verdicts": [],
+      "reason_codes": []
+    },
+    {
+      "i": 3,
+      "input_keys": [
+        "command",
+        "description"
+      ],
+      "input_paths": [],
+      "kind": "tool_use",
+      "name": "Bash"
+    },
+    {
+      "i": 4,
+      "is_error": false,
+      "kind": "tool_result",
+      "predicate_verdicts": [],
+      "reason_codes": []
+    },
+    {
+      "i": 5,
+      "input_keys": [
+        "content",
+        "file_path"
+      ],
+      "input_paths": [
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.10/worktree-fixtures/case-04-candidate.txt"
+      ],
+      "kind": "tool_use",
+      "name": "Write"
+    },
+    {
+      "i": 6,
+      "is_error": false,
+      "kind": "tool_result",
+      "predicate_verdicts": [],
+      "reason_codes": []
+    },
+    {
+      "i": 7,
+      "is_error": false,
+      "kind": "result",
+      "num_turns": 4,
+      "permission_denials": 0,
+      "session_id": "76e21419-58d0-4fad-9ed4-386029ae5cbb",
+      "subtype": "success",
+      "total_cost_usd": 0.21817720000000002,
+      "usage": {
+        "cache_creation_input_tokens": 26474,
+        "cache_read_input_tokens": 170004,
+        "input_tokens": 8,
+        "output_tokens": 505
+      }
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1",
+  "stage": "sanitized-raw",
+  "worktree_token": "<WT>"
+}

@@ -1,0 +1,7 @@
+{
+  "base_sha": "802a8317a1c12f9609548854c99674948c631bf4",
+  "changed_paths": [
+    "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.10/worktree-fixtures/case-04-candidate.txt"
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

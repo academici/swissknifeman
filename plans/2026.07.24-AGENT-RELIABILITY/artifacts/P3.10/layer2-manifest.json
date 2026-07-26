@@ -1,0 +1,95 @@
+{
+  "candidate_sha": "802a8317a1c12f9609548854c99674948c631bf4",
+  "declared_case_set_sha256": "b9184b589060c1bcd412009a43454e2bc8a1056cbb9c173ad91f8db9467b4787",
+  "dispatch_budget": {
+    "actual_dispatches": 10,
+    "declared_max_dispatches": 10,
+    "retries_used": 0,
+    "total_cost_usd": 2.052801
+  },
+  "first_pass_success": {
+    "baseline": 0.4,
+    "candidate": 1.0
+  },
+  "floors": {
+    "F10_owner_intervention_ratio": {
+      "metric": "owner_intervention_ratio",
+      "reason": "`owner_question` is declared `unmappable` in event-mapping-v1.json (a headless dispatch has no owner channel); none of the 5 declared cases assert it either. A 0/0-style ratio here would misreport an unobservable channel as a measured absence of intervention (D83 trap).",
+      "status": "unknown"
+    },
+    "F6_trace_completeness": {
+      "baseline_proof_class": "recomputed",
+      "completeness": 1.0,
+      "denominator": 1,
+      "exclusions": [],
+      "metric": "trace_completeness",
+      "note": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'; only 1 trace_emitted event(s) produced across both sides on this subset -- thin sample, not a bank-wide claim",
+      "numerator": 1,
+      "scope": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'",
+      "source_trace_ids": [],
+      "value": 1.0
+    },
+    "F8_first_pass_success_delta_vs_paired_baseline": {
+      "baseline": {
+        "baseline_proof_class": "recomputed",
+        "completeness": 1.0,
+        "denominator": 5,
+        "exclusions": [],
+        "metric": "first_pass_success",
+        "note": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'",
+        "numerator": 2,
+        "source_trace_ids": [],
+        "value": 0.4
+      },
+      "candidate": {
+        "baseline_proof_class": "recomputed",
+        "completeness": 1.0,
+        "denominator": 5,
+        "exclusions": [],
+        "metric": "first_pass_success",
+        "note": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'",
+        "numerator": 5,
+        "source_trace_ids": [],
+        "value": 1.0
+      },
+      "delta": 0.6,
+      "metric": "first_pass_success",
+      "note": null,
+      "scope": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'",
+      "status": "paired"
+    },
+    "F9_context_input_per_success_ratio": {
+      "baseline": {
+        "context_input_per_success": 371910.5,
+        "passed_cases": 2,
+        "terms": {
+          "cache_creation_input_tokens": 133519,
+          "cache_read_input_tokens": 610272,
+          "input_tokens": 30
+        }
+      },
+      "candidate": {
+        "context_input_per_success": 157450.0,
+        "passed_cases": 5,
+        "terms": {
+          "cache_creation_input_tokens": 130511,
+          "cache_read_input_tokens": 656707,
+          "input_tokens": 32
+        }
+      },
+      "metric": "context_input_per_success_ratio",
+      "scope": "scope: declared-subset 5/31 (D51/D82) -- not eligible for full-bank 'met'",
+      "status": "computed",
+      "value": 0.4233545436334817
+    }
+  },
+  "generated_at": "2026-07-26T00:00:00Z",
+  "leftover_worktree_registrations": 0,
+  "pre_plan_sha": "7479972f2a582ab8583270c30fad8da1ff56659e",
+  "route": {
+    "effort": "high",
+    "model": "sonnet",
+    "model_class": "implementation"
+  },
+  "schema_version": "p3.10-layer2-manifest/v1"
+}

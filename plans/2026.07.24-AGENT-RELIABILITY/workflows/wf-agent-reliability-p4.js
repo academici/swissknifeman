@@ -153,7 +153,7 @@ function verifyPrompt(item) {
 Ничего не добавляй от себя, ничего не чини, ни одного файла не трогай. Вывод команд — единственное, что от тебя нужно.`
 }
 
-function reviewPrompt(item, verify) {
+function reviewPrompt(item, verify, boundaryCodes) {
   return `Ты adversarial-ревьюер item'а ${item.id} мастер-плана ${PLAN}. Read-only: КОД НЕ ПРАВИШЬ, план НЕ ПРАВИШЬ.
 ${CTX}
 Механический верификатор (отдельный агент, которому нечего защищать) прогнал проверки — СЫРОЙ вывод; верь ЕМУ и git-диффу, а НЕ прозе исполнителя:
@@ -161,13 +161,23 @@ ${verify}
 
 ТЗ item'а — ${PLAN_DIR}/phases/P4.md, раздел «### ${item.id} —» (прочитай сам, целиком).
 
+**ГРАНИЦА ТВОЕГО ПРЕДМЕТА (читай до первой находки).** Bookkeeping плана для ЭТОГО item'а —
+Status, Completion Notes, Pending Work, Known Deviations, строка «## Phase Status», запись в
+journal.jsonl, handoff.md — пишется стадией \`Close\` ПОСЛЕ твоего вердикта, а не исполнителем
+до него. Их незаполненность на момент ревью — КОНСТРУКЦИЯ пайплайна, а не дефект item'а: она
+НЕ находка, НЕ Blocker и НЕ основание для RED. Ты судишь ПРОДУКТ item'а: дифф против Scope
+Included/Files/Implementation Rules/Deliverables и результаты Validation. Исключение ровно
+одно: если исполнитель НЕ ПОСЧИТАЛ коды границ или код ≠ \`allow\` — это находка по существу
+(D76/Ф2); сам факт, что посчитанные коды ещё не перенесены в Completion Notes, находкой НЕ
+является. Посчитанное исполнителем, дословно: «${boundaryCodes}».
+
 ПОРЯДОК (начни с диффа, не с отчёта исполнителя — иначе якорь):
 1. \`git log\`/\`git show --stat\` по коммиту(ам) item'а в ${REPO} — что РЕАЛЬНО изменилось.
 2. Сверь дифф со Scope Included/Files/Implementation Rules/Deliverables спеки построчно; заполни scope_boundary_ok (мутации вне Files, push/tag/релиз, правки чужих планов — всё это false).
 3. validation_cross_check: что реально зелёное/красное по Verify-выводу — совпадает ли с заявленным исполнителем (расхождение → false_claims).
 4. Помни «красное остаётся красным»: честно названное расхождение — ПРАВИЛЬНЫЙ исход; дефект — СКРЫТОЕ или подогнанное.
-5. Отдельно проверь напечатанные коды границ: закрытие при коде ≠ \`allow\` на любой из границ (включая \`pre_final: n/a\`) — находка Major (D76); отсутствие кодов вовсе — находка (ровно Ф2, ради которой существует P4.4).
-6. Только теперь читай отчёт исполнителя и ищи расхождение с фактами.
+5. Отдельно проверь ПОСЧИТАННЫЕ коды границ (блок «ГРАНИЦА ТВОЕГО ПРЕДМЕТА» выше): код ≠ \`allow\` на любой из границ (включая \`pre_final: n/a\`) — находка Major (D76); коды не посчитаны вовсе — находка (ровно Ф2, ради которой существует P4.4).
+6. Только теперь ищи расхождение фактов с тем, что заявлено о работе.
 
 Вердикт: RED — Scope Included не исполнен / есть Blocker / скрытое либо подогнанное расхождение / нарушена граница наружу; ATTENTION — исполнено с честно названным долгом; GREEN — чисто, всё по спеке.
 Не занижай severity ради «не останавливать пайплайн»: RED останавливает ВЕСЬ прогон — это правильно, не повод для самоцензуры вердикта.
@@ -216,12 +226,22 @@ const ITEMS = [
   { id: 'P4.3', title: 'Синхронизировать docs и собрать Owner rollout/release packet', model: 'opus', effort: 'high', reviewClass: 'full' },
 ]
 
+// START_FROM — дозапуск ХВОСТА фазы после остановки: items ДО указанного ID уже терминальны в
+// плане (проверяется по `phases/P4.md`, не по памяти) и повторному прогону не подлежат — иначе
+// заход переисполнит закрытый item и создаст второй носитель того же факта. Пустая строка —
+// полный прогон с начала. Порядок D90 при этом НЕ нарушается: хвост исполняется в том же порядке.
+const START_FROM = 'P4.3'
+const startIdx = START_FROM ? ITEMS.findIndex(i => i.id === START_FROM) : 0
+if (startIdx < 0) throw new Error(`START_FROM="${START_FROM}" не найден среди items: ${ITEMS.map(i => i.id).join(', ')}`)
+const QUEUE = ITEMS.slice(startIdx)
+if (startIdx > 0) log(`START_FROM=${START_FROM}: пропущены уже терминальные ${ITEMS.slice(0, startIdx).map(i => i.id).join(', ')} — исполняется хвост ${QUEUE.map(i => i.id).join(' → ')}.`)
+
 log(`wf-P4: ${ITEMS.length} items строго последовательно (${ITEMS.map(i => i.id).join(' → ')}) — стоп на первом RED/blocked останавливает ВЕСЬ прогон. Наружу (push/tag/релиз/флот) не выходит ни один агент: решение G1 остаётся владельцу.`)
 
 const done = []
 let stoppedAt = null
 
-for (const item of ITEMS) {
+for (const item of QUEUE) {
   const isLast = item.id === ITEMS[ITEMS.length - 1].id
 
   phase('Impl')
@@ -244,7 +264,7 @@ for (const item of ITEMS) {
   const verify = await safeAgent(verifyPrompt(item), { label: `verify:${item.id}`, phase: 'Verify', model: 'sonnet', effort: 'low' })
 
   phase('Review')
-  const review = await safeAgent(reviewPrompt(item, verify || '(верификатор не вернул результат — ревьюер учитывает это как риск)'), {
+  const review = await safeAgent(reviewPrompt(item, verify || '(верификатор не вернул результат — ревьюер учитывает это как риск)', impl.boundary_codes), {
     label: `review:${item.id}`, phase: 'Review', ...REVIEW_FOR[item.reviewClass], schema: REVIEW_SCHEMA,
   })
   if (!review || review.verdict === 'RED' || review.scope_boundary_ok === false) {
@@ -271,10 +291,12 @@ for (const item of ITEMS) {
   log(`✅ ${item.id} — ${review.verdict} (${review.findings.length} находок), коды границ: ${impl.boundary_codes}. Терминальных: ${done.filter(d => !d.stopped).length}/${ITEMS.length}.`)
 }
 
-const allTerminal = done.length === ITEMS.length && done.every(d => !d.stopped)
+// Терминальность считается по ОЧЕРЕДИ этого захода (QUEUE), не по всей фазе: пропущенные
+// START_FROM'ом items уже закрыты в плане — их статус берётся из `phases/P4.md`, а не отсюда.
+const allTerminal = done.length === QUEUE.length && done.every(d => !d.stopped)
 
 return {
-  pipeline: `${ITEMS.map(i => i.id).join(' → ')} (фаза P4, строго последовательно, D90/D93)`,
+  pipeline: `${QUEUE.map(i => i.id).join(' → ')} (фаза P4, строго последовательно, D90/D93${startIdx > 0 ? `; хвост после START_FROM=${START_FROM}` : ''})`,
   items: done.map(d => ({
     item: d.item,
     stopped: d.stopped || null,

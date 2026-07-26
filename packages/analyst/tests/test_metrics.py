@@ -9,7 +9,7 @@ from analyst.metrics import (
 from analyst.trace import build_trace_record
 
 
-def _trace(**overrides):
+def _trace(*, turn_id="t1", **overrides):
     raw = {
         "provenance": {"provider_id": "claude-code", "raw_ref": "local:s1", "sha256": "0" * 64,
                        "reader_id": "harness.provider_trace", "reader_version": "1.0.0"},
@@ -24,7 +24,7 @@ def _trace(**overrides):
     }
     raw.update(overrides)
     return build_trace_record(raw, provider_id="claude-code", project_id="swissknifeman",
-                              identity="s1", turn_id="t1")
+                              identity="s1", turn_id=turn_id)
 
 
 class TestBuildMetricRecord(unittest.TestCase):
@@ -56,9 +56,10 @@ class TestBuildMetricRecord(unittest.TestCase):
 
     def test_completeness_derives_from_source_traces_when_given(self):
         complete = _trace()
-        degraded = _trace(route=None, reasons={"route": "no route captured", "contract_ref": "n/a",
-                                                "dispatch": "n/a", "public_outcome": "n/a",
-                                                "finding_refs": "n/a"})
+        degraded = _trace(turn_id="t2", route=None,
+                          reasons={"route": "no route captured", "contract_ref": "n/a",
+                                   "dispatch": "n/a", "public_outcome": "n/a",
+                                   "finding_refs": "n/a"})
         record = build_metric_record("trace_completeness", numerator=2, denominator=2,
                                      baseline_proof_class="recomputed",
                                      source_traces=(complete, degraded))
@@ -70,6 +71,15 @@ class TestBuildMetricRecord(unittest.TestCase):
         with self.assertRaisesRegex(MetricError, "METRIC_TRACE_SCHEMA_MISMATCH"):
             build_metric_record("m", numerator=1, denominator=1, baseline_proof_class="recomputed",
                                 source_traces=({"schema_version": "other/v9"},))
+
+    def test_resumed_duplicate_traces_are_deduped_before_counting(self):
+        trace = _trace()
+        resumed_duplicate = dict(trace)  # same trace_id (same natural key), same record
+        record = build_metric_record("trace_completeness", numerator=1, denominator=1,
+                                     baseline_proof_class="recomputed",
+                                     source_traces=(trace, resumed_duplicate))
+        self.assertEqual(len(record["source_trace_ids"]), 1)
+        self.assertEqual(record["completeness"], 1.0)
 
 
 class TestPairMetric(unittest.TestCase):

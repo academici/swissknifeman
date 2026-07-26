@@ -24,6 +24,7 @@ record}` entries: this module's own aggregation input, not a change to the froze
 import json
 
 from .trace import SCHEMA_VERSION as TRACE_SCHEMA_VERSION
+from .trace import dedup_records
 
 SCHEMA_VERSION = "reliability-metrics-digest/v1"
 
@@ -46,6 +47,9 @@ def build_metric_record(metric, *, numerator, denominator, baseline_proof_class,
     metric this module emits. `source_traces` — zero or more `analyst.trace.TraceRecord`
     dicts this metric was derived from; empty for a bank-count metric that predates the
     trace instrument (completeness then reflects denominator presence, not trace quality).
+    Resume/fork duplicates are collapsed via `analyst.trace.dedup_records` before being
+    counted (Implementation Rules: "Resume/fork dedup is mandatory for candidate
+    traces") — a caller never needs to dedup its own candidate trace list first.
     """
     if not isinstance(metric, str) or not metric:
         raise MetricError("METRIC_MISSING_ID: metric must be a non-empty string")
@@ -61,6 +65,7 @@ def build_metric_record(metric, *, numerator, denominator, baseline_proof_class,
         if trace.get("schema_version") != TRACE_SCHEMA_VERSION:
             raise MetricError("METRIC_TRACE_SCHEMA_MISMATCH: source_traces must be "
                               f"'{TRACE_SCHEMA_VERSION}' records")
+    source_traces = dedup_records(source_traces) if source_traces else source_traces
 
     value = (numerator / denominator) if denominator else None
     if source_traces:

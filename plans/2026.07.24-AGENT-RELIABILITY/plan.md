@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.0 |
+| Version | 1.16.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (design-заход разобрал остановку P2.7: D75–D79 — маршрут исполнителя на pre-final, `n/a` не зелёный, названные границы предиката и штатного пути, легаси-форма §3 в компиляторе, тест на различающий предикат; P2.7 → 🟠, заведены items P2.10/P2.11, порядок P2.10 → P2.11 → P2.8 → P2.9) |
+| Last Updated | 2026-07-26 (P2.10 закрыт 🟠: закрытый набор заголовков §3, имя модели → класс по committed-карте, типизированный отказ вместо `ValueError` по обеим осям/сторонам маршрута, probe охвата, `task@0.8.0`; следующий — P2.11) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -398,6 +398,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.6 закрыт 🟢: `task_contract.build`/`bundle_lint`, `review_policy.LoopBudget.from_committed`, `canonical_actor` с моделью (D72), `task@0.6.0` — детали см. phases/P2.md P2.6 Completion Notes. Version 1.15.0 → 1.15.1. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.7 закрыт 🟢: write-site компилятора в `plan-exec`/`plan-close` (D74), истинный `plan-protocol` §13, `source-evidence-template.md`, `plan-protocol@2.13.0`/`skiller@0.6.0`/`task@0.7.0` — детали см. phases/P2.md P2.7 Completion Notes. Version 1.15.1 → 1.15.2. |
 | 2026-07-26 | plan-design/Claude Opus 5/high | Остановка P2.7 разобрана: D75–D79 (маршрут исполнителя на pre-final, `n/a` не зелёный, названные границы предиката и штатного пути, легаси-форма §3 в компиляторе, тест на различающий предикат); P2.7 → 🟠, заведены P2.10/P2.11 (28 items), слои — `findings/14`, `research/08`. Version 1.15.2 → 1.16.0. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.10 закрыт 🟠: компилятор читает легаси-формы §3, типизированный отказ вместо `ValueError` (D74/D78), `task@0.8.0` — детали см. phases/P2.md P2.10 Completion Notes. Version 1.16.0 → 1.16.1. |
 
 ## 7. Contracts
 
@@ -420,6 +421,7 @@ audit/fix-loop без продукта, который план создан л�
 | `task` plugin/routing (`plugin_version`) | v0.6.0 → v0.7.0 | committed P2.6 (`a13614db`) / P2.7 (`d11c3b74`, реопен D70) | те же потребители | task; строка (v0.5.0) приводится к факту в P2.9 |
 | `plan-protocol` skill canon | v2.13.0 | committed P2.7 (`d11c3b74`, реопен D70); **утверждение §13 материально НЕПОЛНО до P2.11** (D76: `plan-close` принимает `n/a` за зелёное; D78: вызов падает `ValueError` на 11/14 планов корня) — потребитель, полагающийся на «fail-closed на любом коде кроме allow», получает гарантию сильнее факта | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2); следующая версия — `v2.14.0` из P2.11 |
 | `skiller` package API + `general`/`core` units | v0.6.0 | committed P2.7 (`d11c3b74`, реопен D70 — новый `snippets/source-evidence-template.md` в unit `general`) | `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
+| `task` plugin/routing (`plugin_version`) | v0.7.0 → v0.8.0 | committed P2.10 (`668012bd`, реопен D70/D78 — компилятор читает закрытый набор §3-заголовков, отображает имя модели в класс по `command-routing.json::class_selectors`, типизирует отказ `_rank` по обеим осям/сторонам вместо `ValueError`) | те же потребители | task; тот же D58/D85 |
 
 ### Consumed
 

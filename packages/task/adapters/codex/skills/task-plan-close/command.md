@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:efc01918df8de07041dfe654f0d97ff435647f11d58dc211512330793cc8bc6a
+Canonical SHA-256: sha256:7072915e26f59bb2162f8e7e37a13e22839b26de38290606545d9121bbbd4c35
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -38,11 +38,15 @@ Adapter: task.codex-command/1.0.3
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
 
-**Pre-final — Task Contract (P2.7, ОБЯЗАТЕЛЬНЫЙ шаг).** Шаг 4 режима `Pn.m` ниже собирает и
+**Pre-final — Task Contract (P2.7/P2.11, ОБЯЗАТЕЛЬНЫЙ шаг).** Шаг 4 режима `Pn.m` ниже собирает и
 проверяет Task Contract v1 через `packages/task/lib/task/task_contract.py` (`task-contract-v1.md`
-§Pre-final predicate) ДО вердикта — компилятор владеет hash/precedence/portability/evidence
-логикой, эта команда его ЗОВЁТ безусловно, а не пересказывает; точная команда и таблица
-код→действие — в самом шаге 4.
+§Pre-mutation predicate + §Pre-final predicate) ДО вердикта — компилятор владеет hash/precedence/
+portability/evidence логикой, эта команда его ЗОВЁТ безусловно, а не пересказывает. **Гейт
+БИНАРЕН:** зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` — НЕ зелёное
+(D76: «сессия заблокирована, объявлять сдачу нечего»). Маршрут `actual_route` на этой границе —
+маршрут ИСПОЛНИТЕЛЯ item'а (D75), не пин этой команды. `pre_final` утверждает свойство ФОРМЫ
+спеки item'а, а не то, что item исполнен хорошо (D77) — вердикт material/process остаётся за
+status-rule ниже. Точная команда, лестница маршрута и таблица код→действие — в самом шаге 4.
 
 ## Режим `Pn.m` — реконсиляция item'а
 
@@ -51,31 +55,58 @@ Adapter: task.codex-command/1.0.3
    `git diff <до>..<после> -- <Files>` — правки реально есть и соответствуют Scope Included?
 3. Прогони команды из **Validation** item'а, зафиксируй результат.
 4. **Pre-final — Task Contract, ОБЯЗАТЕЛЬНЫЙ шаг, не условный.** ДО вердикта — собери и
-   проверь контракт тем же Python API, что `plan-exec.md`'s pre-mutation (CLI-форма `check`
-   не годится по той же причине — `route.actual` неразрешён по конструкции, флага на живой
-   route у `build` нет):
+   проверь контракт тем же Python API, что `plan-exec.md`'s pre-mutation/pre-final (CLI-форма
+   `check` не годится по той же причине — `route.actual` неразрешён по конструкции, флага на
+   живой route у `build` нет).
+
+   **Маршрут `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а, лестница D75, fail-closed:**
+   1. Строка routing-adherence в **Completion Notes** закрываемого item'а (`phases/Pn.md`) —
+      носитель КЛАССА и effort'а (`plan-protocol` §9 уже обязывает исполнителя `plan-run`
+      печатать фактическую пару «класс, effort» в отчёте и Update Log). Основной источник.
+   2. Терминальная запись `journal.jsonl` этого item'а — `actor` = `<model>/<effort>` (D72:
+      модель, не класс). Перекрёстная сверка: effort обязан совпасть с п.1; модель обязана
+      отображаться в заявленный класс по committed-карте
+      `command-routing.json::mappings.*.class_selectors`. **Расхождение п.1↔п.2 → СТОП + D#**,
+      а не выбор в пользу удобного.
+   3. **Ни того, ни другого** (item не исполнялся; легаси-запись без маршрута) → **СТОП** с
+      текстом «маршрут исполнителя <Pn.m> неразрешим: нет routing-adherence в Completion Notes
+      и нет терминальной записи journal.jsonl» и названным ПРОХОДОМ (записать фактический
+      маршрут по §9). Подстановка собственного пина команды, `unknown` и «продолжай как
+      раньше» ЗАПРЕЩЕНЫ.
+
+   Частный случай `plan-run`: сессия исполняет и закрывает item в ОДНОЙ сессии — «фактический
+   маршрут сессии» И ЕСТЬ маршрут исполнителя, лестница схлопывается в п.1 тривиально.
 
    ```
    PYTHONPATH=packages/task/lib python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
-       "implementation", "low", source="self-attested", model="implementation"))
+       "<ФАКТИЧЕСКИЙ model_class с шага лестницы D75 выше>", "<ФАКТИЧЕСКИЙ effort>",
+       source="self-attested", model="<ФАКТИЧЕСКАЯ модель>"))
    result = task_contract.evaluate(contract)
    print(result)
-   sys.exit(0 if result["pre_final"] in ("allow", "n/a") else 1)
+   sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
    PY
    ```
 
-   **Зелёное:** `pre_final: 'allow'` (item честно резолвится в публично проверяемый факт) —
-   ИЛИ `pre_mutation` уже упал раньше (`pre_final: 'n/a'`) — тогда действуй по той же
-   код→действие таблице, что в `plan-exec.md`'s pre-mutation (реальные коды — эскалация п.5
-   analog / структурные — D#-запись, реопен-кандидат P2.6). `pre_final`-специфичный отказ:
+   **Гейт бинарен.** Зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`.
+   `n/a`, любой `block:*` и любое иное значение — красное; формулировки «условно зелёное»,
+   «предупреждение», «продолжай, если …» и синонимы ЗАПРЕЩЕНЫ (`plan-protocol` §6 прямо
+   запрещает «мягкий пункт Validation»). Таблица код→действие:
 
-   | Код | Действие |
-   |:--|:--|
-   | `ACCEPTANCE_NOT_PUBLIC` | реальный — заводит material-триггер «Validation осталась красной / acceptance-критерий не выполнен» ниже: `🟠 Done with deviations` с Known Deviations, НЕ тихий `🟢` |
-   | `EVIDENCE_REF_UNKNOWN` / `EVIDENCE_PROOF_CLASS_INSUFFICIENT` | структурный (`build()` этого не производит при корректной работе) — СТОП, D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+   | `pre_mutation` | `pre_final` | Действие |
+   |:--|:--|:--|
+   | `allow` | `allow` | зелёное — item честно резолвится в публично проверяемый факт; вердикт по status-rule ниже |
+   | `block:*` | `n/a` | **`n/a` — НЕ зелёное** (`task-contract-v1.md:164-165`: «evaluated only when pre-mutation allowed; otherwise it reports `n/a` — a blocked session has nothing to declare done»): item НЕ закрывается; разбери код `pre_mutation` по код→действие таблице `plan-exec.md`'s Pre-mutation (реальные коды — эскалация п.5 analog / структурные — D#-запись, реопен-кандидат P2.6) |
+   | `allow` | `block:ACCEPTANCE_NOT_PUBLIC` | реальный — заводит material-триггер «Validation осталась красной / acceptance-критерий не выполнен» ниже: `🟠 Done with deviations` с Known Deviations, НЕ тихий `🟢` |
+   | `allow` | `block:EVIDENCE_REF_UNKNOWN` / `block:EVIDENCE_PROOF_CLASS_INSUFFICIENT` | структурный (`build()` этого не производит при корректной работе) — СТОП, D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+
+   **Что утверждает `pre_final` (D77, названо, не подразумевается).** Предикат проверяет
+   свойство ФОРМЫ спеки item'а — есть ли хотя бы один публично проверяемый acceptance-пункт на
+   детерминированном классе доказательства — и НЕ утверждает, что item исполнен ХОРОШО: он
+   зелен и на не стартовавшем `⬜`-item'е. Вердикт material/process остаётся за status-rule
+   ниже, `pre_final: allow` его не заменяет.
 
    Модуль `task.task_contract`/`task.route_evidence` недоступен (standalone-раскладка вне
    монорепо) → СТОП с явным текстом «шаг недоступен: `task.task_contract` не импортируется» —

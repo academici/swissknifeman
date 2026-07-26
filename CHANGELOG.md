@@ -4,6 +4,37 @@
 
 ### Added
 
+- **task/general — pre-final boundary closes fail-closed on both closing paths
+  (P2.11 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.9.0`,
+  `plan-protocol@2.14.0`, `skiller@0.7.0`).** `task:plan-close`'s pre-final
+  checkpoint (step 4) no longer greenlights `n/a`: the gate is now the binary
+  `pre_mutation == "allow" and pre_final == "allow"`, with `n/a` reported by
+  its own code→action table row spelling out the contract-SSOT semantics
+  ("a blocked session has nothing to declare done") — before this fix the
+  literal `in ("allow", "n/a")` predicate greenlit every real item, because
+  the actual route substituted was the closing command's own pin
+  (`implementation/low`), below every item's required route, so
+  `pre_mutation` always failed and `pre_final` always reported `n/a` (M1,
+  `findings/14`). The `actual_route` on pre-final is now resolved as the
+  item's EXECUTOR route (D75) via a fail-closed ladder — Completion Notes
+  routing-adherence line, cross-checked against the item's terminal
+  `journal.jsonl` entry — instead of the closing command's pin; an
+  unresolvable or mismatched route stops with a named PASS rather than
+  guessing. `task:plan-exec`'s own step 7 (routine self-close — the path most
+  items actually take) gains the SAME executable pre-final call: before this
+  fix the boundary was never crossed there at all (M5) — `plan-exec` closes
+  the item itself and `plan-close Pn.m` is never invoked on that path.
+  `plan-run.md` and `plan-audit.md` are synced to the same binary gate and
+  dual-boundary reporting requirement. Both checkpoints now name what
+  `pre_final` actually asserts (D77): a property of the item spec's FORM —
+  whether at least one publicly checkable acceptance entry rests on a
+  deterministic proof class — never that the item was executed well. §13 of
+  `plan-protocol` (both languages) is rewritten to state all of this
+  truthfully, and the literal test in `test_canon_literals.py` gains a new
+  class asserting the DIFFERENTIATING predicate (D79) rather than mere
+  identifier presence — every new assertion was verified red against the
+  pre-fix command bodies before being added (M6: the pre-existing literal
+  test passed green through the `n/a` and missing-step-7-call defects both).
 - **task — compiler reads all §3 Routing forms and never crashes
   (P2.10 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.8.0`).**
   `task_contract._find_routing_row` now recognizes a closed literal set of

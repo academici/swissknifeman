@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.8.0",
+  "plugin_version": "0.9.0",
   "commands": [
     {
       "command_id": "task:design",

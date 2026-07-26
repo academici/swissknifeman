@@ -2255,10 +2255,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "2.13.0",
+      "version": "2.14.0",
       "description": "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive.",
-      "sha256": "b86b5ea894c19a60c2d56fe7ec729ae4f497f8559be0fd216ea9c2a6b74ab460",
-      "content_sha256": "d61f5233f5df3b183c30d5ad890fa47eeae5020f0f4ca09c1846aeb4036318c4",
+      "sha256": "ee275633c7d0d996da2439e3808fdcbd2d1a72b4bb616bb18345fb521e04d384",
+      "content_sha256": "6d2ec12a675eccad1829eee945fd86fb2a8941db2dcfdbe33e8633157918c79b",
       "tags": [
         "workflow",
         "planning",

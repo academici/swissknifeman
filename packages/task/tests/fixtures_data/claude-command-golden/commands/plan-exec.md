@@ -132,13 +132,39 @@ effort: medium
 
 7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан.
 
-   **Pre-final (P2.2).** Топология ниже (два коммита, зелёная Validation, `plan-lint`) —
-   прозовая реализация `task_contract.py::pre_final` (task-contract-v1.md §Pre-final
-   predicate: `ACCEPTANCE_NOT_PUBLIC` / `EVIDENCE_REF_UNKNOWN` /
-   `EVIDENCE_PROOF_CLASS_INSUFFICIENT`) — как минимум ОДНО поле `Deliverables`/Validation
-   обязано резолвиться в публично проверяемый факт (реальная команда, реальный вывод), не
-   только внутренний byte/hash-green результат (D30). Компилируемый Task Contract
-   (при его наличии) прогоняется тем же модулем ДО объявления item'а завершённым.
+   **Pre-final — Task Contract (P2.2/P2.11, ОБЯЗАТЕЛЬНЫЙ шаг, штатный путь — М5).** `plan-exec`
+   закрывает item САМ (эта топология) — граница pre-final ОБЯЗАНА пересекаться ЗДЕСЬ, а не только
+   в реконсилирующем `task:plan-close Pn.m`, который на штатном пути exec'а не вызывается. Маршрут
+   `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а (D75): здесь это own pin ЭТОЙ команды
+   (`implementation`/`medium`), потому что команда сама исполнила item — сборка контракта одна на
+   оба предиката, `evaluate()` считает их за один вызов:
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "implementation", "medium", source="self-attested", model="sonnet"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
+   PY
+   ```
+
+   **Гейт бинарен** (та же таблица код→действие, что `plan-close.md`'s Pre-final шаг 4): зелёное —
+   РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` и любой `block:*` — красное,
+   item НЕ закрывается этим шагом (эскалация п.5 / D#-запись по классу кода — реальный vs
+   структурный, та же таблица, что `plan-close.md`'s шаг 4). Как минимум ОДНО поле
+   `Deliverables`/Validation обязано резолвиться в публично проверяемый факт (реальная команда,
+   реальный вывод), не только внутренний byte/hash-green результат (D30) — это то, что
+   `pre_final == "allow"` подтверждает машинно. **Граница предиката (D77, М3):** `pre_final`
+   утверждает свойство ФОРМЫ спеки item'а (публично проверяемый acceptance на детерминированном
+   классе доказательства), а НЕ то, что item исполнен ХОРОШО — вердикт material/process остаётся
+   за status-rule ниже, этот код его не заменяет.
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (standalone-раскладка вне
+   монорепо) → СТОП с явным текстом «шаг недоступен: `task.task_contract` не импортируется» —
+   fail-closed.
 
    **Топология — ДВА коммита (единственная; шаги 1–6 строго в этом порядке):**
    1) **Item-коммит.** Дифф Scope (код/артефакты) ТОЛЬКО по путям `Files` item'а — файлы плана в него

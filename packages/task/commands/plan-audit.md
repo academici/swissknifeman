@@ -7,11 +7,16 @@ effort: xhigh
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (Opus/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 
-**Compiler (P2.7).** `task:plan-exec`'s Pre-mutation и `task:plan-close`'s Pre-final (шаг 4) —
-ИСПОЛНЯЕМЫЕ write-site (не проза): каждый закрытый item обязан нести в Completion Notes
-напечатанный результат (`pre_mutation`/`pre_final` коды) этого шага — читай ЕГО как источник
-истины предиката, не пересчитывай вручную вторым способом. `plan_lint.py`'s tiered-portability
-находки — та же дисциплина (`plan-portability-v1.md`, D47).
+**Compiler (P2.7/P2.11).** `task:plan-exec`'s Pre-mutation (шаг 2) И Pre-final (шаг 7, штатный
+путь самозакрытия) — а для item'ов, закрытых реконсиляцией, `task:plan-close`'s Pre-final (шаг
+4) — ИСПОЛНЯЕМЫЕ write-site (не проза): каждый закрытый item обязан нести в Completion Notes
+напечатанные результаты ОБЕИХ границ (`pre_mutation` И `pre_final` коды) — читай ИХ как источник
+истины предиката, не пересчитывай вручную вторым способом. Гейт закрытия бинарен
+(`pre_mutation == "allow" and pre_final == "allow"`, D76): `n/a` НЕ зелёное — item со статусом
+`🟢`/`🟠`, чьи напечатанные коды не оба `allow`, = находка Major (status-rule обманут). `pre_final`
+утверждает свойство ФОРМЫ спеки, не качество исполнения (D77) — не путай это со status-rule
+material/process ниже. `plan_lint.py`'s tiered-portability находки — та же дисциплина
+(`plan-portability-v1.md`, D47).
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,
@@ -73,11 +78,14 @@ effort: xhigh
    - **Validation реально прогнана**: КАЖДЫЙ пункт поля `Validation` закрытого item'а прогоняешь сам НА
      ЗАКОММИЧЕННОМ дереве item'а (`git show <ref>:<файл>`), а не на веру и не на дереве момента аудита;
      расхождение с заявленным = находка; item, закрытый `🟢` БЕЗ отчёта по своей Validation, = находка;
-   - **write-site реально исполнен (P2.7, F1-дисциплина)**: item, закрытый ПОСЛЕ P2.7 (командные тела
-     несут исполняемый Pre-mutation/Pre-final), без напечатанного `pre_mutation`/`pre_final` кода в
-     Completion Notes = находка (общая фраза «контракт скомпилирован» без результата — ссылка на
-     модуль, не доказательство, ровно F1); проверь код сам на закоммиченном item'е тем же вызовом,
-     что несёт `plan-exec.md`/`plan-close.md`;
+   - **write-site реально исполнен (P2.7/P2.11, F1-дисциплина)**: item, закрытый ПОСЛЕ P2.7
+     (командные тела несут исполняемый Pre-mutation/Pre-final), без напечатанных `pre_mutation`
+     И `pre_final` кодов ОБЕИХ границ в Completion Notes = находка (общая фраза «контракт
+     скомпилирован» без результата — ссылка на модуль, не доказательство, ровно F1); проверь код
+     сам на закоммиченном item'е тем же вызовом, что несёт `plan-exec.md`/`plan-close.md`, с
+     маршрутом ИСПОЛНИТЕЛЯ (D75), не своим пином `opus/xhigh`; **item `🟢`/`🟠` с напечатанным
+     кодом ≠ `allow` на любой из границ (включая `pre_final: n/a`) = находка Major** (D76: `n/a` не
+     зелёное, закрытие на нём — рецидив F1);
    - **status-rule** (§6): item `🟢` с непустыми Known Deviations — сверь по предикату **material** (Scope
      выполнен не полностью/иначе · Validation осталась красной · затронут public contract / SemVer сверх
      ТЗ · acceptance не выполнен · workaround ЖИВЁТ В КОДЕ · item-коммит несёт дифф вне `Files`): material

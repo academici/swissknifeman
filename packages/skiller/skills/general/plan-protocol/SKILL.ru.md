@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.13.0
+version: 2.14.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -1103,23 +1103,41 @@ Provider mapping проецирует эти minima в native selectors. `plan-r
 его минимум приходит из item Routing, а observed route сессии проверяется тем же fail-closed
 гейтом. Claude invocation — `/task:…`, Codex — `$ task:…`; UI prefix не semantic identity.
 
-**Task Contract compiler (v2.13.0).** Pre-mutation/pre-final предикаты, precedence/conflict-
+**Task Contract compiler (v2.14.0).** Pre-mutation/pre-final предикаты, precedence/conflict-
 резолюция, content-hash и tiered-portability классификация — один модуль,
 `packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
-`plan-portability-v1.md` плана `2026.07.24-AGENT-RELIABILITY`, items P2.2/P2.6/P2.7).
-Pre-mutation-чекпоинт `task:plan-exec` и pre-final-чекпоинт `task:plan-close` его ЗОВУТ —
-исполняемый шаг, а не проза: каждый собирает Task Contract v1 (`task_contract.build`,
-живой actual route передаётся его же документированным kwarg'ом `actual_route` — CLI-форма
-держит его неразрешённым ради байт-детерминированности между процессами) и проверяет
-(`task_contract.evaluate`), падая закрыто на любом коде, отличном от `allow` (таблица
-код→действие — в самих файлах команд, не здесь второй раз). `task:plan-run` подставляет
-НАБЛЮДАЕМЫЙ route сессии в тот же вызов вместо пина; `task:plan-audit` читает получившиеся
-`pre_mutation`/`pre_final` коды из Completion Notes закрытого item'а как источник истины,
-вместо повторного счёта вручную. `plan_lint.py` зовёт тот же строковый тест «внешности»
-пути для tiered-portability lint'а. Это утверждение защищено литеральным тестом
-(`test_canon_literals.py`), который падает, если формулировка изменится без изменения тел
-команд (P2.7, F1-репарация: до 2.13.0 канон утверждал «команды зовут», а звала только
-проза).
+`plan-portability-v1.md` плана `2026.07.24-AGENT-RELIABILITY`, items P2.2/P2.6/P2.7/P2.10/P2.11).
+Обе границы ЗОВУТСЯ исполняемо, не прозой, и на ОБОИХ путях закрытия item'а: `task:plan-exec`
+собирает и проверяет контракт ДВАЖДЫ за один прогон — pre-mutation ПЕРЕД мутацией (шаг 2) и
+pre-final при самозакрытии (шаг 7, штатный путь — item закрывает себя сам, реконсилирующий
+`task:plan-close` на этом пути не вызывается); `task:plan-close`'s Pre-final (режим `Pn.m`, шаг 4)
+— тот же вызов для item'ов, закрываемых реконсиляцией. Каждый вызов собирает Task Contract v1
+(`task_contract.build`, живой actual route передаётся его же документированным kwarg'ом
+`actual_route` — CLI-форма держит его неразрешённым ради байт-детерминированности между
+процессами) и проверяет (`task_contract.evaluate`). **Гейт закрытия БИНАРЕН** (D76): зелёное —
+РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` — НЕ зелёное («сессия
+заблокирована, объявлять сдачу нечего» — `task-contract-v1.md` §Pre-final predicate дословно),
+любой `block:*` — тем более (таблица код→действие — в самих файлах команд, не здесь второй раз).
+**Маршрут `actual_route` на pre-final — маршрут ИСПОЛНИТЕЛЯ item'а** (D75), не пин закрывающей
+команды: у `task:plan-exec`/`task:plan-run` (самозакрытие) это own pin/observed route сессии; у
+реконсилирующего `task:plan-close` — лестница разрешения из закоммиченной записи (routing-
+adherence Completion Notes → терминальная запись `journal.jsonl` → неразрешимо/расхождение =
+СТОП с названным ПРОХОДОМ). `task:plan-run` подставляет НАБЛЮДАЕМЫЙ route сессии в оба вызова
+`plan-exec` вместо пина; `task:plan-audit` читает получившиеся `pre_mutation`/`pre_final` коды
+ОБЕИХ границ из Completion Notes закрытого item'а как источник истины, вместо повторного счёта
+вручную — item `🟢`/`🟠` с кодом ≠ `allow` на любой границе = находка. `plan_lint.py` зовёт тот же
+строковый тест «внешности» пути для tiered-portability lint'а. **Что утверждает `pre_final`**
+(D77): свойство ФОРМЫ спеки item'а — есть ли хотя бы один публично проверяемый acceptance-пункт
+на детерминированном классе доказательства — а НЕ то, что item исполнен хорошо (он зелен и на
+не стартовавшем `⬜`-item'е); вердикт material/process остаётся за status-rule §6, этот код его
+не заменяет. Это утверждение защищено литеральным тестом (`test_canon_literals.py`), который
+падает, если формулировка изменится без изменения тел команд (P2.7/P2.11, F1-репарация: до
+2.13.0 канон утверждал «команды зовут», а звала только проза; до 2.14.0 звала только на одной
+из двух границ закрытия, и `n/a` зеленел закрытие вслепую). **Тест защищает РАЗЛИЧАЮЩИЙ
+предикат, не наличие идентификатора** (D79): каждый новый ассершен обязан быть проверен на
+СТАРОМ тексте команды и там покраснеть — ассершен, зелёный и до правки, ничего не защищает
+(ровно то, чем был литеральный тест до 2.14.0: он проверял подстроки и прошёл зелёным через
+дефект `n/a`-гейта).
 
 **Evidence bundle (v2.13.0).** Item тира `committed-bundle` (`plan-portability-v1.md`
 §Classification rule, D26) обязан нести коммиченный evidence bundle с bundle-требованиями

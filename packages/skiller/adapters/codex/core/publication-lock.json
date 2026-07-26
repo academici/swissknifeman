@@ -1,181 +1,181 @@
 {
   "contract_version": "1.0.0",
   "publication_unit": "core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:cdaa017d960e34a88160b3f399b779a39ac7cfacfca51842021ab2934865ced9",
-      "rendered_hash": "sha256:3a609376ca297e4b92246956c82cb6c3f742c55a95ab57dbe6e3beb56dad9dea"
+      "source_hash": "sha256:ce03cfbef089308f05526899a4e467e81354fe5948bfffd480b2d56f7a16027a",
+      "rendered_hash": "sha256:0da53a10153e642e7b8764183d6a6b5d46543285e27a3f6d108ab7106ebfc5a5"
     },
     {
       "path": "skills/general/context-economy/SKILL.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:5f58b3a85174952856921036099c8359cb9b80e315effed502fef1022f888a9f"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-checklist.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:74a991b31bba853b972e9cb4744311a0a83d924c77e55a3b31cb5130204ffe4f"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-fact-vs-procedure-examples.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:20c088ea3e7f7950d6c322d9cc0c9469a01b48b185a17ee356b8fcc93982a4c0"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-template.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:ce43523f42621a831006680499824bff9c552cf39055d47f5804a09abc8117e9"
     },
     {
       "path": "skills/general/context-economy/snippets/command-execute.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:f8aa5c85570ad377c746ce658c7d589af6f5b7e4a7019eab2da03e9efdb19f2c"
     },
     {
       "path": "skills/general/context-economy/snippets/command-plan.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:0c749951df352dea67c8b623c7ba2e6ba3e03db6684e7c4d44dd93d3642fc0b6"
     },
     {
       "path": "skills/general/context-economy/snippets/command-prime.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:400d39e499301d4e2748ada3d7ae8cd49c1c8945b6e0b4f41e93bcb6e16ccf7c"
     },
     {
       "path": "skills/general/context-economy/snippets/index.json",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:6200e2909d0aff348932f5b026737615a66fdcbe7602284567152642f7b5611e"
     },
     {
       "path": "skills/general/context-economy/snippets/rules-example.md",
-      "source_hash": "sha256:a2ed11a4f7846a0ae55500939b4fdd3a0a52ea53a8ec5489cff6fccf207b3805",
+      "source_hash": "sha256:c89623926b028383549a0b805d9363ed7d93af0376a5eea09b4a930c2111d04c",
       "rendered_hash": "sha256:097e50b6087ec0429efac0e10d70931537ab8de18ff79a75f4ae43dffb88fdf7"
     },
     {
       "path": "skills/general/anti-drift/SKILL.md",
-      "source_hash": "sha256:7e276fdc330400c12d133aa00c4e317b98833afc133f7f2b68c7398afe9dd207",
+      "source_hash": "sha256:8a0c3e3e9bc345c0a299b6502d33ef06206c23487ce9cfbc7777870b9f21c2f3",
       "rendered_hash": "sha256:30d386711671315d8d974759456d04565a28ad979aec85cc17e93dbef9e28004"
     },
     {
       "path": "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
-      "source_hash": "sha256:7e276fdc330400c12d133aa00c4e317b98833afc133f7f2b68c7398afe9dd207",
+      "source_hash": "sha256:8a0c3e3e9bc345c0a299b6502d33ef06206c23487ce9cfbc7777870b9f21c2f3",
       "rendered_hash": "sha256:496cffb2318c0f4718042113793fad150fbd501115f951aaad0b5684577e6deb"
     },
     {
       "path": "skills/general/anti-drift/snippets/index.json",
-      "source_hash": "sha256:7e276fdc330400c12d133aa00c4e317b98833afc133f7f2b68c7398afe9dd207",
+      "source_hash": "sha256:8a0c3e3e9bc345c0a299b6502d33ef06206c23487ce9cfbc7777870b9f21c2f3",
       "rendered_hash": "sha256:9f30bcf49a06f2daa7133c339649fc836ca1d635c0639ce22f6cff0048896995"
     },
     {
       "path": "skills/general/compact-responses/SKILL.md",
-      "source_hash": "sha256:4ae20715c6dece25f29437943cdb80542696251169711dd5e3b6d772989f0281",
+      "source_hash": "sha256:947ae8d43b0d723a73275c1df9ef04eaaa844eabbe844576abddfba9bc7c0615",
       "rendered_hash": "sha256:afd38c18697b7b170557936647e5b92bb74c5352f0b0636bb2c721ecd810e5c2"
     },
     {
       "path": "skills/general/session-handoff/SKILL.md",
-      "source_hash": "sha256:2a8fb1d1895a5743178277007b553e1f11c859557f2cd6e5d72bb00c32bff8f5",
+      "source_hash": "sha256:3a598db3ff9e03c667e3daaa415301169a8b5f421ca99e1cd120adc013d4919c",
       "rendered_hash": "sha256:9116c6f1612418fbd614b0f88ec86e27172363011f77926ea314c86d1e689cc5"
     },
     {
       "path": "skills/general/session-handoff/snippets/handoff-template.md",
-      "source_hash": "sha256:2a8fb1d1895a5743178277007b553e1f11c859557f2cd6e5d72bb00c32bff8f5",
+      "source_hash": "sha256:3a598db3ff9e03c667e3daaa415301169a8b5f421ca99e1cd120adc013d4919c",
       "rendered_hash": "sha256:c7730e534ab4b8cec7016af6e60444c581e94cecca39267cfe95e6b479fc9bdf"
     },
     {
       "path": "skills/general/session-handoff/snippets/index.json",
-      "source_hash": "sha256:2a8fb1d1895a5743178277007b553e1f11c859557f2cd6e5d72bb00c32bff8f5",
+      "source_hash": "sha256:3a598db3ff9e03c667e3daaa415301169a8b5f421ca99e1cd120adc013d4919c",
       "rendered_hash": "sha256:8aab6105648da9a72a241cfe4b6c6c574f0d4147e5a3fa3467720334727bc41d"
     },
     {
       "path": "skills/general/mcp-advisor/SKILL.md",
-      "source_hash": "sha256:a62c0a9b3aa85fb6a02f315a180db989bd901292207b28ebf9271aa713e92bfd",
+      "source_hash": "sha256:584d5509f1b070f02b7ff37933831b3cbf3d8e4489b89774390af9be2de375ec",
       "rendered_hash": "sha256:cfa7c70cd7183323d6611d140d73f460c8a57a574dd7b09d2d2c628d4d1e0f69"
     },
     {
       "path": "skills/general/verify-claims/SKILL.md",
-      "source_hash": "sha256:66539e1d37231d8bf18ed2d5995b1ab2214fbad4e4f3c47410ebc74604f4e97b",
+      "source_hash": "sha256:3eca6a92fc7e9133c2f85a3116b94eba52fe6b498f95a53a99007f119a186717",
       "rendered_hash": "sha256:ccb328f74903a8beb922c3619579922743bcb3ddd6f8934a0ba5f9ab434d85ba"
     },
     {
       "path": "skills/research/query-craft/SKILL.md",
-      "source_hash": "sha256:c54093239b218b54df7ee45966a0973cbd649ed713d25ce8b24547a22c347660",
+      "source_hash": "sha256:54fbf5a92d313cdfdc219fe812397466381fed982fdb1f5e7a7286d2583e153e",
       "rendered_hash": "sha256:6e72140a9d7fc3b403450f1e4b420cd053a5bb81282bc1d0e3f2d8bfe3c97af6"
     },
     {
       "path": "skills/oss-dev/gh-review/SKILL.md",
-      "source_hash": "sha256:a6f68c80f435ae64315385a5e46d37fd1c77cf478d77f31dfc90ebe548e7aca8",
+      "source_hash": "sha256:ede96d73bd8aa7464cac1ab97c84b0cbf4a9d1ae3cff2247bee174314ffb848c",
       "rendered_hash": "sha256:7a6942c56babb3a0c97a076861cdb89ab943aa9aec696d091ec0852da895eda9"
     },
     {
       "path": "skills/oss-dev/gh-review/snippets/gh-review-commands.md",
-      "source_hash": "sha256:a6f68c80f435ae64315385a5e46d37fd1c77cf478d77f31dfc90ebe548e7aca8",
+      "source_hash": "sha256:ede96d73bd8aa7464cac1ab97c84b0cbf4a9d1ae3cff2247bee174314ffb848c",
       "rendered_hash": "sha256:dae502e73e0b45d21d1617eb520881caa09ed0ad09286eb8f2f82ca22672de32"
     },
     {
       "path": "skills/oss-dev/gh-review/snippets/index.json",
-      "source_hash": "sha256:a6f68c80f435ae64315385a5e46d37fd1c77cf478d77f31dfc90ebe548e7aca8",
+      "source_hash": "sha256:ede96d73bd8aa7464cac1ab97c84b0cbf4a9d1ae3cff2247bee174314ffb848c",
       "rendered_hash": "sha256:95bf0532ae2847bb3a8dbec4df86238076ecd3f82b0381e7c35022732d24d23b"
     },
     {
       "path": "skills/general/plan-protocol/SKILL.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
-      "rendered_hash": "sha256:b86b5ea894c19a60c2d56fe7ec729ae4f497f8559be0fd216ea9c2a6b74ab460"
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
+      "rendered_hash": "sha256:ee275633c7d0d996da2439e3808fdcbd2d1a72b4bb616bb18345fb521e04d384"
     },
     {
       "path": "skills/general/plan-protocol/snippets/active-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:5f055389e6db9583dfecf3b6fb2dad9c6e015a32ebc74d104b7e80f0d251017a"
     },
     {
       "path": "skills/general/plan-protocol/snippets/code-guidance-patterns.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:87377dbfaa2502eca574d7a9511fc3ecdfb11e896683dd460ef2a3799e37775c"
     },
     {
       "path": "skills/general/plan-protocol/snippets/handoff-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:6b8420464c1b9ff2a295f4cbcbb13b58151f30fc4d338ac8dd7ca5783d492564"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:e65c010dfcd2af3d9e356ab65525ab591215898bd318094087ee9a9a80d2d443"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index.json",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:2f9b9b9b2e1537ecb16a7a5036a3a92293f8590c8ec2547ea58641d8879ac982"
     },
     {
       "path": "skills/general/plan-protocol/snippets/journal-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:6e0ecc18cbfe4f3e0b99f3ff3501c5ba8168128beb87df7a79e4accbb57d4d74"
     },
     {
       "path": "skills/general/plan-protocol/snippets/launch-block-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:0f3224f68706194e788a896631725a290d52c3c3fddc23349b5686d4db226315"
     },
     {
       "path": "skills/general/plan-protocol/snippets/phase-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:bbe2142bde69a96be0628dadac2eb07c73c5057df9154d72400e5a438e626781"
     },
     {
       "path": "skills/general/plan-protocol/snippets/plan-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:b4e9b5e3f591b7b11289b016d1911b2d7c8775afe76f88bb01d2415234680a77"
     },
     {
       "path": "skills/general/plan-protocol/snippets/roadmap-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:e6e48732d638eb973e46b4512565fcd2277b524bc62f3823974ef3d4104ea6c3"
     },
     {
       "path": "skills/general/plan-protocol/snippets/source-evidence-template.md",
-      "source_hash": "sha256:0e543c5c84db717d308e1eb66f273775997403334d5eba0c56b1db78a10695a6",
+      "source_hash": "sha256:9b33150cc68f00e45d45180ed091438ab676652647ffa1837e1c537e472a3c98",
       "rendered_hash": "sha256:cedf2767c7c7d28a72e191a9943890863b713d60e99c48c7200e21338083e7a8"
     }
   ]

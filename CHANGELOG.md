@@ -4,6 +4,28 @@
 
 ### Added
 
+- **analyst/harness/task — Unified Agent Trace v1 (P3.1, `2026.07.24-AGENT-RELIABILITY`).**
+  New versioned, stdlib-only trace schema
+  (`plans/2026.07.24-AGENT-RELIABILITY/root/contracts/unified-agent-trace-v1.md`)
+  links a requirement to its contract identity, route, dispatch state, findings and
+  public outcome in one closed-field record, distinct from the unrelated D90
+  normalized analytics envelope (`analyst.events`/`runs`/`readers`). `analyst.trace`
+  is the sole schema owner: `build_trace_record` validates provenance/sha256, fails
+  closed on any raw key plausibly carrying chain-of-thought/tool-payload/secret
+  content (`TRACE_PRIVACY_VIOLATION`), scores `quality.completeness` over six nullable
+  field groups with an explicit `reasons` entry for every missing one, and
+  `dedup_records` collapses resumed/forked duplicates by a natural-key `trace_id`
+  (provider/project/session identity/turn), keeping the higher-completeness record.
+  `harness.provider_trace` supplies thin Claude/Codex readers that map already-
+  captured provider structures into the RAW payload the schema owner consumes — no
+  Codex hook in this repository captures a comparable structure yet, so every
+  Codex-sourced field degrades to `null` + `codex-hook-not-integrated` rather than a
+  guessed value. `task.journal` gains one additive optional `trace_ref`/`--trace-ref`
+  linkage (outside `REQUIRED_FIELDS`; a call that omits it writes a byte-identical
+  entry to before this field existed) so a journal line can point at a trace identity
+  without duplicating its metrics. `analyst`/`harness` package-API minor bumps
+  (`0.1.0`→`0.2.0`, `0.3.0`→`0.4.0`) are owed but deferred to the next item touching
+  those manifests — `package.json` is outside this item's declared `Files`.
 - **task/general — pre-final boundary closes fail-closed on both closing paths
   (P2.11 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.9.0`,
   `plan-protocol@2.14.0`, `skiller@0.7.0`).** `task:plan-close`'s pre-final

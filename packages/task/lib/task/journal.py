@@ -259,10 +259,16 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
 
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
-              note=None, ts=None):
+              note=None, ts=None, trace_ref=None):
     """Собирает запись по схеме P1.1 с дефолтами контракта (§2) — единая точка сборки,
-    чтобы close-протокол команд не собирал dict вручную по месту россыпью полей."""
-    return {
+    чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
+
+    `trace_ref` (P3.1, `root/contracts/unified-agent-trace-v1.md` § Journal reference)
+    — ADDITIVE optional linkage to a Unified Agent Trace `trace_id`, outside
+    `REQUIRED_FIELDS`: omitted (`None`, the default) it is not written at all, so
+    every caller that does not pass it gets a byte-identical entry to before this
+    field existed. The journal never carries trace METRICS, only this pointer."""
+    entry = {
         "ts": ts or _now_iso(),
         "plan_id": plan_id,
         "item_id": item_id,
@@ -278,6 +284,9 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
         "duration_ms": duration_ms,
         "note": note,
     }
+    if trace_ref is not None:
+        entry["trace_ref"] = trace_ref
+    return entry
 
 
 def append(plan_dir, entry):
@@ -338,6 +347,10 @@ def _build_arg_parser():
     ap.add_argument("--num-turns", type=int, default=None)
     ap.add_argument("--duration-ms", type=float, default=None)
     ap.add_argument("--note", default=None)
+    ap.add_argument(
+        "--trace-ref", default=None,
+        help="опционально: trace_id Unified Agent Trace (P3.1) — additive, не влияет на "
+            "REQUIRED_FIELDS; опущен по умолчанию")
     ep = sub.add_parser(
         "exception", help="дописать owner-gated exception для historical schema-invalid строки")
     ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
@@ -404,6 +417,7 @@ def main(argv=None):
         run_id=args.run_id, attempt=args.attempt,
         friction=_parse_friction(args.friction), cost_usd=args.cost_usd,
         num_turns=args.num_turns, duration_ms=args.duration_ms, note=args.note,
+        trace_ref=args.trace_ref,
     )
     try:
         path = append(args.plan_dir, entry)

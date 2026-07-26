@@ -324,7 +324,12 @@ def _build_arg_parser():
     ap.add_argument("--item", required=True, dest="item_id")
     ap.add_argument("--command", required=True, choices=COMMANDS)
     ap.add_argument("--result", required=True, choices=RESULT_VALUES)
-    ap.add_argument("--actor", required=True, help="`<model>/<effort>` или `owner`")
+    ap.add_argument("--actor", default=None, help="`<model>/<effort>` или `owner`")
+    ap.add_argument(
+        "--route-evidence", default=None,
+        help="альтернатива --actor: путь к JSON `task.route_evidence.capture_actual()` "
+            "(P2.4) — actor выводится канонической `<model_class>/<effort>`-спеллинг-формой "
+            "(`findings/02` — 34 наблюдённых написания), а не собирается руками по месту")
     ap.add_argument("--session-id", default=None)
     ap.add_argument("--run-id", default=None)
     ap.add_argument("--attempt", type=int, default=1)
@@ -375,9 +380,24 @@ def main(argv=None):
 
     if args.cmd != "append":  # pragma: no cover - argparse уже гейтит choices
         return 1
+    if (args.actor is None) == (args.route_evidence is None):
+        print("ERROR: ровно один из --actor / --route-evidence обязателен", file=sys.stderr)
+        return 1
+    actor = args.actor
+    if args.route_evidence is not None:
+        # Lazy import (task_contract.evaluate_finding P2.3 pattern): journal.py's own
+        # schema/writer stay importable without task.route_evidence on the path.
+        from task.route_evidence import RouteEvidenceError, canonical_actor
+        try:
+            evidence = json.loads(Path(args.route_evidence).read_text(encoding="utf-8"))
+            actor = canonical_actor(evidence["model_class"], evidence.get("effort"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError,
+               RouteEvidenceError) as exc:
+            print(f"ERROR: --route-evidence не читается: {exc}", file=sys.stderr)
+            return 1
     entry = new_entry(
         plan_id=args.plan_id, item_id=args.item_id, command=args.command,
-        actor=args.actor, result=args.result, session_id=args.session_id,
+        actor=actor, result=args.result, session_id=args.session_id,
         run_id=args.run_id, attempt=args.attempt,
         friction=_parse_friction(args.friction), cost_usd=args.cost_usd,
         num_turns=args.num_turns, duration_ms=args.duration_ms, note=args.note,

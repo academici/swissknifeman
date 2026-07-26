@@ -1,7 +1,9 @@
 """analyst doctor — диагностика окружения пакета (read-only, без внешних вызовов).
 
 Проверяет: python3, наличие пакета `core` на PYTHONPATH (общий фундамент), доступность
-CLI `maind` (нужен для surfacing curated-уроков в память — необязателен, только warn)."""
+CLI `maind` (нужен для surfacing curated-уроков в память — необязателен, только warn) и
+`task.route_evidence` (P2.4 route/budget evidence — опционально, analyst не зависит от
+`task` жёстко)."""
 import shutil
 import sys
 
@@ -11,6 +13,17 @@ from .common import parse_args
 def _check_core():
     try:
         import core  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _check_route_evidence():
+    """P2.4 (plans/2026.07.24-AGENT-RELIABILITY): опциональный маркер того, что
+    `task.route_evidence` (нормализованное route/budget evidence) виден с текущего
+    PYTHONPATH — analyst не зависит от `task` жёстко, как и от `maind`."""
+    try:
+        from task import route_evidence  # noqa: F401
         return True
     except Exception:
         return False
@@ -26,11 +39,13 @@ def cmd_doctor(env, argv):
     py_ok = sys.version_info >= (3, 8)
     core_ok = _check_core()
     maind_bin = shutil.which("maind")
+    route_evidence_ok = _check_route_evidence()
 
     checks = {
         "python>=3.8": py_ok,
         "core (общий фундамент на PYTHONPATH)": core_ok,
         "maind (surfacing curated в память, опц.)": bool(maind_bin),
+        "task.route_evidence (route/budget evidence, опц.)": route_evidence_ok,
     }
     ok = py_ok and core_ok  # maind — опционально, не роняет вердикт
 

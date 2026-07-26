@@ -7,6 +7,7 @@ import unittest
 from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
                                  parse_next_carrier, plan_provider_invocation)
+from task.route_evidence import required_route
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -172,6 +173,23 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                         inherited_minimum=inherited)
                     self.assertTrue(plan.ok, plan.diagnostics)
                     self.assertIsNotNone(plan.invocation)
+
+    def test_route_evidence_required_route_agrees_with_the_catalog_for_every_plan_command(self):
+        # P2.4: route_evidence derives REQUIRED from the same CommandCatalog this
+        # module already builds — never a second, independently-parsed reading of
+        # `command-routing.json` that could silently drift from this one.
+        for command_id, expected in self.expected["plan_commands"].items():
+            with self.subTest(command_id=command_id):
+                record = self.records[command_id]
+                if expected["mode"] == "fixed":
+                    required = required_route(record)
+                    self.assertEqual(
+                        [required["model_class"], required["effort"]], expected["minimum"])
+                else:
+                    required = required_route(
+                        record, inherited_minimum=tuple(expected["minimum"]))
+                    self.assertEqual(
+                        [required["model_class"], required["effort"]], expected["minimum"])
 
 
 if __name__ == "__main__":  # pragma: no cover

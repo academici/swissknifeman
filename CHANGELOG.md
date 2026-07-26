@@ -4,6 +4,27 @@
 
 ### Added
 
+- **task — route/budget evidence (P2.4, `2026.07.24-AGENT-RELIABILITY`).** New
+  `packages/task/lib/task/route_evidence.py`: normalized `required`/`actual` route
+  capture with a named source (`self-attested`/`provider-doctor`/`cli-flag`) and
+  timestamp — never inferred from static config, an actor string or the requested
+  model. `classify` gives the four-way `exact/over/under/unknown` label (one axis
+  never compensates the other — an unresolved model class outweighs a generous
+  effort); `dispatch_guard` is the fail-closed boundary strictly upstream of
+  `task_contract.pre_mutation` (P2.2) — it reuses the two frozen P0.2 `route` deny
+  codes verbatim (`ROUTE_UNDERSHOOT` also for an `unknown` axis, `CAPABILITY_UNSUPPORTED`)
+  and is what prevents that predicate's `.index()` lookup from ever seeing a `None`.
+  `build_task_contract_route` assembles the exact `task-contract-v1.schema.json`
+  `$defs/route` shape once the guard already allowed. Also: `capture_budget`
+  (token/duration/tool-call evidence only, no pricing — axis names match
+  `analyst.readers` `usage.totals`), `route_change_boundary`, and
+  `canonical_actor` — the one `<model_class>/<effort>` journal actor spelling
+  (`findings/02-telemetry-2026-07-20-24.md` — 34 observed spellings). `task.journal
+  append` gains `--route-evidence PATH` (mutually exclusive with `--actor`) to derive
+  the actor from a captured evidence file instead of hand-typing it. `harness doctor`
+  and `analyst doctor` each gain one informational/optional line naming where route
+  evidence can come from (`analyst doctor`'s is the existing `task.route_evidence`
+  importability pattern already used for `maind`).
 - **task — typed finding/review enforcement and loop breaker (P2.3,
   `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/review_policy.py`
   implements `risk-review-loop-budget-v1.md` as executable policy: seam-derived

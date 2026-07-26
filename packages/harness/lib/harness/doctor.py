@@ -103,4 +103,11 @@ def cmd_doctor(env, argv):
     if stale:
         print(f"  · хук run-report протух ({', '.join(stale)}) — повтори harness hooks --global")
 
+    # P2.4 (plans/2026.07.24-AGENT-RELIABILITY): SessionStart-пейлоад провайдера несёт
+    # `model` живым полем — `reasoning effort` он не экспонирует ни у одного провайдера
+    # (findings/02-telemetry-2026-07-20-24.md), поэтому actual effort остаётся
+    # self-attested и никогда не подставляется молча. Информационная строка, не ✗.
+    print("  · route evidence: live model — из пейлоада хука/`codex doctor --json`; "
+          "effort остаётся self-attested (`task.route_evidence capture --source self-attested`)")
+
     print("\nharness: OK" if ok else "\nharness: есть проблемы (см. ✗)")

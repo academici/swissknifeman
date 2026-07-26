@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.1 |
+| Version | 1.16.2 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.10 закрыт 🟠: закрытый набор заголовков §3, имя модели → класс по committed-карте, типизированный отказ вместо `ValueError` по обеим осям/сторонам маршрута, probe охвата, `task@0.8.0`; следующий — P2.11) |
+| Last Updated | 2026-07-26 (P2.11 закрыт 🟢: бинарный pre-final гейт (`n/a` не зелёное), маршрут исполнителя по лестнице D75, граница исполняется на штатном пути `plan-exec` (М5), различающий литеральный тест (D79), `plan-protocol@2.14.0`/`skiller@0.7.0`/`task@0.9.0`; следующий — P2.8) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -251,7 +251,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 4/11 | 🟡 In progress |
+| P2 | Checked outcome execution и bounded review | 5/11 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -399,6 +399,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.7 закрыт 🟢: write-site компилятора в `plan-exec`/`plan-close` (D74), истинный `plan-protocol` §13, `source-evidence-template.md`, `plan-protocol@2.13.0`/`skiller@0.6.0`/`task@0.7.0` — детали см. phases/P2.md P2.7 Completion Notes. Version 1.15.1 → 1.15.2. |
 | 2026-07-26 | plan-design/Claude Opus 5/high | Остановка P2.7 разобрана: D75–D79 (маршрут исполнителя на pre-final, `n/a` не зелёный, названные границы предиката и штатного пути, легаси-форма §3 в компиляторе, тест на различающий предикат); P2.7 → 🟠, заведены P2.10/P2.11 (28 items), слои — `findings/14`, `research/08`. Version 1.15.2 → 1.16.0. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.10 закрыт 🟠: компилятор читает легаси-формы §3, типизированный отказ вместо `ValueError` (D74/D78), `task@0.8.0` — детали см. phases/P2.md P2.10 Completion Notes. Version 1.16.0 → 1.16.1. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.11 закрыт 🟢: бинарный pre-final гейт (D76), маршрут исполнителя (D75), граница на обоих путях закрытия (М5), различающий тест (D79), `plan-protocol@2.14.0`/`task@0.9.0` — детали phases/P2.md P2.11 Completion Notes. Version 1.16.1 → 1.16.2. |
 
 ## 7. Contracts
 
@@ -422,6 +423,8 @@ audit/fix-loop без продукта, который план создан л�
 | `plan-protocol` skill canon | v2.13.0 | committed P2.7 (`d11c3b74`, реопен D70); **утверждение §13 материально НЕПОЛНО до P2.11** (D76: `plan-close` принимает `n/a` за зелёное; D78: вызов падает `ValueError` на 11/14 планов корня) — потребитель, полагающийся на «fail-closed на любом коде кроме allow», получает гарантию сильнее факта | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2); следующая версия — `v2.14.0` из P2.11 |
 | `skiller` package API + `general`/`core` units | v0.6.0 | committed P2.7 (`d11c3b74`, реопен D70 — новый `snippets/source-evidence-template.md` в unit `general`) | `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
 | `task` plugin/routing (`plugin_version`) | v0.7.0 → v0.8.0 | committed P2.10 (`668012bd`, реопен D70/D78 — компилятор читает закрытый набор §3-заголовков, отображает имя модели в класс по `command-routing.json::class_selectors`, типизирует отказ `_rank` по обеим осям/сторонам вместо `ValueError`) | те же потребители | task; тот же D58/D85 |
+| `plan-protocol` skill canon | v2.14.0 | committed P2.11 (`abd53b4b`, реопен D70/D75–D77/D79) — §13 материально ПОЛНО: бинарный гейт `pre_mutation == allow AND pre_final == allow` (`n/a` больше не зелёное, D76), маршрут исполнителя на pre-final по лестнице D75, обе точки закрытия исполняют границу (М5 закрыт), граница предиката названа (D77), литеральный тест на различающий предикат (D79) | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2) |
+| `task` plugin/routing (`plugin_version`) | v0.8.0 → v0.9.0 | committed P2.11 (`abd53b4b`, реопен D70/D75–D77/D79 — `plan-close.md`/`plan-exec.md`/`plan-run.md`/`plan-audit.md` несут бинарный fail-closed гейт на обеих границах закрытия) | те же потребители | task; тот же D58/D85 |
 
 ### Consumed
 

@@ -1,57 +1,96 @@
-# HANDOFF — 2026-07-26 — after P2.4
+# HANDOFF — 2026-07-26 — after P2.5
 
-**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P2.5
+**Next:** phase P2 item-terminal (5/5) — close/reconcile it before P3 starts (Phase-first rule).
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | `implementation` |
-| Effort | `medium` |
-| Capabilities | `command.subagents` |
-| Context | `continue (/clear) — ручной item` |
-| Суть | Прогнать immutable P0.3 bank через combined P1/P2 effective runtimes (P2.2–P2.4), доказать historical failure scenarios end-to-end |
+| Effort | `low` |
+| Capabilities | — |
+| Context | `NEW SESSION — шаг-не-item` |
+| Суть | Реконсилировать и закрыть фазу P2 по git-фактам (все 5 items терминальны: P2.1🟢/P2.2🟢/P2.3🟢/P2.4🟢/P2.5🟠), обновить Phase Handoff/Status Board, затем открыть P3.1 |
 
 ```
-/task:plan-exec 2026.07.24-AGENT-RELIABILITY P2.5
+/task:plan-close 2026.07.24-AGENT-RELIABILITY P2
 ```
 
 **Done:**
 
-- **P2.1 закрыт 🟢** (три контракта запечатаны, машина 135/135 ячеек) — детали `phases/P2.md` P2.1 Completion Notes.
-- **P2.2 закрыт 🟢** (2026-07-26, `task:plan-run` под **sonnet/high** = предписанный §3 Routing `implementation/high`, точное совпадение). `task_contract.py` compiler + tiered-portability lint, `plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0` — детали `phases/P2.md` P2.2 Completion Notes.
-- **P2.3 закрыт 🟢** (2026-07-26, `task:plan-run` под **sonnet/high** = предписанный §3 Routing `implementation/high`, точное совпадение). `review_policy.py` — typed finding/review enforcement, loop breaker, `evaluate_finding` хук в `task_contract.py`, `task@0.5.0` — детали `phases/P2.md` P2.3 Completion Notes.
-- **P2.4 закрыт 🟢** (2026-07-26, `task:plan-run` под **sonnet/high** = предписанный §3 Routing `implementation/high`, точное совпадение). Произведено:
-  - `packages/task/lib/task/route_evidence.py` — `required_route` (детерминированно из `CommandCatalog`), `capture_actual`/`classify` (`exact/over/under/unknown`), `dispatch_guard` (fail-closed строго ДО компиляции Task Contract — переиспользует ровно `ROUTE_UNDERSHOOT`/`CAPABILITY_UNSUPPORTED`, P0.2, новых кодов не минтит), `capability_support`, `route_change_boundary`, `capture_budget` (no-pricing, оси совпадают с `analyst.readers` `usage.totals`), `canonical_actor`, `build_task_contract_route` (байт-в-байт `task-contract-v1.schema.json` `$defs/route`).
-  - `journal.py` получил `--route-evidence PATH` (взаимоисключающий с `--actor`).
-  - `harness/doctor.py`/`analyst/doctor.py` — по одной строке про источник route evidence (analyst — опциональный `task.route_evidence`-чек).
-  - `command-routing.json` НЕ тронут: `required_route` переиспользует уже собранный `CommandCatalog`, а не парсит JSON заново — exact-set схема файла принадлежит `command_catalog.py` (вне Files этого item'а).
-  - Тесты: 36+8+17+10, все зелёные (на `97b4a7eb`); `render-provider-commands.py --check` и `skiller registry --check` — no-op.
-  - Diff-scope guard: item-коммит `97b4a7eb` несёт ровно `Files` минус `command-routing.json` — посторонний дифф нет.
-  - Known Deviations (process, не material): пропущена интерим-запись `🟡 In progress` и старт-запись журнала до начала работы (D21 п.3) — журнал несёт только финал-запись — детали `phases/P2.md` P2.4 Known Deviations.
+- **P2.1–P2.4 закрыты 🟢** — детали `phases/P2.md` соответствующих Completion Notes.
+- **P2.5 закрыт 🟠 Done with deviations** (2026-07-26, `task:plan-run` под **implementation/medium**
+  = предписанный §3 Routing `implementation/medium`, точное совпадение). Произведено:
+  - `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.5/candidate-results.json`,
+    `.../result-manifest.json`, `.../verify_result_manifest.py` (P2.5-owned verifier/manifest
+    writer, не переизобретает грейдинг — вызывает замороженный `run_bank.py candidate`, D30) и
+    `findings/P2.5-scenario-results.md`.
+  - Все 31 замороженных кейса `reliability-bank-v1` (`bank_version 1.0.0`) прогнаны через
+    реальные вызовы `task.task_contract.pre_mutation`/`pre_final` (15 кейсов),
+    `task.review_policy` (`reopens_product`/`LoopBudget`/`review_transition`, 2), `task.route_evidence`
+    (`capture_actual`/`classify`/`dispatch_guard`/`canonical_actor`, 3),
+    `task.command_catalog`/`command_render` (реальный provider-рендеринг, 3) и прямое чтение
+    закоммиченной evidence (`artifacts/P1.4/effective-carrier-set.json`, `.codex/hooks.json` +
+    `.swissknifeman/provider-artifacts.lock.json`, `artifacts/source-evidence/sessions/**`,
+    `skiller registry --check` — 5). Результат: **30/31 зелёных**
+    (`first_pass_success 0.9677`). Floors: met F2/F3/F7/F11/F12/F13/F14; **not-met F1**
+    (`critical_requirement_retention 0.96`); deferred F4 (уже терминален, P1.4)/F5 (уже
+    терминален, P0.4)/F6/F8/F9/F10 (требуют P3.3 live layer-2 paired run).
+  - **Единственный residual:** `trace-record-missing` — P3.1/P3.2 (unified trace) ещё не
+    существует, честно репортится `declared_status: failed`, не подделан.
+  - Validation: `py_compile` OK · оба `json.tool` OK · полный прогон `verify_result_manifest.py`
+    → `30/31 кейсов green, floors not-met: F1, residual: trace-record-missing` ·
+    `packages/task/scripts/validate.sh` / `packages/skiller/scripts/validate.sh` (444 тестов) /
+    `packages/harness/scripts/validate.sh` → все `validate: OK`.
+  - Diff-scope guard: item-коммит `14b3e6ce` несёт ровно `Files` — посторонний дифф нет.
+  - **Known Deviations (material, не только process — см. `phases/P2.md` P2.5 Known
+    Deviations):** (1) "fresh item dispatch"/"cold recovery" (root-supervisor → fresh
+    subagent → cold recovery) не были буквально воспроизведены — гарнесс работал прямым
+    вызовом внутри текущей сессии, не симулированным multi-subagent диспатчем; сами
+    проверяемые швы (`task_contract`/`review_policy`/`route_evidence`) от этого не зависят,
+    но механика диспатча этим item'ом не доказана. (2) task-specific temp roots per provider
+    (D48) материализованы только для 3 кейсов, реально нуждающихся в двух провайдерах
+    (`wrong-provider-invocation`, `claude-only-carrier`, `control-provider-neutral-rendering`)
+    — остальные 28 читали живой каталог репо напрямую; запрет на `HOME`/`CODEX_HOME`/
+    global state (собственно D48) не нарушен ни разу.
 
 **Remaining:**
 
-12/22 items. P2: 4/5 (P2.5 — последний item фазы) → P3 (5) → P4 (3).
-Все items P2 детализированы; повторный дизайн-заход не требуется.
+17/22 items. Фаза P2 item-terminal (5/5), не закрыта формально (нет reconciliation-прохода
+`plan-close`) → P3 (5 items) → P4 (3 items).
 
 **Sources of truth:**
 
-`plan.md` v1.14.3 (§3 Routing, §4 Status Board, §5 D9/D68, §7 Contracts) ·
-`phases/P2.md` § P2.4 Completion Notes (факты закрытия) ·
-`packages/task/lib/task/route_evidence.py` · `packages/task/lib/task/task_contract.py` ·
-`roadmap.md` § P2.5 · `journal.jsonl`.
+`plan.md` v1.14.4 (§3 Routing, §4 Status Board, §6 Update Log) ·
+`phases/P2.md` § P2.5 Completion Notes/Known Deviations (факты закрытия) ·
+`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.5/result-manifest.json` ·
+`findings/P2.5-scenario-results.md` · `roadmap.md` § P3 · `journal.jsonl`.
 
 **Open risks:**
 
-- **Строка фазы P0 в `plan.md` §4 всё ещё протухла** (унаследовано от P2.1–P2.3's handoff — этим item'ом не правилось, чужая поверхность И2): `🟡 In progress` при четырёх терминальных items. Владелец правки — `task:plan-close 2026.07.24-AGENT-RELIABILITY P0`.
-- **`packages/task/docs/reference/provider-commands.md` не входит в `artifacts/P1.1/remediation-map.json::owners.P2.2.paths`** (унаследовано от P2.2, этим item'ом не задето). Владелец правки карты — P1.1 (D#).
-- `check_collision_owners` структурно несовместим с фазовой ремедиацией — без изменений с P2.1.
-- Прежний долг: две находки A2 (порядок capture `base-sha` — закрыто по факту исполнения P2.2/P2.3); `research/01–03` без ссылок на слой 1; A1 F11; `command.interactive-user-input` вне каталога capability; Claude enabled-set `unknown`; Claude-проекция `workflow-craft`; расхождение провенанса harness-CLI ↔ maind-адаптера (P0.4).
-- **`review_policy.py`'s `LoopBudget`/`review_transition` — in-process, без persisted cross-session состояния.** P2.5 — владелец доказательства реальной многосессионной/многовызовной последовательности против этой политики.
-- **`plan-lint`: 1 WARN (`plan.md:366`, чужая P1.4 Update Log-строка >300 символов) — pre-existing, 0 новых от диффа P2.4** (`--baseline HEAD` на item-коммите `97b4a7eb`). Владелец правки — исполнитель P1.4/P1.5, не этот item.
-- **`route_evidence.py`'s `dispatch_guard`/`build_task_contract_route` не подключены ни к одной реальной точке dispatch** (root supervisor / `plan-exec`/`plan-run` командные тела не зовут этот модуль — Scope P2.4 был библиотека+интеграционные швы, не переписывание командных тел, вне Files этого item'а). P2.5 (end-to-end historical scenarios) — первый потребитель, который реально прогоняет через route guard; если он этого не сделает — назвать долг явно, не молчать.
+- **Строка фазы P0 в `plan.md` §4 всё ещё протухла** (унаследовано, не этим item'ом; владелец
+  правки — `task:plan-close 2026.07.24-AGENT-RELIABILITY P0`).
+- **`packages/task/docs/reference/provider-commands.md` не входит в
+  `artifacts/P1.1/remediation-map.json::owners.P2.2.paths`** (унаследовано от P2.2). Владелец
+  правки карты — P1.1 (D#).
+- **P2.5's dispatch/cold-recovery/per-provider temp-root narrowing (Known Deviations выше)** —
+  не пере-открыт как отдельный item; если владелец хочет буквальную механику — новый P2.5-scoped
+  follow-up или переиспользовать P3.4 (disposable-worktree canary несёт смежную machinery).
+- **`trace-record-missing` — единственный provable residual, владелец P3.1/P3.2.** F1 not-met
+  до тех пор.
+- **F4/F5 репортятся `deferred` в `result-manifest.json` только по метаданным floor-строки**
+  (`evaluate_floors` классифицирует по `baseline_source`, не по факту измерения) — оба уже
+  реально закрыты зелёными (P1.4/P0.4); это артефакт `run_bank.py`'s общей логики, не пробел
+  этого item'а.
+- **`plan-lint`: см. свежий прогон при следующем шаге** (`--baseline HEAD` на item-коммите
+  `14b3e6ce`, не пересчитывалось этим handoff — плановый шаг `plan-close` сделает это заново).
+- Прежний долг (без изменений этим item'ом): две находки A2 (закрыто по факту исполнения
+  P2.2/P2.3); `research/01–03` без ссылок на слой 1; A1 F11; `command.interactive-user-input`
+  вне каталога capability; Claude enabled-set `unknown`; Claude-проекция `workflow-craft`;
+  расхождение провенанса harness-CLI ↔ maind-адаптера (P0.4).
 
 **Workarounds/Deferred/Open questions:**
 
 - **workarounds:** нет новых этим item'ом.
-- **deferred:** протухшая строка фазы P0 в §4; структурный фикс `check_collision_owners`/`remediation-map.json`; `command.interactive-user-input`; Claude-проекция `workflow-craft`; расхождение провенанса harness-CLI ↔ maind-адаптера; исторический A2-долг; `route_evidence.py` не подключён к реальной dispatch-точке (см. Open risks).
+- **deferred:** протухшая строка фазы P0 в §4; `trace-record-missing` → P3.1/P3.2; F6/F8/F9/F10 →
+  P3.3 live layer-2 paired run; буквальная dispatch/cold-recovery/per-provider-root механика
+  P2.5 (см. Open risks); исторический A2-долг.
 - **open_questions:** нет открытых для владельца — по D50 развилки закрываются записью.

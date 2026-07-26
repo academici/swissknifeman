@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.14.3 |
+| Version | 1.14.4 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.4 закрыт 🟢: route/budget evidence + fail-closed dispatch-guard) |
+| Last Updated | 2026-07-26 (P2.5 закрыт 🟠, фаза P2 терминальна 5/5: historical scenarios end-to-end, F1 not-met named residual) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -371,6 +371,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.2 закрыт 🟢: `task_contract.py` compiler + tiered-portability lint (D47 role-тест), `plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0` — детали см. phases/P2.md P2.2 Completion Notes. Version 1.14.0 → 1.14.1. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.3 закрыт 🟢: `review_policy.py` — typed finding/loop breaker над risk-review-loop-budget-v1.md, один ленивый хук `evaluate_finding` в `task_contract.py`, `task@0.5.0` — детали см. phases/P2.md P2.3 Completion Notes. Version 1.14.1 → 1.14.2. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.4 закрыт 🟢: `route_evidence.py` — required/actual route capture, exact/over/under/unknown, fail-closed `dispatch_guard` строго до `task_contract.pre_mutation`, `journal.py --route-evidence`, harness/analyst doctor guidance — детали см. phases/P2.md P2.4 Completion Notes. Version 1.14.2 → 1.14.3. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/medium | P2.5 закрыт 🟠 (фаза P2 item-terminal, 5/5): 30/31 frozen-bank кейсов зелёные, F1 not-met — детали см. phases/P2.md P2.5 Completion Notes/Known Deviations. Version 1.14.3 → 1.14.4. |
 
 ## 7. Contracts
 

@@ -197,7 +197,7 @@
     {
       "case_id": "case-04-hook-cold-start",
       "commit": "1b42c35f8b54dd000cd99e837c5fa66386fa93d6",
-      "detail": "new command resolves to existing /tmp/skm-agent-reliability-p3.4.kklYE4/worktree/.codex/hooks/lifecycle.py",
+      "detail": "new command resolves to existing $CANARY_WT/.codex/hooks/lifecycle.py",
       "family": "hook-cold-start",
       "kind": "critical",
       "passed": true,

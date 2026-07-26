@@ -60,6 +60,29 @@ def file_hash(path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def _strip_anchor(payload: dict) -> dict:
+    stripped = {k: v for k, v in payload.items() if k != "content_hash"}
+    provenance = stripped.get("input_provenance")
+    if provenance:
+        stripped["input_provenance"] = {k: v for k, v in provenance.items() if k != "tree_anchor"}
+    return stripped
+
+
+def _diff_paths(committed, recomputed, prefix=""):
+    if isinstance(committed, dict) and isinstance(recomputed, dict):
+        paths = []
+        for key in sorted(set(committed) | set(recomputed)):
+            path = f"{prefix}.{key}" if prefix else key
+            if key not in committed or key not in recomputed:
+                paths.append(path)
+            else:
+                paths.extend(_diff_paths(committed[key], recomputed[key], path))
+        return paths
+    if committed != recomputed:
+        return [prefix or "<root>"]
+    return []
+
+
 def load_json(path):
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -92,6 +115,11 @@ def main(argv=None) -> int:
                              "the candidate input -- generator path, sha256, tree anchor)")
     parser.add_argument("--generator", default=None,
                         help="path to generate_transcripts.py (P2.8, paired with --transcripts)")
+    parser.add_argument("--check", action="store_true",
+                        help="P3.7 -- read-only mode: recompute the payload and compare it "
+                             "field-by-field against the committed --manifest instead of "
+                             "writing. tree_anchor/content_hash are compared separately from "
+                             "the rest of the payload (D84).")
     args = parser.parse_args(argv)
     if bool(args.transcripts) != bool(args.generator):
         fail("--transcripts and --generator must be supplied together (P2.8 input provenance)")
@@ -181,6 +209,23 @@ def main(argv=None) -> int:
                  "this script."),
     }
     manifest_payload["content_hash"] = content_hash(manifest_payload)
+
+    if args.check:
+        committed = load_json(args.manifest)
+        diffs = _diff_paths(_strip_anchor(committed), _strip_anchor(manifest_payload))
+        if not diffs:
+            committed_anchor = (committed.get("input_provenance") or {}).get("tree_anchor")
+            current_anchor = (manifest_payload.get("input_provenance") or {}).get("tree_anchor")
+            if committed_anchor != current_anchor:
+                print(f"verify_result_manifest --check: tree_anchor differs "
+                      f"({committed_anchor} → {current_anchor}), payload identical")
+            else:
+                print("verify_result_manifest --check: identical, tree_anchor matches too")
+            return 0
+        for p in diffs:
+            print(f"  ОШИБКА: input drift at {p}", file=sys.stderr)
+        fail(f"{len(diffs)} полей разошлись с закоммиченным {args.manifest} (input drift)")
+
     Path(args.manifest).write_text(
         json.dumps(manifest_payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
         encoding="utf-8")

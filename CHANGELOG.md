@@ -4,6 +4,20 @@
 
 ### Added
 
+- **analyst/harness — Contribution gate minor bumps paid (P4.5,
+  `2026.07.24-AGENT-RELIABILITY`, `analyst@0.2.0`, `harness@0.4.0`).**
+  Package-API minor bumps owed by `unified-agent-trace-v1.md` § Contribution gate (D23) —
+  `analyst 0.1.0 → 0.2.0`, `harness 0.3.0 → 0.4.0` — were recorded as debt in P3.1
+  Pending Work / P3.2 Completion Notes (the contract's own consumer-surveyed SemVer/ADR
+  result) but left unpaid because `package.json` sat outside those items' declared
+  `Files`. This item pays exactly that debt: `analyst`'s bump reflects the new public
+  module `analyst.trace` (P3.1's normalized `TraceRecord` schema owner) plus
+  `analyst.metrics` (P3.2's paired reliability digest layer); `harness`'s bump reflects
+  the new public module `harness.provider_trace` (P3.1's thin Claude/Codex readers).
+  Neither package's `.claude-plugin/plugin.json` moves — that is a separate publication
+  surface not derivable from `package.json` (measured: `harness` package `0.3.0` sat
+  against plugin `0.2.0` before this bump) — and no generated artifact drifts
+  (`skiller registry --check` and diff-scope guard both confirm a no-op).
 - **task/general — machine gate for printed pre_mutation/pre_final boundary codes
   (P4.4, `2026.07.24-AGENT-RELIABILITY`, `plan-protocol@2.15.0`, `skiller@0.8.0`).**
   `plan_lint.py` gains a new rule: a `🟢`/`🟠` item whose `Updated` cell (Phase Status

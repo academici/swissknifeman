@@ -592,15 +592,23 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False, repair=False,
                 die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
                     f"target {plan['skills_path']}/{name} changed after planning; "
                     "repair: replan before `skiller sync --repair`")
-            if not skill_file.is_file():
+            if expected_observed == _hash_label(""):
+                # Managed skill VANISHED from the project (dir deleted, or replaced by a
+                # symlink): drift is classified at plan time by `not dst.is_dir()`, and
+                # there are no local bytes to preserve. Demanding a pre-image here made
+                # the ONLY repair path for a deleted managed skill unreachable — repair
+                # died instead of restoring it. Nothing to back up is not a conflict.
+                pass
+            elif not skill_file.is_file():
                 die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
                     f"target {plan['skills_path']}/{name} has no recoverable pre-image")
-            # safe_copy_skill replaces the directory, so preserve the exact bytes
-            # immediately beside it until the new directory exists. Then move this
-            # pending file to the P2-standard final backup path beside SKILL.md.
-            pending = dst.parent / f".{name}.provider-artifact.bak.pending"
-            shutil.copy2(skill_file, pending)
-            pending_backups[name] = pending
+            else:
+                # safe_copy_skill replaces the directory, so preserve the exact bytes
+                # immediately beside it until the new directory exists. Then move this
+                # pending file to the P2-standard final backup path beside SKILL.md.
+                pending = dst.parent / f".{name}.provider-artifact.bak.pending"
+                shutil.copy2(skill_file, pending)
+                pending_backups[name] = pending
         # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
         # перепроверка + SKILL_IGNORE) — общий с vendor.copy_skill (не разъезжаться).
         # Пропуск (containment-стоп/TOCTOU-гонка, уже warn'ится внутри) — не тихий:
@@ -613,8 +621,9 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False, repair=False,
             if _dir_sha256(dst) != entry["sha256"]:
                 die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
                     f"target {plan['skills_path']}/{name} repair bytes failed verification")
-            pending_backups[name].replace(
-                (dst / "SKILL.md").with_name("SKILL.md.provider-artifact.bak"))
+            if name in pending_backups:  # отсутствует у восстановления удалённого скилла
+                pending_backups[name].replace(
+                    (dst / "SKILL.md").with_name("SKILL.md.provider-artifact.bak"))
             repair_evidence.append({"name": name, **plan["drift_hashes"][name]})
         locked[name] = {
             "source": SOURCE,

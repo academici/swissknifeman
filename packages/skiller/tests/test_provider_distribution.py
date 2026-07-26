@@ -3,6 +3,7 @@ import contextlib
 import hashlib
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -443,6 +444,36 @@ class ProviderDistributionCase(unittest.TestCase):
                                provider="codex")
         self.assertEqual(codex_plan["managed_drift"], [])
         self.assertEqual(codex_plan["update"], [])
+        self.assertIn("code-style", codex_plan["keep"])
+
+    def test_repair_restores_managed_skill_deleted_from_project(self):
+        """Удалённый managed-скилл — тоже managed-drift, но пре-образа у него нет.
+
+        Регрессия: `--repair` требовал SKILL.md для бэкапа и умирал
+        SPUB_OWNERSHIP_CONFLICT «no recoverable pre-image», из-за чего ЕДИНСТВЕННЫЙ
+        путь восстановления удалённого скилла был недостижим (наблюдено на живом
+        проекте: `plan-protocol` пропал из `.claude/skills`, sync не чинился).
+        """
+        self.write_provider_config(providers())
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_sync(self.env, self.project, {"no_core": True})
+        codex_skill_dir = self.project / ".agents/skills/code-style"
+        shutil.rmtree(codex_skill_dir)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = do_sync(self.env, self.project, {"no_core": True, "repair": True})
+        source = (self.root / "skills/php/code-style/SKILL.md").read_bytes()
+        self.assertEqual((codex_skill_dir / "SKILL.md").read_bytes(), source)
+        # бэкапа нет и быть не может — локальных байт не существовало
+        self.assertFalse((codex_skill_dir / "SKILL.md.provider-artifact.bak").exists())
+        evidence = next(record for record in result["providers"]
+                        if record["provider"] == "codex")["repair"][0]
+        self.assertEqual(evidence["observed"], "sha256:<missing>")
+        cfg = json.loads((self.project / ".swissknifeman/config.json").read_text())
+        codex_plan = plan_sync(self.env, self.project,
+                               {**cfg, "skills_path": ".agents/skills", "agent": "codex"},
+                               provider="codex")
+        self.assertEqual(codex_plan["managed_drift"], [])
         self.assertIn("code-style", codex_plan["keep"])
 
     def test_source_staleness_updates_without_repair_backup(self):

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **skiller sync --repair теперь восстанавливает managed-скилл, УДАЛЁННЫЙ из проекта.**
+  Пропавший скилл классифицируется как managed-drift (`not dst.is_dir()`), но пре-образа
+  у него нет по определению — ветка ремонта требовала `SKILL.md` для бэкапа и падала
+  `SPUB_OWNERSHIP_CONFLICT: … has no recoverable pre-image`, из-за чего ЕДИНСТВЕННЫЙ путь
+  восстановления был недостижим: обычный `sync` отказывался (drift), `--repair` умирал.
+  Наблюдено на живом проекте (`plan-protocol` пропал из `.claude/skills`). Теперь при
+  отсутствующих локальных байтах бэкап просто не создаётся (нечего сохранять), копия
+  восстанавливается, evidence несёт `observed: sha256:<missing>`; поведение при живых
+  локальных правках не изменилось — бэкап `SKILL.md.provider-artifact.bak` по-прежнему
+  обязателен. Регрессионный тест —
+  `test_repair_restores_managed_skill_deleted_from_project`.
+
 ### Added
 
 - **docs/plan — canonical docs synchronised and the measured-scope Owner decision

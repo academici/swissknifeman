@@ -1,0 +1,9 @@
+diff --git a/docs/task/plan-structure.md b/docs/task/plan-structure.md
+index c31684dc..6c44ac13 100644
+--- a/docs/task/plan-structure.md
++++ b/docs/task/plan-structure.md
+@@ -95,3 +95,4 @@ D#-старый», старый D# не редактируется.
+ план переезжает в репо проекта (Meta `Home: repo:<путь>`), Brain-копия становится зеркалом
+ (`brain sync`); после завершения — синк обратно → архив → миграция `root/` в docs. Полный
+ цикл — [Методология](/task/methodology).
++<!-- canary P3.4 case-02 plan-doc ok -->

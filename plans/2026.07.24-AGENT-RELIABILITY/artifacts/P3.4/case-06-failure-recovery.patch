@@ -1,0 +1,7 @@
+diff --git a/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt b/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt
+new file mode 100644
+index 00000000..016ac426
+--- /dev/null
++++ b/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt
+@@ -0,0 +1 @@
++ceaf207005686532783dfddba100e028f0d7527d238be30e0f2ed01d8879fcbd

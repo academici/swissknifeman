@@ -1,0 +1,13 @@
+diff --git a/packages/skiller/tests/fixtures_data/provider-publication-cases.json b/packages/skiller/tests/fixtures_data/provider-publication-cases.json
+index de5c7663..af042399 100644
+--- a/packages/skiller/tests/fixtures_data/provider-publication-cases.json
++++ b/packages/skiller/tests/fixtures_data/provider-publication-cases.json
+@@ -8,6 +8,7 @@
+     "managed-drift-repair",
+     "corrupt-lock-no-write",
+     "native-install-default-no-subprocess",
+-    "protected-path-no-write"
++    "protected-path-no-write",
++    "canary-provider-neutral-check"
+   ]
+ }

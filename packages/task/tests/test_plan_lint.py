@@ -515,6 +515,70 @@ class TestTieredPortability(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "PORTABILITY_INPUT_MISSING"), diag.errors)
 
 
+class TestWriteSiteCodesGate(TmpPlanTestCase):
+    """P4.4/D91 (ремонт находки Ф2, findings/P3.11-terminal-audit-2.md § Ф2): item со
+    статусом 🟢/🟠, чей `Updated` (Phase Status) ≥ cutoff, обязан нести оба кода
+    `pre_mutation:`/`pre_final:` со значением `allow` в Completion Notes; item ДО cutoff'а
+    не диагностируется вовсе (forward-only, D91). Каждый различающий кейс (b)/(c) ниже
+    проверен КРАСНЫМ на коде до этого item'а (`git show HEAD:packages/task/lib/task/
+    plan_lint.py` не нёс ни `_lint_write_site_codes_44`, ни вызова из `lint_plan` —
+    старый код молчал на ОБОИХ кейсах; см. Completion Notes P4.4 за точным прогоном, D79)."""
+
+    def _write(self, *, updated, item_status="🟢 Done",
+               completion_notes="сделано, тест зелёный"):
+        plan_dir = write_valid_plan(self.root)
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(
+            phase_md(item_status=item_status, completion_notes=completion_notes,
+                      updated=updated),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_pre_cutoff_item_without_codes_is_silent(self):
+        """(а) Updated < cutoff, без кодов → молчание (forward-only, И10)."""
+        plan_dir = self._write(updated="2026-07-26")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+    def test_b_post_cutoff_item_without_codes_is_error(self):
+        """(б) Updated ≥ cutoff, без кодов → ERROR."""
+        plan_dir = self._write(updated="2026-07-27")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
+
+    def test_c_post_cutoff_item_with_pre_final_na_is_error(self):
+        """(в) Updated ≥ cutoff, `pre_final: n/a` → ERROR (D76: `n/a` — не зелёное)."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="Сделано. `pre_mutation: allow`, `pre_final: n/a`.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
+
+    def test_d_post_cutoff_item_with_both_allow_is_silent(self):
+        """(г) Updated ≥ cutoff, оба `allow` → молчание."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="Сделано. `pre_mutation: allow`, `pre_final: allow`.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_malformed_updated_date_is_out_of_scope_not_error(self):
+        """Непарсимая/нестрогая дата (не ISO `YYYY-MM-DD`) = вне скоупа — fail-open по дате
+        (Implementation Rules P4.4 (1)), не ERROR/WARNING."""
+        plan_dir = self._write(updated="2026.07.27")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+    def test_not_done_status_is_never_gated(self):
+        """Статус вне `🟢`/`🟠` (напр. `⬜ Not started`) — правило не применяется, каким бы
+        ни был Updated."""
+        plan_dir = self._write(updated="2026-07-27", item_status="⬜ Not started",
+                                completion_notes="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+
 class TestValidPlan(TmpPlanTestCase):
     def test_valid_plan_ok(self):
         plan_dir = write_valid_plan(self.root)

@@ -337,6 +337,69 @@ def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
                f"item'е (PORTABILITY_INPUT_MISSING)")
 
 
+# --- P4.4/D91: машинный гейт напечатанных кодов границ (ремонт находки Ф2) ------
+# findings/P3.11-terminal-audit-2.md § Ф2, событие 2 из 2: канон уже требовал печати ОБОИХ
+# кодов write-site (`plan-audit.md` чеклист), но проверка была НЕ машинной — пять items
+# подряд (P3.6-P3.10) прошли аудит перепрогоном предиката ВРУЧНУЮ (все пять → allow/allow),
+# сама ЗАПИСЬ в Completion Notes осталась отсутствующей. Якорь скоупа — ДАТА ITEM'а
+# (колонка `Updated` таблицы «## Phase Status», ISO), А НЕ дата плана: паттерн
+# BRIEF_CANON_DATE/JOURNAL_CANON_DATE/PORTABILITY_TIER_CANON_DATE здесь промахнулся бы —
+# этот план датирован `2026.07.24`, то есть его собственные будущие items P4.* остались бы
+# вне гейта, а красить закрытые задним числом запрещено (D91, третий проход по записи
+# отвергнут отчётом Ф2). Формат константы — ISO ДЕФИС (`YYYY-MM-DD`), а НЕ ТОЧКА, как у
+# датовых plan_id-констант выше: сравнение идёт со значением ЯЧЕЙКИ `Updated`, которая несёт
+# дефисы — сравнение разноформатных строк друг с другом ломает лексикографический порядок.
+# Дата НАМЕРЕННО на день позже дня авторства правила (2026-07-26) — тот же приём, что у
+# PORTABILITY_TIER_CANON_DATE: items, закрываемые ЭТОЙ же фазой в день авторства, не красятся
+# задним числом; правило доказывается синтетическими датированными фикстурами
+# (test_plan_lint.py), а не самоприменением к текущему прогону.
+WRITE_SITE_CODES_CANON_DATE = "2026-07-27"
+ITEM_UPDATED_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Канон кодов — `task_contract.evaluate()`: `pre_mutation` ∈ {allow, block:<CODE>};
+# `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное). Markdown-бэктики
+# вырезаются ДО поиска (форма печати — `` `pre_mutation: allow` ``); сами литералы
+# `pre_mutation:`/`pre_final:` — в `CANON_LITERALS` (директивы `i18n-keep`, SKILL.ru.md §8
+# «Порядок закрытия item'а»).
+WRITE_SITE_PRE_MUTATION_RE = re.compile(r"pre_mutation:\s*(allow|n/a|block:[A-Za-z0-9_]+)")
+WRITE_SITE_PRE_FINAL_RE = re.compile(r"pre_final:\s*(allow|n/a|block:[A-Za-z0-9_]+)")
+
+
+def _lint_write_site_codes_44(status_table, items, path, diag):
+    """P4.4/D91 (ремонт находки Ф2): item со статусом 🟢/🟠, чей `Updated` (Phase Status)
+    ISO-датирован ≥ WRITE_SITE_CODES_CANON_DATE, обязан нести оба кода
+    `pre_mutation:`/`pre_final:` в Completion Notes, и оба обязаны быть `allow` (D76: `n/a`
+    — не зелёное). Непарсимая/отсутствующая дата = item вне скоупа — МОЛЧАНИЕ, а не
+    WARNING (И10: ни один существующий закрытый item не краснеет задним числом). Внутри
+    скоупа — ERROR (правило уже канон: `plan-audit.md` чеклист «write-site»; новое здесь —
+    только его машинная проверяемость)."""
+    updated_by_id = {row.get("ID"): row.get("Updated", "") for row, _ in status_table}
+    for item_id, occurrences in items.items():
+        item = occurrences[0]
+        status_val, _ = item["fields"].get("Status", ("", item["header_lineno"]))
+        if status_val not in (STATUS_DONE, STATUS_DEVIATIONS):
+            continue
+        updated = updated_by_id.get(item_id, "") or ""
+        if not ITEM_UPDATED_ISO_RE.match(updated) or updated < WRITE_SITE_CODES_CANON_DATE:
+            continue
+        cn_val, cn_lineno = item["fields"].get("Completion Notes", ("", item["header_lineno"]))
+        clean = (cn_val or "").replace("`", "")
+        m_mut = WRITE_SITE_PRE_MUTATION_RE.search(clean)
+        m_fin = WRITE_SITE_PRE_FINAL_RE.search(clean)
+        if not m_mut or not m_fin:
+            diag.error(path, cn_lineno,
+                       f"item {item_id}: закрыт «{status_val}» без напечатанных кодов границ "
+                       f"pre_mutation/pre_final в Completion Notes")
+            continue
+        if m_mut.group(1) != "allow":
+            diag.error(path, cn_lineno,
+                       f"item {item_id}: pre_mutation: {m_mut.group(1)} при статусе "
+                       f"«{status_val}» — закрытие на не-allow (D76)")
+        if m_fin.group(1) != "allow":
+            diag.error(path, cn_lineno,
+                       f"item {item_id}: pre_final: {m_fin.group(1)} при статусе "
+                       f"«{status_val}» — закрытие на не-allow (D76)")
+
+
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
@@ -382,6 +445,8 @@ CANON_LITERALS = (
     LITERAL_WAITING,                                          # форма `Next` «ОЖИДАНИЕ» (SKILL §8, D8)
     LITERAL_AUDIT_VERDICT,                                    # шапка вердикта `## Audit Pn` (§8)
     *SCOPE_PAYLOAD_MARKERS,                                   # scope-payload launch-block'а (§8)
+    "pre_mutation:",                                          # write-site код границы (§8, P4.4/D91)
+    "pre_final:",                                             # write-site код границы (§8, P4.4/D91)
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -1399,6 +1464,9 @@ def lint_plan(plan_dir, diag):
                     diag.warning(path, rr_lineno, f"item {item_id}: пустые Required Reads при статусе «{status_val}»")
                 if _is_empty(va_val):
                     diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
+
+        # --- P4.4/D91: гейт напечатанных кодов границ pre_mutation/pre_final --
+        _lint_write_site_codes_44(parsed["status_table"], parsed["items"], path, diag)
 
     # --- P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
     # execution input, либо внешний путь в роли execution input) ----------------

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.14.0
+version: 2.15.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -748,6 +748,11 @@ item'а, шаг 6 — остальную бухгалтерию.
 Deviations + чинящий коммит с реальным хешем в handoff.
 ```
 
+Печать кодов границ (`pre_mutation:`/`pre_final:`) в Completion Notes item'ов `🟢`/`🟠` —
+МАШИННЫЙ гейт (`plan_lint.py`, P4.4/D91, forward-only по дате ITEM'а) для item'ов с
+`Updated` ≥ `2026-07-27`: отсутствующий код или код ≠ `allow` на любой границе — ERROR;
+более ранние item'ы им не диагностируются вовсе.
+
 **Якорь дерева для чисел в отчётах.** Любое ЧИСЛО в отчёте item'а (Completion Notes,
 Validation, Known Deviations, Update Log) — счётчик `grep`, число ERROR/WARN, число
 коммитов/файлов — приводится с явным **якорем дерева**, на котором оно воспроизводимо:
@@ -1281,3 +1286,5 @@ acceptance-предикат не опирается на `pinned-not-recomputabl
 <!-- i18n-keep: ВХОД: -->
 <!-- i18n-keep: СКОУП: -->
 <!-- i18n-keep: НЕ ТРОГАТЬ: -->
+<!-- i18n-keep: pre_mutation: -->
+<!-- i18n-keep: pre_final: -->

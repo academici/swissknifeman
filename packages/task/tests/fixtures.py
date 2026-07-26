@@ -65,7 +65,8 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
              completion_notes="сделано, тест зелёный", known_deviations="—",
-             escalation_needed="—", handoff_text="Фаза сдана: всё зелёное."):
+             escalation_needed="—", handoff_text="Фаза сдана: всё зелёное.",
+             updated="2026-07-02"):
     return f"""# {phase_id} — Фаза раз
 
 ## Phase Context
@@ -76,7 +77,7 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {item_id} | Валидация конфига | {item_status} | 2026-07-02 |
+| {item_id} | Валидация конфига | {item_status} | {updated} |
 
 ### {item_id} — Валидация конфига
 

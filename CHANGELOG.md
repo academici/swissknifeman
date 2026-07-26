@@ -4,6 +4,25 @@
 
 ### Added
 
+- **task/general — machine gate for printed pre_mutation/pre_final boundary codes
+  (P4.4, `2026.07.24-AGENT-RELIABILITY`, `plan-protocol@2.15.0`, `skiller@0.8.0`).**
+  `plan_lint.py` gains a new rule: a `🟢`/`🟠` item whose `Updated` cell (Phase Status
+  table) is ISO-dated `≥ 2026-07-27` must print BOTH `pre_mutation:`/`pre_final:` codes
+  in its Completion Notes, and both must read `allow` (D76: `n/a` is not green) — a
+  missing code, or a code other than `allow` on either boundary, is now an ERROR
+  instead of a prose checklist item (`plan-audit.md`) an auditor has to remember to
+  recompute by hand. Repairs `findings/P3.11-terminal-audit-2.md` § Ф2 (reopen of F3,
+  event 2 of 2): five consecutive items (P3.6-P3.10) closed `🟢`/`🟠` after the
+  write-site canon already existed without ever printing the codes — the gate itself
+  held (the audit's own recomputation of the predicate on all five returned
+  `allow`/`allow`) but the RECORD was silently absent, and a real `block:*` under a
+  `🟢` would have stayed invisible until the next audit, which this phase no longer
+  has. The scope anchor is the ITEM's own `Updated` date, not the plan's — a
+  plan-dated cutoff would miss this very plan's own future `P4.*` items (D91); items
+  closed before the cutoff are never diagnosed at all (forward-only, no existing
+  fleet plan is repainted retroactively). `plan-protocol` §8 canon gains one line
+  (both languages) naming the machine check; `pre_mutation:`/`pre_final:` are
+  registered in `CANON_LITERALS` with matching `i18n-keep` directives (test T2).
 - **skiller — system-bank adapter for the P0.3 reliability bank (P3.3,
   `2026.07.24-AGENT-RELIABILITY`).** `skiller.quality.eval` gains a second,
   distinct deterministic grading vocabulary alongside its existing per-skill

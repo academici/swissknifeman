@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.14.0
+version: 2.15.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -727,6 +727,11 @@ Merging steps 1 and 6 into one commit (bundling) = process deviation §6: 🟢 +
 Deviations entry + a fixing commit carrying the real hash in the handoff.
 ```
 
+Printing the boundary codes (`pre_mutation:`/`pre_final:`) in the Completion Notes of `🟢`/`🟠`
+items is a MACHINE gate (`plan_lint.py`, P4.4/D91, forward-only by the item's own date) for
+items with `Updated` ≥ `2026-07-27`: a missing code, or a code ≠ `allow` on either boundary, is
+an ERROR; earlier items are not diagnosed at all.
+
 **Tree anchor for numbers in reports.** ANY NUMBER in an item's report (Completion Notes,
 Validation, Known Deviations, Update Log) — a `grep` count, an ERROR/WARN count, a count of
 commits/files — is given with an explicit **tree anchor** on which it is reproducible:
@@ -1210,4 +1215,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 1ee8c15ce053aa3b76d9ef62522208d4bbc02bf3d4e693499008b21ba7f8028a -->
+<!-- ru-source-sha256: f25c2d2a6a8de5cc43c98e4e4b1733826756086cc10c8100ce3f3a756559a597 -->

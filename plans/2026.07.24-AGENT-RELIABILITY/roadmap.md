@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.16.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; **фаза P2 реопенена D70** — ремонтные items P2.6–P2.9; после разбора остановки P2.7 добавлены **P2.10/P2.11** (D75–D79), порядок строго последовательный: P2.6 → P2.7 → **P2.10 → P2.11** → P2.8 → P2.9)
+**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.16.5 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; **фаза P2 ЗАКРЫТА 🟠 Done with deviations** 2026-07-26 — все 11 items терминальны, реопен D70 (P2.6–P2.11, порядок P2.6 → P2.7 → P2.10 → P2.11 → P2.8 → P2.9) отработан; следующий шаг — `task:plan-audit … P2`, заход 2 из двух)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически

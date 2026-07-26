@@ -88,7 +88,7 @@
       "total": 1
     }
   },
-  "content_hash": "217d59d5438d35a2962ff2c9abbd5f71d494677644d1a1fd28f56ab51a79471f",
+  "content_hash": "4550549804e5458206dbf740d2e56f1a964776174dfd5c17ff230618f8b8750e",
   "counts": {
     "cases": 31,
     "control": 6,
@@ -98,8 +98,9 @@
   },
   "files": {
     "bank-manifest.json": "cbb7716e60685ef1ec07205d7b5b403482b5bf59859b533d435ad471ac0128d5",
-    "candidate-results.json": "b4bcd71616c38332957f55f601bd8fe070a42a85dd5298e7882bad889827345d",
-    "verify_result_manifest.py": "e7d267976786de3f04e298265ce97b9bbe27ed0a8282d8907677a68b83325753"
+    "candidate-results.json": "cddf2f2544a17bfeb210272ac1febd5e969406eb1dcf09935ccd60f4e4a20fd5",
+    "transcripts.json": "642925616ab54e11d55ad735a5b5e3206ce7ede9b44a82a1dda35cb1f97db582",
+    "verify_result_manifest.py": "6c1458de5edfe7fa1b9bc8fed4fb51addf89c72388d0d68f87d278d82fdeb5c7"
   },
   "floor_status": [
     {
@@ -226,7 +227,14 @@
     ]
   },
   "grader_version": "1.0.0",
-  "layer": "candidate-p2.5",
+  "input_provenance": {
+    "generator": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.5/generate_transcripts.py",
+    "generator_sha256": "ef9872efdf70432d54b5a27c760dff5b5edcf19e03fc4a157233e33945b6d38d",
+    "note": "committed generator + committed sha256 of transcripts.json -- a future regression of either is visible as a content_hash/sha256 diff against this sealed record, never re-derived from an uncommitted scratch input",
+    "transcripts_sha256": "642925616ab54e11d55ad735a5b5e3206ce7ede9b44a82a1dda35cb1f97db582",
+    "tree_anchor": "9b20dafa"
+  },
+  "layer": "candidate-p2.8",
   "metrics": {
     "audit_loop_overrun_cases": [],
     "audit_loop_overrun_count": 0,
@@ -245,7 +253,7 @@
     "false_block_rate": 0.0,
     "first_pass_success": 0.9677,
     "first_pass_success_critical": 0.96,
-    "layer": "candidate-p2.5",
+    "layer": "candidate-p2.8",
     "owner_intervention_cases": [],
     "owner_intervention_rate": 0.0,
     "premature_stop_cases": [],
@@ -261,7 +269,7 @@
     }
   },
   "note": "Deferred floors (F4/F5/F6/F8/F9/F10) require measurement owners outside this item (P1.4, P0.4, P3.2/P3.3) or a live layer-2 paired run that does not exist before P3.3 -- reported deferred, never silently upgraded to green (D30/D59). A not-met floor or a residual failure below is this item's honest deliverable, not a defect of this script.",
-  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P2.5",
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P2.5, input provenance P2.8",
   "residual_failures": [
     {
       "case_id": "trace-record-missing",

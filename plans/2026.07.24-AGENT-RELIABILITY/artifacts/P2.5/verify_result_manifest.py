@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -68,16 +69,32 @@ def load_json(path):
         fail(f"невалидный JSON {path}: {exc}")
 
 
+def _git_head(repo_root: Path) -> str | None:
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(repo_root),
+                             capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return out.stdout.strip() or None
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="P2.5 -- verify a candidate reliability-bank run and seal its result manifest.")
+        description="P2.5/P2.8 -- verify a candidate reliability-bank run and seal its result manifest.")
     parser.add_argument("--bank-manifest", required=True,
                         help="path to the frozen artifacts/reliability-bank-v1/bank-manifest.json")
     parser.add_argument("--results", required=True,
                         help="path to candidate-results.json (produced by run_bank.py candidate)")
     parser.add_argument("--manifest", required=True,
                         help="output path for this item's own result-manifest.json")
+    parser.add_argument("--transcripts", default=None,
+                        help="path to transcripts.json (P2.8, D30/D59 machine provenance of "
+                             "the candidate input -- generator path, sha256, tree anchor)")
+    parser.add_argument("--generator", default=None,
+                        help="path to generate_transcripts.py (P2.8, paired with --transcripts)")
     args = parser.parse_args(argv)
+    if bool(args.transcripts) != bool(args.generator):
+        fail("--transcripts and --generator must be supplied together (P2.8 input provenance)")
 
     bank_manifest = load_json(args.bank_manifest)
     bank_payload = {k: v for k, v in bank_manifest.items() if k != "content_hash"}
@@ -116,17 +133,33 @@ def main(argv=None) -> int:
     for row in results.get("floor_status", []):
         floor_summary.setdefault(row["status"].replace("-", "_"), []).append(row["id"])
 
+    files = {
+        "bank-manifest.json": file_hash(args.bank_manifest),
+        "candidate-results.json": file_hash(args.results),
+        "verify_result_manifest.py": file_hash(__file__),
+    }
+    input_provenance = None
+    if args.transcripts:
+        files["transcripts.json"] = file_hash(args.transcripts)
+        repo_root = Path(__file__).resolve().parents[4]
+        input_provenance = {
+            "generator": str(Path(args.generator).resolve().relative_to(repo_root)),
+            "generator_sha256": file_hash(args.generator),
+            "transcripts_sha256": files["transcripts.json"],
+            "tree_anchor": _git_head(repo_root),
+            "note": ("committed generator + committed sha256 of transcripts.json -- a future "
+                     "regression of either is visible as a content_hash/sha256 diff against "
+                     "this sealed record, never re-derived from an uncommitted scratch input"),
+        }
+
     manifest_payload = {
         "schema_version": SCHEMA_VERSION,
-        "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P2.5",
+        "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P2.5, input provenance P2.8",
         "bank_version": bank_manifest["bank_version"],
         "grader_version": bank_manifest["grader_version"],
         "bank_manifest_content_hash": bank_manifest["content_hash"],
-        "files": {
-            "bank-manifest.json": file_hash(args.bank_manifest),
-            "candidate-results.json": file_hash(args.results),
-            "verify_result_manifest.py": file_hash(__file__),
-        },
+        "input_provenance": input_provenance,
+        "files": files,
         "counts": {
             "cases": len(results["cases"]),
             "critical": bank_manifest["counts"]["critical"],

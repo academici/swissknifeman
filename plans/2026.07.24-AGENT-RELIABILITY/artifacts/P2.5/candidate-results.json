@@ -254,7 +254,7 @@
       "case_id": "same-finding-third-event",
       "checks": [
         {
-          "detail": "event_count_max finding ≤ 2: 2",
+          "detail": "event_count_max finding ≤ 2: 0",
           "expect": true,
           "grader": "G-EVENT-COUNT-MAX",
           "id": "A1",
@@ -1347,7 +1347,7 @@
       "target": 0.0
     }
   ],
-  "layer": "candidate-p2.5",
+  "layer": "candidate-p2.8",
   "metrics": {
     "audit_loop_overrun_cases": [],
     "audit_loop_overrun_count": 0,
@@ -1366,7 +1366,7 @@
     "false_block_rate": 0.0,
     "first_pass_success": 0.9677,
     "first_pass_success_critical": 0.96,
-    "layer": "candidate-p2.5",
+    "layer": "candidate-p2.8",
     "owner_intervention_cases": [],
     "owner_intervention_rate": 0.0,
     "premature_stop_cases": [],

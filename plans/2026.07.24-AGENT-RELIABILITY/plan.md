@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.22.0 |
+| Version | 1.22.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
@@ -424,6 +424,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | docs-curator/sonnet | P4.3 статус исправлен 🟢→🟠 Done with deviations по ревью-вердикту ATTENTION — детали см. phases/P4.md P4.3 Known Deviations 6–8. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Design pass 3/3: fresh full-plan DoR/brief/RCA/dependency/routing/CLI sweep; exact reads, contribution gates, semantic+native recovery carriers and safe temp/worktree contracts reconciled; next — separate audit-design. |
 | 2026-07-24 | Owner refinement / plan-design | D25 removes host-bound execution evidence. The materialized bundle passed four verifier modes: 20 manifest entries, 7 journals, 5 sanitized cases, corrected denominators/control and 8 claim ranges. |
+| 2026-07-26 | Owner decision (G1) | Владелец ответил на G1 узко: **go только по agelto** (один свой dev-проект: skiller sync + agent-pack + maind sync), остальные цели наружу (push, тег/релиз, флот, consumers, FOREMAN) остаются **hold** по рекомендации packet'а |
 | 2026-07-26 | plan-close/opus-high | Фаза P4 закрыта 🟠 Done with deviations (2/5 🟢): Owner packet собран, рекомендация HOLD, G1 за владельцем — детали см. phases/P4.md § Phase Handoff |
 | 2026-07-26 | plan-close/opus-high | P4.2 закрыт 🟢: ложный `🔴 Blocked` снят по перепрогнанной Validation и повторно измеренным кодам границ; дефект носителя (порядок стадий carrier'а) исправлен — детали см. phases/P4.md P4.2 Completion Notes |
 | 2026-07-26 | docs-curator/sonnet | Прогон фазы P4 ОСТАНОВЛЕН на P4.2 🔴 Blocked: код реализован и закоммичен (`1e9006f4`), но item не закрыт по plan-protocol — коды границ/journal/handoff не зафиксированы; P4.3 не стартует до `plan-close` P4.2. |

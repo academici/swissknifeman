@@ -11,7 +11,7 @@ P2.7 → P2.8 → P2.9; каждый следующий стартует тол�
 | Model class | `implementation` |
 | Effort | `high` |
 | Capabilities | `command.subagents` |
-| Context | `NEW SESSION — item` |
+| Context | `continue (/clear) — ручной item` |
 | Model | Claude Sonnet 5 |
 | Thinking | `high` |
 | Суть | P2.7: write-site `build → check` в `plan-exec.md`/`plan-close.md`, истинное утверждение `plan-protocol` §13, литеральный тест канона, `source-evidence-template.md`, `plan-protocol@2.13.0`/`skiller@0.6.0`/`task@0.7.0`. Только `packages/task/commands/**` + канон — не трогает `packages/task/lib/**` (тело компилятора уже готово P2.6) |

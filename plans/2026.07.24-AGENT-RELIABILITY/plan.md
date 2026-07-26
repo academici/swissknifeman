@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.3 |
+| Version | 1.16.4 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.8 закрыт 🟠: доказательство P2.5 воспроизводимо из закоммиченных входов — committed-генератор транскриптов гоняет реальные seam'ы, `run_bank.py candidate` даёт те же 30/31 независимо пересчитываемо, честный `covered` по всем 12 категориям (`bundle_lint` реально считает privacy-rawbulk); следующий — P2.9) |
+| Last Updated | 2026-07-26 (P2.9 закрыт 🟢: последний ремонтный item реопена — восемь бухгалтерских находок (F6/F7/F10–F15) сведены поимённо чистой реконсиляцией записи (Validation-литерал P2.4 №3, топология P2.3, полнота отчёта P2.3, хеш item-коммита P2.5, недостающая старт-запись P2.5, §7 Exported `task`), ни одной мутации `packages/**`; следующий — `task:plan-close … P2` (терминальные P2.6–P2.11)) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -251,7 +251,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 5/11 | 🟡 In progress |
+| P2 | Checked outcome execution и bounded review | 6/11 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -401,6 +401,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.10 закрыт 🟠: компилятор читает легаси-формы §3, типизированный отказ вместо `ValueError` (D74/D78), `task@0.8.0` — детали см. phases/P2.md P2.10 Completion Notes. Version 1.16.0 → 1.16.1. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.11 закрыт 🟢: бинарный pre-final гейт (D76), маршрут исполнителя (D75), граница на обоих путях закрытия (М5), различающий тест (D79), `plan-protocol@2.14.0`/`task@0.9.0` — детали phases/P2.md P2.11 Completion Notes. Version 1.16.1 → 1.16.2. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.8 закрыт 🟠: committed `generate_transcripts.py` даёт те же 30/31, честный `covered` по 12 категориям — детали см. phases/P2.md P2.8 Completion Notes. Version 1.16.2 → 1.16.3. |
+| 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P2.9 закрыт 🟢: последний ремонтный item реопена — восемь бухгалтерских находок (F6/F7/F10–F15) сняты поимённо реконсиляцией записи, без мутаций кода — детали см. phases/P2.md P2.9 Completion Notes. Version 1.16.3 → 1.16.4. |
 
 ## 7. Contracts
 

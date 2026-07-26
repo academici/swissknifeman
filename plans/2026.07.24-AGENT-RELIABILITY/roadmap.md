@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.14.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; carrier P2.1 синхронизирован с D64–D68)
+**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.15.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; **фаза P2 реопенена D70** — carrier'ы ремонтных items P2.6–P2.9 добавлены, порядок строго последовательный)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -70,6 +70,10 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | P2.3 | solo | task:plan-run | implementation/high | — | Нельзя объединить: audit/reopen/cap enforcement must be isolated from compiler |
 | P2.4 | solo | task:plan-run | implementation/high | — | Нельзя объединить: actual route evidence has separate fail-closed boundary |
 | P2.5 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: terminal immutable-bank proof after all P2 code |
+| P2.6 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): достройка compiler seam — producer/bundle-предикат/межсессионный cap/actor + versioned `task@0.6.0` publication; канон не трогает |
+| P2.7 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): единственная правка канона флота + исполняемый write-site; стартует ТОЛЬКО после терминального P2.6 (без producer'а нечего звать) |
+| P2.8 | solo | task:plan-run | implementation/high | — | Нельзя объединить (реопен D70): воспроизводимость доказательства 30/31; считается ПОСЛЕ появления предикатов P2.6/P2.7 |
+| P2.9 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить (реопен D70): реконсиляция записи фазы без мутаций кода; последний item реопена, отчитывается о фактах P2.6–P2.8 |
 | P3.1 | solo | task:plan-run | implementation/high | — | Нельзя объединить: cross-provider trace schema/version, Review=full |
 | P3.2 | solo | task:plan-run | implementation/high | — | Нельзя объединить: metric arithmetic consumes frozen trace |
 | P3.3 | solo | task:plan-run | implementation/high | — | Нельзя объединить: behavioral release gate consumes trace+metrics |
@@ -79,11 +83,17 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | P4.2 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: lower-route one-package doctor after P4.1 |
 | P4.3 | solo | task:plan-run | frontier/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | Нельзя объединить: final synthesis and external authority boundary |
 
-## Готовые native Codex NEW SESSION recovery launch-blocks
+## Готовые NEW SESSION recovery launch-blocks
 
 Блоки ниже — current local recovery projections по root `AGENTS.md`.
 Semantic `Next`/neutral Routing остаются SSOT; другой provider рендерит тот
 же carrier через проверенную mapping table без изменения payload.
+
+**Провайдер рендера по items.** P0.*–P2.5, P3.*, P4.* несут native
+Codex-проекции (написаны в Codex-авторские заходы). Ремонтные items реопена
+**P2.6–P2.9 несут Claude-форму** (`/task:…`) — acting provider этих items
+Claude, а payload между провайдерами не меняется по построению (D12: neutral
+Routing — SSOT, native selectors живут только в carrier'ах).
 
 ### P0.1 — verify immutable integrity + semantic closure
 
@@ -377,6 +387,109 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ```bash
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P2.5. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P2.md and P2.5 Required Reads; verify P2.2-P2.4 committed. Root delegates P2.5 to a fresh grounded subagent. Run the exact immutable bank, write only result artifacts, route failures without recursive repair, close through task-plan-exec and continue.'
+```
+
+### P2.6 — достройка компилятора (реопен D70)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.6
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Достройка compiler seam: producer `build`, `bundle_lint`, межсессионный `LoopBudget`, `canonical_actor` с моделью, `task@0.6.0` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.6
+
+РЕМОНТ реопена D70. Читай ПЕРВЫМИ: research/07-p2-reopen-remediation.md и блок `## Audit P2 — 2026-07-26` в phases/P2.md (находки F1/F2/F4/F5/F8/F10), затем остальные Required Reads P2.6 в объявленном порядке.
+ГРАНИЦЫ: трогается ТОЛЬКО packages/task/lib/** и его тесты + versioned publication пакета task. НЕ трогать: packages/task/commands/**, канон plan-protocol (владелец — P2.7), tiered-portability lint / его 8 тестов / PORTABILITY_TIER_CANON_DATE (D69), artifacts/P1.1/remediation-map.json, artifacts/P2.5/** (P2.8), исторические строки journal.jsonl (append-only, D51).
+НИКОГДА не запускать assert_generated_scope.py и не создавать artifacts/P2.6/base-sha.txt: baseline_owners == [P1.2,P1.3,P1.5,P2.2,P2.3], карта заморожена. Вместо этого доказать scope прогоном `git show --stat <item-коммит>` против объявленных Files.
+СУТЬ: (1) task_contract.build — item плана → Task Contract v1 JSON со всеми 15 обязательными ключами схемы; форма берётся ТОЛЬКО из task-contract-v1.schema.json (additionalProperties: false везде): лишний ключ = провал, недостающий обязательный = типизированный отказ с именем поля, НИКОГДА не правдоподобный дефолт. Таблицу отображения опубликовать как findings/P2.6-contract-mapping.md. (2) bundle_lint ВЫЧИСЛЯЕТ минимизацию и классы содержимого по фактическим байтам bundle'а, а не читает декларацию. (3) LoopBudget восстанавливается из УЖЕ закоммиченных межсессионных носителей (journal.jsonl + блоки `## Audit Pn`); новый state-файл ЗАПРЕЩЁН; третий исход `unknown` никогда не приводится к 0. (4) canonical_actor нормализует написания БЕЗ стирания модели; класс остаётся отдельной осью route evidence.
+ДИСЦИПЛИНА: каждый негативный кейс падает СВОИМ кодом — падение по чужому коду считается провалом, не проходом; build и bundle_lint побайтово детерминированы (без часов/случайности/сети), и это отдельный тест. Бамп task plugin/routing plugin_version → 0.6.0 ДО полной регенерации адаптеров/локов/golden-plugin/marketplace; второй прогон --check обязан быть no-op.
+```
+
+### P2.7 — write-site и истинный канон (реопен D70)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.7
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Исполняемый write-site в plan-exec/plan-close, истинное §13 канона + литеральный тест, source-evidence-template.md, plan-protocol@2.13.0/skiller@0.6.0/task@0.7.0 |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.7
+
+РЕМОНТ реопена D70. Читай ПЕРВЫМИ: research/07-p2-reopen-remediation.md §3 и §7, находку F1 аудита целиком, findings/P2.6-contract-mapping.md, затем остальные Required Reads P2.7.
+PRECONDITION до первой записи: P2.6 закоммичен и терминален; `PYTHONPATH=packages/task/lib python3 -m task.task_contract build --plan-dir plans/2026.07.24-AGENT-RELIABILITY --item P2.7` печатает валидный контракт; `git status --porcelain` пуст по packages/task/** и packages/skiller/**. Отказ любого условия — стоп до мутации.
+СУТЬ: канон делается ИСТИННЫМ, а не смягчается. plan-exec шаг 2 и plan-close шаг 4 получают ИСПОЛНЯЕМЫЕ шаги build → check. Формулировка «при наличии смонтированного Task Contract JSON» и любые её синонимы ЗАПРЕЩЕНЫ: шаг либо обязателен, либо его нет; текст обязан назвать точную команду, что считается зелёным и что делать на каждый класс отказа. Доставить недостающий snippets/source-evidence-template.md; bundle-требования канон ЦИТИРУЕТ из plan-portability-v1.md, а не переписывает. §13 обеих языковых версий переписать под фактическое поведение и защитить литеральным тестом в test_canon_literals.py — правило: утверждение о поведении публикуется в канон только вместе с тестом, который его фальсифицирует.
+ПУБЛИКАЦИЯ (порядок дословно как в P2.2): сначала версии — plan-protocol → 2.13.0, skiller package + units {core,general} → 0.6.0, task plugin/routing → 0.7.0; затем полная регенерация обеих публикаций, оба вторых прогона обязаны быть no-op; repository-bootstrap@0.2.0 и его 27 проекций байт-идентичны.
+НЕ трогать: packages/task/lib/** (владелец — P2.6; расхождение → D#-запись и реопен P2.6, не тихая правка), tiered-portability lint и D69, remediation-map.json; assert_generated_scope.py не запускать, base-sha не создавать.
+SELF-CONFORMANCE обязательна: прогнать новый write-site на минимум трёх реальных items ЭТОГО плана (один закрытый 🟢, один закрытый 🟠, текущий) и вписать вердикт каждого с точным кодом отказа. Красный вердикт на закрытом 🟠 — ПРАВИЛЬНЫЙ исход, а не повод ослабить предикат. Если обязательный шаг реально ломает поток закрытия — стоп и эскалация D#-записью; тихая замена обязательности на условность запрещена.
+```
+
+### P2.8 — воспроизводимое доказательство P2.5 (реопен D70)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.8
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Воспроизводимое доказательство P2.5: закоммиченный детерминированный генератор транскриптов, перепрогон замороженного банка, честный covered |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.8
+
+РЕМОНТ реопена D70. Читай ПЕРВЫМИ: research/07-p2-reopen-remediation.md §4.3 и находки F3/F4 аудита целиком, затем остальные Required Reads P2.8.
+PRECONDITION: P2.6 и P2.7 закоммичены и терминальны; `git diff --exit-code` чист по artifacts/reliability-bank-v1 и artifacts/source-evidence; хеши банка сходятся с bank-manifest.json.
+СУТЬ: доказательство фазы обязано пересчитываться третьим лицом из закоммиченных байтов. Закоммитить детерминированный генератор транскриптов в artifacts/P2.5/ (без часов/случайности/сети/переменных окружения/абсолютных путей — два прогона подряд дают побайтово одинаковый выход, это пункт Validation), затем перепрогнать замороженный `run_bank.py candidate` от закоммиченного входа. Банк, грейдеры, run_bank.py и манифест ЗАМОРОЖЕНЫ (D30) — ни байта: item производит ВХОД и потребляет ВЫХОД. Провенанс входа записать машинно в result-manifest.json (путь генератора, sha256 транскриптов, дерево-якорь) и расширить verify_result_manifest.py проверкой совпадения хеша с фактическим файлом.
+COVERED ЧЕСТЕН: для каждой из двенадцати категорий Code Guidance P2.5 назвать предикат репозитория (файл::функция), который её вычисляет. Категория без вычислителя СНИМАЕТСЯ из covered; portability-privacy-rawbulk зеленеет ТОЛЬКО через реально работающий task_contract.bundle_lint из P2.6.
+КРАСНОЕ ОСТАЁТСЯ КРАСНЫМ: если пересчитанная цифра отличается от 30/31 — записать ФАКТИЧЕСКУЮ и разложить каждое расхождение по кейсам. Подгонка генератора под прежний результат — провал item'а. Floors не меняются (D15). D48 соблюдается без изменений: никакой подмены HOME/CODEX_HOME и записи в user-owned состояние провайдера; коммит собственного входа D48 не запрещает. assert_generated_scope.py не запускать, base-sha не создавать.
+```
+
+### P2.9 — реконсиляция записи фазы (реопен D70)
+
+**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P2.9
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `medium` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | Claude Sonnet 5 |
+| Thinking | `medium` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Context | `NEW SESSION` |
+| Суть | Реконсиляция записи фазы: F6, F7, F10–F15 без единой мутации кода |
+
+```
+/task:plan-exec 2026.07.24-AGENT-RELIABILITY P2.9
+
+РЕМОНТ реопена D70, последний item. Читай ПЕРВЫМИ: находки F6, F7, F10, F11, F12, F13, F14, F15 аудита целиком и research/07 §8, затем остальные Required Reads P2.9. Стартовать только на терминальных P2.6–P2.8.
+СУТЬ (ни одной мутации кода — только запись плана): починить неисполнимый литерал Validation P2.4 №3 на `PYTHONPATH=packages/harness/lib:packages/harness` и ДОКАЗАТЬ фактическим прогоном (`Ran 17 tests … OK`); дописать в Completion Notes P2.4 отчёт по трём неотчитанным validate.sh (task/harness/analyst) и убрать два отчитанных пункта, которых в поле Validation нет; в Known Deviations P2.3 назвать, что artifacts/P2.3/base-sha.txt уехал в bookkeeping-коммит 324bae5d вместо item-коммита 77b574b5; дополнить отчёт Validation P2.3 пунктами test_canon_literals.py и test_journal.py; вписать реальный хеш item-коммита 14b3e6ce в Completion Notes P2.5 и в findings/P2.5-scenario-results.md; назвать в Known Deviations P2.5 отсутствующую старт-запись журнала ровно так, как это уже сделали P2.3 и P2.4; «Three cases» → фактические семь; привести строку §7 Exported для task plugin/routing к версии, фактически опубликованной P2.7, с указанием коммита.
+ДИСЦИПЛИНА: каждая цифра, литерал и хеш перепроверяются СВОИМ прогоном в этой сессии — значение, скопированное из аудита без перепрогона, есть дефект. Историю не переписывать: строки journal.jsonl append-only и schema-valid, поэтому sidecar journal-exceptions.jsonl НЕ заводится. Правка ТЗ закрытого item'а разрешена ТОЛЬКО для F7 и только по прецеденту D60/D61 — Scope/Files/Deliverables не трогаются. Каждую правку перечислить в Completion Notes построчно как `F# → файл:поле`. Если ремонт записи требует изменения кода — это НЕ этот item: стоп и D#-запись с владельцем.
 ```
 
 ### P3.1 — Unified Trace v1

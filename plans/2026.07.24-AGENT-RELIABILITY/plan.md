@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.14.1 |
+| Version | 1.14.2 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.2 закрыт 🟢: Task Contract compiler + tiered-portability lint) |
+| Last Updated | 2026-07-26 (P2.3 закрыт 🟢: typed finding/review enforcement + loop breaker) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -245,7 +245,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 2/5 | 🟡 In progress |
+| P2 | Checked outcome execution и bounded review | 3/5 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -369,6 +369,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | P2.1 доведён до DoR: D64–D68 — граница с замороженным P0.2, объявленные множества (9/15/6, 135 ячеек), потребители FOREMAN/ECO, долг A2 о workflow-carrier закрыт, cap как профиль authority. Слой 2 — `research/06`. Version 1.13.1 → 1.14.0. |
 | 2026-07-26 | plan-run/Claude Opus 5/high | P2.1 закрыт 🟢: три контракта execution/review/portability запечатаны надстройкой над P0.2, машина 135/135 ячеек — детали см. phases/P2.md P2.1 Completion Notes |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.2 закрыт 🟢: `task_contract.py` compiler + tiered-portability lint (D47 role-тест), `plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0` — детали см. phases/P2.md P2.2 Completion Notes. Version 1.14.0 → 1.14.1. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.3 закрыт 🟢: `review_policy.py` — typed finding/loop breaker над risk-review-loop-budget-v1.md, один ленивый хук `evaluate_finding` в `task_contract.py`, `task@0.5.0` — детали см. phases/P2.md P2.3 Completion Notes. Version 1.14.1 → 1.14.2. |
 
 ## 7. Contracts
 
@@ -387,7 +388,7 @@ audit/fix-loop без продукта, который план создан л�
 | `root/contracts/unified-agent-trace-v1.md` | v1 | planned P3.1 | P3.2–P4 | analyst, harness, task |
 | `plan-protocol` skill canon | v2.12.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; долг зеркальной `Consumed`-строки снят D58 (его D85 — ECO-OPT решил не пинить) |
 | `skiller` package API + `general`/`core` units | v0.5.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
-| `task` plugin/routing (`plugin_version`) | v0.4.0 | committed P2.2 (`08e787b8`, далее v0.5.0 в P2.3) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | task; тот же D58/D85 |
+| `task` plugin/routing (`plugin_version`) | v0.5.0 | committed P2.3 (`77b574b5`) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | task; тот же D58/D85 |
 
 ### Consumed
 

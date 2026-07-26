@@ -82,9 +82,11 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | P3.4 | solo | task:plan-run | implementation/high | — | Нельзя объединить: disposable worktree, native trials and rollback |
 | P3.5 | solo | task:plan-run | frontier/xhigh | — | Нельзя объединить: fresh independent terminal audit. **Исполнен 2026-07-26, 🟢 Done, вердикт REMEDIATE (D81)** — следующий шаг НЕ P4.1, а `task:plan-design … P3` (ремедиация, § ниже) |
 | P3.R | solo | task:plan-design | frontier/high | — | Ремедиация вердикта REMEDIATE: добавить два item'а (layer-2 paired run; регенерация транскриптов P2.5 поверх `trace_emitted`) + свести запись. Нельзя объединить: развилки состава закрываются проектированием, а не exec'ом |
-| P4.1 | solo | task:plan-run | frontier/high | — | Нельзя объединить: open accept/reject/unknown architecture verdict |
-| P4.2 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: lower-route one-package doctor after P4.1 |
-| P4.3 | solo | task:plan-run | frontier/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | Нельзя объединить: final synthesis and external authority boundary |
+| P4.4 | `wf-P4` (1/5) | Workflow (carrier) | implementation/high | — | Оркестрация объявлена D93 (три items фазы независимы по данным). Первый в пайплайне: меняет линтер, которым валидируются все последующие закрытия |
+| P4.5 | `wf-P4` (2/5) | Workflow (carrier) | implementation/medium | — | Мутация `packages/**` ложится до read-only проверки закрытости публикаций в P4.3; отдельная поверхность от P4.4 (D78-прецедент) |
+| P4.1 | `wf-P4` (3/5) | Workflow (carrier) | frontier/high | — | open accept/reject/unknown architecture verdict; вход — код и запиненный снапшот, от приёмки не зависит (D89) |
+| P4.2 | `wf-P4` (4/5) | Workflow (carrier) | implementation/medium | — | lower-route one-package doctor after P4.1 |
+| P4.3 | `wf-P4` (5/5) | Workflow (carrier) | frontier/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | final measured-scope synthesis and external authority boundary; carrier останавливается ПЕРЕД G1 |
 
 ## Готовые NEW SESSION recovery launch-blocks
 
@@ -777,68 +779,39 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 /task:plan-close 2026.07.24-AGENT-RELIABILITY P3
 ```
 
-### P4.1 — code-grounded hypothesis verdict (гейт «P4 не стартует до GREEN» НЕ удовлетворим на этом инструментальном поколении, D88 — вход переопределяет отдельный заход `plan-design` над P4)
+### Фаза P4 — carrier оркестрации `wf-P4` (D93; заменяет три отдельных launch-block'а P4.1/P4.2/P4.3)
 
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.1
+Фаза объявила оркестрацию: критерий SKILL §7 сработал (три items фазы — P4.1/P4.4/P4.5 —
+независимы по данным и несут детерминированную Validation). Carrier — строго
+последовательный pipeline `Impl → Verify → Review → Close` по пяти items в порядке D90;
+красный item останавливает ВЕСЬ прогон и переписывает handoff на разбор остановки.
+Маршруты пинит оркестратор из §3 Routing, наружу (push/tag/релиз/флот/чужие планы) не
+выходит ни один агент — решение **G1** остаётся владельцу после packet'а P4.3.
+
+**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.4 P4.5 P4.1 P4.2 P4.3 (носитель — carrier ниже)
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | `frontier` |
+| Model class | `frontier` (оркестратор; маршруты items — из §3 Routing) |
 | Effort | `high` |
-| Capabilities | `command.subagents` |
-| Plan context | `same-session — item` |
-| Model | `gpt-5.6-sol` |
+| Capabilities | `command.subagents`, `command.workflow-carrier` |
+| Plan context | `cold-start — orchestration` |
+| Model | `opus` (Claude) |
 | Thinking | `high` |
-| Approval policy | `never` |
-| Sandbox | `danger-full-access` |
-| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION` |
+| Context | `cold-start — orchestration` |
+| Суть | Пять items фазы P4 одним прогоном: гейт кодов границ → оплата Contribution gate → вердикт гипотез → operator doctor → docs и Owner packet |
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P4.1. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P4.md and P4.1 Required Reads; verify literal GREEN P3.5. Root delegates P4.1 to a fresh grounded subagent. Produce accept/reject/unknown code-grounded verdict artifacts only; do not implement accepted structural refactors. Close and continue.'
+```
+Workflow({scriptPath: "plans/2026.07.24-AGENT-RELIABILITY/workflows/wf-agent-reliability-p4.js"})
 ```
 
-### P4.2 — effective source doctor
-
-**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.2
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | `implementation` |
-| Effort | `medium` |
-| Capabilities | `command.subagents` |
-| Plan context | `same-session — item` |
-| Model | `gpt-5.6-terra` |
-| Thinking | `medium` |
-| Approval policy | `never` |
-| Sandbox | `danger-full-access` |
-| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION` |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P4.2. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P4.md and P4.2 Required Reads; verify P4.1 committed. Root delegates P4.2 to a fresh grounded subagent. Extend only the exact skiller read-only doctor Files, compose frozen P1/P3 outputs without duplicating ownership logic, prove no writes, close and continue.'
-```
-
-### P4.3 — docs and G1 Owner packet
-
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.3
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | `frontier` |
-| Effort | `high` |
-| Capabilities | `command.subagents` |
-| Plan context | `same-session — item` |
-| Model | `gpt-5.6-sol` |
-| Thinking | `high` |
-| Approval policy | `never` |
-| Sandbox | `danger-full-access` |
-| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION` |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P4.3. Read AGENTS.md, CLAUDE.md, release-discipline, docs-maintenance and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P4.md and P4.3 Required Reads; verify P4.1/P4.2 committed. Root delegates P4.3 to a fresh grounded subagent. Synchronize exact docs/changelog and build the measured self-host Owner packet. Run task renderer --check and skiller registry --check only; do not rewrite or re-version generated publications, and reopen the exact D27 owner on drift. Stop at G1; do not execute fleet/consumer/FOREMAN/tag/push/release.'
-```
+**Ручной фолбэк (если прогон carrier'а сорвался).** Каждый item остаётся исполнимым
+поодиночке по своему маршруту §3 Routing, в том же порядке: `P4.4` (`implementation/high`,
+`Exec = manual` → `run-items: task:plan-run … P4.4`) · `P4.5` (`implementation/medium` →
+`exec-items: task:plan-exec … P4.5`) · `P4.1` (`frontier/high`, manual → `task:plan-run …
+P4.1`) · `P4.2` (`implementation/medium` → `task:plan-exec … P4.2`) · `P4.3`
+(`frontier/high`, manual → `task:plan-run … P4.3`). Порядок при фолбэке не меняется:
+он обоснован D90, а не удобством carrier'а.
 
 ## Гейты владельца
 

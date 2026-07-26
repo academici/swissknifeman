@@ -1,89 +1,96 @@
-# HANDOFF — 2026-07-26 — after P3
+# HANDOFF — 2026-07-26 — after P4.4
 
-**Next:** design: task:plan-design 2026.07.24-AGENT-RELIABILITY P4
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — переопределение входного гейта фазы по названному D88-долгу, не открытое проектирование |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Переопределить входной гейт P4 («не стартует до GREEN», D81) по D88: measured-scope Owner packet ЛИБО объявление плана терминальным на 🟠. Items фазы P4 не создавать без этого решения. |
+| Model class | `implementation` |
+| Effort | `medium` |
+| Capabilities | — |
+| Model | `sonnet` |
+| Thinking | `medium` |
+| Context | `same-session — item` |
+| Суть | Оплатить Contribution gate D23: минорные бампы `analyst 0.1.0 → 0.2.0` и `harness 0.3.0 → 0.4.0`, owed с P3.1; печать кодов границ теперь под машинным гейтом P4.4 |
 
 ```
-/task:plan-design 2026.07.24-AGENT-RELIABILITY P4
+task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.5
 ```
 
 **Done:**
 
-- **Фаза P3 закрыта 🟠 Done with deviations** (`plans/2026.07.24-AGENT-RELIABILITY/phases/P3.md`,
-  `## Phase Handoff`) — **5/11 items 🟢** (P3.2, P3.4, P3.5, P3.9, P3.11), **6/11 🟠** (P3.1, P3.3,
-  P3.6, P3.7, P3.8, P3.10). Audit cap фазы исчерпан (2/2, `risk-review-loop-budget-v1.md` §
-  Loop budget) — названный долг **D88**: полная терминальная приёмка `reliability-acceptance-v1.md`
-  недостижима на этом инструментальном поколении.
-  - Доказано: Unified Agent Trace v1, paired reliability metrics/digest, behavioral eval-адаптер
-    (byte-identical кросс-сверка), шесть self-host канареечных кейсов в disposable worktree,
-    харнес живого диспатча с измеренным множеством наблюдаемых кейсов (5/31 mappable), парный
-    живой layer-2 прогон (F6=1.0, F8=+0.6, F9=0.4234), два независимых terminal-аудита.
-  - НЕ доказано: F1=0.96 (не 1.0, единственный остаточный critical), F10=`unknown` (канала
-    `owner_question` нет вовсе), 26/31 кейсов банка структурно `unmappable`.
-  - Docs-sync: не требуется (items правили только `plans/**`/`packages/{analyst,harness,skiller}`
-    lib/tests, без нового процесса/фичи для `docs/` корня проекта).
-- **Items P3.1–P3.11 не реопенены** — записи сверены по git-фактам, статусы items не менялись
-  этим закрытием (уже несли финальные значения из P3.6/P3.11).
+- **Фаза P4 доведена до DoR** заходом `plan-design … P4` (Claude Opus 5/high). Входной гейт
+  «P4 не стартует до GREEN» (D81) **переопределён D89**: принят measured-scope Owner packet;
+  план НЕ терминируется на `🟠`. Приёмка объявлена формально НЕ выполненной — floors не
+  повышаются, замороженные контракты/банк (владелец P0.3) не правятся, слово GREEN в доках и
+  packet'е не появляется. Состав фазы — 5 items (D90, порядок `P4.4 → P4.5 → P4.1 → P4.2 →
+  P4.3`); оркестрация объявлена (D93, carrier `workflows/wf-agent-reliability-p4.js`).
+- **P4.4 закрыт 🟢** (item-коммит `4ca7af67`): новое правило `plan_lint`
+  (`_lint_write_site_codes_44`) — item `🟢`/`🟠`, чей `Updated` (`## Phase Status`)
+  ISO-датирован ≥ `2026-07-27`, обязан нести оба кода `pre_mutation:`/`pre_final:` = `allow`
+  в Completion Notes; отсутствие любого кода или значение ≠ `allow` — ERROR; вне скоупа —
+  молчание (не WARNING). Ремонт `findings/P3.11-terminal-audit-2.md` § Ф2 (reopen F3, событие
+  2 из 2): пять items P3.6–P3.10 закрылись без записи кодов, хотя предикат держался. Шесть
+  тестов (четыре обязательных различающих кейса D79 + два defensive), T1/T2 канон-литералов
+  зелёные, одна строка канона `plan-protocol` §8 в обоих языках → `2.15.0`, публикация
+  `skiller@0.8.0`/units `core`/`general@0.8.0`, `registry --check` — «артефакты актуальны»,
+  `repository-bootstrap` байт-идентичен. Собственный `Updated` этого item'а (`2026-07-26`)
+  намеренно < cutoff `2026-07-27` — self-conformance доказана тестовыми фикстурами, не
+  самоприменением; коды границ напечатаны (`pre_mutation: allow`, `pre_final: allow`) потому,
+  что предсуществующий канон (P2.7/P2.11) уже требовал их до этого правила. Детали —
+  `phases/P4.md` P4.4 Completion Notes.
 
 **Remaining:**
 
-- **Гейт P4** — «не стартует до GREEN» (D81) не удовлетворим на этом инструментальном поколении
-  (D88 п.5). Нужен отдельный заход `plan-design … P4`: переопределить вход как measured-scope
-  Owner packet ЛИБО объявить план терминальным на `🟠`. Внутри P3 решения нет.
-- **Ремонт находки Ф2** (захода 2, PROMOTE-CANDIDATE) — машинный гейт в
-  `packages/task/lib/task/plan_lint.py` («item `🟢`/`🟠`, закрытый после доставки write-site,
-  обязан нести оба кода `pre_mutation`/`pre_final` в Completion Notes»); носитель — отдельный
-  item ВНЕ фазы P3, не третий проход по записи закрытых items.
+- **Четыре items фазы P4** — P4.5 (следующий, D90), P4.1, P4.2, P4.3 — ни один не стартовал
+  (`⬜`). Ручной фолбэк по items описан в `roadmap.md` § «Фаза P4 — carrier оркестрации»; carrier
+  `wf-agent-reliability-p4.js` остаётся доступным как альтернативный launch-путь (P4.4 закрыт
+  этим заходом маршрутом `task:plan-run`, не carrier'ом).
+- **G1** — единственный действующий Owner-гейт: принимается ВЛАДЕЛЬЦЕМ после packet'а P4.3
+  (fleet/consumers/FOREMAN/tag/push/release либо hold). Ни один агент прогона наружу не выходит.
+- **Строка доски P0** остаётся `🟡` при терминальных items — снимается `task:plan-close … P0`
+  (открыто с ранних handoff'ов, вне фазы P4).
 
 **Sources of truth:**
 
-- `phases/P3.md` — `## Phase Status` (11 items, 5/11 🟢), `## Phase Handoff` (переписан этим
-  закрытием), оба блока `## Audit P3` (историчны, не правились).
-- `plan.md` — §0 Meta (v1.20.3), §4 Status Board (`P3 5/11 · 🟠 Done with deviations`), **D88**
-  (§5), §6 Update Log.
-- `findings/P3.11-terminal-audit-2.md` — полный отчёт второго захода: находки Ф1–Ф4, классы
-  доказательства, решение развилки layer-2.
+- `phases/P4.md` — `## Phase Context` (переопределённый вход, контракт фазы, порядок),
+  `## Phase Status` (5 items, P4.4 `🟢`), P4.4 ТЗ + Completion Notes.
+- `plan.md` — §0 Meta (v1.21.1), §3 Routing (строки P4.1–P4.5), §4 Status Board (`P4 1/5`),
+  §7 Contracts Exported (`plan-protocol@2.15.0`, `skiller@0.8.0`, item-коммит `4ca7af67`),
+  D89–D93 (§5), §6 Update Log.
+- `research/10-p4-entry-gate-and-composition.md` — основание решений захода, в т.ч. § 6
+  (долги с носителями, вход packet'а P4.3) и § 8 (pre-mortem).
+- `phases/P3.md` § `## Phase Handoff` + `findings/P3.11-terminal-audit-2.md` — фактический
+  вход фазы (что доказано / что не доказано, с числами).
 
-**Open risks (перенесены из D88 п.6 + находки Ф2/Ф3/Ф4 захода 2, носители названы):**
+**Open risks:**
 
-1. `contract_ref`/`finding_refs` не заполняются харнесами P3.4/P3.9 → остаток F1=0.96. Носитель —
-   будущий producer layer-2, вне этого плана.
-2. Карта `event-mapping-v1.json` наблюдает 10/20 типов событий и 2/22 outcome-путей → знаменатель
-   layer-2 остаётся 5/31. Носитель — расширение наблюдаемости карты, отдельный будущий план/item.
-3. F6 на знаменателе 1 — статистически ничтожно. Тот же будущий носитель, что п.1/2.
-4. Codex-сторона наблюдаемости не пробовалась (acting provider — Claude, D33/D50). Тот же
-   будущий носитель.
-5. **Ф2 (PROMOTE-CANDIDATE):** ни один из пяти items P3.6–P3.10 не печатает коды
-   `pre_mutation`/`pre_final`, хотя все пять пересчитаны маршрутом исполнителя → `allow`/`allow`.
-   Носитель — машинный гейт в `plan_lint.py`, отдельный item вне фазы P3.
-6. **Ф3 (Minor/evidence):** `findings/P3.10-layer2-paired.md:29` («единственное различие сторон —
-   дерево») неточно — носитель: одна строка формулировки при следующей правке отчёта.
-7. **Ф4 (Nit/evidence):** замороженный `bank-manifest.json` называет производителем layer-2
-   несуществующий «P3.3 paired run» (факт — P3.9/P3.10, D82). Носитель — только § Correction
-   procedure владельца P0.3 (бамп `bank_version`/`grader_version`).
-8. **Гейт P4 «не стартует до GREEN» не удовлетворим на этом инструментальном поколении** (D88
-   п.5) — носитель: отдельный заход `plan-design … P4`.
-- Остаточный lint вне диффа: 0 ERROR при 1 WARN (строка Update Log P1.4, 303 символа при пороге
-  300), открыт с предыдущих handoff'ов.
-- `analyst`/`harness` package-API minor bumps и CLI-подключение `analyst metrics`/`skiller eval` —
-  долги с P3.1/P3.2/P3.3.
-- P0 phase-index row (`task:plan-close … P0`) — все items P0 терминальны, строка доски остаётся
-  `🟡`; открыто с ранних handoff'ов.
+1. **Приёмка формально не выполнена и не будет выполнена этим планом** (D88/D89): `F1 = 0.96`,
+   `F10 = unknown`, layer-2 на знаменателе `5/31`, `F6` на знаменателе 1. Носитель ремонта —
+   будущий producer layer-2, вне этого плана; packet обязан назвать это первым.
+2. **Гейт P4.4 может покрасить чужой живой план флота**, если его items закрываются после
+   cutoff без кодов границ. Измерено этим item'ом: `bash packages/task/scripts/validate.sh`
+   по ВСЕМ 14 планам репо — `0 ошибок` (никакой существующий план флота не покрашен; cutoff
+   `2026-07-27` строго в будущем относительно всех items флота на момент закрытия). Дальнейшая
+   реакция при появлении реального красного — измерить и напечатать список, НЕ смягчать
+   правило и не двигать cutoff (Code Guidance P4.4); владелец красного — владелец того плана.
+3. **Якорь `Updated`**: если колонка систематически не заполняется/несёт не-ISO форму — item
+   обязан остановиться и эскалировать D#-записью выбор якоря, а не подменить его тихо. Не
+   сработало в этом прогоне (измерено 0 ERROR по флоту).
+4. **Ф2 закрывается ПРИЧИНОЙ, не экземплярами**: запись закрытых items P0–P3 не правилась —
+   P4.4 не тронул ни одной записи P3.6–P3.10 (только правило `plan_lint` + канон).
+5. Остаточный lint вне диффа: 0 ERROR при 1 WARN (строка Update Log P1.4, 303 символа при
+   пороге 300) — открыт с предыдущих handoff'ов, не тронут этим item'ом.
+6. Долги без носителя в этом плане (D92): producer layer-2 · расширение наблюдаемости карты ·
+   канал `owner_question` · Codex-сторона · CLI-подключение `analyst metrics`/системного
+   `skiller eval` (новая публичная поверхность — проектирование, не долг-хвост) · промоушен
+   D83 в канон eval-дисциплины · остатки A1 (F11) и A2.
 
 **Workarounds / Deferred / Open questions:**
 
-- Посторонний untracked-каталог `.swissknife/` в рабочем дереве — не тронут этим закрытием.
-- F5 `hook_reference_resolution` остаётся `cross-checked` (фикстуры P0.4, вне скоупа
-  ремедиации P3.6–P3.10). Rollback-репетиция P3.4 не переигрывалась по той же причине (создала
-  бы ровно тот worktree-остаток, который вменяла F6).
-- Пустые каталоги-родители одноразовых worktree'ев (`/tmp/skm-p3.9.*`, `/tmp/skm-p3.10-*`) могли
-  остаться на диске (`rmdir` запрещён локальным хуком вне `safe-dirs.json`); регистраций в
-  `git worktree list --porcelain` — 0 (проверено обоими заходами аудита).
+- Ф3 (одна строка формулировки `findings/P3.10-layer2-paired.md:29`) и Ф4 (переатрибуция
+  производителя layer-2 в замороженном манифесте — только через § Correction procedure
+  владельца P0.3) остаются записью; отдельных заходов не стоят.
+- Посторонний untracked-каталог `.swissknife/` в рабочем дереве — не тронут этим item'ом.
 - `docs-sync` follow-up (`packages/task/CLAUDE.md`, описание compiler/enforcement seam) — долг
-  P3.1, не тронут.
+  P3.1, не тронут; ближайший естественный носитель — P4.3 (docs), если попадёт в его Scope.
+- Открытых вопросов со статусом ≠ `Resolved` этот item не оставил.

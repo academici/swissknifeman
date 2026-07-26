@@ -7,11 +7,11 @@ effort: xhigh
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (Opus/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 
-**Compiler (P2.2).** `status-rule`/material-предикат чеклиста ниже и tiered-portability
-находки — прозовая реализация `packages/task/lib/task/task_contract.py`
-(pre_mutation/pre_final, `task-contract-v1.md`) и `plan_lint.py`'s tiered-portability lint
-(`plan-portability-v1.md`, D47) — читай их вывод как источник истины предиката, не
-пересчитывай вручную вторым способом.
+**Compiler (P2.7).** `task:plan-exec`'s Pre-mutation и `task:plan-close`'s Pre-final (шаг 4) —
+ИСПОЛНЯЕМЫЕ write-site (не проза): каждый закрытый item обязан нести в Completion Notes
+напечатанный результат (`pre_mutation`/`pre_final` коды) этого шага — читай ЕГО как источник
+истины предиката, не пересчитывай вручную вторым способом. `plan_lint.py`'s tiered-portability
+находки — та же дисциплина (`plan-portability-v1.md`, D47).
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,
@@ -73,6 +73,11 @@ effort: xhigh
    - **Validation реально прогнана**: КАЖДЫЙ пункт поля `Validation` закрытого item'а прогоняешь сам НА
      ЗАКОММИЧЕННОМ дереве item'а (`git show <ref>:<файл>`), а не на веру и не на дереве момента аудита;
      расхождение с заявленным = находка; item, закрытый `🟢` БЕЗ отчёта по своей Validation, = находка;
+   - **write-site реально исполнен (P2.7, F1-дисциплина)**: item, закрытый ПОСЛЕ P2.7 (командные тела
+     несут исполняемый Pre-mutation/Pre-final), без напечатанного `pre_mutation`/`pre_final` кода в
+     Completion Notes = находка (общая фраза «контракт скомпилирован» без результата — ссылка на
+     модуль, не доказательство, ровно F1); проверь код сам на закоммиченном item'е тем же вызовом,
+     что несёт `plan-exec.md`/`plan-close.md`;
    - **status-rule** (§6): item `🟢` с непустыми Known Deviations — сверь по предикату **material** (Scope
      выполнен не полностью/иначе · Validation осталась красной · затронут public contract / SemVer сверх
      ТЗ · acceptance не выполнен · workaround ЖИВЁТ В КОДЕ · item-коммит несёт дифф вне `Files`): material

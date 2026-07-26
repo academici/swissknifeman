@@ -50,14 +50,49 @@ effort: medium
    Гейт — ЧТЕНИЕ §3 глазами, не парсинг (форм Routing во флоте много, regex запрещён). Разрешение
    владельца РЕПЛИКОЙ в чате гейт не снимает: оно выражается ЗАПИСЬЮ `Exec = plan-exec` в §3.
 
-   **Pre-mutation (P2.2).** Гейт п. 2 выше — прозовая реализация ровно того, что формально
-   владеет `packages/task/lib/task/task_contract.py::pre_mutation` (task-contract-v1.md
-   §Pre-mutation predicate, 12 упорядоченных reason codes) поверх
-   `plan-portability-v1.md` (tier-классификация/lint, `task_contract.portability_lint`) —
-   компилятор владеет precedence/conflict/hash/portability, эта команда его зовёт (при
-   наличии смонтированного Task Contract JSON — `python3 -m task.task_contract check
-   --contract <path>`), а не пересказывает логику второй прозой; шаги 2–3 остаются
-   единственным SSOT процедуры там, где контракт не компилируется явно.
+   **Pre-mutation — Task Contract (P2.7, ОБЯЗАТЕЛЬНЫЙ шаг, не условный).** Компилятор
+   `packages/task/lib/task/task_contract.py` владеет precedence/conflict/hash/portability
+   логикой (`task-contract-v1.md` §Pre-mutation predicate, 12 упорядоченных reason codes
+   поверх `plan-portability-v1.md`) — эта команда его ЗОВЁТ, а не пересказывает логику
+   второй прозой: собери контракт и проверь его ПЕРЕД ЛЮБОЙ мутацией, для КАЖДОГО item'а
+   без исключения — условная формулировка F1 (шаг «если контракт где-то уже собран») и
+   любой её синоним ЗАПРЕЩЕНЫ. CLI-форма `task_contract build` держит `route.actual`
+   неразрешённым по конструкции (байт-детерминированность между процессами, докстринг
+   модуля) — передать ей живой route нечем, флага нет; поэтому шаг зовёт тот же компилятор
+   его же документированным Python API (`build(..., actual_route=…)` — тот же параметр,
+   которым self-conformance P2.6 уже пользовался), а не переизобретает предикат вторым
+   способом:
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "implementation", "medium", source="self-attested", model="sonnet"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_mutation"] == "allow" else 1)
+   PY
+   ```
+
+   `<PLAN-ID>`/`<Pn.m>` — те же, что «$ARGUMENTS»; `"implementation", "medium",
+   model="sonnet"` — пин ЭТОЙ команды (frontmatter выше); `plan-run` подставляет
+   ФАКТИЧЕСКИЙ `model_class`/`effort`/`model` сессии (см. `plan-run.md`).
+   **Зелёное:** `pre_mutation: 'allow'` (exit 0) — продолжай п. 3.
+   **Отказ по коду** (`result["pre_mutation"]`, первый упавший — единственный):
+
+   | Код | Класс | Действие |
+   |:--|:--|:--|
+   | `ROUTE_UNDERSHOOT` | реальный (route ниже required) | СТОП: гейт п. 2 уже обязан был это поймать раньше — расхождение прозы и компилятора = D#-запись + `ROUTING-INCONSISTENT` |
+   | `AUTHORITY_BOUNDARY` | реальный (owner-gate не выдан) | СТОП: эскалация п. 5 (owner-gate) |
+   | `LOOP_BUDGET_EXCEEDED` | реальный (аудит-cap исчерпан) | СТОП: `AUDIT-CAP`-путь, решение владельца |
+   | `PORTABILITY_EXTERNAL_INPUT` / `PORTABILITY_INPUT_MISSING` | реальный (item несёт внешний/недостающий execution input) | СТОП: эскалация п. 5 (дефект спеки item'а), правит `plan-design` |
+   | `VERSION_HASH_MISMATCH` / `CONFLICT_UNRESOLVED` / `CONFLICT_PRECEDENCE_VIOLATION` / `NEXT_CHANGED_WITHOUT_TRANSITION` / `CAPABILITY_UNSUPPORTED` / `SLICE_INCOMPLETE` / `COLD_START_INCOMPLETE` | структурный (`build()` этого не производит при корректной работе) | СТОП: D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (`ModuleNotFoundError` —
+   standalone-раскладка вне монорепо, PYTHONPATH не резолвится) → СТОП с явным текстом «шаг
+   недоступен: `task.task_contract` не импортируется» — fail-closed, а не «продолжай как
+   раньше».
 
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).

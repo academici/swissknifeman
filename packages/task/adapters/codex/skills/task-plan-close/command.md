@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:28498b421c66f42f8721bf8c19214a7bd18c892b309f55a5c914105ae0c62022
+Canonical SHA-256: sha256:efc01918df8de07041dfe654f0d97ff435647f11d58dc211512330793cc8bc6a
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -38,10 +38,11 @@ Adapter: task.codex-command/1.0.3
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
 
-**Pre-final (P2.2).** Предикат material/process шага 4 ниже и оба чек-листа
-(`Pn.m`/`Pn`) — прозовая реализация `packages/task/lib/task/task_contract.py::pre_final`
-(task-contract-v1.md §Pre-final predicate) — компилятор владеет hash/precedence/portability,
-эта команда его зовёт при наличии смонтированного Task Contract, а не пересказывает логику.
+**Pre-final — Task Contract (P2.7, ОБЯЗАТЕЛЬНЫЙ шаг).** Шаг 4 режима `Pn.m` ниже собирает и
+проверяет Task Contract v1 через `packages/task/lib/task/task_contract.py` (`task-contract-v1.md`
+§Pre-final predicate) ДО вердикта — компилятор владеет hash/precedence/portability/evidence
+логикой, эта команда его ЗОВЁТ безусловно, а не пересказывает; точная команда и таблица
+код→действие — в самом шаге 4.
 
 ## Режим `Pn.m` — реконсиляция item'а
 
@@ -49,7 +50,38 @@ Adapter: task.codex-command/1.0.3
 2. Сверь заявленное с git-фактами: `git log --oneline -- <Files item'а>` ·
    `git diff <до>..<после> -- <Files>` — правки реально есть и соответствуют Scope Included?
 3. Прогони команды из **Validation** item'а, зафиксируй результат.
-4. **Вердикт по фактам — по предикату material/process** (6 триггеров, не «на глаз»; §6
+4. **Pre-final — Task Contract, ОБЯЗАТЕЛЬНЫЙ шаг, не условный.** ДО вердикта — собери и
+   проверь контракт тем же Python API, что `plan-exec.md`'s pre-mutation (CLI-форма `check`
+   не годится по той же причине — `route.actual` неразрешён по конструкции, флага на живой
+   route у `build` нет):
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "implementation", "low", source="self-attested", model="implementation"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_final"] in ("allow", "n/a") else 1)
+   PY
+   ```
+
+   **Зелёное:** `pre_final: 'allow'` (item честно резолвится в публично проверяемый факт) —
+   ИЛИ `pre_mutation` уже упал раньше (`pre_final: 'n/a'`) — тогда действуй по той же
+   код→действие таблице, что в `plan-exec.md`'s pre-mutation (реальные коды — эскалация п.5
+   analog / структурные — D#-запись, реопен-кандидат P2.6). `pre_final`-специфичный отказ:
+
+   | Код | Действие |
+   |:--|:--|
+   | `ACCEPTANCE_NOT_PUBLIC` | реальный — заводит material-триггер «Validation осталась красной / acceptance-критерий не выполнен» ниже: `🟠 Done with deviations` с Known Deviations, НЕ тихий `🟢` |
+   | `EVIDENCE_REF_UNKNOWN` / `EVIDENCE_PROOF_CLASS_INSUFFICIENT` | структурный (`build()` этого не производит при корректной работе) — СТОП, D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (standalone-раскладка вне
+   монорепо) → СТОП с явным текстом «шаг недоступен: `task.task_contract` не импортируется» —
+   fail-closed.
+
+   **Вердикт по фактам — по предикату material/process** (6 триггеров, не «на глаз»; §6
    канона, дословно как `plan-exec.md`). Непустые Known Deviations САМИ ПО СЕБЕ статус item'а
    НЕ меняют. `🟠 Done with deviations` ОБЯЗАТЕЛЕН при **material**-отклонении (любое из):
    Scope Included выполнен не полностью или иначе, чем предписано · Validation осталась

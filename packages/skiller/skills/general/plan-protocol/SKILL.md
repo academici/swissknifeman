@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.12.0
+version: 2.13.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -1081,12 +1081,35 @@ Provider mappings project minima to native selectors. `plan-run` has no fixed ro
 comes from item Routing and the same fail-closed gate checks the observed session route. Claude
 invocation is `/task:…`; Codex is `$ task:…`; UI prefix is not semantic identity.
 
-**Task Contract compiler (v2.12.0).** Pre-mutation/pre-final predicates, precedence/conflict
+**Task Contract compiler (v2.13.0).** Pre-mutation/pre-final predicates, precedence/conflict
 resolution, content hash and tiered-portability classification are one module,
 `packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
-`plan-portability-v1.md` of plan `2026.07.24-AGENT-RELIABILITY`, item P2.2). Commands call it
-at the noted pre-mutation/pre-final checkpoints instead of restating the logic in prose;
-`plan_lint.py`'s tiered-portability lint calls its external-path string test too.
+`plan-portability-v1.md` of plan `2026.07.24-AGENT-RELIABILITY`, items P2.2/P2.6/P2.7).
+`task:plan-exec`'s pre-mutation checkpoint and `task:plan-close`'s pre-final checkpoint CALL
+it — an executable step, not prose: each builds a Task Contract v1 payload
+(`task_contract.build`, live actual route supplied through its documented `actual_route`
+kwarg — the CLI form leaves it unresolved for cross-process determinism) and evaluates it
+(`task_contract.evaluate`), failing closed on any code other than `allow` (code→action table
+lives in the command files themselves, not restated here). `task:plan-run` substitutes the
+session's observed route into the same call instead of the pin; `task:plan-audit` reads the
+resulting `pre_mutation`/`pre_final` codes from a closed item's Completion Notes as source of
+truth instead of recomputing them. `plan_lint.py` calls the same external-path string test
+for its tiered-portability lint. This claim is protected by a literal test
+(`test_canon_literals.py`) that fails if the wording changes without the command bodies
+changing (P2.7, F1 repair: before 2.13.0 the canon claimed "commands call it" while only
+prose did).
+
+**Evidence bundle (v2.13.0).** A `committed-bundle`-tier item (`plan-portability-v1.md`
+§Classification rule, D26) ships a committed evidence bundle meeting the bundle
+requirements (SSOT — `plan-portability-v1.md` §Bundle requirements, cited not restated):
+minimization (only what an execution input is actually read for; `privacy.excluded_classes`
+names what is left out — raw transcript bodies, chain-of-thought, tool payloads, secrets), a
+deterministic manifest plus verifier (hashes recomputed, never trusted as written), complete
+dependency closure, one neutral semantic carrier with provider renderers, no public
+acceptance predicate resting on `pinned-not-recomputable`/`unknown` evidence. Executable
+form — `snippets/source-evidence-template.md` (manifest structure, required fields,
+verification command, the explicit forbidden-content-class list). Computed, not read as a
+declaration, by `task_contract.bundle_lint` (P2.6) — over the bundle's actual bytes.
 
 ## 14. Plan-quality checklist
 
@@ -1168,4 +1191,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 536fb42b64aa6b3f228ab417059a8e2b78768221a3273edd8b7639257eeeb1c6 -->
+<!-- ru-source-sha256: 7700acd2dde979c788b836b9a4ce2ee076485137cb8d149914a4ffe729f0f0ee -->

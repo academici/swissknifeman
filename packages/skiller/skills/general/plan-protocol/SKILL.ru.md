@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.12.0
+version: 2.13.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -1103,12 +1103,37 @@ Provider mapping проецирует эти minima в native selectors. `plan-r
 его минимум приходит из item Routing, а observed route сессии проверяется тем же fail-closed
 гейтом. Claude invocation — `/task:…`, Codex — `$ task:…`; UI prefix не semantic identity.
 
-**Task Contract compiler (v2.12.0).** Pre-mutation/pre-final предикаты, precedence/conflict-
+**Task Contract compiler (v2.13.0).** Pre-mutation/pre-final предикаты, precedence/conflict-
 резолюция, content-hash и tiered-portability классификация — один модуль,
 `packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
-`plan-portability-v1.md` плана `2026.07.24-AGENT-RELIABILITY`, item P2.2). Команды его зовут
-в отмеченных pre-mutation/pre-final точках, а не пересказывают логику второй прозой;
-`plan_lint.py` зовёт его же строковый тест «внешности» пути для tiered-portability lint'а.
+`plan-portability-v1.md` плана `2026.07.24-AGENT-RELIABILITY`, items P2.2/P2.6/P2.7).
+Pre-mutation-чекпоинт `task:plan-exec` и pre-final-чекпоинт `task:plan-close` его ЗОВУТ —
+исполняемый шаг, а не проза: каждый собирает Task Contract v1 (`task_contract.build`,
+живой actual route передаётся его же документированным kwarg'ом `actual_route` — CLI-форма
+держит его неразрешённым ради байт-детерминированности между процессами) и проверяет
+(`task_contract.evaluate`), падая закрыто на любом коде, отличном от `allow` (таблица
+код→действие — в самих файлах команд, не здесь второй раз). `task:plan-run` подставляет
+НАБЛЮДАЕМЫЙ route сессии в тот же вызов вместо пина; `task:plan-audit` читает получившиеся
+`pre_mutation`/`pre_final` коды из Completion Notes закрытого item'а как источник истины,
+вместо повторного счёта вручную. `plan_lint.py` зовёт тот же строковый тест «внешности»
+пути для tiered-portability lint'а. Это утверждение защищено литеральным тестом
+(`test_canon_literals.py`), который падает, если формулировка изменится без изменения тел
+команд (P2.7, F1-репарация: до 2.13.0 канон утверждал «команды зовут», а звала только
+проза).
+
+**Evidence bundle (v2.13.0).** Item тира `committed-bundle` (`plan-portability-v1.md`
+§Classification rule, D26) обязан нести коммиченный evidence bundle с bundle-требованиями
+(SSOT — `plan-portability-v1.md` §Bundle requirements, здесь только ЦИТАТА, не
+переписывание): минимизация (только то, что фактически прочитано для execution input —
+`privacy.minimized`/`excluded_classes` называет оставленное за бортом: сырые тела
+транскриптов, chain-of-thought, tool-payloads, секреты), детерминированный manifest +
+верификатор (хеши пересчитываются, никогда не доверяются как написанные), полное замыкание
+зависимостей, один нейтральный semantic carrier с provider-рендерами, ни один public
+acceptance-предикат не опирается на `pinned-not-recomputable`/`unknown` evidence. Исполнимая
+форма — `snippets/source-evidence-template.md` (структура manifest'а, обязательные поля,
+команда верификации, явный перечень запрещённых классов содержимого). Соответствие
+ВЫЧИСЛЯЕТ, а не читает как декларацию, `task_contract.bundle_lint` (P2.6) — по фактическим
+байтам bundle'а.
 
 ## 14. Чеклист качества плана
 

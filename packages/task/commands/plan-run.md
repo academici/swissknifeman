@@ -7,9 +7,15 @@ argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 Ввод пользователя: «$ARGUMENTS».
 
 Прочти `packages/task/commands/plan-exec.md` ЦЕЛИКОМ и исполни его пункты 1–8 ДОСЛОВНО,
-с ДВУМЯ отличиями:
+с ТРЕМЯ отличиями:
 
 - Модель/effort НЕ запинены: действуют настройки сессии владельца.
+- **Pre-mutation/Pre-final write-site (P2.7).** Литералы `"implementation", "medium",
+  model="sonnet"` (`plan-exec.md`'s Pre-mutation) и `"implementation", "low", model="sonnet"`
+  (`plan-close.md`'s Pre-final шаг 4) — пин ТЕХ команд, не этой: подставляй ФАКТИЧЕСКИЕ
+  `model_class`/`effort`/`model` ЭТОЙ сессии (те же значения, что уже прошли Routing-гейт
+  ниже) в `route_evidence.capture_actual(...)`. Шаг остаётся ОБЯЗАТЕЛЬНЫМ — замена лишь
+  литералов, не условия.
 - Routing-гейт п.2 инвертирован: сверяется ФАКТИЧЕСКАЯ модель/effort сессии с §3 Routing
   item'а (тир-порядок — plan-protocol §9). Недобор (модель или effort НИЖЕ предписанного)
   → СТОП «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, сессия <фактическое>»,

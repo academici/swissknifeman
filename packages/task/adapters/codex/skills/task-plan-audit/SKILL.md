@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-audit`.
 - Invocation: `$ task:plan-audit <arguments>`
 - Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
 - Canonical source: `packages/task/commands/plan-audit.md`
-- Canonical SHA-256: `sha256:2346d1afa3380aa306707c605dfa6f26e4c30d4b0eb9213aa3d99aa7a3fa8d03`
+- Canonical SHA-256: `sha256:abc32719cd8343f23a6fee35abca4ad4dc8244df26ccbbbde460976229507709`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

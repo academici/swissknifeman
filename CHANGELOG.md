@@ -4,6 +4,31 @@
 
 ### Added
 
+- **task/general — Task Contract write-site and truthful canon
+  (P2.7 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.7.0`,
+  `plan-protocol@2.13.0`, `skiller@0.6.0`).** `task:plan-exec`'s pre-mutation
+  checkpoint and `task:plan-close`'s pre-final checkpoint now CALL the P2.6
+  compiler — an executable step (build a live Task Contract v1 payload via
+  `task_contract.build(..., actual_route=…)`, evaluate it, fail closed on any
+  non-`allow` code with a named code→action table) — replacing the F1 prose-only
+  cross-reference and the always-false "when a Task Contract JSON happens to be
+  mounted" condition. `task:plan-run` substitutes the session's observed route;
+  `task:plan-audit` gains a checklist bullet requiring the printed
+  `pre_mutation`/`pre_final` result in a closed item's Completion Notes. §13 of
+  `plan-protocol` (both languages) is rewritten to state this truthfully and is
+  now protected by a literal test in `test_canon_literals.py` that fails if the
+  wording diverges from the command bodies. New
+  `snippets/source-evidence-template.md` delivers the evidence-bundle Files
+  entry P2.2 left undelivered — manifest structure, required fields,
+  verification command via `task_contract.bundle_lint` (P2.6), and the
+  explicit forbidden-content-class list — cited from, not duplicating,
+  `plan-portability-v1.md` §Bundle requirements (also newly cited by the
+  canon). Discovered along the way: the CLI form `task_contract build` (no
+  `--actual-route` flag) always leaves `route.actual` unresolved by design
+  (cross-process determinism) — feeding that straight into `check` crashes
+  `pre_mutation`'s `ROUTE_UNDERSHOOT` check with an uncaught `ValueError`
+  (`.index(None)`), so the write-site calls the compiler's documented Python
+  API (`build`/`evaluate`) instead of a literal `build | check` shell pipe.
 - **task — compiler producer, bundle predicate, cross-session cap, actor repair
   (P2.6 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.6.0`).**
   `packages/task/lib/task/task_contract.py` gains `build(plan_dir, item_id, …)`

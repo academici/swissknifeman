@@ -227,7 +227,7 @@ agentmemory = кросс-проектное/экосистемное/высок�
 осям агенты/скиллы/настройки) → урок → **человек** промоутит его в скилл/правило (`field-feedback-loop`
 + гейты `skill-authoring`/`anti-drift`). Автоматический **кросс-проектный** контур (детекция паттернов
 по многим проектам → confidence-scoring → авто-черновики `SKILL.md`) — спроектирован
-(`research/analyst-package-design.md`) и осознанно **отложен** в [roadmap](../roadmap/self-learning-memory.md):
+(`research/analyst-package-design.md`) и реализован пакетом `analyst` (`digest`→`confidence`→`promote`):
 гейт — confidence + ручное промо, чтобы ложные «уроки» не попадали в скиллы автоматически.
 
 ## 10. RAG и верификация

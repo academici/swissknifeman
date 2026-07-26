@@ -25,8 +25,8 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) | курируемый каталог | 47k★, активный, NOASSERTION-лиц. | reference | подтверждает реальную схему субагента; Design-Review ≈ agent-pack 1:1 |
 | [vijaythecoder/awesome-claude-agents](https://github.com/vijaythecoder/awesome-claude-agents) | оркестратор + специалисты | 4.3k★, MIT, ~stale | reference | блюпринт `orchestrator → stack-detect → специалисты` (= наши профили + `_common`) |
 | [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) | 150+ субагентов | 22k★, MIT, активный | reference | seed-материал ролей; нативный frontmatter |
-| [claude-rio](https://github.com/alex-popov-tech/claude-rio) | hooks-matcher (роутинг) | ~20★, MIT, ранний | reference → [roadmap](../roadmap/agent-command-router-hook.md) | контракт `UserPromptSubmit.additionalContext` для будущего router-хука |
-| Self-Improving session-hooks | паттерны session-хуков | talk-level, без репо | reference → [roadmap](../roadmap/self-learning-memory.md) | подтверждает `additionalContext`-путь (уже есть в maind) |
+| [claude-rio](https://github.com/alex-popov-tech/claude-rio) | hooks-matcher (роутинг) | ~20★, MIT, ранний | adopt → `harness router` | контракт `UserPromptSubmit.additionalContext` лёг в хуки `agent-router` |
+| Self-Improving session-hooks | паттерны session-хуков | talk-level, без репо | adopt → пакет `analyst` | подтверждает `additionalContext`-путь (memory-digest-hook в maind) |
 | [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | multi-agent runtime | 35k★, MIT | **skip** (reference) | только словарь оркестрации (supervisor/swarm) для прозы — иной слой |
 | [itgoyo/awesome-agent-skills](https://github.com/itgoyo/awesome-agent-skills) | каталог скиллов | 138★, CC-BY | reference → [roadmap](../roadmap/skill-rules-sidecar.md) | паттерн `skill-rules.json` сайдкар (отложен) |
 | [wshobson/agents](https://github.com/wshobson/agents) | стек-бандлы + model-tiers | 37k★, MIT, активный | reference | блюпринт профилей: стек→бандл, per-agent model-tiers |
@@ -61,6 +61,7 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | скилл ADHD-friendly вывода: 10 правил (action-first, нумерация, no preamble/closers) | 9.6k★, MIT, Python; верифиц. GitHub API + README 2026-07-25 | **skip** (reference) | дублирует lean output style + `core:compact-responses`; 1–2 правила (answer-first, no closers) — кандидаты в правку compact-responses (`2026.07.25-ECO-OPT` P6.2, D8) |
 | [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | официальный OpenAI плагин CC: `/codex:review\|adversarial-review\|rescue\|transfer`, subprocess над локальным `codex` CLI | 29.9k★, Apache-2.0, first-party OpenAI; верифиц. GitHub API + README 2026-07-25 | **reference → пилот** | план `2026.07.25-ECO-OPT` P7: гейтированный пилот делегирования лёгких задач ПОСЛЕ dedup/enforcement AGENT-RELIABILITY P1/P2 (D9: инцидент «Codex тупил» — коллизии identities + монолитный контекст, не «SKM вреден») |
 | [Anthropic — Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | first-party гайд: анти-паттерн явных verify/double-check инструкций (овер-верификация), effort-sweep (low/medium дешевле при качестве), subagent-капы, verbosity/scope-стиринг, 1M контекст | first-party, 2026; прочитан 2026-07-25 | **adopt (метод)** | план `2026.07.25-ECO-OPT` P2: Brain model-notes выжимка + точечная ревизия task-команд/agent-packs (убрать double-check из Opus-pinned, пересмотреть effort-пины) — D5: модель-специфика в model-notes, не в evergreen-скиллах |
+| [romarayt/raytsystem-public-os](https://github.com/romarayt/raytsystem-public-os) | local-first агентный воркспейс; для нас — **механика гейтов**: политика как данные, preflight-хеш-запись, один guard для CLI и pre-commit, симулятор ≡ рантайм, версионированный реестр контрактов, docs-DoD + coverage по живым контрактам, отчёт квалификации с классом свидетельства | Apache-2.0; публичное дерево — **сквошенный снимок** (1 коммит, 0 тегов), поэтому ★/возраст не индикатор; зрелость снята артефактами: 35 ADR, 73 теста (809 КБ), датированный отчёт прогона, полевые issue с числами. Верифиц. GitHub API + `raw.githubusercontent.com` + `perplexity-web` 2026-07-25 | **adopt (механика, 17 item'ов)** · **skip** (uv/pyproject/React, каталог-снимок схем на версию, обязательность на pre-commit) · **reference** (симулятор политики как код, `reason` в каталогах адаптеров) | `plans/2026.07.25-ECO-OPT/findings/rayt-deep-2026-07-25.md` (слой 1) + `research/09-rayt-adoption-map.md` (вердикты по каждому приёму, карта по пакетам). Адресат — **фаза P8** плана `2026.07.25-ECO-OPT` (9 приёмов), остальные 10 — в его `roadmap.md` (D41: отдельный план отменён) |
 
 ## Карточки
 
@@ -115,15 +116,15 @@ frontmatter — падает прямо в `.claude/agents/`. **Минусы:** 
 Hooks-matcher: `UserPromptSubmit` подсказывает скилл/агент по ключевым словам. **Плюсы:** закрывает
 реальный пробел — агенты/команды НЕ автоактивируются; чистый контракт I/O; ненавязчив. **Минусы:**
 для скиллов избыточен (они и так автозагружаются); JS/npx — против stdlib-only; матчер наивный.
-**Решение:** контракт берём, реализацию откладываем в [roadmap](../roadmap/agent-command-router-hook.md)
-(внедрять по факту мисроутов), на Python.
+**Решение:** контракт взяли, реализация — на Python: хуки
+`packages/harness/configs/claude-code/hooks/agent-router/` + `harness router` (спека-роадмап закрыта и удалена).
 
 ### Self-Improving session-hooks — reference → roadmap
 Паттерны: direnv-промпты, strike/praise CSV, skill-activation, SessionStart-инжект контекста.
 **Плюсы:** всё ложится на уже используемый в maind `additionalContext`-путь. **Минусы:** «CSV-скоринг»
 без канона (talk-level); `UserPromptSubmit.additionalContext` протухает на resume. **Решение:**
-безопасную форму самообучения — в [roadmap](../roadmap/self-learning-memory.md) (через память maind,
-ручное промо).
+безопасную форму самообучения — пакетом `analyst` (через память maind, ручное промо);
+остаток потокового capture — `packages/analyst/docs/roadmap.md`.
 
 ### langchain-ai/langgraph — skip (reference)
 Production-grade multi-agent **рантайм**. **Плюсы:** зрелый словарь топологий (supervisor/swarm/
@@ -234,6 +235,54 @@ https://github.com/openai/codex-plugin-cc — **официальный плаг�
 FOREMAN) делегацией review/фоновых задач на отдельную учётку OpenAI. **Минусы:** вторая
 подписка/биллинг; координация двух CLI; качество Codex на наших Laravel/Dart-стеках не замерено.
 **Взято:** пока ничего — детальная проработка в `roadmap/codex-subagent-offload.md`.
+
+### romarayt/raytsystem-public-os — adopt (механика гейтов), skip (стек)
+https://github.com/romarayt/raytsystem-public-os — local-first агентный воркспейс (знания,
+документы, задачи, verifiable workflows), Apache-2.0, Python + React. Назначение у нас разное
+(мы — менеджер инструментов), поэтому сравнивалась **механика инструкционного слоя и гейтов**,
+а не продукт.
+
+**Оценка зрелости — отдельно, потому что обычные индикаторы здесь не работают.** Публичное
+дерево — сквошенный снимок: ровно **один коммит** (`b5ac7056`, 2026-07-13), **ноль тегов и
+релизов**; ★ и возраст публичной истории не несут информации ни в плюс, ни в минус. Что реально
+доказывает эксплуатацию: датированный машиночитаемый отчёт квалификации
+(`evals/m5a/results/synthetic-20260711T105905Z.json` — ветка `codex/raytsystem-bootstrap`,
+«252 passed», покрытие 81.77 %, гейты G0–G10 с классом свидетельства), 35 ADR с `Consequences`
+и `Alternatives considered`, 73 тест-файла (809 КБ) с тестами на политику/guard/crash-recovery,
+цепочка версий схем 27→151. Что картину ослабляет: все 35 ADR датированы тремя сутками
+(07-10…07-12), бенчмарк опубликован **без результатов**, а автор на своём сайте пишет о себе
+«Я не программист» — код агентно-сгенерирован под его контролем. Поэтому вес свидетельства
+переносится на «есть тест/артефакт», а не «автор годами это эксплуатировал».
+
+**Полевые свидетельства (issues 07-17…07-24, независимые операторы) — самое ценное:** ingest
+квадратичен («~4 s на пустом леджере → ~344 s при ~590 источниках», 1 045 358 чтений на одну
+операцию); код-граф падает целиком на пустом `__init__.py` и **не называет файл**; Windows
+ломается на безусловном `import resource`. Ответов мейнтейнера нет, PR'ы висят → как **апстрим**
+проект не сопровождается, вендорить нечего; берём механику.
+
+**Плюсы:** политика как данные с валидатором формы рядом; preflight — редактированная хеш-запись
+(`operation_key`, абсолютный путь не сохраняется) и `CHECKPOINTED_FOR_RESUME` + точная команда
+вместо ложного «успеха»; **один** `CheckpointGuard` для CLI и pre-commit, а тест ассертит, что
+хук зовёт ту же команду; симулятор политики вызывает **ту же чистую функцию**, что рантайм-гейт;
+docs-in-the-same-change-set как DoD + coverage-гейт по **живым** контрактам («cannot pass by
+editing the coverage page alone»); матрица возможностей с границей доказательства («A visible UI
+section or CLI group is not proof that its external runtime is enabled»); тест, ассертящий
+**форму инструкционного слоя** (`AGENTS.md ≤65` строк, `SKILL.md ≤150`, обязательные секции,
+запрет дублирования канона в bootstrap, пара golden+adversarial на каждый скилл).
+**Минусы:** стек не переносим (uv/pyproject/pydantic/React); каталог-снимок схем на каждую
+версию накапливает мёртвые контракты (15 схем удалённого домена живут в v1.2.0–v1.4.0);
+docs-гейт коарсовый (зачёт даёт любой файл под `website/docs/`); строгая ревалидация имеет
+измеренную цену O(N²); fail-closed без имени виновника — реальный дефект UX.
+
+**Взято:** пока ничего не внедрено — вердикты по 19 приёмам и карта заимствований лежат в
+`plans/2026.07.25-ECO-OPT/research/09-rayt-adoption-map.md`; сырьё — `findings/rayt-deep-2026-07-25.md`.
+Из них **9 заведены фазой P8** плана `2026.07.25-ECO-OPT` (D41 — отдельный план отменён, чтобы не
+плодить межплановую синхронизацию): отчёт закрытия фазы с классом свидетельства
+(synthetic/real/`baseline_pending`), `Consequences` в D-записи, `CHECKPOINTED`-отказ с командой,
+docs-impact гейт, матрица возможностей, CI-гигиена + verify-tag, `assert_safe_replace_target` в
+`core/io.py`, дельта к `validate.sh` и `skiller eval`. Остальные 10 (реестр ролей ревью как
+данные, preflight делегирования, провенанс-записи, реестр контрактов, coverage по живым
+контрактам, инвариант устаревания графа) — в `roadmap.md` того же плана, тянутся по факту.
 
 ## Как это легло в архитектуру
 

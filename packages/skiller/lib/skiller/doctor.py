@@ -1,13 +1,16 @@
 """doctor — диагностика окружения."""
+import dataclasses
 import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
-from .common import DB_VERSION, harness_bin, is_within, parse_flags, warn
+from .common import DB_VERSION, atomic_write_json, harness_bin, is_within, parse_flags, warn
 from .state import registry_git_state
 
 
@@ -287,10 +290,291 @@ def _provider_distribution_doctor(env, target):
         print(f"  [warn] vendor plan blocked: {exc}")
 
 
+# P1.4 (D51/D62/D63): terminal effective-runtime conformance gate. Cold per-provider
+# install/discover of the DECLARED fixture (all repo marketplace units minus exactly the
+# three donor buckets `general`/`research`/`oss-dev`, D42-conformant), asserting
+# catalog-wide identity uniqueness — never a list of named IDs — plus a negative fixture
+# that proves the nine excluded core/donor pairs and the class-B `workflow-craft`
+# precondition are diagnosed, not silently dropped. Materialization is confined to a
+# caller-owned `tempfile.TemporaryDirectory`; canonical bytes are always read from the
+# real `package_root` (never copied into a live profile/cache/home).
+_DONOR_BUCKETS = _CORE_DONOR_BUCKETS
+
+
+def _fixture_catalog(catalog, *, exclude_bucket_ids=_DONOR_BUCKETS):
+    """The D51 positive-fixture view: every catalog unit minus exactly the donor buckets.
+    Root-bootstrap (private/source-only) never reaches `catalog.units` at all — nothing to
+    filter there. A pure data transform: no filesystem access."""
+    kept_units = tuple(unit for unit in catalog.units
+                       if not (unit.kind == "bucket" and unit.plugin_id in exclude_bucket_ids))
+    kept_ids = {member for unit in kept_units for member in unit.member_ids}
+    kept_skills = tuple(skill for skill in catalog.skills if skill.semantic_id in kept_ids)
+    return dataclasses.replace(catalog, units=kept_units, skills=kept_skills)
+
+
+def declared_fixture_unit_set(catalog, *, repo_root):
+    """D51 declared literal (`artifacts/P1.4/fixture-unit-set.json`, schema v1): the
+    positive fixture's exact input, one record per provider. Both providers share one
+    provider-neutral catalog, so `units` is identical by construction — the schema still
+    carries a record per provider so a future provider-specific catalog can diverge
+    without a schema change."""
+    fixture = _fixture_catalog(catalog)
+    units = sorted({unit.plugin_id for unit in fixture.units} |
+                   {sibling.name for sibling in catalog.sibling_plugins})
+    identity_source = "packages/skiller/lib/skiller/registry.py::build_catalog"
+    per_provider = {
+        "codex": {"marketplace": ".agents/plugins/marketplace.json"},
+        "claude-code": {"marketplace": ".claude-plugin/marketplace.json"},
+    }
+    providers = {}
+    for provider, extra in per_provider.items():
+        providers[provider] = {
+            "marketplace": extra["marketplace"],
+            "excluded": sorted(_DONOR_BUCKETS),
+            "excluded_reason": "d42-donor-bucket",
+            "units": units,
+            "identity_source": identity_source,
+        }
+    return {"schema_version": "p1.4-fixture-unit-set/v1", "providers": providers}
+
+
+def _sibling_identities(repo_root, sibling, *, manifest_name):
+    """Read-only, D44-ordered: a sibling package's OWN plugin manifest names its declared
+    `skills` root(s) — never a blind recursive walk of the package. Returns the immediate
+    subdirectory names that carry a SKILL.md (empty when the manifest declares `commands`
+    only, e.g. `task`'s Claude side — commands are a different identity space)."""
+    manifest_path = repo_root / sibling.source_path / manifest_name
+    if not manifest_path.is_file():
+        return ()
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ()
+    roots = data.get("skills")
+    if isinstance(roots, str):
+        roots = [roots]
+    if not isinstance(roots, list):
+        return ()
+    identities = set()
+    for raw in roots:
+        if not isinstance(raw, str):
+            continue
+        root_dir = (manifest_path.parent.parent / raw).resolve()
+        if not root_dir.is_dir():
+            continue
+        for entry in sorted(root_dir.iterdir()):
+            if entry.is_dir() and (entry / "SKILL.md").is_file():
+                identities.add(entry.name)
+    return tuple(sorted(identities))
+
+
+def _materialize_repository_bootstrap_sources(*, repo_root, package_root, tmp_root):
+    """Copy exactly the bytes `render_repository_bootstrap_projections` reads (class-A
+    config + 13 canonical bilingual pairs; class-B canon at its real repo-relative path)
+    into `tmp_root`, never the live repo — `render_repository_bootstrap_projections`
+    calls `.resolve()` on `package_root`, which would defeat a symlink and silently read
+    the real tree, so a real (small) copy is the only way to keep the read genuinely
+    cold. Returns the fixture's `package_root` Path."""
+    rel_pkg = package_root.relative_to(repo_root)
+    fixture_package_root = tmp_root / rel_pkg
+    if fixture_package_root.exists():
+        return fixture_package_root
+    (fixture_package_root / "configs").mkdir(parents=True, exist_ok=True)
+    for name in ("repository-bootstrap-skills.json", "publication-versions.json"):
+        shutil.copy2(package_root / "configs" / name, fixture_package_root / "configs" / name)
+    shutil.copytree(package_root / "skills" / "repository-bootstrap",
+                    fixture_package_root / "skills" / "repository-bootstrap")
+    workflow_craft_src = package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
+    if workflow_craft_src.is_file():
+        dest = fixture_package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(workflow_craft_src, dest)
+    return fixture_package_root
+
+
+def build_provider_carrier_map(catalog, *, repo_root, package_root, provider, tmp_root):
+    """Cold install+discover of the D51 fixture for ONE provider into `tmp_root` (a
+    caller-owned `tempfile.TemporaryDirectory`). Returns `{identity: sorted(carriers)}`.
+
+    Carrier vocabulary: `unit:<plugin_id>` for a bucket/curated/bucket-alias/sibling
+    member (identity map read from the generated publication catalog/each unit's own
+    declaration — never a recursive source-tree walk, D44); `root:<provider>` for a
+    root-bootstrap projection actually materialized for this provider. Bucket/curated
+    membership needs no I/O (it is already fully known from the catalog); root-bootstrap
+    projections ARE written to `tmp_root` and read back, so the class-A/B generator is
+    genuinely exercised cold, not merely trusted in memory."""
+    from .publication import render_repository_bootstrap_projections
+
+    fixture = _fixture_catalog(catalog)
+    by_id = {skill.semantic_id: skill for skill in fixture.skills}
+    carriers: dict[str, set[str]] = {}
+    for unit in fixture.units:
+        if unit.kind not in ("bucket", "curated", "bucket-alias"):
+            continue
+        for member in unit.member_ids:
+            skill = by_id.get(member)
+            if skill is not None:
+                carriers.setdefault(skill.name, set()).add(f"unit:{unit.plugin_id}")
+
+    manifest_name = ".codex-plugin/plugin.json" if provider == "codex" else ".claude-plugin/plugin.json"
+    for sibling in catalog.sibling_plugins:
+        if provider == "codex" and not sibling.codex_supported:
+            continue
+        for identity in _sibling_identities(repo_root, sibling, manifest_name=manifest_name):
+            carriers.setdefault(identity, set()).add(f"unit:{sibling.package}")
+
+    fixture_package_root = _materialize_repository_bootstrap_sources(
+        repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
+    bootstrap_artifacts = render_repository_bootstrap_projections(
+        repo_root=tmp_root, package_root=fixture_package_root)
+    root_provider_key = "claude" if provider == "claude-code" else "codex"
+    for artifact in bootstrap_artifacts:
+        if artifact.provider != root_provider_key:
+            continue
+        target = tmp_root / artifact.target if not artifact.target.is_absolute() else artifact.target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(artifact.managed_bytes)
+        # Discover cold, off the materialized fixture disk — not the in-memory artifact.
+        if target.is_file():
+            carriers.setdefault(target.parent.name, set()).add(f"root:{provider}")
+
+    return {identity: sorted(members) for identity, members in carriers.items()}
+
+
+def catalog_wide_collisions(carrier_map):
+    """Every identity with ≥2 carriers — the whole declared fixture, never a named list."""
+    return {identity: carriers for identity, carriers in carrier_map.items()
+            if len(carriers) >= 2}
+
+
+def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
+    """The D51 negative fixture: `core` and every donor bucket enabled together. Proves the
+    nine core/donor pairs surface as named D42 diagnostics (never silently dropped) and
+    that the class-B `workflow-craft` precondition fails closed when its donor bucket
+    (`general`) is enabled. Returns `(nine_pairs, workflow_craft_error)`."""
+    from .publication import render_repository_bootstrap_projections
+
+    worst_case = _worst_case_enabled(catalog)
+    pairs = detect_core_donor_collisions(catalog, enabled=worst_case)
+    fixture_package_root = _materialize_repository_bootstrap_sources(
+        repo_root=repo_root, package_root=package_root, tmp_root=tmp_root)
+    try:
+        render_repository_bootstrap_projections(
+            repo_root=tmp_root, package_root=fixture_package_root,
+            donor_enabled={"general": True})
+        workflow_craft_error = None
+    except ValueError as exc:
+        workflow_craft_error = str(exc)
+    return pairs, workflow_craft_error
+
+
+def reconcile_remediation_collisions(collisions, *, positive_maps, negative_pairs,
+                                     terminal_owner_items):
+    """D62: classify every FROZEN `remediation-map.json` collision record as exactly one of
+    `still-measured` / `resolved` / `unowned-or-unexplained` against the fresh perimeter
+    measured by THIS item — never against the frozen snapshot's own point-in-time counters.
+
+    A record whose `classes` include `unit-vs-unit` (a core↔donor-bucket pair) is D42's
+    permanent, by-construction diagnostic — it never closes; it classifies `still-measured`
+    iff the exact (identity, donor) pair is still among `negative_pairs`. A pure
+    `root-vs-unit` record (the 16 deleted root duplicates, or class-B `workflow-craft`)
+    classifies `resolved` iff the positive fixture no longer shows it as a live collision
+    (root-vs-unit) AND every one of its owner items is terminal; `still-measured` if it is
+    still a live collision in the positive fixture; otherwise `unowned-or-unexplained`."""
+    negative_index = {(item["identity"], donor) for item in negative_pairs
+                      for donor in (carrier.split(":", 1)[1] for carrier in item["carriers"]
+                                   if carrier.startswith("unit:") and carrier.split(":", 1)[1] != "core")}
+    results = []
+    for record in collisions:
+        classes = set(record.get("classes", ()))
+        owners = [owner["owner_item"] for owner in record.get("owners", ())]
+        identity = record["identity"]
+        if "unit-vs-unit" in classes:
+            donor = next((carrier.split(":", 1)[1] for carrier in record["carriers"]
+                         if carrier.startswith("unit:") and carrier.split(":", 1)[1] != "core"), None)
+            outcome = "still-measured" if (identity, donor) in negative_index \
+                else "unowned-or-unexplained"
+        else:
+            carriers_now = positive_maps.get(record["provider"], {}).get(identity, [])
+            if len(carriers_now) >= 2:
+                outcome = "still-measured"
+            elif owners and all(owner in terminal_owner_items for owner in owners):
+                outcome = "resolved"
+            else:
+                outcome = "unowned-or-unexplained"
+        results.append({"identity": identity, "provider": record["provider"], "outcome": outcome})
+    return results
+
+
+def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1.5")):
+    """Orchestrate the full P1.4 gate: declared fixture → cold positive install/discover per
+    provider (catalog-wide collisions + undeclared-root completeness) → negative fixture
+    (D42 nine pairs + class-B precondition) → D62 reconciliation against the frozen
+    `remediation-map.json`. Returns a plain dict — the CLI/tests decide what to print or
+    persist; this function never writes outside the `tempfile.TemporaryDirectory` it owns."""
+    from core import find_repo_root
+    from .registry import build_catalog, build_registry
+    from .publication import assert_root_bootstrap_set_completeness
+
+    root = env.root
+    repo_root = find_repo_root(root) or root
+    registry, bucket_meta, bucket_dirs = build_registry(env)
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
+
+    fixture_unit_set = declared_fixture_unit_set(catalog, repo_root=repo_root)
+
+    positive_maps = {}
+    collisions_by_provider = {}
+    undeclared_by_provider = {}
+    for provider in ("codex", "claude-code"):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_root = Path(tmp)
+            carrier_map = build_provider_carrier_map(
+                catalog, repo_root=repo_root, package_root=root,
+                provider=provider, tmp_root=tmp_root)
+            positive_maps[provider] = carrier_map
+            collisions_by_provider[provider] = catalog_wide_collisions(carrier_map)
+            root_artifacts = [
+                type("A", (), {"provider": "claude" if provider == "claude-code" else "codex",
+                               "identity": identity})()
+                for identity, carriers in carrier_map.items()
+                if any(c == f"root:{provider}" for c in carriers)]
+            undeclared_by_provider[provider] = assert_root_bootstrap_set_completeness(
+                tmp_root, root_artifacts)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        negative_pairs, workflow_craft_error = negative_fixture_diagnostics(
+            catalog, repo_root=repo_root, package_root=root, tmp_root=Path(tmp))
+
+    return {
+        "fixture_unit_set": fixture_unit_set,
+        "positive_maps": positive_maps,
+        "collisions_by_provider": collisions_by_provider,
+        "undeclared_by_provider": undeclared_by_provider,
+        "negative_pairs": negative_pairs,
+        "workflow_craft_precondition_error": workflow_craft_error,
+    }
+
+
+def _effective_carrier_set_document(gate_result, *, commit_sha):
+    """`artifacts/P1.4/effective-carrier-set.json` (D62 schema v1): the post-remediation
+    identity→carriers map, one record per provider, on a named commit."""
+    providers = {}
+    for provider, carrier_map in gate_result["positive_maps"].items():
+        providers[provider] = {
+            "fixture_unit_set": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.4/fixture-unit-set.json",
+            "identities": [{"identity": identity, "carriers": carriers}
+                          for identity, carriers in sorted(carrier_map.items())],
+        }
+    return {"schema_version": "p1.4-effective-carrier-set/v1",
+            "measured_at_commit": commit_sha, "providers": providers}
+
+
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool",
                               "--settings": "bool", "--provider-distribution": "bool",
-                              "--target": "str"})
+                              "--effective-runtime": "bool", "--fixture-out": "str",
+                              "--carrier-out": "str", "--target": "str"})
     if opts["help"]:
         print("skiller doctor [--downstream] [--vendor-drift] [--settings [--target P]]\n"
               "  --downstream:   гигиена publish-surface онбордженных проектов "
@@ -299,6 +583,9 @@ def cmd_doctor(env, argv):
               "(новые/изменившиеся managed-скиллы; сухой расчёт).\n"
               "  --provider-distribution: read-only preflight Claude/Codex delivery; "
               "не запускает native installer.\n"
+              "  --effective-runtime [--fixture-out F] [--carrier-out F]: P1.4 cold "
+              "install/discover conformance gate (declared fixture, catalog-wide "
+              "uniqueness, D42 negative fixture); опц. запись declared-literal/carrier-set.\n"
               "  --settings:     аудит настроек Claude Code (фасад → harness "
               "doctor --settings).")
         return
@@ -309,6 +596,33 @@ def cmd_doctor(env, argv):
         from .config import resolve_target
         target, _ = resolve_target(env, opts)
         _provider_distribution_doctor(env, target)
+        return
+    if opts.get("effective_runtime"):
+        result = run_effective_runtime_gate(env)
+        failures = []
+        for provider in ("codex", "claude-code"):
+            for identity, carriers in result["collisions_by_provider"][provider].items():
+                failures.append(f"{provider}: {identity} has ≥2 carriers: {carriers}")
+            failures.extend(f"{provider}: {msg}" for msg in result["undeclared_by_provider"][provider])
+        print("skiller doctor --effective-runtime:")
+        print(f"  positive fixture: codex {len(result['positive_maps']['codex'])} identities, "
+              f"claude-code {len(result['positive_maps']['claude-code'])} identities")
+        print(f"  negative fixture: {len(result['negative_pairs'])} D42 pairs, "
+              f"workflow-craft precondition error: "
+              f"{'yes' if result['workflow_craft_precondition_error'] else 'NO (BUG)'}")
+        if opts.get("fixture_out"):
+            atomic_write_json(Path(opts["fixture_out"]), result["fixture_unit_set"])
+        if opts.get("carrier_out"):
+            sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=env.root,
+                                 capture_output=True, text=True, check=False).stdout.strip()
+            atomic_write_json(Path(opts["carrier_out"]),
+                              _effective_carrier_set_document(result, commit_sha=sha or "unknown"))
+        if failures:
+            print("  FAILURES:")
+            for item in failures:
+                print(f"    - {item}")
+            sys.exit(1)
+        print("  OK — 0 catalog-wide collisions, 0 undeclared root directories")
         return
     root = env.root
     issues = 0

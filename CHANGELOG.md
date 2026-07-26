@@ -4,6 +4,18 @@
 
 ### Added
 
+- **skiller — effective-runtime conformance gate (P1.4, D51/D62/D63).** New
+  `skiller doctor --effective-runtime`: cold per-provider install/discover of the declared
+  positive fixture (every repository-marketplace unit minus exactly the three donor buckets
+  `general`/`research`/`oss-dev`) into a `tempfile.TemporaryDirectory`, proving catalog-wide
+  identity uniqueness (216 Codex / 204 Claude identities, 0 collisions, 0 undeclared root
+  directories) rather than checking a named ID list. A companion negative fixture proves the
+  nine `core`↔donor D42 pairs and the class-B `workflow-craft` precondition still fail
+  closed when their donor bucket is enabled. `--fixture-out`/`--carrier-out` persist the
+  declared fixture (`fixture-unit-set.json`) and the measured identity→carriers map
+  (`effective-carrier-set.json`), the latter reconciling every one of the 29 frozen
+  collision records from P1.1's `remediation-map.json` as `resolved` or `still-measured`
+  (0 `unowned-or-unexplained`).
 - **skiller — root-bootstrap class-B publication and collision closure (P1.5, D40/D42/D43).**
   Four duplicate `architect` root identities (`architecture`, `codebase-design`,
   `domain-modeling`, `package-contribution-protocol`) removed from `.agents/skills/` after

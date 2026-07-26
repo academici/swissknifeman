@@ -10,7 +10,7 @@
 | Model | `sonnet` |
 | Thinking | `low` |
 | Context | `НОВАЯ сессия` |
-| Суть | Все пять items фазы P4 терминальны (3 🟢 / 2 🟠). Закрыть фазу по git-фактам: таблицы, `## Phase Handoff`, docs-sync решение, lint. Слово GREEN о приёмке не появляется — приёмка формально НЕ выполнена (D88/D89). Затем терминальный `task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия) |
+| Суть | Все пять items фазы P4 терминальны (2 🟢 / 3 🟠). Закрыть фазу по git-фактам: таблицы, `## Phase Handoff`, docs-sync решение, lint. Слово GREEN о приёмке не появляется — приёмка формально НЕ выполнена (D88/D89). Затем терминальный `task:plan-audit … P4` (frontier/xhigh, НОВАЯ сессия) |
 
 ```
 task:plan-close 2026.07.24-AGENT-RELIABILITY P4
@@ -18,7 +18,9 @@ task:plan-close 2026.07.24-AGENT-RELIABILITY P4
 
 **Done:**
 
-- **P4.3 закрыт 🟢** (item-коммит `e0c7269c`) — терминальный item фазы и плана.
+- **P4.3 закрыт `🟠 Done with deviations`** (item-коммит `e0c7269c`; статус ИСПРАВЛЕН этим
+  bookkeeping-заходом с ошибочного `🟢` по ревью-вердикту **ATTENTION**) — терминальный item
+  фазы и плана.
   - **Доки:** `docs/control-surface.md` — три слоя источника (canonical → generated →
     effective), кто владеет каждым, чем проверяется read-only, правило «дрейф `generated`
     чинится перегенерацией, а не правкой файла»; измеренное качество (`5/31`, `F1 = 0.96`,
@@ -40,7 +42,7 @@ task:plan-close 2026.07.24-AGENT-RELIABILITY P4
     НЕ выполненной первым предложением; недоказанное — первым разделом и числами; каждый
     остаточный долг — с носителем; отрепетированный откат и его измеренная цена; **ровно одно**
     решение G1 с рекомендацией **HOLD** и четырьмя фальсифицируемыми критериями, которые её
-    изменят. Слово GREEN в packet'е не употребляется.
+    изменят.
   - **Закрытость публикаций доказана командами** (не фразой): render `--check` и
     `registry --check` — no-op; diff-scope guard по адаптерам/bootstrap-деревьям/обоим
     marketplace'ам — пусто; приватный `repository-bootstrap@0.2.0` пересчитан из своего lock'а —
@@ -52,6 +54,13 @@ task:plan-close 2026.07.24-AGENT-RELIABILITY P4
   - **Коды границ:** `pre_mutation: allow`, `pre_final: allow`
     (`content_hash 503f71945702b101503be3d4a0a924224b805e59b11555d8e7aa5503d24c6a47`, EXIT=0),
     маршрут исполнителя `frontier/high` (D75).
+  - **Ревью-вердикт ATTENTION — три находки, все Minor/Nit, никакого Blocker:**
+    (1) арифметика Files в Known Deviations 3 была неверна («7» вместо фактических «5»
+    нетронутых путей) — исправлено; (2) статус `🟢` держался при собственноручно помеченной
+    [Major/evidence] дыре (недоказанная закрытость `docs/provider-support.md`) — статус
+    исправлен на `🟠`; (3) `docs/task/plan-structure.md` (продукт item'а) приписывает пять
+    отказов портируемости `plan_lint`, реально это `task_contract.portability_lint` — правка
+    текста дока названа будущим долгом (Known Deviations 7), не чинится задним числом здесь.
 
 **Remaining:**
 
@@ -60,15 +69,14 @@ task:plan-close 2026.07.24-AGENT-RELIABILITY P4
 - **G1 — единственный действующий Owner-гейт.** Вход для ответа собран:
   `artifacts/P4.3/owner-decision-packet.md` § 6. Рекомендация агента — **HOLD**. Решение
   принимает ВЛАДЕЛЕЦ; агент его не исполняет. Ни `push`, ни `tag`, ни релиз, ни раскатка на
-  флот/consumers, ни `plans/2026.07.18-FOREMAN` этим прогоном не тронуты (ветка
-  `codex/provider-project-sync` — 117 коммитов впереди `origin`, тегов не добавлено).
+  флот/consumers, ни `plans/2026.07.18-FOREMAN` этим прогоном не тронуты.
 - **Новая находка P4.3 (долг с носителем):** `scripts/provider-docs.py` —
   генератор/чекер `docs/provider-support.md` — читает `plans/2026.07.19-DUAL-PROVIDER/…` после
   архивации плана и падает `FileNotFoundError`; `scripts/test-provider-docs.py` — 4 ошибки;
-  скрипт не подключён ни к одному `validate.sh`, поэтому был невидим CI. Соседи путь уже
-  обновили (`packages/task/tests/test_provider_command_parity.py:24` → `plans/archive/…`), то
-  есть это изолированный пропуск архивации. Ремонт — владельцу скрипта, не этому item'у
+  скрипт не подключён ни к одному `validate.sh`. Ремонт — владельцу скрипта, не этому item'у
   (D27/D31). Следствие: `docs/provider-support.md` доказанно закрытой НЕ объявляется.
+- **Правка атрибуции портируемости** в `docs/task/plan-structure.md` (Known Deviations 7) —
+  будущий item, трогающий этот файл.
 - **Ремонт предиката `_lint_write_site_codes_44`** (Major ложный ERROR + Minor ложный пропуск,
   находки ревью P4.4) — в packet'е § 4.3, носитель назван.
 - **Ремонт гейта `verify_claim_verdicts.py`** (не проверяет символ после `::`) и **исправление
@@ -83,11 +91,13 @@ task:plan-close 2026.07.24-AGENT-RELIABILITY P4
 
 **Sources of truth:**
 
-- `phases/P4.md` — `## Phase Status` (P4.1 `🟠`, P4.2 `🟢`, P4.3 `🟢`, P4.4 `🟠`, P4.5 `🟢`),
-  `### P4.3` Completion Notes/Known Deviations — полная запись закрытия.
+- `phases/P4.md` — `## Phase Status` (P4.1 `🟠`, P4.2 `🟢`, P4.3 `🟠`, P4.4 `🟠`, P4.5 `🟢`),
+  `### P4.3` Completion Notes/Known Deviations 1–8 — полная запись закрытия и исправления.
 - `artifacts/P4.3/owner-decision-packet.md` — терминальное измеренное свидетельство и вход G1.
-- `plan.md` — §4 Status Board (`P4 3/5, 🟡 In progress`), §6 Update Log, §0 Meta `Version 1.21.6`.
-- `journal.jsonl` — последняя запись `item_id: "P4.3", command: "plan-exec", result: "closed-green"`.
+- `plan.md` — §4 Status Board (`P4 2/5, 🟡 In progress`), §6 Update Log, §0 Meta
+  `Version 1.21.7`.
+- `journal.jsonl` — последняя запись `item_id: "P4.3", command: "plan-close",
+  result: "closed-deviations"`.
 - `research/10-p4-entry-gate-and-composition.md` — основание решений захода (D89–D93).
 
 **Open risks:**

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.1 доведён до DoR: D64–D68 — граница с замороженным P0.2, объявленные множества, потребители FOREMAN/ECO) |
+| Last Updated | 2026-07-26 (P2.1 закрыт 🟢: три контракта запечатаны, машина 135/135 ячеек) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -245,7 +245,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 0/5 | ⬜ Not started |
+| P2 | Checked outcome execution и bounded review | 1/5 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -365,6 +365,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P1.4 закрыт 🟢: cold effective-runtime conformance gate (`skiller doctor --effective-runtime`), D62-сверка 0 unowned-or-unexplained — фаза P1 терминальна. Детали — phases/P1.md P1.4 Completion Notes. Version 1.13.0 → 1.13.1. |
 | 2026-07-26 | plan-close/Claude Sonnet 5/low | Фаза P1 закрыта (5/5 items терминальны: P1.1🟢/P1.2🟠/P1.3🟢/P1.5🟠/P1.4🟢); Phase Handoff/handoff.md перезаписаны, docs-sync — не требуется. |
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | P2.1 доведён до DoR: D64–D68 — граница с замороженным P0.2, объявленные множества (9/15/6, 135 ячеек), потребители FOREMAN/ECO, долг A2 о workflow-carrier закрыт, cap как профиль authority. Слой 2 — `research/06`. Version 1.13.1 → 1.14.0. |
+| 2026-07-26 | plan-run/Claude Opus 5/high | P2.1 закрыт 🟢: три контракта execution/review/portability запечатаны надстройкой над P0.2, машина 135/135 ячеек — детали см. phases/P2.md P2.1 Completion Notes |
 
 ## 7. Contracts
 
@@ -377,9 +378,9 @@ audit/fix-loop без продукта, который план создан л�
 | `root/contracts/reliability-acceptance-v1.md` | v1 | committed P0.3 (G0 — агент, D59) | P0.4–P3 | skiller, task, analyst, harness |
 | `root/contracts/semantic-identity-ownership-v1.md` | v1 | committed P1.1 (`628092b3`) | P1.2, P1.3, P1.5, P1.4 | skiller, task, harness |
 | `root/contracts/generated-artifact-version-v1.md` | v1 | committed P1.1 (`628092b3`) | P1.2, P1.3, P1.5, P2.2, P2.3, P4.3 | skiller, task, harness |
-| `root/contracts/execution-state-machine-v1.md` | v1 | planned P2.1 | P2.2–P3 · **`2026.07.18-FOREMAN` P2/P5** (пере-скоуп Artifex в тонкую обвязку, его D49/D51/D59 — маркер снимается при терминальных P2.1 И P3.1) | task, analyst; FOREMAN — гейтится терминальной P2 по `plans/README.md` § «Кросс-плановая последовательность» (D66) |
-| `root/contracts/risk-review-loop-budget-v1.md` | v1 | planned P2.1 | P2.3, P2.5, P3.1, P4.3 · **`2026.07.18-FOREMAN` P2/P5** · **`2026.07.25-ECO-OPT` P9** (словарь типов находок для `answer-key.json`, читается как чужой) | task, analyst; FOREMAN/ECO-OPT — тот же гейт терминальной P2 (D66) |
-| `root/contracts/plan-portability-v1.md` | v1 | planned P2.1 | P2.2, P2.5, P3.3, P4.3 | task, skiller |
+| `root/contracts/execution-state-machine-v1.md` | v1 | committed P2.1 (`575a49b2`) | P2.2–P3 · **`2026.07.18-FOREMAN` P2/P5** (пере-скоуп Artifex в тонкую обвязку, его D49/D51/D59 — маркер снимается при терминальных P2.1 И P3.1) | task, analyst; FOREMAN — гейтится терминальной P2 по `plans/README.md` § «Кросс-плановая последовательность» (D66) |
+| `root/contracts/risk-review-loop-budget-v1.md` | v1 | committed P2.1 (`575a49b2`) | P2.3, P2.5, P3.1, P4.3 · **`2026.07.18-FOREMAN` P2/P5** · **`2026.07.25-ECO-OPT` P9** (словарь типов находок для `answer-key.json`, читается как чужой) | task, analyst; FOREMAN/ECO-OPT — тот же гейт терминальной P2 (D66) |
+| `root/contracts/plan-portability-v1.md` | v1 | committed P2.1 (`575a49b2`) | P2.2, P2.5, P3.3, P4.3 | task, skiller |
 | `root/contracts/unified-agent-trace-v1.md` | v1 | planned P3.1 | P3.2–P4 | analyst, harness, task |
 | `plan-protocol` skill canon | v2.12.0 | planned P2.2 | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; ECO-OPT — Owner-facing долг зеркальной `Consumed`-строки |
 | `skiller` package API + `general`/`core` units | v0.5.0 | planned P2.2 | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; ECO-OPT — тот же долг |

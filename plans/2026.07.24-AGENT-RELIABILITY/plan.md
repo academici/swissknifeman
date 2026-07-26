@@ -297,7 +297,7 @@ audit/fix-loop без продукта, который план создан л�
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
 | P3 | Unified traces, evals и isolated self-host canary | 5/11 | 🟠 Done with deviations |
-| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 1/5 | 🟡 In progress |
+| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 1/5 | 🔴 Blocked |
 
 ## 5. Decision Log
 
@@ -423,6 +423,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-close/sonnet-low | P4.1 закрыт 🟠 Done with deviations: code-grounded вердикт 16 гипотез, ATTENTION-ревью (H06 mis-cite) — детали см. phases/P4.md P4.1 Completion Notes. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Design pass 3/3: fresh full-plan DoR/brief/RCA/dependency/routing/CLI sweep; exact reads, contribution gates, semantic+native recovery carriers and safe temp/worktree contracts reconciled; next — separate audit-design. |
 | 2026-07-24 | Owner refinement / plan-design | D25 removes host-bound execution evidence. The materialized bundle passed four verifier modes: 20 manifest entries, 7 journals, 5 sanitized cases, corrected denominators/control and 8 claim ranges. |
+| 2026-07-26 | docs-curator/sonnet | Прогон фазы P4 ОСТАНОВЛЕН на P4.2 🔴 Blocked: код реализован и закоммичен (`1e9006f4`), но item не закрыт по plan-protocol — коды границ/journal/handoff не зафиксированы; P4.3 не стартует до `plan-close` P4.2. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Design pass 3/3 final reconciliation: downstream items, findings, roadmap and handoff consume only the source bundle; version 1.4.0 is ready for separate fresh audit-design. P0 remains unexecuted. |
 | 2026-07-24 | Owner refinement / plan-design | D26 promotes self-contained planning into the canonical package contract without adding a phase/item: P0.2/P0.3 freeze fields/cases; P2.1/P2.2 define and enforce tiers in Task Contract, plan-design and plan-lint; P2.5/P3.3 run conformance; P4.3 publishes docs. Version 1.4.0 remains 21 items. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Audit attempt 2 stopped pre-verdict on SSOT gaps. Reopened Pass 3 added D27 version/generated-tree closure and D28 exact 12-collision removal plus P1.4 cold discovery. Version 1.5.0; 21 items; P0 unexecuted. |

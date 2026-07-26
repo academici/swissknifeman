@@ -1,6 +1,6 @@
-# HANDOFF — 2026-07-26 — after P2.1
+# HANDOFF — 2026-07-26 — after P2.2
 
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.2
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P2.3
 
 | Параметр | Значение |
 |:--|:--|
@@ -8,80 +8,50 @@
 | Effort | `high` |
 | Capabilities | `command.subagents` |
 | Context | `same-session — item` |
-| Суть | Реализовать единый компилятор Task Contract, root-dispatch и tiered-portability lint против запечатанных P2.1-контрактов |
+| Суть | Реализовать typed finding/review enforcement и loop breaker поверх независимо-зелёного P2.2 compiler'а |
 
 ```
-/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.2
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P2.3
 
-РЕЖИМ: исполнение детализированного item'а (P2.2 ⬜, P2.1 закрыт 🟢 коммитом `575a49b2` — не реопен, не повторный дизайн).
-ВХОД: phases/P2.md § P2.2 (ТЗ) → его 23 Required Reads в объявленном порядке, начиная с root/contracts/task-contract-v1.md; свежие входы этого шага — root/contracts/{execution-state-machine,risk-review-loop-budget,plan-portability}-v1.md и artifacts/P2.1/state-transition-cases.json (машинная форма: declared_sets, 135 ячеек, обе проекции, decide(), словарь находок).
-СКОУП: 1) D36-baseline `assert_generated_scope.py baseline --owner P2.2 … --capture-or-verify` ПОСЛЕ Required Reads и ДО любой другой записи item'а; 2) один компилятор `task_contract.py`, владеющий precedence/conflict/hash/portability — команды его зовут, логику не пересказывают; 3) интеграция pre-mutation/pre-final переходов и последовательного fresh-subagent dispatch в канонические plan-команды; 4) tiered-portability компилятор + отказ `plan_lint` на high-risk/multi-session/handoff/audit-плане без коммиченного execution input; классификация по РОЛИ пути, регекс по подстроке `tmp/` запрещён; 5) self-conformance (D47) ВНУТРИ item'а: новые tier-правила применяются к ЭТОМУ плану, `plan-lint plans/2026.07.24-AGENT-RELIABILITY` — 0 ошибок до коммита; 6) версии `plan-protocol@2.12.0` / `skiller@0.5.0` / `task@0.4.0` + полная регенерация владеемых деревьев/локов/marketplace'ов + доказательство второго прогона; 7) §11-уведомление плана-потребителя `2026.07.25-ECO-OPT` до закрытия.
-НЕ ТРОГАТЬ: запечатанные P2.1-контракты и `artifacts/P2.1/**` (владелец — P2.1; расхождение → D#, не тихая правка) — их множества ЗАКРЫТЫ: новое состояние/событие/выход решающей функции = major-бамп контракта, а не локальное расширение; классификация находок и cap — P2.3 (здесь только вызов); захват фактического route — P2.4; замороженные контракты P0/P1 и `artifacts/P1.1/remediation-map.json`; провайдерный рендеринг P1; FOREMAN.
+РЕЖИМ: исполнение детализированного item'а (P2.3 ⬜, P2.2 закрыт 🟢 коммитами `08e787b8` (Files) + `79341e31` (companion) — не реопен, не повторный дизайн).
+ВХОД: phases/P2.md § P2.3 (ТЗ) → его Required Reads в объявленном порядке. Свежие входы: `packages/task/lib/task/task_contract.py` (независимо-зелёный компилятор, его policy hook — точка расширения), `artifacts/P2.1/state-transition-cases.json::review_policy` (типы находок/severity/reopen-предикат уже машиночитаемы).
+СКОУП: 1) D36-baseline `assert_generated_scope.py baseline --owner P2.3 … --capture-or-verify` ПОСЛЕ Required Reads и ДО любой другой записи item'а; 2) `packages/task/lib/task/review_policy.py` + `test_review_policy.py` — ТОЛЬКО ПОСЛЕ pre-mutation гейта (не cold-start prerequisites); 3) расширить P2.2 compiler на его approved policy hook, НЕ править `packages/task/commands/*.md`/`plan-protocol` канон повторно (P2.2 — единственный владелец их бампа); 4) typed `finding_id` (seam-derived, split-ban), reopen-предикат (product/security-blocker/evidence-invalidates-acceptance), `same_finding_max=2` → третий → INCIDENT без inline-ремонта; 5) task plugin/routing bump `0.4.0 → 0.5.0`, полная регенерация adapters/locks/golden/marketplace (тела команд не меняются — второй прогон обязан быть no-op даже так); 6) `bash packages/task/scripts/validate.sh` зелёный, `assert_generated_scope.py generated-scope` без failures.
+НЕ ТРОГАТЬ: `packages/task/commands/*.md` и `plan-protocol` канон повторно (владелец P2.2, единый бамп 2.11.0→2.12.0 уже закрыт — второй edit той же версии — гонка); `packages/task/lib/task/task_contract.py`'s core-предикаты (compiler остаётся независимо-зелёным, P2.3 только зовёт его policy hook); замороженные P0/P1/P2.1-контракты и их artifacts/**; `artifacts/P2.2/base-sha.txt` (владелец P2.2).
 ```
-
-Item-коммит P2.1 — `575a49b2` (пять `Files` ровно); плановые пути закрыты отдельным
-bookkeeping-коммитом, его хеш — `git log -1 -- plans/2026.07.24-AGENT-RELIABILITY`.
 
 **Done:**
 
-- **P2.1 закрыт 🟢** (2026-07-26, `task:plan-run` под **opus/high** = предписанный §3 Routing
-  `frontier/high`). Запечатаны три контракта: `execution-state-machine-v1` ·
-  `risk-review-loop-budget-v1` · `plan-portability-v1` — каждый **надстройкой** над замороженным
-  P0.2 (секция `## Frozen upstream` со ссылками `file:line`, ни один код P0.2 не перевыпущен, D64).
-- **Тотальная машина исполнения**: 9 состояний × 15 событий = **135/135 ячеек** (63 перехода +
-  72 объявленные невозможности с индивидуальными причинами, 17 именованных классов); wildcard/
-  default-правило в формате носителя непредставимо. Проекции тотальны в обе стороны: **9/9**
-  состояний → шесть канонических статусов (`DONE` берёт `material_deviation` входом проекции),
-  **8/8** journal `RESULT_VALUES` достижимы.
-- **Решающая функция** `decide(state, event, payload, profile)` — чистый детерминированный
-  просмотр матрицы; шесть выходов, все достижимы. Это то, что потребляет
-  `2026.07.18-FOREMAN` P2/P5 вместо второго движка решений.
-- **Cap как параметр профиля authority** (D68): `owner-gated` (канон пакета,
-  `plan-audit.md:52-54`) ↔ `self-host` (D50). Гейт машинный: ячейка разрешения cap ОБЯЗАНА быть
-  guarded по профилю, иначе `AUTHORITY_PROFILE_UNDECLARED`.
-- **F14-гейт**: **10/10** позитивных routine-кейсов дают `continue-next` (порог — 5).
-- Фальсификация проверок: **11/11** объявленных мутаций красны КАЖДАЯ по своему коду; восемь
-  новых кодов объявлены с `distinct_from` на замороженный код P0.2.
-- **Долг A2 о workflow-carrier закрыт по существу** (D67): критерий `plan-protocol` §7 измерен на
-  фактах фазы (`phases/P2.md:54,73,92,111` — цепочка строго последовательна) → скрипт для P2 не
-  заводится; обратное условие зафиксировано правилом в контракте.
+- **P2.1 закрыт 🟢** (три контракта запечатаны, машина 135/135 ячеек) — детали `phases/P2.md` P2.1 Completion Notes.
+- **P2.2 закрыт 🟢** (2026-07-26, `task:plan-run` под **sonnet/high** = предписанный §3 Routing `implementation/high`, точное совпадение). Произведено:
+  - `packages/task/lib/task/task_contract.py` — единый компилятор content-hash/precedence-conflict/12 pre-mutation + 3 pre-final кодов (`task-contract-v1.md`, цитируется, не пересказывается) + tier-классификация/lint `plan-portability-v1.md` (новый код `PORTABILITY_TIER_MISCLASSIFIED`, сверен с `artifacts/P2.1/state-transition-cases.json::new_reason_codes`). 38/38 юнит-тестов, включая table-driven сверку с P2.1's `portability_cases`.
+  - `plan_lint.py` — tiered-portability lint (`_lint_tiered_portability_22`): ROLE-тест позиционный (Inputs/Required Reads/Validation), НЕ substring `tmp/` (D47); severity-cutoff `PORTABILITY_TIER_CANON_DATE = "2026.07.27"` (форвард-дата — fleet-замер вскрыл 58 ERROR в чужих планах `2026.07.18-FOREMAN`/`2026.07.25-ECO-OPT`, задокументировано D69). 176/176 тестов `test_plan_lint.py` (168 + 8 новых `TestTieredPortability`).
+  - `packages/task/commands/{plan-exec,plan-close,plan-audit,plan-design}.md` — cross-reference абзацы к компилятору на pre-mutation/pre-final чекпоинтах.
+  - Версии: `plan-protocol@2.12.0`, `skiller@0.5.0` (package API + `general`/`core` units), `task` plugin/routing `@0.4.0`. Полная регенерация: `render-provider-commands.py --write --repair-owned` (12 Claude + 24 Codex) → `--check` no-op; `skiller registry` → `registry --check` актуально; `claude-command-golden/`+`docs/reference/provider-commands.md` синхронизированы вручную (не покрыты `--write`, оба проверены зелёными тестами).
+  - Diff-scope guard: `failures: []`, `undeclared_drift: []` на топологии из ДВУХ атомарных коммитов внутри шага 1 — `79341e31` (companion, `provider-commands.md`, вне owner-набора P1.1's `remediation-map.json`) ДО item-коммита `08e787b8` (ровно declared Files, `own_commits`).
+  - Self-conformance (D47): `plan-lint plans/2026.07.24-AGENT-RELIABILITY` — **0 ERROR / 1 WARN** (WARN — предсуществующий, Update Log длина); fleet-wide `bash packages/task/scripts/validate.sh` — **0 ERROR / 215 WARN** (было 95 WARN на baseline, 120 новых — все legacy-severity от tiered-portability, 0 новых ERROR).
+  - `## 7. Contracts § Exported`: три строки `plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0` переведены `planned P2.2 → committed P2.2 (08e787b8)`; долг зеркальной `Consumed`-строки `2026.07.25-ECO-OPT` уже снят D58 (его D85) — новое уведомление не требуется.
 
 **Remaining:**
 
-16/22 items. P2: 1/5 (P2.2 → P2.3 → P2.4 → P2.5, все `solo` по `roadmap.md`) → P3 (5) → P4 (3).
+15/22 items. P2: 2/5 (P2.3 → P2.4 → P2.5, все `solo` по `roadmap.md`) → P3 (5) → P4 (3).
 Все items P2 детализированы; повторный дизайн-заход не требуется.
 
 **Sources of truth:**
 
-`plan.md` v1.14.0 (§3 Routing, §4 Status Board, §5 D64–D68, §7 Contracts) ·
-`phases/P2.md` § P2.1 Completion Notes (факты закрытия) ·
-`root/contracts/{execution-state-machine,risk-review-loop-budget,plan-portability}-v1.md` ·
-`artifacts/P2.1/state-transition-cases.json` (машинная форма) · `roadmap.md` § P2.2 ·
-`journal.jsonl`.
+`plan.md` v1.14.1 (§3 Routing, §4 Status Board, §5 D69, §7 Contracts) ·
+`phases/P2.md` § P2.2 Completion Notes (факты закрытия) ·
+`packages/task/lib/task/task_contract.py` · `packages/task/lib/task/plan_lint.py`
+`_lint_tiered_portability_22` · `roadmap.md` § P2.3 · `journal.jsonl`.
 
 **Open risks:**
 
-- **Строка фазы P0 в `plan.md` §4 протухла:** `🟡 In progress` при четырёх терминальных items
-  (`phases/P0.md`: 3🟢 + 1🟠). Precondition-гейт P2.1 требовал терминальности «in `plan.md` §4»
-  и был вычислен по КАНОНИЧЕСКОМУ определению (статусы items), а не по ячейке. Владелец правки —
-  `task:plan-close 2026.07.24-AGENT-RELIABILITY P0`; **осторожно: режим `Pn` перезаписывает
-  `handoff.md` целиком** (заголовок `after P0`), поэтому после него Next надо вернуть на P2.2.
-  Этим item'ом не правилось — чужая поверхность (И2).
-- **Три новых контракта — новая публичная поверхность.** D23-секции (`## Contribution gate`)
-  внутри каждого заполнены (extension points, названные потребители, ≥2 альтернативы,
-  SemVer/ADR-результат), но качество их обоснования выявится только аудитом фазы.
-- `check_collision_owners` структурно несовместим с фазовой ремедиацией — назван трижды
-  (P1.1/P1.5/P1.4), владелец «отдельный proposal/ADR по D23» не назначен. P2 не блокирует.
-- Прежний долг без изменений: две находки A2 (порядок capture `base-sha` — владельцы P2.2/P2.3;
-  `research/01–03` без ссылок на слой 1); A1 F11; `command.interactive-user-input` вне каталога
-  capability; Claude enabled-set `unknown`; Claude-проекция `workflow-craft` (нужен
-  `skiller budget --first-turn`); расхождение провенанса harness-CLI ↔ maind-адаптера (P0.4).
+- **Строка фазы P0 в `plan.md` §4 всё ещё протухла** (унаследовано от P2.1's handoff — этим item'ом не правилось, чужая поверхность И2): `🟡 In progress` при четырёх терминальных items. Владелец правки — `task:plan-close 2026.07.24-AGENT-RELIABILITY P0`.
+- **`packages/task/docs/reference/provider-commands.md` не входит в `artifacts/P1.1/remediation-map.json::owners.P2.2.paths`**, хотя детерминированно порождается той же командной канонизацией, что и объявленные Files (D69 Known Deviations). Companion-коммит `79341e31` — рабочая резолюция; настоящая потребность в правке карты владения — за P1.1 (D#).
+- `check_collision_owners` структурно несовместим с фазовой ремедиацией — без изменений с P2.1.
+- Прежний долг: две находки A2 (порядок capture `base-sha` — владельцы P2.2/P2.3, ЧАСТИЧНО закрыто этим item'ом: `assert_generated_scope.py baseline --capture-or-verify` теперь прогнан ПОСЛЕ Required Reads, ДО первой записи, как D36 предписывает — P2.3 обязан следовать тому же порядку); `research/01–03` без ссылок на слой 1; A1 F11; `command.interactive-user-input` вне каталога capability; Claude enabled-set `unknown`; Claude-проекция `workflow-craft`; расхождение провенанса harness-CLI ↔ maind-адаптера (P0.4).
 
 **Workarounds/Deferred/Open questions:**
 
-- **workarounds:** нет новых.
-- **deferred:** протухшая строка фазы P0 в §4 (владелец — `plan-close P0`, § Open risks);
-  структурный фикс `check_collision_owners`/`remediation-map.json`;
-  `command.interactive-user-input`; Claude-проекция `workflow-craft`; расхождение провенанса
-  harness-CLI ↔ maind-адаптера; две находки A2.
+- **workarounds:** companion-коммит `79341e31` для `provider-commands.md` вне declared Files (D69, Known Deviations phases/P2.md P2.2) — процессная резолюция diff-scope guard, не изменение поведения.
+- **deferred:** протухшая строка фазы P0 в §4; структурный фикс `check_collision_owners`/`remediation-map.json` (включая отсутствие `provider-commands.md` в owner-карте P2.2); `command.interactive-user-input`; Claude-проекция `workflow-craft`; расхождение провенанса harness-CLI ↔ maind-адаптера; две находки A2 (одна частично закрыта).
 - **open_questions:** нет открытых для владельца — по D50 развилки закрываются записью.

@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.14.0 |
+| Version | 1.14.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P2.1 закрыт 🟢: три контракта запечатаны, машина 135/135 ячеек) |
+| Last Updated | 2026-07-26 (P2.2 закрыт 🟢: Task Contract compiler + tiered-portability lint) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -245,7 +245,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
-| P2 | Checked outcome execution и bounded review | 1/5 | 🟡 In progress |
+| P2 | Checked outcome execution и bounded review | 2/5 | 🟡 In progress |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
@@ -333,6 +333,8 @@ audit/fix-loop без продукта, который план создан л�
 
 | D68 | 2026-07-26 | **Субъект решения при исчерпанном cap — параметр профиля authority, а не константа.** Конфликт измерен: `packages/task/commands/plan-audit.md:52-54` (канон пакета, уедет во флот через P2.2/P2.3) предписывает третий заход → «решение за владельцем»; D50 этого плана оставляет владельцу ровно G1, а развилки закрывает агент. Зашить владельца — вернуть в план ручной гейт, снятый D50; зашить агента — молча переписать канон флота из 17 проектов (правка чужой поверхности без владельца, И2). Решение: контракт объявляет два профиля — `owner-gated` (дефолт канона, сегодняшнее поведение) и `self-host` (этот план, D50) — и правило выбора; `OWNER_BOUNDARY` при этом входится только по границе G1 («нельзя откатить / видно снаружи»), никогда по границе компетенции, и называет точную недостающую authority. Сюда же — гейт против лечения тотальной блокировкой: F14 `false_block_rate == 0` (`root/contracts/reliability-acceptance-v1.md:89-93`, введён D59 п.3) означает, что позитивные routine-кейсы в фикстуре обязательны наравне с негативными — контракт, блокирующий всё, формально тотален и практически бесполезен. | RAG:— (repo-grounded: `packages/task/commands/plan-audit.md:52-54`; `plan.md` D50; `root/contracts/reliability-acceptance-v1.md:89-93`; синтез — `research/06-p2.1-contract-boundary.md` §§4.1, 4.3). |
 
+| D69 | 2026-07-26 | **P2.2: tiered-portability lint severity — форвард-датовый cutoff (`2026.07.27`), не дата запечатывания правила.** Fleet-замер (`bash packages/task/scripts/validate.sh` на живом дереве) вскрыл 58 новых ERROR в `2026.07.18-FOREMAN`/`2026.07.25-ECO-OPT`/`archive/2026.07.19-DUAL-PROVIDER` — легитимные `~`-пути в их Required Reads/Validation, дозволенные до этого правила. Правка ЧУЖИХ планов задним числом нарушила бы И2 («чужая поверхность»); back-compat паттерн этого же файла (`BRIEF_CANON_DATE`/`JOURNAL_CANON_DATE`) уже решает точно эту задачу — датировать НОВОЕ правило позже дня, а не раньше. Self-conformance (D47) от этого не страдает: `TestTieredPortability` гоняет правило на ERROR-тир синтетическими датовыми фикстурами независимо от cutoff'а — механизм полностью протестирован, откладывается только severity для РЕАЛЬНОГО флота. **Diff-scope guard: companion-коммит вне owner-набора.** `packages/task/docs/reference/provider-commands.md` — детерминированный вывод той же командной канонизации, что и P2.2 Files (`commands/*.md`), но отсутствует в `remediation-map.json::owners.P2.2.paths` (P1.1 — владелец карты, не правится этим item'ом); правило — отдельный атомарный companion-коммит ДО item-коммита (топология §8 разрешает несколько атомарных коммитов внутри шага 1), diff-scope guard подтверждает `failures: []` на этой топологии, а не расширение owner-набора чужой карты. | RAG:— (repo-grounded: `bash packages/task/scripts/validate.sh` замер на `08e787b8`^; `plan_lint.py` `BRIEF_CANON_DATE`/`JOURNAL_CANON_DATE` прецедент; `artifacts/P1.1/remediation-map.json::owners.P2.2`; `root/contracts/generated-artifact-version-v1.md` §Diff-scope guard). |
+
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
@@ -366,6 +368,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-close/Claude Sonnet 5/low | Фаза P1 закрыта (5/5 items терминальны: P1.1🟢/P1.2🟠/P1.3🟢/P1.5🟠/P1.4🟢); Phase Handoff/handoff.md перезаписаны, docs-sync — не требуется. |
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | P2.1 доведён до DoR: D64–D68 — граница с замороженным P0.2, объявленные множества (9/15/6, 135 ячеек), потребители FOREMAN/ECO, долг A2 о workflow-carrier закрыт, cap как профиль authority. Слой 2 — `research/06`. Version 1.13.1 → 1.14.0. |
 | 2026-07-26 | plan-run/Claude Opus 5/high | P2.1 закрыт 🟢: три контракта execution/review/portability запечатаны надстройкой над P0.2, машина 135/135 ячеек — детали см. phases/P2.md P2.1 Completion Notes |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.2 закрыт 🟢: `task_contract.py` compiler + tiered-portability lint (D47 role-тест), `plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0` — детали см. phases/P2.md P2.2 Completion Notes. Version 1.14.0 → 1.14.1. |
 
 ## 7. Contracts
 
@@ -382,9 +385,9 @@ audit/fix-loop без продукта, который план создан л�
 | `root/contracts/risk-review-loop-budget-v1.md` | v1 | committed P2.1 (`575a49b2`) | P2.3, P2.5, P3.1, P4.3 · **`2026.07.18-FOREMAN` P2/P5** · **`2026.07.25-ECO-OPT` P9** (словарь типов находок для `answer-key.json`, читается как чужой) | task, analyst; FOREMAN/ECO-OPT — тот же гейт терминальной P2 (D66) |
 | `root/contracts/plan-portability-v1.md` | v1 | committed P2.1 (`575a49b2`) | P2.2, P2.5, P3.3, P4.3 | task, skiller |
 | `root/contracts/unified-agent-trace-v1.md` | v1 | planned P3.1 | P3.2–P4 | analyst, harness, task |
-| `plan-protocol` skill canon | v2.12.0 | planned P2.2 | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; ECO-OPT — Owner-facing долг зеркальной `Consumed`-строки |
-| `skiller` package API + `general`/`core` units | v0.5.0 | planned P2.2 | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; ECO-OPT — тот же долг |
-| `task` plugin/routing (`plugin_version`) | v0.4.0 | planned P2.2 (далее v0.5.0 в P2.3) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | task; ECO-OPT — тот же долг |
+| `plan-protocol` skill canon | v2.12.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; долг зеркальной `Consumed`-строки снят D58 (его D85 — ECO-OPT решил не пинить) |
+| `skiller` package API + `general`/`core` units | v0.5.0 | committed P2.2 (`08e787b8`) | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
+| `task` plugin/routing (`plugin_version`) | v0.4.0 | committed P2.2 (`08e787b8`, далее v0.5.0 в P2.3) | план `2026.07.25-ECO-OPT` (его P2.2, P7.1) | task; тот же D58/D85 |
 
 ### Consumed
 

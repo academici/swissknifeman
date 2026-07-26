@@ -655,26 +655,123 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P3.5. Read AGENTS.md, CLAUDE.md and task:task-plan-run plus canonical plan-audit completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P3.md and P3.5 Required Reads. Root delegates the read-only terminal audit to a fresh grounded frontier/xhigh subagent. Recompute exact hashes/metrics/cold runtime/canary cleanup; write only canonical audit/bookkeeping. Return GREEN, REMEDIATE or ROLLBACK under existing cap and continue to P4 only on GREEN.'
 ```
 
-### P3.R — ремедиация вердикта REMEDIATE (действующий следующий шаг)
+### P3.6 — реконсиляция записи фазы P3 (действующий следующий шаг)
 
-> **P3.5 исполнен 2026-07-26 и вернул REMEDIATE (D81), не GREEN.** Блок P4.1 ниже сохранён как
-> проекция и НЕ является следующим шагом: его собственная преамбула требует «verify literal
-> GREEN P3.5», а его нет. Действующий носитель — этот блок.
+> **P3.5 исполнен 2026-07-26 и вернул REMEDIATE (D81), не GREEN.** Заход `plan-design … P3`
+> развернул ремонт в шесть items P3.6–P3.11 (D82). Блок P4.1 ниже сохранён как проекция и НЕ
+> является следующим шагом: его преамбула требует «verify literal GREEN P3.5», а его нет.
 
-**Next:** design-phase: task:plan-design 2026.07.24-AGENT-RELIABILITY P3
+**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P3.6
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `medium` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | `sonnet` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `medium` |
+| Context | `NEW SESSION` |
+
+```
+/task:plan-exec 2026.07.24-AGENT-RELIABILITY P3.6
+```
+
+### P3.7 — `--check` для верификатора P2.5 (F5)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.7
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | `sonnet` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `high` |
+| Context | `NEW SESSION` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.7
+```
+
+### P3.8 — честное F1: регенерация кандидатских транскриптов P2.5
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.8
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | `sonnet` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `high` |
+| Context | `NEW SESSION` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.8
+```
+
+### P3.9 — харнес живого диспатча и измерение наблюдаемости (frontier)
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.9
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | `frontier` |
 | Effort | `high` |
-| Capabilities | `—` |
-| Plan context | `cold-start — plan-step` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
 | Model | `opus`/`fable` (Claude) или `gpt-5.6-sol` (Codex) |
 | Thinking | `high` |
-| Context | `NEW SESSION — шаг-не-item` |
+| Context | `NEW SESSION` |
 
-Полный scope-payload (четыре канонические строки) — `phases/P3.md`, блок
-`## Audit P3 — 2026-07-26`, подсекция `### Что запускать`; копипаст оттуда без правок.
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.9
+```
+
+### P3.10 — парный живой layer-2 прогон (F6/F8/F9/F10)
+
+> Гейт входа: `artifacts/P3.9/declared-case-set.json` существует и непуст — ранний старт
+> fail-closed. Живые диспатчи на ДВУХ деревьях: объявленный бюджет и стоп-правило в ТЗ.
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.10
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `implementation` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `same-session — item` |
+| Model | `sonnet` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `high` |
+| Context | `NEW SESSION` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.10
+```
+
+### P3.11 — терминальный аудит фазы P3, заход 2/2
+
+> Последний заход из бюджета `risk-review-loop-budget-v1.md`; третий = решение владельца или
+> INCIDENT, а не четвёртый фикс-луп. Вердикт выносит НЕ тот, кто ремонтировал.
+
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P3.11
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `frontier` |
+| Effort | `xhigh` |
+| Capabilities | `command.subagents` |
+| Plan context | `same-session — item` |
+| Model | `opus`/`fable` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `xhigh` |
+| Context | `NEW SESSION` |
+
+```
+/task:plan-run 2026.07.24-AGENT-RELIABILITY P3.11
+```
 
 ### P4.1 — code-grounded hypothesis verdict (гейтится GREEN'ом P3.5 — сейчас НЕ достигнут)
 

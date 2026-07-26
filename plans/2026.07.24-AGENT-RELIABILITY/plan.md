@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.21.1 |
+| Version | 1.21.2 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
@@ -297,7 +297,7 @@ audit/fix-loop без продукта, который план создан л�
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
 | P3 | Unified traces, evals и isolated self-host canary | 5/11 | 🟠 Done with deviations |
-| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 1/5 | 🟡 In progress |
+| P4 | Hypothesis verdict, operator doctor, закрытие названных долгов и Owner packet | 0/5 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -479,6 +479,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-design/Claude Opus 5/high | Фаза P4 доведена до DoR: 5 items (P4.4/P4.5 — новые носители названного долга), входной гейт переопределён D89 (measured-scope packet), D90–D93 — детали см. `research/10-p4-entry-gate-and-composition.md`. Version 1.20.3 → 1.21.0. |
 | 2026-07-26 | plan-design/Claude Opus 5/high | `roadmap.md` пересобран под фазу P4: три отдельных launch-block'а P4.* заменены carrier'ом `wf-P4` (D93), строки items — в порядке исполнения D90. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P4.4 закрыт 🟢: машинный гейт `plan_lint` для напечатанных кодов границ `pre_mutation`/`pre_final` (ремонт Ф2, D91), `plan-protocol@2.15.0`/`skiller@0.8.0` — детали см. `phases/P4.md` P4.4 Completion Notes. Version 1.21.0 → 1.21.1. |
+| 2026-07-26 | plan-close/Claude Sonnet 5 | P4.4 понижен 🟢→🟠 Done with deviations: ревью нашло Major+Minor дефект точности предиката `_lint_write_site_codes_44` (ложный ERROR/ложное молчание при цитировании чужих кодов) — детали см. `phases/P4.md` P4.4 Known Deviations. Version 1.21.1 → 1.21.2. |
 
 ## 7. Contracts
 

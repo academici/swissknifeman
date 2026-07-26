@@ -353,6 +353,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P1.5 закрыт 🟠: четыре root-дубля `architect` удалены по ownership, `workflow-craft` class-B проекция (repository-bootstrap 0.2.0/skiller 0.4.2), root-set completeness + D42 detector — детали см. phases/P1.md P1.5 Completion Notes/Known Deviations. Version 1.12.8 → 1.12.9. |
 | 2026-07-26 | plan-design/Claude Opus 5/high (Owner authority E) | P1.4 доведён до DoR: D62 — терминальный 🟠 P1.5 принят как вход + компенсирующий post-remediation перезамер `effective-carrier-set.json`; D63 — измеренное расхождение committed-канона class B → новый гейт committed-консистентности (0b); `roadmap.md` carrier P1.4 синхронизирован. Version 1.12.9 → 1.13.0. |
 | 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P1.4 закрыт 🟢: cold effective-runtime conformance gate (`skiller doctor --effective-runtime`), D62-сверка 0 unowned-or-unexplained — фаза P1 терминальна. Детали — phases/P1.md P1.4 Completion Notes. Version 1.13.0 → 1.13.1. |
+| 2026-07-26 | plan-close/Claude Sonnet 5/low | Фаза P1 закрыта (5/5 items терминальны: P1.1🟢/P1.2🟠/P1.3🟢/P1.5🟠/P1.4🟢); Phase Handoff/handoff.md перезаписаны, docs-sync — не требуется. |
 
 ## 7. Contracts
 

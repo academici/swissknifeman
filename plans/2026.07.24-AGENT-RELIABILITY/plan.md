@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.19.0 |
+| Version | 1.19.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (фаза P3 расширена ремедиацией вердикта REMEDIATE — шесть новых items **P3.6–P3.11** доведены до DoR: реконсиляция записи (F2/F3/F4/F6/F7/F8) · `--check` для верификатора P2.5 (F5) · честное F1 на доставленном trace-seam'е · харнес живого диспатча с ИЗМЕРЕННЫМ множеством наблюдаемых кейсов · парный layer-2 прогон на `PRE_PLAN_SHA` (F6/F8/F9/F10) · терминальный аудит захода 2/2; **D82–D86**, развилка скоупа layer-2 закрыта владельцем («измерить, потом решить»); P3.1–P3.5 не реопенены, **P4 не стартует до GREEN**; следующий шаг — `/task:plan-exec … P3.6` | Предыдущее: P3.5 закрыт 🟢 Done: независимый terminal reliability audit, вердикт **REMEDIATE** (вердикт фазы по порогу `plan-audit` — ATTENTION, заход 1/2) — GREEN недостижим: F1 = 0.96 при `== 1.0`, F6/F8/F9/F10 никогда не измерялись; продукты P0–P3 пересчитаны из закоммиченных входов и зелены (P0.1 побайтово, хеши банка, 0 коллизий холодного runtime, 135/135 ячеек, P2.8 sha256 совпали, P3.3 byte-identical, шесть canary-коммитов/патчей); восемь находок, D81; **P4 не стартует** — следующий шаг `task:plan-design … P3` (ремедиация) | Предыдущее: P3.4 закрыт 🟢 Done: disposable-worktree self-host canary — 6/6 real headless-dispatch cases pass (tiny control, plan/docs, provider publication, hook cold start, sequential multi-item dispatch, failure/recovery) in one detached worktree at `CANDIDATE_SHA`, routed axes pinned by flag (sonnet/high, D46), rollback rehearsal to `PRE_PLAN_SHA` clean both ways, one Unified Agent Trace v1 record per real dispatch; следующий — `phases/P3.md` P3.5) |
+| Last Updated | 2026-07-26 (P3.6 закрыт 🟠: реконсиляция записи фазы P3 по шести находкам аудита F2/F3/F4/F6/F7/F8 — P3.3 → 🟠 с Known Deviations; `pre_mutation`/`pre_final` коды ретро-записаны в Completion Notes P3.1–P3.4; ложное «12» → факт «8» в трёх носителях; живой debug-worktree `/tmp/skm-p3.4-debug.TAcgRY` снят; host-bound путь в `canary-results.json` санитизирован; §4 Status Board P3 → `3/11`; ни одной мутации `packages/**`; следующий шаг — `/task:plan-exec … P3.7`) | Предыдущее: фаза P3 расширена ремедиацией вердикта REMEDIATE — шесть новых items **P3.6–P3.11** доведены до DoR: реконсиляция записи (F2/F3/F4/F6/F7/F8) · `--check` для верификатора P2.5 (F5) · честное F1 на доставленном trace-seam'е · харнес живого диспатча с ИЗМЕРЕННЫМ множеством наблюдаемых кейсов · парный layer-2 прогон на `PRE_PLAN_SHA` (F6/F8/F9/F10) · терминальный аудит захода 2/2; **D82–D86**, развилка скоупа layer-2 закрыта владельцем («измерить, потом решить»); P3.1–P3.5 не реопенены, **P4 не стартует до GREEN** | Предыдущее: P3.5 закрыт 🟢 Done: независимый terminal reliability audit, вердикт **REMEDIATE** (вердикт фазы по порогу `plan-audit` — ATTENTION, заход 1/2) — GREEN недостижим: F1 = 0.96 при `== 1.0`, F6/F8/F9/F10 никогда не измерялись; продукты P0–P3 пересчитаны из закоммиченных входов и зелены (P0.1 побайтово, хеши банка, 0 коллизий холодного runtime, 135/135 ячеек, P2.8 sha256 совпали, P3.3 byte-identical, шесть canary-коммитов/патчей); восемь находок, D81; **P4 не стартует** — следующий шаг `task:plan-design … P3` (ремедиация) | Предыдущее: P3.4 закрыт 🟢 Done: disposable-worktree self-host canary — 6/6 real headless-dispatch cases pass (tiny control, plan/docs, provider publication, hook cold start, sequential multi-item dispatch, failure/recovery) in one detached worktree at `CANDIDATE_SHA`, routed axes pinned by flag (sonnet/high, D46), rollback rehearsal to `PRE_PLAN_SHA` clean both ways, one Unified Agent Trace v1 record per real dispatch; следующий — `phases/P3.md` P3.5) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -258,7 +258,7 @@ audit/fix-loop без продукта, который план создан л�
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
-| P3 | Unified traces, evals и isolated self-host canary | 4/11 | 🟡 In progress |
+| P3 | Unified traces, evals и isolated self-host canary | 3/11 | 🟡 In progress |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -423,6 +423,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.4 закрыт 🟢: disposable-worktree self-host canary — 6/6 real headless-dispatch cases pass, rollback rehearsal clean, per-dispatch Unified Agent Trace v1 records — детали см. `phases/P3.md` P3.4 Completion Notes. Version 1.16.9 → 1.17.0. |
 | 2026-07-26 | plan-run/Claude Opus 5/xhigh | P3.5 закрыт 🟢: независимый terminal audit, вердикт REMEDIATE (фаза — ATTENTION, заход 1/2), 8 находок, D81 — P4 не стартует — детали см. `phases/P3.md` P3.5 Completion Notes. Version 1.17.0 → 1.18.0. |
 | 2026-07-26 | plan-design/Claude Opus 5/high | Фаза P3 расширена ремедиацией вердикта REMEDIATE: шесть items P3.6–P3.11 доведены до DoR, D82–D86, слои знаний (`findings/15`, `research/09`, бриф). Version 1.18.0 → 1.19.0. |
+| 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P3.6 закрыт 🟠: реконсиляция записи фазы P3 по шести находкам аудита (F2/F3/F4/F6/F7/F8), без мутаций кода — детали см. `phases/P3.md` P3.6 Completion Notes. Version 1.19.0 → 1.19.1. |
 
 ## 7. Contracts
 

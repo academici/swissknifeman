@@ -80,7 +80,8 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | P3.2 | solo | task:plan-run | implementation/high | — | Нельзя объединить: metric arithmetic consumes frozen trace |
 | P3.3 | solo | task:plan-run | implementation/high | — | Нельзя объединить: behavioral release gate consumes trace+metrics |
 | P3.4 | solo | task:plan-run | implementation/high | — | Нельзя объединить: disposable worktree, native trials and rollback |
-| P3.5 | solo | task:plan-run | frontier/xhigh | — | Нельзя объединить: fresh independent terminal audit |
+| P3.5 | solo | task:plan-run | frontier/xhigh | — | Нельзя объединить: fresh independent terminal audit. **Исполнен 2026-07-26, 🟢 Done, вердикт REMEDIATE (D81)** — следующий шаг НЕ P4.1, а `task:plan-design … P3` (ремедиация, § ниже) |
+| P3.R | solo | task:plan-design | frontier/high | — | Ремедиация вердикта REMEDIATE: добавить два item'а (layer-2 paired run; регенерация транскриптов P2.5 поверх `trace_emitted`) + свести запись. Нельзя объединить: развилки состава закрываются проектированием, а не exec'ом |
 | P4.1 | solo | task:plan-run | frontier/high | — | Нельзя объединить: open accept/reject/unknown architecture verdict |
 | P4.2 | solo | task:plan-exec | implementation/medium | — | Нельзя объединить: lower-route one-package doctor after P4.1 |
 | P4.3 | solo | task:plan-run | frontier/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | Нельзя объединить: final synthesis and external authority boundary |
@@ -654,7 +655,28 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P3.5. Read AGENTS.md, CLAUDE.md and task:task-plan-run plus canonical plan-audit completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P3.md and P3.5 Required Reads. Root delegates the read-only terminal audit to a fresh grounded frontier/xhigh subagent. Recompute exact hashes/metrics/cold runtime/canary cleanup; write only canonical audit/bookkeeping. Return GREEN, REMEDIATE or ROLLBACK under existing cap and continue to P4 only on GREEN.'
 ```
 
-### P4.1 — code-grounded hypothesis verdict
+### P3.R — ремедиация вердикта REMEDIATE (действующий следующий шаг)
+
+> **P3.5 исполнен 2026-07-26 и вернул REMEDIATE (D81), не GREEN.** Блок P4.1 ниже сохранён как
+> проекция и НЕ является следующим шагом: его собственная преамбула требует «verify literal
+> GREEN P3.5», а его нет. Действующий носитель — этот блок.
+
+**Next:** design-phase: task:plan-design 2026.07.24-AGENT-RELIABILITY P3
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | `frontier` |
+| Effort | `high` |
+| Capabilities | `—` |
+| Plan context | `cold-start — plan-step` |
+| Model | `opus`/`fable` (Claude) или `gpt-5.6-sol` (Codex) |
+| Thinking | `high` |
+| Context | `NEW SESSION — шаг-не-item` |
+
+Полный scope-payload (четыре канонические строки) — `phases/P3.md`, блок
+`## Audit P3 — 2026-07-26`, подсекция `### Что запускать`; копипаст оттуда без правок.
+
+### P4.1 — code-grounded hypothesis verdict (гейтится GREEN'ом P3.5 — сейчас НЕ достигнут)
 
 **Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.1
 

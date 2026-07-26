@@ -1,108 +1,109 @@
-# HANDOFF — 2026-07-26 — after P3.4
+# HANDOFF — 2026-07-26 — after P3.5
 
-**Next:** ЗАПУСК ВРУЧНУЮ: frontier/xhigh — fresh independent terminal reliability audit (`task:plan-audit`-class, no self-certification)
+**Next:** design-phase: task:plan-design 2026.07.24-AGENT-RELIABILITY P3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | `frontier` |
-| Effort | `xhigh` |
-| Capabilities | `manual` |
+| Effort | `high` |
+| Capabilities | `—` |
 | Context | `NEW SESSION — шаг-не-item` |
-| Model | `gpt-5.6-sol` (Codex) or `opus`/`fable` (Claude) — per §3 Routing checked mapping, verified at cold-start preflight of whichever session executes it |
-| Thinking | `xhigh` — fresh terminal adversarial verdict, no self-certification (Routing rationale) |
-| Суть | P3.5: independent, read-only terminal reliability audit. Recompute exact hashes/metrics/cold runtime/canary evidence against frozen P0–P3; return GREEN, REMEDIATE or ROLLBACK under the existing two-audit-per-phase cap; P4 starts only on GREEN. |
+| Model | `opus`/`fable` (Claude) или `gpt-5.6-sol` (Codex) — по §3 Routing через checked mapping, проверяется на cold-start preflight |
+| Thinking | `high` — ремедиация по УЖЕ закрытым находкам, не открытое проектирование |
+| Суть | Развернуть ремонт вердикта REMEDIATE: два новых item'а в живой фазе P3 (layer-2 paired run; регенерация транскриптов P2.5 поверх `trace_emitted`), реконсиляция записи и два мелких фикса. **P4 не стартует.** |
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P3.5. Read AGENTS.md, CLAUDE.md and task:task-plan-run plus canonical plan-audit completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P3.md and P3.5 Required Reads. Root delegates the read-only terminal audit to a fresh grounded frontier/xhigh subagent. Recompute exact hashes/metrics/cold runtime/canary cleanup; write only canonical audit/bookkeeping. Return GREEN, REMEDIATE or ROLLBACK under existing cap and continue to P4 only on GREEN.'
+```
+/task:plan-design 2026.07.24-AGENT-RELIABILITY P3
+
+РЕЖИМ: ремедиация вердикта REMEDIATE — ДОБАВИТЬ items в живую фазу P3 и свести запись; НЕ реопен закрытых Deliverable'ов (P3.1–P3.4 пересчитаны и зелены), НЕ детализация с нуля
+ВХОД: plans/2026.07.24-AGENT-RELIABILITY/findings/P3.5-terminal-audit.md → § 3 «Находки» и § 6 «Ремонт — состав и адрес»; прочитать ПЕРВЫМ. Затем phases/P3.md → блок `## Audit P3 — 2026-07-26`
+СКОУП: 1) новый item — харнес «живой claude -p/Codex вызов → типизированный event-транскрипт, который грейдит адаптер P3.3» + парный прогон на PRE_PLAN_SHA 7479972f: заполняет F6/F8/F9/F10 (находка F1); 2) новый item — перегенерация кандидатских транскриптов artifacts/P2.5 поверх доставленного P3.1 `trace_emitted`, версионируя обе стороны по § Correction procedure: снимает остаточный critical `trace-record-missing`, даёт честное F1 (находка F1); 3) реконсиляция записи без мутаций кода — P3.3 → 🟠 + Known Deviations (F2), ретро-запись кодов pre_mutation/pre_final в Completion Notes P3.1–P3.4 со ссылкой на пересчёт P3.5 (F3), `12` → `8` в phases/P3.md + findings/P3.4-canary.md + handoff.md с якорем `(на cfd0e4ba)` (F4), строка Known Deviations в P3.1 о старт-записи журнала (F7); 4) фикс-item — режим `--check` (или вынос `tree_anchor` из хешируемого payload'а) в artifacts/P2.5/verify_result_manifest.py (F5); 5) уборка — снять регистрацию /tmp/skm-p3.4-debug.TAcgRY/worktree и привести формулировку Known Deviations P3.4 к факту (F6)
+НЕ ТРОГАТЬ: ТЗ/Scope/Files/Validation закрытых P3.1–P3.4 (кроме перечисленных в п. 3 полей записи) · замороженные контракты P0/P1/P2 и их артефакты · пороги банка reliability-bank-v1 (правка порога кандидатом запрещена, D15) · фазы P0–P2 и их аудиты · гипотезы и items фазы P4 — P4 не стартует до GREEN · artifacts/source-evidence/** (неизменяем, D25)
 ```
 
 **Done:**
 
-- **P3.4 закрыт 🟢 Done** (item-commit `cfd0e4ba`) — disposable-worktree self-host
-  canary: `run_canary.py` (authored by this item, sole executable owner) dispatched
-  the acting provider's headless CLI (Claude Code, this session) six times for real
-  — routed axes pinned explicitly by flag per §3 Routing (`sonnet`/`high`,
-  `--permission-mode bypassPermissions`, D46) — against the frozen six fixed cases
-  (tiny control, plan/docs, provider publication, hook cold start, sequential
-  multi-item root dispatch, intentional failure/recovery) in one disposable detached
-  git worktree at `CANDIDATE_SHA=c1513dbb`.
-- **6/6 cases passed** (12 real headless turns total), graded deterministically at
-  the file/git level (diff scope vs `CANDIDATE_SHA` restricted to each case's
-  declared allowlist, plus a per-case content check) — never by transcript
-  self-report. Case 06 is the sharpest signal: attempt 1 correctly REFUSED to
-  fabricate a sha256 for a missing input (wrote nothing); attempt 2 recovered with
-  the exact independently-recomputed digest.
-- **Rollback rehearsal** to `PRE_PLAN_SHA=7479972f` (`artifacts/P0.1/pre-plan-sha.txt`,
-  D45) and back was clean both ways; frozen smoke = `py_compile` of
-  `packages/task/lib/task/*.py` as it exists on the checked-out tree at call time +
-  `task.plan_lint` import + a 0-error `plan-lint.py` run — all three passed.
-- One **Unified Agent Trace v1** record per real dispatch
-  (`canary-results.json::cases[].traces[]`, 12 records, `quality.completeness =
-  0.667` each — `contract_ref`/`finding_refs` honestly null/empty with a reason).
-- Six `case-NN-*.patch` files (`git diff --binary` against `CANDIDATE_SHA`) plus
-  `canary-cases.json`/`canary-results.json`/`canary-manifest.json`/
-  `canary-commits.json`/`findings/P3.4-canary.md` committed
-  (`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/`).
-- `plan.md` §0 Meta v1.16.9 → **1.17.0**; §4 Status Board P3 → `3/5`; §6 Update Log
-  row; `phases/P3.md` Phase Status P3.4 → `🟢 Done`.
-- **Known Deviations (process, both recorded in `phases/P3.md` P3.4):** (a) the
-  rollback smoke definition was self-corrected mid-run — a first pass used `bash
-  packages/task/scripts/validate.sh` and surfaced that historical commit's own
-  pre-existing, unrelated journal-fixture/`test_provider_command_parity` test debt
-  (not a rollback defect); `run_canary.py` was rewritten to grade only "the switch
-  is clean and the old tree byte-compiles/lints", and only the rollback phase was
-  re-run (the six case commits were not re-dispatched, no repeat real-provider
-  cost) — a first draft of that fix itself computed paths from the wrong tree and
-  was caught before the real re-run; (b) the disposable worktree's parent `mktemp`
-  root directory could not be `rmdir`'d — the local harness auto-approve hook
-  hard-denies `rm`/`rmdir`-shaped commands outside `safe-dirs.json`'s registered
-  directories (`/tmp` is not registered) — `git worktree remove` itself succeeded
-  and `git worktree list`/main-repo `git status --short` are both clean, which is
-  what this item's Validation actually checks; the same class of leftover empty
-  `/tmp` directories already exists for several other, unrelated worktrees in this
-  repo's own `git worktree list` history.
+- **P3.5 закрыт 🟢 Done** (item-commit `e17f61f7`) — независимый terminal reliability
+  audit P0–P3, read-only, исполнен `task:plan-run` под **Claude Opus 5 / xhigh**
+  (`frontier/xhigh` = предписанное §3 Routing, точное совпадение).
+- **Вердикт (item enum): REMEDIATE.** Вердикт фазы по порогу `plan-audit` §2: **ATTENTION**.
+  Заход аудита фазы P3 — **1** из двух. Отчёт — `findings/P3.5-terminal-audit.md`; вердикт,
+  таблица находок и launch-block продублированы блоком `## Audit P3 — 2026-07-26` в
+  `phases/P3.md`.
+- **Почему не GREEN — арифметика, не оценка:** **F1 `critical_requirement_retention` = 0.96**
+  при target `== 1.0` (единственный остаточный critical `trace-record-missing`), и
+  **F6/F8/F9/F10 — весь относительный layer-2 — никогда не измерялись**. GREEN потребовал бы
+  повысить `deferred` до green, что Implementation Rules P3.5 и D30 прямо запрещают.
+- **ROLLBACK отклонён явно:** кандидатное дерево строго лучше pre-plan по каждой измеренной
+  оси (`first_pass_success` 0.1935 → 0.9677, `critical_regression_escape` 22 → 0, effective
+  collisions 16+1 → 0). Отрепетированный путь отката остаётся доступен, но не показан.
+- **Пересчитано из закоммиченных входов и ЗЕЛЕНО** (на `21ebd7b2`): P0.1 — четыре неизменяемые
+  команды + `semantic_bundle_verifier.py` воспроизвёл отчёт **побайтово** (16/16), бандл тронут
+  **одним** коммитом за всю историю · P0.2 — 23 кейса / 16 кодов / 4-4 critical corpus · P0.3 —
+  `verify ok` + независимо пересчитанные sha256 четырёх файлов, трёх `source_inputs` и
+  `content_hash` `82d1e6a9…` · P1.4 — холодная установка: codex 216 / claude-code 204, **0
+  коллизий, 0 undeclared root** (F4 = 0), негативная фикстура 9/9 · P2.1 — 135/135 ячеек ·
+  P2.8 — `transcripts.json` и `candidate-results.json` регенерированы с **совпавшими sha256** ·
+  P3.3 — `benchmark.json` **byte-identical**, 17 ключей против `layer1_metrics` без расхождений ·
+  P3.4 — шесть case-коммитов присутствуют (parent = `CANDIDATE_SHA`), шесть патчей побайтово
+  равны `git diff --binary`, allowlist соблюдён поимённо, трассы валидны против
+  `unified-agent-trace/v1`.
+- **Граница authority (G1) соблюдена:** тегов на HEAD нет, 72 коммита не запушены, записей вне
+  этого репозитория нет; `plans/2026.07.18-FOREMAN/*` и `plans/2026.07.25-ECO-OPT/plan.md` —
+  предписанная §11 кросс-плановая бухгалтерия, разрешённая владельцем, а не consumer write.
+- **Пиннованное осталось пиннованным:** `classified_lifecycle_events` (550) и `dedup_correction`
+  — `pinned-not-recomputable`; ни один зелёный предикат на них не стоит.
+- `plan.md` §0 Meta v1.17.0 → **1.18.0**, §4 Status Board P3 → `4/5`, **D81** (вердикт и его
+  основание), §6 Update Log; `phases/P3.md` Phase Status P3.5 → `🟢 Done` + блок `## Audit P3`;
+  `roadmap.md` — блок `P3.R` как действующий следующий шаг, блок P4.1 помечен гейтом.
 
 **Remaining:**
 
-- **P3.5** ⬜ — independent fresh terminal reliability audit (frontier/xhigh,
-  `Exec = manual`, no self-certification). **P4** ⬜ waits for terminal, GREEN P3.
+- **Ремедиация фазы P3** (следующий шаг выше) — пять пунктов СКОУПа, из них два новых item'а.
+- **P4** ⬜ — **не стартует до GREEN**. Гейт назван в самом блоке P4.1 роадмапа («verify literal
+  GREEN P3.5») и в Pending Work P3.5.
 
 **Sources of truth:**
 
-- `plan.md` — §0 Meta (v1.17.0), §4 Status Board (P3 = `3/5`, `🟡 In progress`), §6
-  Update Log.
-- `phases/P3.md` — `## Phase Status` (P3.4 row `🟢 Done`), P3.4 item block
-  (Completion Notes/Known Deviations carry the full record).
-- `plans/2026.07.24-AGENT-RELIABILITY/findings/P3.4-canary.md` — full run narrative,
-  the rollback-smoke correction rationale, and the six case-commit SHAs/patches.
-- `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/canary-manifest.json` — exact
-  provider/model/effort actually applied and their source (`cli-flag`), `cases_sha256`.
-- `journal.jsonl` — this item's start/final pair (`plan-run`, `item_id=P3.4`).
+- `findings/P3.5-terminal-audit.md` — полный отчёт: § 1 порог вердикта, § 2 проверенное без
+  находок с доказательствами, § 3 восемь находок (severity/type/finding_id/failure scenario),
+  § 4 классы доказательства и честная граница непересчитанного, § 6 состав ремонта.
+- `phases/P3.md` — `## Phase Status` (P3.5 `🟢 Done`), блок P3.5 (Completion Notes несут
+  напечатанные коды ОБЕИХ границ компилятора), блок `## Audit P3 — 2026-07-26`.
+- `plan.md` — §0 Meta (v1.18.0), §4 Status Board (P3 = `4/5`, `🟡 In progress`), **D81**, §6.
+- `journal.jsonl` — пара записей P3.5 (`plan-run`, `actor=opus/xhigh`).
 
 **Open risks:**
 
-- **Layer-2 (live paired) F6/F8/F9/F10 still have no live number wired into the P0.3
-  bank's own floor evaluation.** P3.4 is that gap's actual live-dispatch producer
-  (per P3.3's own Pending Work), but wiring these 12 real traces into
-  `skiller.quality.eval`'s system-bank adapter as a graded layer-2 pass is a
-  distinct future item, not silently assumed here.
-- **`analyst`/`harness` package-API minor bumps still owed** (`0.1.0`→`0.2.0`,
-  `0.3.0`→`0.4.0`, owed since P3.1/P3.2) — untouched again, `package.json` outside
-  this item's `Files` too.
-- **`skiller eval` CLI wiring for the system bank not added** — unchanged from
-  P3.3's own Pending Work, out of this item's declared `Files`.
-- **Predecessor items unchanged:** P0 phase-index row owner (`task:plan-close … P0`)
-  and the P1.4 Update Log WARN remain open from earlier handoffs, untouched by P3.4.
+- **Восемь находок аудита открыты** — ни одна не переоткрывает продукт P3.1–P3.4, все адресованы
+  ремедиацией: F1 (Blocker, product) недостижимая приёмка · F2/F3/F4/F5 (Major) · F6/F7 (Minor) ·
+  F8 (Nit). Полный текст с failure scenario — § 3 отчёта.
+- **`verify_result_manifest.py` мутирует закоммиченный артефакт при каждом запуске** (находка
+  F5). Любая следующая сессия, пересчитывающая доказательство P2.5, получит ту же незапрошенную
+  правку двух строк; отменять `git checkout --`, пока фикс-item не поставлен.
+- **Живой debug-worktree `/tmp/skm-p3.4-debug.TAcgRY/worktree`** (35 MB, `7479972f`) остаётся
+  зарегистрированным — `git worktree add` того же имени упадёт (находка F6). Удаление не
+  выполнено здесь: P3.5 read-only, а `rm`-образные команды вне `safe-dirs.json` в этом окружении
+  запрещены хуком.
+- **Остаточный lint вне диффа item'а:** `plan-lint` даёт **0 ERROR / 1 WARN** — строка
+  `## 6. Update Log` P1.4 длиной 303 символа при пороге 300; открыта с предыдущих handoff'ов.
+- **`analyst`/`harness` package-API minor bumps** (`0.1.0`→`0.2.0`, `0.3.0`→`0.4.0`) всё ещё
+  должны с P3.1/P3.2 — `package.json` вне `Files` каждого прошедшего item'а.
+- **`skiller eval` / `analyst metrics` CLI-подключение** не сделано — долг с P3.2/P3.3.
+- **P0 phase-index row** (`task:plan-close … P0`) — все items P0 терминальны, строка доски
+  остаётся `🟡`; открыто с ранних handoff'ов.
 
 **Workarounds / Deferred / Open questions:**
 
-- **Rollback-smoke definition is now item-owned, not `validate.sh`.** Any future
-  item touching `run_canary.py`'s `_smoke_steps` should preserve the tree-relative
-  file resolution (confirmed via the 5-file-vs-8-file cross-check in
-  `findings/P3.4-canary.md`) — the earlier draft silently used the wrong tree and
-  would have reported a false-positive smoke pass on every rollback, not just the
-  historical `validate.sh` one this item corrected away from.
-- **`docs-sync` follow-up** (`packages/task/CLAUDE.md` compiler/enforcement seam
-  description) — still owned by P3.1's original note; not touched by this item.
-- **FOREMAN re-scope marker condition** — unchanged, both terminal-condition phases
-  (P2.1, P3.1) are already terminal; owned by `2026.07.18-FOREMAN`'s own bookkeeping.
+- **Репетиция отката P3.4 помечена `cross-checked`, а не `recomputed`** — переигровка switch'а
+  потребовала бы создать worktree, то есть произвести ровно тот остаток, который вменяет F6.
+  Предпосылки проверены независимо (ancestry, счёт файлов 5/8, `plan-lint` 0 ошибок).
+- **Дрейф 18 проб банка при `--strict-probes` — не находка**, а задокументированное самообнуление
+  layer-1 после появления seam'а P2 (`reliability-acceptance-v1.md` § Correction procedure). Не
+  «чинить»: перегенерация baseline без бампа версии банка запрещена.
+- **Самоатрибуция маршрута машинно не проверяема** (`plan-protocol` §9): «Opus 5 / xhigh» выше —
+  заявление исполнителя, а не измерение. Жёсткий гейт остаётся за `plan-exec`.
+- **FOREMAN re-scope marker** — без изменений, обе терминальные фазы-условия (P2.1, P3.1) уже
+  терминальны; владелец — собственная бухгалтерия `2026.07.18-FOREMAN`.
+- **`docs-sync` follow-up** (`packages/task/CLAUDE.md`, описание compiler/enforcement seam) —
+  долг P3.1, не тронут.

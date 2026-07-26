@@ -1,0 +1,25 @@
+{
+  "base_sha": "e30c989c3b85000c73d6afbb25681c9b98a36b33",
+  "cli_flags": [
+    "--model",
+    "opus",
+    "--effort",
+    "high",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "bypassPermissions"
+  ],
+  "prompt_sha256": "526e40abfe866e0fe8eadb2ee4f121567f467fd193be558a34496b2be38e133e",
+  "provider": "claude-code",
+  "returncode": 0,
+  "route": {
+    "effort": "high",
+    "model": "opus",
+    "model_class": "frontier",
+    "source": "cli-flag"
+  },
+  "schema_version": "p3.9-sanitized-raw/v1",
+  "stderr_class": "none"
+}

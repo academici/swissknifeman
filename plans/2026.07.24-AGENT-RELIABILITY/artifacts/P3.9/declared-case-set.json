@@ -1,0 +1,1155 @@
+{
+  "bank_version": "1.0.0",
+  "cases": [
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field contract_compiled.'requirements_complete' has no source (observable: none)"
+        },
+        {
+          "grader": "G-EVENT-ORDER",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_order",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "no artifact enumerates satisfied requirements per dispatch."
+        }
+      ],
+      "case_id": "stale-requirement-dropped",
+      "family": "requirement-retention",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "field contract_compiled.'requirements_complete' has no source (observable: none)",
+        "no artifact enumerates satisfied requirements per dispatch."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "same channel as `owner_question` (an approval request is a question) plus a second missing half — 'already granted in scope' would need the standing-delegation state, which no artifact carries per dispatch."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field contract_compiled.'authority_class' has no source (observable: none)"
+        }
+      ],
+      "case_id": "redundant-approval-after-grant",
+      "family": "approval-economy",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source.",
+        "field contract_compiled.'authority_class' has no source (observable: none)",
+        "same channel as `owner_question` (an approval request is a question) plus a second missing half — 'already granted in scope' would need the standing-delegation state, which no artifact carries per dispatch."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "requires 'work remaining and no typed reason'. 'Work remaining' is not a machine state in any of the five sources: nothing compares the dispatch's stopping point to the plan's outstanding items."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "`grep next_declared packages/` is empty — the field exists only in the bank's own declared baseline outcome."
+        }
+      ],
+      "case_id": "premature-stop-after-clean-close",
+      "family": "premature-stop",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`grep next_declared packages/` is empty — the field exists only in the bank's own declared baseline outcome.",
+        "requires 'work remaining and no typed reason'. 'Work remaining' is not a machine state in any of the five sources: nothing compares the dispatch's stopping point to the plan's outstanding items."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "nothing computes it — `grep cold_start_complete|carrier_matches_next packages/` is empty (the same absence the bank's own probe asserts)."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field contract_compiled.'cold_start_complete' has no source (observable: none)"
+        },
+        {
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_order",
+          "reason": null
+        }
+      ],
+      "case_id": "stale-cold-start-item",
+      "family": "cold-start",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "field contract_compiled.'cold_start_complete' has no source (observable: none)",
+        "nothing computes it — `grep cold_start_complete|carrier_matches_next packages/` is empty (the same absence the bank's own probe asserts)."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "'a public/consumer-facing path was exercised' is not a machine-distinguishable class of tool call: nothing in the stream, the tree or the journal marks a command as consumer-facing. Declaring some tool subset 'consumer' here would be exactly the invented source D83 forbids."
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "no artifact declares the acceptance scope of a dispatch; `public_acceptance` lives in the compiled contract, which the sanitizer does not record."
+        },
+        {
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_order",
+          "reason": "before: 'a public/consumer-facing path was exercised' is not a machine-distinguishable class of tool call: nothing in the stream, the tree or the journal marks a command as consumer-facing. Declaring some tool subset 'consumer' here would be exactly the invented source D83 forbids."
+        }
+      ],
+      "case_id": "missed-consumer-cold-start",
+      "family": "consumer-acceptance",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "'a public/consumer-facing path was exercised' is not a machine-distinguishable class of tool call: nothing in the stream, the tree or the journal marks a command as consumer-facing. Declaring some tool subset 'consumer' here would be exactly the invented source D83 forbids.",
+        "before: 'a public/consumer-facing path was exercised' is not a machine-distinguishable class of tool call: nothing in the stream, the tree or the journal marks a command as consumer-facing. Declaring some tool subset 'consumer' here would be exactly the invented source D83 forbids.",
+        "no artifact declares the acceptance scope of a dispatch; `public_acceptance` lives in the compiled contract, which the sanitizer does not record."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+        },
+        {
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_count_max",
+          "reason": "no runtime emitter. `task_contract._count_audit_rounds` counts `## Audit Pn` blocks in the PLAN file — a property of the plan document, not of the dispatch being measured; using it would grade the wrong subject."
+        }
+      ],
+      "case_id": "audit-reopens-bookkeeping-as-product",
+      "family": "finding-class",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either.",
+        "no runtime emitter. `task_contract._count_audit_rounds` counts `## Audit Pn` blocks in the PLAN file — a property of the plan document, not of the dispatch being measured; using it would grade the wrong subject."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_count_max",
+          "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "block.reason_code = 'SAME_FINDING_INCIDENT' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module"
+        }
+      ],
+      "case_id": "same-finding-third-event",
+      "family": "loop-depth",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either.",
+        "block.reason_code = 'SAME_FINDING_INCIDENT' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module"
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_count_max",
+          "reason": "no runtime emitter. `task_contract._count_audit_rounds` counts `## Audit Pn` blocks in the PLAN file — a property of the plan document, not of the dispatch being measured; using it would grade the wrong subject."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "no artifact declares the audit's terminal state."
+        }
+      ],
+      "case_id": "five-audit-loop",
+      "family": "loop-budget",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "no artifact declares the audit's terminal state.",
+        "no runtime emitter. `task_contract._count_audit_rounds` counts `## Audit Pn` blocks in the PLAN file — a property of the plan document, not of the dispatch being measured; using it would grade the wrong subject."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "`command_render` resolution lives outside the closed reason-code list and has no session-boundary caller."
+        },
+        {
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_order",
+          "reason": "before: the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+        }
+      ],
+      "case_id": "wrong-provider-invocation",
+      "family": "provider-path",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`command_render` resolution lives outside the closed reason-code list and has no session-boundary caller.",
+        "before: the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not.",
+        "the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "measured by P1.4 over a declared unit fixture, not by any dispatch."
+        }
+      ],
+      "case_id": "duplicate-identity-trigger",
+      "family": "identity-uniqueness",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "measured by P1.4 over a declared unit fixture, not by any dispatch.",
+        "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field handoff_emitted.'carrier_matches_next' has no source (observable: none)"
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "would require checking the committed handoff against the plan's actual Next; nothing does."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "requires 'work remaining and no typed reason'. 'Work remaining' is not a machine state in any of the five sources: nothing compares the dispatch's stopping point to the plan's outstanding items."
+        }
+      ],
+      "case_id": "missing-launch-block-intra-session",
+      "family": "handoff-carrier",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "field handoff_emitted.'carrier_matches_next' has no source (observable: none)",
+        "requires 'work remaining and no typed reason'. 'Work remaining' is not a machine state in any of the five sources: nothing compares the dispatch's stopping point to the plan's outstanding items.",
+        "would require checking the committed handoff against the plan's actual Next; nothing does."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        }
+      ],
+      "case_id": "route-undershoot-silent",
+      "family": "routing",
+      "kind": "critical",
+      "mappable": true,
+      "reasons": [],
+      "unmappable_assertions": []
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field route_declared.'printed_in_report' has no source (observable: ['undershoot'])"
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "`grep route_attribution|self_attributed packages/` is empty — the attribution class is not fixed machine-side anywhere (this is exactly the honesty boundary `plan-run.md` names)."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "field route_declared.'claimed' has no source (observable: ['undershoot'])"
+        }
+      ],
+      "case_id": "false-self-attribution-route",
+      "family": "routing",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`grep route_attribution|self_attributed packages/` is empty — the attribution class is not fixed machine-side anywhere (this is exactly the honesty boundary `plan-run.md` names).",
+        "field route_declared.'claimed' has no source (observable: ['undershoot'])",
+        "field route_declared.'printed_in_report' has no source (observable: ['undershoot'])"
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "harness hook-resolution state, not a dispatch artifact."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "block.reason_code = 'HOOK_HANDLER_MISSING' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module"
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        }
+      ],
+      "case_id": "hook-handler-missing",
+      "family": "hook-integrity",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "block.reason_code = 'HOOK_HANDLER_MISSING' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module",
+        "harness hook-resolution state, not a dispatch artifact."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "harness ownership state, not a dispatch artifact."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "block.reason_code = 'HOOK_OWNERSHIP_CONFLICT' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module"
+        }
+      ],
+      "case_id": "hook-target-unmanaged",
+      "family": "hook-integrity",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "block.reason_code = 'HOOK_OWNERSHIP_CONFLICT' is outside reason_code_channel.declared_codes — no artifact can carry a code that exists in no module",
+        "harness ownership state, not a dispatch artifact."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "the effective hook set spanning global+project sources is a harness inventory property, not a dispatch artifact."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source."
+        }
+      ],
+      "case_id": "hook-set-spans-sources",
+      "family": "hook-integrity",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source.",
+        "the effective hook set spanning global+project sources is a harness inventory property, not a dispatch artifact."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "'approved-goal vs diagnostic-drift' is a judgement about the dispatch's subject matter, with no machine carrier."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+        }
+      ],
+      "case_id": "wrong-scope-return",
+      "family": "scope-control",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "'approved-goal vs diagnostic-drift' is a judgement about the dispatch's subject matter, with no machine carrier.",
+        "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_list_excludes",
+          "reason": "outcome.execution_inputs literal '/home/vostrikov/tmp/handoff-notes.md' is an absolute host-bound path — erased by the F8 privacy sanitizer before recording, so it can never be observed"
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        }
+      ],
+      "case_id": "portability-external-input",
+      "family": "portability",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "outcome.execution_inputs literal '/home/vostrikov/tmp/handoff-notes.md' is an absolute host-bound path — erased by the F8 privacy sanitizer before recording, so it can never be observed"
+      ],
+      "unmappable_assertions": [
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_list_excludes",
+          "reason": "`bundle_lint`'s class vocabulary is not emitted per dispatch; only its reason codes would be, and they are not this field."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "no artifact declares an evidence bundle minimized."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "field portability_check.'privacy_checked' has no source (observable: none)"
+        }
+      ],
+      "case_id": "portability-privacy-rawbulk",
+      "family": "portability",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`bundle_lint`'s class vocabulary is not emitted per dispatch; only its reason codes would be, and they are not this field.",
+        "field portability_check.'privacy_checked' has no source (observable: none)",
+        "no artifact declares an evidence bundle minimized."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "`task_contract.classify_tier`'s output lives inside the compiled contract, outside the verdict channel; only a `PORTABILITY_TIER_MISCLASSIFIED` code would be observable, and that is a different proposition than the tier's value."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        }
+      ],
+      "case_id": "portability-input-missing-highrisk",
+      "family": "portability",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "`task_contract.classify_tier`'s output lives inside the compiled contract, outside the verdict channel; only a `PORTABILITY_TIER_MISCLASSIFIED` code would be observable, and that is a different proposition than the tier's value."
+      ],
+      "unmappable_assertions": [
+        "A1"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "a compiled-contract field (`portability.semantic_carrier`), outside the recorded channel."
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+        }
+      ],
+      "case_id": "claude-only-carrier",
+      "family": "provider-neutrality",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "a compiled-contract field (`portability.semantic_carrier`), outside the recorded channel.",
+        "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        }
+      ],
+      "case_id": "capability-unknown-solo-fallback",
+      "family": "capability",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+      ],
+      "unmappable_assertions": [
+        "A1"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "a generated projection landing in the tree is visible as `mutation`, but the asserted fields `version_bumped` and `provenance_hash` are not emitted by any publication path — no artifact states that a version was bumped or that a provenance hash was written."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_field_equals",
+          "reason": "no publication path emits it."
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": false,
+          "operator": "event_present",
+          "reason": "a generated projection landing in the tree is visible as `mutation`, but the asserted fields `version_bumped` and `provenance_hash` are not emitted by any publication path — no artifact states that a version was bumped or that a provenance hash was written."
+        }
+      ],
+      "case_id": "publication-version-reuse",
+      "family": "generated-artifact",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "a generated projection landing in the tree is visible as `mutation`, but the asserted fields `version_bumped` and `provenance_hash` are not emitted by any publication path — no artifact states that a version was bumped or that a provenance hash was written.",
+        "no publication path emits it."
+      ],
+      "unmappable_assertions": [
+        "A1",
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        }
+      ],
+      "case_id": "trace-record-missing",
+      "family": "trace",
+      "kind": "critical",
+      "mappable": true,
+      "reasons": [],
+      "unmappable_assertions": []
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_list_excludes",
+          "reason": "same as `acceptance_scopes`: a compiled-contract field, outside the recorded channel."
+        }
+      ],
+      "case_id": "evidence-proof-class-overclaim",
+      "family": "evidence-proof-class",
+      "kind": "critical",
+      "mappable": false,
+      "reasons": [
+        "same as `acceptance_scopes`: a compiled-contract field, outside the recorded channel."
+      ],
+      "unmappable_assertions": [
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "mappable": true,
+          "operator": "outcome_field_equals",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "mappable": true,
+          "operator": "event_present",
+          "reason": null
+        }
+      ],
+      "case_id": "honest-http-clean-control",
+      "family": "control-clean-run",
+      "kind": "control",
+      "mappable": true,
+      "reasons": [],
+      "unmappable_assertions": []
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": true,
+          "operator": "outcome_field_equals",
+          "reason": null
+        }
+      ],
+      "case_id": "control-simple-brief-acceptance",
+      "family": "control-portability-simple",
+      "kind": "control",
+      "mappable": false,
+      "reasons": [
+        "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+      ],
+      "unmappable_assertions": [
+        "A2"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "mappable": true,
+          "operator": "outcome_list_contains",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": true,
+          "operator": "outcome_field_equals",
+          "reason": null
+        }
+      ],
+      "case_id": "control-committed-bundle-highrisk",
+      "family": "control-portability-bundle",
+      "kind": "control",
+      "mappable": true,
+      "reasons": [],
+      "unmappable_assertions": []
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "mappable": true,
+          "operator": "outcome_list_contains",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": true,
+          "operator": "outcome_field_equals",
+          "reason": null
+        }
+      ],
+      "case_id": "control-predecessor-produced-path",
+      "family": "control-portability-predecessor",
+      "kind": "control",
+      "mappable": true,
+      "reasons": [],
+      "unmappable_assertions": []
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+        },
+        {
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "mappable": false,
+          "operator": "outcome_list_contains",
+          "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+        }
+      ],
+      "case_id": "control-provider-neutral-rendering",
+      "family": "control-provider-neutrality",
+      "kind": "control",
+      "mappable": false,
+      "reasons": [
+        "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."
+      ],
+      "unmappable_assertions": [
+        "A2",
+        "A3"
+      ]
+    },
+    {
+      "assertions": [
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "mappable": false,
+          "operator": "event_absent",
+          "reason": "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+        },
+        {
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "mappable": true,
+          "operator": "event_absent",
+          "reason": null
+        },
+        {
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "mappable": true,
+          "operator": "outcome_field_equals",
+          "reason": null
+        }
+      ],
+      "case_id": "control-routine-continuation",
+      "family": "control-approval-economy",
+      "kind": "control",
+      "mappable": false,
+      "reasons": [
+        "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+      ],
+      "unmappable_assertions": [
+        "A1"
+      ]
+    }
+  ],
+  "counts": {
+    "assertions": 88,
+    "cases": 31,
+    "control": 6,
+    "critical": 25,
+    "mappable": 5,
+    "mappable_assertions": 31,
+    "mappable_control": 3,
+    "mappable_critical": 2,
+    "unmappable": 26
+  },
+  "declared_case_set": [
+    "control-committed-bundle-highrisk",
+    "control-predecessor-produced-path",
+    "honest-http-clean-control",
+    "route-undershoot-silent",
+    "trace-record-missing"
+  ],
+  "excluded_case_set": [
+    "audit-reopens-bookkeeping-as-product",
+    "capability-unknown-solo-fallback",
+    "claude-only-carrier",
+    "control-provider-neutral-rendering",
+    "control-routine-continuation",
+    "control-simple-brief-acceptance",
+    "duplicate-identity-trigger",
+    "evidence-proof-class-overclaim",
+    "false-self-attribution-route",
+    "five-audit-loop",
+    "hook-handler-missing",
+    "hook-set-spans-sources",
+    "hook-target-unmanaged",
+    "missed-consumer-cold-start",
+    "missing-launch-block-intra-session",
+    "portability-external-input",
+    "portability-input-missing-highrisk",
+    "portability-privacy-rawbulk",
+    "premature-stop-after-clean-close",
+    "publication-version-reuse",
+    "redundant-approval-after-grant",
+    "same-finding-third-event",
+    "stale-cold-start-item",
+    "stale-requirement-dropped",
+    "wrong-provider-invocation",
+    "wrong-scope-return"
+  ],
+  "inputs": {
+    "cases": {
+      "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/reliability-bank-v1/cases.json",
+      "sha256": "a0d667128e710e701d34cc48ea9c04d9cf272e2b74de0399c145fbd464f625c5"
+    },
+    "graders": {
+      "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/reliability-bank-v1/graders.json",
+      "sha256": "a034a85722268fdb22871f3ddd5742b711870e9df8a7b49c2a26a8094fad7acf"
+    },
+    "mapping": {
+      "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.9/event-mapping-v1.json",
+      "sha256": "190a39219ac01e7842ff4f54eff03df0877f2d9f887d1a262bb3b28f0a3c32f5"
+    }
+  },
+  "mapping_version": "1.0.0",
+  "note": "The DECLARED case set for layer-2 (D51): declared as a literal BEFORE any live paired run, so P3.10 cannot pick a denominator after the fact. A case is included only if EVERY one of its assertions has a source in the closed D83 list; a case with one sourceless assertion is excluded WHOLE — its negative assertions are never counted (D83).",
+  "owner": "plans/2026.07.24-AGENT-RELIABILITY P3.9",
+  "schema_version": "p3.9-declared-case-set/v1"
+}

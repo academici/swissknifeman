@@ -4,6 +4,27 @@
 
 ### Added
 
+- **analyst — reliability metric arithmetic and paired digest (P3.2,
+  `2026.07.24-AGENT-RELIABILITY`).** `analyst.metrics` derives paired reliability
+  metrics only from committed `analyst.trace.TraceRecord`s and the frozen P0.3
+  reliability bank, never by re-parsing provider logs a second way. `build_metric_record`
+  emits the numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-
+  class shape every metric must carry; `pair_metric` pairs a baseline against a candidate
+  (or `None` when the P3.3 live paired run has not produced it yet — reported `deferred`,
+  never a silent zero) and fails closed (`METRIC_PINNED_BASELINE_FORBIDDEN`) if the
+  baseline's proof class is `pinned-not-recomputable`/`unknown`, so a historical pinned
+  quantity (e.g. `journals.classified_lifecycle_events`) can never be silently promoted to
+  a recomputed comparator (D30). `slice_by` groups by project/plan/item over a caller-side
+  `{project_id, trace}` wrapper — the frozen `TraceRecord` carries no `project_id` field of
+  its own, so slicing does not widen that closed schema. `build_digest`/`digest_to_json`
+  produce the one compact, byte-stable JSON shape Code Guidance asks for (no dashboard, no
+  ranking). `findings/P3.2-metric-reconciliation.md` reconciles this against the committed
+  P0 bank: the four already-recomputed layer-1 floors it can re-express today (F1/F7/F13/
+  F14) all resolve to `deferred` pairs (no layer-2 candidate exists yet), and F6
+  (`trace_completeness`) gets its record shape with `value=None` rather than a fabricated
+  pass — no new central `analyst <cmd>` is wired (`cli.py` is outside this item's declared
+  `Files`); `doctor.py`/`test_provider_readers.py`/`test_cli.py` were declared in scope but
+  left untouched for lack of a concrete requirement against any of them.
 - **analyst/harness/task — Unified Agent Trace v1 (P3.1, `2026.07.24-AGENT-RELIABILITY`).**
   New versioned, stdlib-only trace schema
   (`plans/2026.07.24-AGENT-RELIABILITY/root/contracts/unified-agent-trace-v1.md`)

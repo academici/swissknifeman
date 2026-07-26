@@ -6,11 +6,16 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.20.2 |
+| Version | 1.20.3 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P3.11 закрыт 🟢 Done: **повторный terminal reliability audit, заход 2 из
+| Last Updated | 2026-07-26 (Фаза **P3 закрыта 🟠 Done with deviations** по git-фактам: 5/11 items
+🟢, audit cap фазы исчерпан (2/2), приёмка недостижима на этом инструментальном поколении —
+названный долг **D88**. `Phase Handoff` переписан: что фаза доказала (unified trace, метрики,
+eval-адаптер, канарейка, измеренный layer-2 5/31) и что не доказала (F1=0.96, F10=unknown, 26/31
+структурно ненаблюдаемы). Следующий шаг — отдельный заход `plan-design` над входным гейтом P4)
+| Предыдущее: P3.11 закрыт 🟢 Done: **повторный terminal reliability audit, заход 2 из
 двух — потолок исчерпан**. Вердикт item'а — **REMEDIATE с адресом ремонта ВНЕ петли фазы**, вердикт
 фазы — **ATTENTION** (продукт фазы не сломан: ремедиация P3.6–P3.10 воспроизводится побайтово).
 **Семь из восьми находок захода 1 сняты** и подтверждены пересчётом (F2/F3-для-P3.1–P3.4/F4/F5/F6/
@@ -289,7 +294,7 @@ audit/fix-loop без продукта, который план создан л�
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
-| P3 | Unified traces, evals и isolated self-host canary | 5/11 | 🟡 In progress |
+| P3 | Unified traces, evals и isolated self-host canary | 5/11 | 🟠 Done with deviations |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -462,6 +467,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Opus 5/high | P3.9 закрыт 🟢: харнес живого диспатча + карта наблюдения; измерено 5/31 mappable — детали см. `phases/P3.md` P3.9 Completion Notes/`findings/P3.9-mappability.md`. Version 1.19.3 → 1.20.0. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.10 закрыт 🟠: живой парный layer-2 прогон 5/31, 10/10 диспатчей — F8=+60pp/F9=0.4234/F6=1.0(1/1)/F10=unknown — детали см. `phases/P3.md` P3.10 Completion Notes/`findings/P3.10-layer2-paired.md`. Version 1.20.0 → 1.20.1. |
 | 2026-07-26 | plan-run/Claude Opus 5/xhigh | P3.11 закрыт 🟢 (item-commit `7601110f`): аудит захода 2/2 — ATTENTION/REMEDIATE, 7 из 8 находок захода 1 сняты, 4 новые, развилка layer-2 закрыта D88 — детали см. `phases/P3.md` P3.11 Completion Notes. Version 1.20.1 → 1.20.2. |
+| 2026-07-26 | plan-close/Claude Sonnet 5/low | P3 фаза закрыта 🟠 Done with deviations (5/11 🟢); Phase Handoff переписан; Next → plan-design P4. Version 1.20.2 → 1.20.3. |
 
 ## 7. Contracts
 

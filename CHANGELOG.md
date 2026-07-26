@@ -4,6 +4,27 @@
 
 ### Added
 
+- **task — compiler reads all §3 Routing forms and never crashes
+  (P2.10 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.8.0`).**
+  `task_contract._find_routing_row` now recognizes a closed literal set of
+  route-column headers — the canon `Model class/effort` plus the two legacy
+  spellings `Model/effort`/`Model/Effort` `plan-protocol` §9 Back-compat already
+  declares valid — instead of the single hardcoded canon header (D78:
+  `findings/14` M4/M4.1 measured 11 of 14 root `plans/` failing this call, 9 of
+  them with an unhandled `ValueError`). A provider model name in the cell (the
+  FOREMAN §3 form, e.g. `opus/high`) is resolved to its frozen class ONLY
+  through the committed `command-routing.json::mappings.*.class_selectors`
+  carrier (`command_catalog.load_routing_metadata`) — never a second name
+  table. Every unparseable/unrecognized/ambiguous form now raises
+  `TaskContractBuildError` naming the item, field and offending cell instead of
+  fabricating an empty `required` route or crashing; `pre_mutation`'s own
+  `_rank` lookup is guarded on both axes and both sides of the route (closing
+  D74's `.index(None)` root cause defensively, for any contract reaching `check`
+  regardless of producer) and returns the frozen `ROUTE_UNDERSHOOT` code rather
+  than raising. New committed probe
+  `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.10/routing_form_coverage.py`
+  reproduces the walk over all 14 root plans and exits 1 on any unhandled
+  exception (none observed after the fix — 9 `ok`, 5 typed refusals, 0 `EXC`).
 - **task/general — Task Contract write-site and truthful canon
   (P2.7 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.7.0`,
   `plan-protocol@2.13.0`, `skiller@0.6.0`).** `task:plan-exec`'s pre-mutation

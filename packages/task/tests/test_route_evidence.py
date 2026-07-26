@@ -6,8 +6,10 @@ Covers: deterministic REQUIRED derivation (`fixed` vs `inherited-plan` routing m
 real source and a preserved timestamp; the four-way `exact/over/under/unknown`
 classification where one axis never compensates the other; the two-code fail-closed
 `dispatch_guard` that stands strictly upstream of `task_contract.pre_mutation` (an
-`unknown` actual would crash that predicate's `.index()` lookup — this guard is what
-prevents it from ever being called with one); capability support, route-change
+`unknown` actual denies EARLY, before the route ever reaches a contract — `pre_mutation`
+itself also guards an out-of-ladder value on either axis/side as a defense-in-depth
+typed `ROUTE_UNDERSHOOT`, P2.10/D78, rather than the raw `.index()` crash it used to
+raise); capability support, route-change
 boundary, the no-pricing usage/budget schema, the canonical `<model_class>/<effort>`
 actor spelling (`findings/02` — 34 observed spellings), and the exact
 `task-contract-v1.schema.json` `$defs/route` shape `build_task_contract_route`
@@ -269,8 +271,11 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         self.assertIsNone(task_contract.pre_mutation(contract))
 
     def test_guard_denies_before_pre_mutation_ever_sees_an_unknown_actual(self):
-        # `task_contract.pre_mutation` would raise ValueError on a `None` axis
-        # (`.index()`); the guard is what stops that call from ever happening.
+        # `dispatch_guard` denies EARLY, before a `None` axis ever reaches a compiled
+        # contract. `task_contract.pre_mutation` itself also guards the same axis as
+        # defense in depth (P2.10/D78): a caller that skips the guard and feeds
+        # `pre_mutation` an out-of-ladder value gets the same typed `ROUTE_UNDERSHOOT`,
+        # never the raw `.index()` crash this predicate used to raise.
         contract = _load_base_contract()
         required = contract["route"]["required"]
         unknown_actual = re.capture_actual(required["model_class"], None, source="self-attested")
@@ -281,8 +286,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         broken = copy.deepcopy(contract)
         broken["route"]["actual"]["effort"] = None
         broken["version"]["content_hash"] = task_contract.content_hash(broken)
-        with self.assertRaises(ValueError):
-            task_contract.pre_mutation(broken)
+        self.assertEqual(task_contract.pre_mutation(broken), "ROUTE_UNDERSHOOT")
 
 
 class JournalActorIntegrationTests(unittest.TestCase):

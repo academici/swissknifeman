@@ -244,6 +244,24 @@ class RouteAndCapabilityTests(unittest.TestCase):
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "CAPABILITY_UNSUPPORTED")
 
+    def test_unresolved_actual_route_blocks_as_route_undershoot_not_crash(self):
+        # D74/D78 root: `_rank(MODEL_CLASS_ORDER, None)` used to raise
+        # `ValueError: tuple.index(x): x not in tuple` instead of a typed code.
+        base = _load_base_contract()
+        base["route"]["actual"]["model_class"] = None
+        base["route"]["actual"]["effort"] = None
+        contract = _rehashed(base)
+        self.assertEqual(task_contract.pre_mutation(contract), "ROUTE_UNDERSHOOT")
+
+    def test_out_of_ladder_required_model_class_blocks_as_route_undershoot_not_crash(self):
+        # D78 М4: an unresolved §3 Routing cell used to fabricate `required = ""` and
+        # crash `_rank`; `pre_mutation` now guards the required side too, defensively,
+        # for any contract fed to `check` regardless of how it was produced.
+        base = _load_base_contract()
+        base["route"]["required"]["model_class"] = ""
+        contract = _rehashed(base)
+        self.assertEqual(task_contract.pre_mutation(contract), "ROUTE_UNDERSHOOT")
+
     def test_unknown_capability_support_blocks(self):
         base = _load_base_contract()
         base["route"]["capabilities"].append({"id": "command.interactive-user-input",
@@ -484,6 +502,101 @@ class BuildFixtureTests(unittest.TestCase):
         contract = task_contract.build(self.plan_dir, "P1.1")
         self.assertEqual(contract["route"]["required"],
                          {"model_class": "frontier", "effort": "high"})
+
+
+def _routing_row_with_header(header, model_effort="implementation/medium", items="P1.1"):
+    return (f"\n\n| Items | {header} | Exec | Почему |\n"
+           f"|:--|:--|:--|:--|\n"
+           f"| {items} | {model_effort} | plan-exec | test |\n")
+
+
+class RoutingFormTests(unittest.TestCase):
+    """P2.10/D78 — §3 Routing form coverage: closed legacy header set, provider model
+    names resolved through the committed carrier, and every unparseable/ambiguous form
+    fails TYPED, never with an unhandled exception. Each negative case here reproduces
+    a shape `findings/14` M4/M4.1 measured live on the fleet."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-1")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write_plan(self, table_text):
+        plan_md = fixtures.plan_md("DEMO-1").replace("## 3. Routing\n\n", "## 3. Routing" + table_text)
+        (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+
+    def test_legacy_header_model_effort_is_recognized(self):
+        self._write_plan(_routing_row_with_header("Model/effort", "implementation/high"))
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(contract["route"]["required"],
+                         {"model_class": "implementation", "effort": "high"})
+
+    def test_legacy_header_model_effort_capitalized_is_recognized(self):
+        self._write_plan(_routing_row_with_header("Model/Effort", "economy/low"))
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(contract["route"]["required"],
+                         {"model_class": "economy", "effort": "low"})
+
+    def test_unrecognized_header_fails_closed_not_silently_empty(self):
+        # `findings/14` M4.1: this exact composite header appears live on the fleet and
+        # is NOT in the closed set (Scope Excluded) — must stay a typed refusal, never
+        # a fabricated empty `required` (D78 M4).
+        self._write_plan(_routing_row_with_header("Model/effort И/ИЛИ Tool Capability",
+                                                   "implementation/high"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_provider_model_name_maps_to_class_via_committed_carrier(self):
+        # FOREMAN §3 form: a concrete provider model name, not a class.
+        self._write_plan(_routing_row_with_header("Model/effort", "opus/high"))
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(contract["route"]["required"],
+                         {"model_class": "frontier", "effort": "high"})
+
+    def test_unknown_model_name_fails_closed(self):
+        self._write_plan(_routing_row_with_header("Model/effort", "gpt-9-nonexistent/high"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_prose_tail_in_cell_fails_closed(self):
+        self._write_plan(_routing_row_with_header(
+            "Model class/effort", "sonnet/medium (экстракция fan-out)"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_cell_without_slash_fails_closed(self):
+        self._write_plan(_routing_row_with_header("Model class/effort", "fable ИЛИ opus"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_no_section_at_all_fails_closed(self):
+        plan_md = fixtures.plan_md("DEMO-1").replace("## 3. Routing\n\n", "")
+        (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+
+    def test_ambiguous_model_name_across_two_classes_fails_closed(self):
+        self._write_plan(_routing_row_with_header("Model/effort", "shared-name/high"))
+        routing_config = self.root / "ambiguous-command-routing.json"
+        routing_config.write_text(json.dumps({
+            "contract_version": "1.0.0", "catalog_version": "1.0.0", "plugin_version": "0.1.0",
+            "commands": [],
+            "mappings": {
+                "fake-a": {"class_selectors": {"economy": ["shared-name"]}},
+                "fake-b": {"class_selectors": {"frontier": ["shared-name"]}},
+            },
+        }), encoding="utf-8")
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1", routing_config_path=routing_config)
+        self.assertEqual(ctx.exception.field, "Routing")
 
 
 class BundleLintTests(unittest.TestCase):

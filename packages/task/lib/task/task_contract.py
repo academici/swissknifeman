@@ -168,42 +168,116 @@ def _count_audit_rounds(phase_lines, phase_id: str) -> int:
     return count
 
 
-def _find_routing_row(plan_lint_mod, plan_lines, item_id: str):
+# D78/P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9
+# Back-compat declares VALID today: the canon form plus exactly the two legacy spellings
+# measured live on the fleet (`findings/14` M4.1). Preference order matters (canon first);
+# no fuzzy/normalized/regex match — a header outside this tuple is an unrecognized table,
+# never a guess (Implementation Rules (2)).
+_ROUTING_HEADER_CANON = "Model class/effort"
+_ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON, "Model/effort", "Model/Effort")
+
+# Default location of the committed provider routing carrier this module reads
+# `mappings.*.class_selectors` from (D78 Implementation Rules (1) — one name-to-class
+# carrier, never a second table in this module). Package-relative, same convention
+# `command_render.mapping_from_catalog` already uses for its own sibling config
+# (`Path(__file__).resolve().parents[N] / "configs/..."`) — never cwd/env discovery
+# (`command_catalog`'s own module docstring bans that for the loader this calls).
+_DEFAULT_ROUTING_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "command-routing.json"
+
+
+def _model_class_name_map(routing_metadata: dict) -> dict:
+    """`{model-name: {classes it is bound to}}` built fresh from every provider's
+    `mappings.<provider>.class_selectors` (committed `command-routing.json`, read via
+    `command_catalog.load_routing_metadata` by the caller — this function never opens a
+    file itself). A name bound to more than one class is ambiguous by construction of the
+    fleet-wide carrier; `_resolve_model_class` below refuses it rather than picking
+    either winner (D78: "имя ... встречающееся в двух разных классах, даёт тот же
+    типизированный отказ")."""
+    name_to_classes: dict = {}
+    for provider in routing_metadata.get("mappings", {}).values():
+        for model_class, names in provider.get("class_selectors", {}).items():
+            for name in names:
+                name_to_classes.setdefault(name, set()).add(model_class)
+    return name_to_classes
+
+
+def _resolve_model_class(token: str, name_to_classes: dict, item_id: str, raw_cell: str) -> str:
+    """Route-column model token → frozen `MODEL_CLASS_ORDER` class. Already a class name
+    (the canon form this plan's own §3 uses) → returned as-is. A provider model name (the
+    FOREMAN §3 form, e.g. `opus`) → looked up through the committed carrier ONLY — this
+    module never grows its own name table (D78 Implementation Rules (1), D6). Unknown or
+    ambiguous (bound to two classes at once) → typed refusal naming the offending cell,
+    never a guessed class."""
+    if token in MODEL_CLASS_ORDER:
+        return token
+    classes = name_to_classes.get(token)
+    if not classes or len(classes) != 1:
+        raise TaskContractBuildError(
+            item_id, "Routing",
+            f"route cell {raw_cell!r}: model token {token!r} is neither a class "
+            f"{MODEL_CLASS_ORDER} nor an unambiguous name in command-routing.json "
+            f"class_selectors (resolved classes: {sorted(classes) if classes else []})")
+    return next(iter(classes))
+
+
+def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata: dict):
     """Reuses `plan_lint`'s own generic table parser (`_find_section`/
-    `_parse_table` — already the SSOT for Meta/Status Board/Phase Status
-    tables) over the `## 3. Routing` section instead of a second parser."""
+    `_parse_table` — already the SSOT for Meta/Status Board/Phase Status tables) over the
+    `## 3. Routing` section instead of a second parser. Returns `(model_class, effort)` —
+    both already frozen-ladder members — or raises `TaskContractBuildError` naming the
+    item, field `"Routing"` and the concrete cause (D78: no fabricated empty pair ever
+    reaches `build()`'s caller, no unrecognized form is silently guessed at)."""
     _, body, start = plan_lint_mod._find_section(plan_lines, _ROUTING_HEADER_RE)
     if body is None:
-        return None
+        raise TaskContractBuildError(item_id, "Routing", "no `## 3. Routing` section found in plan.md")
     headers, rows, _ = plan_lint_mod._parse_table(body, start)
     if headers is None:
-        return None
+        raise TaskContractBuildError(item_id, "Routing", "`## 3. Routing` section carries no table")
+    header = next((candidate for candidate in _ROUTING_HEADER_CANDIDATES if candidate in headers), None)
+    if header is None:
+        raise TaskContractBuildError(
+            item_id, "Routing",
+            f"no recognized route-column header among {headers!r}; supported (closed set): "
+            f"{_ROUTING_HEADER_CANDIDATES!r}")
+
     phase_token = item_id.split(".")[0]
     try:
         item_n = int(item_id.split(".")[1])
     except (IndexError, ValueError):
         item_n = None
+    name_to_classes = _model_class_name_map(routing_metadata)
+
+    def _resolve(raw_cell: str):
+        model_token, sep, effort = raw_cell.partition("/")
+        model_token, effort = model_token.strip(), effort.strip()
+        if not sep or not model_token or not effort:
+            raise TaskContractBuildError(
+                item_id, "Routing", f"route cell {raw_cell!r} does not parse as '<model>/<effort>'")
+        model_class = _resolve_model_class(model_token, name_to_classes, item_id, raw_cell)
+        if effort not in EFFORT_ORDER:
+            raise TaskContractBuildError(
+                item_id, "Routing",
+                f"route cell {raw_cell!r}: effort {effort!r} is outside the frozen ladder {EFFORT_ORDER}")
+        return model_class, effort
+
     for row, _lineno in rows:
         cell = (row.get("Items", "") or "").strip().strip("`")
         if cell == item_id:
-            model_effort = row.get("Model class/effort", "")
-            model_class, _, effort = model_effort.partition("/")
-            return model_class.strip(), effort.strip()
+            return _resolve(row.get(header, ""))
         m = _ROUTING_RANGE_RE.match(cell)
         if m and item_n is not None and m.group(1) == phase_token == m.group(3):
             lo, hi = int(m.group(2)), int(m.group(4))
             if lo <= item_n <= hi:
-                model_effort = row.get("Model class/effort", "")
-                model_class, _, effort = model_effort.partition("/")
-                return model_class.strip(), effort.strip()
-    return None
+                return _resolve(row.get(header, ""))
+    raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item")
 
 
 def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_privacy=None,
          authority_class="routine", authority_granted=True,
          authority_granted_by="D50 (G-EXEC for self-host P0-P3)",
          next_form="exec-items", next_context="same-session — item",
-         next_origin="approved-goal", next_changed_by=None, carrier=None) -> dict:
+         next_origin="approved-goal", next_changed_by=None, carrier=None,
+         routing_config_path=None) -> dict:
     """Task Contract v1 producer (P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
     §3/§0 fields for one item into the exact 15-key schema
     `task-contract-v1.schema.json` declares. Full field-mapping table:
@@ -226,10 +300,19 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     (the canonical `"—"` placeholder) where the schema requires a value
     raises `TaskContractBuildError` naming the field and item — never a
     fabricated placeholder dressed up as data.
+
+    `routing_config_path` (P2.10, D78) — the committed routing carrier
+    `_find_routing_row`/`_resolve_model_class` read `mappings.*.class_selectors` from,
+    via `command_catalog.load_routing_metadata` (never a second name table in this
+    module). Defaults to this package's own `configs/command-routing.json`
+    (`_DEFAULT_ROUTING_CONFIG_PATH`, derived from `__file__` — the same
+    package-relative convention `command_render.mapping_from_catalog` already uses for
+    its sibling config); a caller MAY override it, but never supplies cwd/env instead.
     """
     from task import plan_lint  # lazy — avoids a plan_lint↔task_contract circular import
     from task import route_evidence  # lazy — same reasoning, route assembly only
     from task import review_policy  # lazy — reuse of loop_budget constants only
+    from task import command_catalog  # lazy — same reasoning, class_selectors carrier only
 
     plan_dir = Path(plan_dir)
     phase_token = item_id.split(".")[0]
@@ -314,9 +397,9 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
         raise TaskContractBuildError(item_id, "Validation", "no check clause found")
 
     plan_lines = plan_lint._read_lines(plan_dir / "plan.md") or []
-    routing = _find_routing_row(plan_lint, plan_lines, item_id)
-    if routing is None:
-        raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item")
+    routing_metadata = command_catalog.load_routing_metadata(
+        routing_config_path or _DEFAULT_ROUTING_CONFIG_PATH)
+    routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
     required_route = {"model_class": routing[0], "effort": routing[1]}
     if actual_route is None:
         actual_route = route_evidence.capture_actual(
@@ -515,6 +598,20 @@ def _rank(order: tuple, value: str) -> int:
     return order.index(value)
 
 
+def _rank_or_none(order: tuple, value) -> int | None:
+    """D78/P2.10 route-ladder guard: `None` (never an `IndexError`/`ValueError`) when
+    `value` is outside `order`. Used ONLY by `pre_mutation`'s route check below — the
+    `CARRIER_PRECEDENCE` conflict-resolution use of `_rank` above is unrelated scope
+    (D78/`findings/14` measured the route axes specifically) and stays untouched. An
+    out-of-ladder value on EITHER axis and EITHER side of the route (required or
+    actual) is treated the same way `route_evidence.classify` already treats an
+    unresolved actual — as an undershoot, never a crash — reusing the frozen
+    `ROUTE_UNDERSHOOT` code rather than minting a new one (P0.2 pre-mutation codes are
+    frozen; D74 already established this precedent one layer up, in
+    `route_evidence.dispatch_guard`)."""
+    return order.index(value) if value in order else None
+
+
 def classify_tier(work: dict) -> str:
     """plan-portability-v1.md §Classification rule (D26) — `tier(work)`.
 
@@ -596,10 +693,15 @@ def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
         return portability_code
 
     route = contract["route"]
-    if (_rank(MODEL_CLASS_ORDER, route["actual"]["model_class"])
-            < _rank(MODEL_CLASS_ORDER, route["required"]["model_class"])):
+    required_class_rank = _rank_or_none(MODEL_CLASS_ORDER, route["required"]["model_class"])
+    actual_class_rank = _rank_or_none(MODEL_CLASS_ORDER, route["actual"]["model_class"])
+    if (required_class_rank is None or actual_class_rank is None
+            or actual_class_rank < required_class_rank):
         return "ROUTE_UNDERSHOOT"
-    if _rank(EFFORT_ORDER, route["actual"]["effort"]) < _rank(EFFORT_ORDER, route["required"]["effort"]):
+    required_effort_rank = _rank_or_none(EFFORT_ORDER, route["required"]["effort"])
+    actual_effort_rank = _rank_or_none(EFFORT_ORDER, route["actual"]["effort"])
+    if (required_effort_rank is None or actual_effort_rank is None
+            or actual_effort_rank < required_effort_rank):
         return "ROUTE_UNDERSHOOT"
     for capability in route["capabilities"]:
         if capability["support"] not in ("native", "adapted"):

@@ -4,6 +4,21 @@
 
 ### Added
 
+- **skiller — read-only composed effective-source doctor
+  (P4.2, `2026.07.24-AGENT-RELIABILITY`).** `skiller doctor --effective-source [--json]`
+  composes five read-only diagnostics — active semantic owner/provenance/collisions
+  (reused verbatim from the P1.4 gate, `run_effective_runtime_gate`, never re-derived),
+  cache (a structural `n/a`: identity detection is repo-derived/cold, D44 — no provider
+  cache/profile is read), reference/capability coverage (cites the committed P1.1
+  capability-gaps finding), hook ownership (registration source × `.swissknifeman/
+  provider-artifacts.lock.json` managed owner × handler locality, per
+  `semantic-identity-ownership-v1.md` § Hook identities) and trace-quality (cites the
+  committed P3.11 measured scope — declared subset 5/31, `F1=0.96`, `F10=unknown` —
+  printed measured, never rounded to `ok`). Each diagnostic carries owner/source/status/
+  evidence/quality/`next_command`; `build_effective_source_report` fails closed on a
+  missing key or an out-of-vocabulary status. No new public subcommand or write path
+  (Scope Excluded, D92): an extension of the existing `skiller doctor` facade only,
+  proven no-write by `git status --porcelain=v1` before/after in Validation.
 - **analyst/harness — Contribution gate minor bumps paid (P4.5,
   `2026.07.24-AGENT-RELIABILITY`, `analyst@0.2.0`, `harness@0.4.0`).**
   Package-API minor bumps owed by `unified-agent-trace-v1.md` § Contribution gate (D23) —

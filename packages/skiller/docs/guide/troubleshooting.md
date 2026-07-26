@@ -4,6 +4,21 @@
 Python, симлинк, `PATH`, целостность `~/.swissknifeman/projects.json`, что реестр
 — git-репозиторий и без незакоммиченных скиллов, что профили читаются.
 
+## Composed effective-source doctor (`--effective-source`)
+
+`skiller doctor --effective-source [--json]` — read-only композиция из уже
+существующих источников (никакой новой логики владения не заводит): активный
+семантический владелец/провенанс/коллизии переиспользуют P1.4-гейт
+(`--effective-runtime`), плюс cache/reference/capability/hook/trace-quality статус.
+Каждый диагностик несёт owner/source/status/evidence/quality/next_command; статус —
+`ok`/`degraded`/`unknown`/`n/a` (n/a только для структурных фактов, напр. cache —
+детекция репо-derived и холодная по контракту D44, живой профиль/кэш провайдера не
+читается вовсе). `--json` печатает ровно один версионированный документ
+(`schema_version: effective-source-doctor/v1`). Качество печатается измеренным: там,
+где источник неполон (напр. `trace-quality` на измеренном подмножестве 5/31,
+`F1=0.96`/`F10=unknown`), диагностика печатает число и причину, а не «ok». Ничего
+не пишет — доказано `git status --porcelain=v1` до/после в Validation item'а P4.2.
+
 ## Частые проблемы
 
 ### `swissknifeman: command not found`

@@ -290,6 +290,271 @@ def _provider_distribution_doctor(env, target):
         print(f"  [warn] vendor plan blocked: {exc}")
 
 
+class EffectiveSourceDoctorError(ValueError):
+    """Raised when a diagnostic dict violates the P4.2 record shape (missing key or an
+    out-of-vocabulary status) — a composition bug, never a runtime condition to catch."""
+
+
+EFFECTIVE_SOURCE_SCHEMA_VERSION = "effective-source-doctor/v1"
+_DIAGNOSTIC_REQUIRED_KEYS = ("id", "owner", "source", "status", "evidence", "quality",
+                             "next_command")
+_DIAGNOSTIC_STATUSES = frozenset(("ok", "degraded", "unknown", "n/a"))
+
+# Coupling surface (read-only): frozen findings this diagnostic cites rather than
+# recomputes (D92 — no new public surface may re-derive what P1.1/P3 already measured
+# and committed). Absence (e.g. after the plan archives) degrades to a named `unknown`
+# gap, never a crash and never a silent "ok" (Implementation Rules «If-then»).
+_CAPABILITY_GAP_FINDING = "plans/2026.07.24-AGENT-RELIABILITY/findings/P1.1-capability-gaps.md"
+_TRACE_QUALITY_FINDING = "plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md"
+_HOOK_REGISTRATIONS = (".codex/hooks.json", ".claude/settings.json")
+
+
+def build_effective_source_report(diagnostics):
+    """Compose the P4.2 read-only effective-source doctor document (schema
+    `effective-source-doctor/v1`) from already-gathered diagnostic dicts. Pure: no I/O,
+    no ownership/collision arithmetic of its own (that stays sealed in P1's own
+    functions, e.g. `run_effective_runtime_gate`) — this only validates the record shape
+    Implementation Rules require (semantic owner/source/evidence/quality/next command per
+    diagnostic) and folds an overall status. `n/a` counts toward `ok` (a structural fact,
+    not a measurement, per the `cache` diagnostic); `degraded`/`unknown` do not."""
+    for d in diagnostics:
+        missing = [k for k in _DIAGNOSTIC_REQUIRED_KEYS if k not in d]
+        if missing:
+            raise EffectiveSourceDoctorError(
+                f"diagnostic {d.get('id', '?')!r} missing required keys: {missing}")
+        if d["status"] not in _DIAGNOSTIC_STATUSES:
+            raise EffectiveSourceDoctorError(
+                f"diagnostic {d['id']!r} has out-of-vocabulary status {d['status']!r}")
+    overall = "ok" if all(d["status"] in ("ok", "n/a") for d in diagnostics) else "degraded"
+    return {"schema_version": EFFECTIVE_SOURCE_SCHEMA_VERSION,
+            "diagnostics": list(diagnostics), "overall": overall}
+
+
+def _identity_ownership_diagnostic(env):
+    """Active semantic owner + provenance + collisions — reused verbatim from the P1.4
+    gate (`run_effective_runtime_gate`), never re-derived: composition, not a second
+    ownership engine (Implementation Rules)."""
+    try:
+        result = run_effective_runtime_gate(env)
+    except Exception as exc:  # pragma: no cover — defensive, gate itself is tested elsewhere
+        return {
+            "id": "identity-ownership", "owner": "P1.1/P1.4 (semantic-identity-ownership-v1.md)",
+            "source": "skiller.doctor.run_effective_runtime_gate", "status": "unknown",
+            "evidence": {"gap": f"gate did not run: {exc}"},
+            "quality": {"completeness": 0.0, "note": "gate raised before producing a result"},
+            "next_command": "skiller doctor --effective-runtime",
+        }
+    collisions = {p: c for p, c in result["collisions_by_provider"].items() if c}
+    counts = {p: len(m) for p, m in result["positive_maps"].items()}
+    status = "ok" if not collisions else "degraded"
+    return {
+        "id": "identity-ownership", "owner": "P1.1/P1.4 (semantic-identity-ownership-v1.md)",
+        "source": "skiller.doctor.run_effective_runtime_gate", "status": status,
+        "evidence": {"identity_counts": counts, "collisions": collisions,
+                     "negative_pairs_measured": len(result["negative_pairs"])},
+        "quality": {"completeness": 1.0,
+                    "note": "cold catalog-wide gate over the declared fixture, not a named subset"},
+        "next_command": "skiller doctor --effective-runtime",
+    }
+
+
+def _cache_diagnostic():
+    """Cache status is a structural fact (D44), not a measurement: identity/collision
+    detection never reads a live provider profile or cache, so neither does this
+    diagnostic — printing `ok` here would imply a check that was never run."""
+    return {
+        "id": "cache",
+        "owner": "P1.1 (semantic-identity-ownership-v1.md § Detection is repo-derived and cold, D44)",
+        "source": "contract citation — no runtime cache/profile read performed",
+        "status": "n/a",
+        "evidence": {"note": "carrier detection reads repository sources only "
+                             "(marketplace + root projections); a live provider "
+                             "cache/profile (~/.codex, ~/.claude) is never read"},
+        "quality": {"completeness": 1.0, "note": "structural fact, not a measurement"},
+        "next_command": "skiller doctor --effective-runtime",
+    }
+
+
+def _read_json_or_none(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _hook_commands(data):
+    """Flatten every literal `command` string out of a hooks.json/settings.json-shaped
+    `hooks` block — read-only extraction, no execution, no shell parsing beyond `str`."""
+    commands = []
+    hooks_block = data.get("hooks", data) if isinstance(data, dict) else {}
+    for entries in (hooks_block or {}).values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            for h in (entry.get("hooks") or ()):
+                cmd = h.get("command") if isinstance(h, dict) else None
+                if isinstance(cmd, str):
+                    commands.append(cmd)
+    return commands
+
+
+def _command_locality(command, *, repo_root):
+    """Best-effort, read-only classification per semantic-identity-ownership-v1.md §
+    Hook identities: `repo-local` when the command names a path inside `repo_root`
+    (directly, or via `$(git rev-parse --show-toplevel)`); `outside-repo` when it names a
+    home-relative path instead. Content of an outside-repo handler is never read
+    (`unknown`, never scanned — execution does not read a provider home)."""
+    if "show-toplevel" in command or str(repo_root) in command:
+        return "repo-local"
+    if "~/" in command or "$HOME" in command:
+        return "outside-repo"
+    return "unknown"
+
+
+def _hook_ownership_diagnostic(repo_root):
+    """Registration source (repo file) × managed owner (`.swissknifeman/provider-
+    artifacts.lock.json`) × handler locality — the three answers semantic-identity-
+    ownership-v1.md § Hook identities names for a hook identity, computed from
+    repository files only. A registration target without a lock record is `unmanaged`,
+    never assumed fine."""
+    lock_path = repo_root / ".swissknifeman" / "provider-artifacts.lock.json"
+    lock = _read_json_or_none(lock_path)
+    if lock is None:
+        return {
+            "id": "hook-ownership",
+            "owner": "P0.4 (semantic-identity-ownership-v1.md § Hook identities)",
+            "source": str(lock_path), "status": "unknown",
+            "evidence": {"gap": f"lock file not found at {lock_path}"},
+            "quality": {"completeness": 0.0, "note": "no managed-owner map to cite"},
+            "next_command": "harness doctor",
+        }
+    managed_targets = {r.get("target_path") for r in lock.get("records", ())}
+    registrations = {}
+    for rel in _HOOK_REGISTRATIONS:
+        data = _read_json_or_none(repo_root / rel)
+        if data is None:
+            continue
+        commands = _hook_commands(data)
+        registrations[rel] = {
+            "managed": rel in managed_targets,
+            "commands": [{"command": c, "locality": _command_locality(c, repo_root=repo_root)}
+                        for c in commands],
+        }
+    unmanaged = sorted(rel for rel, r in registrations.items() if not r["managed"])
+    status = "ok" if not unmanaged else "degraded"
+    return {
+        "id": "hook-ownership",
+        "owner": "P0.4 (semantic-identity-ownership-v1.md § Hook identities)",
+        "source": str(lock_path.relative_to(repo_root)), "status": status,
+        "evidence": {"registrations": registrations, "unmanaged": unmanaged},
+        "quality": {"completeness": 1.0,
+                    "note": "handler content outside the repo is never scanned (D44-style)"},
+        "next_command": "harness doctor  # hook lifecycle ownership is P0.4/harness, read-only here",
+    }
+
+
+def _capability_gap_diagnostic(repo_root):
+    """Reference/capability coverage — cites the committed P1.1 finding rather than
+    recomputing carrier-literal capability coverage live (D92: a new public surface for
+    this is Scope Excluded; the finding IS the P1 measurement)."""
+    p = repo_root / _CAPABILITY_GAP_FINDING
+    if not p.is_file():
+        return {
+            "id": "capability-reference-coverage",
+            "owner": "P1.1 (semantic-identity-ownership-v1.md § Record shape)",
+            "source": _CAPABILITY_GAP_FINDING, "status": "unknown",
+            "evidence": {"gap": f"finding not found at {_CAPABILITY_GAP_FINDING} "
+                                "(plan may have archived) — recomputing it live is Scope "
+                                "Excluded (D92); citation is the only proof this owns"},
+            "quality": {"completeness": 0.0, "note": "no committed evidence to cite"},
+            "next_command": "skiller doctor --provider-distribution",
+        }
+    return {
+        "id": "capability-reference-coverage",
+        "owner": "P1.1 (semantic-identity-ownership-v1.md § Record shape)",
+        "source": _CAPABILITY_GAP_FINDING, "status": "degraded",
+        "evidence": {"note": "carrier-literal capability gaps measured at P1.1 close time "
+                             "are recorded in this finding and remain open — not "
+                             "recomputed live here"},
+        "quality": {"completeness": 1.0, "note": "citation of a committed finding, not a live recomputation"},
+        "next_command": f"cat {_CAPABILITY_GAP_FINDING}",
+    }
+
+
+def _analyst_trace_modules_available():
+    """One-way, optional import (mirrors `analyst.doctor`'s own optional `task.route_evidence`
+    check): absence of `analyst` degrades this diagnostic, it never raises a trace."""
+    try:
+        import analyst.metrics as _metrics
+        import analyst.trace as _trace
+    except Exception:
+        return None, None
+    return _trace.SCHEMA_VERSION, _metrics.SCHEMA_VERSION
+
+
+def _trace_quality_diagnostic(repo_root):
+    """Trace quality is printed measured, never rounded to `ok` (Implementation Rules):
+    the last committed measurement (declared subset 5/31, F1=0.96, F10=unknown) is cited
+    from the P3.11 finding, named explicitly as a plan-scoped snapshot — no generic
+    per-project trace store exists yet to query live (Pending Work)."""
+    trace_schema, metrics_schema = _analyst_trace_modules_available()
+    if not (trace_schema and metrics_schema):
+        return {
+            "id": "trace-quality", "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
+            "source": "analyst.trace / analyst.metrics (optional, one-way import)",
+            "status": "unknown",
+            "evidence": {"gap": "analyst package not importable from current PYTHONPATH "
+                                "— optional dependency, degrades rather than errors"},
+            "quality": {"completeness": 0.0, "note": "instrument not on path"},
+            "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor",
+        }
+    p = repo_root / _TRACE_QUALITY_FINDING
+    if not p.is_file():
+        return {
+            "id": "trace-quality", "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
+            "source": f"{trace_schema}/{metrics_schema} (no measurement citation found)",
+            "status": "unknown",
+            "evidence": {"gap": f"no measured-scope citation found at {_TRACE_QUALITY_FINDING}"},
+            "quality": {"completeness": 0.0, "note": "modules present, no committed measurement to cite"},
+            "next_command": f"cat {_TRACE_QUALITY_FINDING}",
+        }
+    return {
+        "id": "trace-quality", "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
+        "source": _TRACE_QUALITY_FINDING, "status": "degraded",
+        "evidence": {
+            "measured_scope": "declared subset 5/31 (bank-layer-2-live-paired)",
+            "F1_critical_requirement_retention": "0.96 measured vs 1.0 required (full critical bank, not-met)",
+            "F10_owner_intervention_ratio": "unknown — no owner_question channel in headless dispatch",
+            "note": "this is the plan's own last committed measurement, NOT a live "
+                    "per-project trace store — no generic store reader exists yet",
+        },
+        "quality": {"completeness": 1.0, "note": "citation of a committed, hash-checkable finding"},
+        "next_command": f"cat {_TRACE_QUALITY_FINDING}",
+    }
+
+
+def gather_effective_source_diagnostics(env, *, repo_root):
+    """Assemble the five read-only diagnostics from their own sources — the CLI-facing
+    counterpart to `build_effective_source_report`'s pure validation/fold."""
+    return [
+        _identity_ownership_diagnostic(env),
+        _cache_diagnostic(),
+        _capability_gap_diagnostic(repo_root),
+        _hook_ownership_diagnostic(repo_root),
+        _trace_quality_diagnostic(repo_root),
+    ]
+
+
+def _print_effective_source_report(report):
+    print("skiller doctor --effective-source:")
+    for d in report["diagnostics"]:
+        print(f"  [{d['status']}] {d['id']} (owner: {d['owner']})")
+        print(f"      source: {d['source']}")
+        print(f"      evidence: {d['evidence']}")
+        print(f"      next: {d['next_command']}")
+    print(f"\noverall: {report['overall']}")
+
+
 # P1.4 (D51/D62/D63): terminal effective-runtime conformance gate. Cold per-provider
 # install/discover of the DECLARED fixture (all repo marketplace units minus exactly the
 # three donor buckets `general`/`research`/`oss-dev`, D42-conformant), asserting
@@ -574,7 +839,8 @@ def cmd_doctor(env, argv):
     opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool",
                               "--settings": "bool", "--provider-distribution": "bool",
                               "--effective-runtime": "bool", "--fixture-out": "str",
-                              "--carrier-out": "str", "--target": "str"})
+                              "--carrier-out": "str", "--target": "str",
+                              "--effective-source": "bool", "--json": "bool"})
     if opts["help"]:
         print("skiller doctor [--downstream] [--vendor-drift] [--settings [--target P]]\n"
               "  --downstream:   гигиена publish-surface онбордженных проектов "
@@ -586,11 +852,24 @@ def cmd_doctor(env, argv):
               "  --effective-runtime [--fixture-out F] [--carrier-out F]: P1.4 cold "
               "install/discover conformance gate (declared fixture, catalog-wide "
               "uniqueness, D42 negative fixture); опц. запись declared-literal/carrier-set.\n"
+              "  --effective-source [--json]: read-only composed effective-source doctor "
+              "(active semantic owner/provenance/collisions, cache, capability/reference "
+              "coverage, hook ownership, trace-quality — versioned JSON with --json).\n"
               "  --settings:     аудит настроек Claude Code (фасад → harness "
               "doctor --settings).")
         return
     if opts.get("settings"):
         _delegate_settings_doctor(env, opts)
+        return
+    if opts.get("effective_source"):
+        from core import find_repo_root
+        repo_root = find_repo_root(env.root) or env.root
+        diagnostics = gather_effective_source_diagnostics(env, repo_root=repo_root)
+        report = build_effective_source_report(diagnostics)
+        if opts.get("json"):
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            _print_effective_source_report(report)
         return
     if opts.get("provider_distribution"):
         from .config import resolve_target

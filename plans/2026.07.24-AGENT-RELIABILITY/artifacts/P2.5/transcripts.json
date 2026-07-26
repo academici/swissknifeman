@@ -825,18 +825,23 @@
         "acceptance_scopes": [
           "internal"
         ],
-        "declared_status": "failed"
+        "declared_status": "failed",
+        "trace_completeness": 0.6666666666666666,
+        "trace_missing_fields": [
+          "contract_ref",
+          "finding_refs"
+        ]
       },
       "transcript": [
         {
           "seq": 1,
-          "target": "phases/P2.md",
+          "target": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/canary-results.json::cases[0](case-01-tiny-control).traces[0]",
           "type": "read"
         },
         {
+          "required_fields_complete": false,
           "seq": 2,
-          "target": "файлы шага",
-          "type": "mutation"
+          "type": "trace_emitted"
         },
         {
           "seq": 3,

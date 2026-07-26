@@ -21,9 +21,12 @@ resulting transcript+outcome, never a value asserted by hand:
     (hook resolution/ownership -- checked against the live tree AND a synthetic
     reproduction of each case's declared bad fixture), `skiller registry --check`
     (publication version-reuse).
-  * One honest miss -- `trace-record-missing`: no `trace_emitted` seam exists
-    anywhere in the repo (grepped, not asserted); reported `declared_status:
-    failed`, never fabricated green.
+  * `trace-record-missing` (P3.8, D81 F1/D85): drives the delivered P3.1 seam
+    (`analyst.trace.build_trace_record`) over a real committed P3.4 canary trace
+    record and reports its literal `quality.completeness`/`missing`, never an
+    asserted value. `trace_emitted` is a bank *event name*, not a package symbol
+    -- it was never greppable text in `packages/*/lib/**/*.py`, and the honest
+    result is whatever that real record's completeness turns out to be.
 
 No case invents a fixture the run then approves: task-contract-driven cases
 that test a NEGATIVE path (route undershoot, missing portability input, ...)
@@ -660,21 +663,59 @@ def case_publication_version_reuse():
 
 
 def case_trace_record_missing():
-    hits = []
-    for path in (REPO_ROOT / "packages").glob("*/lib/**/*.py"):
-        try:
-            if "trace_emitted" in path.read_text(encoding="utf-8", errors="replace"):
-                hits.append(str(path.relative_to(REPO_ROOT)))
-        except OSError:
-            continue
-    events = [
-        {"type": "read", "target": "phases/P2.md"},
-        {"type": "mutation", "target": "файлы шага"},
-        {"type": "final_response"},
-    ]
-    # Honest miss (D30/D59): no trace_emitted seam exists anywhere in the repo yet
-    # (grepped above, not asserted) -- never fabricated as a claimed success.
-    outcome = {"declared_status": "failed", "acceptance_scopes": ["internal"]}
+    # P3.8 (D81 F1/D85): drive the delivered P3.1 seam over a real committed
+    # trace input instead of grepping for `trace_emitted` as if it were package
+    # source text -- it is a bank event name, `analyst.trace.build_trace_record`
+    # is the seam that emits it.
+    sys.path.insert(0, str(REPO_ROOT / "packages" / "analyst" / "lib"))
+    from analyst import trace as analyst_trace
+
+    canary_path = PLAN_DIR / "artifacts" / "P3.4" / "canary-results.json"
+    canary = _load_json(canary_path)
+    source_case = canary["cases"][0]
+    source_trace = source_case["traces"][0]
+    source_ref = (f"{canary_path.relative_to(REPO_ROOT)}"
+                  f"::cases[0]({source_case['case_id']}).traces[0]")
+
+    raw = {
+        "provenance": dict(source_trace["provenance"]),
+        "occurred_at": source_trace["occurred_at"],
+        "plan_ref": source_trace["plan_ref"],
+        "contract_ref": source_trace["contract_ref"],
+        "route": source_trace["route"],
+        "dispatch": source_trace["dispatch"],
+        "finding_refs": list(source_trace["finding_refs"]),
+        "public_outcome": source_trace["public_outcome"],
+        "reasons": dict(source_trace["reasons"]),
+    }
+
+    events = [{"type": "read", "target": source_ref}]
+    try:
+        record = analyst_trace.build_trace_record(
+            raw,
+            provider_id=source_trace["provenance"]["provider_id"],
+            project_id=PLAN_ID,
+            identity=source_trace["provenance"]["raw_ref"],
+            turn_id=source_case["case_id"],
+        )
+    except analyst_trace.TraceError as exc:
+        events.append({"type": "final_response"})
+        return events, {"declared_status": "failed", "acceptance_scopes": ["internal"],
+                        "trace_build_error": str(exc)}
+
+    # Honest result (D85): report the real record's literal completeness, never
+    # a hand-asserted True -- the delivered seam fired, this specific committed
+    # dispatch record may still be degraded (contract_ref/finding_refs not
+    # captured by the P3.4 harness), and that is a result, not a defect here.
+    required_fields_complete = record["quality"]["completeness"] == 1.0
+    events.append({"type": "trace_emitted", "required_fields_complete": required_fields_complete})
+    events.append({"type": "final_response"})
+    outcome = {
+        "declared_status": "success" if required_fields_complete else "failed",
+        "trace_completeness": record["quality"]["completeness"],
+        "trace_missing_fields": record["quality"]["missing"],
+        "acceptance_scopes": ["internal"],
+    }
     return events, outcome
 
 

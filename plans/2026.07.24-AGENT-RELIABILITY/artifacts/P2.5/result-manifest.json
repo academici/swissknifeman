@@ -88,7 +88,7 @@
       "total": 1
     }
   },
-  "content_hash": "4550549804e5458206dbf740d2e56f1a964776174dfd5c17ff230618f8b8750e",
+  "content_hash": "7732749f4f900c18e5cb6cd65d45075e4c3123df5d78d90cc78b1bc021822ca0",
   "counts": {
     "cases": 31,
     "control": 6,
@@ -98,9 +98,9 @@
   },
   "files": {
     "bank-manifest.json": "cbb7716e60685ef1ec07205d7b5b403482b5bf59859b533d435ad471ac0128d5",
-    "candidate-results.json": "cddf2f2544a17bfeb210272ac1febd5e969406eb1dcf09935ccd60f4e4a20fd5",
-    "transcripts.json": "642925616ab54e11d55ad735a5b5e3206ce7ede9b44a82a1dda35cb1f97db582",
-    "verify_result_manifest.py": "6c1458de5edfe7fa1b9bc8fed4fb51addf89c72388d0d68f87d278d82fdeb5c7"
+    "candidate-results.json": "ea2c81a9bff4552049337b59421057d619c6c9335df07d666d40b3b24f02ec29",
+    "transcripts.json": "af1307b594a58ead66a6e84eabe9c39bb6ac6ae5e305dfd3021e07b2a00226d8",
+    "verify_result_manifest.py": "0db77ee544493c37157a2bc71371689439082bc67634290eea75d070b6083b00"
   },
   "floor_status": [
     {
@@ -229,10 +229,10 @@
   "grader_version": "1.0.0",
   "input_provenance": {
     "generator": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.5/generate_transcripts.py",
-    "generator_sha256": "ef9872efdf70432d54b5a27c760dff5b5edcf19e03fc4a157233e33945b6d38d",
+    "generator_sha256": "2927c8a2dd10327e27208345c3801f0613e443e3c4af9ecbbc183881eb483033",
     "note": "committed generator + committed sha256 of transcripts.json -- a future regression of either is visible as a content_hash/sha256 diff against this sealed record, never re-derived from an uncommitted scratch input",
-    "transcripts_sha256": "642925616ab54e11d55ad735a5b5e3206ce7ede9b44a82a1dda35cb1f97db582",
-    "tree_anchor": "9b20dafa"
+    "transcripts_sha256": "af1307b594a58ead66a6e84eabe9c39bb6ac6ae5e305dfd3021e07b2a00226d8",
+    "tree_anchor": "0c216ce2"
   },
   "layer": "candidate-p2.8",
   "metrics": {
@@ -274,7 +274,6 @@
     {
       "case_id": "trace-record-missing",
       "failed_checks": [
-        "A1",
         "A2"
       ],
       "family": "trace",

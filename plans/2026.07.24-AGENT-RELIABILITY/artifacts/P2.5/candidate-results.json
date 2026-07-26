@@ -939,12 +939,12 @@
       "case_id": "trace-record-missing",
       "checks": [
         {
-          "detail": "event_present trace_emitted: 0",
+          "detail": "event_present trace_emitted: 1",
           "expect": true,
           "grader": "G-EVENT-PRESENT",
           "id": "A1",
-          "observed": false,
-          "ok": false,
+          "observed": true,
+          "ok": true,
           "tags": [
             "requirement_retention"
           ]

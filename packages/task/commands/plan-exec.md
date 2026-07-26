@@ -50,6 +50,15 @@ effort: medium
    Гейт — ЧТЕНИЕ §3 глазами, не парсинг (форм Routing во флоте много, regex запрещён). Разрешение
    владельца РЕПЛИКОЙ в чате гейт не снимает: оно выражается ЗАПИСЬЮ `Exec = plan-exec` в §3.
 
+   **Pre-mutation (P2.2).** Гейт п. 2 выше — прозовая реализация ровно того, что формально
+   владеет `packages/task/lib/task/task_contract.py::pre_mutation` (task-contract-v1.md
+   §Pre-mutation predicate, 12 упорядоченных reason codes) поверх
+   `plan-portability-v1.md` (tier-классификация/lint, `task_contract.portability_lint`) —
+   компилятор владеет precedence/conflict/hash/portability, эта команда его зовёт (при
+   наличии смонтированного Task Contract JSON — `python3 -m task.task_contract check
+   --contract <path>`), а не пересказывает логику второй прозой; шаги 2–3 остаются
+   единственным SSOT процедуры там, где контракт не компилируется явно.
+
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
@@ -87,6 +96,14 @@ effort: medium
    записи в Known Deviations/Pending Work, а не пассивное «готов к следующему, были ошибки».
 
 7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан.
+
+   **Pre-final (P2.2).** Топология ниже (два коммита, зелёная Validation, `plan-lint`) —
+   прозовая реализация `task_contract.py::pre_final` (task-contract-v1.md §Pre-final
+   predicate: `ACCEPTANCE_NOT_PUBLIC` / `EVIDENCE_REF_UNKNOWN` /
+   `EVIDENCE_PROOF_CLASS_INSUFFICIENT`) — как минимум ОДНО поле `Deliverables`/Validation
+   обязано резолвиться в публично проверяемый факт (реальная команда, реальный вывод), не
+   только внутренний byte/hash-green результат (D30). Компилируемый Task Contract
+   (при его наличии) прогоняется тем же модулем ДО объявления item'а завершённым.
 
    **Топология — ДВА коммита (единственная; шаги 1–6 строго в этом порядке):**
    1) **Item-коммит.** Дифф Scope (код/артефакты) ТОЛЬКО по путям `Files` item'а — файлы плана в него

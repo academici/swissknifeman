@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.11.0
+version: 2.12.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -1102,6 +1102,13 @@ milestone-делегаты (по плану-делегату на item); Validat
 Provider mapping проецирует эти minima в native selectors. `plan-run` не имеет fixed route:
 его минимум приходит из item Routing, а observed route сессии проверяется тем же fail-closed
 гейтом. Claude invocation — `/task:…`, Codex — `$ task:…`; UI prefix не semantic identity.
+
+**Task Contract compiler (v2.12.0).** Pre-mutation/pre-final предикаты, precedence/conflict-
+резолюция, content-hash и tiered-portability классификация — один модуль,
+`packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
+`plan-portability-v1.md` плана `2026.07.24-AGENT-RELIABILITY`, item P2.2). Команды его зовут
+в отмеченных pre-mutation/pre-final точках, а не пересказывают логику второй прозой;
+`plan_lint.py` зовёт его же строковый тест «внешности» пути для tiered-portability lint'а.
 
 ## 14. Чеклист качества плана
 

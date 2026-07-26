@@ -41,6 +41,10 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # журнала реюзает её вместо дубля правил (Code Guidance P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
+# task.task_contract — единственный владелец строкового теста «внешности» execution
+# input'а (task-contract-v1.md §Portability, frozen P0.2); tiered-portability lint (P2.2)
+# зовёт его, а не пересказывает список префиксов вторым списком (Implementation Rules P2.2).
+from task import task_contract
 
 # --- канон схемы -------------------------------------------------------------
 
@@ -245,6 +249,93 @@ PHASE_HANDOFF_CLOSURE_RE = re.compile(
 PHASE_HANDOFF_NEGATION_LITERALS = ("не закрыт",)
 PHASE_HANDOFF_NEGATION_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_NEGATION_LITERALS), re.IGNORECASE)
+
+# --- P2.2/D26/D47: tiered-portability lint (plan-portability-v1.md, task_contract.py) ---
+# Классификация РОЛИ пути (execution input vs provenance) — ПОЗИЦИОННЫЙ тест: путь
+# execution-input, только если появляется в ЗНАЧЕНИИ полей Inputs/Required Reads/Validation
+# КОНКРЕТНОГО item'а (то самое «что item реально читает» — plan-portability-v1.md
+# §Provenance vs execution input). Прочая проза плана (Implementation Rules, Code Guidance,
+# brief/, findings/) НЕ сканируется вовсе — упоминание пути там по построению не может стать
+# execution input, что и есть self-conformance fixture этого плана (tmp/-ссылка в
+# brief/00-brief.md обязана проходить). Регекс по подстроке `tmp/` для ЭТОГО шага (роль)
+# ЗАПРЕЩЁН (D47) — используется только позиция поля. Строковый тест «внешности» пути
+# (абсолютный/`~`/`../`/URL/`tmp/`-корень) — ОТДЕЛЬНЫЙ шаг ПОСЛЕ того, как роль уже решена
+# позиционно (task_contract.is_external_path, task-contract-v1.md §Portability, frozen P0.2).
+# Severity-cutoff (тот же паттерн, что у BRIEF_CANON_DATE/JOURNAL_CANON_DATE): датовые
+# планы ОТ этой даты — ERROR, старее — WARNING. Дата НАМЕРЕННО позже дня запечатывания
+# правила (2026-07-26, P2.2): fleet-замер на живом дереве (`bash
+# packages/task/scripts/validate.sh`) вскрыл ~40 `~`/абсолютных путей в Required
+# Reads/Validation ДРУГИХ активных планов (`2026.07.18-FOREMAN`, `2026.07.25-ECO-OPT`) —
+# датируй правило раньше их даты, и чужая поверхность (И2) ловит новые ERROR без их
+# участия. Правило само по себе уже применено и протестировано (юнит-тесты гоняют его на
+# ERROR-тир синтетическими датовыми фикстурами); отложенный cutoff — только про то, какие
+# УЖЕ СУЩЕСТВУЮЩИЕ планы флота не красятся задним числом (back-compat §2).
+PORTABILITY_TIER_CANON_DATE = "2026.07.27"
+PORTABILITY_ROLE_FIELDS = ("Inputs", "Required Reads", "Validation")
+# Shell-редирект (`> файл` / `>> файл`) в поле Validation — ЦЕЛЬ записи диагностики
+# (output её собственной команды), не execution input; вырезается ДО скана путей, иначе
+# скретч-редирект `>/tmp/…` читался бы как «item читает /tmp/…» (ложное срабатывание).
+PORTABILITY_SHELL_REDIRECT_RE = re.compile(r">>?\s*\S+")
+# Путь-кандидат — любой path-like токен (≥1 `/`, path-safe символы), backtick-цитата или
+# голый (снипеты/фикстуры протокола закавычивание не требуют) — сканируется по ВСЕМУ тексту
+# поля, а не по одному «атомарному» backtick-спану (тот часто несёт целую команду). Префикс
+# `./` (repo-relative CLI-инвокация вида `./packages/skiller/bin/skiller`) — ОТДЕЛЬНАЯ ветка
+# от голого `/` (абсолютный путь): без неё ведущая точка «съедалась» бы регексом, и
+# `./packages/…` читался бы как `/packages/…` (абсолютный, внешний) — ложное срабатывание.
+PORTABILITY_PATH_RE = re.compile(
+    r"(?:~/|\.\./|\./|/)?[A-Za-z0-9_.][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_.][A-Za-z0-9_.-]*)+")
+
+
+def _portability_execution_paths(fields):
+    """Пути (path-like токены, backtick-цитата или голые) в значениях ролевых полей
+    item'а (ROLE-тест, D47): другие поля (Implementation Rules/Code Guidance/Why/…)
+    НЕ сканируются — упоминание там не даёт пути роль execution input."""
+    paths = []
+    for name in PORTABILITY_ROLE_FIELDS:
+        value = fields.get(name, "") or ""
+        cleaned = PORTABILITY_SHELL_REDIRECT_RE.sub(" ", value)
+        paths.extend(PORTABILITY_PATH_RE.findall(cleaned))
+    return paths
+
+
+def _plan_declares_committed_bundle_tier(plan_dir):
+    """plan-portability-v1.md §Classification rule — tier(work) применительно к
+    исполняемому мастер-плану целиком: план протокола ПО КОНСТРУКЦИИ несёт `handoff.md`
+    (multi-session/handoff всегда true — обязательный носитель SKILL §8) → committed-bundle.
+    План без `handoff.md` (ещё не дошёл до схемы) этим гейтом не разбирается — другая
+    диагностика уже требует сам файл."""
+    return (Path(plan_dir) / "handoff.md").is_file()
+
+
+def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
+    """P2.2/D26/D47: план tier=committed-bundle (что верно для любого исполняемого
+    мастер-плана по конструкции, см. `_plan_declares_committed_bundle_tier`) обязан
+    нести ≥1 committed/predecessor-produced execution input и не содержать внешний
+    (host/chat/mAInd/tmp/foreign) путь В РОЛИ execution input — иначе `plan_lint`
+    отказывает (`task_contract.PORTABILITY_INPUT_MISSING`/`PORTABILITY_EXTERNAL_INPUT`).
+    Датовые планы от PORTABILITY_TIER_CANON_DATE — ERROR, старее/legacy — WARNING
+    (back-compat, тот же паттерн, что у brief/roadmap/journal-гейтов)."""
+    if not _plan_declares_committed_bundle_tier(plan_dir):
+        return
+    report = (diag.error if (PLAN_ID_DATED_RE.match(plan_id)
+                             and plan_id[:10] >= PORTABILITY_TIER_CANON_DATE) else diag.warning)
+    found_committed = False
+    for item_id, info in sorted(all_items.items()):
+        item_path = phases.get(info.get("phase"), {}).get("path", plan_dir)
+        for raw_path in _portability_execution_paths(info.get("fields", {})):
+            if task_contract.is_external_path(raw_path):
+                report(item_path, None,
+                       f"item {item_id}: execution input «{raw_path}» — внешний путь "
+                       f"(host/chat/mAInd/tmp/foreign, PORTABILITY_EXTERNAL_INPUT, "
+                       f"plan-portability-v1.md)")
+            else:
+                found_committed = True
+    if not found_committed:
+        report(Path(plan_dir) / "plan.md", None,
+               f"план несёт handoff.md (tier=committed-bundle, plan-portability-v1.md "
+               f"§Classification rule) без единого committed execution input ни в одном "
+               f"item'е (PORTABILITY_INPUT_MISSING)")
+
 
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
@@ -1308,6 +1399,10 @@ def lint_plan(plan_dir, diag):
                     diag.warning(path, rr_lineno, f"item {item_id}: пустые Required Reads при статусе «{status_val}»")
                 if _is_empty(va_val):
                     diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
+
+    # --- P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
+    # execution input, либо внешний путь в роли execution input) ----------------
+    _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag)
 
     # --- глобальная уникальность ID item ---------------------------------
     seen = {}

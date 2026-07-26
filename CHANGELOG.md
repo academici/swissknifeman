@@ -4,6 +4,20 @@
 
 ### Added
 
+- **task — Task Contract v1 compiler and tiered-portability lint (P2.2,
+  `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/task_contract.py`: the
+  single checked seam owning content-hash recomputation, the precedence/conflict-resolution
+  ladder, the twelve pre-mutation and three pre-final reason codes of
+  `task-contract-v1.md`, plus the portability tier classification/lint layer of
+  `plan-portability-v1.md` (`PORTABILITY_TIER_MISCLASSIFIED`). Canonical plan commands
+  (`plan-design`/`plan-exec`/`plan-close`/`plan-audit`) now cite this compiler at their
+  pre-mutation/pre-final checkpoints instead of restating the predicate in prose.
+  `plan_lint.py` gained a tiered-portability check (role-based — never a `tmp/` substring
+  match, D47) that rejects a committed-bundle-tier plan without a committed execution input
+  or with an external (host/chat/mAInd/tmp/foreign) one; severity is ERROR only for plans
+  dated `2026.07.27` or later (back-compat, existing fleet plans stay WARNING). Versions:
+  `plan-protocol@2.12.0`, skiller package API + `general`/`core` publication units to
+  `0.5.0`, task plugin/routing to `0.4.0`.
 - **skiller — effective-runtime conformance gate (P1.4, D51/D62/D63).** New
   `skiller doctor --effective-runtime`: cold per-provider install/discover of the declared
   positive fixture (every repository-marketplace unit minus exactly the three donor buckets

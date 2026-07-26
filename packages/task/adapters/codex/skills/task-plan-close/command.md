@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:335d0f0ee37b49f618d8efaf44adf789a1dea4fbd7297a26a36d8e6d764582d9
+Canonical SHA-256: sha256:28498b421c66f42f8721bf8c19214a7bd18c892b309f55a5c914105ae0c62022
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -37,6 +37,11 @@ Adapter: task.codex-command/1.0.3
   `## 2. Execution Rules` — план запрещает `$ task:plan-exec` (программный план) →
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
+
+**Pre-final (P2.2).** Предикат material/process шага 4 ниже и оба чек-листа
+(`Pn.m`/`Pn`) — прозовая реализация `packages/task/lib/task/task_contract.py::pre_final`
+(task-contract-v1.md §Pre-final predicate) — компилятор владеет hash/precedence/portability,
+эта команда его зовёт при наличии смонтированного Task Contract, а не пересказывает логику.
 
 ## Режим `Pn.m` — реконсиляция item'а
 

@@ -424,6 +424,97 @@ class TestAuditScopePayload(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
 
 
+class TestTieredPortability(TmpPlanTestCase):
+    """P2.2/D26/D47: план с `handoff.md` (tier=committed-bundle по конструкции) обязан
+    нести ≥1 committed execution input и не содержать внешний (host/chat/mAInd/tmp/foreign)
+    путь В РОЛИ execution input (Inputs/Required Reads/Validation); упоминание того же пути
+    ВНЕ ролевых полей (Why/Implementation Rules/…) — provenance и обязано проходить."""
+
+    def _write(self, plan_id, *, required_reads="1) lib/pkg/config.py"):
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace("**Required Reads:** 1) lib/pkg/config.py",
+                            f"**Required Reads:** {required_reads}")
+        phase.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_committed_execution_input_is_clean(self):
+        plan_dir = self._write("2026.07.27-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY"), [])
+        self.assertEqual([w for w in diag.warnings if "PORTABILITY" in w], [])
+
+    def test_dated_plan_with_tmp_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) tmp/scratch-notes.md")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_dated_plan_with_absolute_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) /etc/passwd")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_dated_plan_with_home_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) ~/.codex/session.json")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_legacy_plan_with_external_execution_input_is_warning_not_error(self):
+        """Back-compat §2: планы старее канона красить задним числом нельзя."""
+        plan_dir = self._write("DEMO-LEGACY", required_reads="1) tmp/scratch-notes.md")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), [], diag.errors)
+        self.assertTrue([w for w in diag.warnings if "PORTABILITY_EXTERNAL_INPUT" in w],
+                        diag.warnings)
+
+    def test_tmp_mention_outside_role_fields_is_provenance_and_passes(self):
+        """D47: `tmp/`-упоминание в Why/Implementation Rules (не Inputs/Required
+        Reads/Validation) — provenance, не execution input; та же дисциплина, что
+        закрепляет self-conformance фикстура этого плана на `brief/00-brief.md`."""
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace(
+            "**Why:** Диагностика дорогая.",
+            "**Why:** Диагностика дорогая; см. user-owned `tmp/scratch-notes.md` "
+            "как provenance.")
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY"), [])
+        self.assertEqual([w for w in diag.warnings if "PORTABILITY" in w], [])
+
+    def test_shell_redirect_target_in_validation_is_not_an_execution_input(self):
+        """Скретч-редирект (`> файл`) в поле Validation — цель записи диагностики
+        собственной команды item'а, не execution input (P4.2-инцидент на этом самом
+        плане до фикса regex'а)."""
+        plan_dir = self._write(
+            "2026.07.27-DEMO",
+            required_reads="1) lib/pkg/config.py",
+        )
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace(
+            "**Validation:** bash scripts/test.sh — зелёный.",
+            "**Validation:** `bash scripts/test.sh >/tmp/scratch-output.txt` — зелёный.")
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), [], diag.errors)
+
+    def test_dated_plan_without_any_committed_execution_input_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = (text.replace("**Inputs:** список ключей.", "**Inputs:** ничего внешнего.")
+                    .replace("**Required Reads:** 1) lib/pkg/config.py",
+                             "**Required Reads:** прочитать контекст владельца.")
+                    .replace("**Validation:** bash scripts/test.sh — зелёный.",
+                             "**Validation:** проверить руками."))
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_INPUT_MISSING"), diag.errors)
+
+
 class TestValidPlan(TmpPlanTestCase):
     def test_valid_plan_ok(self):
         plan_dir = write_valid_plan(self.root)

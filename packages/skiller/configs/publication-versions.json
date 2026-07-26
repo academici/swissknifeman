@@ -2,7 +2,8 @@
   "_doc": "D27: per-publication-unit version map, separated from the skiller package API SemVer (packages/skiller/package.json). `default_unit_version` freezes the exact pre-migration value every generated unit's manifest carried before this map existed (skiller API was 0.4.0 at freeze time and every unit's rendered `version` field inherited it uniformly); a unit NOT listed under `units` stays pinned to that frozen baseline, so an unrelated owner's package-API bump never touches its manifest bytes (byte-identical guard, generated-artifact-version-v1.md). Only an owner item's Implementation Rules may add/bump an entry here, and each bump is read from the repo, not assumed (P1.1 ledger).",
   "default_unit_version": "0.4.0",
   "units": {
-    "core": "0.4.1",
+    "core": "0.5.0",
+    "general": "0.5.0",
     "skm": "0.4.1",
     "repository-bootstrap": "0.2.0"
   }

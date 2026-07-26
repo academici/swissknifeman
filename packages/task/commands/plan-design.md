@@ -133,6 +133,12 @@ effort: high
    менялись КОНТРАКТЫ фаз (не только статусы) — предупреди владельца, что нужен новый
    `finish`, а не только пересборка карты.
 
+**Compiler (P2.2).** `§3 Routing`, портируемость (D26/D47) и precedence/conflict-разрешение
+компилируются одним модулем — `packages/task/lib/task/task_contract.py`
+(`root/contracts/task-contract-v1.md`, `root/contracts/plan-portability-v1.md`). Пишешь
+здесь Routing/tier-признаки item'а — не пересказывай сами предикаты второй прозой; их
+владелец компилятор, эта команда только производит вход для него.
+
 ## Схема (компактная выжимка — на случай отсутствия скилла)
 
 - `plan.md`: `## 0. Meta` (таблица: Plan ID / Title / Version / Status / Document Type /

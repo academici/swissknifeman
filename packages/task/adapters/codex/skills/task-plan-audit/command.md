@@ -1,10 +1,16 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:e98d0c1937a2895f396b3bea4d70c51764a83f08c799188fcf144351a02df1ba
+Canonical SHA-256: sha256:2346d1afa3380aa306707c605dfa6f26e4c30d4b0eb9213aa3d99aa7a3fa8d03
 Adapter: task.codex-command/1.0.3
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
+
+**Compiler (P2.2).** `status-rule`/material-предикат чеклиста ниже и tiered-portability
+находки — прозовая реализация `packages/task/lib/task/task_contract.py`
+(pre_mutation/pre_final, `task-contract-v1.md`) и `plan_lint.py`'s tiered-portability lint
+(`plan-portability-v1.md`, D47) — читай их вывод как источник истины предиката, не
+пересчитывай вручную вторым способом.
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,

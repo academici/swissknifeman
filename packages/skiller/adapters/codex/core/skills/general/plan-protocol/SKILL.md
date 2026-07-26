@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.11.0
+version: 2.12.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -1081,6 +1081,13 @@ Provider mappings project minima to native selectors. `plan-run` has no fixed ro
 comes from item Routing and the same fail-closed gate checks the observed session route. Claude
 invocation is `/task:…`; Codex is `$ task:…`; UI prefix is not semantic identity.
 
+**Task Contract compiler (v2.12.0).** Pre-mutation/pre-final predicates, precedence/conflict
+resolution, content hash and tiered-portability classification are one module,
+`packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
+`plan-portability-v1.md` of plan `2026.07.24-AGENT-RELIABILITY`, item P2.2). Commands call it
+at the noted pre-mutation/pre-final checkpoints instead of restating the logic in prose;
+`plan_lint.py`'s tiered-portability lint calls its external-path string test too.
+
 ## 14. Plan-quality checklist
 
 - [ ] Every item executable by its assigned model class with no context beyond the plan.
@@ -1161,4 +1168,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 0cbc635b1b804899f8cf9abc926c68c653d4cc296fe8b469e40c9536bd718f19 -->
+<!-- ru-source-sha256: 536fb42b64aa6b3f228ab417059a8e2b78768221a3273edd8b7639257eeeb1c6 -->

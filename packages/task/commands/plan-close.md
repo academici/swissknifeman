@@ -39,6 +39,11 @@ effort: low
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
 
+**Pre-final (P2.2).** Предикат material/process шага 4 ниже и оба чек-листа
+(`Pn.m`/`Pn`) — прозовая реализация `packages/task/lib/task/task_contract.py::pre_final`
+(task-contract-v1.md §Pre-final predicate) — компилятор владеет hash/precedence/portability,
+эта команда его зовёт при наличии смонтированного Task Contract, а не пересказывает логику.
+
 ## Режим `Pn.m` — реконсиляция item'а
 
 1. Прочитай `plans/<PLAN-ID>/plan.md` (Status Board) и item Pn.m в `phases/Pn.md`.

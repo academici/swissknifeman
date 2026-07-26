@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.10.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; bounded A3 repair и Owner authority E — D50–D55)
+**Обновлён:** 2026-07-26 · **Соответствует plan.md:** v1.14.0 (neutral Routing SSOT; acting provider не назначен — native Codex-блоки суть recovery-проекции; фазы P0 и P1 терминальны; carrier P2.1 синхронизирован с D64–D68)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -15,8 +15,8 @@ carrier (D22); provider mapping проверяется в cold-start preflight �
 fallback. D33 остаётся историческим Claude assignment; D35 его supersedes.
 
 **Exec boundary (действует с v1.10.0, Owner authority E / D50):** `G-EXEC`
-**выдан** для self-host — P0–P3 исполняются без отдельного человеческого гейта,
-старт с P0.1 по `handoff.md`. G0 (заморозка Acceptance после P0.3) принимает
+**выдан** для self-host — P0–P3 исполняются без отдельного человеческого гейта;
+фазы P0 и P1 терминальны, следующий шаг всегда берётся из `handoff.md`. G0 (заморозка Acceptance после P0.3) принимает
 агент D-записью. За владельцем остаётся ровно **G1** в P4.3: tag/push/release,
 fleet и 17 подключённых проектов, запись в consumer-репозитории, продолжение
 `2026.07.18-FOREMAN`. Персональное рационирование audit-слотов снято: шесть
@@ -292,7 +292,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P2.1. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P2.md and P2.1 Required Reads; verify terminal P1. Root delegates P2.1 to a fresh grounded subagent. Freeze total state/authority/review/fresh-dispatch contracts and negative cases only; no package edits. Close and continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P2.1. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P2.md and P2.1 Required Reads in their declared order, starting with research/06-p2.1-contract-boundary.md; verify terminal P0 and P1. Root delegates P2.1 to a fresh grounded subagent. Precondition gate before any write: git diff --exit-code must be clean for task-contract-v1.md, its schema, reliability-acceptance-v1.md, artifacts/P0.2 and artifacts/source-evidence — a dirty frozen input fails closed naming path and owner. Never capture a base-sha and never run assert_generated_scope.py here: remediation-map.json baseline_owners is exactly P1.2, P1.3, P1.5, P2.2, P2.3, and artifacts/P2.1/base-sha.txt must not exist. The three contracts LAYER ON the frozen P0.2 Task Contract per D64: each opens with a Frozen upstream section citing file:line, reason codes are never re-minted, and portability tiers, authority classes, both predicate ladders, the slice partition, the cold-start rule and the three context values stay P0.2 property. Declare the closed sets literally per D65 — nine states, fifteen events, six decision outputs, three finding types, four severities, two authority profiles — prove totality by construction over all 135 cells with no wildcard, prove the projection to the six canonical statuses and all eight journal RESULT_VALUES in both directions, and treat green-versus-orange as the material_deviation attribute of DONE, never a state. Emit the deterministic decision function consumed by 2026.07.18-FOREMAN and the machine finding vocabulary consumed by 2026.07.25-ECO-OPT P9 per D66; parameterize the cap subject by authority profile per D68 and include at least five positive routine cases that must yield continue-next per F14. If a real transition does not fit the declared sets, stop and record a D-entry instead of extending them silently. Write only the five declared Files, no package or canon edits, close through task-plan-run and continue.'
 ```
 
 ### P2.2 — compiler and root dispatch

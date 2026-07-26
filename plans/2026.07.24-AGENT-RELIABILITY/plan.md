@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.9 |
+| Version | 1.17.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (P3.3 закрыт 🟢 Done: `skiller.quality.eval` system-bank adapter — 8 deterministic transcript/outcome operators, `compute_system_metrics` byte-identical to the frozen bank's own published `layer1_metrics`/`sample.selected` on the real 31-case bank, `provider_capability_matrix`, `classify_portability_tier` (cites `task.task_contract`), `pair_system_metric` (deferred layer-2), committed `artifacts/P3.3/benchmark.json`+`benchmark-manifest.json`; следующий — `phases/P3.md` P3.4) |
+| Last Updated | 2026-07-26 (P3.4 закрыт 🟢 Done: disposable-worktree self-host canary — 6/6 real headless-dispatch cases pass (tiny control, plan/docs, provider publication, hook cold start, sequential multi-item dispatch, failure/recovery) in one detached worktree at `CANDIDATE_SHA`, routed axes pinned by flag (sonnet/high, D46), rollback rehearsal to `PRE_PLAN_SHA` clean both ways, one Unified Agent Trace v1 record per real dispatch; следующий — `phases/P3.md` P3.5) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -252,7 +252,7 @@ audit/fix-loop без продукта, который план создан л�
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 3/5 | 🟠 Done with deviations |
 | P2 | Checked outcome execution и bounded review | 6/11 | 🟠 Done with deviations |
-| P3 | Unified traces, evals и isolated self-host canary | 2/5 | 🟡 In progress |
+| P3 | Unified traces, evals и isolated self-host canary | 3/5 | 🟡 In progress |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -408,6 +408,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.1 закрыт 🟠: новый контракт `unified-agent-trace-v1.md` + `analyst.trace`/`harness.provider_trace`/`task.journal` trace_ref, 55 тестов зелёных — F6-число деферится на P3.2/P3.3 (D80) — детали см. `phases/P3.md` P3.1 Completion Notes. Version 1.16.6 → 1.16.7. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.2 закрыт 🟢: `analyst.metrics` — paired metric arithmetic над committed trace+bank, 21 тестов зелёных — детали см. `phases/P3.md` P3.2 Completion Notes. Version 1.16.7 → 1.16.8. |
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.3 закрыт 🟢: `skiller.quality.eval` system-bank adapter, `compute_system_metrics` byte-identical опубликованным `layer1_metrics`/`sample.selected`, 24 новых теста — детали см. `phases/P3.md` P3.3 Completion Notes. Version 1.16.8 → 1.16.9. |
+| 2026-07-26 | plan-run/Claude Sonnet 5/high | P3.4 закрыт 🟢: disposable-worktree self-host canary — 6/6 real headless-dispatch cases pass, rollback rehearsal clean, per-dispatch Unified Agent Trace v1 records — детали см. `phases/P3.md` P3.4 Completion Notes. Version 1.16.9 → 1.17.0. |
 
 ## 7. Contracts
 

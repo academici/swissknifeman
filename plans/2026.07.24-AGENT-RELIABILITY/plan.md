@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.16.5 |
+| Version | 1.16.6 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-26 (фаза P2 закрыта 🟠 Done with deviations: все 11 items терминальны — 6 🟢 / 5 🟠; `## Phase Handoff` перезаписан целиком, маркер «УСТАРЕЛ — реопенена D70» снят; следующий — `task:plan-audit … P2`, заход 2 из двух) |
+| Last Updated | 2026-07-26 (реконсиляция записи фазы P2 после аудита, заход 2: восемь дефектов записи устранены — агрегат Phase Handoff P2.7, строка §7 Exported `skiller@0.7.0`, реальный хеш handoff'а, три перепрогнанных числа, литерал Validation P2.8 №7, коды границы P2.10; статусы items не менялись; следующий — `task:plan-exec … P3.1`) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -403,6 +403,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-26 | plan-run/Claude Sonnet 5/high | P2.8 закрыт 🟠: committed `generate_transcripts.py` даёт те же 30/31, честный `covered` по 12 категориям — детали см. phases/P2.md P2.8 Completion Notes. Version 1.16.2 → 1.16.3. |
 | 2026-07-26 | plan-exec/Claude Sonnet 5/medium | P2.9 закрыт 🟢: последний ремонтный item реопена — восемь бухгалтерских находок (F6/F7/F10–F15) сняты поимённо реконсиляцией записи, без мутаций кода — детали см. phases/P2.md P2.9 Completion Notes. Version 1.16.3 → 1.16.4. |
 | 2026-07-26 | plan-close/Claude Sonnet 5/low | Фаза P2 закрыта 🟠 Done with deviations: все 11 items терминальны (6 🟢 / 5 🟠), `## Phase Handoff` перезаписан целиком (маркер «УСТАРЕЛ — реопенена D70» снят), агрегат Known Deviations сведён по всем items. Version 1.16.4 → 1.16.5. |
+| 2026-07-26 | plan-close/Claude Sonnet 5/low | Реконсиляция ЗАПИСИ фазы P2 (8 находок захода 2, статусы items не менялись) — см. `phases/P2.md` Phase Handoff/Completion Notes. Version 1.16.5 → 1.16.6. |
 
 ## 7. Contracts
 
@@ -428,6 +429,7 @@ audit/fix-loop без продукта, который план создан л�
 | `task` plugin/routing (`plugin_version`) | v0.7.0 → v0.8.0 | committed P2.10 (`668012bd`, реопен D70/D78 — компилятор читает закрытый набор §3-заголовков, отображает имя модели в класс по `command-routing.json::class_selectors`, типизирует отказ `_rank` по обеим осям/сторонам вместо `ValueError`) | те же потребители | task; тот же D58/D85 |
 | `plan-protocol` skill canon | v2.14.0 | committed P2.11 (`abd53b4b`, реопен D70/D75–D77/D79) — §13 материально ПОЛНО: бинарный гейт `pre_mutation == allow AND pre_final == allow` (`n/a` больше не зелёное, D76), маршрут исполнителя на pre-final по лестнице D75, обе точки закрытия исполняют границу (М5 закрыт), граница предиката названа (D77), литеральный тест на различающий предикат (D79) | `2026.07.25-ECO-OPT` (его P2.2, P7.1) | skiller; уведомление — этой строкой, не правкой чужого плана (И2) |
 | `task` plugin/routing (`plugin_version`) | v0.8.0 → v0.9.0 | committed P2.11 (`abd53b4b`, реопен D70/D75–D77/D79 — `plan-close.md`/`plan-exec.md`/`plan-run.md`/`plan-audit.md` несут бинарный fail-closed гейт на обеих границах закрытия) | те же потребители | task; тот же D58/D85 |
+| `skiller` package API + `general`/`core` units | v0.7.0 | committed P2.11 (`abd53b4b`) | план `2026.07.25-ECO-OPT` (его P2.2) | skiller; тот же D58/D85 |
 
 ### Consumed
 

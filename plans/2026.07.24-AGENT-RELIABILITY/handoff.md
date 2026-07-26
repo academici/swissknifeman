@@ -1,6 +1,6 @@
-# HANDOFF — 2026-07-26 — after P4.5
+# HANDOFF — 2026-07-26 — after P4.1
 
-**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.1
+**Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P4.2
 
 | Параметр | Значение |
 |:--|:--|
@@ -10,10 +10,10 @@
 | Model | `sonnet` |
 | Thinking | `high` |
 | Context | `same-session — item` |
-| Суть | Вынести вердикт по external provider/core hypotheses по коду — read-only проверка гипотез, следующая по D90 после оплаты Contribution gate |
+| Суть | Read-only effective source doctor — расширить `skiller doctor` одним versioned JSON/text представлением активного семантического владельца/provenance/коллизий, следующий по D90 после вердикта гипотез |
 
 ```
-task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
+task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.2
 ```
 
 **Done:**
@@ -24,48 +24,50 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
   повышаются, замороженные контракты/банк (владелец P0.3) не правятся, слово GREEN в доках и
   packet'е не появляется. Состав фазы — 5 items (D90, порядок `P4.4 → P4.5 → P4.1 → P4.2 →
   P4.3`); оркестрация объявлена (D93, carrier `workflows/wf-agent-reliability-p4.js`).
-- **P4.4 закрыт 🟠 Done with deviations** (item-коммит `4ca7af67`; bookkeeping-коммит понизил
-  статус с изначального 🟢 после adversarial-ревью, вердикт **ATTENTION**). Продукт исполнен
-  по Deliverables: новое правило `plan_lint` (`_lint_write_site_codes_44`) — item `🟢`/`🟠`,
-  чей `Updated` (`## Phase Status`) ISO-датирован ≥ `2026-07-27`, обязан нести оба кода
-  `pre_mutation:`/`pre_final:` = `allow` в Completion Notes; отсутствие любого кода или
-  значение ≠ `allow` — ERROR; вне скоупа — молчание (не WARNING). Ремонт
-  `findings/P3.11-terminal-audit-2.md` § Ф2 (reopen F3, событие 2 из 2): пять items
-  P3.6–P3.10 закрылись без записи кодов, хотя предикат держался. Шесть тестов (четыре
-  обязательных различающих кейса D79 + два defensive), T1/T2 канон-литералов зелёные, одна
-  строка канона `plan-protocol` §8 в обоих языках → `2.15.0`, публикация `skiller@0.8.0`/units
-  `core`/`general@0.8.0`, `registry --check` — «артефакты актуальны», `repository-bootstrap`
-  байт-идентичен. **Но** ревью нашло и подтвердило прогоном на реальных Completion Notes
-  этого же плана дефект точности самого предиката: **Major** — ложный `ERROR` на честно
-  закрытом item'е, если он цитирует чужой `pre_mutation: block:*` где-то выше в тексте
-  (воспроизведено на буквальном тексте P3.10, `phases/P3.md:626-627`); **Minor** — симметрично,
-  item без собственных кодов проходит зелёным, цитируя чужие `allow`/`allow` (класс P3.11).
-  Ни один из шести тестов эти случаи не покрывает. Детали и полная запись Known Deviations —
-  `phases/P4.md` P4.4 Completion Notes / Known Deviations.
-- **P4.5 закрыт 🟢** (item-коммит `e45d0f8f`). Contribution gate D23 (`unified-agent-trace-v1.md`
-  § Contribution gate) оплачен ровно двумя полями `version` + `CHANGELOG.md`: `analyst`
-  `0.1.0 → 0.2.0` (новый публичный модуль `analyst.trace`/`analyst.metrics`, P3.1/P3.2),
-  `harness` `0.3.0 → 0.4.0` (новый публичный модуль `harness.provider_trace`, P3.1) — долг,
-  записанный P3.1 Pending Work/P3.2 Completion Notes как owed, но не применённый, потому что
-  `package.json` лежал вне `Files` тех items. `plugin.json` обоих пакетов НЕ тронут (измеренная
-  граница `research/10 § 4`: `harness` package `0.3.0` уже лежал против plugin `0.2.0` до этого
-  бампа). Отсутствие дрейфа доказано командой: `skiller registry --check` — «артефакты
-  актуальны», `git diff --exit-code` по generated-путям — пусто; `plan-lint.py` — 0 ERROR (1
-  унаследованный WARN, не этот item). Boundary codes: `pre_mutation: allow`, `pre_final: allow`
-  (тот же `content_hash`, состояние item'а между границами не менялось) — печать обязательна
-  предсуществующим каноном P2.7/P2.11, машинный гейт P4.4 этот item НЕ диагностирует (`Updated`
-  `2026-07-26` < cutoff `2026-07-27`, D91 — спроектированное forward-only поведение). Детали —
-  `phases/P4.md` P4.5 Completion Notes.
+- **P4.4 закрыт 🟠 Done with deviations** (item-коммит `4ca7af67`) — машинный гейт `plan_lint`
+  напечатанных кодов границ (ремонт Ф2), ревью ATTENTION: подтверждён Major/Minor дефект
+  точности предиката `_lint_write_site_codes_44` (ложный ERROR/ложное молчание на цитировании
+  чужих кодов). Детали — `phases/P4.md` P4.4 Completion Notes.
+- **P4.5 закрыт 🟢** (item-коммит `e45d0f8f`) — Contribution gate D23 оплачен: `analyst`
+  `0.1.0 → 0.2.0`, `harness` `0.3.0 → 0.4.0`; `registry --check` — «артефакты актуальны»,
+  нулевой дрейф. Детали — `phases/P4.md` P4.5 Completion Notes.
+- **P4.1 закрыт 🟠 Done with deviations** (item-коммит `a376a64e`) — code-grounded вердикт по
+  16 несущим гипотезам запиненного снапшота внешнего аудита: 3 accept (оформлены как FP-1/FP-2/
+  FP-3 — bounded future proposals с владельцем/контрактом/тестами/наблюдаемым исходом,
+  `implemented_by_this_item=false`), 11 reject, 2 unknown (H15 heuristic drift, H16 semantic
+  duplication — недостающее доказательство названо поимённо). Ни одной мутации `packages/**`/
+  `core/**` (`git diff --exit-code -- packages core` = 0). Validation зелёная дословно: `py_compile`
+  exit 0, `json.tool` exit 0, `verify_claim_verdicts.py` → «ok — 553 проверок, снапшот аудита
+  совпал с bundle-manifest» exit 0, `git diff --exit-code -- packages core` exit 0. Boundary
+  codes: `pre_mutation: allow`, `pre_final: allow` (write-site `task_contract.build`, маршрут
+  исполнителя `frontier/high`, model=opus, D75; codegate P4.4 не диагностирует этот item —
+  `Updated=2026-07-26` < `WRITE_SITE_CODES_CANON_DATE=2026-07-27`). **Ревью — ATTENTION, не
+  GREEN**: deliverables_met=true, scope_boundary_ok=true, files_outside_scope пусто, НО продукт
+  item'а несёт два подтверждённых дефекта целостности улик — (Major) `hypothesis-verdicts.json`
+  H06 цитирует несуществующий тест `core/tests/test_provider_config.py::TestProviderConfigResolution::
+  test_negative_validation_matrix_covers_frozen_contract` (реальный тест лежит в
+  `core/tests/test_provider_manifest.py:97`); (Major) сам гейт `verify_claim_verdicts.py`
+  (строки 148–151) проверяет только существование ФАЙЛА из `ref`, символ после `::` не
+  валидируется вовсе — воспроизведено подменой на выдуманное имя теста, вывод остаётся
+  «553 проверок ok»; (Minor) заявленное универсальное правило «every `reject` carries
+  `observation_upheld`» нарушено в H05, гейтом не проверяется. Полная запись — `phases/P4.md`
+  P4.1 Completion Notes / Known Deviations.
 
 **Remaining:**
 
-- **Три items фазы P4** — P4.1 (следующий, D90), P4.2, P4.3 — ни один не стартовал (`⬜`).
-  Ручной фолбэк по items описан в `roadmap.md` § «Фаза P4 — carrier оркестрации»; carrier
-  `wf-agent-reliability-p4.js` остаётся доступным как альтернативный launch-путь (P4.4/P4.5
-  закрыты этим/предыдущим заходом маршрутом `task:plan-run`, не carrier'ом).
-- **Ремонт предиката `_lint_write_site_codes_44`** (Major/Minor находки ревью P4.4) — не
-  носитель ни одного из последующих items; остаётся долгом с носителем «будущий проход по
-  `plan_lint.py`», ОБЯЗАН попасть в P4.3 Owner packet поимённо (D92-класс, `research/10 § 6`).
+- **Два items фазы P4** — P4.2, P4.3 — не стартовали (`⬜`). Ручной фолбэк по items описан в
+  `roadmap.md` § «Фаза P4 — carrier оркестрации»; carrier `wf-agent-reliability-p4.js` остаётся
+  доступным как альтернативный launch-путь (P4.1/P4.4/P4.5 закрыты `task:plan-run`, не carrier'ом).
+- **Ремонт предиката `_lint_write_site_codes_44`** (находки ревью P4.4) — долг с носителем
+  «будущий проход по `plan_lint.py`», ОБЯЗАН попасть в P4.3 Owner packet поимённо.
+- **Ремонт гейта `verify_claim_verdicts.py`** (не проверяет символ после `::` в `ref`) и
+  **исправление цитаты H06** — новый долг с носителем из этого захода, ОБЯЗАН попасть в P4.3
+  packet поимённо (или быть исправлен до P4.3, если владелец P4.2/P4.3 сочтёт это дешевле —
+  правка самого `verify_claim_verdicts.py`/`hypothesis-verdicts.json` НЕ входит в Scope P4.2).
+- **FP-1/FP-2/FP-3 и H15/H16** — обязаны попасть в P4.3 Owner packet поимённо с владельцами;
+  FP-1 пересекается с предметом P4.2 (P4.2 может печатать подмножество provenance-данных в
+  своём замороженном скоупе, но владельцем FP-1 не становится, D92); FP-2 предлагается тому же
+  владельцу, что и долг D88 п.6а.
 - **G1** — единственный действующий Owner-гейт: принимается ВЛАДЕЛЬЦЕМ после packet'а P4.3
   (fleet/consumers/FOREMAN/tag/push/release либо hold). Ни один агент прогона наружу не выходит.
 - **Строка доски P0** остаётся `🟡` при терминальных items — снимается `task:plan-close … P0`
@@ -74,11 +76,13 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
 **Sources of truth:**
 
 - `phases/P4.md` — `## Phase Context` (переопределённый вход, контракт фазы, порядок),
-  `## Phase Status` (5 items, P4.4 `🟠`, P4.5 `🟢`), P4.4/P4.5 ТЗ + Completion Notes + Known
-  Deviations.
-- `plan.md` — §0 Meta (v1.21.3), §3 Routing (строки P4.1–P4.5), §4 Status Board (`P4 1/5`),
-  §7 Contracts Exported (`plan-protocol@2.15.0`, `skiller@0.8.0`, item-коммит `4ca7af67`),
-  D89–D93 (§5), §6 Update Log.
+  `## Phase Status` (5 items, P4.1/P4.4 `🟠`, P4.5 `🟢`), P4.1/P4.4/P4.5 ТЗ + Completion Notes +
+  Known Deviations.
+- `plan.md` — §0 Meta (v1.21.4), §3 Routing (строки P4.1–P4.5), §4 Status Board (`P4 1/5`),
+  §7 Contracts Exported, D89–D93 (§5), §6 Update Log.
+- `artifacts/P4.1/hypothesis-verdicts.json` + `artifacts/P4.1/verify_claim_verdicts.py` —
+  вердикты 16 гипотез + детерминированный верификатор (с обнаруженным ревью пробелом на `::`).
+- `findings/P4.1-code-grounded-audit.md` + `root/provider-core-hypotheses.md` — вход для P4.3.
 - `research/10-p4-entry-gate-and-composition.md` — основание решений захода, в т.ч. § 6
   (долги с носителями, вход packet'а P4.3) и § 8 (pre-mortem).
 - `phases/P3.md` § `## Phase Handoff` + `findings/P3.11-terminal-audit-2.md` — фактический
@@ -89,38 +93,23 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
 1. **Приёмка формально не выполнена и не будет выполнена этим планом** (D88/D89): `F1 = 0.96`,
    `F10 = unknown`, layer-2 на знаменателе `5/31`, `F6` на знаменателе 1. Носитель ремонта —
    будущий producer layer-2, вне этого плана; packet обязан назвать это первым.
-2. **Гейт P4.4 НЕ покрывает остальные items этой же фазы**: cutoff `2026-07-27` строго в
-   будущем относительно даты закрытия P4.5/P4.1/P4.2/P4.3 (сегодня, `2026-07-26`) — это
-   спроектированное поведение D91 (self-conformance доказана синтетическими тестами, не
-   самоприменением), НЕ автоматическая гарантия. Печать кодов границ у этих items остаётся
-   ручной дисциплиной по предсуществующему канону (P2.7/P2.11), не машинно проверяемой в
-   этом прогоне — исполнитель следующего item обязан напечатать `pre_mutation:`/`pre_final:`
-   сам, а не полагаться на молчание линтера как на подтверждение. P4.5 напечатал коды по
-   этой самой дисциплине.
-3. **Предикат `_lint_write_site_codes_44` несёт подтверждённый дефект точности** (ревью,
-   ATTENTION): ложный ERROR при цитировании чужого `block:*`, ложное молчание при цитировании
-   чужих `allow`/`allow` — оба класса воспроизведены на реальном тексте плана (P3.10/P3.11).
-   Не измерено/не тестировано авторами item'а; названо здесь и в Known Deviations P4.4, чтобы
-   не потеряться до P4.3 packet'а.
-4. **Гейт P4.4 может покрасить чужой живой план флота**, если его items закрываются после
-   cutoff без кодов границ. Измерено этим item'ом: `bash packages/task/scripts/validate.sh`
-   по ВСЕМ 14 планам репо — `0 ошибок` (никакой существующий план флота не покрашен; cutoff
-   `2026-07-27` строго в будущем относительно всех items флота на момент закрытия). Дальнейшая
-   реакция при появлении реального красного — измерить и напечатать список, НЕ смягчать
-   правило и не двигать cutoff (Code Guidance P4.4); владелец красного — владелец того плана.
-5. **Якорь `Updated`**: если колонка систематически не заполняется/несёт не-ISO форму — item
-   обязан остановиться и эскалировать D#-записью выбор якоря, а не подменить его тихо. Не
-   сработало в этом прогоне (независимо перемерено: 379/379 items во всех 14 планах репо несут
-   строгий ISO — измерение состоятельности якоря, а не «0 ERROR по флоту», которое само по себе
-   ничего не различает).
-6. **Ф2 закрывается ПРИЧИНОЙ, не экземплярами**: запись закрытых items P0–P3 не правилась —
-   P4.4 не тронул ни одной записи P3.6–P3.10 (только правило `plan_lint` + канон).
+2. **Гейт P4.4 НЕ покрывает P4.1/P4.2/P4.3 этой же фазы**: cutoff `2026-07-27` строго в будущем
+   относительно даты их закрытия (`2026-07-26`) — спроектированное поведение D91. Печать кодов
+   границ остаётся ручной дисциплиной (P2.7/P2.11), не машинно проверяемой в этом прогоне.
+3. **Предикат `_lint_write_site_codes_44` несёт подтверждённый дефект точности** (ревью P4.4,
+   ATTENTION): ложный ERROR/ложное молчание на цитировании чужих кодов границ.
+4. **Гейт `verify_claim_verdicts.py` не проверяет символ после `::` в `ref`** (ревью P4.1,
+   ATTENTION) — мис-цитата H06 прошла все 553 «проверки»; риск повторения при доборе гипотез.
+5. **Гейт P4.4 может покрасить чужой живой план флота**, если его items закрываются после
+   cutoff без кодов границ — измерено: `validate.sh` по всем 14 планам репо, 0 ошибок.
+6. **Ф2 закрывается ПРИЧИНОЙ, не экземплярами**: запись закрытых items P0–P3 не правилась.
 7. Остаточный lint вне диффа: 0 ERROR при 1 WARN (строка Update Log P1.4, 303 символа при
    пороге 300) — открыт с предыдущих handoff'ов, не тронут этим item'ом.
 8. Долги без носителя в этом плане (D92): producer layer-2 · расширение наблюдаемости карты ·
    канал `owner_question` · Codex-сторона · CLI-подключение `analyst metrics`/системного
-   `skiller eval` (новая публичная поверхность — проектирование, не долг-хвост) · промоушен
-   D83 в канон eval-дисциплины · остатки A1 (F11) и A2.
+   `skiller eval` · промоушен D83 в канон eval-дисциплины · остатки A1 (F11) и A2 · ремонт
+   предиката `_lint_write_site_codes_44` · ремонт гейта `verify_claim_verdicts.py` (символ
+   после `::`) и цитаты H06.
 
 **Workarounds / Deferred / Open questions:**
 
@@ -130,4 +119,5 @@ task:plan-exec 2026.07.24-AGENT-RELIABILITY P4.1
 - Посторонний untracked-каталог `.swissknife/` в рабочем дереве — не тронут этим item'ом.
 - `docs-sync` follow-up (`packages/task/CLAUDE.md`, описание compiler/enforcement seam) — долг
   P3.1, не тронут; ближайший естественный носитель — P4.3 (docs), если попадёт в его Scope.
-- Открытых вопросов со статусом ≠ `Resolved` этот item не оставил.
+- H15/H16 (unknown-гипотезы) — недостающее доказательство названо поимённо в
+  `hypothesis-verdicts.json::missing_evidence`, не решается на закоммиченном дереве.

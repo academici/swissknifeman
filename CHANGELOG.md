@@ -4,6 +4,44 @@
 
 ### Added
 
+- **skiller — system-bank adapter for the P0.3 reliability bank (P3.3,
+  `2026.07.24-AGENT-RELIABILITY`).** `skiller.quality.eval` gains a second,
+  distinct deterministic grading vocabulary alongside its existing per-skill
+  `ASSERTION_TYPES` (which grade one free-text string): eight structured
+  transcript/outcome operators (`event_present/absent/order/count_max/
+  count_min`, `outcome_field_equals/list_contains/list_excludes`) matching
+  `reliability-acceptance-v1.md` § Graders exactly — no LLM judge anywhere in
+  this path (D15). `apply_system_operator`/`grade_system_case` grade a case
+  against a structured transcript+outcome record; `validate_system_graders`/
+  `validate_system_cases` structurally validate ANY `reliability-bank/v1`-
+  shaped document, not only the frozen P0.3 one; `compute_system_metrics`
+  reimplements (independently of, never importing) the frozen bank's own
+  `run_bank.py::compute_metrics` — so this regression surface survives the
+  plan's own eventual archival — and is verified **byte-identical** against
+  `bank-manifest.json::layer1_metrics` (zero mismatches across ten metrics
+  plus `same_finding_loop_depth`) when run against the real 31-case bank.
+  `seeded_system_sample` reproduces the same `sha256(seed|case_id)`-ascending,
+  baseline-passing selection rule the frozen bank uses — confirmed to
+  reproduce `bank-manifest.json::sample.selected` exactly (the same five
+  control cases). `provider_capability_matrix` is a deliberately narrow
+  presence-only Claude/Codex probe (native only on resolved binary — an
+  unconfirmed capability must fail closed, D46, never claim more). `classify_
+  portability_tier` cites `task.task_contract.classify_tier` via an optional
+  import (mirrors `analyst.doctor`'s existing `task.route_evidence` pattern;
+  returns `(None, reason)` rather than guessing when `task` isn't importable).
+  `pair_system_metric` mirrors `analyst.metrics.pair_metric`'s discipline
+  (candidate `None` → `deferred`, a `pinned-not-recomputable` baseline can
+  never ground a comparison) as its own small local implementation, per that
+  module's own stated cross-package-boundary rule. `build_system_benchmark`
+  orchestrates all of the above into the P3.3 benchmark artifact
+  (`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.3/benchmark.json` +
+  `benchmark-manifest.json`, generated against the real frozen bank,
+  candidate-less/`deferred` — no live paired (layer-2) transcript-capturing
+  harness exists yet for the bank's multi-round, typed-event cases; that gap
+  is named as Pending Work, not fabricated). Two new local test fixtures
+  (`packages/skiller/tests/fixtures_data/system-reliability-{bank,graders}-
+  v1.json`) exercise all eight operators and every `compute_system_metrics`
+  path without touching the frozen plan-owned bank.
 - **analyst — reliability metric arithmetic and paired digest (P3.2,
   `2026.07.24-AGENT-RELIABILITY`).** `analyst.metrics` derives paired reliability
   metrics only from committed `analyst.trace.TraceRecord`s and the frozen P0.3

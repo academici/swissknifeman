@@ -21,7 +21,9 @@ benchmark / iteration-loop / description-optimization) и obra/superpowers
 
 Конвенции пакета: stdlib-only, `Env` явно, атомарная запись (`core.io`), сообщения
 по-русски. Токен-математика — НЕ здесь (единый источник `budget.py`)."""
+import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -379,6 +381,391 @@ def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
             grade = grade_case(case, run.get("output", ""), ws)
         results.append({**run, **grade})
     return results
+
+
+# ============================================================================ #
+#  SYSTEM BANK ADAPTER (P3.3) — deterministic structured graders               #
+# ============================================================================ #
+# The frozen P0.3 reliability bank (`plans/2026.07.24-AGENT-RELIABILITY/
+# artifacts/reliability-bank-v1/`) grades a case by a TRANSCRIPT (ordered typed
+# events) + OUTCOME (dict) record, not a single free-text string — a different
+# vocabulary from ASSERTION_TYPES above (which grades one string). Its own
+# `run_bank.py` is the sole executable owner of THAT frozen case set (schema/
+# probes/floors/manifest) and stays untouched — but the deterministic GRADING
+# ALGORITHM itself is exactly what this item ports into skiller, so the eval
+# seam survives the plan's own archival (`plans/<ID>/` is not a durable
+# dependency surface for a package). Reimplemented here, not imported — cited
+# in this module's own docstring convention (`analyst.metrics`: "each contract
+# owns its own closed enum rather than sharing a runtime module across an
+# unrelated boundary"). No LLM judge anywhere in this path (D15).
+SYSTEM_OPERATORS = {"event_present", "event_absent", "event_order", "event_count_max",
+                   "event_count_min", "outcome_field_equals", "outcome_list_contains",
+                   "outcome_list_excludes"}
+
+
+def _system_matches(event, where):
+    return all(event.get(k) == v for k, v in (where or {}).items())
+
+
+def _system_select(transcript, spec):
+    return [e for e in transcript
+           if e.get("type") == spec.get("type") and _system_matches(e, spec.get("where"))]
+
+
+def _system_dig(outcome, path):
+    node = outcome
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
+
+
+def apply_system_operator(operator, args, transcript, outcome):
+    """One deterministic operator over a structured transcript/outcome record.
+    → (observed: bool, detail: str). Vocabulary/semantics match
+    `reliability-acceptance-v1.md` § Graders exactly (eight operators, no
+    model call anywhere)."""
+    args = args or {}
+    if operator == "event_present":
+        hits = _system_select(transcript, args)
+        return bool(hits), f"event_present {args.get('type')}: {len(hits)}"
+    if operator == "event_absent":
+        hits = _system_select(transcript, args)
+        return not hits, f"event_absent {args.get('type')}: {len(hits)}"
+    if operator == "event_order":
+        before, after = args["before"], args["after"]
+        afters = _system_select(transcript, after)
+        if not afters:
+            return True, f"event_order: no {after.get('type')} events — vacuously ok"
+        befores = _system_select(transcript, before)
+        ok = all(any(b["seq"] < a["seq"] for b in befores) for a in afters)
+        return ok, (f"event_order {before.get('type')}->{after.get('type')}: "
+                   f"{'ok' if ok else 'VIOLATED'}")
+    if operator == "event_count_max":
+        hits = _system_select(transcript, args)
+        ok = len(hits) <= args["max"]
+        return ok, f"event_count_max {args.get('type')} <= {args['max']}: {len(hits)}"
+    if operator == "event_count_min":
+        hits = _system_select(transcript, args)
+        ok = len(hits) >= args["min"]
+        return ok, f"event_count_min {args.get('type')} >= {args['min']}: {len(hits)}"
+    if operator == "outcome_field_equals":
+        got = _system_dig(outcome, args["path"])
+        return got == args["value"], f"outcome.{args['path']} == {args['value']!r}: got {got!r}"
+    if operator in ("outcome_list_contains", "outcome_list_excludes"):
+        got = _system_dig(outcome, args["path"])
+        items = got if isinstance(got, list) else []
+        present = args["value"] in items
+        ok = present if operator == "outcome_list_contains" else not present
+        return ok, f"{operator} outcome.{args['path']} {args['value']!r}: {'ok' if ok else 'violated'}"
+    return False, f"unknown system operator: {operator!r}"
+
+
+def grade_system_case(case, graders_by_id, transcript, outcome):
+    """Grade one system-bank case (assertions bound to graders by id) against a
+    transcript/outcome record. → {case_id, passed, checks}. `checks` carry each
+    assertion's `tags` through unchanged — `compute_system_metrics` below reads
+    them (e.g. `requirement_retention`) rather than re-deriving case semantics."""
+    checks = []
+    for a in case.get("assertions", []) or []:
+        grader = graders_by_id.get(a.get("grader"))
+        if grader is None:
+            checks.append({"id": a.get("id"), "grader": a.get("grader"), "ok": False,
+                          "tags": a.get("tags") or [],
+                          "detail": f"unknown grader {a.get('grader')!r}"})
+            continue
+        observed, detail = apply_system_operator(grader["operator"], a.get("args"),
+                                                  transcript, outcome)
+        ok = observed == a.get("expect", True)
+        checks.append({"id": a.get("id"), "grader": a.get("grader"), "expect": a.get("expect"),
+                       "observed": observed, "ok": ok, "detail": detail,
+                       "tags": a.get("tags") or []})
+    return {"case_id": case.get("case_id"),
+           "passed": all(c["ok"] for c in checks) if checks else None, "checks": checks}
+
+
+def validate_system_graders(data, label="graders.json"):
+    """Structural validation of a system-bank graders document (`reliability-
+    bank/v1` shape): no-LLM-judge policy, operator closure. → errors (empty =
+    valid). Generic — validates ANY system-bank-shaped doc, not only the frozen
+    P0.3 one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
+    if not isinstance(data, dict):
+        return [f"{label}: root must be an object"]
+    errors = []
+    policy = data.get("policy") or {}
+    if policy.get("llm_judge_allowed") is not False:
+        errors.append(f"{label}: policy.llm_judge_allowed must be false (D15)")
+    seen = set()
+    for i, g in enumerate(data.get("graders") or []):
+        gid = g.get("id")
+        if not gid or gid in seen:
+            errors.append(f"{label}.graders[{i}]: missing or duplicate id {gid!r}")
+        seen.add(gid)
+        if g.get("operator") not in SYSTEM_OPERATORS:
+            errors.append(f"{label}.graders[{i}]: operator {g.get('operator')!r} not in "
+                          f"{sorted(SYSTEM_OPERATORS)}")
+    if not seen:
+        errors.append(f"{label}: empty grader list")
+    return errors
+
+
+def validate_system_cases(data, grader_ids, label="cases.json"):
+    """Structural validation of a system-bank cases document. → errors (empty =
+    valid). Deliberately does not enforce the frozen bank's own D10 20–50 case-
+    count range — that range is a property of ONE specific frozen bank, not of
+    this generic adapter."""
+    if not isinstance(data, dict):
+        return [f"{label}: root must be an object"]
+    errors = []
+    cases = data.get("cases")
+    if not isinstance(cases, list) or not cases:
+        errors.append(f"{label}: 'cases' must be a non-empty array")
+        cases = []
+    seen = set()
+    for c in cases:
+        cid = c.get("case_id")
+        where = f"{label} case {cid!r}"
+        if not cid or cid in seen:
+            errors.append(f"{where}: missing or duplicate case_id")
+        seen.add(cid)
+        if c.get("kind") not in ("critical", "control"):
+            errors.append(f"{where}: kind must be critical|control")
+        asserts = c.get("assertions") or []
+        if not asserts:
+            errors.append(f"{where}: no assertions")
+        for a in asserts:
+            if a.get("grader") not in grader_ids:
+                errors.append(f"{where}: unknown grader {a.get('grader')!r}")
+        base = c.get("baseline") or {}
+        if not base.get("transcript"):
+            errors.append(f"{where}: baseline.transcript is empty")
+        if "declared_status" not in (base.get("outcome") or {}):
+            errors.append(f"{where}: baseline.outcome.declared_status missing")
+    return errors
+
+
+def compute_system_metrics(cases, graded, records):
+    """Deterministic bank-level metrics from graded cases plus their
+    `{transcript, outcome}` records. Same computation the frozen bank's own
+    `run_bank.py::compute_metrics` owns for ITS 31 cases — reimplemented here
+    (not imported, see module-level note) so skiller's regression surface does
+    not depend on plan-scoped code. Cross-checked byte-for-byte against the
+    frozen bank's own published `bank-manifest.json::layer1_metrics` numbers
+    (see `test_eval.py`/Completion Notes) as a reproducibility proof, not a
+    silent parallel reimplementation."""
+    grade_by_id = {g["case_id"]: g for g in graded}
+    critical = [c for c in cases if c.get("kind") == "critical"]
+    control = [c for c in cases if c.get("kind") == "control"]
+
+    def transcript(cid):
+        return records[cid]["transcript"]
+
+    def outcome(cid):
+        return records[cid]["outcome"]
+
+    retained = 0
+    for c in critical:
+        tagged = [ch for ch in grade_by_id[c["case_id"]]["checks"]
+                 if "requirement_retention" in (ch.get("tags") or [])]
+        if tagged and all(ch["ok"] for ch in tagged):
+            retained += 1
+    premature = [c["case_id"] for c in critical
+                if _system_select(transcript(c["case_id"]), {"type": "premature_stop"})]
+    redundant = [c["case_id"] for c in critical
+                if _system_select(transcript(c["case_id"]), {"type": "redundant_approval"})]
+    unneeded_owner = [c["case_id"] for c in cases
+                     if not c.get("owner_gate_required")
+                     and _system_select(transcript(c["case_id"]), {"type": "owner_question"})]
+    depths = []
+    for c in cases:
+        counts = {}
+        for e in _system_select(transcript(c["case_id"]), {"type": "finding"}):
+            fid = e.get("finding_id")
+            counts[fid] = counts.get(fid, 0) + 1
+        if counts:
+            depths.append(max(counts.values()))
+    overrun = []
+    for c in cases:
+        budget = (c.get("environment") or {}).get("audit_rounds_max", 2)
+        if len(_system_select(transcript(c["case_id"]), {"type": "audit_round"})) > budget:
+            overrun.append(c["case_id"])
+    routed = [c for c in cases
+             if _system_select(transcript(c["case_id"]), {"type": "route_declared"})]
+    compliant = [c for c in routed
+                if not _system_select(transcript(c["case_id"]),
+                                      {"type": "route_declared", "where": {"undershoot": True}})]
+    escapes = []
+    for c in critical:
+        tagged = [ch for ch in grade_by_id[c["case_id"]]["checks"]
+                 if "requirement_retention" in (ch.get("tags") or [])]
+        if (any(not ch["ok"] for ch in tagged)
+                and outcome(c["case_id"]).get("declared_status") == "success"):
+            escapes.append(c["case_id"])
+    false_blocks = [c["case_id"] for c in control
+                   if _system_select(transcript(c["case_id"]), {"type": "block"})]
+
+    def ratio(num, den):
+        return round(num / den, 4) if den else None
+
+    def _p95(values):
+        if not values:
+            return 0
+        ordered = sorted(values)
+        idx = max(0, math.ceil(0.95 * len(ordered)) - 1)
+        return ordered[idx]
+
+    critical_ids = {c["case_id"] for c in critical}
+    graded_critical = [g for g in graded if g["case_id"] in critical_ids]
+
+    return {
+        "counts": {"cases": len(cases), "critical": len(critical), "control": len(control)},
+        "critical_requirement_retention": ratio(retained, len(critical)),
+        "premature_stop_count": len(premature),
+        "premature_stop_cases": premature,
+        "redundant_approval_count": len(redundant),
+        "redundant_approval_cases": redundant,
+        "first_pass_success": ratio(sum(1 for g in graded if g["passed"]), len(graded)),
+        "first_pass_success_critical": ratio(
+            sum(1 for g in graded_critical if g["passed"]), len(graded_critical)),
+        "owner_intervention_rate": ratio(len(unneeded_owner), len(cases)),
+        "owner_intervention_cases": unneeded_owner,
+        "same_finding_loop_depth": {
+            "samples": len(depths),
+            "median": statistics.median(depths) if depths else 0,
+            "p95": _p95(depths) if depths else 0,
+        },
+        "audit_loop_overrun_count": len(overrun),
+        "audit_loop_overrun_cases": overrun,
+        "routing_compliance": ratio(len(compliant), len(routed)),
+        "critical_regression_escape": len(escapes),
+        "critical_regression_escape_cases": escapes,
+        "false_block_rate": ratio(len(false_blocks), len(control)),
+    }
+
+
+def seeded_system_sample(seed, case_ids, size):
+    """Deterministic seeded sample: `sha256(seed|case_id)` ascending, first
+    `size`. Same method `reliability-acceptance-v1.md` § sample specifies for
+    the frozen bank — kept here so skiller's own gate can reproduce a small
+    sample of ANY system-bank-shaped case set without depending on the plan-
+    scoped `run_bank.py`."""
+    ranked = sorted(case_ids, key=lambda cid: hashlib.sha256(
+        f"{seed}|{cid}".encode("utf-8")).hexdigest())
+    return ranked[:size]
+
+
+# --- provider capability matrix --------------------------------------------- #
+def codex_bin():
+    """Path to the Codex CLI, if present. Mirrors `claude_bin()`'s env-override
+    (`SKM_CODEX_BIN`) then PATH lookup."""
+    override = os.environ.get("SKM_CODEX_BIN")
+    if override:
+        p = Path(os.path.expanduser(override))
+        return str(p) if p.exists() else None
+    return shutil.which("codex")
+
+
+def provider_capability_matrix(*, claude_lookup=claude_bin, codex_lookup=codex_bin):
+    """Presence-only provider capability probe for `{claude, codex}`: `native`
+    when the CLI binary resolves, `unsupported` otherwise. Deliberately narrow
+    (binary presence, not a live flag/version check) — a probe claiming more
+    than this would itself be an unverified capability claim; D46 requires an
+    unconfirmed capability to fail closed, never assume `native`."""
+    return {
+        "claude": {"capability": "native" if claude_lookup() else "unsupported"},
+        "codex": {"capability": "native" if codex_lookup() else "unsupported"},
+    }
+
+
+# --- portability tier (cites task.task_contract, never re-implements it) --- #
+def classify_portability_tier(work):
+    """Classify a case's portability tier via `task.task_contract.classify_tier`
+    (`plan-portability-v1.md` § Classification rule). → `(tier, reason)`; `tier`
+    is `None` with a reason when `task` is not importable from the current
+    PYTHONPATH — fail-closed on the CALLER's side (a `None` tier must never be
+    treated as `brief-acceptance` by default), mirroring `analyst.doctor`'s
+    optional `task.route_evidence` check: cited via import, never duplicated."""
+    try:
+        from task import task_contract
+    except ImportError as exc:
+        return None, f"task-not-importable: {exc}"
+    return task_contract.classify_tier(work), None
+
+
+# --- paired baseline/candidate ---------------------------------------------- #
+def pair_system_metric(baseline, candidate):
+    """Pair one baseline metric (`{metric, value, baseline_proof_class}`) with
+    an optional live candidate. `candidate=None` → `status: 'deferred'` (never
+    a silent zero). A baseline whose proof class is not `recomputed`/`cross-
+    checked` can never ground a comparison (D30) — mirrors
+    `analyst.metrics.pair_metric`'s discipline, cited rather than imported
+    (cross-package rationale in that module's own docstring)."""
+    comparable = {"recomputed", "cross-checked"}
+    if candidate is None:
+        return {"metric": baseline["metric"], "status": "deferred",
+                "baseline": baseline, "candidate": None, "delta": None}
+    if baseline.get("baseline_proof_class") not in comparable:
+        raise ValueError(
+            f"SYSTEM_METRIC_PINNED_BASELINE_FORBIDDEN: {baseline['metric']!r} baseline is "
+            f"{baseline.get('baseline_proof_class')!r}; cannot ground a comparison (D30)")
+    delta = None
+    if baseline.get("value") is not None and candidate.get("value") is not None:
+        delta = candidate["value"] - baseline["value"]
+    return {"metric": baseline["metric"], "status": "paired",
+            "baseline": baseline, "candidate": candidate, "delta": delta}
+
+
+def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=5,
+                           candidate_runs=None, provider_matrix=None):
+    """Grade a system-bank case set against its own declared baseline transcripts
+    (`case['baseline']['transcript'/'outcome']`) and, if `candidate_runs`
+    (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
+    `first_pass_success` metric against it; omitted → the pair is `deferred`
+    (no live paired run yet exists — never fabricated, Execution Rules: "ноль
+    и silent skip запрещены"). → the P3.3 benchmark artifact shape."""
+    graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
+    cases = cases_doc.get("cases", [])
+    baseline_records = {c["case_id"]: c["baseline"] for c in cases}
+    baseline_graded = [grade_system_case(c, graders_by_id,
+                                         c["baseline"]["transcript"], c["baseline"]["outcome"])
+                      for c in cases]
+    baseline_metrics = compute_system_metrics(cases, baseline_graded, baseline_records)
+    candidate_graded, candidate_metrics = None, None
+    if candidate_runs is not None:
+        candidate_cases = [c for c in cases if c["case_id"] in candidate_runs]
+        candidate_graded = [grade_system_case(c, graders_by_id,
+                                              candidate_runs[c["case_id"]]["transcript"],
+                                              candidate_runs[c["case_id"]]["outcome"])
+                           for c in candidate_cases]
+        candidate_metrics = compute_system_metrics(candidate_cases, candidate_graded,
+                                                    candidate_runs)
+    baseline_metric = {"metric": "first_pass_success",
+                       "value": baseline_metrics["first_pass_success"],
+                       "baseline_proof_class": "recomputed"}
+    candidate_metric = ({"metric": "first_pass_success",
+                        "value": candidate_metrics["first_pass_success"]}
+                       if candidate_metrics is not None else None)
+    # Sampled from baseline-PASSING cases only — same selection rule the frozen
+    # P0.3 bank's own manifest uses (a case whose declared baseline already
+    # fails is not a representative "smoke" sample of steady-state behaviour).
+    passing_ids = [g["case_id"] for g in baseline_graded if g["passed"]]
+    sample = seeded_system_sample(
+        cases_doc.get("sample_seed", "system-bank/default"),
+        passing_ids, min(sample_size, len(passing_ids)))
+    return {
+        "schema_version": "system-bank-benchmark/v1",
+        "generated_at": generated_at,
+        "bank_version": cases_doc.get("bank_version"),
+        "grader_version": graders_doc.get("grader_version"),
+        "counts": {"cases": len(cases)},
+        "baseline": {"cases": baseline_graded, "metrics": baseline_metrics},
+        "candidate": ({"cases": candidate_graded, "metrics": candidate_metrics}
+                     if candidate_graded is not None else None),
+        "pair": pair_system_metric(baseline_metric, candidate_metric),
+        "sample": {"seed": cases_doc.get("sample_seed"), "size": len(sample), "selected": sample},
+        "provider_capability": provider_matrix or provider_capability_matrix(),
+    }
 
 
 # ============================================================================ #

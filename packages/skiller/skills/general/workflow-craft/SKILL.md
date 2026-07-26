@@ -169,6 +169,20 @@ than silently piling up iterations: note in the script comment what each fix
 addressed, so `analyst digest` (candidate lesson `workflow-relaunch`) and the
 next session see the fix history, not just the final version.
 
+**Checkpoint before a third resume in a row: is my cache-bust marker
+global?** A second field precedent on the same project/script (`dterema`,
+`wf-dterema-site-p3-api.js`, 2026-07-15) burned ≈4M subagent tokens in one
+day: the script held ONE global `GATE_ASOF` constant pasted into the code-gate,
+bookkeeping-gate and review prompts of EVERY pipeline item. Each bump — made to
+re-verify a SINGLE item being fixed — invalidated the `agent()` cache for
+already-closed items too, so the resume re-ran gate+review over files that
+hadn't changed by a line. Rule: a manual invalidator is a **per-item field
+only** (`s.asOf`, mixed into that item's prompt/`label` — see README "slot
+rules" → per-item cache-bust), never a global constant across all prompts.
+Better still, no manual marker: the gate prompt already asks the agent to check
+`git log`/HEAD, so freshness is verified live; forcing is needed only after an
+external fix commit and must stay local.
+
 ### 5. RAG option for non-standard orchestration
 
 If the task needs orchestration the 4 templates don't cover directly (rare,
@@ -202,4 +216,4 @@ unavailable — don't pass off unverified orchestration as verified.
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
 
-<!-- ru-source-sha256: f4e111bc28531540733da5efa74b040353b43ef932f48f8ffd4290d3d554fee6 -->
+<!-- ru-source-sha256: c2b49eca42fdbea7e5d9fc0daf352aee75af6aef4cc50fcf7b674a4d4eebec08 -->

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.16.0
+version: 2.17.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md", "closure-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -49,6 +49,7 @@ plans/<PLAN-ID>/
 ├── brief/             # слой 0 «вход»: бриф владельца + дописываемые уточнения (раздел 16, ОБЯЗАТЕЛЕН)
 ├── findings/          # слой 1 «сырьё»: RAG-выжимки, recon, исходные документы (раздел 16)
 ├── research/          # слой 2 «синтез»: авторские design-документы (раздел 16)
+├── closure/           # отчёты закрытия фаз `<Pn>.json` (раздел 8, opt-in `Closure Protocol`)
 ├── artifacts/         # рабочие артефакты фаз, судьба — архив
 ├── workflows/         # полевые копии workflow-скриптов плана (шаблоны-исходники — packages/task/workflows/)
 ├── root/              # долгоживущий материал, судьба — docs проекта (раздел 3)
@@ -758,6 +759,41 @@ P4.4/D91, forward-only по дате ITEM'а) для item'ов с `Updated` ≥ 
 ошибался в обе стороны на такой прозе (fail-open на цитате чужих кодов, ложный ERROR на
 процитированном `block:*`/`n/a`), починка P10.1 это закрыла именно требованием
 единственной строки-носителя.
+
+**Отчёт закрытия фазы — `plans/<ID>/closure/<Pn>.json`, схема v1 (opt-in).** `## Phase
+Handoff` — проза плюс git-хеш: КЛАСС СВИДЕТЕЛЬСТВА в нём не фиксируется нигде, и синтетика
+читается как результат. Машиночитаемый отчёт закрытия фазы даёт его явно — он ДОПОЛНЯЕТ блок
+сдачи, а не заменяет.
+<!-- i18n-keep: Closure Protocol -->
+
+- **Активация — opt-in полем `## 0. Meta`: `Closure Protocol | v1`** (единственное легальное
+  значение; иное = ERROR, а не тихое отключение). Плана без поля правило не касается НИ ОДНОЙ
+  новой диагностикой — аддитивность проверяется тестом, а не обещанием.
+- **Миграция (выбор владельца, оба пути легальны):** включать поле на плане, у которого ещё
+  нет терминальных фаз, ЛИБО одновременно дописать `closure/<Pn>.json` уже закрытым фазам.
+  Уже закрытые записи (`Phase Handoff`, Completion Notes) при этом НЕ переписываются.
+- **Схема v1** — ключи фиксированы, отсутствие ключа = ошибка схемы: «нет числа» выражается
+  ЗНАЧЕНИЕМ (`baseline_pending` с причиной), а не пропуском строки. Скелет и полный пример —
+  `snippets/closure-template.md`: `schema_version`/`plan`/`phase`/`closed_at`/`closed_by`/
+  `phase_status`/`git`/`inputs_sha256`/`items[]`/`gates[]`/`metrics[]`/`limitations[]`/
+  `external_side_effects[]`.
+- **Класс свидетельства — enum РОВНО из трёх:** `real` (прогон на закоммиченном дереве,
+  доказательство несёт команду и число) · `synthetic` (фикстура/один кейс — доказательство
+  обязано это называть) · `baseline_pending` (числа нет, названа причина). Он отвечает на
+  вопрос «на каких ДАННЫХ получен результат» и НЕ заменяет закрытый перечень классов
+  ДОКАЗАТЕЛЬСТВА `recomputed`/`cross-checked`/`pinned-not-recomputable`/`unknown`
+  (`source-evidence-verification-v1.md`, §13 — «выводимо ли утверждение из коммиченного
+  bundle'а»): разные оси, оба словаря действуют одновременно.
+- **Писатель — `plan-close <ID> Pn`** (шаг между заполнением `Phase Handoff` и перезаписью
+  `handoff.md`): собирает файл МЕХАНИЧЕСКИ из полей items фазы, пересказ запрещён.
+- **Потребители названы, иначе приём — «provenance theatre»:** `plan_lint` (схема ·
+  `items[]` ↔ `## Phase Status` · `phase_status` ↔ Status Board · `real` с пустым
+  доказательством · терминальная фаза без файла — ERROR с ожидаемым путём) и
+  `plan-audit <ID> Pn` (читает файл ПЕРВЫМ входом ступени 1, перепрогоняет команды из
+  доказательств на `git.head_sha`, ловит правку ТЗ фазы после закрытия по `inputs_sha256`).
+- **У каждого хеша схемы назван потребитель** (`git.head_sha` — якорь чисел ниже;
+  `inputs_sha256` — детект правки ТЗ); поля без потребителя в схему не добавляются, хеширование
+  дерева в неё не входит (измеренная цена O(N²)).
 
 **Якорь дерева для чисел в отчётах.** Любое ЧИСЛО в отчёте item'а (Completion Notes,
 Validation, Known Deviations, Update Log) — счётчик `grep`, число ERROR/WARN, число

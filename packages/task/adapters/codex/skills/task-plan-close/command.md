@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:932cc0230ef81753c0afaf25848925d77202aab1146b5e07dae35d1cf7333139
+Canonical SHA-256: sha256:667f59d8e4a6ed1a45985787f9798bc81fb84a7ea902167a18a5876c84cd82aa
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -174,6 +174,19 @@ status-rule ниже. Точная команда, лестница маршру
    класс B1). Блок несёт первой строкой маркер `> УСТАРЕЛ — фаза реопенена <D#>` (фаза
    реопенена, §3 скилла) — **сними маркер, перезаписав блок ЦЕЛИКОМ** актуальным
    сдачным текстом (снимает ТОЛЬКО эта команда); маркера нет — заполни блок как обычно.
+4a. **Отчёт закрытия фазы `closure/<Pn>.json`** (P8.1/D42) — ТОЛЬКО если `## 0. Meta` плана
+   несёт `Closure Protocol | v1` (нет поля — шаг пропускается молча, это opt-in). Собери файл
+   **МЕХАНИЧЕСКИ из полей items фазы**, пересказ запрещён: `items[]` — по строке на item
+   (`id`/`status` из `## Phase Status` БЕЗ расхождений, `evidence_class` + `evidence`);
+   `gates[]` — гейты сдачи; `metrics[]` — числа сдачи (`value` строкой); `phase_status` —
+   байт-в-байт строка фазы из Status Board; `git` — `head_sha`/`branch`/`dirty` на момент
+   закрытия; `inputs_sha256` — sha256 `plan.md` и `phases/<Pn>.md` (`sha256sum`).
+   **Класс свидетельства — enum РОВНО из трёх** (`real` — прогон на закоммиченном дереве,
+   evidence несёт команду и число · `synthetic` — фикстура/один кейс, evidence это НАЗЫВАЕТ ·
+   `baseline_pending` — числа нет, названа ПРИЧИНА). «Нет числа» выражается ЗАПИСЬЮ
+   `baseline_pending`, а НЕ отсутствием ключа/строки; `real` с пустым evidence = ERROR линтера.
+   Схема и правила заполнения — `snippets/closure-template.md` скилла `plan-protocol` (§8);
+   файл входит в коммит закрытия (шаг 9, `git add plans/<PLAN-ID>`).
 5. Перезапиши `plans/<PLAN-ID>/handoff.md` **целиком**: заголовок
    `# HANDOFF — <ISO-дата> — after Pn` (закрывается ФАЗА, не item — D30); Next — launch-
    block с формой из enum выше (первый item следующей фазы или закрытие плана) + сверка

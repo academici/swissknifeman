@@ -435,6 +435,197 @@ def _lint_write_site_codes_44(status_table, items, path, diag):
                        f"«{status_val}» — закрытие на не-allow (D76)")
 
 
+# --- P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1) --------------
+# Класс свидетельства фазы не фиксировался нигде: `Phase Handoff` — проза плюс git-хеш, и
+# синтетика читается как результат (research/11-P8-target-design.md §1). Отчёт закрытия —
+# машиночитаемый файл на фазу, ВКЛЮЧАЕТСЯ opt-in полем `## 0. Meta` → `Closure Protocol | v1`:
+# плана без поля правило не касается НИ ОДНОЙ строкой диагностики (аддитивность — тест, а не
+# обещание; закрытые записи живых планов не переписываются). Ревалидация ПОСЛОЙНАЯ (рамка
+# переноса, findings/rayt-deep-2026-07-25.md §8.3 #17/#29): один JSON на фазу + две уже
+# распарсенные таблицы; обхода дерева и пересчёта хешей файлов плана здесь нет.
+# У КАЖДОГО хеша схемы назван потребитель (иначе «provenance theatre», §9.6): `git.head_sha` —
+# якорь чисел §8 канона; `inputs_sha256` — детект правки ТЗ фазы после закрытия (`plan-audit`).
+CLOSURE_META_FIELD = "Closure Protocol"
+CLOSURE_PROTOCOL_V1 = "v1"  # ЕДИНСТВЕННОЕ легальное значение поля (D42)
+CLOSURE_DIR_NAME = "closure"
+CLOSURE_SCHEMA_VERSION = 1
+# Класс свидетельства — enum РОВНО из трёх (D42): на каких ДАННЫХ получен результат.
+# НЕ путать с закрытым перечнем классов ДОКАЗАТЕЛЬСТВА `recomputed`/`cross-checked`/
+# `pinned-not-recomputable`/`unknown` (`source-evidence-verification-v1.md`, другая ось —
+# выводимо ли утверждение из коммиченного bundle'а): оба словаря действуют, ни один не
+# заменяет другой (канон `plan-protocol` §8, реконсайл 2026-07-26).
+CLOSURE_EVIDENCE_CLASSES = ("real", "synthetic", "baseline_pending")
+CLOSURE_REQUIRED_KEYS = ("schema_version", "plan", "phase", "closed_at", "closed_by",
+                         "phase_status", "git", "inputs_sha256", "items", "gates",
+                         "metrics", "limitations", "external_side_effects")
+CLOSURE_CLOSED_BY_KEYS = ("command", "actor")
+CLOSURE_GIT_KEYS = ("head_sha", "branch", "dirty")
+# `items`/`gates` — записи с классом свидетельства; `metrics` несёт его в `label`
+# (числа нет ⇒ `baseline_pending` с причиной, а НЕ отсутствие строки — ради этого приём и взят).
+CLOSURE_ENTRY_KEYS = {"items": ("id", "status", "evidence_class", "evidence"),
+                      "gates": ("id", "status", "evidence_class", "evidence"),
+                      "metrics": ("name", "value", "label")}
+CLOSURE_LIST_KEYS = ("items", "gates", "metrics", "limitations", "external_side_effects")
+
+
+def _closure_report_path(plan_dir, phase_id):
+    """Дом отчёта закрытия — `plans/<PLAN-ID>/closure/<Pn>.json` (D42)."""
+    return Path(plan_dir) / CLOSURE_DIR_NAME / f"{phase_id}.json"
+
+
+def _closure_load(report_path, diag):
+    """Читает отчёт закрытия; любой отказ НАЗЫВАЕТ файл и причину (рамка переноса:
+    fail-closed без имени объекта запрещён — findings §8.3 issue #19). None = не разобран."""
+    try:
+        data = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError) as error:
+        diag.error(report_path, None, f"отчёт закрытия не читается: {error}")
+        return None
+    except json.JSONDecodeError as error:
+        diag.error(report_path, None, f"отчёт закрытия не разбирается как JSON: {error}")
+        return None
+    if not isinstance(data, dict):
+        diag.error(report_path, None,
+                   f"отчёт закрытия: ожидался объект схемы v{CLOSURE_SCHEMA_VERSION}, "
+                   f"получен {type(data).__name__}")
+        return None
+    return data
+
+
+def _closure_lint_schema(data, report_path, plan_id, phase_id, diag):
+    """Проверка 1 — схема v1: отсутствие ключа = ОШИБКА СХЕМЫ, а не «нет данных»
+    («нет данных» выражается ЗНАЧЕНИЕМ — `baseline_pending` с причиной, D42).
+    Проверка 3 — `evidence_class: "real"` при пустом `evidence` = ERROR с id записи."""
+    for key in CLOSURE_REQUIRED_KEYS:
+        if key not in data:
+            diag.error(report_path, None, f"отчёт закрытия: нет обязательного ключа «{key}»")
+    if data.get("schema_version") != CLOSURE_SCHEMA_VERSION:
+        diag.error(report_path, None,
+                   f"отчёт закрытия: schema_version «{data.get('schema_version')}» ≠ "
+                   f"{CLOSURE_SCHEMA_VERSION} (иных версий схемы не существует)")
+    for key, expected in (("plan", plan_id), ("phase", phase_id)):
+        if key in data and data.get(key) != expected:
+            diag.error(report_path, None,
+                       f"отчёт закрытия: «{key}» = «{data.get(key)}» ≠ фактическому «{expected}»")
+    for key, subkeys in (("closed_by", CLOSURE_CLOSED_BY_KEYS), ("git", CLOSURE_GIT_KEYS),
+                         ("inputs_sha256", ())):
+        value = data.get(key)
+        if key in data and not isinstance(value, dict):
+            diag.error(report_path, None,
+                       f"отчёт закрытия: «{key}» — ожидался объект, получен {type(value).__name__}")
+            continue
+        for subkey in subkeys:
+            if isinstance(value, dict) and subkey not in value:
+                diag.error(report_path, None,
+                           f"отчёт закрытия: нет обязательного ключа «{key}.{subkey}»")
+    if isinstance(data.get("inputs_sha256"), dict) and not data["inputs_sha256"]:
+        diag.error(report_path, None,
+                   "отчёт закрытия: «inputs_sha256» пуст — потребитель (plan-audit) ловит по "
+                   "нему правку ТЗ фазы после закрытия; хеш без потребителя не пишем, "
+                   "потребителя без хеша — тем более")
+    for key in CLOSURE_LIST_KEYS:
+        if key in data and not isinstance(data[key], list):
+            diag.error(report_path, None,
+                       f"отчёт закрытия: «{key}» — ожидался список, получен "
+                       f"{type(data[key]).__name__}")
+    for key, entry_keys in CLOSURE_ENTRY_KEYS.items():
+        for pos, entry in enumerate(data.get(key) if isinstance(data.get(key), list) else []):
+            if not isinstance(entry, dict):
+                diag.error(report_path, None,
+                           f"отчёт закрытия: «{key}[{pos}]» — ожидался объект, получен "
+                           f"{type(entry).__name__}")
+                continue
+            name = entry.get("id") or entry.get("name") or f"{key}[{pos}]"
+            for subkey in entry_keys:
+                if subkey not in entry:
+                    diag.error(report_path, None,
+                               f"отчёт закрытия: «{key}» запись «{name}» без ключа «{subkey}»")
+            # Носитель класса и носитель ДОКАЗАТЕЛЬСТВА различаются по виду записи:
+            # items/gates несут `evidence_class` + `evidence` (команда и её вывод),
+            # metrics — `label` + `value` (само число). Пустое доказательство при классе
+            # `real` = fail-closed: это либо `synthetic`, либо `baseline_pending` с причиной.
+            klass_key, proof_key = (("label", "value") if key == "metrics"
+                                    else ("evidence_class", "evidence"))
+            klass = entry.get(klass_key)
+            if klass_key in entry and klass not in CLOSURE_EVIDENCE_CLASSES:
+                diag.error(report_path, None,
+                           f"отчёт закрытия: «{key}» запись «{name}»: {klass_key} «{klass}» вне "
+                           f"enum'а {list(CLOSURE_EVIDENCE_CLASSES)}")
+            if klass == "real" and _is_empty(str(entry.get(proof_key, "") or "")):
+                diag.error(report_path, None,
+                           f"отчёт закрытия: «{key}» запись «{name}» заявлена "
+                           f"«real» с пустым {proof_key} — класс real требует команду и её вывод "
+                           f"(иначе это synthetic либо baseline_pending с причиной)")
+
+
+def _closure_lint_correspondence(data, report_path, phase_id, parsed_phase, board_row, diag):
+    """Проверка 4 — `items[]` ↔ строки `## Phase Status` фазы (лишний/недостающий id либо
+    иной статус); проверка 5 — `phase_status` ↔ строка фазы в Status Board (`plan.md`).
+    Обе — на УЖЕ распарсенных таблицах: отдельного обхода дерева гейт не делает."""
+    if board_row is not None:
+        board_status = board_row[0].get("Status", "")
+        if "phase_status" in data and data.get("phase_status") != board_status:
+            diag.error(report_path, None,
+                       f"отчёт закрытия: phase_status «{data.get('phase_status')}» ≠ статусу "
+                       f"фазы {phase_id} в Status Board «{board_status}»")
+    if parsed_phase is None:
+        return  # файла фазы нет — отдельная диагностика уже выдана, дублировать нечем
+    table = {row.get("ID"): row.get("Status", "")
+             for row, _ in parsed_phase.get("status_table", [])}
+    reported = {}
+    for entry in (data.get("items") if isinstance(data.get("items"), list) else []):
+        if isinstance(entry, dict) and entry.get("id"):
+            reported[entry["id"]] = entry.get("status")
+    for item_id in sorted(set(reported) - set(table)):
+        diag.error(report_path, None,
+                   f"отчёт закрытия: item «{item_id}» есть в items[], но нет строки в "
+                   f"«## Phase Status» фазы {phase_id}")
+    for item_id in sorted(set(table) - set(reported)):
+        diag.error(report_path, None,
+                   f"отчёт закрытия: item «{item_id}» есть в «## Phase Status» фазы "
+                   f"{phase_id}, но отсутствует в items[]")
+    for item_id in sorted(set(table) & set(reported)):
+        if reported[item_id] != table[item_id]:
+            diag.error(report_path, None,
+                       f"отчёт закрытия: item «{item_id}»: status «{reported[item_id]}» ≠ "
+                       f"статусу в «## Phase Status» «{table[item_id]}»")
+
+
+def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, diag):
+    """P8.1/D42, все пять проверок отчёта закрытия. Активация — opt-in Meta-поле
+    `Closure Protocol | v1`: без него функция молчит целиком (аддитивность). Проверка 2 —
+    фаза терминальна, поле включено, файла нет → ERROR с ОЖИДАЕМЫМ ПУТЁМ (fail-closed
+    называет объект). Нетерминальная фаза отчёта не обязана иметь; но ЕСЛИ файл лежит —
+    он разбирается по той же схеме (иначе включённый протокол молча пропускал бы мусор)."""
+    plan_md = Path(plan_dir) / "plan.md"
+    declared, meta_lineno = (meta or {}).get(CLOSURE_META_FIELD, (None, None))
+    if declared is None:
+        return
+    declared = declared.strip()
+    if declared != CLOSURE_PROTOCOL_V1:
+        diag.error(plan_md, meta_lineno,
+                   f"Meta «{CLOSURE_META_FIELD}»: значение «{declared}» — единственное "
+                   f"легальное «{CLOSURE_PROTOCOL_V1}» (канон plan-protocol §8)")
+        return
+    for phase_id in sorted(set(phases) | set(board_by_phase)):
+        report_path = _closure_report_path(plan_dir, phase_id)
+        board_row = board_by_phase.get(phase_id)
+        board_status = board_row[0].get("Status", "") if board_row else ""
+        if not report_path.is_file():
+            if board_status in TERMINAL_STATUSES:
+                diag.error(plan_md, board_row[1] if board_row else None,
+                           f"фаза {phase_id} терминальна («{board_status}») при "
+                           f"`{CLOSURE_META_FIELD} | {CLOSURE_PROTOCOL_V1}`, но отчёта "
+                           f"закрытия нет — ожидается файл {report_path}")
+            continue
+        data = _closure_load(report_path, diag)
+        if data is None:
+            continue
+        _closure_lint_schema(data, report_path, plan_id, phase_id, diag)
+        _closure_lint_correspondence(data, report_path, phase_id, phases.get(phase_id),
+                                     board_row, diag)
+
+
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
@@ -484,6 +675,9 @@ CANON_LITERALS = (
     "pre_final:",                                             # write-site код границы (§8, P4.4/D91)
     "write-site:",                                            # каноническая строка (§8, P10.1/D102:
                                                                # T1 латиницу не ловит, регистрация решением)
+    CLOSURE_META_FIELD,                                       # Meta-поле активации отчёта закрытия
+                                                               # (§8, P8.1/D42: латиница — та же
+                                                               # регистрация решением, что у write-site:)
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -1605,6 +1799,9 @@ def lint_plan(plan_dir, diag):
                              f"его первой строкой маркер «> УСТАРЕЛ — фаза реопенена <D#>» "
                              f"(SKILL §3, 4-й шаг реопена: блок не удаляется, его перезапишет "
                              f"plan-close при следующем закрытии фазы)")
+
+    # --- P8.1/D42: отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
+    _lint_closure_reports_81(plan_dir, plan_id, _meta_raw, phases, board_by_phase, diag)
 
     # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
     numbered = sorted(

@@ -12,13 +12,13 @@ from pathlib import Path
 
 try:  # package invocation used by the focused P4 command-projection gate
     from .fixtures import (  # noqa: E402
-        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
-        plan_md, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
+        phase_md, plan_md, write_closure, write_valid_plan,
     )
 except ImportError:  # direct discovery from packages/task remains supported
     from fixtures import (  # noqa: E402
-        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
-        plan_md, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
+        phase_md, plan_md, write_closure, write_valid_plan,
     )
 from task.plan_lint import (  # noqa: E402
     Diagnostics, _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
@@ -666,6 +666,139 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
                                 completion_notes="—")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+
+class TestClosureReports81(TmpPlanTestCase):
+    """P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1), включаемый opt-in
+    полем `## 0. Meta` → `Closure Protocol | v1`. Пять проверок линтера + аддитивность.
+    Каждый различающий кейс ниже проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_closure_reports_81`, ни
+    вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах (б)–(д), а (а)/(е) на нём
+    зелены by construction (D79 — предмет теста именно РАЗЛИЧАЮЩИЙ, см. Completion Notes)."""
+
+    def _plan(self, *, closure_protocol="v1", phase_status="🟢 Done"):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, phase_status=phase_status,
+                    closure_protocol=closure_protocol),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_valid_closure_report_passes(self):
+        """(а) валидный `closure/P1.json` при включённом протоколе — ни ERROR, ни WARNING."""
+        plan_dir = self._plan()
+        write_closure(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(diag.warnings, [])
+
+    def test_b_terminal_phase_without_report_is_error_with_path(self):
+        """(б) фаза терминальна, `Closure Protocol | v1` есть, файла нет → ERROR, и в тексте
+        ERROR присутствует ОЖИДАЕМЫЙ путь `closure/P1.json` (fail-closed называет объект)."""
+        plan_dir = self._plan()
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "отчёта закрытия нет")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any(str(Path("closure") / "P1.json") in e for e in hits), hits)
+
+    def test_c_real_evidence_class_without_evidence_is_error_with_id(self):
+        """(в) `evidence_class: "real"` при пустом `evidence` → ERROR с id записи."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, evidence="")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "«real» с пустым evidence")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_d_items_diverging_from_phase_status_is_error_with_id(self):
+        """(г) `items[]` расходится с `## Phase Status`: и лишний/недостающий id, и иной
+        статус — ERROR, каждый со своим id."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, item_id="P1.9")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "«P1.9» есть в items[]"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "«P1.1» есть в «## Phase Status»"), diag.errors)
+
+        plan_dir2 = write_valid_plan(self.root, plan_id="DEMO-2")
+        (plan_dir2 / "plan.md").write_text(
+            plan_md("DEMO-2", closure_protocol="v1"), encoding="utf-8")
+        write_closure(plan_dir2, item_status="🟠 Done with deviations")
+        _, diag2 = _lint(plan_dir2)
+        self.assertTrue(_errors_containing(diag2, "статусу в «## Phase Status»"), diag2.errors)
+
+    def test_e_phase_status_diverging_from_status_board_is_error(self):
+        """(д) `phase_status` отчёта ≠ строке фазы в `## 4. Phase Index & Status Board`."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, phase_status="⛔ Skipped by decision")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "≠ статусу фазы P1 в Status Board"), diag.errors)
+
+    def test_f_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(е) АДДИТИВНОСТЬ: тот же план БЕЗ Meta-поля даёт РОВНО тот же список диагностик,
+        что и без каталога `closure/` вовсе (сравнение МНОЖЕСТВ, не количества) — даже когда
+        на диске лежит заведомо битый отчёт. Без этого включение протокола у одного плана
+        красило бы весь флот."""
+        baseline_dir = write_valid_plan(self.root, plan_id="DEMO-BASE")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = write_valid_plan(self.root, plan_id="DEMO-NOFIELD")
+        (plan_dir / "closure").mkdir()
+        (plan_dir / "closure" / "P1.json").write_text("{ битый json", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))
+
+    def test_missing_required_key_is_schema_error(self):
+        """Отсутствие ключа схемы = ОШИБКА СХЕМЫ, а не «нет данных» (D42): «нет данных»
+        выражается значением `baseline_pending`, а не пропуском строки."""
+        plan_dir = self._plan()
+        report = json.loads(closure_json(plan_dir.name))
+        del report["limitations"]
+        write_closure(plan_dir)
+        (plan_dir / "closure" / "P1.json").write_text(
+            json.dumps(report, ensure_ascii=False), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "нет обязательного ключа «limitations»"),
+                        diag.errors)
+
+    def test_evidence_class_outside_enum_is_error(self):
+        """Класс свидетельства — enum РОВНО из трёх; чужой словарь классов доказательства
+        (`recomputed`/`cross-checked`/…) сюда не подставляется (разные оси, реконсайл D86)."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, evidence_class="recomputed")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "evidence_class «recomputed» вне enum"),
+                        diag.errors)
+
+    def test_unknown_meta_value_is_error(self):
+        """`Closure Protocol` со значением ≠ `v1` — ERROR, а не молчаливое отключение
+        (fail-open «протокол объявлен, но гейты спят» — ровно то, ради чего приём взят)."""
+        plan_dir = self._plan(closure_protocol="v2")
+        write_closure(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "единственное легальное «v1»"), diag.errors)
+
+    def test_non_terminal_phase_without_report_is_silent(self):
+        """Нетерминальная фаза отчёта не обязана иметь — правило forward-only по СТАТУСУ
+        фазы, а не «каждая фаза плана с включённым протоколом»."""
+        plan_dir = self._plan(phase_status="🟡 In progress")
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(phase_md(item_status="🟡 In progress", completion_notes="—"),
+                         encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "отчёта закрытия нет"), [])
+
+    def test_broken_json_names_the_file(self):
+        """Битый JSON при включённом протоколе — ERROR, НАЗЫВАЮЩИЙ файл и причину
+        (рамка переноса: fail-closed без имени объекта запрещён, findings §8.3 #19)."""
+        plan_dir = self._plan()
+        (plan_dir / "closure").mkdir()
+        (plan_dir / "closure" / "P1.json").write_text("{ битый json", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "не разбирается как JSON")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.json" in e for e in hits), hits)
 
 
 class TestValidPlan(TmpPlanTestCase):

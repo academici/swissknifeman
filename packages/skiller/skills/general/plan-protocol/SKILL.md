@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.16.0
+version: 2.17.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md", "closure-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -49,6 +49,7 @@ plans/<PLAN-ID>/
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
+├── closure/           # phase closure reports `<Pn>.json` (section 8, opt-in `Closure Protocol`)
 ├── artifacts/         # phases' working artifacts, destiny — archive
 ├── workflows/         # plan's field copies of workflow scripts (template sources — packages/task/workflows/)
 ├── root/              # long-lived material, destiny — project docs (section 3)
@@ -737,6 +738,40 @@ the substrings `pre_mutation:`/`pre_final:` anywhere in the field. Printing code
 prose (fail-open on a quoted other item's codes, false ERROR on a quoted `block:*`/`n/a`); the
 P10.1 fix closed both by requiring a single carrier line.
 
+**Phase closure report — `plans/<ID>/closure/<Pn>.json`, schema v1 (opt-in).** `## Phase
+Handoff` is prose plus a git hash: the EVIDENCE CLASS is recorded nowhere, so synthetics read as
+results. The machine-readable closure report states it explicitly; it COMPLEMENTS the handoff
+block, never replaces it.
+
+- **Activation — opt-in `## 0. Meta` field: `Closure Protocol | v1`** (the only legal value;
+  anything else is an ERROR, not a silent opt-out). A plan without the field gets NOT ONE new
+  diagnostic — additivity is proven by a test, not promised.
+- **Migration (owner's choice, both paths legal):** enable the field on a plan with no terminal
+  phases yet, OR write `closure/<Pn>.json` for the already-closed phases at the same time.
+  Already-closed records (`Phase Handoff`, Completion Notes) are never rewritten.
+- **Schema v1** — keys are fixed; a missing key is a schema error: "no number" is expressed by a
+  VALUE (`baseline_pending` with a reason), never by an omitted line. Skeleton and full example —
+  `snippets/closure-template.md`: `schema_version`/`plan`/`phase`/`closed_at`/`closed_by`/
+  `phase_status`/`git`/`inputs_sha256`/`items[]`/`gates[]`/`metrics[]`/`limitations[]`/
+  `external_side_effects[]`.
+- **Evidence class — an enum of EXACTLY three:** `real` (run on the committed tree; the evidence
+  carries the command and the number) · `synthetic` (fixture/single case — the evidence must say
+  so) · `baseline_pending` (no number, reason named). It answers "on WHAT DATA was this result
+  obtained" and does NOT replace the closed set of PROOF classes
+  `recomputed`/`cross-checked`/`pinned-not-recomputable`/`unknown`
+  (`source-evidence-verification-v1.md`, section 13 — "is the claim derivable from the committed
+  bundle"): different axes, both vocabularies apply at once.
+- **Writer — `plan-close <ID> Pn`** (a step between filling `Phase Handoff` and overwriting
+  `handoff.md`): assembles the file MECHANICALLY from the phase items' fields; retelling is banned.
+- **Consumers are named, otherwise the practice is "provenance theatre":** `plan_lint` (schema ·
+  `items[]` ↔ `## Phase Status` · `phase_status` ↔ Status Board · `real` with empty evidence ·
+  terminal phase without the file — ERROR naming the expected path) and `plan-audit <ID> Pn`
+  (reads the file as the FIRST input of stage 1, re-runs the commands from the evidence at
+  `git.head_sha`, catches a post-closure edit of the phase spec via `inputs_sha256`).
+- **Every hash in the schema has a named consumer** (`git.head_sha` — the tree anchor below;
+  `inputs_sha256` — spec-edit detection); fields without a consumer are not added, and tree
+  hashing stays out (measured O(N²) cost).
+
 **Tree anchor for numbers in reports.** ANY NUMBER in an item's report (Completion Notes,
 Validation, Known Deviations, Update Log) — a `grep` count, an ERROR/WARN count, a count of
 commits/files — is given with an explicit **tree anchor** on which it is reproducible:
@@ -1220,4 +1255,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 816e0b48fc06f231fba4594cad89589d48cf3264aed9a335d7ca9da431ccfd70 -->
+<!-- ru-source-sha256: bcf84006c653298383da2ddc2cd3ebd8ed094b6b93dbcad33dbb752bd0b613c5 -->

@@ -32,6 +32,24 @@
 
 ### Added
 
+- **Отчёт закрытия фазы `plans/<ID>/closure/<Pn>.json` (схема v1) с классом свидетельства
+  (P8.1, `2026.07.25-ECO-OPT`).** `## Phase Handoff` — проза плюс git-хеш: класс
+  свидетельства не фиксировался нигде, и синтетика читалась как результат. Теперь фаза
+  сдаётся ещё и машиночитаемым отчётом: `evidence_class` — enum РОВНО из трёх (`real` /
+  `synthetic` / `baseline_pending`), «нет числа» выражается ЗАПИСЬЮ с причиной, а не
+  отсутствием ключа. Включается **opt-in** полем `## 0. Meta` → `Closure Protocol | v1`
+  (иное значение = ERROR); плана без поля правило не касается ни одной диагностикой
+  (тест аддитивности). Писатель — `plan-close <ID> Pn` (собирает механически из полей
+  items); потребители названы и оба исполняются: `plan_lint.py` (схема · `items[]` ↔
+  `## Phase Status` · `phase_status` ↔ Status Board · `real` с пустым доказательством ·
+  терминальная фаза без файла — ERROR с ожидаемым путём) и `plan-audit <ID> Pn` (первый
+  вход ступени 1: перепрогон команд из `evidence` на `git.head_sha`, детект правки ТЗ
+  фазы после закрытия по `inputs_sha256`). Наш `evidence_class` РАЗВЕДЁН одной строкой
+  канона с закрытым перечнем классов доказательства `recomputed`/`cross-checked`/
+  `pinned-not-recomputable`/`unknown` (`source-evidence-verification-v1.md`) — разные оси,
+  оба словаря действуют. Канон — `plan-protocol` §8 + `snippets/closure-template.md`
+  (skill `2.16.0 → 2.17.0`, units `core`/`general` + skiller package API `0.9.0 → 0.10.0`).
+
 - **docs/plan — canonical docs synchronised and the measured-scope Owner decision
   packet assembled (P4.3, `2026.07.24-AGENT-RELIABILITY`).** Terminal item of the plan.
   Docs now state the three source layers explicitly — canonical (hand-written), generated

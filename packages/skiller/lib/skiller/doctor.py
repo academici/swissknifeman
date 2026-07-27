@@ -304,9 +304,24 @@ _DIAGNOSTIC_STATUSES = frozenset(("ok", "degraded", "unknown", "n/a"))
 # recomputes (D92 — no new public surface may re-derive what P1.1/P3 already measured
 # and committed). Absence (e.g. after the plan archives) degrades to a named `unknown`
 # gap, never a crash and never a silent "ok" (Implementation Rules «If-then»).
-_CAPABILITY_GAP_FINDING = "plans/2026.07.24-AGENT-RELIABILITY/findings/P1.1-capability-gaps.md"
-_TRACE_QUALITY_FINDING = "plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md"
+_AGENT_RELIABILITY_PLAN_ID = "2026.07.24-AGENT-RELIABILITY"
+_CAPABILITY_GAP_FINDING_REL = "findings/P1.1-capability-gaps.md"
+_TRACE_QUALITY_FINDING_REL = "findings/P3.11-terminal-audit-2.md"
+_FIXTURE_UNIT_SET_REL = "artifacts/P1.4/fixture-unit-set.json"
 _HOOK_REGISTRATIONS = (".codex/hooks.json", ".claude/settings.json")
+
+
+def _resolve_agent_reliability_path(repo_root, relative):
+    """Resolve a path inside the AGENT-RELIABILITY plan via `core.resolve_plan_dir`
+    (D95/P10.3) — live `plans/<id>/…` or archived `plans/archive/<id>/…`, whichever
+    exists; None if the plan is not found under either. Callers degrade to `unknown`
+    on None rather than crash (same contract as a plain missing file)."""
+    from core.repo import resolve_plan_dir
+    try:
+        plan_dir = resolve_plan_dir(repo_root, _AGENT_RELIABILITY_PLAN_ID)
+    except FileNotFoundError:
+        return None
+    return plan_dir / relative
 
 
 def build_effective_source_report(diagnostics):
@@ -457,13 +472,15 @@ def _capability_gap_diagnostic(repo_root):
     """Reference/capability coverage — cites the committed P1.1 finding rather than
     recomputing carrier-literal capability coverage live (D92: a new public surface for
     this is Scope Excluded; the finding IS the P1 measurement)."""
-    p = repo_root / _CAPABILITY_GAP_FINDING
-    if not p.is_file():
+    p = _resolve_agent_reliability_path(repo_root, _CAPABILITY_GAP_FINDING_REL)
+    source = str(p.relative_to(repo_root)) if p else (
+        f"plans/{_AGENT_RELIABILITY_PLAN_ID}/{_CAPABILITY_GAP_FINDING_REL}")
+    if p is None or not p.is_file():
         return {
             "id": "capability-reference-coverage",
             "owner": "P1.1 (semantic-identity-ownership-v1.md § Record shape)",
-            "source": _CAPABILITY_GAP_FINDING, "status": "unknown",
-            "evidence": {"gap": f"finding not found at {_CAPABILITY_GAP_FINDING} "
+            "source": source, "status": "unknown",
+            "evidence": {"gap": f"finding not found at {source} "
                                 "(plan may have archived) — recomputing it live is Scope "
                                 "Excluded (D92); citation is the only proof this owns"},
             "quality": {"completeness": 0.0, "note": "no committed evidence to cite"},
@@ -472,12 +489,12 @@ def _capability_gap_diagnostic(repo_root):
     return {
         "id": "capability-reference-coverage",
         "owner": "P1.1 (semantic-identity-ownership-v1.md § Record shape)",
-        "source": _CAPABILITY_GAP_FINDING, "status": "degraded",
+        "source": source, "status": "degraded",
         "evidence": {"note": "carrier-literal capability gaps measured at P1.1 close time "
                              "are recorded in this finding and remain open — not "
                              "recomputed live here"},
         "quality": {"completeness": 1.0, "note": "citation of a committed finding, not a live recomputation"},
-        "next_command": f"cat {_CAPABILITY_GAP_FINDING}",
+        "next_command": f"cat {source}",
     }
 
 
@@ -508,19 +525,21 @@ def _trace_quality_diagnostic(repo_root):
             "quality": {"completeness": 0.0, "note": "instrument not on path"},
             "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor",
         }
-    p = repo_root / _TRACE_QUALITY_FINDING
-    if not p.is_file():
+    p = _resolve_agent_reliability_path(repo_root, _TRACE_QUALITY_FINDING_REL)
+    source = str(p.relative_to(repo_root)) if p else (
+        f"plans/{_AGENT_RELIABILITY_PLAN_ID}/{_TRACE_QUALITY_FINDING_REL}")
+    if p is None or not p.is_file():
         return {
             "id": "trace-quality", "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
             "source": f"{trace_schema}/{metrics_schema} (no measurement citation found)",
             "status": "unknown",
-            "evidence": {"gap": f"no measured-scope citation found at {_TRACE_QUALITY_FINDING}"},
+            "evidence": {"gap": f"no measured-scope citation found at {source}"},
             "quality": {"completeness": 0.0, "note": "modules present, no committed measurement to cite"},
-            "next_command": f"cat {_TRACE_QUALITY_FINDING}",
+            "next_command": f"cat {source}",
         }
     return {
         "id": "trace-quality", "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
-        "source": _TRACE_QUALITY_FINDING, "status": "degraded",
+        "source": source, "status": "degraded",
         "evidence": {
             "measured_scope": "declared subset 5/31 (bank-layer-2-live-paired)",
             "F1_critical_requirement_retention": "0.96 measured vs 1.0 required (full critical bank, not-met)",
@@ -529,7 +548,7 @@ def _trace_quality_diagnostic(repo_root):
                     "per-project trace store — no generic store reader exists yet",
         },
         "quality": {"completeness": 1.0, "note": "citation of a committed, hash-checkable finding"},
-        "next_command": f"cat {_TRACE_QUALITY_FINDING}",
+        "next_command": f"cat {source}",
     }
 
 
@@ -821,13 +840,17 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
     }
 
 
-def _effective_carrier_set_document(gate_result, *, commit_sha):
+def _effective_carrier_set_document(gate_result, *, commit_sha, repo_root):
     """`artifacts/P1.4/effective-carrier-set.json` (D62 schema v1): the post-remediation
     identity→carriers map, one record per provider, on a named commit."""
+    fixture_unit_set_path = _resolve_agent_reliability_path(repo_root, _FIXTURE_UNIT_SET_REL)
+    fixture_unit_set = (str(fixture_unit_set_path.relative_to(repo_root))
+                        if fixture_unit_set_path else
+                        f"plans/{_AGENT_RELIABILITY_PLAN_ID}/{_FIXTURE_UNIT_SET_REL}")
     providers = {}
     for provider, carrier_map in gate_result["positive_maps"].items():
         providers[provider] = {
-            "fixture_unit_set": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.4/fixture-unit-set.json",
+            "fixture_unit_set": fixture_unit_set,
             "identities": [{"identity": identity, "carriers": carriers}
                           for identity, carriers in sorted(carrier_map.items())],
         }
@@ -892,10 +915,13 @@ def cmd_doctor(env, argv):
         if opts.get("fixture_out"):
             atomic_write_json(Path(opts["fixture_out"]), result["fixture_unit_set"])
         if opts.get("carrier_out"):
+            from core import find_repo_root
             sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=env.root,
                                  capture_output=True, text=True, check=False).stdout.strip()
             atomic_write_json(Path(opts["carrier_out"]),
-                              _effective_carrier_set_document(result, commit_sha=sha or "unknown"))
+                              _effective_carrier_set_document(
+                                  result, commit_sha=sha or "unknown",
+                                  repo_root=find_repo_root(env.root) or env.root))
         if failures:
             print("  FAILURES:")
             for item in failures:

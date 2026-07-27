@@ -30,6 +30,19 @@
   обязателен. Регрессионный тест —
   `test_repair_restores_managed_skill_deleted_from_project`.
 
+- **Резолвинг пути плана после архивации: `core.resolve_plan_dir` (P10.3, `2026.07.25-ECO-OPT`).**
+  `scripts/provider-docs.py` жёстко читал живой путь `plans/2026.07.19-DUAL-PROVIDER/…` и падал
+  `FileNotFoundError` после архивации того плана (файл фактически лежит в `plans/archive/…`), а
+  `packages/skiller/lib/skiller/doctor.py` те же две диагностики (`capability-reference-coverage`,
+  `trace-quality`) молча деградировали в `unknown` с неразрешимым `next_command: cat …` —
+  дерево несло ДВЕ конвенции на один факт («план `<ID>` — это `plans/<ID>` ЛИБО
+  `plans/archive/<ID>`»), и следующая архивация ломала следующего читателя. Новый хелпер
+  `core.repo.resolve_plan_dir(repo_root, plan_id)` — единый резолвер (живой каталог, иначе
+  архивный, иначе `FileNotFoundError` с ОБОИМИ проверенными путями); переведены четыре
+  функциональных читателя: `scripts/provider-docs.py`, `scripts/test-provider-docs.py`,
+  `packages/harness/lib/harness/instructions.py`, `packages/skiller/lib/skiller/doctor.py`.
+  `python3 scripts/provider-docs.py --check` — зелёный.
+
 ### Added
 
 - **`plans/verify-citations.py`: гейт «ссылка-доказательство резолвится до символа»

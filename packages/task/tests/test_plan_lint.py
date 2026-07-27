@@ -547,21 +547,93 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
 
     def test_c_post_cutoff_item_with_pre_final_na_is_error(self):
-        """(в) Updated ≥ cutoff, `pre_final: n/a` → ERROR (D76: `n/a` — не зелёное)."""
+        """(в) Updated ≥ cutoff, `pre_final: n/a` → ERROR (D76: `n/a` — не зелёное).
+        Фикстура конвертирована на каноническую строку `write-site:` (D102, P10.1) —
+        старая свободная форма `` `pre_mutation: allow`, `pre_final: n/a` `` покраснела
+        по плану после починки fail-open/ложного ERROR (гейт теперь матчит ТОЛЬКО
+        каноническую строку); предмет проверки не изменился."""
         plan_dir = self._write(
             updated="2026-07-27",
-            completion_notes="Сделано. `pre_mutation: allow`, `pre_final: n/a`.")
+            completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: n/a")
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
 
     def test_d_post_cutoff_item_with_both_allow_is_silent(self):
-        """(г) Updated ≥ cutoff, оба `allow` → молчание."""
+        """(г) Updated ≥ cutoff, оба `allow` → молчание. Фикстура конвертирована на
+        каноническую строку `write-site:` (D102, P10.1) — см. докстринг test_c."""
         plan_dir = self._write(
             updated="2026-07-27",
-            completion_notes="Сделано. `pre_mutation: allow`, `pre_final: allow`.")
+            completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: allow")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
         self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_e_fail_open_prose_citation_without_own_line_is_error(self):
+        """(б, D88/D102): item БЕЗ своей канонической строки `write-site:`, но
+        цитирующий чужие коды в прозе (разбор другого item'а) → ERROR, а не молчание.
+        Fail-open дефекта: старый `re.search` по всему полю засчитывал цитату как
+        собственные коды item'а."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Разбор соседнего item'а для контекста: там стояло "
+                "`pre_mutation: allow`, `pre_final: allow` — у нас другая ситуация."))
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
+
+    def test_f_own_allow_line_with_prose_block_citation_is_silent(self):
+        """(в, D88/D102): item СО своей канонической строкой `write-site:` (оба
+        `allow`), который выше по тексту ЦИТИРУЕТ `pre_final: block:X` чужого item'а
+        (объясняя, почему тот не закрылся) → диагностик НЕТ. Ложный ERROR дефекта:
+        старый `re.search` брал ПЕРВОЕ вхождение в поле — цитату, а не свою строку."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Для сравнения: соседний item был заблокирован (`pre_final: "
+                "block:ACCEPTANCE_NOT_PUBLIC`). У этого item — иначе.\n"
+                "write-site: pre_mutation: allow · pre_final: allow"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_g_markdown_wrapped_canonical_line_with_both_allow_passes(self):
+        """(а, D88/D102): каноническая строка ДОПУСКАЕТ ведущую markdown-обёртку
+        (буллет `- `, blockquote `> `, `**bold**` — Implementation Rules P10.1 (1)) —
+        item проходит без диагностик, как и голая форма."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Готово.\n"
+                "- **write-site:** `pre_mutation: allow` · `pre_final: allow`"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_h_own_line_pre_mutation_block_is_error(self):
+        """(д, D88/D102): каноническая строка есть, но `pre_mutation:` ≠ `allow`
+        (`block:*`) — ERROR по D76, симметрично test_c (там красный код был у
+        `pre_final`). Различает поле, а не только «хоть один код неверный»."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="write-site: pre_mutation: block:LOOP_BUDGET_EXCEEDED · pre_final: n/a")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
+
+    def test_i_pre_cutoff_item_with_prose_citation_stays_silent_additivity(self):
+        """(е, D88/D102): аддитивность по дате (И10) сохраняется даже когда
+        Completion Notes несёт прозаическую цитату кодов — item с `Updated` < cutoff
+        не диагностируется НИ ОДНОЙ новой строкой независимо от содержимого поля
+        (план из трёх живых репо на 2026-07-27 не даёт ни одного item'а с
+        `Updated ≥` cutoff — замер Inputs P10.1 — этот кейс синтетически
+        воспроизводит «что если бы был», не текущее дерево)."""
+        plan_dir = self._write(
+            updated="2026-07-26",
+            completion_notes=(
+                "Сделано. Для контекста цитата соседнего item'а: `pre_mutation: "
+                "allow`, `pre_final: block:X`."))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+        self.assertEqual(_errors_containing(diag, "закрытие на не-allow"), [])
 
     def test_malformed_updated_date_is_out_of_scope_not_error(self):
         """Непарсимая/нестрогая дата (не ISO `YYYY-MM-DD`) = вне скоупа — fail-open по дате

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:7072915e26f59bb2162f8e7e37a13e22839b26de38290606545d9121bbbd4c35
+Canonical SHA-256: sha256:932cc0230ef81753c0afaf25848925d77202aab1146b5e07dae35d1cf7333139
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -133,7 +133,11 @@ status-rule ниже. Точная команда, лестница маршру
    <sha>», не оставляй пугать несуществующим долгом.
 6. Синхронизируй `## Phase Status` (в `phases/Pn.md`) и `## 4. Phase Index & Status Board`
    (в `plan.md`); перезапиши `handoff.md`, если статус изменился (заголовок `after Pn.m`,
-   форма `Next` — из enum выше).
+   форма `Next` — из enum выше). **Печать кодов границ (D88/P10.1):** если вердикт шага 4
+   закрывает item `🟢`/`🟠`, а Completion Notes ещё не несёт строку `write-site:
+   pre_mutation: <код> · pre_final: <код>` — допиши её ОДНОЙ строкой из
+   `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
+   пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.15.0
+version: 2.16.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
@@ -748,10 +748,16 @@ item'а, шаг 6 — остальную бухгалтерию.
 Deviations + чинящий коммит с реальным хешем в handoff.
 ```
 
-Печать кодов границ (`pre_mutation:`/`pre_final:`) в Completion Notes item'ов `🟢`/`🟠` —
-МАШИННЫЙ гейт (`plan_lint.py`, P4.4/D91, forward-only по дате ITEM'а) для item'ов с
-`Updated` ≥ `2026-07-27`: отсутствующий код или код ≠ `allow` на любой границе — ERROR;
-более ранние item'ы им не диагностируются вовсе.
+Печать кодов границ в Completion Notes item'ов `🟢`/`🟠` — МАШИННЫЙ гейт (`plan_lint.py`,
+P4.4/D91, forward-only по дате ITEM'а) для item'ов с `Updated` ≥ `2026-07-27`:
+отсутствующий код или код ≠ `allow` на любой границе — ERROR; более ранние item'ы им не
+диагностируются вовсе. **Форма — ОДНА каноническая строка** (P10.1/D88):
+`write-site: pre_mutation: <код> · pre_final: <код>`. Гейт матчит ЭТУ строку
+построчно, а не любое вхождение подстрок `pre_mutation:`/`pre_final:` где-либо в поле —
+писать коды прозой врассыпную (цитируя их вне этой строки) ЗАПРЕЩЕНО: до P10.1 гейт
+ошибался в обе стороны на такой прозе (fail-open на цитате чужих кодов, ложный ERROR на
+процитированном `block:*`/`n/a`), починка P10.1 это закрыла именно требованием
+единственной строки-носителя.
 
 **Якорь дерева для чисел в отчётах.** Любое ЧИСЛО в отчёте item'а (Completion Notes,
 Validation, Known Deviations, Update Log) — счётчик `grep`, число ERROR/WARN, число
@@ -1288,3 +1294,4 @@ acceptance-предикат не опирается на `pinned-not-recomputabl
 <!-- i18n-keep: НЕ ТРОГАТЬ: -->
 <!-- i18n-keep: pre_mutation: -->
 <!-- i18n-keep: pre_final: -->
+<!-- i18n-keep: write-site: -->

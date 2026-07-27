@@ -356,22 +356,52 @@ def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
 WRITE_SITE_CODES_CANON_DATE = "2026-07-27"
 ITEM_UPDATED_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Канон кодов — `task_contract.evaluate()`: `pre_mutation` ∈ {allow, block:<CODE>};
-# `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное). Markdown-бэктики
-# вырезаются ДО поиска (форма печати — `` `pre_mutation: allow` ``); сами литералы
-# `pre_mutation:`/`pre_final:` — в `CANON_LITERALS` (директивы `i18n-keep`, SKILL.ru.md §8
-# «Порядок закрытия item'а»).
-WRITE_SITE_PRE_MUTATION_RE = re.compile(r"pre_mutation:\s*(allow|n/a|block:[A-Za-z0-9_]+)")
-WRITE_SITE_PRE_FINAL_RE = re.compile(r"pre_final:\s*(allow|n/a|block:[A-Za-z0-9_]+)")
+# `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное).
+# --- P10.1/D88/D102: каноническая строка вместо re.search по всему полю --------
+# Старая форма (`WRITE_SITE_PRE_MUTATION_RE.search(clean)` по ВСЕМУ Completion Notes)
+# ошибалась в ОБЕ стороны: (1) fail-open — item без своих кодов, но ЦИТИРУЮЩИЙ чужие в
+# прозе, проходил гейт; (2) ложный ERROR — item со своими `allow`, процитировавший ВЫШЕ
+# по тексту `block:*`/`n/a` чужого item'а, краснел, потому что `search` берёт ПЕРВОЕ
+# вхождение. Обе цены реальны с даты активации гейта. Починка: ОДНА каноническая строка
+# `write-site: pre_mutation: <код> · pre_final: <код>` (D88) — коды item'а живут ТОЛЬКО
+# на строке с этим префиксом; прозаические цитаты на других строках гейт не видит.
+WRITE_SITE_LINE_FORM = "write-site: pre_mutation: <код> · pre_final: <код>"
+_WRITE_SITE_CODE = r"(allow|n/a|block:[A-Za-z0-9_]+)"
+WRITE_SITE_LINE_PREFIX_RE = re.compile(r"^write-site:\s*(.*)$")
+WRITE_SITE_CODE_PAIR_RE = re.compile(
+    r"^pre_mutation:\s*" + _WRITE_SITE_CODE + r"\s*\W+\s*"
+    r"pre_final:\s*" + _WRITE_SITE_CODE + r"\s*\.?\s*$")
+
+
+def _write_site_canonical_codes(completion_notes):
+    """Находит ЕДИНСТВЕННУЮ каноническую строку `write-site:` (D88) в Completion
+    Notes и возвращает `(pre_mutation, pre_final)` — ПОСТРОЧНО (поле парсер отдаёт
+    многострочным), а не `re.search` по всему полю. Markdown-обёртка строки
+    (бэктики, `**`, ведущие `- `/`> `, пробелы) срезается ДО матча — форма печати
+    несёт их. Строки БЕЗ префикса `write-site:` (цитаты, объяснения) не
+    рассматриваются вовсе, даже если в них встречаются `pre_mutation:`/`pre_final:` —
+    ровно это закрывает fail-open. Префикс есть, но форма после него не разбирается
+    (сломан порядок/разделитель) → тоже `None`, ERROR тем же путём, что «кодов нет»."""
+    for raw_line in (completion_notes or "").replace("`", "").splitlines():
+        line = raw_line.replace("*", "").strip()
+        while line[:1] in ("-", ">"):
+            line = line[1:].strip()
+        prefix = WRITE_SITE_LINE_PREFIX_RE.match(line)
+        if not prefix:
+            continue
+        pair = WRITE_SITE_CODE_PAIR_RE.match(prefix.group(1).strip())
+        return (pair.group(1), pair.group(2)) if pair else None
+    return None
 
 
 def _lint_write_site_codes_44(status_table, items, path, diag):
-    """P4.4/D91 (ремонт находки Ф2): item со статусом 🟢/🟠, чей `Updated` (Phase Status)
-    ISO-датирован ≥ WRITE_SITE_CODES_CANON_DATE, обязан нести оба кода
-    `pre_mutation:`/`pre_final:` в Completion Notes, и оба обязаны быть `allow` (D76: `n/a`
-    — не зелёное). Непарсимая/отсутствующая дата = item вне скоупа — МОЛЧАНИЕ, а не
-    WARNING (И10: ни один существующий закрытый item не краснеет задним числом). Внутри
-    скоупа — ERROR (правило уже канон: `plan-audit.md` чеклист «write-site»; новое здесь —
-    только его машинная проверяемость)."""
+    """P4.4/D91 (ремонт находки Ф2), точность — P10.1/D88/D102: item со статусом
+    🟢/🟠, чей `Updated` (Phase Status) ISO-датирован ≥ WRITE_SITE_CODES_CANON_DATE,
+    обязан нести каноническую строку `write-site:` (см. `_write_site_canonical_codes`)
+    с ОБОИМИ кодами `allow` (D76: `n/a` — не зелёное). Непарсимая/отсутствующая дата =
+    item вне скоупа — МОЛЧАНИЕ, а не WARNING (И10: ни один существующий закрытый item
+    не краснеет задним числом). Внутри скоупа — ERROR (правило уже канон:
+    `plan-audit.md` чеклист «write-site»; машинная проверяемость — P4.4/P10.1)."""
     updated_by_id = {row.get("ID"): row.get("Updated", "") for row, _ in status_table}
     for item_id, occurrences in items.items():
         item = occurrences[0]
@@ -382,21 +412,21 @@ def _lint_write_site_codes_44(status_table, items, path, diag):
         if not ITEM_UPDATED_ISO_RE.match(updated) or updated < WRITE_SITE_CODES_CANON_DATE:
             continue
         cn_val, cn_lineno = item["fields"].get("Completion Notes", ("", item["header_lineno"]))
-        clean = (cn_val or "").replace("`", "")
-        m_mut = WRITE_SITE_PRE_MUTATION_RE.search(clean)
-        m_fin = WRITE_SITE_PRE_FINAL_RE.search(clean)
-        if not m_mut or not m_fin:
+        codes = _write_site_canonical_codes(cn_val)
+        if codes is None:
             diag.error(path, cn_lineno,
                        f"item {item_id}: закрыт «{status_val}» без напечатанных кодов границ "
-                       f"pre_mutation/pre_final в Completion Notes")
+                       f"pre_mutation/pre_final в Completion Notes (ожидается строка "
+                       f"`{WRITE_SITE_LINE_FORM}`)")
             continue
-        if m_mut.group(1) != "allow":
+        pre_mutation, pre_final = codes
+        if pre_mutation != "allow":
             diag.error(path, cn_lineno,
-                       f"item {item_id}: pre_mutation: {m_mut.group(1)} при статусе "
+                       f"item {item_id}: pre_mutation: {pre_mutation} при статусе "
                        f"«{status_val}» — закрытие на не-allow (D76)")
-        if m_fin.group(1) != "allow":
+        if pre_final != "allow":
             diag.error(path, cn_lineno,
-                       f"item {item_id}: pre_final: {m_fin.group(1)} при статусе "
+                       f"item {item_id}: pre_final: {pre_final} при статусе "
                        f"«{status_val}» — закрытие на не-allow (D76)")
 
 
@@ -447,6 +477,8 @@ CANON_LITERALS = (
     *SCOPE_PAYLOAD_MARKERS,                                   # scope-payload launch-block'а (§8)
     "pre_mutation:",                                          # write-site код границы (§8, P4.4/D91)
     "pre_final:",                                             # write-site код границы (§8, P4.4/D91)
+    "write-site:",                                            # каноническая строка (§8, P10.1/D102:
+                                                               # T1 латиницу не ловит, регистрация решением)
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы

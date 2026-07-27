@@ -134,7 +134,11 @@ status-rule ниже. Точная команда, лестница маршру
    <sha>», не оставляй пугать несуществующим долгом.
 6. Синхронизируй `## Phase Status` (в `phases/Pn.md`) и `## 4. Phase Index & Status Board`
    (в `plan.md`); перезапиши `handoff.md`, если статус изменился (заголовок `after Pn.m`,
-   форма `Next` — из enum выше).
+   форма `Next` — из enum выше). **Печать кодов границ (D88/P10.1):** если вердикт шага 4
+   закрывает item `🟢`/`🟠`, а Completion Notes ещё не несёт строку `write-site:
+   pre_mutation: <код> · pre_final: <код>` — допиши её ОДНОЙ строкой из
+   `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
+   пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result

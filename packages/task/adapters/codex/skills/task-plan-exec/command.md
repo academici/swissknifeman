@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:59712a8418aac9166e61b44104f2f7c31830af40a7bcecdc18df76e0a6cca0a3
+Canonical SHA-256: sha256:04e18fe3838ffc1b7aaf902146124337c9380c4e1d8bcef924746198c70c21fd
 Adapter: task.codex-command/1.0.3
 -->
 Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -173,7 +173,11 @@ Adapter: task.codex-command/1.0.3
       (шаг 3). Фикс по ревью — коммит СВЕРХ топологии (не `amend`: трассируемость).
    2) **Bookkeeping плана.** `**Status:**` item'а → `🟢 Done` / `🟠 Done with deviations` (status-rule
       ниже) · **Completion Notes** — только факты (файлы, тесты, прогнанные команды и их вывод; без
-      оценок «всё отлично») · **Pending Work** (из п. 4, или «—») · **Known Deviations** · строка в
+      оценок «всё отлично») + **строка `write-site: pre_mutation: <код> · pre_final: <код>`** (D88/
+      P10.1) — коды БЕРУТСЯ из результата шага 7 Pre-final выше (`result["pre_mutation"]`/
+      `result["pre_final"]`), пишутся ЭТОЙ ОДНОЙ строкой (не прозой врассыпную — `plan_lint.py`
+      матчит только её построчно), обязательна на закрытии `🟢`/`🟠` · **Pending Work** (из п. 4,
+      или «—») · **Known Deviations** · строка в
       `## Phase Status` фазы · `## 4. Phase Index & Status Board` в `plan.md` (счётчик `Items 🟢/всего`,
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·

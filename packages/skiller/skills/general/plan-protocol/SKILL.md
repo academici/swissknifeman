@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.15.0
+version: 2.16.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -727,10 +727,15 @@ Merging steps 1 and 6 into one commit (bundling) = process deviation §6: 🟢 +
 Deviations entry + a fixing commit carrying the real hash in the handoff.
 ```
 
-Printing the boundary codes (`pre_mutation:`/`pre_final:`) in the Completion Notes of `🟢`/`🟠`
-items is a MACHINE gate (`plan_lint.py`, P4.4/D91, forward-only by the item's own date) for
-items with `Updated` ≥ `2026-07-27`: a missing code, or a code ≠ `allow` on either boundary, is
-an ERROR; earlier items are not diagnosed at all.
+Printing the boundary codes in the Completion Notes of `🟢`/`🟠` items is a MACHINE gate
+(`plan_lint.py`, P4.4/D91, forward-only by the item's own date) for items with `Updated` ≥
+`2026-07-27`: a missing code, or a code ≠ `allow` on either boundary, is an ERROR; earlier items
+are not diagnosed at all. **Form — ONE canonical line** (P10.1/D88): `write-site: pre_mutation:
+<code> · pre_final: <code>`. The gate matches THIS line, line-by-line — not any occurrence of
+the substrings `pre_mutation:`/`pre_final:` anywhere in the field. Printing codes as loose prose
+(quoting them outside this line) is FORBIDDEN: before P10.1 the gate erred both ways on such
+prose (fail-open on a quoted other item's codes, false ERROR on a quoted `block:*`/`n/a`); the
+P10.1 fix closed both by requiring a single carrier line.
 
 **Tree anchor for numbers in reports.** ANY NUMBER in an item's report (Completion Notes,
 Validation, Known Deviations, Update Log) — a `grep` count, an ERROR/WARN count, a count of
@@ -1215,4 +1220,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: f25c2d2a6a8de5cc43c98e4e4b1733826756086cc10c8100ce3f3a756559a597 -->
+<!-- ru-source-sha256: 816e0b48fc06f231fba4594cad89589d48cf3264aed9a335d7ca9da431ccfd70 -->

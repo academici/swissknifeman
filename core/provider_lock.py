@@ -973,7 +973,25 @@ def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProven
         return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, None, "target-owned-by-other-artifact"
     if record is None:
         if target.exists() or target.is_symlink():
-            return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, _managed_hash(target, result, codec), "unmanaged-target"
+            observed_hash = _managed_hash(target, result, codec)
+            if not repair_requested:
+                return (DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE,
+                        observed_hash, "unmanaged-target")
+            if observed_hash is not None and observed_hash == provenance.rendered_hash:
+                # Tier 1 (D92): byte-identical to the render, so nothing changes on disk.
+                # STALE_SOURCE/UPDATE (not NOOP) mirrors maind.plan_exact_artifact_adoption —
+                # apply_plan skips the lock write entirely when every action is NOOP, so the
+                # provenance record would never be persisted.
+                return (DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE,
+                        observed_hash, "unmanaged-target-adopted")
+            # Tier 2 (D92): content diverges (or is unreadable) — REFUSE stays, but the bare
+            # "unmanaged-target" diagnostic is no longer enough; name the target and the fix.
+            return (DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, observed_hash,
+                    "unmanaged-target-diverged: {} does not byte-match the rendered {}; resolve "
+                    "the divergence manually (diff {} against the render), then rerun with "
+                    "--repair once it matches — adopting diverging content needs an owner "
+                    "--adopt decision, not implemented (D92)".format(
+                        target.as_posix(), provenance.artifact_id, target.as_posix()))
         return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
     if not _matching_identity(record, provenance):
         return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, _managed_hash(target, result, codec), "record-identity-mismatch"

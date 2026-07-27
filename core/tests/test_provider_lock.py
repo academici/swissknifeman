@@ -154,6 +154,53 @@ class ProviderLockTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             plan_artifact_lock(self.root, (self.expected, other), lock_bytes=None)
 
+    def test_unmanaged_target_repair_tier1_adopts_byte_identical_content(self):
+        """P10.4/D92 — all four (target present/absent x repair yes/no) combinations."""
+        target = self.root / self.expected.target.path
+        repair_ids = (self.expected.provenance.artifact_id,)
+
+        absent_no_repair = self.plan()
+        self.assertEqual((absent_no_repair.actions[0].observation, absent_no_repair.actions[0].action),
+                         (DriftObservation.MISSING, ArtifactActionKind.CREATE))
+
+        absent_repair = self.plan(repair_artifact_ids=repair_ids)
+        self.assertEqual((absent_repair.actions[0].observation, absent_repair.actions[0].action),
+                         (DriftObservation.MISSING, ArtifactActionKind.CREATE))
+
+        target.parent.mkdir(parents=True)
+        target.write_bytes(self.expected.managed_bytes)
+
+        present_no_repair = self.plan()
+        self.assertEqual((present_no_repair.actions[0].observation, present_no_repair.actions[0].action,
+                          present_no_repair.actions[0].diagnostic),
+                         (DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, "unmanaged-target"))
+
+        present_repair = self.plan(repair_artifact_ids=repair_ids)
+        action = present_repair.actions[0]
+        self.assertEqual((action.observation, action.action, action.diagnostic),
+                         (DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE, "unmanaged-target-adopted"))
+        applied = apply_plan(self.root, present_repair)
+        self.assertEqual(target.read_bytes(), self.expected.managed_bytes)
+        self.assertFalse(target.with_name(target.name + ".provider-artifact.bak").exists())
+        lock = parse_lock((self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
+        self.assertEqual(lock.records, (self.expected.provenance,))
+        self.assertEqual(applied.actions[0].action, ArtifactActionKind.NOOP)
+
+    def test_unmanaged_target_repair_tier2_refuses_diverging_content(self):
+        target = self.root / self.expected.target.path
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b"manual edit, not the render\n")
+        plan = self.plan(repair_artifact_ids=(self.expected.provenance.artifact_id,))
+        action = plan.actions[0]
+        self.assertEqual(action.observation, DriftObservation.OWNERSHIP_CONFLICT)
+        self.assertEqual(action.action, ArtifactActionKind.REFUSE)
+        self.assertIn(self.expected.target.path, action.diagnostic)
+        self.assertIn("--repair", action.diagnostic)
+        self.assertIn("--adopt", action.diagnostic)
+        with self.assertRaises(ValueError):
+            apply_plan(self.root, plan)
+        self.assertEqual(target.read_bytes(), b"manual edit, not the render\n")
+
     def test_corrupt_and_newer_locks_refuse_without_writes(self):
         for raw in (b"{", b'{"records":[],"schema_version":2}\n'):
             with self.subTest(raw=raw):

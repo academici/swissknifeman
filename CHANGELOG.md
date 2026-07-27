@@ -21,6 +21,14 @@
   CI-job `hygiene`); честно называет границу: «видимая CLI-группа не доказывает, что её рантайм
   включён», сверка полноты со списком реальных возможностей отложена (кандидат D2).
 
+- **CI-гигиена дерева: запрещённые пути + тег = версия (P8.6, `2026.07.25-ECO-OPT`).**
+  `scripts/public-hygiene.py` — fail-closed по `git ls-files` на запрещённые суффиксы/имена/
+  каталоги (`.sqlite`/`.log`/`.pem`/`.key`/архивы, `.env` кроме `*.example`, `__pycache__`/
+  `.venv`/`node_modules`); `scripts/verify-tag.py <tag>` — тег `vX.Y.Z` обязан быть верхним
+  выпущенным заголовком `## [X.Y.Z] - YYYY-MM-DD` в корневом CHANGELOG.md. Шаг
+  `public-hygiene` в job `hygiene` и новый job `release-tag` (`on: push: tags: ['v*']`) в
+  `.github/workflows/hygiene.yml`; раздел в `docs/develop.md`.
+
 ### Changed
 
 - **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6, `2026.07.25-ECO-OPT`, D117).**

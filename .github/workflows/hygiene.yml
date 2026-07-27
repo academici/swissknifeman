@@ -34,3 +34,19 @@ jobs:
         run: |
           python3 scripts/test-status-check.py -v
           python3 scripts/status-check.py docs/status.md
+
+      - name: public-hygiene (запрещённые пути в дереве)
+        run: |
+          python3 scripts/test-public-hygiene.py -v
+          python3 scripts/public-hygiene.py
+
+  release-tag:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: verify-tag (тег ↔ CHANGELOG.md)
+        run: |
+          python3 scripts/test-verify-tag.py -v
+          python3 scripts/verify-tag.py "${GITHUB_REF_NAME}"

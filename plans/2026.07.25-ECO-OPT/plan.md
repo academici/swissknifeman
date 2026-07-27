@@ -199,7 +199,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
-| P5 | Пилот code-review-graph vs Serena | 1/4 | 🟡 In progress |
+| P5 | Пилот code-review-graph vs Serena | 2/4 | 🟡 In progress |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
@@ -541,6 +541,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-design/Claude Opus 5/high (P5.3 разблокирован + P5.4) | D109 (диагноз §8 отменён: downgrade, конфиги новее пина) · D110 (пин — commit-SHA `@026b007b…`) · D111 (новый item **P5.4**, гейт связности схема↔пин). P5.3 🔴→🟡, ТЗ пересобрано; фаза 3→4 items — детали см. `phases/P5.md` и `findings/P5.3-…` §10–§11. |
 | 2026-07-27 | plan-run/Claude Sonnet 5/medium (P5.3 закрыт) | P5.3 закрыт 🟠: пин `@026b007b…` (D110) внесён в `constants.py`/`config.json`/десять живых `.mcp.json`, smoke зелёный на двух типах (python-монорепо + php/laravel), `unmanaged-target` подтверждён живым; отклонение — новый failing-тест `test_provider_deploy.py::test_d108_…` (хардкод sha256 старого пина, файл вне `Files`) — детали см. `phases/P5.md` P5.3 Completion Notes, `findings/P5.3-…` §12. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P5.4 закрыт) | P5.4 закрыт 🟢: офлайновый гейт `codegraph.check_schema_connectivity` (пин↔схема `.serena/project.yml`, D111), 4 новых теста, 0 новых FAIL — детали см. `phases/P5.md` P5.4 Completion Notes. |
+| 2026-07-27 | plan-run/Claude Sonnet 5/medium (P5.1 закрыт) | P5.1 закрыт 🟢: kill-gate CRG 2.3.7 на `git worktree`-копии flexcrm — Ops (1.66с/0.24с) в пределах D35, `P_impact` (медиана 0.0182 по 3 коммитам) сорвал порог `≥0.40` ⇒ **skip**, ступень 1 не запускалась; `L_evidence` частично снял `[UNVERIFIED]` — детали см. `phases/P5.md` P5.1 Completion Notes, `findings/P5.1-stage0-killgate.md`. |
 
 ## 7. Contracts
 

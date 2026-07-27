@@ -61,7 +61,7 @@
 | P3.3 | solo | manual | frontier/high | **Owner** | решения OQ-4/OQ-5 плана `2026.07.15-TELEMETRY-OPT` |
 | P4.1 → P4.2 → P4.3 | solo | manual | implementation/high · high · medium | — | ADR памяти (owner-гейт снят D80) → реализация (ПОСЛЕ P3.2) → rollout второй машины |
 | P5.1 → P5.2 | solo | manual | implementation/medium · frontier/high | **Owner** (P5.2) | ступень 0 kill-gate (D72) → вердикт combine/skip (D35) |
-| P5.3 | solo | manual | implementation/medium | — | пин Serena + пропаганда во флот; строку «доставка ручная» правит P10.4 по факту исхода |
+| P5.3 | solo | manual | implementation/medium | — | **🔴 Blocked повторно** (2026-07-27): шаги 2–3 (пин `@v1.6.1`, D107) исполнены и откачены — smoke фатально падает (`KeyError: 'languages'`, `.serena/project.yml` флота без обязательного на `1.6.x` ключа); ждёт `plan-design` по расширению Scope. Доставка ручная — P10.4/D106 подтвердил, что ресинк недоступен |
 | P7.1 · P7.3 → P7.2 | solo | manual | implementation/high · medium · high | **Owner** (P7.2) | гейты сняты ⇒ фаза может идти раньше прежнего. Кандидаты dogfood P7.1 (сверить статус перед прогоном): **P8.7** · **P1.2** · **P3.2** |
 
 ### Волна 2 — skiller: листинг, измеритель, вендоринг

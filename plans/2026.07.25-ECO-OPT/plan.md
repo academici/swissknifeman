@@ -206,7 +206,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | 🟡 In progress |
-| P10 | Долги, унаследованные от AGENT-RELIABILITY | 3/4 | 🟡 In progress |
+| P10 | Долги, унаследованные от AGENT-RELIABILITY | 3/4 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -555,8 +555,10 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-run/Claude Opus 5/high (P5.2 закрыт) | P5.2 закрыт 🟢: OQ-1 закрыт вердиктом владельца `skip` по code-review-graph (D113) — `P_impact` 0.0390 при пороге 0.40 после k-fold-усиления замера (D112, 24 fold'а), запись ушла в 5 адресатов; enumeration генерёжки в `Files` синхронизирована (D114) — детали см. phases/P5.md P5.2 Completion Notes |
 | 2026-07-27 | plan-design/Claude Opus 5/high (реопен P5) | P5 реопенена по аудиту RED (D115): F1/F2 → новые items **P5.5** (D116) и **P5.6** (D117), F3–F7 закрыты этим заходом — детали см. `phases/P5.md` `## Phase Status`. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P5.5 закрыт) | P5.5 закрыт 🟢: пин Serena перенесён в версионируемый слой (`config.example.json`/`.mcp.json.example`/дока) + двойной гейт (тест шаблонов, `check_schema_connectivity` в `maind doctor`) — детали см. `phases/P5.md` P5.5 Completion Notes. |
-| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P5.6 закрыт) | P5.6 закрыт 🟢: `SERENA_SCHEMA_FIELDS` сужена до факта апстрима `{project_name, language_servers}` (D117), докстринг `render_project_yaml` исправлен, регресс-тест в обе стороны — детали см. `phases/P5.md` P5.6 Completion Notes. |
+| 2026-07-27 | plan-close/Claude Sonnet 5/low (P5.6 сверен) | P5.6 сверен 🟢 (F16: атрибуция строки исправлена с `plan-exec` на факт `journal.jsonl`) — детали см. `phases/P5.md` P5.6 Completion Notes. |
 | 2026-07-27 | plan-close/Claude Sonnet 5/low (фаза P5 закрыта повторно) | Реопен D115 закрыт: все 6 items терминальны (P5.1🟢/P5.2🟢/P5.3🟠/P5.4🟢/P5.5🟢/P5.6🟢) — фаза `🟠 Done with deviations` (унаследованный Known Deviation P5.3, второй красный тест `validate.sh` вне Files); `closure/P5.json` регенерирован целиком, `external_side_effects[]` сохранён (D115 Consequences п.3); `handoff.md` переписан (`after P5`, Next → `plan-audit P5` по правилу «была 🟠 → сперва аудит»). |
+| 2026-07-27 | plan-audit/Claude Opus 5/xhigh (P5, заход 2) | Вердикт ATTENTION: F9–F16 дефекты бухгалтерии, продукт цел — детали см. `phases/P5.md` `## Audit P5 — 2026-07-27 (заход 2)`. |
+| 2026-07-27 | plan-close/Claude Sonnet 5/low (фаза P10 закрыта) | P10 закрыта 🟠 Done with deviations (3🟢+1🟠); заодно выправлена бухгалтерия P5 по находкам F10/F11/F12/F15/F16 аудита — детали см. `phases/P10.md` `## Phase Handoff`. |
 
 ## 7. Contracts
 

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P10",
+  "closed_at": "2026-07-27",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "aaf50abd6f6d9a4250803a94f08f41db5f5672c7", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "8e0d68e9fc2d3f54663debf94f592f3f745eec7a23df64742553f99f52d7a52c",
+    "phases/P10.md": "933e6763bbf2f2af5996696623ca981417390908e04aa91abc0d8368681cfe00"
+  },
+  "items": [
+    {"id": "P10.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "гейт кодов границ починен канонической строкой write-site: (D88/D102), fail-open + ложный ERROR закрыты различающими тестами — item-коммиты 0b33116c+243254aa, bookkeeping 9d0a3023"},
+    {"id": "P10.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "plans/verify-citations.py — гейт «ссылка-доказательство резолвится до символа», первый прогон 154 цитаты/39 находок, --selftest 10/10 — item-коммит 47d6972d, bookkeeping 9b4d81d9"},
+    {"id": "P10.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "core.resolve_plan_dir — резолвинг пути плана устойчивый к архивации, четыре функциональных читателя переведены, python3 scripts/provider-docs.py --check зелёный — item-коммит ae54d790, bookkeeping d5aecc66"},
+    {"id": "P10.4", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "core/provider_lock.py _classify усыновляет тир 1 (D92); эмпирика 15/15 флота — тир 2, эскалация решена владельцем в сессии (D106); bash packages/maind/scripts/validate.sh осталась красной (test_local_skills_reference_on_demand_model, пред-существующий дефект вне Scope, воспроизведено ДО/ПОСЛЕ через git stash) — item-коммит 77bf9d8c, bookkeeping 3c5e2610"}
+  ],
+  "gates": [
+    {"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/task/scripts/validate.sh (на дереве закрытия P10) → plan-lint: OK (14 план(ов), 0 ошибок, 219 предупреждений); validate: OK"},
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh → tests: OK (Ran 481 tests), registry --check: артефакты актуальны"},
+    {"id": "validate.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/validate.sh → validate: OK"},
+    {"id": "core.tests", "status": "PASS", "evidence_class": "real",
+     "evidence": "PYTHONPATH=. python3 -m unittest discover -s core/tests → Ran 236 tests … OK"},
+    {"id": "validate.sh:maind", "status": "FAIL", "evidence_class": "real",
+     "evidence": "bash packages/maind/scripts/test.sh -v → Ran 504 tests, FAILED (failures=2): test_local_skills_reference_on_demand_model (пред-существующий, P3.2) + test_d108_inventory_uses_configured_server_names_without_changing_bindings (пред-существующий, P5.3) — оба воспроизведены ОДИНАКОВО ДО и ПОСЛЕ P10.4 (git stash), не регрессия этой фазы; названы в Known Deviations P10.4"}
+  ],
+  "metrics": [
+    {"name": "lint_new_from_closure", "value": "0", "label": "real"},
+    {"name": "p10_2_first_scan_findings", "value": "39 (154 цитаты проверено)", "label": "real"},
+    {"name": "p10_4_fleet_tier2_ratio", "value": "15/15", "label": "real"}
+  ],
+  "limitations": [
+    "gates[]/metrics[] построены МЕХАНИЧЕСКИ из полей items + перепрогона validate.sh каждого затронутого пакета этой сессией (не из памяти) — урок находки F15 предыдущего закрытия P5 применён здесь заранее",
+    "core/tests затронуты P10.3 (resolve_plan_dir) и P10.4 (provider_lock); отдельный гейт core.tests добавлен, т.к. core/ не несёт своего validate.sh"
+  ],
+  "external_side_effects": []
+}

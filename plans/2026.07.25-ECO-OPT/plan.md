@@ -194,7 +194,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Хвосты: tool-search вердикт + канон план-ссылок | 0/2 | ⬜ Not started |
+| P1 | Хвосты: tool-search вердикт + канон план-ссылок | 1/2 | 🟡 In progress |
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
@@ -525,6 +525,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P9.1 закрыт) | P9.1 закрыт 🟠: `review-gate` получил содержание (`checks/` + миграция + three-state `doctor`), live-прогон субагента подтвердил семантику и вскрыл два бага (исправлены) — детали см. `phases/P9.md` P9.1 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P2.1 закрыт) | P2.1 закрыт 🟢: две Brain-ноты `opus-5-prompting.md`/`sonnet-5-prompting.md` по форме `fable-5-prompting.md` + указатели в `prompting.md` + две карточки в `docs/reference.md` — детали см. `phases/P2.md` P2.1 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P3.2 закрыт) | P3.2 закрыт 🟠: живой замер 11 инструментов maind MCP + генерическая воронка тримминга в `_content()` (снятие `indent=2` + потолок/receipt хвостовым случаем) — отклонение: пре-существующий failing-тест вне `Files` item'а — детали см. `phases/P3.md` P3.2 Completion Notes |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P1.2 закрыт) | P1.2 закрыт 🟢: канон D3 (полный `<PLAN-ID> Pn.m`) в root `CLAUDE.md` + бэкфилл 33 lib-файлов (комменты/докстринги, ноль правок кода) — детали см. `phases/P1.md` P1.2 Completion Notes |
 
 ## 7. Contracts
 

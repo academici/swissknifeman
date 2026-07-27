@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-27 (P8.9) |
+| Last Updated | 2026-07-27 (P8.10) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -581,6 +581,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.7) | P8.7 закрыт 🟢 Done: `assert_safe_replace_target` в `core/io.py` + 8 тестов + регресс по всем пакетам (2 пред-существующих FAIL в maind — детали см. `phases/P8.md` P8.7 Completion Notes). Батч B4b (P8.4–P8.7) завершён. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.8) | P8.8 закрыт 🟢 Done: три гейта в `validate.sh` (CORE-секции с рэтчетом, анти-дублирование проекций, полнота pressure + `triggers[]`) — детали см. `phases/P8.md` P8.8 Completion Notes. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.9) | P8.9 закрыт 🟢 Done: `benchmark.json` детерминирован (Fraction+строковый рендер, инжектируемые часы, честный `provenance`, `schema_version: "skill-benchmark/v2"`) — батч B5 завершён — детали см. `phases/P8.md` P8.9 Completion Notes. |
+| 2026-07-27 | plan-run/Claude Opus 5/high (P8.10) | P8.10 закрыт 🟠 Done with deviations: закрытый набор форм ячейки `Items` §9 канона + диагностичный отказ `_find_routing_row` + 4 теста с красным-до; отклонения — version-first файлы вне `Files` и перебор тира — детали см. `phases/P8.md` P8.10 Completion Notes. Все 10 items P8 терминальны. |
 
 ## 7. Contracts
 

@@ -3,12 +3,12 @@
   "plan": "2026.07.25-ECO-OPT",
   "phase": "P5",
   "closed_at": "2026-07-27",
-  "closed_by": {"command": "plan-close", "actor": "implementation/low"},
-  "phase_status": "🟡 In progress",
-  "git": {"head_sha": "a476527fea003f0bd428c0cc3c0d3cac24bb8e68", "branch": "codex/provider-project-sync", "dirty": true},
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "9cafcac10fcd7adf8b77a0e1dd10a013bb373963", "branch": "codex/provider-project-sync", "dirty": true},
   "inputs_sha256": {
-    "plan.md": "fb307c232bae46e9dba097d4e533e7a36c16ed24c6d5d53f667057e0b8c66a55",
-    "phases/P5.md": "1e731cd1db493865380079de68dadf9f7174e513fdc4bebafaaaa165b00aa393"
+    "plan.md": "1759df6483b64b0f96385cc477d261ab48f7383ee0ca73e20fc716a599b43798",
+    "phases/P5.md": "5161f0af3c55fe6c0ca4ca1162ade7115e32f45d64c506d288f72096ff2bd686"
   },
   "items": [
     {"id": "P5.1", "status": "🟢 Done", "evidence_class": "real",
@@ -21,15 +21,15 @@
      "evidence": "гейт связности .serena/project.yml ↔ версия пина — test_codegraph.py"},
     {"id": "P5.5", "status": "🟢 Done", "evidence_class": "real",
      "evidence": "пин в config.example.json/.mcp.json.example/code-graph.md + тест шаблонов против constants.SERENA_SRC + codegraph.check_schema_connectivity в maind doctor — item-коммит 88f0c7eb"},
-    {"id": "P5.6", "status": "⬜ Not started", "evidence_class": "baseline_pending",
-     "evidence": "заведён реопеном 2026-07-27 (D115/D117) под находку F2 аудита — SERENA_SCHEMA_FIELDS сужается до факта апстрима; не исполнялся, свидетельства нет по построению"}
+    {"id": "P5.6", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "SERENA_SCHEMA_FIELDS сужена до {project_name, language_servers} (факт апстрима, серена 1.6.2.dev0 @026b007b…) + докстринг render_project_yaml исправлен + 2 регресс-теста TestSchemaConnectivity (обе стороны) — packages/maind/tests/test_codegraph.py, item-коммит 9cafcac1"}
   ],
   "gates": [],
   "metrics": [],
   "limitations": [
     "evidence_class=real опирается на Completion Notes items, не на повторный прогон этой сессией (plan-close низкоэффортный — механическая сверка)",
-    "ЗАКРЫТИЕ ОТОЗВАНО 2026-07-27 (D115): аудит `phases/P5.md` → `## Audit P5 — 2026-07-27` дал RED по двум дефектам Deliverables (F1/F2), фаза реопенена, phase_status и items[] приведены к живому состоянию доски. Поля git.head_sha/closed_at/inputs_sha256 описывают ПРЕЖНЕЕ закрытие (якорь a476527f) и остаются как провенанс — они не описывают текущее дерево; следующий `plan-close P5` перезаписывает отчёт целиком",
-    "external_side_effects[] заполнен задним числом реопеном (находка F7): при перезаписи отчёта следующим plan-close перечень обязан быть СОХРАНЁН, а не потерян регенерацией (D115 Consequences п.3)"
+    "ЗАКРЫТИЕ ФАЗЫ ЗАВЕРШЕНО 2026-07-27 (после реопена D115): F1 → P5.5, F2 → P5.6, оба терминальны; отчёт перезаписан целиком на текущее дерево",
+    "external_side_effects[] сохранён из прежнего закрытия (находка F7, D115 Consequences п.3) — новых внешних side-effect'ов P5.5/P5.6 не вносят (правка версионируемых шаблонов и константы внутри репозитория)"
   ],
   "external_side_effects": [
     "git worktree-копия flexcrm (P5.1/P5.2) — вне репозитория swissknifeman; копия удалена после замера",

@@ -201,7 +201,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
-| P5 | Пилот code-review-graph vs Serena | 4/6 | 🟡 In progress |
+| P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
@@ -555,6 +555,8 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-run/Claude Opus 5/high (P5.2 закрыт) | P5.2 закрыт 🟢: OQ-1 закрыт вердиктом владельца `skip` по code-review-graph (D113) — `P_impact` 0.0390 при пороге 0.40 после k-fold-усиления замера (D112, 24 fold'а), запись ушла в 5 адресатов; enumeration генерёжки в `Files` синхронизирована (D114) — детали см. phases/P5.md P5.2 Completion Notes |
 | 2026-07-27 | plan-design/Claude Opus 5/high (реопен P5) | P5 реопенена по аудиту RED (D115): F1/F2 → новые items **P5.5** (D116) и **P5.6** (D117), F3–F7 закрыты этим заходом — детали см. `phases/P5.md` `## Phase Status`. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P5.5 закрыт) | P5.5 закрыт 🟢: пин Serena перенесён в версионируемый слой (`config.example.json`/`.mcp.json.example`/дока) + двойной гейт (тест шаблонов, `check_schema_connectivity` в `maind doctor`) — детали см. `phases/P5.md` P5.5 Completion Notes. |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P5.6 закрыт) | P5.6 закрыт 🟢: `SERENA_SCHEMA_FIELDS` сужена до факта апстрима `{project_name, language_servers}` (D117), докстринг `render_project_yaml` исправлен, регресс-тест в обе стороны — детали см. `phases/P5.md` P5.6 Completion Notes. |
+| 2026-07-27 | plan-close/Claude Sonnet 5/low (фаза P5 закрыта повторно) | Реопен D115 закрыт: все 6 items терминальны (P5.1🟢/P5.2🟢/P5.3🟠/P5.4🟢/P5.5🟢/P5.6🟢) — фаза `🟠 Done with deviations` (унаследованный Known Deviation P5.3, второй красный тест `validate.sh` вне Files); `closure/P5.json` регенерирован целиком, `external_side_effects[]` сохранён (D115 Consequences п.3); `handoff.md` переписан (`after P5`, Next → `plan-audit P5` по правилу «была 🟠 → сперва аудит»). |
 
 ## 7. Contracts
 

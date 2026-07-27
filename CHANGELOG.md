@@ -29,6 +29,14 @@
   `public-hygiene` в job `hygiene` и новый job `release-tag` (`on: push: tags: ['v*']`) в
   `.github/workflows/hygiene.yml`; раздел в `docs/develop.md`.
 
+- **`core.io.assert_safe_replace_target` (P8.7, `2026.07.25-ECO-OPT`).** Инвариант цели
+  атомарной записи: перед `os.replace` `atomic_write_text`/`atomic_write_json` отказывают, если
+  существующая цель — symlink, не-регулярный файл или жёсткая ссылка (`st_nlink != 1`); отказ
+  называет путь и причину. Несуществующая цель и обычный файл — поведение байт-в-байт прежнее;
+  новый параметр `check_target=False` — точечный законный выход. Дедуп: докстринг называет
+  ручные копии того же инварианта в `packages/maind/lib/maind/provider_deploy.py` (перевод на
+  хелпер — roadmap-кандидат, вне скоупа этого item'а).
+
 ### Changed
 
 - **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6, `2026.07.25-ECO-OPT`, D117).**

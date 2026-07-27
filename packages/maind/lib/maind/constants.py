@@ -60,6 +60,17 @@ GRAPH_VERSION = 1
 # @v1.5.3/@v1.6.1 оба старше схемы .serena/project.yml, которую пишет наш провиженер
 # с ccd4505b (language_servers); стабильного тега с этой схемой у апстрима нет)
 SERENA_SRC = "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1"
+# Обязательные ключи .serena/project.yml (Serena `_from_dict` FIELDS_WITHOUT_DEFAULTS), которых
+# ожидает пиннованная выше версия — офлайновая копия факта, а не запрос к апстриму (D111, P5.4).
+# Обновляется ТЕМ ЖЕ швом, что SERENA_SRC: бампнул пин — сверь этот набор с новым
+# serena/resources/project.template.yml (или релиз-нотами схемы), иначе гейт связности
+# (codegraph.check_schema_connectivity) начнёт красить ложное расхождение или пропустит настоящее.
+SERENA_SCHEMA_FIELDS = frozenset({
+    "language_servers", "symbol_info_budget", "ignored_paths", "fixed_tools",
+    "excluded_tools", "included_optional_tools", "read_only",
+    "ignore_all_files_in_gitignore", "initial_prompt", "encoding",
+    "added_modes", "default_modes",
+})
 CODE_GRAPH_DEFAULTS = {
     "enabled_default": False,
     "engine": "serena",

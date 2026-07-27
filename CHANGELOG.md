@@ -80,6 +80,13 @@
 
 ### Added
 
+- **`maind.codegraph.check_schema_connectivity`: офлайновый гейт связности «пин Serena ↔ схема `.serena/project.yml`» (P5.4, `2026.07.25-ECO-OPT`, D111).**
+  Версия Serena живёт в репо двумя независимыми местами (`constants.SERENA_SRC` и шаблон
+  `render_project_yaml`) — они уже расходились молча (D109) и упали фаталом только у живого
+  сервера. Новая функция сверяет пин (`SERENA_SRC` + `code_graph.args`/`index_args` конфига)
+  с обязательными ключами схемы (`constants.SERENA_SCHEMA_FIELDS`, офлайновая копия факта,
+  без сети) против того, что реально печатает рендерер — не значение пина, только связность.
+  Подключено к `packages/maind/scripts/test.sh` через `tests/test_codegraph.py`.
 - **`plans/verify-citations.py`: гейт «ссылка-доказательство резолвится до символа»
   (P10.2, `2026.07.25-ECO-OPT`).** Переносит в репозиторий класс проверки, дыру в котором
   чужой закрытый план назвал своим долгом (`verify_claim_verdicts.py` проверял только

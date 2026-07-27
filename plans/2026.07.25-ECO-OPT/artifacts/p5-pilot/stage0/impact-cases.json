@@ -1,0 +1,77 @@
+{
+  "selection_criterion": "Три коммита flexcrm (ветка refactor/vaulter), затронувшие app/ и/или modules/, отобраны по числу изменённых файлов в этих путях за последние 40 коммитов истории app/: мелкий = наименьший (>1 файла, исключая тривиальные однострочные правки единственного файла), средний = медиана бакета, крупный = максимум. Критерий объявлен и коммиты зафиксированы ДО первого запуска графа CRG.",
+  "worktree_head": "80182e8f1a30b848c35805ed08a7a206adc17bf7",
+  "cases": [
+    {
+      "size_bucket": "small",
+      "sha": "80182e8f1a30b848c35805ed08a7a206adc17bf7",
+      "subject": "refactor(deps)!: потребитель vaulter — DocVault→Vaulter (composer require/path, app/Vaulter, config)",
+      "ground_truth_files": [
+        "app/Vaulter/AllowAuthenticatedResolver.php",
+        "modules/Documents/src/DocumentsServiceProvider.php"
+      ]
+    },
+    {
+      "size_bucket": "medium",
+      "sha": "c9c408993a72163893f6153ee6440952c474e3c9",
+      "sha_short": "c9c4089",
+      "subject": "fix(auth): мигрировали RBAC FlexCRM на AzGuard 1.0",
+      "ground_truth_files": [
+        "app/Guards/Admin/AdminGuardPanelProvider.php",
+        "app/Guards/App/AppGuardPanelProvider.php",
+        "app/Http/Middleware/EnsureFilamentAdminAccess.php",
+        "app/Http/Middleware/HandleInertiaRequests.php",
+        "app/Models/User.php"
+      ]
+    },
+    {
+      "size_bucket": "large",
+      "sha": "87af600f6cb47b701de9eb2d3b5ec3cf5b4f246f",
+      "sha_short": "87af600",
+      "subject": "refactor: вынесли доменные модели в модули modules/{Crm,Tasks,Documents}",
+      "ground_truth_files": [
+        "app/Actions/Documents/CreateDocumentVersionAction.php",
+        "app/Actions/Documents/MarkDocumentCollaboratorOfflineAction.php",
+        "app/Actions/Documents/StoreDocumentStateFromHocuspocusAction.php",
+        "app/Guards/App/Documents/Abilities/DocumentsAbilities.php",
+        "app/Guards/App/Documents/Policies/DocumentsPolicy.php",
+        "app/Http/Controllers/Api/Documents/DocumentCollaborationSessionController.php",
+        "app/Http/Controllers/Api/Documents/DocumentCollaborationTokenController.php",
+        "app/Http/Controllers/Api/Documents/DocumentController.php",
+        "app/Http/Controllers/Api/Documents/DocumentMediaController.php",
+        "app/Http/Controllers/Api/Documents/DocumentVersionController.php",
+        "app/Http/Controllers/Documents/DocumentIndexController.php",
+        "app/Http/Controllers/Documents/DocumentShowController.php",
+        "app/Http/Resources/CollaborationTokenResource.php",
+        "app/Http/Resources/DocumentResource.php",
+        "app/Http/Resources/DocumentVersionResource.php",
+        "app/Models/User.php",
+        "app/Models/Workspaces/Workspace.php",
+        "app/Providers/AppServiceProvider.php",
+        "modules/Crm/src/Models/Company.php",
+        "modules/Crm/src/Models/Department.php",
+        "modules/Crm/src/Models/Employee.php",
+        "modules/Crm/src/Models/Project.php",
+        "modules/Crm/src/Models/ProjectParticipant.php",
+        "modules/Documents/src/DocumentsServiceProvider.php",
+        "modules/Documents/src/Models/Collaborator.php",
+        "modules/Documents/src/Models/Comment.php",
+        "modules/Documents/src/Models/Document.php",
+        "modules/Documents/src/Models/State.php",
+        "modules/Documents/src/Models/Version.php",
+        "modules/Tasks/src/Models/Process.php",
+        "modules/Tasks/src/Models/ProcessStage.php",
+        "modules/Tasks/src/Models/Task.php",
+        "modules/Tasks/src/Models/TaskParticipant.php",
+        "modules/Tasks/src/TasksServiceProvider.php"
+      ]
+    }
+  ],
+  "laravel_evidence_constructs": [
+    "facade",
+    "resolve()",
+    "macro",
+    "eloquent_relation",
+    "blade_include"
+  ]
+}

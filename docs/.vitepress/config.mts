@@ -21,6 +21,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Обзор', link: '/' },
       { text: 'Разработка', link: '/develop', activeMatch: '/develop' },
+      { text: 'Статус', link: '/status', activeMatch: '/status' },
       { text: 'Окружение', link: '/harness/', activeMatch: '/harness/' },
       { text: 'Скиллы', link: '/skiller/guide/', activeMatch: '/skiller/' },
       { text: 'Память и граф', link: '/maind/', activeMatch: '/maind/' },

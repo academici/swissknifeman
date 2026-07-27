@@ -29,3 +29,8 @@ jobs:
 
       - name: Test docs-impact gate
         run: python3 scripts/test-docs-impact.py -v
+
+      - name: status-check (capability matrix)
+        run: |
+          python3 scripts/test-status-check.py -v
+          python3 scripts/status-check.py docs/status.md

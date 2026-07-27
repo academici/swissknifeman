@@ -23,6 +23,13 @@
   (fail-closed: shlex-argv, realpath, containment, защита .git/корня; project-override
   конфига хука на allowlist НЕ влияет).
 - `hooks/memory/` — единая память (file/federation/agentmemory).
+- `hooks/review-gate/` — гейт архитектуры на `SubagentStop`. Содержание — `checks/`
+  (диспетчер `run-checks.sh` + по файлу на класс проверки, везёт harness);
+  `config.json` (machine-owned) объявляет ТОЛЬКО набор и per-check режим
+  (`strict`/`warn`), `check_command` — одна стабильная строка-вызов диспетчера.
+  Глобальный `MODE` (`env.ini`) может ПОНИЗИТЬ strict-класс до warn, не наоборот;
+  защита от петли — счётчик диспетчера по (сессия, агент, проверка). Три состояния
+  в `harness doctor` вместо тихого no-op.
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
 - `hooks/agent-router/` — **intent-router** (первый Python-хук репо): пара `session-policy.py`
   (SessionStart — статическая политика) + `router.py` (UserPromptSubmit — keyword-подсказка) роутит

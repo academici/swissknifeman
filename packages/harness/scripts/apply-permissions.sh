@@ -19,6 +19,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRESETS_DIR="$SCRIPT_DIR/../configs/claude-code"
+# sha256 старой заглушки review-gate/config.json ({"version":1,"check_command":""}) —
+# byte-for-byte критерий миграции (P9.1): мигрируем ТОЛЬКО нетронутый файл.
+RG_OLD_STUB_SHA256="2ba2ef6564d8dcb5591b691667ce00d137510cc60c42b185f0ef5d3e1aeb22d2"
 
 TARGET=""
 PRESETS=""
@@ -68,15 +71,31 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     mkdir -p "$HOME/.claude/hooks/daemon-safety"
     cp "$PRESETS_DIR/hooks/daemon-safety/block-daemon-ops.sh" "$HOME/.claude/hooks/daemon-safety/"
     chmod +x "$HOME/.claude/hooks/daemon-safety/block-daemon-ops.sh"
-    # review-gate: гейт архитектуры на SubagentStop. Код обновляем; env.ini и
-    # config.json не перезатираем (там режим и проверка проекта).
+    # review-gate: гейт архитектуры на SubagentStop. Код и содержание checks/
+    # обновляем всегда; env.ini не перезатираем (там режим проекта). config.json
+    # мигрируется на новый шаблон ТОЛЬКО если он байт-в-байт равен старой
+    # заглушке {"version":1,"check_command":""} (владелец его не трогал) —
+    # иначе локальный выбор уважается (правило `plansDirectory`,
+    # `packages/harness/CLAUDE.md`): файл не трогается, печатается точная
+    # команда ручного обновления.
     RG_SRC="$PRESETS_DIR/hooks/review-gate"; RG_DST="$HOME/.claude/hooks/review-gate"
-    mkdir -p "$RG_DST"
+    mkdir -p "$RG_DST/checks"
     cp "$RG_SRC/review-gate.sh" "$RG_DST/"
     cp "$RG_SRC/README.md" "$RG_DST/"
-    chmod +x "$RG_DST/review-gate.sh"
-    [[ -f "$RG_DST/env.ini" ]]     || cp "$RG_SRC/env.ini" "$RG_DST/"
-    [[ -f "$RG_DST/config.json" ]] || cp "$RG_SRC/config.json" "$RG_DST/"
+    cp "$RG_SRC/checks/"*.sh "$RG_DST/checks/"
+    chmod +x "$RG_DST/review-gate.sh" "$RG_DST/checks/"*.sh
+    [[ -f "$RG_DST/env.ini" ]] || cp "$RG_SRC/env.ini" "$RG_DST/"
+    if [[ ! -f "$RG_DST/config.json" ]]; then
+      cp "$RG_SRC/config.json" "$RG_DST/"
+    else
+      RG_DST_SHA256="$(sha256sum "$RG_DST/config.json" | cut -d' ' -f1)"
+      if [[ "$RG_DST_SHA256" == "$RG_OLD_STUB_SHA256" ]]; then
+        cp "$RG_SRC/config.json" "$RG_DST/"
+      else
+        echo "review-gate: $RG_DST/config.json — не старая заглушка (уважаю локальный выбор), не трогаю."
+        echo "  Обновить вручную: cp \"$RG_SRC/config.json\" \"$RG_DST/config.json\""
+      fi
+    fi
     # observer: capture-слой (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО.
     # Код обновляем; env.ini не перезатираем (там ENABLED проекта). Проводка —
     # opt-in пресетом observer, не глобально.
@@ -151,6 +170,19 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
     echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ (НЕ активны)."
     echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
+  else
+    echo "--- dry-run: --global (файлы хуков не пишутся) ---"
+    RG_DST_CFG="$HOME/.claude/hooks/review-gate/config.json"
+    if [[ ! -f "$RG_DST_CFG" ]]; then
+      echo "review-gate: config.json отсутствует — будет установлен новый шаблон (checks: generated-assets, plan-lint, tests-touched)"
+    else
+      RG_DST_SHA256="$(sha256sum "$RG_DST_CFG" | cut -d' ' -f1)"
+      if [[ "$RG_DST_SHA256" == "$RG_OLD_STUB_SHA256" ]]; then
+        echo "review-gate: config.json — старая заглушка → будет мигрирован на новый шаблон"
+      else
+        echo "review-gate: config.json — не заглушка (локальный выбор) → НЕ будет тронут"
+      fi
+    fi
   fi
 fi
 

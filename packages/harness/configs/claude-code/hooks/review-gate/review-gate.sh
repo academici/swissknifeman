@@ -6,10 +6,22 @@
 # агенту, а этот хук детерминированно ловит нарушения, на которые модель
 # могла забить — то, чего проза «следуй скиллу» не гарантирует.
 #
+# Содержание проверки — `checks/` (диспетчер `run-checks.sh` + по файлу на
+# класс проверки), которые везёт harness; `check_command` в config.json —
+# ОДНА стабильная строка-вызов диспетчера. Машина владеет РЕЖИМОМ и НАБОРОМ
+# (config.json:checks[]), репозиторий — содержанием проверок.
+#
 # MODE (env.ini или .claude/review-gate.env.ini проекта), дефолт warn:
 #   off    — ничего (база A/B).
 #   warn   — проверка не прошла → подсказка в контекст (additionalContext), НЕ блок.
-#   strict — проверка не прошла → блок субагента (exit 2 + причина в stderr).
+#   strict — проверка не прошла → `exit 2` на SubagentStop. Семантика ВАЖНА:
+#            first-party («Can block?» → «Prevents the subagent from
+#            stopping») — это НЕ прерывание субагента, а ПРИНУЖДЕНИЕ его
+#            продолжать с фидбеком в stderr («it continues working»), петля
+#            «нашли нарушение → субагент чинит → снова проверка». Защита от
+#            бесконечной петли — счётчик диспетчера (см. checks/run-checks.sh):
+#            `stop_hook_active` в первоисточнике не документирован, полагаться
+#            на рантайм нельзя.
 #
 # Безопасно по умолчанию: без check_command хук — no-op. check_command берётся
 # ТОЛЬКО из machine-owned config хука ($HOOK_DIR/config.json):
@@ -23,7 +35,15 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 input=$(cat)
 cwd=""
-command -v jq >/dev/null 2>&1 && cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null)
+session_id=""
+agent_id=""
+agent_type=""
+if command -v jq >/dev/null 2>&1; then
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null)
+  session_id=$(printf '%s' "$input" | jq -r '.session_id // ""' 2>/dev/null)
+  agent_id=$(printf '%s' "$input" | jq -r '.agent_id // ""' 2>/dev/null)
+  agent_type=$(printf '%s' "$input" | jq -r '.agent_type // ""' 2>/dev/null)
+fi
 [ -n "$cwd" ] || cwd="$PWD"
 
 read_ini() { # file key
@@ -57,21 +77,51 @@ if command -v jq >/dev/null 2>&1; then
 fi
 [ -n "$CHECK" ] || exit 0   # проверка не задана — no-op (безопасный дефолт)
 
+# Экспорт для диспетчера checks/run-checks.sh (и для любой project-local
+# команды, которая захочет прочитать контекст события) — bash -c ниже
+# наследует окружение процесса.
+export REVIEW_GATE_DIR="$HOOK_DIR"
+export REVIEW_GATE_MODE="$MODE"
+export REVIEW_GATE_AGENT_TYPE="$agent_type"
+export REVIEW_GATE_SESSION="${session_id:-nosession}"
+export REVIEW_GATE_AGENT_ID="${agent_id:-noagent}"
+
 out="$(cd "$cwd" && bash -c "$CHECK" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && exit 0   # чисто
 
-reason="review-gate: проверка архитектуры не пройдена после субагента (mode=$MODE).
-${out}"
+# Наш диспетчер (checks/run-checks.sh) уже применил per-check strict/warn,
+# глобальный downgrade и защиту от петли — его exit-код 1=warn/2=strict
+# читается напрямую. Любой ДРУГОЙ check_command (custom project-local,
+# ALLOW_PROJECT_CONFIG=1, или старый однострочный) не несёт этого контракта —
+# для него решает только глобальный $MODE, как раньше (back-compat).
+is_dispatcher=0
+case "$CHECK" in *run-checks.sh*) is_dispatcher=1 ;; esac
+if [ "$is_dispatcher" -eq 1 ]; then
+  [ "$rc" -eq 2 ] && strict=1 || strict=0
+else
+  [ "$MODE" = strict ] && strict=1 || strict=0
+fi
 
-if [ "$MODE" = strict ]; then
+downgrade_line="$(printf '%s\n' "$out" | grep '^\[DOWNGRADE\]' | head -1 || true)"
+body="$(printf '%s\n' "$out" | grep -v '^\[DOWNGRADE\]' || true)"
+
+reason="review-gate: проверка архитектуры не пройдена после субагента (mode=$MODE).
+${body}"
+
+if [ "$strict" -eq 1 ]; then
   printf '%s\n' "$reason" >&2
-  exit 2   # блок субагента
+  exit 2   # принуждает субагента продолжать (НЕ прерывает — см. комментарий выше)
 fi
 
 # warn: вернуть подсказку в контекст, не блокируя
 if command -v jq >/dev/null 2>&1; then
-  jq -cn --arg r "$reason" \
-    '{hookSpecificOutput:{hookEventName:"SubagentStop",additionalContext:$r}}'
+  if [ -n "$downgrade_line" ]; then
+    jq -cn --arg r "$reason" --arg s "$downgrade_line" \
+      '{hookSpecificOutput:{hookEventName:"SubagentStop",additionalContext:$r},systemMessage:$s}'
+  else
+    jq -cn --arg r "$reason" \
+      '{hookSpecificOutput:{hookEventName:"SubagentStop",additionalContext:$r}}'
+  fi
 else
   printf '%s\n' "$reason" >&2
 fi

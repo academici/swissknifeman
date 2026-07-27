@@ -18,6 +18,44 @@ from .mcp import available_mcp
 # run-report SCHEMA=2: файлы хука, чью свежесть сверяем против источника в репо.
 _RUN_REPORT_FILES = ("run-report.py", "_lib.py", "_usage.py")
 
+# P9.1: коды проверок review-gate для компактной строки doctor'а (research/18 §2.4).
+_REVIEW_GATE_CHECK_CODES = {"generated-assets": "G1", "plan-lint": "G2", "tests-touched": "W1"}
+
+
+def _review_gate_mode(env_path):
+    """MODE из env.ini review-gate (off/warn/strict), дефолт warn — та же логика
+    read_ini/case, что в `review-gate.sh` (первое совпадение, дефолт при мусоре)."""
+    if not env_path.exists():
+        return "warn"
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line.startswith("MODE") and "=" in line:
+            val = line.split("=", 1)[1].strip().strip("\"'")
+            return val if val in ("off", "warn", "strict") else "warn"
+    return "warn"
+
+
+def _review_gate_state(hooks_dir):
+    """Три различимых состояния (research/18 §2.4, вместо тихого no-op):
+    `disabled (MODE=off)` / `unconfigured (no-op)` / `configured: <коды по режиму>`."""
+    rg = hooks_dir / "review-gate"
+    if _review_gate_mode(rg / "env.ini") == "off":
+        return "disabled (MODE=off)"
+    cfg_path = rg / "config.json"
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "unconfigured (no-op)"
+    checks = cfg.get("checks") or []
+    if not cfg.get("check_command") or not checks:
+        return "unconfigured (no-op)"
+    by_mode = {}
+    for c in checks:
+        code = _REVIEW_GATE_CHECK_CODES.get(c.get("name", ""), c.get("name", "?"))
+        by_mode.setdefault(c.get("mode", "warn"), []).append(code)
+    parts = [f"{', '.join(by_mode[m])} ({m})" for m in ("strict", "warn") if by_mode.get(m)]
+    return "configured: " + ", ".join(parts) if parts else "unconfigured (no-op)"
+
 
 def _sha256(path):
     """sha256 файла или None (нет файла/не читается) — для сравнения «свежести»."""
@@ -102,6 +140,8 @@ def cmd_doctor(env, argv):
     stale = [f for f in _RUN_REPORT_FILES if _sha256(rr_src / f) != _sha256(rr_dst / f)]
     if stale:
         print(f"  · хук run-report протух ({', '.join(stale)}) — повтори harness hooks --global")
+
+    print(f"  · review-gate: {_review_gate_state(hooks)}")
 
     # P2.4 (plans/2026.07.24-AGENT-RELIABILITY): SessionStart-пейлоад провайдера несёт
     # `model` живым полем — `reasoning effort` он не экспонирует ни у одного провайдера

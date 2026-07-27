@@ -280,6 +280,10 @@ def cmd_doctor(env, argv):
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))
         _channel_hygiene_report(env, config, detail=opts.get("channel_drift"))
+        from .codegraph import check_schema_connectivity
+        schema_issues = check_schema_connectivity(config)
+        check(not schema_issues, "пин Serena/схема .serena/project.yml связны",
+              "; ".join(schema_issues))
 
     # порты памяти — на разрешённых портах (env/конфиг), информативно
     if not quiet:

@@ -38,6 +38,19 @@
   (P10.4/D106) остаётся отдельным, не исчезнувшим дефектом — доставка `.mcp.json` во флот
   по-прежнему ручная.
 
+- **Пин Serena перенесён в версионируемый слой + гейт связности в `maind doctor` (P5.5, `2026.07.25-ECO-OPT`, D115/D116).**
+  P5.3 пиннована три поверхности, но `config.json` — **gitignored**; единственный версионируемый
+  носитель той же политики, `config.example.json`, оставался непиннованным, и
+  `packages/maind/install.sh` копирует его в живой `config.json` на любом новом узле — свежая
+  установка воспроизводила дефект D65 собственным установщиком. Пин
+  `@026b007bb889366283c925527e9a3bab317f66c1` внесён в `config.example.json`
+  (`code_graph.args`+`index_args`), `.mcp.json.example` (`serena.args`) и пример в
+  `packages/maind/docs/guide/code-graph.md`. Под двойной охраной: офлайновый тест
+  `test_tracked_templates_pin_serena_same_as_source` (`test_constants.py`) сверяет шаблоны
+  побайтно с `constants.SERENA_SRC`, и `maind doctor` теперь зовёт
+  `codegraph.check_schema_connectivity` на РЕАЛЬНОМ конфиге узла — расхождение печатается,
+  не чинится (D111).
+
 - **`core.provider_lock._classify`: `unmanaged-target` теперь может быть принят под управление явным `--repair` (P10.4, `2026.07.25-ECO-OPT`, D92/D106).**
   Ветка `record is None` возвращала `OWNERSHIP_CONFLICT`/`REFUSE` РАНЬШЕ, чем в потоке
   появлялся учёт `repair_requested` — неуправляемая существующая цель не могла быть усыновлена

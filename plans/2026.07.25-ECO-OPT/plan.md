@@ -203,7 +203,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | 🟡 In progress |
-| P10 | Долги, унаследованные от AGENT-RELIABILITY | 2/4 | 🟡 In progress |
+| P10 | Долги, унаследованные от AGENT-RELIABILITY | 3/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -527,6 +527,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P3.2 закрыт) | P3.2 закрыт 🟠: живой замер 11 инструментов maind MCP + генерическая воронка тримминга в `_content()` (снятие `indent=2` + потолок/receipt хвостовым случаем) — отклонение: пре-существующий failing-тест вне `Files` item'а — детали см. `phases/P3.md` P3.2 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P1.2 закрыт) | P1.2 закрыт 🟢: канон D3 (полный `<PLAN-ID> Pn.m`) в root `CLAUDE.md` + бэкфилл 33 lib-файлов (комменты/докстринги, ноль правок кода) — детали см. `phases/P1.md` P1.2 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P10.2 закрыт) | P10.2 закрыт 🟢: `plans/verify-citations.py` — гейт «ссылка-доказательство до символа» (класс дефекта чужого `verify_claim_verdicts.py`, H06); первый прогон 154 цитаты/39 находок — детали см. `phases/P10.md` P10.2 Completion Notes |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P10.3 закрыт) | P10.3 закрыт 🟢: `core.resolve_plan_dir` — резолвинг пути плана, устойчивый к архивации; переведены четыре функциональных читателя — детали см. `phases/P10.md` P10.3 Completion Notes |
 
 ## 7. Contracts
 

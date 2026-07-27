@@ -4,7 +4,7 @@
   "phase": "P5",
   "closed_at": "2026-07-27",
   "closed_by": {"command": "plan-close", "actor": "implementation/low"},
-  "phase_status": "🟠 Done with deviations",
+  "phase_status": "🟡 In progress",
   "git": {"head_sha": "a476527fea003f0bd428c0cc3c0d3cac24bb8e68", "branch": "codex/provider-project-sync", "dirty": true},
   "inputs_sha256": {
     "plan.md": "fb307c232bae46e9dba097d4e533e7a36c16ed24c6d5d53f667057e0b8c66a55",
@@ -18,10 +18,23 @@
     {"id": "P5.3", "status": "🟠 Done with deviations", "evidence_class": "real",
      "evidence": "pinned Serena в config.json/constants.py — bash packages/maind/scripts/validate.sh осталась красной 2 тестами (1 чужой P3.2, 1 новый — test_d108_ прямое следствие бампа SERENA_SRC, фикс назван, не применён — вне Files item'а)"},
     {"id": "P5.4", "status": "🟢 Done", "evidence_class": "real",
-     "evidence": "гейт связности .serena/project.yml ↔ версия пина — test_codegraph.py"}
+     "evidence": "гейт связности .serena/project.yml ↔ версия пина — test_codegraph.py"},
+    {"id": "P5.5", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "пин в config.example.json/.mcp.json.example/code-graph.md + тест шаблонов против constants.SERENA_SRC + codegraph.check_schema_connectivity в maind doctor — item-коммит 88f0c7eb"},
+    {"id": "P5.6", "status": "⬜ Not started", "evidence_class": "baseline_pending",
+     "evidence": "заведён реопеном 2026-07-27 (D115/D117) под находку F2 аудита — SERENA_SCHEMA_FIELDS сужается до факта апстрима; не исполнялся, свидетельства нет по построению"}
   ],
   "gates": [],
   "metrics": [],
-  "limitations": ["evidence_class=real опирается на Completion Notes items, не на повторный прогон этой сессией (plan-close низкоэффортный — механическая сверка)"],
-  "external_side_effects": ["git worktree-копия flexcrm (P5.1/P5.2) — вне репозитория swissknifeman"]
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items, не на повторный прогон этой сессией (plan-close низкоэффортный — механическая сверка)",
+    "ЗАКРЫТИЕ ОТОЗВАНО 2026-07-27 (D115): аудит `phases/P5.md` → `## Audit P5 — 2026-07-27` дал RED по двум дефектам Deliverables (F1/F2), фаза реопенена, phase_status и items[] приведены к живому состоянию доски. Поля git.head_sha/closed_at/inputs_sha256 описывают ПРЕЖНЕЕ закрытие (якорь a476527f) и остаются как провенанс — они не описывают текущее дерево; следующий `plan-close P5` перезаписывает отчёт целиком",
+    "external_side_effects[] заполнен задним числом реопеном (находка F7): при перезаписи отчёта следующим plan-close перечень обязан быть СОХРАНЁН, а не потерян регенерацией (D115 Consequences п.3)"
+  ],
+  "external_side_effects": [
+    "git worktree-копия flexcrm (P5.1/P5.2) — вне репозитория swissknifeman; копия удалена после замера",
+    "правка serena.args в .mcp.json ДЕСЯТИ внешних репозиториев флота (P5.3): agelto, flexcrm, vaulter, swissknifeman, corex, memster, cms, edufy, chatom, perplexity-web-mcp — мутации вне этого репозитория, откат/перенос фазы обязан их учитывать",
+    "правка gitignored config.json в корне монорепо (P5.3): code_graph.args + code_graph.index_args пиннованы на @026b007bb889366283c925527e9a3bab317f66c1 — вне git-истории, на свежей машине НЕ воспроизводится (находка F1, носитель починки — P5.5)",
+    "установка code-review-graph 2.3.7 через pipx на машине оператора (P5.1) — изолированная, без `code-review-graph install` (D36)"
+  ]
 }

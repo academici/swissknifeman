@@ -17,6 +17,7 @@
 | Target Operator Models | Claude: frontier→Opus 5 · implementation→Sonnet · economy→Haiku (SSOT-матрица plan-protocol §9) |
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
+| Closure Protocol | v1 |
 | supersedes | 2026.07.15-TOKEN-ECON-P6 |
 | Design Passes | 3/3 — ЗАВЕРШЁН. Объявлялось при `new` по объёму того момента (7 фаз / 16 items → N=2); план вырос до 9 фаз / 36 items (зона N=3 по эвристике SKILL §5), и на `finish` N=2 был сохранён решением владельца (D85). **Прогон 3 добран директивой владельца 2026-07-26 (D86)** — реконсайл после закрытия `2026.07.24-AGENT-RELIABILITY`: актуальность фаз, снятые гейты, порядок, новая фаза P10. pass 1 = скелеты+контракты+RAG-финдинги+детализация P1; pass 2 = детализация P2–P9 до DoR + пересборки P3/P5.1/P7 + finish + roadmap; pass 3 = реконсайл 10 фаз / 40 items |
 
@@ -199,7 +200,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P5 | Пилот code-review-graph vs Serena | 0/3 | ⬜ Not started |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
-| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 0/9 | ⬜ Not started |
+| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 0/9 | 🟡 In progress |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | ⬜ Not started |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟡 In progress |
 
@@ -507,6 +508,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-design/Claude Opus 5/high (finish, закрытие находок) | Все 11 находок + 2 nit'а закрыты, D94–D100. Ключевое: снят deadlock `P9.1 ↔ P6.1` (D94), назван владелец `skiller/doctor.py` (D95), названа граница доставки профилей на флот (D96), §7 Contracts переписана по факту (D97). Фаз/items не добавлено: 10/40, 0 закрыто. |
 | 2026-07-27 | plan-design/Claude Opus 5/high (item P10.1) | ТЗ P10.1 доведено до DoR: исправлен `Exec` `plan-exec`→`manual` (деривация §9, D101), добавлены version-first публикация канона, регистрация литерала `write-site:` и конверсия двух существующих тестов (D102). Статусы не менялись: 10 фаз / 40 items, 0 закрыто. |
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P10.1 закрыт) | P10.1 закрыт 🟢: гейт кодов границ починен канонической строкой `write-site:` (D88/D102, fail-open + ложный ERROR закрыты) — детали см. `phases/P10.md` P10.1 Completion Notes. |
+| 2026-07-27 | plan-run/Claude Opus 5/high (P8.1 закрыт) | P8.1 закрыт 🟠: введён отчёт закрытия фазы `closure/<Pn>.json` (схема v1, opt-in `Closure Protocol | v1`) — канон §8 + снипет, писатель `plan-close`, потребители `plan_lint` (5 проверок) и `plan-audit`; отклонение — дифф вне `Files` (fixtures.py, version-first бампы, index.json) — детали см. phases/P8.md P8.1 Completion Notes |
 
 ## 7. Contracts
 

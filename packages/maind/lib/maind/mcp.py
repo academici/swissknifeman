@@ -17,6 +17,15 @@ from .config import load_config
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
+# Цель тримминга — НИЖЕ warning-порога Claude Code (10 000 токенов), а не под дефолтный
+# потолок клиента (25 000, после которого клиент сам выгружает ответ на диск и подставляет
+# file-reference — это аварийный выход клиента, не канал доставки сервера, см.
+# findings/P3-mcp-result-field-practice.md). Оценщик токенов — grep-эвристика (stdlib, без
+# токенайзера): символы/3.2 — консервативнее «символы/4» для кириллицы+JSON-пунктуации
+# (findings/P3.2-maind-tool-result-sizes.md — сверка оценки с явным запасом).
+TRIM_TARGET_TOKENS = 10_000
+CHARS_PER_TOKEN_ESTIMATE = 3.2
+
 
 def _graph_reader(env, config):
     """Единый read-фасад графа (федерация — единственная раскладка; disabled → die)."""
@@ -94,9 +103,83 @@ def _error(req_id, code, message):
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
 
 
+def _estimate_tokens(text):
+    return len(text) / CHARS_PER_TOKEN_ESTIMATE
+
+
+def _list_candidates(payload):
+    """Топ-уровневые списки — кандидаты на урезание: сам payload (если это список) или его
+    непосредственные значения-списки (если payload — словарь). Только верхний уровень: одной
+    воронки `_content` достаточно для всех форм ответов 11 инструментов (списочные — бакет
+    целиком, ограниченные — списков нет вовсе, тримминг для них не срабатывает)."""
+    if isinstance(payload, list):
+        yield (), payload
+    elif isinstance(payload, dict):
+        for key, value in payload.items():
+            if isinstance(value, list):
+                yield (key,), value
+
+
+def _with_truncation_receipt(payload, path, trimmed, total_count):
+    """Данные, а не только флаг: `truncated`/`returned_count`/`total_count` + человекочитаемая
+    подсказка дозапроса — голый `truncated: true` не снимает ни один из трёх отказов молчаливого
+    усечения (findings/P3-mcp-result-field-practice.md). `isError` НЕ переиспользуется — он занят
+    классом «ошибка инструмента» (`_run_tool`/`_tools_call`)."""
+    receipt = {
+        "truncated": True,
+        "returned_count": len(trimmed),
+        "total_count": total_count,
+        "hint": ("ответ урезан лимитом контекста; сузьте запрос (query/depth/project) "
+                 "или запросите остаток отдельным вызовом"),
+    }
+    if path == ():
+        return {"items": trimmed, **receipt}
+    key = path[0]
+    out = dict(payload)
+    out[key] = trimmed
+    out[f"{key}_truncated"] = receipt
+    return out
+
+
+def _truncate_largest_list(payload, limit_tokens):
+    """Урезает крупнейший топ-уровневый список до размера, укладывающегося в лимит, бинарным
+    спуском по числу элементов (JSON пересобирается на каждой пробе — списков ≤ пары сотен
+    элементов на практике, цена приемлема). None-кандидатов (ни payload, ни его значения не
+    список) — возвращает исходный payload как есть: свободных байт для тримминга нет, это
+    хвостовой случай эскалации (Implementation Rules P3.2), не молчаливая потеря данных."""
+    candidates = list(_list_candidates(payload))
+    if not candidates:
+        return payload
+    path, full_list = max(candidates, key=lambda c: len(json.dumps(c[1], ensure_ascii=False)))
+    if not full_list:
+        return payload
+    lo, hi = 0, len(full_list)
+    best = 0
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        trimmed = full_list[:mid]
+        candidate_payload = _with_truncation_receipt(payload, path, trimmed, len(full_list))
+        text = json.dumps(candidate_payload, ensure_ascii=False)
+        if _estimate_tokens(text) <= limit_tokens:
+            best = mid
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return _with_truncation_receipt(payload, path, full_list[:best], len(full_list))
+
+
 def _content(payload, is_error=False):
-    out = {"content": [{"type": "text",
-                        "text": json.dumps(payload, ensure_ascii=False, indent=2)}]}
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    # (1) первый рычаг — снять indent=2 (чистая экономия без потери данных); ошибки не трогаем
+    # (короткие, тримминг им не нужен, а форма важна для читаемости в логах).
+    if not is_error and _estimate_tokens(text) > TRIM_TARGET_TOKENS:
+        text = json.dumps(payload, ensure_ascii=False)
+        # (3) потолок с receipt — хвостовой случай, срабатывает только если снятие indent
+        # не хватило (сузить на входе — уровень выбора стратегии инструментом, не воронки).
+        if _estimate_tokens(text) > TRIM_TARGET_TOKENS:
+            trimmed_payload = _truncate_largest_list(payload, TRIM_TARGET_TOKENS)
+            text = json.dumps(trimmed_payload, ensure_ascii=False)
+    out = {"content": [{"type": "text", "text": text}]}
     if is_error:
         out["isError"] = True
     return out

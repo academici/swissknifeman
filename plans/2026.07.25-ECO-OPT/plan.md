@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-27 (P8.10) |
+| Last Updated | 2026-07-27 (P8 closed) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -208,7 +208,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
-| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟡 In progress |
+| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | 🟡 In progress |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
 
@@ -582,6 +582,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.8) | P8.8 закрыт 🟢 Done: три гейта в `validate.sh` (CORE-секции с рэтчетом, анти-дублирование проекций, полнота pressure + `triggers[]`) — детали см. `phases/P8.md` P8.8 Completion Notes. |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.9) | P8.9 закрыт 🟢 Done: `benchmark.json` детерминирован (Fraction+строковый рендер, инжектируемые часы, честный `provenance`, `schema_version: "skill-benchmark/v2"`) — батч B5 завершён — детали см. `phases/P8.md` P8.9 Completion Notes. |
 | 2026-07-27 | plan-run/Claude Opus 5/high (P8.10) | P8.10 закрыт 🟠 Done with deviations: закрытый набор форм ячейки `Items` §9 канона + диагностичный отказ `_find_routing_row` + 4 теста с красным-до; отклонения — version-first файлы вне `Files` и перебор тира — детали см. `phases/P8.md` P8.10 Completion Notes. Все 10 items P8 терминальны. |
+| 2026-07-27 | plan-close/Claude Sonnet 5/low (фаза P8 закрыта) | Фаза P8 закрыта 🟠 Done with deviations: все 10 items терминальны (P8.1🟠/P8.2🟢/P8.3🟠/P8.4🟢/P8.5🟢/P8.6🟢/P8.7🟢/P8.8🟢/P8.9🟢/P8.10🟠); Status Board `10/10`; `closure/P8.json` (Closure Protocol v1); Phase Handoff собран — детали см. `phases/P8.md` `## Phase Handoff`. |
 
 ## 7. Contracts
 

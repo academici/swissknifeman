@@ -3,15 +3,15 @@
 Читает ЧЕТЫРЕ слоя настроек Claude Code (user → project → local → managed, по
 возрастанию приоритета) и строит из них ЭФФЕКТИВНУЮ конфигурацию с провенансом
 (из какого слоя пришло каждое итоговое значение). Каркас находки (`Finding`) — тоже
-здесь; сами проверки таксономии заводятся поверх этого модуля в P1.2/P1.3/P1.5, CLI —
+здесь; сами проверки таксономии заводятся поверх этого модуля в 2026.07.10-SKM-ROADMAP-005 P1.2/P1.3/P1.5, CLI —
 в P1.4. reader-семантика **fail-soft**: битый слой — это ОТЧЁТ (проверка №1, P1.2), а
 не смерть doctor'а — намеренный дубль чтения `.claude/settings*.json` рядом с
 `harness.settings.load_settings` (тот `die()`-ает на битом JSON — writer-семантика,
 её нельзя чинить, не сломав `permissions`/`hooks`).
 
 Несущие внешние факты (precedence слоёв, merge-режимы, managed-пути) сверены RAG —
-см. `plans/SKM-ROADMAP-005/findings/P1-cc-settings-facts.md` (дата сверки зафиксирована
-там; при регрессии — пере-сверить, доки Claude Code меняются между версиями CLI).
+см. находки плана 2026.07.10-SKM-ROADMAP-005 (`findings/P1-cc-settings-facts.md`, дата сверки
+зафиксирована там; при регрессии — пере-сверить, доки Claude Code меняются между версиями CLI).
 stdlib-only."""
 import json
 import os
@@ -54,7 +54,7 @@ MERGE_KEYS = ("permissions.allow", "permissions.deny", "permissions.ask", "hooks
 
 # Семантика слияния НЕ ПОДТВЕРЖДЕНА (D15, findings §«Не подтверждено»): ядро хранит обе
 # проекции (per-layer + union) и НЕ выбирает режим — решение остаётся на совести проверки,
-# которая когда-нибудь эту величину использует (P1.5 №8 работает per-layer, не от union).
+# которая когда-нибудь эту величину использует (2026.07.10-SKM-ROADMAP-005 P1.5 №8 работает per-layer, не от union).
 UNVERIFIED_MERGE_KEYS = ("permissions.additionalDirectories",)
 
 # Подключи permissions.*, которые сливаются как union-массивы (не путать с
@@ -62,7 +62,7 @@ UNVERIFIED_MERGE_KEYS = ("permissions.additionalDirectories",)
 _PERMISSIONS_ARRAY_KEYS = ("allow", "deny", "ask")
 
 # Порог проверки №6 (мусорные точные allow-правила) — константа модуля, НЕ флаг
-# CLI (Implementation Rules P1.5: вынос во флаг = scope creep).
+# CLI (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5: вынос во флаг = scope creep).
 DEAD_ALLOW_THRESHOLD = 50
 
 
@@ -79,7 +79,7 @@ class Layer(object):
 
 @dataclass(frozen=True)
 class Finding(object):
-    """Находка проверки таксономии (P1.2+). Ядро P1.1 только объявляет форму."""
+    """Находка проверки таксономии (2026.07.10-SKM-ROADMAP-005 P1.2+). Ядро P1.1 только объявляет форму."""
 
     id: int
     level: str  # "error" | "warn" | "info"
@@ -288,7 +288,7 @@ def effective_config(layers):
     return values, provenance
 
 
-# --- VSCode-слой (P1.5): claudeCode.* поверх user/project settings.json -------
+# --- VSCode-слой (2026.07.10-SKM-ROADMAP-005 P1.5): claudeCode.* поверх user/project settings.json -------
 # Path юзер-слоя VSCode — **[UNVERIFIED]** (findings §«Не подтверждено» не покрывает
 # это отдельно, но это общее знание о VSCode, не Claude Code докой): linux
 # `~/.config/Code/User/settings.json`, darwin `~/Library/Application Support/Code/
@@ -397,7 +397,7 @@ def load_vscode(env, target):
 
 @dataclass(frozen=True)
 class ProfileState(object):
-    """Разрешённое состояние policy-профиля проекта (P1.3). Три случая:
+    """Разрешённое состояние policy-профиля проекта (2026.07.10-SKM-ROADMAP-005 P1.3). Три случая:
     - НЕ объявлен: `name=None`, `profile=None` → проверки №4/№11 дают один `info`;
     - объявлено НЕИЗВЕСТНОЕ имя: `name="…"`, `profile=None` → №4 даёт `error`;
     - объявлен и загружен: `name`+`profile` заполнены → №4/№11 сверяют факт с `expect`.
@@ -410,7 +410,7 @@ class ProfileState(object):
 
 @dataclass(frozen=True)
 class Context(object):
-    """Контекст прогона проверок таксономии (P1.2+): слои + эффективная
+    """Контекст прогона проверок таксономии (2026.07.10-SKM-ROADMAP-005 P1.2+): слои + эффективная
     конфигурация + окружение запуска. `profile` — `ProfileState` (P1.3): разрешён
     из декларации `<target>/.swissknife.json:policy_profile` либо явного имени
     (`--profile`, P1.4). До P1.3 был `None`; проверки №4/№11 читают его.
@@ -429,7 +429,7 @@ class Context(object):
 def build_context(env, target, profile_name=None):
     """Читает слои, строит эффективную конфигурацию, разрешает policy-профиль и
     VSCode-слой — удобный вход для CLI/тестов. `profile_name` (явное имя из
-    `--profile`, P1.4) перекрывает декларацию `<target>/.swissknife.json:policy_profile`;
+    `--profile`, 2026.07.10-SKM-ROADMAP-005 P1.4) перекрывает декларацию `<target>/.swissknife.json:policy_profile`;
     None → берётся декларация."""
     layers = load_layers(env, target)
     values, provenance = effective_config(layers)
@@ -449,7 +449,7 @@ def _load_settings_keys():
     return data
 
 
-# --- Policy-профили (P1.3): декларация проекта + сверка «ожидание vs факт» ----
+# --- Policy-профили (2026.07.10-SKM-ROADMAP-005 P1.3): декларация проекта + сверка «ожидание vs факт» ----
 # Профили — пакетный ресурс рядом с пресетами, ПУТЬ module-relative (как снапшот
 # ключей выше), НЕ env-relative: снапшот/профили одни на пакет, а тесты гоняют с
 # tmp-корнем env (иначе искали бы профиль в tmp/configs и не нашли).
@@ -480,7 +480,7 @@ def read_policy_declaration(target):
 
 def load_profile(env, name):
     """Профиль `configs/claude-code/policy/<name>.json` → dict, или None (пустое имя /
-    нет файла / битый / не объект). `env` — для совместимости сигнатуры с P1.4-вызовом
+    нет файла / битый / не объект). `env` — для совместимости сигнатуры с 2026.07.10-SKM-ROADMAP-005 P1.4-вызовом
     (`--profile`), путь профиля module-relative (пакетный ресурс, см. `_POLICY_DIR`)."""
     if not name:
         return None
@@ -489,7 +489,7 @@ def load_profile(env, name):
 
 
 def resolve_profile_state(env, target, explicit_name=None):
-    """Разрешает `ProfileState` для проекта: явное имя (`--profile`, P1.4) перекрывает
+    """Разрешает `ProfileState` для проекта: явное имя (`--profile`, 2026.07.10-SKM-ROADMAP-005 P1.4) перекрывает
     декларацию `<target>/.swissknife.json`. Имя не задано → состояние «не объявлен»;
     задано, но файла нет → состояние «неизвестный профиль» (обе ветки — не die())."""
     name = explicit_name or read_policy_declaration(target)
@@ -503,7 +503,7 @@ def resolve_profile_state(env, target, explicit_name=None):
 
 def check_1_layer_json_valid(ctx):
     """Один слой с битым JSON = одна находка error — Layer.error уже несёт текст
-    исключения (P1.1, fail-soft: слой исключён из merge, doctor не падает)."""
+    исключения (2026.07.10-SKM-ROADMAP-005 P1.1, fail-soft: слой исключён из merge, doctor не падает)."""
     findings = []
     for layer in ctx.layers:
         if layer.error:
@@ -595,7 +595,7 @@ def check_4_policy_profile_conformance(ctx):
     """Эффективная конфигурация vs `expect` объявленного профиля: `defaultMode`
     (равенство), `permissions.deny` (надмножество — проект ВПРАВЕ добавить свои
     guardrails, НЕ вправе урезать), `hooks.required` (событие+команда прописаны).
-    `permissions.ask` — не здесь (проверка №11). Секция `vscode` — читается в P1.5
+    `permissions.ask` — не здесь (проверка №11). Секция `vscode` — читается в 2026.07.10-SKM-ROADMAP-005 P1.5
     (в P1.3 объявлена, но молча пропускается). Профиль не объявлен → один `info`;
     объявлено неизвестное имя → `error` (обе ветки несут единственный `info`/`error`
     за пару №4/№11 — №11 в этих случаях молчит)."""
@@ -673,7 +673,7 @@ def check_4_policy_profile_conformance(ctx):
                     hint="Пропиши хук (writer: harness hooks) или сними требование из профиля.",
                 ))
 
-    # vscode — секция профиля (P1.3 объявлена, P1.5 читается и сверяется). Сверяем
+    # vscode — секция профиля (2026.07.10-SKM-ROADMAP-005 P1.3 объявлена, P1.5 читается и сверяется). Сверяем
     # ТОЛЬКО если проект реально несёт VSCode-настройки (хотя бы один слой с данными) —
     # иначе каждый проект без VSCode ловил бы шумный error за неиспользуемый редактор.
     vscode_expect = expect.get("vscode")
@@ -879,7 +879,7 @@ def check_11_ask_rules_when_expected_empty(ctx):
 # --- Проверка №6 — мусорные точные allow-правила Bash(...) (info) ------------
 
 def _is_exact_bash_rule(rule):
-    """«Точное» правило (Implementation Rules P1.5): `Bash(...)` БЕЗ `*` в теле —
+    """«Точное» правило (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5): `Bash(...)` БЕЗ `*` в теле —
     одноразовый след кнопки «always allow», не покрывает ничего нового."""
     return (isinstance(rule, str) and rule.startswith("Bash(") and rule.endswith(")")
             and "*" not in rule)
@@ -888,7 +888,7 @@ def _is_exact_bash_rule(rule):
 def check_6_dead_allow_rules(ctx):
     """Порог `DEAD_ALLOW_THRESHOLD` точных `Bash(...)`-правил в эффективном
     `permissions.allow` → `info` с числом и топ-5 примерами. Дубли уже сведены
-    union'ом эффективной конфигурации (P1.1) — здесь только объём мусора."""
+    union'ом эффективной конфигурации (2026.07.10-SKM-ROADMAP-005 P1.1) — здесь только объём мусора."""
     allow = (ctx.values.get("permissions") or {}).get("allow") or []
     exact = [r for r in allow if _is_exact_bash_rule(r)]
     if len(exact) < DEAD_ALLOW_THRESHOLD:
@@ -906,7 +906,7 @@ def check_6_dead_allow_rules(ctx):
 
 def check_7_allow_deny_overlap(ctx):
     """Один и тот же ПАТТЕРН (сравнение строк, без семантического glob-матчера —
-    Implementation Rules P1.5) объявлен и в allow, и в deny → deny побеждает
+    Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5) объявлен и в allow, и в deny → deny побеждает
     молча (RAG:✅ 2026-07-10 permissions.md, deny-first)."""
     perms = ctx.values.get("permissions") or {}
     allow = {r for r in (perms.get("allow") or []) if isinstance(r, str)}
@@ -973,7 +973,7 @@ def check_10_bypass_without_skip_dialog(ctx):
 
 def _vscode_parse_errors(ctx):
     """Layer.error непустой (JSONC не распарсился) → `info` (никогда `error`,
-    Implementation Rules P1.5). Отсутствующий файл — норма, без находки."""
+    Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5). Отсутствующий файл — норма, без находки."""
     vscode = ctx.vscode
     if vscode is None:
         return []
@@ -1046,7 +1046,7 @@ def check_13_vscode_bypass_toggle_missing(ctx):
 # --- Реестр проверок ----------------------------------------------------------
 
 # Список пар (id, fn); добавление проверки = новая функция + строка здесь, не
-# ветвление в мега-функции (Implementation Rules P1.2). Порядок — по возрастанию id.
+# ветвление в мега-функции (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.2). Порядок — по возрастанию id.
 CHECKS = (
     (1, check_1_layer_json_valid),
     (2, check_2_noncanonical_keys),
@@ -1072,7 +1072,7 @@ def run_checks(ctx, checks=CHECKS):
     return findings
 
 
-# --- Рендер отчёта, счётчики, код возврата (P1.4) ----------------------------
+# --- Рендер отчёта, счётчики, код возврата (2026.07.10-SKM-ROADMAP-005 P1.4) ----------------------------
 # Контракт CLI (`harness doctor --settings`): человекочитаемый отчёт ЛИБО единый
 # JSON-документ + exit-code 0/1/2. На `--json` стоит fleet-скан P1.6 — форма ниже
 # ЯВЛЯЕТСЯ контрактом, не стилем.
@@ -1131,7 +1131,7 @@ def render_text(ctx, findings):
 
 
 def render_json_obj(ctx, findings):
-    """Машинный вид (контракт для P1.6): dict под `json.dumps(..., ensure_ascii=False)`.
+    """Машинный вид (контракт для 2026.07.10-SKM-ROADMAP-005 P1.6): dict под `json.dumps(..., ensure_ascii=False)`.
     Ровно один такой документ идёт в stdout при `--json`, ничего кроме него."""
     return {
         "target": str(ctx.target),

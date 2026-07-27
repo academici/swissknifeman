@@ -1,9 +1,9 @@
 """wf_status — детерминированный парсер transcript-директории workflow-прогона Claude Code
-(P2.1: ядро парсинга; P2.2: discovery прогонов; рендер/CLI — P2.3-P2.4).
+(2026.07.10-SKM-ROADMAP-005 P2.1: ядро парсинга; P2.2: discovery прогонов; рендер/CLI — P2.3-P2.4).
 
 Формат ВНУТРЕННИЙ и НЕДОКУМЕНТИРОВАННЫЙ (может меняться между версиями CLI) — источник
-истины НЕ доки Claude Code, а эмпирика на реальных прогонах:
-`plans/SKM-ROADMAP-005/findings/P2-workflow-transcript-format.md` (дата сверки 2026-07-10;
+истины НЕ доки Claude Code, а эмпирика на реальных прогонах: находки плана
+2026.07.10-SKM-ROADMAP-005 (`findings/P2-workflow-transcript-format.md`, дата сверки 2026-07-10;
 при регрессии формата — пере-сверить перед правкой, доки его не несут).
 
 Раскладка (см. findings §«Раскладка на диске»):
@@ -182,7 +182,7 @@ def parse_script_meta(text):
 
 def parse_run(run_dir):
     """Одна transcript-директория `wf_<id>/` → dict-статус прогона. ЧИСТАЯ функция
-    (path in → dict out), без печати/побочных эффектов — рендер в P2.3.
+    (path in → dict out), без печати/побочных эффектов — рендер в 2026.07.10-SKM-ROADMAP-005 P2.3.
 
     Возвращает:
         run_id, run_dir, degraded, degraded_reasons (list[str]),
@@ -252,7 +252,7 @@ def parse_run(run_dir):
 
 
 # ---------------------------------------------------------------------------
-# P2.2 — discovery прогонов (свежие по mtime, --run, --project)
+# 2026.07.10-SKM-ROADMAP-005 P2.2 — discovery прогонов (свежие по mtime, --run, --project)
 # ---------------------------------------------------------------------------
 
 # Официальный env-override корня конфигурации Claude Code (RAG:✅ 2026-07-10 perplexity-web:
@@ -294,7 +294,7 @@ def _run_mtime(run_dir):
 
 
 def discover_runs(base_dir=None, run=None, project=None, limit=1):
-    """Найти прогоны-кандидаты под базой `<config_dir>/projects` (P2.2 Scope Included).
+    """Найти прогоны-кандидаты под базой `<config_dir>/projects` (2026.07.10-SKM-ROADMAP-005 P2.2 Scope Included).
 
     `base_dir` — переопределение для тестов (обычно `None` → `_config_base_dir()`).
     `run` — точное имя `wf_<id>`, сужает по всем проектам. `project` — абсолютный путь
@@ -358,7 +358,7 @@ def discover_runs(base_dir=None, run=None, project=None, limit=1):
 
 
 # ---------------------------------------------------------------------------
-# P2.3 — фиксированный шаблон отчёта, --json, --watch
+# 2026.07.10-SKM-ROADMAP-005 P2.3 — фиксированный шаблон отчёта, --json, --watch
 # ---------------------------------------------------------------------------
 #
 # Плоский рендер (Code Guidance P2.3): вся логика вычисления статуса живёт в `parse_run`
@@ -367,7 +367,7 @@ def discover_runs(base_dir=None, run=None, project=None, limit=1):
 
 
 def render_text(status):
-    """ФИКСИРОВАННЫЙ человекочитаемый шаблон статуса прогона (Scope Included P2.3) — один
+    """ФИКСИРОВАННЫЙ человекочитаемый шаблон статуса прогона (Scope Included 2026.07.10-SKM-ROADMAP-005 P2.3) — один
     и тот же байт-в-байт при равных входных данных (детерминизм рендера, без ветвления
     бизнес-логики внутри f-строк). Печатает декларации фаз из `meta.phases` ОТДЕЛЬНО от
     прогресса агентов, с явной пометкой недоступности привязки агент→фаза (D18 — журнал
@@ -424,7 +424,7 @@ def render_text(status):
 
 
 def render_json(status):
-    """`--json`: та же структура P2.1 (`parse_run`), сериализованная валидным JSON
+    """`--json`: та же структура 2026.07.10-SKM-ROADMAP-005 P2.1 (`parse_run`), сериализованная валидным JSON
     (`ensure_ascii=False` — контракт для хуков/статуслайна, кириллица не эскейпится).
     Round-trip: `json.loads(render_json(x)) == x` (Validation P2.3 (б)) — `status` уже
     состоит из JSON-нативных типов (str/int/bool/list/dict), рендер их не меняет."""
@@ -433,7 +433,7 @@ def render_json(status):
 
 def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterations=None):
     """`--watch`: перепечатка `render_text(parse_run(run_dir))` кадром до Ctrl-C либо пока
-    `inflight == 0` (Implementation Rules P2.3) — на каждой итерации `parse_run` читает
+    `inflight == 0` (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P2.3) — на каждой итерации `parse_run` читает
     журнал заново (его пишет фоновый процесс). `KeyboardInterrupt` перехватывается —
     чистый выход, возвращает 0 (Implementation Rules: не трейсбек на Ctrl-C).
     `max_iterations`/`sleep_fn` — инъекция для тестируемости (иначе бесконечный цикл в
@@ -458,7 +458,7 @@ def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterati
 
 
 # ---------------------------------------------------------------------------
-# P2.4 — CLI: `harness wf status` (диспетч в bin/harness, регистрация в cli.py)
+# 2026.07.10-SKM-ROADMAP-005 P2.4 — CLI: `harness wf status` (диспетч в bin/harness, регистрация в cli.py)
 # ---------------------------------------------------------------------------
 #
 # Тонкая обвязка над P2.1-P2.3 (парс/discovery/рендер) — сама CLI-функция НЕ несёт
@@ -480,7 +480,7 @@ _WF_USAGE = (
 
 
 def _cmd_wf_status(argv):
-    """`harness wf status [...]` — discovery (P2.2) → parse (P2.1) → render (P2.3).
+    """`harness wf status [...]` — discovery (2026.07.10-SKM-ROADMAP-005 P2.2) → parse (P2.1) → render (P2.3).
     Отсутствие прогонов — честное сообщение, exit 0 (это info, не ошибка использования)."""
     opts = parse_flags(argv, {
         "--run": "str", "--project": "str", "--json": "bool",

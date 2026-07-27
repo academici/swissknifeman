@@ -22,7 +22,7 @@ SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 # file-reference — это аварийный выход клиента, не канал доставки сервера, см.
 # findings/P3-mcp-result-field-practice.md). Оценщик токенов — grep-эвристика (stdlib, без
 # токенайзера): символы/3.2 — консервативнее «символы/4» для кириллицы+JSON-пунктуации
-# (findings/P3.2-maind-tool-result-sizes.md — сверка оценки с явным запасом).
+# (2026.07.25-ECO-OPT findings/P3.2-maind-tool-result-sizes.md — сверка оценки с явным запасом).
 TRIM_TARGET_TOKENS = 10_000
 CHARS_PER_TOKEN_ESTIMATE = 3.2
 
@@ -146,7 +146,7 @@ def _truncate_largest_list(payload, limit_tokens):
     спуском по числу элементов (JSON пересобирается на каждой пробе — списков ≤ пары сотен
     элементов на практике, цена приемлема). None-кандидатов (ни payload, ни его значения не
     список) — возвращает исходный payload как есть: свободных байт для тримминга нет, это
-    хвостовой случай эскалации (Implementation Rules P3.2), не молчаливая потеря данных."""
+    хвостовой случай эскалации (Implementation Rules 2026.07.25-ECO-OPT P3.2), не молчаливая потеря данных."""
     candidates = list(_list_candidates(payload))
     if not candidates:
         return payload

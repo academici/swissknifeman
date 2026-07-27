@@ -86,7 +86,7 @@ def cmd_status(env, argv):
                 f"(добавить: skiller update)")
         if extra:
             out(f"  Сверх профиля: {' '.join(extra)}")
-        # P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
+        # 2026.07.02-SKM-MASTER-002 P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
         # нагнетания; status read-only, ничего не переключает сама.
         alias_hints = alias_migration_hints(load_bucket_aliases(env), enabled)
         for h in alias_hints:

@@ -1,5 +1,5 @@
 """journal — append-only писатель пер-планового журнала исполнения
-`plans/<PLAN-ID>/journal.jsonl` (схема P1.1 sealed v1,
+`plans/<PLAN-ID>/journal.jsonl` (схема 2026.07.18-FOREMAN P1.1 sealed v1,
 `root/contracts/plan-journal-schema.md`) и optional append-only sidecar
 `journal-exceptions.jsonl` для owner-gated historical schema exceptions.
 
@@ -9,7 +9,7 @@
 конкурентные сессии дописывают свою строку без чужого построчного разрыва (git-merge
 разрешается конкатенацией строк, контракт §1).
 
-Вызывается close-протоколом команд `/task:plan-*` (P1.3) — старт-запись
+Вызывается close-протоколом команд `/task:plan-*` (2026.07.18-FOREMAN P1.3) — старт-запись
 (`result="in-progress"`) в начале исполнения item'а, финал-запись (терминальный
 `result` + запечённые cost/turns/duration) при закрытии (контракт §2, «пара записей»).
 
@@ -35,7 +35,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк
 FILENAME = "journal.jsonl"
 EXCEPTIONS_FILENAME = "journal-exceptions.jsonl"
 
-# --- канон схемы P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
+# --- канон схемы 2026.07.18-FOREMAN P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
 COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
 FRICTION_VALUES = (
     "escalation", "routing-blocked", "red-audit", "deviation", "retry", "no-op",
@@ -59,7 +59,7 @@ _DECISION_RE = re.compile(r"^D[1-9][0-9]*$")
 
 
 class JournalValidationError(ValueError):
-    """Запись не прошла schema-валидацию P1.1 — `append()` не пишет строку."""
+    """Запись не прошла schema-валидацию 2026.07.18-FOREMAN P1.1 — `append()` не пишет строку."""
 
 
 def entry_validation_errors(entry):
@@ -92,7 +92,7 @@ def entry_validation_errors(entry):
 
     _check_str("ts")
     _check_str("plan_id")
-    _check_str("item_id")  # P1.1 — всегда set (сужение P0.6 str|null, §5)
+    _check_str("item_id")  # 2026.07.18-FOREMAN P1.1 — всегда set (сужение 2026.07.18-FOREMAN P0.6 str|null, §5)
     _check_str("session_id", allow_none=True)
     _check_str("run_id", allow_none=True)
     _check_str("actor")
@@ -121,7 +121,7 @@ def entry_validation_errors(entry):
 
 
 def validate_entry(entry):
-    """Сверяет event-запись со схемой P1.1 (§2), копя все нарушения разом."""
+    """Сверяет event-запись со схемой 2026.07.18-FOREMAN P1.1 (§2), копя все нарушения разом."""
     errors = entry_validation_errors(entry)
     if errors:
         raise JournalValidationError("; ".join(message for _, message in errors))
@@ -260,10 +260,10 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
               note=None, ts=None, trace_ref=None):
-    """Собирает запись по схеме P1.1 с дефолтами контракта (§2) — единая точка сборки,
+    """Собирает запись по схеме 2026.07.18-FOREMAN P1.1 с дефолтами контракта (§2) — единая точка сборки,
     чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
 
-    `trace_ref` (P3.1, `root/contracts/unified-agent-trace-v1.md` § Journal reference)
+    `trace_ref` (2026.07.24-AGENT-RELIABILITY P3.1, `root/contracts/unified-agent-trace-v1.md` § Journal reference)
     — ADDITIVE optional linkage to a Unified Agent Trace `trace_id`, outside
     `REQUIRED_FIELDS`: omitted (`None`, the default) it is not written at all, so
     every caller that does not pass it gets a byte-identical entry to before this
@@ -398,13 +398,13 @@ def main(argv=None):
         return 1
     actor = args.actor
     if args.route_evidence is not None:
-        # Lazy import (task_contract.evaluate_finding P2.3 pattern): journal.py's own
+        # Lazy import (task_contract.evaluate_finding 2026.07.24-AGENT-RELIABILITY P2.3 pattern): journal.py's own
         # schema/writer stay importable without task.route_evidence on the path.
         from task.route_evidence import RouteEvidenceError, canonical_actor
         try:
             evidence = json.loads(Path(args.route_evidence).read_text(encoding="utf-8"))
             # D72/F8: canonical_actor now reads the concrete `model` evidence field
-            # (P2.6), never `model_class` — a historical evidence blob predating
+            # (2026.07.24-AGENT-RELIABILITY P2.6), never `model_class` — a historical evidence blob predating
             # this item simply lacks "model" and renders `unknown/<effort>`.
             actor = canonical_actor(evidence.get("model"), evidence.get("effort"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError,

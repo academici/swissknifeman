@@ -173,7 +173,7 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
     metadata_by_name = {name: dict(data) for name, data in metadata}
     units = []
     for bucket in sorted(bucket_dirs):
-        # P1.2 (D31): a private/source-only bucket (repository-bootstrap) is indexed above for
+        # 2026.07.24-AGENT-RELIABILITY P1.2 (D31): a private/source-only bucket (repository-bootstrap) is indexed above for
         # ownership/hash lookup (`skills` tuple already includes its members) but never becomes
         # an ordinary publication unit — excluded here, before any Claude/Codex/marketplace
         # renderer ever sees it as a `PublicationUnit`.
@@ -573,7 +573,7 @@ def _freeze_value(value: object) -> object:
     return value
 
 
-# P3.4 distribution plans live beside the P3-owned semantic publication seam.
+# 2026.07.19-DUAL-PROVIDER P3.4 distribution plans live beside the P3-owned semantic publication seam.
 # They intentionally consume package config only through the P1 adapter and do
 # not scan a provider manifest or execute a native installer during planning.
 @dataclass(frozen=True)
@@ -920,7 +920,7 @@ def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
     return True, f"codex/native-install: marketplace={repo_root}, plugin={plugin}@{MARKETPLACE}"
 
 
-# P1.2 (D31/D38): the sole root-bootstrap producer. Class-A private/source-only identities
+# 2026.07.24-AGENT-RELIABILITY P1.2 (D31/D38): the sole root-bootstrap producer. Class-A private/source-only identities
 # never reach an ordinary bucket/core/marketplace unit (`build_publication_catalog` excludes the
 # `repository-bootstrap` bucket outright); their generated surface is exactly 26 thin provider
 # projections (13 Claude + 13 Codex root `SKILL.md` pointers, no copied body) plus one combined
@@ -972,7 +972,7 @@ def load_repository_bootstrap_config(package_root: Path) -> dict:
     """Read+validate `configs/repository-bootstrap-skills.json` (schema v1, D38-shaped).
 
     The class-A `identities` list is the D38-frozen 13-identity set (byte-identical rules
-    unchanged by P1.5). `class_b` (P1.5, D43) is an OPTIONAL, separate list of public-bucket
+    unchanged by 2026.07.24-AGENT-RELIABILITY P1.5). `class_b` (P1.5, D43) is an OPTIONAL, separate list of public-bucket
     canon records that are not part of the class-A count/formula at all — validated here so a
     malformed record fails closed before any render, but never merged into `identities`.
     """
@@ -1040,7 +1040,7 @@ def _class_b_donor_bucket(canonical: str) -> str:
 def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path: str,
                                  canonical_sha256: str, unit_version: str,
                                  asymmetry_reason: str) -> bytes:
-    """Thin class-B projection body (P1.5, D43): same no-copied-body contract as class-A, plus
+    """Thin class-B projection body (2026.07.24-AGENT-RELIABILITY P1.5, D43): same no-copied-body contract as class-A, plus
     the declared provider-asymmetry note — never emitted for a provider outside `providers`."""
     title = " ".join(word.capitalize() for word in identity.split("-"))
     quoted = description.replace("\\", "\\\\").replace('"', '\\"')
@@ -1089,7 +1089,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
                                             manifest_path=None,
                                             donor_enabled: Mapping[str, bool] | None = None
                                             ) -> tuple[RootBootstrapArtifact, ...]:
-    """Render the exact 26 class-A thin root-bootstrap projections plus the class-B (P1.5,
+    """Render the exact 26 class-A thin root-bootstrap projections plus the class-B (2026.07.24-AGENT-RELIABILITY P1.5,
     D43) public-bucket projections, and their one combined lock.
 
     Reads ONLY the private/source-only canonical bilingual pairs named by
@@ -1113,7 +1113,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     config = load_repository_bootstrap_config(package_root)
     unit_version = _repository_bootstrap_unit_version(package_root)
     # D38-frozen: class-A's OWN embedded version/publication_unit literal never tracks the
-    # umbrella `unit_version` bump (P1.5 moves 0.1.0->0.2.0) — that decoupling is what keeps
+    # umbrella `unit_version` bump (2026.07.24-AGENT-RELIABILITY P1.5 moves 0.1.0->0.2.0) — that decoupling is what keeps
     # the 26 class-A projection bytes byte-identical across the P1.5 owner bump.
     class_a_version = config["class_a_content_version"]
 
@@ -1241,7 +1241,7 @@ _ROOT_BOOTSTRAP_PROVIDER_ROOTS = {"claude": ".claude/skills", "codex": ".agents/
 
 def assert_root_bootstrap_set_completeness(repo_root: Path,
                                            artifacts: Sequence[RootBootstrapArtifact]) -> list[str]:
-    """P1.5 (`semantic-identity-ownership-v1` invariant i): each provider's root skills
+    """2026.07.24-AGENT-RELIABILITY P1.5 (`semantic-identity-ownership-v1` invariant i): each provider's root skills
     directory equals EXACTLY the declared root-bootstrap target set — never a subset check.
     An undeclared directory is a hard failure naming the path and that it needs an owner item
     (ownership, never suppression); a declared target missing on disk is reported too so a

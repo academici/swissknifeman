@@ -22,7 +22,7 @@ MEMORY_WORKERS = (
 GLOBAL_SCOPE = "global"
 NS_SCOPE_PREFIX = "ns:"
 
-# Digest-бюджет SessionStart (D10, P1.1): дайджест — project-only по умолчанию, ограничен
+# Digest-бюджет SessionStart (2026.07.12-CONTEXT-ECONOMY D10, P1.1): дайджест — project-only по умолчанию, ограничен
 # байтами (не только count), с per-item обрезкой. Нормы — findings/P0-rag-context-economy.md
 # (additionalContext ≤500–1500 ток/сессию; ~4 симв/ток → 4000 симв ≈ 1000–1200 ток).
 DIGEST_BUDGET_CHARS = 4000

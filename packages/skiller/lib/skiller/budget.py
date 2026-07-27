@@ -184,7 +184,7 @@ def budget_for_set(skills, pulled=None):
     }
 
 
-# --- first-turn footprint (P5.1) -----------------------------------------------
+# --- first-turn footprint (2026.07.12-CONTEXT-ECONOMY P5.1) --------------------
 # Невидимый always-on бюджет — первопричина инцидента (findings/P0-rag-context-economy.md,
 # RAG:✅ 2026-07-12): стартовый контекст 3–7K ток норма, >10K — аномалия. Пять
 # источников always-on нагрузки первого хода проекта: skills meta (⊕ tier-0),

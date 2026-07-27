@@ -37,12 +37,12 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
     def _core_warn(msg):
         print(f"WARN: {msg}", file=sys.stderr)
 
-# task.journal — SSOT схемы записи P1.1 и historical exception sidecar; лint
-# журнала реюзает её вместо дубля правил (Code Guidance P1.4 «анти-подгонка»), тот же
+# task.journal — SSOT схемы записи 2026.07.18-FOREMAN P1.1 и historical exception sidecar; лint
+# журнала реюзает её вместо дубля правил (Code Guidance 2026.07.18-FOREMAN P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
 # task.task_contract — единственный владелец строкового теста «внешности» execution
-# input'а (task-contract-v1.md §Portability, frozen P0.2); tiered-portability lint (P2.2)
+# input'а (task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2); tiered-portability lint (2026.07.24-AGENT-RELIABILITY P2.2)
 # зовёт его, а не пересказывает список префиксов вторым списком (Implementation Rules P2.2).
 from task import task_contract
 
@@ -161,7 +161,7 @@ README_FILENAME = "README.md"
 SKELETON_MARKER_RE = re.compile(r"^>\s*СКЕЛЕТ\s+—\s+не детализирован")
 # Маркер неоднозначности (SKILL §7): в фазе со статусом 🟡+ (не ⬜) = DoR-warning.
 NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
-# P3.8/D52: append-only блок `## Audit Pn` ИСКЛЮЧЁН из региона грепов по фазе. Аудитор
+# 2026.07.13-PLAN-PROTOCOL-GAP P3.8/D52: append-only блок `## Audit Pn` ИСКЛЮЧЁН из региона грепов по фазе. Аудитор
 # отчитывается о проверке предиката («маркеров X — 0») и обязан УПОМЯНУТЬ маркер дословно;
 # греп по всему файлу бил бы по честному отчёту (A4: первая версия `## Audit P3` уронила
 # гейт собственной строкой). Регион гейтов кончается на ПЕРВОМ `## Audit` — ниже него живого
@@ -199,21 +199,21 @@ PHASE_CONTEXT_HEADER_RE = re.compile(r"^##\s+Phase Context\s*$")
 # порог «item по сути пуст» для требования скелет-маркера
 SKELETON_EMPTY_RATIO = 0.5
 
-# --- P4.3: канон ID / места-имени workflow-скрипта / supersedes (D24/D27/D28) --
+# --- 2026.07.10-SKM-ROADMAP-005 P4.3: канон ID / места-имени workflow-скрипта / supersedes (D24/D27/D28) --
 # Регулярка PLAN-ID (D16/D24) — union: датовый канон `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`
 # и старый паттерн (back-compat: живые планы SKM-ROADMAP-005/SKM-AUDIT-004 матчат
 # старый → 0 warning; несоответствие ни одному — WARNING, никогда не ERROR).
 PLAN_ID_DATED_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}-[A-Z][A-Z0-9-]*$")
 PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
 # Маркер workflow-скрипта в теле .js — детект ПОДСТРОКОЙ (не eval/import JS,
-# прецедент P2.1/D19 `parse_script_meta`).
+# прецедент 2026.07.10-SKM-ROADMAP-005 P2.1/D19 `parse_script_meta`).
 WORKFLOW_META_MARKER = "export const meta"
 WORKFLOW_DIR_NAME = "workflows"  # единственный дом скриптов плана (D28)
 # Резидентный agent-pack класс (harness dev-loop.js) — не плановый артефакт, exempt по
-# имени файла от места/имени-проверки (findings A4, P3.3).
+# имени файла от места/имени-проверки (findings A4, 2026.07.15-PLANFLOW-UX P3.3).
 DEV_LOOP_EXEMPT_NAME = "dev-loop.js"
 
-# --- P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
+# --- 2026.07.10-SKM-ROADMAP-005 P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
 # КОНСЕРВАТИВНЫЙ набор маркеров в теле фазы: явный `scriptPath` launch-block'а,
 # «оркестрац», «мультиагент»/`multi-agent`. Правило Code Guidance «при сомнении НЕ
 # срабатывать» перевешивает буквальный список: бумерный `fan-out` НАМЕРЕННО исключён —
@@ -222,7 +222,7 @@ DEV_LOOP_EXEMPT_NAME = "dev-loop.js"
 # item-by-item исполнение workflow не требует — маркер должен быть намеренным.
 ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
 
-# --- P2.15/D34: протухший `## Phase Handoff` при реопене фазы (H2) --------------
+# --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34: протухший `## Phase Handoff` при реопене фазы (H2) --------------
 # Реопен (SKILL §3, 4-й шаг) НЕ удаляет блок сдачи, а помечает его ПЕРВОЙ НЕПУСТОЙ строкой
 # маркером `> УСТАРЕЛ — фаза реопенена <D#>` (провенанс сдачи сохраняется, ложь снимается);
 # перезаписывает блок `plan-close` при следующем закрытии фазы. Жирное начертание маркера
@@ -234,11 +234,11 @@ PHASE_HANDOFF_STALE_RE = re.compile(r"^>\s*\*{0,2}\s*УСТАРЕЛ\b")
 # непуст при нетерминальной фазе» бьёт 104 фазы (скелеты/заготовки — ложно-положительные),
 # эти три формы — 4 фазы, все истинно-положительные. Список НЕ расширять «на всякий случай»:
 # каждое лишнее слово — риск ложного WARNING на сотне фаз (пойдёт в реестр CANON_LITERALS,
-# P2.16). Регистронезависимо (флот пишет и «Терминальн…», и «терминальн…»).
+# 2026.07.13-PLAN-PROTOCOL-GAP P2.16). Регистронезависимо (флот пишет и «Терминальн…», и «терминальн…»).
 PHASE_HANDOFF_CLOSURE_LITERALS = ("терминальн", "фаза закрыта", "Сдано:")
 PHASE_HANDOFF_CLOSURE_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_CLOSURE_LITERALS), re.IGNORECASE)
-# P3.7/D50: гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову. Закрывающий
+# 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову. Закрывающий
 # литерал ищется ТОЛЬКО в ПЕРВОЙ непустой строке блока (там же, где ищется маркер
 # `> УСТАРЕЛ`), и гасится ОТРИЦАНИЕМ на той же строке. Основание (J1, живая форма флота
 # `themeon/2026.07.12-BASE/P5`): «**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2
@@ -250,7 +250,7 @@ PHASE_HANDOFF_NEGATION_LITERALS = ("не закрыт",)
 PHASE_HANDOFF_NEGATION_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_NEGATION_LITERALS), re.IGNORECASE)
 
-# --- P2.2/D26/D47: tiered-portability lint (plan-portability-v1.md, task_contract.py) ---
+# --- 2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: tiered-portability lint (plan-portability-v1.md, task_contract.py) ---
 # Классификация РОЛИ пути (execution input vs provenance) — ПОЗИЦИОННЫЙ тест: путь
 # execution-input, только если появляется в ЗНАЧЕНИИ полей Inputs/Required Reads/Validation
 # КОНКРЕТНОГО item'а (то самое «что item реально читает» — plan-portability-v1.md
@@ -260,7 +260,7 @@ PHASE_HANDOFF_NEGATION_RE = re.compile(
 # brief/00-brief.md обязана проходить). Регекс по подстроке `tmp/` для ЭТОГО шага (роль)
 # ЗАПРЕЩЁН (D47) — используется только позиция поля. Строковый тест «внешности» пути
 # (абсолютный/`~`/`../`/URL/`tmp/`-корень) — ОТДЕЛЬНЫЙ шаг ПОСЛЕ того, как роль уже решена
-# позиционно (task_contract.is_external_path, task-contract-v1.md §Portability, frozen P0.2).
+# позиционно (task_contract.is_external_path, task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2).
 # Severity-cutoff (тот же паттерн, что у BRIEF_CANON_DATE/JOURNAL_CANON_DATE): датовые
 # планы ОТ этой даты — ERROR, старее — WARNING. Дата НАМЕРЕННО позже дня запечатывания
 # правила (2026-07-26, P2.2): fleet-замер на живом дереве (`bash
@@ -308,7 +308,7 @@ def _plan_declares_committed_bundle_tier(plan_dir):
 
 
 def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
-    """P2.2/D26/D47: план tier=committed-bundle (что верно для любого исполняемого
+    """2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: план tier=committed-bundle (что верно для любого исполняемого
     мастер-плана по конструкции, см. `_plan_declares_committed_bundle_tier`) обязан
     нести ≥1 committed/predecessor-produced execution input и не содержать внешний
     (host/chat/mAInd/tmp/foreign) путь В РОЛИ execution input — иначе `plan_lint`
@@ -337,7 +337,7 @@ def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
                f"item'е (PORTABILITY_INPUT_MISSING)")
 
 
-# --- P4.4/D91: машинный гейт напечатанных кодов границ (ремонт находки Ф2) ------
+# --- 2026.07.24-AGENT-RELIABILITY P4.4/D91: машинный гейт напечатанных кодов границ (ремонт находки Ф2) ------
 # findings/P3.11-terminal-audit-2.md § Ф2, событие 2 из 2: канон уже требовал печати ОБОИХ
 # кодов write-site (`plan-audit.md` чеклист), но проверка была НЕ машинной — пять items
 # подряд (P3.6-P3.10) прошли аудит перепрогоном предиката ВРУЧНУЮ (все пять → allow/allow),
@@ -357,7 +357,7 @@ WRITE_SITE_CODES_CANON_DATE = "2026-07-27"
 ITEM_UPDATED_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Канон кодов — `task_contract.evaluate()`: `pre_mutation` ∈ {allow, block:<CODE>};
 # `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное).
-# --- P10.1/D88/D102: каноническая строка вместо re.search по всему полю --------
+# --- 2026.07.25-ECO-OPT P10.1/D88/D102: каноническая строка вместо re.search по всему полю --------
 # Старая форма (`WRITE_SITE_PRE_MUTATION_RE.search(clean)` по ВСЕМУ Completion Notes)
 # ошибалась в ОБЕ стороны: (1) fail-open — item без своих кодов, но ЦИТИРУЮЩИЙ чужие в
 # прозе, проходил гейт; (2) ложный ERROR — item со своими `allow`, процитировавший ВЫШЕ
@@ -400,7 +400,7 @@ def _write_site_canonical_codes(completion_notes):
 
 
 def _lint_write_site_codes_44(status_table, items, path, diag):
-    """P4.4/D91 (ремонт находки Ф2), точность — P10.1/D88/D102: item со статусом
+    """2026.07.24-AGENT-RELIABILITY P4.4/D91 (ремонт находки Ф2), точность — 2026.07.25-ECO-OPT P10.1/D88/D102: item со статусом
     🟢/🟠, чей `Updated` (Phase Status) ISO-датирован ≥ WRITE_SITE_CODES_CANON_DATE,
     обязан нести каноническую строку `write-site:` (см. `_write_site_canonical_codes`)
     с ОБОИМИ кодами `allow` (D76: `n/a` — не зелёное). Непарсимая/отсутствующая дата =
@@ -435,7 +435,7 @@ def _lint_write_site_codes_44(status_table, items, path, diag):
                        f"«{status_val}» — закрытие на не-allow (D76)")
 
 
-# --- P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1) --------------
+# --- 2026.07.25-ECO-OPT P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1) --------------
 # Класс свидетельства фазы не фиксировался нигде: `Phase Handoff` — проза плюс git-хеш, и
 # синтетика читается как результат (research/11-P8-target-design.md §1). Отчёт закрытия —
 # машиночитаемый файл на фазу, ВКЛЮЧАЕТСЯ opt-in полем `## 0. Meta` → `Closure Protocol | v1`:
@@ -592,7 +592,7 @@ def _closure_lint_correspondence(data, report_path, phase_id, parsed_phase, boar
 
 
 def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, diag):
-    """P8.1/D42, все пять проверок отчёта закрытия. Активация — opt-in Meta-поле
+    """2026.07.25-ECO-OPT P8.1/D42, все пять проверок отчёта закрытия. Активация — opt-in Meta-поле
     `Closure Protocol | v1`: без него функция молчит целиком (аддитивность). Проверка 2 —
     фаза терминальна, поле включено, файла нет → ERROR с ОЖИДАЕМЫМ ПУТЁМ (fail-closed
     называет объект). Нетерминальная фаза отчёта не обязана иметь; но ЕСЛИ файл лежит —
@@ -626,7 +626,7 @@ def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, di
                                      board_row, diag)
 
 
-# --- P8.2/D103-D105: `Consequences` в D-записи (research/11 §2, research/23) ---
+# --- 2026.07.25-ECO-OPT P8.2/D103-D105: `Consequences` в D-записи (research/11 §2, research/23) ---
 # Носитель — инлайн-подполе `**Consequences:**` внутри ячейки `Решение` (пятая колонка
 # отклонена: шапка D-лога — литерал реестра CANON_LITERALS, её правка = переписывание
 # шапки во всех планах флота, D43). Гейт — ОПТ-IN ДВАЖДЫ (та же дисциплина, что у
@@ -649,14 +649,14 @@ CONSEQUENCES_DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
 # ОТРИЦАНИЕ «не отменяет»/«не отменена» (ложный ERROR). Негативный lookbehind
 # `(?<!не )` СНИМАТЬ НЕЛЬЗЯ: без него 4 из 6 срабатываний на этом же плане ложные
 # (D11/D19/D26 и др., research/23 §1). Стем-лист держать УЗКИМ — три семантики, не
-# десять слов (Code Guidance P8.2): каждый лишний стем — риск ложного ERROR на сотнях
+# десять слов (Code Guidance 2026.07.25-ECO-OPT P8.2): каждый лишний стем — риск ложного ERROR на сотнях
 # планов флота.
 CONSEQUENCES_STEMS_RE = re.compile(
     r"supersedes D|отменяет D|(?<!не )отмен(?:ён|ен|ена|ено|ены)\b")
 
 
 def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
-    """P8.2/D103-D105: ячейка `Решение` строки `## 5. Decision Log`, матчащая
+    """2026.07.25-ECO-OPT P8.2/D103-D105: ячейка `Решение` строки `## 5. Decision Log`, матчащая
     CONSEQUENCES_STEMS_RE (отмена/замена решения) и датированная (`Дата`) ≥
     CONSEQUENCES_CANON_DATE, обязана нести `**Consequences:**` — иначе ERROR с
     номером D-записи (fail-closed называет объект). Активация — ДВОЙНОЙ opt-in:
@@ -688,10 +688,10 @@ def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
                        f"с {CONSEQUENCES_CANON_DATE}, D103)")
 
 
-# --- P8.3/D44: `CHECKPOINTED` — отказ несёт точную команду возобновления ------
+# --- 2026.07.25-ECO-OPT P8.3/D44: `CHECKPOINTED` — отказ несёт точную команду возобновления ------
 # Носитель — строка `Возобновление: <команда>` в поле `Pending Work` item'а (НЕ седьмой
 # статус, НЕ семнадцатое поле — оба варианта отклонены D44, ломают контракт трёх живых
-# планов/`plans/cross-plan-files.py`). Активация — тот же opt-in, что у P8.1/P8.2:
+# планов/`plans/cross-plan-files.py`). Активация — тот же opt-in, что у 2026.07.25-ECO-OPT P8.1/P8.2:
 # Meta-поле `Closure Protocol | v1` (без даты-канона — на дату детализации в этом плане
 # живых 🔴/⛔ items с включённым протоколом нет, задним числом красить нечего).
 STATUS_SKIPPED = "⛔ Skipped by decision"
@@ -715,7 +715,7 @@ def _find_resume_line(pending_work):
 
 
 def _lint_checkpointed_83(meta, items, path, diag):
-    """P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work непустую
+    """2026.07.25-ECO-OPT P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work непустую
     строку `Возобновление: <команда>` (форма `Возобновление: — (внешний блокер: …)` —
     легальное «непусто» для блокера без локального шага, Code Guidance P8.3); item со
     статусом `⛔ Skipped by decision` обязан нести РОВНО `Возобновление: —` И ссылку
@@ -745,7 +745,7 @@ def _lint_checkpointed_83(meta, items, path, diag):
                            f"решение о пропуске обязано быть предъявлено D-записью (D44)")
 
 
-# --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
+# --- 2026.07.13-PLAN-PROTOCOL-GAP P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
 #   * `CANON_LITERALS` — строка, которую протокол ТРЕБУЕТ писать дословно (шапки таблиц,
@@ -790,19 +790,19 @@ CANON_LITERALS = (
     LITERAL_WAITING,                                          # форма `Next` «ОЖИДАНИЕ» (SKILL §8, D8)
     LITERAL_AUDIT_VERDICT,                                    # шапка вердикта `## Audit Pn` (§8)
     *SCOPE_PAYLOAD_MARKERS,                                   # scope-payload launch-block'а (§8)
-    "pre_mutation:",                                          # write-site код границы (§8, P4.4/D91)
+    "pre_mutation:",                                          # write-site код границы (§8, 2026.07.24-AGENT-RELIABILITY P4.4/D91)
     "pre_final:",                                             # write-site код границы (§8, P4.4/D91)
-    "write-site:",                                            # каноническая строка (§8, P10.1/D102:
+    "write-site:",                                            # каноническая строка (§8, 2026.07.25-ECO-OPT P10.1/D102:
                                                                # T1 латиницу не ловит, регистрация решением)
     CLOSURE_META_FIELD,                                       # Meta-поле активации отчёта закрытия
-                                                               # (§8, P8.1/D42: латиница — та же
+                                                               # (§8, 2026.07.25-ECO-OPT P8.1/D42: латиница — та же
                                                                # регистрация решением, что у write-site:)
-    CONSEQUENCES_LITERAL,                                     # §6, P8.2/D103-D105: латиница — та же
+    CONSEQUENCES_LITERAL,                                     # §6, 2026.07.25-ECO-OPT P8.2/D103-D105: латиница — та же
                                                                # регистрация решением, T1 её не ловит
-    RESUME_LITERAL,                                           # §6, P8.3/D44: кириллица — обязательна
+    RESUME_LITERAL,                                           # §6, 2026.07.25-ECO-OPT P8.3/D44: кириллица — обязательна
                                                                # i18n-директива в SKILL.ru.md
 )
-# --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
+# --- 2026.07.15-PLANFLOW-UX P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
 # «ОЖИДАНИЕ: <условие> → <целевая форма>» (recon §3.2, живой SKM-MASTER-002). Стем-лист
 # УЗКИЙ и финализирован по замеру ДЕЛЬТЫ флота (§8 D53), не «на глаз»: каждый лишний стем —
@@ -824,7 +824,7 @@ C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "au
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
                       + PHASE_HANDOFF_NEGATION_LITERALS
                       + ("не раньше", "делать нечего", "тайм-гейт")
-                      # P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
+                      # 2026.07.25-ECO-OPT P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
                       # (отмена/замена решения) в свободной прозе D-лога; EN-канон их не
                       # несёт и нести не обязан (research/23 §3).
                       + ("отменяет", "отменён", "отменен", "отменена", "отменено", "отменены"))
@@ -846,8 +846,8 @@ def _workflow_name_re(codename):
 
 def _plan_has_workflow_script(plan_dir):
     """Есть ли у плана хоть один `.js`-workflow-скрипт (с маркером `export const meta`)
-    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки P4.6 (D29).
-    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент P2.1/D19)."""
+    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки 2026.07.10-SKM-ROADMAP-005 P4.6 (D29).
+    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент 2026.07.10-SKM-ROADMAP-005 P2.1/D19)."""
     workflows_dir = Path(plan_dir) / WORKFLOW_DIR_NAME
     if not workflows_dir.is_dir():
         return False
@@ -868,7 +868,7 @@ class Diagnostics:
     def __init__(self):
         self.errors = []
         self.warnings = []
-        self._raw_errors = []  # (path, msg) — для normalized_keys (P1.2/B1)
+        self._raw_errors = []  # (path, msg) — для normalized_keys (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1)
         self._raw_warnings = []
 
     def error(self, path, line, msg):
@@ -885,7 +885,7 @@ class Diagnostics:
 
     def normalized_keys(self, base_dir):
         """Мультимножество `(kind, отн_путь, msg)` для сравнения деревьев (`--baseline`,
-        P1.2/D5/D6): путь — относительно `base_dir` (если под ним, иначе как есть),
+        2026.07.13-PLAN-PROTOCOL-GAP P1.2/D5/D6): путь — относительно `base_dir` (если под ним, иначе как есть),
         номер строки НЕ участвует (сдвиг строк от собственного диффа не должен превращать
         старую ошибку в «новую»)."""
         base_dir = Path(base_dir).resolve()
@@ -1274,7 +1274,7 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
         diag.warning(plan_dir / "plan.md", None, msg)
 
 
-# --- Слой журнала/индекса (P1.4/D22) — soft/hard-гейт по дате-cutoff ------------
+# --- Слой журнала/индекса (2026.07.18-FOREMAN P1.4/D22) — soft/hard-гейт по дате-cutoff ------------
 # Датовые планы ОТ этой даты обязаны нести валидный journal.jsonl (ERROR); старее/
 # legacy — WARNING (тот же паттерн, что у brief/roadmap-гейтов, back-compat — не ломаем
 # уже идущий флот). Cutoff = дата запечатывания этого канона (P1.4/D47): план
@@ -1329,7 +1329,7 @@ def _lint_journal_exceptions_20(plan_dir, plan_id, report):
 
 
 def _lint_plan_journal_20(plan_dir, plan_id, diag):
-    """journal.jsonl (P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
+    """journal.jsonl (2026.07.18-FOREMAN P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
     одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
     невалидный файл — ERROR для датовых планов от JOURNAL_CANON_DATE, WARNING для
     старее/legacy. Схема записи реюзается из `task.journal` (SSOT — не дублируем enum'ы)."""
@@ -1375,7 +1375,7 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):
-    """index.md (P1.2, root/contracts/plan-index-schema.md) — карта файлов+провенанс,
+    """index.md (2026.07.18-FOREMAN P1.2, root/contracts/plan-index-schema.md) — карта файлов+провенанс,
     ОПЦИОНАЛЕН (не носитель факта, в отличие от журнала/брифа — P1.2 §1). Отсутствие —
     ВСЕГДА WARNING, независимо от даты плана (нет ERROR-ветки в отличие от журнала)."""
     plan_dir = Path(plan_dir)
@@ -1387,7 +1387,7 @@ def _lint_plan_index_20(plan_dir, plan_id, diag):
                      f"snippets/index-template.md")
 
 
-# --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
+# --- 2026.07.10-SKM-ROADMAP-005 P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     """Три WARNING-проверки идентичности плана (все — warning, back-compat D24):
@@ -1530,7 +1530,7 @@ def parse_phase_md(path, phase_id, diag):
     if ctx_body is not None:
         is_skeleton = any(SKELETON_MARKER_RE.match(ln) for ln in ctx_body)
 
-    # --- P3.8/D52: регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
+    # --- 2026.07.13-PLAN-PROTOCOL-GAP P3.8/D52: регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
     # аудита законно цитирует маркеры, по которым отчитывается; см. AUDIT_BLOCK_HEADER_RE)
     gate_lines = _lines_before_audit(lines)
 
@@ -1538,7 +1538,7 @@ def parse_phase_md(path, phase_id, diag):
     needs_clarification = [i + 1 for i, ln in enumerate(gate_lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
-    # --- P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
+    # --- 2026.07.10-SKM-ROADMAP-005 P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
     # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
     declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in gate_lines)
 
@@ -1600,8 +1600,8 @@ def parse_phase_md(path, phase_id, diag):
     else:
         handoff_text = "\n".join(handoff_body).strip()
         handoff_lineno = handoff_start - 1  # строка самого заголовка «## Phase Handoff»
-        # P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
-        # P3.7/D50: по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
+        # 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
+        # 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
         handoff_first_line = next((ln for ln in handoff_body if ln.strip()), "").strip()
         handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line))
 
@@ -1707,7 +1707,7 @@ def lint_plan(plan_dir, diag):
     plan_md = plan_dir / "plan.md"
     meta, status_board = parse_plan_md(plan_md, diag)
 
-    # P4.3: warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
+    # 2026.07.10-SKM-ROADMAP-005 P4.3: warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
     # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
     _meta_raw = meta if isinstance(meta, dict) else {}
     _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
@@ -1720,7 +1720,7 @@ def lint_plan(plan_dir, diag):
     contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
                  else {"exported": [], "consumed": []})
 
-    # P8.2/D103-D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
+    # 2026.07.25-ECO-OPT P8.2/D103-D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
     if plan_lines is not None:
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
@@ -1740,7 +1740,7 @@ def lint_plan(plan_dir, diag):
     # Roadmap-гейт (SKILL §8): полностью детализированный план обязан нести roadmap.md.
     _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag)
 
-    # Журнал/индекс (P1.4/D22): journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
+    # Журнал/индекс (2026.07.18-FOREMAN P1.4/D22): journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
     _lint_plan_journal_20(plan_dir, plan_id, diag)
     _lint_plan_index_20(plan_dir, plan_id, diag)
 
@@ -1827,13 +1827,13 @@ def lint_plan(plan_dir, diag):
                 if _is_empty(va_val):
                     diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
 
-        # --- P4.4/D91: гейт напечатанных кодов границ pre_mutation/pre_final --
+        # --- 2026.07.24-AGENT-RELIABILITY P4.4/D91: гейт напечатанных кодов границ pre_mutation/pre_final --
         _lint_write_site_codes_44(parsed["status_table"], parsed["items"], path, diag)
 
-        # --- P8.3/D44: 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
+        # --- 2026.07.25-ECO-OPT P8.3/D44: 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
         _lint_checkpointed_83(_meta_raw, parsed["items"], path, diag)
 
-    # --- P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
+    # --- 2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
     # execution input, либо внешний путь в роли execution input) ----------------
     _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag)
 
@@ -1894,7 +1894,7 @@ def lint_plan(plan_dir, diag):
                              f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
                              f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
 
-        # --- P4.6 WARNING: workflow-как-DoR (D29) — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
+        # --- 2026.07.10-SKM-ROADMAP-005 P4.6 WARNING: workflow-как-DoR (D29) — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
         # оркестрацию (грепаемый признак), но у плана нет workflow-скрипта в
         # `plans/<ID>/workflows/`. Условность: без признака оркестрации — молчит
         # (ручное item-by-item исполнение workflow не требует). warning-only.
@@ -1914,11 +1914,11 @@ def lint_plan(plan_dir, diag):
                 diag.error(phases[pid]["path"], None,
                            f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
 
-        # --- P2.15/D34 WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
+        # --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34 WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
         # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).
         # WARNING, не ERROR: три плана флота (истинно-положительные, carve-out D34) иначе
         # получили бы недостижимый commit-гейт в ЧУЖИХ репозиториях.
-        # P3.7/D50: утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
+        # 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
         # снимается ОТРИЦАНИЕМ на ней же — иначе гейт ловит слово, а не субъект (J1).
         elif phase_status and phase_status not in TERMINAL_STATUSES:
             handoff_text = phases[pid].get("phase_handoff")
@@ -1934,7 +1934,7 @@ def lint_plan(plan_dir, diag):
                              f"(SKILL §3, 4-й шаг реопена: блок не удаляется, его перезапишет "
                              f"plan-close при следующем закрытии фазы)")
 
-    # --- P8.1/D42: отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
+    # --- 2026.07.25-ECO-OPT P8.1/D42: отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
     _lint_closure_reports_81(plan_dir, plan_id, _meta_raw, phases, board_by_phase, diag)
 
     # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
@@ -2213,11 +2213,11 @@ def discover_plan_dirs(root):
     return dirs
 
 
-# --- --baseline: детерминированный счёт новых ошибок (P1.2/B1/D5/D6) ---------
+# --- --baseline: детерминированный счёт новых ошибок (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1/D5/D6) ---------
 
 def _git_run(args, cwd, timeout=15):
     """`check=False`, перехватывает `FileNotFoundError`/таймаут — линтер обязан
-    работать вне git-репо (гоняют по Brain-vault'у и чужим корням, P1.2 Implementation
+    работать вне git-репо (гоняют по Brain-vault'у и чужим корням, 2026.07.13-PLAN-PROTOCOL-GAP P1.2 Implementation
     Rules). None — команда не выполнилась вовсе (нет git / таймаут)."""
     try:
         return subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,

@@ -885,7 +885,7 @@ def cmd_agent_packs(env, argv):
     die(f"неизвестная подкоманда agent-packs: {sub}")
 
 
-# P5.4 provider projection seam. The role catalog is the semantic source; the
+# 2026.07.19-DUAL-PROVIDER P5.4 provider projection seam. The role catalog is the semantic source; the
 # established Claude lifecycle and templates above are compatibility consumers.
 @dataclass(frozen=True)
 class AgentRole:

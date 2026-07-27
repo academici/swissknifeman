@@ -1,16 +1,16 @@
-"""task_contract — Task Contract v1 compiler (P2.2, plans/2026.07.24-AGENT-RELIABILITY).
+"""task_contract — Task Contract v1 compiler (2026.07.24-AGENT-RELIABILITY P2.2).
 
 The single checked seam `packages/task/commands/plan-*.md` call at the pre-mutation and
 pre-final boundaries instead of restating the rule in prose. It owns exactly what the
 frozen contracts assign it and nothing else:
 
   * content-hash recomputation and the precedence/conflict resolution ladder
-    (`root/contracts/task-contract-v1.md` §Version / §Precedence, P0.2, frozen);
+    (`root/contracts/task-contract-v1.md` §Version / §Precedence, 2026.07.24-AGENT-RELIABILITY P0.2, frozen);
   * the twelve ordered pre-mutation reason codes and the three ordered pre-final reason
     codes of the same contract (frozen; reused verbatim, never re-minted);
   * the slice-partition and cold-start checks of the same contract (frozen);
   * the portability tier classification and lint predicate of
-    `plans/2026.07.24-AGENT-RELIABILITY/root/contracts/plan-portability-v1.md` (P2.1),
+    `plans/2026.07.24-AGENT-RELIABILITY/root/contracts/plan-portability-v1.md` (2026.07.24-AGENT-RELIABILITY P2.1),
     including the one new reason code that layer adds
     (`PORTABILITY_TIER_MISCLASSIFIED`, `artifacts/P2.1/state-transition-cases.json`
     `new_reason_codes`).
@@ -34,7 +34,7 @@ from pathlib import Path
 SCHEMA_VERSION = "task-contract/v1"
 
 # Ordered ladders — index = rank, a lower index outranks a higher one
-# (task-contract-v1.md §Precedence ladder / §Route, frozen P0.2 enums).
+# (task-contract-v1.md §Precedence ladder / §Route, frozen 2026.07.24-AGENT-RELIABILITY P0.2 enums).
 CARRIER_PRECEDENCE = (
     "owner-instruction",
     "plan-decision",
@@ -61,7 +61,7 @@ SLICE_ROOT_ONLY_REQUIRED = frozenset({"evidence", "portability", "conflicts"})
 
 # task-contract-v1.md §Portability — an execution input that is absolute, `~`-rooted,
 # parent-escaping, `tmp/`-rooted or URL-shaped is external BY CONSTRUCTION once its ROLE
-# (execution input vs provenance) is already decided — this is the frozen P0.2 string test
+# (execution input vs provenance) is already decided — this is the frozen 2026.07.24-AGENT-RELIABILITY P0.2 string test
 # over an ALREADY-CLASSIFIED input, not the D47 role test itself. The role test (which path
 # even belongs in `execution_inputs` in the first place) lives upstream of this compiler, in
 # whatever builds the `portability` block (root supervisor / `plan_lint`'s tiered-portability
@@ -72,13 +72,13 @@ _EXTERNAL_PREFIXES = ("/", "~", "../", "tmp/")
 _EXTERNAL_SUBSTRINGS = ("/../", "/tmp/", "://")
 
 # --------------------------------------------------------------------------
-# build() — Task Contract v1 producer (P2.6, F1). Field-mapping table lives in
+# build() — Task Contract v1 producer (2026.07.24-AGENT-RELIABILITY P2.6, F1). Field-mapping table lives in
 # `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
 # --------------------------------------------------------------------------
 
-# New P2.6 reason codes — not pre-declared by P2.1's frozen
+# New 2026.07.24-AGENT-RELIABILITY P2.6 reason codes — not pre-declared by 2026.07.24-AGENT-RELIABILITY P2.1's frozen
 # `artifacts/P2.1/state-transition-cases.json::new_reason_codes` (this item introduces
-# them directly, same authoring discipline: a distinct_from a frozen P0.2 code, never a
+# them directly, same authoring discipline: a distinct_from a frozen 2026.07.24-AGENT-RELIABILITY P0.2 code, never a
 # redefinition — D64).
 BUNDLE_ARTIFACT_MISSING = "BUNDLE_ARTIFACT_MISSING"
 BUNDLE_PRIVACY_MISMATCH = "BUNDLE_PRIVACY_MISMATCH"
@@ -99,7 +99,7 @@ SLICE_ROOT_ONLY_KEYS = ("evidence", "portability", "conflicts")
 
 class TaskContractBuildError(ValueError):
     """A typed refusal to compile a Task Contract — never a fabricated
-    placeholder value (Implementation Rules P2.6 (2), anti-padding). Carries
+    placeholder value (Implementation Rules 2026.07.24-AGENT-RELIABILITY P2.6 (2), anti-padding). Carries
     the offending item and field name so the caller can act on it directly,
     the same shape `RouteEvidenceError`/`ReviewPolicyError` already use."""
 
@@ -168,7 +168,7 @@ def _count_audit_rounds(phase_lines, phase_id: str) -> int:
     return count
 
 
-# D78/P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9
+# D78/2026.07.24-AGENT-RELIABILITY P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9
 # Back-compat declares VALID today: the canon form plus exactly the two legacy spellings
 # measured live on the fleet (`findings/14` M4.1). Preference order matters (canon first);
 # no fuzzy/normalized/regex match — a header outside this tuple is an unrecognized table,
@@ -278,7 +278,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
          next_form="exec-items", next_context="same-session — item",
          next_origin="approved-goal", next_changed_by=None, carrier=None,
          routing_config_path=None) -> dict:
-    """Task Contract v1 producer (P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
+    """Task Contract v1 producer (2026.07.24-AGENT-RELIABILITY P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
     §3/§0 fields for one item into the exact 15-key schema
     `task-contract-v1.schema.json` declares. Full field-mapping table:
     `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
@@ -301,7 +301,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     raises `TaskContractBuildError` naming the field and item — never a
     fabricated placeholder dressed up as data.
 
-    `routing_config_path` (P2.10, D78) — the committed routing carrier
+    `routing_config_path` (2026.07.24-AGENT-RELIABILITY P2.10, D78) — the committed routing carrier
     `_find_routing_row`/`_resolve_model_class` read `mappings.*.class_selectors` from,
     via `command_catalog.load_routing_metadata` (never a second name table in this
     module). Defaults to this package's own `configs/command-routing.json`
@@ -463,7 +463,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
 
 # --------------------------------------------------------------------------
-# bundle_lint() — evidence-bundle privacy/minimization predicate (P2.6, F2/F4).
+# bundle_lint() — evidence-bundle privacy/minimization predicate (2026.07.24-AGENT-RELIABILITY P2.6, F2/F4).
 # --------------------------------------------------------------------------
 
 _SECRET_PATTERNS = (
@@ -521,7 +521,7 @@ def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -
     `declared_privacy` as ground truth (that was exactly F2/F4: the fields
     were self-declared and self-read by the same generator).
 
-    New reason codes (P2.6 — not pre-declared by P2.1's frozen
+    New reason codes (2026.07.24-AGENT-RELIABILITY P2.6 — not pre-declared by 2026.07.24-AGENT-RELIABILITY P2.1's frozen
     `state-transition-cases.json::new_reason_codes`; this item introduces
     them directly, same discipline as that file's own entries):
 
@@ -538,8 +538,8 @@ def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -
     `manifest_path` — a JSON file `{"files": [<bundle-relative path>, ...]}`
     declaring the bundle's exact expected member set (this item's own minimal
     manifest contract — no existing generic manifest schema is reusable
-    across the fleet's several bundle-specific formats, e.g. P0.1's
-    `manifests/bundle-manifest.json` vs P2.5's `result-manifest.json`).
+    across the fleet's several bundle-specific formats, e.g. 2026.07.24-AGENT-RELIABILITY P0.1's
+    `manifests/bundle-manifest.json` vs 2026.07.24-AGENT-RELIABILITY P2.5's `result-manifest.json`).
     `verifier_path` — existence-checked only (never executed: running an
     arbitrary committed script from inside a library predicate is its own
     hazard and outside this item's Scope).
@@ -551,7 +551,7 @@ def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -
     considered: (a) trust the declared `privacy` block as-is — rejected,
     exactly F4's defect; (b) hash-only manifest check without content-class
     scanning — rejected, leaves secrets/raw-bulk undetected even when file
-    counts match. Named consumers: P2.7 (write-site), P2.8 (P2.5 bundle
+    counts match. Named consumers: 2026.07.24-AGENT-RELIABILITY P2.7 (write-site), 2026.07.24-AGENT-RELIABILITY P2.8 (P2.5 bundle
     rerun). SemVer: new public function, additive to `task_contract`'s
     surface.
     """
@@ -599,14 +599,14 @@ def _rank(order: tuple, value: str) -> int:
 
 
 def _rank_or_none(order: tuple, value) -> int | None:
-    """D78/P2.10 route-ladder guard: `None` (never an `IndexError`/`ValueError`) when
+    """D78/2026.07.24-AGENT-RELIABILITY P2.10 route-ladder guard: `None` (never an `IndexError`/`ValueError`) when
     `value` is outside `order`. Used ONLY by `pre_mutation`'s route check below — the
     `CARRIER_PRECEDENCE` conflict-resolution use of `_rank` above is unrelated scope
     (D78/`findings/14` measured the route axes specifically) and stays untouched. An
     out-of-ladder value on EITHER axis and EITHER side of the route (required or
     actual) is treated the same way `route_evidence.classify` already treats an
     unresolved actual — as an undershoot, never a crash — reusing the frozen
-    `ROUTE_UNDERSHOOT` code rather than minting a new one (P0.2 pre-mutation codes are
+    `ROUTE_UNDERSHOOT` code rather than minting a new one (2026.07.24-AGENT-RELIABILITY P0.2 pre-mutation codes are
     frozen; D74 already established this precedent one layer up, in
     `route_evidence.dispatch_guard`)."""
     return order.index(value) if value in order else None
@@ -632,9 +632,9 @@ def is_external_path(path: str) -> bool:
 def portability_lint(portability: dict, *, work: dict | None = None) -> str | None:
     """plan-portability-v1.md §Classification rule + §Lint predicate — ordered check over
     an already-compiled `portability` block. Returns `None` (allow) or a typed reason code:
-    `PORTABILITY_TIER_MISCLASSIFIED` (P2.1, new — `artifacts/P2.1/state-transition-cases.json`
+    `PORTABILITY_TIER_MISCLASSIFIED` (2026.07.24-AGENT-RELIABILITY P2.1, new — `artifacts/P2.1/state-transition-cases.json`
     `new_reason_codes`) · `PORTABILITY_INPUT_MISSING` / `PORTABILITY_EXTERNAL_INPUT`
-    (P0.2, `task-contract-v1.md` §Pre-mutation predicate #5-6, reused verbatim).
+    (2026.07.24-AGENT-RELIABILITY P0.2, `task-contract-v1.md` §Pre-mutation predicate #5-6, reused verbatim).
 
     Order, exactly as declared in plan-portability-v1.md §Classification rule:
     (1) tier contradicts the rule for the declared `work` · (2) `committed-bundle` with no
@@ -759,7 +759,7 @@ def pre_final(contract: dict) -> str | None:
 
 def evaluate(contract: dict, *, work: dict | None = None) -> dict:
     """Run both boundaries in the canonical order and return a compact typed result —
-    the shape a plan command reports verbatim (journal/handoff/subagent slice, P2.2
+    the shape a plan command reports verbatim (journal/handoff/subagent slice, 2026.07.24-AGENT-RELIABILITY P2.2
     Code Guidance): `{"pre_mutation": "allow"|"block:<CODE>", "pre_final":
     "allow"|"block:<CODE>"|"n/a", "content_hash": <sha256>}`."""
     mutation_code = pre_mutation(contract, work=work)
@@ -817,7 +817,7 @@ def main(argv=None) -> int:
 
 
 # --------------------------------------------------------------------------
-# Review/loop-budget policy hook (P2.3) — the one extension point
+# Review/loop-budget policy hook (2026.07.24-AGENT-RELIABILITY P2.3) — the one extension point
 # `root/contracts/risk-review-loop-budget-v1.md`'s Contribution gate names:
 # this compiler owns the pre-mutation/pre-final boundaries above and nothing
 # about what happens to an item BETWEEN them when a typed finding is raised
@@ -829,7 +829,7 @@ def main(argv=None) -> int:
 
 def evaluate_finding(state: str, finding: dict, *, budget=None, profile: str) -> dict:
     """Delegates one `typed-finding` event to `task.review_policy.review_transition`
-    (P2.3). `budget` defaults to a fresh `LoopBudget` when the caller tracks no
+    (2026.07.24-AGENT-RELIABILITY P2.3). `budget` defaults to a fresh `LoopBudget` when the caller tracks no
     cross-finding state of its own; passing the same `LoopBudget` across calls is
     what lets `same_finding_max` count occurrences across an item's fix rounds."""
     from task.review_policy import LoopBudget, review_transition

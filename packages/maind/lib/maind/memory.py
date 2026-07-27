@@ -436,7 +436,7 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
     дампа памяти `raw` (список dict export()-формы: content/narrative/title + timestamp).
 
     `private` — приватный scope проекта (первым в выдаче); `want` — видимые scope'ы
-    (приватный + ns:*/global по recall_scopes). Алгоритм (D10, P1.1):
+    (приватный + ns:*/global по recall_scopes). Алгоритм (2026.07.12-CONTEXT-ECONOMY D10, P1.1):
     1) фильтр по scope-маркеру/want + дедуп + ecosystem-link cross-ref (как раньше) →
        партиция private_rows/shared_rows, каждая отсортирована свежее-сверху;
     2) кандидаты = весь private + shared[:shared_max] (дефолт shared_max=0 → shared не
@@ -488,7 +488,7 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
 def _cmd_digest(env, config, argv):
     """Компактный дайджест памяти проекта для SessionStart-хука (additionalContext).
     ДЕТЕРМИНИРОВАННО (не семантика): берём ВСЕ факты scope'ов проекта через list+фильтр по
-    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет (D10, P1.1) — по
+    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет (2026.07.12-CONTEXT-ECONOMY D10, P1.1) — по
     умолчанию project-only (shared_max=0), shared — явно флагом/конфигом. ХУК-БЕЗОПАСНО:
     демон лёг / scope не определён → молча пусто, без die."""
     opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--limit": "str",

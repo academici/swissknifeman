@@ -18,7 +18,7 @@ from .mcp import available_mcp
 # run-report SCHEMA=2: файлы хука, чью свежесть сверяем против источника в репо.
 _RUN_REPORT_FILES = ("run-report.py", "_lib.py", "_usage.py")
 
-# P9.1: коды проверок review-gate для компактной строки doctor'а (research/18 §2.4).
+# 2026.07.25-ECO-OPT P9.1: коды проверок review-gate для компактной строки doctor'а (research/18 §2.4).
 _REVIEW_GATE_CHECK_CODES = {"generated-assets": "G1", "plan-lint": "G2", "tests-touched": "W1"}
 
 
@@ -69,14 +69,14 @@ def _cmd_doctor_settings(env, opts):
     """Ветка `--settings`: аудит слоёв настроек Claude Code целевого проекта.
     Отдельная от диагностики окружения harness (ранний return в `cmd_doctor`) —
     два разных вывода не смешиваются. exit-code 0/1/2 по составу находок; `--json`
-    печатает РОВНО один JSON-документ (контракт для fleet-скана P1.6)."""
+    печатает РОВНО один JSON-документ (контракт для fleet-скана 2026.07.10-SKM-ROADMAP-005 P1.6)."""
     from .settings_audit import build_context, exit_code, render_json_obj, render_text, run_checks
     target = opts["target"] or os.getcwd()
     profile_name = opts["profile"] or None
     ctx = build_context(env, target, profile_name=profile_name)
     findings = run_checks(ctx)
     if opts["json"]:
-        # Единственный вывод в stdout — иначе fleet-скан P1.6 (json.loads) падает.
+        # Единственный вывод в stdout — иначе fleet-скан 2026.07.10-SKM-ROADMAP-005 P1.6 (json.loads) падает.
         print(json.dumps(render_json_obj(ctx, findings), ensure_ascii=False))
     else:
         print(render_text(ctx, findings))

@@ -449,7 +449,7 @@ def block_pack_guard(target, mode, settings_file, dry):
 
 def block_changelog_gate(target, mode, settings_file, dry):
     """Записать changelog-gate.env.ini + зарегистрировать PreToolUse-хук (matcher Bash).
-    Opt-in commit-гейт CHANGELOG-дисциплины (P5.2, D32/D33): по умолчанию НЕ устанавливается,
+    Opt-in commit-гейт CHANGELOG-дисциплины (2026.07.10-SKM-ROADMAP-005 P5.2, D32/D33): по умолчанию НЕ устанавливается,
     включается явным --changelog-gate. off → пишет MODE=off, хук не регистрируется
     (kill-switch без снятия уже зарегистрированного — merge-only не удаляет чужие записи)."""
     print(f"changelog-gate: {mode or 'пропуск'}")

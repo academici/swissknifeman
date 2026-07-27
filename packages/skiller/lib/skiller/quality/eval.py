@@ -489,7 +489,7 @@ def validate_system_graders(data, label="graders.json"):
     """Structural validation of a system-bank graders document (`reliability-
     bank/v1` shape): no-LLM-judge policy, operator closure. → errors (empty =
     valid). Generic — validates ANY system-bank-shaped doc, not only the frozen
-    P0.3 one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
+    2026.07.24-AGENT-RELIABILITY P0.3 one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
     if not isinstance(data, dict):
         return [f"{label}: root must be an object"]
     errors = []
@@ -723,7 +723,7 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
     (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
     `first_pass_success` metric against it; omitted → the pair is `deferred`
     (no live paired run yet exists — never fabricated, Execution Rules: "ноль
-    и silent skip запрещены"). → the P3.3 benchmark artifact shape."""
+    и silent skip запрещены"). → the 2026.07.24-AGENT-RELIABILITY P3.3 benchmark artifact shape."""
     graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
     cases = cases_doc.get("cases", [])
     baseline_records = {c["case_id"]: c["baseline"] for c in cases}
@@ -747,7 +747,7 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
                         "value": candidate_metrics["first_pass_success"]}
                        if candidate_metrics is not None else None)
     # Sampled from baseline-PASSING cases only — same selection rule the frozen
-    # P0.3 bank's own manifest uses (a case whose declared baseline already
+    # 2026.07.24-AGENT-RELIABILITY P0.3 bank's own manifest uses (a case whose declared baseline already
     # fails is not a representative "smoke" sample of steady-state behaviour).
     passing_ids = [g["case_id"] for g in baseline_graded if g["passed"]]
     sample = seeded_system_sample(

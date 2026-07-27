@@ -1,7 +1,7 @@
-"""review_policy — typed finding/review enforcement and loop breaker (P2.3,
-plans/2026.07.24-AGENT-RELIABILITY).
+"""review_policy — typed finding/review enforcement and loop breaker
+(2026.07.24-AGENT-RELIABILITY P2.3).
 
-Implements exactly `root/contracts/risk-review-loop-budget-v1.md` (P2.1, frozen) as
+Implements exactly `root/contracts/risk-review-loop-budget-v1.md` (2026.07.24-AGENT-RELIABILITY P2.1, frozen) as
 executable policy: finding identity derived from the defect's SEAM (never report
 wording — split-ban), the `reopens_product` predicate, the `same_finding_max = 2`
 loop budget where the THIRD occurrence of one stable identity becomes an incident
@@ -10,7 +10,7 @@ the subject is a parameter, never hardcoded). Validation cadence follows the sam
 contract: full once per phase-terminal item, targeted after each bounded fix.
 
 This module is the ONE new call-site `packages/task/lib/task/task_contract.py`
-gains for it (`evaluate_finding`, P2.2's approved policy hook) — the compiler's own
+gains for it (`evaluate_finding`, 2026.07.24-AGENT-RELIABILITY P2.2's approved policy hook) — the compiler's own
 pre-mutation/pre-final predicates are untouched and never import this module, so
 P2.2's independently-green test suite does not depend on it.
 
@@ -53,7 +53,7 @@ CAP_SUBJECT_BY_PROFILE = {
 _READY_OR_DONE_REOPEN_TARGET = "ESCALATED"
 _VERIFYING_REOPEN_TARGET = "FIXING"
 
-# `LoopBudget.from_committed` (P2.6, F5) — locates each `## Audit <phase_id>` block
+# `LoopBudget.from_committed` (2026.07.24-AGENT-RELIABILITY P2.6, F5) — locates each `## Audit <phase_id>` block
 # in a committed phase file, the same append-only audit region `plan-audit.md`'s
 # own two-round-cap grep already reads.
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
@@ -156,7 +156,7 @@ class LoopBudget:
     @classmethod
     def from_committed(cls, plan_dir, phase_id: str, finding: dict, *,
                        same_finding_max: int = SAME_FINDING_MAX):
-        """§Loop budget and cadence + F5 (P2.6) — reconstructs ONE finding's
+        """§Loop budget and cadence + F5 (2026.07.24-AGENT-RELIABILITY P2.6) — reconstructs ONE finding's
         cross-session occurrence count from the two committed carriers this
         contract already names: `journal.jsonl` `command == "plan-audit"`
         entries and `## Audit <phase_id>` blocks in the phase file.
@@ -223,7 +223,7 @@ def review_transition(state: str, finding: dict, *, budget: LoopBudget, profile:
     `same-finding-third` event — `INCIDENT` with no inline repair, its cap subject
     parameterized by `profile` (D68). Never re-derives the 135-cell matrix: this is
     the ONE call site the compiler owns for a single finding, not a second copy of
-    the abstract validator (`artifacts/P2.1/validate_state_cases.py`, which proves
+    the abstract validator (2026.07.24-AGENT-RELIABILITY `artifacts/P2.1/validate_state_cases.py`, which proves
     the matrix itself and is not imported here)."""
     reopens = reopens_product(finding)
 

@@ -1,4 +1,4 @@
-"""route_evidence — normalized route/budget evidence (P2.4, plans/2026.07.24-AGENT-RELIABILITY).
+"""route_evidence — normalized route/budget evidence (2026.07.24-AGENT-RELIABILITY P2.4).
 
 Captures what a dispatch ACTUALLY ran under — model class, effort, capability
 support, token/duration/tool-call budget — as evidence carrying its own source and
@@ -7,7 +7,7 @@ timestamp, never inferred from static config, an actor string or the requested m
 has 34 observed spellings and no live effort signal, so item compliance was not
 reproducible from prose — this module is the typed replacement.
 
-Layered strictly UPSTREAM of `task.task_contract.pre_mutation` (P2.2, frozen): that
+Layered strictly UPSTREAM of `task.task_contract.pre_mutation` (2026.07.24-AGENT-RELIABILITY P2.2, frozen): that
 predicate's own route check assumes an already-resolved `route` (`.index()` lookups
 that crash on `None`), so `dispatch_guard` below is the fail-closed boundary that
 never lets an `unknown` axis reach it — a guard refusal here stops before any Task
@@ -16,10 +16,10 @@ Contract compiles. `build_task_contract_route` only assembles the exact
 `actual`/`capabilities`, `additionalProperties: false`) once the guard already
 allowed; it is a repeat proof over validated axes, not a second gate.
 
-Reuses `task.task_contract.MODEL_CLASS_ORDER`/`EFFORT_ORDER` (frozen P0.2 route
+Reuses `task.task_contract.MODEL_CLASS_ORDER`/`EFFORT_ORDER` (frozen 2026.07.24-AGENT-RELIABILITY P0.2 route
 ladder, D6 single owner — never re-declared) for classification, and
 `task.command_catalog.CommandRecord` for the deterministic REQUIRED side
-(`command-routing.json`, P1/P2.2 — unmodified by this item: its exact-set schema is
+(`command-routing.json`, 2026.07.24-AGENT-RELIABILITY P1/P2.2 — unmodified by this item: its exact-set schema is
 owned by `command_catalog.py`, outside this item's Files).
 
 stdlib-only.
@@ -52,7 +52,7 @@ BUDGET_AXES = ("in", "out", "cache_read", "cache_creation", "duration_ms", "tool
 CLASSIFICATIONS = ("exact", "over", "under", "unknown")
 
 # execution-state-machine-v1.md §Declared sets — the `route` deny class partitions
-# exactly these two frozen P0.2 pre-mutation codes (never re-minted here).
+# exactly these two frozen 2026.07.24-AGENT-RELIABILITY P0.2 pre-mutation codes (never re-minted here).
 ROUTE_UNDERSHOOT = "ROUTE_UNDERSHOOT"
 CAPABILITY_UNSUPPORTED = "CAPABILITY_UNSUPPORTED"
 
@@ -103,8 +103,8 @@ def capture_actual(model_class, effort, *, source: str, ts: str | None = None,
     inferred here: an omitted axis (`None`) is evidence of absence, not a guess, and
     survives unchanged into `classify`/`dispatch_guard` as `unknown`.
 
-    `model` (P2.6/D72) — optional concrete provider model name (e.g. `"sonnet"`),
-    a SEPARATE axis from `model_class`: the class stays the frozen P0.2 route axis
+    `model` (2026.07.24-AGENT-RELIABILITY P2.6/D72) — optional concrete provider model name (e.g. `"sonnet"`),
+    a SEPARATE axis from `model_class`: the class stays the frozen 2026.07.24-AGENT-RELIABILITY P0.2 route axis
     `dispatch_guard`/`classify` compare against Required; `model` is new evidence
     `canonical_actor` reads instead of stripping the actor spelling down to the
     class (F8 — `required` and `actual` had collapsed to the same string once the
@@ -156,7 +156,7 @@ def capability_support(capability_requirements, capability_bindings) -> tuple:
 
 
 def dispatch_guard(required: dict, actual: dict, capabilities) -> str | None:
-    """Fail-closed BEFORE any Task Contract compiles. Reuses the two frozen P0.2
+    """Fail-closed BEFORE any Task Contract compiles. Reuses the two frozen 2026.07.24-AGENT-RELIABILITY P0.2
     `route` deny codes verbatim (`execution-state-machine-v1.md` §Declared sets,
     never re-minted): `ROUTE_UNDERSHOOT` for an under OR unknown axis — "Missing
     actual effort is unknown and fails a route-required dispatch" (Implementation
@@ -175,7 +175,7 @@ def route_change_boundary(before: dict, after: dict) -> dict:
     """Detects a mid-item route change between two `capture_actual` evidence records
     (e.g. a session model/effort switch between an item's dispatch capture and a
     later re-check). Evidence only, no new machine event: the frozen state machine
-    (P2.1) owns transitions — this returns the comparison a caller reports against
+    (2026.07.24-AGENT-RELIABILITY P2.1) owns transitions — this returns the comparison a caller reports against
     it, never a decision of its own."""
     changed = (before["model_class"], before["effort"]) != (after["model_class"], after["effort"])
     return {"changed": changed, "before": dict(before), "after": dict(after)}
@@ -203,7 +203,7 @@ def canonical_actor(model, effort) -> str:
     repair of `findings/02`'s 34 observed spellings). `model_class` remains a
     SEPARATE route-evidence axis (`capture_actual`'s own field, `route.actual.
     model_class` in the compiled contract) — this function never derives a
-    model from it: that was exactly F8 (`journal.jsonl` P2.4/P2.5 rows carry
+    model from it: that was exactly F8 (`journal.jsonl` 2026.07.24-AGENT-RELIABILITY P2.4/P2.5 rows carry
     `"implementation/high"` instead of `"sonnet/high"` — `required` and
     `actual` collapsed to the same string once the class was all this
     function had). An absent or non-string `model` renders the literal
@@ -211,7 +211,7 @@ def canonical_actor(model, effort) -> str:
     substituted for a missing model.
 
     Breaking signature change (D23/D72): the ONE internal consumer,
-    `journal.py --route-evidence`, is repaired in this same item (P2.6)."""
+    `journal.py --route-evidence`, is repaired in this same item (2026.07.24-AGENT-RELIABILITY P2.6)."""
     model_part = model if isinstance(model, str) and model else "unknown"
     effort_part = effort if effort in EFFORT_ORDER else "unknown"
     return f"{model_part}/{effort_part}"

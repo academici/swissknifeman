@@ -252,7 +252,7 @@ def extract_pathologies(run_report, project_path):
 
 
 def extract_workflow_relaunch(run_report, *, scope, project):
-    """Сигнал D: срез `workflow_relaunch` run-report'а (P1.2) — готовые группы
+    """Сигнал D: срез `workflow_relaunch` run-report'а (2026.07.15-TELEMETRY-OPT P1.2) — готовые группы
     `{name, count, statuses}` уже отфильтрованы хуком по порогу `_WF_RELAUNCH_MIN`.
     Диагностический кандидат, не «ошибка»: N resume/relaunch одного воркфлоу в одной
     сессии — прокси «скрипт нестабилен, дебажился на лету внутри основной сессии»

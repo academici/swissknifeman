@@ -72,7 +72,7 @@ def cmd_mcp(env, argv):
               parse_mcp_flag(opts["mcp"]), opts["dry_run"])
 
 
-# P5.4 deliberately keeps this seam small.  The legacy functions above own the
+# 2026.07.19-DUAL-PROVIDER P5.4 deliberately keeps this seam small.  The legacy functions above own the
 # Claude merge/write behaviour; the records below are immutable planning data
 # for both providers and never infer one provider's output from another.
 @dataclass(frozen=True)

@@ -86,7 +86,8 @@ def build_metric_record(metric, *, numerator, denominator, baseline_proof_class,
 
 
 def pair_metric(baseline, candidate):
-    """Pair a baseline `MetricRecord` against a candidate one, or `None` when the P3.3
+    """Pair a baseline `MetricRecord` against a candidate one, or `None` when the
+    2026.07.24-AGENT-RELIABILITY P3.3
     live paired run has not produced it yet — never a silent zero (Execution Rules:
     "Missing evidence/route/capability остаётся unknown/red... ноль и silent skip
     запрещены"). Layer-2 absence is reported as `status: "deferred"`, exactly what

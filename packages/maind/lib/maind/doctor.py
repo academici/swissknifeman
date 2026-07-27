@@ -125,7 +125,7 @@ def _channel_hygiene_report(env, config, detail):
 
 def _fleet_context(env, config):
     """Флот-агрегация футпринта первого хода: цикл по registered-проектам → subprocess
-    `skiller budget --first-turn --target <path> --json` (P5.1) — токен-математика
+    `skiller budget --first-turn --target <path> --json` (2026.07.12-CONTEXT-ECONOMY P5.1) — токен-математика
     остаётся ЕДИНСТВЕННО в skiller, maind только потребляет готовый JSON (без дубля,
     без кросс-импортов — паттерн doctor --audit settings, D10). Fail-soft: недоступный
     skiller / сломанный вывод / отсутствующий local_path на проект → context='n/a',

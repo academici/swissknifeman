@@ -74,7 +74,7 @@ def build_registry(env):
                 on_error=lambda e, f=upstream_file: die(f"битый upstream.json: {f}: {e}"),
             )
             files = up.get("files", [])
-            # provenance-запись: body_path (P7.3 thin-navigator) явно называет, какая
+            # provenance-запись: body_path (2026.07.02-SKM-MASTER-002 P7.3 thin-navigator) явно называет, какая
             # files[]-запись — «тело» апстрима, когда SKILL.md — навигатор, а не
             # зеркало; иначе как раньше — запись SKILL.md, иначе первая (fork/merge:
             # files[].path указывает на pristine-зеркало в references/, напр. в
@@ -117,7 +117,7 @@ def build_registry(env):
         die("buckets.json not found — every bucket needs description/category/tags")
     bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
     bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
-    # Alias-бакеты (P7.5, будущие слияния бакетов — D14 запрещает исполнять их СЕЙЧАС):
+    # Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5, будущие слияния бакетов — D14 запрещает исполнять их СЕЙЧАС):
     # метаданные-запись БЕЗ физического skills/<bucket> — старое имя бакета переживает
     # слияние как список ссылок на скиллы цели `alias_of` (см. build_plugin_manifests).
     # Не «orphan» (забытый каталог), а явная миграционная запись.
@@ -151,7 +151,7 @@ def build_registry(env):
 
 
 def load_bucket_aliases(env):
-    """Alias-бакеты (P7.5) из buckets.json: {старое_имя: целевой_бакет}. Лёгкий читатель
+    """Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5) из buckets.json: {старое_имя: целевой_бакет}. Лёгкий читатель
     (без build_registry) для update.py/status.py — им не нужна вся структура реестра ради
     одной подсказки. Пусто, если файла нет (standalone/тест-фикстура без buckets.json) или
     алиасов не объявлено — сегодня в реальном реестре их нет (D14: P7 не сливает бакеты)."""
@@ -168,7 +168,7 @@ def load_bucket_aliases(env):
 
 def alias_migration_hints(aliases, enabled_names):
     """Одна строка на КАЖДЫЙ активный alias-бакет — «бакет X теперь Y», без нагнетания
-    (P7.5 Code Guidance). `aliases` — {старое: целевое} из load_bucket_aliases,
+    (2026.07.02-SKM-MASTER-002 P7.5 Code Guidance). `aliases` — {старое: целевое} из load_bucket_aliases,
     `enabled_names` — плагины, реально включённые (True) в settings проекта."""
     return [f"бакет '{name}' теперь '{aliases[name]}' — обновите enabledPlugins, "
             f"когда удобно."
@@ -229,7 +229,7 @@ def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
             "package": "skiller",
         })
 
-    # Alias-бакеты (P7.5, слияния бакетов — механизм СЕЙЧАС без применения, D14): старое имя
+    # Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5, слияния бакетов — механизм СЕЙЧАС без применения, D14): старое имя
     # бакета остаётся marketplace-плагином (13 проектов на enabledPlugins — back-compat), но
     # без своего skills/<bucket>. Та же техника, что у курируемого `core` ниже: marketplace-
     # запись source:"./" + явный skills[]-список ссылок на скиллы, физически живущие теперь в
@@ -406,7 +406,7 @@ def _sibling_plugins(repo_root, package_root):
 def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
     """Shared semantic-catalog construction — the immutable P1 input every provider renderer
     consumes AND the read-only D42 core/donor-bucket diagnostic (doctor.py), so the
-    identity→carrier mapping is read from exactly one seam, never re-derived (P1.5)."""
+    identity→carrier mapping is read from exactly one seam, never re-derived (2026.07.24-AGENT-RELIABILITY P1.5)."""
     root = env.root
     repo_root = _repo_root(root)
     if registry is None:
@@ -440,7 +440,7 @@ def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
 
 
 def build_repository_bootstrap_publication(env):
-    """Render the 26 thin root-bootstrap projections + combined lock (P1.2, D31)."""
+    """Render the 26 thin root-bootstrap projections + combined lock (2026.07.24-AGENT-RELIABILITY P1.2, D31)."""
     root = env.root
     repo_root = _repo_root(root)
     return render_repository_bootstrap_projections(repo_root=repo_root, package_root=root)
@@ -457,7 +457,7 @@ def _manifest_text(data):
 
 
 def _has_repository_bootstrap_config(root):
-    """Standalone/fixture roots predating P1.2 carry no root-bootstrap config — skip the
+    """Standalone/fixture roots predating 2026.07.24-AGENT-RELIABILITY P1.2 carry no root-bootstrap config — skip the
     renderer entirely rather than fail closed on a file that was never meant to exist there."""
     return (root / "configs" / "repository-bootstrap-skills.json").is_file()
 
@@ -473,7 +473,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         bootstrap_artifacts = build_repository_bootstrap_publication(env)
         for artifact in bootstrap_artifacts:
             atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
-        # P1.5 (D40 invariant i): fail closed on write too — an undeclared root directory
+        # 2026.07.24-AGENT-RELIABILITY P1.5 (D40 invariant i): fail closed on write too — an undeclared root directory
         # (e.g. a stray hand-written adapter reappearing) is never a silent "unique carrier".
         completeness_failures = assert_root_bootstrap_set_completeness(
             _repo_root(env.root), bootstrap_artifacts)
@@ -518,7 +518,7 @@ def check_drift(env):
         bootstrap_artifacts = build_repository_bootstrap_publication(env)
         for artifact in bootstrap_artifacts:
             _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
-        # P1.5 (D40 invariant i): registry --check must catch an undeclared root directory,
+        # 2026.07.24-AGENT-RELIABILITY P1.5 (D40 invariant i): registry --check must catch an undeclared root directory,
         # not only stale bytes of a declared one — ownership, never suppression.
         drift.extend(assert_root_bootstrap_set_completeness(repo_root, bootstrap_artifacts))
 

@@ -226,7 +226,12 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
     `## 3. Routing` section instead of a second parser. Returns `(model_class, effort)` —
     both already frozen-ladder members — or raises `TaskContractBuildError` naming the
     item, field `"Routing"` and the concrete cause (D78: no fabricated empty pair ever
-    reaches `build()`'s caller, no unrecognized form is silently guessed at)."""
+    reaches `build()`'s caller, no unrecognized form is silently guessed at).
+
+    An `Items` cell that is a comma list covering this item (`P8.5, P8.6` — the shape that
+    blocked 7 live fleet items, `research/25` §1) gets a DIAGNOSTIC refusal naming the cell,
+    its line and both legal forms; it stays a refusal — the list is not a legal form (D124,
+    P8.10). Every other unrecognized cell keeps the historical blind text."""
     _, body, start = plan_lint_mod._find_section(plan_lines, _ROUTING_HEADER_RE)
     if body is None:
         raise TaskContractBuildError(item_id, "Routing", "no `## 3. Routing` section found in plan.md")
@@ -269,6 +274,32 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
             lo, hi = int(m.group(2)), int(m.group(4))
             if lo <= item_n <= hi:
                 return _resolve(row.get(header, ""))
+
+    def _token_covers(token: str) -> bool:
+        """The same two matchers the loop above uses, applied to ONE token of a comma
+        list — for DIAGNOSIS ONLY. A covering token never yields a route (the list stays
+        illegal, D124: «отказ остаётся отказом»); it only proves the refusal is about the
+        cell's FORM, not about a missing row."""
+        if token == item_id:
+            return True
+        match = _ROUTING_RANGE_RE.match(token)
+        return bool(match and item_n is not None and match.group(1) == phase_token == match.group(3)
+                    and int(match.group(2)) <= item_n <= int(match.group(4)))
+
+    range_form = f"{phase_token}.a–{phase_token}.b"
+    for row, lineno in rows:
+        cell = (row.get("Items", "") or "").strip().strip("`")
+        # Narrow by construction (Code Guidance): a comma AND a token that covers this item.
+        # Any other unparsed cell keeps the blind text below — a diagnostic that guessed the
+        # cause on a foreign shape would lie about the fix.
+        if "," not in cell or not any(_token_covers(t.strip().strip("`")) for t in cell.split(",")):
+            continue
+        raise TaskContractBuildError(
+            item_id, "Routing",
+            f"§3 Routing row {cell!r} (line {lineno}) is a comma list — an illegal `Items` "
+            f"cell form; legal forms (closed set, plan-protocol §9): {item_id!r} (a single item) "
+            f"or {range_form!r} (a single-phase range). Split the row per item; the batch "
+            f"belongs in the `Batch` column.")
     raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item")
 
 

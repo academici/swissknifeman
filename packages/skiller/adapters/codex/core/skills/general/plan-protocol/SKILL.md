@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.19.0
+version: 2.20.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -970,6 +970,18 @@ Columns `Batch`/`Review` are **OPTIONAL**: the legacy form without them
 NOT a defect. `Batch` empty → the subphase runs solo (not in a batch); `Review` empty → depth by
 default (`full`).
 
+**The `Items` cell form is a CLOSED SET of TWO forms:** one item (`Pn.m`) OR a range within ONE
+phase (`Pn.a–Pn.b`, both dash forms). A comma list (`P8.5, P8.6`), a range glued to a list
+(`P4.1–P4.2, P4.4`) and any other shape are **ILLEGAL**: the subphase group is carried by the
+`Batch` column («Subphase batching» below), not by the `Items` cell — a second carrier of one
+fact is forbidden (§3). Granularity below already demands per-item Routing exactly where such
+glue is usually introduced. The basis is machine-side: §3 is read not only by a human but by the
+`task_contract` compiler (`_find_routing_row`), which rejects the glued cell outright — a
+2026-07-27 measurement found 7 live fleet items unable to build a Task Contract. On a glued cell
+the compiler emits a **diagnostic refusal** (naming the cell, its line number and both legal
+forms) yet stays a refusal: the route is NOT taken from the matching token — a list never
+becomes a legal form through the back door.
+
 **Granularity.** A range row (`P2.x–P2.y`) is legal only for HOMOGENEOUS items: one risk class
 per Tier policy, one "Почему" phrase true for EVERY item of the range. When a phase gets
 detailed, the Routing of its items MUST become per-item if homogeneity does not hold; a
@@ -1027,7 +1039,12 @@ print the actual class/effort pair in the report and in the Update Log.
 Exec/`Batch`/`Review` column, an empty section) stay VALID; `plan-lint` does not parse section 3 —
 the gate is run by the READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule
 above. The new `Batch`/`Review` columns are likewise not parsed by the linter (no machine gate on
-them).
+them). **Honest boundary of the concession:** the legacy forms listed stay valid for a HUMAN
+executor, but §3 is also read by a MACHINE (`task_contract`, since 2026-07-24) and it understands
+only the table. The closed set of `Items` cell forms (above) is a requirement of BOTH readers and
+back-compat does NOT extend to it: a prose/bullet plan simply has no machine reader (a human
+executes it as before), while a table plan with an illegal cell refuses on EVERY item of that row
+— fixed by editing §3, not by the parser.
 
 **Subphase batching (optional exec-plan "console").** A batch — a group of subphases executed in
 ONE executor session without a per-subphase confirmation ritual (small subphases don't run
@@ -1303,4 +1320,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 821d9d14af1c7a287b0b7c913b9abbd35183555fe0a1aba2f49de00ce7207923 -->
+<!-- ru-source-sha256: e9ce9c34562312524ec1863502365d7e45470c6b135960bac8bc0d1e45f1c3db -->

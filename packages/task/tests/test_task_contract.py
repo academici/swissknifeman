@@ -10,6 +10,7 @@ test, never a hand-authored contract that could silently satisfy the wrong branc
 """
 import copy
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -582,6 +583,61 @@ class RoutingFormTests(unittest.TestCase):
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
         self.assertEqual(ctx.exception.field, "Routing")
+
+    def _write_phase_item(self, item_id):
+        # `build()` parses the phase item BEFORE §3 Routing, so an item_id absent from
+        # phases/P1.md would refuse on field `item` and never reach the branch under test.
+        (self.plan_dir / "phases" / "P1.md").write_text(
+            fixtures.phase_md(item_id=item_id), encoding="utf-8")
+
+    def _assert_comma_list_diagnostic(self, message, cell, item_id):
+        self.assertIn("comma list", message)
+        self.assertIn(cell, message)                       # the offending cell, verbatim
+        self.assertIsNotNone(re.search(r"\(line \d+\)", message))  # its line in plan.md
+        self.assertIn(f"'{item_id}'", message)             # legal form 1 — a single item
+        self.assertIn("P1.a–P1.b", message)                # legal form 2 — single-phase range
+        self.assertIn("Batch", message)                    # where the group actually belongs
+
+    def test_comma_list_cell_refuses_with_a_diagnostic_naming_the_cell(self):
+        # P8.10/D124, `research/25` §1: this shape blocked 7 live fleet items behind a blind
+        # `no §3 Routing row found`. The refusal STAYS a refusal (the list never becomes a
+        # legal form through the back door) — only its text learns to name the fix.
+        self._write_plan(_routing_row_with_header("Model class/effort", items="P1.1, P1.2"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+        self.assertEqual(ctx.exception.item_id, "P1.1")
+        self._assert_comma_list_diagnostic(str(ctx.exception), "P1.1, P1.2", "P1.1")
+
+    def test_comma_list_diagnostic_is_symmetric_across_tokens(self):
+        # The second token of the same cell must diagnose identically — the blocked FOREMAN
+        # items sit in every position of the list, not only the first.
+        self._write_phase_item("P1.2")
+        self._write_plan(_routing_row_with_header("Model class/effort", items="P1.1, P1.2"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.2")
+        self.assertEqual(ctx.exception.field, "Routing")
+        self._assert_comma_list_diagnostic(str(ctx.exception), "P1.1, P1.2", "P1.2")
+
+    def test_mixed_range_and_list_cell_is_diagnosed_too(self):
+        # The live `2026.07.18-FOREMAN` shape (`P4.1–P4.2, P4.4`): a range AND a list in one
+        # cell — the matched token here is covered by neither способ of the two matchers.
+        self._write_phase_item("P1.4")
+        self._write_plan(_routing_row_with_header("Model class/effort", items="P1.1–P1.2, P1.4"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.4")
+        self.assertEqual(ctx.exception.field, "Routing")
+        self._assert_comma_list_diagnostic(str(ctx.exception), "P1.1–P1.2, P1.4", "P1.4")
+
+    def test_absent_row_keeps_the_previous_blind_text(self):
+        # Anti-regress (Implementation Rules): a cell with neither a comma nor a matching
+        # token is «строки действительно нет» — the diagnostic must NOT claim a comma list.
+        self._write_plan(_routing_row_with_header("Model class/effort", items="P1.3"))
+        with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
+            task_contract.build(self.plan_dir, "P1.1")
+        self.assertEqual(ctx.exception.field, "Routing")
+        self.assertIn("no §3 Routing row found for this item", str(ctx.exception))
+        self.assertNotIn("comma list", str(ctx.exception))
 
     def test_ambiguous_model_name_across_two_classes_fails_closed(self):
         self._write_plan(_routing_row_with_header("Model/effort", "shared-name/high"))

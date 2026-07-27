@@ -1,51 +1,56 @@
-# HANDOFF — 2026-07-27 — after P8.2
+# HANDOFF — 2026-07-27 — after P8.3
 
-**P8.2 закрыт 🟢** (item-коммит `4d01d547`, bookkeeping — следом). `**Consequences:**` в D-записи (инлайн-подполе внутри ячейки `Решение`,
-измеренный предикат `supersedes D`/`отменяет D`/причастие с негативным lookbehind `(?<!не )`,
-opt-in дважды — `Closure Protocol | v1` + `Дата` ≥ `2026-07-28` forward-only) и словарь
-зрелости возможности (РОВНО пять значений: `available`/`experimental`/`behind-gate`/
-`disabled`/`superseded`, канон `plan-protocol` §6, отдельно от шести статусов item'а). Канон
-обновлён в RU и EN (skill `2.17.0 → 2.18.0`), `plan-design.md`/`plan-audit.md` несут
-авторскую/аудит-дисциплину. Version-first: units `core`/`general` + `package.json`
-`0.10.0 → 0.11.0`. Побочно найдены и починены byte-golden регрессии независимого голдена
-команд (`plan-design.md`/`plan-audit.md` правка меняла байты — голден и сгенерированный
-`docs/reference/provider-commands.md` не были в `Files`, но регенерация детерминирована и
-входит в carve-out (б)); без починки `validate.sh` падал на трёх тестах. Детали —
-`phases/P8.md` P8.2 Completion Notes.
+**P8.3 закрыт 🟠** (item-коммит `c36bbee5`, bookkeeping — следом). Строка `Возобновление:
+<точная команда>` в поле `Pending Work` item'а при `🔴 Blocked` (форма `Возобновление: —
+(внешний блокер: …)` легальна) / РОВНО `Возобновление: —` + ссылка `D<номер>` при
+`⛔ Skipped by decision` — гейт `_lint_checkpointed_83` в `plan_lint.py`, opt-in ОДИН раз
+(`Closure Protocol | v1`, без даты-канона — на дату детализации живых 🔴/⛔ items с
+включённым протоколом на флоте нет). Носитель — существующее поле, НЕ седьмой статус и НЕ
+семнадцатое поле (D44). Канон `plan-protocol` §6 (RU+EN, skill `2.18.0 → 2.19.0`) несёт
+таблицу гейта и разграничение с формой `waiting:`/`ОЖИДАНИЕ:`; писатели —
+`plan-exec.md`/`plan-close.md`. Version-first: units `core`/`general` + `package.json`
+`0.11.0 → 0.12.0`. Отклонение — те же два файла версионирования
+(`publication-versions.json`/`package.json`) не были в `Files` item'а (тот же класс, что
+P8.1; P8.2 для контраста включила их явно) → `🟠 Done with deviations`; derived-регенерация
+(`skills.json`/`budget.md`/codex-адаптер/golden-зеркало `{plan-exec,plan-close}.md`/
+`provider-commands.md`) — carve-out (б), не material. Детали — `phases/P8.md` P8.3
+Completion Notes.
 
-**Next:** /task:plan-exec 2026.07.25-ECO-OPT P8.3
+**Next:** ЗАПУСК ВРУЧНУЮ: sonnet/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | medium — Routing B4a-2, деривация §9 (`implementation/medium` ⇒ `plan-exec`) |
+| Thinking | high — Routing P9.1 (`implementation/high` ⇒ `manual`, деривация §9) |
 | Context | continue (/clear) — ручной item |
-| Суть | `CHECKPOINTED`: отказ несёт точную команду возобновления (строка `Возобновление:` в `Pending Work`) |
+| Суть | Гейт `review-gate` с содержанием: проверки-скрипты, `strict`/`warn`, защита от петли, live-прогон субагента как доказательство; идёт ПЕРЕД P6.1 (roadmap «Волна 0, шаг 4») |
 
 ```
-/task:plan-exec 2026.07.25-ECO-OPT P8.3
+/model sonnet
+/effort high
+/task:plan-run 2026.07.25-ECO-OPT P9.1
 ```
 
 **Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие всех находок) · **P10.1**
 (гейт кодов границ) · **P8.1** (отчёт закрытия фазы) · **P8.2** (`Consequences` + словарь
-зрелости) — 3/40 items закрыто, 2/10 фаз в работе (P10 — 1/4, P8 — 1/9).
+зрелости) · **P8.3** (`CHECKPOINTED`) — 4/40 items закрыто, 2/10 фаз в работе (P10 — 1/4,
+P8 — 1/9 по `Items 🟢/всего`, фактически 3/9 терминальны: P8.1 🟠/P8.2 🟢/P8.3 🟠).
 
-**Remaining:** 37/40 items. Волна 0: **P8.3** (следующий шаг, solo `plan-exec`) → **P9.1**
-(manual, идёт перед P6.1). Далее волна 1 (одиннадцать items без гейтов, свободный порядок) →
+**Remaining:** 36/40 items. Волна 0: **P9.1** (следующий шаг, manual, идёт перед P6.1) —
+последний item волны 0. Далее волна 1 (одиннадцать items без гейтов, свободный порядок) →
 волны 2–5 по карте `roadmap.md`. Долги P10 (B1'): P10.3 → P1.2 → P10.2; P10.4 — отдельной
 manual-сессией. P2.3 — ПОСЛЕ P8.1/P8.2/P8.3 и P6.3 (D93).
 
 **Sources of truth:** `plan.md` (§2 Execution Rules — двенадцать связок, правило печати кодов
-границ; §3 Routing — строки P8.2/P8.3 разделены; §5 D1–D105; §7 Contracts; Обсуждение 1–19;
-блок `## Audit design — 2026-07-27`) · `phases/P8.md` (реконсайл-блок + рефайн-блок P8.2 +
-сам item, Completion Notes) · `research/23-P8.2-refine-2026-07-27.md` (замеры, на которых
-стоят D103–D105) · `research/11-P8-target-design.md` §2 (**в части стем-листа отменён D103**,
-таблица словаря зрелости в силе) · `research/11-P8-target-design.md` §3 (спека P8.3) ·
-`roadmap.md` (волны 0–5, B4a-1 закрыт/B4a-2 следующий, отложенное) · `brief/00-brief.md` +
-`brief/01-refinements.md` · `research/22-reconcile-2026-07-26.md` · `findings/` и
-`research/01–21` · `open-questions.md` · машинные гейты `plans/cross-plan-files.py` и
+границ; §3 Routing — строка P9.1; §5 D1–D105; §7 Contracts; Обсуждение 1–19; блок
+`## Audit design — 2026-07-27`) · `phases/P8.md` (реконсайл-блок + P8.3 Completion Notes,
+фаза остаётся 🟡 — шесть items ещё не стартовали) · `phases/P9.md` (реконсайл-блок + P9.1) ·
+`research/18-P9-target-design.md` §2 (спека P9.1) · `roadmap.md` (волны 0–5, «Волна 0, шаг 4»
+— launch-block P9.1) · `brief/00-brief.md` + `brief/01-refinements.md` ·
+`research/22-reconcile-2026-07-26.md` · `findings/` и `research/01–21` ·
+`open-questions.md` · машинные гейты `plans/cross-plan-files.py` и
 `packages/task/scripts/plan-lint.py` · канон
-`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §§4, 6, 8, 9.
+`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §§6, 8, 9.
 
 **Open risks:**
 - **`research/11` §2 частично отменён D103, а сам файл не переписан** (слой 2 append-only):
@@ -57,10 +62,10 @@ manual-сессией. P2.3 — ПОСЛЕ P8.1/P8.2/P8.3 и P6.3 (D93).
 - **Протокол закрытия включён на ЭТОМ плане и молчит до первой терминальной фазы.** Гейт «фаза
   терминальна, а файла нет» сработает на первом же `plan-close <ID> Pn`. У двух других живых
   планов протокол НЕ включён (решение владельца, Pending Work P8.1).
-- **Дифф вне `Files` — три повтора подряд теперь предотвращены превентивно** (P10.1, P8.1,
-  P8.2 — но P8.2 нашёл ЧЕТВЁРТЫЙ класс: derived golden команд, не покрытый прежним списком
-  «version-first/fixtures.py/index.json». Правило до сих пор живёт в ТЗ каждого item'а
-  отдельно, а не в чеклисте DoR `plan-design`: кандидат в правило.
+- **Дифф вне `Files` — четыре повтора подряд теперь предотвращены превентивно** (P10.1, P8.1,
+  P8.2, P8.3 — версионные файлы P8.1/P8.3 и derived golden P8.2/P8.3 не покрыты прежним
+  списком «version-first/fixtures.py/index.json» единообразно). Правило до сих пор живёт в ТЗ
+  каждого item'а отдельно, а не в чеклисте DoR `plan-design`: кандидат в правило.
 - **Гейт кодов границ активен**: каждый item, закрываемый с `Updated ≥ 2026-07-27`, обязан
   нести каноническую строку `write-site:` с обоими `allow`.
 - **Двенадцать внутриплановых связок держатся ТЕКСТОМ и машине невидимы** (§2 плана);

@@ -521,6 +521,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-run/Claude Opus 5/high (P8.1 закрыт) | P8.1 закрыт 🟠: введён отчёт закрытия фазы `closure/<Pn>.json` (схема v1, opt-in `Closure Protocol | v1`) — канон §8 + снипет, писатель `plan-close`, потребители `plan_lint` (5 проверок) и `plan-audit`; отклонение — дифф вне `Files` (fixtures.py, version-first бампы, index.json) — детали см. phases/P8.md P8.1 Completion Notes |
 | 2026-07-27 | plan-design/Claude Opus 5/high (item P8.2) | ТЗ P8.2 доведено до DoR: снят мёртвый гейт порядка, гейт `Consequences` переопределён замером + forward-only дата, Routing поднят до implementation/high — D103–D105; детали см. research/23-P8.2-refine-2026-07-27.md |
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P8.2 закрыт) | P8.2 закрыт 🟢: `**Consequences:**` в D-записи (измеренный предикат + forward-only) и словарь зрелости возможности (5 значений) — канон §4/§6, гейт `plan_lint.py`, version-first — детали см. `phases/P8.md` P8.2 Completion Notes |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.3 закрыт) | P8.3 закрыт 🟠: `Возобновление: <команда>` в Pending Work — гейт `_lint_checkpointed_83` (opt-in `Closure Protocol \| v1`) на `🔴 Blocked`/`⛔ Skipped by decision`, канон §6, писатели `plan-exec.md`/`plan-close.md`; отклонение — version-first бампы вне `Files` (тот же класс, что P8.1) — детали см. `phases/P8.md` P8.3 Completion Notes |
 
 ## 7. Contracts
 

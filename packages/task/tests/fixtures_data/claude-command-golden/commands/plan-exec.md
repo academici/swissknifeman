@@ -116,6 +116,11 @@ effort: medium
    При срабатывании оставь ТРИ greppable-артефакта и остановись:
    - blockquote в item: `> 🔴 ESCALATION Pn.m: <причина> | trigger: <из enum> | нужен: plan-design`;
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
+   - **при `Closure Protocol | v1` (opt-in, D44/P8.3):** строка `Возобновление: <точная
+     команда>` в **Pending Work** — точная команда, которой продолжится работа (обычно
+     `/task:plan-design <PLAN-ID> Pn.m`), а не «пропущено»; локального шага продолжения
+     не существует в принципе (внешний блокер) → `Возобновление: — (внешний блокер:
+     <что именно ждём>)`, выдумывать команду запрещено;
    - обнови `handoff.md` (Next: /task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
    - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation

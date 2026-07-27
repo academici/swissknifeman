@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.18.0
+version: 2.19.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -428,6 +428,25 @@ above) — not a silent relaxation by the executor on the spot. A "soft" knob is
 any inconvenient threshold being quietly voided by the very item that exceeded it
 (precedent D58: an item closed 🟢 on a red point because the spec itself declared it soft).
 ```
+
+**`🔴`/`⛔` must carry an exact resume command (opt-in, D44).** An item's refusal cannot
+read as "skipped" without a path back. The carrier is a **`Возобновление: <exact
+command>`** line in the item's `Pending Work` field — not a seventh status (the six lines
+above are read byte-for-byte by `plan_lint.STATUSES`/`TERMINAL_STATUSES` and the cross-plan
+gate `plans/cross-plan-files.py`, a contract of three live plans) and not a new item field
+(`REQUIRED_ITEM_FIELDS` would instantly invalidate every plan in the fleet). The machine
+gate (`plan_lint.py`) is opt-in ONCE (`## 0. Meta` → `Closure Protocol | v1`; without the
+field the check stays silent entirely, additivity):
+
+| Item status | `Pending Work` requirement | Diagnostic on violation |
+|:--|:--|:--|
+| `🔴 Blocked` | `Возобновление: <command>` — non-empty; the form `Возобновление: — (внешний блокер: <what we're waiting on>)` is legal when no local resume step exists at all | ERROR with the item's id: "a refusal must carry an exact continuation command, not «skipped»" |
+| `⛔ Skipped by decision` | EXACTLY `Возобновление: —` AND a `D<number>` reference in the same field | ERROR with the item's id: a skip decision must be evidenced by a decision record, not silence |
+
+Distinguished from the `waiting:`/`ОЖИДАНИЕ:` form (§8): that one is about a **plan step**,
+real but not executable right now (carrier — `handoff.Next`); `Возобновление:` is about an
+**item** the executor couldn't close (carrier — the item's `Pending Work`). Two mechanisms
+for one case are not built.
 
 **Commit gate on close.** Status `🟢`/`🟠` is NOT set without the item's diff committed:
 Conventional Commits (Russian), affected package's `validate.sh` green BEFORE the commit;
@@ -1284,4 +1303,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 37d00c48e687250a1af23cd93ee512944b7f2c874d06a9d733070a995d5bf7d0 -->
+<!-- ru-source-sha256: 821d9d14af1c7a287b0b7c913b9abbd35183555fe0a1aba2f49de00ce7207923 -->

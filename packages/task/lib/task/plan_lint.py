@@ -688,6 +688,63 @@ def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
                        f"с {CONSEQUENCES_CANON_DATE}, D103)")
 
 
+# --- P8.3/D44: `CHECKPOINTED` — отказ несёт точную команду возобновления ------
+# Носитель — строка `Возобновление: <команда>` в поле `Pending Work` item'а (НЕ седьмой
+# статус, НЕ семнадцатое поле — оба варианта отклонены D44, ломают контракт трёх живых
+# планов/`plans/cross-plan-files.py`). Активация — тот же opt-in, что у P8.1/P8.2:
+# Meta-поле `Closure Protocol | v1` (без даты-канона — на дату детализации в этом плане
+# живых 🔴/⛔ items с включённым протоколом нет, задним числом красить нечего).
+STATUS_SKIPPED = "⛔ Skipped by decision"
+RESUME_LITERAL = "Возобновление:"
+RESUME_LINE_RE = re.compile(r"^Возобновление:\s*(.*)$")
+D_REF_RE = re.compile(r"\bD\d+\b")
+
+
+def _find_resume_line(pending_work):
+    """Ищет строку `Возобновление: …` в поле Pending Work — построчно (та же дисциплина,
+    что `_write_site_canonical_codes`), markdown-обёртка (`-`/`>`/`` ` ``/`**`) срезается
+    ДО матча. Возвращает значение ПОСЛЕ двоеточия (обрезанное) либо `None`, если строки нет."""
+    for raw_line in (pending_work or "").replace("`", "").splitlines():
+        line = raw_line.replace("*", "").strip()
+        while line[:1] in ("-", ">"):
+            line = line[1:].strip()
+        m = RESUME_LINE_RE.match(line)
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def _lint_checkpointed_83(meta, items, path, diag):
+    """P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work непустую
+    строку `Возобновление: <команда>` (форма `Возобновление: — (внешний блокер: …)` —
+    легальное «непусто» для блокера без локального шага, Code Guidance P8.3); item со
+    статусом `⛔ Skipped by decision` обязан нести РОВНО `Возобновление: —` И ссылку
+    `D<номер>` в том же поле (решение о пропуске предъявляется записью, не молчанием)."""
+    declared, _ = (meta or {}).get(CLOSURE_META_FIELD, (None, None))
+    if declared is None or declared.strip() != CLOSURE_PROTOCOL_V1:
+        return
+    for item_id, occurrences in items.items():
+        item = occurrences[0]
+        status_val, _ = item["fields"].get("Status", ("", item["header_lineno"]))
+        if status_val not in (STATUS_BLOCKED, STATUS_SKIPPED):
+            continue
+        pw_val, pw_lineno = item["fields"].get("Pending Work", ("", item["header_lineno"]))
+        resume = _find_resume_line(pw_val)
+        if status_val == STATUS_BLOCKED:
+            if resume is None or _is_empty(resume):
+                diag.error(path, pw_lineno,
+                           f"item {item_id}: {STATUS_BLOCKED} без строки "
+                           f"`{RESUME_LITERAL} <команда>` в Pending Work — отказ обязан "
+                           f"нести точную команду продолжения, а не «пропущено» (D44)")
+        else:
+            has_d_ref = bool(D_REF_RE.search(pw_val or ""))
+            if resume is None or resume != EMPTY_PLACEHOLDER or not has_d_ref:
+                diag.error(path, pw_lineno,
+                           f"item {item_id}: {STATUS_SKIPPED} без `{RESUME_LITERAL} "
+                           f"{EMPTY_PLACEHOLDER}` и ссылки `D<номер>` в Pending Work — "
+                           f"решение о пропуске обязано быть предъявлено D-записью (D44)")
+
+
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
@@ -742,6 +799,8 @@ CANON_LITERALS = (
                                                                # регистрация решением, что у write-site:)
     CONSEQUENCES_LITERAL,                                     # §6, P8.2/D103-D105: латиница — та же
                                                                # регистрация решением, T1 её не ловит
+    RESUME_LITERAL,                                           # §6, P8.3/D44: кириллица — обязательна
+                                                               # i18n-директива в SKILL.ru.md
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -1770,6 +1829,9 @@ def lint_plan(plan_dir, diag):
 
         # --- P4.4/D91: гейт напечатанных кодов границ pre_mutation/pre_final --
         _lint_write_site_codes_44(parsed["status_table"], parsed["items"], path, diag)
+
+        # --- P8.3/D44: 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
+        _lint_checkpointed_83(_meta_raw, parsed["items"], path, diag)
 
     # --- P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
     # execution input, либо внешний путь в роли execution input) ----------------

@@ -2553,3 +2553,92 @@ class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "заявляет оркестрацию"), [], diag.warnings)
+
+
+class TestCheckpointedGate83(TmpPlanTestCase):
+    """P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work строку
+    `Возобновление: <команда>`; `⛔ Skipped by decision` — РОВНО `Возобновление: —` И
+    ссылку `D<номер>`. Активация — opt-in Meta `Closure Protocol | v1` (без даты-канона:
+    на дату детализации живых 🔴/⛔ items с включённым протоколом на флоте нет). Каждый
+    различающий кейс проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_checkpointed_83`, ни
+    вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах."""
+
+    def _write(self, *, closure_protocol="v1", item_status="🔴 Blocked", pending_work="—"):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, closure_protocol=closure_protocol),
+            encoding="utf-8")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase_md(item_status=item_status).replace(
+            "**Pending Work:** —", f"**Pending Work:** {pending_work}")
+        phase.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_a_blocked_with_resume_command_passes(self):
+        """(a) 🔴 + `Возобновление: <команда>` → диагностик гейта нет."""
+        plan_dir = self._write(pending_work="Возобновление: /task:plan-design DEMO-1 P1.1")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_b_blocked_without_resume_line_is_error_with_id(self):
+        """(б) 🔴 без строки `Возобновление:` → ERROR, текст несёт id item'а."""
+        plan_dir = self._write(pending_work="—")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "Возобновление")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_b2_blocked_with_bare_dash_resume_is_error(self):
+        """(б, вариант) 🔴 + `Возобновление: —` (голый прочерк, без внешнего блокера и
+        без команды) → ERROR: непустая команда обязательна, «—» ей не считается."""
+        plan_dir = self._write(pending_work="Возобновление: —")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+
+    def test_b3_blocked_with_external_blocker_form_passes(self):
+        """(б, вариант) 🔴 + `Возобновление: — (внешний блокер: …)` — легальная форма
+        для блокера без локального шага (Code Guidance P8.3) → диагностик нет."""
+        plan_dir = self._write(
+            pending_work="Возобновление: — (внешний блокер: решение владельца по OQ-4)")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_c_skipped_without_resume_and_d_ref_is_error(self):
+        """(в) ⛔ без `Возобновление: —`/без `D<номер>` → ERROR с id item'а."""
+        plan_dir = self._write(item_status="⛔ Skipped by decision", pending_work="—")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "Возобновление")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_c2_skipped_with_resume_dash_but_no_d_ref_is_error(self):
+        """(в, вариант) ⛔ + `Возобновление: —`, но БЕЗ ссылки `D<номер>` → ERROR:
+        решение о пропуске обязано быть предъявлено записью, не молчанием."""
+        plan_dir = self._write(item_status="⛔ Skipped by decision",
+                               pending_work="Возобновление: —")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+
+    def test_c3_skipped_with_resume_dash_and_d_ref_passes(self):
+        """(в, обратный) ⛔ + РОВНО `Возобновление: —` И `D40` в том же поле (другой
+        строкой) → диагностик нет."""
+        plan_dir = self._write(
+            item_status="⛔ Skipped by decision",
+            pending_work="Возобновление: —\nМоот, решение — D40.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_d_done_status_has_no_new_requirement(self):
+        """(г) 🟢 Done без строки `Возобновление:` — гейт молчит (требование только у
+        🔴/⛔)."""
+        plan_dir = self._write(item_status="🟢 Done", pending_work="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_e_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(д) АДДИТИВНОСТЬ: тот же 🔴-план БЕЗ Meta `Closure Protocol` не даёт ни
+        одной диагностики гейта, даже без строки `Возобновление:`."""
+        plan_dir = self._write(closure_protocol=None, pending_work="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])

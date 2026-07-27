@@ -208,6 +208,37 @@ class TestSchemaConnectivity(unittest.TestCase):
             self.assertTrue(any("пин отсутствует" in i and "SERENA_SRC" in i
                                  for i in issues), issues)
 
+    def test_missing_optional_key_not_flagged(self):
+        # необязательный ключ (дефолт у Serena) отсутствует в выводе рендерера — гейт
+        # НЕ должен считать это расхождением (F2, D117: набор сужен до FIELDS_WITHOUT_DEFAULTS).
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            original = codegraph.render_project_yaml
+
+            def _without_encoding(*a, **kw):
+                return "\n".join(line for line in original(*a, **kw).splitlines()
+                                  if not line.startswith("encoding:"))
+
+            with mock.patch.object(codegraph, "render_project_yaml", _without_encoding):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertEqual(issues, [])
+
+    def test_missing_required_key_flagged(self):
+        # обязательный ключ (language_servers) отсутствует в выводе рендерера — гейт обязан
+        # это поймать (F2, D117: сужение не должно ослабить настоящее расхождение).
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            original = codegraph.render_project_yaml
+
+            def _without_language_servers(*a, **kw):
+                return "\n".join(line for line in original(*a, **kw).splitlines()
+                                  if not line.startswith("language_servers"))
+
+            with mock.patch.object(codegraph, "render_project_yaml", _without_language_servers):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertTrue(any("схема разошлась" in i and "language_servers" in i
+                                 for i in issues), issues)
+
     def test_pins_diverge_between_src_and_config_detected(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(

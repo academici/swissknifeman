@@ -90,14 +90,15 @@ def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True)
     """Полный валидный .serena/project.yml под текущую схему Serena.
     language: str | список str | None.
 
-    Serena `_from_dict` читает РЯД ключей без `.get()` (FIELDS_WITHOUT_DEFAULTS +
-    обязательные): language_servers, symbol_info_budget, ignored_paths, fixed_tools,
-    excluded_tools, included_optional_tools, read_only, ignore_all_files_in_gitignore,
-    initial_prompt, encoding, added_modes, default_modes — отсутствие ЛЮБОГО → KeyError
-    при загрузке (НЕ автодетект). Поэтому пишем ПОЛНЫЙ набор с дефолтами Serena, сохраняя
-    свои курированные ignored_paths/initial_prompt/language_servers. Дефолты сверены с
-    serena/resources/project.template.yml. `language_servers` всегда присутствует (пустой
-    список при нераспознанном языке — standalone-тип + пустой репо)."""
+    Serena `_from_dict` требует без `.get()` только `project_name`/`language_servers`
+    (FIELDS_WITHOUT_DEFAULTS пиннованной версии, constants.SERENA_SCHEMA_FIELDS) — остальные
+    ключи (symbol_info_budget, ignored_paths, fixed_tools, excluded_tools,
+    included_optional_tools, read_only, ignore_all_files_in_gitignore, initial_prompt,
+    encoding, added_modes, default_modes) имеют дефолты (`data.setdefault`) и их отсутствие
+    НЕ даёт KeyError. Полный набор печатаем сами — ради явности конфига, а не потому, что
+    апстрим этого требует. Дефолты сверены с serena/resources/project.template.yml.
+    `language_servers` всегда присутствует (пустой список при нераспознанном языке —
+    standalone-тип + пустой репо)."""
     langs = [language] if isinstance(language, str) else (language or [])
     lines = [f'project_name: "{name}"']
     if langs:

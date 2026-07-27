@@ -9,7 +9,18 @@
       "ground_truth_files": [
         "app/Vaulter/AllowAuthenticatedResolver.php",
         "modules/Documents/src/DocumentsServiceProvider.php"
-      ]
+      ],
+      "measurement": {
+        "graph_state": "построен на родителе коммита (f1a93a1) — файл-затравка уже существует там",
+        "seed_file": "modules/Documents/src/DocumentsServiceProvider.php",
+        "seed_excluded_because": "второй файл коммита (AllowAuthenticatedResolver.php) — НОВЫЙ, узла в графе-предшественнике для него нет",
+        "held_out_ground_truth": ["app/Vaulter/AllowAuthenticatedResolver.php"],
+        "predicted_impacted_files_count": 9,
+        "hits": [],
+        "precision": 0.0,
+        "raw_command": "code-review-graph impact --repo . --files modules/Documents/src/DocumentsServiceProvider.php --max-results 200",
+        "raw_output": "raw/impact-small.json"
+      }
     },
     {
       "size_bucket": "medium",
@@ -22,13 +33,43 @@
         "app/Http/Middleware/EnsureFilamentAdminAccess.php",
         "app/Http/Middleware/HandleInertiaRequests.php",
         "app/Models/User.php"
-      ]
+      ],
+      "measurement": {
+        "graph_state": "построен на родителе коммита (8913999) — файл-затравка существует там",
+        "seed_file": "app/Models/User.php",
+        "seed_excluded_because": "seed — центральная модель, выбрана как наиболее вероятный якорь blast radius",
+        "held_out_ground_truth": [
+          "app/Guards/Admin/AdminGuardPanelProvider.php",
+          "app/Guards/App/AppGuardPanelProvider.php",
+          "app/Http/Middleware/EnsureFilamentAdminAccess.php",
+          "app/Http/Middleware/HandleInertiaRequests.php"
+        ],
+        "predicted_impacted_files_count": 110,
+        "hits": [
+          "app/Http/Middleware/EnsureFilamentAdminAccess.php",
+          "app/Http/Middleware/HandleInertiaRequests.php"
+        ],
+        "precision": 0.018181818181818184,
+        "raw_command": "code-review-graph impact --repo . --files app/Models/User.php --max-results 200",
+        "raw_output": "raw/impact-medium.json"
+      }
     },
     {
       "size_bucket": "large",
       "sha": "87af600f6cb47b701de9eb2d3b5ec3cf5b4f246f",
       "sha_short": "87af600",
       "subject": "refactor: вынесли доменные модели в модули modules/{Crm,Tasks,Documents}",
+      "measurement": {
+        "graph_state": "построен на родителе коммита (8b27b5f) — из 34 файлов ground truth 2 (DocumentsServiceProvider.php/TasksServiceProvider.php) на родителе НОВЫЕ (перенесённые в модули), поэтому seed выбран из существовавших ДО коммита файлов",
+        "seed_file": "app/Providers/AppServiceProvider.php",
+        "seed_excluded_because": "seed существует на родителе, широко ссылается на затрагиваемые провайдеры/модели",
+        "held_out_ground_truth_count": 33,
+        "predicted_impacted_files_count": 89,
+        "hits_count": 16,
+        "precision": 0.1797752808988764,
+        "raw_command": "code-review-graph impact --repo . --files app/Providers/AppServiceProvider.php --max-results 200",
+        "raw_output": "raw/impact-large.json"
+      },
       "ground_truth_files": [
         "app/Actions/Documents/CreateDocumentVersionAction.php",
         "app/Actions/Documents/MarkDocumentCollaboratorOfflineAction.php",
@@ -73,5 +114,15 @@
     "macro",
     "eloquent_relation",
     "blade_include"
-  ]
+  ],
+  "p_impact_summary": {
+    "precisions_by_bucket": {
+      "small": 0.0,
+      "medium": 0.018181818181818184,
+      "large": 0.1797752808988764
+    },
+    "median": 0.018181818181818184,
+    "threshold": 0.4,
+    "verdict": "P_impact < 0.40 — порог сорван"
+  }
 }

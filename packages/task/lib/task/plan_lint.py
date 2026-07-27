@@ -374,14 +374,18 @@ WRITE_SITE_CODE_PAIR_RE = re.compile(
 
 
 def _write_site_canonical_codes(completion_notes):
-    """Находит ЕДИНСТВЕННУЮ каноническую строку `write-site:` (D88) в Completion
-    Notes и возвращает `(pre_mutation, pre_final)` — ПОСТРОЧНО (поле парсер отдаёт
+    """Находит каноническую строку `write-site:` (D88) в Completion Notes и
+    возвращает `(pre_mutation, pre_final)` — ПОСТРОЧНО (поле парсер отдаёт
     многострочным), а не `re.search` по всему полю. Markdown-обёртка строки
     (бэктики, `**`, ведущие `- `/`> `, пробелы) срезается ДО матча — форма печати
     несёт их. Строки БЕЗ префикса `write-site:` (цитаты, объяснения) не
     рассматриваются вовсе, даже если в них встречаются `pre_mutation:`/`pre_final:` —
-    ровно это закрывает fail-open. Префикс есть, но форма после него не разбирается
-    (сломан порядок/разделитель) → тоже `None`, ERROR тем же путём, что «кодов нет»."""
+    ровно это закрывает fail-open. Строка С префиксом, но не разбирающаяся в форму
+    (сломан порядок/разделитель, ЛИБО это прозаическая цитата шаблона строки —
+    `` `write-site: pre_mutation: <код> · pre_final: <код>` `` как объяснение
+    правила, — с обёрнутой строки такая цитата тоже начинается) НЕ считается
+    канонической и не останавливает поиск: перебор продолжается дальше по полю.
+    Ни одной разбирающейся строки во всём поле → `None`, ERROR «кодов нет»."""
     for raw_line in (completion_notes or "").replace("`", "").splitlines():
         line = raw_line.replace("*", "").strip()
         while line[:1] in ("-", ">"):
@@ -390,7 +394,8 @@ def _write_site_canonical_codes(completion_notes):
         if not prefix:
             continue
         pair = WRITE_SITE_CODE_PAIR_RE.match(prefix.group(1).strip())
-        return (pair.group(1), pair.group(2)) if pair else None
+        if pair:
+            return pair.group(1), pair.group(2)
     return None
 
 

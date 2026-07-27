@@ -635,6 +635,23 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
         self.assertEqual(_errors_containing(diag, "закрытие на не-allow"), [])
 
+    def test_j_prose_quoting_the_form_template_does_not_shadow_the_real_line(self):
+        """(D88/D102, найдено при закрытии самого P10.1): Completion Notes item'а
+        МОЖЕТ прозой ЦИТИРОВАТЬ форму строки как шаблон (`write-site: pre_mutation:
+        <код> · pre_final: <код>` — объясняя правило), и такая цитата ТОЖЕ начинается
+        с префикса `write-site:` после markdown-обёртки. Она не должна «застолбить»
+        поиск и скрыть настоящую каноническую строку ниже — гейт обязан продолжить
+        перебор строк и найти реальную."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Форма — одна строка `write-site: pre_mutation: <код> · pre_final: "
+                "<код>` (D88), это не сама сдача.\n"
+                "write-site: pre_mutation: allow · pre_final: allow"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
     def test_malformed_updated_date_is_out_of_scope_not_error(self):
         """Непарсимая/нестрогая дата (не ISO `YYYY-MM-DD`) = вне скоупа — fail-open по дате
         (Implementation Rules P4.4 (1)), не ERROR/WARNING."""

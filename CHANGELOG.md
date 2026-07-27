@@ -37,6 +37,19 @@
   ручные копии того же инварианта в `packages/maind/lib/maind/provider_deploy.py` (перевод на
   хелпер — roadmap-кандидат, вне скоупа этого item'а).
 
+- **`validate.sh`: секции тела CORE-девятки, анти-дублирование проекции, полнота pressure
+  (P8.8, `2026.07.25-ECO-OPT`).** Три детерминированных гейта дельтой: (1) резидентные
+  `core-policy.json::skills` (9 шт.) обязаны нести активационную секцию (`##When…`/
+  `##Activate…`, ERROR с рэтчетом `scripts/skill-sections-burndown.txt`, 3 стартовые
+  записи) и секцию ссылок (`##Links`/`References`/`Related skills`/`Related`, ERROR без
+  исключений — долг нулевой); (2) тонкие проекции `.claude|.agents/skills/*/SKILL.md` не
+  дублируют канон — пары из `adapters/repository-bootstrap/publication-lock.json`: тело
+  ≤15 непустых строк, есть ссылка на канон, ни один `##`-заголовок канона не воспроизведён
+  (fail-closed: проекции есть, лока нет ⇒ ERROR; ни того ни другого ⇒ пропуск); (3) скилл с
+  `evals/evals.json` обязан иметь `evals/pressure.json` с ≥1 сценарием (ERROR), а
+  `triggers.json`'s `should_trigger` без покрывающего pressure-сценария (новое поле
+  `triggers[]`) — WARNING. `eval.py::validate_pressure` валидирует форму `triggers[]`.
+
 ### Changed
 
 - **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6, `2026.07.25-ECO-OPT`, D117).**

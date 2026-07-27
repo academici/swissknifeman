@@ -74,11 +74,18 @@ skills/<bucket>/<name>/
       "assertions": [
         {"type": "regex", "value": "точечн|минимальн|surgical|scope"},
         {"type": "not_contains", "value": "переписываю весь файл"}
-      ]
+      ],
+      "triggers": ["стоит ли заодно отрефакторить весь модуль, пока правлю баг"]
     }
   ]
 }
 ```
+
+**`triggers[]` (P8.8, опционально)** — список строк `should_trigger` из
+`triggers.json`, которые этот сценарий покрывает под давлением. У скилла с
+`evals.json` `pressure.json` обязателен (ERROR, `validate.sh`); каждый
+`should_trigger`, не покрытый ни одним `triggers[]`, — WARNING (поле новое,
+не карает существующие скиллы задним числом).
 
 ## triggers.json — точность описания
 

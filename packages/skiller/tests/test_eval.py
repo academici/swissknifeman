@@ -99,6 +99,15 @@ class ValidateSchemaCase(unittest.TestCase):
             {"skill": "s", "scenarios": [{"id": 1, "prompt": "p"}]}), [])
         self.assertTrue(ev.validate_pressure({"skill": "s"}))
 
+    def test_pressure_triggers_field(self):
+        self.assertEqual(ev.validate_pressure(
+            {"skill": "s", "scenarios": [
+                {"id": 1, "prompt": "p", "triggers": ["a query"]}]}), [])
+        errs = ev.validate_pressure(
+            {"skill": "s", "scenarios": [
+                {"id": 1, "prompt": "p", "triggers": ["ok", "", 5]}]})
+        self.assertTrue(any("triggers" in e for e in errs))
+
     def test_triggers(self):
         self.assertEqual(ev.validate_triggers(
             {"should_trigger": ["a"], "should_not": ["b"]}), [])

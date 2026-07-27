@@ -172,13 +172,25 @@ def validate_pressure(data, label="pressure.json"):
     """Структурная валидация pressure.json (сценарии-соблазны). → список ошибок.
 
     Сценарий — тот же грейд-контракт (assertions), плюс поле `tempts` (что агента
-    подмывает сделать, пропустив скилл) для читаемости."""
+    подмывает сделать, пропустив скилл) для читаемости. Опциональное поле
+    `triggers` (P8.8) — список строк `should_trigger` из triggers.json, которые
+    сценарий покрывает; форма проверяется здесь, полнота покрытия — в validate.sh
+    (кросс-файловая сверка со скиллом же triggers.json)."""
     if not isinstance(data, dict):
         return [f"{label}: корень должен быть объектом"]
     errors = []
     if not data.get("skill"):
         errors.append(f"{label}: нет поля skill")
-    errors += _validate_cases(data.get("scenarios"), label, kind="scenarios")
+    scenarios = data.get("scenarios")
+    errors += _validate_cases(scenarios, label, kind="scenarios")
+    if isinstance(scenarios, list):
+        for i, sc in enumerate(scenarios):
+            if not isinstance(sc, dict) or "triggers" not in sc:
+                continue
+            t = sc["triggers"]
+            if not isinstance(t, list) or any(not isinstance(x, str) or not x.strip() for x in t):
+                errors.append(f"{label}.scenarios[{i}].triggers: должен быть массивом "
+                              f"непустых строк")
     return errors
 
 

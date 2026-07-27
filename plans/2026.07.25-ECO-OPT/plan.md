@@ -195,8 +195,8 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 0/2 | ⬜ Not started |
-| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 0/3 | ⬜ Not started |
-| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | ⬜ Not started |
+| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
+| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
 | P5 | Пилот code-review-graph vs Serena | 0/3 | ⬜ Not started |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
@@ -523,6 +523,8 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P8.2 закрыт) | P8.2 закрыт 🟢: `**Consequences:**` в D-записи (измеренный предикат + forward-only) и словарь зрелости возможности (5 значений) — канон §4/§6, гейт `plan_lint.py`, version-first — детали см. `phases/P8.md` P8.2 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.3 закрыт) | P8.3 закрыт 🟠: `Возобновление: <команда>` в Pending Work — гейт `_lint_checkpointed_83` (opt-in `Closure Protocol \| v1`) на `🔴 Blocked`/`⛔ Skipped by decision`, канон §6, писатели `plan-exec.md`/`plan-close.md`; отклонение — version-first бампы вне `Files` (тот же класс, что P8.1) — детали см. `phases/P8.md` P8.3 Completion Notes |
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P9.1 закрыт) | P9.1 закрыт 🟠: `review-gate` получил содержание (`checks/` + миграция + three-state `doctor`), live-прогон субагента подтвердил семантику и вскрыл два бага (исправлены) — детали см. `phases/P9.md` P9.1 Completion Notes |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P2.1 закрыт) | P2.1 закрыт 🟢: две Brain-ноты `opus-5-prompting.md`/`sonnet-5-prompting.md` по форме `fable-5-prompting.md` + указатели в `prompting.md` + две карточки в `docs/reference.md` — детали см. `phases/P2.md` P2.1 Completion Notes |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P3.2 закрыт) | P3.2 закрыт 🟠: живой замер 11 инструментов maind MCP + генерическая воронка тримминга в `_content()` (снятие `indent=2` + потолок/receipt хвостовым случаем) — отклонение: пре-существующий failing-тест вне `Files` item'а — детали см. `phases/P3.md` P3.2 Completion Notes |
 
 ## 7. Contracts
 

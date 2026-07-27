@@ -4,6 +4,24 @@
 
 ### Fixed
 
+- **Пин Serena восстановлен в первопричину — `SERENA_SRC`/`config.json`/`.mcp.json` флота (P5.3, `2026.07.25-ECO-OPT`, D109/D110).**
+  Политика `code_graph.args`/`index_args` корневого `config.json` перебивала пиннованный дефолт
+  `SERENA_SRC` (`packages/maind/lib/maind/constants.py`) непиннованным
+  `git+https://github.com/oraios/serena` — весь живой флот резолвил плавающий HEAD.
+  Первая попытка вернуть тег `v1.6.1` провалилась фатально (`KeyError: 'languages'`): апстрим
+  переименовал `languages` → `language_servers` ПОСЛЕ релиза `v1.6.1`, а наш провиженер перешёл на
+  новый ключ ещё 2026-07-23 (`ccd4505b`) — любой тег сегодня оказывается downgrade, ломающий
+  загрузку `.serena/project.yml` на каждом зарегистрированном проекте. Владелец расширил форму
+  пина (D110): неизменяемая ссылка = тег ИЛИ полный commit-SHA; значение —
+  `@026b007bb889366283c925527e9a3bab317f66c1` (`main` HEAD, `Serena 1.6.2.dev0`) — внесено тем же
+  швом в `constants.py`, `config.json` (`args`+`index_args`) и `serena.args` десяти живых
+  `.mcp.json` (`agelto`/`flexcrm`/`vaulter`/`swissknifeman`/`corex`/`memster`/`cms`/`edufy`/
+  `chatom`/`perplexity-web-mcp`). Smoke на двух типах проектов (python-монорепо `swissknifeman`,
+  php/laravel `flexcrm`) подтвердил полный JSON-RPC цикл (`initialize` → `get_symbols_overview`)
+  без фатала. Повторный `maind sync --only mcp --dry-run` подтверждает, что `unmanaged-target`
+  (P10.4/D106) остаётся отдельным, не исчезнувшим дефектом — доставка `.mcp.json` во флот
+  по-прежнему ручная.
+
 - **`core.provider_lock._classify`: `unmanaged-target` теперь может быть принят под управление явным `--repair` (P10.4, `2026.07.25-ECO-OPT`, D92/D106).**
   Ветка `record is None` возвращала `OWNERSHIP_CONFLICT`/`REFUSE` РАНЬШЕ, чем в потоке
   появлялся учёт `repair_requested` — неуправляемая существующая цель не могла быть усыновлена

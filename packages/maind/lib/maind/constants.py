@@ -56,8 +56,10 @@ GRAPH_VERSION = 1
 # initial_prompt/workspace_prompt: нативно даются модели при активации проекта Serena.
 # Serena пиннована на тег релиза (НЕ bare-main): breaking-изменение в main не сломает
 # код-граф у всех проектов внезапно. Бамп — здесь, в ОДНОМ месте; актуальный релиз сверять
-# на github.com/oraios/serena/releases. (verified 2026-06-26: последний v1.5.3)
-SERENA_SRC = "git+https://github.com/oraios/serena@v1.5.3"
+# на github.com/oraios/serena/releases. (verified 2026-07-27: пин на commit-SHA D110 —
+# @v1.5.3/@v1.6.1 оба старше схемы .serena/project.yml, которую пишет наш провиженер
+# с ccd4505b (language_servers); стабильного тега с этой схемой у апстрима нет)
+SERENA_SRC = "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1"
 CODE_GRAPH_DEFAULTS = {
     "enabled_default": False,
     "engine": "serena",

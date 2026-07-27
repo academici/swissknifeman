@@ -4,10 +4,12 @@
 схемы, агрегат benchmark, scoring/selection описания, скаффолд, резолв, viewer.
 Стиль — как test_budget.py (unittest, синтетический реестр, tmpdir, без сети)."""
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
@@ -457,6 +459,140 @@ class SystemBankAdapterCase(unittest.TestCase):
         self.assertEqual(bench["pair"]["status"], "paired")
         # candidate == baseline transcripts here -> identical metric, delta 0
         self.assertAlmostEqual(bench["pair"]["delta"], 0.0)
+
+
+class FractionRenderCase(unittest.TestCase):
+    """_fmt_frac/_stringify_fractions — рендер без float (P8.9)."""
+
+    def test_fmt_frac_round_half_up_and_sign(self):
+        self.assertEqual(ev._fmt_frac(None), None)
+        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 2)), "0.500")
+        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 3)), "0.333")
+        self.assertEqual(ev._fmt_frac(ev.Fraction(-1, 4)), "-0.250")
+        self.assertEqual(ev._fmt_frac(3), "3.000")
+
+    def test_stringify_fractions_recursive_no_leftover(self):
+        obj = {"a": ev.Fraction(1, 2), "b": [ev.Fraction(3), None, "x"], "c": {"d": ev.Fraction(0)}}
+        out = ev._stringify_fractions(obj)
+        self.assertEqual(out, {"a": "0.500", "b": ["3.000", None, "x"], "c": {"d": "0.000"}})
+
+    def test_sqrt_fraction_integer_no_float(self):
+        # √4 == 2 точно; проверяем, что реализация не трогает float вообще
+        self.assertEqual(ev._sqrt_fraction(ev.Fraction(4)), ev.Fraction(2))
+        self.assertGreater(ev._sqrt_fraction(ev.Fraction(2)), ev.Fraction(0))
+
+
+def _write_fake_claude(tmp_dir, *, output_tokens=5, input_tokens=10, result="ok output"):
+    """Скрипт-заглушка `claude -p ... --output-format json` — детерминированный
+    JSON без сети (P8.9 online-тесты: SKM_CLAUDE_BIN — штатная точка подмены)."""
+    script = tmp_dir / "fake_claude.py"
+    script.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, sys\n"
+        f"print(json.dumps({{'result': {result!r}, 'usage': "
+        f"{{'input_tokens': {input_tokens}, 'output_tokens': {output_tokens}}}}}))\n",
+        encoding="utf-8")
+    script.chmod(0o755)
+    return script
+
+
+def _no_op_clock():
+    """clock_ns детерминированный счётчик, свежий на каждый вызов-фабрику
+    (независимые прогоны с одним и тем же счётчиком дают идентичные duration_s)."""
+    import itertools
+    it = itertools.count(0, 1_000_000_000)  # шаг 1с в нс
+    return lambda: next(it)
+
+
+class OnlineDeterminismCase(unittest.TestCase):
+    """cmd_eval online-ветка через фейковый claude (SKM_CLAUDE_BIN) — P8.9
+    Validation: побайтная воспроизводимость, отсутствие float, честный
+    provenance, no-op офлайн, ровно один/два файла online."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        self.skill_dir = self.root / "skills" / "quality" / "test-writer"
+        (self.skill_dir / "evals").mkdir(parents=True, exist_ok=True)
+        (self.skill_dir / "evals" / "evals.json").write_text(json.dumps({
+            "skill": "test-writer",
+            "cases": [{"id": 1, "prompt": "say ok",
+                      "assertions": [{"type": "contains", "value": "ok"}]}],
+        }), encoding="utf-8")
+        self.claude = _write_fake_claude(self.tmp)
+        self._env_patch = {"SKM_CLAUDE_BIN": str(self.claude)}
+        self._old_env = {k: os.environ.get(k) for k in self._env_patch}
+        os.environ.update(self._env_patch)
+
+    def tearDown(self):
+        for k, v in self._old_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        self._tmp.cleanup()
+
+    def _bench_path(self):
+        return self.skill_dir / "evals" / "benchmark.json"
+
+    def test_byte_reproducible_with_injected_clock(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        first = self._bench_path().read_bytes()
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        second = self._bench_path().read_bytes()
+        self.assertEqual(first, second)
+
+    def test_no_float_anywhere_in_report(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        data = json.loads(self._bench_path().read_text(encoding="utf-8"))
+
+        def _walk(node):
+            if isinstance(node, float):
+                self.fail(f"float найден в отчёте: {node!r}")
+            if isinstance(node, dict):
+                for v in node.values():
+                    _walk(v)
+            elif isinstance(node, list):
+                for v in node:
+                    _walk(v)
+        _walk(data)
+        self.assertEqual(data["schema_version"], "skill-benchmark/v2")
+
+    def test_provenance_llm_true_and_clock_injected(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        data = json.loads(self._bench_path().read_text(encoding="utf-8"))
+        self.assertTrue(data["provenance"]["llm"])
+        self.assertTrue(data["provenance"]["network"])
+        self.assertEqual(data["provenance"]["clock"], "injected")
+
+    def test_offline_branch_writes_nothing(self):
+        with mock.patch.object(ev, "claude_bin", return_value=None):
+            before = sorted((self.skill_dir / "evals").iterdir())
+            ev.cmd_eval(self.env, ["quality/test-writer"])
+            after = sorted((self.skill_dir / "evals").iterdir())
+        self.assertEqual(before, after)
+        self.assertFalse(self._bench_path().exists())
+
+    def test_online_branch_writes_exactly_benchmark_json(self):
+        before = set((self.skill_dir / "evals").iterdir())
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        after = set((self.skill_dir / "evals").iterdir())
+        new_files = after - before
+        self.assertEqual({p.name for p in new_files}, {"benchmark.json"})
+
+    def test_online_static_writes_benchmark_json_and_html(self):
+        before = set((self.skill_dir / "evals").iterdir())
+        ev.cmd_eval(self.env, ["quality/test-writer", "--static"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        after = set((self.skill_dir / "evals").iterdir())
+        new_files = {p.name for p in after - before}
+        self.assertEqual(new_files, {"benchmark.json", "benchmark.html"})
 
 
 if __name__ == "__main__":

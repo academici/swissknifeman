@@ -50,6 +50,18 @@
   `triggers.json`'s `should_trigger` без покрывающего pressure-сценария (новое поле
   `triggers[]`) — WARNING. `eval.py::validate_pressure` валидирует форму `triggers[]`.
 
+- **`skiller eval`: детерминизм `benchmark.json` (P8.9, `2026.07.25-ECO-OPT`).**
+  Метрики (`pass_rate`/`duration_*`/`tokens_*`/`delta.*`) — точная арифметика
+  `fractions.Fraction` внутри (√ для stddev — целочисленно, `math.isqrt`), строка
+  фиксированной точности на границе записи — ни одного `float` в отчёте.
+  Инжектируемые часы (`clock_ns`/`now_iso` в `run_case`/`run_suite`/`cmd_eval`,
+  дефолт — реальное время, CLI не меняется) дают побайтную воспроизводимость при
+  одинаковых часах. Честный блок `provenance` (`llm`/`network`/`clock`/`baseline` —
+  фактические, не константы). `schema_version: "skill-benchmark/v2"` (намеспейсовано
+  — не конфликтует с соседним P3.3-контрактом `system-bank-benchmark/v1` в том же
+  модуле). No-op на офлайн-ветке, ровно `benchmark.json`(+`.html` при `--static`)
+  на online — 6 новых тестов через `SKM_CLAUDE_BIN`-фейк.
+
 ### Changed
 
 - **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6, `2026.07.25-ECO-OPT`, D117).**

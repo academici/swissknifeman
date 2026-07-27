@@ -31,6 +31,7 @@ import statistics
 import subprocess
 import tempfile
 import time
+from fractions import Fraction
 from pathlib import Path
 
 from core import (atomic_write_json, atomic_write_text, die, parse_args,
@@ -211,14 +212,71 @@ def validate_triggers(data, label="triggers.json"):
 # ============================================================================ #
 #  АГРЕГАТ BENCHMARK (офлайн)                                                   #
 # ============================================================================ #
+# P8.9: метрики держатся `fractions.Fraction` до самой границы записи — точная
+# арифметика (никаких промежуточных `round()`-искажений), ни одного float даже
+# транзитно (√ — через `math.isqrt`, не `math.sqrt`). Рендер строкой — одна
+# функция `_fmt_frac`, применяемая рекурсивно `_stringify_fractions` ровно один
+# раз, перед `atomic_write_json` (см. cmd_eval). Downstream-потребители (viewer)
+# читают через `float(x)` — работает и с Fraction (тесты дергают build_benchmark
+# напрямую), и со строкой (реальный `cmd_eval`-путь).
+def _sqrt_fraction(value, ndigits=9):
+    """√(Fraction ≥ 0) → Fraction-приближение с `ndigits` дробных цифр, целочисленно
+    (`math.isqrt`) — без float даже транзитно. value<=0 → Fraction(0)."""
+    fr = value if isinstance(value, Fraction) else Fraction(value)
+    if fr <= 0:
+        return Fraction(0)
+    scale = Fraction(10) ** (2 * ndigits)
+    scaled = fr * scale
+    root = math.isqrt(scaled.numerator * scaled.denominator) // scaled.denominator
+    return Fraction(root, 10 ** ndigits)
+
+
+def _fmt_frac(value, ndigits=3):
+    """Fraction|int|None → строка фиксированной точности (round-half-up на точной
+    дроби, без float). None → None (нечего измерять)."""
+    if value is None:
+        return None
+    fr = value if isinstance(value, Fraction) else Fraction(value)
+    sign = "-" if fr < 0 else ""
+    fr = abs(fr)
+    scale = Fraction(10) ** ndigits
+    scaled = fr * scale
+    q, r = divmod(scaled.numerator, scaled.denominator)
+    if 2 * r >= scaled.denominator:
+        q += 1
+    s = str(q).rjust(ndigits + 1, "0")
+    return f"{sign}{s[:-ndigits]}.{s[-ndigits:]}"
+
+
+def _stringify_fractions(obj, ndigits=3):
+    """Рекурсивно заменить Fraction-листья строками (`_fmt_frac`) — инвариант «ни
+    одного float/Fraction в JSON-отчёте» на границе записи (не раньше: внутренние
+    вычисления остаются точными до этого шага)."""
+    if isinstance(obj, Fraction):
+        return _fmt_frac(obj, ndigits)
+    if isinstance(obj, dict):
+        return {k: _stringify_fractions(v, ndigits) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_stringify_fractions(v, ndigits) for v in obj]
+    return obj
+
+
 def _stat(values):
-    """(mean, stddev) по списку чисел; None-ы отфильтрованы. stdev=0 при <2."""
-    nums = [v for v in values if isinstance(v, (int, float))]
+    """(mean, stddev) как Fraction|None по списку чисел; None/bool отфильтрованы.
+    mean — точное среднее; stddev — √(популяционной дисперсии) через
+    `_sqrt_fraction` (целочисленно). stddev=Fraction(0) при <2 значениях."""
+    nums = [Fraction(v) for v in values
+           if isinstance(v, (int, float, Fraction)) and not isinstance(v, bool)]
     if not nums:
         return None, None
-    mean = statistics.fmean(nums)
-    sd = statistics.pstdev(nums) if len(nums) > 1 else 0.0
-    return round(mean, 3), round(sd, 3)
+    n = len(nums)
+    mean = sum(nums, Fraction(0)) / n
+    if n > 1:
+        var = sum((x - mean) ** 2 for x in nums) / n
+        sd = _sqrt_fraction(var)
+    else:
+        sd = Fraction(0)
+    return mean, sd
 
 
 def aggregate_runs(case_results):
@@ -226,7 +284,9 @@ def aggregate_runs(case_results):
 
     case_results: [{passed: bool|None, duration_s?, tokens?}]. →
     {total, graded, passed, pass_rate, duration_mean, duration_std,
-     tokens_mean, tokens_std}. pass_rate=None, если нечего оценивать."""
+     tokens_mean, tokens_std} — числовые метрики Fraction|None (точная арифметика,
+     см. _stat); строковый рендер — на границе записи (cmd_eval). pass_rate=None,
+     если нечего оценивать."""
     total = len(case_results)
     graded = [r for r in case_results if r.get("passed") is not None]
     passed = sum(1 for r in graded if r["passed"])
@@ -236,7 +296,7 @@ def aggregate_runs(case_results):
         "total": total,
         "graded": len(graded),
         "passed": passed,
-        "pass_rate": round(passed / len(graded), 3) if graded else None,
+        "pass_rate": Fraction(passed, len(graded)) if graded else None,
         "duration_mean": d_mean, "duration_std": d_std,
         "tokens_mean": t_mean, "tokens_std": t_std,
     }
@@ -244,7 +304,8 @@ def aggregate_runs(case_results):
 
 def build_benchmark(skill, with_skill_runs, baseline_runs=None):
     """Собрать benchmark из прогонов with-skill (и опц. baseline). Чистая функция:
-    без времени/IO (детерминированна для тестов; generated_at ставит cmd_eval)."""
+    без времени/IO (детерминированна для тестов; generated_at/provenance/
+    schema_version ставит cmd_eval). Числовые метрики — Fraction|None."""
     bench = {"skill": skill, "with_skill": aggregate_runs(with_skill_runs)}
     if baseline_runs is not None:
         base = aggregate_runs(baseline_runs)
@@ -252,9 +313,9 @@ def build_benchmark(skill, with_skill_runs, baseline_runs=None):
         ws, bs = bench["with_skill"], base
         delta = {}
         if ws["pass_rate"] is not None and bs["pass_rate"] is not None:
-            delta["pass_rate"] = round(ws["pass_rate"] - bs["pass_rate"], 3)
+            delta["pass_rate"] = ws["pass_rate"] - bs["pass_rate"]
         if ws["tokens_mean"] is not None and bs["tokens_mean"] is not None:
-            delta["tokens_mean"] = round(ws["tokens_mean"] - bs["tokens_mean"], 3)
+            delta["tokens_mean"] = ws["tokens_mean"] - bs["tokens_mean"]
         bench["delta"] = delta
     return bench
 
@@ -276,15 +337,16 @@ def score_description(description, trigger_set, judge):
     fp = sum(1 for q in sn if judge(description, q))
     tn = len(sn) - fp
     total = tp + fn + fp + tn
-    precision = tp / (tp + fp) if (tp + fp) else 0.0
-    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    # Fraction — точные отношения (P8.9), не round()-искажение; Fraction полностью
+    # упорядочен, select_best_description сортирует по нему без изменений.
+    precision = Fraction(tp, tp + fp) if (tp + fp) else Fraction(0)
+    recall = Fraction(tp, tp + fn) if (tp + fn) else Fraction(0)
     f1 = (2 * precision * recall / (precision + recall)
-          if (precision + recall) else 0.0)
+          if (precision + recall) else Fraction(0))
     return {
         "tp": tp, "fp": fp, "fn": fn, "tn": tn,
-        "precision": round(precision, 3), "recall": round(recall, 3),
-        "f1": round(f1, 3),
-        "accuracy": round((tp + tn) / total, 3) if total else 0.0,
+        "precision": precision, "recall": recall, "f1": f1,
+        "accuracy": Fraction(tp + tn, total) if total else Fraction(0),
         "len": len(description), "over_limit": len(description) > DESC_MAX,
     }
 
@@ -348,12 +410,15 @@ def _parse_claude_json(stdout):
 
 
 def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
-             claude=None):
+             claude=None, clock_ns=time.monotonic_ns):
     """Один прогон кейса через `claude -p` в каталоге workspace.
 
     with_skill=True → тело SKILL.md подмешивается в системный промт (baseline без
     него — изоляция эффекта скилла). case.files[] (если есть) пишутся в workspace
-    до прогона. → {id, output, returncode, duration_s, tokens, error?}."""
+    до прогона. `clock_ns` (P8.9) — инжектируемые часы (дефолт `time.monotonic_ns`);
+    тесты подставляют детерминированный счётчик ⇒ отчёт побайтно воспроизводим.
+    duration_s — точный `Fraction(ns, 10**9)`, не float. →
+    {id, output, returncode, duration_s, tokens, error?}."""
     claude = claude or claude_bin()
     if not claude:
         raise RuntimeError("CLI `claude` не найден — раннер недоступен (офлайн)")
@@ -368,28 +433,28 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
         md = Path(skill_dir) / "SKILL.md"
         skill_text = md.read_text(encoding="utf-8") if md.is_file() else None
     cmd = build_run_cmd(claude, case["prompt"], skill_text)
-    start = time.time()
+    start_ns = clock_ns()
     try:
         proc = subprocess.run(cmd, cwd=str(ws), capture_output=True, text=True,
                               timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
         return {"id": case.get("id"), "output": "", "returncode": -1,
-                "duration_s": round(time.time() - start, 3), "tokens": None,
+                "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": None,
                 "error": f"timeout {timeout}s"}
     text, tokens = _parse_claude_json(proc.stdout)
     return {"id": case.get("id"), "output": text, "returncode": proc.returncode,
-            "duration_s": round(time.time() - start, 3), "tokens": tokens}
+            "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": tokens}
 
 
 def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
-              claude=None):
+              claude=None, clock_ns=time.monotonic_ns):
     """Прогнать набор кейсов (каждый в своём временном workspace) и оценить.
-    → [{...run_case, **grade_case}]. Online."""
+    → [{...run_case, **grade_case}]. Online. `clock_ns` — см. run_case (P8.9)."""
     results = []
     for case in cases:
         with tempfile.TemporaryDirectory(prefix="skiller-eval-") as ws:
             run = run_case(skill_dir, case, with_skill=with_skill, workspace=ws,
-                           timeout=timeout, claude=claude)
+                           timeout=timeout, claude=claude, clock_ns=clock_ns)
             grade = grade_case(case, run.get("output", ""), ws)
         results.append({**run, **grade})
     return results
@@ -784,11 +849,15 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
 #  VIEWER (markdown / standalone HTML)                                          #
 # ============================================================================ #
 def _fmt_rate(r):
-    return "—" if r is None else f"{r * 100:.0f}%"
+    """Строковая дробь (или Fraction — при прямом вызове build_benchmark в тестах;
+    или None) → '50%' для дисплея (P8.9: чтение строкового рендера метрик)."""
+    return "—" if r is None else f"{float(r) * 100:.0f}%"
 
 
 def render_markdown(benchmark):
-    """Человекочитаемый markdown-отчёт по benchmark."""
+    """Человекочитаемый markdown-отчёт по benchmark. Метрики — Fraction (прямой
+    вызов build_benchmark) или строка (реальный benchmark.json с диска, P8.9) —
+    оба читаются через float()."""
     b = benchmark
     ws = b.get("with_skill", {})
     out = [f"# Eval: {b.get('skill', '?')}", "",
@@ -797,9 +866,9 @@ def render_markdown(benchmark):
 
     def row(label, a):
         tok = "—" if a.get("tokens_mean") is None else \
-            f"{a['tokens_mean']:.0f}±{a.get('tokens_std', 0):.0f}"
+            f"{float(a['tokens_mean']):.0f}±{float(a.get('tokens_std', 0)):.0f}"
         dur = "—" if a.get("duration_mean") is None else \
-            f"{a['duration_mean']:.1f}±{a.get('duration_std', 0):.1f}"
+            f"{float(a['duration_mean']):.1f}±{float(a.get('duration_std', 0)):.1f}"
         return (f"| {label} | {_fmt_rate(a.get('pass_rate'))} | "
                 f"{a.get('passed', 0)}/{a.get('graded', 0)} | {tok} | {dur} |")
 
@@ -810,9 +879,9 @@ def render_markdown(benchmark):
         d = b["delta"]
         parts = []
         if "pass_rate" in d:
-            parts.append(f"pass@ {d['pass_rate'] * 100:+.0f}пп")
+            parts.append(f"pass@ {float(d['pass_rate']) * 100:+.0f}пп")
         if "tokens_mean" in d:
-            parts.append(f"ток {d['tokens_mean']:+.0f}")
+            parts.append(f"ток {float(d['tokens_mean']):+.0f}")
         out += ["", f"**Δ skill vs baseline:** {', '.join(parts) or '—'}"]
     return "\n".join(out) + "\n"
 
@@ -945,7 +1014,11 @@ def _offline_report(skill_dir):
          "или задай SKM_CLAUDE_BIN, чтобы запускать with-skill vs baseline.")
 
 
-def cmd_eval(env, argv):
+def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
+    """CLI-обвязка `skiller eval`. `clock_ns`/`now_iso` (P8.9) — точка внедрения
+    инжектируемых часов для детерминированных тестов (побайтная воспроизводимость
+    benchmark.json); дефолт `None` → реальное время, `provenance.clock: "wall"`.
+    Поведение CLI без флагов не меняется (обратная совместимость)."""
     opts, pos = parse_args(argv, {
         "--baseline": "bool", "--triggers": "bool", "--scaffold": "bool",
         "--static": "bool", "--json": "bool", "--timeout": "str",
@@ -1016,16 +1089,35 @@ def cmd_eval(env, argv):
     if pressure:
         cases += list(pressure.get("scenarios", []))
 
+    _clock_ns = clock_ns if clock_ns is not None else time.monotonic_ns
     with_runs = run_suite(skill_dir, cases, with_skill=True, timeout=timeout,
-                          claude=claude)
+                          claude=claude, clock_ns=_clock_ns)
     base_runs = None
     if opts["baseline"]:
         base_runs = run_suite(skill_dir, cases, with_skill=False, timeout=timeout,
-                              claude=claude)
+                              claude=claude, clock_ns=_clock_ns)
     bench = build_benchmark(skill_name, with_runs, base_runs)
-    bench["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    # schema_version — намеспейсовано (не голое "2"): та же benchmark.json-семья
+    # держит и P3.3-артефакт build_system_benchmark со своим "system-bank-
+    # benchmark/v1" — два несопоставимых словаря версий под одинаковым коротким
+    # именем были бы дефектом (реконсайл 2026-07-26, D52/`plan.md` §1).
+    bench["schema_version"] = "skill-benchmark/v2"
+    bench["generated_at"] = now_iso if now_iso is not None else \
+        time.strftime("%Y-%m-%dT%H:%M:%S")
+    # provenance — ФАКТИЧЕСКОЕ, не константа: эта ветка достижима только когда
+    # `claude` реально резолвлен и `run_suite` его реально вызвал (гейт `if not
+    # claude` выше) — реальный ИЛИ фейковый (SKM_CLAUDE_BIN) бинарь одинаково
+    # "невраньё" для llm/network (сам факт, что подпроцесс claude был запущен;
+    # различить «настоящую» модель от локального фейка на этом уровне нечем).
+    bench["provenance"] = {
+        "llm": True,
+        "network": True,
+        "clock": "injected" if clock_ns is not None else "wall",
+        "baseline": bool(opts["baseline"]),
+    }
     bench["cases"] = [{"id": r.get("id"), "passed": r.get("passed"),
                        "checks": r.get("checks", [])} for r in with_runs]
+    bench = _stringify_fractions(bench)
     atomic_write_json(evals_dir / "benchmark.json", bench)
 
     if opts["static"]:

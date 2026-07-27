@@ -1,122 +1,118 @@
 # HANDOFF — 2026-07-27 — after P5.3
 
-**P5.3 повторно эскалирован: smoke на пине `v1.6.1` фатально падает (D107 решение о версии не
-виновато).** Ход событий этого дня: скан флота (шаг 1, коммит `b14d0f4d`) вскрыл, что объявленный
-пин `v1.5.3` устарел; владелец выбрал `v1.6.1` (D107/D108), `plan-design` синхронизировал ТЗ.
-Заходом `plan-run` шаги 2–3 исполнены (`SERENA_SRC@v1.6.1` в `constants.py`, `@v1.6.1` в
-`config.json` § `code_graph.args`/`index_args`, точечная правка `serena.args` в `.mcp.json`
-десяти живых проектов) — и НЕМЕДЛЕННО отменены: smoke на `swissknifeman` фатально падает ДО
-JSON-RPC ответа, `serena.agent:show_fatal_exception_safe Fatal exception: 'languages'`
-(`serena_config.py:_from_dict`, `KeyError: 'languages'`), причина — раскатанные (под `v1.5.3`)
-`.serena/project.yml` не несут ключа `languages`, обязательного на `v1.6.1`; фатал ловит КАЖДЫЙ
-проект, зарегистрированный в `~/.serena/serena_config.yml` (не только десять из карты дрейфа).
-Implementation Rules item'а («smoke красный ⇒ откат + эскалация») исполнены буквально: все три
-правки откачены точечно, `config.json`/`constants.py` байт-в-байт равны состоянию до захода,
-все десять `.mcp.json` флота проверены `json.load` после отката. Починка внутри заявленного
-Scope Included невозможна — нужна ЧЕТВЁРТАЯ поверхность (миграция `.serena/project.yml`), что
-меняет класс работы. Детали, лог, команды воспроизведения, RAG-сверка —
-`findings/P5.3-serena-pin-and-provider-gate.md` §8–§9. Статус P5.3: `🟡 In progress` →
-`🔴 Blocked`, `Escalation Needed: yes`.
+**P5.3 закрыт 🟠 Done with deviations.** Шаги 2–4 под пином D110 исполнены: `SERENA_SRC`
+(`packages/maind/lib/maind/constants.py`), `code_graph.args`/`index_args` (`config.json`) и
+`serena.args` десяти живых `.mcp.json` (`agelto`, `flexcrm`, `vaulter`, `swissknifeman`, `corex`,
+`memster`, `cms`, `edufy`, `chatom`, `perplexity-web-mcp`) пиннованы на одну и ту же строку
+`@026b007bb889366283c925527e9a3bab317f66c1` (побайтно сверено). Smoke зелёный на ДВУХ типах
+проектов (python-монорепо `swissknifeman`, php/laravel `flexcrm`): полный JSON-RPC цикл
+`initialize`→`tools/call get_symbols_overview` вернул реальные символы, фатала `KeyError:
+'languages'` больше нет — все 15 зарегистрированных проектов грузятся без ошибки. Гигиена
+процессов (гашение строго своего `Popen.pid`, без `pkill` по паттерну) выдержана. Повторный скан
+(`serena-pin-drift.json`, секция «ПОСЛЕ») — 10/10 живых пиннованы и резолвят `Serena 1.6.2.dev0`.
+Повторный `maind sync --only mcp --dry-run` подтверждает, что `unmanaged-target` (P10.4/D106,
+OQ-9) не исчез сам — item лишь прикладывает доказательство, второго адреса не заводит.
+**Отклонение:** бамп `SERENA_SRC` разбил `packages/maind/tests/test_provider_deploy.py::
+test_d108_inventory_uses_configured_server_names_without_changing_bindings` — тест хардкодит
+sha256 рендера, зависящий от значения пина; фактический хеш сегодня —
+`sha256:1d6d757436dc238647a841e6bb7c9efdfa137d5f82c680b7a88d28f1c325fd9d` вместо ожидаемого в тесте
+`sha256:8adaa29018516734a6af1137fb797562861eb221fe425b03d5d0bcc1d43e4f2f`; файл не входит в `Files`
+этого item'а — фикс назван (заменить литерал), не применён здесь. Остаточный failing-тест
+`test_local_skills_reference_on_demand_model` (P3.2 Pending Work) — известный, не новый. Детали —
+`findings/P5.3-serena-pin-and-provider-gate.md` §12, `phases/P5.md` P5.3 Completion Notes/Pending
+Work/Known Deviations.
 
-**Next:** `/task:plan-design 2026.07.25-ECO-OPT P5.3`
+**Next:** exec-items: task:plan-exec 2026.07.25-ECO-OPT P5.4
+
+Свободный выбор владельца: **P5.4** (гейт связности, теперь идёт ПОСЛЕ закрытого P5.3, `Exec =
+plan-exec`) либо **P5.1** (ступень 0 kill-gate, не зависит от P5.3). Дефект `test_d108_…` —
+самостоятельный follow-up, не блокирующий: точечный фикс литерала хеша в тесте, вне Files P5.3.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — owner-гейт по расширению Scope (миграция стороннего конфига вне заявленных Files) |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Владелец/`plan-design` решает, как расширять P5.3 под находку §8: (а) добавить в Scope миграцию/регенерацию `.serena/project.yml` (ключ `languages`) на всех проектах с раскатанным `.serena/` ПЕРЕД пином, (б) проверить, требует ли ключ именно `v1.6.0`/`v1.6.1` или это шире серии `1.6.x` (RAG/чтение release notes), либо (в) явный отказ от пина этим item'ом. После решения — `plan-design` синхронизирует Scope Included/Files/Implementation Rules, затем `/task:plan-run 2026.07.25-ECO-OPT P5.3` продолжает шаги 2–4 под обновлённым ТЗ. |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | — |
+| Context | continue (/clear) — ручной item |
+| Суть | P5.4: офлайновый гейт связности «схема `.serena/project.yml` ↔ версия пина» в `packages/maind` — читает `Required Reads`, пишет детектор + тесты, НЕ трогает значение пина. |
 
 ```
-/task:plan-design 2026.07.25-ECO-OPT P5.3
+/task:plan-exec 2026.07.25-ECO-OPT P5.4
 ```
 
-**Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие всех находок) · **P10.1**
-(гейт кодов границ) · **P10.2** (гейт ссылок-доказательств) · **P10.3** (резолвинг пути плана) ·
-**P10.4** (усыновление unmanaged-target тиром 1, D106) — все 4 items фазы P10 терминальны
-(3🟢+1🟠), первая такая фаза этого плана; `plan.md` § «Phase Index» держит её строку `🟡 In
-progress» НАРОЧНО — переход в терминальный статус доски делает `plan-close`, не эта команда ·
-**P8.1** (отчёт закрытия фазы) · **P8.2** (`Consequences` + словарь зрелости) · **P8.3**
-(`CHECKPOINTED`) · **P9.1** (`review-gate` с содержанием) · **P2.1** (Brain model-notes) ·
-**P3.2** (maind MCP tool-result trimming) · **P1.2** (канон D3 + бэкфилл) — **11/40 items
-закрыто**, P10 терминальна, 5 фаз в работе (P8 — 3/9 терминальны факт., P9 — 1/4, P2 — 1/3,
-P3 — 1/6, P1 — 1/2). P5.3 — шаг 1 (замер) сделан, шаги 2–3 попробованы и откачены (smoke
-красный), в закрытые не засчитывается.
+Альтернатива (фикс найденного теста, если владелец хочет закрыть его раньше P5.4):
 
-**Remaining:** 29/40 items (P5.3 — заблокирован повторно, ждёт владельца/`plan-design`). Волна 1
-(девять items без гейтов, свободный порядок — P5.3 временно снят из свободного выбора до ответа
-владельца) продолжается остальными восемью кандидатами; далее волны 2–5 по карте `roadmap.md`.
-**P10 готова к `/task:plan-close 2026.07.25-ECO-OPT P10`** когда владелец сочтёт нужным. P2.3 —
-ПОСЛЕ P8.1/P8.2/P8.3 и P6.3 (D93). P6.1 — ПОСЛЕ P9.1 (условие снято). P4.2 — ПОСЛЕ P3.2 (условие
-снято).
+```
+Замени в packages/maind/tests/test_provider_deploy.py литерал ожидаемого sha256 в
+test_d108_inventory_uses_configured_server_names_without_changing_bindings с
+"sha256:8adaa29018516734a6af1137fb797562861eb221fe425b03d5d0bcc1d43e4f2f" на
+"sha256:1d6d757436dc238647a841e6bb7c9efdfa137d5f82c680b7a88d28f1c325fd9d"
+(новое значение — прямое следствие пина Serena @026b007b… из P5.3, D110), прогони
+bash packages/maind/scripts/test.sh и закоммить точечно.
+```
 
-**Sources of truth:** `plan.md` (§2 Execution Rules; §3 Routing; §5 D1–D108; §7 Contracts;
-Обсуждение 1–19; `## Audit design`) · `phases/P5.md` (P5.3 — эскалация §8-класса, Completion
-Notes, Pending Work, Возобновление) · `findings/P5.3-serena-pin-and-provider-gate.md` (карта
-дрейфа + §3 обе версии + §7 решение владельца + §8–§9 smoke-фатал и откат) ·
-`artifacts/P5.3/scan_serena_pin.py` + `serena-pin-drift.json` (снимок ДО) ·
-`phases/P10.md` (P10.1–P10.4 Completion Notes, фаза терминальна) · `roadmap.md` (волна 1) ·
-`open-questions.md` (OQ-9 — владелец починки контура) · машинные гейты
-`plans/cross-plan-files.py`, `plans/verify-citations.py`, `packages/task/scripts/plan-lint.py` ·
-канон `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §§6, 8, 9.
+**Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие всех находок) · **P10.1** ·
+**P10.2** · **P10.3** · **P10.4** (фаза P10 терминальна фактически, 3🟢+1🟠; перевод строки доски
+делает `plan-close`) · **P8.1** · **P8.2** · **P8.3** · **P9.1** · **P2.1** · **P3.2** · **P1.2** ·
+**P5.3** (🟠 Done with deviations, эта сессия — коммит `930ad0ac`) — **12/41 items закрыто**, 5 фаз
+в работе (P8 — 3/9, P9 — 1/4, P2 — 1/3, P3 — 1/6, P1 — 1/2, P5 — 0🟢+1🟠 из 4).
+
+**Remaining:** 29/41 items. **P5.4** свободен (идёт ПОСЛЕ P5.3 — условие снято). **P5.1/P5.2**
+свободны (не зависят от P5.3). **P10 готова к `/task:plan-close 2026.07.25-ECO-OPT P10`** когда
+владелец сочтёт нужным. P2.3 — ПОСЛЕ P8.1/P8.2/P8.3 и P6.3 (D93). P6.1 — ПОСЛЕ P9.1 (условие
+снято). P4.2 — ПОСЛЕ P3.2 (условие снято).
+
+**Sources of truth:** `plan.md` (§2 Execution Rules; §3 Routing — строки P5.3/P5.4; §5 D1–D111;
+§7 Contracts; Обсуждение 1–19; `## Audit design`; §6 Update Log — запись «P5.3 закрыт») ·
+`phases/P5.md` (P5.3 Completion Notes/Pending Work/Known Deviations — итог этого захода; P5.4 —
+готовое ТЗ) · `findings/P5.3-serena-pin-and-provider-gate.md` (§12 — что изменено, smoke, повторный
+скан, `unmanaged-target` живым) · `artifacts/P5.3/serena-pin-drift.json` (секции ДО/ПОСЛЕ) ·
+`roadmap.md` (§ «Отложенное» — три долга D109–D111, включая «перепиннуться на тег») ·
+`open-questions.md` (OQ-9) · машинные гейты `plans/cross-plan-files.py`,
+`plans/verify-citations.py`, `packages/task/scripts/plan-lint.py` · канон
+`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §§6, 8, 9.
 
 **Open risks:**
-- **Новое (2026-07-27, `plan-run`): пин Serena `1.6.x` требует ключ `languages` в
-  `.serena/project.yml`, которого раскатанные (под `v1.5.3`) файлы флота не несут — фатальный
-  крах сервера на КАЖДОМ зарегистрированном проекте, не только на десяти из карты дрейфа.**
-  Починка вне Scope Included P5.3 (нужна миграция/регенерация `.serena/project.yml` —
-  четвёртая поверхность); адрес — `plan-design` на повторном заходе P5.3 или отдельный
-  follow-up item, решение владельца. Детали — `findings/P5.3-…` §8.
-- **`plan-lint` даёт новое WARNING «phase-first: P5 содержит активные 🟡 items, хотя P4 ещё не
-  терминальна»** — ожидаемо и не дефект правки, но статус P5.3 вернулся к `🔴 Blocked`, так что
-  warning на ближайшем прогоне может не воспроизвестись (сверить при следующем `plan-lint`).
-- **Downgrade `1.6.2.dev0` → `v1.6.1` по-прежнему никем не проверен** (D107): дельта тег↔dev-
-  коммит этим item'ом не изучалась — вопрос снят с повестки текущего захода фаталом на
-  `languages`, но остаётся открытым на будущее, если Scope расширится.
-- **Три места истины версии** (`constants.py` `SERENA_SRC`, `config.json` `args`/`index_args`):
-  расхождение между ними воспроизводит ровно тот дефект, который P5.3 намерен чинить — сейчас
-  все три снова СИНХРОННО на `v1.5.3`/непиннованы (откат подтверждён).
-- **Дефект рендерера `.mcp.json` — системный, не заведён отдельным item'ом** (P10.4 Pending
-  Work, D106): тир 1 D92 корректен, но недостижим, пока конвенция не сведена. Практическое
-  следствие для P5.3: доставка пина во флот — ручная точечная правка, ресинк недоступен
-  (актуально независимо от исхода находки §8).
-- **Остаточный failing-тест `test_local_skills_reference_on_demand_model`** (P3.2 Pending
-  Work) — краснит `packages/maind/scripts/test.sh`/`validate.sh` для любого следующего item'а
-  пакета `maind`.
+- **Новый failing-тест `test_provider_deploy.py::test_d108_…`** — хардкод sha256 старого пина,
+  прямое следствие D110; фикс назван (замена литерала), не применён (файл вне `Files` P5.3);
+  follow-up точечным коммитом, не блокирует другие items.
+- **Пиннуется dev-коммит без релиз-нот и апстрим-QA** (D110): дельта `v1.6.1` → `1.6.2.dev0`
+  планом НЕ вычитана ([UNVERIFIED]). Долг «перепиннуться на тег» — `roadmap.md` § «Отложенное».
+- **Апстрим может force-push'нуть/переписать историю**, и запиненный SHA перестанет резолвиться —
+  тогда следующий бамп эскалирует, а не подменяет ссылку молча.
+- **Две истории версии в репо остаются разъехавшимися до закрытия P5.4** — сегодня согласованность
+  держится только текстом ТЗ; P5.4 — следующий свободный item, который это чинит машинно.
+- **Дефект рендерера `.mcp.json` — системный** (P10.4 Pending Work, D106): доставка пина во флот
+  остаётся ручной точечной правкой, ресинк недоступен (подтверждено ещё раз этим заходом).
+- **Остаточный failing-тест `test_local_skills_reference_on_demand_model`** (P3.2 Pending Work)
+  краснит `packages/maind/scripts/validate.sh` — задевает и P5.3 (закрыт), и P5.4 (следующий,
+  оба в пакете `maind`): зелёным считается прогон СВОИХ тестов.
+- **`plan-lint` даёт WARNING «phase-first: P5 содержит активные 🟡/🟠 items, хотя P4 ещё не
+  терминальна»** — ожидаемо (P5.3 сознательно шёл вне очереди фаз, D65), не дефект правки.
 - **`packages/task/lib/task/plan_lint.py` несёт 8 нерезолвящихся бэйр-ссылок `P0.3 рек#N`**
-  (P1.2 Pending Work) — источник неясен.
-- **`plans/verify-citations.py` первым прогоном нашёл 39 находок на этом же плане** (P10.2
-  Pending Work) — follow-up item не заведён.
-- **Файл `plans/verify-citations-known-exceptions.json` не заведён** (P10.2 Known Deviation 2).
-- **`README.md:122` ссылается на несуществующий `roadmap/self-learning-memory.md`** (P10.3
-  Pending Work).
-- **`research/11` §2 частично отменён D103, файл не переписан** — сверить при детализации P8.5.
-- **Гейт `Consequences` в день внедрения ловит ноль записей** (forward-only, D103).
-- **Протокол закрытия молчит до первой терминальной фазы — она наступила (P10).**
-- **Гейт кодов границ активен И бинарен независимо от статуса** (`_lint_write_site_codes_44`).
-- **Двенадцать внутриплановых связок держатся ТЕКСТОМ и машине невидимы** (§2 плана).
-- Prior-риски в силе (не повторяются дословно): P3.1 нельзя закрыть без оператора · P3.5 —
-  самая «дальнобойная» правка · корневой `CLAUDE.md`/`AGENTS.md` — три писателя (P1.2/P3.6/P6.3,
-  D79) · P8 держит шесть оставшихся items на горячем hotspot'е · P9 не параллелится · P7.1
-  работает на живых items · LAN-стадия памяти: секрет — единственный предохранитель ·
-  pressure-eval P6.3 по построению слаб.
+  (P1.2 Pending Work) · **39 находок `verify-citations.py`** без follow-up (P10.2) ·
+  **`verify-citations-known-exceptions.json` не заведён** (P10.2) · **`README.md:122` ссылается на
+  несуществующий `roadmap/self-learning-memory.md`** (P10.3) · **`research/11` §2 частично отменён
+  D103, файл не переписан**.
+- Prior-риски в силе (не повторяются дословно): P3.1 нельзя закрыть без оператора · P3.5 — самая
+  «дальнобойная» правка · корневой `CLAUDE.md`/`AGENTS.md` — три писателя (D79) · P8 держит шесть
+  оставшихся items на горячем hotspot'е · P9 не параллелится · P7.1 работает на живых items ·
+  LAN-стадия памяти: секрет — единственный предохранитель · pressure-eval P6.3 по построению слаб ·
+  двенадцать внутриплановых связок держатся ТЕКСТОМ.
 
 **Workarounds/Deferred/Open questions:**
-- **workarounds:** двенадцать связок «порядок вместо инструмента»; ручная точечная правка
-  `.mcp.json` вместо `maind sync` (P5.3, D65/D106); `STALE_SOURCE`/`UPDATE` для тира 1
-  усыновления (P10.4); пересечения по корневым файлам — чтением; человеческий арбитраж вместо
-  LLM-judge (D71); правило активации плагина Codex — текстом (D84); `## 7. Contracts` — каталог,
-  не машинная сверка (D97); собственный файловый счётчик петли review-gate (P9.1); короткие
-  ссылки-доказательства без каталога сознательно НЕ резолвятся (P10.2); резолвер
-  `core.resolve_plan_dir` не экспортирован через `core/__init__.py` (P10.3).
-- **deferred:** всё из `roadmap.md` § «Отложенное» + починка системного расхождения рендерера
-  `.mcp.json` (P10.4, D106) + follow-up на 39 находок `verify-citations.py` (P10.2) +
-  `verify-citations-known-exceptions.json` (P10.2) + битая ссылка `README.md:122` (P10.3) +
-  миграция схемы `.serena/project.yml` (ключ `languages`), найденная smoke этого захода, вне
-  Scope P5.3 (новое) + сверка дельты `v1.6.1` → `1.6.2.dev0` на breaking changes (D107, вне
-  скоупа P5.3, если Scope расширится).
-- **open_questions:** без изменений этим заходом. Owner-вопрос о версии пина Serena
-  ЗАКРЫТ решением D107; НОВЫЙ вопрос (расширение Scope под миграцию `.serena/project.yml`)
-  адресован эскалацией item'а, в `open-questions.md` не заведён (не про владельца починки
-  контура — про масштаб этого item'а). OQ-9 (владелец починки провайдерского контура) —
-  по-прежнему открыт, P5.3 его не дублирует (D108).
+- **workarounds:** ручная точечная правка `.mcp.json` вместо `maind sync` (D65/D106); офлайновая
+  константа-ожидание схемы в P5.4 вместо запроса к апстриму (сеть в гейте запрещена — иначе
+  flaky); двенадцать связок «порядок вместо инструмента»; `STALE_SOURCE`/`UPDATE` для тира 1
+  усыновления (P10.4); человеческий арбитраж вместо LLM-judge (D71); правило активации плагина
+  Codex — текстом (D84); `## 7. Contracts` — каталог, не машинная сверка (D97); собственный
+  файловый счётчик петли review-gate (P9.1); резолвер `core.resolve_plan_dir` не экспортирован
+  через `core/__init__.py` (P10.3).
+- **deferred:** всё из `roadmap.md` § «Отложенное», включая три долга D109–D111 (перепиннуться на
+  тег · вычитка дельты `v1.6.1` → `1.6.2.dev0` · обобщение гейта связности на другие внешние пины
+  репо) + починка расхождения рендерера `.mcp.json` (P10.4/D106) + follow-up на 39 находок
+  `verify-citations.py` + `verify-citations-known-exceptions.json` + битая ссылка `README.md:122`
+  + фикс литерала sha256 в `test_d108_…` (новый, этот заход).
+- **open_questions:** новых не заведено. OQ-9 (владелец починки провайдерского контура) — открыт,
+  P5.3/P5.4 его не дублируют. Срок выпуска апстримом тега со схемой `language_servers` —
+  непроверяем по построению, планировать на него нельзя.

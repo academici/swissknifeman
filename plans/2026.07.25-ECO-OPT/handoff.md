@@ -1,107 +1,45 @@
-# HANDOFF — 2026-07-27 — after P5.2
+# HANDOFF — 2026-07-27 — after P5
 
-**P5.2 закрыт 🟢 Done. OQ-1 закрыт: вердикт владельца по `code-review-graph` — `skip` (D113).**
-Пакет решения по шести пунктам собран (`findings/P5.2-codegraph-verdict-packet.md`), владелец
-ответил на owner-гейте. Ключевое: владелец выбрал «`skip`, но **сначала усилить замер**; порог
-**неприкосновенен**» — вместо сдвига порога прогнан **k-fold-перезамер** (D112, протокол объявлен
-ДО прогона отдельным коммитом `8149829f`): 24 fold'а (каждый файл ground truth, существовавший на
-родителе коммита) на тех же трёх коммитах `flexcrm`. **`P_impact` = 0.0390** при пороге `≥ 0.40`
-(среднее по коммитам 0.0000 / 0.0390 / 0.2613; порог перешёл 1 fold из 24). Усиление сдвинуло числа
-**в пользу инструмента** (medium ×2.1, large ×1.45) — и порог всё равно не взят с запасом в порядок,
-то есть вердикт не был артефактом неудачного seed'а. Отказ **по шуму, не по слепоте**: recall
-0.40–0.43 при 110 предсказанных файлах на seed (истинные — на позициях 77 и 102 ⇒ усечение top-K
-делает хуже). Оригинал `flexcrm` не тронут (`git status --porcelain` до/после идентичен), worktree
-удалён. Запись ушла в **5 адресатов** (выбор владельца — полная): тело `general/mcp-advisor`
-(строка карты + блок «Граф-retrieval MCP: измеренный вердикт» + правило «не подключать по README —
-только после своего co-change-замера» + **три триггера переоткрытия**) · `docs/reference.md`
-(`reference → пилот` → `skip` с числами) · `plan.md` §5 D112/D113/D114 · OQ-1 `Resolved → D113` ·
-`CHANGELOG.md`. Канон графа кода остаётся **Serena**. Ветка `combine` не исполнялась —
-`packages/task/commands/review.md` не тронут. Known Deviations: ТЗ правлено по ходу дважды, оба раза
-D-записью (D112 — расширение Scope решением владельца; D114 — enumeration генерёжки в `Files`
-отставала от вывода `skiller registry`). Task Contract: `allow`/`allow`.
+**Фаза P5 закрыта 🟠 Done with deviations.** Все 4 item'а терминальны: P5.1 🟢 (kill-gate) ·
+P5.2 🟢 (вердикт **skip** по CRG, D112/D113) · P5.3 🟠 (пин Serena `v1.5.3` commit-SHA раскатан,
+но `bash packages/maind/scripts/validate.sh` осталась красной вторым тестом — `test_d108_...`
+бьётся о новый sha256 от бампа `SERENA_SRC`, фикс назван в Completion Notes, не применён — вне
+`Files` P5.3) · P5.4 🟢 (гейт связности `.serena/project.yml` ↔ пин). Docs-sync: не требуется
+(вердикт/пин уже в `mcp-advisor`/`findings/`). `closure/P5.json` записан (Closure Protocol v1).
 
-**Next:** свободных items в P5 не осталось — фаза **терминальна фактически** (3🟢 + 1🟠), перевод
-строки доски делает `plan-close`. Логичный следующий шаг — **закрыть фазу P5**
-(`/task:plan-close 2026.07.25-ECO-OPT P5`): дёшево, снимает с доски вторую готовую фазу рядом с уже
-готовой P10 и разблокирует phase-first-порядок для остальных.
+**Next:** фаза закрыта С отклонением (🟠 у P5.3) — по канону перед следующим шагом нужен
+`/task:plan-audit 2026.07.25-ECO-OPT P5` (сверка деклараций P5.3 с кодом, no-op/scope-drift).
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | low |
-| Capabilities | — |
+| Model | opus |
+| Thinking | xhigh — adversarial-аудит закрытой фазы с 🟠 |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть фазу P5 по git-фактам: Phase Handoff, строка `## 4` в `plan.md`, lint. |
+| Суть | Аудит фазы P5: сверка 🟢/🟠-заявок P5.1–P5.4 с git-фактами, поиск no-op/scope drift. |
 
 ```
-/task:plan-close 2026.07.25-ECO-OPT P5
+/task:plan-audit 2026.07.25-ECO-OPT P5
 ```
-
-Альтернатива (если приоритет — закрыть вторую готовую фазу): `/task:plan-close 2026.07.25-ECO-OPT P10`
-(P10 терминальна фактически с 2026-07-27, 3🟢+1🟠).
 
 **Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие всех находок) · **P10.1** ·
-**P10.2** · **P10.3** · **P10.4** (фаза P10 терминальна фактически, 3🟢+1🟠) · **P8.1** · **P8.2** ·
-**P8.3** · **P9.1** · **P2.1** · **P3.2** · **P1.2** · **P5.3** (🟠) · **P5.4** (🟢) · **P5.1** (🟢) ·
-**P5.2** (🟢, эта сессия — коммиты `8149829f` протокол → `1844ab29` item) — **15/41 items закрыто**,
-5 фаз в работе (P8 — 3/9, P9 — 1/4, P2 — 1/3, P3 — 1/6, P1 — 1/2), **P5 — 3🟢+1🟠 из 4 (терминальна
-фактически)**.
+**P10.2** · **P10.3** · **P10.4** (фаза P10 терминальна фактически, 3🟢+1🟠, ждёт `plan-close`) ·
+**P8.1** · **P8.2** · **P8.3** · **P9.1** · **P2.1** · **P3.2** · **P1.2** · **фаза P5 закрыта
+целиком** (P5.1🟢/P5.2🟢/P5.3🟠/P5.4🟢) — **15/41 items закрыто**, 2 фазы терминальны (P5 закрыта,
+P10 готова к закрытию), 5 фаз в работе (P8 — 3/9, P9 — 1/4, P2 — 1/3, P3 — 1/6, P1 — 1/2).
 
-**Remaining:** 26/41 items. **P5 и P10 обе готовы к `/task:plan-close`.** P2.3 — ПОСЛЕ P8.1/P8.2/P8.3
-и P6.3 (D93). P6.1 — ПОСЛЕ P9.1 (условие снято). P4.2 — ПОСЛЕ P3.2 (условие снято). Свободные
-одиночные items: P1.1 (frontier/high, manual), P3.1 (нужен оператор), P8.4–P8.9, P9.3.
+**Remaining:** 26/41 items. **P10 готова к `/task:plan-close 2026.07.25-ECO-OPT P10`** (независимо
+от аудита P5). P2.3 — ПОСЛЕ P8.1/P8.2/P8.3 и P6.3 (D93). P6.1 — ПОСЛЕ P9.1 (условие снято). P4.2 —
+ПОСЛЕ P3.2 (условие снято). Свободные одиночные items: P1.1 (frontier/high, manual), P3.1 (нужен
+оператор), P8.4–P8.9, P9.3.
 
-**Sources of truth:** `plan.md` (§2 Execution Rules; §3 Routing; §5 **D112/D113/D114** — свежие;
-§7 Contracts; Обсуждение 1–19; §6 Update Log — запись «P5.2 закрыт») · `phases/P5.md` (P5.2
-Completion Notes — итог этого захода; Phase Context) · `findings/P5.2-codegraph-verdict-packet.md`
-(пакет решения + ответы владельца) · `findings/P5.1-stage0-killgate.md` (kill-gate + датированный
-блок k-fold) · `artifacts/p5-pilot/stage0/{kfold-protocol.md,impact-kfold.json}` (метод до прогона +
-все 24 fold'а) · `open-questions.md` (OQ-1 закрыт; OQ-9 открыт) · машинные гейты
-`plans/cross-plan-files.py`, `plans/verify-citations.py`, `packages/task/scripts/plan-lint.py` ·
-канон `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §§3, 6, 8, 9.
+**Sources of truth:** `plan.md` (§2 Execution Rules; §4 Phase Index — P5 строка `🟠 Done with
+deviations`; §6 Update Log — запись «P5 закрыта») · `phases/P5.md` (`## Phase Status` + `## Phase
+Handoff` — сдача фазы, агрегат Known Deviations) · `closure/P5.json` (машиночитаемый отчёт
+закрытия) · `findings/P5.1-stage0-killgate.md` · `findings/P5.2-codegraph-verdict-packet.md` ·
+`findings/P5.3-serena-pin-and-provider-gate.md` · `open-questions.md` (OQ-1 закрыт; OQ-9 открыт) ·
+машинные гейты `plans/cross-plan-files.py`, `plans/verify-citations.py`,
+`packages/task/scripts/plan-lint.py`.
 
-**Open risks:**
-- **Правило «enumeration генерёжки в ТЗ» носителя не имеет** (P5.2 Pending Work, D114): ТЗ любого
-  будущего item'а, правящего тело скилла, обязана перечислять ВСЕ пять выходов `skiller registry`
-  (`skills.json` · `skills/_index.md` · `.claude-plugin/marketplace.json` · `docs/guide/budget.md` ·
-  `adapters/codex/core/**`). Пока это только D-запись, а не чеклист `plan-design`.
-- **Новый failing-тест `test_provider_deploy.py::test_d108_…`** (со времён P5.3) — хардкод sha256
-  старого пина, фикс назван (замена литерала), не применён (файл вне `Files` P5.3); follow-up
-  точечным коммитом, не блокирует другие items.
-- **Пиннуется dev-коммит без релиз-нот и апстрим-QA** (D110): дельта `v1.6.1` → `1.6.2.dev0` планом
-  НЕ вычитана ([UNVERIFIED]). Долг «перепиннуться на тег» — `roadmap.md` § «Отложенное».
-- **`SERENA_SCHEMA_FIELDS` — офлайновая константа, которую следующий бамп пина обязан обновить ТЕМ
-  ЖЕ швом** — гейт P5.4 не спасает от забытого обновления самой константы-ожидания.
-- **Дефект рендерера `.mcp.json` — системный** (P10.4 Pending Work, D106): доставка пина во флот
-  остаётся ручной точечной правкой, ресинк недоступен.
-- **Остаточный failing-тест `test_local_skills_reference_on_demand_model`** (P3.2 Pending Work)
-  краснит `packages/maind/scripts/validate.sh` — зелёным считается прогон СВОИХ тестов.
-- **`plan-lint` даёт WARNING «phase-first: P5 содержит активные items, хотя P4 ещё не терминальна»** —
-  ожидаемо (P5.1–P5.4 сознательно шли вне очереди фаз, D65), не дефект правки.
-- **`packages/task/lib/task/plan_lint.py` несёт 8 нерезолвящихся бэйр-ссылок `P0.3 рек#N`** (P1.2
-  Pending Work) · **39 находок `verify-citations.py`** без follow-up (P10.2) ·
-  **`verify-citations-known-exceptions.json` не заведён** (P10.2) · **`README.md:122` ссылается на
-  несуществующий `roadmap/self-learning-memory.md`** (P10.3) · **`research/11` §2 частично отменён
-  D103, файл не переписан**.
-- **Вердикт `skip` — по НАШИМ числам на НАШЕЙ кодовой базе, не по классу** (D113): альтернативы
-  того же класса (`codegraph`, `claude-context`, `repomix`, findings §8) не оценивались; триггер (2)
-  прямо называет условие, при котором граф-retrieval вернётся в повестку.
-- Prior-риски в силе (не повторяются дословно): P3.1 нельзя закрыть без оператора · P3.5 — самая
-  «дальнобойная» правка · корневой `CLAUDE.md`/`AGENTS.md` — три писателя (D79) · P8 держит шесть
-  оставшихся items на горячем hotspot'е · P9 не параллелится · P7.1 работает на живых items ·
-  LAN-стадия памяти: секрет — единственный предохранитель · pressure-eval P6.3 по построению слаб ·
-  двенадцать внутриплановых связок держатся ТЕКСТОМ.
-
-**Workarounds/Deferred/Open questions:**
-- **workarounds:** ручная точечная правка `.mcp.json` вместо `maind sync` (D65/D106); офлайновая
-  константа-ожидание схемы в P5.4; двенадцать связок «порядок вместо инструмента»;
-  `STALE_SOURCE`/`UPDATE` для тира 1 усыновления (P10.4); человеческий арбитраж вместо LLM-judge
-  (D71); правило активации плагина Codex — текстом (D84); `## 7. Contracts` — каталог, не машинная
-  сверка (D97); собственный файловый счётчик петли review-gate (P9.1); резолвер
-  `core.resolve_plan_dir` не экспортирован через `core/__init__.py` (P10.3).
-- **deferred:** всё из `roadmap.md` § «Отложенное», включая три долга D109–D111 + починка
-  расхождения рендерера `.mcp.json` (P10.4/D106) + follow-up на 39 находок `verify-citations.py` +
-  `verify-citations-known-exceptions.json` + битая ссылка `README.md:122` + фикс литерала sha256 в
-  `test_d108_…` + **правило enumeration генерёжки в чеклист `plan-design` (D114)**.
-- **open_questions:** новых не заведено. **OQ-1 ЗАКРЫТ → D113** (`skip`). OQ-9 (владелец починки
-  провайдерского контура) — открыт; P5.1/P5.2/P5.3/P5.4 его не дублируют.
+**Open risks:** второй красный тест `validate.sh` (`test_d108_...`, следствие P5.3) не почищен —
+кандидат на отдельный фикс-item за владельцем `maind`, не блокирует закрытие фазы (вне `Files`
+P5.3, зафиксировано Known Deviations).

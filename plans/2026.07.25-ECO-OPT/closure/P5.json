@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P5",
+  "closed_at": "2026-07-27",
+  "closed_by": {"command": "plan-close", "actor": "implementation/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "a476527fea003f0bd428c0cc3c0d3cac24bb8e68", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "fb307c232bae46e9dba097d4e533e7a36c16ed24c6d5d53f667057e0b8c66a55",
+    "phases/P5.md": "1e731cd1db493865380079de68dadf9f7174e513fdc4bebafaaaa165b00aa393"
+  },
+  "items": [
+    {"id": "P5.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "kill-gate замер Ops/P_impact/L_evidence на git worktree-копии flexcrm — findings/P5.1-stage0-killgate.md"},
+    {"id": "P5.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "k-fold-усиленный замер P_impact + вердикт skip по CRG — findings/P5.2-codegraph-verdict-packet.md, mcp-advisor правка"},
+    {"id": "P5.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "pinned Serena в config.json/constants.py — bash packages/maind/scripts/validate.sh осталась красной 2 тестами (1 чужой P3.2, 1 новый — test_d108_ прямое следствие бампа SERENA_SRC, фикс назван, не применён — вне Files item'а)"},
+    {"id": "P5.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "гейт связности .serena/project.yml ↔ версия пина — test_codegraph.py"}
+  ],
+  "gates": [],
+  "metrics": [],
+  "limitations": ["evidence_class=real опирается на Completion Notes items, не на повторный прогон этой сессией (plan-close низкоэффортный — механическая сверка)"],
+  "external_side_effects": ["git worktree-копия flexcrm (P5.1/P5.2) — вне репозитория swissknifeman"]
+}

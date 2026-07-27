@@ -199,7 +199,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
-| P5 | Пилот code-review-graph vs Serena | 3/4 | 🟡 In progress |
+| P5 | Пилот code-review-graph vs Serena | 3/4 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
@@ -504,6 +504,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 |:--|:--|:--|
 | 2026-07-25 | plan-design/Claude Fable 5 | Design pass 1/2: brief + RAG-финдинги (5 реп GitHub API, Opus 5 guide, CC-факты, 2 perplexity-синтеза), 7 фаз/16 items (P1 детализирована, P2–P7 скелеты с контрактами), Обсуждение (7 развилок), D1–D10. Supersedes TOKEN-ECON-P6. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (межплановая очередь) | D11/D12: очередь уточнена пофазно, гейт FOREMAN — терминальные P1/P2 AGENT-RELIABILITY, а не G1; `Paused By` проставлен частично (независимые фазы идут параллельно). |
+| 2026-07-27 | plan-close/Claude Sonnet 5/low | P5 закрыта 🟠 Done with deviations: все 4 item'а терминальны (P5.3 несёт непочиненный второй красный тест `validate.sh` вне Files); `closure/P5.json` (Closure Protocol v1). |
 | 2026-07-25 | plan-design/Claude Opus 5/high (программный гейт) | D13: план стал этапом A программы design-first, ACTIVE передан сюда; следующий шаг — детализация P2. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (P2) | P2 детализирована до DoR: 2→3 items (сплит по cross-plan гейту), D14–D18; слой 1 — `findings/P2-opus5-guide.md` (полный first-party гайд Opus 5 + док effort), слой 2 — `research/01-P2-opus5-revision-map.md` (правило A/B/C, инвентарь поверхностей, разбиение по гейту). |
 | 2026-07-25 | plan-design/Claude Opus 5/high (P2, добор RAG) | D19: рамка P2 расширена до Claude 5 family (гайд Sonnet 5 + кросс-модельный док + перплексити → `findings/P2-claude5-family-and-migration.md`). D20: постмортем неполноты RAG → вход P6.3. |

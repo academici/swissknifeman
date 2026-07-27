@@ -43,7 +43,8 @@
 |---|---|---|---|---|
 | **P10.1** | manual | implementation/high | — | **ПЕРВЫЙ item плана.** Точность гейта кодов границ + печать кодов писателем + version-first публикация канона (D102). Срочность машинная: `WRITE_SITE_CODES_CANON_DATE = 2026-07-27`. `Exec = manual` по деривации §9 (D101) — запуск `plan-run` |
 | **P8.1** | manual | frontier/high | ПОСЛЕ P10.1 | `closure/<Pn>.json` + Meta-поле `Closure Protocol \| v1` — активатор P8.2/P8.3; разводит свой `evidence_class` с чужим enum'ом классов доказательства |
-| **P8.2 · P8.3** | plan-exec (батч **B4a**) | implementation/medium | ПОСЛЕ P8.1 | `Consequences` + словарь зрелости · строка `Возобновление:`. Порядок внутри: P8.2 → P8.3 |
+| **P8.2** | manual (**B4a-1**, solo) | implementation/high | ПОСЛЕ P8.1 | `Consequences` (измеренный предикат + forward-only `CONSEQUENCES_CANON_DATE`) + словарь зрелости. **Тир поднят D105** по прецеденту P10.1: канон флота + линтер + два тела команд + version-first одним швом; `Exec = manual` по деривации §9 — запуск `plan-run` |
+| **P8.3** | plan-exec (**B4a-2**, solo) | implementation/medium | ПОСЛЕ P8.2 | строка `Возобновление:` в `Pending Work` при 🔴/⛔ (седьмого статуса НЕ вводится). Общий `plan_lint.py` с P8.2 ⇒ строго после неё |
 | **P9.1** | manual | implementation/high | — | Гейт `review-gate` с содержанием + live-прогон субагента. Идёт **ПЕРЕД P6.1** (общие `apply-permissions.sh`, `packages/harness/CLAUDE.md`) |
 
 ### Волна 1 — свободное окно (гейтов нет; порядок внутри свободен)
@@ -141,16 +142,37 @@ items с независимым scope и детерминированной Vali
 
 ### B4a — активируемые P8.1 (после неё)
 
+**Батч распался на два запуска (D105):** P8.2 поднят до `implementation/high` + `manual`
+(деривация §9: `effort > medium ⇒ manual`) и одной сессией с P8.3 не идёт; `Review` обоих — `full`.
+
+#### B4a-1 — P8.2 (solo)
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Context | cold-start: `plan.md` → `roadmap.md` → `phases/P8.md` (реконсайл-блок + рефайн-блок + P8.2) → `research/23-P8.2-refine-2026-07-27.md` |
+| Гейт | ПОСЛЕ P8.1 (терминальна) и P10.1 (терминальна); ПЕРЕД P8.3 и P2.3 |
+| Почему solo | тир выше батча (`implementation/high` ⇒ `manual`), объединение с P8.3 нарушило бы правило «батч несовместимых `Model/effort` и `Exec`» (§9) |
+| Суть | `Consequences` в D-записи (измеренный предикат + forward-only `CONSEQUENCES_CANON_DATE`) + словарь зрелости из пяти значений; два реестра литералов; version-first публикация канона |
+
+```
+/task:plan-run 2026.07.25-ECO-OPT P8.2
+```
+
+#### B4a-2 — P8.3 (solo, после P8.2)
+
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | medium |
-| Context | cold-start: `plan.md` → `roadmap.md` → `phases/P8.md` |
-| Гейт | ПОСЛЕ P8.1; порядок внутри обязателен: P8.2 → P8.3 |
-| Суть | `Consequences` + словарь зрелости · строка `Возобновление:` (седьмого статуса НЕ вводится) |
+| Context | cold-start: `plan.md` → `roadmap.md` → `phases/P8.md` (реконсайл-блок + P8.3) → `research/11-P8-target-design.md` §3 |
+| Гейт | ПОСЛЕ P8.2 (общий `plan_lint.py`); ПЕРЕД P2.3 |
+| Почему solo | единственный оставшийся item батча после выделения P8.2 |
+| Суть | строка `Возобновление:` в `Pending Work` при 🔴/⛔ (седьмого статуса НЕ вводится) |
 
 ```
-/task:plan-exec 2026.07.25-ECO-OPT P8.2 P8.3
+/task:plan-exec 2026.07.25-ECO-OPT P8.3
 ```
 
 ### Волна 0, шаг 4 — P9.1

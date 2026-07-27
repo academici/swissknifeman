@@ -14,10 +14,15 @@ if str(_LIB) not in sys.path:
 
 
 def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",
-            closure_protocol=None):
+            closure_protocol=None, decision_log_rows=None):
     # `closure_protocol` (P8.1/D42) — opt-in Meta-поле `Closure Protocol`; None = строки нет
     # вовсе (аддитивность: план без поля обязан линтоваться байт-в-байт как до P8.1).
     closure_row = f"\n| Closure Protocol | {closure_protocol} |" if closure_protocol else ""
+    # `decision_log_rows` (P8.2/D103-D105, research/23 §4): D-лог параметризован, а не
+    # зашит одной строкой — гейт `Consequences` гоняет тесты на РАЗНОМ содержимом ячейки
+    # `Решение`/`Дата`; None = прежняя единственная строка (byte-compat с до-P8.2 фикстурой).
+    if decision_log_rows is None:
+        decision_log_rows = "| D1 | 2026-07-02 | тест | тест |"
     return f"""# {plan_id} — Демо-план
 
 ## 0. Meta
@@ -57,7 +62,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 | D# | Дата | Решение | Почему |
 |:--|:--|:--|:--|
-| D1 | 2026-07-02 | тест | тест |
+{decision_log_rows}
 
 ## 6. Update Log
 

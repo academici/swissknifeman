@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.17.0
+version: 2.18.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -204,7 +204,18 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
   section = defaults apply. Canonical line form (column `Exec`), the `Exec` derivation rule
   and the routing gate — section 9; legacy forms stay valid.
 - **`## 4. Phase Index & Status Board`** — table `Phase | Title | Items 🟢/всего | Status`.
-- **`## 5. Decision Log`** — table `D# | Дата | Решение | Почему`.
+- **`## 5. Decision Log`** — table `D# | Дата | Решение | Почему`. A D-record that
+  supersedes OR cancels a previously accepted decision (`supersedes D#`, «отменяет D#»,
+  «отменён»/«отменена»/…) carries an inline `**Consequences:**` subfield inside the
+  `Решение` cell — what we PAY for the reversal (risk, duplication, compatibility rollback).
+  No fifth column: the header `D# | Дата | Решение | Почему` is a canon literal
+  (`CANON_LITERALS`), rewriting it means rewriting the header across the whole fleet.
+  Machine gate (`plan_lint.py`) — DOUBLE opt-in: `## 0. Meta` → `Closure Protocol | v1`
+  AND the D-record's date ≥ `2026-07-28` (forward-only, same trick as the write-site gate
+  §8: no existing record turns red retroactively). The gate catches a MACHINE-DETECTABLE
+  subclass (an explicit reversal/replacement marker in the decision text), NOT the full
+  canon requirement "Consequences on every load-bearing record" — claiming full coverage
+  for a partial catch is forbidden.
 - **`## 6. Update Log`** — append-only table `Дата | Кто (role/model) | Что`. Hard limit:
   "What" ≤ 2 lines, canonical format:
   `<item> закрыт: <1 line of substance> — детали см. phases/Pn.md <item> Completion Notes`.
@@ -353,6 +364,24 @@ EXACTLY 6 canonical strings — copy byte-for-byte (greppable, parser is strict)
 
 Status lives in the plan: finishing work without updating the plan = incomplete execution.
 Closed an item → update `Phase Status` and the Status Board in `plan.md`.
+
+**Capability maturity ≠ item status.** The six statuses above describe the ITEM (is the
+work on it done); they do NOT describe whether the CAPABILITY it produced actually works in
+practice — "there's a command" reads as "it works", and that is not the same claim. The
+maturity dictionary is EXACTLY five values, latin, byte-for-byte:
+
+| Value | What it means | What it does NOT mean |
+|:--|:--|:--|
+| `available` | there's a command/surface AND evidence it works (test/run) | — |
+| `experimental` | works on our rig, contract may still change | "done" |
+| `behind-gate` | code exists, toggled by a flag/owner decision | "enabled" |
+| `disabled` | present in the tree, off in the shipped product, reason named | "broken" |
+| `superseded` | replaced by another mechanism, kept for backward compatibility | "removed" |
+
+The dictionary's carrier is the capabilities matrix (plan/project matrix, Evidence/boundary
+column); item status and capability maturity live in different tables and are never
+substituted for each other: an item can be `🟢 Done` while the capability it produced is
+`experimental` or `behind-gate`.
 
 **Status under deviations.**
 
@@ -1255,4 +1284,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: bcf84006c653298383da2ddc2cd3ebd8ed094b6b93dbcad33dbb752bd0b613c5 -->
+<!-- ru-source-sha256: 37d00c48e687250a1af23cd93ee512944b7f2c874d06a9d733070a995d5bf7d0 -->

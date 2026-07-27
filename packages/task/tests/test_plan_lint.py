@@ -801,6 +801,93 @@ class TestClosureReports81(TmpPlanTestCase):
         self.assertTrue(any("P1.json" in e for e in hits), hits)
 
 
+class TestConsequencesGate82(TmpPlanTestCase):
+    """P8.2/D103-D105: D-запись, чья ячейка `Решение` матчит измеренный предикат
+    отмены/замены (`supersedes D`/`отменяет D`/причастие без «не» перед ним) и датирована
+    (`Дата`) ≥ CONSEQUENCES_CANON_DATE, обязана нести `**Consequences:**` — иначе ERROR с
+    номером D-записи. Активация — ДВОЙНОЙ opt-in: Meta `Closure Protocol | v1` И дата.
+    Каждый различающий кейс проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_consequences_82`, ни
+    CONSEQUENCES_STEMS_RE, ни вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах."""
+
+    def _plan(self, *, closure_protocol="v1", decision_log_rows):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, closure_protocol=closure_protocol,
+                    decision_log_rows=decision_log_rows),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_supersedes_with_consequences_passes(self):
+        """(a) `supersedes D30` + `**Consequences:**` → диагностик нет."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D40 | 2026-07-28 | supersedes D30 в части объёма. "
+            "**Consequences:** старый носитель дублируется до реконсайла. | почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_b_supersedes_without_consequences_is_error_with_id(self):
+        """(б) `supersedes D30` без `Consequences` → ERROR, текст несёт номер D-записи."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-28 | supersedes D30 в части объёма. | почему |"))
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "**Consequences:**")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("D98" in e for e in hits), hits)
+
+    def test_c_negated_participle_is_not_gated(self):
+        """(в) «не отменена» (причастие, НО с отрицанием перед ним) → диагностик нет —
+        негативный lookbehind снимает ложный ERROR (research/23 §1, D11/D19/D26-класс)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D11 | 2026-07-28 | Уточняет D10 по факту сверки (не отменена, а расширена). "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_d_form_without_yo_is_caught(self):
+        """(г) «отменена» (форма без «ё») без `Consequences` → ERROR — форма без «ё»
+        ловится (D103: спека дословно её теряла)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-28 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "**Consequences:**")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("D98" in e for e in hits), hits)
+
+    def test_e_forward_only_before_cutoff_is_silent(self):
+        """(д) та же запись, но `Дата` < CONSEQUENCES_CANON_DATE → диагностик нет
+        (forward-only, D103: ни одна существующая запись не краснеет задним числом)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-27 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_f_unparsable_date_is_silent(self):
+        """(е) непарсимая/суффиксная `Дата` (`2026-07-18 (финализирован P0.4)`, форма
+        FOREMAN D7) → префиксный ISO-матч даёт «2026-07-18» < cutoff — диагностик нет."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D7 | 2026-07-18 (финализирован P0.4) | Спека отменена. | почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_g_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(ж) АДДИТИВНОСТЬ: тот же план БЕЗ Meta `Closure Protocol` даёт РОВНО тот же
+        список диагностик, что базовый план (сравнение МНОЖЕСТВ), даже когда D-лог несёт
+        заведомо гейтящуюся запись без `Consequences`."""
+        baseline_dir = write_valid_plan(self.root, plan_id="DEMO-BASE")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = self._plan(closure_protocol=None, decision_log_rows=(
+            "| D98 | 2026-07-28 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))
+
+
 class TestValidPlan(TmpPlanTestCase):
     def test_valid_plan_ok(self):
         plan_dir = write_valid_plan(self.root)

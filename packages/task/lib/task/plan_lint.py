@@ -626,6 +626,68 @@ def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, di
                                      board_row, diag)
 
 
+# --- P8.2/D103-D105: `Consequences` в D-записи (research/11 §2, research/23) ---
+# Носитель — инлайн-подполе `**Consequences:**` внутри ячейки `Решение` (пятая колонка
+# отклонена: шапка D-лога — литерал реестра CANON_LITERALS, её правка = переписывание
+# шапки во всех планах флота, D43). Гейт — ОПТ-IN ДВАЖДЫ (та же дисциплина, что у
+# `_lint_closure_reports_81`): (1) Meta-поле `Closure Protocol | v1`, (2) `Дата` D-записи
+# ≥ CONSEQUENCES_CANON_DATE (forward-only — механика WRITE_SITE_CODES_CANON_DATE выше,
+# И10: непарсимая/отсутствующая дата = вне скоупа, МОЛЧАНИЕ). Дата константы —
+# ДЕНЬ ПОСЛЕ последней существующей записи без `Consequences` (D98, ECO-OPT
+# 2026-07-27) — измерено `research/23-P8.2-refine-2026-07-27.md` §2: без даты гейт
+# закрылся бы красным собственным планом (D98 нет носителя и бэкфилл ЗАПРЕЩЁН, §2).
+CONSEQUENCES_CANON_DATE = "2026-07-28"
+CONSEQUENCES_LITERAL = "**Consequences:**"
+# Префиксный ISO-матч ячейки `Дата` (не барный `==`, D103 §2): FOREMAN D7 несёт
+# `2026-07-18 (финализирован P0.4)` — суффикс после даты легален, а строгий полный
+# матч читал бы это как непарсимое и терял смысл прецедента.
+CONSEQUENCES_DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+# Предикат отмены/замены решения — ИЗМЕРЕННЫЙ (research/23 §1), не переписанный со
+# спеки дословно: спека (`supersedes D`/`отменён`/`отменяет D`) ловит НОЛЬ записей на
+# ECO-OPT (краткое причастие склоняется, «ё» факультативна — D98 несёт форму
+# «отменена»); широкий стем `отмен` (любая форма) даёт 6 срабатываний, 4 из них —
+# ОТРИЦАНИЕ «не отменяет»/«не отменена» (ложный ERROR). Негативный lookbehind
+# `(?<!не )` СНИМАТЬ НЕЛЬЗЯ: без него 4 из 6 срабатываний на этом же плане ложные
+# (D11/D19/D26 и др., research/23 §1). Стем-лист держать УЗКИМ — три семантики, не
+# десять слов (Code Guidance P8.2): каждый лишний стем — риск ложного ERROR на сотнях
+# планов флота.
+CONSEQUENCES_STEMS_RE = re.compile(
+    r"supersedes D|отменяет D|(?<!не )отмен(?:ён|ен|ена|ено|ены)\b")
+
+
+def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
+    """P8.2/D103-D105: ячейка `Решение` строки `## 5. Decision Log`, матчащая
+    CONSEQUENCES_STEMS_RE (отмена/замена решения) и датированная (`Дата`) ≥
+    CONSEQUENCES_CANON_DATE, обязана нести `**Consequences:**` — иначе ERROR с
+    номером D-записи (fail-closed называет объект). Активация — ДВОЙНОЙ opt-in:
+    без Meta `Closure Protocol | v1` функция молчит целиком (аддитивность, тест).
+
+    Честная граница (Code Guidance P8.2, обязана быть написана вслух и здесь):
+    канон требует `Consequences` у КАЖДОЙ несущей D-записи; эта проверка ловит только
+    МАШИННО-ДЕТЕКТИРУЕМЫЙ подкласс — запись, явно объявляющую отмену/замену другого
+    решения тремя измеренными формами выше. Полное покрытие канона гейт не даёт и
+    не заявляет (findings/rayt-deep-2026-07-25.md §9.4 — формализм галочки)."""
+    declared, _ = (meta or {}).get(CLOSURE_META_FIELD, (None, None))
+    if declared is None or declared.strip() != CLOSURE_PROTOCOL_V1:
+        return
+    _, dl_body, dl_start = _find_section(plan_lines, DECISION_LOG_HEADER_RE)
+    if dl_body is None:
+        return
+    _, rows, _ = _parse_table(dl_body, dl_start)
+    for row, lineno in rows:
+        decision = row.get("Решение", "") or ""
+        if not CONSEQUENCES_STEMS_RE.search(decision):
+            continue
+        date_match = CONSEQUENCES_DATE_PREFIX_RE.match((row.get("Дата", "") or "").strip())
+        if not date_match or date_match.group(1) < CONSEQUENCES_CANON_DATE:
+            continue  # непарсимая/старая дата — вне скоупа, МОЛЧАНИЕ (И10, forward-only)
+        if CONSEQUENCES_LITERAL not in decision:
+            diag.error(plan_md, lineno,
+                       f"Decision Log {row.get('D#', '?')}: маркер отмены/замены решения "
+                       f"без `{CONSEQUENCES_LITERAL}` (канон plan-protocol §6, forward-only "
+                       f"с {CONSEQUENCES_CANON_DATE}, D103)")
+
+
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
@@ -678,6 +740,8 @@ CANON_LITERALS = (
     CLOSURE_META_FIELD,                                       # Meta-поле активации отчёта закрытия
                                                                # (§8, P8.1/D42: латиница — та же
                                                                # регистрация решением, что у write-site:)
+    CONSEQUENCES_LITERAL,                                     # §6, P8.2/D103-D105: латиница — та же
+                                                               # регистрация решением, T1 её не ловит
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -700,7 +764,11 @@ C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "au
 # а не канонический токен ⇒ присутствие в EN не требуется (i18n-keep не нужен).
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
                       + PHASE_HANDOFF_NEGATION_LITERALS
-                      + ("не раньше", "делать нечего", "тайм-гейт"))
+                      + ("не раньше", "делать нечего", "тайм-гейт")
+                      # P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
+                      # (отмена/замена решения) в свободной прозе D-лога; EN-канон их не
+                      # несёт и нести не обязан (research/23 §3).
+                      + ("отменяет", "отменён", "отменен", "отменена", "отменено", "отменены"))
 
 
 def _plan_codename(plan_id):
@@ -1592,6 +1660,10 @@ def lint_plan(plan_dir, diag):
     plan_lines = _read_lines(plan_md)
     contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
                  else {"exported": [], "consumed": []})
+
+    # P8.2/D103-D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
+    if plan_lines is not None:
+        _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
     phases_dir = plan_dir / "phases"
     phase_files = {}  # phase_id -> Path

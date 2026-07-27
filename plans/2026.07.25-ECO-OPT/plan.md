@@ -202,7 +202,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 1/9 | 🟡 In progress |
-| P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | ⬜ Not started |
+| P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | 🟡 In progress |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟡 In progress |
 
 ## 5. Decision Log
@@ -522,6 +522,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-design/Claude Opus 5/high (item P8.2) | ТЗ P8.2 доведено до DoR: снят мёртвый гейт порядка, гейт `Consequences` переопределён замером + forward-only дата, Routing поднят до implementation/high — D103–D105; детали см. research/23-P8.2-refine-2026-07-27.md |
 | 2026-07-27 | plan-run/Claude Sonnet 5/high (P8.2 закрыт) | P8.2 закрыт 🟢: `**Consequences:**` в D-записи (измеренный предикат + forward-only) и словарь зрелости возможности (5 значений) — канон §4/§6, гейт `plan_lint.py`, version-first — детали см. `phases/P8.md` P8.2 Completion Notes |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.3 закрыт) | P8.3 закрыт 🟠: `Возобновление: <команда>` в Pending Work — гейт `_lint_checkpointed_83` (opt-in `Closure Protocol \| v1`) на `🔴 Blocked`/`⛔ Skipped by decision`, канон §6, писатели `plan-exec.md`/`plan-close.md`; отклонение — version-first бампы вне `Files` (тот же класс, что P8.1) — детали см. `phases/P8.md` P8.3 Completion Notes |
+| 2026-07-27 | plan-run/Claude Sonnet 5/high (P9.1 закрыт) | P9.1 закрыт 🟠: `review-gate` получил содержание (`checks/` + миграция + three-state `doctor`), live-прогон субагента подтвердил семантику и вскрыл два бага (исправлены) — детали см. `phases/P9.md` P9.1 Completion Notes |
 
 ## 7. Contracts
 

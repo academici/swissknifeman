@@ -208,7 +208,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
-| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 3/10 | 🟡 In progress |
+| P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 4/10 | 🟡 In progress |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 0/4 | 🟡 In progress |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
 
@@ -577,6 +577,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.4) | P8.4 закрыт 🟢 Done: `scripts/docs-impact.py`+тест+`.github/workflows/hygiene.yml` — детали см. `phases/P8.md` P8.4 Completion Notes. |
 | 2026-07-27 | plan-design/Claude Opus 5/high (разблокировка P8.5/P8.6) | Форма ячейки `Items` §3 объявлена закрытым набором (D124, `supersedes D123` в части легальности склейки): §3 нормализован построчно — P8.5/P8.6/P8.8/P8.9 сняты с `🔴` без правки кода. Заведён P8.10 (диагностичный отказ компилятора + канон §9) в живой P8, реопен P10 отклонён (D125). |
 | 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.5) | P8.5 закрыт 🟢 Done: `docs/status.md` (21 строка) + `scripts/status-check.py`+тест (6 кейсов) + шаг `status-check` в job `hygiene` + nav — детали см. `phases/P8.md` P8.5 Completion Notes. |
+| 2026-07-27 | plan-exec/Claude Sonnet 5/medium (P8.6) | P8.6 закрыт 🟢 Done: `scripts/public-hygiene.py`+`scripts/verify-tag.py`+два теста + шаг `public-hygiene`/job `release-tag` в `hygiene.yml` — детали и Pending Work (найденный `install.log`) см. `phases/P8.md` P8.6 Completion Notes. |
 
 ## 7. Contracts
 

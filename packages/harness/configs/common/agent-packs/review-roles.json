@@ -1,0 +1,95 @@
+{
+  "review_version": "1.0.0",
+  "pack_root": "claude-code/agent-packs",
+  "roles": [
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "reviewer",
+      "projection": "backend-laravel/agents/reviewer.md",
+      "overrides": "backend-laravel/rules/reviewer-overrides.md",
+      "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+      "sections": {
+        "criteria": "## Прочие Laravel-критерии",
+        "verdict_gates": "## Гейты вердикта (по порогам, не «на глаз»)",
+        "project_overrides": "## Проектные оверрайды",
+        "output": "## Выход"
+      },
+      "dimensions": [
+        "access-layer", "layering", "n-plus-one", "validation", "authorization",
+        "migrations-vs-models", "model-conventions", "transactions", "glossary",
+        "config-honesty", "idempotency-races", "test-honesty", "over-engineering",
+        "generated-assets"
+      ]
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "reviewer",
+      "projection": "laravel-package/agents/reviewer.md",
+      "overrides": "laravel-package/rules/reviewer-overrides.md",
+      "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+      "sections": {
+        "criteria": "## Прочие критерии пакета",
+        "verdict_gates": "## Гейты вердикта (по порогам, не «на глаз»)",
+        "project_overrides": "## Проектные оверрайды",
+        "output": "## Выход"
+      },
+      "dimensions": [
+        "public-api-bc", "service-provider-lifecycle", "publishables",
+        "env-outside-config", "composer-constraints", "testbench-infra",
+        "multi-version-matrix", "model-conventions", "glossary", "config-honesty",
+        "test-honesty", "over-engineering", "generated-assets"
+      ]
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "reviewer",
+      "projection": "node-frontend/agents/reviewer.md",
+      "overrides": "node-frontend/rules/reviewer-overrides.md",
+      "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+      "sections": {
+        "criteria": "## Критерии",
+        "verdict_gates": "## Гейты вердикта (по порогам)",
+        "project_overrides": "## Проектные оверрайды",
+        "output": "## Выход"
+      },
+      "dimensions": [
+        "typing", "structure", "reactivity", "accessibility", "over-engineering",
+        "generated-assets", "glossary"
+      ]
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "reviewer",
+      "projection": "dart-flutter/agents/reviewer.md",
+      "overrides": "dart-flutter/rules/reviewer-overrides.md",
+      "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+      "sections": {
+        "criteria": "## Критерии",
+        "verdict_gates": "## Гейты вердикта",
+        "project_overrides": "## Проектные оверрайды",
+        "output": "## Выход"
+      },
+      "dimensions": [
+        "state-management", "resource-lifecycle", "null-safety", "pos-embedded",
+        "ffi", "generated-assets", "glossary"
+      ]
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "reviewer",
+      "projection": "python-backend/agents/reviewer.md",
+      "overrides": "python-backend/rules/reviewer-overrides.md",
+      "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+      "sections": {
+        "criteria": "## Критерии",
+        "verdict_gates": "## Гейты вердикта",
+        "project_overrides": "## Проектные оверрайды",
+        "output": "## Выход"
+      },
+      "dimensions": [
+        "layering", "typing", "security", "over-engineering", "generated-assets",
+        "glossary"
+      ]
+    }
+  ]
+}

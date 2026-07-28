@@ -4,6 +4,16 @@
 
 ### Added
 
+- **Реестр ролей ревью как данные (P9.2, `2026.07.25-ECO-OPT`, D126).** Extension-таблица
+  `packages/harness/configs/common/agent-packs/review-roles.json` (ключ `(pack_id, role_id)`,
+  рядом с каноном `roles.json`) индексирует пять reviewer-ролей: проекция/оверрайды,
+  фактические заголовки четырёх обязательных секций, измерения из закрытого словаря.
+  `role-bindings.json`/`agentpacks.py` не тронуты (frozen provider-contract). Валидатор
+  `harness.reviewroles` (stdlib, восемь проверок, каждая — под конкретный режим отказа
+  policy-as-data) — шаг `[8/8]` `packages/harness/scripts/validate.sh`, единственная точка
+  принуждения. Фактический дрейф пяти паков (разные заголовки, разный набор `skills`) —
+  `plans/2026.07.25-ECO-OPT/findings/P9.2-review-roles-drift.md`, адресован треку 1 OQ-4.
+
 - **docs-impact гейт в CI (P8.4, `2026.07.25-ECO-OPT`, D119–D123).** Новый
   `scripts/docs-impact.py` + `.github/workflows/hygiene.yml` останавливает change-set,
   который вводит/убирает/переименовывает файл поверхности пакета или правит его интерфейс

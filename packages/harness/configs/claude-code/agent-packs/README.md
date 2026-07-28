@@ -42,6 +42,27 @@ harness agent-packs doctor  [--pack <pack>]
 `.claude/agent-pack.lock.json` (sha256 отрендеренного) — совместимы. Upgrade — по
 CHANGELOG-дельте с 3-way reasoning через sha256, без diff-движка.
 
+## Реестр ролей ревью (`configs/common/agent-packs/review-roles.json`)
+
+Отдельная extension-таблица (не `role-bindings.json` — тот несёт provider-биндинг
+`{pack_id, role_id, model_selector, color}` и не трогается, D126) по ключу
+`(pack_id, role_id)`, рядом с каноном тел ролей `configs/common/agent-packs/roles.json`.
+Пять записей `role_id: "reviewer"` — **индекс** носителя процедуры ревью (не копия правил):
+`projection`/`overrides` — пути к `agents/reviewer.md` и `rules/reviewer-overrides.md`
+(compatibility-assets, byte-в-byte проекция канона), `required_sections`/`sections` —
+четыре обязательные секции и их ФАКТИЧЕСКИЕ заголовки в паке (не приведены к одному виду —
+это правка содержания, вне scope), `dimensions` — измерения ревью из закрытого словаря.
+`skills` в реестре НЕТ — это дословный дубль `roles.json.skills`, канон читается напрямую.
+Валидатор `harness.reviewroles` (`PYTHONPATH=lib python3 -m harness.reviewroles --check`,
+шаг `[8/8]` `scripts/validate.sh`) сверяет реестр с диском и с каноном: двусторонний
+default-deny (пак на диске без записи И роль канона без записи), существование projection/
+overrides, буквальное совпадение заголовков с `roles.json` `content` (а не с проекцией —
+расхождение канона и проекции отдельное нарушение), `dimensions` ⊆ словаря,
+`roles.json.skills` ∈ `packages/skiller/skills.json`, `review_version` сверен с
+зафиксированным отпечатком состава. Найденный дрейф между паками (разные заголовки одной
+секции, разный набор `skills`) — не чинится этим механизмом, это фактическая карта
+расхождений (см. `plans/2026.07.25-ECO-OPT/findings/P9.2-review-roles-drift.md`).
+
 ## Паки
 
 | Пак | Shape | Стек | Версия |

@@ -31,6 +31,13 @@
   защита от петли — счётчик диспетчера по (сессия, агент, проверка). Три состояния
   в `harness doctor` вместо тихого no-op.
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
+- **`configs/common/agent-packs/review-roles.json`** — реестр ролей ревью как данные (L2):
+  extension-таблица по ключу `(pack_id, role_id)` рядом с каноном `configs/common/agent-packs/
+  roles.json`; индексирует пять reviewer-ролей (projection/overrides/required_sections/
+  sections/dimensions), НЕ копирует правила и НЕ трогает `role-bindings.json`/`agentpacks.py`
+  (frozen provider-contract, D126). Валидатор `lib/harness/reviewroles.py`
+  (stdlib, восемь проверок) — шаг `[8/8]` в `scripts/validate.sh`; единственная точка
+  принуждения.
 - `hooks/agent-router/` — **intent-router** (первый Python-хук репо): пара `session-policy.py`
   (SessionStart — статическая политика) + `router.py` (UserPromptSubmit — keyword-подсказка) роутит
   свободный текст к оптимальной `/task:*`/агенту/скиллу. Каталог генерит `harness router --generate`.

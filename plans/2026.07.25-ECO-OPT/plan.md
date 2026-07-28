@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (фаза P3 закрыта `🟠 Done with deviations` — все 6 items терминальны, `plan-close`) |
+| Last Updated | 2026-07-28 (P4.1 закрыт `🟢 Done` — ADR-0001 cross-machine память, `plan-run`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -212,7 +212,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 1/2 | 🟢 Done |
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟠 Done with deviations |
-| P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
+| P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟡 In progress |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
@@ -629,6 +629,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (P11.8 — реконсиляция P9) | Реконсиляция терминальной фазы P9 по 12 находкам её аудита (ATTENTION): P9.4 `🟠`→`🟢` (carve-out (а), не material), два ложных утверждения в финдингах P9.4/P9.2 переписаны по фактам, счёт линтера с атрибуцией добавлен трём items, `--arbitration` вписан в Validation P9.3/P9.4 (D134), Known Deviations P9.2 заполнены (D126), висячая ссылка `.gitignore` снята (D135), `reviewroles.py` чинит 19 ложных находок на одну диагностичную — фаза P9 не реопенена — детали см. `phases/P9.md` находки 1–12 и Phase Handoff. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/medium (P3.1 закрыт) | P3.1 закрыт 🟢: диагноз листинга флота (`findings/P3.1-listing-diagnosis.md`) — несущая поправка: реальный бюджет листинга 1M-модели 30 000 симв, не ≈10 000 (живой `claude --debug`+`/context`+`/doctor`); пересчёт §3 переворачивает вердикт `research/20` §1.1 (9/10 профилей укладываются, не переполняют) — детали см. `phases/P3.md` P3.1 Completion Notes/Pending Work. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P3 закрыта) | Фаза P3 закрыта `🟠 Done with deviations`: все 6 items терминальны (2🟢/4🟠) — статусы сверены с git-фактами и Known Deviations, docs-sync подтверждён (обновлено в рамках P3.5/P3.6), закрывающий отчёт `closure/P3.json` заведён — детали см. `phases/P3.md` Phase Handoff. |
+| 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.1 закрыт) | P4.1 закрыт 🟢: `ADR-0001-cross-machine-memory.md` фиксирует восемь принятых решений (D78/D80) + отвергнутые варианты + известные ограничения — детали см. `phases/P4.md` P4.1 Completion Notes. |
 
 ## 7. Contracts
 

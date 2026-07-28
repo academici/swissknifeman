@@ -2386,8 +2386,8 @@
       "path": "skills/general/verify-claims/SKILL.md",
       "version": "0.2.0",
       "description": "Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice, market, service/MCP capability) — verify via RAG, not memory. Ladder: context7 → Perplexity → WebSearch → research for high-stakes. Activate on audit/plan review, big planning, library/stack choice, claiming 'this is standard'. Repo-grounded/stable knowledge — skip.",
-      "sha256": "ccb328f74903a8beb922c3619579922743bcb3ddd6f8934a0ba5f9ab434d85ba",
-      "content_sha256": "644ecb9d01a08f6991044603e56be85e43eba47f1164b2ebd1c7bfc80dc0716a",
+      "sha256": "566ced756d61cfbf79b4d5383f8681990ecc0d4bd9ce35e746af017b7bf31405",
+      "content_sha256": "0be092b1813b831fd9a7f68d24f47041cc4c863f107c966c8358d8b4961dc8e9",
       "tags": [
         "verification",
         "rag",

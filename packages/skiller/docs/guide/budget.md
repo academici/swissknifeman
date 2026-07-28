@@ -169,7 +169,7 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
-    verify_claims["verify-claims<br/>⊕110 ↻2696"]:::hot
+    verify_claims["verify-claims<br/>⊕110 ↻3032"]:::hot
     workflow_craft["workflow-craft<br/>⊕48 ↻3376"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
   end
@@ -439,13 +439,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **15960** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 355770 ток · ⌥ on-demand 828278 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **15960** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356106 ток · ⌥ on-demand 828278 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1508 | 55514 | 20971 |
+| `general` | 22 | 1508 | 55850 | 20971 |
 | `repository-bootstrap` | 13 | 1120 | 28676 | 0 |
 | `php` | 17 | 1048 | 19298 | 54837 |
 | `architect` | 15 | 964 | 23520 | 33458 |

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P6.3 закрыт `🟠 Done with deviations` — verify-claims anti-overconfidence + pressure-evals, все items фазы P6 терминальны, фаза ждёт `plan-close`) |
+| Last Updated | 2026-07-28 (P2.2 закрыт `🟠 Done with deviations` — капы делегирования + `confidence` в ревью-находках, класс A пуст; формат карты для P2.3 готов) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -541,6 +541,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-run/Claude Opus 5/high (P2.2 закрыт 🟠) | P2.2 закрыт `🟠 Done with deviations`: класс A пуст, применены 4 правки класса «добавить» (капы делегирования + `confidence`), карта на 18 файлов; item-коммит нёс 4 производных пути вне `Files` — детали см. `phases/P2.md` P2.2 Completion Notes. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P4 закрыта) | Фаза P4 закрыта 🟠 Done with deviations: все три item'а терминальны (P4.1🟢/P4.2🟠/P4.3🟠); Status Board `1/3`; `closure/P4.json` (Closure Protocol v1); Phase Handoff собран — детали см. `phases/P4.md` `## Phase Handoff`. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/medium (P4.3 закрыт 🟠) | P4.3 закрыт `🟠 Done with deviations`: роль-осознанная ступень 5 `bootstrap-machine.sh` + доки «Вторая машина»; 3/6 гейтов не прогнаны, находки F1/F2 — детали см. phases/P4.md Completion Notes. Все items P4 терминальны; фазовое закрытие — отдельным `/task:plan-close` (не этим item'ом). |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P6.2) | P6.2 закрыт `🟠 Done with deviations`: четыре дельты compact-дисциплины в `context-economy`/`compact-responses`, D8 закрыт как уже покрытый — детали см. `phases/P6.md` P6.2 Completion Notes. |

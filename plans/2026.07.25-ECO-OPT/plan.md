@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (фаза P11 закрыта 🟠) |
+| Last Updated | 2026-07-28 (P1.1 закрыт ⛔ Skipped by decision — вердикт tool-search, D136) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -539,6 +539,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-run/Claude Opus 5/high (P1.1 закрыт ⛔) | P1.1 закрыт `⛔ Skipped by decision`: ветка A (tool search default-on, включать нечего), D136 — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (P11 закрыта 🟠) | Фаза P11 закрыта: все 8 items терминальны (6 🟢, 2 🟠 — P11.6/P11.7). Доска §4: статус `🟡 In progress → 🟠 Done with deviations`. `closure/P11.json` (Closure Protocol v1). |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (P11.8 сверен 🟢) | Бухгалтерия item'а P11.8 (продукт уже исполнен `60605c5b`) заполнена постфактум — детали `phases/P11.md` P11.8 Completion Notes. Доска §4: `P11 5/8 → 6/8`. |
 | 2026-07-25 | plan-design/Claude Fable 5 | Design pass 1/2: brief + RAG-финдинги (5 реп GitHub API, Opus 5 guide, CC-факты, 2 perplexity-синтеза), 7 фаз/16 items (P1 детализирована, P2–P7 скелеты с контрактами), Обсуждение (7 развилок), D1–D10. Supersedes TOKEN-ECON-P6. |

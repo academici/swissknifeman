@@ -1,35 +1,37 @@
-# HANDOFF — 2026-07-28 — after P11.1
+# HANDOFF — 2026-07-28 — after P11.2
 
-**P11.1 закрыт 🟢.** Двухшаговый резолвер пути (корень репо → каталог плана) + расширение
-поверхности скана `plans/verify-citations.py` до семи шаблонов (`plan.md`, `handoff.md`,
-`roadmap.md`, `phases/*.md`, `findings/**`, `research/**`, `brief/**`) — детали см.
-`phases/P11.md` P11.1 Completion Notes. На живых планах гейт теперь проверяет 624 цитаты (было
-393 на входе design-захода), 56 находок; по `2026.07.25-ECO-OPT` отдельно — 384/48 (`--strict`
-exit 1, ожидаемо — часть находок класса `.json::` уйдёт после P11.2).
+**P11.2 закрыт 🟢.** Класс цитаты `` `file.json::a.b.c` `` в `plans/verify-citations.py`:
+резолв через `json.load` + greedy-обход ключей (на каждом уровне — длиннейший дотированный
+префикс остатка, являющийся ключом; для списка — целочисленный индекс), битый JSON — находка
+«JSON не парсится». Регрессия `owners.P2.2` (ключ с точкой внутри `owners`) проверена и
+синтетическим selftest-кейсом, и на реальном носителе
+(`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/remediation-map.json::owners.P2.2`
+резолвится). На расширенной поверхности: цитат класса `*.json::` — 24, находок среди них — 5
+(все пять — буквальные примеры формы цитаты внутри прозы ТЗ/находок P11, не реальные ссылки).
+Общий отчёт гейта: цитат 624, находок 52 (было 48 на входе item'а — рост даёт сам json-класс,
+включённый впервые). Детали — `phases/P11.md` P11.2 Completion Notes.
 
-**Перед стартом item'а найден и починен структурный дефект вне Scope (D133):** пустая строка
-`plan.md:192` разрывала таблицу `## 3. Routing`, `task_contract.build()` не видел ни одной из
-восьми строк P11.1–P11.8. Фикс — точечная правка формата через `/task:plan-design`, семантика
-роутинга не менялась (детали — Known Deviations P11.1, D133 в §5 `plan.md`).
-
-**Next:** exec: task:plan-exec 2026.07.25-ECO-OPT P11.2
+**Next:** exec: task:plan-run 2026.07.25-ECO-OPT P11.3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation (Claude Sonnet 5) |
-| Effort | medium — пин `task:plan-exec` |
+| Effort | high — Routing P11.3 (`Exec = manual` — деривация §9, `plan-exec` пинит `medium` и выдал бы `ROUTING-INCONSISTENT`) |
 | Capabilities | — |
 | Context | NEW SESSION — item читает ТЗ с диска |
-| Суть | Класс цитаты `file.json::a.b.c` — резолв через `json.load` с greedy-обходом ключей (ключи с точками, регрессия `owners.P2.2`) в `plans/verify-citations.py` |
+| Суть | Кросс-документный чек `handoff.md` ↔ §4 Status Board в `plan_lint.py`: шов «линтер + канон скилла, который читает ВЕСЬ флот + version-first публикация» (прецеденты P10.1/D101, P8.2/D105) |
+
+Перед запуском: `/model sonnet` + `/effort high`, затем команда ниже (`plan-run` наследует
+модель/effort ТЕКУЩЕЙ сессии, не пинит их сам).
 
 ```
-/task:plan-exec 2026.07.25-ECO-OPT P11.2
+/task:plan-run 2026.07.25-ECO-OPT P11.3
 ```
 
-Цепочка волны 6 (порядок обязателен, обоснование — `roadmap.md` § «Волна 6»): `P11.1` ✅ → `P11.2`
-→ `P11.3` (**plan-run** под сессией `implementation/high`) → `P11.4` (dogfood ДО починок) →
-`P11.5` (триаж + baseline) → `P11.6` (**plan-run**, `implementation/high`) → `P11.7` (manual,
-машинное состояние `~/.claude/hooks/`) → `P11.8` (`/task:plan-close 2026.07.25-ECO-OPT P9`).
+Цепочка волны 6 (порядок обязателен, обоснование — `roadmap.md` § «Волна 6»): `P11.1` ✅ →
+`P11.2` ✅ → `P11.3` (**plan-run** под сессией `implementation/high`) → `P11.4` (dogfood ДО
+починок) → `P11.5` (триаж + baseline) → `P11.6` (**plan-run**, `implementation/high`) → `P11.7`
+(manual, машинное состояние `~/.claude/hooks/`) → `P11.8` (`/task:plan-close 2026.07.25-ECO-OPT P9`).
 
 Свободные items вне фазы P11 (не гейтованы): **P1.1** (frontier/high, manual) · **P3.1**
 (implementation/medium, manual — нужен оператор для `/doctor`/`/context`) · **P2.3**
@@ -38,22 +40,22 @@ exit 1, ожидаемо — часть находок класса `.json::` у
 
 **Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие находок) · фазы **P5** (5/6 🟠),
 **P8** (7/10 🟠), **P9** (2/4 🟠, аудит проведён — вердикт ATTENTION, 12 находок), **P10** (1/4 🟠)
-терминальны · P2.1 · P3.2 · P1.2 · **P11.1** — **34/52 items закрыто**, 4 фазы терминальны, 4 в
-работе (P2 1/3, P3 1/6, P1 1/2, **P11 1/8**), 3 не начаты (P4, P6, P7).
+терминальны · P2.1 · P3.2 · P1.2 · **P11.1**, **P11.2** — **35/52 items закрыто**, 4 фазы
+терминальны, 4 в работе (P2 1/3, P3 1/6, P1 1/2, **P11 2/8**), 3 не начаты (P4, P6, P7).
 
-**Remaining:** 18/52 items. Ближайшая цепочка — оставшиеся 7 items фазы P11 (`P11.2`→`P11.8`).
+**Remaining:** 17/52 items. Ближайшая цепочка — оставшиеся 6 items фазы P11 (`P11.3`→`P11.8`).
 Порядковые условия вне P11: P2.3 — ПОСЛЕ P8 (выполнено) и P6.3 (D93, не выполнено); P6.1 — ПОСЛЕ
 P9.1 (снято); P4.2 — ПОСЛЕ P3.2 (снято).
 
-**Sources of truth:** `plan.md` (§3 Routing — восемь строк P11; §4 Phase Index — P11 1/8; §5
+**Sources of truth:** `plan.md` (§3 Routing — восемь строк P11; §4 Phase Index — P11 2/8; §5
 D127–D133; §Обсуждение развилки 20–21) · `phases/P11.md` (Phase Context + контракт фазы + 8 items
-с ТЗ, P11.1 Completion Notes) · `findings/P11-citation-gate-measurements.md` (слой 1 — весь замер
-с якорем дерева, включая расхождение с числами брифа и отклонённый класс) ·
-`research/27-P11-citation-gate-target-design.md` (слой 2 — целевой дизайн четырёх механик, три
-точки принуждения, **поимённый разбор dogfood'а F1/F2/F8/F9**) · `brief/01-refinements.md` блок
-2026-07-28 (слой 0 — вход владельца, два принятых уточнения скоупа) · `phases/P9.md` блок
-`## Audit P9 — 2026-07-28` (12 находок — эталон-корпус фазы и скоуп P11.8) · машинные гейты
-`plans/verify-citations.py`, `plans/cross-plan-files.py`, `packages/task/scripts/plan-lint.py`.
+с ТЗ, P11.1/P11.2 Completion Notes) · `findings/P11-citation-gate-measurements.md` (слой 1 — весь
+замер с якорем дерева) · `research/27-P11-citation-gate-target-design.md` (слой 2 — целевой
+дизайн четырёх механик, три точки принуждения, **поимённый разбор dogfood'а F1/F2/F8/F9**) ·
+`brief/01-refinements.md` блок 2026-07-28 (слой 0 — вход владельца, два принятых уточнения
+скоупа) · `phases/P9.md` блок `## Audit P9 — 2026-07-28` (12 находок — эталон-корпус фазы и скоуп
+P11.8) · машинные гейты `plans/verify-citations.py`, `plans/cross-plan-files.py`,
+`packages/task/scripts/plan-lint.py`.
 
 **Open risks:** (0) design-заход кода не менял — рабочее дерево несёт только плановые файлы плюс
 унаследованную грязь. (1) измеренный регресс воспроизводимости ревью `ΔR=-0.12` между P9.3 и
@@ -80,12 +82,10 @@ CORE-скилла без активационной секции (P8.8). (16) ru
 50 находок) — sanity-check размер, не статистически надёжная оценка. (21) `review-roles.json`
 сознательно НЕ входит в `audited_paths` provider-аудита (D126 Consequences (2)). (22) дрейф пяти
 reviewer-паков — `findings/P9.2-review-roles-drift.md`, адресован P7.2. (23) одиночная пустая
-строка внутри таблицы `## 3. Routing` тихо (для человека — таблица читается глазами штатно) режет
-таблицу для `plan_lint._parse_table`/`task_contract.build()` (D133, `plan.md:192` уже починен
-точечно); `plan_lint.py` не несёт диагностики целостности §3 — тот же дефект может повториться в
-ЛЮБОМ плане флота. Роадмап-кандидат, не item P11. (24) **НОВОЕ:** json-путь (`file.json::a.b.c`)
-остаётся ложно-зелёным до P11.2 (следующий item, уже в скоупе фазы) — часть находок P11.1
-относится к этому классу.
+строка внутри таблицы `## 3. Routing` тихо режет таблицу для `plan_lint._parse_table`/
+`task_contract.build()` (D133, `plan.md:192` уже починен точечно); `plan_lint.py` не несёт
+диагностики целостности §3 — тот же дефект может повториться в ЛЮБОМ плане флота. Роадмап-
+кандидат, не item P11.
 
 **Workarounds / Deferred / Open questions:** обходок в коде нет. **Открытые вопросы владельцу,
 поставленные design-заходом (**OQ-11**, `open-questions.md`):** нужны ли отдельные машинные классы

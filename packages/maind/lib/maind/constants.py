@@ -31,6 +31,16 @@ DIGEST_SHARED_MAX = 0          # project-only дефолт (D10); shared — я�
 DIGEST_TRUNCATE_SUFFIX = "… (→ recall)"
 DIGEST_MIN_TAIL_CHARS = 150    # переполняющий item обрезаем только если остаток бюджета ≥ это
 
+# Бюджет ожидания cross-machine вызовов памяти (ADR-0001 P4.2). ЛЁГКИЕ — health/auth-пробник
+# (маленький ответ); ТЯЖЁЛЫЕ — export/digest (весь пул, до нескольких МБ). Измерено по каналу
+# на LAN-адресе хоста (не loopback) — plans/2026.07.25-ECO-OPT/findings/P4.2-remote-link-measure.md;
+# дефолты держат запас НАД измеренным числом (реальный LAN/Wi-Fi добавит джиттер, которого
+# однохостовый замер не видит) — ориентир практики findings §6 (1-2с лёгкие, 5-10с тяжёлые).
+MEMORY_LIGHT_TIMEOUT_S = 3
+MEMORY_HEAVY_TIMEOUT_S = 10
+MEMORY_RETRIES = 2
+MEMORY_RETRY_BACKOFF_S = 0.5
+
 # ── граф ────────────────────────────────────────────────────────────────────
 NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}
 EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",

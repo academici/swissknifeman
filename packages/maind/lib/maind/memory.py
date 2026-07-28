@@ -13,14 +13,18 @@ import shutil
 import signal
 import subprocess
 import time
+from pathlib import Path
 from urllib.parse import quote
+
+from core.http import HTTPUnauthorizedError
 
 from .common import (die, http_get_json, http_post_json, parse_args, pid_alive,
                      ping, warn)
 from .config import load_config
 from .constants import (DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS, DIGEST_MIN_TAIL_CHARS,
-                        DIGEST_SHARED_MAX, DIGEST_TRUNCATE_SUFFIX, MEMORY_HTTP_PORT,
-                        MEMORY_STREAM_PORT, MEMORY_WORKERS)
+                        DIGEST_SHARED_MAX, DIGEST_TRUNCATE_SUFFIX, MEMORY_HEAVY_TIMEOUT_S,
+                        MEMORY_HTTP_PORT, MEMORY_LIGHT_TIMEOUT_S, MEMORY_RETRIES,
+                        MEMORY_RETRY_BACKOFF_S, MEMORY_STREAM_PORT, MEMORY_WORKERS)
 
 
 # ── разрешение портов/URL (env → конфиг → дефолт) ───────────────────────────
@@ -38,9 +42,100 @@ def resolve_ports(env, config):
 
 
 def health(url):
-    """True, если демон отвечает на /agentmemory/health (или /livez)."""
+    """True, если демон отвечает на /agentmemory/health (или /livez). Оба эндпойнта
+    ВСЕГДА публичны у движка (даже с заданным AGENTMEMORY_SECRET) — это НЕ проверка
+    авторизации, только «демон жив» (см. check_auth для 401 vs недоступен)."""
     return (ping(f"{url}/agentmemory/health", timeout=3)
             or ping(f"{url}/agentmemory/livez", timeout=3))
+
+
+# ── роль узла (ADR-0001 п.1/п.5, D27/D80) ────────────────────────────────────
+def memory_role(config):
+    return ((config or {}).get("memory") or {}).get("role", "standalone")
+
+
+def refuse_if_client_role(config):
+    """die(), если этот узел — client: локальный демон памяти НЕ поднимается —
+    второй писатель ломает единственность стора варианта 1 (ADR-0001 п.1/п.5, D27).
+    Запрет — КОД, а не документация (Implementation Rules P4.2)."""
+    if memory_role(config) == "client":
+        die("роль узла memory.role='client' — локальный демон памяти НЕ поднимается "
+            "(второй писатель ломает cross-machine память, ADR-0001). Используйте "
+            "хост памяти по memory.url или смените memory.role на этой машине.")
+
+
+# ── аутентификация (ADR-0001 п.3/п.4, D29) ───────────────────────────────────
+def resolve_secret(env, config):
+    """Bearer-токен для протектед-вызовов памяти. Порядок (ADR-0001): env
+    `AGENTMEMORY_SECRET` → `memory.secret_file` (путь к 0600-файлу; относительный —
+    от корня узла) → нет секрета (анонимный локальный демон, как сегодня — дефолт
+    не меняет ничего)."""
+    env_secret = os.environ.get("AGENTMEMORY_SECRET")
+    if env_secret:
+        return env_secret
+    secret_file = ((config or {}).get("memory") or {}).get("secret_file")
+    if not secret_file:
+        return None
+    path = Path(os.path.expanduser(secret_file))
+    if not path.is_absolute():
+        path = env.root / path
+    try:
+        return path.read_text(encoding="utf-8").strip() or None
+    except OSError as e:
+        warn(f"memory.secret_file не читается ({path}: {e}) — вызовы памяти пойдут без токена")
+        return None
+
+
+def auth_headers(secret):
+    """{'Authorization': 'Bearer <secret>'} либо None (без секрета — как сегодня,
+    заголовки не идут вовсе)."""
+    return {"Authorization": f"Bearer {secret}"} if secret else None
+
+
+def check_auth(url, headers, *, timeout=MEMORY_LIGHT_TIMEOUT_S):
+    """Различает «недоступен» от «неавторизован» на протектед-эндпоинте (findings
+    §2: /agentmemory/health ВСЕГДА публичен и не даёт 401 — правду про bearer можно
+    узнать только реальным протектед-вызовом). None — секрет не настроен (проверка
+    неприменима) · True — авторизован · False — демон ответил 401."""
+    if not headers:
+        return None
+    try:
+        http_post_json(f"{url}/agentmemory/search",
+                       {"query": "__maind_auth_probe__", "namespace": "__maind_auth_probe__",
+                        "limit": 1}, headers=headers, timeout=timeout)
+        return True
+    except HTTPUnauthorizedError:
+        return False
+    except RuntimeError:
+        return None   # недоступен/иная ошибка — не про авторизацию
+
+
+def unavailable_message(config, url):
+    """Роль-осознанный текст недоступности памяти (единственная точка врезки MCP,
+    `_run_tool` в mcp.py): на client НЕ подсказываем поднять локальный демон — это
+    инструкция создать второго писателя (findings §2 «в)»)."""
+    if memory_role(config) == "client":
+        return f"хост памяти {url} недоступен (роль client — локальный демон не поднимается)"
+    return f"демон памяти не запущен ({url}) — maind start --only memory"
+
+
+def _retry_read(fn, *, retries=MEMORY_RETRIES, backoff=MEMORY_RETRY_BACKOFF_S):
+    """Ретраи ТОЛЬКО для read-путей (export/digest) — контракт `store` не несёт
+    operation-id, ретрай мутации рискует дублем (ADR-0001 п.5, `research/06` §5),
+    поэтому store/forget им НЕ оборачиваются. HTTPUnauthorizedError не ретраится —
+    тот же токен даст тот же 401 (findings §6 — ретраи против transient-сбоя канала,
+    не против авторизации)."""
+    last = None
+    for attempt in range(retries + 1):
+        try:
+            return fn()
+        except HTTPUnauthorizedError:
+            raise
+        except RuntimeError as e:
+            last = e
+            if attempt < retries:
+                time.sleep(backoff * (2 ** attempt))
+    raise last
 
 
 def _read_pid(env):
@@ -54,8 +149,11 @@ def _read_pid(env):
 
 # ── жизненный цикл демона ────────────────────────────────────────────────────
 def _daemon_argv(env, config):
-    """(cmd, child_env, url) для запуска Node-демона памяти. Общий для start()/run().
-    Проверяет node и бинарь демона — иначе die с подсказкой."""
+    """(cmd, child_env, url) для запуска Node-демона памяти. Общий для start()/run() —
+    оба пути обязаны отказать на роли client (ADR-0001 п.5, D27), поэтому проверка
+    здесь, а не в каждом из них по отдельности. Проверяет node и бинарь демона —
+    иначе die с подсказкой."""
+    refuse_if_client_role(config)
     http_port, stream_port, url = resolve_ports(env, config)
     if shutil.which("node") is None:
         die("node не найден в PATH — agent-memory это Node-демон")
@@ -212,22 +310,23 @@ def split_scope(text):
         rest = rest[m2.end():]
 
 
-def store(url, scope, key, value):
+def store(url, scope, key, value, headers=None):
     """Сохранить факт: POST /agentmemory/remember. scope встраивается в КОНТЕНТ маркером
     `[[s:<scope>]]` (демон игнорит namespace и переопределяет type — это единственный
     надёжный канал изоляции на стороне maind). `namespace`/`type` шлём как было — на
-    будущее, если движок начнёт их уважать."""
+    будущее, если движок начнёт их уважать. `headers` — bearer-аутентификация (ADR-0001),
+    без секрета не передаются вовсе (дефолт не меняет ничего)."""
     return http_post_json(f"{url}/agentmemory/remember",
                           {"namespace": scope, "content": mark_scope(scope, value),
-                           "type": key})
+                           "type": key}, headers=headers)
 
 
-def recall(url, scope, query, limit=RECALL_LIMIT):
+def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
     """Поиск С ИЗОЛЯЦИЕЙ: демон ищет по ГЛОБАЛЬНОМУ пулу (namespace не фильтрует),
     поэтому берём широкий топ и оставляем ТОЛЬКО факты запрошенного `scope` по маркеру
     в контенте; маркер из текста снимаем. Немаркированные факты (легаси) — режем."""
     res = http_post_json(f"{url}/agentmemory/search",
-                         {"query": query, "namespace": scope, "limit": limit})
+                         {"query": query, "namespace": scope, "limit": limit}, headers=headers)
     results = res.get("results", []) if isinstance(res, dict) else []
     out = []
     for r in results:
@@ -246,7 +345,7 @@ def recall(url, scope, query, limit=RECALL_LIMIT):
     return out
 
 
-def forget(url, scope, key):
+def forget(url, scope, key, headers=None):
     """Удалить факт по memoryId: POST /agentmemory/forget {memoryId}.
 
     agentmemory 0.9.x ждёт ИМЕННО `memoryId` (id памяти глобально уникален);
@@ -254,18 +353,26 @@ def forget(url, scope, key):
     scope сохранён в сигнатуре для совместимости вызовов, но в запрос не идёт.
     """
     try:
-        return http_post_json(f"{url}/agentmemory/forget", {"memoryId": key})
+        return http_post_json(f"{url}/agentmemory/forget", {"memoryId": key}, headers=headers)
+    except HTTPUnauthorizedError:
+        raise
     except RuntimeError as e:
         raise RuntimeError(f"forget: {e}") from e
 
 
-def export(url, scope):
-    """Дамп памяти scope: GET /agentmemory/memories?namespace=."""
-    res = http_get_json(f"{url}/agentmemory/memories?namespace={quote(scope)}")
+def export(url, scope, headers=None, *, timeout=MEMORY_HEAVY_TIMEOUT_S, retries=MEMORY_RETRIES):
+    """Дамп памяти scope: GET /agentmemory/memories?namespace= (весь ГЛОБАЛЬНЫЙ пул —
+    namespace демон игнорит). Самый дорогой по каналу вызов (SessionStart-дайджест
+    тянет его целиком, research/06 §4) — настраиваемый таймаут/ретраи (measured:
+    findings/P4.2-remote-link-measure.md); ретраится (read, не мутация)."""
+    def _do():
+        return http_get_json(f"{url}/agentmemory/memories?namespace={quote(scope)}",
+                             timeout=timeout, headers=headers)
+    res = _retry_read(_do, retries=retries)
     return res.get("memories", []) if isinstance(res, dict) else []
 
 
-def memory_owner_scope(url, memory_id, scopes):
+def memory_owner_scope(url, memory_id, scopes, headers=None):
     """Best-effort: scope-владелец факта `memory_id` среди `scopes` — по маркеру
     `[[s:<scope>]]` в контенте (а нет маркера → бакету, в котором найден), или None,
     если факт не найден ни в одном scope. Нужен forget'у: memoryId глобально уникален,
@@ -273,7 +380,7 @@ def memory_owner_scope(url, memory_id, scopes):
     факт действительно принадлежит разрешённому проекту (защита кросс-namespace
     удаления). Устойчив к форме элемента дампа (raw `content` или observation)."""
     for sc in scopes:
-        for m in export(url, sc):
+        for m in export(url, sc, headers):
             if str(m.get("id")) != str(memory_id):
                 continue
             obs = m.get("observation") or m
@@ -344,10 +451,11 @@ def _memory_target(env, config, opts):
 
 
 def _require_daemon(env, config):
+    """(url, headers) — headers несёт bearer, если секрет настроен (ADR-0001)."""
     _, _, url = resolve_ports(env, config)
     if not health(url):
         die(f"демон памяти не запущен ({url}) — подними: maind start --only memory")
-    return url
+    return url, auth_headers(resolve_secret(env, config))
 
 
 def _cmd_remember(env, config, argv):
@@ -356,12 +464,12 @@ def _cmd_remember(env, config, argv):
     if opts["help"] or not pos:
         print('maind memory remember [--project ID | --scope S] [--share] [--type T] "<факт>"')
         return
-    url = _require_daemon(env, config)
+    url, headers = _require_daemon(env, config)
     _proj, write_scopes, _read = _memory_target(env, config, opts)
     key = opts.get("type") or "fact"
     written = []
     for sc in write_scopes:
-        res = store(url, sc, key, pos[0])
+        res = store(url, sc, key, pos[0], headers=headers)
         mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
         written.append({"scope": sc, "id": mid})
     if opts["json"]:
@@ -380,11 +488,11 @@ def _cmd_recall(env, config, argv):
         limit = int(opts.get("limit") or 10)
     except (TypeError, ValueError):
         limit = 10
-    url = _require_daemon(env, config)
+    url, headers = _require_daemon(env, config)
     _proj, _write, read_scopes = _memory_target(env, config, opts)
     seen, merged = set(), []
     for sc in read_scopes:                # union по приватному + ns:<тег> + global
-        for r in recall(url, sc, pos[0]):
+        for r in recall(url, sc, pos[0], headers=headers):
             text = r.get("text")          # один факт, всплывший в неск. scope'ах — раз
             if text in seen:
                 continue
@@ -407,8 +515,8 @@ def _cmd_forget(env, config, argv):
     if opts["help"] or not pos:
         print("maind memory forget [--project ID] <memoryId>   # id памяти глобально уникален")
         return
-    url = _require_daemon(env, config)
-    res = forget(url, None, pos[0])
+    url, headers = _require_daemon(env, config)
+    res = forget(url, None, pos[0], headers=headers)
     if opts["json"]:
         print(json.dumps(res, ensure_ascii=False))
     else:
@@ -515,6 +623,14 @@ def _cmd_digest(env, config, argv):
         shared_max = int(opts.get("shared_max") or dg.get("shared_max", DIGEST_SHARED_MAX))
     except (TypeError, ValueError):
         shared_max = DIGEST_SHARED_MAX
+    try:
+        timeout_s = float(dg.get("timeout_s") or MEMORY_HEAVY_TIMEOUT_S)
+    except (TypeError, ValueError):
+        timeout_s = MEMORY_HEAVY_TIMEOUT_S
+    try:
+        retries = int(dg["retries"]) if dg.get("retries") is not None else MEMORY_RETRIES
+    except (TypeError, ValueError):
+        retries = MEMORY_RETRIES
     _, _, url = resolve_ports(env, config)
     if not health(url):
         return                                   # демон лёг → тихо (хук-безопасно)
@@ -524,8 +640,9 @@ def _cmd_digest(env, config, argv):
         return                                   # scope не определён → тихо
     private = read_scopes[0] if read_scopes else None
     want = set(read_scopes)
-    try:
-        raw = export(url, "")                    # весь пул (namespace игнор) → фильтр по маркеру
+    headers = auth_headers(resolve_secret(env, config))
+    try:                                         # весь пул (namespace игнор) → фильтр по маркеру
+        raw = export(url, "", headers, timeout=timeout_s, retries=retries)
     except RuntimeError:
         return
     items, dropped = select_digest_items(raw, private, want, limit=limit,
@@ -558,10 +675,10 @@ def _cmd_count(env, config, argv):
         print("maind memory count [--project ID | --scope S] [--json]  "
               "# сколько фактов в памяти по scope")
         return
-    url = _require_daemon(env, config)
+    url, headers = _require_daemon(env, config)
     proj, _write, read_scopes = _memory_target(env, config, opts)
     try:
-        raw = export(url, "")                    # весь пул (namespace игнор) → фильтр по маркеру
+        raw = export(url, "", headers)            # весь пул (namespace игнор) → фильтр по маркеру
     except RuntimeError as e:
         die(f"не прочитать память: {e}")
     per = {sc: 0 for sc in read_scopes}

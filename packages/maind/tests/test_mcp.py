@@ -127,6 +127,37 @@ class TestToolCalls(unittest.TestCase):
                      "maind_memory_recall", {"scope": "x", "query": "y"})
             self.assertTrue(r["result"]["isError"])
 
+    def test_memory_down_message_is_role_aware_for_client(self):
+        # role=client НЕ получает подсказку поднять локальный демон (создало бы
+        # второго писателя, ADR-0001/D27) — единственная точка врезки в _run_tool.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            c = cfg(memory={"url": "http://127.0.0.1:1", "role": "client"})
+            r = call(env, c, "maind_memory_recall", {"scope": "x", "query": "y"})
+            text = r["result"]["content"][0]["text"]
+            self.assertNotIn("maind start", text)
+
+    def test_memory_store_sends_authorization_header_when_secret_configured(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                os.environ["AGENTMEMORY_SECRET"] = "good-token"
+                try:
+                    r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                             {"scope": "project:x", "key": "fact", "value": "hi"})
+                finally:
+                    del os.environ["AGENTMEMORY_SECRET"]
+                self.assertFalse(r["result"].get("isError"))
+
+    def test_memory_store_401_without_secret_surfaces_as_error_not_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                         {"scope": "project:x", "key": "fact", "value": "hi"})
+                self.assertTrue(r["result"]["isError"])   # сервер жив, не крашится сервер MCP
+                self.assertIn("401", r["result"]["content"][0]["text"])
+
     def test_graph_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

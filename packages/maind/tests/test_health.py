@@ -136,6 +136,27 @@ class TestReport(unittest.TestCase):
             self.assertNotEqual(rep["hook_memory_mode"], "maind")
             self.assertTrue(any("режиме maind" in h for h in rep["hints"]))
 
+    def test_roundtrip_reports_unauthorized_not_generic_failure(self):
+        # 401 на протектед-эндпоинте различается от «недоступен»/«раскол» (findings §2) —
+        # memory_roundtrip обязан вернуть детальную причину, а не общий RuntimeError-текст.
+        with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer(secret="right-token") as url:
+            env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
+            secret_path = env.root / "memory.secret"
+            secret_path.write_text("wrong-token", encoding="utf-8")
+            config["memory"]["secret_file"] = "memory.secret"
+            roundtrip = health.memory_roundtrip(env, config, proj, memory_reachable=True)
+            self.assertFalse(roundtrip["ok"])
+            self.assertIn("неавторизован", roundtrip["detail"])
+
+    def test_roundtrip_succeeds_with_correct_secret(self):
+        with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer(secret="right-token") as url:
+            env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
+            secret_path = env.root / "memory.secret"
+            secret_path.write_text("right-token", encoding="utf-8")
+            config["memory"]["secret_file"] = "memory.secret"
+            roundtrip = health.memory_roundtrip(env, config, proj, memory_reachable=True)
+            self.assertTrue(roundtrip["ok"])
+
     def test_mcp_hygiene_missing_example_hinted(self):
         # .mcp.json есть, .example нет → hint чинить через maind sync --only mcp.
         with tempfile.TemporaryDirectory() as tmp:

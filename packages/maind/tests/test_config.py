@@ -48,6 +48,28 @@ class TestValidate(unittest.TestCase):
         with self.assertRaises(SystemExit):
             validate_config({"node": {"role": "boss"}}, "x")
 
+    def test_bad_memory_role_dies(self):
+        with self.assertRaises(SystemExit):
+            validate_config({"memory": {"role": "boss"}}, "x")
+
+    def test_memory_role_client_requires_url(self):
+        with self.assertRaises(SystemExit):
+            validate_config({"memory": {"role": "client"}}, "x")
+
+    def test_memory_role_client_rejects_loopback_url(self):
+        with self.assertRaises(SystemExit):
+            validate_config({"memory": {"role": "client", "url": "http://127.0.0.1:4111"}}, "x")
+
+    def test_memory_role_client_rejects_wildcard_url(self):
+        with self.assertRaises(SystemExit):
+            validate_config({"memory": {"role": "client", "url": "http://0.0.0.0:4111"}}, "x")
+
+    def test_memory_role_client_with_lan_url_passes(self):
+        validate_config({"memory": {"role": "client", "url": "http://192.168.1.5:4111"}}, "x")
+
+    def test_memory_role_host_needs_no_url(self):
+        validate_config({"memory": {"role": "host"}}, "x")   # host не обязан задавать url
+
 
 class TestDefaults(unittest.TestCase):
     def test_merge_fills(self):
@@ -75,6 +97,16 @@ class TestDefaults(unittest.TestCase):
         m = merge_defaults({"memory": {"digest": {"shared_max": 3}}})
         self.assertEqual(m["memory"]["digest"]["shared_max"], 3)
         self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)  # остальные — дефолт
+
+    def test_memory_role_defaults_to_standalone(self):
+        # back-compat (D80/P4.2): конфиг без memory.role — существующие 17 узлов не
+        # меняют поведение после апгрейда.
+        m = merge_defaults({})
+        self.assertEqual(m["memory"]["role"], "standalone")
+
+    def test_memory_role_explicit_preserved(self):
+        m = merge_defaults({"memory": {"role": "host"}})
+        self.assertEqual(m["memory"]["role"], "host")
 
 
 class TestProviderConfig(unittest.TestCase):

@@ -193,7 +193,7 @@ def _missing_required(tool, args):
     return [k for k in tool["inputSchema"].get("required", []) if not args.get(k)]
 
 
-def _recall_union(config, url, scope, query, *, include_related_scopes=True):
+def _recall_union(config, url, scope, query, *, include_related_scopes=True, headers=None):
     """Recall с изоляцией + объединением scope'ов проекта: project:<id> разворачивается в
     приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
     общую-по-тегу память. Явно запрошенный scope не расширяется: публичный MCP-ответ
@@ -207,7 +207,7 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=True):
             scopes = recall_scopes(proj)
     seen, out = set(), []
     for sc in scopes:
-        for r in memory_mod.recall(url, sc, query):
+        for r in memory_mod.recall(url, sc, query, headers=headers):
             if r.get("text") in seen:
                 continue
             seen.add(r.get("text"))
@@ -278,8 +278,8 @@ def _run_tool(env, config, name, args, default_scope):
     if name in ("maind_memory_store", "maind_memory_recall", "maind_memory_forget"):
         _, _, url = memory_mod.resolve_ports(env, config)
         if not memory_mod.health(url):
-            return _content({"error": "демон памяти не запущен (maind start --only memory)"},
-                            is_error=True)
+            return _content({"error": memory_mod.unavailable_message(config, url)}, is_error=True)
+        headers = memory_mod.auth_headers(memory_mod.resolve_secret(env, config))
         requested_scope = args.get("scope")
         scope = requested_scope or default_scope
         allowed = _allowed_scopes(config, default_scope)
@@ -287,19 +287,21 @@ def _run_tool(env, config, name, args, default_scope):
         if denied:
             return denied
         if name == "maind_memory_store":
-            return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"]))
+            return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"],
+                                             headers=headers))
         if name == "maind_memory_recall":
             return _content(_recall_union(config, url, scope, args["query"],
-                                          include_related_scopes=not bool(requested_scope)))
+                                          include_related_scopes=not bool(requested_scope),
+                                          headers=headers))
         # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
         # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
         if allowed is not None:
-            owner = memory_mod.memory_owner_scope(url, args["key"], allowed)
+            owner = memory_mod.memory_owner_scope(url, args["key"], allowed, headers)
             if owner is None or owner not in allowed:
                 return _content({"error": "forget отклонён: факт не принадлежит разрешённым "
                                           "scope этого проекта (изоляция namespace)"},
                                 is_error=True)
-        return _content(memory_mod.forget(url, scope, args["key"]))
+        return _content(memory_mod.forget(url, scope, args["key"], headers=headers))
     if name == "maind_graph_query":
         if _project_blocked(config, default_scope, _node_pid(args["from"])):
             return _graph_error()

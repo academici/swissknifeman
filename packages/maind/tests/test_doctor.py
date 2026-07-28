@@ -11,7 +11,7 @@ from unittest import mock
 
 from maind import doctor
 from maind.doctor import _channel_overlap, _fleet_context, _skill_drift, cmd_doctor
-from tests.fixtures import capture, make_repo, write_maind_config
+from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 
 class TestDoctor(unittest.TestCase):
@@ -278,6 +278,51 @@ class TestFleetContext(unittest.TestCase):
             data = json.loads(out)
             self.assertEqual(data["projects"],
                              [{"id": "proj", "context": {"total": 5000, "verdict": "ELEVATED"}}])
+
+
+class TestMemoryAuthDiagnostic(unittest.TestCase):
+    """doctor различает «недоступен» от «неавторизован» (401) — P4.2 Scope Included:
+    ping()/health() не могут (/agentmemory/health всегда публичен), нужен реальный
+    протектед-вызов (memory.check_auth), который doctor печатает в info-строке."""
+
+    def _env_ok(self, env):
+        bindir = env.root / "node_modules" / ".bin"
+        bindir.mkdir(parents=True)
+        (bindir / "agentmemory").write_text("", encoding="utf-8")
+        doctor.shutil.which = lambda name: "/usr/bin/node"
+
+    def test_reports_unauthorized_when_secret_mismatched(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            self._env_ok(env)
+            try:
+                with FakeMemoryServer(secret="right-token") as url:
+                    secret_path = env.root / "memory.secret"
+                    secret_path.write_text("wrong-token", encoding="utf-8")
+                    write_maind_config(root, memory={"url": url, "secret_file": "memory.secret"})
+                    buf = io.StringIO()
+                    with contextlib.redirect_stdout(buf):
+                        cmd_doctor(env, [])
+                    self.assertIn("неавторизован", buf.getvalue())
+            finally:
+                doctor.shutil.which = __import__("shutil").which
+
+    def test_reports_reachable_when_no_secret_configured(self):
+        # без настроенного client-side секрета doctor НЕ утверждает про авторизацию —
+        # только «отвечает» (check_auth неприменим без headers).
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            self._env_ok(env)
+            try:
+                with FakeMemoryServer() as url:
+                    write_maind_config(root, memory={"url": url})
+                    buf = io.StringIO()
+                    with contextlib.redirect_stdout(buf):
+                        cmd_doctor(env, [])
+                    self.assertIn("отвечает", buf.getvalue())
+                    self.assertNotIn("неавторизован", buf.getvalue())
+            finally:
+                doctor.shutil.which = __import__("shutil").which
 
 
 if __name__ == "__main__":

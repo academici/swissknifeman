@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .common import parse_args
-from .memory import health, resolve_ports
+from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
 
 
 def provider_trust_report(env, config):
@@ -289,8 +289,16 @@ def cmd_doctor(env, argv):
     if not quiet:
         http_port, stream_port, url = resolve_ports(env, config)
         up = health(url)
-        print(f"  [info] память {url} — "
-              + ("отвечает" if up else "не запущена (maind start --only memory)"))
+        if not up:
+            print(f"  [info] память {url} — не запущена (maind start --only memory)")
+        else:
+            # /agentmemory/health ВСЕГДА публичен (даже с секретом) — «отвечает» не значит
+            # «наши вызовы авторизованы»; различаем явным протектед-пробником (findings §2).
+            headers = auth_headers(resolve_secret(env, config)) if config else None
+            auth = check_auth(url, headers) if headers else None
+            detail = "отвечает, но неавторизован (401) — проверьте memory.secret_file/AGENTMEMORY_SECRET" \
+                if auth is False else "отвечает"
+            print(f"  [info] память {url} — {detail}")
         print(f"  [info] порты: http :{http_port}, stream :{stream_port} "
               "(override через .env AGENTMEMORY_PORT/STREAM_PORT)")
 

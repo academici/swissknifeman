@@ -6,8 +6,10 @@ import json
 import os
 import sys
 import tempfile
+import threading
 import unittest
 from dataclasses import FrozenInstanceError
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
@@ -19,7 +21,99 @@ from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
                   now_iso, parse_args, parse_flags, parse_iso, pid_alive,
                   read_ndjson, read_ndjson_iter, run_cmd,
                   safe_load_json, sanitize, sibling_bin, state_dir, upsert_block)
+from core.http import HTTPUnauthorizedError, http_get_json, http_post_json, ping
 from core.repo import resolve_plan_dir
+
+
+class _EchoAuthHandler(BaseHTTPRequestHandler):
+    """Сервер-двойник для http.py: отражает полученный заголовок Authorization и
+    401'ит protected-путь без корректного bearer'а — как agentmemory 0.9.x."""
+
+    def log_message(self, *a):
+        pass
+
+    def _reply(self, code, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle(self):
+        auth = self.headers.get("Authorization", "")
+        if self.path == "/protected" and auth != "Bearer good-token":
+            self._reply(401, {"error": "unauthorized"})
+            return
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        body = self.rfile.read(length) if length else b""
+        self._reply(200, {"path": self.path, "authorization": auth,
+                          "body": body.decode("utf-8") if body else None})
+
+    def do_GET(self):
+        self._handle()
+
+    def do_POST(self):
+        self._handle()
+
+
+class _EchoAuthServer:
+    def __init__(self):
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _EchoAuthHandler)
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+
+    @property
+    def url(self):
+        _, port = self.httpd.server_address
+        return f"http://127.0.0.1:{port}"
+
+    def __enter__(self):
+        self.thread.start()
+        return self.url
+
+    def __exit__(self, *exc):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+class TestHttp(unittest.TestCase):
+    def test_get_json_without_headers_unchanged(self):
+        with _EchoAuthServer() as url:
+            res = http_get_json(f"{url}/open")
+            self.assertEqual(res["authorization"], "")
+
+    def test_post_json_without_headers_unchanged(self):
+        with _EchoAuthServer() as url:
+            res = http_post_json(f"{url}/open", {"k": "v"})
+            self.assertEqual(res["authorization"], "")
+            self.assertIn('"k": "v"', res["body"])
+
+    def test_ping_without_headers_unchanged(self):
+        with _EchoAuthServer() as url:
+            self.assertTrue(ping(f"{url}/open"))
+
+    def test_headers_are_sent(self):
+        with _EchoAuthServer() as url:
+            res = http_get_json(f"{url}/open", headers={"Authorization": "Bearer good-token"})
+            self.assertEqual(res["authorization"], "Bearer good-token")
+
+    def test_401_raises_unauthorized_subclass_of_runtimeerror(self):
+        with _EchoAuthServer() as url:
+            with self.assertRaises(HTTPUnauthorizedError):
+                http_get_json(f"{url}/protected")
+            with self.assertRaises(RuntimeError):  # HTTPUnauthorizedError — подкласс
+                http_get_json(f"{url}/protected")
+
+    def test_401_with_correct_bearer_succeeds(self):
+        with _EchoAuthServer() as url:
+            res = http_get_json(f"{url}/protected", headers={"Authorization": "Bearer good-token"})
+            self.assertEqual(res["authorization"], "Bearer good-token")
+
+    def test_ping_returns_true_on_401_unchanged(self):
+        # ping не различает 401 от прочих 4xx — byte-в-byte прежнее поведение (D6/анти-самообман:
+        # различие даёт HTTPUnauthorizedError у http_get_json/http_post_json, не ping).
+        with _EchoAuthServer() as url:
+            self.assertTrue(ping(f"{url}/protected"))
 
 
 class TestText(unittest.TestCase):

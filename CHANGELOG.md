@@ -4,6 +4,24 @@
 
 ### Added
 
+- **`maind`: cross-machine режим памяти — `memory.role` (standalone/host/client) +
+  bearer-аутентификация (P4.2, `2026.07.25-ECO-OPT`, ADR-0001).** Новое поле
+  `memory.role` (дефолт `standalone`, back-compat — существующие узлы не меняют поведение);
+  `role=client` запрещает КОДОМ поднимать локальный демон (`maind memory start|run`,
+  `maind service install` отказывают), чтобы не завести второго писателя. Аддитивное
+  расширение `core.http` (`http_get_json`/`http_post_json`/`ping` + необязательный
+  `headers`) несёт `Authorization: Bearer` из `memory.secret_file`/`AGENTMEMORY_SECRET`;
+  новый `core.http.HTTPUnauthorizedError` (подкласс `RuntimeError`) отличает 401 от прочих
+  сетевых сбоев — `maind doctor`/`maind health`/MCP-ветка недоступности памяти больше не
+  путают «неавторизован» с «недоступен» (`/agentmemory/health` у движка ВСЕГДА публичен,
+  поэтому раньше это было неразличимо). Настраиваемый бюджет ожидания
+  (`MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES`) с ретраями ТОЛЬКО на
+  read-путях (`export`, не `store`/`forget` — контракт без operation-id, риск дубля).
+  LAN-стадия (D80): `config/memory/iii-config.yaml` бинденд `iii-http` на конкретный
+  LAN-адрес хоста (не `0.0.0.0`) — управляемый конфиг движка, обратим одной строкой при
+  срабатывании триггера `tailscale serve`. Замер канала —
+  `findings/P4.2-remote-link-measure.md` (честная граница: настоящей второй машины ещё
+  нет, P4.3 переизмерит).
 - **`skiller budget --first-turn`: резидент листинга скиллов считается по модели бюджета
   Claude Code, не суммой описаний (P3.4, `2026.07.25-ECO-OPT`).** `_measure_skills` теперь
   капает каждую запись листинга на 1 536 симв (`description`+`when_to_use`, first-party дефолт)

@@ -19,6 +19,12 @@
     `path/to/file.ext::symbol`        — имя символа встречается в файле (поиск по имени,
                                          БЕЗ AST; `a::B::c` — грепается ЛИСТ `c`, граница
                                          намеренная, см. docs/reference/plan-tooling.md)
+    `path/to/file.json::a.b.c`        — путь ключей внутри JSON (P11.2), резолвится
+                                         `json.load` + greedy-обход (на каждом уровне —
+                                         ДЛИННЕЙШИЙ дотированный префикс, являющийся
+                                         ключом; для списка — целочисленный индекс).
+                                         Проверяется, что КЛЮЧ СУЩЕСТВУЕТ — не что значение
+                                         совпадает. Не JSON-путь — прежний грep по листу.
 
 Путь обязан содержать хотя бы один `/` (как `normalize()` у `cross-plan-files.py`) —
 ГОЛЫЙ path-упоминание без суффикса (`:line`/`::symbol`) НЕ проверяется вовсе (класс отклонён
@@ -143,6 +149,52 @@ def resolve_bases(repo_root: str, plan_dir: str) -> list[tuple[str, str]]:
     return [("корня репо", repo_root), ("каталога плана", plan_dir)]
 
 
+def _resolve_json_path(obj: object, remaining: str) -> str | None:
+    """Greedy-обход JSON-объекта: на каждом уровне — ДЛИННЕЙШИЙ дотированный префикс
+    остатка, являющийся ключом (для списка — целочисленный индекс). Возвращает причину
+    отказа, либо None если весь путь резолвился (P11.2, `research/27-…` §2.3 — greedy
+    обязателен: ключи планового артефакта сами содержат точки, `owners.P2.2` = ключ
+    `"P2.2"` внутри `owners`, наивный `split(".")` даёт ложную находку)."""
+    while remaining:
+        if isinstance(obj, dict):
+            matched = None
+            for k in sorted(obj.keys(), key=lambda k: (-len(k), k)):
+                if remaining == k or remaining.startswith(k + "."):
+                    matched = k
+                    break
+            if matched is None:
+                segment = remaining.split(".", 1)[0]
+                return f"ключ {segment!r} не найден"
+            obj = obj[matched]
+            remaining = remaining[len(matched):]
+            remaining = remaining[1:] if remaining.startswith(".") else remaining
+        elif isinstance(obj, list):
+            m = re.match(r"(\d+)(?:\.(.*))?$", remaining)
+            if not m:
+                segment = remaining.split(".", 1)[0]
+                return f"индекс {segment!r} не найден"
+            idx = int(m.group(1))
+            if not (0 <= idx < len(obj)):
+                return f"индекс {idx} вне диапазона списка длиной {len(obj)}"
+            obj = obj[idx]
+            remaining = m.group(2) or ""
+        else:
+            segment = remaining.split(".", 1)[0]
+            return f"ключ {segment!r} не найден (родитель не объект и не список)"
+    return None
+
+
+def _check_json_suffix(abs_path: str, dotted_path: str) -> str | None:
+    """Класс цитаты `file.json::a.b.c` (P11.2): ключ существует — и НИЧЕГО больше
+    (значение не сверяется, та же граница, что у P10.2 «символ = имя встречается»)."""
+    with open(abs_path, encoding="utf-8") as fh:
+        try:
+            data = json.load(fh)
+        except json.JSONDecodeError:
+            return "JSON не парсится"
+    return _resolve_json_path(data, dotted_path)
+
+
 def _check_suffix(abs_path: str, suffix: str) -> str | None:
     with open(abs_path, encoding="utf-8", errors="replace") as fh:
         content = fh.read()
@@ -175,6 +227,8 @@ def check_citation(path_token: str, suffix: str, bases: list[tuple[str, str]]) -
     for _label, base in bases:
         abs_path = os.path.join(base, path_token)
         if os.path.isfile(abs_path):
+            if suffix.startswith("::") and path_token.lower().endswith(".json"):
+                return _check_json_suffix(abs_path, suffix[2:])
             return _check_suffix(abs_path, suffix)
     if not bases:
         return "файл не найден (баз резолва не задано)"
@@ -290,6 +344,50 @@ def _selftest() -> int:
                 [label for label, _ in resolve_bases(self.repo_root, self.plan_dir)],
                 ["корня репо", "каталога плана"],
             )
+
+        # --- P11.2: класс цитаты `file.json::a.b.c` (greedy-резолв) --------------------
+
+        def test_f_json_path_resolves_nested_key(self) -> None:
+            """(a) `pkg/data.json::a.b` при `{"a":{"b":1}}` — проходит."""
+            with open(os.path.join(self.repo_root, "pkg", "data.json"), "w", encoding="utf-8") as fh:
+                json.dump({"a": {"b": 1}}, fh)
+            self.assertIsNone(check_citation("pkg/data.json", "::a.b", self.bases))
+
+        def test_f2_json_path_greedy_key_with_dot(self) -> None:
+            """(b) ключ с точкой в имени (`owners.P2.2` = ключ `"P2.2"` внутри `owners`) —
+            регрессия наивного `split(".")`, обязана проходить (greedy)."""
+            with open(os.path.join(self.repo_root, "pkg", "owners.json"), "w", encoding="utf-8") as fh:
+                json.dump({"owners": {"P2.2": "carrier"}}, fh)
+            self.assertIsNone(check_citation("pkg/owners.json", "::owners.P2.2", self.bases))
+
+        def test_f3_json_path_missing_key_names_segment(self) -> None:
+            """(c) несуществующий ключ → находка, названа ИМЕННО отсутствующая часть."""
+            with open(os.path.join(self.repo_root, "pkg", "data2.json"), "w", encoding="utf-8") as fh:
+                json.dump({"a": {"b": 1}}, fh)
+            reason = check_citation("pkg/data2.json", "::a.nope", self.bases)
+            self.assertIsNotNone(reason)
+            self.assertIn("nope", reason)
+
+        def test_f4_json_path_list_index(self) -> None:
+            """(d) индекс списка (`::items.0.name`) проходит, выход за длину — находка."""
+            with open(os.path.join(self.repo_root, "pkg", "list.json"), "w", encoding="utf-8") as fh:
+                json.dump({"items": [{"name": "x"}]}, fh)
+            self.assertIsNone(check_citation("pkg/list.json", "::items.0.name", self.bases))
+            reason = check_citation("pkg/list.json", "::items.9.name", self.bases)
+            self.assertIsNotNone(reason)
+            self.assertIn("диапазона", reason)
+
+        def test_f5_broken_json_is_finding(self) -> None:
+            """(e) битый JSON → находка «JSON не парсится», не тихий пропуск."""
+            with open(os.path.join(self.repo_root, "pkg", "broken.json"), "w", encoding="utf-8") as fh:
+                fh.write("{not valid json")
+            reason = check_citation("pkg/broken.json", "::a.b", self.bases)
+            self.assertIsNotNone(reason)
+            self.assertIn("не парсится", reason)
+
+        def test_f6_non_json_symbol_branch_unchanged(self) -> None:
+            """(f) НЕ-json файл с `::symbol` — прежнее поведение (грep листа) не изменилось."""
+            self.assertIsNone(check_citation("pkg/mod.py", "::target", self.bases))
 
         def test_scan_plan_end_to_end(self) -> None:
             plan_dir = os.path.join(self.repo_root, "plans", "X")

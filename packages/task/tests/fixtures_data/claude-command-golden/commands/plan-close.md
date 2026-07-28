@@ -144,6 +144,13 @@ status-rule ниже. Точная команда, лестница маршру
    pre_mutation: <код> · pre_final: <код>` — допиши её ОДНОЙ строкой из
    `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
    пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
+   **Цитаты-доказательства (P11.6), на итоговом дереве (после перезаписи handoff'а выше):**
+   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 plans/verify-citations.py
+   plans/<PLAN-ID> --strict`; счёт публикуется С АТРИБУЦИЕЙ: «цитаты: N находок — новых от
+   диффа item'а: K» (baseline перечня `verify-citations-known-exceptions.json` чист — P11.5 —
+   поэтому находка на итоговом дереве атрибутируется диффу ЭТОГО item'а). K > 0 — чинится
+   ДО коммита реконсиляции; N − K > 0 (остаточные находки вне Scope item'а) — строка в
+   Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
@@ -216,6 +223,11 @@ status-rule ниже. Точная команда, лестница маршру
    АТРИБУЦИЕЙ: `N ERROR / M WARN — новых от закрытия: K` (`--baseline HEAD`). K > 0 —
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
+   Следом (та же граница — после перезаписи handoff, на итоговом дереве): `python3
+   plans/verify-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
+   N находок — новых от закрытия: K» (baseline перечня `verify-citations-known-exceptions.json`
+   чист — P11.5). K > 0 — чинится ДО коммита закрытия фазы; N − K > 0 (остаточные находки вне
+   этой фазы) — строка в Open risks `handoff.md`.
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
    --command plan-close --actor sonnet/low --result <closed-green — все items 🟢 |

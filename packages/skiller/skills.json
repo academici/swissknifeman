@@ -2257,8 +2257,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.21.0",
       "description": "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive.",
-      "sha256": "190a29ba77c6de96fe7449c46688a003503280c8ddfba4d569bd7171d224fc21",
-      "content_sha256": "965f64a7b3e4a1dccddd0bf816a2a8bae07a8c4d421c0b7231d1f150c79d5398",
+      "sha256": "34e24fb1030c6b61d80d3ebb13b39841494270c97622bc64ae54c53ac7dd9b62",
+      "content_sha256": "26ce9dc5ec7e691cc48ebe7635a8b4f3441de84fcf8902fcbaf2dfb127232065",
       "tags": [
         "workflow",
         "planning",

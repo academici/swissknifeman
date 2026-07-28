@@ -762,11 +762,19 @@ paths, `-A`/`-a` banned) — §6 "Commit hygiene", not duplicated here.
 4. plan-lint — AFTER step 3, on the final tree. Running it BEFORE the handoff rewrite is
    FORBIDDEN: the closing item itself changes the handoff, so a "before" count does not
    describe the state of the commit.
+   Next, same ordering (final tree, after the handoff): `python3 plans/verify-citations.py
+   plans/<ID> --strict` — the item's evidence citations resolve BEFORE the prose is handed
+   off.
 5. The count is published WITH ATTRIBUTION: «N ERROR / M WARN — новых от диффа item'а: K»
    (K deterministically: plan-lint --baseline HEAD).
    • K > 0 — fix BEFORE the bookkeeping commit;
    • N − K > 0 (residual plan errors outside the item's Scope) — NOT hushed up: a line in
      the item's Pending Work + the handoff's Open risks.
+   A second attributed count for citations: «цитаты: N находок — новых от диффа item'а: K»
+   (the global `verify-citations-known-exceptions.json` baseline is already clean — P11.5 —
+   so any finding on the final tree is attributed to THIS item's diff). K > 0 — fix BEFORE
+   the bookkeeping commit; N − K > 0 — a line in the item's Pending Work + the handoff's
+   Open risks, not a silent downgrade.
 6. BOOKKEEPING COMMIT: plan files only (`plans/<ID>/**`, `plans/ACTIVE.md`).
 
 "Green lint" for the close gate = K = 0 (no NEW errors), not N = 0.
@@ -1335,4 +1343,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 7e4248f003600a6922c5bef7cbdf54542989ae8a8a8cf962a804a8f1de92a731 -->
+<!-- ru-source-sha256: 0b0d6682efb9cc90fa19ec857f1fefefbb50c2765b679e7f2b9882f2c5c4c6e5 -->

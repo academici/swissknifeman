@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P11.6 закрыт 🟠) |
+| Last Updated | 2026-07-28 (P11.7 закрыт 🟠) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -612,6 +612,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P11.4 закрыт) | P11.4 закрыт 🟢: dogfood-снимок на непочиненном дереве — 628 цитат/52 находки (было 393/144), F8-класс пойман кросс-документным чеком, F1/F2/F9 честно названы непойманными (D130) — детали см. `phases/P11.md` P11.4 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P11.5 закрыт) | P11.5 закрыт 🟢: 33 уникальные цитаты разобраны по R1–R4, 18 починены на полный путь, `verify-citations-known-exceptions.json` заведён (19 записей) — гейт чист (0 находок) — детали см. `phases/P11.md` P11.5 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P11.6 закрыт) | P11.6 закрыт 🟠: гейт цитат врезан в `plan-protocol` §8 и `plan-close.md`; Validation 6 красная (16 пред-существующих находок, K=0) — детали см. `phases/P11.md` P11.6 Completion Notes. |
+| 2026-07-28 | plan-run/Claude Sonnet 5/high (P11.7 закрыт) | P11.7 закрыт 🟠: `checks/plan-citations.sh` в `review-gate` (mode: warn), два live-прогона субагента, Live B — замена цели на AGENT-RELIABILITY (confound P11.5) — детали см. `phases/P11.md` P11.7 Completion Notes. |
 
 ## 7. Contracts
 

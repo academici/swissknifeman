@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "note": "Человеческий арбитраж неоднозначных матчей (matching-rules.md: score_review_runs.py печатает пару и падает на равном score между двумя кандидатами; здесь фиксируется решение, ПОЧЕМУ каждый reject). Разметчик — агент по явной делегации владельца (auto-approve), см. answer-key.json note.",
+  "decisions": [
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_1_9", "verdict": "reject", "reason": "F002 — пробел в тестах по pivot-статусам ('active'/'invited' only); C1_1_9 — о другом (заявление про снятие скоупа вне группы), совпал только широким диапазоном 1-56 (весь файл)"},
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_1_11", "verdict": "reject", "reason": "F002 — пробел в тестах по pivot-статусам; C1_1_11 — о другом (побочная активация BelongsToTenant), совпал только широким диапазоном 1-56 (весь файл)"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_1_9", "verdict": "reject", "reason": "F005 — пробел в тестах на пользователя в ДВУХ workspace одновременно; C1_1_9 — о непроверенном заявлении про снятие скоупа вне группы, другая тема, совпал только широким диапазоном"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_1_11", "verdict": "reject", "reason": "F005 — пробел в тестах на пользователя в ДВУХ workspace одновременно; C1_1_11 — о побочной активации BelongsToTenant, другая тема, совпал только широким диапазоном"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_1_5", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_1_5 — end-to-end/HTTP-интеграция теста изоляции, это F007, не F005 (совпали диапазоном 31-42, не темой)"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_2_5", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_2_5 — центральное заявление коммита не проверено end-to-end, это F007, не F005"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_3_15", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_3_15 — тест изоляции доказывает скоуп только после app(TenantService)->setCurrent(), минуя HTTP — это F007, не F005"},
+
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_2_12", "verdict": "reject", "reason": "F002 — пробел по pivot-статусам; C1_2_12 — про return-null ветки резолвера, другая тема, совпал широким диапазоном 1-56"},
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_2_13", "verdict": "reject", "reason": "F002 — пробел по pivot-статусам; C1_2_13 — про непроверенное заявление снятия скоупа, другая тема"},
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_3_16", "verdict": "reject", "reason": "F002 — пробел по pivot-статусам; C1_3_16 — про непокрытый write-path BelongsToTenant, другая тема"},
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_3_17", "verdict": "reject", "reason": "F002 — пробел по pivot-статусам; C1_3_17 — про непроверенное заявление снятия скоупа, другая тема"},
+
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_2_12", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_2_12 — про return-null ветки резолвера, другая тема"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_2_13", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_2_13 — про непроверенное заявление снятия скоупа, другая тема"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_3_16", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_3_16 — про непокрытый write-path BelongsToTenant, другая тема"},
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_3_17", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_3_17 — про непроверенное заявление снятия скоупа, другая тема"},
+
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_1_9", "verdict": "reject", "reason": "F007 — ни один тест не проходит ВСЮ цепочку request→...→scoped query; C1_1_9 — про непроверенное заявление снятия скоупа, другая тема, совпал широким диапазоном"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_1_11", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_1_11 — про побочную активацию BelongsToTenant, другая тема"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_2_12", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_2_12 — про return-null ветки резолвера, другая тема"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_2_13", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_2_13 — про непроверенное заявление снятия скоупа, другая тема"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_3_16", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_3_16 — про непокрытый write-path BelongsToTenant, другая тема"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_3_17", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_3_17 — про непроверенное заявление снятия скоупа, другая тема"},
+
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_1_9", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_1_9 — про непроверенное заявление снятия скоупа, другая тема"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_1_11", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_1_11 — про побочную активацию BelongsToTenant, другая тема"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_2_12", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_2_12 — про return-null ветки резолвера, другая тема"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_2_13", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_2_13 — про непроверенное заявление снятия скоупа, другая тема"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_3_16", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_3_16 — про непокрытый write-path BelongsToTenant, другая тема"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_3_17", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_3_17 — про непроверенное заявление снятия скоупа, другая тема"},
+
+    {"key_finding_id": "T001", "run_finding_id_local": "C1_1_3", "verdict": "reject", "reason": "T001 — ловушка про неаутентифицированный доступ (опровергнута); C1_1_3 — про route:cache/Closure, это F001, не T001 — совпал только диапазоном (T001 33-43 ⊃ F001 37-43)"},
+    {"key_finding_id": "T001", "run_finding_id_local": "C1_2_10", "verdict": "reject", "reason": "T001 — ловушка про неаутентифицированный доступ; C1_2_10 — про route:cache (плюс отдельно debug-эндпоинт), это F001, не T001"},
+    {"key_finding_id": "T001", "run_finding_id_local": "C1_3_1", "verdict": "reject", "reason": "T001 — ловушка про неаутентифицированный доступ; C1_3_1 — про route:cache/Closure, это F001, не T001"},
+
+    {"key_finding_id": "F005", "run_finding_id_local": "C1_2_14", "verdict": "reject", "reason": "F005 — два workspace одновременно; C1_2_14 — про побочную активацию BelongsToTenant create-time, другая тема"},
+    {"key_finding_id": "F007", "run_finding_id_local": "C1_2_14", "verdict": "reject", "reason": "F007 — цепочка request→...→scoped query целиком; C1_2_14 — про побочную активацию BelongsToTenant create-time, другая тема"},
+
+    {"key_finding_id": "F001", "run_finding_id_local": "C1_2_1", "verdict": "reject", "reason": "F001 — route:cache ломается на Closure-роуте; C1_2_1 — про порядок middleware ResolveTenant vs SubstituteBindings и будущий обход скоупа на вложенных роутах Фазы 5 — реальная, но НЕ размеченная в ключе находка (вне ключа не значит ложная), совпал только диапазоном"},
+    {"key_finding_id": "T001", "run_finding_id_local": "C1_2_1", "verdict": "reject", "reason": "T001 — ловушка про неаутентифицированный доступ (опровергнута тем, что группа внутри auth+verified); C1_2_1 — другая, отдельная и вероятно реальная находка про порядок middleware — НЕ то же самое, что T001, не форсируем матч"},
+    {"key_finding_id": "F001", "run_finding_id_local": "C1_3_2", "verdict": "reject", "reason": "F001 — route:cache ломается на Closure-роуте; C1_3_2 — про порядок middleware ResolveTenant vs SubstituteBindings, другая (не размеченная) находка"},
+    {"key_finding_id": "T001", "run_finding_id_local": "C1_3_2", "verdict": "reject", "reason": "T001 — ловушка про неаутентифицированный доступ; C1_3_2 — про порядок middleware, другая находка, не форсируем матч"},
+
+    {"key_finding_id": "F002", "run_finding_id_local": "C1_2_14", "verdict": "reject", "reason": "F002 — пробел по pivot-статусам; C1_2_14 — про побочную активацию BelongsToTenant create-time, другая (не размеченная) находка, совпал только диапазоном в пределах slack"},
+    {"key_finding_id": "F006", "run_finding_id_local": "C1_2_14", "verdict": "reject", "reason": "F006 — нет теста 404 на несуществующий slug; C1_2_14 — про побочную активацию BelongsToTenant create-time, другая находка"},
+
+    {"key_finding_id": "F004", "run_finding_id_local": "C1_3_5", "verdict": "reject", "reason": "F004 — резолвер не проверяет plan_status воркспейса; C1_3_5 — про 403-vs-404 оракул существования workspace, другая (не размеченная) находка, совпал в пределах slack"},
+    {"key_finding_id": "F004", "run_finding_id_local": "C1_3_7", "verdict": "reject", "reason": "F004 — резолвер не проверяет plan_status; C1_3_7 — про типизацию $request->user() как Authenticatable без workspaces(), другая находка"},
+
+    {"key_finding_id": "F011", "run_finding_id_local": "C2_1_12", "verdict": "reject", "reason": "F011 — hardlink-отказ тестируется только на уровне хелпера, не через atomic_write_text; C2_1_12 — про непокрытую ветку 'не регулярный файл' (FIFO/socket), другая (не размеченная) находка"},
+    {"key_finding_id": "F011", "run_finding_id_local": "C2_1_13", "verdict": "reject", "reason": "F011 — hardlink через хелпер vs через atomic_write_text; C2_1_13 — это F012 (atomic_write_json check_target не тестируется), не F011"},
+    {"key_finding_id": "F011", "run_finding_id_local": "C2_2_8", "verdict": "reject", "reason": "F011 — hardlink через хелпер vs через atomic_write_text; C2_2_8 — это F012 (atomic_write_json check_target не тестируется), не F011"},
+    {"key_finding_id": "F012", "run_finding_id_local": "C2_2_10", "verdict": "reject", "reason": "F012 — atomic_write_json check_target не тестируется; C2_2_10 — это F011 (hardlink только на уровне хелпера), не F012 — совпали идентичным диапазоном 46-81"},
+    {"key_finding_id": "F014", "run_finding_id_local": "C2_2_3", "verdict": "reject", "reason": "F014 — голый OSError без структурного различения причины; C2_2_3 — это F009 (нарушение 'один lstat', три syscall'а), не F014 — совпал диапазоном (F009 116-122 ⊂ F014 116-124)"},
+
+    {"key_finding_id": "F016", "run_finding_id_local": "C3_2_10", "verdict": "reject", "reason": "F016 — отсутствие jq перманентно понижает strict-проверки без 4-го состояния doctor; C3_2_10 — это F018 (предсказуемый общий /tmp для state_dir), не F016 — совпал в пределах slack"},
+    {"key_finding_id": "F016", "run_finding_id_local": "C3_3_5", "verdict": "reject", "reason": "F016 — отсутствие jq; C3_3_5 — это F018 (предсказуемый /tmp), не F016"},
+    {"key_finding_id": "F016", "run_finding_id_local": "C3_3_6", "verdict": "reject", "reason": "F016 — отсутствие jq; C3_3_6 — про тестовый бэкдор REVIEW_GATE_STATE_DIR в продакшн-пути, другая (не размеченная) находка, не F016"},
+    {"key_finding_id": "F018", "run_finding_id_local": "C3_3_6", "verdict": "reject", "reason": "F018 — предсказуемый общий /tmp для state_dir; C3_3_6 — про тестовый бэкдор REVIEW_GATE_STATE_DIR, другая (не размеченная) находка, не F018 — совпали идентичным диапазоном 28-28"},
+
+    {"key_finding_id": "F030", "run_finding_id_local": "C5_1_8", "verdict": "reject", "reason": "F030 — нет правила на SSH-ключи без суффикса (id_rsa и т.п.); C5_1_8 — про непокрытые архивные суффиксы (.tar.bz2/.tar.xz/bare .gz), это F032, не F030"},
+    {"key_finding_id": "F030", "run_finding_id_local": "C5_3_8", "verdict": "reject", "reason": "F030 — нет правила на SSH-ключи; C5_3_8 — про непокрытый bare .gz/.bz2/.xz, это F032, не F030"},
+
+    {"key_finding_id": "T003", "run_finding_id_local": "C5_1_8", "verdict": "reject", "reason": "T003 — ловушка про порядок .tar/.tar.gz (опровергнута); C5_1_8 — реальная находка про непокрытые архивные суффиксы (F032), не про порядок правил — не форсируем матч с ловушкой"},
+    {"key_finding_id": "T003", "run_finding_id_local": "C5_3_8", "verdict": "reject", "reason": "T003 — ловушка про порядок .tar/.tar.gz; C5_3_8 — реальная находка F032 про непокрытые суффиксы, не про порядок правил"},
+
+    {"key_finding_id": "F030", "run_finding_id_local": "C5_1_5", "verdict": "reject", "reason": "F030 — нет правила на SSH-ключи; C5_1_5 — это F031 (.env.local/.env.production обходят проверку), не F030"},
+    {"key_finding_id": "T003", "run_finding_id_local": "C5_1_5", "verdict": "reject", "reason": "T003 — ловушка про порядок .tar/.tar.gz; C5_1_5 — это F031 (.env.local/.env.production), не про порядок правил, не форсируем матч с ловушкой"},
+
+    {"key_finding_id": "F038", "run_finding_id_local": "C6_3_8", "verdict": "reject", "reason": "F038 — ветка isdir=False не покрыта тестом; C6_3_8 — про непокрытые fail-open баги F036/F037 (другая evidence-находка, не про isdir), не F038"},
+    {"key_finding_id": "F038", "run_finding_id_local": "C6_2_3", "verdict": "reject", "reason": "F038 — ветка isdir=False не покрыта тестом; C6_2_3 — про непокрытые fail-open баги F036/F037, не про isdir конкретно, не F038 (совпали идентичным диапазоном 40-88 с C6_2_13, который и есть верный матч)"},
+
+    {"key_finding_id": "F049", "run_finding_id_local": "C8_1_6", "verdict": "reject", "reason": "F049 — самопротиворечивая формулировка 'rerun with --repair' (пользователь уже под --repair); C8_1_6 — это F050 (英prose vs kebab-case конвенция), не про противоречие формулировки"},
+    {"key_finding_id": "F049", "run_finding_id_local": "C8_2_8", "verdict": "reject", "reason": "F049 — самопротиворечивая формулировка; C8_2_8 — это F050 (нарушение kebab-token конвенции), не про противоречие 'rerun with --repair'"},
+    {"key_finding_id": "F049", "run_finding_id_local": "C8_3_6", "verdict": "reject", "reason": "F049 — самопротиворечивая формулировка; C8_3_6 — это F050 (kebab-token конвенция vs проза), не про противоречие 'rerun with --repair'"},
+
+    {"key_finding_id": "F047", "run_finding_id_local": "C8_1_4", "verdict": "reject", "reason": "F047 — диагностика вводит в заблуждение для symlink-цели; C8_1_4 — про абсолютный путь в диагностике (другая, не размеченная находка), не F047"},
+    {"key_finding_id": "F047", "run_finding_id_local": "C8_2_2", "verdict": "reject", "reason": "F047 — диагностика вводит в заблуждение для symlink-цели; C8_2_2 — про неверный флаг --repair в подсказке (другая находка), не F047"},
+    {"key_finding_id": "F047", "run_finding_id_local": "C8_2_4", "verdict": "reject", "reason": "F047 — диагностика вводит в заблуждение для symlink-цели; C8_2_4 — про совет чинить вручную при системном дефекте рендерера (другая находка), не F047"},
+
+    {"key_finding_id": "F049", "run_finding_id_local": "C8_2_9", "verdict": "reject", "reason": "F049 — самопротиворечивая формулировка 'rerun with --repair'; C8_2_9 — про дублирование adoption-логики между core и maind (другая, не размеченная находка), не F049"},
+    {"key_finding_id": "F050", "run_finding_id_local": "C8_2_9", "verdict": "reject", "reason": "F050 — English prose vs kebab-case конвенция; C8_2_9 — про дублирование adoption-логики между пакетами, не про формат диагностики, не F050"}
+  ]
+}

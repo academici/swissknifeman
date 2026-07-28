@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P6.1 закрыт `🟢 Done` — statusline context-notify в harness) |
+| Last Updated | 2026-07-28 (P6.3 закрыт `🟠 Done with deviations` — verify-claims anti-overconfidence + pressure-evals, все items фазы P6 терминальны, фаза ждёт `plan-close`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -635,6 +635,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P3 закрыта) | Фаза P3 закрыта `🟠 Done with deviations`: все 6 items терминальны (2🟢/4🟠) — статусы сверены с git-фактами и Known Deviations, docs-sync подтверждён (обновлено в рамках P3.5/P3.6), закрывающий отчёт `closure/P3.json` заведён — детали см. `phases/P3.md` Phase Handoff. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.1 закрыт) | P4.1 закрыт 🟢: `ADR-0001-cross-machine-memory.md` фиксирует восемь принятых решений (D78/D80) + отвергнутые варианты + известные ограничения — детали см. `phases/P4.md` P4.1 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P6.1 закрыт 🟢) | P6.1 закрыт `🟢 Done`: поверхность `statusline/` в harness + флаг `--statusline`; четыре доказательства сняты (дельта бюджета 0 ток, медиана 5.4 мс, таблица полос, ноль сирот) — детали см. `phases/P6.md` P6.1 Completion Notes. |
+| 2026-07-28 | plan-run/Claude Sonnet 5/high (P6.3 закрыт 🟠) | P6.3 закрыт `🟠 Done with deviations`: три дельты в `verify-claims` + три pressure-сценария + спека `research/14` для P2.3 — детали см. `phases/P6.md` P6.3 Completion Notes. Все items P6 терминальны; фазовое закрытие — отдельным `/task:plan-close`. |
 
 ## 7. Contracts
 

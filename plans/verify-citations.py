@@ -20,10 +20,21 @@
                                          БЕЗ AST; `a::B::c` — грепается ЛИСТ `c`, граница
                                          намеренная, см. docs/reference/plan-tooling.md)
 
-Путь обязан содержать хотя бы один `/` (как `normalize()` у `cross-plan-files.py`) — короткие
-формы без директории (напр. `phases/P1.md:80` как продолжение перечисления после полного пути
-чуть раньше) сознательно НЕ резолвятся эвристикой: машина не восстанавливает подразумеваемый
-контекст прозы, находка в отчёте — ожидаемый результат (Code Guidance item'а, анти-подгонка).
+Путь обязан содержать хотя бы один `/` (как `normalize()` у `cross-plan-files.py`) —
+ГОЛЫЙ path-упоминание без суффикса (`:line`/`::symbol`) НЕ проверяется вовсе (класс отклонён
+измерением, D128). Резолв пути — ДВУХШАГОВЫЙ: (1) корень репозитория, (2) каталог плана-источника
+(`plans/<PLAN-ID>/`) — первая база, под которой файл существует, определяет резолв, суффикс
+проверяется относительно НЕЁ. Порядок зафиксирован намеренно (корень репо однозначен и общ для
+всех планов, каталог плана — контекстное дополнение); внутриплановая короткая ссылка вроде
+`phases/P1.md:80` резолвится ВТОРОЙ базой — это не «восстановление подразумеваемого контекста
+прозы», а вторая детерминированная база, известная скрипту по построению (сам обходит
+`plans/<PLAN-ID>/`). Файл, не резолвящийся НИ ОТ ОДНОЙ из двух баз, — находка (Code Guidance
+item'а P11.1, анти-подгонка): машина по-прежнему не угадывает.
+
+Поверхность скана — семь шаблонов внутри `plans/<PLAN-ID>/`: `plan.md`, `handoff.md`,
+`roadmap.md`, `phases/*.md`, `findings/**/*.md`, `research/**/*.md`, `brief/**/*.md`
+(рекурсивно). `artifacts/`, `closure/`, `root/` сознательно вне поверхности (сырьё измерений /
+генерируемые отчёты / переезжает в `docs/` проекта — не носитель плановой прозы).
 
 Известные исключения (ссылки на деливераблы БУДУЩИХ items, которых на этом дереве ещё нет по
 построению) — данными, не кодом: `plans/verify-citations-known-exceptions.json`
@@ -89,10 +100,29 @@ def resolve_plan_dir(arg: str) -> str:
     raise SystemExit(f"verify-citations: не план ({arg}) — plan.md не найден")
 
 
+# Семь шаблонов поверхности (D128, `research/27-P11-citation-gate-target-design.md` §2.2):
+# слои знаний `brief/`→`findings/`→`research/` канонизированы SKILL §16 как носители, из
+# которых цепочка «сырьё → синтез → решение» обязана восстанавливаться без чата — ссылка в
+# них ровно такое же доказательство, как ссылка в ТЗ. `artifacts/`/`closure/`/`root/` вне
+# поверхности сознательно (сырьё измерений / генерируемые отчёты / переезжает в docs/ проекта).
+_SOURCE_PATTERNS = (
+    "plan.md",
+    "handoff.md",
+    "roadmap.md",
+    os.path.join("phases", "*.md"),
+    os.path.join("findings", "**", "*.md"),
+    os.path.join("research", "**", "*.md"),
+    os.path.join("brief", "**", "*.md"),
+)
+
+
 def plan_source_files(plan_dir: str) -> list[str]:
-    files = [os.path.join(plan_dir, "plan.md")]
-    files += sorted(glob.glob(os.path.join(plan_dir, "phases", "*.md")))
-    return [f for f in files if os.path.exists(f)]
+    files: set[str] = set()
+    for pattern in _SOURCE_PATTERNS:
+        for f in glob.glob(os.path.join(plan_dir, pattern), recursive=True):
+            if os.path.isfile(f):
+                files.add(f)
+    return sorted(files)
 
 
 def load_known_exceptions() -> dict[str, str]:
@@ -103,11 +133,17 @@ def load_known_exceptions() -> dict[str, str]:
     return {item["citation"]: item.get("reason", "") for item in data.get("exceptions", [])}
 
 
-def check_citation(path_token: str, suffix: str, repo_root: str) -> str | None:
-    """Вернуть причину отказа, либо None если ссылка резолвится."""
-    abs_path = os.path.join(repo_root, path_token)
-    if not os.path.isfile(abs_path):
-        return f"файл не существует под {repo_root}"
+def resolve_bases(repo_root: str, plan_dir: str) -> list[tuple[str, str]]:
+    """Две базы резолва пути, В ЭТОМ ПОРЯДКЕ (зафиксировано, D128/`research/27-…` §2.1):
+    (1) корень репозитория — однозначен и общ для всех планов; (2) каталог плана-источника —
+    контекстное дополнение, резолвит внутриплановые короткие ссылки (`phases/P9.md:260`).
+    Порядок не переставляется: коллизия имён на живом дереве маловероятна, но при появлении
+    файла в корне репо, совпадающего с внутриплановым путём, приоритет обязан остаться за
+    корнем — это НЕ угадывание, а объявленное правило."""
+    return [("корня репо", repo_root), ("каталога плана", plan_dir)]
+
+
+def _check_suffix(abs_path: str, suffix: str) -> str | None:
     with open(abs_path, encoding="utf-8", errors="replace") as fh:
         content = fh.read()
     if suffix.startswith("::"):
@@ -131,7 +167,23 @@ def check_citation(path_token: str, suffix: str, repo_root: str) -> str | None:
     return None
 
 
+def check_citation(path_token: str, suffix: str, bases: list[tuple[str, str]]) -> str | None:
+    """Вернуть причину отказа, либо None если ссылка резолвится. `bases` — список
+    `(метка, каталог)`, пробуются ПО ПОРЯДКУ (`resolve_bases`); первая база, под которой файл
+    существует, определяет резолв, суффикс проверяется ОТНОСИТЕЛЬНО НЕЁ (смешение баз дало бы
+    ложный «номер строки вне диапазона» — суффикс и найденный файл обязаны быть с одной базы)."""
+    for _label, base in bases:
+        abs_path = os.path.join(base, path_token)
+        if os.path.isfile(abs_path):
+            return _check_suffix(abs_path, suffix)
+    if not bases:
+        return "файл не найден (баз резолва не задано)"
+    tried = ", ни ".join(f"от {label}" for label, _ in bases)
+    return f"файл не найден ни {tried}"
+
+
 def scan_plan(plan_dir: str, known: dict[str, str], repo_root: str) -> tuple[list[Finding], int]:
+    bases = resolve_bases(repo_root, plan_dir)
     findings: list[Finding] = []
     checked = 0
     for src in plan_source_files(plan_dir):
@@ -144,7 +196,7 @@ def scan_plan(plan_dir: str, known: dict[str, str], repo_root: str) -> tuple[lis
                     checked += 1
                     if citation in known:
                         continue
-                    reason = check_citation(path_token, suffix, repo_root)
+                    reason = check_citation(path_token, suffix, bases)
                     if reason:
                         findings.append(Finding(rel_src, lineno, citation, reason))
     return findings, checked
@@ -164,34 +216,80 @@ def _selftest() -> int:
             os.makedirs(os.path.join(self.repo_root, "pkg"))
             with open(os.path.join(self.repo_root, "pkg", "mod.py"), "w", encoding="utf-8") as fh:
                 fh.write("line1\nline2\ndef target():\n    pass\n")
+            # каталог плана — вторая база резолва; несёт СВОЙ файл, отсутствующий под корнем.
+            self.plan_dir = os.path.join(self.repo_root, "plans", "P11-BASES-FIXTURE")
+            os.makedirs(os.path.join(self.plan_dir, "phases"))
+            with open(os.path.join(self.plan_dir, "phases", "P1.md"), "w", encoding="utf-8") as fh:
+                fh.write("line1\nline2\n")
+            self.bases = resolve_bases(self.repo_root, self.plan_dir)
 
         def test_a_valid_line_ref_passes(self) -> None:
-            self.assertIsNone(check_citation("pkg/mod.py", ":2", self.repo_root))
+            self.assertIsNone(check_citation("pkg/mod.py", ":2", self.bases))
 
         def test_a2_valid_range_and_pair_pass(self) -> None:
-            self.assertIsNone(check_citation("pkg/mod.py", ":1-4", self.repo_root))
-            self.assertIsNone(check_citation("pkg/mod.py", ":1,4", self.repo_root))
+            self.assertIsNone(check_citation("pkg/mod.py", ":1-4", self.bases))
+            self.assertIsNone(check_citation("pkg/mod.py", ":1,4", self.bases))
 
         def test_b_line_out_of_range_is_finding(self) -> None:
-            reason = check_citation("pkg/mod.py", ":99", self.repo_root)
+            reason = check_citation("pkg/mod.py", ":99", self.bases)
             self.assertIsNotNone(reason)
             self.assertIn("диапазона", reason)
 
         def test_c_missing_symbol_is_finding(self) -> None:
-            reason = check_citation("pkg/mod.py", "::nope", self.repo_root)
+            reason = check_citation("pkg/mod.py", "::nope", self.bases)
             self.assertIsNotNone(reason)
             self.assertIn("символ", reason)
 
         def test_c2_existing_symbol_passes(self) -> None:
-            self.assertIsNone(check_citation("pkg/mod.py", "::target", self.repo_root))
+            self.assertIsNone(check_citation("pkg/mod.py", "::target", self.bases))
 
         def test_c3_nested_symbol_greps_leaf(self) -> None:
-            self.assertIsNone(check_citation("pkg/mod.py", "::Suite::target", self.repo_root))
+            self.assertIsNone(check_citation("pkg/mod.py", "::Suite::target", self.bases))
 
         def test_d_missing_file_is_finding(self) -> None:
-            reason = check_citation("pkg/absent.py", ":1", self.repo_root)
+            reason = check_citation("pkg/absent.py", ":1", self.bases)
             self.assertIsNotNone(reason)
-            self.assertIn("не существует", reason)
+            self.assertIn("не найден", reason)
+
+        # --- P11.1: двухшаговый резолвер + расширенная поверхность ---------------------
+
+        def test_e_resolves_only_from_plan_dir(self) -> None:
+            """(a) цитата резолвится ТОЛЬКО от каталога плана (`phases/P1.md:2`) — проходит."""
+            self.assertIsNone(check_citation("phases/P1.md", ":2", self.bases))
+
+        def test_e2_resolves_from_repo_root(self) -> None:
+            """(b) цитата резолвится от корня репо — проходит (регрессия: база 1 не сломана)."""
+            self.assertIsNone(check_citation("pkg/mod.py", ":1", self.bases))
+
+        def test_e3_resolves_from_neither_base_names_both(self) -> None:
+            """(c) не резолвится ни от одной базы → находка называет ОБЕ базы."""
+            reason = check_citation("phases/absent.md", ":1", self.bases)
+            self.assertIsNotNone(reason)
+            self.assertIn("корня репо", reason)
+            self.assertIn("каталога плана", reason)
+
+        def test_e4_out_of_range_checked_against_correct_base(self) -> None:
+            """(d) файл есть под каталогом плана, номер строки вне ЕГО диапазона (2 строки) —
+            находка привязана к правильной базе, а не ложно проверена против корня репо."""
+            reason = check_citation("phases/P1.md", ":99", self.bases)
+            self.assertIsNotNone(reason)
+            self.assertIn("диапазона", reason)
+
+        def test_e5_recursive_glob_finds_nested_findings_file(self) -> None:
+            """(e) `findings/sub/x.md` попадает в поверхность (рекурсивный glob)."""
+            sub_dir = os.path.join(self.plan_dir, "findings", "sub")
+            os.makedirs(sub_dir)
+            with open(os.path.join(sub_dir, "x.md"), "w", encoding="utf-8") as fh:
+                fh.write("см. `pkg/mod.py:1`\n")
+            files = plan_source_files(self.plan_dir)
+            self.assertIn(os.path.join(sub_dir, "x.md"), files)
+
+        def test_e6_base_order_is_fixed_repo_root_first(self) -> None:
+            """Порядок баз ЗАФИКСИРОВАН: корень репо первым (`resolve_bases`)."""
+            self.assertEqual(
+                [label for label, _ in resolve_bases(self.repo_root, self.plan_dir)],
+                ["корня репо", "каталога плана"],
+            )
 
         def test_scan_plan_end_to_end(self) -> None:
             plan_dir = os.path.join(self.repo_root, "plans", "X")

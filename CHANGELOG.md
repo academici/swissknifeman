@@ -4,6 +4,18 @@
 
 ### Added
 
+- **Интент-команды: капы делегирования + `confidence` в формате находки ревью (P2.2,
+  `2026.07.25-ECO-OPT`).** Ревизия шести интент-команд `packages/task/commands/` и двенадцати
+  файлов agent-packs по правилу A/B/C (`research/01` §1, расширено D19) под гайды Claude 5.
+  **Класс A (содержательно-пустые ритуалы самопроверки и леса статус-апдейтов) — пуст**, работа
+  ушла в «добавить недостающее»: кап делегирования в `design.md`/`research.md`/`review.md`
+  (гайд Opus 5 §6: «give explicit guidance on which scenarios warrant delegation, or set
+  deterministic caps») + ось `confidence` рядом с `severity` в формате находки `review.md`
+  (гайд Sonnet 5, «Code review harnesses»). Adversarial-verify чужих находок и RAG-верификация
+  внешних фактов явно выведены из-под капа — гайд адресует самопроверку собственного вывода.
+  Пятнадцать файлов закрыты как «изменений нет» с разобранными кандидатами; карта решений —
+  `plans/2026.07.25-ECO-OPT/artifacts/P2.2/opus5-revision-map.md`. `model`/`effort`-пины и
+  `description` не тронуты (D16).
 - **`general/verify-claims`: anti-overconfidence — coverage-шаг + perplexity как отдельный класс
   + делегирование сводки (P6.3, `2026.07.25-ECO-OPT`).** Три дельты по двум датированным полевым
   кейсам этого же плана (D20 — тихое сужение рамки «Opus 5» вместо «Claude 5 family»; D53 —

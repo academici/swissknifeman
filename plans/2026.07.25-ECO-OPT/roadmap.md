@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.25-ECO-OPT
 
-**Обновлён:** 2026-07-27 · **Соответствует plan.md:** v0.14.0
+**Обновлён:** 2026-07-28 · **Соответствует plan.md:** v0.23.0
 
 > **Пересобран реконсайл-прогоном 3/3 (D86–D93).** Что изменилось против сборки `finish`:
 > **все cross-plan гейты сняты** (`2026.07.24-AGENT-RELIABILITY` терминален), заведена фаза
@@ -96,6 +96,26 @@
 | P9.3 | manual | implementation/high | — | эталон-корпус + baseline `J`/`U1`/`R`/`R1`; ключ ≥50 находок коммитится ДО прогонов |
 | P9.2 | plan-exec | implementation/medium | **ПОСЛЕ P9.3** (снято — 🟢) | реестр ролей как данные + валидатор; носитель — extension-таблица `configs/common/agent-packs/review-roles.json`, `role-bindings.json` НЕ трогается (**D126**, переиздано 2026-07-28 после снятой эскалации). **Шаг 0 обязателен:** откат незакоммиченного bump'а `role-bindings.json`. **Вперёд НЕ вынесена сознательно (D93):** она меняет L2, дельту которого P9.4 меряет против baseline P9.3 |
 | P9.4 | manual | implementation/high | ПОСЛЕ P9.2 и P9.3 | повторный замер тем же скорером; «сигнала нет» — законный исход |
+
+### Волна 6 — проверяемость прозы (строгая цепочка, фаза P11)
+
+| Item | Запуск | Model class/Effort | Гейт | Примечание |
+|---|---|---|---|---|
+| P11.1 | plan-exec | implementation/medium | — | двухшаговый резолвер + семь шаблонов поверхности; первый в фазе, предшественников нет |
+| P11.2 | plan-exec | implementation/medium | ПОСЛЕ P11.1 | json-класс с greedy-резолвом; общий носитель `plans/verify-citations.py` |
+| P11.3 | **plan-run** | implementation/high | ПОСЛЕ P11.1 | кросс-док чек handoff↔доска в `plan_lint` + канон `plan-protocol`; `Exec = manual` — деривация §9, `plan-exec` дал бы `ROUTING-INCONSISTENT` |
+| P11.4 | plan-exec | implementation/medium | **ПОСЛЕ P11.1–P11.3** | dogfood-снимок на ЕЩЁ НЕ починенном дереве; после P11.5/P11.8 невоспроизводим |
+| P11.5 | plan-exec | implementation/medium | ПОСЛЕ P11.4 | триаж 48 находок по R1–R4 + baseline `verify-citations-known-exceptions.json` (закрывает Open risk (7) и Pending Work (b) P10.2) |
+| P11.6 | **plan-run** | implementation/high | ПОСЛЕ P11.3 и P11.5 | канон §8 «Порядок закрытия item'а» + `plan-close.md`; общий носитель `SKILL.ru.md` с P11.3 |
+| P11.7 | manual | implementation/high | ПОСЛЕ P11.5 и P11.6 | проверка `plan-citations` в `review-gate`; машинное состояние `~/.claude/hooks/` + два live-прогона |
+| P11.8 | manual (`/task:plan-close`) | implementation/low | **ПОСЛЕДНИЙ в фазе** | реконсиляция P9 по 12 находкам аудита; фаза P9 НЕ реопенится (D132) |
+
+**Почему волна 6 — цепочка, а не батч.** Три звена держатся не удобством, а построением:
+dogfood (P11.4) обязан снять состояние ДО починок, иначе корпус доказательства уничтожен;
+strict-класс review-gate (P11.7) без baseline-перечня (P11.5) отключается петлёй диспетчера после
+третьего отказа; реконсиляция P9 (P11.8) идёт последней, чтобы её проза проходила уже включённый
+гейт. Пары `P11.1→P11.2` и `P11.3→P11.6` сцеплены общими носителями (`verify-citations.py`,
+`SKILL.ru.md`), разрешение — порядком, не мержем.
 
 **Оркестрационных (workflow) запусков карта по-прежнему НЕ предлагает.** Критерий SKILL §7 (N≥3
 items с независимым scope и детерминированной Validation) не выполняется ни в одной группе:
@@ -313,6 +333,25 @@ item'у запрещён. Строка §3 Routing разбита построч
 ```
 /task:plan-run 2026.07.25-ECO-OPT P8.10
 ```
+
+### Волна 6, шаг 1 — P11.1 (первый item фазы P11)
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation (Claude Sonnet 5) |
+| Effort | medium — пин `task:plan-exec` |
+| Capabilities | — |
+| Context | NEW SESSION — item читает ТЗ с диска |
+| Суть | Двухшаговый резолвер пути цитаты (корень репо → каталог плана) + расширение поверхности скана до семи шаблонов в `plans/verify-citations.py` |
+
+```
+/task:plan-exec 2026.07.25-ECO-OPT P11.1
+```
+
+Дальше по цепочке волны 6: `P11.2` (plan-exec) → `P11.3` (**plan-run** под сессией
+`implementation/high`) → `P11.4` → `P11.5` (оба plan-exec) → `P11.6` (**plan-run**,
+`implementation/high`) → `P11.7` (manual, hands-on машинное состояние) → `P11.8`
+(`/task:plan-close 2026.07.25-ECO-OPT P9` с payload'ом launch-block'а аудита P9).
 
 ## Гейты владельца (сводно)
 

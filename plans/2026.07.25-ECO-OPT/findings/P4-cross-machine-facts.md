@@ -213,6 +213,6 @@ LWW-перетирание. Факт зафиксирован здесь, пот
   `Restart=on-failure` + `RestartSec=`.
 - Прямое следствие для нас **мягкое**: демон на хосте слушает loopback (публикация — через
   `tailscale serve`), сети на старте ему не требуется, поэтому текущие строки
-  `After=network-online.target`/`Wants=…` в `provision/service.py:31-32` безвредны, но
+  `After=network-online.target`/`Wants=…` в `packages/maind/lib/maind/provision/service.py:31-32` безвредны, но
   **вводят в заблуждение** — зафиксировано как наблюдение, отдельной правки в этой фазе не
   требует.

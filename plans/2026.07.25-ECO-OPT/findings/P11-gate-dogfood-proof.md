@@ -33,31 +33,31 @@ $ python3 plans/verify-citations.py > /tmp/dogfood-citations.txt; echo $?
 Известных исключений в перечне: 0
 Находок: 52
 
-  plans/2026.07.24-AGENT-RELIABILITY/findings/P4.1-code-grounded-audit.md:90 → `run-report/_lib.py::_protected_sets` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.24-AGENT-RELIABILITY/findings/P4.1-code-grounded-audit.md:90 → `packages/harness/configs/claude-code/hooks/run-report/_lib.py::_protected_sets` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md:77 → `commands/plan-exec.md:58` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.24-AGENT-RELIABILITY/plan.md:380 → `phases/P5.md:8-11` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.24-AGENT-RELIABILITY/plan.md:388 → `commands/plan-exec.md:58` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.24-AGENT-RELIABILITY/research/06-p2.1-contract-boundary.md:95 → `phases/P5.md:8-11` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/findings/P11-citation-gate-measurements.md:102 → `artifacts/P1.1/remediation-map.json::owners.P2.2` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/findings/P11-citation-gate-measurements.md:107 → `configs/core-policy.json::skills` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/findings/P11-citation-gate-measurements.md:102 → `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/remediation-map.json::owners.P2.2` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/findings/P11-citation-gate-measurements.md:107 → `packages/skiller/configs/core-policy.json::skills` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/findings/P4-cross-machine-facts.md:61 → `dist/index.mjs:20209-20221` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/findings/P4-cross-machine-facts.md:74 → `dist/index.mjs:15276` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/findings/P4-cross-machine-facts.md:89 → `dist/index.mjs:10177-10400` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/findings/P4-cross-machine-facts.md:216 → `provision/service.py:31-32` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/findings/P4-cross-machine-facts.md:216 → `packages/maind/lib/maind/provision/service.py:31-32` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/findings/P5-audit-closure-facts.md:47 → `packages/maind/lib/maind/doctor.py:180-300` — строка 300 вне диапазона 1..299
-  plans/2026.07.25-ECO-OPT/findings/P6-context-hygiene-facts.md:263 → `quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/findings/P6-context-hygiene-facts.md:263 → `packages/skiller/lib/skiller/quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P10.md:441 → `core/tests/test_provider_config.py::TestProviderConfigResolution::test_negative_validation_matrix_covers_frozen_contract` — символ 'test_negative_validation_matrix_covers_frozen_contract' не найден в файле
   plans/2026.07.25-ECO-OPT/phases/P10.md:474 → `packages/skiller/lib/skiller/status.py:55-160` — строка 160 вне диапазона 1..156
   plans/2026.07.25-ECO-OPT/phases/P10.md:477 → `scripts/validate.sh:87-100` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/phases/P10.md:477 → `quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/phases/P10.md:477 → `packages/skiller/lib/skiller/quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P11.md:205 → `path/to/file.json::a.b.c` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P11.md:258 → `pkg/data.json::a.b` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P3.md:593 → `packages/skiller/lib/skiller/status.py:55-160` — строка 160 вне диапазона 1..156
   plans/2026.07.25-ECO-OPT/phases/P3.md:696 → `scripts/validate.sh:65` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P4.md:141 → `dist/index.mjs:10177-10400` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P4.md:262 → `dist/index.mjs:20209-20221` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/phases/P5.md:76 → `quality/eval.py:311-333` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/phases/P5.md:937 → `tests/test_codegraph.py::TestSchemaConnectivity` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/phases/P5.md:76 → `packages/skiller/lib/skiller/quality/eval.py:311-333` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/phases/P5.md:937 → `packages/maind/tests/test_codegraph.py::TestSchemaConnectivity` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P5.md:1154 → `serena/config/serena_config.py:341` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P5.md:1217 → `serena/config/serena_config.py:341` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/phases/P5.md:1266 → `serena/config/serena_config.py:341` — файл не найден ни от корня репо, ни от каталога плана
@@ -65,26 +65,26 @@ $ python3 plans/verify-citations.py > /tmp/dogfood-citations.txt; echo $?
   plans/2026.07.25-ECO-OPT/phases/P5.md:1780 → `serena/config/serena_config.py:341` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/plan.md:258 → `dist/index.mjs:20209-20221` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/plan.md:260 → `dist/index.mjs:10177-10400` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/plan.md:351 → `lib/harness/hooks.py::block_output_style` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/plan.md:351 → `scripts/apply-permissions.sh:52-110` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/plan.md:354 → `quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/plan.md:351 → `packages/harness/lib/harness/hooks.py::block_output_style` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/plan.md:351 → `packages/harness/scripts/apply-permissions.sh:52-110` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/plan.md:354 → `packages/skiller/lib/skiller/quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/plan.md:406 → `phases/P1.md:80,118` — строка 118 вне диапазона 1..96
   plans/2026.07.25-ECO-OPT/plan.md:424 → `scripts/validate.sh:87-100` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/plan.md:425 → `lib/skiller/status.py:150` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/plan.md:425 → `packages/skiller/lib/skiller/status.py:150` — файл не найден ни от корня репо, ни от каталога плана
   plans/2026.07.25-ECO-OPT/plan.md:425 → `packages/skiller/lib/skiller/status.py:55-160` — строка 160 вне диапазона 1..156
   plans/2026.07.25-ECO-OPT/plan.md:487 → `serena/config/serena_config.py:341` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/01-P2-opus5-revision-map.md:101 → `_common/pack.json:15` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/01-P2-opus5-revision-map.md:101 → `role-tech-lead/pack.json:64` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/05-P4-fact-classes.md:19 → `provision/deploy.py:137-140` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/05-P4-fact-classes.md:28 → `templates/health/memory-digest-hook.sh:14-15` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/11-P8-target-design.md:267 → `configs/core-policy.json::skills` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/12-P6-fact-classes.md:77 → `quality/eval.py:42-101` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/13-P6-target-design.md:216 → `quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/15-P7-fact-classes.md:39 → `lib/harness/cli.py:18-28` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/16-P7-target-design.md:14 → `lib/harness/cli.py:18-28` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/17-P9-fact-classes.md:103 → `quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/research/18-P9-target-design.md:23 → `lib/harness/hooks.py:91` — файл не найден ни от корня репо, ни от каталога плана
-  plans/2026.07.25-ECO-OPT/roadmap.md:409 → `lib/skiller/config.py::load_profile` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/01-P2-opus5-revision-map.md:101 → `packages/harness/configs/claude-code/agent-packs/_common/pack.json:15` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/01-P2-opus5-revision-map.md:101 → `packages/harness/configs/claude-code/agent-packs/role-tech-lead/pack.json:64` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/05-P4-fact-classes.md:19 → `packages/maind/lib/maind/provision/deploy.py:137-140` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/05-P4-fact-classes.md:28 → `packages/maind/templates/health/memory-digest-hook.sh:14-15` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/11-P8-target-design.md:267 → `packages/skiller/configs/core-policy.json::skills` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/12-P6-fact-classes.md:77 → `packages/skiller/lib/skiller/quality/eval.py:42-101` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/13-P6-target-design.md:216 → `packages/skiller/lib/skiller/quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/15-P7-fact-classes.md:39 → `packages/harness/lib/harness/cli.py:18-28` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/16-P7-target-design.md:14 → `packages/harness/lib/harness/cli.py:18-28` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/17-P9-fact-classes.md:103 → `packages/skiller/lib/skiller/quality/eval.py:42` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/research/18-P9-target-design.md:23 → `packages/harness/lib/harness/hooks.py:91` — файл не найден ни от корня репо, ни от каталога плана
+  plans/2026.07.25-ECO-OPT/roadmap.md:409 → `packages/skiller/lib/skiller/config.py::load_profile` — файл не найден ни от корня репо, ни от каталога плана
 ```
 
 ### 1.2. `python3 plans/verify-citations.py --strict`

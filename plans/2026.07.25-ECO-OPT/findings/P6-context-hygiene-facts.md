@@ -260,7 +260,7 @@ for the actual decision».
 
 **Прямое следствие для P6.3:** `skiller eval` грейдит ровно семью текстовыми ассершенами
 (`contains`/`not_contains`/`regex`/`not_regex`/`file_exists`/`file_absent`/`min_words`,
-`quality/eval.py:42`) — то есть наши pressure-кейсы по построению являются smoke-тестом формы, а
+`packages/skiller/lib/skiller/quality/eval.py:42`) — то есть наши pressure-кейсы по построению являются smoke-тестом формы, а
 не измерением поведения. Это обязано быть НАЗВАНО в результате item'а, а не подразумеваться;
 заявлять по нему «overconfidence устранён» нельзя. Апгрейд до trace/judge-грейдинга — отдельная
 тема (кандидат roadmap), не этот item.

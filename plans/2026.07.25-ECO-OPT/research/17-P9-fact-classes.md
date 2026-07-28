@@ -100,7 +100,7 @@
   `pack_id`/`role_id`/`model_selector`/`color`);
 - что именно производит L3 (`plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md` P2.1/P2.3);
 - формат `evals/` (`evals.json`: `skill`+`cases[]`{id,prompt,assertions[]}, семь
-  детерминированных типов ассершенов — `quality/eval.py:42`).
+  детерминированных типов ассершенов — `packages/skiller/lib/skiller/quality/eval.py:42`).
 
 ### FC-6 (сознательно НЕ исследуется)
 - Построение собственного код-графа (решение владельца — не строим).

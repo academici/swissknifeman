@@ -74,7 +74,7 @@ RAG как ТЗ для P6.3).
 - Есть ли в `harness` statusline сегодня и куда его класть — `configs/claude-code/`, `lib/harness/`.
 - Как доставляется OS-уведомление в этом репо — `hooks/notify/notify.sh`.
 - Как пишется один top-level ключ в settings проекта — `settings.py::set_setting_key`.
-- Формат и допустимые ассершены evals — `quality/eval.py:42-101`.
+- Формат и допустимые ассершены evals — `packages/skiller/lib/skiller/quality/eval.py:42-101`.
 - Что уже сказано в телах трёх правимых скиллов — сами `SKILL.ru.md`.
 - Кто владеет `description` скиллов и телом `mcp-advisor` — D38, `plan.md` §5.
 

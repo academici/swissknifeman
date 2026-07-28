@@ -20,7 +20,7 @@
   — **пустая команда = молчаливый no-op**;
 - `config.json` — `{"version": 1, "check_command": ""}` ⇒ но-оп по построению;
 - `env.ini` — `MODE=warn`;
-- проводка: `lifecycle.review-gate` в `lib/harness/hooks.py:91` (event `SubagentStop`,
+- проводка: `lifecycle.review-gate` в `packages/harness/lib/harness/hooks.py:91` (event `SubagentStop`,
   handler `~/.claude/hooks/review-gate/review-gate.sh`); установка — `scripts/apply-permissions.sh`
   ветка `--global` (строки 71–79).
 

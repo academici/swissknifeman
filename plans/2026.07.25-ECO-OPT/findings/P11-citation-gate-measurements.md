@@ -99,12 +99,12 @@ AGENT-RELIABILITY 5 · FOREMAN 0.
 | Находок **greedy**-резолва (длиннейший префикс-ключ) | **1** |
 
 **Ключевой факт для дизайна:** наивное `path.split(".")` даёт ЛОЖНУЮ находку на
-`plans/2026.07.24-AGENT-RELIABILITY/plan.md:386` → цитата `artifacts/P1.1/remediation-map.json::owners.P2.2`:
+`plans/2026.07.24-AGENT-RELIABILITY/plan.md:386` → цитата `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/remediation-map.json::owners.P2.2`:
 в файле ключи `owners` = `["P1.2","P1.3","P1.5","P2.2","P2.3"]` — **сам ключ содержит точку**.
 Проверено: `json.load(...)["owners"].keys()`. Резолвер обязан на каждом уровне брать
 ДЛИННЕЙШИЙ дотированный префикс, который является ключом, и только потом дробить дальше.
 Единственная реальная находка класса — `research/11-P8-target-design.md:267` →
-`` `configs/core-policy.json::skills` `` (файла нет ни под одной базой).
+`` `packages/skiller/configs/core-policy.json::skills` `` (файла нет ни под одной базой).
 
 ## §4. Кросс-документный чек `handoff.md` ↔ §4 Status Board
 

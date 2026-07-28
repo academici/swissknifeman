@@ -98,7 +98,7 @@ P2.2/P2.3 смещается с «удалить» на «**добавить н�
   architecture-decision,tech-radar-curator}.md` · `role-founder/agents/idea-validator.md` ·
   `role-maintainer/agents/release-conductor.md` · `role-tech-lead/agents/sprint-planner.md`.
 - Шаблонные `{{MODEL_*}}` — **39** файлов; enum интервью `["inherit","opus","sonnet","haiku"]`
-  (`_common/pack.json:15`, `role-tech-lead/pack.json:64`) ⇒ любая из этих ролей может резолвиться в
+  (`packages/harness/configs/claude-code/agent-packs/_common/pack.json:15`, `packages/harness/configs/claude-code/agent-packs/role-tech-lead/pack.json:64`) ⇒ любая из этих ролей может резолвиться в
   Opus у конкретного проекта. Практический вход: `dev.md` отправляет HIGH-срез на Opus+xhigh
   ревьюера ⇒ `*/agents/reviewer.md` — реально Opus-исполняемая поверхность.
 - Капы делегирования частично УЖЕ есть: `_common/agents/orchestrator.md` несёт «Порог делегирования»

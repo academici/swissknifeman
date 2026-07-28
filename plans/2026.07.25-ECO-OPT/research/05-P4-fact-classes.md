@@ -16,7 +16,7 @@
 - Демон сегодня слушает **только loopback**: `iii-http` `host: 127.0.0.1`, `iii-stream`
   `host: 127.0.0.1` (`packages/maind/config/memory/iii-config.yaml:10-11,45-46`); стор —
   `store_method: file_based`, `file_path: ./data/state_store.db` (там же, iii-state).
-- MCP-сервер проекта — `maind mcp --scope <scope>` (`provision/deploy.py:137-140`), он резолвит
+- MCP-сервер проекта — `maind mcp --scope <scope>` (`packages/maind/lib/maind/provision/deploy.py:137-140`), он резолвит
   URL памяти тем же `resolve_ports` (`mcp.py:196,257`), то есть удалённый хост подхватывается
   без изменения `.mcp.json` проектов (важно: зашитые пути `.mcp.json` не ломаем — §2).
 - Round-trip-гейт уже есть: `health.memory_roundtrip` (store → recall → forget,
@@ -25,7 +25,7 @@
 - Демон как systemd `--user` юнит: `provision/service.py` (`ExecStart=<root>/bin/maind memory run`,
   `Restart=on-failure`, подсказка про `loginctl enable-linger`).
 - SessionStart-дайджест деградирует тихо: `memory digest` пуст → `exit 0`
-  (`templates/health/memory-digest-hook.sh:14-15`).
+  (`packages/maind/templates/health/memory-digest-hook.sh:14-15`).
 - Ступень 5 машинного bootstrap безусловно ставит **локальный** демон
   (`scripts/bootstrap-machine.sh:96-104`) — именно она порождает второго писателя.
 

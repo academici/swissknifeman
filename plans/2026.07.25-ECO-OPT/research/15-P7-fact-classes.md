@@ -36,7 +36,7 @@
   рендер в дерево не выполнен. Это и есть фактический зазор, в который целится P7.2.
 - **Публичного CLI у instructions/profiles НЕТ.** `harness` COMMANDS = `permissions`, `apply`,
   `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, `doctor`, `wf`
-  (`lib/harness/cli.py:18-28`). Модули `instructions.py`/`profiles.py`/`provider_render.py`/
+  (`packages/harness/lib/harness/cli.py:18-28`). Модули `instructions.py`/`profiles.py`/`provider_render.py`/
   `provider_audit.py` — библиотечные, вызываются тестами и чужими планами.
 - **Управление плагинами живёт НЕ в harness, а в maind + skiller.** `/maind:plugins`
   (`packages/maind/commands/plugins.md`) читает и правит `enabledPlugins` /

@@ -4,6 +4,20 @@
 
 ### Added
 
+- **harness: statusline context-notify — окно в фактический процент контекста (P6.1,
+  `2026.07.25-ECO-OPT`).** Новая поверхность `configs/claude-code/statusline/`: скрипт
+  `context-notify.sh` печатает строку `модель · каталог · бар · N%` и на ПЕРЕСЕЧЕНИИ полосы
+  порога (дефолт `80,90`, кулдаун 15 мин) отсоединённо (`setsid`) дёргает существующий
+  `hooks/notify/notify.sh` — второго нотификатора не заводим. Состояние на сессию пишется
+  атомарно в `${XDG_RUNTIME_DIR:-/tmp}/claude-statusline/`, потому что рантайм отменяет
+  statusline-скрипт на середине при новом апдейте; `used_percentage: null` (старт сессии,
+  после `/compact`) не считается нулём — бар не рисуется и решение о пороге не принимается.
+  Включение opt-in per-project: `harness hooks --target . --statusline context|off` (ключ
+  `statusLine` в `.claude/settings.local.json` — машинно-локальная преференция, как
+  `outputStyle`; чужое значение уважается skip+warn), файлы ставит ветка `--global`.
+  Замеры: дельта `skiller budget --first-turn` = 0 ток (statusline не тратит контекст-токенов
+  по построению), медиана рендера 5.4 мс при максимуме 6.9 мс на 50 прогонах (порог приёмки
+  50/150 мс) — числа и таблица полос в `plans/2026.07.25-ECO-OPT/findings/P6.1-statusline-measure.md`.
 - **`general/context-economy` + `general/compact-responses`: compact-дисциплина (P6.2,
   `2026.07.25-ECO-OPT`).** `context-economy` §3 получила три дельты: граница сессии по шву
   задачи (завершённая единица работы/смена фазы/повторный `/compact`), а не по проценту —

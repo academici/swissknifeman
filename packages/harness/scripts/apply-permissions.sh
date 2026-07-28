@@ -96,6 +96,16 @@ if [[ "$GLOBAL" -eq 1 ]]; then
         echo "  Обновить вручную: cp \"$RG_SRC/config.json\" \"$RG_DST/config.json\""
       fi
     fi
+    # statusline: строка статуса + уведомление о пересечении полосы контекста.
+    # Не хук: ставится в ~/.claude/statusline/, включается opt-in per-project
+    # (`harness hooks --statusline context` пишет ключ statusLine). Код и README
+    # обновляем; env.ini не перезатираем (там пороги/кулдаун пользователя).
+    SL_SRC="$PRESETS_DIR/statusline"; SL_DST="$HOME/.claude/statusline"
+    mkdir -p "$SL_DST"
+    cp "$SL_SRC/context-notify.sh" "$SL_DST/"
+    cp "$SL_SRC/README.md" "$SL_DST/"
+    chmod +x "$SL_DST/context-notify.sh"
+    [[ -f "$SL_DST/env.ini" ]] || cp "$SL_SRC/env.ini" "$SL_DST/"
     # observer: capture-слой (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО.
     # Код обновляем; env.ini не перезатираем (там ENABLED проекта). Проводка —
     # opt-in пресетом observer, не глобально.
@@ -168,8 +178,8 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     # контент (нет env-state) → всегда overwrite. Включается per-project: harness hooks --output-style.
     OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ (НЕ активны)."
-    echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ + statusline/ (НЕ активны)."
+    echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate, output-style и statusline включаются ПО ПРОЕКТУ / по вызову (см. README)."
   else
     echo "--- dry-run: --global (файлы хуков не пишутся) ---"
     RG_DST_CFG="$HOME/.claude/hooks/review-gate/config.json"

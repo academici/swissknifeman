@@ -30,6 +30,10 @@ RUNREPORT_MODES = ("on", "off")
 PACKGUARD_MODES = ("off", "warn", "strict")
 CHANGELOGGATE_MODES = ("off", "warn", "strict")
 PLANSDIR_DEFAULT = "plans"
+STATUSLINE_MODES = ("context", "off")
+# Наш statusLine — ровно это значение; по нему же опознаём «свой» ключ при off.
+STATUSLINE_VALUE = {"type": "command",
+                    "command": "~/.claude/statusline/context-notify.sh"}
 
 
 @dataclass(frozen=True)
@@ -525,6 +529,40 @@ def block_output_style(env, target, name, dry):
     print("  (outputStyle применится после /clear или новой сессии)")
 
 
+def block_statusline(target, mode, dry):
+    """Записать top-level statusLine в .claude/settings.local.json (машинно-локальная
+    преференция терминала — как outputStyle, НЕ как plansDirectory: statusline это
+    шрифт/ширина/desktop-нотификации конкретной машины, а не командная конвенция).
+    Merge-only и НЕ перезаписывает чужой выбор (правило block_plans_dir): ключа нет →
+    поставить; уже наш → no-op; занят ДРУГИМ значением → skip + warn. off → снять ключ,
+    только если он сейчас равен нашему; иначе warn и не трогать.
+    Сами файлы ставит `harness hooks --global` (ветка --global apply-permissions.sh)."""
+    print(f"statusline: {mode or 'пропуск'}")
+    if not mode:
+        return
+    if mode not in STATUSLINE_MODES:
+        die(f"неизвестный режим statusline: {mode} ({'|'.join(STATUSLINE_MODES)})")
+    if mode == "off":
+        settings, f = load_settings(target, "settings.local.json")
+        current = settings.get("statusLine")
+        if current is None:
+            print(f"  {f}:statusLine не задан — нечего снимать")
+            return
+        if current != STATUSLINE_VALUE:
+            warn(f"statusLine={current!r} — не наш, не снимаю (уважаю локальный выбор)")
+            return
+        del settings["statusLine"]
+        write_json(f, settings, dry)
+        return
+    settings, _ = load_settings(target, "settings.local.json")
+    current = settings.get("statusLine")
+    if current is not None and current != STATUSLINE_VALUE:
+        warn(f"statusLine уже задан ({current!r}) — уважаю локальный выбор, не перезаписываю")
+        return
+    set_setting_key(target, "settings.local.json", "statusLine", STATUSLINE_VALUE, dry)
+    print("  (файлы ставит `harness hooks --global`; строка появится в следующей сессии)")
+
+
 def install_global(env, dry):
     """Поставить файлы хуков (auto-approve/memory/notify/log) в ~/.claude/hooks/."""
     script = env.apply_script
@@ -552,7 +590,8 @@ def cmd_hooks(env, argv):
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
         "--changelog-gate": "str",
-        "--output-style": "str", "--plans-dir": "str", "--file": "str",
+        "--output-style": "str", "--plans-dir": "str", "--statusline": "str",
+        "--file": "str",
         "--provider": "str", "--observer": "bool", "--trusted": "bool",
         "--repair": "bool", "--global": "bool", "--dry-run": "bool",
     })
@@ -565,6 +604,7 @@ def cmd_hooks(env, argv):
               f"[--changelog-gate {'|'.join(CHANGELOGGATE_MODES)}] "
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
+              f"[--statusline {'|'.join(STATUSLINE_MODES)}] "
               "[--provider codex --observer --trusted [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
@@ -582,11 +622,12 @@ def cmd_hooks(env, argv):
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
-            or opts["output_style"] or opts["plans_dir"]):
+            or opts["output_style"] or opts["plans_dir"] or opts["statusline"]):
         die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
             "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / "
-            "--output-style lean|off / --plans-dir plans|off / --global")
+            "--output-style lean|off / --plans-dir plans|off / "
+            "--statusline context|off / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
         block_autoapprove(target, opts["auto_approve"], settings_file, opts["dry_run"])
@@ -605,3 +646,5 @@ def cmd_hooks(env, argv):
         block_output_style(env, target, opts["output_style"], opts["dry_run"])
     if opts["plans_dir"]:
         block_plans_dir(target, opts["plans_dir"], settings_file, opts["dry_run"])
+    if opts["statusline"]:
+        block_statusline(target, opts["statusline"], opts["dry_run"])

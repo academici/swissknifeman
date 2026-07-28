@@ -38,7 +38,7 @@
     },
     {
       "id": "P9.4",
-      "status": "🟠 Done with deviations",
+      "status": "🟢 Done",
       "evidence_class": "real",
       "evidence": "runs-after.csv (292 находки) + arbitration-after.json (9 решений) + findings/P9.4-review-stability-delta.md — item-коммит 8f4152d5; score_review_runs.py --runs runs-after.csv --key answer-key.json --rules matching-rules.md --arbitration arbitration-after.json --json → J=0.667 U1=0.118 R=0.68(34/50) R1=0.556; вердикт по правилу P9.3 дословно (ΔR=-0.12<-0.05): регресс"
     }

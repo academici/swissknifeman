@@ -197,6 +197,9 @@ def check_skills(data, roles_canon=None, skills_index=None):
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
     if skills_index is None:
+        if not _SKILLS_JSON.is_file():
+            return [Violation("skills", "индекс скиллов недоступен: "
+                               f"{_SKILLS_JSON} не найден (standalone-раскладка пакета)")]
         raw = safe_load_json(_SKILLS_JSON, default={})
         skills_index = {s.get("name") for s in raw.get("skills", []) if isinstance(s, dict)}
     known_packs = set(_roles_by_pack(data))

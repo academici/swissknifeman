@@ -164,6 +164,16 @@ class ReviewRolesTestCase(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertTrue(violations)
 
+    def test_missing_skills_json_gives_one_diagnostic_violation(self):
+        # Standalone-раскладка пакета (skiller-сосед отсутствует) — ОДНА диагностичная
+        # находка, не N ложных «skill не найден» (P11.8, реконсиляция аудита P9, находка 7).
+        rr._SKILLS_JSON = self.root / "does-not-exist" / "skills.json"
+        violations, code = self._run(self._registry())
+        self.assertEqual(code, 1)
+        skills_violations = [v for v in violations if v.check == "skills"]
+        self.assertEqual(len(skills_violations), 1)
+        self.assertIn("индекс скиллов недоступен", skills_violations[0].message)
+
 
 if __name__ == "__main__":
     unittest.main()

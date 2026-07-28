@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P1.1 закрыт ⛔ Skipped by decision — вердикт tool-search, D136) |
+| Last Updated | 2026-07-28 (P3.1 закрыт 🟢 — диагноз листинга флота, поправка бюджета 30 000 симв) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -211,7 +211,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 |:--|:--|:--|:--|
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 1/2 | 🟢 Done |
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
-| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 0/6 | 🟡 In progress |
+| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 1/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
@@ -621,6 +621,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P11.6 закрыт) | P11.6 закрыт 🟠: гейт цитат врезан в `plan-protocol` §8 и `plan-close.md`; Validation 6 красная (16 пред-существующих находок, K=0) — детали см. `phases/P11.md` P11.6 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P11.7 закрыт) | P11.7 закрыт 🟠: `checks/plan-citations.sh` в `review-gate` (mode: warn), два live-прогона субагента, Live B — замена цели на AGENT-RELIABILITY (confound P11.5) — детали см. `phases/P11.md` P11.7 Completion Notes. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (P11.8 — реконсиляция P9) | Реконсиляция терминальной фазы P9 по 12 находкам её аудита (ATTENTION): P9.4 `🟠`→`🟢` (carve-out (а), не material), два ложных утверждения в финдингах P9.4/P9.2 переписаны по фактам, счёт линтера с атрибуцией добавлен трём items, `--arbitration` вписан в Validation P9.3/P9.4 (D134), Known Deviations P9.2 заполнены (D126), висячая ссылка `.gitignore` снята (D135), `reviewroles.py` чинит 19 ложных находок на одну диагностичную — фаза P9 не реопенена — детали см. `phases/P9.md` находки 1–12 и Phase Handoff. |
+| 2026-07-28 | plan-run/Claude Sonnet 5/medium (P3.1 закрыт) | P3.1 закрыт 🟢: диагноз листинга флота (`findings/P3.1-listing-diagnosis.md`) — несущая поправка: реальный бюджет листинга 1M-модели 30 000 симв, не ≈10 000 (живой `claude --debug`+`/context`+`/doctor`); пересчёт §3 переворачивает вердикт `research/20` §1.1 (9/10 профилей укладываются, не переполняют) — детали см. `phases/P3.md` P3.1 Completion Notes/Pending Work. |
 
 ## 7. Contracts
 

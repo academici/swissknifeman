@@ -4,6 +4,7 @@
   "checks": [
     { "name": "generated-assets", "mode": "strict" },
     { "name": "plan-lint", "mode": "strict" },
-    { "name": "tests-touched", "mode": "warn" }
+    { "name": "tests-touched", "mode": "warn" },
+    { "name": "plan-citations", "mode": "warn" }
   ]
 }

@@ -29,7 +29,10 @@
   (`strict`/`warn`), `check_command` — одна стабильная строка-вызов диспетчера.
   Глобальный `MODE` (`env.ini`) может ПОНИЗИТЬ strict-класс до warn, не наоборот;
   защита от петли — счётчик диспетчера по (сессия, агент, проверка). Три состояния
-  в `harness doctor` вместо тихого no-op.
+  в `harness doctor` вместо тихого no-op. Проверки: `generated-assets` (strict) ·
+  `plan-lint` (strict) · `tests-touched` (warn) · `plan-citations` (warn — гейт
+  цитат `plans/verify-citations.py --strict` по задетым планам, режим апгрейдится
+  на strict по факту чистоты дерева, P11.7).
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
 - **`configs/common/agent-packs/review-roles.json`** — реестр ролей ревью как данные (L2):
   extension-таблица по ключу `(pack_id, role_id)` рядом с каноном `configs/common/agent-packs/

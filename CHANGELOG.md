@@ -4,6 +4,20 @@
 
 ### Added
 
+- **`review-gate`: третья точка принуждения гейта цитат — `checks/plan-citations.sh` (P11.7,
+  `2026.07.25-ECO-OPT`).** Изменения задели `plans/<ID>/` → прогон `plans/verify-citations.py
+  plans/<ID> --strict` по каждому задетому плану поверх диспетчера P9.1 (`run-checks.sh`);
+  строка `{"name":"plan-citations","mode":"warn"}` в `config.json` — режим по факту чистоты
+  (`--strict` красный на живом дереве `2026.07.25-ECO-OPT`: 16 пред-существующих находок P11.5,
+  Open risk (25) — `strict` даст необъяснённый шум, upgrade условен на их адресации); граceful
+  skip, если `plans/verify-citations.py` в дереве отсутствует. Два реальных live-прогона
+  субагента (Agent-тул): битая цитата в `handoff.md` ловится `[WARN] plan-citations: …`,
+  генуинно чистый план (`2026.07.24-AGENT-RELIABILITY`, 0 находок) остаётся молчаливым в этом
+  же прогоне (замена цели B — на `2026.07.25-ECO-OPT` «чистого» состояния сегодня нет, тот же
+  confound P11.6). Раскатано на машину владельца (`~/.claude/hooks/review-gate/`), sha256
+  репо↔машина сверен; `harness doctor` — третье состояние не деградировало (`plan-citations`
+  добавлена как объявленная, короткого кода нет — fallback на сырое имя, `doctor.py` не тронут).
+
 - **`plan-protocol` §8 «Порядок закрытия item'а» + `plan-close.md`: обязательный прогон гейта
   цитат при закрытии (P11.6, `2026.07.25-ECO-OPT`).** Рядом с шагом 4 (plan-lint, после
   перезаписи handoff'а, на итоговом дереве) — `python3 plans/verify-citations.py plans/<ID>

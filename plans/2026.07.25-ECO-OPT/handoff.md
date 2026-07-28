@@ -1,67 +1,59 @@
-# HANDOFF — 2026-07-28 — after P4
+# HANDOFF — 2026-07-28 — after P6.2
 
-**Фаза P4 закрыта `🟠 Done with deviations`** (все три item'а терминальны — P4.1 🟢/P4.2 🟠/P4.3 🟠):
-вариант 1 роадмап-стаба (единственный демон-хост + сетевые клиенты) реализован — `ADR-0001` фиксирует
-восемь принятых решений (D78/D80), `memory.role` (standalone/host/client) с запретом второго писателя
-кодом, bearer-аутентификация через аддитивный `core.http`, различение 401/недоступен, измеренный
-бюджет ожидания, LAN-bind `iii-config.yaml`, роль-осознанная ступень 5 `bootstrap-machine.sh`. Из
-шести приёмочных гейтов rollout'а прогнан и зелён только гейт 3 (`Linger=yes`); гейты 1/2/4 не
-прогнаны (нет второй физической машины), гейт 5 не завершён (находка F1 — mesh-discovery движка),
-гейт 6 не прогнан (находка F2 — `doctor.py` не роль-осознан) — материальное отклонение Scope
-Included, `🟠` предписан status-rule. Docs-sync: обновлено (`memory.md`, `deploy.md`, `systemd.md`,
-`CHANGELOG.md` — уже в item-коммитах). Гейты закрытия фазы: `maind test.sh` — 534 tests, 2
-пред-существующих FAIL (P3.2/P5.3, не регрессия); `core.tests` — зелёный; `plan-lint --baseline
-HEAD` — 0 ERROR, 27 WARN, новых от закрытия: 0. `closure/P4.json` создан. Детали — `phases/P4.md`
-Phase Handoff / Completion Notes всех трёх item'ов.
+**P6.2 закрыт `🟠 Done with deviations`** (`09998053` — item-коммит): четыре дельты compact-
+дисциплины внесены — в `general/context-economy` §3 (граница сессии по шву задачи, не проценту;
+что теряет компакт; first-party `# Compact instructions` в CLAUDE.md + адресный `/compact
+<фокус>`) и в `general/compact-responses` (`answer-first`). Кандидат D8 `no preamble/closers`
+закрыт как уже покрытый (строки предъявлены). RU → EN регенерирован → `check-translations.sh
+--stamp` (0 протухших) → `skiller registry` (229 skills, диффа в `marketplace.json`/`_index.md`
+нет). `description` обоих скиллов не тронут. `🟠` предписан status-rule: item-коммит несёт дифф
+вне `Files` — `docs/guide/budget.md` + `adapters/codex/core/**` (детерминированный побочный
+продукт мандатного `skiller registry`, не ручная правка). Validation полностью зелёная (см.
+`phases/P6.md` P6.2 Completion Notes).
 
-**Next:** **`/task:plan-exec 2026.07.25-ECO-OPT P6.2`** — фаза P4 терминальна, следующий шаг по
-roadmap (`roadmap.md` §B3, батч «контекст-гигиена») — P6.2, `Exec=plan-exec`,
-`implementation/medium`; P6.1/P6.3 идут отдельными `manual`-сессиями той же фазы (не батчем).
+**Next:** фаза P6 не терминальна (1/3) — следующие P6.1/P6.3 идут **отдельными `manual`-
+сессиями** (Routing §3), не этой командой (`Exec=manual` у обоих).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | medium — предписано роадмапом (P6.2, implementation/medium) |
+| Model | opus (P6.1) / opus (P6.3) — предписано Routing (`implementation/high`, `manual`) |
+| Thinking | high — предписано Routing, не sonnet/medium |
 | Context | continue (/clear) — ручной item |
-| Суть | P6.2: compact-дисциплина в двух скиллах (батч B3) |
+| Суть | P6.1 — statusline context-notify (harness); ждёт терминальную P9.1 (D89/D93) |
+
+**ЗАПУСК ВРУЧНУЮ: opus/high** (P6.1 или P6.3 — независимы друг от друга внутри фазы; P6.1 стартует
+только если P9.1 терминальна — см. `phases/P6.md` P6.1 Implementation Rules):
 
 ```
-/task:plan-exec 2026.07.25-ECO-OPT P6.2
+Прочитать plans/2026.07.25-ECO-OPT/plan.md (Context, Execution Rules, §3 Routing, Status Board),
+plans/2026.07.25-ECO-OPT/handoff.md, plans/2026.07.25-ECO-OPT/phases/P6.md (Phase Context + item
+P6.1 или P6.3 целиком), затем Required Reads item'а. Исполнить строго по Scope Included/
+Implementation Rules/Validation своего item'а (plan-protocol, `/task:plan-run`).
 ```
 
-**Done:** **44/52 items терминальны** (28 🟢 · 15 🟠 · 1 ⛔). Закрыты фазы **P1** (1/2, 🟢), **P4**
-(1/3, 🟠 — только что закрыта), **P5** (5/6, 🟠), **P8** (7/10, 🟠), **P9** (3/4, 🟠), **P10** (1/4,
-🟠), **P11** (6/8, 🟠); частично — **P3** (2/6, 🟠). Вне этих фаз закрыт только P2.1.
+**Done:** **45/52 items терминальны** (28 🟢 · 16 🟠 · 1 ⛔). Закрыты фазы **P1** (1/2, 🟢), **P4**
+(3/3, 🟠), **P5** (5/6, 🟠), **P8** (7/10, 🟠), **P9** (3/4, 🟠), **P10** (1/4, 🟠), **P11** (6/8, 🟠);
+частично — **P3** (2/6, 🟠), **P6** (0/3, 🟡 — не терминальна, один item закрыт 🟠).
 
-**Remaining:** 8 items, все `⬜ Not started`: P2.2/P2.3 · P6.1–P6.3 · P7.1–P7.3. Порядковые условия:
-P2.3 — ПОСЛЕ P6.3 (D93) и ПОСЛЕ P8.1/P8.2/P8.3 (терминальны); P6.1 — ПОСЛЕ P9.1 (снято, терминален);
-P7.1 + P7.3 → P7.2.
+**Remaining:** 7 items: P2.2/P2.3 · P6.1/P6.3 · P7.1–P7.3. Порядковые условия: P2.3 — ПОСЛЕ P6.3
+(D93) и ПОСЛЕ P8.1/P8.2/P8.3 (терминальны); P6.1 — ПОСЛЕ P9.1 (терминальна — снято); P7.1 + P7.3 →
+P7.2.
 
-**Sources of truth:** `plan.md` (§0 Meta `Last Updated`; §4 Phase Index — `P4 1/3` со статусом
-`🟠 Done with deviations`; §6 Update Log — запись закрытия фазы P4) · `phases/P4.md` (Phase Status +
-Phase Handoff) · `closure/P4.json` · `findings/P4.3-rollout-report.md` · `docs/deploy.md` (раздел
-«Вторая машина») · `packages/maind/docs/guide/systemd.md` (linger) · машинные гейты
-`packages/task/scripts/plan-lint.py`, `plans/verify-citations.py`.
+**Sources of truth:** `plan.md` (§0 Meta `Last Updated`; §4 Phase Index — `P6 0/3`; §6 Update
+Log — запись закрытия P6.2) · `phases/P6.md` (Phase Status + P6.2 Completion Notes) ·
+`packages/skiller/skills/general/context-economy/SKILL.ru.md`+`SKILL.md` ·
+`packages/skiller/skills/general/compact-responses/SKILL.ru.md`+`SKILL.md` · машинные гейты
+`packages/skiller/scripts/check-translations.sh`, `packages/skiller/scripts/validate.sh`,
+`packages/task/scripts/plan-lint.py`.
 
 **Open risks:** (наследованные, без изменений этим заходом — полный список см. предыдущий
-`handoff.md` git-историей) плюс:
-(40) **Находка F1 (mesh-discovery, `findings/P4.3-rollout-report.md`)**: любой новый локальный
-процесс `agentmemory` на этой машине автоматически присоединяется к mesh-группе живого демона —
-угрожает инварианту «один писатель» при любом будущем локальном эксперименте с памятью; нет
-митигации на уровне кода, только процессная осторожность.
-(41) **Находка F2 (`doctor.py:246-253` не роль-осознан)**: на реальном клиенте `maind doctor`
-покажет ложные `FAIL` по отсутствующим локальному Node/agentmemory — вне Scope P4, кандидат в новый
-item/roadmap.
-(42) **Гейты 1/2/4/5/6 P4.3 не подтверждены** — требуют физической второй машины; выполнить и
-дополнить `findings/P4.3-rollout-report.md`, когда машина появится (фаза P4 терминальна по правилу
-«🟠 при material-отклонении», не «ждать снятия Pending Work»).
+`handoff.md` git-историей, записи (40)–(42) про P4 F1/F2/недостающие гейты) плюс:
+(43) **item-коммит P6.2 несёт побочный дифф `docs/guide/budget.md` + `adapters/codex/core/**`**
+(детерминированный продукт `skiller registry`, не ручная правка) — статус `🟠` по status-rule;
+material-отклонения Scope/Validation нет.
 
 **Workarounds / Deferred / Open questions:**
 · **workarounds** — нет.
-· **deferred** — roadmap-кандидат **F1** (дисциплина против класса R2, P3.3) не внесён в
-`roadmap.md`; расхождение 142 vs 186 записей `flexcrm` (P3.1) не разобрано до корня;
-`oss-dev/to-issues/upstream.json` — апстрим-URL вернул 404, паспорт нуждается в обновлении; протокол
-проверки backup-restore (ADR-0001 п.7) нуждается в пересмотре метода (находка F1 показывает, что
-«изолированная копия» на одной машине технически не изолирована от mesh-discovery движка) —
-кандидат в roadmap/новый D#, не решён этой фазой.
-· **open questions** — нет новых этим заходом; OQ-11 остаётся `Decision pending` до закрытия P11.
+· **deferred** — без изменений этим заходом (см. предыдущий handoff: F1 roadmap-кандидат,
+расхождение flexcrm 142 vs 186, апстрим-URL `oss-dev/to-issues` 404, протокол backup-restore).
+· **open questions** — без изменений; OQ-11 остаётся `Decision pending` до закрытия P11.

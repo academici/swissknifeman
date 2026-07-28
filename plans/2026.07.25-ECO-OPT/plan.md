@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (фаза P4 закрыта `🟠 Done with deviations` — все items терминальны, `closure/P4.json`, `plan-close`) |
+| Last Updated | 2026-07-28 (P6.2 закрыт `🟠 Done with deviations` — compact-дисциплина в скиллах) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -214,7 +214,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟠 Done with deviations |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
-| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
+| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | 🟡 In progress |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
@@ -543,6 +543,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 |:--|:--|:--|
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P4 закрыта) | Фаза P4 закрыта 🟠 Done with deviations: все три item'а терминальны (P4.1🟢/P4.2🟠/P4.3🟠); Status Board `1/3`; `closure/P4.json` (Closure Protocol v1); Phase Handoff собран — детали см. `phases/P4.md` `## Phase Handoff`. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/medium (P4.3 закрыт 🟠) | P4.3 закрыт `🟠 Done with deviations`: роль-осознанная ступень 5 `bootstrap-machine.sh` + доки «Вторая машина»; 3/6 гейтов не прогнаны, находки F1/F2 — детали см. phases/P4.md Completion Notes. Все items P4 терминальны; фазовое закрытие — отдельным `/task:plan-close` (не этим item'ом). |
+| 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P6.2) | P6.2 закрыт `🟠 Done with deviations`: четыре дельты compact-дисциплины в `context-economy`/`compact-responses`, D8 закрыт как уже покрытый — детали см. `phases/P6.md` P6.2 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.2 закрыт 🟠) | P4.2 закрыт `🟠 Done with deviations`: `memory.role` (standalone/host/client) + запрет второго писателя кодом + bearer-аутентификация (аддитивный `core.http`) + различение 401/недоступен + измеренный бюджет ожидания + LAN-bind `iii-config.yaml` — детали см. phases/P4.md P4.2 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P3.3 закрыт 🟢) | P3.3 закрыт `🟢 Done`: пакет решения собран, владелец ответил по обоим вопросам — D137 (пин `task:research` остаётся `opus/high`) и D138 (ось B не трогаем, ось C = run-report + триггер, класс R2 → roadmap) — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.4 закрыт 🟠) | P3.4 закрыт `🟠 Done with deviations`: модель листингового бюджета в `budget.py` реализована и сверена с эмпирикой P3.1, перекалибровка `count_tokens` не выполнена (нет сети/креденшелов в песочнице) — детали см. phases/P3.md P3.4 Completion Notes. |

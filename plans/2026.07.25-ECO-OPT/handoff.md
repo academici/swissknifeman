@@ -1,31 +1,31 @@
-# HANDOFF — 2026-07-28 — after P11.8
+# HANDOFF — 2026-07-28 — after P11
 
-**P11.8 сверен 🟢 Done.** Продукт item'а (реконсиляция терминальной фазы P9 по 12 находкам её
-аудита) был исполнен коммитом `60605c5b` ДО этого прохода; сама эта сессия — сверка бухгалтерии
-item'а: `## Phase Status`/`Status`/`Completion Notes` в `phases/P11.md` оставались незаполненными
-(`⬜ Not started`) вопреки уже сделанной работе — заполнены постфактум по git-фактам того же
-коммита, продукт не менялся. Task Contract (`task_contract.build`) — `pre_mutation: allow` ·
-`pre_final: allow`. `plan-lint.py --baseline HEAD` — 0 ERROR/26 WARN, новых от диффа item'а: 0.
-`verify-citations.py --strict` — 16 находок, все предсуществуют ДО `60605c5b~1` на
-`phases/P11.md:628-633,648,676` (Open risk (25), не в Files P11.8) — новых от диффа item'а: 0.
-Фаза P9 НЕ реопенена (доска несёт `3/4`, как и было).
+**Фаза P11 закрыта 🟠 Done with deviations.** Все 8 items терминальны (P11.1–P11.5, P11.8 — 🟢
+Done; P11.6, P11.7 — 🟠 Done with deviations). Доска `plan.md` §4 — `P11 6/8`, статус фазы
+`🟡 In progress → 🟠 Done with deviations`. `closure/P11.json` заведён (Closure Protocol v1).
+Продукт фазы: двухшаговый резолвер путей + json-класс цитаты + расширенная поверхность скана
+(P11.1–P11.2) · кросс-документный чек `handoff.md`↔доска в `plan_lint.py` (P11.3) ·
+dogfood-доказательство на непочиненном дереве (P11.4) · триаж 33 уникальных цитат + baseline-
+перечень `verify-citations-known-exceptions.json` (P11.5) · гейт цитат врезан в канон закрытия
+item'а (P11.6) · третья точка принуждения — `plan-citations` в `review-gate`, mode `warn` (P11.7) ·
+реконсиляция терминальной фазы P9 по всем 12 находкам её аудита без реопена (P11.8). Детали —
+`phases/P11.md` `## Phase Handoff` (Known Deviations по item'ам, docs-sync вердикт, что дальше).
 
-**Все 8 items фазы P11 теперь терминальны** (P11.1–P11.5, P11.8 — 🟢; P11.6, P11.7 — 🟠 Done
-with deviations) — доска `plan.md` §4 несёт `P11 6/8`. Фаза готова к закрытию (`/task:plan-close
-2026.07.25-ECO-OPT P11`), но эта команда её НЕ закрывала (item-режим, не phase-режим) — Phase
-Handoff/docs-sync/journal фазы остаются шагом следующей команды.
+Плановое дерево вне P11 не терминально (P1/P2/P3 в работе, P4/P6/P7 не начаты) — `plans/ACTIVE.md`
+не трогается, план в целом остаётся `🟡 In progress`.
 
-**Next:** `/task:plan-close 2026.07.25-ECO-OPT P11`
+**Next:** следующий шаг вне протокола — владелец выбирает, какую фазу продолжать (P1/P2/P3 в
+работе, P4/P6/P7 не начаты; свободные items вне фазовой очереди — см. ниже).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | low — механическая сверка Phase Handoff по уже готовым Completion Notes 8 items, суждений нет |
-| Context | NEW SESSION — шаг-не-item (закрытие фазы читает план с диска заново) |
-| Суть | Закрыть фазу P11: свести таблицы, Phase Handoff, docs-sync check, lint+citations на итоговом дереве, journal, один коммит |
+| Thinking | medium — стандартный tiered exec ближайшего готового item'а |
+| Context | continue (/clear) — ручной item |
+| Суть | Продолжить план: ближайший готовый item среди P1/P2/P3 (владелец выбирает конкретный) |
 
 ```
-/task:plan-close 2026.07.25-ECO-OPT P11
+/task:plan-exec 2026.07.25-ECO-OPT P1.1
 ```
 
 Свободные items вне фазы P11 (не гейтованы): **P1.1** (frontier/high, manual) · **P3.1**
@@ -35,23 +35,22 @@ Handoff/docs-sync/journal фазы остаются шагом следующе�
 
 **Done:** design-конвейер (3/3 паса + design-аудит RED + закрытие находок) · фазы **P5** (5/6 🟠),
 **P8** (7/10 🟠), **P9** (3/4 🟠, реконсиляция P11.8 применена — 12 находок аудита закрыты),
-**P10** (1/4 🟠) терминальны · P2.1 · P3.2 · P1.2 · **P11.1–P11.5**, **P11.8** (🟢) ·
-**P11.6**, **P11.7** (🟠) — **40/52 items закрыто 🟢** (P11.6/P11.7 закрыты с отклонениями, не
-входят в числитель доски), 4 фазы терминальны + фаза P11 фактически терминальна (закрытие —
-следующий шаг), 3 в работе, 3 не начаты (P4, P6, P7).
+**P10** (1/4 🟠), **P11** (6/8 🟠, все 8 items терминальны) терминальны · P2.1 · P3.2 · P1.2 —
+**41/52 items закрыто 🟢** (P11.6/P11.7 и другие closed-with-deviations items не входят в
+числитель доски), 5 фаз терминальны, 3 в работе, 3 не начаты (P4, P6, P7).
 
-**Remaining:** 11/52 items (P11 фаза дособрана; фаза формально не закрыта). Ближайший шаг —
-`/task:plan-close 2026.07.25-ECO-OPT P11`. Порядковые условия вне P11: P2.3 — ПОСЛЕ P8
-(выполнено) и P6.3 (D93, не выполнено); P6.1 — ПОСЛЕ P9.1 (снято); P4.2 — ПОСЛЕ P3.2 (снято).
+**Remaining:** 11/52 items вне фазы P11 (P11 полностью закрыта). Порядковые условия: P2.3 — ПОСЛЕ
+P8 (выполнено) и P6.3 (D93, не выполнено); P6.1 — ПОСЛЕ P9.1 (снято); P4.2 — ПОСЛЕ P3.2 (снято).
 
-**Sources of truth:** `plan.md` (§3 Routing — восемь строк P11; §4 Phase Index — P11 6/8; §5
-D127–D134; §Обсуждение развилки 20–21) · `phases/P11.md` (Phase Context + контракт фазы + 8 items
-с ТЗ и Completion Notes, все терминальны) · `findings/P11-citation-gate-measurements.md` (слой 1) ·
-`findings/P11-gate-dogfood-proof.md` (слой 3) · `research/27-P11-citation-gate-target-design.md`
-(слой 2) · `plans/verify-citations-known-exceptions.json` (19 записей, P11.5) ·
-`brief/01-refinements.md` блок 2026-07-28 (слой 0) · `phases/P9.md` блок
-`## Audit P9 — 2026-07-28` (12 находок, закрыты P11.8) · машинные гейты
-`plans/verify-citations.py`, `plans/cross-plan-files.py`, `packages/task/scripts/plan-lint.py` ·
+**Sources of truth:** `plan.md` (§3 Routing — восемь строк P11; §4 Phase Index — P11 6/8 🟠;
+§5 D127–D134; §6 Update Log — запись закрытия P11) · `phases/P11.md` (Phase Context + контракт
+фазы + 8 items с ТЗ и Completion Notes + `## Phase Handoff`, все терминальны) ·
+`findings/P11-citation-gate-measurements.md` (слой 1) · `findings/P11-gate-dogfood-proof.md`
+(слой 3) · `research/27-P11-citation-gate-target-design.md` (слой 2) ·
+`plans/verify-citations-known-exceptions.json` (19 записей, P11.5) · `brief/01-refinements.md`
+блок 2026-07-28 (слой 0) · `phases/P9.md` блок `## Audit P9 — 2026-07-28` (12 находок, закрыты
+P11.8) · `closure/P11.json` (Closure Protocol v1) · машинные гейты `plans/verify-citations.py`,
+`plans/cross-plan-files.py`, `packages/task/scripts/plan-lint.py` ·
 `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §8 (обновлён P11.6) ·
 `packages/task/commands/plan-close.md` (обновлён P11.6) ·
 `packages/harness/configs/claude-code/hooks/review-gate/` (диспетчер + 4 проверки, P11.7).
@@ -87,23 +86,20 @@ R2/R4-исключений перечня несут стале-суффиксы
 strict-класс. **(25) P11.6/P11.7:** `verify-citations.py --strict` на живом дереве даёт **16
 находок**, все внутри Completion Notes уже закрытого 🟢 P11.5 (`phases/P11.md:628-634,648,676`) —
 самореференсный класс «список починенных цитат сам является цитатой»; фикс-предложение —
-`phases/P11.md` P11.5/P11.6/P11.7 Pending Work; тот же confound сделал буквальный текст
-Validation 6 P11.7 (Live-прогон B) невоспроизводимым — заменён на
-`2026.07.24-AGENT-RELIABILITY` (Known Deviations P11.7); `config.json:checks[plan-citations].mode`
+`phases/P11.md` P11.5/P11.6/P11.7 Pending Work; `config.json:checks[plan-citations].mode`
 остаётся `warn` до адресации (25) владельцем.
 
 **Workarounds / Deferred / Open questions:** обходок в коде нет. **Открытые вопросы владельцу
 (**OQ-11**, `open-questions.md`):** нужны ли отдельные машинные классы «число прозы против числа
-таблицы» (F1) и «ссылка на D-запись» (F9); судьба реестра ролей P9.2 при регрессе `ΔR=-0.12`.
-**Отложено ранее:** F8 (хеши item-коммитов в §6 Update Log); машинный lint формы §3 в
-`plan_lint.py`; сверка полноты матрицы `docs/status.md` (D2); удаление/gitignore `install.log`;
-перевод `maind/provider_deploy.py` на `assert_safe_replace_target`; заполнение `triggers[]` у
-четырёх скиллов с `evals/`; включение `Closure Protocol | v1` на `2026.07.18-FOREMAN`/
-`2026.07.24-AGENT-RELIABILITY`; расширение реестра ревью на остальные 39 ролей; роадмап-кандидат
-«гейт воспроизводимость ревью не деградировала» (D68/D71); перепин на тег Serena (D110). Класс
-«голое path-упоминание» отклонён измерением (D128) — кандидат в `docs/rejected-optimizations.md`.
-Переписать примеры формы цитаты в Code Guidance P11.1/P11.2 (`phases/P11.md:205,258`) без
-обратных кавычек, чтобы не попадать под регэксп гейта вовсе — роадмап-кандидат. **Отложено
-(P11.6/P11.7):** 16 самореференсных находок в Completion Notes P11.5 (Open risk (25)) — примеры/
-списки цитат в backtick-форме сами становятся находками; решение объединить обе правки — за
-владельцем; от него же зависит апгрейд `plan-citations` до `strict`.
+таблицы» (F1) и «ссылка на D-запись» (F9); судьба реестра ролей P9.2 при регрессе `ΔR=-0.12`;
+апгрейд `plan-citations` `warn`→`strict` (условие — Open risk (25)). **Отложено ранее:** F8
+(хеши item-коммитов в §6 Update Log); машинный lint формы §3 в `plan_lint.py`; сверка полноты
+матрицы `docs/status.md` (D2); удаление/gitignore `install.log`; перевод `maind/provider_deploy.py`
+на `assert_safe_replace_target`; заполнение `triggers[]` у четырёх скиллов с `evals/`; включение
+`Closure Protocol | v1` на `2026.07.18-FOREMAN`/`2026.07.24-AGENT-RELIABILITY`; расширение
+реестра ревью на остальные 39 ролей; роадмап-кандидат «гейт воспроизводимость ревью не
+деградировала» (D68/D71); перепин на тег Serena (D110). Класс «голое path-упоминание» отклонён
+измерением (D128) — кандидат в `docs/rejected-optimizations.md`. Переписать примеры формы цитаты
+в Code Guidance P11.1/P11.2 (`phases/P11.md:205,258`) без обратных кавычек — роадмап-кандидат.
+16 самореференсных находок в Completion Notes P11.5 (Open risk (25)) — решение объединить обе
+правки за владельцем.

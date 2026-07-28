@@ -1,50 +1,52 @@
-# HANDOFF — 2026-07-28 — after P1.1
+# HANDOFF — 2026-07-28 — after P1
 
-**P1.1 закрыт `⛔ Skipped by decision` — ветка A (рычаг moot).** GATED-вердикт снят НАПРЯМУЮ по
-first-party доке (`code.claude.com/docs/en/mcp` §§ «Scale with MCP tool search» / «Configure tool
-search» / «Exempt a server from deferral» + `/en/env-vars`, WebFetch 2026-07-28): tool search
-включён ПО УМОЛЧАНИЮ, MCP-схемы отложены («Only tool names and server instructions load at session
-start»), `ENABLE_TOOL_SEARCH` существует чтобы ФОРСИРОВАТЬ за не-first-party хостом или ВЫКЛЮЧИТЬ.
-Ни одно из четырёх условий выключения на флоте не выполняется (21 `.mcp.json` — 0 `alwaysLoad`;
-0 настроек с `ANTHROPIC_BASE_URL`/`*_DISABLE_EXPERIMENTAL_BETAS`/`*_USE_BEDROCK`/`*_USE_VERTEX`/
-`ENABLE_TOOL_SEARCH`; CLI 2.1.220; модели новее Opus 4.5). Продукт — одна D-запись **D136**
-(item-коммит `d68d1d49`); harness и `mcp-advisor` НЕ тронуты (обоснование — в D136).
+**Фаза P1 закрыта `🟢 Done`.** Оба item'а терминальны: **P1.2** `🟢 Done` — канон D3 «полный
+PLAN-ID в код-ссылках» в root `CLAUDE.md` § «Разработка» + бэкфилл 34 файлов
+(`packages/{analyst,harness,maind,skiller,task}/lib/**`), 0 правок исполняемого кода. **P1.1**
+`⛔ Skipped by decision` — GATED-вердикт ENABLE_TOOL_SEARCH снят напрямую по first-party доке
+(`code.claude.com/docs/en/mcp` §§ «Scale with MCP tool search» / «Configure tool search» /
+«Exempt a server from deferral» + `/en/env-vars`, WebFetch 2026-07-28): tool search включён по
+умолчанию, ни одно из четырёх условий выключения на флоте не выполняется (21 `.mcp.json` — 0
+`alwaysLoad`; 0 настроек с `ANTHROPIC_BASE_URL`/`*_DISABLE_EXPERIMENTAL_BETAS`/`*_USE_BEDROCK`/
+`*_USE_VERTEX`/`ENABLE_TOOL_SEARCH`; CLI 2.1.220; модели новее Opus 4.5). Продукт — одна D-запись
+**D136** (item-коммит `d68d1d49`); harness и `mcp-advisor` НЕ тронуты (обоснование — в D136).
 
-**Фаза P1 полностью терминальна** (P1.2 🟢, P1.1 ⛔), но статус фазы на доске §4 остаётся
-`🟡 In progress`, счётчик — `P1 1/2` (⛔ в числитель 🟢 не входит): закрытие фазы и `closure/P1.json`
-— работа `/task:plan-close`, не исполнителя item'а.
+Ни один item фазы не несёт material-отклонение — фаза `🟢 Done` (не `🟠`), ⛔ на фазовый статус
+не давит. Доска §4: `P1 1/2` — `🟡 In progress → 🟢 Done`. `closure/P1.json` (Closure Protocol
+v1) записан. Docs-sync: не требуется — единственная нужная docs-правка уже произведена самим
+P1.2 (канон-строка в root `CLAUDE.md`).
 
-**Next:** `/task:plan-close 2026.07.25-ECO-OPT P1` — закрыть терминальную фазу P1.
+**Next:** следующий свободный item вне очереди — P3.1 (implementation/manual, нужен оператор
+для `/doctor`/`/context`).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | low — бухгалтерия закрытия фазы, решений нет |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть фазу P1 (оба items терминальны): доска §4, `## Phase Handoff`, `closure/P1.json` |
+| Thinking | medium |
+| Context | continue (/clear) — ручной item |
+| Суть | Исполнить P3.1 (implementation, Exec=manual — оператору нужен `/doctor`/`/context`) |
 
 ```
-/task:plan-close 2026.07.25-ECO-OPT P1
+ЗАПУСК ВРУЧНУЮ: sonnet/medium
 ```
 
-Свободные items вне очереди после P1: **P3.1** (implementation/medium, manual — нужен оператор для
-`/doctor`/`/context`) · **P2.3** (frontier/high, manual — ждёт P6.3). Непогашенный adversarial-аудит
-фазы **P8** по-прежнему открыт (Open risks (17)).
+Альтернативно свободен **P2.3** (frontier/high, manual — ждёт P6.3). Непогашенный
+adversarial-аудит фазы **P8** по-прежнему открыт (Open risks (17)).
 
-**Done:** **36/52 items терминальны** (24 🟢 · 11 🟠 · 1 ⛔ — счёт на bookkeeping-коммите этого
-захода, `python3` по таблицам `## Phase Status` всех `phases/P*.md`). Терминальны фазы **P5** (5/6),
-**P8** (7/10), **P9** (3/4), **P10** (1/4), **P11** (6/8); **P1 1/2** — оба items терминальны,
-ждёт `plan-close`. Плюс P2.1 · P3.2 вне терминальных фаз.
+**Done:** **37/52 items терминальны** (25 🟢 · 11 🟠 · 1 ⛔). Терминальны фазы **P1** (1/2, 🟢
+Done), **P5** (5/6, 🟠), **P8** (7/10, 🟠), **P9** (3/4, 🟠), **P10** (1/4, 🟠), **P11** (6/8, 🟠).
+Плюс P2.1 · P3.2 вне терминальных фаз.
 
 **Remaining:** 16 items, все `⬜ Not started`: P2.2–P2.3 · P3.1, P3.3–P3.6 · P4 (3) · P6 (3) ·
 P7 (3). Порядковые условия: P2.3 — ПОСЛЕ P6.3 (D93); P6.1 — ПОСЛЕ P9.1 (снято); P4.2 — ПОСЛЕ
 P3.2 (снято).
 
-**Sources of truth:** `plan.md` (§4 Phase Index — `P1 1/2`; §5 **D136** — литеральный вердикт с
-дословными цитатами доки; §6 Update Log — запись закрытия P1.1) · `phases/P1.md` (P1.1 Completion
-Notes — команды проверки флота и их числа; Pending Work — дельта для тела `mcp-advisor`) ·
-`plans/archive/2026.07.15-TOKEN-ECON-P6/findings/P6-tool-search-precheck.md` (дизайн-RAG 2026-07-15,
-чей вывод подтверждён дословно) · `plans/2026.07.25-ECO-OPT/findings/P5-codegraph-vs-serena-facts.md`
+**Sources of truth:** `plan.md` (§4 Phase Index — `P1 1/2 🟢 Done`; §5 **D136** — литеральный
+вердикт с дословными цитатами доки; §6 Update Log — запись закрытия P1) · `phases/P1.md`
+(Phase Handoff — известные отклонения агрегированы механически; P1.1 Completion Notes — команды
+проверки флота и их числа; Pending Work — дельта для тела `mcp-advisor`) · `closure/P1.json` ·
+`plans/archive/2026.07.15-TOKEN-ECON-P6/findings/P6-tool-search-precheck.md` (дизайн-RAG
+2026-07-15, чей вывод подтверждён дословно) · `plans/2026.07.25-ECO-OPT/findings/P5-codegraph-vs-serena-facts.md`
 §6 (тот же first-party раздел, снятый P5) · `packages/skiller/skills/general/mcp-advisor/SKILL.ru.md`
 § «Прополка резидентного MCP» п. 3 (действующий caveat про default-on) · машинные гейты
 `plans/verify-citations.py`, `plans/cross-plan-files.py`, `packages/task/scripts/plan-lint.py`.
@@ -74,10 +76,10 @@ provider-аудита (D126 Consequences (2)). (22) дрейф пяти reviewer
 целостности §3 — роадмап-кандидат. (24) пять остаточных R2/R4-исключений перечня несут
 стале-суффиксы/неоднозначность (P11.5 Pending Work). (25) `verify-citations.py --strict` даёт
 находки внутри Completion Notes уже закрытого 🟢 P11.5 — самореференсный класс;
-`config.json:checks[plan-citations].mode` остаётся `warn` до адресации владельцем. (26) **новый:**
-дельта для тела `general/mcp-advisor` (три пункта, P1.1 Pending Work) не внесена — правка
-запечатанного `SKILL.md` тянет публикационную цепочку вне `Files` P1.1, владелец тела (P5.2, D98)
-терминален; нужен либо новый item, либо строка `roadmap.md`.
+`config.json:checks[plan-citations].mode` остаётся `warn` до адресации владельцем. (26) дельта
+для тела `general/mcp-advisor` (три пункта, P1.1 Pending Work) не внесена — правка запечатанного
+`SKILL.md` тянет публикационную цепочку вне `Files` P1.1, владелец тела (P5.2, D98) терминален;
+нужен либо новый item, либо строка `roadmap.md`.
 
 **Workarounds / Deferred / Open questions:** обходок в коде нет; вердикт P1.1 не нёс ни одного
 `[POSSIBLE-DEFECT]` — оба несущих факта сняты дословной цитатой first-party доки.

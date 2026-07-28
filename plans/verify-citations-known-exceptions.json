@@ -75,6 +75,14 @@
     {
       "citation": "tests/test_codegraph.py::TestSchemaConnectivity",
       "reason": "R4 (P11.5): occurrence в phases/P5.md:937 — поле закрытого item'а, правка ТЗ вне скоупа фазы; остальные occurrences этой цитаты в findings этого плана уже починены P11.5 на полный путь packages/maind/tests/test_codegraph.py::TestSchemaConnectivity (R1)."
+    },
+    {
+      "citation": "plans/2026.07.25-ECO-OPT/handoff.md:62",
+      "reason": "P3 close (2026-07-28): handoff.md перезаписывается ЦЕЛИКОМ при каждом закрытии фазы/итема (канон plan-protocol) — цитата в findings/P11-citation-gate-measurements.md:120 фиксирует историческую находку F8 аудита P9 (P9 4/4 на срезе того handoff), а не текущее содержимое строки 62; переписывать историческую находку вне Scope P3."
+    },
+    {
+      "citation": "plans/2026.07.25-ECO-OPT/handoff.md:62-63",
+      "reason": "P3 close (2026-07-28): handoff.md перезаписывается ЦЕЛИКОМ при каждом закрытии — цитата в phases/P9.md:970 (СКОУП реконсиляции P9, пункт 7) описывает правку, уже выполненную в прошлых закрытиях; исторический пункт чек-листа P9, не текущее состояние handoff, вне Scope P3."
     }
   ]
 }

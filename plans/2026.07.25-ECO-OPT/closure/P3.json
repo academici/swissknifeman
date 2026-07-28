@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P3",
+  "closed_at": "2026-07-28",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "3615e2c409e8c9bdf2a7c77c47dddd4ead1f365a", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "124e58dddc5def5b654cf576ced50f62c381a0d12dddc99b3d3bead49c710c13",
+    "phases/P3.md": "d93d1dc1845e5b6463aea1226159142a519e08851b3099c8f02574ce7d0271ee"
+  },
+  "items": [
+    {"id": "P3.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "measure-first диагноз листингового бюджета флота — findings/P3.1-listing-diagnosis.md; несущая поправка: реальный бюджет 1M-модели ≈30 000 симв (не 10 000), 9/10 профилей укладываются; порядок 4 рычагов зафиксирован (D74)"},
+    {"id": "P3.2", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "tool-result trimming в maind MCP — mcp.py/test_mcp.py; Validation осталась красной из-за пред-существующего failure вне Scope (test_local_skills_reference_on_demand_model)"},
+    {"id": "P3.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "owner-решения OQ-4/OQ-5 `2026.07.15-TELEMETRY-OPT` зафиксированы D137/D138 — findings/P3.3-owner-decision-packet.md, 247 run-report'ов флота проанализированы машинно"},
+    {"id": "P3.4", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "модель листингового резидента в budget.py (не сумма описаний) — budget.py/test_budget.py/test_budget_first_turn.py; перекалибровка count_tokens не выполнена (нет ANTHROPIC_API_KEY/SDK/CLI в песочнице), закрытие 🟠 предписано Code Guidance item'а"},
+    {"id": "P3.5", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "гигиена листинга: 9 профилей сверены с исправленным бюджетом P3.1, правка не потребовалась (уже проходят инвариант) — findings/P3.5-listing-hygiene.md; доставка на 24 marketplace-проекта флота не нужна (профили не менялись)"},
+    {"id": "P3.6", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "политика вендоринга: критерий fork — docs/guide/upstream-sync.md, CLAUDE.md; Validation 4-я команда (update-upstreams.sh --check) красная — пред-существующий IsADirectoryError на voice-ai/voice-ai, не в Files item'а"}
+  ],
+  "gates": [
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh (на закрытии фазы) — 230 skills checked all valid (98 warning(s)), 509 tests OK, registry --check актуально"},
+    {"id": "validate.sh:maind", "status": "FAIL", "evidence_class": "real",
+     "evidence": "bash packages/maind/scripts/test.sh -v (на закрытии фазы) — Ran 504 tests, FAILED (failures=2): test_local_skills_reference_on_demand_model (P3.2, пред-существующий, назван в Known Deviations) + test_d108_inventory_uses_configured_server_names_without_changing_bindings (P5.3, пред-существующий, вне Scope P3) — оба уже названы в closure/P5.json и closure/P8.json той же формулировкой"},
+    {"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/task/scripts/validate.sh (на закрытии фазы) — plan-lint: OK (14 план(ов), 0 ошибок, 221 предупреждений); validate: OK"},
+    {"id": "core.tests", "status": "PASS", "evidence_class": "real",
+     "evidence": "PYTHONPATH=. python3 -m unittest discover -s core/tests — Ran 244 tests, OK"}
+  ],
+  "metrics": [
+    {"name": "listing_budget_1m_model_chars", "value": "≈30 000 (не 10 000, поправка P3.1)", "label": "real"},
+    {"name": "flexcrm_listing_size", "value": "142 записи / ≈33 026 симв (repo-арифметика) vs 186 (живой --debug), расхождение не разобрано до корня", "label": "real"},
+    {"name": "p3_6_validate_warnings", "value": "98 (без изменений диффом P3.6)", "label": "real"}
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items (командные строки/числа при исполнении) + перепрогон skiller/maind/task validate.sh + core tests этой сессией (gates[] выше) — не полный повторный прогон каждого item-level Validation-пункта",
+    "P3.4 Pending Work: перекалибровка токенайзера через count_tokens не выполнена (нет креденшелов) — точная команда в findings/P3.4-tokenizer-calibration.md §3",
+    "P3.6 Pending Work: voice-ai/voice-ai/upstream.json пустой path у 5 записей ломает update-upstreams.sh --check — сопровождение вне Scope item'а",
+    "gates[]:validate.sh:maind FAIL — оба провала пред-существующие (P3.2/P5.3), не регрессия фазы P3"
+  ],
+  "external_side_effects": []
+}

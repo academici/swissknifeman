@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.20.0
+version: 2.21.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -786,6 +786,21 @@ the substrings `pre_mutation:`/`pre_final:` anywhere in the field. Printing code
 prose (fail-open on a quoted other item's codes, false ERROR on a quoted `block:*`/`n/a`); the
 P10.1 fix closed both by requiring a single carrier line.
 
+**Cross-document check `handoff.md` ↔ Status Board (P11.3/D129).** Every occurrence of the
+`Pn a/b` pattern in `handoff.md` must match the `Items 🟢/всего` column of row `Pn` in
+«## 4. Phase Index & Status Board» — a mismatch is diagnosed naming BOTH sides; a phase `Pn`
+missing from the board is a "dangling reference" (the class guards against P9's audit finding
+F8: the handoff claimed `P9 4/4`, the board carried `2/4`, the board was right). Forward-only
+by the handoff's HEADER date (`HANDOFF_BOARD_CANON_DATE = "2026-07-28"`, same discipline as the
+boundary-codes gate above): a handoff older than the canon date is never diagnosed, not even a
+WARNING. Severity within scope follows the launch-block gate: a dated `plan_id` from
+`2026.07.16` → ERROR, legacy → WARNING. The pattern is deliberately narrow — EXACTLY `Pn a/b`,
+not prose/percentages/"33 of 44" — widening it to prose would reintroduce the noise the
+narrowness holds at zero today (measured across three live plans: 3 occurrences, 1 mismatch, 0
+false positives). The rule's home is the structural linter, NOT `plans/verify-citations.py`:
+this is consistency between two sections of ONE plan, not a citation/path resolve (the reverse
+choice would blur both tools).
+
 **Phase closure report — `plans/<ID>/closure/<Pn>.json`, schema v1 (opt-in).** `## Phase
 Handoff` is prose plus a git hash: the EVIDENCE CLASS is recorded nowhere, so synthetics read as
 results. The machine-readable closure report states it explicitly; it COMPLEMENTS the handoff
@@ -1320,4 +1335,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: e9ce9c34562312524ec1863502365d7e45470c6b135960bac8bc0d1e45f1c3db -->
+<!-- ru-source-sha256: 7e4248f003600a6922c5bef7cbdf54542989ae8a8a8cf962a804a8f1de92a731 -->

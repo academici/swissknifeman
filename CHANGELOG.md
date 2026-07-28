@@ -4,6 +4,16 @@
 
 ### Added
 
+- **`plan_lint.py`: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index & Status Board»
+  (P11.3, `2026.07.25-ECO-OPT`, D129).** Каждое вхождение шаблона `Pn a/b` в `handoff.md`
+  сверяется со значением колонки `Items 🟢/всего` строки `Pn` доски — расхождение диагностируется
+  с ОБЕИМИ сторонами, отсутствующая в доске фаза — «висячая ссылка» (класс защищает от находки F8
+  аудита P9: handoff соврал `P9 4/4`, доска несла `2/4`). Forward-only по дате заголовка handoff'а
+  (`HANDOFF_BOARD_CANON_DATE = "2026-07-28"`); severity — как у launch-block-гейта (датовый
+  `plan_id` от `2026.07.16` → ERROR, легаси → WARNING). На живом дереве ECO-OPT гейт сразу
+  нашёл реальное расхождение (`handoff.md:44` — `P3 1/6` vs доска `P3 0/6`), непочиненное до
+  P11.8 (Scope Excluded этого item'а). Дом — структурный линтер, не `verify-citations.py` (D129).
+
 - **`plans/verify-citations.py`: класс цитаты `` `file.json::a.b.c` `` через `json.load`
   с greedy-обходом (P11.2, `2026.07.25-ECO-OPT`, `research/27-P11-citation-gate-target-design.md`
   §2.3).** Раньше такая цитата резолвилась старой веткой `::symbol` — точка пути работала

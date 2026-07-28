@@ -2642,3 +2642,89 @@ class TestCheckpointedGate83(TmpPlanTestCase):
         plan_dir = self._write(closure_protocol=None, pending_work="—")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+
+class TestHandoffBoardGate113(TmpPlanTestCase):
+    """P11.3/D129: каждое вхождение `Pn a/b` в handoff.md обязано совпадать со значением
+    колонки `Items 🟢/всего` строки `Pn` доски «## 4. Phase Index & Status Board»; фаза,
+    отсутствующая в доске, — «висячая ссылка». Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
+    (HANDOFF_BOARD_CANON_DATE); severity внутри скоупа — как у launch-block-гейта (датовый
+    `plan_id` от BRIEF_CANON_DATE → ERROR, легаси → WARNING). Каждый различающий кейс
+    проверен КРАСНЫМ на коде до этого item'а: `git show HEAD:packages/task/lib/task/
+    plan_lint.py` не нёс ни `_lint_handoff_board_113`, ни `HANDOFF_BOARD_REF_RE`, ни вызова
+    из `lint_plan` — старый код молчал на ВСЕХ кейсах ниже."""
+
+    def _write(self, *, plan_id="DEMO-1", handoff_date="2026-07-28", handoff_extra="",
+               items_cell="1/1"):
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        if items_cell != "1/1":
+            (plan_dir / "plan.md").write_text(
+                plan_md(plan_dir.name, items_cell=items_cell), encoding="utf-8")
+        text = handoff_md(plan_dir.name).replace(
+            "# HANDOFF — 2026-07-02 — after P1.1",
+            f"# HANDOFF — {handoff_date} — after P1.1")
+        if handoff_extra:
+            text = text.replace("**Done:** P1.1 закрыт.",
+                                 f"**Done:** P1.1 закрыт. {handoff_extra}")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_a_f8_mismatch_on_dated_plan_is_error_naming_both_sides(self):
+        """(a) фикстура F8: handoff говорит `P1 4/4`, доска несёт `1/1` (дефолт) на
+        датовом `plan_id` (≥ BRIEF_CANON_DATE) → ERROR, текст называет ОБЕ стороны."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "P1 4/4")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("1/1" in e for e in hits), hits)
+
+    def test_b_matching_numbers_is_silent(self):
+        """(б) handoff `P1 1/1` совпадает с доской `1/1` → диагностик гейта нет."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="Доска: P1 1/1 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 1/1") +
+                         [w for w in diag.warnings if "P1 1/1" in w], [])
+
+    def test_c_handoff_older_than_canon_date_is_silent(self):
+        """(в) forward-only: handoff датирован < HANDOFF_BOARD_CANON_DATE — даже
+        заведомое расхождение `P1 4/4` vs доска `1/1` НЕ диагностируется (И10)."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO", handoff_date="2026-07-27",
+                               handoff_extra="Доска: P1 4/4 (заведомо неверно).")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 4/4") +
+                         [w for w in diag.warnings if "P1 4/4" in w], [])
+
+    def test_d_phase_missing_from_board_is_dangling_reference(self):
+        """(г) `Pn`, отсутствующая в доске (план несёт только `P1`), → диагностика
+        «висячая ссылка»."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="См. P9 3/5 — фаза не существует в этом плане.")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "висячая ссылка")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P9" in e for e in hits), hits)
+
+    def test_e_legacy_plan_id_mismatch_is_warning_not_error(self):
+        """(д) severity-развилка, как у brief/launch-block-гейта: легаси `plan_id`
+        (не датовый) с расхождением → WARNING, а не ERROR."""
+        plan_dir = self._write(plan_id="DEMO-1",
+                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 4/4"), [])
+        self.assertTrue([w for w in diag.warnings if "P1 4/4" in w], diag.warnings)
+
+    def test_f_additivity_plan_without_pattern_gets_no_new_diagnostics(self):
+        """(е) АДДИТИВНОСТЬ: датовый план с ГЕЙТОМ АКТИВНЫМ (handoff ≥ канон-даты), но БЕЗ
+        шаблона `Pn a/b` в handoff'е, даёт РОВНО тот же набор диагностик, что тот же план с
+        гейтом молчащим (handoff < канон-даты) — сравнение МНОЖЕСТВ (D129, план без
+        handoff-числа не получает НИ ОДНОЙ новой диагностики)."""
+        baseline_dir = self._write(plan_id="2026.07.28-BASE", handoff_date="2026-07-27")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = self._write(plan_id="2026.07.28-DEMO", handoff_date="2026-07-28")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))

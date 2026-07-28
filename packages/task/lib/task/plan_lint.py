@@ -745,6 +745,59 @@ def _lint_checkpointed_83(meta, items, path, diag):
                            f"решение о пропуске обязано быть предъявлено D-записью (D44)")
 
 
+# --- 2026.07.25-ECO-OPT P11.3/D129: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index
+# & Status Board» (F8 аудита P9: handoff соврал `P9 4/4`, доска несла `2/4`, права доска).
+# Дом — plan_lint.py, не verify-citations.py (D129): это согласованность двух секций ОДНОГО
+# плана, не резолв пути/цитаты — обратное решение размыло бы оба инструмента (`research/27-…`
+# §2.4, Scope Excluded P10.2 остаётся в силе). Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
+# (та же дисциплина, что WRITE_SITE_CODES_CANON_DATE/CONSEQUENCES_CANON_DATE): handoff старше
+# канон-даты не диагностируется вовсе, даже WARNING (И10 — не красим существующий флот задним
+# числом). Severity внутри скоупа — как у launch-block-гейта (D-канон 2.0): датовый `plan_id`
+# от BRIEF_CANON_DATE → ERROR, легаси → WARNING (`plan_id[:10]` — дата, не handoff-дата).
+HANDOFF_BOARD_CANON_DATE = "2026-07-28"
+HANDOFF_TITLE_DATE_RE = re.compile(r"^#\s+HANDOFF\s+—\s*(\d{4}-\d{2}-\d{2})\s+—")
+# Узкий шаблон намеренно (Code Guidance P11.3, анти-самообман): РОВНО `Pn a/b` — не «33/44»,
+# не проценты, не голая проза «закрыто 4 из 4». Замер (`findings/P11-citation-gate-
+# measurements.md` §4) — 3 вхождения на трёх живых планах, 1 расхождение (F8), 0 ложных;
+# расширение на прозу вернуло бы шум, который узость сегодня держит на нуле.
+HANDOFF_BOARD_REF_RE = re.compile(r"\bP(\d+)\s+(\d+)/(\d+)\b")
+
+
+def _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag):
+    """2026.07.25-ECO-OPT P11.3/D129: каждое вхождение `Pn a/b` в handoff.md обязано совпадать
+    со значением колонки `STATUS_BOARD_ITEMS_COL` строки `Pn` доски «## 4. Phase Index &
+    Status Board»; расхождение — диагностика, называющая ОБЕ стороны. Фаза `Pn`, отсутствующая
+    в доске, — «висячая ссылка». Непарсимая/более старая дата заголовка handoff'а — МОЛЧАНИЕ
+    (forward-only, аддитивность И10), не ERROR/WARNING."""
+    if not handoff:
+        return
+    title_lineno = handoff.get("title_lineno")
+    lines = handoff.get("lines") or []
+    if not title_lineno or title_lineno > len(lines):
+        return
+    date_m = HANDOFF_TITLE_DATE_RE.match(lines[title_lineno - 1])
+    if not date_m or date_m.group(1) < HANDOFF_BOARD_CANON_DATE:
+        return
+    report = (diag.error if (PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE)
+              else diag.warning)
+    for i, ln in enumerate(lines):
+        for m in HANDOFF_BOARD_REF_RE.finditer(ln):
+            phase_id = f"P{m.group(1)}"
+            handoff_ratio = f"{m.group(2)}/{m.group(3)}"
+            row = board_by_phase.get(phase_id)
+            if row is None:
+                report(handoff_path, i + 1,
+                       f"handoff.md: «{phase_id} {handoff_ratio}» ссылается на фазу «{phase_id}», "
+                       f"отсутствующую в «## 4. Phase Index & Status Board» (висячая ссылка)")
+                continue
+            board_ratio = row[0].get(STATUS_BOARD_ITEMS_COL, "")
+            if board_ratio != handoff_ratio:
+                report(handoff_path, i + 1,
+                       f"handoff.md:{i + 1} говорит «{phase_id} {handoff_ratio}», доска «## 4. "
+                       f"Phase Index & Status Board» несёт «{phase_id} {board_ratio}» "
+                       f"(расхождение)")
+
+
 # --- 2026.07.13-PLAN-PROTOCOL-GAP P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
@@ -1959,6 +2012,11 @@ def lint_plan(plan_dir, diag):
     # --- handoff.md ---------------------------------------------------------
     handoff_path = plan_dir / "handoff.md"
     handoff = parse_handoff_md(handoff_path, diag)
+
+    # 2026.07.25-ECO-OPT P11.3/D129: handoff.md ↔ Status Board «Pn a/b» — вне `if handoff:`
+    # блока Next-резолвера ниже (независимая проверка, форма-нейтральна к Next).
+    _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag)
+
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
 

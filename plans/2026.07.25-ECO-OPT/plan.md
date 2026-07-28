@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P6.2 закрыт `🟠 Done with deviations` — compact-дисциплина в скиллах) |
+| Last Updated | 2026-07-28 (P6.1 закрыт `🟢 Done` — statusline context-notify в harness) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -214,7 +214,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟠 Done with deviations |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
-| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | 🟡 In progress |
+| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/3 | 🟡 In progress |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
@@ -634,6 +634,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-run/Claude Sonnet 5/medium (P3.1 закрыт) | P3.1 закрыт 🟢: диагноз листинга флота (`findings/P3.1-listing-diagnosis.md`) — несущая поправка: реальный бюджет листинга 1M-модели 30 000 симв, не ≈10 000 (живой `claude --debug`+`/context`+`/doctor`); пересчёт §3 переворачивает вердикт `research/20` §1.1 (9/10 профилей укладываются, не переполняют) — детали см. `phases/P3.md` P3.1 Completion Notes/Pending Work. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P3 закрыта) | Фаза P3 закрыта `🟠 Done with deviations`: все 6 items терминальны (2🟢/4🟠) — статусы сверены с git-фактами и Known Deviations, docs-sync подтверждён (обновлено в рамках P3.5/P3.6), закрывающий отчёт `closure/P3.json` заведён — детали см. `phases/P3.md` Phase Handoff. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.1 закрыт) | P4.1 закрыт 🟢: `ADR-0001-cross-machine-memory.md` фиксирует восемь принятых решений (D78/D80) + отвергнутые варианты + известные ограничения — детали см. `phases/P4.md` P4.1 Completion Notes. |
+| 2026-07-28 | plan-run/Claude Opus 5/high (P6.1 закрыт 🟢) | P6.1 закрыт `🟢 Done`: поверхность `statusline/` в harness + флаг `--statusline`; четыре доказательства сняты (дельта бюджета 0 ток, медиана 5.4 мс, таблица полос, ноль сирот) — детали см. `phases/P6.md` P6.1 Completion Notes. |
 
 ## 7. Contracts
 

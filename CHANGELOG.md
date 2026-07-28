@@ -4,6 +4,21 @@
 
 ### Added
 
+- **`scripts/bootstrap-machine.sh`: роль-осознанная ступень 5 + rollout-документация второй машины
+  (P4.3, `2026.07.25-ECO-OPT`, ADR-0001).** Ступень `maind service install` читает `memory.role`
+  из локального `config.json` ДО ветки `--dry-run` — на `role=client` печатает информативный
+  `SKIP` и НЕ поднимает локальный демон (второй писатель), поведение `standalone`/`host` не
+  меняется. `docs/deploy.md` получил раздел «Вторая машина: cross-machine память (host/client)»
+  (host/client чеклисты, включая обязательный `memory.url` хоста на LAN-адрес после LAN-bind
+  `iii-config.yaml`); `packages/maind/docs/guide/systemd.md` называет `loginctl enable-linger`
+  условием роли `host`, не опцией. Три из шести приёмочных гейтов rollout'а (клиент-специфичные)
+  не прогнаны — нет второй физической машины в исполнявшей сессии; `Linger=yes` на хосте
+  подтверждён; попытка гейта «бэкап-restore» вскрыла находку — встроенный mesh-discovery движка
+  подключает любой локальный процесс `agentmemory` к общей группе НЕЗАВИСИМО от каталога
+  данных/порта (угроза инварианту «один писатель» при локальном тестировании) — инцидент
+  устранён без потери данных (254/254 записей), root cause (`config.json` без `memory.url` на
+  LAN-адрес после LAN-bind) задокументирован и исправлен на этой машине. Полный протокол —
+  `plans/2026.07.25-ECO-OPT/findings/P4.3-rollout-report.md`.
 - **`maind`: cross-machine режим памяти — `memory.role` (standalone/host/client) +
   bearer-аутентификация (P4.2, `2026.07.25-ECO-OPT`, ADR-0001).** Новое поле
   `memory.role` (дефолт `standalone`, back-compat — существующие узлы не меняют поведение);

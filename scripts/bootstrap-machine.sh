@@ -92,10 +92,21 @@ fi
 step "4/7 MCP-пресеты"
 echo "SKIP: глобального механизма нет — MCP раскатывается per-project (harness mcp --target / maind deploy)"
 
-# 5) демон mAInd (systemd --user) — мягкая деградация, если systemd/user-сессия недоступны
+# 5) демон mAInd (systemd --user) — роль-осознанно: на role=client локальный демон НЕ
+#    ставится (второй писатель, ADR-0001), клиент только дотягивается до хоста по memory.url.
+#    Мягкая деградация, если systemd/user-сессия недоступны (role standalone/host).
 step "5/7 демон mAInd (maind service install)"
 if [[ -x "$MAIND" ]]; then
-  if $DRY_RUN; then
+  MEMORY_ROLE="$(PYTHONPATH="$REPO_ROOT/packages/maind/lib:$REPO_ROOT" python3 -c "
+from maind.common import Env
+from maind.config import Config
+from maind.memory import memory_role
+print(memory_role(Config.load(Env('$REPO_ROOT', 'bootstrap'))))
+" 2>/dev/null || echo standalone)"
+  if [[ "$MEMORY_ROLE" == "client" ]]; then
+    echo "SKIP: memory.role=client — локальный демон НЕ ставится (второй писатель, ADR-0001);" \
+         "клиент дотягивается до хоста по memory.url (см. config.json), гейт — maind health --strict"
+  elif $DRY_RUN; then
     echo "+ $MAIND service install"
   else
     "$MAIND" service install || echo "WARN: maind service install недоступен (нет systemd/user-сессии?) — поднимите вручную: maind start --only memory" >&2

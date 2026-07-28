@@ -142,7 +142,9 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
      модель/effort обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
      есть находка).
 
-4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` + лейбл
+4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` +
+   `confidence ∈ {high,med,low}` (уверенность в самой находке — чтобы владелец мог ранжировать;
+   низкая уверенность — повод пометить, а не отбросить) + лейбл
    `issue/suggestion/question/nitpick` (ось `quality/artifact-review`) + `file:line` + `failure_scenario`
    (сценарий поломки); при сомнении ставь ВЫШЕ. Вердикт фазы — по порогу п. 2, не по максимуму severity.
 
@@ -163,7 +165,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
 
 **Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (Minor/Nit либо дефект бухгалтерии
 плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
-(`N ERROR / M WARN (на <git-ref>)`) + findings (severity · item · `file:line` · failure_scenario); третий
+(`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
+failure_scenario); третий
 и далее заход — строка `AUDIT-CAP:` (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
 Thinking | Context | Суть |` + команда ОТДЕЛЬНЫМ code-block'ом (следующий item с `Exec = manual` —
 форма «ЗАПУСК ВРУЧНУЮ»: `Model`/`Thinking` из Routing, в code-block'е ГОЛЫЙ ПРОМПТ item'а, не

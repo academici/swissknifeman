@@ -4,6 +4,16 @@
 
 ### Added
 
+- **`general/context-economy` + `general/compact-responses`: compact-дисциплина (P6.2,
+  `2026.07.25-ECO-OPT`).** `context-economy` §3 получила три дельты: граница сессии по шву
+  задачи (завершённая единица работы/смена фазы/повторный `/compact`), а не по проценту —
+  фактический процент модель не видит; что теряет компактизация (отклонённые альтернативы,
+  «почему НЕ выбрали») и что решения фиксируются в файл, не только в чате; первопартийный
+  рычаг `# Compact instructions` в CLAUDE.md + адресный `/compact <фокус>`. `compact-responses`
+  получил дельту `answer-first` (действие раньше обоснования). Кандидат D8 `no
+  preamble/closers` закрыт как уже покрытый (строки предъявлены, не переписаны). RU-источник →
+  регенерированный EN-канон → `check-translations.sh --stamp` → `skiller registry`;
+  `description` обоих скиллов не тронут (P3.1).
 - **`scripts/bootstrap-machine.sh`: роль-осознанная ступень 5 + rollout-документация второй машины
   (P4.3, `2026.07.25-ECO-OPT`, ADR-0001).** Ступень `maind service install` читает `memory.role`
   из локального `config.json` ДО ветки `--dry-run` — на `role=client` печатает информативный

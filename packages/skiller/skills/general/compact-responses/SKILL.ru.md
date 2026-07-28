@@ -18,6 +18,7 @@ sha256: ""
 
 When this skill is active:
 
+- **Answer-first**: do the thing, then report — the action/answer comes before any rationale, not after.
 - **Code tasks**: show only the changed code. No explanation of what was done.
 - **Questions**: one sentence max. No examples unless asked.
 - **Errors/bugs**: show the fix, optionally one-line reason if non-obvious.

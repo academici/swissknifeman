@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "note": "Человеческий арбитраж неоднозначных матчей повторного замера P9.4 (matching-rules.md). Разметчик — агент по делегации владельца (plan-run), решения строго по содержанию находки, не по порядку.",
+  "decisions": [
+    {
+      "key_finding_id": "T001",
+      "run_finding_id_local": "C1_1_3",
+      "verdict": "reject",
+      "reason": "C1_1_3 — про поломку php artisan route:cache/optimize из-за Closure-роута (совпадает с F001 по содержанию), а не про опровергнутое заявление T001 (доступ неаутентифицированным); совпал с T001 только диапазоном строк."
+    },
+    {
+      "key_finding_id": "F003",
+      "run_finding_id_local": "C1_1_10",
+      "verdict": "reject",
+      "reason": "F003 — SRP-нарушение resolve(): ?Tenant (abort_unless обрывает контракт возврата null/тенант); C1_1_10 — про другое: обход слоя Policy/azguard-permission-enum. Совпали только локацией; C1_1_4 (abort_unless + resolve():?Tenant) — содержательный матч F003."
+    },
+    {
+      "key_finding_id": "F005",
+      "run_finding_id_local": "C1_2_3",
+      "verdict": "reject",
+      "reason": "F005 — пробел в тестах на пользователя в ДВУХ workspace одновременно; C1_2_3 — о другом (setCurrent() в обход HTTP/резолвера, вся цепочка не проверена) — содержательно совпадает с F007, не с F005."
+    },
+    {
+      "key_finding_id": "F005",
+      "run_finding_id_local": "C1_3_3",
+      "verdict": "reject",
+      "reason": "F005 — пробел в тестах на пользователя в ДВУХ workspace одновременно; C1_3_3 — о другом (setCurrent() в обход HTTP/резолвера, вся цепочка не проверена) — содержательно совпадает с F007, не с F005."
+    },
+    {
+      "key_finding_id": "F004",
+      "run_finding_id_local": "C1_2_1",
+      "verdict": "reject",
+      "reason": "F004 — резолвер не проверяет plan_status Workspace (billing-состояние); C1_2_1 — про другое (бинарная проверка членства игнорирует pivot-роль). Содержательный матч F004 в этом прогоне — C1_2_7 (plan_status='suspended'/'cancelled' резолвится как активный)."
+    },
+    {
+      "key_finding_id": "F014",
+      "run_finding_id_local": "C2_1_3",
+      "verdict": "reject",
+      "reason": "F014 — все три класса нарушения поднимают один и тот же голый OSError (различимо только парсингом текста); C2_1_3 — про другое (три избыточных stat-вызова вместо использования уже прочитанного st) — содержательный матч F009, не F014."
+    },
+    {
+      "key_finding_id": "F013",
+      "run_finding_id_local": "C2_2_4",
+      "verdict": "reject",
+      "reason": "F013 — докстринг «Один lstat» не соответствует фактическому числу stat-вызовов; C2_2_4 — про другое (комментарий о дубле проверок в provider_deploy.py). Содержательный матч F013 — C2_2_8 (дословно про докстринг «Один lstat» vs три stat-вызова)."
+    },
+    {
+      "key_finding_id": "F009",
+      "run_finding_id_local": "C2_2_4",
+      "verdict": "reject",
+      "reason": "F009 — os.lstat уже получен в st, но islink/isfile снова обращаются к ФС; C2_2_4 — про другое (комментарий о дубле проверок в provider_deploy.py, не про избыточные stat-вызовы этого файла). Совпал только диапазоном строк — уходит в plausible_but_unlabeled."
+    },
+    {
+      "key_finding_id": "F014",
+      "run_finding_id_local": "C2_2_4",
+      "verdict": "reject",
+      "reason": "F014 — все три класса нарушения поднимают один и тот же голый OSError; C2_2_4 — про другое (комментарий о дубле проверок в provider_deploy.py). Совпал только диапазоном строк — уходит в plausible_but_unlabeled."
+    },
+    {
+      "key_finding_id": "F015",
+      "run_finding_id_local": "C3_1_9",
+      "verdict": "reject",
+      "reason": "F015 — is_dispatcher распознаётся грубым подстрочным матчингом *run-checks.sh*; C3_1_9 — про другое (strict выставляется только при rc==2, прочие коды молча деградируют до warn). Содержательный матч F015 — C3_1_17 (дословно про подстроку *run-checks.sh*)."
+    },
+    {
+      "key_finding_id": "F019",
+      "run_finding_id_local": "C3_1_8",
+      "verdict": "reject",
+      "reason": "F019 — read-modify-write счётчика не атомарен (нет файловой блокировки, гонка при конкурентных прогонах); C3_1_8 — про другое (предсказуемый state-dir, symlink-атака CWE-377). Совпал только диапазоном строк — уходит в plausible_but_unlabeled."
+    },
+    {
+      "key_finding_id": "F019",
+      "run_finding_id_local": "C3_1_11",
+      "verdict": "reject",
+      "reason": "F019 — read-modify-write счётчика не атомарен (гонка); C3_1_11 — про другое (счётчик сбрасывается в 0 при понижении, повторяющийся цикл). Совпал только диапазоном строк — уходит в plausible_but_unlabeled."
+    },
+    {
+      "key_finding_id": "F031",
+      "run_finding_id_local": "C5_1_7",
+      "verdict": "reject",
+      "reason": "F031 — ENV_BASENAME матчит только точное '.env', пропускает .env.local/.env.production; C5_1_7 — про другое (исключение *.example применяется раньше всех правил). Содержательный матч F031 в этом прогоне — C5_1_3."
+    },
+    {
+      "key_finding_id": "F031",
+      "run_finding_id_local": "C5_2_9",
+      "verdict": "reject",
+      "reason": "F031 — ENV_BASENAME матчит только точное '.env', пропускает .env.local/.env.production; C5_2_9 — про другое (исключение *.example применяется раньше всех правил). Содержательный матч F031 в этом прогоне — C5_2_4."
+    },
+    {
+      "key_finding_id": "F049",
+      "run_finding_id_local": "C8_1_5",
+      "verdict": "reject",
+      "reason": "F049 — диагностика тира-2 самопротиворечиво советует 'rerun with --repair once it matches', хотя пользователь уже был в --repair; C8_1_5 — про другое (нарушение формата: проза вместо kebab-case токена). Содержательный матч C8_1_5 — F050."
+    },
+    {
+      "key_finding_id": "F049",
+      "run_finding_id_local": "C8_3_9",
+      "verdict": "reject",
+      "reason": "F049 — диагностика тира-2 самопротиворечиво советует 'rerun with --repair once it matches'; C8_3_9 — про другое (нарушение формата: проза вместо kebab-case токена). Содержательный матч C8_3_9 — F050."
+    }
+  ]
+}

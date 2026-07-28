@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P9.2 closed 🟢) |
+| Last Updated | 2026-07-28 (P9.4 closed 🟠 — фаза P9 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -209,7 +209,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
-| P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 2/4 | 🟡 In progress |
+| P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 2/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
 
 ## 5. Decision Log
@@ -587,6 +587,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P9.3 закрыт) | P9.3 закрыт 🟢 Done: эталон-корпус ревью (8 кейсов, 50 `must_find`+3 `is_trap`) + 24 read-only прогона + baseline `J=0.75`/`U1=0.20`/`R=0.80`/`R1=0.62` — детали см. `phases/P9.md` P9.3 Completion Notes. |
 | 2026-07-28 | plan-design/Claude Opus 5/high (item P9.2, разрешение эскалации) | Эскалация P9.2 снята решением владельца **D126** (новый носитель `review-roles.json`) — детали см. `research/26-P9.2-registry-carrier.md`. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P9.2 закрыт) | P9.2 закрыт 🟢 Done: `review-roles.json` + валидатор + шаг `[8/8]` `validate.sh` — детали см. `phases/P9.md` P9.2 Completion Notes. |
+| 2026-07-28 | plan-run/Claude Sonnet 5/high (P9.4 закрыт, фаза P9 терминальна) | P9.4 закрыт 🟠: регресс `ΔR=-0.12` по правилу P9.3 — детали см. `phases/P9.md` P9.4 Completion Notes. Фаза P9 терминальна (4/4). |
 
 ## 7. Contracts
 

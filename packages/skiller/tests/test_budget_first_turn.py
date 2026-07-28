@@ -94,6 +94,42 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertIn("maind", mcp["detail"])
         self.assertIn("totally-unknown-server", mcp["detail"])
 
+    def test_listing_entry_capped_at_1536_chars(self):
+        # first-party: "combined description and when_to_use text is truncated
+        # at 1,536 characters" — запись длиннее капа не должна давать больше
+        # токенов, чем капнутый текст.
+        from skiller.budget import _listing_entry_tokens, estimate_tokens
+        d = self.registry_root / "skills" / "quality" / "long-desc"
+        long_desc = "x " * 2000  # 4000 симв, заведомо > 1536
+        fx.write_skill(d, "long-desc", description=long_desc)
+        capped_expected = estimate_tokens("long-desc") + estimate_tokens(
+            long_desc[:1536])
+        self.assertEqual(_listing_entry_tokens(d), capped_expected)
+        self.assertLess(_listing_entry_tokens(d), estimate_tokens(
+            "long-desc " + long_desc))  # некапнутая сумма была бы больше
+
+    def test_listing_budget_caps_raw_sum_and_reports_both(self):
+        # бюджет листинга — потолок, не сумма всех описаний (D22 переучёт):
+        # заведомо тесный бюджет форсирует raw > budget → resident == budget.
+        report = first_turn_report(self.env, self.proj,
+                                   listing_fraction=0.0001,
+                                   listing_context_window=1_000)
+        s = report["sources"]["skills"]
+        self.assertEqual(s["listing_budget"], 0)  # int(1000*0.0001) == 0
+        self.assertEqual(s["tokens"], 0)
+        self.assertGreater(s["raw_tokens"], s["tokens"])
+        self.assertIn("бюджет", s["detail"])
+
+    def test_listing_fraction_is_a_parameter_not_a_constant(self):
+        narrow = first_turn_report(self.env, self.proj, listing_fraction=0.0001,
+                                   listing_context_window=1_000)
+        wide = first_turn_report(self.env, self.proj, listing_fraction=1.0,
+                                 listing_context_window=1_000_000)
+        self.assertLess(narrow["sources"]["skills"]["listing_budget"],
+                        wide["sources"]["skills"]["listing_budget"])
+        self.assertLessEqual(narrow["sources"]["skills"]["tokens"],
+                             wide["sources"]["skills"]["tokens"])
+
     def test_rules_with_paths_excluded_from_claude_md(self):
         no_rules = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
         rules = self.proj / ".claude" / "rules"

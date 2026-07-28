@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P11.3 закрыт 🟢) |
+| Last Updated | 2026-07-28 (P11.4 закрыт 🟢) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -219,7 +219,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 2/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
-| P11 | Проверяемость прозы: гейт цитат + три точки принуждения | 3/8 | 🟡 In progress |
+| P11 | Проверяемость прозы: гейт цитат + три точки принуждения | 4/8 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -609,6 +609,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P11.1 закрыт) | P11.1 закрыт 🟢: двухшаговый резолвер пути + семь шаблонов поверхности в `plans/verify-citations.py` — детали см. `phases/P11.md` P11.1 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P11.2 закрыт) | P11.2 закрыт 🟢: класс цитаты `file.json::a.b.c` через `json.load` + greedy-резолв в `plans/verify-citations.py` — детали см. `phases/P11.md` P11.2 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P11.3 закрыт) | P11.3 закрыт 🟢: гейт `_lint_handoff_board_113` в `plan_lint.py` (handoff.md ↔ Status Board `Pn a/b`, forward-only) сразу нашёл живое расхождение `handoff.md:44` (`P3 1/6` vs доска `P3 0/6`), непочиненное до P11.8 — детали см. `phases/P11.md` P11.3 Completion Notes. |
+| 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P11.4 закрыт) | P11.4 закрыт 🟢: dogfood-снимок на непочиненном дереве — 628 цитат/52 находки (было 393/144), F8-класс пойман кросс-документным чеком, F1/F2/F9 честно названы непойманными (D130) — детали см. `phases/P11.md` P11.4 Completion Notes. |
 
 ## 7. Contracts
 

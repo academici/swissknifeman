@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P11.7 закрыт 🟠) |
+| Last Updated | 2026-07-28 (P11.8 сверен 🟢) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -219,7 +219,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
-| P11 | Проверяемость прозы: гейт цитат + три точки принуждения | 5/8 | 🟡 In progress |
+| P11 | Проверяемость прозы: гейт цитат + три точки принуждения | 6/8 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -538,6 +538,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-close/Claude Sonnet 5/low (P11.8 сверен 🟢) | Бухгалтерия item'а P11.8 (продукт уже исполнен `60605c5b`) заполнена постфактум — детали `phases/P11.md` P11.8 Completion Notes. Доска §4: `P11 5/8 → 6/8`. |
 | 2026-07-25 | plan-design/Claude Fable 5 | Design pass 1/2: brief + RAG-финдинги (5 реп GitHub API, Opus 5 guide, CC-факты, 2 perplexity-синтеза), 7 фаз/16 items (P1 детализирована, P2–P7 скелеты с контрактами), Обсуждение (7 развилок), D1–D10. Supersedes TOKEN-ECON-P6. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (межплановая очередь) | D11/D12: очередь уточнена пофазно, гейт FOREMAN — терминальные P1/P2 AGENT-RELIABILITY, а не G1; `Paused By` проставлен частично (независимые фазы идут параллельно). |
 | 2026-07-27 | plan-close/Claude Sonnet 5/low | P5 закрыта 🟠 Done with deviations: все 4 item'а терминальны (P5.3 несёт непочиненный второй красный тест `validate.sh` вне Files); `closure/P5.json` (Closure Protocol v1). |

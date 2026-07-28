@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "note": "Эталон-корпус P9.3 (2026.07.25-ECO-OPT). Каждый кейс — один реальный коммит-дифф из истории. class — стратификация (Implementation Rules): логика | конфигурация-провижининг | доки. diff_command — команда, которой ревьюер получает дифф read-only (обязательно тем же способом для всех прогонов).",
+  "cases": [
+    {
+      "case_id": "C1",
+      "class": "логика",
+      "repo": "flexcrm",
+      "repo_path": "/home/vostrikov/projects/flexcrm",
+      "commit": "3bdce06c66b2490cb222ec5619a46095906d6627",
+      "subject": "feat(corex): активировали мультиарендность через /w/{workspace} (Фаза 1, инкр. B)",
+      "diff_command": "git -C /home/vostrikov/projects/flexcrm show 3bdce06c66b2490cb222ec5619a46095906d6627",
+      "files": [
+        "app/Models/User.php",
+        "app/Models/Workspaces/Workspace.php",
+        "app/Tenancy/WorkspaceTenantResolver.php",
+        "config/corex.php",
+        "routes/web.php",
+        "tests/Feature/Tenancy/WorkspaceScopeTest.php"
+      ]
+    },
+    {
+      "case_id": "C2",
+      "class": "логика",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "fa1ee8bfe97e13005a85d6bee977754f0451b3c2",
+      "subject": "feat(core): assert_safe_replace_target — проверка цели перед атомарной заменой (P8.7)",
+      "diff_command": "git show fa1ee8bfe97e13005a85d6bee977754f0451b3c2",
+      "files": [
+        "CHANGELOG.md",
+        "core/io.py",
+        "core/tests/test_io.py"
+      ]
+    },
+    {
+      "case_id": "C3",
+      "class": "логика",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "05c5d87e01711c417ca400d56eff146680e59e20",
+      "subject": "feat(harness): review-gate — гейт с содержанием вместо тихого но-опа (P9.1)",
+      "diff_command": "git show 05c5d87e01711c417ca400d56eff146680e59e20",
+      "files": [
+        ".gitignore",
+        "CHANGELOG.md",
+        "packages/harness/CLAUDE.md",
+        "packages/harness/configs/claude-code/hooks/review-gate/README.md",
+        "packages/harness/configs/claude-code/hooks/review-gate/checks/generated-assets.sh",
+        "packages/harness/configs/claude-code/hooks/review-gate/checks/plan-lint.sh",
+        "packages/harness/configs/claude-code/hooks/review-gate/checks/run-checks.sh",
+        "packages/harness/configs/claude-code/hooks/review-gate/checks/tests-touched.sh",
+        "packages/harness/configs/claude-code/hooks/review-gate/config.json",
+        "packages/harness/configs/claude-code/hooks/review-gate/review-gate.sh",
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/scripts/apply-permissions.sh",
+        "packages/harness/tests/test_review_gate.py"
+      ]
+    },
+    {
+      "case_id": "C4",
+      "class": "конфигурация-провижининг",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "5b7cc15e2db43ca6b65f4b93a907836c3550dc6c",
+      "subject": "feat(ci): docs-impact гейт — пакет-скоуп + escape hatch трейлером (P8.4)",
+      "diff_command": "git show 5b7cc15e2db43ca6b65f4b93a907836c3550dc6c",
+      "files": [
+        ".github/workflows/hygiene.yml",
+        "CHANGELOG.md",
+        "docs/develop.md",
+        "scripts/docs-impact.py",
+        "scripts/test-docs-impact.py"
+      ]
+    },
+    {
+      "case_id": "C5",
+      "class": "конфигурация-провижининг",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "12ff61e1ab6db91b4d7a2992fab74ef9f2117231",
+      "subject": "feat(ci): гигиена дерева + тег=версия — public-hygiene/verify-tag (P8.6)",
+      "diff_command": "git show 12ff61e1ab6db91b4d7a2992fab74ef9f2117231",
+      "files": [
+        ".github/workflows/hygiene.yml",
+        "CHANGELOG.md",
+        "docs/develop.md",
+        "scripts/public-hygiene.py",
+        "scripts/test-public-hygiene.py",
+        "scripts/test-verify-tag.py",
+        "scripts/verify-tag.py"
+      ]
+    },
+    {
+      "case_id": "C6",
+      "class": "доки",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "d12ccaf781f3736f632e413d0aa65d93023e8426",
+      "subject": "feat(docs): матрица возможностей docs/status.md с Evidence/boundary (P8.5)",
+      "diff_command": "git show d12ccaf781f3736f632e413d0aa65d93023e8426",
+      "files": [
+        ".github/workflows/hygiene.yml",
+        "CHANGELOG.md",
+        "docs/.vitepress/config.mts",
+        "docs/status.md",
+        "scripts/status-check.py",
+        "scripts/test-status-check.py"
+      ]
+    },
+    {
+      "case_id": "C7",
+      "class": "логика",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "03c529ba4a0cd656881f95fd9f7e8d0eee681f30",
+      "subject": "feat(maind): tool-result trimming + PARTIAL-receipt в MCP (P3.2)",
+      "diff_command": "git show 03c529ba4a0cd656881f95fd9f7e8d0eee681f30",
+      "files": [
+        "CHANGELOG.md",
+        "packages/maind/lib/maind/mcp.py",
+        "packages/maind/tests/test_mcp.py",
+        "plans/2026.07.25-ECO-OPT/findings/P3.2-maind-tool-result-sizes.md"
+      ]
+    },
+    {
+      "case_id": "C8",
+      "class": "логика",
+      "repo": "swissknifeman",
+      "repo_path": "/home/vostrikov/projects/packages/swissknifeman",
+      "commit": "77bf9d8c8a24c7e5612bc498fd5dd30b40c566a0",
+      "subject": "fix(core): усыновление unmanaged-target тиром 1 при --repair (2026.07.25-ECO-OPT P10.4)",
+      "diff_command": "git show 77bf9d8c8a24c7e5612bc498fd5dd30b40c566a0",
+      "files": [
+        "CHANGELOG.md",
+        "core/provider_lock.py",
+        "core/tests/test_provider_lock.py",
+        "plans/2026.07.25-ECO-OPT/phases/P5.md"
+      ]
+    }
+  ]
+}

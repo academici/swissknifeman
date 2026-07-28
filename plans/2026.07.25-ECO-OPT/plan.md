@@ -210,7 +210,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 1/2 | 🟢 Done |
-| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
+| P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟠 Done with deviations |
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟠 Done with deviations |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
@@ -542,6 +542,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-28 | plan-run/Claude Opus 5/high (P2.3 закрыт 🟠) | P2.3 закрыт `🟠 Done with deviations`: класс A пуст, применены кап делегирования, ось `confidence` и пункт DoR (D81), карта на 5 команд; 3 производных пути вне `Files` — детали см. `phases/P2.md` P2.3 Completion Notes. |
+| 2026-07-28 | plan-close/Sonnet 5/low (фаза P2 закрыта) | Фаза P2 закрыта `🟠 Done with deviations` (все items терминальны: P2.1 🟢, P2.2 🟠, P2.3 🟠); Docs-sync: обновлено P2.1; Phase Handoff и `closure/P2.json` записаны. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P2.2 закрыт 🟠) | P2.2 закрыт `🟠 Done with deviations`: класс A пуст, применены 4 правки класса «добавить» (капы делегирования + `confidence`), карта на 18 файлов; item-коммит нёс 4 производных пути вне `Files` — детали см. `phases/P2.md` P2.2 Completion Notes. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (фаза P4 закрыта) | Фаза P4 закрыта 🟠 Done with deviations: все три item'а терминальны (P4.1🟢/P4.2🟠/P4.3🟠); Status Board `1/3`; `closure/P4.json` (Closure Protocol v1); Phase Handoff собран — детали см. `phases/P4.md` `## Phase Handoff`. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/medium (P4.3 закрыт 🟠) | P4.3 закрыт `🟠 Done with deviations`: роль-осознанная ступень 5 `bootstrap-machine.sh` + доки «Вторая машина»; 3/6 гейтов не прогнаны, находки F1/F2 — детали см. phases/P4.md Completion Notes. Все items P4 терминальны; фазовое закрытие — отдельным `/task:plan-close` (не этим item'ом). |

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P2",
+  "closed_at": "2026-07-28",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "51b1b1cb01e5860e8634e6ebcade0e5c59c7595b", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "1e826d48c66b548e0cddfa257add261e85940ade891108b312fb924f9bc1d7a9",
+    "phases/P2.md": "c5919f3a2c1640530ea419cb633a8d5a2dc2d30a23e95ff1a61540a7286a7399"
+  },
+  "items": [
+    {"id": "P2.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "две model-notes в Brain (opus-5-prompting.md 122 строки, sonnet-5-prompting.md 108 строк) на Brain HEAD 16e1ec6, указатели в prompting.md, две строки в docs/reference.md; validate прошёл на swissknifeman HEAD 8b88d8fd"},
+    {"id": "P2.2", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "карта artifacts/P2.2/opus5-revision-map.md — 18 разделов; validate.sh OK (456 тестов) на item-коммите aec18754; Known Deviations: 4 пути вне Files (golden-фикстуры + сгенерированный отчёт)"},
+    {"id": "P2.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "карта artifacts/P2.3/opus5-revision-map.md — 5 разделов; validate.sh OK (456 тестов) на item-коммите e067a7dc; Known Deviations: 3 пути вне Files + пункт DoR §1.1 канона не внесён (вне Scope)"}
+  ],
+  "gates": [],
+  "metrics": [],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items (реконсиляция, не повторный прогон validate.sh этой сессией — plan-close низкоэффортный, механическая сверка)"
+  ],
+  "external_side_effects": []
+}

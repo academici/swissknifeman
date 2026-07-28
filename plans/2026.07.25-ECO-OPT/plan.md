@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P3.4 закрыт 🟠 — модель листингового бюджета `budget.py`; перекалибровка `count_tokens` не выполнена, нет сети/креденшелов в песочнице) |
+| Last Updated | 2026-07-28 (P3.3 закрыт 🟢 — owner-решения по `2026.07.15-TELEMETRY-OPT` OQ-4/OQ-5 зафиксированы D137/D138; все 6 items фазы P3 терминальны, формальное закрытие фазы — за `plan-close`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -211,7 +211,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 |:--|:--|:--|:--|
 | P1 | Хвосты: tool-search вердикт + канон план-ссылок | 1/2 | 🟢 Done |
 | P2 | Claude 5 / Opus 5 guidance (Brain + ревизия команд) | 1/3 | 🟡 In progress |
-| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 1/6 | 🟡 In progress |
+| P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟡 In progress |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 0/3 | ⬜ Not started |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 0/3 | ⬜ Not started |
@@ -541,6 +541,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-run/Claude Opus 5/high (P3.3 закрыт 🟢) | P3.3 закрыт `🟢 Done`: пакет решения собран, владелец ответил по обоим вопросам — D137 (пин `task:research` остаётся `opus/high`) и D138 (ось B не трогаем, ось C = run-report + триггер, класс R2 → roadmap) — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.4 закрыт 🟠) | P3.4 закрыт `🟠 Done with deviations`: модель листингового бюджета в `budget.py` реализована и сверена с эмпирикой P3.1, перекалибровка `count_tokens` не выполнена (нет сети/креденшелов в песочнице) — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.6 закрыт 🟠) | P3.6 закрыт `🟠 Done with deviations`: критерий fork + классификация 56/56 паспортов (0 переводов), `update-upstreams.sh --check` красный на пре-существующем дефекте `voice-ai` — детали см. phases/P3.md P3.6 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.5 закрыт 🟠) | P3.5 закрыт `🟠 Done with deviations`: детали см. phases/P3.md P3.5 Completion Notes. |

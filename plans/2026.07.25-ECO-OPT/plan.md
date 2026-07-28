@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P3.5 закрыт 🟠 — гигиена листинга: детектор каналов + инвариант бюджета профилей, profiles.json не правились — 9/10 уже укладываются) |
+| Last Updated | 2026-07-28 (P3.6 закрыт 🟠 — политика вендоринга: критерий fork + классификация 56/56 паспортов, 0 переводов; `update-upstreams.sh --check` красный на пре-существующем дефекте `voice-ai`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -539,6 +539,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.6 закрыт 🟠) | P3.6 закрыт `🟠 Done with deviations`: критерий fork + классификация 56/56 паспортов (0 переводов), `update-upstreams.sh --check` красный на пре-существующем дефекте `voice-ai` — детали см. phases/P3.md P3.6 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.5 закрыт 🟠) | P3.5 закрыт `🟠 Done with deviations`: детали см. phases/P3.md P3.5 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P1.1 закрыт ⛔) | P1.1 закрыт `⛔ Skipped by decision`: ветка A (tool search default-on, включать нечего), D136 — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-28 | plan-close/Claude Sonnet 5/low (P11 закрыта 🟠) | Фаза P11 закрыта: все 8 items терминальны (6 🟢, 2 🟠 — P11.6/P11.7). Доска §4: статус `🟡 In progress → 🟠 Done with deviations`. `closure/P11.json` (Closure Protocol v1). |

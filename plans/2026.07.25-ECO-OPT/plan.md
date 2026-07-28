@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P4.1 закрыт `🟢 Done` — ADR-0001 cross-machine память, `plan-run`) |
+| Last Updated | 2026-07-28 (P4.2 закрыт `🟠 Done with deviations` — cross-machine режим памяти реализован, `plan-run`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -541,6 +541,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.2 закрыт 🟠) | P4.2 закрыт `🟠 Done with deviations`: `memory.role` (standalone/host/client) + запрет второго писателя кодом + bearer-аутентификация (аддитивный `core.http`) + различение 401/недоступен + измеренный бюджет ожидания + LAN-bind `iii-config.yaml` — детали см. phases/P4.md P4.2 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P3.3 закрыт 🟢) | P3.3 закрыт `🟢 Done`: пакет решения собран, владелец ответил по обоим вопросам — D137 (пин `task:research` остаётся `opus/high`) и D138 (ось B не трогаем, ось C = run-report + триггер, класс R2 → roadmap) — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.4 закрыт 🟠) | P3.4 закрыт `🟠 Done with deviations`: модель листингового бюджета в `budget.py` реализована и сверена с эмпирикой P3.1, перекалибровка `count_tokens` не выполнена (нет сети/креденшелов в песочнице) — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-07-28 | plan-exec/Claude Sonnet 5/medium (P3.6 закрыт 🟠) | P3.6 закрыт `🟠 Done with deviations`: критерий fork + классификация 56/56 паспортов (0 переводов), `update-upstreams.sh --check` красный на пре-существующем дефекте `voice-ai` — детали см. phases/P3.md P3.6 Completion Notes. |

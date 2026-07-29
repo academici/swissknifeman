@@ -1,50 +1,64 @@
-# HANDOFF — 2026-07-29 — after P6
+# HANDOFF — 2026-07-29 — after P7.3
+
+**P7.3 эскалирован `🔴 Blocked`, D141.** Плагин `openai/codex-plugin-cc` установлен
+(marketplace add + install + `/codex:setup --disable-review-gate`, все шаги зелёные) — но
+обязательный гейт `skiller budget --first-turn` даёт delta=0 (13915→13915, оба WARN) не
+потому что цена нулевая, а потому что пять источников измерителя (`packages/skiller/lib/
+skiller/budget.py`) структурно не сканируют marketplace-плагины Claude Code
+(`~/.claude/plugins/**`, глобальный `enabledPlugins`) — только project-local `.claude/
+{skills,agents,settings.json}` + skiller-собственный реестр. Реальная цена по нативному
+`claude plugin details codex@openai-codex` — **~449 ток** always-on, строго положительна.
+Отдельно: бюджет проекта был WARN (13915>10000) ДО установки, независимо от плагина —
+буквальное правило «total>10000 после ⇒ откат» откатило бы ЛЮБУЮ установку. Owner-решение
+2026-07-29: плагин ОСТАЁТСЯ установленным, формальный откат не проводится, эскалация — на
+`plan-design` (переписать Validation P7.3 под реальный инструмент + сузить правило отката до
+дельты). Подробности — `phases/P7.md` P7.3 blockquote + Completion Notes + `plan.md` §5 D141.
 
 **P6 закрыта `🟠 Done with deviations`** (4/4 items терминальны: P6.1 🟢 · P6.2 🟠 · P6.3 🟠 ·
-P6.4 🟠). Реопен D140 закрыт: P6.4 (Codex, item-коммит `b445a727`, bookkeeping `aefe8dd1`)
-расширил стартовую уборку `context-notify.sh` на осиротевшие `*.tmp` рядом с `*.state`, закрыв
-`Open risk` (54) и минорную деградацию, найденную реконсиляцией P6.1 (F6/D139). Известные
-отклонения фазы — механически из Known Deviations всех четырёх items, см.
-`phases/P6.md` `## Phase Handoff`.
+P6.4 🟠), этим заходом не тронута — контекст из прежнего handoff (архив ниже во «Done»).
 
-**Docs-sync:** не требуется — P6.1 уже несёт `docs/configs/statusline.md`; P6.2/P6.3/P6.4 не
-трогают `docs/` (доставка тел скиллов через `skiller registry`, P6.4 — правка одной строки glob'а
-без изменения описанной поверхности).
+**Docs-sync:** не требуется — P7.3 не трогает `docs/` (машинное состояние вне репо, D61).
 
-**Next:** item-exec следующего живого item'а фазы **P7** — `P7.3` (`⬜ Not started`,
-`Exec = manual`, порядок `P7.1 + P7.3 → P7.2`, P7.1 уже 🟠 Done). Форма «ЗАПУСК ВРУЧНУЮ»
-(`/model`+`/effort`+`/task:plan-run`, D18).
+**Next:** ре-дизайн эскалированного item'а — `/task:plan-design 2026.07.25-ECO-OPT P7.3`.
+Причина — blockquote `> 🔴 ESCALATION P7.3` в `phases/P7.md` и Open risk (59) ниже.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | medium — Routing §3 P7.3 (`implementation/medium`) |
-| Context | continue (/clear) — ручной item |
-| Суть | Поставить `codex-plugin-cc` как второстепенную явно маршрутизируемую возможность: гейт `skiller budget --first-turn` до/после, процедура вкл/выкл, правило активации |
+| Model | opus |
+| Thinking | high — план-протокол `plan-design`, конфликт правил требует владельческого решения по формулировке Validation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Снять конфликт правил P7.3: переписать Validation под инструмент, видящий marketplace-плагины (`claude plugin details`), и сузить правило отката к дельте ОТ установки, не унаследованному WARN; продолжить Scope Included с шага «процедура вкл/выкл» |
 
 ```
-/model sonnet
-/effort medium
-/task:plan-run 2026.07.25-ECO-OPT P7.3
+/task:plan-design 2026.07.25-ECO-OPT P7.3
 ```
 
-**Done:** **54/54 items в затронутых фазах терминальны** (P1–P6, P8–P11 плюс P7.1; счёт не
-менялся закрытием фазы P6 — реопен и P6.4 уже посчитаны прежним handoff'ом, закрытие фазы саму
-терминальность items не меняет). Закрыты фазы **P1**
-(1/2, 🟢), **P2** (1/3, 🟠), **P3** (2/6, 🟠), **P4** (3/3, 🟠), **P5** (5/6, 🟠), **P6** (4/4,
-🟠 — закрыта этим заходом), **P8** (7/10, 🟠), **P9** (3/4, 🟠), **P10** (1/4, 🟠), **P11**
-(6/8, 🟠). **P7** — `🟡 In progress` (P7.1 🟠 Done, P7.2/P7.3 `⬜`).
+**Done:** **54/54 items в фазах P1–P6/P8–P11 терминальны**, П7 несёт P7.1 🟠 Done, P7.2 `⬜`,
+**P7.3 🔴 Blocked** (этот заход: предстартовая сверка + оба budget-отчёта + установка плагина +
+`/codex:setup` — сделаны и зафиксированы; процедура вкл/выкл, целостность хуков, findings-документ,
+проба `/codex:rescue` — НЕ начаты). Закрыты фазы **P1** (1/2, 🟢), **P2** (1/3, 🟠), **P3**
+(2/6, 🟠), **P4** (3/3, 🟠), **P5** (5/6, 🟠), **P6** (4/4, 🟠), **P8** (7/10, 🟠), **P9**
+(3/4, 🟠), **P10** (1/4, 🟠), **P11** (6/8, 🟠). **P7** — `🟡 In progress`.
 
-**Remaining:** **P7.3** (плагин `codex-plugin-cc`), затем **P7.2** (инструкционный слой по
-списку поломок P7.1 + трек 1 OQ-4; потребляет список поломок P7.1 — готов — и числа бюджета
-P7.3 — ждёт). Отдельно в очереди висит невыполненный `/task:plan-audit 2026.07.25-ECO-OPT P2`
-(унаследовано, этим заходом не проверялось).
+**Remaining:** ре-дизайн **P7.3** снимает конфликт правил → возврат к `plan-run`/`plan-exec` на
+недоделанном хвосте Scope (процедура вкл/выкл, целостность хуков, findings, проба `/codex:rescue`).
+Затем **P7.2** (инструкционный слой; потребляет список поломок P7.1 — готов — и числа бюджета
+P7.3 — теперь есть: ~449 ток реальных). Отдельно в очереди висит невыполненный
+`/task:plan-audit 2026.07.25-ECO-OPT P2` (унаследовано, этим заходом не проверялось).
 
-**Sources of truth:** `phases/P6.md` `## Phase Status` / `## Phase Handoff` / `## Audit P6 —
-2026-07-29` (заход 1 и 2) · `plan.md` §5 D139/D140 · `closure/P6.json` · `roadmap.md:66-67`
-(P7.1/P6.4/P7.2 связки) · `phases/P7.md` P7.3 (ТЗ следующего шага).
+**Sources of truth:** `phases/P7.md` P7.3 (blockquote эскалации + Completion Notes + Pending
+Work — точная развилка для `plan-design`) · `plan.md` §5 D141 · `artifacts/P7.3/
+budget-first-turn-{before,after}.json` (оба 13915/WARN) · `packages/skiller/lib/skiller/
+budget.py:170-236` (пять `_measure_*` — репо-факт слепоты к marketplace-плагинам) ·
+`~/.claude/settings.json` `enabledPlugins`/`extraKnownMarketplaces` (машинный факт установки,
+вне репо, D61).
 
-**Open risks:** унаследованные, ни один не закрыт этим заходом:
+**Open risks:** унаследованные + новый (59), ни один не закрыт этим заходом:
+(59) **Гейт `skiller budget --first-turn` не видит marketplace-плагины Claude Code
+структурно** (project-local сканеры, не глобальный `~/.claude/plugins/**`/`enabledPlugins`) —
+любой будущий item, устанавливающий плагин, наступит на тот же конфликт правил, что и P7.3;
+кандидат: явная граница применимости инструмента в его же доке/help ИЛИ отдельный roadmap-item
+расширения (не Scope P7.3 — `budget.py` stdlib-only, правка пакета требует своего item'а).
 (49) `Files` items, правящих `packages/task/commands/*.md`, структурно неполон — не называет
 golden-фикстуры и сгенерированный `docs/reference/provider-commands.md`.
 (50) Пре-существующий дрейф Codex-проекции (`render-provider-commands.py --check`).
@@ -72,5 +86,8 @@ P6 — кандидат roadmap, D53, перекалибровка `skiller budg
 
 **Дерево на момент handoff:** `git status --porcelain` = ровно два untracked пути,
 `.swissknife/` и `packages/task/lib/.claude/` — унаследованные, не идентифицированы как продукт
-этого захода, оставлены как есть. Всё остальное закоммичено вплоть до `7e7f1539` (роадмап-шапка
-v0.24.0), плюс bookkeeping-коммит этого закрытия фазы P6.
+этого захода, оставлены как есть; плюс untracked `plans/2026.07.25-ECO-OPT/artifacts/P7.3/`
+(два JSON-отчёта budget, добавляются этим же bookkeeping-коммитом). Всё остальное закоммичено
+вплоть до `52b4e1c7` (закрытие фазы P6), плюс bookkeeping-коммит этой эскалации P7.3.
+Item-коммита нет: Scope Included не поставлен (эскалация до завершения), пакеты монорепо этот
+заход не трогал.

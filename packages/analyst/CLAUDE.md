@@ -1,85 +1,44 @@
-# CLAUDE.md — analyst
-
-Гид по кодовой базе для агентов. Это пакет **непрерывного обучения** экосистемы academici:
-детерминированный (stdlib-only, **on-demand — без демона**) слой, который извлекает «выстраданные
-уроки» из потоков задач Claude Code и — **с человеком в гейте** — продвигает их в переиспользуемое
-знание (память mAInd → скиллы). CLI — `analyst`.
-
-Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
-**P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) + числовая
-state-machine `recompute` + mem0-таксономия; **P4** — `suggest` → ЧЕРНОВИК скилла (`SKILL.ru.md`
-в staging, промоут — человек). Дальше по roadmap: `analyst-capture` + `observe.sh`
-PostToolUse-поток (P5, не начат).
-
-## Что это (два слоя, здесь — только слой-1)
-
-- **Слой-1 (этот пакет):** данные/пайплайн. `digest` → lessons-store(state+провенанс) → `review`/`promote`.
-- **Слой-2 (промпт-дисциплина):** скиллы (`field-feedback-loop` и др.) — вне этого пакета.
-
-Авто-запись в скиллы **запрещена** (инвариант): analyst лишь предлагает, промоутит **человек**.
-
-## Раскладка
-
-- `bin/analyst` — тонкий bash-лаунчер → `python3 -m analyst <root> <cmd> [args]`.
-- `lib/analyst/*.py` — вся логика, **stdlib-only** (реэкспорт общего `core` через `common.py`).
-- `tests/` — `unittest`, изоляция в tmpdir; surfacing тестируется фейковым `MAIND_BIN` (без демона/сети).
-- `.claude-plugin/` + `commands/analyst.md` — плагин Claude Code (slash `/analyst:*` → CLI). Только команды.
-- `docs/` — VitePress: собирается **standalone** (своя `docs/.vitepress/`) и в зонтичном агрегате
-  (`scripts/docs-sync.sh` копирует `packages/analyst/docs` → `docs/analyst/`, gitignored; линковка —
-  в корневом `docs/.vitepress/config.mts` + `docs/routing.md`). Внутренние ссылки относительные.
-
-### Ключевые модули
-
-| Модуль | Ответственность |
-|:--|:--|
-| `cli.py` | диспетчер команд (`COMMANDS` → `cmd_*(env, argv)`) |
-| `common.py` | `Env(BaseEnv)` (path-property: `state_dir`=`~/.swissknifeman/analyst`, `monorepo_root`) + реэкспорт `core` |
-| `lessons.py` | файловый стор: схема урока (скаляры+провенанс), state-каталоги, atomic write, **append-only** `audit.ndjson` + `events.ndjson`, переходы (ре-райт+unlink — не двоится), Jaccard/similar, `classify_consolidation` (mem0-таксономия ADD/UPDATE/NOOP/CONFLICT) |
-| `confidence.py` | **чистая** арифметика (stdlib, без I/O/часов): Beta-среднее × volume × time-decay + тиры 0.3/0.5/0.7/0.9. Константы — тюнинг-параметры модуля (P3) |
-| `recompute.py` | `analyst recompute` (P3) — детерминированный пересчёт confidence из `events.ndjson` → числовая state-machine (авто `ephemeral→candidate`; `curated` — только человек; просадка → soft-deprecate). Восстановим из логов (при фикс. `--now`) |
-| `digest.py` | `analyst digest` — run-report → КАНДИДАТЫ по высокоточным сигналам (resolved-failure, workaround); чистые извлекатели ради тестируемости; защитная деградация |
-| `scan.py` | `analyst scan` (P2) — cross-project агрегатор: читает `config.json:projects[]`, per-project уроки → Jaccard-кластеры → паттерны в ≥N проектах (**namespace-изолированно**) → draft-предложения в `~/.swissknifeman/analyst/`; чистые core-функции + writers. **Reconcile**: после `write_artifacts` прун осиротевших index+suggestion СТРОГО в scope прогона (чистая `stale_pattern_ids` + `list_existing_patterns`/`prune_artifacts`; `--no-prune`/`--dry-run`; классификация ns — из ПОЛЯ индекса; чужой ns не рескан → не трогаем) |
-| `suggest.py` | `analyst suggest` (P4) — cross-project паттерн (`index/by_pattern/`) → ЧЕРНОВИК `SKILL.ru.md` в `~/.swissknifeman/analyst/drafts/<pattern_id>/` (+ `draft.meta.json`); ЧИСТЫЕ генераторы (`build_skill_ru`/`build_meta`/`_slug_name`) + edit-safe writer (`seed_sha256`-детект ручных правок, `--force`, сироты — warn не delete); НЕ пишет в `skills/`, НЕ генерит EN, НЕ регистрирует — промоут только человеком (печатает repo-grounded handoff-последовательность) |
-| `review.py` | `analyst review` — уроки по state + structured diff против активных (read-only) |
-| `token_report.py` | `analyst token-report` — срезы usage-trend по model/role, rolling-baseline (медиана+p90 K=20) + pinned `--baseline set` (формат совместим с `maind analyze`), regression-флаг |
-| `sessions.py` | `analyst sessions` (P5.3) — недельные медианы `first_turn_overhead`/`fresh-per-turn` из ЖИВЫХ jsonl-транскриптов сессии (`~/.claude/projects/<encoded-cwd>/*.jsonl`, отдельный источник от `usage-trend.ndjson`); trend-warn week-over-week >20% |
-| `ingest.py` | `analyst ingest --file F` — findings агента-аналитика → ТОЛЬКО ephemeral-уроки (detector=agent-finding, enforced кодом); валидация целиком до первой записи |
-| `proposals.py` | `analyst proposals` — черновики системных улучшений (stack-pack/project-override/docs) в `~/.swissknifeman/analyst/proposals/`; статусы через audit; handoff-печать; вне своего каталога не пишет |
-| `promote.py` | `analyst promote`/`deprecate` — конвейер + **человеко-гейт** curated + surfacing в память mAInd (subprocess, graceful) |
-| `doctor.py` | диагностика окружения (python/core/maind) |
-
-## Раскладка данных (per-project, LOCAL)
-
-```
-<project>/.claude/analyst/
-  lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
-  audit.ndjson        # append-only провенанс переходов
-  events.ndjson       # append-only поток сигналов confidence (P3): скаляры наблюдений
-```
-
-Урок несёт **аддитивные** P3-поля-снапшот (пишет `recompute`, не ломая P1-схему):
-`S_decayed`/`N_decayed`/`confidence`/`confidence_tier`/`recomputed_at`. Источник истины
-пересчёта — `events.ndjson` (снапшот воспроизводим из лога при фиксированном `--now`).
-
-Инвариант приватности: сырьё (raw-транскрипт) — LOCAL-only, наружу (в память на curated) идёт только
-абстрагированный урок (trigger→action+evidence). Секреты — только по ссылке, не значением.
-
-## Конвенции (соблюдай при правках)
-
-- **stdlib-only** в `lib/analyst/`. Никаких pip-зависимостей в рантайме.
-- **`Env` передаётся явно** (frozen dataclass), без модульных глобалей — тестируемо в tmpdir.
-- **Atomic JSON** (`core.atomic_write_json`); `audit.ndjson` — только дозапись, никогда не перезапись.
-- **Переход state** — через `lessons.move_lesson` (ре-райт+unlink), не двоить урок между каталогами.
-- **Переход в curated — только человек** (`confirm`/`--yes`); авто-промоут запрещён.
-- **Сообщения — на русском** (`die(...)`, `warn(...)`), как в maind/skiller.
-- **Извлекатели digest — чистые функции** (run_report → [lesson]); IO — только в `cmd_*`. Задокументированное исключение: `extract_pathologies` читает историю последних run-report'ов с диска (правило рецидива ≥2/5 физически требует истории); IO ограничен чтением (`safe_load_json`).
-- **После правок плагина/команд** — `skiller registry` (регенерит общий marketplace; analyst подхватывается как соседний пакет).
-
-## Разработка
-
-```bash
-bash scripts/test.sh          # unittest (без сети/демонов)
-bash scripts/validate.sh      # py_compile + bash -n + JSON + обязательные файлы + frontmatter + тесты
-```
-
-Коммиты — Conventional Commits, на русском. Перед PR: `scripts/validate.sh` зелёный.
+<!-- swissknifeman:instructions:analyst:claude-code:common:begin -->
+<!-- semantic:analyst.identity-human-gate -->
+<!-- semantic:analyst.layer-boundary -->
+<!-- semantic:analyst.layout -->
+<!-- semantic:analyst.module-boundaries -->
+<!-- semantic:analyst.data-lifecycle -->
+<!-- semantic:analyst.privacy -->
+<!-- semantic:analyst.engineering-invariants -->
+<!-- semantic:analyst.validation-release -->
+<!-- instruction:analyst.identity-human-gate -->
+## analyst.identity-human-gate
+`analyst` is an on-demand, stdlib-only learning layer with no daemon; it may propose reusable knowledge but only a human may promote a lesson to curated state.
+<!-- instruction:analyst.layer-boundary -->
+## analyst.layer-boundary
+Keep this package as layer-1 data and pipeline work; prompt-discipline skills remain a separate layer and automatic skill writes are forbidden.
+<!-- instruction:analyst.layout -->
+## analyst.layout
+Keep `bin/analyst` as the launcher, `lib/analyst/` as stdlib-only logic, temporary-directory tests, and package documentation that builds standalone and in the umbrella site.
+<!-- instruction:analyst.module-boundaries -->
+## analyst.module-boundaries
+Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules. The documented exception is `extract_pathologies`, which reads run-report history to detect recurrence and is limited to read-only I/O.
+<!-- instruction:analyst.data-lifecycle -->
+## analyst.data-lifecycle
+Store lessons in explicit lifecycle directories, append audit and confidence events without rewriting them, and move lessons through `lessons.move_lesson` rather than duplicating state. Also, `events.ndjson` is the source of truth for confidence recomputation, and lesson snapshot fields stay additive and reproducible from a fixed `--now`.
+<!-- instruction:analyst.privacy -->
+## analyst.privacy
+Keep raw transcripts local; send only abstracted curated lessons to shared memory and reference secrets without storing their values.
+<!-- instruction:analyst.engineering-invariants -->
+## analyst.engineering-invariants
+Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.
+<!-- instruction:analyst.validation-release -->
+## analyst.validation-release
+Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`; regenerate the umbrella registry after changing analyst plugin commands.
+<!-- swissknifeman:instructions:analyst:claude-code:common:end -->
+<!-- swissknifeman:instructions:analyst:claude-code:extension:begin -->
+<!-- semantic:analyst.claude-code.capture-surfaces -->
+<!-- semantic:analyst.claude-code.plugin -->
+<!-- instruction:analyst.claude-code.capture-surfaces -->
+## analyst.claude-code.capture-surfaces
+Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.
+<!-- instruction:analyst.claude-code.plugin -->
+## analyst.claude-code.plugin
+The Claude Code plugin exposes command-only `/analyst:*` wrappers and does not add a daemon or automatic promotion path.
+<!-- swissknifeman:instructions:analyst:claude-code:extension:end -->

@@ -215,7 +215,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P3 | Перенос TOKEN-ECON: описания, maind-тримминг, owner-решения (+ гигиена листинга, вендоринг) | 2/6 | 🟠 Done with deviations |
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
-| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟡 In progress |
+| P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟠 Done with deviations |
 | P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | 🟡 In progress |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
@@ -651,6 +651,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P4.1 закрыт) | P4.1 закрыт 🟢: `ADR-0001-cross-machine-memory.md` фиксирует восемь принятых решений (D78/D80) + отвергнутые варианты + известные ограничения — детали см. `phases/P4.md` P4.1 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Opus 5/high (P6.1 закрыт 🟢) | P6.1 закрыт `🟢 Done`: поверхность `statusline/` в harness + флаг `--statusline`; четыре доказательства сняты (дельта бюджета 0 ток, медиана 5.4 мс, таблица полос, ноль сирот) — детали см. `phases/P6.md` P6.1 Completion Notes. |
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P6.3 закрыт 🟠) | P6.3 закрыт `🟠 Done with deviations`: три дельты в `verify-claims` + три pressure-сценария + спека `research/14` для P2.3 — детали см. `phases/P6.md` P6.3 Completion Notes. Все items P6 терминальны; фазовое закрытие — отдельным `/task:plan-close`. |
+| 2026-07-29 | plan-close/Sonnet 5/low (фаза P6 закрыта после реопена D140) | Фаза P6 закрыта повторно `🟠 Done with deviations`, реопен D140 снят (P6.4 закрыт `b445a727`) — детали см. `phases/P6.md` Phase Handoff. |
 
 ## 7. Contracts
 

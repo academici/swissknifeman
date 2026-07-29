@@ -7,15 +7,15 @@
     "command": "plan-close",
     "actor": "sonnet/low"
   },
-  "phase_status": "🟡 In progress",
+  "phase_status": "🟠 Done with deviations",
   "git": {
-    "head_sha": "61ad855d93ebcdebf73660f36933b397be4a7746",
+    "head_sha": "7e7f15390f2833f7fbf883e2bf969cae237d71de",
     "branch": "codex/provider-project-sync",
     "dirty": true
   },
   "inputs_sha256": {
-    "plan.md": "97d390533417a8970e39d4eacc7c4e4e41c28d24cc611d5f7682121937b18188",
-    "phases/P6.md": "4d119d3fc91161f83c1b7be9e49c72c1e980166b698f830e8215a3874e95f43f"
+    "plan.md": "9e2b34dfc9bd35ebb6475232d09584b8ed1a48d8845cd5dd8db2af6121b9674b",
+    "phases/P6.md": "b38e22ef4e1c57588b783a4e3da1c944c988a2735269ea94757462774e80ac38"
   },
   "items": [
     {

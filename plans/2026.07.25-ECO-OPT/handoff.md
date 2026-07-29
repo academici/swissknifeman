@@ -10,6 +10,12 @@ P6.2/P6.3 доставляются через `skiller registry` (тела ск�
 Детали — `phases/P6.md` Phase Handoff и Completion Notes items.
 
 **Известные отклонения (агрегат, собран механически из Known Deviations items):**
+- P6.1 (process): перебор тира — Routing §3 предписывает `implementation/high`, item исполнен
+  под `frontier/high` (Claude Opus 5/high, `/task:plan-run`, D18); эффорт совпал, перебор только
+  по классу модели.
+- P6.1 (минорный, найден реконсиляцией F6/D139): в 3/40 SIGKILL-прогонов наблюдения отмены
+  in-flight остался осиротевший `*.tmp`-файл — стартовая уборка `context-notify.sh` чистит
+  только `*.state`. Не искажает полосу/доставку; roadmap-кандидат `roadmap/context-notify-tmp-cleanup.md`.
 - P6.2: item-коммит несёт дифф вне `Files` — `packages/skiller/docs/guide/budget.md`,
   `adapters/codex/core/publication-lock.json` и codex-зеркала правленых `SKILL.md`
   (детерминированный продукт `skiller registry`).
@@ -22,19 +28,26 @@ P6.2/P6.3 доставляются через `skiller registry` (тела ск�
   функционально эквивалентный `skiller eval general/verify-claims`.
 - P6.3 (process): чистый прирост тела RU-источника ~17 строк против ориентира «~15».
 
-**Next:** фаза закрыта с deviations (🟠 на двух из трёх items) — по правилу launch-block'а
-«была хоть одна 🟠/эскалация → сперва `plan-audit`» следующий шаг — адверсариальный аудит
-фазы P6, не сразу exec следующего item'а.
+**Next:** «ЗАПУСК ВРУЧНУЮ: Claude Opus 5/high». Фаза P6 закрыта `🟠 Done with deviations` и
+проаудирована ДВАЖДЫ (`## Audit P6 — 2026-07-29` заход 1, вердикт ATTENTION → реконсиляция
+`838cae56`; заход 2, вердикт ATTENTION → эта реконсиляция, последняя бухгалтерская правка P6 —
+повторный `/task:plan-audit P6` не назначается, AUDIT-CAP). Следующий шаг — первый item фазы
+**P7** (детализирована до DoR, 3 items `⬜`, все `Exec = manual`; порядок `P7.1 + P7.3 → P7.2`,
+`roadmap.md:66`).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus — пин `/task:plan-audit` |
-| Thinking | xhigh — пин команды (adversarial-аудит закрытой фазы) |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Adversarial-аудит закрытой фазы P6: сверка 🟢/🟠 с кодом/git, no-op, scope drift, handoff |
+| Model | opus — Routing §3 `implementation/high` (P7.1) |
+| Thinking | high — dogfood-тест переключения на Codex, не механическая правка |
+| Context | continue (/clear) — ручной item |
+| Суть | P7.1 — Codex ведёт живой item плана целиком (cold start → исполнение → закрытие по §8), вердикт «дошёл» / «дошёл с N вмешательствами» / «сломался на X» |
 
 ```
-/task:plan-audit 2026.07.25-ECO-OPT P6
+Прочитать: plans/2026.07.25-ECO-OPT/plan.md (§0 Meta, §2 Execution Rules, §4 Status Board) →
+plans/2026.07.25-ECO-OPT/phases/P7.md (P7.1 Intent/Why/Scope/Validation) → этот handoff.md.
+Исполнить P7.1 по ТЗ item'а (phases/P7.md:123-…): предстартовая сверка гейтов → отбор 1–2
+кандидатов dogfood (P8.7 · P1.2 · P3.2 — сверить статус) → cold-start прогон Codex'ом от начала
+до закрытия item'а по протоколу §8 → `artifacts/P7.1/breakage-log.md` → `findings/P7.1-switch-test.md`.
 ```
 
 **Done:** **52/52 items в затронутых фазах терминальны в P1–P6, P8–P11** (счёт items не
@@ -76,12 +89,13 @@ glob уборки `context-notify.sh` на `*.tmp` — правка кода в�
 `PreCompact`/`PostCompact` хук вне скоупа P6 (кандидат roadmap, D53), перекалибровка
 `skiller budget --first-turn`).
 
-**Дерево на момент handoff:** `git status --short` показывает незакоммиченные правки
-`plans/2026.07.25-ECO-OPT/{plan.md,phases/P2.md,closure/P2.json,journal.jsonl}` (наследие
-незавершённого прохода P2-реконсиляции ДО этой сессии — вне `Files` items фазы P6, не
-трогать в рамках этого закрытия) и untracked
-`.swissknife/`, `packages/task/lib/.claude/` — не идентифицированы как продукт P6, оставлены
-как есть (не удалялись, не коммитились).
+**Дерево на момент handoff:** `git status --porcelain` = ровно два untracked пути,
+`.swissknife/` и `packages/task/lib/.claude/` — не идентифицированы как продукт P6, оставлены
+как есть (не удалялись, не коммитились). Все правки `plans/2026.07.25-ECO-OPT/{plan.md,
+phases/P2.md,closure/P2.json,journal.jsonl}` из предыдущей версии этого раздела закоммичены:
+`phases/P2.md`/`closure/P2.json` — коммитом `7b0156d0` (закрытие P2); `plan.md`/`journal.jsonl`
+— коммитом `838cae56` (реконсиляция P6, заход 1). Прежняя формулировка «незавершённый проход
+P2-реконсиляции» соврала — снята реконсиляцией P6 (заход 2, находка G5).
 `packages/skiller/skills/general/verify-claims/evals/benchmark.json` — прямой продукт прогона
 P6.3 (`generated_at 2026-07-28T22:33:29`, назван в `findings/P6.3-pressure-run.md:16-18`), не
 неопознанный untracked; судьба решена этим заходом — паттерн

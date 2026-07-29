@@ -14,6 +14,7 @@ import json
 import os
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
                   ResolvedProviderConfig,
@@ -85,6 +86,21 @@ TOP_KEYS = {
 NODE_ROLES = {"primary", "secondary", "mirror"}
 PROJECT_STATUSES = {"active", "archived", "planning"}
 LOG_LEVELS = {"debug", "info", "warn", "error"}
+# memory.role (ADR-0001, P4.2): standalone — сегодняшний режим (свой демон, дефолт,
+# back-compat) · host — эта машина держит ЕДИНСТВЕННЫЙ живой демон · client — своей
+# памяти нет, ходит к memory.url (локальный демон поднимать ЗАПРЕЩЕНО кодом, D27).
+MEMORY_ROLES = {"standalone", "host", "client"}
+LOOPBACK_HOSTNAMES = {"127.0.0.1", "localhost", "::1", "0.0.0.0"}
+
+
+def _is_loopback_url(url):
+    """True, если хост URL — loopback/wildcard (client с таким url перепутал бы
+    удалённый демон со своим собственным)."""
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return False
+    return host in LOOPBACK_HOSTNAMES
 
 
 # ── валидация ───────────────────────────────────────────────────────────────
@@ -129,7 +145,18 @@ def validate_config(config, cfg_file):
                    {"role": NODE_ROLES})
     _check_section(cfg_file, "memory", config.get("memory", {}),
                    {"enabled": bool, "config_path": str, "http_port": int,
-                    "stream_port": int, "data_dir": str, "url": str, "digest": dict})
+                    "stream_port": int, "data_dir": str, "url": str, "digest": dict,
+                    "role": str, "secret_file": str},
+                   {"role": MEMORY_ROLES})
+    mem = config.get("memory") or {}
+    if mem.get("role") == "client":
+        url = mem.get("url")
+        if not url:
+            die(f"{cfg_file}: memory.role='client' требует memory.url (адрес хоста памяти) — "
+                f"client не поднимает свой демон (D27)")
+        if _is_loopback_url(url):
+            die(f"{cfg_file}: memory.role='client' — memory.url='{url}' указывает на loopback; "
+                f"client обязан указывать адрес ХОСТА памяти, не свой собственный демон")
     _check_section(cfg_file, "graph", config.get("graph", {}),
                    {"enabled": bool, "adapter": str, "persist": bool,
                     "persist_path": str, "store_layout": str})
@@ -205,6 +232,7 @@ def merge_defaults(config):
 
     mem = config.get("memory") or {}
     mem.setdefault("enabled", True)
+    mem.setdefault("role", "standalone")   # дефолт back-compat: существующие узлы не меняют поведение
     mem.setdefault("http_port", MEMORY_HTTP_PORT)
     mem.setdefault("stream_port", MEMORY_STREAM_PORT)
     mem.setdefault("config_path", "config/memory/iii-config.yaml")

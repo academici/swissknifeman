@@ -30,6 +30,23 @@ def find_monorepo_root(start, *, markers=("packages", "core")):
     return None
 
 
+def resolve_plan_dir(repo_root, plan_id):
+    """Каталог плана по `PLAN-ID`, устойчивый к архивации: `plans/<ID>` ЛИБО
+    `plans/archive/<ID>` — планы не удаляются (архивируются), а функциональные
+    читатели держали только один из двух путей (research/22 §3.3). Возвращает `Path`
+    существующего каталога; `FileNotFoundError` с ОБОИМИ проверенными путями, если
+    план не найден ни там, ни там (диагностична — И9)."""
+    repo_root = Path(repo_root)
+    live = repo_root / "plans" / plan_id
+    archived = repo_root / "plans" / "archive" / plan_id
+    if live.is_dir():
+        return live
+    if archived.is_dir():
+        return archived
+    raise FileNotFoundError(
+        f"план {plan_id} не найден ни в {live}, ни в {archived}")
+
+
 def sibling_bin(pkg, *, env_var=None, monorepo_root=None, use_path=True):
     """Резолвер лаунчера соседнего пакета монорепо — единый источник для трёх
     исторически разошедшихся копий (skiller.harness_bin, analyst._resolve_maind_bin,

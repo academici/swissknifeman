@@ -1,5 +1,6 @@
 """Интегрирующий тест settings-doctor: воспроизводит целиком field-case §Проблема
-из `roadmap/settings-doctor.md` в tmpdir и требует, чтобы doctor ловил его СРАЗУ,
+из спеки `roadmap/settings-doctor.md` (закрыта и удалена 2026-07-25, текст в git-истории)
+в tmpdir и требует, чтобы doctor ловил его СРАЗУ,
 одним прогоном (критерий закрытия фазы P1, Implementation Rules P1.5).
 
 Анти-самообман: не мокаем `run_checks`/эффективную конфигурацию — реальные файлы

@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 216 скиллов в 47 бакетах.
+Всего: 229 скиллов в 48 бакетах.
 
 ## Скиллы по бакетам
 
@@ -413,6 +413,24 @@
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
+### repository-bootstrap — P1.2 (D31/D38): private/source-only bilingual canon for the 13 root-bootstrap identities (class A) — never published as an ordinary bucket/core/marketplace unit, never vendored/connected to a consumer project. Sole producer: registry.py -> publication.py root-bootstrap renderer, emitting thin .claude/.agents projections. (13)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `cross-project-optimizer` | Cross-project optimization across ~N similar ecosystem projects (shared core packages): f… | `ecosystem`, `fleet`, `dedup`, `shared-package`, `root-bootstrap` |
+| `decision-verification` | Epistemic discipline for work ON this repo: before a verdict on an EXTERNAL fact (library… | `rag`, `verification`, `epistemics`, `root-bootstrap` |
+| `docs-maintenance` | After every completed task in a repository with a docs/ directory at its root: assess whe… | `docs`, `maintenance`, `root-bootstrap` |
+| `ecosystem-integration` | How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - sha… | `ecosystem`, `maind`, `onboarding`, `root-bootstrap` |
+| `ecosystem-mcp` | What MCP tools are available here (agent-memory = shared memory/context, serena = code gr… | `ecosystem`, `mcp`, `maind`, `root-bootstrap` |
+| `ecosystem-setup` | How to configure/reconfigure THIS academici ecosystem project - decision tree for skills,… | `ecosystem`, `setup`, `maind`, `root-bootstrap` |
+| `field-feedback-loop` | Feedback loop from field work: implementing/integrating/syncing a project (skiller connec… | `field-feedback`, `improvement-loop`, `root-bootstrap` |
+| `harness-operations` | Operational map of the harness package (Claude Code environment setup): permissions/mcp/h… | `harness`, `permissions`, `mcp`, `hooks`, `root-bootstrap` |
+| `maind-overview` | Brief overview of the mAInd hub - two linking mechanisms (code graph/Serena, agent-memory… | `maind`, `ecosystem`, `memory`, `graph`, `root-bootstrap` |
+| `package-architecture` | Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, gene… | `skiller`, `architecture`, `distribution`, `root-bootstrap` |
+| `project-tooling-runbook` | Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor … | `runbook`, `skills`, `docs-sync`, `root-bootstrap` |
+| `release-discipline` | Closing out any substantive change in this repository: validate.sh → skiller registry → C… | `release`, `changelog`, `validate`, `root-bootstrap` |
+| `skill-authoring` | Rules for creating/editing registry skills (skills/**, generate-skill/): bilingual SKILL.… | `skill-authoring`, `bilingual`, `upstream`, `root-bootstrap` |
+
 ### research — Research and knowledge management (2)
 
 | Скилл | Описание | Теги |
@@ -481,7 +499,7 @@
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
-| `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
+| `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `package-architecture`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `async` | `transactional-outbox-relay` |
 | `attribute` | `attribute-authorization` |
 | `attributes` | `eloquent-accessors`, `enum-attributes` |
@@ -494,6 +512,7 @@
 | `barge-in` | `voice-ai` |
 | `bash` | `shell` |
 | `best-practices` | `laravel-best-practices` |
+| `bilingual` | `skill-authoring` |
 | `blade` | `livewire-blade-attributes` |
 | `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
 | `botkit` | `botkit` |
@@ -509,7 +528,7 @@
 | `cad` | `build-loop`, `config-conventions`, `model-rules`, `parametric-config`, `scene-conventions` |
 | `camera` | `mcp-blender` |
 | `casts` | `laravel-data` |
-| `changelog` | `release-engineering` |
+| `changelog` | `release-discipline`, `release-engineering` |
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
@@ -554,6 +573,7 @@
 | `ddd` | `domain-modeling` |
 | `debugging` | `diagnosing-bugs` |
 | `decomposition` | `to-issues` |
+| `dedup` | `cross-project-optimizer` |
 | `deep-modules` | `codebase-design` |
 | `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
 | `deployment` | `architecture` |
@@ -566,8 +586,10 @@
 | `diagnostics` | `diagnosing-bugs` |
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
+| `distribution` | `package-architecture` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `artifact-review`, `brain-locator`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `brain-locator`, `docs-maintenance`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
+| `docs-sync` | `project-tooling-runbook` |
 | `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
@@ -578,20 +600,23 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
-| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
+| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `cross-project-optimizer`, `ecosystem-integration`, `ecosystem-map`, `ecosystem-mcp`, `ecosystem-reuse-gate`, `ecosystem-setup`, `maind-overview`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
+| `epistemics` | `decision-verification` |
 | `erd` | `data-schema` |
 | `eslint` | `eslint-flat-config`, `wayfinder` |
 | `fdm` | `build-loop`, `config-conventions`, `parametric-config`, `threading` |
 | `feature-flags` | `pennant-development` |
 | `feedback-loop` | `diagnosing-bugs` |
+| `field-feedback` | `field-feedback-loop` |
 | `figma` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue` |
 | `filament` | `filament`, `modular-architecture`, `spatie-settings`, `vite-multi-build` |
 | `file-upload` | `filepond-upload` |
 | `filepond` | `filepond-upload` |
 | `flat-config` | `eslint-flat-config` |
+| `fleet` | `cross-project-optimizer` |
 | `flutter` | `figma-to-flutter` |
 | `forms` | `filepond-upload` |
 | `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `wayfinder` |
@@ -607,18 +632,20 @@
 | `glossary` | `axioma-glossary`, `domain-modeling` |
 | `gotchas` | `livewire-blade-attributes`, `version-gotchas` |
 | `governance` | `issue-triage`, `package-contribution-protocol` |
+| `graph` | `maind-overview` |
 | `grilling` | `grill-with-docs` |
 | `gtm` | `competitive-analysis`, `go-to-market`, `new-project`, `pitch-deck`, `product-roadmap` |
 | `guardrails` | `git-safety` |
 | `handoff` | `gh-review`, `oncall-rotation`, `plan-protocol`, `session-handoff` |
-| `harness` | `agent-packs` |
+| `harness` | `agent-packs`, `harness-operations` |
 | `headless` | `reka-ui-cva` |
 | `health` | `health-checks` |
-| `hooks` | `git-safety`, `shell` |
+| `hooks` | `git-safety`, `harness-operations`, `shell` |
 | `icons` | `vue-dynamic-icons` |
 | `image-preview` | `filepond-upload` |
 | `images` | `medialibrary` |
 | `implementation` | `implement` |
+| `improvement-loop` | `field-feedback-loop` |
 | `incident` | `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `inertia` | `filepond-upload`, `inertia-vue`, `laravel-data`, `wayfinder` |
 | `infection` | `mutation-testing` |
@@ -646,13 +673,15 @@
 | `lock` | `agent-packs` |
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
+| `maind` | `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `maind-overview` |
+| `maintenance` | `docs-maintenance` |
 | `make` | `makefile` |
 | `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-audit`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
 | `materials` | `scene-conventions` |
-| `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-advisor`, `mcp-blender` |
+| `mcp` | `ai-agents`, `build-loop`, `ecosystem-mcp`, `figma-mcp-core`, `harness-operations`, `mcp-advisor`, `mcp-blender` |
 | `media` | `medialibrary` |
-| `memory` | `shared-memory` |
+| `memory` | `maind-overview`, `shared-memory` |
 | `merge` | `resolving-merge-conflicts` |
 | `meta` | `local-topology` |
 | `metrics` | `eval-design`, `observability-design` |
@@ -679,7 +708,7 @@
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
 | `obsidian` | `brain-locator` |
-| `onboarding` | `mcp-advisor` |
+| `onboarding` | `ecosystem-integration`, `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
@@ -694,7 +723,7 @@
 | `patterns` | `eloquent-accessors`, `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
 | `pennant` | `pennant-development` |
 | `performance` | `diagnosing-bugs` |
-| `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
+| `permissions` | `attribute-authorization`, `azguard`, `harness-operations`, `laravel-permissions` |
 | `perplexity` | `query-craft` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
@@ -718,7 +747,7 @@
 | `quality` | `artifact-review`, `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `query` | `query-craft` |
 | `queue` | `docker-services`, `transactional-outbox-relay` |
-| `rag` | `ai-agents`, `query-craft`, `verify-claims` |
+| `rag` | `ai-agents`, `decision-verification`, `query-craft`, `verify-claims` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `readiness` | `health-checks` |
@@ -734,7 +763,7 @@
 | `registry` | `config-driven-abstraction`, `swissknifeman-locator` |
 | `regulatory` | `legal-compliance` |
 | `reka-ui` | `reka-ui-cva` |
-| `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-engineering` |
+| `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-discipline`, `release-engineering` |
 | `reliability` | `production-readiness-checklist`, `transactional-outbox-relay` |
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories` |
@@ -745,11 +774,12 @@
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `artifact-review`, `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+| `root-bootstrap` | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring` |
 | `router` | `docker` |
 | `routes` | `wayfinder` |
 | `routing` | `plan-protocol`, `project-map`, `vue-router-best-practices` |
 | `rules` | `model-rules` |
-| `runbook` | `observability-design` |
+| `runbook` | `observability-design`, `project-tooling-runbook` |
 | `russian` | `writing-style` |
 | `russian-stack` | `voice-ai` |
 | `safety` | `git-safety`, `namespace-refactor-safety`, `shell`, `test-isolation-guard`, `testing-safety-report` |
@@ -764,9 +794,13 @@
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
+| `setup` | `ecosystem-setup` |
 | `severity` | `artifact-review` |
+| `shared-package` | `cross-project-optimizer` |
 | `shell` | `shell` |
-| `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
+| `skill-authoring` | `skill-authoring` |
+| `skiller` | `package-architecture` |
+| `skills` | `laravel-packages`, `project-tooling-runbook`, `skills-ssot`, `swissknifeman-locator` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
@@ -816,13 +850,15 @@
 | `units` | `parametric-config` |
 | `upgrade` | `agent-packs`, `php-upgrade-checklist` |
 | `uploads` | `filepond-upload`, `medialibrary` |
+| `upstream` | `skill-authoring` |
 | `vad` | `voice-ai` |
+| `validate` | `release-discipline` |
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `vault` | `brain-locator` |
 | `vendor-vs-build` | `ecosystem-reuse-gate` |
 | `venv` | `venv-dependencies` |
-| `verification` | `testing-safety-report`, `verify-claims` |
+| `verification` | `decision-verification`, `testing-safety-report`, `verify-claims` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
 | `versioning` | `agent-packs` |
 | `vertical-slices` | `tdd-discipline`, `to-issues` |

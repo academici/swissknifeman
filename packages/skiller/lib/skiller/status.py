@@ -6,7 +6,7 @@ from pathlib import Path
 from core import find_repo_root
 
 from .budget import budget_for_set, resolve_active_set
-from .common import MANIFEST, MARKETPLACE, die, parse_flags
+from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, parse_frontmatter
 from .config import find_project_root, load_config, resolve_selection
 from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
@@ -23,6 +23,86 @@ def channel_overlap(enabled, vendored_buckets):
     """Бакеты, активные ОДНОВРЕМЕННО как плагин (connect) и вендоренные (vendor) —
     скиллы такого бакета раздаются дважды. Возвращает отсортированный список."""
     return sorted(set(enabled) & set(vendored_buckets))
+
+
+def detect_raw_vendor_path(target, config):
+    """Вендорный канал БЕЗ манифеста (P3.5, D76): скиллы приехали симлинками/копиями
+    из стороннего источника (`.ai/skills` и т.п.), не через `skiller sync` — у
+    `detect_vendor_path` (нужен `.swissknifeman-manifest.json`) такой канал невидим,
+    и `channel_overlap` на нём молчит (репо-факт `flexcrm`,
+    `findings/P3-listing-hygiene-and-vendoring-facts.md` §2.3). Возвращает первый
+    непустой из тех же кандидатов, что и `detect_vendor_path`, БЕЗ требования манифеста."""
+    candidates = []
+    if config.get("skills_path"):
+        candidates.append(config["skills_path"])
+    candidates += [p for p in AGENT_DEFAULTS.values() if p not in candidates]
+    for p in candidates:
+        d = target / p
+        if d.is_dir() and any(d.iterdir()):
+            return p
+    return None
+
+
+def local_channel_entries(skills_dir):
+    """Записи локального каталога скиллов (symlinks+каталоги), включая мёртвые.
+    -> [{"dir": имя, "dead": bool, "name": frontmatter name | None}]. `dead` —
+    битый симлинк ИЛИ каталог без `SKILL.md` (P3.5 дельта в, репо-факт `flexcrm`:
+    41 битый симлинк из 58 записей)."""
+    entries = []
+    if not skills_dir.is_dir():
+        return entries
+    for p in sorted(skills_dir.iterdir()):
+        if p.name == MANIFEST or p.name.startswith("."):
+            continue
+        if p.is_symlink() and not p.exists():
+            entries.append({"dir": p.name, "dead": True, "name": None})
+            continue
+        if not p.is_dir():
+            continue
+        md = p / "SKILL.md"
+        if not md.is_file():
+            entries.append({"dir": p.name, "dead": True, "name": None})
+            continue
+        try:
+            fm = parse_frontmatter(md)
+            name = fm.get("name") or p.name
+        except Exception:
+            name = p.name
+        entries.append({"dir": p.name, "dead": False, "name": name})
+    return entries
+
+
+def registry_skill_names(env):
+    """frontmatter `name` -> [бакеты], по ВСЕМУ реестру (не только включённым
+    бакетам): дубль — это вторая физическая копия скилла реестра, живущая вне
+    реестра и не обновляемая `skiller update`, независимо от того, включён ли
+    сегодня бакет-донор (P3.5 дельта б)."""
+    names = {}
+    skills_root = env.root / "skills"
+    if not skills_root.is_dir():
+        return names
+    for bucket_dir in sorted(skills_root.iterdir()):
+        if not bucket_dir.is_dir():
+            continue
+        for md in sorted(bucket_dir.rglob("SKILL.md")):
+            fm = parse_frontmatter(md)
+            name = fm.get("name") or md.parent.name
+            names.setdefault(name, []).append(bucket_dir.name)
+    return names
+
+
+def name_duplicates(local_entries, registry_names):
+    """Живые локальные записи, чьё frontmatter `name` уже есть где-то в реестре —
+    дубль ИМЕНИ (не каталога: у части скиллов каталог переименован при сохранённом
+    `name`, см. `findings/P3-listing-hygiene-and-vendoring-facts.md` §6)."""
+    return sorted(
+        (e["dir"], e["name"], tuple(registry_names[e["name"]]))
+        for e in local_entries if not e["dead"] and e["name"] in registry_names)
+
+
+def dead_local_entries(local_entries):
+    """Имена мёртвых локальных записей (диагностично: что именно мертво)."""
+    return sorted(e["dir"] for e in local_entries if e["dead"])
 
 
 def cmd_status(env, argv):
@@ -86,7 +166,7 @@ def cmd_status(env, argv):
                 f"(добавить: skiller update)")
         if extra:
             out(f"  Сверх профиля: {' '.join(extra)}")
-        # P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
+        # 2026.07.02-SKM-MASTER-002 P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
         # нагнетания; status read-only, ничего не переключает сама.
         alias_hints = alias_migration_hints(load_bucket_aliases(env), enabled)
         for h in alias_hints:
@@ -97,6 +177,8 @@ def cmd_status(env, argv):
             "profile": profile_name, "source_via": source,
             "missing": missing, "extra": extra, "alias_hints": alias_hints}
     vendor_path = detect_vendor_path(target, config)
+    raw_vendor_path = None
+    local_entries = []
     if vendor_path:
         mf = target / vendor_path / MANIFEST
         manifest = json.loads(mf.read_text(encoding="utf-8"))
@@ -116,8 +198,45 @@ def cmd_status(env, argv):
             "path": vendor_path, "layout": manifest.get("layout"), "count": len(skills),
             "installed_at": manifest.get("installed_at"), "agent": manifest.get("agent"),
             "profile": manifest.get("profile"), "gone": gone}
-    if not mk_file and not vendor_path:
+        local_entries = local_channel_entries(target / vendor_path)
+    else:
+        # P3.5 дельта а: канал без манифеста (симлинки/копии со стороны, не
+        # через `skiller sync`) — раньше был невидим для этой команды и для
+        # channel_overlap (репо-факт flexcrm: 58 записей, манифеста нет).
+        raw_vendor_path = detect_raw_vendor_path(target, config)
+        if raw_vendor_path:
+            local_entries = local_channel_entries(target / raw_vendor_path)
+            live = [e for e in local_entries if not e["dead"]]
+            out(f"\nКанал vendor ({raw_vendor_path}, БЕЗ манифеста — не через "
+                f"skiller sync/vendor):")
+            out(f"  Записей: {len(local_entries)} ({len(live)} живых, "
+                f"{len(local_entries) - len(live)} мёртвых)")
+    if not mk_file and not vendor_path and not raw_vendor_path:
         out("\nКаналы: не подключён (skiller connect | vendor)")
+
+    dup = dead = []
+    if local_entries:
+        registry_names = registry_skill_names(env)
+        dup = name_duplicates(local_entries, registry_names)
+        dead = dead_local_entries(local_entries)
+        if not vendor_path:
+            # манифеста нет — единственный источник "вендоренных бакетов" для
+            # channel_overlap ниже: бакеты-доноры имён, которые local делит с реестром.
+            vendored_buckets = {b for _dir, _name, buckets in dup for b in buckets}
+        if dup:
+            out(f"\n⚠ ДУБЛИ ИМЁН с реестром ({len(dup)}): " + ", ".join(
+                f"{d}→{'/'.join(b)}" for d, _n, b in dup[:8])
+                + (" …" if len(dup) > 8 else ""))
+            out("  Локальная копия не обновляется `skiller update` — либо снять "
+                "локальную запись, либо подключить бакет-донор штатным каналом.")
+        if dead:
+            out(f"\n⚠ МЁРТВЫЕ ЗАПИСИ ({len(dead)}): битые симлинки/каталоги без "
+                "SKILL.md — " + ", ".join(dead[:8]) + (" …" if len(dead) > 8 else ""))
+            out("  Почистить: find <канал> -maxdepth 1 -xtype l -delete "
+                "(проверь список выше перед массовым удалением).")
+    report["name_duplicates"] = [{"dir": d, "name": n, "buckets": list(b)}
+                                  for d, n, b in dup]
+    report["dead_entries"] = dead
 
     # Токеновый бюджет набора (контроль раздувания): ⊕ always — постоянный налог
     # описаний, резидентный в каждом запросе. Подробности/карта — skiller budget.

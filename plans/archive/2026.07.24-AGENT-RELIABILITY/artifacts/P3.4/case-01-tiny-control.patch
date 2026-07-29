@@ -1,0 +1,7 @@
+diff --git a/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt b/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt
+new file mode 100644
+index 00000000..7781507d
+--- /dev/null
++++ b/plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt
+@@ -0,0 +1 @@
++canary case-01 tiny-control ok

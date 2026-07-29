@@ -1,0 +1,31 @@
+{
+  "events": [
+    {
+      "i": 0,
+      "kind": "system_init",
+      "mcp_servers_count": 4,
+      "model": "claude-opus-5",
+      "permission_mode": "bypassPermissions",
+      "tools_count": 44
+    },
+    {
+      "i": 1,
+      "is_error": false,
+      "kind": "result",
+      "num_turns": 1,
+      "permission_denials": 0,
+      "session_id": "0291eed4-49d4-429b-b339-be86a54b9495",
+      "subtype": "success",
+      "total_cost_usd": 0.17183000000000004,
+      "usage": {
+        "cache_creation_input_tokens": 16102,
+        "cache_read_input_tokens": 20154,
+        "input_tokens": 2,
+        "output_tokens": 4
+      }
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1",
+  "stage": "sanitized-raw",
+  "worktree_token": "<WT>"
+}

@@ -28,6 +28,7 @@ export default defineConfig({
             { text: 'Обзор: CLI harness', link: '/' },
             { text: 'Permissions для Claude Code', link: '/configs/claude-permissions' },
             { text: 'Agent-packs: паки субагентов', link: '/configs/agent-packs' },
+            { text: 'Statusline: контекст и уведомления', link: '/configs/statusline' },
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
           ],

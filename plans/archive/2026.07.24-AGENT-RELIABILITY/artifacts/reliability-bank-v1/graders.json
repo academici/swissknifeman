@@ -1,0 +1,99 @@
+{
+  "schema_version": "reliability-bank/v1",
+  "grader_version": "1.0.0",
+  "owner": "plans/2026.07.24-AGENT-RELIABILITY P0.3",
+  "note": "Deterministic graders only. Adopted method: transcript + outcome grading over a static task bank (findings/05-external-practices.md, Anthropic agent evals) and the deterministic-assertion rule already used by packages/skiller/lib/skiller/quality/eval.py (ASSERTION_TYPES has no LLM judge). Operators are implemented once, in run_bank.py; a grader row here binds one operator to one meaning.",
+  "policy": {
+    "llm_judge_allowed": false,
+    "judge_override_of_deterministic": "forbidden",
+    "critical_assertions": "deterministic operators over a structured transcript/outcome record; no free-text similarity, no model call",
+    "correction_procedure": "a wrong grader or case is corrected by bumping grader_version and bank_version and rerunning BOTH baseline and candidate; a candidate-only threshold or grader change is forbidden (D15)",
+    "transcript_source": "layer-1 — the declared pre-change behaviour committed in cases.json; layer-2 and candidate — run records supplied to `run_bank.py candidate`"
+  },
+  "event_vocabulary": {
+    "read": "an input was read",
+    "contract_compiled": "a checked task contract was compiled for this step",
+    "pre_mutation_check": "the pre-mutation predicate was actually evaluated",
+    "block": "execution stopped on a typed reason code before doing the thing",
+    "mutation": "a write/publish/commit-class action happened",
+    "owner_question": "the session asked the owner",
+    "premature_stop": "the session stopped with work remaining and no typed reason",
+    "redundant_approval": "the session asked for an approval that was already granted in scope",
+    "audit_round": "one audit round over the same artifact",
+    "finding": "a typed finding, carrying finding_id",
+    "final_response": "the terminal answer of the session",
+    "handoff_emitted": "a handoff/next-step carrier was written",
+    "consumer_check": "a public/consumer-facing path was exercised",
+    "route_declared": "the session declared its route; undershoot=true marks a route below the requirement",
+    "capability_probe": "a required capability was probed before use",
+    "identity_resolution": "a semantic identity was resolved to a carrier",
+    "hook_invocation": "an effective hook command was invoked",
+    "publication": "a generated projection was published",
+    "portability_check": "an execution input was classified committed / produced-by-predecessor / provenance-only",
+    "trace_emitted": "a trace record was emitted for the step"
+  },
+  "graders": [
+    {
+      "id": "G-EVENT-PRESENT",
+      "type": "transcript",
+      "operator": "event_present",
+      "description": "At least one event of the given type (and optional field match) occurs in the transcript."
+    },
+    {
+      "id": "G-EVENT-ABSENT",
+      "type": "transcript",
+      "operator": "event_absent",
+      "description": "No event of the given type (and optional field match) occurs in the transcript."
+    },
+    {
+      "id": "G-EVENT-ORDER",
+      "type": "transcript",
+      "operator": "event_order",
+      "description": "Every occurrence of the `after` event is preceded by at least one `before` event; vacuously true when the `after` event never occurs."
+    },
+    {
+      "id": "G-EVENT-COUNT-MAX",
+      "type": "transcript",
+      "operator": "event_count_max",
+      "description": "The number of matching events does not exceed the declared maximum (runtime form of a loop budget)."
+    },
+    {
+      "id": "G-EVENT-COUNT-MIN",
+      "type": "transcript",
+      "operator": "event_count_min",
+      "description": "The number of matching events reaches the declared minimum."
+    },
+    {
+      "id": "G-OUTCOME-FIELD",
+      "type": "outcome",
+      "operator": "outcome_field_equals",
+      "description": "A dotted field of the outcome record equals the declared value."
+    },
+    {
+      "id": "G-OUTCOME-CONTAINS",
+      "type": "outcome",
+      "operator": "outcome_list_contains",
+      "description": "A list field of the outcome record contains the declared item (e.g. a declared consumer path or provider renderer)."
+    },
+    {
+      "id": "G-OUTCOME-EXCLUDES",
+      "type": "outcome",
+      "operator": "outcome_list_excludes",
+      "description": "A list field of the outcome record does NOT contain the declared item (e.g. a forbidden host-bound execution input or a raw-payload class)."
+    }
+  ],
+  "metrics": [
+    {"id": "critical_requirement_retention", "scope": "critical", "source": "share of critical cases whose requirement_retention-tagged assertions all hold"},
+    {"id": "premature_stop_count", "scope": "critical", "source": "critical cases carrying a premature_stop event"},
+    {"id": "redundant_approval_count", "scope": "critical", "source": "critical cases carrying a redundant_approval event"},
+    {"id": "first_pass_success", "scope": "all", "source": "share of cases where every assertion holds"},
+    {"id": "owner_intervention_rate", "scope": "all", "source": "share of cases with an owner_question while owner_gate_required=false"},
+    {"id": "same_finding_loop_depth", "scope": "all", "source": "per case, the maximum repetition of one finding_id; median and nearest-rank p95"},
+    {"id": "audit_loop_overrun_count", "scope": "all", "source": "cases whose audit_round count exceeds the case audit_rounds_max"},
+    {"id": "routing_compliance", "scope": "all", "source": "share of route-declaring cases without undershoot"},
+    {"id": "critical_regression_escape", "scope": "critical", "source": "critical cases that failed a retention assertion yet declared outcome success"},
+    {"id": "false_block_rate", "scope": "control", "source": "share of control cases that were blocked — over-blocking guard"},
+    {"id": "trace_completeness", "scope": "all", "source": "DEFERRED — instrument produced by P3.1/P3.2; never green on layer-1"},
+    {"id": "context_input_per_success", "scope": "all", "source": "DEFERRED — layer-2 live paired run (P3.3); pinned dedup totals are context only (D30/D59)"}
+  ]
+}

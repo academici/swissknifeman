@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Plan Audit"
-  short_description: "Adversarial-аудит плана или закрытой фазы"
-  default_prompt: "Use $task-plan-audit to audit this plan or completed phase."

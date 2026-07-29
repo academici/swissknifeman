@@ -1,0 +1,517 @@
+{
+  "captured_at": "2026-07-25T18:35:46Z",
+  "commands": [
+    {
+      "argv": [],
+      "exit_code": null,
+      "provider": "claude-code",
+      "read_only": true,
+      "status": "no-declared-command"
+    },
+    {
+      "argv": [
+        "codex",
+        "plugin",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "provider": "codex",
+      "read_only": true,
+      "status": "ok"
+    }
+  ],
+  "providers": {
+    "claude-code": {
+      "other_marketplace_units": 0,
+      "reason": "no declared read-only enabled-set command for this provider",
+      "root_projections": [
+        {
+          "identity": "cross-project-optimizer",
+          "path": ".claude/skills/cross-project-optimizer/SKILL.md"
+        },
+        {
+          "identity": "decision-verification",
+          "path": ".claude/skills/decision-verification/SKILL.md"
+        },
+        {
+          "identity": "docs-maintenance",
+          "path": ".claude/skills/docs-maintenance/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-integration",
+          "path": ".claude/skills/ecosystem-integration/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-mcp",
+          "path": ".claude/skills/ecosystem-mcp/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-setup",
+          "path": ".claude/skills/ecosystem-setup/SKILL.md"
+        },
+        {
+          "identity": "field-feedback-loop",
+          "path": ".claude/skills/field-feedback-loop/SKILL.md"
+        },
+        {
+          "identity": "harness-operations",
+          "path": ".claude/skills/harness-operations/SKILL.md"
+        },
+        {
+          "identity": "maind-overview",
+          "path": ".claude/skills/maind-overview/SKILL.md"
+        },
+        {
+          "identity": "package-architecture",
+          "path": ".claude/skills/package-architecture/SKILL.md"
+        },
+        {
+          "identity": "project-tooling-runbook",
+          "path": ".claude/skills/project-tooling-runbook/SKILL.md"
+        },
+        {
+          "identity": "release-discipline",
+          "path": ".claude/skills/release-discipline/SKILL.md"
+        },
+        {
+          "identity": "skill-authoring",
+          "path": ".claude/skills/skill-authoring/SKILL.md"
+        }
+      ],
+      "state": "unknown",
+      "units": []
+    },
+    "codex": {
+      "other_marketplace_units": 12,
+      "root_projections": [
+        {
+          "identity": "anti-drift",
+          "path": ".agents/skills/anti-drift/SKILL.md"
+        },
+        {
+          "identity": "architecture",
+          "path": ".agents/skills/architecture/SKILL.md"
+        },
+        {
+          "identity": "codebase-design",
+          "path": ".agents/skills/codebase-design/SKILL.md"
+        },
+        {
+          "identity": "context-economy",
+          "path": ".agents/skills/context-economy/SKILL.md"
+        },
+        {
+          "identity": "cross-project-optimizer",
+          "path": ".agents/skills/cross-project-optimizer/SKILL.md"
+        },
+        {
+          "identity": "decision-verification",
+          "path": ".agents/skills/decision-verification/SKILL.md"
+        },
+        {
+          "identity": "docs-maintenance",
+          "path": ".agents/skills/docs-maintenance/SKILL.md"
+        },
+        {
+          "identity": "domain-modeling",
+          "path": ".agents/skills/domain-modeling/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-integration",
+          "path": ".agents/skills/ecosystem-integration/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-mcp",
+          "path": ".agents/skills/ecosystem-mcp/SKILL.md"
+        },
+        {
+          "identity": "ecosystem-setup",
+          "path": ".agents/skills/ecosystem-setup/SKILL.md"
+        },
+        {
+          "identity": "field-feedback-loop",
+          "path": ".agents/skills/field-feedback-loop/SKILL.md"
+        },
+        {
+          "identity": "harness-operations",
+          "path": ".agents/skills/harness-operations/SKILL.md"
+        },
+        {
+          "identity": "maind-overview",
+          "path": ".agents/skills/maind-overview/SKILL.md"
+        },
+        {
+          "identity": "package-architecture",
+          "path": ".agents/skills/package-architecture/SKILL.md"
+        },
+        {
+          "identity": "package-contribution-protocol",
+          "path": ".agents/skills/package-contribution-protocol/SKILL.md"
+        },
+        {
+          "identity": "plan-protocol",
+          "path": ".agents/skills/plan-protocol/SKILL.md"
+        },
+        {
+          "identity": "project-tooling-runbook",
+          "path": ".agents/skills/project-tooling-runbook/SKILL.md"
+        },
+        {
+          "identity": "query-craft",
+          "path": ".agents/skills/query-craft/SKILL.md"
+        },
+        {
+          "identity": "release-discipline",
+          "path": ".agents/skills/release-discipline/SKILL.md"
+        },
+        {
+          "identity": "session-handoff",
+          "path": ".agents/skills/session-handoff/SKILL.md"
+        },
+        {
+          "identity": "skill-authoring",
+          "path": ".agents/skills/skill-authoring/SKILL.md"
+        },
+        {
+          "identity": "task-design",
+          "path": ".agents/skills/task-design/SKILL.md"
+        },
+        {
+          "identity": "task-plan-audit",
+          "path": ".agents/skills/task-plan-audit/SKILL.md"
+        },
+        {
+          "identity": "task-plan-close",
+          "path": ".agents/skills/task-plan-close/SKILL.md"
+        },
+        {
+          "identity": "task-plan-design",
+          "path": ".agents/skills/task-plan-design/SKILL.md"
+        },
+        {
+          "identity": "task-plan-exec",
+          "path": ".agents/skills/task-plan-exec/SKILL.md"
+        },
+        {
+          "identity": "task-plan-run",
+          "path": ".agents/skills/task-plan-run/SKILL.md"
+        },
+        {
+          "identity": "verify-claims",
+          "path": ".agents/skills/verify-claims/SKILL.md"
+        },
+        {
+          "identity": "workflow-craft",
+          "path": ".agents/skills/workflow-craft/SKILL.md"
+        }
+      ],
+      "state": "read",
+      "units": [
+        {
+          "enabled": true,
+          "identities": [
+            "agent-design",
+            "api-design",
+            "architecture",
+            "codebase-design",
+            "data-schema",
+            "dev-engineering-super-skill",
+            "domain-modeling",
+            "ecosystem-reuse-gate",
+            "eval-design",
+            "figma-mcp-core",
+            "legal-compliance",
+            "observability-design",
+            "package-contribution-protocol",
+            "security-design",
+            "tech-stack-selection"
+          ],
+          "name": "architect",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "axioma-doctrine",
+            "axioma-glossary",
+            "axioma-stack",
+            "ecosystem-map"
+          ],
+          "name": "axioma",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "anti-drift",
+            "compact-responses",
+            "context-economy",
+            "gh-review",
+            "mcp-advisor",
+            "plan-protocol",
+            "query-craft",
+            "session-handoff",
+            "verify-claims"
+          ],
+          "name": "core",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "content-creative-super-skill"
+          ],
+          "name": "creative",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "ci-cd",
+            "db-test-preflight",
+            "docker",
+            "docker-dev-prod",
+            "docker-php",
+            "docker-postgres",
+            "docker-services",
+            "docker-vite",
+            "gitops",
+            "makefile",
+            "node-pnpm-preflight"
+          ],
+          "name": "devops",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "finance-super-skill"
+          ],
+          "name": "finance",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "adversarial-check",
+            "competitive-analysis",
+            "customer-discovery",
+            "defensibility",
+            "idea-audit",
+            "idea-discovery",
+            "new-project",
+            "pitch-deck",
+            "risk-assessment",
+            "startup-lifecycle"
+          ],
+          "name": "founder",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "attribute-authorization",
+            "laravel-permissions",
+            "laravel-security-audit"
+          ],
+          "name": "laravel-auth",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "laravel-broadcasting",
+            "laravel-data"
+          ],
+          "name": "laravel-data-layer",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "health-checks",
+            "laravel-dusk",
+            "laravel-testing",
+            "test-isolation-guard"
+          ],
+          "name": "laravel-testing",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "legal-super-skill"
+          ],
+          "name": "legal",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "marketing-super-skill"
+          ],
+          "name": "marketing",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "capacity-planning",
+            "incident-response",
+            "oncall-rotation",
+            "operations-cx-super-skill",
+            "postmortem",
+            "runbook"
+          ],
+          "name": "operator",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "code-style-spatie",
+            "cursor-pagination-design",
+            "database",
+            "dependency-injection",
+            "laravel",
+            "laravel-best-practices",
+            "laravel-structure",
+            "named-arguments",
+            "namespace-refactor-safety",
+            "pao",
+            "php-naming-conventions",
+            "php-patterns",
+            "php-upgrade-checklist",
+            "production-readiness-checklist",
+            "repositories",
+            "static-analysis",
+            "transactional-outbox-relay"
+          ],
+          "name": "php",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "laravel-package-compatibility",
+            "laravel-package-docs",
+            "laravel-package-expressive",
+            "laravel-package-generate-skill",
+            "laravel-package-release",
+            "laravel-package-scaffold",
+            "laravel-package-service-provider",
+            "laravel-package-testing",
+            "laravel-packages"
+          ],
+          "name": "php-packages",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "brd",
+            "business-process",
+            "go-to-market",
+            "monetization-design",
+            "pm-super-skill",
+            "pmf-diagnostics",
+            "prd-from-brd",
+            "product-roadmap",
+            "requirement-critic",
+            "unit-economics"
+          ],
+          "name": "pm",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "artifact-review",
+            "code-review",
+            "code-simplifier",
+            "diagnosing-bugs",
+            "mutation-testing",
+            "playwright-e2e",
+            "refactoring-plan",
+            "tdd-discipline",
+            "tech-debt-audit",
+            "test-strategy",
+            "testing-safety-report"
+          ],
+          "name": "quality",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "query-craft",
+            "research-knowledge-super-skill"
+          ],
+          "name": "research",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "open-source-maintainer",
+            "solo-founder",
+            "startup-cto",
+            "tech-lead"
+          ],
+          "name": "roles",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "sales-super-skill"
+          ],
+          "name": "sales",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "skm"
+          ],
+          "name": "skm",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "agent-packs",
+            "brain-locator",
+            "cross-project-coordinator",
+            "local-topology",
+            "session-observer",
+            "shared-memory",
+            "swissknifeman-locator"
+          ],
+          "name": "system",
+          "version": "0.4.0"
+        },
+        {
+          "enabled": true,
+          "identities": [
+            "task-design",
+            "task-dev",
+            "task-fix",
+            "task-make-workflow",
+            "task-plan-audit",
+            "task-plan-close",
+            "task-plan-design",
+            "task-plan-exec",
+            "task-plan-run",
+            "task-research",
+            "task-review"
+          ],
+          "name": "task",
+          "version": "0.3.0"
+        }
+      ]
+    }
+  },
+  "schema_version": "effective-runtime-before-state/v1"
+}

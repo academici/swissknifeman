@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 
 from .common import atomic_write_text, warn
-from .constants import CODE_GRAPH_DEFAULTS
+from .constants import CODE_GRAPH_DEFAULTS, SERENA_SCHEMA_FIELDS, SERENA_SRC
 
 SERENA_CONFIG = Path(".serena") / "project.yml"
 
@@ -90,14 +90,15 @@ def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True)
     """Полный валидный .serena/project.yml под текущую схему Serena.
     language: str | список str | None.
 
-    Serena `_from_dict` читает РЯД ключей без `.get()` (FIELDS_WITHOUT_DEFAULTS +
-    обязательные): language_servers, symbol_info_budget, ignored_paths, fixed_tools,
-    excluded_tools, included_optional_tools, read_only, ignore_all_files_in_gitignore,
-    initial_prompt, encoding, added_modes, default_modes — отсутствие ЛЮБОГО → KeyError
-    при загрузке (НЕ автодетект). Поэтому пишем ПОЛНЫЙ набор с дефолтами Serena, сохраняя
-    свои курированные ignored_paths/initial_prompt/language_servers. Дефолты сверены с
-    serena/resources/project.template.yml. `language_servers` всегда присутствует (пустой
-    список при нераспознанном языке — standalone-тип + пустой репо)."""
+    Serena `_from_dict` требует без `.get()` только `project_name`/`language_servers`
+    (FIELDS_WITHOUT_DEFAULTS пиннованной версии, constants.SERENA_SCHEMA_FIELDS) — остальные
+    ключи (symbol_info_budget, ignored_paths, fixed_tools, excluded_tools,
+    included_optional_tools, read_only, ignore_all_files_in_gitignore, initial_prompt,
+    encoding, added_modes, default_modes) имеют дефолты (`data.setdefault`) и их отсутствие
+    НЕ даёт KeyError. Полный набор печатаем сами — ради явности конфига, а не потому, что
+    апстрим этого требует. Дефолты сверены с serena/resources/project.template.yml.
+    `language_servers` всегда присутствует (пустой список при нераспознанном языке —
+    standalone-тип + пустой репо)."""
     langs = [language] if isinstance(language, str) else (language or [])
     lines = [f'project_name: "{name}"']
     if langs:
@@ -118,6 +119,75 @@ def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True)
               "symbol_info_budget:",
               f'initial_prompt: "{initial_prompt}"', ""]
     return "\n".join(lines)
+
+
+def _extract_pin(src):
+    """Форма пина `git+URL@REF` → REF (тег или полный SHA, D110 — обе легальны); None, если
+    источник не пиннован (нет '@' или пустой хвост)."""
+    if not src or "@" not in src:
+        return None
+    ref = src.rsplit("@", 1)[1]
+    return ref or None
+
+
+def _pin_from_args(args):
+    """REF из `--from <SRC>` в списке args serena-команды (args/index_args конфига)."""
+    for i, a in enumerate(args or []):
+        if a == "--from" and i + 1 < len(args):
+            return _extract_pin(args[i + 1])
+    return None
+
+
+def check_schema_connectivity(config):
+    """Гейт связности (D111, P5.4): версия Serena, на которую пиннуется флот
+    (`constants.SERENA_SRC` + `code_graph.args`/`index_args` конфига), обязана требовать ту же
+    схему `.serena/project.yml`, которую реально печатает `render_project_yaml`. Офлайновый и
+    детерминированный: сравнивает факты дерева (никакой сети, никакого uvx). НЕ чинит
+    расхождение — только называет его; решение (бампнуть пин или откатить шаблон) — за
+    владельцем (D111). Возвращает список человекочитаемых расхождений; пустой список — гейт
+    зелёный."""
+    st = settings(config)
+    issues = []
+
+    src_pin = _extract_pin(SERENA_SRC)
+    args_pin = _pin_from_args(st.get("args"))
+    index_pin = _pin_from_args(st.get("index_args"))
+
+    if src_pin is None:
+        issues.append(
+            f"пин отсутствует: constants.SERENA_SRC не содержит '@REF' ({SERENA_SRC!r})")
+    if st.get("args") and args_pin is None:
+        issues.append(
+            "пин отсутствует: code_graph.args конфига не содержит '@REF' в '--from'")
+    if st.get("index_args") and index_pin is None:
+        issues.append(
+            "пин отсутствует: code_graph.index_args конфига не содержит '@REF' в '--from'")
+
+    pins = {p for p in (src_pin, args_pin, index_pin) if p is not None}
+    if len(pins) > 1:
+        issues.append(
+            "пины разошлись: constants.SERENA_SRC={!r}, code_graph.args={!r}, "
+            "code_graph.index_args={!r} — правь оба места (constants.py и config.json) "
+            "одним швом".format(src_pin, args_pin, index_pin))
+
+    # Ключи берём из РЕАЛЬНОГО вывода рендерера (не из его копии здесь) — иначе гейт начал
+    # бы проверять свою копию правды, а не настоящую (Code Guidance «Анти-самообман», P5.4).
+    sample = render_project_yaml("_schema_probe", None, [], "", gitignore=True)
+    rendered_keys = {line.split(":", 1)[0].strip()
+                      for line in sample.splitlines()
+                      if line and not line[0].isspace() and ":" in line}
+    # Только НЕДОСТАЮЩИЕ обязательные ключи — расхождение; необязательные лишние ключи
+    # рендерера (напр. project_name) вне FIELDS_WITHOUT_DEFAULTS не считаются (Scope Excluded).
+    missing = set(SERENA_SCHEMA_FIELDS) - rendered_keys
+    if missing:
+        issues.append(
+            "схема разошлась: constants.SERENA_SCHEMA_FIELDS (ожидание пина {!r}) требует "
+            "{}, которых codegraph.render_project_yaml НЕ печатает (реально печатает {}) — "
+            "правь constants.py SERENA_SCHEMA_FIELDS или codegraph.py render_project_yaml, "
+            "пока оба места не совпадут".format(
+                SERENA_SRC, sorted(missing), sorted(rendered_keys)))
+
+    return issues
 
 
 def _maybe_pre_index(st, project, path):

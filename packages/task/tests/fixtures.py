@@ -13,7 +13,16 @@ if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
 
-def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done"):
+def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",
+            closure_protocol=None, decision_log_rows=None):
+    # `closure_protocol` (P8.1/D42) — opt-in Meta-поле `Closure Protocol`; None = строки нет
+    # вовсе (аддитивность: план без поля обязан линтоваться байт-в-байт как до P8.1).
+    closure_row = f"\n| Closure Protocol | {closure_protocol} |" if closure_protocol else ""
+    # `decision_log_rows` (P8.2/D103-D105, research/23 §4): D-лог параметризован, а не
+    # зашит одной строкой — гейт `Consequences` гоняет тесты на РАЗНОМ содержимом ячейки
+    # `Решение`/`Дата`; None = прежняя единственная строка (byte-compat с до-P8.2 фикстурой).
+    if decision_log_rows is None:
+        decision_log_rows = "| D1 | 2026-07-02 | тест | тест |"
     return f"""# {plan_id} — Демо-план
 
 ## 0. Meta
@@ -23,7 +32,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 | Plan ID | {plan_id} |
 | Title | Демо-план |
 | Version | 0.1.0 |
-| Status | {phase_status} |
+| Status | {phase_status} |{closure_row}
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
 | Last Updated | 2026-07-02 |
@@ -53,7 +62,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 | D# | Дата | Решение | Почему |
 |:--|:--|:--|:--|
-| D1 | 2026-07-02 | тест | тест |
+{decision_log_rows}
 
 ## 6. Update Log
 
@@ -65,7 +74,8 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
              completion_notes="сделано, тест зелёный", known_deviations="—",
-             escalation_needed="—", handoff_text="Фаза сдана: всё зелёное."):
+             escalation_needed="—", handoff_text="Фаза сдана: всё зелёное.",
+             updated="2026-07-02"):
     return f"""# {phase_id} — Фаза раз
 
 ## Phase Context
@@ -76,7 +86,7 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {item_id} | Валидация конфига | {item_status} | 2026-07-02 |
+| {item_id} | Валидация конфига | {item_status} | {updated} |
 
 ### {item_id} — Валидация конфига
 
@@ -187,6 +197,43 @@ def journal_jsonl(plan_id, *, item_id="P1.1"):
         "cost_usd": None, "num_turns": None, "duration_ms": None, "note": "тест",
     }
     return _json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
+
+
+def closure_json(plan_id, *, phase_id="P1", item_id="P1.1", item_status="🟢 Done",
+                 phase_status="🟢 Done", evidence_class="real",
+                 evidence="bash packages/task/scripts/validate.sh — exit 0 (на abc1234)"):
+    """closure/<Pn>.json (P8.1/D42) — отчёт закрытия фазы, схема v1 (research/11 §1).
+    Все ключи обязательны: «нет числа» выражается ЗНАЧЕНИЕМ (`baseline_pending` + причина),
+    а не отсутствием ключа."""
+    import json as _json
+    report = {
+        "schema_version": 1,
+        "plan": plan_id,
+        "phase": phase_id,
+        "closed_at": "2026-07-02",
+        "closed_by": {"command": "plan-close", "actor": "implementation/low"},
+        "phase_status": phase_status,
+        "git": {"head_sha": "0" * 40, "branch": "main", "dirty": False},
+        "inputs_sha256": {"plan.md": "1" * 64, f"phases/{phase_id}.md": "2" * 64},
+        "items": [{"id": item_id, "status": item_status,
+                   "evidence_class": evidence_class, "evidence": evidence}],
+        "gates": [{"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
+                   "evidence": "bash packages/task/scripts/validate.sh — exit 0 (на abc1234)"}],
+        "metrics": [{"name": "lint_new_from_closure", "value": "0", "label": "real"}],
+        "limitations": ["демо-фикстура, не полевой прогон"],
+        "external_side_effects": [],
+    }
+    return _json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+
+def write_closure(plan_dir, **kwargs):
+    """Кладёт closure/<Pn>.json рядом с планом (каталог создаётся)."""
+    plan_dir = Path(plan_dir)
+    phase_id = kwargs.get("phase_id", "P1")
+    (plan_dir / "closure").mkdir(parents=True, exist_ok=True)
+    path = plan_dir / "closure" / f"{phase_id}.json"
+    path.write_text(closure_json(plan_dir.name, **kwargs), encoding="utf-8")
+    return path
 
 
 def index_md(plan_id):

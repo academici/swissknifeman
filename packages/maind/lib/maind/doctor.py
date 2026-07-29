@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .common import parse_args
-from .memory import health, resolve_ports
+from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
 
 
 def provider_trust_report(env, config):
@@ -125,7 +125,7 @@ def _channel_hygiene_report(env, config, detail):
 
 def _fleet_context(env, config):
     """Флот-агрегация футпринта первого хода: цикл по registered-проектам → subprocess
-    `skiller budget --first-turn --target <path> --json` (P5.1) — токен-математика
+    `skiller budget --first-turn --target <path> --json` (2026.07.12-CONTEXT-ECONOMY P5.1) — токен-математика
     остаётся ЕДИНСТВЕННО в skiller, maind только потребляет готовый JSON (без дубля,
     без кросс-импортов — паттерн doctor --audit settings, D10). Fail-soft: недоступный
     skiller / сломанный вывод / отсутствующий local_path на проект → context='n/a',
@@ -280,13 +280,25 @@ def cmd_doctor(env, argv):
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))
         _channel_hygiene_report(env, config, detail=opts.get("channel_drift"))
+        from .codegraph import check_schema_connectivity
+        schema_issues = check_schema_connectivity(config)
+        check(not schema_issues, "пин Serena/схема .serena/project.yml связны",
+              "; ".join(schema_issues))
 
     # порты памяти — на разрешённых портах (env/конфиг), информативно
     if not quiet:
         http_port, stream_port, url = resolve_ports(env, config)
         up = health(url)
-        print(f"  [info] память {url} — "
-              + ("отвечает" if up else "не запущена (maind start --only memory)"))
+        if not up:
+            print(f"  [info] память {url} — не запущена (maind start --only memory)")
+        else:
+            # /agentmemory/health ВСЕГДА публичен (даже с секретом) — «отвечает» не значит
+            # «наши вызовы авторизованы»; различаем явным протектед-пробником (findings §2).
+            headers = auth_headers(resolve_secret(env, config)) if config else None
+            auth = check_auth(url, headers) if headers else None
+            detail = "отвечает, но неавторизован (401) — проверьте memory.secret_file/AGENTMEMORY_SECRET" \
+                if auth is False else "отвечает"
+            print(f"  [info] память {url} — {detail}")
         print(f"  [info] порты: http :{http_port}, stream :{stream_port} "
               "(override через .env AGENTMEMORY_PORT/STREAM_PORT)")
 

@@ -10,9 +10,10 @@ harness hooks --global [--dry-run]
 
 По проекту (включить режимы — файлы хуков должны быть уже установлены глобально):
 ```
-harness hooks --target . [--auto-approve strict|permissive|bypass|off] [--memory core:federation] [--file settings.json] [--dry-run]
+harness hooks --target . [--auto-approve strict|permissive|bypass|off] [--memory core:federation] [--statusline context|off] [--file settings.json] [--dry-run]
 ```
 - `--auto-approve` пишет `.claude/auto-approve.env.ini` и регистрирует хук на Bash/ExitPlanMode (merge-only).
 - `--memory BRAIN:MODE` присоединяет проект к мозгу: `.swissknife.json:memory_brain` + `.claude/memory.env.ini`.
+- `--statusline context` ставит ключ `statusLine` в `.claude/settings.local.json` — строка с процентом контекста + ОС-уведомление на пересечении порога (`off` снимает, но только наш ключ).
 
 Разбери намерение из «$ARGUMENTS»; для bypass-режима предупреди, что он снимает подтверждения (только для контейнеров/VM).

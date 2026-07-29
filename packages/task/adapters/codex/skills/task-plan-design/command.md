@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:27f9e582fa808fd8e8654acb3ac14d1dd0266fd1f6364819d24eb35a9e868922
+Canonical SHA-256: sha256:752227b36b3f0d121f328eea01fa5a1e82aa05ed607e652d20048fdc76e91bf7
 Adapter: task.codex-command/1.0.3
 -->
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -131,6 +131,12 @@ Adapter: task.codex-command/1.0.3
    переопределяет Routing §3) → строка Update Log. Если с последнего `finish`/`audit design`
    менялись КОНТРАКТЫ фаз (не только статусы) — предупреди владельца, что нужен новый
    `finish`, а не только пересборка карты.
+
+**Compiler (P2.2).** `§3 Routing`, портируемость (D26/D47) и precedence/conflict-разрешение
+компилируются одним модулем — `packages/task/lib/task/task_contract.py`
+(`root/contracts/task-contract-v1.md`, `root/contracts/plan-portability-v1.md`). Пишешь
+здесь Routing/tier-признаки item'а — не пересказывай сами предикаты второй прозой; их
+владелец компилятор, эта команда только производит вход для него.
 
 ## Схема (компактная выжимка — на случай отсутствия скилла)
 

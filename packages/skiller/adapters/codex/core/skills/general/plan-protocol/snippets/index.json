@@ -83,6 +83,16 @@
         "planning",
         "template"
       ]
+    },
+    {
+      "file": "closure-template.md",
+      "description": "Скелет plans/<ID>/closure/<Pn>.json (P8.1, opt-in `Closure Protocol | v1`): схема v1 отчёта закрытия фазы, правила заполнения, enum классов свидетельства",
+      "tags": [
+        "workflow",
+        "planning",
+        "closure",
+        "template"
+      ]
     }
   ]
 }

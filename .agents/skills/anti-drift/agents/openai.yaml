@@ -1,4 +1,0 @@
-interface:
-  display_name: "Anti Drift"
-  short_description: "Защита от scope drift и лишней сложности"
-  default_prompt: "Use $anti-drift to keep this change focused and surgical."

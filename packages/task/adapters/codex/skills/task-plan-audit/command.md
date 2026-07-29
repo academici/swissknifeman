@@ -1,10 +1,21 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:e98d0c1937a2895f396b3bea4d70c51764a83f08c799188fcf144351a02df1ba
+Canonical SHA-256: sha256:541ffc9dd5b7fca94a55681460b7ba00099d0b7c8a0a6341ff7c31e033b52e9e
 Adapter: task.codex-command/1.0.3
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
+
+**Compiler (P2.7/P2.11).** `task:plan-exec`'s Pre-mutation (шаг 2) И Pre-final (шаг 7, штатный
+путь самозакрытия) — а для item'ов, закрытых реконсиляцией, `task:plan-close`'s Pre-final (шаг
+4) — ИСПОЛНЯЕМЫЕ write-site (не проза): каждый закрытый item обязан нести в Completion Notes
+напечатанные результаты ОБЕИХ границ (`pre_mutation` И `pre_final` коды) — читай ИХ как источник
+истины предиката, не пересчитывай вручную вторым способом. Гейт закрытия бинарен
+(`pre_mutation == "allow" and pre_final == "allow"`, D76): `n/a` НЕ зелёное — item со статусом
+`🟢`/`🟠`, чьи напечатанные коды не оба `allow`, = находка Major (status-rule обманут). `pre_final`
+утверждает свойство ФОРМЫ спеки, не качество исполнения (D77) — не путай это со status-rule
+material/process ниже. `plan_lint.py`'s tiered-portability находки — та же дисциплина
+(`plan-portability-v1.md`, D47).
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,
@@ -33,7 +44,17 @@ Adapter: task.codex-command/1.0.3
 Остальные пункты ниже (git-сверка, no-op, Completion Notes) относятся к режиму `Pn` — в
 `design` их пропусти.
 
-1. **Две ступени — дешёвая ПЕРЕД дорогой.** Сперва **конфликт-скан** (детерминированный):
+1. **Две ступени — дешёвая ПЕРЕД дорогой.** **ПЕРВЫЙ вход ступени 1** (режим `Pn`, если план
+   несёт `## 0. Meta` → `Closure Protocol | v1`) — отчёт закрытия `plans/<PLAN-ID>/closure/<Pn>.json`
+   (P8.1/D42, схема — `snippets/closure-template.md` канона): читаешь его ДО грепов и чтения прозы.
+   Что он даёт: (а) `evidence`/`evidence_class` каждого item'а и гейта — команды перепрогоняются
+   ТОБОЙ на `git.head_sha` отчёта, расхождение с заявленным классом (`real` там, где прогон не
+   воспроизводится, либо `synthetic`, выданный за результат) = находка **Major**; (б)
+   `inputs_sha256["phases/<Pn>.md"]` ≠ фактическому хешу файла сейчас ⇒ **ТЗ фазы правился после
+   закрытия** — проверь, не съехал ли scope (`git log -p` по файлу фазы после `closed_at`); (в)
+   `limitations[]`/`external_side_effects[]` — заявленные границы сдачи, сверяются с Completion
+   Notes. Отчёта нет при включённом протоколе — это ERROR линтера, не твоя находка; протокол не
+   включён — пункт пропускается, ступень 1 идёт как ниже. Затем — **конфликт-скан** (детерминированный):
    `validate.sh` затронутых пакетов · тесты линтера · `check-translations.sh` (фаза правила скилл) ·
    `plan-lint plans/<PLAN-ID> --baseline <sha до фазы>` · сверка enum'ов и литералов между SSOT (канон ↔
    EN-копия ↔ `plan_lint.py`): механический класс (противоречие правил, слип перевода, дыра гейта) даёт
@@ -66,6 +87,14 @@ Adapter: task.codex-command/1.0.3
    - **Validation реально прогнана**: КАЖДЫЙ пункт поля `Validation` закрытого item'а прогоняешь сам НА
      ЗАКОММИЧЕННОМ дереве item'а (`git show <ref>:<файл>`), а не на веру и не на дереве момента аудита;
      расхождение с заявленным = находка; item, закрытый `🟢` БЕЗ отчёта по своей Validation, = находка;
+   - **write-site реально исполнен (P2.7/P2.11, F1-дисциплина)**: item, закрытый ПОСЛЕ P2.7
+     (командные тела несут исполняемый Pre-mutation/Pre-final), без напечатанных `pre_mutation`
+     И `pre_final` кодов ОБЕИХ границ в Completion Notes = находка (общая фраза «контракт
+     скомпилирован» без результата — ссылка на модуль, не доказательство, ровно F1); проверь код
+     сам на закоммиченном item'е тем же вызовом, что несёт `plan-exec.md`/`plan-close.md`, с
+     маршрутом ИСПОЛНИТЕЛЯ (D75), не своим пином `frontier/xhigh`; **item `🟢`/`🟠` с напечатанным
+     кодом ≠ `allow` на любой из границ (включая `pre_final: n/a`) = находка Major** (D76: `n/a` не
+     зелёное, закрытие на нём — рецидив F1);
    - **status-rule** (§6): item `🟢` с непустыми Known Deviations — сверь по предикату **material** (Scope
      выполнен не полностью/иначе · Validation осталась красной · затронут public contract / SemVer сверх
      ТЗ · acceptance не выполнен · workaround ЖИВЁТ В КОДЕ · item-коммит несёт дифф вне `Files`): material

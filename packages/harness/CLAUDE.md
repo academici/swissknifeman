@@ -23,7 +23,32 @@
   (fail-closed: shlex-argv, realpath, containment, защита .git/корня; project-override
   конфига хука на allowlist НЕ влияет).
 - `hooks/memory/` — единая память (file/federation/agentmemory).
+- `hooks/review-gate/` — гейт архитектуры на `SubagentStop`. Содержание — `checks/`
+  (диспетчер `run-checks.sh` + по файлу на класс проверки, везёт harness);
+  `config.json` (machine-owned) объявляет ТОЛЬКО набор и per-check режим
+  (`strict`/`warn`), `check_command` — одна стабильная строка-вызов диспетчера.
+  Глобальный `MODE` (`env.ini`) может ПОНИЗИТЬ strict-класс до warn, не наоборот;
+  защита от петли — счётчик диспетчера по (сессия, агент, проверка). Три состояния
+  в `harness doctor` вместо тихого no-op. Проверки: `generated-assets` (strict) ·
+  `plan-lint` (strict) · `tests-touched` (warn) · `plan-citations` (warn — гейт
+  цитат `plans/verify-citations.py --strict` по задетым планам, режим апгрейдится
+  на strict по факту чистоты дерева, P11.7).
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
+- **`statusline/`** — строка статуса Claude Code с фактическим процентом контекста
+  (`context_window.used_percentage` — поле получает ТОЛЬКО statusline, ни одно hook-событие)
+  + ОС-уведомление на ПЕРЕСЕЧЕНИИ полосы порога (дефолт `80,90`, кулдаун, состояние на сессию
+  атомарно в `$XDG_RUNTIME_DIR/claude-statusline/`). Доставка переиспользует `hooks/notify/`,
+  вызов отсоединён (`setsid`): рантайм отменяет statusline-скрипт на середине. Не тратит
+  контекст-токенов; цена — латентность (ровно один внешний вызов `jq` на рендер). Файлы —
+  ветка `--global`, включение opt-in per-project: `harness hooks --statusline context|off`
+  (ключ в `settings.local.json` — машинно-локальная преференция, как `outputStyle`).
+- **`configs/common/agent-packs/review-roles.json`** — реестр ролей ревью как данные (L2):
+  extension-таблица по ключу `(pack_id, role_id)` рядом с каноном `configs/common/agent-packs/
+  roles.json`; индексирует пять reviewer-ролей (projection/overrides/required_sections/
+  sections/dimensions), НЕ копирует правила и НЕ трогает `role-bindings.json`/`agentpacks.py`
+  (frozen provider-contract, D126). Валидатор `lib/harness/reviewroles.py`
+  (stdlib, восемь проверок) — шаг `[8/8]` в `scripts/validate.sh`; единственная точка
+  принуждения.
 - `hooks/agent-router/` — **intent-router** (первый Python-хук репо): пара `session-policy.py`
   (SessionStart — статическая политика) + `router.py` (UserPromptSubmit — keyword-подсказка) роутит
   свободный текст к оптимальной `/task:*`/агенту/скиллу. Каталог генерит `harness router --generate`.
@@ -68,7 +93,7 @@
 harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
-harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean --plans-dir plans
+harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean --plans-dir plans --statusline context
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py

@@ -1,0 +1,2686 @@
+{
+  "schema_version": "p1.4-effective-carrier-set/v1",
+  "measured_at_commit": "953fcb158e186edc2a3fca130c1cef70efadae1b",
+  "providers": {
+    "codex": {
+      "fixture_unit_set": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.4/fixture-unit-set.json",
+      "identities": [
+        {
+          "identity": "adversarial-check",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "agent-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "agent-packs",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "agent-security-super-skill",
+          "carriers": [
+            "unit:security"
+          ]
+        },
+        {
+          "identity": "ai-agents",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "antfu",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "anti-drift",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "api-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "architecture",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "artifact-review",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "attribute-authorization",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "axioma-doctrine",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "axioma-glossary",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "axioma-stack",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "azguard",
+          "carriers": [
+            "unit:azguard"
+          ]
+        },
+        {
+          "identity": "backend-type-sync",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "botkit",
+          "carriers": [
+            "unit:botkit"
+          ]
+        },
+        {
+          "identity": "brain-locator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "brd",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "build-loop",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "business-process",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "capacity-planning",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "ci-cd",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "code-review",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "code-simplifier",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "code-style-spatie",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "codebase-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "compact-responses",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "competitive-analysis",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "config-conventions",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "config-driven-abstraction",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "content-creative-super-skill",
+          "carriers": [
+            "unit:creative"
+          ]
+        },
+        {
+          "identity": "context-economy",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "cross-project-coordinator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "cross-project-optimizer",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "cursor-pagination-design",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "customer-discovery",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "dark-mode",
+          "carriers": [
+            "unit:frontend-tailwind"
+          ]
+        },
+        {
+          "identity": "data-schema",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "database",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "db-test-preflight",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "decision-verification",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "defensibility",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "dependency-injection",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "dev-engineering-super-skill",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "diagnosing-bugs",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "docker",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-dev-prod",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-php",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-postgres",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-services",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-vite",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docs-maintenance",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "document-writer",
+          "carriers": [
+            "unit:frontend"
+          ]
+        },
+        {
+          "identity": "domain-modeling",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "ecosystem-integration",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "ecosystem-map",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "ecosystem-mcp",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "ecosystem-reuse-gate",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "ecosystem-setup",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "eloquent-accessors",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "enum-attributes",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "enum-state-machine",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "eslint-flat-config",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "eval-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "field-feedback-loop",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "figma-mcp-core",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "figma-to-flutter",
+          "carriers": [
+            "unit:mobile"
+          ]
+        },
+        {
+          "identity": "figma-to-vue",
+          "carriers": [
+            "unit:frontend-figma"
+          ]
+        },
+        {
+          "identity": "filament",
+          "carriers": [
+            "unit:laravel-filament"
+          ]
+        },
+        {
+          "identity": "filepond-upload",
+          "carriers": [
+            "unit:frontend"
+          ]
+        },
+        {
+          "identity": "finance-super-skill",
+          "carriers": [
+            "unit:finance"
+          ]
+        },
+        {
+          "identity": "gh-review",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "gitops",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "go-to-market",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "harness-operations",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "health-checks",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "idea-audit",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "idea-discovery",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "incident-response",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "inertia-vue",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "js-code-style",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "laravel",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-best-practices",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-broadcasting",
+          "carriers": [
+            "unit:laravel-data-layer"
+          ]
+        },
+        {
+          "identity": "laravel-data",
+          "carriers": [
+            "unit:laravel-data-layer"
+          ]
+        },
+        {
+          "identity": "laravel-dusk",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "laravel-echo-client",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "laravel-package-compatibility",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-docs",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-expressive",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-generate-skill",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-release",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-scaffold",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-service-provider",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-testing",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-packages",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-permissions",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "laravel-security-audit",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "laravel-structure",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-subagents",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "laravel-testing",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "legal-compliance",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "legal-super-skill",
+          "carriers": [
+            "unit:legal"
+          ]
+        },
+        {
+          "identity": "livewire-blade-attributes",
+          "carriers": [
+            "unit:laravel-livewire"
+          ]
+        },
+        {
+          "identity": "local-topology",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "maind-overview",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "makefile",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "marketing-super-skill",
+          "carriers": [
+            "unit:marketing"
+          ]
+        },
+        {
+          "identity": "mcp-advisor",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "mcp-blender",
+          "carriers": [
+            "unit:blender"
+          ]
+        },
+        {
+          "identity": "mcp-builder",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "medialibrary",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "ml-project-structure",
+          "carriers": [
+            "unit:python"
+          ]
+        },
+        {
+          "identity": "model-rules",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "modular-architecture",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "monetization-design",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "motion",
+          "carriers": [
+            "unit:frontend-animations"
+          ]
+        },
+        {
+          "identity": "mutation-testing",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "naive-ui-theming",
+          "carriers": [
+            "unit:frontend-naive-ui"
+          ]
+        },
+        {
+          "identity": "named-arguments",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "namespace-refactor-safety",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "new-project",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "node-pnpm-preflight",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "nuxt",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "nuxt-modules",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "nuxt-seo",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "observability-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "oncall-rotation",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "open-source-maintainer",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "operations-cx-super-skill",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "package-architecture",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "package-contribution-protocol",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "pao",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "parametric-config",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "pennant-development",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "php-naming-conventions",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "php-patterns",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "php-upgrade-checklist",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "pinia",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "pinia-stores",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "pitch-deck",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "plan-protocol",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "playwright-e2e",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "pm-super-skill",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "pmf-diagnostics",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "postmortem",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "prd-from-brd",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "product-roadmap",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "production-readiness-checklist",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "project-tooling-runbook",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "query-craft",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "refactoring-plan",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "reka-ui-cva",
+          "carriers": [
+            "unit:frontend-reka"
+          ]
+        },
+        {
+          "identity": "release-discipline",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "repositories",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "requirement-critic",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "risk-assessment",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "runbook",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "sales-super-skill",
+          "carriers": [
+            "unit:sales"
+          ]
+        },
+        {
+          "identity": "scene-conventions",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "security-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "session-handoff",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "session-observer",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "shared-memory",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "skill-authoring",
+          "carriers": [
+            "root:codex"
+          ]
+        },
+        {
+          "identity": "solo-founder",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "spatie-settings",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "startup-cto",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "startup-lifecycle",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "static-analysis",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "swissknifeman-locator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "tailwind-conventions",
+          "carriers": [
+            "unit:frontend-tailwind"
+          ]
+        },
+        {
+          "identity": "task-design",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-dev",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-fix",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-make-workflow",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-plan-audit",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-plan-close",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-plan-design",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-plan-exec",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-plan-run",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-research",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "task-review",
+          "carriers": [
+            "unit:task"
+          ]
+        },
+        {
+          "identity": "tdd-discipline",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "tech-debt-audit",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "tech-lead",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "tech-stack-selection",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "test-isolation-guard",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "test-strategy",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "testing-safety-report",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "threading",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "token-efficient",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "transactional-outbox-relay",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "ts-library",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "unit-economics",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "venv-dependencies",
+          "carriers": [
+            "unit:python"
+          ]
+        },
+        {
+          "identity": "verify-claims",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "version-gotchas",
+          "carriers": [
+            "unit:blender"
+          ]
+        },
+        {
+          "identity": "vite",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vite-module-loader",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vite-multi-build",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vitepress",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vitest",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vitest-vue",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "voice-ai",
+          "carriers": [
+            "unit:voice-ai"
+          ]
+        },
+        {
+          "identity": "vue",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-composition-api",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-dynamic-icons",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-router-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-testing-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vueuse-functions",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "wayfinder",
+          "carriers": [
+            "unit:frontend-wayfinder"
+          ]
+        },
+        {
+          "identity": "web-design-guidelines",
+          "carriers": [
+            "unit:frontend"
+          ]
+        },
+        {
+          "identity": "workflow-craft",
+          "carriers": [
+            "root:codex"
+          ]
+        }
+      ]
+    },
+    "claude-code": {
+      "fixture_unit_set": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.4/fixture-unit-set.json",
+      "identities": [
+        {
+          "identity": "adversarial-check",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "agent-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "agent-packs",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "agent-security-super-skill",
+          "carriers": [
+            "unit:security"
+          ]
+        },
+        {
+          "identity": "ai-agents",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "antfu",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "anti-drift",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "api-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "architecture",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "artifact-review",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "attribute-authorization",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "axioma-doctrine",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "axioma-glossary",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "axioma-stack",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "azguard",
+          "carriers": [
+            "unit:azguard"
+          ]
+        },
+        {
+          "identity": "backend-type-sync",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "botkit",
+          "carriers": [
+            "unit:botkit"
+          ]
+        },
+        {
+          "identity": "brain-locator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "brd",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "build-loop",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "business-process",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "capacity-planning",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "ci-cd",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "code-review",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "code-simplifier",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "code-style-spatie",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "codebase-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "compact-responses",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "competitive-analysis",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "config-conventions",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "config-driven-abstraction",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "content-creative-super-skill",
+          "carriers": [
+            "unit:creative"
+          ]
+        },
+        {
+          "identity": "context-economy",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "cross-project-coordinator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "cross-project-optimizer",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "cursor-pagination-design",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "customer-discovery",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "dark-mode",
+          "carriers": [
+            "unit:frontend-tailwind"
+          ]
+        },
+        {
+          "identity": "data-schema",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "database",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "db-test-preflight",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "decision-verification",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "defensibility",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "dependency-injection",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "dev-engineering-super-skill",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "diagnosing-bugs",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "docker",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-dev-prod",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-php",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-postgres",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-services",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docker-vite",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "docs-maintenance",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "document-writer",
+          "carriers": [
+            "unit:frontend"
+          ]
+        },
+        {
+          "identity": "domain-modeling",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "ecosystem-integration",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "ecosystem-map",
+          "carriers": [
+            "unit:axioma"
+          ]
+        },
+        {
+          "identity": "ecosystem-mcp",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "ecosystem-reuse-gate",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "ecosystem-setup",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "eloquent-accessors",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "enum-attributes",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "enum-state-machine",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "eslint-flat-config",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "eval-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "field-feedback-loop",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "figma-mcp-core",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "figma-to-flutter",
+          "carriers": [
+            "unit:mobile"
+          ]
+        },
+        {
+          "identity": "figma-to-vue",
+          "carriers": [
+            "unit:frontend-figma"
+          ]
+        },
+        {
+          "identity": "filament",
+          "carriers": [
+            "unit:laravel-filament"
+          ]
+        },
+        {
+          "identity": "filepond-upload",
+          "carriers": [
+            "unit:frontend"
+          ]
+        },
+        {
+          "identity": "finance-super-skill",
+          "carriers": [
+            "unit:finance"
+          ]
+        },
+        {
+          "identity": "gh-review",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "gitops",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "go-to-market",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "harness-operations",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "health-checks",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "idea-audit",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "idea-discovery",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "incident-response",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "inertia-vue",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "js-code-style",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "laravel",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-best-practices",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-broadcasting",
+          "carriers": [
+            "unit:laravel-data-layer"
+          ]
+        },
+        {
+          "identity": "laravel-data",
+          "carriers": [
+            "unit:laravel-data-layer"
+          ]
+        },
+        {
+          "identity": "laravel-dusk",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "laravel-echo-client",
+          "carriers": [
+            "unit:frontend-backend"
+          ]
+        },
+        {
+          "identity": "laravel-package-compatibility",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-docs",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-expressive",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-generate-skill",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-release",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-scaffold",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-service-provider",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-package-testing",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-packages",
+          "carriers": [
+            "unit:php-packages"
+          ]
+        },
+        {
+          "identity": "laravel-permissions",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "laravel-security-audit",
+          "carriers": [
+            "unit:laravel-auth"
+          ]
+        },
+        {
+          "identity": "laravel-structure",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "laravel-subagents",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "laravel-testing",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "legal-compliance",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "legal-super-skill",
+          "carriers": [
+            "unit:legal"
+          ]
+        },
+        {
+          "identity": "livewire-blade-attributes",
+          "carriers": [
+            "unit:laravel-livewire"
+          ]
+        },
+        {
+          "identity": "local-topology",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "maind-overview",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "makefile",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "marketing-super-skill",
+          "carriers": [
+            "unit:marketing"
+          ]
+        },
+        {
+          "identity": "mcp-advisor",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "mcp-blender",
+          "carriers": [
+            "unit:blender"
+          ]
+        },
+        {
+          "identity": "mcp-builder",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "medialibrary",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "ml-project-structure",
+          "carriers": [
+            "unit:python"
+          ]
+        },
+        {
+          "identity": "model-rules",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "modular-architecture",
+          "carriers": [
+            "unit:laravel-architecture"
+          ]
+        },
+        {
+          "identity": "monetization-design",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "motion",
+          "carriers": [
+            "unit:frontend-animations"
+          ]
+        },
+        {
+          "identity": "mutation-testing",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "naive-ui-theming",
+          "carriers": [
+            "unit:frontend-naive-ui"
+          ]
+        },
+        {
+          "identity": "named-arguments",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "namespace-refactor-safety",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "new-project",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "node-pnpm-preflight",
+          "carriers": [
+            "unit:devops"
+          ]
+        },
+        {
+          "identity": "nuxt",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "nuxt-modules",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "nuxt-seo",
+          "carriers": [
+            "unit:frontend-nuxt"
+          ]
+        },
+        {
+          "identity": "observability-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "oncall-rotation",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "open-source-maintainer",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "operations-cx-super-skill",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "package-architecture",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "package-contribution-protocol",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "pao",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "parametric-config",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "pennant-development",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "php-naming-conventions",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "php-patterns",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "php-upgrade-checklist",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "pinia",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "pinia-stores",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "pitch-deck",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "plan-protocol",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "playwright-e2e",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "pm-super-skill",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "pmf-diagnostics",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "postmortem",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "prd-from-brd",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "product-roadmap",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "production-readiness-checklist",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "project-tooling-runbook",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "query-craft",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "refactoring-plan",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "reka-ui-cva",
+          "carriers": [
+            "unit:frontend-reka"
+          ]
+        },
+        {
+          "identity": "release-discipline",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "repositories",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "requirement-critic",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "risk-assessment",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "runbook",
+          "carriers": [
+            "unit:operator"
+          ]
+        },
+        {
+          "identity": "sales-super-skill",
+          "carriers": [
+            "unit:sales"
+          ]
+        },
+        {
+          "identity": "scene-conventions",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "security-design",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "session-handoff",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "session-observer",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "shared-memory",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "skill-authoring",
+          "carriers": [
+            "root:claude-code"
+          ]
+        },
+        {
+          "identity": "solo-founder",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "spatie-settings",
+          "carriers": [
+            "unit:laravel-extras"
+          ]
+        },
+        {
+          "identity": "startup-cto",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "startup-lifecycle",
+          "carriers": [
+            "unit:founder"
+          ]
+        },
+        {
+          "identity": "static-analysis",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "swissknifeman-locator",
+          "carriers": [
+            "unit:system"
+          ]
+        },
+        {
+          "identity": "tailwind-conventions",
+          "carriers": [
+            "unit:frontend-tailwind"
+          ]
+        },
+        {
+          "identity": "tdd-discipline",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "tech-debt-audit",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "tech-lead",
+          "carriers": [
+            "unit:roles"
+          ]
+        },
+        {
+          "identity": "tech-stack-selection",
+          "carriers": [
+            "unit:architect"
+          ]
+        },
+        {
+          "identity": "test-isolation-guard",
+          "carriers": [
+            "unit:laravel-testing"
+          ]
+        },
+        {
+          "identity": "test-strategy",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "testing-safety-report",
+          "carriers": [
+            "unit:quality"
+          ]
+        },
+        {
+          "identity": "threading",
+          "carriers": [
+            "unit:blender-modeling"
+          ]
+        },
+        {
+          "identity": "token-efficient",
+          "carriers": [
+            "unit:ai"
+          ]
+        },
+        {
+          "identity": "transactional-outbox-relay",
+          "carriers": [
+            "unit:php"
+          ]
+        },
+        {
+          "identity": "ts-library",
+          "carriers": [
+            "unit:frontend-linting"
+          ]
+        },
+        {
+          "identity": "unit-economics",
+          "carriers": [
+            "unit:pm"
+          ]
+        },
+        {
+          "identity": "venv-dependencies",
+          "carriers": [
+            "unit:python"
+          ]
+        },
+        {
+          "identity": "verify-claims",
+          "carriers": [
+            "unit:core"
+          ]
+        },
+        {
+          "identity": "version-gotchas",
+          "carriers": [
+            "unit:blender"
+          ]
+        },
+        {
+          "identity": "vite",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vite-module-loader",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vite-multi-build",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vitepress",
+          "carriers": [
+            "unit:frontend-vite"
+          ]
+        },
+        {
+          "identity": "vitest",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vitest-vue",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "voice-ai",
+          "carriers": [
+            "unit:voice-ai"
+          ]
+        },
+        {
+          "identity": "vue",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-composition-api",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-dynamic-icons",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-router-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vue-testing-best-practices",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "vueuse-functions",
+          "carriers": [
+            "unit:frontend-vue"
+          ]
+        },
+        {
+          "identity": "wayfinder",
+          "carriers": [
+            "unit:frontend-wayfinder"
+          ]
+        },
+        {
+          "identity": "web-design-guidelines",
+          "carriers": [
+            "unit:frontend"
+          ]
+        }
+      ]
+    }
+  },
+  "remediation_reconciliation": {
+    "source": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/remediation-map.json",
+    "records": [
+      {
+        "identity": "anti-drift",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "compact-responses",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "context-economy",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "gh-review",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "mcp-advisor",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "plan-protocol",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "query-craft",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "session-handoff",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "verify-claims",
+        "provider": "claude-code",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "anti-drift",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "architecture",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "codebase-design",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "compact-responses",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "context-economy",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "domain-modeling",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "gh-review",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "mcp-advisor",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "package-contribution-protocol",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "plan-protocol",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "query-craft",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "session-handoff",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "task-design",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "task-plan-audit",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "task-plan-close",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "task-plan-design",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "task-plan-exec",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "task-plan-run",
+        "provider": "codex",
+        "outcome": "resolved"
+      },
+      {
+        "identity": "verify-claims",
+        "provider": "codex",
+        "outcome": "still-measured"
+      },
+      {
+        "identity": "workflow-craft",
+        "provider": "codex",
+        "outcome": "resolved"
+      }
+    ]
+  }
+}

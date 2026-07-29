@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P8",
+  "closed_at": "2026-07-27",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "e877fc78d5459ebc068b4602959bd50d527048d5", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "8245f024e6172affc7705cb914584c89541700ecb287e3e999351ff427471e95",
+    "phases/P8.md": "a8a1939f30cfe1c9aaa26657876adef8072716deef9e7fc4f455a3406d5580f3"
+  },
+  "items": [
+    {"id": "P8.1", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "closure/<Pn>.json схема v1 (opt-in Closure Protocol | v1) + пять проверок plan_lint.py + шаг-писатель plan-close/шаг-потребитель plan-audit — item-коммит 5f5dfa73 (29 файлов); validate.sh Ran 430 tests OK, plan-lint 0 новых ERROR"},
+    {"id": "P8.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "гейт _lint_consequences_82 + CONSEQUENCES_CANON_DATE (forward-only, измеренный предикат негативного lookbehind) + словарь зрелости §6 канона — bookkeeping 2a6cbb3d/9950eaa0; validate.sh 475 unittest OK, 7 новых тестов зелёные, check-translations --strict зелёный"},
+    {"id": "P8.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "гейт _lint_checkpointed_83 (Возобновление: <команда> в Pending Work на 🔴/⛔) — item-коммит c36bbee5; validate.sh 446 тестов OK, 9 новых тестов зелёные, plan-lint 0 новых ERROR на живых планах"},
+    {"id": "P8.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "scripts/docs-impact.py + scripts/test-docs-impact.py + .github/workflows/hygiene.yml — item-коммит 5b7cc15e; test-docs-impact.py 10 кейсов OK, docs-impact.py --base HEAD~1 --head HEAD код 0, дельта 8/12 PR совпала с зондом"},
+    {"id": "P8.5", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "docs/status.md (21 строка матрицы) + scripts/status-check.py + шаг hygiene + nav — item-коммит d12ccaf7; test-status-check.py 6/6 OK, status-check.py код 0 «21 строк(и), 0 ошибок»"},
+    {"id": "P8.6", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "scripts/public-hygiene.py + scripts/verify-tag.py + job release-tag — item-коммит 12ff61e1; 6/6 OK каждый тест; public-hygiene.py на дереве код 1 (единственное нарушение — артефакт P5.1 вне Files item'а, допустимо по Validation спеки)"},
+    {"id": "P8.7", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "assert_safe_replace_target(path) в core/io.py — item-коммит fa1ee8bf; core/tests 244/244 OK, регресс skiller/harness/task зелёные, maind 2 пред-существующих FAIL (P3.2/P5.3, io.py не в traceback)"},
+    {"id": "P8.8", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "три проверки в heredoc validate.sh (CORE-секции+рэтчет, анти-дублирование проекций, полнота pressure/triggers) — item-коммит 4ee3ba6d; 230 skills checked all valid, 5 негативных прогонов на tmpdir-копии дали ожидаемые ERROR"},
+    {"id": "P8.9", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "детерминизм benchmark.json (Fraction, инжектируемые часы, provenance, schema_version: skill-benchmark/v2) — item-коммит 980ce398; skiller test.sh Ran 491 tests OK (9 новых), no-op офлайн подтверждён"},
+    {"id": "P8.10", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "закрытый набор форм ячейки Items §3 Routing в каноне §9 + диагностичный отказ task_contract._find_routing_row — item-коммит a020f434; validate.sh Ran 450 tests OK, plan-lint OK (14 планов, 0 ошибок), test_task_contract 72/72 OK (+4 новых)"}
+  ],
+  "gates": [
+    {"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/task/scripts/validate.sh (на закрытии фазы, после правки plan.md/phases/P8.md/closure/P8.json) → plan-lint: OK (14 план(ов), 0 ошибок, 219 предупреждений); validate: OK"},
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh (на закрытии) — см. вывод ниже в phases/P8.md P8.9/P8.10 Completion Notes: 230 skills checked all valid, registry --check артефакты актуальны"},
+    {"id": "validate.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/validate.sh (регресс, прогнан P8.7) — validate: OK, exit 0"},
+    {"id": "validate.sh:maind", "status": "FAIL", "evidence_class": "real",
+     "evidence": "bash packages/maind/scripts/test.sh -v (регресс, прогнан P8.7) — Ran 504 tests, FAILED (failures=2): test_local_skills_reference_on_demand_model (P3.2, пред-существующий) + test_d108_inventory_uses_configured_server_names_without_changing_bindings (P5.3, пред-существующий) — оба вне Files P8, io.py не в traceback, названы в Known Deviations прежних фаз (P5/P10 closure)"},
+    {"id": "core.tests", "status": "PASS", "evidence_class": "real",
+     "evidence": "PYTHONPATH=. python3 -m unittest discover -s core/tests -v (прогнан P8.7) — 244/244 OK"}
+  ],
+  "metrics": [
+    {"name": "lint_new_from_closure", "value": "0", "label": "real"},
+    {"name": "p8_4_docs_impact_probe_delta", "value": "8/12 PR (совпало с зондом artifacts/P8.4/probe-output-2026-07-27.txt)", "label": "real"},
+    {"name": "p8_9_benchmark_schema_version", "value": "skill-benchmark/v2", "label": "real"}
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items (командные строки/числа, зафиксированные при исполнении item'ов) + перепрогон task/skiller/harness/maind validate.sh этой сессией (gates[] выше) — не полный повторный прогон каждого item-level Validation-пункта заново",
+    "P8.4 Pending Work: job hygiene.yml не доказан реальным прогоном GitHub Actions (PR не открыт на момент закрытия item'а) — первое живое подтверждение даст следующий PR/push",
+    "P8.6 Pending Work: гейт public-hygiene красный на текущем дереве из-за plans/2026.07.25-ECO-OPT/artifacts/p5-pilot/stage0/install.log (артефакт P5.1, вне Files P8.6) — удаление/`.gitignore` остаётся owner-решением",
+    "gates[]:validate.sh:maind FAIL — оба провала пред-существующие (P3.2/P5.3), не регрессия фазы P8; названы также в closure/P5.json и closure/P10.json той же формулировкой"
+  ],
+  "external_side_effects": []
+}

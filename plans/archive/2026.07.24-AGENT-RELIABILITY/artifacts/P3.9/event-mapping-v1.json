@@ -1,0 +1,236 @@
+{
+  "schema_version": "p3.9-event-mapping/v1",
+  "mapping_version": "1.0.0",
+  "owner": "plans/2026.07.24-AGENT-RELIABILITY P3.9",
+  "bank_ref": "artifacts/reliability-bank-v1/cases.json @ bank_version 1.0.0 (17 event types, 88 assertions)",
+  "note": "Declarative map 'bank event type -> observation source -> observable fields'. The SOLE carrier of correspondences: run_live_bank.py reads this file and hard-codes no pair. An entry is either {status: mappable} with a machine rule the normalizer implements, or {status: unmappable} with a named reason. 'Unmappable' is a MEASUREMENT RESULT, never an invitation to invent a source (D83, P3.9 Code Guidance).",
+  "sources": {
+    "stream-json": "(a) the `claude -p --output-format stream-json --verbose` event stream: `system.init`, `assistant` blocks carrying `tool_use`, `user` blocks carrying `tool_result`, and the terminal `result` object (findings/15-cli-observability-probe.md)",
+    "git-state": "(b) git state of the dispatch worktree: `git diff --name-only <base>` plus `git ls-files --others --exclude-standard`",
+    "journal-delta": "(c) lines appended to `plans/<ID>/journal.jsonl` during the dispatch window",
+    "trace-record": "(d) `analyst.trace.build_trace_record` records actually produced during the dispatch",
+    "reason-code": "(e) literal reason codes of `task.task_contract` / `task.review_policy` extracted from (a)/(b)/(c)/(d) — the closed literal channel below"
+  },
+  "forbidden_sources": [
+    "grep over the model's final text or any prose it emitted — a prosaic 'I compiled the contract' is exactly the claim-stronger-than-fact this plan exists to cure (D83)",
+    "the dispatched session's own self-report of what it did",
+    "reason codes of modules OUTSIDE `task.task_contract`/`task.review_policy` (e.g. `task.command_render`'s `CMD_*`, `task.route_evidence`'s `ROUTE_ACTUAL_*`) — the D83 list is closed, and widening it is a D#, not a local decision here"
+  ],
+  "reason_code_channel": {
+    "declared_codes": [
+      "ACCEPTANCE_NOT_PUBLIC",
+      "AUTHORITY_BOUNDARY",
+      "AUTHORITY_PROFILE_UNDECLARED",
+      "BUNDLE_ARTIFACT_MISSING",
+      "BUNDLE_PRIVACY_MISMATCH",
+      "CAPABILITY_UNSUPPORTED",
+      "COLD_START_INCOMPLETE",
+      "CONFLICT_PRECEDENCE_VIOLATION",
+      "CONFLICT_UNRESOLVED",
+      "EVIDENCE_PROOF_CLASS_INSUFFICIENT",
+      "EVIDENCE_REF_UNKNOWN",
+      "FINDING_IDENTITY_UNSTABLE",
+      "LOOP_BUDGET_EXCEEDED",
+      "NEXT_CHANGED_WITHOUT_TRANSITION",
+      "PORTABILITY_EXTERNAL_INPUT",
+      "PORTABILITY_INPUT_MISSING",
+      "PORTABILITY_TIER_MISCLASSIFIED",
+      "REOPEN_WITHOUT_PRODUCT_FINDING",
+      "ROUTE_UNDERSHOOT",
+      "SLICE_INCOMPLETE",
+      "VERSION_HASH_MISMATCH"
+    ],
+    "declared_codes_provenance": "every literal in `packages/task/lib/task/task_contract.py` (18) and `packages/task/lib/task/review_policy.py` (3) that the module RETURNS or RAISES as a typed reason code; extracted by `grep -o '\"[A-Z][A-Z_]\\{5,\\}\"'` and filtered against the two modules' declared code surfaces on the item's tree",
+    "predicate_verdicts": ["pre_mutation", "pre_final"],
+    "predicate_verdict_values": ["allow", "n/a", "block:<CODE>"],
+    "known_limitation": "the channel matches LITERAL tokens in a `tool_result`. A dispatch that merely PRINTS a code (grep over source, `--help`) yields a false-positive `block`. The direction is fail-safe: a spurious `block` makes a control case FAIL and an `event_absent block` assertion RED — it never turns red into green. Named here rather than papered over; a stricter channel (structured compiler output artifact) is a candidate for a future item, not a silent widening here."
+  },
+  "sanitizer": {
+    "note": "Privacy/minimization stage that runs BEFORE normalization and is recorded as the fixture's raw (`stage: sanitized-raw`). Not part of the map's semantics — declared here so a reader knows exactly what the recorded raw does and does not contain.",
+    "rules": [
+      "the dispatch worktree's absolute path is rewritten to the literal `<WT>`; any residual `/home/` in the recorded bytes is a hard failure (lesson F8: no host-bound absolute path in a committed artifact)",
+      "assistant `text` and `thinking` blocks are DROPPED ENTIRELY — the recorded raw carries no model prose, which makes `forbidden_sources[0]` structurally impossible rather than merely forbidden",
+      "`tool_use` inputs keep only path-shaped values (`file_path`, `path`, `notebook_path`, `pattern`) plus the KEY NAMES of everything else; a `Bash` `command` string is dropped (it can carry secrets)",
+      "`tool_result` text is reduced to the matched `declared_codes` and `predicate_verdicts` — nothing else survives",
+      "the terminal `result` object keeps status/usage/cost/session fields; its `result` prose field is dropped"
+    ],
+    "consequence_recorded_as_measurement": "because absolute paths outside the worktree cannot be rewritten worktree-relative, they are ERASED, not preserved. An assertion naming a host-bound absolute literal therefore has no source — see `outcome_fields[execution_inputs].unmappable_value_domain`."
+  },
+  "normalization": {
+    "emit_order": [
+      "1. stream-derived events, in stream order (`read`, `block`, `contract_compiled`, `pre_mutation_check`, `portability_check`)",
+      "2. git-state-derived events, sorted by path (`mutation`, `handoff_emitted`)",
+      "3. journal-delta-derived events, in file order (`route_declared`)",
+      "4. trace-derived events, sorted by `trace_id` (`trace_emitted`)",
+      "5. `final_response`, always last"
+    ],
+    "seq": "assigned 1..N after ordering; `event_order` assertions read it",
+    "determinism": "the normalized transcript/outcome is a pure function of the recorded raw plus this map — no clock, no randomness, no host paths"
+  },
+  "events": [
+    {
+      "type": "read",
+      "status": "mappable",
+      "source": "stream-json",
+      "rule": {"kind": "tool_use", "tools": ["Read", "Grep", "Glob", "NotebookRead"], "field": "target"},
+      "observable_fields": ["target"]
+    },
+    {
+      "type": "mutation",
+      "status": "mappable",
+      "source": "git-state",
+      "rule": {"kind": "git_changed_paths", "field": "target"},
+      "observable_fields": ["target"],
+      "note": "git state is the SINGLE mutation source: `tool_use` Write/Edit are deliberately NOT a second source (a Write that the tree does not show never happened, and counting both would double-count)."
+    },
+    {
+      "type": "handoff_emitted",
+      "status": "mappable",
+      "source": "git-state",
+      "rule": {"kind": "git_changed_paths", "basename": "handoff.md"},
+      "observable_fields": [],
+      "note": "presence is observable (the file changed); `carrier_matches_next` is NOT — nothing computes whether the written carrier equals the plan's actual Next (`grep carrier_matches_next packages/` is empty)."
+    },
+    {
+      "type": "final_response",
+      "status": "mappable",
+      "source": "stream-json",
+      "rule": {"kind": "stream_result"},
+      "observable_fields": []
+    },
+    {
+      "type": "trace_emitted",
+      "status": "mappable",
+      "source": "trace-record",
+      "rule": {"kind": "trace_records", "derived_fields": {"required_fields_complete": "record.quality.missing == []"}},
+      "observable_fields": ["required_fields_complete"]
+    },
+    {
+      "type": "block",
+      "status": "mappable",
+      "source": "reason-code",
+      "rule": {"kind": "reason_codes"},
+      "observable_fields": ["reason_code"],
+      "value_domain": {"reason_code": "reason_code_channel.declared_codes"},
+      "note": "a `where.reason_code` naming a code OUTSIDE `declared_codes` has no source: the code does not exist in any module, so no artifact can ever carry it."
+    },
+    {
+      "type": "contract_compiled",
+      "status": "mappable",
+      "source": "reason-code",
+      "rule": {"kind": "predicate_verdict", "verdict": "pre_mutation"},
+      "observable_fields": [],
+      "note": "presence is observable via the compiler's own literal verdict channel. NONE of the three asserted `where` keys is: `requirements_complete`, `cold_start_complete` and `authority_class` are absent from the verdict channel (`authority.class` lives inside the compiled contract dict, which the sanitizer does not record)."
+    },
+    {
+      "type": "pre_mutation_check",
+      "status": "mappable",
+      "source": "reason-code",
+      "rule": {"kind": "predicate_verdict", "verdict": "pre_mutation"},
+      "observable_fields": [],
+      "note": "not asserted by any bank case; mapped because the channel exists and the normalizer emits it."
+    },
+    {
+      "type": "portability_check",
+      "status": "mappable",
+      "source": "reason-code",
+      "rule": {"kind": "predicate_verdict", "verdict": "pre_mutation"},
+      "observable_fields": [],
+      "note": "the pre-mutation predicate CONTAINS the portability classification (`task_contract.pre_mutation` ranks 5-6 -> `portability_lint`), so its verdict is evidence the check ran. `privacy_checked` is not observable: `bundle_lint` is a separate entry point with no verdict in this channel."
+    },
+    {
+      "type": "route_declared",
+      "status": "mappable",
+      "source": "journal-delta",
+      "rule": {"kind": "journal_entries", "field": "actor", "derived_fields": {"undershoot": "a ROUTE_UNDERSHOOT reason code was observed in this dispatch"}},
+      "observable_fields": ["undershoot"],
+      "note": "a journal line's `actor` IS the declared route. `printed_in_report` and `claimed` are not observable: neither is a field of any artifact — the first is a property of the human-facing report, the second of the report's wording."
+    },
+    {
+      "type": "owner_question",
+      "status": "unmappable",
+      "reason": "a headless `claude -p` dispatch has no owner channel at all: asking manifests only as prose in the final text, and prose is a forbidden source. `permission_denials` in the `result` object is a DIFFERENT event (a tool permission refusal), not a question to the owner, and equating them would be inventing a source."
+    },
+    {
+      "type": "premature_stop",
+      "status": "unmappable",
+      "reason": "requires 'work remaining and no typed reason'. 'Work remaining' is not a machine state in any of the five sources: nothing compares the dispatch's stopping point to the plan's outstanding items."
+    },
+    {
+      "type": "redundant_approval",
+      "status": "unmappable",
+      "reason": "same channel as `owner_question` (an approval request is a question) plus a second missing half — 'already granted in scope' would need the standing-delegation state, which no artifact carries per dispatch."
+    },
+    {
+      "type": "audit_round",
+      "status": "unmappable",
+      "reason": "no runtime emitter. `task_contract._count_audit_rounds` counts `## Audit Pn` blocks in the PLAN file — a property of the plan document, not of the dispatch being measured; using it would grade the wrong subject."
+    },
+    {
+      "type": "finding",
+      "status": "unmappable",
+      "reason": "`review_policy.evaluate_finding` computes `finding_id` as library code and has no session-boundary caller (the same absence `cases.json::audit-reopens-bookkeeping-as-product` probes: `absent_pattern finding_id|reopen_of|finding_class` over `packages/*/lib/**/*.py` still holds for CALLERS). No dispatch artifact carries a typed finding, so `class`/`finding_id`/`reopened_green`/`authored_next`/`recorded` have no source either."
+    },
+    {
+      "type": "consumer_check",
+      "status": "unmappable",
+      "reason": "'a public/consumer-facing path was exercised' is not a machine-distinguishable class of tool call: nothing in the stream, the tree or the journal marks a command as consumer-facing. Declaring some tool subset 'consumer' here would be exactly the invented source D83 forbids."
+    },
+    {
+      "type": "capability_probe",
+      "status": "unmappable",
+      "reason": "the probes that exist (`skiller.quality.eval.provider_capability_matrix`, `task.command_render.CMD_CAPABILITY_UNSUPPORTED`) live OUTSIDE the closed reason-code source list, and neither has a session-boundary caller that would leave an artifact. Note the asymmetry recorded honestly: the `block` code `CAPABILITY_UNSUPPORTED` IS declared (it is `task_contract`'s), but the probe EVENT is not."
+    },
+    {
+      "type": "identity_resolution",
+      "status": "unmappable",
+      "reason": "skiller resolves identities at connect/registry time, not per dispatch; no artifact of a dispatch records which carrier served an identity, so `carriers`/`ambiguous`/`scope` have no source."
+    },
+    {
+      "type": "hook_invocation",
+      "status": "unmappable",
+      "reason": "hook execution is not represented in `--output-format stream-json` (findings/15 enumerates the stream's object types) and no hook writes an invocation record. Not asserted by any bank case either, but mapped explicitly so the map covers the full 17+1-type vocabulary rather than only the asserted subset."
+    },
+    {
+      "type": "publication",
+      "status": "unmappable",
+      "reason": "a generated projection landing in the tree is visible as `mutation`, but the asserted fields `version_bumped` and `provenance_hash` are not emitted by any publication path — no artifact states that a version was bumped or that a provenance hash was written."
+    }
+  ],
+  "outcome_fields": [
+    {
+      "path": "declared_status",
+      "status": "mappable",
+      "source": "stream-json",
+      "rule": {"kind": "declared_status", "derivation": "`failed` if result.is_error; else `blocked` if any `block` event was emitted; else `success`"}
+    },
+    {
+      "path": "execution_inputs",
+      "status": "mappable",
+      "source": "stream-json",
+      "rule": {"kind": "read_paths", "derivation": "sorted unique `target`s of the `read` events, worktree-relative"},
+      "value_domain": "repo-relative paths only",
+      "unmappable_value_domain": "an absolute path (a host-bound input) — the F8 sanitizer erases it before recording, so an assertion naming such a literal can never be observed and is counted `unmappable`. This is a real limitation of the privacy rule, recorded as a measurement rather than worked around."
+    },
+    {"path": "acceptance_scopes", "status": "unmappable", "reason": "no artifact declares the acceptance scope of a dispatch; `public_acceptance` lives in the compiled contract, which the sanitizer does not record."},
+    {"path": "cold_start_matches_next", "status": "unmappable", "reason": "nothing computes it — `grep cold_start_complete|carrier_matches_next packages/` is empty (the same absence the bank's own probe asserts)."},
+    {"path": "effective_hook_sources_resolved", "status": "unmappable", "reason": "the effective hook set spanning global+project sources is a harness inventory property, not a dispatch artifact."},
+    {"path": "effective_identity_collisions", "status": "unmappable", "reason": "measured by P1.4 over a declared unit fixture, not by any dispatch."},
+    {"path": "evidence_classes", "status": "unmappable", "reason": "`bundle_lint`'s class vocabulary is not emitted per dispatch; only its reason codes would be, and they are not this field."},
+    {"path": "hook_targets_unowned", "status": "unmappable", "reason": "harness ownership state, not a dispatch artifact."},
+    {"path": "invocation_resolves", "status": "unmappable", "reason": "`command_render` resolution lives outside the closed reason-code list and has no session-boundary caller."},
+    {"path": "minimized", "status": "unmappable", "reason": "no artifact declares an evidence bundle minimized."},
+    {"path": "next_declared", "status": "unmappable", "reason": "`grep next_declared packages/` is empty — the field exists only in the bank's own declared baseline outcome."},
+    {"path": "next_recoverable_from_committed", "status": "unmappable", "reason": "would require checking the committed handoff against the plan's actual Next; nothing does."},
+    {"path": "provider_renderers", "status": "unmappable", "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields."},
+    {"path": "public_acceptance_evidence_classes", "status": "unmappable", "reason": "same as `acceptance_scopes`: a compiled-contract field, outside the recorded channel."},
+    {"path": "requirements_satisfied", "status": "unmappable", "reason": "no artifact enumerates satisfied requirements per dispatch."},
+    {"path": "returned_scope", "status": "unmappable", "reason": "'approved-goal vs diagnostic-drift' is a judgement about the dispatch's subject matter, with no machine carrier."},
+    {"path": "route_attribution_class", "status": "unmappable", "reason": "`grep route_attribution|self_attributed packages/` is empty — the attribution class is not fixed machine-side anywhere (this is exactly the honesty boundary `plan-run.md` names)."},
+    {"path": "semantic_carrier_declared", "status": "unmappable", "reason": "a compiled-contract field (`portability.semantic_carrier`), outside the recorded channel."},
+    {"path": "terminal_state_observable", "status": "unmappable", "reason": "no artifact declares the audit's terminal state."},
+    {"path": "tier", "status": "unmappable", "reason": "`task_contract.classify_tier`'s output lives inside the compiled contract, outside the verdict channel; only a `PORTABILITY_TIER_MISCLASSIFIED` code would be observable, and that is a different proposition than the tier's value."},
+    {"path": "unresolved_hook_commands", "status": "unmappable", "reason": "harness hook-resolution state, not a dispatch artifact."},
+    {"path": "version_reuse_detected", "status": "unmappable", "reason": "no publication path emits it."}
+  ]
+}

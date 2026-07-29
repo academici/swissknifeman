@@ -227,7 +227,7 @@ agentmemory = кросс-проектное/экосистемное/высок�
 осям агенты/скиллы/настройки) → урок → **человек** промоутит его в скилл/правило (`field-feedback-loop`
 + гейты `skill-authoring`/`anti-drift`). Автоматический **кросс-проектный** контур (детекция паттернов
 по многим проектам → confidence-scoring → авто-черновики `SKILL.md`) — спроектирован
-(`research/analyst-package-design.md`) и осознанно **отложен** в [roadmap](../roadmap/self-learning-memory.md):
+(`research/analyst-package-design.md`) и реализован пакетом `analyst` (`digest`→`confidence`→`promote`):
 гейт — confidence + ручное промо, чтобы ложные «уроки» не попадали в скиллы автоматически.
 
 ## 10. RAG и верификация
@@ -262,6 +262,37 @@ context7 ──▶ perplexity-web ──▶ WebSearch
 | Окружение скиллов | `skiller doctor`, `skiller status` |
 | Окружение Claude Code (permissions/MCP/хуки) | `harness doctor` |
 | Всё сразу (fan-out) | `swissknifeman doctor` |
+
+**Гейт docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` останавливает
+change-set, который вводит/убирает/переименовывает файл поверхности пакета (`packages/<pkg>/
+{bin,lib,commands,configs}/**`, `core/*.py`, корневые `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
+или правит его интерфейсные пути (`bin`/`commands`/`configs`/`install.sh`), без правки доков
+**того же пакета** (`packages/<pkg>/docs/**`; у `task` — вторым легальным домом `docs/task/**`;
+корень — `docs/*.md`) в том же диапазоне. Обход — трейлер коммита `Docs-Not-Needed: <причина>`
+(причина печатается, пустое значение обходом не считается).
+Измеренная частота (`plans/archive/2026.07.25-ECO-OPT/research/24-P8.4-refine-2026-07-27.md` §1–§2,
+дерево `cd93dbc8`): **8 из 12** PR, **11 из 41** коммит. Граница покрытия: гейт **НЕ ловит**
+изменение поведения существующего модуля `lib/**`/`core/*.py`/`scripts/*.{sh,py}` без нового
+файла и без правки интерфейса — это осознанное сужение (форма «любая правка поверхности» красила
+100 % PR и снималась бы первым же спорным вечером), а не полное покрытие.
+
+**Гейты CI-гигиены дерева (`.github/workflows/hygiene.yml`, P8.6).** Два stdlib-скрипта,
+списки правил — данными:
+
+- `scripts/public-hygiene.py` — fail-closed по **отслеживаемому** дереву (`git ls-files`,
+  содержимое не читается) на запрещённые суффиксы/имена/каталоги: `.sqlite`/`.log`/`.pem`/
+  `.key`/архивы (`.zip`/`.tar`/`.tar.gz`/`.tgz`/`.rar`/`.7z`), `.env` (кроме `*.example`),
+  `__pycache__`/`.venv`/`node_modules`. Каждое нарушение — строка `<путь> — запрещено правилом
+  «<причина>»`; шаг `public-hygiene` в job `hygiene`. Красное на текущем дереве — гейт
+  **сообщает**, чинит человек (файлы не удаляются молча).
+- `scripts/verify-tag.py <tag>` — тег `vX.Y.Z` обязан быть **верхним выпущенным** заголовком
+  `## [X.Y.Z] - YYYY-MM-DD` в корневом `CHANGELOG.md` (носитель версии зонтика — CHANGELOG, не
+  `package.json`: корневого нет, теги пакетные версии не несут). Шаг `verify-tag` в отдельном job
+  `release-tag` (`on: push: tags: ['v*']`) — красное на релизном теге останавливает публикацию
+  раньше, чем версия разойдётся с заголовком.
+
+Починка: перечень нарушений `public-hygiene` — в Completion Notes закрывающего item'а, удаление
+артефактов из дерева — отдельное решение владельца (не автоправка гейта).
 
 ## Сценарии-FAQ
 

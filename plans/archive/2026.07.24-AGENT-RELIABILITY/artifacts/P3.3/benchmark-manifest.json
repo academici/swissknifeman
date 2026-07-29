@@ -1,0 +1,33 @@
+{
+  "adapter": "packages/skiller/lib/skiller/quality/eval.py (build_system_benchmark, compute_system_metrics, grade_system_case, apply_system_operator)",
+  "bank_source": {
+    "bank-manifest.content_hash": "82d1e6a9997dc8de7459085957edb5bb66736e7971e31679d69bf07a7809e987",
+    "bank-manifest.json": "cbb7716e60685ef1ec07205d7b5b403482b5bf59859b533d435ad471ac0128d5",
+    "cases.json": "a0d667128e710e701d34cc48ea9c04d9cf272e2b74de0399c145fbd464f625c5",
+    "graders.json": "a034a85722268fdb22871f3ddd5742b711870e9df8a7b49c2a26a8094fad7acf"
+  },
+  "benchmark.json": "15857d4e21f8f6b86cdff3c65f4bc47b1538e053145e5928899146616dcf2b80",
+  "content_hash": "6da3add865949540669691c560e045556fc9861ab1db5201e99ee9c77d11f57b",
+  "cross_check": {
+    "layer1_metrics_mismatches": [],
+    "method": "independently recomputed via packages/skiller/lib/skiller/quality/eval.py against the frozen P0.3 bank's own cases.json/graders.json, compared field-by-field to bank-manifest.json::layer1_metrics and ::sample.selected",
+    "result": "byte-identical",
+    "same_finding_loop_depth_match": true,
+    "seeded_sample_match": true
+  },
+  "generated_at": "2026-07-26T00:00:00Z",
+  "layer2_live_paired": {
+    "reason": "no harness exists yet that turns a live `claude -p`/`codex` invocation into a typed event transcript this adapter can grade (the bank's cases assume multi-round session state and typed event emission; run_case/run_suite's one-shot prompt/response model does not produce one) — building that harness is Pending Work, not fabricated here (F6/F8/F9/F10 stay deferred, matching bank-manifest.json's own current status)",
+    "status": "deferred"
+  },
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P3.3",
+  "provider_capability": {
+    "claude": {
+      "capability": "native"
+    },
+    "codex": {
+      "capability": "native"
+    }
+  },
+  "schema_version": "system-bank-benchmark-manifest/v1"
+}

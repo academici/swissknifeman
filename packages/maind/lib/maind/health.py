@@ -13,10 +13,13 @@ import os
 import stat
 from pathlib import Path
 
+from core.http import HTTPUnauthorizedError
+
 from .common import (atomic_write_json, atomic_write_text, backup_file,
                      content_hash, die, parse_args, upsert_block, warn)
 from .config import load_config
 from .mcpconfig import check_hygiene
+from .memory import auth_headers, resolve_secret
 from .memory import forget as mem_forget
 from .memory import health as mem_health
 from .memory import recall as mem_recall
@@ -85,20 +88,27 @@ def _native_memory_state(project):
 
 def memory_roundtrip(env, config, project, memory_reachable):
     """Доказать, что память РЕАЛЬНО работает: write→recall→forget по temp-факту в приватном
-    scope. Ловит раскол (хук пишет не в тот стор), сломанный forget и потерю изоляции."""
+    scope. Ловит раскол (хук пишет не в тот стор), сломанный forget и потерю изоляции.
+    401 различается от прочих сбоев отдельно (findings §2: /agentmemory/health не 401'ит,
+    поэтому «недоступен» и «неавторизован» неразличимы без реального протектед-вызова —
+    ровно это здесь и делает store/recall/forget)."""
     if not memory_reachable:
         return {"ok": False, "detail": "демон не запущен"}
     _, _, url = resolve_ports(env, config)
+    headers = auth_headers(resolve_secret(env, config))
     scope = private_scope(project)
     token = f"maind-health-probe-{project['id']}"
     try:
-        res = mem_store(url, scope, "health-probe", token)
+        res = mem_store(url, scope, "health-probe", token, headers=headers)
         mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
-        found = any(token in (r.get("text") or "") for r in mem_recall(url, scope, token))
+        found = any(token in (r.get("text") or "")
+                    for r in mem_recall(url, scope, token, headers=headers))
         if mid:
-            mem_forget(url, scope, mid)          # чисто за собой
+            mem_forget(url, scope, mid, headers=headers)          # чисто за собой
         return {"ok": bool(found),
                 "detail": scope if found else "запись не нашлась при recall (раскол стора?)"}
+    except HTTPUnauthorizedError:
+        return {"ok": False, "detail": "неавторизован (401) — проверьте секрет памяти"}
     except RuntimeError as e:
         return {"ok": False, "detail": str(e)}
 

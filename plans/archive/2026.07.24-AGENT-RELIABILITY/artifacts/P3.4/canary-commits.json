@@ -1,0 +1,12 @@
+{
+  "candidate_sha": "c1513dbb579f36ffdc2979b7080ea73e6eca806c",
+  "commits": {
+    "case-01-tiny-control": "e8d2d35f02c70f4e7f36ad649aaaf4e438805503",
+    "case-02-plan-doc": "bcbab1c347b4dea0a98f01998c43a11d6a6b1020",
+    "case-03-provider-publication": "f9a2d2ddeed8649163ea09eb8f3e44559757f252",
+    "case-04-hook-cold-start": "1b42c35f8b54dd000cd99e837c5fa66386fa93d6",
+    "case-05-multi-item-dispatch": "78c83fcd6c67304b939392f81e70fe5b8fe6e9a4",
+    "case-06-failure-recovery": "d289b72406ab7d5bff48194ae1f83227e288fba6"
+  },
+  "schema_version": "p3.4-canary-commits/v1"
+}

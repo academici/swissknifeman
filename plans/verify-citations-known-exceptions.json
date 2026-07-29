@@ -1,0 +1,88 @@
+{
+  "exceptions": [
+    {
+      "citation": "commands/plan-exec.md:58",
+      "reason": "R2+R3 (P11.5): путь неоднозначен — 2 кандидата в репо (packages/task/commands/plan-exec.md, packages/task/tests/fixtures_data/claude-command-golden/commands/plan-exec.md), исходный не восстановим по контексту цитаты; occurrences также в чужом плане 2026.07.24-AGENT-RELIABILITY (phases/P2.md:77, plan.md:388) — чужая проза не правится (И4-И6)."
+    },
+    {
+      "citation": "core/tests/test_provider_config.py::TestProviderConfigResolution::test_negative_validation_matrix_covers_frozen_contract",
+      "reason": "R4 (P11.5): путь уже полный и существует, но тестовый метод в файле отсутствует (протух после написания находки в phases/P10.md:441, поле закрытого item'а P10.4) — правка ТЗ закрытого item'а вне скоупа фазы P11."
+    },
+    {
+      "citation": "dist/index.mjs:10177-10400",
+      "reason": "R2 (P11.5): dist/index.mjs — собранный бандл Claude Code CLI, внешний по отношению к этому репозиторию (npm-пакет, не вендорится) — не резолвится ни от корня репо, ни от каталога плана по построению."
+    },
+    {
+      "citation": "dist/index.mjs:15276",
+      "reason": "R2 (P11.5): dist/index.mjs — собранный бандл Claude Code CLI, внешний по отношению к этому репозиторию (npm-пакет, не вендорится) — не резолвится ни от корня репо, ни от каталога плана по построению."
+    },
+    {
+      "citation": "dist/index.mjs:20209-20221",
+      "reason": "R2 (P11.5): dist/index.mjs — собранный бандл Claude Code CLI, внешний по отношению к этому репозиторию (npm-пакет, не вендорится) — не резолвится ни от корня репо, ни от каталога плана по построению."
+    },
+    {
+      "citation": "packages/maind/lib/maind/doctor.py:180-300",
+      "reason": "R2 (P11.5): путь уже полный; верхняя граница диапазона (300) вышла за пределы файла (299 строк) после правок, датированных позже написания находки в findings/P5-audit-closure-facts.md:47 — правка содержательного финдинга терминальной фазы P5 вне скоупа P11.5 (Scope Excluded фазы P11: не трогает содержание P5)."
+    },
+    {
+      "citation": "packages/skiller/lib/skiller/status.py:55-160",
+      "reason": "R2+R4 (P11.5): путь уже полный; верхняя граница (160) вышла за пределы файла (156 строк); occurrences в phases/P10.md:474 и phases/P3.md:593 — поля закрытых items (R4, правка ТЗ вне скоупа); occurrence в plan.md:425 та же цитата — правка изолированно от phases-копий оставила бы один носитель верным, другой сломанным без видимой причины разночтения."
+    },
+    {
+      "citation": "path/to/file.json::a.b.c",
+      "reason": "R4 (P11.5): буквальный пример формы цитаты в Code Guidance закрытого item'а P11.2 (phases/P11.md:205) — не факт-цитата, а иллюстрация синтаксиса `file.json::a.b.c`; правка ТЗ закрытого item'а вне скоупа фазы."
+    },
+    {
+      "citation": "phases/P1.md:80,118",
+      "reason": "R4 (P11.5): путь phases/P1.md резолвится (внутриплановая ссылка), но строка 118 вышла за пределы файла (96 строк) после bookkeeping-правки закрытого item'а P1.2; исходное содержание строки не восстановимо без правки ТЗ закрытого item'а (вне скоупа P11.5)."
+    },
+    {
+      "citation": "phases/P5.md:8-11",
+      "reason": "R3 (P11.5): цитата в чужом плане 2026.07.24-AGENT-RELIABILITY (plan.md:380, research/06-p2.1-contract-boundary.md:95) — чужая проза не правится этим планом (И4-И6)."
+    },
+    {
+      "citation": "pkg/data.json::a.b",
+      "reason": "R4 (P11.5): буквальный пример формы цитаты в Code Guidance закрытого item'а P11.2 (phases/P11.md:258) — та же природа, что path/to/file.json::a.b.c; правка ТЗ закрытого item'а вне скоупа фазы."
+    },
+    {
+      "citation": "quality/eval.py:311-333",
+      "reason": "R4 (P11.5): occurrence в phases/P5.md:76 — поле закрытого item'а, правка ТЗ вне скоупа фазы; остальные occurrences этой цитаты в findings/research этого плана уже починены P11.5 на полный путь packages/skiller/lib/skiller/quality/eval.py:311-333 (R1)."
+    },
+    {
+      "citation": "quality/eval.py:42",
+      "reason": "R4 (P11.5): occurrence в phases/P10.md:477 — поле закрытого item'а, правка ТЗ вне скоупа фазы; остальные occurrences этой цитаты в plan.md/findings/research этого плана уже починены P11.5 на полный путь packages/skiller/lib/skiller/quality/eval.py:42 (R1)."
+    },
+    {
+      "citation": "run-report/_lib.py::_protected_sets",
+      "reason": "R3 (P11.5): цитата в чужом плане 2026.07.24-AGENT-RELIABILITY (findings/P4.1-code-grounded-audit.md:90) — чужая проза не правится (И4-И6); occurrence в findings этого плана уже починена P11.5 на полный путь packages/harness/configs/claude-code/hooks/run-report/_lib.py::_protected_sets (R1)."
+    },
+    {
+      "citation": "scripts/validate.sh:65",
+      "reason": "R2+R4 (P11.5): путь неоднозначен — 5 кандидатов в репо (packages/{analyst,harness,maind,skiller,task}/scripts/validate.sh), исходный пакет не восстановим по контексту цитаты без археологии источника; occurrence также в phases/P3.md:696 — поле закрытого item'а (R4)."
+    },
+    {
+      "citation": "scripts/validate.sh:87-100",
+      "reason": "R2+R4 (P11.5): путь неоднозначен — 5 кандидатов в репо (packages/{analyst,harness,maind,skiller,task}/scripts/validate.sh), исходный пакет не восстановим по контексту цитаты без археологии источника; occurrence также в phases/P10.md:477 — поле закрытого item'а (R4)."
+    },
+    {
+      "citation": "serena/config/serena_config.py:341",
+      "reason": "R2+R4 (P11.5): внешний пакет Serena (сторонний MCP-сервер, устанавливается/вендорится вне дерева этого репозитория, D110) — путь не резолвится ни от корня, ни от каталога плана по построению; часть occurrences в phases/P5.md — поле закрытого item'а (R4)."
+    },
+    {
+      "citation": "src/serena/config/serena_config.py:341",
+      "reason": "R2+R4 (P11.5): внешний пакет Serena (сторонний MCP-сервер, устанавливается/вендорится вне дерева этого репозитория, D110) — путь не резолвится ни от корня, ни от каталога плана по построению; occurrence в phases/P5.md:1637 — поле закрытого item'а (R4)."
+    },
+    {
+      "citation": "tests/test_codegraph.py::TestSchemaConnectivity",
+      "reason": "R4 (P11.5): occurrence в phases/P5.md:937 — поле закрытого item'а, правка ТЗ вне скоупа фазы; остальные occurrences этой цитаты в findings этого плана уже починены P11.5 на полный путь packages/maind/tests/test_codegraph.py::TestSchemaConnectivity (R1)."
+    },
+    {
+      "citation": "plans/2026.07.25-ECO-OPT/handoff.md:62",
+      "reason": "P3 close (2026-07-28): handoff.md перезаписывается ЦЕЛИКОМ при каждом закрытии фазы/итема (канон plan-protocol) — цитата в findings/P11-citation-gate-measurements.md:120 фиксирует историческую находку F8 аудита P9 (P9 4/4 на срезе того handoff), а не текущее содержимое строки 62; переписывать историческую находку вне Scope P3."
+    },
+    {
+      "citation": "plans/2026.07.25-ECO-OPT/handoff.md:62-63",
+      "reason": "P3 close (2026-07-28): handoff.md перезаписывается ЦЕЛИКОМ при каждом закрытии — цитата в phases/P9.md:970 (СКОУП реконсиляции P9, пункт 7) описывает правку, уже выполненную в прошлых закрытиях; исторический пункт чек-листа P9, не текущее состояние handoff, вне Scope P3."
+    }
+  ]
+}

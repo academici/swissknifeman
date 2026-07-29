@@ -65,6 +65,14 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("хук run-report протух", text)
         self.assertIn("harness hooks --global", text)
 
+    def test_route_evidence_guidance_line_present(self):
+        # P2.4: doctor всегда честно называет источник model/effort (live model,
+        # effort self-attested), а не молчит про отсутствие живого effort-сигнала.
+        env = fx.real_env(self.tmp)
+        _out, text = run(cmd_doctor, env, [])
+        self.assertIn("route evidence", text)
+        self.assertIn("self-attested", text)
+
     def test_run_report_hook_fresh_no_warn(self):
         # копия файлов хука из репо в tmp-home 1-в-1 ⇒ freshness-гейт молчит.
         env = fx.real_env(self.tmp)

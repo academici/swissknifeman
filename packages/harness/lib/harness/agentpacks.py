@@ -496,40 +496,52 @@ def categorize_file_change(f, pf, new_sha, tgt):
     f — описание файла из манифеста (флаги optional/user_owned); pf — запись файла из
     прежнего lock (None, если файл новый); new_sha — sha отрендеренного нового содержимого;
     tgt — путь файла на диске (для детекта локальной правки). Возврат:
-      new / new-optional — файла не было; user-owned — отдан пользователю, не трогаем;
-      conflict — изменились и база, и локальная копия; safe-apply — изменилась только
-      база (в т.ч. пропавший с диска файл при смене версии, см. ниже); nochange —
-      база не менялась (пропавший файл без смены версии — тоже nochange, это забота
-      doctor --drift, не upgrade)."""
+      new / new-optional — файла не было ИЛИ он пропал с диска; user-owned — отдан
+      пользователю, не трогаем; conflict — изменились и база, и локальная копия;
+      safe-apply — изменилась только база; nochange — база не менялась и файл на месте.
+
+    Категория считается ТОЛЬКО по факту (хэши источника/диска против lock), номер
+    версии пака сюда не входит вовсе — см. do_upgrade (версия не инвариант состояния)."""
     if pf is None:
         return "new-optional" if f.get("optional") else "new"
     if f.get("user_owned"):
         return "user-owned"
-    missing = not tgt.exists()
-    disk_sha = "" if missing else sha256_text(tgt.read_text(encoding="utf-8"))
+    if not tgt.exists():
+        # Файл пропал с диска (lock_drift: 'missing') — мержить нечего: это не
+        # конфликт локальной правки, а установка отсутствующего файла (ровно то,
+        # что советует doctor --drift: "восстанови render"). Восстанавливаем
+        # НЕЗАВИСИМО от смены версии — кейс B раскатки 2026-07-11 (botkit): снос
+        # соседнего пака унёс общие targets, а `upgrade` при равной версии отвечал
+        # «уже актуален» и оставлял проект с паком в локе и БЕЗ его файлов.
+        return "new-optional" if f.get("optional") else "new"
+    disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
     local_mod = disk_sha != pf.get("base_sha256")
     base_changed = new_sha != pf.get("base_sha256")
     if base_changed and local_mod:
-        # Файл пропал с диска (lock_drift: 'missing') — мержить нечего: это не
-        # конфликт локальной правки, а установка отсутствующего файла (ровно то,
-        # что советует doctor --drift: "восстанови render"). Иначе missing-файл
-        # при смене версии пака ложно давал бы *.pack-new вместо восстановления.
-        return ("new-optional" if f.get("optional") else "new") if missing else "conflict"
+        return "conflict"
     if base_changed:
         return "safe-apply"
     return "nochange"
 
 
 def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
+    """Накатить пак на цель по ФАКТУ файлов, а не по номеру версии.
+
+    Версия пака — не инвариант состояния: забытый бамп `pack.json:version` раньше
+    давал тихое «уже актуален» и НЕ доставлял изменение (кейс A раскатки 2026-07-11 —
+    пункт reviewer'а не доехал ни в один из 11 проектов), а снос соседнего пака с
+    пересекающимися targets оставлял проект без файлов (кейс B, botkit). Поэтому план
+    строится всегда — из сверки хэшей (источник против `base_sha256` лока, диск против
+    него же), а равные версии лишь меняют формулировку отчёта и добавляют warn о
+    дрейфе источника без бампа. Бамп версии для авторов паков остаётся обязательным —
+    он просто перестал быть ЕДИНСТВЕННОЙ защитой доставки."""
     manifest = load_manifest(env, pack)
     lock = load_lock(target)
     prior = lock.get("packs", {}).get(pack)
     if prior is None:
         die(f"agent-pack '{pack}' не установлен — сначала render")
     v_old, v_new = prior.get("version"), manifest["version"]
-    if v_old == v_new:
-        print(f"agent-pack '{pack}' уже актуален (v{v_new})")
-        return 0
+    same_version = v_old == v_new
     base_overrides = dict(prior.get("answers", {}))
     base_overrides.update(overrides)
     answers, _ = resolve_interview(manifest, target, base_overrides, shell_policy)
@@ -561,12 +573,13 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
             tgt_rel)
         new_sha = sha256_text(rendered)
         cat = categorize_file_change(f, prior_files.get(src), new_sha, tgt)
-        plan.append((cat, src, tgt_rel))
         # Новые файлы версии (напр. recon-агенты) ставим на upgrade так же, как render:
         # цель не существует → запись безопасна (нечего затирать). Опциональные, которые
         # пользователь ЯВНО удалил (removed_optional), не возвращаем.
         install_new = cat == "new" or (
             cat == "new-optional" and src not in prior.get("removed_optional", []))
+        plan.append((cat, src, tgt_rel,
+                     bool(install_new or cat in ("safe-apply", "conflict"))))
         if (cat == "safe-apply" or install_new) and not dry:
             tgt.parent.mkdir(parents=True, exist_ok=True)
             write_text(tgt, rendered, dry)
@@ -579,10 +592,23 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
                           "base_sha256": new_sha,
                           "local_modified": cat == "conflict",
                           "user_owned": bool(f.get("user_owned", False))})
-    print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
-    for cat, _src, tgt_rel in plan:
-        print(f"  [{cat}] {tgt_rel}")
-    conflicts = [t for c, _s, t in plan if c == "conflict"]
+    acted = [(c, t) for c, _s, t, a in plan if a]
+    if same_version:
+        print(f"=== upgrade {pack}: v{v_new} (версия та же — сверка по факту файлов) ===")
+    else:
+        print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
+    for cat, _src, tgt_rel, a in plan:
+        if a or cat != "nochange":
+            print(f"  [{cat}] {tgt_rel}")
+    if not acted:
+        print("  нечего делать: файлы совпадают с lock'ом")
+    elif same_version:
+        # Кейс A: контент источника уехал, а `pack.json:version` забыли бампнуть —
+        # молча игнорировать нельзя (тихая недоставка во весь флот).
+        warn(f"  ⚠ пак '{pack}' не менял версию (v{v_new}), но {len(acted)} файл(ов) "
+             f"разошлись с lock'ом — применено по факту; авторам пака: бампайте "
+             f"pack.json:version, иначе апгрейд опирается только на хэши")
+    conflicts = [t for c, _s, t, _a in plan if c == "conflict"]
     if conflicts:
         warn(f"  ⚠ {len(conflicts)} conflict → ручной мерж из .pack-new: "
              + ", ".join(t + ".pack-new" for t in conflicts))
@@ -746,7 +772,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
             print(f"[{'OK ' if not problems else 'BAD'}] {pk} v{manifest['version']}")
             for p in problems:
                 print(f"      - {p}")
-    installed = None
+    installed, shared = None, {}
     if target:
         lock = load_lock(target)
         lock_ok = lock.get("schema") == 1
@@ -761,6 +787,19 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                 print("[BAD] lock: schema != 1")
         elif installed and not json_out:
             print(f"Установлено в {target.name}: {', '.join(sorted(installed))}")
+        # Пересечение targets: два установленных пака владеют одним файлом (прецедент
+        # botkit 2026-07-11 — remove первого унёс файлы второго, upgrade их не вернул).
+        owners = {}
+        for name, pk in (lock.get("packs") or {}).items():
+            for f in pk.get("files") or []:
+                owners.setdefault(f.get("target", ""), set()).add(name)
+        shared = {tt: sorted(pp) for tt, pp in owners.items() if len(pp) > 1}
+        if shared and not json_out:
+            warn(f"пересечение targets: {len(shared)} файл(ов) принадлежат 2+ пакам — "
+                 f"remove одного унесёт файлы другого (восстановление: "
+                 f"harness agent-packs upgrade --pack <второй> --target .)")
+            for t in sorted(shared):
+                warn(f"  {t} ← {', '.join(shared[t])}")
         # .bak-гигиена: локальные *.bak в .claude/agents/ — легальны (бэкап merge-only
         # записи), но копятся мусором (прецедент: agelto — 9 файлов) — только warn, не error.
         bak_files = sorted(f.name for f in (target / ".claude" / "agents").glob("*.bak"))
@@ -768,7 +807,8 @@ def do_doctor(env, pack=None, target=None, json_out=False):
             warn(f".claude/agents: {len(bak_files)} .bak-файл(ов) — "
                  f"проверь и удали лишнее ({', '.join(bak_files)})")
     if json_out:
-        print(json.dumps({"catalog": catalog, "installed": installed, "rc": rc},
+        print(json.dumps({"catalog": catalog, "installed": installed,
+                          "shared_targets": shared, "rc": rc},
                          ensure_ascii=False, indent=2))
     return rc
 
@@ -845,7 +885,7 @@ def cmd_agent_packs(env, argv):
     die(f"неизвестная подкоманда agent-packs: {sub}")
 
 
-# P5.4 provider projection seam. The role catalog is the semantic source; the
+# 2026.07.19-DUAL-PROVIDER P5.4 provider projection seam. The role catalog is the semantic source; the
 # established Claude lifecycle and templates above are compatibility consumers.
 @dataclass(frozen=True)
 class AgentRole:

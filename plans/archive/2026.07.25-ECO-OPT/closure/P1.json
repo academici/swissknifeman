@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P1",
+  "closed_at": "2026-07-28",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟢 Done",
+  "git": {"head_sha": "8ac027315ed62663d7a8d7e23c86fa01c21969a1", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "aa806cafd2c32a6de86e4a244db4d3f8e18fdebce52529c140c558c9cff3500d",
+    "phases/P1.md": "6d70607605e1b699d4b5cf87f2517f3e5ab0d97e22c87a393a25a8d998b02e3c"
+  },
+  "items": [
+    {"id": "P1.1", "status": "⛔ Skipped by decision", "evidence_class": "real",
+     "evidence": "first-party WebFetch code.claude.com/docs/en/mcp + /en/env-vars (2026-07-28) — tool search default-on, ни одно из 4 условий выключения не выполняется на флоте (21 .mcp.json проверены); D136 в plan.md §5, item-коммит d68d1d49"},
+    {"id": "P1.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "канон D3 в root CLAUDE.md § «Разработка» + бэкфилл 34 файлов (packages/{analyst,harness,maind,skiller,task}/lib), 0 правок исполняемого кода — py_compile + построчный дифф, item-коммит b44409c7"}
+  ],
+  "gates": [],
+  "metrics": [],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items (реконсиляция, не повторный прогон validate.sh этой сессией — plan-close низкоэффортный, механическая сверка)"
+  ],
+  "external_side_effects": []
+}

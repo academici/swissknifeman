@@ -8,8 +8,9 @@ from core import atomic_write_text, find_repo_root, safe_load_json
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
-from .publication import (SiblingPlugin, build_publication_catalog,
-                          render_claude_publication, render_codex_publication)
+from .publication import (SiblingPlugin, assert_root_bootstrap_set_completeness,
+                          build_publication_catalog, render_claude_publication,
+                          render_codex_publication, render_repository_bootstrap_projections)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -73,7 +74,7 @@ def build_registry(env):
                 on_error=lambda e, f=upstream_file: die(f"битый upstream.json: {f}: {e}"),
             )
             files = up.get("files", [])
-            # provenance-запись: body_path (P7.3 thin-navigator) явно называет, какая
+            # provenance-запись: body_path (2026.07.02-SKM-MASTER-002 P7.3 thin-navigator) явно называет, какая
             # files[]-запись — «тело» апстрима, когда SKILL.md — навигатор, а не
             # зеркало; иначе как раньше — запись SKILL.md, иначе первая (fork/merge:
             # files[].path указывает на pristine-зеркало в references/, напр. в
@@ -116,7 +117,7 @@ def build_registry(env):
         die("buckets.json not found — every bucket needs description/category/tags")
     bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
     bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
-    # Alias-бакеты (P7.5, будущие слияния бакетов — D14 запрещает исполнять их СЕЙЧАС):
+    # Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5, будущие слияния бакетов — D14 запрещает исполнять их СЕЙЧАС):
     # метаданные-запись БЕЗ физического skills/<bucket> — старое имя бакета переживает
     # слияние как список ссылок на скиллы цели `alias_of` (см. build_plugin_manifests).
     # Не «orphan» (забытый каталог), а явная миграционная запись.
@@ -150,7 +151,7 @@ def build_registry(env):
 
 
 def load_bucket_aliases(env):
-    """Alias-бакеты (P7.5) из buckets.json: {старое_имя: целевой_бакет}. Лёгкий читатель
+    """Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5) из buckets.json: {старое_имя: целевой_бакет}. Лёгкий читатель
     (без build_registry) для update.py/status.py — им не нужна вся структура реестра ради
     одной подсказки. Пусто, если файла нет (standalone/тест-фикстура без buckets.json) или
     алиасов не объявлено — сегодня в реальном реестре их нет (D14: P7 не сливает бакеты)."""
@@ -167,7 +168,7 @@ def load_bucket_aliases(env):
 
 def alias_migration_hints(aliases, enabled_names):
     """Одна строка на КАЖДЫЙ активный alias-бакет — «бакет X теперь Y», без нагнетания
-    (P7.5 Code Guidance). `aliases` — {старое: целевое} из load_bucket_aliases,
+    (2026.07.02-SKM-MASTER-002 P7.5 Code Guidance). `aliases` — {старое: целевое} из load_bucket_aliases,
     `enabled_names` — плагины, реально включённые (True) в settings проекта."""
     return [f"бакет '{name}' теперь '{aliases[name]}' — обновите enabledPlugins, "
             f"когда удобно."
@@ -228,7 +229,7 @@ def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
             "package": "skiller",
         })
 
-    # Alias-бакеты (P7.5, слияния бакетов — механизм СЕЙЧАС без применения, D14): старое имя
+    # Alias-бакеты (2026.07.02-SKM-MASTER-002 P7.5, слияния бакетов — механизм СЕЙЧАС без применения, D14): старое имя
     # бакета остаётся marketplace-плагином (13 проектов на enabledPlugins — back-compat), но
     # без своего skills/<bucket>. Та же техника, что у курируемого `core` ниже: marketplace-
     # запись source:"./" + явный skills[]-список ссылок на скиллы, физически живущие теперь в
@@ -353,6 +354,30 @@ def _package_version(root):
     return version
 
 
+def _publication_versions(root):
+    """D27 per-unit version map (`configs/publication-versions.json`): separates the skiller
+    package API SemVer from finite per-unit manifest versions, so an unaffected bucket manifest
+    stays byte-identical across an unrelated owner's package-API bump. Absent (standalone/fixture
+    root predating the map) → `(None, None)`: `build_publication_catalog` then falls back to
+    stamping every unit with `package_version` uniformly — the pre-D27 behavior, unchanged."""
+    path = root / "configs" / "publication-versions.json"
+    if not path.is_file():
+        return None, None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        die(f"{path}: невалидный JSON: {e}")
+    if not isinstance(data, dict):
+        die(f"{path}: корень должен быть объектом")
+    units = data.get("units")
+    if not isinstance(units, dict) or not all(isinstance(v, str) for v in units.values()):
+        die(f"{path}: 'units' должен быть объектом {{unit: version}}")
+    default = data.get("default_unit_version")
+    if not isinstance(default, str) or not default:
+        die(f"{path}: 'default_unit_version' обязателен и должен быть строкой")
+    return units, default
+
+
 def _sibling_plugins(repo_root, package_root):
     """Scan the bounded sibling-package manifest input before catalog construction."""
     if package_root == repo_root or not (repo_root / "packages").is_dir():
@@ -378,20 +403,31 @@ def _sibling_plugins(repo_root, package_root):
     return tuple(siblings)
 
 
-def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
-    """Render legacy Claude artifacts through the immutable P3 semantic catalog."""
+def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
+    """Shared semantic-catalog construction — the immutable P1 input every provider renderer
+    consumes AND the read-only D42 core/donor-bucket diagnostic (doctor.py), so the
+    identity→carrier mapping is read from exactly one seam, never re-derived (2026.07.24-AGENT-RELIABILITY P1.5)."""
     root = env.root
     repo_root = _repo_root(root)
     if registry is None:
         registry, _meta, _dirs = build_registry(env)
     meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
-    catalog = build_publication_catalog(
+    unit_versions, default_unit_version = _publication_versions(root)
+    return build_publication_catalog(
         registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
         core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
         package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
         generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
         skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
+        unit_versions=unit_versions, default_unit_version=default_unit_version,
     )
+
+
+def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
+    """Render legacy Claude artifacts through the immutable P3 semantic catalog."""
+    root = env.root
+    repo_root = _repo_root(root)
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
     return render_claude_publication(catalog, repo_root=repo_root, package_root=root)
 
 
@@ -399,17 +435,15 @@ def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
     """Render native Codex outputs from the same immutable semantic catalog."""
     root = env.root
     repo_root = _repo_root(root)
-    if registry is None:
-        registry, _meta, _dirs = build_registry(env)
-    meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
-    catalog = build_publication_catalog(
-        registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
-        core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
-        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
-        generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
-        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
-    )
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
     return render_codex_publication(catalog, repo_root=repo_root, package_root=root)
+
+
+def build_repository_bootstrap_publication(env):
+    """Render the 26 thin root-bootstrap projections + combined lock (2026.07.24-AGENT-RELIABILITY P1.2, D31)."""
+    root = env.root
+    repo_root = _repo_root(root)
+    return render_repository_bootstrap_projections(repo_root=repo_root, package_root=root)
 
 
 def build_plugin_manifests(env, bucket_meta, bucket_dirs, registry=None):
@@ -422,6 +456,12 @@ def _manifest_text(data):
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
+def _has_repository_bootstrap_config(root):
+    """Standalone/fixture roots predating 2026.07.24-AGENT-RELIABILITY P1.2 carry no root-bootstrap config — skip the
+    renderer entirely rather than fail closed on a file that was never meant to exist there."""
+    return (root / "configs" / "repository-bootstrap-skills.json").is_file()
+
+
 def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     """Записать все plugin-манифесты + marketplace.json (атомарно). Возвращает число плагинов."""
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
@@ -429,6 +469,17 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         atomic_write_text(path, _manifest_text(data))
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs):
         atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
+    if _has_repository_bootstrap_config(env.root):
+        bootstrap_artifacts = build_repository_bootstrap_publication(env)
+        for artifact in bootstrap_artifacts:
+            atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
+        # 2026.07.24-AGENT-RELIABILITY P1.5 (D40 invariant i): fail closed on write too — an undeclared root directory
+        # (e.g. a stray hand-written adapter reappearing) is never a silent "unique carrier".
+        completeness_failures = assert_root_bootstrap_set_completeness(
+            _repo_root(env.root), bootstrap_artifacts)
+        if completeness_failures:
+            die("root-bootstrap root-set completeness:\n" +
+                "\n".join(f"  - {item}" for item in completeness_failures))
     # число плагинов = размер marketplace.plugins (последний манифест — marketplace.json)
     return len(manifests[-1][1]["plugins"])
 
@@ -463,6 +514,13 @@ def check_drift(env):
         _cmp(path, _manifest_text(data))
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
         _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
+    if _has_repository_bootstrap_config(root):
+        bootstrap_artifacts = build_repository_bootstrap_publication(env)
+        for artifact in bootstrap_artifacts:
+            _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
+        # 2026.07.24-AGENT-RELIABILITY P1.5 (D40 invariant i): registry --check must catch an undeclared root directory,
+        # not only stale bytes of a declared one — ownership, never suppression.
+        drift.extend(assert_root_bootstrap_set_completeness(repo_root, bootstrap_artifacts))
 
     graph_text, _n_nodes, _n_edges = render_graph(registry)
     _cmp(_docs_root(root) / "docs" / "guide" / "graph.md", graph_text)
@@ -666,6 +724,11 @@ def cmd_registry(env, argv):
     n_plugins = write_plugin_manifests(env, bucket_meta, bucket_dirs)
     print(f"Updated plugin manifests: {n_plugins} plugins "
           f"(.claude-plugin/marketplace.json)")
+
+    if _has_repository_bootstrap_config(root):
+        n_bootstrap = len(build_repository_bootstrap_publication(env))
+        print(f"Updated root-bootstrap projections: {n_bootstrap} artifacts "
+              f"(.claude/skills + .agents/skills + publication-lock.json, P1.2/D31)")
 
     n_nodes, n_edges = write_graph(env, registry)
     print(f"Updated docs/guide/graph.md: {n_nodes} nodes, {n_edges} edges")

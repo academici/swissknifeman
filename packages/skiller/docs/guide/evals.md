@@ -74,11 +74,18 @@ skills/<bucket>/<name>/
       "assertions": [
         {"type": "regex", "value": "точечн|минимальн|surgical|scope"},
         {"type": "not_contains", "value": "переписываю весь файл"}
-      ]
+      ],
+      "triggers": ["стоит ли заодно отрефакторить весь модуль, пока правлю баг"]
     }
   ]
 }
 ```
+
+**`triggers[]` (P8.8, опционально)** — список строк `should_trigger` из
+`triggers.json`, которые этот сценарий покрывает под давлением. У скилла с
+`evals.json` `pressure.json` обязателен (ERROR, `validate.sh`); каждый
+`should_trigger`, не покрытый ни одним `triggers[]`, — WARNING (поле новое,
+не карает существующие скиллы задним числом).
 
 ## triggers.json — точность описания
 
@@ -116,6 +123,33 @@ skiller eval quality/code-review  --scaffold     # создать стабы eva
 
 `benchmark.json` агрегирует pass-rate, тайминги и токены (mean±stddev), плюс Δ
 with-skill vs baseline.
+
+## Детерминизм отчёта (P8.9)
+
+`benchmark.json` воспроизводим и честен:
+
+- **Ни одного float.** Метрики (`pass_rate`, `duration_mean/std`, `tokens_mean/std`,
+  `delta.*`) — точная арифметика `fractions.Fraction` внутри, строка фиксированной
+  точности (`"0.500"`) на границе записи (`_stat`/`aggregate_runs`/`build_benchmark`
+  → `_stringify_fractions` перед `atomic_write_json`). √ для stddev — целочисленно
+  (`math.isqrt`), не `math.sqrt`.
+- **Инжектируемые часы.** `run_case`/`run_suite`/`cmd_eval` принимают `clock_ns`
+  (дефолт `time.monotonic_ns`) и `cmd_eval` — `now_iso` (дефолт `time.strftime(...)`).
+  С одинаковыми инжектированными часами два прогона дают побайтно идентичный
+  `benchmark.json`. CLI без флагов не меняется — параметры только для тестов/API.
+- **`provenance` — фактическое, не константа.** Блок `{"llm", "network", "clock",
+  "baseline"}` в отчёте: `llm`/`network` — `true` тогда и только тогда, когда
+  `claude` реально был вызван (эта ветка cmd_eval недостижима иначе); `clock` —
+  `"injected"`, если `clock_ns` передан явно, иначе `"wall"`; `baseline` — флаг
+  `--baseline`.
+- **`schema_version: "skill-benchmark/v2"`** — намеспейсовано (не голое число):
+  тот же модуль несёт отдельный `build_system_benchmark` (P3.3-контракт,
+  `"schema_version": "system-bank-benchmark/v1"`) — разные словари версий под
+  общим коротким именем были бы дефектом.
+- **No-op офлайн, ровно нужные файлы online.** Нет `claude` → ничего не пишется
+  (только валидация формата, см. выше). Есть `claude` → пишется РОВНО
+  `evals/benchmark.json` (+`evals/benchmark.html` при `--static`) — проверено
+  снимком каталога до/после в `tests/test_eval.py::OnlineDeterminismCase`.
 
 ## Покрытие и гейт
 

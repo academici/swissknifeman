@@ -17,6 +17,15 @@ from .config import load_config
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
+# Цель тримминга — НИЖЕ warning-порога Claude Code (10 000 токенов), а не под дефолтный
+# потолок клиента (25 000, после которого клиент сам выгружает ответ на диск и подставляет
+# file-reference — это аварийный выход клиента, не канал доставки сервера, см.
+# findings/P3-mcp-result-field-practice.md). Оценщик токенов — grep-эвристика (stdlib, без
+# токенайзера): символы/3.2 — консервативнее «символы/4» для кириллицы+JSON-пунктуации
+# (2026.07.25-ECO-OPT findings/P3.2-maind-tool-result-sizes.md — сверка оценки с явным запасом).
+TRIM_TARGET_TOKENS = 10_000
+CHARS_PER_TOKEN_ESTIMATE = 3.2
+
 
 def _graph_reader(env, config):
     """Единый read-фасад графа (федерация — единственная раскладка; disabled → die)."""
@@ -94,9 +103,83 @@ def _error(req_id, code, message):
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
 
 
+def _estimate_tokens(text):
+    return len(text) / CHARS_PER_TOKEN_ESTIMATE
+
+
+def _list_candidates(payload):
+    """Топ-уровневые списки — кандидаты на урезание: сам payload (если это список) или его
+    непосредственные значения-списки (если payload — словарь). Только верхний уровень: одной
+    воронки `_content` достаточно для всех форм ответов 11 инструментов (списочные — бакет
+    целиком, ограниченные — списков нет вовсе, тримминг для них не срабатывает)."""
+    if isinstance(payload, list):
+        yield (), payload
+    elif isinstance(payload, dict):
+        for key, value in payload.items():
+            if isinstance(value, list):
+                yield (key,), value
+
+
+def _with_truncation_receipt(payload, path, trimmed, total_count):
+    """Данные, а не только флаг: `truncated`/`returned_count`/`total_count` + человекочитаемая
+    подсказка дозапроса — голый `truncated: true` не снимает ни один из трёх отказов молчаливого
+    усечения (findings/P3-mcp-result-field-practice.md). `isError` НЕ переиспользуется — он занят
+    классом «ошибка инструмента» (`_run_tool`/`_tools_call`)."""
+    receipt = {
+        "truncated": True,
+        "returned_count": len(trimmed),
+        "total_count": total_count,
+        "hint": ("ответ урезан лимитом контекста; сузьте запрос (query/depth/project) "
+                 "или запросите остаток отдельным вызовом"),
+    }
+    if path == ():
+        return {"items": trimmed, **receipt}
+    key = path[0]
+    out = dict(payload)
+    out[key] = trimmed
+    out[f"{key}_truncated"] = receipt
+    return out
+
+
+def _truncate_largest_list(payload, limit_tokens):
+    """Урезает крупнейший топ-уровневый список до размера, укладывающегося в лимит, бинарным
+    спуском по числу элементов (JSON пересобирается на каждой пробе — списков ≤ пары сотен
+    элементов на практике, цена приемлема). None-кандидатов (ни payload, ни его значения не
+    список) — возвращает исходный payload как есть: свободных байт для тримминга нет, это
+    хвостовой случай эскалации (Implementation Rules 2026.07.25-ECO-OPT P3.2), не молчаливая потеря данных."""
+    candidates = list(_list_candidates(payload))
+    if not candidates:
+        return payload
+    path, full_list = max(candidates, key=lambda c: len(json.dumps(c[1], ensure_ascii=False)))
+    if not full_list:
+        return payload
+    lo, hi = 0, len(full_list)
+    best = 0
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        trimmed = full_list[:mid]
+        candidate_payload = _with_truncation_receipt(payload, path, trimmed, len(full_list))
+        text = json.dumps(candidate_payload, ensure_ascii=False)
+        if _estimate_tokens(text) <= limit_tokens:
+            best = mid
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return _with_truncation_receipt(payload, path, full_list[:best], len(full_list))
+
+
 def _content(payload, is_error=False):
-    out = {"content": [{"type": "text",
-                        "text": json.dumps(payload, ensure_ascii=False, indent=2)}]}
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    # (1) первый рычаг — снять indent=2 (чистая экономия без потери данных); ошибки не трогаем
+    # (короткие, тримминг им не нужен, а форма важна для читаемости в логах).
+    if not is_error and _estimate_tokens(text) > TRIM_TARGET_TOKENS:
+        text = json.dumps(payload, ensure_ascii=False)
+        # (3) потолок с receipt — хвостовой случай, срабатывает только если снятие indent
+        # не хватило (сузить на входе — уровень выбора стратегии инструментом, не воронки).
+        if _estimate_tokens(text) > TRIM_TARGET_TOKENS:
+            trimmed_payload = _truncate_largest_list(payload, TRIM_TARGET_TOKENS)
+            text = json.dumps(trimmed_payload, ensure_ascii=False)
+    out = {"content": [{"type": "text", "text": text}]}
     if is_error:
         out["isError"] = True
     return out
@@ -110,7 +193,7 @@ def _missing_required(tool, args):
     return [k for k in tool["inputSchema"].get("required", []) if not args.get(k)]
 
 
-def _recall_union(config, url, scope, query, *, include_related_scopes=True):
+def _recall_union(config, url, scope, query, *, include_related_scopes=True, headers=None):
     """Recall с изоляцией + объединением scope'ов проекта: project:<id> разворачивается в
     приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
     общую-по-тегу память. Явно запрошенный scope не расширяется: публичный MCP-ответ
@@ -124,7 +207,7 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=True):
             scopes = recall_scopes(proj)
     seen, out = set(), []
     for sc in scopes:
-        for r in memory_mod.recall(url, sc, query):
+        for r in memory_mod.recall(url, sc, query, headers=headers):
             if r.get("text") in seen:
                 continue
             seen.add(r.get("text"))
@@ -195,8 +278,8 @@ def _run_tool(env, config, name, args, default_scope):
     if name in ("maind_memory_store", "maind_memory_recall", "maind_memory_forget"):
         _, _, url = memory_mod.resolve_ports(env, config)
         if not memory_mod.health(url):
-            return _content({"error": "демон памяти не запущен (maind start --only memory)"},
-                            is_error=True)
+            return _content({"error": memory_mod.unavailable_message(config, url)}, is_error=True)
+        headers = memory_mod.auth_headers(memory_mod.resolve_secret(env, config))
         requested_scope = args.get("scope")
         scope = requested_scope or default_scope
         allowed = _allowed_scopes(config, default_scope)
@@ -204,19 +287,21 @@ def _run_tool(env, config, name, args, default_scope):
         if denied:
             return denied
         if name == "maind_memory_store":
-            return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"]))
+            return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"],
+                                             headers=headers))
         if name == "maind_memory_recall":
             return _content(_recall_union(config, url, scope, args["query"],
-                                          include_related_scopes=not bool(requested_scope)))
+                                          include_related_scopes=not bool(requested_scope),
+                                          headers=headers))
         # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
         # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
         if allowed is not None:
-            owner = memory_mod.memory_owner_scope(url, args["key"], allowed)
+            owner = memory_mod.memory_owner_scope(url, args["key"], allowed, headers)
             if owner is None or owner not in allowed:
                 return _content({"error": "forget отклонён: факт не принадлежит разрешённым "
                                           "scope этого проекта (изоляция namespace)"},
                                 is_error=True)
-        return _content(memory_mod.forget(url, scope, args["key"]))
+        return _content(memory_mod.forget(url, scope, args["key"], headers=headers))
     if name == "maind_graph_query":
         if _project_blocked(config, default_scope, _node_pid(args["from"])):
             return _graph_error()

@@ -18,6 +18,7 @@ sha256: ""
 
 When active:
 
+- Answer-first: do the thing, then report — action/answer comes before rationale, not after.
 - Code tasks: show only changed code. No explanation of what was done.
 - Questions: one sentence max. No examples unless asked.
 - Errors/bugs: show the fix; optionally one-line reason if non-obvious.
@@ -57,4 +58,4 @@ Mode stays active rest of conversation unless user says "normal mode" or "под
 - `writing-style` (general) — tone/language of artifacts when verbose text is needed.
 - Output-style `lean` (harness) — session-wide enforcement of the same voice at system-prompt level; this skill = portable SSOT of the phrasings (the output-style distills it).
 
-<!-- ru-source-sha256: f99e7994b55f460553f0bfe9330f19be7e96479398cb70987458ce32faa930ae -->
+<!-- ru-source-sha256: 808dc15ab760bac290e598ee47562ac5a6857d3e22c9a04ec62b46352eb30a04 -->

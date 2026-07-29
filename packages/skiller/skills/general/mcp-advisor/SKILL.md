@@ -60,6 +60,7 @@ Where a CLI suffices (`gh`, `git`), prefer the CLI over a server.
 | **filesystem** | npx | rare: multi-root / special FS access | extended file access | **usually redundant** — Claude Code has native FS access | Node |
 | **memory (generic)** | npx `server-memory` | **in the academici ecosystem — do NOT use** | — | always: memory goes through the `maind` hub | conflicts with the memory canon |
 | **maind (hub)** | per-project, from onboarding `.mcp.json` | onboarded ecosystem projects | memory (scope isolation) + link graph + projects/links | one-off external project without onboarding | already present after `maind onboard` |
+| **graph-retrieval MCP** (`code-review-graph` and its class) | pipx/uvx, separate process | **do not connect without your own co-change measurement** — see block below | multi-hop "what breaks if I change this" | the code-graph canon is **Serena** (LSP); evaluated and rejected 2026-07 on our numbers | process + permissions + maintaining an external project |
 
 **Memory caveat.** In the academici ecosystem memory and graph go **through the `maind` server**
 (`MODE=maind`, tools `maind_memory_*` / `maind_graph_*`), **not** the raw `memory` MCP nor direct
@@ -68,6 +69,29 @@ agentmemory. Do not propose generic `memory` — it duplicates/conflicts with th
 **GitHub: `gh` CLI vs `github` MCP.** For routine review/handoff, `gh` CLI is cheaper (minimal slice:
 `gh pr diff`, `gh pr view --comments`) — see `oss-dev/gh-review`. The full `github` MCP — when you need the
 platform's tool integration in the agent (bulk operations, Actions, secrets).
+
+## Graph-retrieval MCP: measured verdict (not connected — on our numbers)
+
+The class "code graph as a retrieval layer under review" was **evaluated and rejected 2026-07** on the
+candidate `tirth8205/code-review-graph` (26k★, MIT) — rejected by a NUMBER on our codebase, not by impression:
+
+- **Ops are excellent** — 1.66 s build (405 files), 0.24 s increment. Speed was not the problem.
+- **`P_impact` = 0.039** against a `≥ 0.40` threshold declared BEFORE measuring: blast-radius precision vs
+  co-change ground truth, 24 folds (each changed file of a commit as seed in turn) over three real commits
+  of a Laravel project. 1 fold out of 24 cleared the threshold.
+- **It fails on noise, not blindness:** recall 0.40–0.43 — the graph does see the links, but returns 110
+  files for one seed, with the true ones at positions 77 and 102 ⇒ top-K truncation makes it WORSE.
+- Public numbers are self-measured: the claimed F1 0.714 is computed against ground truth derived from the
+  same graph ("circular by construction" — the author's own wording); co-change numbers were never published.
+
+**Resulting rule:** never connect a graph-retrieval MCP on README and stars — only after YOUR OWN
+co-change measurement on YOUR repo (threshold declared BEFORE measuring, ground truth from real commits,
+not from the graph). A verdict on one candidate is not a verdict on the class.
+
+**Reopen the question if** (any): (1) external, non-self-measured co-change precision ≥ 0.40 is published;
+OR (2) a repo > 3000 files appears where Serena/grep structurally cannot answer "what breaks if I change
+this"; OR (3) an independent benchmark of the class appears. Until then the code-graph canon is **Serena**
+(LSP; the candidate's own author states LSP is more precise for symbol-precise access).
 
 ## Profile defaults (starting point, not ceiling)
 
@@ -93,7 +117,11 @@ Selection (above) is about adding. Symmetric ritual — about what's ALREADY sit
    tokens") — that figure is honest only as an upper bound when tool search is off/unavailable. Weeding
    still has value (a server is still a summary line + permissions surface + Node/uvx dep), but its ROI
    is lower than the eager ceiling implies.
-4. **Disconnect candidate** — a server for which none of the map's "Connect when" signals has held for
+4. **A heavy resident is not justified by its author's claim.** A server selling "×N context savings"
+   (code graph, semantic search, repo packers) is checked by YOUR measurement on YOUR repo — see the
+   "Graph-retrieval MCP" block above: for the candidate we measured, the ×82 claim stood against a
+   "read the whole repository" baseline the author himself calls "an upper bound no real agent pays".
+5. **Disconnect candidate** — a server for which none of the map's "Connect when" signals has held for
    7+ days straight (see `context-economy` §5) — propose disconnection to the project owner with a
    reason, don't disconnect silently.
 
@@ -116,4 +144,4 @@ Selection (above) is about adding. Symmetric ritual — about what's ALREADY sit
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
 - `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
 
-<!-- ru-source-sha256: 167766f22c020388e639900aef0562529bac0f1f8329a68418ab28bc818018e6 -->
+<!-- ru-source-sha256: 4e926a520d834270e90769a13248f0309968b7f871b94e09b3057bb147e43738 -->

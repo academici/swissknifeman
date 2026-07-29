@@ -12,13 +12,13 @@ from pathlib import Path
 
 try:  # package invocation used by the focused P4 command-projection gate
     from .fixtures import (  # noqa: E402
-        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
-        plan_md, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
+        phase_md, plan_md, write_closure, write_valid_plan,
     )
 except ImportError:  # direct discovery from packages/task remains supported
     from fixtures import (  # noqa: E402
-        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
-        plan_md, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
+        phase_md, plan_md, write_closure, write_valid_plan,
     )
 from task.plan_lint import (  # noqa: E402
     Diagnostics, _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
@@ -422,6 +422,470 @@ class TestAuditScopePayload(TmpPlanTestCase):
                          encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
+
+
+class TestTieredPortability(TmpPlanTestCase):
+    """P2.2/D26/D47: план с `handoff.md` (tier=committed-bundle по конструкции) обязан
+    нести ≥1 committed execution input и не содержать внешний (host/chat/mAInd/tmp/foreign)
+    путь В РОЛИ execution input (Inputs/Required Reads/Validation); упоминание того же пути
+    ВНЕ ролевых полей (Why/Implementation Rules/…) — provenance и обязано проходить."""
+
+    def _write(self, plan_id, *, required_reads="1) lib/pkg/config.py"):
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace("**Required Reads:** 1) lib/pkg/config.py",
+                            f"**Required Reads:** {required_reads}")
+        phase.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_committed_execution_input_is_clean(self):
+        plan_dir = self._write("2026.07.27-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY"), [])
+        self.assertEqual([w for w in diag.warnings if "PORTABILITY" in w], [])
+
+    def test_dated_plan_with_tmp_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) tmp/scratch-notes.md")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_dated_plan_with_absolute_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) /etc/passwd")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_dated_plan_with_home_execution_input_is_error(self):
+        plan_dir = self._write("2026.07.27-DEMO", required_reads="1) ~/.codex/session.json")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), diag.errors)
+
+    def test_legacy_plan_with_external_execution_input_is_warning_not_error(self):
+        """Back-compat §2: планы старее канона красить задним числом нельзя."""
+        plan_dir = self._write("DEMO-LEGACY", required_reads="1) tmp/scratch-notes.md")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), [], diag.errors)
+        self.assertTrue([w for w in diag.warnings if "PORTABILITY_EXTERNAL_INPUT" in w],
+                        diag.warnings)
+
+    def test_tmp_mention_outside_role_fields_is_provenance_and_passes(self):
+        """D47: `tmp/`-упоминание в Why/Implementation Rules (не Inputs/Required
+        Reads/Validation) — provenance, не execution input; та же дисциплина, что
+        закрепляет self-conformance фикстура этого плана на `brief/00-brief.md`."""
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace(
+            "**Why:** Диагностика дорогая.",
+            "**Why:** Диагностика дорогая; см. user-owned `tmp/scratch-notes.md` "
+            "как provenance.")
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY"), [])
+        self.assertEqual([w for w in diag.warnings if "PORTABILITY" in w], [])
+
+    def test_shell_redirect_target_in_validation_is_not_an_execution_input(self):
+        """Скретч-редирект (`> файл`) в поле Validation — цель записи диагностики
+        собственной команды item'а, не execution input (P4.2-инцидент на этом самом
+        плане до фикса regex'а)."""
+        plan_dir = self._write(
+            "2026.07.27-DEMO",
+            required_reads="1) lib/pkg/config.py",
+        )
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = text.replace(
+            "**Validation:** bash scripts/test.sh — зелёный.",
+            "**Validation:** `bash scripts/test.sh >/tmp/scratch-output.txt` — зелёный.")
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "PORTABILITY_EXTERNAL_INPUT"), [], diag.errors)
+
+    def test_dated_plan_without_any_committed_execution_input_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase.read_text(encoding="utf-8")
+        text = (text.replace("**Inputs:** список ключей.", "**Inputs:** ничего внешнего.")
+                    .replace("**Required Reads:** 1) lib/pkg/config.py",
+                             "**Required Reads:** прочитать контекст владельца.")
+                    .replace("**Validation:** bash scripts/test.sh — зелёный.",
+                             "**Validation:** проверить руками."))
+        phase.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "PORTABILITY_INPUT_MISSING"), diag.errors)
+
+
+class TestWriteSiteCodesGate(TmpPlanTestCase):
+    """P4.4/D91 (ремонт находки Ф2, findings/P3.11-terminal-audit-2.md § Ф2): item со
+    статусом 🟢/🟠, чей `Updated` (Phase Status) ≥ cutoff, обязан нести оба кода
+    `pre_mutation:`/`pre_final:` со значением `allow` в Completion Notes; item ДО cutoff'а
+    не диагностируется вовсе (forward-only, D91). Каждый различающий кейс (b)/(c) ниже
+    проверен КРАСНЫМ на коде до этого item'а (`git show HEAD:packages/task/lib/task/
+    plan_lint.py` не нёс ни `_lint_write_site_codes_44`, ни вызова из `lint_plan` —
+    старый код молчал на ОБОИХ кейсах; см. Completion Notes P4.4 за точным прогоном, D79)."""
+
+    def _write(self, *, updated, item_status="🟢 Done",
+               completion_notes="сделано, тест зелёный"):
+        plan_dir = write_valid_plan(self.root)
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(
+            phase_md(item_status=item_status, completion_notes=completion_notes,
+                      updated=updated),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_pre_cutoff_item_without_codes_is_silent(self):
+        """(а) Updated < cutoff, без кодов → молчание (forward-only, И10)."""
+        plan_dir = self._write(updated="2026-07-26")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+    def test_b_post_cutoff_item_without_codes_is_error(self):
+        """(б) Updated ≥ cutoff, без кодов → ERROR."""
+        plan_dir = self._write(updated="2026-07-27")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
+
+    def test_c_post_cutoff_item_with_pre_final_na_is_error(self):
+        """(в) Updated ≥ cutoff, `pre_final: n/a` → ERROR (D76: `n/a` — не зелёное).
+        Фикстура конвертирована на каноническую строку `write-site:` (D102, P10.1) —
+        старая свободная форма `` `pre_mutation: allow`, `pre_final: n/a` `` покраснела
+        по плану после починки fail-open/ложного ERROR (гейт теперь матчит ТОЛЬКО
+        каноническую строку); предмет проверки не изменился."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: n/a")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
+
+    def test_d_post_cutoff_item_with_both_allow_is_silent(self):
+        """(г) Updated ≥ cutoff, оба `allow` → молчание. Фикстура конвертирована на
+        каноническую строку `write-site:` (D102, P10.1) — см. докстринг test_c."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: allow")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_e_fail_open_prose_citation_without_own_line_is_error(self):
+        """(б, D88/D102): item БЕЗ своей канонической строки `write-site:`, но
+        цитирующий чужие коды в прозе (разбор другого item'а) → ERROR, а не молчание.
+        Fail-open дефекта: старый `re.search` по всему полю засчитывал цитату как
+        собственные коды item'а."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Разбор соседнего item'а для контекста: там стояло "
+                "`pre_mutation: allow`, `pre_final: allow` — у нас другая ситуация."))
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
+
+    def test_f_own_allow_line_with_prose_block_citation_is_silent(self):
+        """(в, D88/D102): item СО своей канонической строкой `write-site:` (оба
+        `allow`), который выше по тексту ЦИТИРУЕТ `pre_final: block:X` чужого item'а
+        (объясняя, почему тот не закрылся) → диагностик НЕТ. Ложный ERROR дефекта:
+        старый `re.search` брал ПЕРВОЕ вхождение в поле — цитату, а не свою строку."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Для сравнения: соседний item был заблокирован (`pre_final: "
+                "block:ACCEPTANCE_NOT_PUBLIC`). У этого item — иначе.\n"
+                "write-site: pre_mutation: allow · pre_final: allow"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_g_markdown_wrapped_canonical_line_with_both_allow_passes(self):
+        """(а, D88/D102): каноническая строка ДОПУСКАЕТ ведущую markdown-обёртку
+        (буллет `- `, blockquote `> `, `**bold**` — Implementation Rules P10.1 (1)) —
+        item проходит без диагностик, как и голая форма."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Готово.\n"
+                "- **write-site:** `pre_mutation: allow` · `pre_final: allow`"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_h_own_line_pre_mutation_block_is_error(self):
+        """(д, D88/D102): каноническая строка есть, но `pre_mutation:` ≠ `allow`
+        (`block:*`) — ERROR по D76, симметрично test_c (там красный код был у
+        `pre_final`). Различает поле, а не только «хоть один код неверный»."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes="write-site: pre_mutation: block:LOOP_BUDGET_EXCEEDED · pre_final: n/a")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
+
+    def test_i_pre_cutoff_item_with_prose_citation_stays_silent_additivity(self):
+        """(е, D88/D102): аддитивность по дате (И10) сохраняется даже когда
+        Completion Notes несёт прозаическую цитату кодов — item с `Updated` < cutoff
+        не диагностируется НИ ОДНОЙ новой строкой независимо от содержимого поля
+        (план из трёх живых репо на 2026-07-27 не даёт ни одного item'а с
+        `Updated ≥` cutoff — замер Inputs P10.1 — этот кейс синтетически
+        воспроизводит «что если бы был», не текущее дерево)."""
+        plan_dir = self._write(
+            updated="2026-07-26",
+            completion_notes=(
+                "Сделано. Для контекста цитата соседнего item'а: `pre_mutation: "
+                "allow`, `pre_final: block:X`."))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+        self.assertEqual(_errors_containing(diag, "закрытие на не-allow"), [])
+
+    def test_j_prose_quoting_the_form_template_does_not_shadow_the_real_line(self):
+        """(D88/D102, найдено при закрытии самого P10.1): Completion Notes item'а
+        МОЖЕТ прозой ЦИТИРОВАТЬ форму строки как шаблон (`write-site: pre_mutation:
+        <код> · pre_final: <код>` — объясняя правило), и такая цитата ТОЖЕ начинается
+        с префикса `write-site:` после markdown-обёртки. Она не должна «застолбить»
+        поиск и скрыть настоящую каноническую строку ниже — гейт обязан продолжить
+        перебор строк и найти реальную."""
+        plan_dir = self._write(
+            updated="2026-07-27",
+            completion_notes=(
+                "Форма — одна строка `write-site: pre_mutation: <код> · pre_final: "
+                "<код>` (D88), это не сама сдача.\n"
+                "write-site: pre_mutation: allow · pre_final: allow"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
+        self.assertEqual(_errors_containing(diag, "pre_final"), [])
+
+    def test_malformed_updated_date_is_out_of_scope_not_error(self):
+        """Непарсимая/нестрогая дата (не ISO `YYYY-MM-DD`) = вне скоупа — fail-open по дате
+        (Implementation Rules P4.4 (1)), не ERROR/WARNING."""
+        plan_dir = self._write(updated="2026.07.27")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+    def test_not_done_status_is_never_gated(self):
+        """Статус вне `🟢`/`🟠` (напр. `⬜ Not started`) — правило не применяется, каким бы
+        ни был Updated."""
+        plan_dir = self._write(updated="2026-07-27", item_status="⬜ Not started",
+                                completion_notes="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
+
+
+class TestClosureReports81(TmpPlanTestCase):
+    """P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1), включаемый opt-in
+    полем `## 0. Meta` → `Closure Protocol | v1`. Пять проверок линтера + аддитивность.
+    Каждый различающий кейс ниже проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_closure_reports_81`, ни
+    вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах (б)–(д), а (а)/(е) на нём
+    зелены by construction (D79 — предмет теста именно РАЗЛИЧАЮЩИЙ, см. Completion Notes)."""
+
+    def _plan(self, *, closure_protocol="v1", phase_status="🟢 Done"):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, phase_status=phase_status,
+                    closure_protocol=closure_protocol),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_valid_closure_report_passes(self):
+        """(а) валидный `closure/P1.json` при включённом протоколе — ни ERROR, ни WARNING."""
+        plan_dir = self._plan()
+        write_closure(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(diag.warnings, [])
+
+    def test_b_terminal_phase_without_report_is_error_with_path(self):
+        """(б) фаза терминальна, `Closure Protocol | v1` есть, файла нет → ERROR, и в тексте
+        ERROR присутствует ОЖИДАЕМЫЙ путь `closure/P1.json` (fail-closed называет объект)."""
+        plan_dir = self._plan()
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "отчёта закрытия нет")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any(str(Path("closure") / "P1.json") in e for e in hits), hits)
+
+    def test_c_real_evidence_class_without_evidence_is_error_with_id(self):
+        """(в) `evidence_class: "real"` при пустом `evidence` → ERROR с id записи."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, evidence="")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "«real» с пустым evidence")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_d_items_diverging_from_phase_status_is_error_with_id(self):
+        """(г) `items[]` расходится с `## Phase Status`: и лишний/недостающий id, и иной
+        статус — ERROR, каждый со своим id."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, item_id="P1.9")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "«P1.9» есть в items[]"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "«P1.1» есть в «## Phase Status»"), diag.errors)
+
+        plan_dir2 = write_valid_plan(self.root, plan_id="DEMO-2")
+        (plan_dir2 / "plan.md").write_text(
+            plan_md("DEMO-2", closure_protocol="v1"), encoding="utf-8")
+        write_closure(plan_dir2, item_status="🟠 Done with deviations")
+        _, diag2 = _lint(plan_dir2)
+        self.assertTrue(_errors_containing(diag2, "статусу в «## Phase Status»"), diag2.errors)
+
+    def test_e_phase_status_diverging_from_status_board_is_error(self):
+        """(д) `phase_status` отчёта ≠ строке фазы в `## 4. Phase Index & Status Board`."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, phase_status="⛔ Skipped by decision")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "≠ статусу фазы P1 в Status Board"), diag.errors)
+
+    def test_f_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(е) АДДИТИВНОСТЬ: тот же план БЕЗ Meta-поля даёт РОВНО тот же список диагностик,
+        что и без каталога `closure/` вовсе (сравнение МНОЖЕСТВ, не количества) — даже когда
+        на диске лежит заведомо битый отчёт. Без этого включение протокола у одного плана
+        красило бы весь флот."""
+        baseline_dir = write_valid_plan(self.root, plan_id="DEMO-BASE")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = write_valid_plan(self.root, plan_id="DEMO-NOFIELD")
+        (plan_dir / "closure").mkdir()
+        (plan_dir / "closure" / "P1.json").write_text("{ битый json", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))
+
+    def test_missing_required_key_is_schema_error(self):
+        """Отсутствие ключа схемы = ОШИБКА СХЕМЫ, а не «нет данных» (D42): «нет данных»
+        выражается значением `baseline_pending`, а не пропуском строки."""
+        plan_dir = self._plan()
+        report = json.loads(closure_json(plan_dir.name))
+        del report["limitations"]
+        write_closure(plan_dir)
+        (plan_dir / "closure" / "P1.json").write_text(
+            json.dumps(report, ensure_ascii=False), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "нет обязательного ключа «limitations»"),
+                        diag.errors)
+
+    def test_evidence_class_outside_enum_is_error(self):
+        """Класс свидетельства — enum РОВНО из трёх; чужой словарь классов доказательства
+        (`recomputed`/`cross-checked`/…) сюда не подставляется (разные оси, реконсайл D86)."""
+        plan_dir = self._plan()
+        write_closure(plan_dir, evidence_class="recomputed")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "evidence_class «recomputed» вне enum"),
+                        diag.errors)
+
+    def test_unknown_meta_value_is_error(self):
+        """`Closure Protocol` со значением ≠ `v1` — ERROR, а не молчаливое отключение
+        (fail-open «протокол объявлен, но гейты спят» — ровно то, ради чего приём взят)."""
+        plan_dir = self._plan(closure_protocol="v2")
+        write_closure(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "единственное легальное «v1»"), diag.errors)
+
+    def test_non_terminal_phase_without_report_is_silent(self):
+        """Нетерминальная фаза отчёта не обязана иметь — правило forward-only по СТАТУСУ
+        фазы, а не «каждая фаза плана с включённым протоколом»."""
+        plan_dir = self._plan(phase_status="🟡 In progress")
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(phase_md(item_status="🟡 In progress", completion_notes="—"),
+                         encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "отчёта закрытия нет"), [])
+
+    def test_broken_json_names_the_file(self):
+        """Битый JSON при включённом протоколе — ERROR, НАЗЫВАЮЩИЙ файл и причину
+        (рамка переноса: fail-closed без имени объекта запрещён, findings §8.3 #19)."""
+        plan_dir = self._plan()
+        (plan_dir / "closure").mkdir()
+        (plan_dir / "closure" / "P1.json").write_text("{ битый json", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "не разбирается как JSON")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.json" in e for e in hits), hits)
+
+
+class TestConsequencesGate82(TmpPlanTestCase):
+    """P8.2/D103-D105: D-запись, чья ячейка `Решение` матчит измеренный предикат
+    отмены/замены (`supersedes D`/`отменяет D`/причастие без «не» перед ним) и датирована
+    (`Дата`) ≥ CONSEQUENCES_CANON_DATE, обязана нести `**Consequences:**` — иначе ERROR с
+    номером D-записи. Активация — ДВОЙНОЙ opt-in: Meta `Closure Protocol | v1` И дата.
+    Каждый различающий кейс проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_consequences_82`, ни
+    CONSEQUENCES_STEMS_RE, ни вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах."""
+
+    def _plan(self, *, closure_protocol="v1", decision_log_rows):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, closure_protocol=closure_protocol,
+                    decision_log_rows=decision_log_rows),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_a_supersedes_with_consequences_passes(self):
+        """(a) `supersedes D30` + `**Consequences:**` → диагностик нет."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D40 | 2026-07-28 | supersedes D30 в части объёма. "
+            "**Consequences:** старый носитель дублируется до реконсайла. | почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_b_supersedes_without_consequences_is_error_with_id(self):
+        """(б) `supersedes D30` без `Consequences` → ERROR, текст несёт номер D-записи."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-28 | supersedes D30 в части объёма. | почему |"))
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "**Consequences:**")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("D98" in e for e in hits), hits)
+
+    def test_c_negated_participle_is_not_gated(self):
+        """(в) «не отменена» (причастие, НО с отрицанием перед ним) → диагностик нет —
+        негативный lookbehind снимает ложный ERROR (research/23 §1, D11/D19/D26-класс)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D11 | 2026-07-28 | Уточняет D10 по факту сверки (не отменена, а расширена). "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_d_form_without_yo_is_caught(self):
+        """(г) «отменена» (форма без «ё») без `Consequences` → ERROR — форма без «ё»
+        ловится (D103: спека дословно её теряла)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-28 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "**Consequences:**")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("D98" in e for e in hits), hits)
+
+    def test_e_forward_only_before_cutoff_is_silent(self):
+        """(д) та же запись, но `Дата` < CONSEQUENCES_CANON_DATE → диагностик нет
+        (forward-only, D103: ни одна существующая запись не краснеет задним числом)."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D98 | 2026-07-27 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_f_unparsable_date_is_silent(self):
+        """(е) непарсимая/суффиксная `Дата` (`2026-07-18 (финализирован P0.4)`, форма
+        FOREMAN D7) → префиксный ISO-матч даёт «2026-07-18» < cutoff — диагностик нет."""
+        plan_dir = self._plan(decision_log_rows=(
+            "| D7 | 2026-07-18 (финализирован P0.4) | Спека отменена. | почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Consequences"), [])
+
+    def test_g_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(ж) АДДИТИВНОСТЬ: тот же план БЕЗ Meta `Closure Protocol` даёт РОВНО тот же
+        список диагностик, что базовый план (сравнение МНОЖЕСТВ), даже когда D-лог несёт
+        заведомо гейтящуюся запись без `Consequences`."""
+        baseline_dir = write_valid_plan(self.root, plan_id="DEMO-BASE")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = self._plan(closure_protocol=None, decision_log_rows=(
+            "| D98 | 2026-07-28 | Спека research/11 §2 отменена во всех носителях. "
+            "| почему |"))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))
 
 
 class TestValidPlan(TmpPlanTestCase):
@@ -2089,3 +2553,178 @@ class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "заявляет оркестрацию"), [], diag.warnings)
+
+
+class TestCheckpointedGate83(TmpPlanTestCase):
+    """P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work строку
+    `Возобновление: <команда>`; `⛔ Skipped by decision` — РОВНО `Возобновление: —` И
+    ссылку `D<номер>`. Активация — opt-in Meta `Closure Protocol | v1` (без даты-канона:
+    на дату детализации живых 🔴/⛔ items с включённым протоколом на флоте нет). Каждый
+    различающий кейс проверен КРАСНЫМ на коде до этого item'а: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_checkpointed_83`, ни
+    вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах."""
+
+    def _write(self, *, closure_protocol="v1", item_status="🔴 Blocked", pending_work="—"):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "plan.md").write_text(
+            plan_md(plan_dir.name, closure_protocol=closure_protocol),
+            encoding="utf-8")
+        phase = plan_dir / "phases" / "P1.md"
+        text = phase_md(item_status=item_status).replace(
+            "**Pending Work:** —", f"**Pending Work:** {pending_work}")
+        phase.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_a_blocked_with_resume_command_passes(self):
+        """(a) 🔴 + `Возобновление: <команда>` → диагностик гейта нет."""
+        plan_dir = self._write(pending_work="Возобновление: /task:plan-design DEMO-1 P1.1")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_b_blocked_without_resume_line_is_error_with_id(self):
+        """(б) 🔴 без строки `Возобновление:` → ERROR, текст несёт id item'а."""
+        plan_dir = self._write(pending_work="—")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "Возобновление")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_b2_blocked_with_bare_dash_resume_is_error(self):
+        """(б, вариант) 🔴 + `Возобновление: —` (голый прочерк, без внешнего блокера и
+        без команды) → ERROR: непустая команда обязательна, «—» ей не считается."""
+        plan_dir = self._write(pending_work="Возобновление: —")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+
+    def test_b3_blocked_with_external_blocker_form_passes(self):
+        """(б, вариант) 🔴 + `Возобновление: — (внешний блокер: …)` — легальная форма
+        для блокера без локального шага (Code Guidance P8.3) → диагностик нет."""
+        plan_dir = self._write(
+            pending_work="Возобновление: — (внешний блокер: решение владельца по OQ-4)")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_c_skipped_without_resume_and_d_ref_is_error(self):
+        """(в) ⛔ без `Возобновление: —`/без `D<номер>` → ERROR с id item'а."""
+        plan_dir = self._write(item_status="⛔ Skipped by decision", pending_work="—")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "Возобновление")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in e for e in hits), hits)
+
+    def test_c2_skipped_with_resume_dash_but_no_d_ref_is_error(self):
+        """(в, вариант) ⛔ + `Возобновление: —`, но БЕЗ ссылки `D<номер>` → ERROR:
+        решение о пропуске обязано быть предъявлено записью, не молчанием."""
+        plan_dir = self._write(item_status="⛔ Skipped by decision",
+                               pending_work="Возобновление: —")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+
+    def test_c3_skipped_with_resume_dash_and_d_ref_passes(self):
+        """(в, обратный) ⛔ + РОВНО `Возобновление: —` И `D40` в том же поле (другой
+        строкой) → диагностик нет."""
+        plan_dir = self._write(
+            item_status="⛔ Skipped by decision",
+            pending_work="Возобновление: —\nМоот, решение — D40.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_d_done_status_has_no_new_requirement(self):
+        """(г) 🟢 Done без строки `Возобновление:` — гейт молчит (требование только у
+        🔴/⛔)."""
+        plan_dir = self._write(item_status="🟢 Done", pending_work="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+    def test_e_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
+        """(д) АДДИТИВНОСТЬ: тот же 🔴-план БЕЗ Meta `Closure Protocol` не даёт ни
+        одной диагностики гейта, даже без строки `Возобновление:`."""
+        plan_dir = self._write(closure_protocol=None, pending_work="—")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+
+
+class TestHandoffBoardGate113(TmpPlanTestCase):
+    """P11.3/D129: каждое вхождение `Pn a/b` в handoff.md обязано совпадать со значением
+    колонки `Items 🟢/всего` строки `Pn` доски «## 4. Phase Index & Status Board»; фаза,
+    отсутствующая в доске, — «висячая ссылка». Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
+    (HANDOFF_BOARD_CANON_DATE); severity внутри скоупа — как у launch-block-гейта (датовый
+    `plan_id` от BRIEF_CANON_DATE → ERROR, легаси → WARNING). Каждый различающий кейс
+    проверен КРАСНЫМ на коде до этого item'а: `git show HEAD:packages/task/lib/task/
+    plan_lint.py` не нёс ни `_lint_handoff_board_113`, ни `HANDOFF_BOARD_REF_RE`, ни вызова
+    из `lint_plan` — старый код молчал на ВСЕХ кейсах ниже."""
+
+    def _write(self, *, plan_id="DEMO-1", handoff_date="2026-07-28", handoff_extra="",
+               items_cell="1/1"):
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        if items_cell != "1/1":
+            (plan_dir / "plan.md").write_text(
+                plan_md(plan_dir.name, items_cell=items_cell), encoding="utf-8")
+        text = handoff_md(plan_dir.name).replace(
+            "# HANDOFF — 2026-07-02 — after P1.1",
+            f"# HANDOFF — {handoff_date} — after P1.1")
+        if handoff_extra:
+            text = text.replace("**Done:** P1.1 закрыт.",
+                                 f"**Done:** P1.1 закрыт. {handoff_extra}")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_a_f8_mismatch_on_dated_plan_is_error_naming_both_sides(self):
+        """(a) фикстура F8: handoff говорит `P1 4/4`, доска несёт `1/1` (дефолт) на
+        датовом `plan_id` (≥ BRIEF_CANON_DATE) → ERROR, текст называет ОБЕ стороны."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "P1 4/4")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("1/1" in e for e in hits), hits)
+
+    def test_b_matching_numbers_is_silent(self):
+        """(б) handoff `P1 1/1` совпадает с доской `1/1` → диагностик гейта нет."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="Доска: P1 1/1 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 1/1") +
+                         [w for w in diag.warnings if "P1 1/1" in w], [])
+
+    def test_c_handoff_older_than_canon_date_is_silent(self):
+        """(в) forward-only: handoff датирован < HANDOFF_BOARD_CANON_DATE — даже
+        заведомое расхождение `P1 4/4` vs доска `1/1` НЕ диагностируется (И10)."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO", handoff_date="2026-07-27",
+                               handoff_extra="Доска: P1 4/4 (заведомо неверно).")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 4/4") +
+                         [w for w in diag.warnings if "P1 4/4" in w], [])
+
+    def test_d_phase_missing_from_board_is_dangling_reference(self):
+        """(г) `Pn`, отсутствующая в доске (план несёт только `P1`), → диагностика
+        «висячая ссылка»."""
+        plan_dir = self._write(plan_id="2026.07.28-DEMO",
+                               handoff_extra="См. P9 3/5 — фаза не существует в этом плане.")
+        _, diag = _lint(plan_dir)
+        hits = _errors_containing(diag, "висячая ссылка")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P9" in e for e in hits), hits)
+
+    def test_e_legacy_plan_id_mismatch_is_warning_not_error(self):
+        """(д) severity-развилка, как у brief/launch-block-гейта: легаси `plan_id`
+        (не датовый) с расхождением → WARNING, а не ERROR."""
+        plan_dir = self._write(plan_id="DEMO-1",
+                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "P1 4/4"), [])
+        self.assertTrue([w for w in diag.warnings if "P1 4/4" in w], diag.warnings)
+
+    def test_f_additivity_plan_without_pattern_gets_no_new_diagnostics(self):
+        """(е) АДДИТИВНОСТЬ: датовый план с ГЕЙТОМ АКТИВНЫМ (handoff ≥ канон-даты), но БЕЗ
+        шаблона `Pn a/b` в handoff'е, даёт РОВНО тот же набор диагностик, что тот же план с
+        гейтом молчащим (handoff < канон-даты) — сравнение МНОЖЕСТВ (D129, план без
+        handoff-числа не получает НИ ОДНОЙ новой диагностики)."""
+        baseline_dir = self._write(plan_id="2026.07.28-BASE", handoff_date="2026-07-27")
+        _, baseline_diag = _lint(baseline_dir)
+        baseline = set(baseline_diag.normalized_keys(baseline_dir))
+
+        plan_dir = self._write(plan_id="2026.07.28-DEMO", handoff_date="2026-07-28")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(set(diag.normalized_keys(plan_dir)), baseline,
+                         (diag.errors, diag.warnings))

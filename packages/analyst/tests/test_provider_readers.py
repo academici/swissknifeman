@@ -1,11 +1,17 @@
+import io
+import contextlib
 import json
 import hashlib
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+from analyst.doctor import cmd_doctor
 from analyst.events import append_event, events_path, read_events
 from analyst.runs import migrate_legacy, neutral_run_report, normalize
+
+_TASK_LIB = Path(__file__).resolve().parents[2] / "task" / "lib"
 
 
 class ProviderReaderTests(unittest.TestCase):
@@ -130,6 +136,46 @@ class ProviderReaderTests(unittest.TestCase):
             self.assertNotIn("files_changed", report)
             self.assertNotIn("bash", report)
             self.assertNotIn("workflows", report)
+
+
+class DoctorRouteEvidenceTests(unittest.TestCase):
+    """P2.4 (plans/2026.07.24-AGENT-RELIABILITY): `analyst doctor` optionally reports
+    whether `task.route_evidence` is importable — analyst does not depend on `task`
+    hard, mirroring the existing optional `maind` check."""
+
+    def _run_doctor(self):
+        from analyst.common import Env
+        env = Env("/tmp/analyst-root", "doctor", home="/tmp/fakehome")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cmd_doctor(env, [])
+        return out.getvalue()
+
+    def test_reports_available_when_task_lib_is_on_sys_path(self):
+        sys.path.insert(0, str(_TASK_LIB))
+        sys.modules.pop("task.route_evidence", None)
+        sys.modules.pop("task", None)
+        try:
+            text = self._run_doctor()
+        finally:
+            sys.path.remove(str(_TASK_LIB))
+            sys.modules.pop("task.route_evidence", None)
+            sys.modules.pop("task", None)
+        self.assertIn("✓ task.route_evidence", text)
+
+    def test_reports_optional_and_does_not_fail_the_verdict_when_absent(self):
+        sys.modules.pop("task.route_evidence", None)
+        sys.modules.pop("task", None)
+        blocked = [p for p in sys.path if p.endswith("task/lib") or p == str(_TASK_LIB)]
+        for p in blocked:
+            sys.path.remove(p)
+        try:
+            text = self._run_doctor()
+        finally:
+            for p in blocked:
+                sys.path.insert(0, p)
+        self.assertIn("· task.route_evidence", text)
+        self.assertIn("Окружение готово.", text)
 
 
 if __name__ == "__main__":

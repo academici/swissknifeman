@@ -49,6 +49,13 @@ data. Cheaper to re-check than to ship a wrong verdict.
 - Stable general knowledge (syntax, established patterns, math).
 - Pure implementation of an already-planned-and-verified spec ("it's planned for you — implement").
 
+## Coverage step: list the facts, don't just check one
+
+Before locking in a plan/phase/verdict — list which EXTERNAL fact classes it stands on
+(model/tool/third-party service/practice), and name a source for EACH — **including the ones
+whose answer feels already known**: a narrow deep-check of one fact misses a gap in the
+neighboring one that nobody asked about.
+
 ## Engine ladder (cheapest/most reliable first)
 
 1. **Library/framework/API fact** (does a method exist, current signature, config option, version behavior)?
@@ -67,6 +74,11 @@ data. Cheaper to re-check than to ship a wrong verdict.
 4. **Deep/high-stakes** (needs synthesis + cross-checking sources) → escalate to skill `research/research`
    (deep-research, source-tiers, faithfulness-check).
 
+**Perplexity isn't just a fallback for a doc miss.** Field practice ("what actually breaks", migration
+checklists, fresh incidents) is a SEPARATE knowledge class the first-party doc lacks by definition —
+call `perplexity-web` EVEN when context7/the doc already answered, whenever the decision leans on how
+the system behaves in the field, not just its spec.
+
 Economy: context7 for exact library API; everything else aggressively via `perplexity-web` (flat-rate, compact
 synthesis); WebSearch/WebFetch = narrow known-URL/fallback; don't fire deep-research for nothing.
 
@@ -80,6 +92,10 @@ AVAILABLE (usually the main context). **Before delegating "verify X" to a subage
 return WHAT to verify and run the ladder yourself. Delegating verification is fine (e.g. `research/research` fans
 out deliberately) — only silent rung-dropping is not. If the rung ran degraded anyway — that's an engine failure:
 put it in the "Непроверено → ПОВТОРНЫЙ ПРОХОД" footer.
+
+The rule extends to a **summary/list**, not just checking one fact: "what events/options/cases exist"
+from a WebSearch-only delegate is a retelling, not a primary source; accept a complete enumeration of
+anything only from the priority-rung engine.
 
 ## Citation and confidence
 
@@ -122,6 +138,7 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 ## Quality checklist
 
 - [ ] Every decision-bearing claim classified (repo-grounded / stable / external-staleness).
+- [ ] External fact classes listed BEFORE locking in (including "feels already known"); a delegate's summary treated as a draft to cross-check, not an exhaustive list.
 - [ ] External facts checked via the ladder (context7 for API → **aggressively `perplexity-web`** → websearch fallback → research), not from memory.
 - [ ] Synthesis/beyond-docs offloaded to `perplexity-web` (flat-rate, token-cheap), not pulled raw via WebSearch/WebFetch.
 - [ ] Source + date + confidence stated; `low` facts flagged "needs confirmation".
@@ -141,4 +158,4 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
 
-<!-- ru-source-sha256: 167635f470c559b15686db3efe6fae9e55150b029172b6284f5fbde76a86a89d -->
+<!-- ru-source-sha256: 75be6d87a6e88b468541355fc3f6bec6f5c45fa30874afd2083dad79c512fd57 -->

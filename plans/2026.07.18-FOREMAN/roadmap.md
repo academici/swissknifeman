@@ -5,13 +5,15 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет Routing §3 — только группирует
      запуски. Порядок exec — строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. -->
 
-**Обновлён:** 2026-07-18 · **Соответствует plan.md:** v0.19.0
+**Обновлён:** 2026-07-25 (payload C, аудит этапа C Ф6) · **Соответствует plan.md:** v0.22.1
 
 > **Статус exec:** P0 исполнена и терминальна (6/6 🟢); контракты P0 **sealed** (Consumed
-> plan-protocol v2.8.0@2cf26e8; Exported policy v1 + run-folder v1). P1 reconcile-refined
-> (D46/D47) — готова к exec. Следующий шаг — **exec P1.1** (см. handoff.md). §7: журнал P1.1–P1.2
-> и decision-лог P5.4 остаются draft (запечатываются своими фазами). Продукт переименован
-> foreman→artifex (D48); legacy PLAN-ID FOREMAN и workflow-codename сохранены.
+> plan-protocol v2.8.0@2cf26e8; Exported policy v1 + run-folder v1). P1 — 3/5, следующий шаг —
+> **exec P1.5** (re-пин P0.2, закрывает фазу P1; гейт — терминальная AR P2 + шаг 00-A README, см.
+> `handoff.md`). §7: журнал P1.1–P1.2 и decision-лог P5.4 остаются draft (запечатываются своими
+> фазами). Продукт переименован foreman→artifex (D48); legacy PLAN-ID FOREMAN и
+> workflow-codename сохранены. Фазы P2/P5 несут маркер «подлежит пере-скоупу», условие снятия —
+> терминальные AR P2.1 И P3.1 (D59).
 
 ## Карта исполнения
 

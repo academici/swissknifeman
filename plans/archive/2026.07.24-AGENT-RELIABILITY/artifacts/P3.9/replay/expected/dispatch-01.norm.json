@@ -1,0 +1,175 @@
+{
+  "base_sha": "e30c989c3b85000c73d6afbb25681c9b98a36b33",
+  "fixture": "dispatch-01",
+  "mapping_version": "1.0.0",
+  "observed_event_types": [
+    "block",
+    "contract_compiled",
+    "final_response",
+    "mutation",
+    "portability_check",
+    "pre_mutation_check",
+    "read",
+    "route_declared",
+    "trace_emitted"
+  ],
+  "outcome": {
+    "declared_status": "blocked",
+    "execution_inputs": [
+      "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/pre-plan-sha.txt"
+    ]
+  },
+  "outcome_provenance": {
+    "declared_status": {
+      "derivation": "a block event was observed",
+      "source": "stream-json"
+    },
+    "execution_inputs": {
+      "derivation": "sorted unique `read` targets",
+      "source": "stream-json"
+    }
+  },
+  "outcome_unobserved": {
+    "acceptance_scopes": {
+      "reason": "no artifact declares the acceptance scope of a dispatch; `public_acceptance` lives in the compiled contract, which the sanitizer does not record.",
+      "value": null
+    },
+    "cold_start_matches_next": {
+      "reason": "nothing computes it — `grep cold_start_complete|carrier_matches_next packages/` is empty (the same absence the bank's own probe asserts).",
+      "value": null
+    },
+    "effective_hook_sources_resolved": {
+      "reason": "the effective hook set spanning global+project sources is a harness inventory property, not a dispatch artifact.",
+      "value": null
+    },
+    "effective_identity_collisions": {
+      "reason": "measured by P1.4 over a declared unit fixture, not by any dispatch.",
+      "value": null
+    },
+    "evidence_classes": {
+      "reason": "`bundle_lint`'s class vocabulary is not emitted per dispatch; only its reason codes would be, and they are not this field.",
+      "value": null
+    },
+    "hook_targets_unowned": {
+      "reason": "harness ownership state, not a dispatch artifact.",
+      "value": null
+    },
+    "invocation_resolves": {
+      "reason": "`command_render` resolution lives outside the closed reason-code list and has no session-boundary caller.",
+      "value": null
+    },
+    "minimized": {
+      "reason": "no artifact declares an evidence bundle minimized.",
+      "value": null
+    },
+    "next_declared": {
+      "reason": "`grep next_declared packages/` is empty — the field exists only in the bank's own declared baseline outcome.",
+      "value": null
+    },
+    "next_recoverable_from_committed": {
+      "reason": "would require checking the committed handoff against the plan's actual Next; nothing does.",
+      "value": null
+    },
+    "provider_renderers": {
+      "reason": "present inside the compiled contract (`portability.provider_renderers`), which the sanitizer does not record; the verdict channel carries codes, not contract fields.",
+      "value": null
+    },
+    "public_acceptance_evidence_classes": {
+      "reason": "same as `acceptance_scopes`: a compiled-contract field, outside the recorded channel.",
+      "value": null
+    },
+    "requirements_satisfied": {
+      "reason": "no artifact enumerates satisfied requirements per dispatch.",
+      "value": null
+    },
+    "returned_scope": {
+      "reason": "'approved-goal vs diagnostic-drift' is a judgement about the dispatch's subject matter, with no machine carrier.",
+      "value": null
+    },
+    "route_attribution_class": {
+      "reason": "`grep route_attribution|self_attributed packages/` is empty — the attribution class is not fixed machine-side anywhere (this is exactly the honesty boundary `plan-run.md` names).",
+      "value": null
+    },
+    "semantic_carrier_declared": {
+      "reason": "a compiled-contract field (`portability.semantic_carrier`), outside the recorded channel.",
+      "value": null
+    },
+    "terminal_state_observable": {
+      "reason": "no artifact declares the audit's terminal state.",
+      "value": null
+    },
+    "tier": {
+      "reason": "`task_contract.classify_tier`'s output lives inside the compiled contract, outside the verdict channel; only a `PORTABILITY_TIER_MISCLASSIFIED` code would be observable, and that is a different proposition than the tier's value.",
+      "value": null
+    },
+    "unresolved_hook_commands": {
+      "reason": "harness hook-resolution state, not a dispatch artifact.",
+      "value": null
+    },
+    "version_reuse_detected": {
+      "reason": "no publication path emits it.",
+      "value": null
+    }
+  },
+  "schema_version": "p3.9-normalized-transcript/v1",
+  "transcript": [
+    {
+      "seq": 1,
+      "source": "stream-json",
+      "target": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/pre-plan-sha.txt",
+      "type": "read"
+    },
+    {
+      "reason_code": "ROUTE_UNDERSHOOT",
+      "seq": 2,
+      "source": "reason-code",
+      "type": "block"
+    },
+    {
+      "seq": 3,
+      "source": "reason-code",
+      "type": "contract_compiled"
+    },
+    {
+      "seq": 4,
+      "source": "reason-code",
+      "type": "pre_mutation_check"
+    },
+    {
+      "seq": 5,
+      "source": "reason-code",
+      "type": "portability_check"
+    },
+    {
+      "seq": 6,
+      "source": "git-state",
+      "target": "p3.9-traces.json",
+      "type": "mutation"
+    },
+    {
+      "seq": 7,
+      "source": "git-state",
+      "target": "plans/2026.07.24-AGENT-RELIABILITY/journal.jsonl",
+      "type": "mutation"
+    },
+    {
+      "actor": "opus/high",
+      "seq": 8,
+      "source": "journal-delta",
+      "type": "route_declared",
+      "undershoot": true
+    },
+    {
+      "completeness": 1.0,
+      "required_fields_complete": true,
+      "seq": 9,
+      "source": "trace-record",
+      "type": "trace_emitted"
+    },
+    {
+      "seq": 10,
+      "source": "stream-json",
+      "type": "final_response"
+    }
+  ]
+}

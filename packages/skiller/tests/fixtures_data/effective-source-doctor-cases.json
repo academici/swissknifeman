@@ -1,0 +1,81 @@
+{
+  "schema_version": "effective-source-doctor-cases/v1",
+  "cases": {
+    "healthy": {
+      "expected_overall": "ok",
+      "diagnostics": [
+        {
+          "id": "identity-ownership",
+          "owner": "P1.1/P1.4 (semantic-identity-ownership-v1.md)",
+          "source": "skiller.doctor.run_effective_runtime_gate",
+          "status": "ok",
+          "evidence": {"identity_counts": {"codex": 216, "claude-code": 204}, "collisions": {}},
+          "quality": {"completeness": 1.0, "note": "cold catalog-wide gate"},
+          "next_command": "skiller doctor --effective-runtime"
+        },
+        {
+          "id": "cache",
+          "owner": "P1.1 (semantic-identity-ownership-v1.md § Detection is repo-derived and cold, D44)",
+          "source": "contract citation — no runtime cache/profile read performed",
+          "status": "n/a",
+          "evidence": {"note": "no live provider cache/profile is read"},
+          "quality": {"completeness": 1.0, "note": "structural fact, not a measurement"},
+          "next_command": "skiller doctor --effective-runtime"
+        },
+        {
+          "id": "hook-ownership",
+          "owner": "P0.4 (semantic-identity-ownership-v1.md § Hook identities)",
+          "source": ".swissknifeman/provider-artifacts.lock.json",
+          "status": "ok",
+          "evidence": {"registrations": {".codex/hooks.json": {"managed": true, "commands": []}}, "unmanaged": []},
+          "quality": {"completeness": 1.0, "note": "handler content outside the repo is never scanned"},
+          "next_command": "harness doctor"
+        }
+      ]
+    },
+    "degraded": {
+      "expected_overall": "degraded",
+      "diagnostics": [
+        {
+          "id": "identity-ownership",
+          "owner": "P1.1/P1.4 (semantic-identity-ownership-v1.md)",
+          "source": "skiller.doctor.run_effective_runtime_gate",
+          "status": "ok",
+          "evidence": {"identity_counts": {"codex": 216, "claude-code": 204}, "collisions": {}},
+          "quality": {"completeness": 1.0, "note": "cold catalog-wide gate"},
+          "next_command": "skiller doctor --effective-runtime"
+        },
+        {
+          "id": "hook-ownership",
+          "owner": "P0.4 (semantic-identity-ownership-v1.md § Hook identities)",
+          "source": ".swissknifeman/provider-artifacts.lock.json",
+          "status": "degraded",
+          "evidence": {
+            "registrations": {
+              ".codex/hooks.json": {"managed": true, "commands": []},
+              ".claude/settings.json": {"managed": false, "commands": [
+                {"command": "python3 ~/.claude/hooks/run-report/run-report.py", "locality": "outside-repo"}
+              ]}
+            },
+            "unmanaged": [".claude/settings.json"]
+          },
+          "quality": {"completeness": 1.0, "note": "handler content outside the repo is never scanned"},
+          "next_command": "harness doctor"
+        },
+        {
+          "id": "trace-quality",
+          "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
+          "source": "plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md",
+          "status": "degraded",
+          "evidence": {
+            "measured_scope": "declared subset 5/31 (bank-layer-2-live-paired)",
+            "F1_critical_requirement_retention": "0.96 measured vs 1.0 required (full critical bank, not-met)",
+            "F10_owner_intervention_ratio": "unknown — no owner_question channel in headless dispatch"
+          },
+          "quality": {"completeness": 1.0, "note": "citation of a committed, hash-checkable finding"},
+          "next_command": "cat plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md"
+        }
+      ]
+    }
+  }
+}

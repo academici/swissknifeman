@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from core import (ProviderId, SupportLevel, load_provider_manifest,
                   provider_manifest_sha256, support_for)
+from core.repo import resolve_plan_dir
 
 
 MANIFEST_PATH = ROOT / "configs/provider-capabilities.json"
@@ -36,7 +37,8 @@ def independent_inventory(root: Path = ROOT) -> dict[str, object]:
     harness_ids = {surface["id"] for surface in profile["surfaces"]}
     instructions = json.loads((root / "packages/harness/configs/common/instructions/catalog.json").read_text())
     instruction_ids = {item["id"] for item in instructions["capability_requirements"]}
-    analytics_contract = (root / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/"
+    plan_dir = resolve_plan_dir(root, "2026.07.19-DUAL-PROVIDER")
+    analytics_contract = (plan_dir / "root/contracts/"
                            "provider-analytics-contract.md").read_text(encoding="utf-8")
     analytics_sections = {
         "## Event envelope": "analytics.normalized-events",

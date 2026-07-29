@@ -209,6 +209,11 @@
       "count": 11,
       "status": "active"
     },
+    "repository-bootstrap": {
+      "description": "P1.2 (D31/D38): private/source-only bilingual canon for the 13 root-bootstrap identities (class A) — never published as an ordinary bucket/core/marketplace unit, never vendored/connected to a consumer project. Sole producer: registry.py -> publication.py root-bootstrap renderer, emitting thin .claude/.agents projections.",
+      "count": 13,
+      "status": "active"
+    },
     "research": {
       "description": "Research and knowledge management",
       "count": 2,
@@ -2036,8 +2041,8 @@
       "path": "skills/general/compact-responses/SKILL.md",
       "version": "0.2.1",
       "description": "Activate ultra-compact response mode: minimal prose, code-only, no explanations unless asked. Use for terse output — quick edits, code reviews, repeated tasks with established context.",
-      "sha256": "afd38c18697b7b170557936647e5b92bb74c5352f0b0636bb2c721ecd810e5c2",
-      "content_sha256": "05d2ceb7937e20d657bab975844aba1caa92061634df31ca8a8bcbb51cd831ab",
+      "sha256": "f2f85effb41f2584d98cac0788146278a62ca7c1b134bbb41e55697727c7fd0c",
+      "content_sha256": "056425d645292db374ccc65377091b752a7ad80e04161afaedbe405bdf8ed612",
       "tags": [
         "conventions",
         "style",
@@ -2072,8 +2077,8 @@
       "path": "skills/general/context-economy/SKILL.md",
       "version": "1.2.1",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
-      "sha256": "5f58b3a85174952856921036099c8359cb9b80e315effed502fef1022f888a9f",
-      "content_sha256": "49a2dbf871c69bf4ea8424a17c939e44da17a4803ed1166581c81641f1b0cea2",
+      "sha256": "488315b5c6c84858591f3c48a84c27971b8ad057899d647b3050ba22c962a0ad",
+      "content_sha256": "58e14f6a6d1d77e21cd4a6e0b57c9eaa82ffb7b622502686f21071c07aac5cf5",
       "tags": [
         "tokens",
         "context",
@@ -2197,8 +2202,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.2.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "cfa7c70cd7183323d6611d140d73f460c8a57a574dd7b09d2d2c628d4d1e0f69",
-      "content_sha256": "93cc3340ba5ccdd17f75d5224e4dd07fef9f8b774c547aabd3eef82f52108971",
+      "sha256": "8500c7c73b661c9dce0ea16acdd841508a1be4bd2ef24605a63b34d3800c3059",
+      "content_sha256": "7146b2f762d958f4fde22f4f52347dd4d7dfa6294405b8ada9adb41a0162b390",
       "tags": [
         "mcp",
         "onboarding",
@@ -2250,10 +2255,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "2.11.0",
+      "version": "2.21.0",
       "description": "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive.",
-      "sha256": "52aac293d3cb0fcb4eede751f82cdd6011bacbf6798535777e0922ae16b8ad53",
-      "content_sha256": "fcefb96e46962bf9155c2501f1ac183487bf6794c85be67b8e51f956ca66b87b",
+      "sha256": "34e24fb1030c6b61d80d3ebb13b39841494270c97622bc64ae54c53ac7dd9b62",
+      "content_sha256": "26ce9dc5ec7e691cc48ebe7635a8b4f3441de84fcf8902fcbaf2dfb127232065",
       "tags": [
         "workflow",
         "planning",
@@ -2381,8 +2386,8 @@
       "path": "skills/general/verify-claims/SKILL.md",
       "version": "0.2.0",
       "description": "Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice, market, service/MCP capability) — verify via RAG, not memory. Ladder: context7 → Perplexity → WebSearch → research for high-stakes. Activate on audit/plan review, big planning, library/stack choice, claiming 'this is standard'. Repo-grounded/stable knowledge — skip.",
-      "sha256": "ccb328f74903a8beb922c3619579922743bcb3ddd6f8934a0ba5f9ab434d85ba",
-      "content_sha256": "644ecb9d01a08f6991044603e56be85e43eba47f1164b2ebd1c7bfc80dc0716a",
+      "sha256": "566ced756d61cfbf79b4d5383f8681990ecc0d4bd9ce35e746af017b7bf31405",
+      "content_sha256": "0be092b1813b831fd9a7f68d24f47041cc4c863f107c966c8358d8b4961dc8e9",
       "tags": [
         "verification",
         "rag",
@@ -2403,8 +2408,8 @@
       "path": "skills/general/workflow-craft/SKILL.md",
       "version": "0.1.0",
       "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
-      "sha256": "a6dff90faca39c9929ed58ae9629c490b04d44d1c749a6aa2ab092e9bb256af9",
-      "content_sha256": "9ecb51429c860d19345889b48178395300ae4ff4f4c6169155007143f843f23b",
+      "sha256": "a0d26c8d3fd174ab72de0333377b25e6040d1eecbac5ed9d04a3a4ccd9756586",
+      "content_sha256": "3ba75f1a555994c12295a3ed0cf802b2801607c1347e57761400cba1c057b9bc",
       "tags": [
         "workflow",
         "orchestration",
@@ -4125,6 +4130,215 @@
         "verification",
         "quality",
         "refactor"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "cross-project-optimizer",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/cross-project-optimizer/SKILL.md",
+      "version": "0.1.0",
+      "description": "Cross-project optimization across ~N similar ecosystem projects (shared core packages): find duplicated code/schemas and extract into core. Use to analyze projects for duplicates/shared patterns, correlate similar features, or decide what to extract into a shared package (corex/azguard/vaulter).",
+      "sha256": "0551131c65f87924ff770d6035c464896526cd8260c9a4e9f63af044de8741ae",
+      "content_sha256": "1c5200970d1ad4df32f57c6e30679123cc0ac464113c91cb7e1edaefa2099747",
+      "tags": [
+        "ecosystem",
+        "fleet",
+        "dedup",
+        "shared-package",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "decision-verification",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/decision-verification/SKILL.md",
+      "version": "0.1.0",
+      "description": "Epistemic discipline for work ON this repo: before a verdict on an EXTERNAL fact (library version/API, still-current status, best practice, market, MCP capability) verify via RAG, don't assert from memory. Activate auditing a plan, big design, or choosing/updating a dependency/tool/MCP.",
+      "sha256": "b8a53eb99f1179a261118956081cd208be23aca17db661c8a6b5e9049a223ba7",
+      "content_sha256": "c8d88afa37fdef32de99644843b9f7c6d7697632d2e3e1fd37fe17428de92377",
+      "tags": [
+        "rag",
+        "verification",
+        "epistemics",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "docs-maintenance",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/docs-maintenance/SKILL.md",
+      "version": "0.1.0",
+      "description": "After every completed task in a repository with a docs/ directory at its root: assess whether something worth documenting changed (processes, install capabilities, schemas, features for understanding the project), and update docs/. Not for every task — only for substantive changes.",
+      "sha256": "0e9be988ccd0ad34148f9fbee9d853c907f86df69303e90bd1a61cf12ae8b8f0",
+      "content_sha256": "d1cdc1ec12436cef3caf3a37a54adc6d2fe6793b6a26590c0890015e2b0c9ad7",
+      "tags": [
+        "docs",
+        "maintenance",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "ecosystem-integration",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/ecosystem-integration/SKILL.md",
+      "version": "0.1.0",
+      "description": "How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - shared memory + graph + MCP tools + skills. Use to onboard a project, add it to mAInd, roll out memory/graph, or fix/update an already-connected project.",
+      "sha256": "c802a81ba16018169fc04647493d159e560ccffd6c11d5fe3f29b99042a9e1e8",
+      "content_sha256": "264bf80d3d51ddcc584f6f03e7a568c3ec259ac2c2b1fdb77bea071ac05435f0",
+      "tags": [
+        "ecosystem",
+        "maind",
+        "onboarding",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "ecosystem-mcp",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
+      "version": "0.1.0",
+      "description": "What MCP tools are available here (agent-memory = shared memory/context, serena = code graph), when to call them, which ecosystem projects this one links to, and how to fix a broken link. Use in any ecosystem project to raise past-decision context, navigate code, or diagnose missing memory/graph.",
+      "sha256": "e5f4a59ae9349a12a8eede2811c4024d7600606816cf18e815bfecda36f7b907",
+      "content_sha256": "87998ac71123a27d7402b23fdd71b6d43f26525cc8f129cd40252935968eb989",
+      "tags": [
+        "ecosystem",
+        "mcp",
+        "maind",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "ecosystem-setup",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/ecosystem-setup/SKILL.md",
+      "version": "0.1.0",
+      "description": "How to configure/reconfigure THIS academici ecosystem project - decision tree for skills, plugins, memory, namespaces, environment, graph. Use to connect/change skills or plugins, change memory/namespaces, add a role, or diagnose the connection. Pick the OPTIMAL set; ask when unclear.",
+      "sha256": "aed90cb91115a2bb118c8112d1a0fe99403cf40afc7e2fc87c3f6899503d6f24",
+      "content_sha256": "f192eee77474e61259a6ddde44b875c2a6f272e1a4e5136d75f2581d64f52b69",
+      "tags": [
+        "ecosystem",
+        "setup",
+        "maind",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "field-feedback-loop",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+      "version": "0.1.0",
+      "description": "Feedback loop from field work: implementing/integrating/syncing a project (skiller connect|vendor, maind onboard|sync, harness, setup) and reality diverges from promised behavior - route it, don't swallow it. Obvious bug -> fix now; new/uncertain -> propose, don't implement speculatively.",
+      "sha256": "2e1a7ec44917ec4db8357f5b2253d16672105191a20e77821437b233ab659b19",
+      "content_sha256": "1b4bbd3809deb3223a57e5b7520084ab48a95ef9089250bd6d5c2756388ebff0",
+      "tags": [
+        "field-feedback",
+        "improvement-loop",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "harness-operations",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/harness-operations/SKILL.md",
+      "version": "0.1.0",
+      "description": "Operational map of the harness package (Claude Code environment setup): permissions/mcp/hooks/agent-packs/doctor commands, preset catalog, agent-packs subsystem. Activate for any task touching packages/harness/ or when deciding which preset/MCP/mode to connect to a project.",
+      "sha256": "4e643e8f1e547af14dfdb07de49bdbbb32d451865240294f52416c0e593d51c8",
+      "content_sha256": "6f80b07c7607475ed43a6a1dfe7faaa8f98713c0b123ae2e6a07578c50018ac1",
+      "tags": [
+        "harness",
+        "permissions",
+        "mcp",
+        "hooks",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "maind-overview",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/maind-overview/SKILL.md",
+      "version": "0.1.0",
+      "description": "Brief overview of the mAInd hub - two linking mechanisms (code graph/Serena, agent-memory), the namespace model, and key commands. Use when working in maind or any ecosystem project to understand shared memory, the connection graph, and namespace isolation.",
+      "sha256": "711a235eb01b3a2fdc1235656dfb7a4845ebacc7d0cf473707107d6a6af6fc22",
+      "content_sha256": "0c1cc82d6a6e9fecb26f866ea9a3e5ffcb67a29907780990598c9613f4ca4c50",
+      "tags": [
+        "maind",
+        "ecosystem",
+        "memory",
+        "graph",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "package-architecture",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/package-architecture/SKILL.md",
+      "version": "0.1.0",
+      "description": "Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, generated artifacts and what regenerates them. Activate at the start of any task in this repository touching skills/, bin/, scripts/, configs/, profiles/, the registry, or manifests.",
+      "sha256": "564b9764c9720b32e8452f63e6f90e8d0767cacd31e36d1efeb0f981473966a0",
+      "content_sha256": "c2651b47da9e20f6c4a7decb8dc2ee0b48f95f0c3713846e97d9e3abec20fff1",
+      "tags": [
+        "skiller",
+        "architecture",
+        "distribution",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "project-tooling-runbook",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
+      "version": "0.1.0",
+      "description": "Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor channels + local skills; Laravel Boost as MCP only) and docs sync with Brain vault. Use to add/choose skills (ALWAYS ask connect vs vendor), configure agent-packs, sync docs, or handle config hygiene.",
+      "sha256": "25c85756714e032b1911021a241c1b58122dbde8f09b0524c24e5d37617ebb59",
+      "content_sha256": "ad352f9127d1fa96b6f2671d831b58b5b84cc296cb0520d3ca607c229681c9d1",
+      "tags": [
+        "runbook",
+        "skills",
+        "docs-sync",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "release-discipline",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/release-discipline/SKILL.md",
+      "version": "0.1.0",
+      "description": "Closing out any substantive change in this repository: validate.sh → skiller registry → CHANGELOG [Unreleased] → PR; semver tag rules. Activate before every commit/PR and when preparing a release.",
+      "sha256": "6398d49b5543598d5411d716346d16e39c2b2761c24e3db4d3a9d142dc6e6694",
+      "content_sha256": "e563679580b8732dc40a837b0b220dcefb7479f9f829e88359723f7fd547d592",
+      "tags": [
+        "release",
+        "changelog",
+        "validate",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "skill-authoring",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/skill-authoring/SKILL.md",
+      "version": "0.1.0",
+      "description": "Rules for creating/editing registry skills (skills/**, generate-skill/): bilingual SKILL.ru.md (full RU source) -> SKILL.md (compact EN canon) model, overlap check, completeness, frontmatter, mandatory upstream.json. Activate on any skill add/edit/move/removal or SKILL.ru.md edit.",
+      "sha256": "0962285ea33b0703108a6729f49930dbf65de2f2c6deda168131e1ab5821dc79",
+      "content_sha256": "984673f1b2c74a4cdc132e45f823e8266939de9a55b316c4d3df3c76ed6289f0",
+      "tags": [
+        "skill-authoring",
+        "bilingual",
+        "upstream",
+        "root-bootstrap"
       ],
       "source": "local"
     },

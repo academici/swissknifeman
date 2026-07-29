@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "actor": "opus/high",
+      "attempt": 1,
+      "command": "plan-run",
+      "cost_usd": null,
+      "duration_ms": null,
+      "friction": [],
+      "item_id": "P3.9",
+      "note": "p3.9 live smoke",
+      "num_turns": null,
+      "plan_id": "2026.07.24-AGENT-RELIABILITY",
+      "result": "in-progress",
+      "run_id": null,
+      "session_id": null,
+      "ts": "2026-07-26T15:51:09Z"
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

@@ -1,0 +1,341 @@
+{
+  "schema_version": "hypothesis-verdicts/v1",
+  "item": "P4.1",
+  "adjudicated_on": "2026-07-26",
+  "verdict_semantics": {
+    "accept": "the audit's proposed change is adopted as ONE bounded FUTURE proposal; this item implements nothing",
+    "reject": "the audit's proposed change is not adopted; `observation_upheld` names whatever part of the observation is true",
+    "unknown": "the committed tree cannot decide it; `missing_evidence` names the missing evidence by name"
+  },
+  "generated_from": {
+    "audit_path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/perplexity-audit.md",
+    "audit_sha256": "dd686f91b4ad8e3279d92a28fb7061cd026608a4757be115643a23faa4a0d37b",
+    "audit_lines": 2993,
+    "bundle_manifest": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/manifests/bundle-manifest.json",
+    "code_tree": "working tree at 2026-07-26 after P4.4/P4.5 (packages/** and core/** unmutated by this item)"
+  },
+  "verdict_counts": {"accept": 3, "reject": 11, "unknown": 2},
+  "hypotheses": [
+    {
+      "id": "H01",
+      "claim": "core/ is simultaneously domain, application and infra layer; the target architecture is a domain/application/infra/adapters split with one-way dependencies.",
+      "claim_class": "architecture-target",
+      "audit_lines": [45, 169],
+      "verdict": "reject",
+      "observation_upheld": "core/ does hold pure provider-domain modules (provider*.py) next to infra utilities (io/http/proc/paths/env) in one package — the naming observation is correct.",
+      "observable_relevance": "The proposed split would rewrite 4299 lines of core/ that no measured incident points at: all five committed incident cases (artifacts/source-evidence/precomputed/corpus.json) are agent-run reliability defects (cold start, missing launch block, wrong scope return, audit loop, clean control), none of them a core layering defect. The one-way dependency the target asks for already holds.",
+      "evidence": [
+        {"kind": "command", "ref": "grep -rn 'import' core/*.py", "observation": "no core module imports any package; core imports stdlib plus its own siblings only — the requested one-way dependency rule already holds."},
+        {"kind": "function", "ref": "core/provider.py::module-docstring", "observation": "'This module deliberately contains no carrier parsing, registry, rendering, or I/O' — the pure/impure boundary the target proposes is already declared and held."},
+        {"kind": "function", "ref": "core/provider_config.py::resolve_provider_config", "observation": "docstring and body: 'Resolve already-read layers; this function has no filesystem or environment I/O' — layers are supplied by the calling package, not discovered."},
+        {"kind": "function", "ref": "core/cli.py::parse_flags", "observation": "core/cli.py is 111 lines of argv parsing plus one guarded subprocess helper; it dispatches nothing. Command dispatch lives per package (packages/skiller/lib/skiller/cli.py::COMMANDS), so the 'cli.py inside the domain core' reading is wrong."},
+        {"kind": "artifact", "ref": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json", "observation": "five frozen incident cases, none attributed to core module layout."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H02",
+      "claim": "core/ is a historically accumulated coordination layer, and the provider subdomain's invariants live as implicit author knowledge rather than as fixed schemas and tests.",
+      "claim_class": "core-quality",
+      "audit_lines": [171, 311],
+      "verdict": "reject",
+      "observation_upheld": "The provider cluster is indeed where the system's complexity lives — that half of the claim is confirmed by the same file sizes the audit measured (provider_lock.py 1202 lines, provider_manifest.py 550, provider_artifact.py 385).",
+      "observable_relevance": "The claim's operative half — 'invariants are implicit' — is what would justify work. It is refuted mechanically: 77 tests over seven modules pin the invariants, and they run in the repo's own gate.",
+      "evidence": [
+        {"kind": "command", "ref": "PYTHONPATH=. python3 -m unittest discover -s core/tests -p 'test_provider*.py'", "observation": "Ran 77 tests ... OK — the provider subdomain is covered by an executable invariant suite, not by author memory."},
+        {"kind": "test", "ref": "core/tests/test_provider.py::TestProviderDomain::test_exports_match_the_approved_public_surface", "observation": "the public API surface itself is pinned by a test, so 'public functions unknown' is not the state of the tree."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py", "observation": "27 tests covering drift classes, atomic write interruption, symlink escape, lock round trip and sealed bootstrap transfers."},
+        {"kind": "function", "ref": "core/provider_manifest.py::parse_provider_manifest", "observation": "the manifest is a validated schema with an explicit key allowlist and typed diagnostics, not an informal convention."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H03",
+      "claim": "The provider subsystem probably runs a mixed truth model: config, manifest and lock are near-duplicate layers and it is unclear which step is the source of truth for the next.",
+      "claim_class": "provider-lifecycle",
+      "audit_lines": [312, 463],
+      "verdict": "reject",
+      "observation_upheld": "The audit is right that the answer must be explicit; it is — just not with the lifecycle the audit inferred from file names.",
+      "observable_relevance": "The claim rests on an inferred pipeline config -> manifest -> lock -> artifact that this code does not implement. 'manifest' here is the root-owned CAPABILITY manifest, an INPUT to config resolution, not a computed intent document; the lock records rendered artifact provenance, not a resolved dependency selection. Acting on the claim would restructure a lifecycle that does not exist.",
+      "evidence": [
+        {"kind": "function", "ref": "core/provider_manifest.py::provider_config_catalog", "observation": "the manifest projects INTO the config catalog (ProviderConfigCatalog) — direction is manifest -> config, the reverse of the audit's assumed config -> manifest."},
+        {"kind": "function", "ref": "core/provider_config.py::resolve_provider_config", "observation": "one ranked precedence chain (_RANKS = operation, project, fleet-project, fleet-defaults) with a legacy default, producing EffectiveProvider plus per-leaf ConfigProvenance — intent state is unambiguous and addressable."},
+        {"kind": "function", "ref": "core/provider_lock.py::plan_artifact_lock", "observation": "the lock is a sidecar of ArtifactProvenance records for already-rendered bytes; drift is classified into the closed DriftObservation enum (clean/missing/stale-source/managed-drift/boundary-invalid/provenance-invalid/ownership-conflict/unsupported)."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py::ProviderLockTests::test_each_frozen_drift_state_has_one_action", "observation": "every drift state maps to exactly one action — the 'which state wins' question is answered by a frozen table, not by convention."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H04",
+      "claim": "Normalization/validation is duplicated between manifest and lock, and provider identity is scattered across provider.py, registry, manifest serialization and artifact naming.",
+      "claim_class": "provider-lifecycle",
+      "audit_lines": [362, 378],
+      "verdict": "reject",
+      "observation_upheld": "Both modules do validate — but over different subjects: the manifest validates a carrier schema, the lock validates deserialized provenance shape. That is deserialization hardening, not a second copy of the domain rules.",
+      "observable_relevance": "Identity is a single frozen value type propagated end to end and regression-tested; 'rename/aliasing/migration edge cases' the claim predicts have no subject in this code (ProviderId is a closed two-member enum with no alias path).",
+      "evidence": [
+        {"kind": "function", "ref": "core/provider_artifact.py::ArtifactAdapterIdentity", "observation": "one frozen identity value (adapter_id/adapter_version/provider_id/capability_catalog_version/capability_requirements) constructed once and carried by request, provenance and lock."},
+        {"kind": "test", "ref": "core/tests/test_provider_registry.py::ProviderRegistryTests::test_selected_identity_propagates_to_render_and_lock", "observation": "the identity chain registry -> render -> lock is asserted, so drift between layers would fail the suite."},
+        {"kind": "function", "ref": "core/provider_lock.py::_matching_identity", "observation": "the lock compares identity through one predicate rather than re-deriving it."},
+        {"kind": "command", "ref": "grep -rn 'alias\\|rename\\|migrat' core/provider*.py", "observation": "no hits — there is no provider rename/alias mechanism, so the predicted rename edge cases cannot occur. The repo's only alias mechanism is skill-bucket-level (packages/skiller/lib/skiller/registry.py::load_bucket_aliases) with its own tests."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H05",
+      "claim": "provider_artifact.py is architecturally dangerous: artifacts may become a second operational source of truth that diverges from lock state.",
+      "claim_class": "provider-lifecycle",
+      "audit_lines": [372, 374],
+      "verdict": "reject",
+      "observable_relevance": "Rendering is a pure function of the request and never touches a target; the same immutable plan is used for preview and for apply, and apply re-checks preconditions. There is no path by which artifacts can hold state the lock does not.",
+      "evidence": [
+        {"kind": "function", "ref": "core/provider_artifact.py::plan_artifact_render", "observation": "returns ArtifactRenderResult(bytes, target, provenance) and writes nothing; the docstring states P2.2 owns all target writes."},
+        {"kind": "test", "ref": "core/tests/test_provider_artifact_e2e.py::ProviderArtifactEndToEndTests::test_preview_and_apply_share_one_plan_and_preview_is_no_write", "observation": "preview provably performs no write and shares the plan object with apply."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py::ProviderLockTests::test_apply_rechecks_precondition_and_leaves_lock_unwritten", "observation": "apply re-verifies the on-disk precondition and refuses instead of materializing divergent state."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py::ProviderLockTests::test_clean_noop_apply_never_calls_writer_or_replaces_lock", "observation": "a clean state provably never reaches the writer."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H06",
+      "claim": "The subsystem needs seven mandatory contract tests (deterministic manifest, deterministic lock, lossless lock round trip, deterministic artifact generation, idempotent reconcile, distinguishable error classes, provider rename/migration back-compat).",
+      "claim_class": "tests",
+      "audit_lines": [442, 452],
+      "verdict": "reject",
+      "observation_upheld": "The list is a good list. Six of its seven items are already executable tests; the seventh has no subject in this code base.",
+      "observable_relevance": "Adopting the claim as work would mean writing tests that already exist. Mapping is one-to-one and was verified by running the suite, not by reading names.",
+      "evidence": [
+        {"kind": "test", "ref": "core/tests/test_provider_config.py::TestProviderConfigResolution::test_canonical_compatibility_case_table", "observation": "invariant 1 (same input layers -> same effective resolution) plus test_synthetic_protected_carriers_remain_byte_identical."},
+        {"kind": "test", "ref": "core/tests/test_provider_artifact.py::ProviderArtifactTests::test_same_semantics_have_same_bytes_and_hashes_despite_mapping_order", "observation": "invariant 2 (same semantics -> same bytes/hashes) plus test_provider_registry.py::test_input_permutations_produce_one_canonical_catalog_order."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py::ProviderLockTests::test_canonical_lock_round_trip_and_rejects_noncanonical_order", "observation": "invariant 3 (lossless lock serialization) plus test_v1_1_lock_round_trip_emits_semantic_metadata."},
+        {"kind": "test", "ref": "core/tests/test_provider_artifact_e2e.py::ProviderArtifactEndToEndTests::test_all_frozen_drift_and_capability_cases_have_stable_projection", "observation": "invariant 4 (deterministic generation relative to lock state)."},
+        {"kind": "test", "ref": "core/tests/test_provider_lock.py::ProviderLockTests::test_absent_create_apply_and_second_plan_is_noop", "observation": "invariant 5 (idempotent reconcile) plus test_provider_artifact_e2e.py::test_repair_returns_clean_doctor_and_second_apply_is_noop."},
+        {"kind": "test", "ref": "core/tests/test_provider_config.py::TestProviderConfigResolution::test_negative_validation_matrix_covers_frozen_contract", "observation": "invariant 6 (distinguishable error classes) plus test_provider_registry.py::test_unknown_provider_and_artifact_have_distinct_diagnostics and test_provider_lock.py::test_corrupt_and_newer_locks_refuse_without_writes."},
+        {"kind": "function", "ref": "core/provider.py::ProviderId", "observation": "invariant 7 is vacuous here: ProviderId is a closed enum of claude-code/codex with no rename, alias or migration path, so there is no back-compat behaviour to pin."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H07",
+      "claim": "P0 CLI backlog: introduce explicit status/validate/doctor/explain/trace commands and a dry-run/plan mode for mutating commands, 'if some of them are missing'.",
+      "claim_class": "cli-ux",
+      "audit_lines": [568, 576],
+      "verdict": "reject",
+      "observation_upheld": "explain/trace as user-facing commands are indeed absent; that specific half is carried separately as H08 (accepted) rather than adopted wholesale here.",
+      "observable_relevance": "The backlog is written conditionally ('if part of them are absent') and most of it is already shipped, so adopting it as a list would create duplicate surfaces — and new public subcommands are the exact class D92 defers to a future plan with recorded consumers/alternatives/SemVer.",
+      "evidence": [
+        {"kind": "caller", "ref": "packages/skiller/lib/skiller/cli.py", "observation": "COMMANDS already contains status, doctor, lock, registry, list, budget, eval, sync, update — status/diagnostic classes exist."},
+        {"kind": "caller", "ref": "packages/harness/lib/harness/doctor.py", "observation": "harness doctor exists with --settings/--provider-audit branches and severity-derived exit codes."},
+        {"kind": "command", "ref": "grep -rn '\"--dry-run\"' packages/*/lib", "observation": "41 dry-run flag declarations across package CLIs — preview mode for mutating commands is shipped, not missing."},
+        {"kind": "function", "ref": "core/provider_lock.py::artifact_dry_run", "observation": "machine-readable no-write preview derived from the plan alone; render_artifact_projection renders it, and harness hooks call both (packages/harness/lib/harness/hooks.py:299)."},
+        {"kind": "function", "ref": "core/provider_lock.py::ArtifactActionKind", "observation": "REPAIR is a first-class action gated by explicit repair_artifact_ids — the requested 'repair' semantics exist as an explicit transaction."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H08",
+      "claim": "The CLI must be able to explain the resolution: which config inputs and overrides took part in the decision and why this variant was chosen.",
+      "claim_class": "cli-ux",
+      "audit_lines": [532, 542],
+      "verdict": "accept",
+      "observation_upheld": "The explain DATA is fully computed and frozen; only the operator-facing rendering of it is missing.",
+      "observable_relevance": "Every provider-config resolution already returns per-leaf provenance (which layer set the value, by which pointer, explicitly or by default), and nothing prints it. An operator who asks 'why is codex enabled here' has to read code, which is the failure mode P0/P1 preflight actually cost time on.",
+      "evidence": [
+        {"kind": "function", "ref": "core/provider.py::ConfigProvenance", "observation": "frozen value carrying effective_path, source (kind/id/carrier/path), source_path and explicit — exactly the explain payload the claim asks for."},
+        {"kind": "function", "ref": "core/provider_config.py::resolve_provider_config", "observation": "fills one ConfigProvenance per effective leaf (enabled, each capability, each native extension) and returns them sorted in ResolvedProviderConfig.provenance."},
+        {"kind": "caller", "ref": "packages/skiller/lib/skiller/config.py::render_provider_diagnostic", "observation": "the only package-level renderer of provider-config output renders DIAGNOSTIC code and path; there is no renderer for provenance."},
+        {"kind": "command", "ref": "grep -rn 'provenance' packages/*/lib | grep -v tests", "observation": "every hit is artifact source/rendered hash provenance (publication, command_render, instructions); no consumer renders ConfigProvenance, so the resolution explanation never reaches a human."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": "FP-1"
+    },
+    {
+      "id": "H09",
+      "claim": "Domain and infrastructure errors must be separated into classes with distinct exit codes; otherwise the CLI loses half its product value.",
+      "claim_class": "cli-ux",
+      "audit_lines": [544, 554],
+      "verdict": "reject",
+      "observation_upheld": "Exit codes today are effectively 0/1/2 (core/term.py::die default 1, per-package usage 2, harness doctor severity 0/1/2), so the numeric taxonomy the claim asks for is genuinely absent.",
+      "observable_relevance": "Error class is already machine-readable where it matters — in the structured code, not the exit code: PCFG_*, REGISTRY_*, MANIFEST_*, HARNESS_* and the DriftObservation enum all name the class and the subject. No committed incident was caused by an indistinguishable exit code, and widening the exit-code contract is a public compatibility change for every caller and hook.",
+      "evidence": [
+        {"kind": "function", "ref": "core/provider_config.py::_diagnostic", "observation": "every config refusal carries a stable PCFG_* code, an RFC6901 path and its source — the class is in the payload."},
+        {"kind": "function", "ref": "core/provider_registry.py::RegistryDiagnostic", "observation": "structured refusal data with distinct codes for duplicate adapter, unknown provider, unknown artifact kind, provider mismatch, catalog version mismatch, disabled provider and four capability classes."},
+        {"kind": "function", "ref": "core/term.py::die", "observation": "die(msg, code=1) — one default exit code shared by all packages; the observation half of the claim is true."},
+        {"kind": "artifact", "ref": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json", "observation": "none of the five frozen incidents is an error-classification failure."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H10",
+      "claim": "run-report is fail-open by construction, and without quality flags / partial-data indicators this silently loses signal: the report looks valid while part of the telemetry is missing.",
+      "claim_class": "hooks-telemetry",
+      "audit_lines": [659, 662],
+      "verdict": "accept",
+      "observation_upheld": "Confirmed in the returned payload, not inferred: the run-report result carries no completeness field at all.",
+      "observable_relevance": "parse_events drops malformed JSONL lines, unknown event types and missing fields with bare continue and counts none of them; the sole degradation signal is usage=None. The consumer (core/pathology.py) then silently under-fires on the missing slices. This is the same class as the plan's own remaining red axis F1, whose cause is a producer that does not fill declared fields — the vocabulary for the fix already exists in analyst.trace and is simply not used by this producer.",
+      "evidence": [
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py::parse_events", "observation": "the returned dict has keys schema/tools/files_changed/tool_failures/bash/workflows/workflow_relaunch/devloop/maind/usage/reads/error_loops/retrieval/protected_writes — no skipped-line counter, no completeness, no quality flag."},
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py::parse_transcript", "observation": "broken lines are dropped by `except: continue` inside the same forward pass, so the loss is unobservable downstream."},
+        {"kind": "function", "ref": "packages/analyst/lib/analyst/trace.py::build_trace_record", "observation": "the repo already has the honest form: quality.completeness / quality.missing / quality.degraded computed over nullable fields, with a build error when a missing field has no reason."},
+        {"kind": "function", "ref": "core/pathology.py::detect", "observation": "docstring states a SCHEMA=1 report degrades silently — detectors on absent slices simply do not fire, which is exactly the silent-success path the claim predicts."},
+        {"kind": "test", "ref": "packages/harness/tests/test_run_report.py", "observation": "test_empty_and_garbage and test_usage_none_no_crash assert survival, not reporting: no test asserts that a partially parsed transcript is reported as partial."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": "FP-2"
+    },
+    {
+      "id": "H11",
+      "claim": "The vendored _usage.py copy in the hook directory is direct architectural duplication and creates a drift risk against core/usage.py.",
+      "claim_class": "hooks-telemetry",
+      "audit_lines": [671, 673],
+      "verdict": "reject",
+      "observation_upheld": "The copy is real and deliberate (the hook runs in ~/.claude/hooks without the monorepo PYTHONPATH).",
+      "observable_relevance": "The drift the claim predicts is prevented by a build gate, not by discipline: the package validation step compares the two files byte for byte and fails the build with the exact remediation command. Nothing to adopt.",
+      "evidence": [
+        {"kind": "command", "ref": "packages/harness/scripts/validate.sh", "observation": "step [2/7] runs `cmp -s core/usage.py configs/claude-code/hooks/run-report/_usage.py` and errors with 'вендоренный _usage.py разошёлся с core/usage.py — запусти scripts/sync-usage.sh'."},
+        {"kind": "command", "ref": "packages/harness/scripts/sync-usage.sh", "observation": "the single documented copy site; core/usage.py is declared the source of truth."},
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py::similar_ratio", "observation": "the hook degrades to a local fallback if the vendored module is absent, so a stale deployment cannot silently produce a different number for the metric-bearing slices."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H12",
+      "claim": "The hook layer has become a holder of operational policy: it interprets managed/protected path semantics rather than merely observing events.",
+      "claim_class": "hooks-policy",
+      "audit_lines": [696, 705],
+      "verdict": "accept",
+      "observation_upheld": "The policy SOURCE is not in the hooks — it is the lock files written by their owners; but the PREDICATE that reads them is now implemented three times with no parity gate.",
+      "observable_relevance": "Rule of Three is met on the tree: `managed target AND NOT user_owned` is implemented independently in harness/agentpacks.py (writer/owner), in run-report/_lib.py::_protected_sets (reporting) and in pack-guard.py::_managed_files (blocking). The blocking copy documents the duplication in its own docstring. Each has tests, none has a parity test, and the repo's own precedent for a deliberate hook-local copy (_usage.py) carries a cmp gate that this predicate does not. A divergence would let pack-guard block a file that run-report does not call protected, or the reverse — an operator-visible contradiction between two hooks over the same lock.",
+      "evidence": [
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py::_protected_sets", "observation": "reads skills-lock.json managed entries and .claude/agent-pack.lock.json files[].target excluding user_owned."},
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/pack-guard/pack-guard.py::_managed_files", "observation": "same lock, same exclusion; the module docstring names it 'осознанный маленький дубль' of _protected_sets."},
+        {"kind": "caller", "ref": "packages/harness/lib/harness/agentpacks.py", "observation": "the owner writes user_owned into the lock and applies its own reading of it in _decide/categorize_file_change and remove/upgrade paths."},
+        {"kind": "command", "ref": "grep -rn '_managed_files\\|_protected_sets' packages/harness/tests/*.py", "observation": "no hits — neither hook-side implementation is compared against the other or against the owner by any test."},
+        {"kind": "command", "ref": "packages/harness/scripts/validate.sh", "observation": "the vendoring gate covers only _usage.py; there is no equivalent parity gate for the ownership predicate."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": "FP-3"
+    },
+    {
+      "id": "H13",
+      "claim": "Intent drift between .claude, .codex, .agents and .claude-plugin is highly likely; the project needs a semantic core with generated vendor-specific variants and drift detection tooling.",
+      "claim_class": "agent-surfaces",
+      "audit_lines": [767, 912],
+      "verdict": "reject",
+      "observation_upheld": "The risk is real for surfaces outside the publication catalog — see H16, which carries that residue honestly as unknown rather than folding it in here.",
+      "observable_relevance": "For the surfaces the claim names, the recommended architecture is already the implemented one: one canonical body, generated thin projections carrying canonical path + sha256 + generator, and a read-only drift check. Adopting the claim would rebuild what exists.",
+      "evidence": [
+        {"kind": "function", "ref": "packages/skiller/lib/skiller/publication.py::render_repository_bootstrap_projections", "observation": "root projections are generated from the canonical skill body; each carries canonical, canonical_sha256 and generator in frontmatter and no copied body."},
+        {"kind": "command", "ref": "diff .agents/skills/decision-verification/SKILL.md .claude/skills/decision-verification/SKILL.md", "observation": "byte-identical across the two provider surfaces — the predicted per-surface divergence does not exist for this class."},
+        {"kind": "command", "ref": "./packages/skiller/bin/skiller registry --check", "observation": "ran read-only: 'registry --check: артефакты актуальны (skills.json/_index.md/манифесты/graph.md/budget.md)' — drift detection tooling exists and is green."},
+        {"kind": "artifact", "ref": "plans/2026.07.24-AGENT-RELIABILITY/findings/P1.4-effective-runtime-proof.md", "observation": "cold per-provider install of the declared unit set: codex 216 identities, claude-code 204, 0 catalog-wide collisions, 0 undeclared root directories — measured, not asserted."},
+        {"kind": "function", "ref": "packages/task/lib/task/command_render.py", "observation": "the same generated-projection discipline covers provider command surfaces, with a --check mode used by the plan's own validations."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H14",
+      "claim": "Hooks need a policy taxonomy (observation / advisory / enforcement) so that the habit of never failing does not spread into hooks that must block.",
+      "claim_class": "hooks-policy",
+      "audit_lines": [686, 694],
+      "verdict": "reject",
+      "observation_upheld": "There is no single table naming every hook's policy class; that is a documentation gap and belongs to the docs pass, not to a structural change.",
+      "observable_relevance": "The behaviour the taxonomy is meant to guarantee already differs per hook by construction and is declared at each hook's own site: the observation hook cannot block, the guard hook blocks in strict mode, the approval hook denies hard. The predicted spread of fail-open into enforcement is not observable on the tree.",
+      "evidence": [
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py", "observation": "module docstring: 'Никогда не бросай наружу' — observation hook, fail-open by declaration."},
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/pack-guard/pack-guard.py", "observation": "declares three modes off/warn/strict where strict blocks Edit/Write/MultiEdit/NotebookEdit with exit 2, and states it never blocks because of an internal error — enforcement with an explicit failure policy."},
+        {"kind": "caller", "ref": "packages/harness/docs/configs/agent-packs.md", "observation": "the operator documentation states per-mode blocking behaviour explicitly (warn does not block, strict blocks with exit 2)."},
+        {"kind": "caller", "ref": "packages/harness/CLAUDE.md", "observation": "auto-approve hook is documented as deny_hard/deny_block/allow ordering with a fail-closed safe-dirs verdict — an enforcement hook that does not inherit the observation hook's fail-open habit."}
+      ],
+      "missing_evidence": null,
+      "future_proposal_id": null
+    },
+    {
+      "id": "H15",
+      "claim": "Heuristic drift: regex and best-effort classifiers (test/lint detection, retrieval detection, repeated-query similarity, pathology thresholds) diverge from tool reality over time and quietly degrade the signal.",
+      "claim_class": "hooks-telemetry",
+      "audit_lines": [663, 665],
+      "verdict": "unknown",
+      "observable_relevance": "Whether these classifiers are drifting cannot be decided from the committed tree in either direction: deciding it needs a labelled corpus that does not exist, and manufacturing one is field data collection, not adjudication. The repo itself declares the thresholds uncalibrated, so neither 'accept, probably true' nor 'reject, speculative' would be honest.",
+      "evidence": [
+        {"kind": "function", "ref": "core/pathology.py", "observation": "module docstring states the thresholds are heuristics 'НЕ откалиброванные по полевому false-positive-rate (реальной калибровки не было; она возможна только после накопления полевых прогонов)' — the tree names its own uncertainty."},
+        {"kind": "function", "ref": "packages/harness/configs/claude-code/hooks/run-report/_lib.py::_retrieval_tool", "observation": "retrieval classification is a name-suffix heuristic plus a RAG-provider name list; correctness against real tool inventories is untested by construction."},
+        {"kind": "test", "ref": "packages/harness/tests/test_run_report.py", "observation": "the tests exercise the patterns on synthetic transcripts (a matching command fires, a non-matching one does not); they measure pattern behaviour, not false-positive/negative rate on real runs."}
+      ],
+      "missing_evidence": "A committed labelled run corpus with ground truth per Bash invocation (was it really a test / a lint) and per tool call (was it really retrieval), plus a measured false-positive/false-negative rate against it. No such corpus exists in this repository: artifacts/source-evidence/ carries five sanitized incident cases with no per-tool-call labels, and the frozen bank (artifacts/reliability-bank-v1/) grades plan-level assertions, not classifier output.",
+      "future_proposal_id": null
+    },
+    {
+      "id": "H16",
+      "claim": "Semantic duplication between agents, skills, docs and workflows: one intent lives simultaneously in several artifacts with no canonical contract.",
+      "claim_class": "agent-surfaces",
+      "audit_lines": [834, 836],
+      "verdict": "unknown",
+      "observable_relevance": "For publication units the question is answered (H13); for agent-pack roles, workflow scripts and docs sections it is not, and the difference matters because those are exactly the surfaces the effective identity gate does not enumerate. Calling it accepted would claim a measurement nobody made; calling it rejected would extend a measured result past its own declared scope.",
+      "evidence": [
+        {"kind": "artifact", "ref": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.4/fixture-unit-set.json", "observation": "the declared fixture is 'every unit declared in each provider's repository marketplace' — publication units (skill buckets, curated core, task/harness/maind plugins), not agent-pack roles or workflow scripts."},
+        {"kind": "function", "ref": "packages/harness/lib/harness/agentpacks.py::semantic_agent_roles", "observation": "agent roles have their own semantic catalog and their own rendering path, disjoint from the skiller publication catalog that the identity gate enumerates."},
+        {"kind": "function", "ref": "packages/skiller/lib/skiller/registry.py::build_registry", "observation": "the registry is built from skills/**/SKILL.md only; workflow scripts and doc sections never enter the identity space at all."}
+      ],
+      "missing_evidence": "A committed intent->artifact map spanning agent-pack roles, workflow scripts and doc sections (the P1.4 effective identity map deliberately covers publication units only), plus a duplication predicate defining when two different artifact kinds carry 'the same intent'. Neither exists; producing them is a measurement item, not an adjudication.",
+      "future_proposal_id": null
+    }
+  ],
+  "future_proposals": [
+    {
+      "id": "FP-1",
+      "title": "Render the already-computed provider-config provenance to the operator",
+      "source_hypothesis": "H08",
+      "owner": "future plan (new item, not this phase). P4.2's read-only doctor may print a subset of this data inside its own frozen scope, but it does not own this proposal and must not grow a public surface for it (D92).",
+      "contract": "root/contracts/semantic-identity-ownership-v1.md (active owner/source/evidence vocabulary); no change to core/provider_config.py's resolution semantics — rendering only, over the existing ResolvedProviderConfig.provenance tuple.",
+      "tests": [
+        "a renderer test asserting that for each effective leaf the output names layer kind, carrier, RFC6901 source pointer and whether the value was explicit or defaulted",
+        "a legacy-default case asserting the PCFG_LEGACY_DEFAULT_APPLIED path is rendered as 'defaulted', never as an explicit choice",
+        "a precedence case (operation over project over fleet-project over fleet-defaults) asserting the winning layer is the one named"
+      ],
+      "observable_user_outcome": "An operator asking 'why is this provider/capability active here' gets the winning layer and pointer from one read-only command instead of reading resolve_provider_config by hand.",
+      "rule_of_three": "Two committed occurrences today (P0/P1 preflight investigations that had to reconstruct effective state by hand — findings/04-runtime-preflight.md, findings/P1.4-effective-runtime-proof.md). Rendering is additive and reversible, so it does not need a third occurrence to be cheap; the proposal is nevertheless deferred, not implemented, because a new public surface requires recorded consumers/alternatives/SemVer (D23/D92).",
+      "implemented_by_this_item": false
+    },
+    {
+      "id": "FP-2",
+      "title": "Make run-report degradation observable (quality flags on the hook payload)",
+      "source_hypothesis": "H10",
+      "owner": "future plan — the same producer-instrumentation debt D88 п.6а already names (contract_ref/finding_refs unfilled by the P3.4/P3.9 harnesses); one owner for both, since both are 'the producer does not declare what it failed to produce'.",
+      "contract": "root/contracts/unified-agent-trace-v1.md § quality (completeness/missing/degraded is the frozen vocabulary; the hook payload adopts it additively, keeping SCHEMA back-compat as SCHEMA=3 rather than mutating SCHEMA=2 readers).",
+      "tests": [
+        "a golden fixture transcript with N malformed lines and M unknown event types asserting the reported skipped/unknown counters equal N and M",
+        "a fixture without _usage.py asserting the payload declares the usage slice degraded instead of only setting usage=None",
+        "a consumer test asserting core/pathology.py::detect does not report a clean run when the payload declares itself partial"
+      ],
+      "observable_user_outcome": "A run report produced from a partially unparsable transcript says so, so `maind analyze` and the pathology detectors can no longer report a clean run over silently missing telemetry.",
+      "rule_of_three": "Three independent occurrences of the same seam are already recorded: F1 = 0.96 (trace producer leaves declared fields unfilled), F10 = unknown (a channel that does not exist is reported as absent rather than as unmeasurable by the harness), and this hook (dropped lines never counted). The class is confirmed, not predicted.",
+      "implemented_by_this_item": false
+    },
+    {
+      "id": "FP-3",
+      "title": "One ownership predicate for managed/user-owned paths, with a parity gate",
+      "source_hypothesis": "H12",
+      "owner": "future plan (new item). The surface spans packages/harness/lib/** and two hook directories, so it cannot be a side effect of any item in this phase.",
+      "contract": "root/contracts/semantic-identity-ownership-v1.md (ownership/managed/user-owned vocabulary); the lock schemas (skills-lock.json, .claude/agent-pack.lock.json) stay unchanged — this is about one reading of them, not a new format.",
+      "tests": [
+        "a parity test over one shared fixture lock asserting agentpacks, _protected_sets and pack-guard._managed_files return the same protected set, including the user_owned exclusion and the directory-prefix rule",
+        "a negative fixture (missing lock, malformed JSON, user_owned entry) asserting all three degrade identically instead of diverging",
+        "a build gate mirroring the existing validate.sh [2/7] cmp step so a hook-local copy cannot drift from its source unnoticed"
+      ],
+      "observable_user_outcome": "pack-guard can no longer block a file that run-report does not consider protected (or the reverse), so the operator sees one consistent answer to 'is this file mine or the pack's'.",
+      "rule_of_three": "Met on the committed tree: three independent implementations of the same predicate (owner, reporter, blocker), the third of which documents the duplication in its own docstring. The repo already has the pattern for the fix (_usage.py sync + cmp gate), so the proposal reuses it rather than inventing one.",
+      "implemented_by_this_item": false
+    }
+  ]
+}

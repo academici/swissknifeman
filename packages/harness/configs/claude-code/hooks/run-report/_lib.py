@@ -155,7 +155,7 @@ def _collect_usage(main_acc, transcript_path):
         "subagents_parsed": parsed,
         "subagents_skipped": skipped,
         # first_turn_overhead/turns — ГЛАВНОГО транскрипта (не мёрж с субагентами):
-        # это про стартовый оверхед самой сессии (P5.3, ТЗ), не про сумму всех агентов.
+        # это про стартовый оверхед самой сессии (2026.07.12-CONTEXT-ECONOMY P5.3, ТЗ), не про сумму всех агентов.
         "first_turn_overhead": main.get("first_turn_overhead"),
         "turns": main.get("msgs"),
     }
@@ -487,7 +487,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                         "status": tur.get("status") or "?",
                         "summary": _snippet(tur.get("summary") or "", 300),
                     })
-                # workflow_relaunch (P1.2, findings/P1-workflow-rootcause.md): группировка ПО
+                # workflow_relaunch (2026.07.15-TELEMETRY-OPT P1.2, findings/P1-workflow-rootcause.md): группировка ПО
                 # runId (resume того же рана — dterema-кейс, 11× resumeFromRunId), не по имени —
                 # один workflowName у двух разных runId не должен схлопываться в одну группу.
                 # runId отсутствует (старые транскрипты/фикстуры) → деградация на workflowName.

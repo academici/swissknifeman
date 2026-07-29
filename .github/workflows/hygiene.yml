@@ -1,0 +1,52 @@
+name: Hygiene
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — дефолт checkout@v4 (fetch-depth: 1) не кладёт базу PR в клон
+      # (в т.ч. для fork-PR); docs-impact.py диффит по merge-base, ему нужна полная история.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: docs-impact (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 scripts/docs-impact.py \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}"
+
+      - name: docs-impact (push)
+        if: github.event_name == 'push'
+        run: python3 scripts/docs-impact.py --base HEAD~1 --head HEAD
+
+      - name: Test docs-impact gate
+        run: python3 scripts/test-docs-impact.py -v
+
+      - name: status-check (capability matrix)
+        run: |
+          python3 scripts/test-status-check.py -v
+          python3 scripts/status-check.py docs/status.md
+
+      - name: public-hygiene (запрещённые пути в дереве)
+        run: |
+          python3 scripts/test-public-hygiene.py -v
+          python3 scripts/public-hygiene.py
+
+  release-tag:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: verify-tag (тег ↔ CHANGELOG.md)
+        run: |
+          python3 scripts/test-verify-tag.py -v
+          python3 scripts/verify-tag.py "${GITHUB_REF_NAME}"

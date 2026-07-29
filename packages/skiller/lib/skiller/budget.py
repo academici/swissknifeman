@@ -184,7 +184,7 @@ def budget_for_set(skills, pulled=None):
     }
 
 
-# --- first-turn footprint (P5.1) -----------------------------------------------
+# --- first-turn footprint (2026.07.12-CONTEXT-ECONOMY P5.1) --------------------
 # Невидимый always-on бюджет — первопричина инцидента (findings/P0-rag-context-economy.md,
 # RAG:✅ 2026-07-12): стартовый контекст 3–7K ток норма, >10K — аномалия. Пять
 # источников always-on нагрузки первого хода проекта: skills meta (⊕ tier-0),
@@ -205,16 +205,59 @@ KNOWN_MCP_TOOLS = {
 FALLBACK_MCP_TOOLS = 5
 TOKENS_PER_MCP_TOOL = 150
 
+# --- модель листингового бюджета Claude Code (P3.4, RAG:✅ /docs/en/skills) ----
+# «The listing always contains every skill name … Claude Code shortens
+# descriptions to fit the listing's character budget … drops descriptions
+# starting with the skills you invoke least.» Клиент режет каждую запись ДО
+# 1 536 симв (description+when_to_use; name — всегда полностью) и держит сумму
+# листинга под потолком budget = context_window * fraction (дефолт 1%,
+# настраивается `skillListingBudgetFraction`/`SLASH_COMMAND_TOOL_CHAR_BUDGET` —
+# оба параметризуемы здесь, а не зашиты, см. Implementation Rules P3.4).
+# Порядок «дропа» зависит от истории вызовов проекта, которой у нас нет —
+# `_measure_skills` МОДЕЛИРУЕТ потолок (после-бюджета = min(сумма, потолок)),
+# не порядок дропа конкретных записей; это Scope Included P3.4, не полная
+# симуляция клиента.
+SKILL_LISTING_MAX_ENTRY_CHARS = 1_536
+SKILL_LISTING_BUDGET_FRACTION = 0.01
+SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 
-def _measure_skills(env, target):
-    """⊕ tier-0 активного набора скиллов проекта — тот же источник, что и
-    resolve_active_set/budget_for_set выше. n/a на любой сбой (незнакомый бакет
-    в чужом .swissknife.json и т.п.) — не должно ронять весь отчёт."""
+
+def _listing_entry_tokens(skill_dir):
+    """⊕ tier-0 ОДНОЙ записи листинга, как считает клиент: `name` без обрезки +
+    `description`(+`when_to_use`, если фронтматтер несёт поле), капнутые до
+    SKILL_LISTING_MAX_ENTRY_CHARS символов. Отдельно от `skill_budget.tier0`
+    (используется `budget_for_set`/`--check-core`/картой бюджета — та математика
+    вне Scope P3.4, Files item'а её не трогает)."""
+    skill_dir = Path(skill_dir)
+    md = skill_dir / "SKILL.md"
+    if not md.is_file():
+        return 0
+    fm = parse_frontmatter(md)
+    name = fm.get("name", "") or skill_dir.name
+    desc_text = (fm.get("description", "") + " " + fm.get("when_to_use", "")).strip()
+    return estimate_tokens(name) + estimate_tokens(
+        desc_text[:SKILL_LISTING_MAX_ENTRY_CHARS])
+
+
+def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
+                    listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
+    """Резидент листинга активного набора скиллов проекта — модель бюджета
+    выше (cap на запись + потолок = context_window*fraction), не сумма всех
+    описаний (тот переучёт был причиной D22/[POSSIBLE-DEFECT] в разведке P3.4).
+    n/a на любой сбой (незнакомый бакет в чужом .swissknife.json и т.п.) — не
+    должно ронять весь отчёт."""
     try:
         config = load_config(env, target)
         skills, meta = resolve_active_set(env, target, config)
-        b = budget_for_set(skills, meta["pulled"])
-        return {"tokens": b["tier0"], "detail": f"{b['count']} скиллов"}
+        raw = sum(_listing_entry_tokens(d) for _bucket, _rel, d, _fm in skills)
+        budget = int(listing_context_window * listing_fraction)
+        resident = min(raw, budget)
+        detail = f"{len(skills)} скиллов"
+        if raw > budget:
+            detail += (f", листинг {raw} > бюджет {budget} ток → резидент "
+                      f"{resident} (клиент дропает редко вызываемые описания)")
+        return {"tokens": resident, "raw_tokens": raw, "listing_budget": budget,
+                "detail": detail}
     except (Exception, SystemExit) as e:
         return {"tokens": None, "detail": f"n/a ({e})"}
 
@@ -363,14 +406,20 @@ _FIRST_TURN_SOURCE_LABELS = (
 )
 
 
-def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT):
+def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
+                      listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
+                      listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
     """Сумма always-on футпринта первого хода проекта по пяти источникам.
     n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
     что реально измерено. Вердикт: OK ≤7K · ELEVATED ≤10K · WARN >10K
-    (findings/P0-rag-context-economy.md, RAG:✅ 2026-07-12)."""
+    (findings/P0-rag-context-economy.md, RAG:✅ 2026-07-12). `listing_fraction`/
+    `listing_context_window` — доля бюджета листинга скиллов и контекстное окно
+    целевой модели; параметры, а не константы (P3.4 Implementation Rules —
+    захардкоженный дефолт протухнет при смене `skillListingBudgetFraction`)."""
     target = Path(target).resolve()
     sources = {
-        "skills": _measure_skills(env, target),
+        "skills": _measure_skills(env, target, listing_fraction=listing_fraction,
+                                  listing_context_window=listing_context_window),
         "agents": _measure_agents(target),
         "claude_md": _measure_claude_md(target),
         "hooks": _measure_hooks(target, timeout=timeout),
@@ -394,6 +443,9 @@ def format_first_turn_report(report):
         tok = s.get("tokens")
         tok_str = "   n/a" if tok is None else f"{tok:>6}"
         out.append(f"  {label:<28} {tok_str} ток  ({s.get('detail', '')})")
+        raw = s.get("raw_tokens")
+        if raw is not None and raw != tok:
+            out.append(f"  {'  (сумма описаний до бюджета)':<28} {raw:>6} ток")
     out.append("")
     out.append(f"Итого: {report['total']:>6} ток — {report['verdict']}  "
                f"(target ≤{FIRST_TURN_TARGET_MAX} · warn >{FIRST_TURN_WARN})")

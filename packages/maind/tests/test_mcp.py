@@ -60,6 +60,12 @@ class TestDispatch(unittest.TestCase):
                              "maind_memory_forget", "maind_graph_project",
                              "maind_memory_links"} <= names)
 
+    def test_tool_descriptions_within_2kb_cap(self):
+        # client-side cap на description инструмента (research/04-P3-listing-budget-and-trim-math.md)
+        for tool in mcp.TOOLS:
+            self.assertLessEqual(len(tool["description"].encode("utf-8")), 2048,
+                                 f"{tool['name']}: description превышает 2048 байт")
+
     def test_protocol_version_echo(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
@@ -120,6 +126,37 @@ class TestToolCalls(unittest.TestCase):
             r = call(env, cfg(memory={"url": "http://127.0.0.1:1"}),
                      "maind_memory_recall", {"scope": "x", "query": "y"})
             self.assertTrue(r["result"]["isError"])
+
+    def test_memory_down_message_is_role_aware_for_client(self):
+        # role=client НЕ получает подсказку поднять локальный демон (создало бы
+        # второго писателя, ADR-0001/D27) — единственная точка врезки в _run_tool.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            c = cfg(memory={"url": "http://127.0.0.1:1", "role": "client"})
+            r = call(env, c, "maind_memory_recall", {"scope": "x", "query": "y"})
+            text = r["result"]["content"][0]["text"]
+            self.assertNotIn("maind start", text)
+
+    def test_memory_store_sends_authorization_header_when_secret_configured(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                os.environ["AGENTMEMORY_SECRET"] = "good-token"
+                try:
+                    r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                             {"scope": "project:x", "key": "fact", "value": "hi"})
+                finally:
+                    del os.environ["AGENTMEMORY_SECRET"]
+                self.assertFalse(r["result"].get("isError"))
+
+    def test_memory_store_401_without_secret_surfaces_as_error_not_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                         {"scope": "project:x", "key": "fact", "value": "hi"})
+                self.assertTrue(r["result"]["isError"])   # сервер жив, не крашится сервер MCP
+                self.assertIn("401", r["result"]["content"][0]["text"])
 
     def test_graph_path(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -338,6 +375,75 @@ class TestScopeIsolation(unittest.TestCase):
                 r = scoped_call(env, config, "maind_memory_recall",
                                 {"scope": "project:b", "query": "хаб"}, "global")
                 self.assertFalse(r["result"].get("isError"))
+
+
+class TestContentTrimming(unittest.TestCase):
+    """`_content` — единая воронка тримминга (P3.2): ниже порога — байт-в-байт как раньше;
+    выше — снятие `indent=2`, а если и этого не хватило — receipt с `truncated`/
+    `returned_count`/`total_count` на крупнейшем топ-уровневом списке. `isError` не
+    пересекается с `truncated`-путём (разные классы — ошибка инструмента vs частичность)."""
+
+    def test_small_payload_unchanged_bytes(self):
+        payload = {"a": 1, "b": [1, 2, 3]}
+        out = mcp._content(payload)
+        self.assertEqual(out["content"][0]["text"],
+                          json.dumps(payload, ensure_ascii=False, indent=2))
+
+    def test_over_threshold_drops_indent_first(self):
+        # список средней ширины: превышает порог с indent=2, но укладывается компактным —
+        # тримминг обязан остановиться на рычаге (1), не резать данные.
+        payload = {"items": [{"id": i, "note": "x" * 40} for i in range(400)]}
+        indented_tokens = mcp._estimate_tokens(
+            json.dumps(payload, ensure_ascii=False, indent=2))
+        compact_tokens = mcp._estimate_tokens(json.dumps(payload, ensure_ascii=False))
+        self.assertGreater(indented_tokens, mcp.TRIM_TARGET_TOKENS)   # проверка фикстуры
+        self.assertLessEqual(compact_tokens, mcp.TRIM_TARGET_TOKENS)  # проверка фикстуры
+        out = mcp._content(payload)
+        text = out["content"][0]["text"]
+        data = json.loads(text)
+        self.assertEqual(len(data["items"]), 400)           # ничего не потеряно
+        self.assertNotIn("truncated", data)
+        self.assertNotIn("\n  ", text)                       # indent=2 снят (компактный JSON)
+
+    def test_far_over_threshold_truncates_with_receipt(self):
+        payload = [{"id": i, "note": "x" * 200} for i in range(2000)]
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertTrue(data["truncated"])
+        self.assertEqual(data["total_count"], 2000)
+        self.assertLess(data["returned_count"], 2000)
+        self.assertEqual(len(data["items"]), data["returned_count"])
+        self.assertIn("hint", data)
+        self.assertLessEqual(mcp._estimate_tokens(out["content"][0]["text"]),
+                             mcp.TRIM_TARGET_TOKENS)
+
+    def test_truncation_preserves_dict_shape_and_sibling_keys(self):
+        payload = {"hub": {"ok": True}, "projects": [{"id": i} for i in range(3000)]}
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertEqual(data["hub"], {"ok": True})          # соседний ключ не тронут
+        self.assertTrue(data["projects_truncated"]["truncated"])
+        self.assertEqual(data["projects_truncated"]["total_count"], 3000)
+        self.assertEqual(len(data["projects"]), data["projects_truncated"]["returned_count"])
+
+    def test_is_error_path_never_truncated(self):
+        # ошибочный payload короткий на практике, но воронка обязана НЕ трогать isError-путь
+        # тримминг-логикой (isError занят классом «ошибка инструмента», не «частичность»).
+        payload = {"error": "x" * 5000}
+        out = mcp._content(payload, is_error=True)
+        self.assertTrue(out["isError"])
+        self.assertNotIn("truncated", out["content"][0]["text"])
+        self.assertEqual(out["content"][0]["text"],
+                         json.dumps(payload, ensure_ascii=False, indent=2))
+
+    def test_no_truncatable_list_leaves_payload_as_is(self):
+        # верхнеуровневых списков нет — тримминг молчаливо не срабатывает (хвостовой случай
+        # эскалации по Implementation Rules, не наблюдался на живом узле P3.2).
+        payload = {"note": "x" * 50000}
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertEqual(data, payload)
+        self.assertNotIn("truncated", data)
 
 
 class TestFraming(unittest.TestCase):

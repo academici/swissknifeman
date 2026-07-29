@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "check_command": "$REVIEW_GATE_DIR/checks/run-checks.sh",
+  "checks": [
+    { "name": "generated-assets", "mode": "strict" },
+    { "name": "plan-lint", "mode": "strict" },
+    { "name": "tests-touched", "mode": "warn" },
+    { "name": "plan-citations", "mode": "warn" }
+  ]
+}

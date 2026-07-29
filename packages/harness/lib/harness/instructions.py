@@ -12,6 +12,7 @@ import re
 from typing import Mapping
 
 from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.repo import resolve_plan_dir
 from core.provider_artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest,
@@ -238,7 +239,8 @@ def catalog_path() -> Path:
 
 
 def contract_path() -> Path:
-    return repository_root() / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md"
+    return resolve_plan_dir(repository_root(), "2026.07.19-DUAL-PROVIDER") / (
+        "root/contracts/provider-instruction-contract.md")
 
 
 def compatibility_path() -> Path:

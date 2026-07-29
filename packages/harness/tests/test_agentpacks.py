@@ -381,8 +381,12 @@ class TestCategorizeFileChange(unittest.TestCase):
             "user-owned")
 
     def test_nochange_when_base_same(self):
+        # nochange требует, чтобы файл ЛЕЖАЛ на диске: категория считается по факту,
+        # а пропавший target — всегда восстановление (см. ниже).
+        self.tgt.write_text("body", encoding="utf-8")
         self.assertEqual(
-            ap.categorize_file_change({}, self._pf("same"), "same", self.tgt), "nochange")
+            ap.categorize_file_change({}, self._pf(ap.sha256_text("body")),
+                                      ap.sha256_text("body"), self.tgt), "nochange")
 
     def test_safe_apply_base_changed_disk_untouched(self):
         # на диске = прежняя база (не правлена локально), база сменилась → safe-apply
@@ -408,11 +412,16 @@ class TestCategorizeFileChange(unittest.TestCase):
             ap.categorize_file_change({"optional": True}, self._pf("orig"), "newsha", self.tgt),
             "new-optional")
 
-    def test_missing_file_with_base_unchanged_stays_nochange(self):
-        # Пропавший файл БЕЗ смены версии пака — не дело upgrade его восстанавливать
-        # (это забота doctor --drift); upgrade просто нечего делать для этой записи.
+    def test_missing_file_with_base_unchanged_is_new(self):
+        # Пропавший файл при РАВНОЙ базе/версии — тоже восстановление (кейс B раскатки
+        # 2026-07-11, botkit: снос соседнего пака унёс общие targets, а upgrade при
+        # равной версии отвечал «уже актуален» и оставлял проект без файлов).
+        # doctor --drift по-прежнему репортит такой файл как 'missing'.
         self.assertEqual(
-            ap.categorize_file_change({}, self._pf("samesha"), "samesha", self.tgt), "nochange")
+            ap.categorize_file_change({}, self._pf("samesha"), "samesha", self.tgt), "new")
+        self.assertEqual(
+            ap.categorize_file_change({"optional": True}, self._pf("samesha"), "samesha",
+                                      self.tgt), "new-optional")
 
 
 if __name__ == "__main__":

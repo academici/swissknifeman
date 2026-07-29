@@ -93,11 +93,23 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _authorized(self):
+        """True, если протектед-эндпоинт пропускает запрос: сервер БЕЗ секрета —
+        всегда (как живой демон без AGENTMEMORY_SECRET); с секретом — только
+        корректный `Authorization: Bearer <secret>` (как middleware::api-auth)."""
+        secret = getattr(self.server, "secret", None)
+        if not secret:
+            return True
+        return self.headers.get("Authorization") == f"Bearer {secret}"
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/agentmemory/health":
-            self._send(200, {"status": "ok"})
+            self._send(200, {"status": "ok"})   # ВСЕГДА публичен — даже с секретом
         elif parsed.path == "/agentmemory/memories":
+            if not self._authorized():
+                self._send(401, {"error": "unauthorized"})
+                return
             q = parse_qs(parsed.query)
             ns = (q.get("namespace") or [""])[0]
             mems = self.server.memories.get(ns, [])
@@ -109,6 +121,9 @@ class _Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length) or b"{}")
+        if not self._authorized():
+            self._send(401, {"error": "unauthorized"})
+            return
         ns = payload.get("namespace", "")
         if parsed.path == "/agentmemory/remember":
             self.server._seq += 1
@@ -143,12 +158,15 @@ class _Handler(BaseHTTPRequestHandler):
 
 class FakeMemoryServer:
     """Контекст-менеджер: HTTP-сервер с agentmemory-контрактом на свободном порту.
-    `with FakeMemoryServer() as url:` → базовый URL. Память — в self.memories."""
+    `with FakeMemoryServer() as url:` → базовый URL. Память — в self.memories.
+    `secret` — опционально: протектед-эндпоинты (все, кроме /agentmemory/health —
+    он ВСЕГДА публичен, как у живого движка) 401'ят без корректного bearer'а."""
 
-    def __init__(self):
+    def __init__(self, secret=None):
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
         self.httpd.memories = {}
         self.httpd._seq = 0
+        self.httpd.secret = secret
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
 
     @property

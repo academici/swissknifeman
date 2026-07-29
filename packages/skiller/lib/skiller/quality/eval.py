@@ -21,7 +21,9 @@ benchmark / iteration-loop / description-optimization) и obra/superpowers
 
 Конвенции пакета: stdlib-only, `Env` явно, атомарная запись (`core.io`), сообщения
 по-русски. Токен-математика — НЕ здесь (единый источник `budget.py`)."""
+import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -29,6 +31,7 @@ import statistics
 import subprocess
 import tempfile
 import time
+from fractions import Fraction
 from pathlib import Path
 
 from core import (atomic_write_json, atomic_write_text, die, parse_args,
@@ -170,13 +173,25 @@ def validate_pressure(data, label="pressure.json"):
     """Структурная валидация pressure.json (сценарии-соблазны). → список ошибок.
 
     Сценарий — тот же грейд-контракт (assertions), плюс поле `tempts` (что агента
-    подмывает сделать, пропустив скилл) для читаемости."""
+    подмывает сделать, пропустив скилл) для читаемости. Опциональное поле
+    `triggers` (P8.8) — список строк `should_trigger` из triggers.json, которые
+    сценарий покрывает; форма проверяется здесь, полнота покрытия — в validate.sh
+    (кросс-файловая сверка со скиллом же triggers.json)."""
     if not isinstance(data, dict):
         return [f"{label}: корень должен быть объектом"]
     errors = []
     if not data.get("skill"):
         errors.append(f"{label}: нет поля skill")
-    errors += _validate_cases(data.get("scenarios"), label, kind="scenarios")
+    scenarios = data.get("scenarios")
+    errors += _validate_cases(scenarios, label, kind="scenarios")
+    if isinstance(scenarios, list):
+        for i, sc in enumerate(scenarios):
+            if not isinstance(sc, dict) or "triggers" not in sc:
+                continue
+            t = sc["triggers"]
+            if not isinstance(t, list) or any(not isinstance(x, str) or not x.strip() for x in t):
+                errors.append(f"{label}.scenarios[{i}].triggers: должен быть массивом "
+                              f"непустых строк")
     return errors
 
 
@@ -197,14 +212,71 @@ def validate_triggers(data, label="triggers.json"):
 # ============================================================================ #
 #  АГРЕГАТ BENCHMARK (офлайн)                                                   #
 # ============================================================================ #
+# P8.9: метрики держатся `fractions.Fraction` до самой границы записи — точная
+# арифметика (никаких промежуточных `round()`-искажений), ни одного float даже
+# транзитно (√ — через `math.isqrt`, не `math.sqrt`). Рендер строкой — одна
+# функция `_fmt_frac`, применяемая рекурсивно `_stringify_fractions` ровно один
+# раз, перед `atomic_write_json` (см. cmd_eval). Downstream-потребители (viewer)
+# читают через `float(x)` — работает и с Fraction (тесты дергают build_benchmark
+# напрямую), и со строкой (реальный `cmd_eval`-путь).
+def _sqrt_fraction(value, ndigits=9):
+    """√(Fraction ≥ 0) → Fraction-приближение с `ndigits` дробных цифр, целочисленно
+    (`math.isqrt`) — без float даже транзитно. value<=0 → Fraction(0)."""
+    fr = value if isinstance(value, Fraction) else Fraction(value)
+    if fr <= 0:
+        return Fraction(0)
+    scale = Fraction(10) ** (2 * ndigits)
+    scaled = fr * scale
+    root = math.isqrt(scaled.numerator * scaled.denominator) // scaled.denominator
+    return Fraction(root, 10 ** ndigits)
+
+
+def _fmt_frac(value, ndigits=3):
+    """Fraction|int|None → строка фиксированной точности (round-half-up на точной
+    дроби, без float). None → None (нечего измерять)."""
+    if value is None:
+        return None
+    fr = value if isinstance(value, Fraction) else Fraction(value)
+    sign = "-" if fr < 0 else ""
+    fr = abs(fr)
+    scale = Fraction(10) ** ndigits
+    scaled = fr * scale
+    q, r = divmod(scaled.numerator, scaled.denominator)
+    if 2 * r >= scaled.denominator:
+        q += 1
+    s = str(q).rjust(ndigits + 1, "0")
+    return f"{sign}{s[:-ndigits]}.{s[-ndigits:]}"
+
+
+def _stringify_fractions(obj, ndigits=3):
+    """Рекурсивно заменить Fraction-листья строками (`_fmt_frac`) — инвариант «ни
+    одного float/Fraction в JSON-отчёте» на границе записи (не раньше: внутренние
+    вычисления остаются точными до этого шага)."""
+    if isinstance(obj, Fraction):
+        return _fmt_frac(obj, ndigits)
+    if isinstance(obj, dict):
+        return {k: _stringify_fractions(v, ndigits) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_stringify_fractions(v, ndigits) for v in obj]
+    return obj
+
+
 def _stat(values):
-    """(mean, stddev) по списку чисел; None-ы отфильтрованы. stdev=0 при <2."""
-    nums = [v for v in values if isinstance(v, (int, float))]
+    """(mean, stddev) как Fraction|None по списку чисел; None/bool отфильтрованы.
+    mean — точное среднее; stddev — √(популяционной дисперсии) через
+    `_sqrt_fraction` (целочисленно). stddev=Fraction(0) при <2 значениях."""
+    nums = [Fraction(v) for v in values
+           if isinstance(v, (int, float, Fraction)) and not isinstance(v, bool)]
     if not nums:
         return None, None
-    mean = statistics.fmean(nums)
-    sd = statistics.pstdev(nums) if len(nums) > 1 else 0.0
-    return round(mean, 3), round(sd, 3)
+    n = len(nums)
+    mean = sum(nums, Fraction(0)) / n
+    if n > 1:
+        var = sum((x - mean) ** 2 for x in nums) / n
+        sd = _sqrt_fraction(var)
+    else:
+        sd = Fraction(0)
+    return mean, sd
 
 
 def aggregate_runs(case_results):
@@ -212,7 +284,9 @@ def aggregate_runs(case_results):
 
     case_results: [{passed: bool|None, duration_s?, tokens?}]. →
     {total, graded, passed, pass_rate, duration_mean, duration_std,
-     tokens_mean, tokens_std}. pass_rate=None, если нечего оценивать."""
+     tokens_mean, tokens_std} — числовые метрики Fraction|None (точная арифметика,
+     см. _stat); строковый рендер — на границе записи (cmd_eval). pass_rate=None,
+     если нечего оценивать."""
     total = len(case_results)
     graded = [r for r in case_results if r.get("passed") is not None]
     passed = sum(1 for r in graded if r["passed"])
@@ -222,7 +296,7 @@ def aggregate_runs(case_results):
         "total": total,
         "graded": len(graded),
         "passed": passed,
-        "pass_rate": round(passed / len(graded), 3) if graded else None,
+        "pass_rate": Fraction(passed, len(graded)) if graded else None,
         "duration_mean": d_mean, "duration_std": d_std,
         "tokens_mean": t_mean, "tokens_std": t_std,
     }
@@ -230,7 +304,8 @@ def aggregate_runs(case_results):
 
 def build_benchmark(skill, with_skill_runs, baseline_runs=None):
     """Собрать benchmark из прогонов with-skill (и опц. baseline). Чистая функция:
-    без времени/IO (детерминированна для тестов; generated_at ставит cmd_eval)."""
+    без времени/IO (детерминированна для тестов; generated_at/provenance/
+    schema_version ставит cmd_eval). Числовые метрики — Fraction|None."""
     bench = {"skill": skill, "with_skill": aggregate_runs(with_skill_runs)}
     if baseline_runs is not None:
         base = aggregate_runs(baseline_runs)
@@ -238,9 +313,9 @@ def build_benchmark(skill, with_skill_runs, baseline_runs=None):
         ws, bs = bench["with_skill"], base
         delta = {}
         if ws["pass_rate"] is not None and bs["pass_rate"] is not None:
-            delta["pass_rate"] = round(ws["pass_rate"] - bs["pass_rate"], 3)
+            delta["pass_rate"] = ws["pass_rate"] - bs["pass_rate"]
         if ws["tokens_mean"] is not None and bs["tokens_mean"] is not None:
-            delta["tokens_mean"] = round(ws["tokens_mean"] - bs["tokens_mean"], 3)
+            delta["tokens_mean"] = ws["tokens_mean"] - bs["tokens_mean"]
         bench["delta"] = delta
     return bench
 
@@ -262,15 +337,16 @@ def score_description(description, trigger_set, judge):
     fp = sum(1 for q in sn if judge(description, q))
     tn = len(sn) - fp
     total = tp + fn + fp + tn
-    precision = tp / (tp + fp) if (tp + fp) else 0.0
-    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    # Fraction — точные отношения (P8.9), не round()-искажение; Fraction полностью
+    # упорядочен, select_best_description сортирует по нему без изменений.
+    precision = Fraction(tp, tp + fp) if (tp + fp) else Fraction(0)
+    recall = Fraction(tp, tp + fn) if (tp + fn) else Fraction(0)
     f1 = (2 * precision * recall / (precision + recall)
-          if (precision + recall) else 0.0)
+          if (precision + recall) else Fraction(0))
     return {
         "tp": tp, "fp": fp, "fn": fn, "tn": tn,
-        "precision": round(precision, 3), "recall": round(recall, 3),
-        "f1": round(f1, 3),
-        "accuracy": round((tp + tn) / total, 3) if total else 0.0,
+        "precision": precision, "recall": recall, "f1": f1,
+        "accuracy": Fraction(tp + tn, total) if total else Fraction(0),
         "len": len(description), "over_limit": len(description) > DESC_MAX,
     }
 
@@ -334,12 +410,15 @@ def _parse_claude_json(stdout):
 
 
 def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
-             claude=None):
+             claude=None, clock_ns=time.monotonic_ns):
     """Один прогон кейса через `claude -p` в каталоге workspace.
 
     with_skill=True → тело SKILL.md подмешивается в системный промт (baseline без
     него — изоляция эффекта скилла). case.files[] (если есть) пишутся в workspace
-    до прогона. → {id, output, returncode, duration_s, tokens, error?}."""
+    до прогона. `clock_ns` (P8.9) — инжектируемые часы (дефолт `time.monotonic_ns`);
+    тесты подставляют детерминированный счётчик ⇒ отчёт побайтно воспроизводим.
+    duration_s — точный `Fraction(ns, 10**9)`, не float. →
+    {id, output, returncode, duration_s, tokens, error?}."""
     claude = claude or claude_bin()
     if not claude:
         raise RuntimeError("CLI `claude` не найден — раннер недоступен (офлайн)")
@@ -354,42 +433,431 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
         md = Path(skill_dir) / "SKILL.md"
         skill_text = md.read_text(encoding="utf-8") if md.is_file() else None
     cmd = build_run_cmd(claude, case["prompt"], skill_text)
-    start = time.time()
+    start_ns = clock_ns()
     try:
         proc = subprocess.run(cmd, cwd=str(ws), capture_output=True, text=True,
                               timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
         return {"id": case.get("id"), "output": "", "returncode": -1,
-                "duration_s": round(time.time() - start, 3), "tokens": None,
+                "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": None,
                 "error": f"timeout {timeout}s"}
     text, tokens = _parse_claude_json(proc.stdout)
     return {"id": case.get("id"), "output": text, "returncode": proc.returncode,
-            "duration_s": round(time.time() - start, 3), "tokens": tokens}
+            "duration_s": Fraction(clock_ns() - start_ns, 10 ** 9), "tokens": tokens}
 
 
 def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
-              claude=None):
+              claude=None, clock_ns=time.monotonic_ns):
     """Прогнать набор кейсов (каждый в своём временном workspace) и оценить.
-    → [{...run_case, **grade_case}]. Online."""
+    → [{...run_case, **grade_case}]. Online. `clock_ns` — см. run_case (P8.9)."""
     results = []
     for case in cases:
         with tempfile.TemporaryDirectory(prefix="skiller-eval-") as ws:
             run = run_case(skill_dir, case, with_skill=with_skill, workspace=ws,
-                           timeout=timeout, claude=claude)
+                           timeout=timeout, claude=claude, clock_ns=clock_ns)
             grade = grade_case(case, run.get("output", ""), ws)
         results.append({**run, **grade})
     return results
 
 
 # ============================================================================ #
+#  SYSTEM BANK ADAPTER (P3.3) — deterministic structured graders               #
+# ============================================================================ #
+# The frozen P0.3 reliability bank (`plans/2026.07.24-AGENT-RELIABILITY/
+# artifacts/reliability-bank-v1/`) grades a case by a TRANSCRIPT (ordered typed
+# events) + OUTCOME (dict) record, not a single free-text string — a different
+# vocabulary from ASSERTION_TYPES above (which grades one string). Its own
+# `run_bank.py` is the sole executable owner of THAT frozen case set (schema/
+# probes/floors/manifest) and stays untouched — but the deterministic GRADING
+# ALGORITHM itself is exactly what this item ports into skiller, so the eval
+# seam survives the plan's own archival (`plans/<ID>/` is not a durable
+# dependency surface for a package). Reimplemented here, not imported — cited
+# in this module's own docstring convention (`analyst.metrics`: "each contract
+# owns its own closed enum rather than sharing a runtime module across an
+# unrelated boundary"). No LLM judge anywhere in this path (D15).
+SYSTEM_OPERATORS = {"event_present", "event_absent", "event_order", "event_count_max",
+                   "event_count_min", "outcome_field_equals", "outcome_list_contains",
+                   "outcome_list_excludes"}
+
+
+def _system_matches(event, where):
+    return all(event.get(k) == v for k, v in (where or {}).items())
+
+
+def _system_select(transcript, spec):
+    return [e for e in transcript
+           if e.get("type") == spec.get("type") and _system_matches(e, spec.get("where"))]
+
+
+def _system_dig(outcome, path):
+    node = outcome
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
+
+
+def apply_system_operator(operator, args, transcript, outcome):
+    """One deterministic operator over a structured transcript/outcome record.
+    → (observed: bool, detail: str). Vocabulary/semantics match
+    `reliability-acceptance-v1.md` § Graders exactly (eight operators, no
+    model call anywhere)."""
+    args = args or {}
+    if operator == "event_present":
+        hits = _system_select(transcript, args)
+        return bool(hits), f"event_present {args.get('type')}: {len(hits)}"
+    if operator == "event_absent":
+        hits = _system_select(transcript, args)
+        return not hits, f"event_absent {args.get('type')}: {len(hits)}"
+    if operator == "event_order":
+        before, after = args["before"], args["after"]
+        afters = _system_select(transcript, after)
+        if not afters:
+            return True, f"event_order: no {after.get('type')} events — vacuously ok"
+        befores = _system_select(transcript, before)
+        ok = all(any(b["seq"] < a["seq"] for b in befores) for a in afters)
+        return ok, (f"event_order {before.get('type')}->{after.get('type')}: "
+                   f"{'ok' if ok else 'VIOLATED'}")
+    if operator == "event_count_max":
+        hits = _system_select(transcript, args)
+        ok = len(hits) <= args["max"]
+        return ok, f"event_count_max {args.get('type')} <= {args['max']}: {len(hits)}"
+    if operator == "event_count_min":
+        hits = _system_select(transcript, args)
+        ok = len(hits) >= args["min"]
+        return ok, f"event_count_min {args.get('type')} >= {args['min']}: {len(hits)}"
+    if operator == "outcome_field_equals":
+        got = _system_dig(outcome, args["path"])
+        return got == args["value"], f"outcome.{args['path']} == {args['value']!r}: got {got!r}"
+    if operator in ("outcome_list_contains", "outcome_list_excludes"):
+        got = _system_dig(outcome, args["path"])
+        items = got if isinstance(got, list) else []
+        present = args["value"] in items
+        ok = present if operator == "outcome_list_contains" else not present
+        return ok, f"{operator} outcome.{args['path']} {args['value']!r}: {'ok' if ok else 'violated'}"
+    return False, f"unknown system operator: {operator!r}"
+
+
+def grade_system_case(case, graders_by_id, transcript, outcome):
+    """Grade one system-bank case (assertions bound to graders by id) against a
+    transcript/outcome record. → {case_id, passed, checks}. `checks` carry each
+    assertion's `tags` through unchanged — `compute_system_metrics` below reads
+    them (e.g. `requirement_retention`) rather than re-deriving case semantics."""
+    checks = []
+    for a in case.get("assertions", []) or []:
+        grader = graders_by_id.get(a.get("grader"))
+        if grader is None:
+            checks.append({"id": a.get("id"), "grader": a.get("grader"), "ok": False,
+                          "tags": a.get("tags") or [],
+                          "detail": f"unknown grader {a.get('grader')!r}"})
+            continue
+        observed, detail = apply_system_operator(grader["operator"], a.get("args"),
+                                                  transcript, outcome)
+        ok = observed == a.get("expect", True)
+        checks.append({"id": a.get("id"), "grader": a.get("grader"), "expect": a.get("expect"),
+                       "observed": observed, "ok": ok, "detail": detail,
+                       "tags": a.get("tags") or []})
+    return {"case_id": case.get("case_id"),
+           "passed": all(c["ok"] for c in checks) if checks else None, "checks": checks}
+
+
+def validate_system_graders(data, label="graders.json"):
+    """Structural validation of a system-bank graders document (`reliability-
+    bank/v1` shape): no-LLM-judge policy, operator closure. → errors (empty =
+    valid). Generic — validates ANY system-bank-shaped doc, not only the frozen
+    2026.07.24-AGENT-RELIABILITY P0.3 one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
+    if not isinstance(data, dict):
+        return [f"{label}: root must be an object"]
+    errors = []
+    policy = data.get("policy") or {}
+    if policy.get("llm_judge_allowed") is not False:
+        errors.append(f"{label}: policy.llm_judge_allowed must be false (D15)")
+    seen = set()
+    for i, g in enumerate(data.get("graders") or []):
+        gid = g.get("id")
+        if not gid or gid in seen:
+            errors.append(f"{label}.graders[{i}]: missing or duplicate id {gid!r}")
+        seen.add(gid)
+        if g.get("operator") not in SYSTEM_OPERATORS:
+            errors.append(f"{label}.graders[{i}]: operator {g.get('operator')!r} not in "
+                          f"{sorted(SYSTEM_OPERATORS)}")
+    if not seen:
+        errors.append(f"{label}: empty grader list")
+    return errors
+
+
+def validate_system_cases(data, grader_ids, label="cases.json"):
+    """Structural validation of a system-bank cases document. → errors (empty =
+    valid). Deliberately does not enforce the frozen bank's own D10 20–50 case-
+    count range — that range is a property of ONE specific frozen bank, not of
+    this generic adapter."""
+    if not isinstance(data, dict):
+        return [f"{label}: root must be an object"]
+    errors = []
+    cases = data.get("cases")
+    if not isinstance(cases, list) or not cases:
+        errors.append(f"{label}: 'cases' must be a non-empty array")
+        cases = []
+    seen = set()
+    for c in cases:
+        cid = c.get("case_id")
+        where = f"{label} case {cid!r}"
+        if not cid or cid in seen:
+            errors.append(f"{where}: missing or duplicate case_id")
+        seen.add(cid)
+        if c.get("kind") not in ("critical", "control"):
+            errors.append(f"{where}: kind must be critical|control")
+        asserts = c.get("assertions") or []
+        if not asserts:
+            errors.append(f"{where}: no assertions")
+        for a in asserts:
+            if a.get("grader") not in grader_ids:
+                errors.append(f"{where}: unknown grader {a.get('grader')!r}")
+        base = c.get("baseline") or {}
+        if not base.get("transcript"):
+            errors.append(f"{where}: baseline.transcript is empty")
+        if "declared_status" not in (base.get("outcome") or {}):
+            errors.append(f"{where}: baseline.outcome.declared_status missing")
+    return errors
+
+
+def compute_system_metrics(cases, graded, records):
+    """Deterministic bank-level metrics from graded cases plus their
+    `{transcript, outcome}` records. Same computation the frozen bank's own
+    `run_bank.py::compute_metrics` owns for ITS 31 cases — reimplemented here
+    (not imported, see module-level note) so skiller's regression surface does
+    not depend on plan-scoped code. Cross-checked byte-for-byte against the
+    frozen bank's own published `bank-manifest.json::layer1_metrics` numbers
+    (see `test_eval.py`/Completion Notes) as a reproducibility proof, not a
+    silent parallel reimplementation."""
+    grade_by_id = {g["case_id"]: g for g in graded}
+    critical = [c for c in cases if c.get("kind") == "critical"]
+    control = [c for c in cases if c.get("kind") == "control"]
+
+    def transcript(cid):
+        return records[cid]["transcript"]
+
+    def outcome(cid):
+        return records[cid]["outcome"]
+
+    retained = 0
+    for c in critical:
+        tagged = [ch for ch in grade_by_id[c["case_id"]]["checks"]
+                 if "requirement_retention" in (ch.get("tags") or [])]
+        if tagged and all(ch["ok"] for ch in tagged):
+            retained += 1
+    premature = [c["case_id"] for c in critical
+                if _system_select(transcript(c["case_id"]), {"type": "premature_stop"})]
+    redundant = [c["case_id"] for c in critical
+                if _system_select(transcript(c["case_id"]), {"type": "redundant_approval"})]
+    unneeded_owner = [c["case_id"] for c in cases
+                     if not c.get("owner_gate_required")
+                     and _system_select(transcript(c["case_id"]), {"type": "owner_question"})]
+    depths = []
+    for c in cases:
+        counts = {}
+        for e in _system_select(transcript(c["case_id"]), {"type": "finding"}):
+            fid = e.get("finding_id")
+            counts[fid] = counts.get(fid, 0) + 1
+        if counts:
+            depths.append(max(counts.values()))
+    overrun = []
+    for c in cases:
+        budget = (c.get("environment") or {}).get("audit_rounds_max", 2)
+        if len(_system_select(transcript(c["case_id"]), {"type": "audit_round"})) > budget:
+            overrun.append(c["case_id"])
+    routed = [c for c in cases
+             if _system_select(transcript(c["case_id"]), {"type": "route_declared"})]
+    compliant = [c for c in routed
+                if not _system_select(transcript(c["case_id"]),
+                                      {"type": "route_declared", "where": {"undershoot": True}})]
+    escapes = []
+    for c in critical:
+        tagged = [ch for ch in grade_by_id[c["case_id"]]["checks"]
+                 if "requirement_retention" in (ch.get("tags") or [])]
+        if (any(not ch["ok"] for ch in tagged)
+                and outcome(c["case_id"]).get("declared_status") == "success"):
+            escapes.append(c["case_id"])
+    false_blocks = [c["case_id"] for c in control
+                   if _system_select(transcript(c["case_id"]), {"type": "block"})]
+
+    def ratio(num, den):
+        return round(num / den, 4) if den else None
+
+    def _p95(values):
+        if not values:
+            return 0
+        ordered = sorted(values)
+        idx = max(0, math.ceil(0.95 * len(ordered)) - 1)
+        return ordered[idx]
+
+    critical_ids = {c["case_id"] for c in critical}
+    graded_critical = [g for g in graded if g["case_id"] in critical_ids]
+
+    return {
+        "counts": {"cases": len(cases), "critical": len(critical), "control": len(control)},
+        "critical_requirement_retention": ratio(retained, len(critical)),
+        "premature_stop_count": len(premature),
+        "premature_stop_cases": premature,
+        "redundant_approval_count": len(redundant),
+        "redundant_approval_cases": redundant,
+        "first_pass_success": ratio(sum(1 for g in graded if g["passed"]), len(graded)),
+        "first_pass_success_critical": ratio(
+            sum(1 for g in graded_critical if g["passed"]), len(graded_critical)),
+        "owner_intervention_rate": ratio(len(unneeded_owner), len(cases)),
+        "owner_intervention_cases": unneeded_owner,
+        "same_finding_loop_depth": {
+            "samples": len(depths),
+            "median": statistics.median(depths) if depths else 0,
+            "p95": _p95(depths) if depths else 0,
+        },
+        "audit_loop_overrun_count": len(overrun),
+        "audit_loop_overrun_cases": overrun,
+        "routing_compliance": ratio(len(compliant), len(routed)),
+        "critical_regression_escape": len(escapes),
+        "critical_regression_escape_cases": escapes,
+        "false_block_rate": ratio(len(false_blocks), len(control)),
+    }
+
+
+def seeded_system_sample(seed, case_ids, size):
+    """Deterministic seeded sample: `sha256(seed|case_id)` ascending, first
+    `size`. Same method `reliability-acceptance-v1.md` § sample specifies for
+    the frozen bank — kept here so skiller's own gate can reproduce a small
+    sample of ANY system-bank-shaped case set without depending on the plan-
+    scoped `run_bank.py`."""
+    ranked = sorted(case_ids, key=lambda cid: hashlib.sha256(
+        f"{seed}|{cid}".encode("utf-8")).hexdigest())
+    return ranked[:size]
+
+
+# --- provider capability matrix --------------------------------------------- #
+def codex_bin():
+    """Path to the Codex CLI, if present. Mirrors `claude_bin()`'s env-override
+    (`SKM_CODEX_BIN`) then PATH lookup."""
+    override = os.environ.get("SKM_CODEX_BIN")
+    if override:
+        p = Path(os.path.expanduser(override))
+        return str(p) if p.exists() else None
+    return shutil.which("codex")
+
+
+def provider_capability_matrix(*, claude_lookup=claude_bin, codex_lookup=codex_bin):
+    """Presence-only provider capability probe for `{claude, codex}`: `native`
+    when the CLI binary resolves, `unsupported` otherwise. Deliberately narrow
+    (binary presence, not a live flag/version check) — a probe claiming more
+    than this would itself be an unverified capability claim; D46 requires an
+    unconfirmed capability to fail closed, never assume `native`."""
+    return {
+        "claude": {"capability": "native" if claude_lookup() else "unsupported"},
+        "codex": {"capability": "native" if codex_lookup() else "unsupported"},
+    }
+
+
+# --- portability tier (cites task.task_contract, never re-implements it) --- #
+def classify_portability_tier(work):
+    """Classify a case's portability tier via `task.task_contract.classify_tier`
+    (`plan-portability-v1.md` § Classification rule). → `(tier, reason)`; `tier`
+    is `None` with a reason when `task` is not importable from the current
+    PYTHONPATH — fail-closed on the CALLER's side (a `None` tier must never be
+    treated as `brief-acceptance` by default), mirroring `analyst.doctor`'s
+    optional `task.route_evidence` check: cited via import, never duplicated."""
+    try:
+        from task import task_contract
+    except ImportError as exc:
+        return None, f"task-not-importable: {exc}"
+    return task_contract.classify_tier(work), None
+
+
+# --- paired baseline/candidate ---------------------------------------------- #
+def pair_system_metric(baseline, candidate):
+    """Pair one baseline metric (`{metric, value, baseline_proof_class}`) with
+    an optional live candidate. `candidate=None` → `status: 'deferred'` (never
+    a silent zero). A baseline whose proof class is not `recomputed`/`cross-
+    checked` can never ground a comparison (D30) — mirrors
+    `analyst.metrics.pair_metric`'s discipline, cited rather than imported
+    (cross-package rationale in that module's own docstring)."""
+    comparable = {"recomputed", "cross-checked"}
+    if candidate is None:
+        return {"metric": baseline["metric"], "status": "deferred",
+                "baseline": baseline, "candidate": None, "delta": None}
+    if baseline.get("baseline_proof_class") not in comparable:
+        raise ValueError(
+            f"SYSTEM_METRIC_PINNED_BASELINE_FORBIDDEN: {baseline['metric']!r} baseline is "
+            f"{baseline.get('baseline_proof_class')!r}; cannot ground a comparison (D30)")
+    delta = None
+    if baseline.get("value") is not None and candidate.get("value") is not None:
+        delta = candidate["value"] - baseline["value"]
+    return {"metric": baseline["metric"], "status": "paired",
+            "baseline": baseline, "candidate": candidate, "delta": delta}
+
+
+def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=5,
+                           candidate_runs=None, provider_matrix=None):
+    """Grade a system-bank case set against its own declared baseline transcripts
+    (`case['baseline']['transcript'/'outcome']`) and, if `candidate_runs`
+    (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
+    `first_pass_success` metric against it; omitted → the pair is `deferred`
+    (no live paired run yet exists — never fabricated, Execution Rules: "ноль
+    и silent skip запрещены"). → the 2026.07.24-AGENT-RELIABILITY P3.3 benchmark artifact shape."""
+    graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
+    cases = cases_doc.get("cases", [])
+    baseline_records = {c["case_id"]: c["baseline"] for c in cases}
+    baseline_graded = [grade_system_case(c, graders_by_id,
+                                         c["baseline"]["transcript"], c["baseline"]["outcome"])
+                      for c in cases]
+    baseline_metrics = compute_system_metrics(cases, baseline_graded, baseline_records)
+    candidate_graded, candidate_metrics = None, None
+    if candidate_runs is not None:
+        candidate_cases = [c for c in cases if c["case_id"] in candidate_runs]
+        candidate_graded = [grade_system_case(c, graders_by_id,
+                                              candidate_runs[c["case_id"]]["transcript"],
+                                              candidate_runs[c["case_id"]]["outcome"])
+                           for c in candidate_cases]
+        candidate_metrics = compute_system_metrics(candidate_cases, candidate_graded,
+                                                    candidate_runs)
+    baseline_metric = {"metric": "first_pass_success",
+                       "value": baseline_metrics["first_pass_success"],
+                       "baseline_proof_class": "recomputed"}
+    candidate_metric = ({"metric": "first_pass_success",
+                        "value": candidate_metrics["first_pass_success"]}
+                       if candidate_metrics is not None else None)
+    # Sampled from baseline-PASSING cases only — same selection rule the frozen
+    # 2026.07.24-AGENT-RELIABILITY P0.3 bank's own manifest uses (a case whose declared baseline already
+    # fails is not a representative "smoke" sample of steady-state behaviour).
+    passing_ids = [g["case_id"] for g in baseline_graded if g["passed"]]
+    sample = seeded_system_sample(
+        cases_doc.get("sample_seed", "system-bank/default"),
+        passing_ids, min(sample_size, len(passing_ids)))
+    return {
+        "schema_version": "system-bank-benchmark/v1",
+        "generated_at": generated_at,
+        "bank_version": cases_doc.get("bank_version"),
+        "grader_version": graders_doc.get("grader_version"),
+        "counts": {"cases": len(cases)},
+        "baseline": {"cases": baseline_graded, "metrics": baseline_metrics},
+        "candidate": ({"cases": candidate_graded, "metrics": candidate_metrics}
+                     if candidate_graded is not None else None),
+        "pair": pair_system_metric(baseline_metric, candidate_metric),
+        "sample": {"seed": cases_doc.get("sample_seed"), "size": len(sample), "selected": sample},
+        "provider_capability": provider_matrix or provider_capability_matrix(),
+    }
+
+
+# ============================================================================ #
 #  VIEWER (markdown / standalone HTML)                                          #
 # ============================================================================ #
 def _fmt_rate(r):
-    return "—" if r is None else f"{r * 100:.0f}%"
+    """Строковая дробь (или Fraction — при прямом вызове build_benchmark в тестах;
+    или None) → '50%' для дисплея (P8.9: чтение строкового рендера метрик)."""
+    return "—" if r is None else f"{float(r) * 100:.0f}%"
 
 
 def render_markdown(benchmark):
-    """Человекочитаемый markdown-отчёт по benchmark."""
+    """Человекочитаемый markdown-отчёт по benchmark. Метрики — Fraction (прямой
+    вызов build_benchmark) или строка (реальный benchmark.json с диска, P8.9) —
+    оба читаются через float()."""
     b = benchmark
     ws = b.get("with_skill", {})
     out = [f"# Eval: {b.get('skill', '?')}", "",
@@ -398,9 +866,9 @@ def render_markdown(benchmark):
 
     def row(label, a):
         tok = "—" if a.get("tokens_mean") is None else \
-            f"{a['tokens_mean']:.0f}±{a.get('tokens_std', 0):.0f}"
+            f"{float(a['tokens_mean']):.0f}±{float(a.get('tokens_std', 0)):.0f}"
         dur = "—" if a.get("duration_mean") is None else \
-            f"{a['duration_mean']:.1f}±{a.get('duration_std', 0):.1f}"
+            f"{float(a['duration_mean']):.1f}±{float(a.get('duration_std', 0)):.1f}"
         return (f"| {label} | {_fmt_rate(a.get('pass_rate'))} | "
                 f"{a.get('passed', 0)}/{a.get('graded', 0)} | {tok} | {dur} |")
 
@@ -411,9 +879,9 @@ def render_markdown(benchmark):
         d = b["delta"]
         parts = []
         if "pass_rate" in d:
-            parts.append(f"pass@ {d['pass_rate'] * 100:+.0f}пп")
+            parts.append(f"pass@ {float(d['pass_rate']) * 100:+.0f}пп")
         if "tokens_mean" in d:
-            parts.append(f"ток {d['tokens_mean']:+.0f}")
+            parts.append(f"ток {float(d['tokens_mean']):+.0f}")
         out += ["", f"**Δ skill vs baseline:** {', '.join(parts) or '—'}"]
     return "\n".join(out) + "\n"
 
@@ -546,7 +1014,11 @@ def _offline_report(skill_dir):
          "или задай SKM_CLAUDE_BIN, чтобы запускать with-skill vs baseline.")
 
 
-def cmd_eval(env, argv):
+def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
+    """CLI-обвязка `skiller eval`. `clock_ns`/`now_iso` (P8.9) — точка внедрения
+    инжектируемых часов для детерминированных тестов (побайтная воспроизводимость
+    benchmark.json); дефолт `None` → реальное время, `provenance.clock: "wall"`.
+    Поведение CLI без флагов не меняется (обратная совместимость)."""
     opts, pos = parse_args(argv, {
         "--baseline": "bool", "--triggers": "bool", "--scaffold": "bool",
         "--static": "bool", "--json": "bool", "--timeout": "str",
@@ -617,16 +1089,35 @@ def cmd_eval(env, argv):
     if pressure:
         cases += list(pressure.get("scenarios", []))
 
+    _clock_ns = clock_ns if clock_ns is not None else time.monotonic_ns
     with_runs = run_suite(skill_dir, cases, with_skill=True, timeout=timeout,
-                          claude=claude)
+                          claude=claude, clock_ns=_clock_ns)
     base_runs = None
     if opts["baseline"]:
         base_runs = run_suite(skill_dir, cases, with_skill=False, timeout=timeout,
-                              claude=claude)
+                              claude=claude, clock_ns=_clock_ns)
     bench = build_benchmark(skill_name, with_runs, base_runs)
-    bench["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    # schema_version — намеспейсовано (не голое "2"): та же benchmark.json-семья
+    # держит и P3.3-артефакт build_system_benchmark со своим "system-bank-
+    # benchmark/v1" — два несопоставимых словаря версий под одинаковым коротким
+    # именем были бы дефектом (реконсайл 2026-07-26, D52/`plan.md` §1).
+    bench["schema_version"] = "skill-benchmark/v2"
+    bench["generated_at"] = now_iso if now_iso is not None else \
+        time.strftime("%Y-%m-%dT%H:%M:%S")
+    # provenance — ФАКТИЧЕСКОЕ, не константа: эта ветка достижима только когда
+    # `claude` реально резолвлен и `run_suite` его реально вызвал (гейт `if not
+    # claude` выше) — реальный ИЛИ фейковый (SKM_CLAUDE_BIN) бинарь одинаково
+    # "невраньё" для llm/network (сам факт, что подпроцесс claude был запущен;
+    # различить «настоящую» модель от локального фейка на этом уровне нечем).
+    bench["provenance"] = {
+        "llm": True,
+        "network": True,
+        "clock": "injected" if clock_ns is not None else "wall",
+        "baseline": bool(opts["baseline"]),
+    }
     bench["cases"] = [{"id": r.get("id"), "passed": r.get("passed"),
                        "checks": r.get("checks", [])} for r in with_runs]
+    bench = _stringify_fractions(bench)
     atomic_write_json(evals_dir / "benchmark.json", bench)
 
     if opts["static"]:

@@ -7,7 +7,7 @@ run-report (тот источник читает `token_report.py` — здес�
 РЕПО — сюда перенесена только выжимка алгоритма, findings/P0-rag-context-economy.md):
   - `first_turn_overhead` = input + cache_creation ПЕРВОЙ assistant-записи сессии
     (не сумма по всем — единый источник математики теперь `core.usage.feed_event`,
-    см. P5.3 правку `core/usage.py`, дублировать её здесь не нужно);
+    см. 2026.07.12-CONTEXT-ECONOMY P5.3 правку `core/usage.py`, дублировать её здесь не нужно);
   - `fresh_per_turn` = (Σinput + Σcache_creation) / turns (`turns` = число
     assistant-событий, `core.usage.finish(...)["msgs"]`);
   - путь транскрипта: `~/.claude/projects/<encoded-cwd>/<session_id>.jsonl`.

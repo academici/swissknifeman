@@ -23,6 +23,51 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 `stream_port` / `url`) → **дефолт** `4111/4112`. Никаких хардкодов — два узла на одной
 машине разводятся по портам через `.env`.
 
+## Cross-machine режим: `memory.role` (ADR-0001)
+
+По умолчанию узел — `standalone` (сегодняшний режим, свой демон на loopback; back-compat —
+существующие узлы поведения не меняют). Для нескольких постоянных машин (`ADR-0001
+cross-machine память`, `roadmap/cross-machine-memory.md`) — единственный живой демон на
+**host**-машине, остальные — **client**:
+
+```json
+"memory": {
+  "role": "host",                          // | "standalone" (дефолт) | "client"
+  "url": "http://192.168.31.93:4111",       // ОБЯЗАТЕЛЕН для role=client, НЕ loopback
+  "secret_file": "memory.secret"            // путь (относительно корня узла), 0600
+}
+```
+
+- **`role=client` запрещает поднимать локальный демон КОДОМ** (не только документацией):
+  `maind memory start`/`maind memory run`/`maind service install` откажут с ненулевым
+  кодом — второй писатель ломает единственность стора (LWW/перезапись целого scope при
+  конфликте, `findings/P4-cross-machine-facts.md` §4). Указывайте хост через `memory.url`.
+- **`secret_file`** — bearer-токен для `AGENTMEMORY_SECRET` на хосте; порядок разрешения:
+  env `AGENTMEMORY_SECRET` → `memory.secret_file` → без токена (анонимно, как сегодня).
+  Секрет НЕ хранится инлайном в конфиге (диффы/копии конфига light его бы утекли) и не
+  печатается в логах/сообщениях об ошибке.
+- **LAN-стадия (ближайшая, D80).** Транспорт — LAN: демон бинденд не на `127.0.0.1`, а на
+  **конкретный LAN-адрес хоста** — `config/memory/iii-config.yaml` → `workers[iii-http].host`.
+  Это **управляемый конфиг движка**: правка обязана остаться здесь, иначе следующий
+  `npm install`/апгрейд `@agentmemory/agentmemory` тихо вернёт дефолт `127.0.0.1`. Bind
+  `0.0.0.0` ЗАПРЕЩЁН (поверхность атаки на весь LAN + key expiry перестаёт быть
+  предохранителем); `iii-stream` (стрим-порт) НЕ бинденд на LAN — cross-machine
+  store/recall/forget/export идут только через `iii-http` REST.
+  При срабатывании триггера **`tailscale serve`** (третья постоянная машина ИЛИ работа вне
+  LAN) — правка ОБРАТИМА одной строкой: `host` возвращается к `127.0.0.1`, публикация
+  делается снаружи (`tailscale serve --http=4111 127.0.0.1:4111`), `AGENTMEMORY_SECRET`
+  остаётся включённым (ADR-0001).
+- **Различение «недоступен» от «неавторизован» (401).** `GET /agentmemory/health` ВСЕГДА
+  публичен у движка (даже с заданным секретом) — «демон отвечает» ≠ «наши вызовы
+  авторизованы». `maind doctor`/`maind health` различают это явным протектед-вызовом
+  (`memory.check_auth`), а не полагаются на `ping`.
+- **Известные ограничения LAN-стадии** (полностью — `root/adr/ADR-0001-cross-machine-memory.md`):
+  секрет — единственный предохранитель (нет автоотзыва по key expiry, как у Tailscale);
+  ротация секрета — ручная операция; сегмент LAN шире tailnet (кто в том же сегменте и
+  получил секрет — читает/пишет память ВСЕХ проектов); офлайн-машина (нет сети до хоста)
+  работает БЕЗ памяти — локального кэша/очереди отложенной записи НЕТ (сознательный отказ,
+  версионирования/идемпотентности записи у контракта `store` нет).
+
 ## Scopes (бакеты памяти) и где живёт изоляция
 
 | scope | назначение |
@@ -132,6 +177,14 @@ Recall объединяет `project:<id>` + `ns:<все группы>` + `globa
 
 Обёртка в `memory.py`: `store`/`recall` (маркер + фильтр + нормализация в `[{score, text, id}]`),
 `forget`/`export`. Конфиг воркеров — `config/memory/iii-config.yaml` (7 воркеров `iii-*`).
+
+При настроенном `memory.secret_file`/`AGENTMEMORY_SECRET` все протектед-вызовы несут
+`Authorization: Bearer <секрет>` (`core.http` — аддитивный параметр `headers`, дефолт не
+меняет ничего); `GET /agentmemory/health` — исключение, он публичен всегда. Бюджет ожидания
+(таймауты/ретраи) — `MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES` в
+`constants.py`, измерено в `plans/archive/2026.07.25-ECO-OPT/findings/P4.2-remote-link-measure.md`;
+ретраятся только read-вызовы (`export`), не мутации (`store`/`forget` — риск дубля без
+operation-id в контракте).
 
 ## Проверка «реально ли работает» и troubleshooting
 

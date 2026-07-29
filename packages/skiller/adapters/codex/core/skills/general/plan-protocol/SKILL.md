@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.11.0
+version: 2.21.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md", "closure-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -49,6 +49,7 @@ plans/<PLAN-ID>/
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
+├── closure/           # phase closure reports `<Pn>.json` (section 8, opt-in `Closure Protocol`)
 ├── artifacts/         # phases' working artifacts, destiny — archive
 ├── workflows/         # plan's field copies of workflow scripts (template sources — packages/task/workflows/)
 ├── root/              # long-lived material, destiny — project docs (section 3)
@@ -203,7 +204,18 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
   section = defaults apply. Canonical line form (column `Exec`), the `Exec` derivation rule
   and the routing gate — section 9; legacy forms stay valid.
 - **`## 4. Phase Index & Status Board`** — table `Phase | Title | Items 🟢/всего | Status`.
-- **`## 5. Decision Log`** — table `D# | Дата | Решение | Почему`.
+- **`## 5. Decision Log`** — table `D# | Дата | Решение | Почему`. A D-record that
+  supersedes OR cancels a previously accepted decision (`supersedes D#`, «отменяет D#»,
+  «отменён»/«отменена»/…) carries an inline `**Consequences:**` subfield inside the
+  `Решение` cell — what we PAY for the reversal (risk, duplication, compatibility rollback).
+  No fifth column: the header `D# | Дата | Решение | Почему` is a canon literal
+  (`CANON_LITERALS`), rewriting it means rewriting the header across the whole fleet.
+  Machine gate (`plan_lint.py`) — DOUBLE opt-in: `## 0. Meta` → `Closure Protocol | v1`
+  AND the D-record's date ≥ `2026-07-28` (forward-only, same trick as the write-site gate
+  §8: no existing record turns red retroactively). The gate catches a MACHINE-DETECTABLE
+  subclass (an explicit reversal/replacement marker in the decision text), NOT the full
+  canon requirement "Consequences on every load-bearing record" — claiming full coverage
+  for a partial catch is forbidden.
 - **`## 6. Update Log`** — append-only table `Дата | Кто (role/model) | Что`. Hard limit:
   "What" ≤ 2 lines, canonical format:
   `<item> закрыт: <1 line of substance> — детали см. phases/Pn.md <item> Completion Notes`.
@@ -353,6 +365,24 @@ EXACTLY 6 canonical strings — copy byte-for-byte (greppable, parser is strict)
 Status lives in the plan: finishing work without updating the plan = incomplete execution.
 Closed an item → update `Phase Status` and the Status Board in `plan.md`.
 
+**Capability maturity ≠ item status.** The six statuses above describe the ITEM (is the
+work on it done); they do NOT describe whether the CAPABILITY it produced actually works in
+practice — "there's a command" reads as "it works", and that is not the same claim. The
+maturity dictionary is EXACTLY five values, latin, byte-for-byte:
+
+| Value | What it means | What it does NOT mean |
+|:--|:--|:--|
+| `available` | there's a command/surface AND evidence it works (test/run) | — |
+| `experimental` | works on our rig, contract may still change | "done" |
+| `behind-gate` | code exists, toggled by a flag/owner decision | "enabled" |
+| `disabled` | present in the tree, off in the shipped product, reason named | "broken" |
+| `superseded` | replaced by another mechanism, kept for backward compatibility | "removed" |
+
+The dictionary's carrier is the capabilities matrix (plan/project matrix, Evidence/boundary
+column); item status and capability maturity live in different tables and are never
+substituted for each other: an item can be `🟢 Done` while the capability it produced is
+`experimental` or `behind-gate`.
+
 **Status under deviations.**
 
 ```text
@@ -398,6 +428,25 @@ above) — not a silent relaxation by the executor on the spot. A "soft" knob is
 any inconvenient threshold being quietly voided by the very item that exceeded it
 (precedent D58: an item closed 🟢 on a red point because the spec itself declared it soft).
 ```
+
+**`🔴`/`⛔` must carry an exact resume command (opt-in, D44).** An item's refusal cannot
+read as "skipped" without a path back. The carrier is a **`Возобновление: <exact
+command>`** line in the item's `Pending Work` field — not a seventh status (the six lines
+above are read byte-for-byte by `plan_lint.STATUSES`/`TERMINAL_STATUSES` and the cross-plan
+gate `plans/cross-plan-files.py`, a contract of three live plans) and not a new item field
+(`REQUIRED_ITEM_FIELDS` would instantly invalidate every plan in the fleet). The machine
+gate (`plan_lint.py`) is opt-in ONCE (`## 0. Meta` → `Closure Protocol | v1`; without the
+field the check stays silent entirely, additivity):
+
+| Item status | `Pending Work` requirement | Diagnostic on violation |
+|:--|:--|:--|
+| `🔴 Blocked` | `Возобновление: <command>` — non-empty; the form `Возобновление: — (внешний блокер: <what we're waiting on>)` is legal when no local resume step exists at all | ERROR with the item's id: "a refusal must carry an exact continuation command, not «skipped»" |
+| `⛔ Skipped by decision` | EXACTLY `Возобновление: —` AND a `D<number>` reference in the same field | ERROR with the item's id: a skip decision must be evidenced by a decision record, not silence |
+
+Distinguished from the `waiting:`/`ОЖИДАНИЕ:` form (§8): that one is about a **plan step**,
+real but not executable right now (carrier — `handoff.Next`); `Возобновление:` is about an
+**item** the executor couldn't close (carrier — the item's `Pending Work`). Two mechanisms
+for one case are not built.
 
 **Commit gate on close.** Status `🟢`/`🟠` is NOT set without the item's diff committed:
 Conventional Commits (Russian), affected package's `validate.sh` green BEFORE the commit;
@@ -713,11 +762,19 @@ paths, `-A`/`-a` banned) — §6 "Commit hygiene", not duplicated here.
 4. plan-lint — AFTER step 3, on the final tree. Running it BEFORE the handoff rewrite is
    FORBIDDEN: the closing item itself changes the handoff, so a "before" count does not
    describe the state of the commit.
+   Next, same ordering (final tree, after the handoff): `python3 plans/verify-citations.py
+   plans/<ID> --strict` — the item's evidence citations resolve BEFORE the prose is handed
+   off.
 5. The count is published WITH ATTRIBUTION: «N ERROR / M WARN — новых от диффа item'а: K»
    (K deterministically: plan-lint --baseline HEAD).
    • K > 0 — fix BEFORE the bookkeeping commit;
    • N − K > 0 (residual plan errors outside the item's Scope) — NOT hushed up: a line in
      the item's Pending Work + the handoff's Open risks.
+   A second attributed count for citations: «цитаты: N находок — новых от диффа item'а: K»
+   (the global `verify-citations-known-exceptions.json` baseline is already clean — P11.5 —
+   so any finding on the final tree is attributed to THIS item's diff). K > 0 — fix BEFORE
+   the bookkeeping commit; N − K > 0 — a line in the item's Pending Work + the handoff's
+   Open risks, not a silent downgrade.
 6. BOOKKEEPING COMMIT: plan files only (`plans/<ID>/**`, `plans/ACTIVE.md`).
 
 "Green lint" for the close gate = K = 0 (no NEW errors), not N = 0.
@@ -726,6 +783,65 @@ the item's `Files`, step 6 — the rest of the bookkeeping.
 Merging steps 1 and 6 into one commit (bundling) = process deviation §6: 🟢 + a Known
 Deviations entry + a fixing commit carrying the real hash in the handoff.
 ```
+
+Printing the boundary codes in the Completion Notes of `🟢`/`🟠` items is a MACHINE gate
+(`plan_lint.py`, P4.4/D91, forward-only by the item's own date) for items with `Updated` ≥
+`2026-07-27`: a missing code, or a code ≠ `allow` on either boundary, is an ERROR; earlier items
+are not diagnosed at all. **Form — ONE canonical line** (P10.1/D88): `write-site: pre_mutation:
+<code> · pre_final: <code>`. The gate matches THIS line, line-by-line — not any occurrence of
+the substrings `pre_mutation:`/`pre_final:` anywhere in the field. Printing codes as loose prose
+(quoting them outside this line) is FORBIDDEN: before P10.1 the gate erred both ways on such
+prose (fail-open on a quoted other item's codes, false ERROR on a quoted `block:*`/`n/a`); the
+P10.1 fix closed both by requiring a single carrier line.
+
+**Cross-document check `handoff.md` ↔ Status Board (P11.3/D129).** Every occurrence of the
+`Pn a/b` pattern in `handoff.md` must match the `Items 🟢/всего` column of row `Pn` in
+«## 4. Phase Index & Status Board» — a mismatch is diagnosed naming BOTH sides; a phase `Pn`
+missing from the board is a "dangling reference" (the class guards against P9's audit finding
+F8: the handoff claimed `P9 4/4`, the board carried `2/4`, the board was right). Forward-only
+by the handoff's HEADER date (`HANDOFF_BOARD_CANON_DATE = "2026-07-28"`, same discipline as the
+boundary-codes gate above): a handoff older than the canon date is never diagnosed, not even a
+WARNING. Severity within scope follows the launch-block gate: a dated `plan_id` from
+`2026.07.16` → ERROR, legacy → WARNING. The pattern is deliberately narrow — EXACTLY `Pn a/b`,
+not prose/percentages/"33 of 44" — widening it to prose would reintroduce the noise the
+narrowness holds at zero today (measured across three live plans: 3 occurrences, 1 mismatch, 0
+false positives). The rule's home is the structural linter, NOT `plans/verify-citations.py`:
+this is consistency between two sections of ONE plan, not a citation/path resolve (the reverse
+choice would blur both tools).
+
+**Phase closure report — `plans/<ID>/closure/<Pn>.json`, schema v1 (opt-in).** `## Phase
+Handoff` is prose plus a git hash: the EVIDENCE CLASS is recorded nowhere, so synthetics read as
+results. The machine-readable closure report states it explicitly; it COMPLEMENTS the handoff
+block, never replaces it.
+
+- **Activation — opt-in `## 0. Meta` field: `Closure Protocol | v1`** (the only legal value;
+  anything else is an ERROR, not a silent opt-out). A plan without the field gets NOT ONE new
+  diagnostic — additivity is proven by a test, not promised.
+- **Migration (owner's choice, both paths legal):** enable the field on a plan with no terminal
+  phases yet, OR write `closure/<Pn>.json` for the already-closed phases at the same time.
+  Already-closed records (`Phase Handoff`, Completion Notes) are never rewritten.
+- **Schema v1** — keys are fixed; a missing key is a schema error: "no number" is expressed by a
+  VALUE (`baseline_pending` with a reason), never by an omitted line. Skeleton and full example —
+  `snippets/closure-template.md`: `schema_version`/`plan`/`phase`/`closed_at`/`closed_by`/
+  `phase_status`/`git`/`inputs_sha256`/`items[]`/`gates[]`/`metrics[]`/`limitations[]`/
+  `external_side_effects[]`.
+- **Evidence class — an enum of EXACTLY three:** `real` (run on the committed tree; the evidence
+  carries the command and the number) · `synthetic` (fixture/single case — the evidence must say
+  so) · `baseline_pending` (no number, reason named). It answers "on WHAT DATA was this result
+  obtained" and does NOT replace the closed set of PROOF classes
+  `recomputed`/`cross-checked`/`pinned-not-recomputable`/`unknown`
+  (`source-evidence-verification-v1.md`, section 13 — "is the claim derivable from the committed
+  bundle"): different axes, both vocabularies apply at once.
+- **Writer — `plan-close <ID> Pn`** (a step between filling `Phase Handoff` and overwriting
+  `handoff.md`): assembles the file MECHANICALLY from the phase items' fields; retelling is banned.
+- **Consumers are named, otherwise the practice is "provenance theatre":** `plan_lint` (schema ·
+  `items[]` ↔ `## Phase Status` · `phase_status` ↔ Status Board · `real` with empty evidence ·
+  terminal phase without the file — ERROR naming the expected path) and `plan-audit <ID> Pn`
+  (reads the file as the FIRST input of stage 1, re-runs the commands from the evidence at
+  `git.head_sha`, catches a post-closure edit of the phase spec via `inputs_sha256`).
+- **Every hash in the schema has a named consumer** (`git.head_sha` — the tree anchor below;
+  `inputs_sha256` — spec-edit detection); fields without a consumer are not added, and tree
+  hashing stays out (measured O(N²) cost).
 
 **Tree anchor for numbers in reports.** ANY NUMBER in an item's report (Completion Notes,
 Validation, Known Deviations, Update Log) — a `grep` count, an ERROR/WARN count, a count of
@@ -877,6 +993,18 @@ Columns `Batch`/`Review` are **OPTIONAL**: the legacy form without them
 NOT a defect. `Batch` empty → the subphase runs solo (not in a batch); `Review` empty → depth by
 default (`full`).
 
+**The `Items` cell form is a CLOSED SET of TWO forms:** one item (`Pn.m`) OR a range within ONE
+phase (`Pn.a–Pn.b`, both dash forms). A comma list (`P8.5, P8.6`), a range glued to a list
+(`P4.1–P4.2, P4.4`) and any other shape are **ILLEGAL**: the subphase group is carried by the
+`Batch` column («Subphase batching» below), not by the `Items` cell — a second carrier of one
+fact is forbidden (§3). Granularity below already demands per-item Routing exactly where such
+glue is usually introduced. The basis is machine-side: §3 is read not only by a human but by the
+`task_contract` compiler (`_find_routing_row`), which rejects the glued cell outright — a
+2026-07-27 measurement found 7 live fleet items unable to build a Task Contract. On a glued cell
+the compiler emits a **diagnostic refusal** (naming the cell, its line number and both legal
+forms) yet stays a refusal: the route is NOT taken from the matching token — a list never
+becomes a legal form through the back door.
+
 **Granularity.** A range row (`P2.x–P2.y`) is legal only for HOMOGENEOUS items: one risk class
 per Tier policy, one "Почему" phrase true for EVERY item of the range. When a phase gets
 detailed, the Routing of its items MUST become per-item if homogeneity does not hold; a
@@ -934,7 +1062,12 @@ print the actual class/effort pair in the report and in the Update Log.
 Exec/`Batch`/`Review` column, an empty section) stay VALID; `plan-lint` does not parse section 3 —
 the gate is run by the READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule
 above. The new `Batch`/`Review` columns are likewise not parsed by the linter (no machine gate on
-them).
+them). **Honest boundary of the concession:** the legacy forms listed stay valid for a HUMAN
+executor, but §3 is also read by a MACHINE (`task_contract`, since 2026-07-24) and it understands
+only the table. The closed set of `Items` cell forms (above) is a requirement of BOTH readers and
+back-compat does NOT extend to it: a prose/bullet plan simply has no machine reader (a human
+executes it as before), while a table plan with an illegal cell refuses on EVERY item of that row
+— fixed by editing §3, not by the parser.
 
 **Subphase batching (optional exec-plan "console").** A batch — a group of subphases executed in
 ONE executor session without a per-subphase confirmation ritual (small subphases don't run
@@ -1081,6 +1214,55 @@ Provider mappings project minima to native selectors. `plan-run` has no fixed ro
 comes from item Routing and the same fail-closed gate checks the observed session route. Claude
 invocation is `/task:…`; Codex is `$ task:…`; UI prefix is not semantic identity.
 
+**Task Contract compiler (v2.14.0).** Pre-mutation/pre-final predicates, precedence/conflict
+resolution, content hash and tiered-portability classification are one module,
+`packages/task/lib/task/task_contract.py` (`root/contracts/task-contract-v1.md` +
+`plan-portability-v1.md` of plan `2026.07.24-AGENT-RELIABILITY`, items P2.2/P2.6/P2.7/P2.10/P2.11).
+Both boundaries are called executably, not in prose, on BOTH closing paths: `task:plan-exec`
+builds and evaluates the contract TWICE in one run — pre-mutation BEFORE mutation (step 2) and
+pre-final on self-close (step 7, the routine path — the item closes itself; the reconciling
+`task:plan-close` is never called on this path); `task:plan-close`'s Pre-final (`Pn.m` mode, step
+4) is the same call for items closed by reconciliation. Each call builds a Task Contract v1
+payload (`task_contract.build`, live actual route supplied through its documented `actual_route`
+kwarg — the CLI form leaves it unresolved for cross-process determinism) and evaluates it
+(`task_contract.evaluate`). **Closure gate is BINARY** (D76): green is EXACTLY
+`pre_mutation == "allow"` AND `pre_final == "allow"`; `n/a` is NOT green ("a blocked session has
+nothing to declare done" — `task-contract-v1.md` §Pre-final predicate verbatim), any `block:*` is
+red a fortiori (code→action table lives in the command files themselves, not restated here).
+**The pre-final `actual_route` is the item's EXECUTOR route** (D75), never the closing command's
+pin: for `task:plan-exec`/`task:plan-run` (self-close) it is the command's own pin / the
+session's observed route; for the reconciling `task:plan-close` it is resolved from the
+committed record (Completion Notes routing-adherence line → `journal.jsonl` terminal entry →
+unresolvable/mismatch = STOP with a named PASS). `task:plan-run` substitutes the session's
+observed route into both `plan-exec` calls instead of the pin; `task:plan-audit` reads the
+resulting `pre_mutation`/`pre_final` codes of BOTH boundaries from a closed item's Completion
+Notes as source of truth instead of recomputing them — a `🟢`/`🟠` item with a code other than
+`allow` on either boundary is a finding. `plan_lint.py` calls the same external-path string test
+for its tiered-portability lint. **What `pre_final` asserts** (D77): a property of the item
+spec's FORM — whether at least one publicly checkable acceptance entry rests on a deterministic
+proof class — never that the item was executed well (it is green on a not-yet-started `⬜` item
+too); the material/process verdict stays with status-rule §6, this code never substitutes for
+it. This claim is protected by a literal test (`test_canon_literals.py`) that fails if the
+wording changes without the command bodies changing (P2.7/P2.11, F1 repair: before 2.13.0 the
+canon claimed "commands call it" while only prose did; before 2.14.0 it called on only one of
+the two closing boundaries, and `n/a` greenlit closure blind). **The test protects a
+DIFFERENTIATING predicate, not the presence of an identifier** (D79): every new assertion must
+be checked against the OLD command text and go red there first — an assertion that is green
+before the fix protects nothing (exactly what the literal test was before 2.14.0: it checked
+substrings and passed green through the `n/a` gate defect).
+
+**Evidence bundle (v2.13.0).** A `committed-bundle`-tier item (`plan-portability-v1.md`
+§Classification rule, D26) ships a committed evidence bundle meeting the bundle
+requirements (SSOT — `plan-portability-v1.md` §Bundle requirements, cited not restated):
+minimization (only what an execution input is actually read for; `privacy.excluded_classes`
+names what is left out — raw transcript bodies, chain-of-thought, tool payloads, secrets), a
+deterministic manifest plus verifier (hashes recomputed, never trusted as written), complete
+dependency closure, one neutral semantic carrier with provider renderers, no public
+acceptance predicate resting on `pinned-not-recomputable`/`unknown` evidence. Executable
+form — `snippets/source-evidence-template.md` (manifest structure, required fields,
+verification command, the explicit forbidden-content-class list). Computed, not read as a
+declaration, by `task_contract.bundle_lint` (P2.6) — over the bundle's actual bytes.
+
 ## 14. Plan-quality checklist
 
 - [ ] Every item executable by its assigned model class with no context beyond the plan.
@@ -1161,4 +1343,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 0cbc635b1b804899f8cf9abc926c68c653d4cc296fe8b469e40c9536bd718f19 -->
+<!-- ru-source-sha256: 0b0d6682efb9cc90fa19ec857f1fefefbb50c2765b679e7f2b9882f2c5c4c6e5 -->

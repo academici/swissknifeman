@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Design"
-  short_description: "Проектирование решения без написания кода"
-  default_prompt: "Use $task-design to design the requested solution."

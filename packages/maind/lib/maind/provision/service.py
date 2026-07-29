@@ -11,6 +11,8 @@ import shutil
 import subprocess
 
 from ..common import die
+from ..config import load_config
+from ..memory import refuse_if_client_role
 
 UNIT = "maind-memory.service"
 SERVICE_SUBCMDS = {"install", "uninstall", "start", "stop", "restart",
@@ -71,6 +73,8 @@ def cmd_service(env, argv):
     path = _unit_path(env)
 
     if sub == "install":
+        config, _source = load_config(env)
+        refuse_if_client_role(config)   # client не поднимает локальный демон (ADR-0001, D27)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_unit_text(env), encoding="utf-8")
         _sc("daemon-reload")

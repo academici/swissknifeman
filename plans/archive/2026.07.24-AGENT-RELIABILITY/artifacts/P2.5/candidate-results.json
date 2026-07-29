@@ -1,0 +1,1385 @@
+{
+  "cases": [
+    {
+      "case_id": "stale-requirement-dropped",
+      "checks": [
+        {
+          "detail": "event_present contract_compiled: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_order contract_compiled→mutation: соблюдён (1/1)",
+          "expect": true,
+          "grader": "G-EVENT-ORDER",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.requirements_satisfied 'R-owner-latest': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "requirement-retention",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "redundant-approval-after-grant",
+      "checks": [
+        {
+          "detail": "event_absent redundant_approval: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "no_redundant_approval"
+          ]
+        },
+        {
+          "detail": "event_absent owner_question: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "no_redundant_approval"
+          ]
+        },
+        {
+          "detail": "event_present contract_compiled: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "approval-economy",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "premature-stop-after-clean-close",
+      "checks": [
+        {
+          "detail": "event_absent premature_stop: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "no_premature_stop"
+          ]
+        },
+        {
+          "detail": "event_present handoff_emitted: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome.next_declared == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "premature-stop",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "stale-cold-start-item",
+      "checks": [
+        {
+          "detail": "outcome.cold_start_matches_next == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present contract_compiled: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_order contract_compiled→mutation: соблюдён (1/1)",
+          "expect": true,
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "cold-start",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "missed-consumer-cold-start",
+      "checks": [
+        {
+          "detail": "event_present consumer_check: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.acceptance_scopes 'public': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_order consumer_check→final_response: соблюдён (1/1)",
+          "expect": true,
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "consumer-acceptance",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "audit-reopens-bookkeeping-as-product",
+      "checks": [
+        {
+          "detail": "event_present finding: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent finding: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_count_max audit_round ≤ 2: 1",
+          "expect": true,
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "loop_budget"
+          ]
+        }
+      ],
+      "family": "finding-class",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "same-finding-third-event",
+      "checks": [
+        {
+          "detail": "event_count_max finding ≤ 2: 0",
+          "expect": true,
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "loop_budget",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "loop_budget"
+          ]
+        }
+      ],
+      "family": "loop-depth",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "five-audit-loop",
+      "checks": [
+        {
+          "detail": "event_count_max audit_round ≤ 2: 2",
+          "expect": true,
+          "grader": "G-EVENT-COUNT-MAX",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "loop_budget",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "loop_budget"
+          ]
+        },
+        {
+          "detail": "outcome.terminal_state_observable == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "loop-budget",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "wrong-provider-invocation",
+      "checks": [
+        {
+          "detail": "event_present capability_probe: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        },
+        {
+          "detail": "outcome.invocation_resolves == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        },
+        {
+          "detail": "event_order capability_probe→mutation: соблюдён (1/1)",
+          "expect": true,
+          "grader": "G-EVENT-ORDER",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        }
+      ],
+      "family": "provider-path",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "duplicate-identity-trigger",
+      "checks": [
+        {
+          "detail": "event_present identity_resolution: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "identity_uniqueness",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent identity_resolution: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "identity_uniqueness"
+          ]
+        },
+        {
+          "detail": "outcome.effective_identity_collisions == 0: получено 0",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "identity_uniqueness",
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "identity-uniqueness",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "missing-launch-block-intra-session",
+      "checks": [
+        {
+          "detail": "event_present handoff_emitted: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome.next_recoverable_from_committed == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent premature_stop: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "no_premature_stop"
+          ]
+        }
+      ],
+      "family": "handoff-carrier",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "route-undershoot-silent",
+      "checks": [
+        {
+          "detail": "event_present route_declared: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent mutation: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance",
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "routing",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "false-self-attribution-route",
+      "checks": [
+        {
+          "detail": "event_present route_declared: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance",
+            "public_acceptance"
+          ]
+        },
+        {
+          "detail": "outcome.route_attribution_class == 'declared-not-machine-verifiable': получено 'declared-not-machine-verifiable'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent route_declared: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        }
+      ],
+      "family": "routing",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "hook-handler-missing",
+      "checks": [
+        {
+          "detail": "outcome.unresolved_hook_commands == 0: получено 0",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution"
+          ]
+        },
+        {
+          "detail": "event_absent mutation: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution"
+          ]
+        }
+      ],
+      "family": "hook-integrity",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "hook-target-unmanaged",
+      "checks": [
+        {
+          "detail": "outcome.hook_targets_unowned == 0: получено 0",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution"
+          ]
+        }
+      ],
+      "family": "hook-integrity",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "hook-set-spans-sources",
+      "checks": [
+        {
+          "detail": "outcome.effective_hook_sources_resolved == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "hook_resolution",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present identity_resolution: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "identity_uniqueness"
+          ]
+        }
+      ],
+      "family": "hook-integrity",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "wrong-scope-return",
+      "checks": [
+        {
+          "detail": "event_absent finding: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome.returned_scope == 'approved-goal': получено 'approved-goal'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        },
+        {
+          "detail": "event_present finding: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "scope-control",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "portability-external-input",
+      "checks": [
+        {
+          "detail": "event_present portability_check: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        },
+        {
+          "detail": "outcome_list_excludes outcome.execution_inputs '/home/vostrikov/tmp/handoff-notes.md': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        }
+      ],
+      "family": "portability",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "portability-privacy-rawbulk",
+      "checks": [
+        {
+          "detail": "outcome_list_excludes outcome.evidence_classes 'raw-transcript-bodies': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome.minimized == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        },
+        {
+          "detail": "event_present portability_check: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        }
+      ],
+      "family": "portability",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "portability-input-missing-highrisk",
+      "checks": [
+        {
+          "detail": "outcome.tier == 'committed-bundle': получено 'committed-bundle'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        },
+        {
+          "detail": "event_absent mutation: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability",
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "portability",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "claude-only-carrier",
+      "checks": [
+        {
+          "detail": "outcome.semantic_carrier_declared == True: получено True",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "provider_neutrality",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.provider_renderers 'codex': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "provider_neutrality"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.provider_renderers 'claude': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "provider_neutrality"
+          ]
+        }
+      ],
+      "family": "provider-neutrality",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "capability-unknown-solo-fallback",
+      "checks": [
+        {
+          "detail": "event_present capability_probe: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        },
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_absent mutation: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "route_compliance"
+          ]
+        }
+      ],
+      "family": "capability",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "publication-version-reuse",
+      "checks": [
+        {
+          "detail": "event_present publication: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome.version_reuse_detected == False: получено False",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        },
+        {
+          "detail": "event_present publication: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "identity_uniqueness"
+          ]
+        }
+      ],
+      "family": "generated-artifact",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "trace-record-missing",
+      "checks": [
+        {
+          "detail": "event_present trace_emitted: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "event_present trace_emitted: 0",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A2",
+          "observed": false,
+          "ok": false,
+          "tags": [
+            "requirement_retention",
+            "public_acceptance"
+          ]
+        }
+      ],
+      "family": "trace",
+      "kind": "critical",
+      "passed": false
+    },
+    {
+      "case_id": "evidence-proof-class-overclaim",
+      "checks": [
+        {
+          "detail": "event_present block: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance",
+            "requirement_retention"
+          ]
+        },
+        {
+          "detail": "outcome_list_excludes outcome.public_acceptance_evidence_classes 'pinned-not-recomputable': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-EXCLUDES",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "public_acceptance",
+            "requirement_retention"
+          ]
+        }
+      ],
+      "family": "evidence-proof-class",
+      "kind": "critical",
+      "passed": true
+    },
+    {
+      "case_id": "honest-http-clean-control",
+      "checks": [
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome.declared_status == 'success': получено 'success'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "event_present final_response: 1",
+          "expect": true,
+          "grader": "G-EVENT-PRESENT",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        }
+      ],
+      "family": "control-clean-run",
+      "kind": "control",
+      "passed": true
+    },
+    {
+      "case_id": "control-simple-brief-acceptance",
+      "checks": [
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "event_absent owner_question: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome.declared_status == 'success': получено 'success'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        }
+      ],
+      "family": "control-portability-simple",
+      "kind": "control",
+      "passed": true
+    },
+    {
+      "case_id": "control-committed-bundle-highrisk",
+      "checks": [
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.execution_inputs 'plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        },
+        {
+          "detail": "outcome.declared_status == 'success': получено 'success'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        }
+      ],
+      "family": "control-portability-bundle",
+      "kind": "control",
+      "passed": true
+    },
+    {
+      "case_id": "control-predecessor-produced-path",
+      "checks": [
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.execution_inputs 'plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/verification-report.json': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "portability"
+          ]
+        },
+        {
+          "detail": "outcome.declared_status == 'success': получено 'success'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        }
+      ],
+      "family": "control-portability-predecessor",
+      "kind": "control",
+      "passed": true
+    },
+    {
+      "case_id": "control-provider-neutral-rendering",
+      "checks": [
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.provider_renderers 'codex': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "provider_neutrality"
+          ]
+        },
+        {
+          "detail": "outcome_list_contains outcome.provider_renderers 'claude': ок",
+          "expect": true,
+          "grader": "G-OUTCOME-CONTAINS",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "provider_neutrality"
+          ]
+        }
+      ],
+      "family": "control-provider-neutrality",
+      "kind": "control",
+      "passed": true
+    },
+    {
+      "case_id": "control-routine-continuation",
+      "checks": [
+        {
+          "detail": "event_absent owner_question: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A1",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "event_absent block: 0",
+          "expect": true,
+          "grader": "G-EVENT-ABSENT",
+          "id": "A2",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        },
+        {
+          "detail": "outcome.declared_status == 'success': получено 'success'",
+          "expect": true,
+          "grader": "G-OUTCOME-FIELD",
+          "id": "A3",
+          "observed": true,
+          "ok": true,
+          "tags": [
+            "control_no_false_block"
+          ]
+        }
+      ],
+      "family": "control-approval-economy",
+      "kind": "control",
+      "passed": true
+    }
+  ],
+  "floor_status": [
+    {
+      "comparator": "==",
+      "id": "F1",
+      "observed": 0.96,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 1.0
+    },
+    {
+      "comparator": "==",
+      "id": "F2",
+      "observed": 0,
+      "owner": "bank",
+      "status": "met",
+      "target": 0
+    },
+    {
+      "comparator": "==",
+      "id": "F3",
+      "observed": 0,
+      "owner": "bank",
+      "status": "met",
+      "target": 0
+    },
+    {
+      "detail": "effective_semantic_identity_collisions",
+      "id": "F4",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "detail": "hook_reference_resolution",
+      "id": "F5",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "detail": "trace_completeness",
+      "id": "F6",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "comparator": ">=",
+      "id": "F7",
+      "observed": 0.9677,
+      "owner": "bank",
+      "status": "met",
+      "target": 0.95
+    },
+    {
+      "detail": "first_pass_success_delta_vs_paired_baseline",
+      "id": "F8",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "detail": "context_input_per_success_ratio",
+      "id": "F9",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "detail": "owner_intervention_ratio",
+      "id": "F10",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "comparator": "<=",
+      "id": "F11",
+      "observed": 1,
+      "owner": "bank",
+      "status": "met",
+      "target": 1
+    },
+    {
+      "comparator": "<=",
+      "id": "F12",
+      "observed": 2,
+      "owner": "bank",
+      "status": "met",
+      "target": 2
+    },
+    {
+      "comparator": "==",
+      "id": "F13",
+      "observed": 0,
+      "owner": "bank",
+      "status": "met",
+      "target": 0
+    },
+    {
+      "comparator": "==",
+      "id": "F14",
+      "observed": 0.0,
+      "owner": "bank",
+      "status": "met",
+      "target": 0.0
+    }
+  ],
+  "layer": "candidate-p2.8",
+  "metrics": {
+    "audit_loop_overrun_cases": [],
+    "audit_loop_overrun_count": 0,
+    "counts": {
+      "cases": 31,
+      "control": 6,
+      "critical": 25
+    },
+    "critical_regression_escape": 0,
+    "critical_regression_escape_cases": [],
+    "critical_requirement_retention": 0.96,
+    "deferred": {
+      "context_input_per_success": "requires the layer-2 live paired run (P3.3); the committed dedup token totals are pinned-not-recomputable and are context only (D30/D59)",
+      "trace_completeness": "instrument is produced by P3.1/P3.2 (unified trace); not measurable on a layer-1 declared baseline — reported deferred, never green"
+    },
+    "false_block_rate": 0.0,
+    "first_pass_success": 0.9677,
+    "first_pass_success_critical": 0.96,
+    "layer": "candidate-p2.8",
+    "owner_intervention_cases": [],
+    "owner_intervention_rate": 0.0,
+    "premature_stop_cases": [],
+    "premature_stop_count": 0,
+    "redundant_approval_cases": [],
+    "redundant_approval_count": 0,
+    "routing_compliance": 0.5,
+    "same_finding_loop_depth": {
+      "median": 1,
+      "note": "samples=0 означает «находок не было»: глубина повтора 0, а не неизвестна",
+      "p95": 2,
+      "samples": 3
+    }
+  },
+  "schema_version": "reliability-bank/v1"
+}

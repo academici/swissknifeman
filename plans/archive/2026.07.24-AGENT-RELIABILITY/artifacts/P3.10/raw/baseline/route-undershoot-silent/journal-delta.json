@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "actor": "implementation/medium",
+      "attempt": 1,
+      "command": "plan-run",
+      "cost_usd": null,
+      "duration_ms": null,
+      "friction": [
+        "routing-blocked"
+      ],
+      "item_id": "PROBE.1",
+      "note": "P3.10 layer-2 probe",
+      "num_turns": null,
+      "plan_id": "P3.10-PROBE",
+      "result": "blocked",
+      "run_id": null,
+      "session_id": null,
+      "ts": "2026-07-26T16:20:01Z"
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

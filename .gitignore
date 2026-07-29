@@ -23,6 +23,13 @@ settings.local.json.bak
 MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
 config.json
+# review-gate: шаблон check_command/checks[] — репозиторный источник истины пресета
+# (машинно-локальный экземпляр живёт вне репо, в ~/.claude/hooks/review-gate/), не
+# приватный конфиг — трекается вопреки правилу выше (найдено P9.1, D135 в plan.md).
+!packages/harness/configs/claude-code/hooks/review-gate/config.json
+# skiller eval раннер — сгенерированный benchmark любого скилла (провенанс прогона,
+# не ручной артефакт; см. plan 2026.07.25-ECO-OPT P6 реконсиляция F5).
+packages/skiller/skills/**/evals/benchmark.json
 # Machine-owned allowlist safe-dirs (пути машины); шаблон — safe-dirs.example.json,
 # читают хук auto-approve (lib/safedirs.py) и CLI `harness safe-dirs`
 safe-dirs.json

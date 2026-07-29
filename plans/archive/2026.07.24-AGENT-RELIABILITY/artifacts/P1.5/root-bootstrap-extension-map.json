@@ -1,0 +1,19 @@
+{
+  "schema_version": "root-bootstrap-extension-map/v1",
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P1.5",
+  "records": [
+    {
+      "identity": "workflow-craft",
+      "source_class": "public-bucket",
+      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+      "canonical_sha256": "a0d26c8d3fd174ab72de0333377b25e6040d1eecbac5ed9d04a3a4ccd9756586",
+      "providers": ["codex"],
+      "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
+      "precondition": "no enabled unit serves this identity",
+      "projection": ".agents/skills/workflow-craft/SKILL.md",
+      "publication_unit": "repository-bootstrap@0.2.0",
+      "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
+      "lock_path": "packages/skiller/adapters/repository-bootstrap/publication-lock.json"
+    }
+  ]
+}

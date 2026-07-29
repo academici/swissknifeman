@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P4",
+  "closed_at": "2026-07-28",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "2983af49dd9671bf8af2dc7618b97459891357c3", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "ad16e11aeeeaff65e4b6f312fe8341225f14e0a1d8fd1628a2662c92887a612",
+    "phases/P4.md": "b4cc472228409761ea1e66c9827f526ed823da00f3f27af264419f394eda90c4"
+  },
+  "items": [
+    {"id": "P4.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "ADR-0001-cross-machine-memory.md — восемь принятых решений (D78/D80) с провенансом, отвергнутые варианты, известные ограничения в полном составе; item-коммит 47462ac4"},
+    {"id": "P4.2", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "memory.role (standalone/host/client) + запрет второго писателя кодом + bearer-аутентификация (аддитивный core.http) + различение 401/недоступен + измеренный бюджет ожидания + LAN-bind iii-config.yaml — memory.py/config.py/http.py/doctor.py/health.py + тесты; item-коммит 30137bbf"},
+    {"id": "P4.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "роль-осознанная ступень 5 bootstrap-machine.sh + docs/deploy.md/systemd.md + findings/P4.3-rollout-report.md — три из шести гейтов не прогнаны (нет второй физической машины), находки F1/F2; item-коммит cb020331"}
+  ],
+  "gates": [
+    {"id": "maind.test.sh", "status": "FAIL", "evidence_class": "real",
+     "evidence": "bash packages/maind/scripts/test.sh (на закрытии фазы) — Ran 534 tests, FAILED (failures=2): test_local_skills_reference_on_demand_model (P3.2, пред-существующий) + test_d108_inventory_uses_configured_server_names_without_changing_bindings (P5.3, пред-существующий) — оба вне Scope P4, уже названы в closure/P3.json и closure/P5.json той же формулировкой, регрессий нет"},
+    {"id": "core.tests", "status": "PASS", "evidence_class": "real",
+     "evidence": "PYTHONPATH=. python3 -m unittest discover -s core/tests — включая TestHttp (+8, P4.2 headers/HTTPUnauthorizedError) — все зелёные"},
+    {"id": "plan-lint", "status": "PASS", "evidence_class": "real",
+     "evidence": "python3 packages/task/scripts/plan-lint.py plans/2026.07.25-ECO-OPT --baseline HEAD — 0 ERROR, 27 WARN, новых от рабочего дерева: 0"}
+  ],
+  "metrics": [
+    {"name": "p4_gates_not_run", "value": "3 из 6 (гейты 1/2/4 P4.3, клиент-специфичные — нет второй физической машины)", "label": "real"},
+    {"name": "p4_memory_digest_measured_ms", "value": "median 12.03–12.57мс loopback vs LAN-интерфейс этой машины (верхняя граница накладных расходов кода, не реальный cross-machine замер)", "label": "real"},
+    {"name": "maind_test_suite_size", "value": "534 tests, 2 failures (оба пред-существующие, вне Scope P4)", "label": "real"}
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items + перепрогон maind test.sh/core tests/plan-lint этой сессией (gates[] выше) — не полный повторный прогон каждого item-level Validation-пункта",
+    "P4.3 Pending Work: гейты 1/2/4/5/6 требуют настоящей второй физической машины — не выполнено в этой фазе, честно отмечено 🟠 (не 🟢 по рассуждению)",
+    "gates[]:maind.test.sh FAIL — оба провала пред-существующие (P3.2/P5.3), не регрессия фазы P4"
+  ],
+  "external_side_effects": []
+}

@@ -8,6 +8,15 @@
             "command": "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\" --surface context.observer"
+          }
+        ],
+        "matcher": "startup|resume|clear|compact"
       }
     ]
   }

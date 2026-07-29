@@ -39,7 +39,7 @@ maind onboard flexcrm --with-code       # онбординг сразу с ко�
 ```json
 { "mcpServers": {
     "serena": { "command": "uvx", "args": [
-      "--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server",
+      "--from", "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1", "serena", "start-mcp-server",
       "--context", "ide-assistant", "--project", "/path/to/flexcrm",
       "--enable-web-dashboard", "false" ] } } }
 ```

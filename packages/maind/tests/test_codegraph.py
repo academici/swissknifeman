@@ -179,5 +179,77 @@ class TestConfigDriven(unittest.TestCase):
                 popen.assert_not_called()
 
 
+class TestSchemaConnectivity(unittest.TestCase):
+    """Гейт связности схема↔пин (D111, P5.4): check_schema_connectivity."""
+
+    def test_consistent_state_is_green(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            self.assertEqual(codegraph.check_schema_connectivity(config), [])
+
+    def test_schema_mismatch_detected(self):
+        # симулирует D109: пин ожидает старый ключ 'languages', рендерер печатает
+        # 'language_servers' — гейт обязан падать именно на этом расхождении.
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            with mock.patch.object(codegraph, "SERENA_SCHEMA_FIELDS",
+                                    frozenset({"languages"})):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertTrue(any("схема разошлась" in i for i in issues), issues)
+            self.assertTrue(any("languages" in i and "language_servers" in i
+                                 for i in issues), issues)
+
+    def test_unpinned_source_detected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            with mock.patch.object(codegraph, "SERENA_SRC",
+                                    "git+https://github.com/oraios/serena"):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertTrue(any("пин отсутствует" in i and "SERENA_SRC" in i
+                                 for i in issues), issues)
+
+    def test_missing_optional_key_not_flagged(self):
+        # необязательный ключ (дефолт у Serena) отсутствует в выводе рендерера — гейт
+        # НЕ должен считать это расхождением (F2, D117: набор сужен до FIELDS_WITHOUT_DEFAULTS).
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            original = codegraph.render_project_yaml
+
+            def _without_encoding(*a, **kw):
+                return "\n".join(line for line in original(*a, **kw).splitlines()
+                                  if not line.startswith("encoding:"))
+
+            with mock.patch.object(codegraph, "render_project_yaml", _without_encoding):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertEqual(issues, [])
+
+    def test_missing_required_key_flagged(self):
+        # обязательный ключ (language_servers) отсутствует в выводе рендерера — гейт обязан
+        # это поймать (F2, D117: сужение не должно ослабить настоящее расхождение).
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)
+            original = codegraph.render_project_yaml
+
+            def _without_language_servers(*a, **kw):
+                return "\n".join(line for line in original(*a, **kw).splitlines()
+                                  if not line.startswith("language_servers"))
+
+            with mock.patch.object(codegraph, "render_project_yaml", _without_language_servers):
+                issues = codegraph.check_schema_connectivity(config)
+            self.assertTrue(any("схема разошлась" in i and "language_servers" in i
+                                 for i in issues), issues)
+
+    def test_pins_diverge_between_src_and_config_detected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(
+                tmp, code=True,
+                code_graph={"args": [
+                    "--from", "git+https://github.com/oraios/serena@v1.5.3",
+                    "serena", "start-mcp-server",
+                ]})
+            issues = codegraph.check_schema_connectivity(config)
+            self.assertTrue(any("пины разошлись" in i for i in issues), issues)
+
+
 if __name__ == "__main__":
     unittest.main()

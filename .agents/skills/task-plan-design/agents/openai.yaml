@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Plan Design"
-  short_description: "Создание и детализация исполнимых мастер-планов"
-  default_prompt: "Use $task-plan-design to create or refine the master plan."

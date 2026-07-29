@@ -271,5 +271,147 @@ class TestCanonLiteralsRegistry(unittest.TestCase):
             + "; ".join(f"добавь `<!-- i18n-keep: {lit} -->`" for lit in missing))
 
 
+class TestTaskContractCanonClaimIsBackedByCommands(unittest.TestCase):
+    """P2.7/F1 repair — the literal test Implementation Rules (2) demands: §13's claim
+    that `task:plan-exec`/`task:plan-close` CALL the Task Contract compiler is checked
+    against the actual command bodies, not trusted. Before P2.7 the canon asserted
+    "Commands call it at the noted pre-mutation/pre-final checkpoints" while
+    `plan-exec.md:58` was conditional ("при наличии смонтированного Task Contract
+    JSON") and nothing ever mounted one (audit finding F1) — this test goes RED the
+    moment either half of that pairing (claim vs call) is edited without the other:
+    strengthen/replace the claim without touching the calls, or remove the calls
+    without softening the claim, and a run here catches it before publication."""
+
+    SKILL_EN_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
+    PLAN_EXEC_RELPATH = Path("packages/task/commands/plan-exec.md")
+    PLAN_CLOSE_RELPATH = Path("packages/task/commands/plan-close.md")
+
+    # F1's exact banned formulation — a synonym of it re-appearing anywhere in the
+    # write-site paragraphs is the regression this test exists to catch.
+    BANNED_CONDITIONAL_RU = "при наличии смонтированного"
+    BANNED_CONDITIONAL_EN = "when a Task Contract JSON happens to be mounted"
+
+    @classmethod
+    def setUpClass(cls):
+        repo_root = None
+        for parent in PLAN_LINT_PY.parents:
+            if (parent / cls.SKILL_EN_RELPATH).is_file():
+                repo_root = parent
+                break
+        if repo_root is None:
+            raise unittest.SkipTest(
+                f"standalone-раскладка: не найден {cls.SKILL_EN_RELPATH} "
+                f"(от {PLAN_LINT_PY} вверх) — SSOT канона недоступен")
+        cls.repo_root = repo_root
+        cls.skill_en = (repo_root / cls.SKILL_EN_RELPATH).read_text(encoding="utf-8")
+        cls.skill_ru = _find_skill_ru().read_text(encoding="utf-8")
+        cls.plan_exec = (repo_root / cls.PLAN_EXEC_RELPATH).read_text(encoding="utf-8")
+        cls.plan_close = (repo_root / cls.PLAN_CLOSE_RELPATH).read_text(encoding="utf-8")
+
+    def test_canon_claims_the_checkpoints_call_the_compiler(self):
+        """§13 (both languages) must assert the CALL, naming both checkpoint commands
+        and the module — not a weaker "is available"/"can be called" hedge."""
+        for label, text in (("EN", self.skill_en), ("RU", self.skill_ru)):
+            with self.subTest(canon=label):
+                self.assertIn("task_contract.build", text)
+                self.assertIn("task_contract.evaluate", text)
+                self.assertIn("task:plan-exec", text)
+                self.assertIn("task:plan-close", text)
+
+    def test_canon_does_not_repeat_f1s_banned_conditional(self):
+        """F1's exact defect: a formulation conditioning the call on a JSON that
+        nothing ever mounts. Neither language may carry it again."""
+        self.assertNotIn(self.BANNED_CONDITIONAL_RU, self.skill_ru)
+        self.assertNotIn(self.BANNED_CONDITIONAL_EN, self.skill_en)
+
+    def test_plan_exec_pre_mutation_actually_calls_the_compiler(self):
+        """The command body itself — not just the canon's claim about it — carries an
+        unconditional call: both compiler entry points named, no F1 conditional."""
+        self.assertIn("task_contract.build", self.plan_exec)
+        self.assertIn("task_contract.evaluate", self.plan_exec)
+        self.assertIn('result["pre_mutation"]', self.plan_exec)
+        self.assertNotIn(self.BANNED_CONDITIONAL_RU, self.plan_exec)
+
+    def test_plan_close_pre_final_actually_calls_the_compiler(self):
+        self.assertIn("task_contract.build", self.plan_close)
+        self.assertIn("task_contract.evaluate", self.plan_close)
+        self.assertIn('result["pre_final"]', self.plan_close)
+        self.assertNotIn(self.BANNED_CONDITIONAL_RU, self.plan_close)
+
+
+class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
+    """D76/D77/M1/M5/M6 repair (P2.11) — a DIFFERENTIATING predicate (D79), not a
+    naming-only test: every assertion here was verified RED against the exact
+    pre-P2.11 command bodies (`plan-close.md`/`plan-exec.md` at commit `5a410858`,
+    byte-identical to `d11c3b74` for these files) before being added — see
+    Completion Notes P2.11 for the recorded red run. `TestTaskContractCanonClaim
+    IsBackedByCommands` above only asserts presence of identifiers; it went GREEN
+    through the M1 defect (`in ("allow", "n/a")` greenlit a failed pre_mutation) and
+    the M5 defect (`plan-exec.md` step 7 carried the string `pre_final` only in one
+    prose sentence, never `result["pre_final"]`) — this class exists because that
+    kind of test protects nothing (M6)."""
+
+    PLAN_EXEC_RELPATH = Path("packages/task/commands/plan-exec.md")
+    PLAN_CLOSE_RELPATH = Path("packages/task/commands/plan-close.md")
+    SKILL_EN_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
+
+    # M1's exact defect, byte-for-byte as it stood before P2.11: an exit predicate
+    # that accepts `n/a` as green. A tolerant regex (whitespace-insensitive) so a
+    # future reformat of the same defect is still caught.
+    BANNED_NA_GREENLIGHT_RE = re.compile(r'in\s*\(\s*"allow"\s*,\s*"n/a"\s*\)')
+
+    @classmethod
+    def setUpClass(cls):
+        repo_root = None
+        for parent in PLAN_LINT_PY.parents:
+            if (parent / cls.SKILL_EN_RELPATH).is_file():
+                repo_root = parent
+                break
+        if repo_root is None:
+            raise unittest.SkipTest(
+                f"standalone-раскладка: не найден {cls.SKILL_EN_RELPATH} "
+                f"(от {PLAN_LINT_PY} вверх) — SSOT канона недоступен")
+        cls.repo_root = repo_root
+        cls.plan_exec = (repo_root / cls.PLAN_EXEC_RELPATH).read_text(encoding="utf-8")
+        cls.plan_close = (repo_root / cls.PLAN_CLOSE_RELPATH).read_text(encoding="utf-8")
+        cls.skill_en = (repo_root / cls.SKILL_EN_RELPATH).read_text(encoding="utf-8")
+        cls.skill_ru = _find_skill_ru().read_text(encoding="utf-8")
+
+    def test_neither_closing_command_greenlights_n_a(self):
+        """M1: the exact `in ("allow", "n/a")` predicate must be gone from BOTH
+        commands that evaluate pre_final — a regression here reopens M1."""
+        for label, text in (("plan-close", self.plan_close), ("plan-exec", self.plan_exec)):
+            with self.subTest(command=label):
+                self.assertIsNone(self.BANNED_NA_GREENLIGHT_RE.search(text),
+                                  f"{label}.md still greenlights n/a as a pre_final verdict")
+
+    def test_both_closing_commands_gate_on_binary_allow_and_allow(self):
+        """D76 fix: the exit predicate is a binary AND of both codes == 'allow'."""
+        needle = 'result["pre_mutation"] == "allow" and result["pre_final"] == "allow"'
+        for label, text in (("plan-close", self.plan_close), ("plan-exec", self.plan_exec)):
+            with self.subTest(command=label):
+                self.assertIn(needle, text)
+
+    def test_plan_exec_step_7_calls_pre_final_on_the_routine_close_path(self):
+        """M5: `plan-exec` closes the item itself (routine path) — before P2.11 its
+        step 7 carried `pre_final` only in one prose sentence (`findings/14` M5),
+        never a `result["pre_final"]` reference. Regression here reopens M5."""
+        self.assertIn('result["pre_final"]', self.plan_exec)
+        self.assertIn("task_contract.evaluate", self.plan_exec)
+
+    def test_canon_states_n_a_is_not_green_in_both_languages(self):
+        """D76's canonical claim: `n/a` is explicitly named NOT green, in both §13
+        language versions — not merely implied by an unchanged CLI predicate."""
+        self.assertIn("NOT green", self.skill_en)
+        self.assertIn("НЕ зелёное", self.skill_ru)
+
+    def test_canon_names_the_pre_final_predicate_boundary_in_both_languages(self):
+        """D77: §13 names what `pre_final` asserts (spec-FORM property) versus what
+        it does not (good execution) — in both languages, not only in the command
+        bodies."""
+        self.assertIn("spec's FORM", self.skill_en)
+        self.assertIn("ФОРМЫ спеки", self.skill_ru)
+
+
 if __name__ == "__main__":
     unittest.main()

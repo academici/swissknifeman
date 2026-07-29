@@ -1,39 +1,77 @@
 # roadmap — отложенные направления swissknifeman
 
-Здесь живут **спеки на будущее внедрение** — идеи, которые исследованы и осознанно отложены
-(вне scope текущего прохода «конфигурируемые субагенты + шаблоны по типу проекта»). Каждый файл —
-самодостаточный план: зачем, как, критерий «когда внедрять». Часть записей ниже уже **реализована**
-(критерий внедрения сработал) — файл остаётся в каталоге как история задумки/спецификация
-(колонка **Статус** — источник истины, не заголовок раздела).
+Здесь живут **спеки на будущее внедрение** — идеи, которые исследованы и осознанно отложены.
+Каждый файл — самодостаточный план: зачем, как, критерий «когда внедрять».
+
+> **Правило каталога (2026-07-25):** полностью реализованная спека **удаляется** — история
+> задумки живёт в git и в закрывшем её плане (`plans/archive/<ID>`), а каталог показывает
+> только незакрытую работу. Частично реализованные записи остаются, но их **Статус** называет
+> ровно ОСТАТОК. Колонка **Статус** — источник истины.
 
 Источник большинства решений «отложить» — глубокий research-аудит (см.
 [`docs/reference.md`](../docs/reference.md), там же плюсы/минусы исследованных репозиториев).
 
-## Отложенное
+## Критерий сработал — ждёт внедрения
 
-| Файл | Что | Статус | Почему отложено / реализовано | Критерий внедрения |
-|:--|:--|:--|:--|:--|
-| [`codex-publication-consumer-acceptance.md`](codex-publication-consumer-acceptance.md) | Изолированный гейт `source → marketplace → install/cache → clean consumer → fresh session` для Codex plugins + circuit breaker item-исполнения | ⬜ к внедрению | Azguard: repo-local adapters и generator tests скрыли сломанный native marketplace/cache, формальный GREEN не дал skills новой сессии | Уже сработал; внедрить до следующего изменения Codex plugin export surface |
-| [`2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md`](2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md) | Ручной as-of cache-bust маркер (`GATE_ASOF`) в pipeline-воркфлоу должен быть per-item полем, а не одной глобальной константой во всех промптах гейта/ревью — иначе бамп ради ОДНОГО чинящегося item'а передёргивает ревью/гейты ВСЕХ уже закрытых items | ⬜ к внедрению | Измерено дважды на одном файле (`dterema`/`wf-dterema-site-p3-api.js`): ≈4 млн лишних токенов на переверификацию P3.1–P3.3 за один день; см. также более ранний `plans/archive/2026.07.15-TELEMETRY-OPT/findings/P1-workflow-rootcause.md` (тот же симптом, другой вывод) | Уже сработал дважды — готово к внедрению |
-| [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых, но важных вендорных скиллов с `strategy: notify` на `strategy: fork` — механизм (pristine-зеркало + incoming-diff + review-гейт) уже есть, нужен критерий отбора + плейбук массовой миграции | ⬜ отложено | Идея Owner 2026-07-12: диета важных upstream-скиллов стопится из страха потерять адаптацию при апдейте апстрима; фундамент (`strategy: fork`) уже реализован, но используется у 1 скилла из 56 | Диета-фаза (по образцу P3 context-economy) явно упирается в notify-скилл, который жалко сжимать без гарантии сохранности — конкретный кейс запускает миграцию |
-| [`agent-packs-upgrade-drift.md`](agent-packs-upgrade-drift.md) | `agent-packs upgrade` сверяет ФАКТ файлов (хэши target+источника), а не только номер версии пака | ⬜ к внедрению | Критерий уже сработал: 2 отказа за одну раскатку — забытый бамп версии тихо не доставил изменение в 11 проектов; удалённые файлы не восстановились («уже актуален») | — (сработал, 2026-07-11) |
-| [`agent-command-router-hook.md`](agent-command-router-hook.md) | UserPromptSubmit-хук, подсказывающий нужного субагента/команду | ✅ реализовано (v1) | Триггер сработал: замеренный мисроут `/task:*` на реальном потоке | — (сработал) |
-| [`self-learning-memory.md`](self-learning-memory.md) | Самообучение через namespace-память maind (не перезапись CLAUDE.md) | 🟡 ядро реализовано (`analyst`), остаток отложен | Ядро (`digest`→`confidence`→`promote`→`memory-digest-hook`) реализовано; остаток — потоковый PostToolUse event-stream capture (`observe.sh`/`analyst-capture`, P5) | Остаток: измеренное трение (наблюдения теряются между прогонами) — on-demand `digest` пока покрывает MVP |
-| [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | ⬜ отложено | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |
-| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | ✅ реализовано (opt-in) | По умолчанию выключено (`mcp.emit_example`); полевой кейс agelto подтвердил ценность | Остаток (default-on): повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example` |
-| [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | ✅ реализовано (`agent-packs/laravel-package@0.1.0`) | Замеренное трение на azguard сработало, пак заведён (принятые отклонения — в самом файле) | — (сработал) |
-| [`analyst-suggest-draft-skill.md`](analyst-suggest-draft-skill.md) | `analyst suggest` (P4): cross-project паттерн → ЧЕРНОВИК `SKILL.ru.md` в staging, человек промоутит | ✅ реализовано (`packages/analyst/lib/analyst/suggest.py`) | Накопленные cross-project паттерны + повторяющееся ручное трение оформления черновика — критерий сработал | — (сработал) |
-| [`settings-doctor.md`](settings-doctor.md) | Конфликт-линтер настроек Claude Code: эффективный merge слоёв, policy-профили проектов, сверка «ожидание vs факт» (пара к `apply-permissions.sh`) | 🟢 внедрено (SKM-ROADMAP-005 P1) | Критерий уже сработал: field-case 2026-07-10 — промпты каждые полминуты при `bypassPermissions` в local, неустановленный safe-dirs-хук, ~400 мёртвых allow-правил | — (сработал) |
-| [`workflow-craft.md`](workflow-craft.md) | Активация конструктора workflow (скилл-указатель на `packages/task/workflows/` с обязательными стадиями по типу задачи) + fleet-синтез накопленных `plans/*/workflows/*.js` через analyst | 🟢 внедрено (SKM-ROADMAP-005 P3 ч.1/1.5, P4 ч.1.6 — канон места/имён + DoR-workflow в plan-protocol/plan_lint); ч.2 — ⬜ по накоплению | Критерий ч.1 сработал: field-case 2026-07-10 vaulter — Opus собрал dev-workflow без обязательного review при живом каноне и включённом `task@swissknifeman` (мисроут свободной формулировки) | ч.2: 10+ полевых скриптов ИЛИ повтор «изобрели то, что было шаблоном» |
-| [`workflow-status-cli.md`](workflow-status-cli.md) | `swissknifeman wf status` — детерминированный статус-репортер фоновых workflow-прогонов (парсинг journal.jsonl + meta → фиксированный шаблон: фазы/агенты/%), вместо LLM-импровизаций и бесполезного совета «/workflows» | 🟢 внедрено (SKM-ROADMAP-005 P2) | Критерий уже сработал: field-case 2026-07-10 — агенты многократно советуют несуществующую в окружении команду, статус каждый раз парсится заново за токены | — (сработал) |
-| [`plan-homes.md`](plan-homes.md) | Репо-дом планов по умолчанию («план живёт там, где deliverables», синк brain CLI, ось видимости для OSS) + канон имён планов с `supersedes:` и lint против v2/W2-разношёрстности | 🟢 внедрено (SKM-ROADMAP-005 P4) | Идея Owner 2026-07-10: планы в проектах на уровне docs/, самодостаточный CLAUDE.md в обоих контекстах; имена планов разъехались (FLEX/FLEX-IMPL/FLEXCRM-W2) | — (сработал) |
-| [`changelog-discipline.md`](changelog-discipline.md) | CHANGELOG всегда заполнен: пакеты — conventional commits → patch/minor (major вручную) + commit-гейт на `[Unreleased]`; проекты — компактные записи со ссылками на коммиты → систематизация в релиз (`skm release`) | 🟢 внедрено (SKM-ROADMAP-005 P5.1+P5.2 — скилл + opt-in commit-гейт harness); `skiller release` (P5.3) — опциональная механизация, ⬜ | Наблюдение Owner 2026-07-10: корневой CHANGELOG заполняется нерегулярно, дисциплина держится на памяти сессии | — (сработал) |
-| [`plan-audit-loop.md`](plan-audit-loop.md) | Правила остановки adversarial-аудита плана: scope-граница (судить фазу по её Deliverables), порог severity (RED только на сломанном продукте, бухгалтерия → ATTENTION), потолок раундов (2 на фазу), follow-up вместо реопена + дешёвая ступень «конфликт-скан» (машинная сверка трёх SSOT) ПЕРЕД дорогим проходом | ⬜ к внедрению (P3.3 + CLI-остаток) | Критерий уже сработал: 2026-07-14 — фаза P2 `2026.07.13-PLAN-PROTOCOL-GAP` дала 3 RED-круга (items 4 → 18, три реопена), окупились 2–3 находки, остальные раунды жгли opus на бухгалтерии плана; тот же класс — REGHUB (4 RED подряд). Проблема наблюдается и на других проектах (Owner) | — (сработал, 2026-07-14) |
-| [`analyst-plan-scan.md`](analyst-plan-scan.md) | `analyst digest` читает Known Deviations/Pending Work/Escalation Needed закрытых `plans/*` как источник уроков (не только run-report) | ⬜ отложено | Идея Owner 2026-07-12 (после релиза v0.9.0); данных пока мало (~5 закрытых планов), второй лог-файл дублировал бы уже обязательные поля plan-протокола | ≥2-3 плана с содержательными Known Deviations после этого — ручной просмотр перестаёт масштабироваться |
-| [`ecosystem-glossary.md`](ecosystem-glossary.md) | Единый язык экосистемы: идиомы per язык (линтеры) + CONTEXT.md per пакет + тонкий term-index в 02-Knowledge (Rule of Two, коллизии, владелец=пакет); кросс-языковая согласованность — контрактами (JSON Schema + casing-маппинг + fixtures), не стайлгайдом | 🟢 внедрено (механизм, SKM-ROADMAP-005 P6.1–P6.3); наполнение term-index — ⬜ здесь (P6.4 закрыт ⛔ при архивации плана, ТЗ — `plans/archive/2026.07.10-SKM-ROADMAP-005/phases/P6.md` P6.4) | Идея Owner 2026-07-10, RAG:✅ (DDD per-context glossaries + polyglot idioms консенсус 2025–2026; мега-глоссарий — документированные failure modes) | Наполнение term-index — после закрепления терминов КОДОМ (ECOSYSTEM P4 закрыта design-only: контракты заморожены, кода нет) |
-| [`playwright-mcp-output-dir.md`](playwright-mcp-output-dir.md) | `@playwright/mcp` резолвит скриншоты с явным `filename` от CWD агента, а не от output-папки — мусорят в корне проекта; чинится флагом `--output-dir` в шаблоне `.mcp.json` + пиновкой версии | ⬜ отложено | Найдено на `dterema` P6.1 (2026-07-16): 27 png в корне репозитория за одну фазу; замерено `--help`/пробным вызовом, не догадка | Повтор на ещё одном проекте ИЛИ решение владельца внедрить сразу (правка одной строки) |
-| [`plan-lesson-capture.md`](plan-lesson-capture.md) | `plan-protocol` не имеет шага для фиксации находок владельца, всплывших ПОСЛЕ закрытия item'а (живое ревью) — предложены `/task:plan-lesson` команда + обязательный протокольный триггер (по аналогии с эскалацией §5) | ⬜ отложено | Найдено на `dterema` P6.2/P6.3 (2026-07-16): 4 системные находки владельца зафиксированы в план ТОЛЬКО по инициативе исполнителя, протокол такого шага не требует | Повтор на ещё одном плане/проекте — подтвердит системность разрыва, не разовую случайность |
-| [`plan-routing-tier-granularity.md`](plan-routing-tier-granularity.md) | Блочный Routing уровня фазы (`P2.1–P2.10 \| fable/high`) over-provision'ит верхний тир на разнородные items: в §9 не было критерия ТИРА модели (только effort-policy), DoR-гейт требовал «покрытия», а не гранулярности | 🟢 внедрено сразу (Tier policy §9 + Гранулярность + DoR-гейт plan-design; lint-эвристика снята — §3 не парсится by design) | Полевой кейс azguard `2026.07.18-AZGUARD-STABLE` D28 (2026-07-18): 7 из 10 items фазы P2 over-provisioned на 1–2 тира, владелец вмешался mid-execution; фикс текстовый — внедрён той же сессией по указанию владельца | — (сработал) |
+| Файл | Что | Статус | Критерий / связь с планами |
+|:--|:--|:--|:--|
+| [`codex-publication-consumer-acceptance.md`](codex-publication-consumer-acceptance.md) | Изолированный гейт `source → marketplace → install/cache → clean consumer → fresh session` для Codex plugins + circuit breaker item-исполнения | ⬜ к внедрению | Сработал (azguard 2026-07-21: формальный GREEN при пустых скиллах новой сессии). **Решение владельца 2026-07-25:** оформить item'ом плана (ECO-OPT P7.3 либо AGENT-RELIABILITY) — гейт трогает publication-поверхность, которую AR перестраивает; смежно AR P1/P3.4 (self-host canary, consumer-запись исключена) |
+
+## Частично реализовано — остаток здесь
+
+| Файл | Остаток | Статус | Критерий остатка |
+|:--|:--|:--|:--|
+| [`plan-audit-loop.md`](plan-audit-loop.md) | Правила остановки аудита внедрены (`packages/task/commands/plan-audit.md`: две ступени, порог severity, потолок 2 раунда). **Остаток — детерминированная CLI-ступень** `plan-lint --conflicts` (машинная сверка трёх SSOT перед дорогим проходом) | 🟡 остаток | Ручной конфликт-скан повторно съедает opus-раунды — тогда механизируем |
+| [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
+| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | Эмит `.mcp.json.example` + ведение `.gitignore` реализованы **opt-in** (`mcp.emit_example`). **Остаток — default-on** | 🟡 остаток | Повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example`. Файл также — якорь ссылки из `.claude/skills/project-tooling-runbook` (не трогать до AR P1) |
+
+## Отложено — критерий не сработал
+
+| Файл | Что | Критерий внедрения |
+|:--|:--|:--|
+| [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Диета-фаза упирается в notify-скилл, который жалко сжимать без гарантии сохранности |
+| [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` (134/207 скиллов без явного «Use when») | Рычаг **№4** по решению владельца (ECO-OPT D74): включается, только если рычаги 1–3 листинговой гигиены (ECO-OPT P3.1/P3.5) переполнение не сняли |
+| [`analyst-plan-scan.md`](analyst-plan-scan.md) | `analyst digest` читает Known Deviations/Pending Work закрытых `plans/*` как источник уроков | ≥2–3 плана с содержательными Known Deviations — ручной просмотр перестаёт масштабироваться |
+| [`analyst-fleet-coverage.md`](analyst-fleet-coverage.md) | Покрытие analyst-цикла по флоту: хук `run-report` включён у 5/20 проектов, analyst-state — 2/20 | Осознанное решение по umbrella-политике хуков на чужих проектах (не одностороннее включение) |
+| [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
+| [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | Агент рекомендует `plan-design` вместо `plan-exec`, не проверив фактический статус фазы | Повтор на ещё одном плане/проекте (пока один замер — `insiders` P1) |
+| [`playwright-mcp-output-dir.md`](playwright-mcp-output-dir.md) | `--output-dir` в шаблоне `.mcp.json` + пиновка версии: скриншоты с явным `filename` мусорят в корне | Повтор на ещё одном проекте ИЛИ решение владельца внедрить сразу (правка одной строки) |
+| [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
+| [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
+| [`context-notify-tmp-cleanup.md`](context-notify-tmp-cleanup.md) | Стартовая уборка `context-notify.sh` не чистит осиротевшие `*.tmp` (3/40 SIGKILL-прогонов, ECO-OPT P6.1) | Следующая содержательная правка того же скрипта |
+
+## Входы активных планов (не трогать вне их items)
+
+| Файл | Роль | План |
+|:--|:--|:--|
+| [`cross-machine-memory.md`](cross-machine-memory.md) | Постановка «память между машинами» (D12 CONTEXT-ECONOMY) | вход **ECO-OPT P4** (ADR + remote-host режим maind) |
+| [`2026.07.25-memory-hub-service.md`](2026.07.25-memory-hub-service.md) | Хаб-как-сервис: авторизация по scope, раздача конфигов — тяжёлая часть, ВНЕ скоупа P4 | смежно **ECO-OPT P4** (P4 делает только подготовку); критерии активации — в самом файле §12 |
+| [`codex-subagent-offload.md`](codex-subagent-offload.md) | `openai/codex-plugin-cc`: разгрузка квот + кросс-модельное ревью | вход **ECO-OPT P7** (Codex как второй водитель) |
+
+## Отклонено решением
+
+| Файл | Что | Решение |
+|:--|:--|:--|
+| [`otel-preset.md`](otel-preset.md) | OTEL-пресет harness (opt-in телеметрия Claude Code) | ⛔ Skipped by decision (D7, CONTEXT-ECONOMY P5.4) — стаб; строка вердикта в [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md). Вернуться при реальном коллекторе |
+
+## Закрыто и удалено (2026-07-25)
+
+Спеки реализованы; текст — в git-истории, ТЗ и решения — в закрывших планах.
+
+| Спека | Где живёт результат |
+|:--|:--|
+| `agent-command-router-hook.md` | `packages/harness/configs/claude-code/hooks/agent-router/` + `harness router` + провиженер `router-config` в `maind sync` |
+| `settings-doctor.md` | `harness doctor --settings` (`lib/harness/settings_audit.py`) · `skiller doctor --settings` · `maind doctor --audit settings` |
+| `workflow-status-cli.md` | `harness wf status` (`lib/harness/wf_status.py`), роутинг `swissknifeman wf` |
+| `plan-homes.md` | plan-protocol §12 «два дома», канон имён + `supersedes`, `brain` CLI |
+| `plan-routing-tier-granularity.md` | plan-protocol §9 Tier policy + Гранулярность; DoR-гейт `plan-design` |
+| `changelog-discipline.md` | хук `changelog-gate` (harness) + `skiller release` (`lib/skiller/release.py`) + скилл `oss-dev/release-engineering` |
+| `php-package-stack-pack.md` | `packages/harness/configs/claude-code/agent-packs/laravel-package/` |
+| `analyst-suggest-draft-skill.md` | `packages/analyst/lib/analyst/suggest.py` (+ `commands/analyst.md`) |
+| `self-learning-memory.md` | ядро — пакет `analyst` (`digest`→`confidence`→`promote`→`memory-digest-hook`); остаток P5 (потоковый capture) ведёт [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md) |
+| `agent-packs-upgrade-drift.md` | `do_upgrade` строит план из хэшей (источник/диск против `base_sha256` лока), пропавший target восстанавливается при равной версии, дрейф источника без бампа — warn; `doctor` предупреждает о targets двух паков (`shared_targets` в `--json`). Тесты — `packages/harness/tests/test_agentpacks_upgrade_fact.py` |
+| `2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md` | per-item `asOf` — канон `packages/task/workflows/README.md` §«Правила заполнения слотов»; чек-пункт «глобальный ли cache-bust маркер?» перед третьим resume — скилл `general/workflow-craft` §4.1 |
+| `ecosystem-glossary.md` | механизм — скилл `architect/domain-modeling` (CONTEXT.md, Rule of Two, term-index) + ревью-паки; наполнение term-index — ТЗ `plans/archive/2026.07.10-SKM-ROADMAP-005/phases/P6.md` (P6.4, vault) |
 
 ## Принцип
 

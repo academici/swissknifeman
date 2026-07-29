@@ -50,6 +50,50 @@ effort: medium
    Гейт — ЧТЕНИЕ §3 глазами, не парсинг (форм Routing во флоте много, regex запрещён). Разрешение
    владельца РЕПЛИКОЙ в чате гейт не снимает: оно выражается ЗАПИСЬЮ `Exec = plan-exec` в §3.
 
+   **Pre-mutation — Task Contract (P2.7, ОБЯЗАТЕЛЬНЫЙ шаг, не условный).** Компилятор
+   `packages/task/lib/task/task_contract.py` владеет precedence/conflict/hash/portability
+   логикой (`task-contract-v1.md` §Pre-mutation predicate, 12 упорядоченных reason codes
+   поверх `plan-portability-v1.md`) — эта команда его ЗОВЁТ, а не пересказывает логику
+   второй прозой: собери контракт и проверь его ПЕРЕД ЛЮБОЙ мутацией, для КАЖДОГО item'а
+   без исключения — условная формулировка F1 (шаг «если контракт где-то уже собран») и
+   любой её синоним ЗАПРЕЩЕНЫ. CLI-форма `task_contract build` держит `route.actual`
+   неразрешённым по конструкции (байт-детерминированность между процессами, докстринг
+   модуля) — передать ей живой route нечем, флага нет; поэтому шаг зовёт тот же компилятор
+   его же документированным Python API (`build(..., actual_route=…)` — тот же параметр,
+   которым self-conformance P2.6 уже пользовался), а не переизобретает предикат вторым
+   способом:
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "implementation", "medium", source="self-attested", model="sonnet"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_mutation"] == "allow" else 1)
+   PY
+   ```
+
+   `<PLAN-ID>`/`<Pn.m>` — те же, что «$ARGUMENTS»; `"implementation", "medium",
+   model="sonnet"` — пин ЭТОЙ команды (frontmatter выше); `plan-run` подставляет
+   ФАКТИЧЕСКИЙ `model_class`/`effort`/`model` сессии (см. `plan-run.md`).
+   **Зелёное:** `pre_mutation: 'allow'` (exit 0) — продолжай п. 3.
+   **Отказ по коду** (`result["pre_mutation"]`, первый упавший — единственный):
+
+   | Код | Класс | Действие |
+   |:--|:--|:--|
+   | `ROUTE_UNDERSHOOT` | реальный (route ниже required) | СТОП: гейт п. 2 уже обязан был это поймать раньше — расхождение прозы и компилятора = D#-запись + `ROUTING-INCONSISTENT` |
+   | `AUTHORITY_BOUNDARY` | реальный (owner-gate не выдан) | СТОП: эскалация п. 5 (owner-gate) |
+   | `LOOP_BUDGET_EXCEEDED` | реальный (аудит-cap исчерпан) | СТОП: `AUDIT-CAP`-путь, решение владельца |
+   | `PORTABILITY_EXTERNAL_INPUT` / `PORTABILITY_INPUT_MISSING` | реальный (item несёт внешний/недостающий execution input) | СТОП: эскалация п. 5 (дефект спеки item'а), правит `plan-design` |
+   | `VERSION_HASH_MISMATCH` / `CONFLICT_UNRESOLVED` / `CONFLICT_PRECEDENCE_VIOLATION` / `NEXT_CHANGED_WITHOUT_TRANSITION` / `CAPABILITY_UNSUPPORTED` / `SLICE_INCOMPLETE` / `COLD_START_INCOMPLETE` | структурный (`build()` этого не производит при корректной работе) | СТОП: D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (`ModuleNotFoundError` —
+   standalone-раскладка вне монорепо, PYTHONPATH не резолвится) → СТОП с явным текстом «шаг
+   недоступен: `task.task_contract` не импортируется» — fail-closed, а не «продолжай как
+   раньше».
+
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
@@ -72,6 +116,11 @@ effort: medium
    При срабатывании оставь ТРИ greppable-артефакта и остановись:
    - blockquote в item: `> 🔴 ESCALATION Pn.m: <причина> | trigger: <из enum> | нужен: plan-design`;
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
+   - **при `Closure Protocol | v1` (opt-in, D44/P8.3):** строка `Возобновление: <точная
+     команда>` в **Pending Work** — точная команда, которой продолжится работа (обычно
+     `/task:plan-design <PLAN-ID> Pn.m`), а не «пропущено»; локального шага продолжения
+     не существует в принципе (внешний блокер) → `Возобновление: — (внешний блокер:
+     <что именно ждём>)`, выдумывать команду запрещено;
    - обнови `handoff.md` (Next: /task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
    - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
@@ -88,6 +137,40 @@ effort: medium
 
 7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан.
 
+   **Pre-final — Task Contract (P2.2/P2.11, ОБЯЗАТЕЛЬНЫЙ шаг, штатный путь — М5).** `plan-exec`
+   закрывает item САМ (эта топология) — граница pre-final ОБЯЗАНА пересекаться ЗДЕСЬ, а не только
+   в реконсилирующем `task:plan-close Pn.m`, который на штатном пути exec'а не вызывается. Маршрут
+   `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а (D75): здесь это own pin ЭТОЙ команды
+   (`implementation`/`medium`), потому что команда сама исполнила item — сборка контракта одна на
+   оба предиката, `evaluate()` считает их за один вызов:
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "implementation", "medium", source="self-attested", model="sonnet"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
+   PY
+   ```
+
+   **Гейт бинарен** (та же таблица код→действие, что `plan-close.md`'s Pre-final шаг 4): зелёное —
+   РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` и любой `block:*` — красное,
+   item НЕ закрывается этим шагом (эскалация п.5 / D#-запись по классу кода — реальный vs
+   структурный, та же таблица, что `plan-close.md`'s шаг 4). Как минимум ОДНО поле
+   `Deliverables`/Validation обязано резолвиться в публично проверяемый факт (реальная команда,
+   реальный вывод), не только внутренний byte/hash-green результат (D30) — это то, что
+   `pre_final == "allow"` подтверждает машинно. **Граница предиката (D77, М3):** `pre_final`
+   утверждает свойство ФОРМЫ спеки item'а (публично проверяемый acceptance на детерминированном
+   классе доказательства), а НЕ то, что item исполнен ХОРОШО — вердикт material/process остаётся
+   за status-rule ниже, этот код его не заменяет.
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (standalone-раскладка вне
+   монорепо) → СТОП с явным текстом «шаг недоступен: `task.task_contract` не импортируется» —
+   fail-closed.
+
    **Топология — ДВА коммита (единственная; шаги 1–6 строго в этом порядке):**
    1) **Item-коммит.** Дифф Scope (код/артефакты) ТОЛЬКО по путям `Files` item'а — файлы плана в него
       НЕ входят; `validate.sh` затронутого пакета зелёный ДО коммита; Conventional Commits (рус.)
@@ -96,7 +179,11 @@ effort: medium
       (шаг 3). Фикс по ревью — коммит СВЕРХ топологии (не `amend`: трассируемость).
    2) **Bookkeeping плана.** `**Status:**` item'а → `🟢 Done` / `🟠 Done with deviations` (status-rule
       ниже) · **Completion Notes** — только факты (файлы, тесты, прогнанные команды и их вывод; без
-      оценок «всё отлично») · **Pending Work** (из п. 4, или «—») · **Known Deviations** · строка в
+      оценок «всё отлично») + **строка `write-site: pre_mutation: <код> · pre_final: <код>`** (D88/
+      P10.1) — коды БЕРУТСЯ из результата шага 7 Pre-final выше (`result["pre_mutation"]`/
+      `result["pre_final"]`), пишутся ЭТОЙ ОДНОЙ строкой (не прозой врассыпную — `plan_lint.py`
+      матчит только её построчно), обязательна на закрытии `🟢`/`🟠` · **Pending Work** (из п. 4,
+      или «—») · **Known Deviations** · строка в
       `## Phase Status` фазы · `## 4. Phase Index & Status Board` в `plan.md` (счётчик `Items 🟢/всего`,
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·

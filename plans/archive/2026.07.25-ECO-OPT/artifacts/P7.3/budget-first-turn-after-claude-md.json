@@ -1,0 +1,29 @@
+{
+  "target": "/home/vostrikov/projects/packages/swissknifeman",
+  "sources": {
+    "skills": {
+      "tokens": 2547,
+      "raw_tokens": 2547,
+      "listing_budget": 10000,
+      "detail": "37 скиллов"
+    },
+    "agents": {
+      "tokens": 567,
+      "detail": "6 агентов"
+    },
+    "claude_md": {
+      "tokens": 4506,
+      "detail": "CLAUDE.md=4506"
+    },
+    "hooks": {
+      "tokens": 1156,
+      "detail": "1 хук(ов)"
+    },
+    "mcp": {
+      "tokens": 5250,
+      "detail": "3 сервер(ов): maind, perplexity-web, serena"
+    }
+  },
+  "total": 14026,
+  "verdict": "WARN"
+}

@@ -25,8 +25,8 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) | курируемый каталог | 47k★, активный, NOASSERTION-лиц. | reference | подтверждает реальную схему субагента; Design-Review ≈ agent-pack 1:1 |
 | [vijaythecoder/awesome-claude-agents](https://github.com/vijaythecoder/awesome-claude-agents) | оркестратор + специалисты | 4.3k★, MIT, ~stale | reference | блюпринт `orchestrator → stack-detect → специалисты` (= наши профили + `_common`) |
 | [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) | 150+ субагентов | 22k★, MIT, активный | reference | seed-материал ролей; нативный frontmatter |
-| [claude-rio](https://github.com/alex-popov-tech/claude-rio) | hooks-matcher (роутинг) | ~20★, MIT, ранний | reference → [roadmap](../roadmap/agent-command-router-hook.md) | контракт `UserPromptSubmit.additionalContext` для будущего router-хука |
-| Self-Improving session-hooks | паттерны session-хуков | talk-level, без репо | reference → [roadmap](../roadmap/self-learning-memory.md) | подтверждает `additionalContext`-путь (уже есть в maind) |
+| [claude-rio](https://github.com/alex-popov-tech/claude-rio) | hooks-matcher (роутинг) | ~20★, MIT, ранний | adopt → `harness router` | контракт `UserPromptSubmit.additionalContext` лёг в хуки `agent-router` |
+| Self-Improving session-hooks | паттерны session-хуков | talk-level, без репо | adopt → пакет `analyst` | подтверждает `additionalContext`-путь (memory-digest-hook в maind) |
 | [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | multi-agent runtime | 35k★, MIT | **skip** (reference) | только словарь оркестрации (supervisor/swarm) для прозы — иной слой |
 | [itgoyo/awesome-agent-skills](https://github.com/itgoyo/awesome-agent-skills) | каталог скиллов | 138★, CC-BY | reference → [roadmap](../roadmap/skill-rules-sidecar.md) | паттерн `skill-rules.json` сайдкар (отложен) |
 | [wshobson/agents](https://github.com/wshobson/agents) | стек-бандлы + model-tiers | 37k★, MIT, активный | reference | блюпринт профилей: стек→бандл, per-agent model-tiers |
@@ -56,11 +56,15 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | `perplexity-web` синтез — monorepo.tools · contracts-as-SSOT+codegen паттерны для полиглот-монорепо | как организовать `services/+packages/js|php|flutter/+apps/+infra/`, dependency direction, per-package vs unified semver, отдельные lockfiles, CI multi-lang | web/vendor-доки, верифиц. `perplexity-web` 2026-07-03 | **reference** | `docs/guide/polyglot-monorepo.md` (skiller) + профиль `platform-service` (`packages/skiller/profiles/`) |
 | `code.claude.com/docs/en/skills` (frontmatter `model`/`effort`) · `…/model-config` (нет API смены модели сессии) · `…/sub-agents` (нет per-subagent effort) | официальный спек: где живут `model`/`effort`, какие ручки смены модели существуют | first-party, верифиц. `perplexity-web` 2026-07-15 (`2026.07.13-PLAN-PROTOCOL-GAP` D1/D3) | **reference** | подтверждён факт «нет API переключения модели/effort сессии изнутри команды» → `plan-exec` реализован как routing-**гейт-отказ** (эскалация `manual`), а не авто-переключение модели/effort |
 | `perplexity-web` синтез — токен-экономия агентных систем 2026 (Anthropic prompt-caching docs · /compact-vs-/clear практика · sub-agent isolation · tool-result trimming/PARTIAL-receipts · MCP tool-def deferred loading (paddo.dev/reddit-кейс 92%) · tiered model-routing «не даунгрейдить ревьюеров») | актуальные (2026) внешние рычаги токен-экономии, сверенные с архитектурой репо | web/vendor-доки + first-party Anthropic, верифиц. `perplexity-web` 2026-07-15 (6 запросов; context7 — quota-промах) | **reference** (C4/C5 — adopt-кандидаты backlog) | `findings/P5-external-bestpractices.md` плана `2026.07.15-TELEMETRY-OPT`: C1–C3/C6 подтверждают уже принятое (`context-economy`, workflow-craft, D8/D9-routing); adopt-кандидаты — потолок+truncation-receipt в ответах maind MCP-тулов (C4) и прополка MCP-серверов / deferred tool-loading (C5, `ENABLE_TOOL_SEARCH` — `[UNVERIFIED]`, пред-проверка по first-party доке); C7/C8 → rejected-optimizations |
-| [tirth8205/code-review-graph](https://github.com/tirth8205/code-review-graph) | local-first код-граф (Tree-sitter AST → SQLite) + MCP (30 тулов)/CLI; 40+ языков; заявка ~82× токен-экономии на вопрос (самозамер) | 26k★, MIT, активный; верифиц. GitHub API + README 2026-07-25 | **reference → пилот** | план `2026.07.25-ECO-OPT` P5: пилот против Serena (замеры budget/задачи/multi-hop), вердикт adopt/skip/combine — owner-гейт; до вердикта канон графа — Serena |
+| [tirth8205/code-review-graph](https://github.com/tirth8205/code-review-graph) | local-first код-граф (Tree-sitter AST → SQLite) + MCP (30 тулов)/CLI; 40+ языков; заявка ~82× токен-экономии на вопрос (самозамер) | 26k★, MIT, активный; верифиц. GitHub API + README 2026-07-25; пилот-замер 2026-07-27 (v2.3.7) | **skip** (измерено, вердикт владельца `2026.07.25-ECO-OPT` D113) | Пилот против Serena исполнен: `Ops` отличные (build 1.66 с / 405 файлов, инкремент 0.24 с), но precision blast-radius против co-change ground truth `P_impact` = **0.039** при объявленном ДО замера пороге `≥ 0.40` (24 fold'а на 3 коммитах Laravel-проекта; порог перешёл 1 fold). Отказ по ШУМУ, не по слепоте: recall 0.40–0.43, но 110 файлов на seed, истинные — на позициях 77 и 102. Не подключаем **по нашим числам на нашей кодовой базе**; канон графа кода остаётся **Serena** (LSP). Взято: правило «graph-retrieval MCP не подключается по README — только после своего co-change-замера» + триггеры переоткрытия → тело скилла `general/mcp-advisor`; числа — `plans/archive/2026.07.25-ECO-OPT/findings/P5.1-stage0-killgate.md`, пакет решения — `findings/P5.2-codegraph-verdict-packet.md` |
 | [breferrari/obsidian-mind](https://github.com/breferrari/obsidian-mind) | Obsidian-vault как персистентная память агентов (CC/Codex/Gemini), git-синк, хуки+MCP semantic search | 3.9k★, MIT, TS/Node; верифиц. GitHub API + README 2026-07-25 | **skip** (паттерн-reference) | как механизм памяти дублирует maind/agentmemory + Brain vault; полезный паттерн MEMORY.md-указателей уже канон; cross-machine решается демоном-хостом (`2026.07.25-ECO-OPT` P4, D4) |
 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | скилл ADHD-friendly вывода: 10 правил (action-first, нумерация, no preamble/closers) | 9.6k★, MIT, Python; верифиц. GitHub API + README 2026-07-25 | **skip** (reference) | дублирует lean output style + `core:compact-responses`; 1–2 правила (answer-first, no closers) — кандидаты в правку compact-responses (`2026.07.25-ECO-OPT` P6.2, D8) |
-| [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | официальный OpenAI плагин CC: `/codex:review\|adversarial-review\|rescue\|transfer`, subprocess над локальным `codex` CLI | 29.9k★, Apache-2.0, first-party OpenAI; верифиц. GitHub API + README 2026-07-25 | **reference → пилот** | план `2026.07.25-ECO-OPT` P7: гейтированный пилот делегирования лёгких задач ПОСЛЕ dedup/enforcement AGENT-RELIABILITY P1/P2 (D9: инцидент «Codex тупил» — коллизии identities + монолитный контекст, не «SKM вреден») |
+| [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | официальный OpenAI плагин CC: `/codex:review\|adversarial-review\|rescue\|transfer`, subprocess над локальным `codex` CLI | 29.9k★, Apache-2.0, first-party OpenAI; верифиц. GitHub API + README 2026-07-25 | **adopt (Codex CLI как второй водитель) · reference (плагин, opt-in per-plan)** | план `2026.07.25-ECO-OPT` P7 (D84/P7.1/P7.2/P7.3): Codex CLI напрямую водит тот же plan-протокол при недоступности Claude (dogfood — «дошёл с 4 вмешательствами», 2 из 4 устранены починкой корневого `AGENTS.md`); плагин `codex-plugin-cc` установлен, но задействуется ТОЛЬКО при явном указании в плане (правило текстовое, машинного гейта нет) |
 | [Anthropic — Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) | first-party гайд: анти-паттерн явных verify/double-check инструкций (овер-верификация), effort-sweep (low/medium дешевле при качестве), subagent-капы, verbosity/scope-стиринг, 1M контекст | first-party, 2026; прочитан 2026-07-25 | **adopt (метод)** | план `2026.07.25-ECO-OPT` P2: Brain model-notes выжимка + точечная ревизия task-команд/agent-packs (убрать double-check из Opus-pinned, пересмотреть effort-пины) — D5: модель-специфика в model-notes, не в evergreen-скиллах |
+| [Anthropic — Prompting Claude Sonnet 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5) | first-party гайд implementation-тира: тот же анти-паттерн явной верификации/лесов статус-апдейтов применим и к Sonnet-пиненным поверхностям (5 из 10 запиненных команд); буквальность инструкций (не обобщает правило с одного объекта на другие); effort-мэппинг при миграции (medium≈S4.6 high, high≈S4.6 max); +30% токенайзер; confidence-level на находку в code review | first-party, 2026; прочитан 2026-07-25 | **adopt (метод)** | план `2026.07.25-ECO-OPT` P2: Brain model-notes `sonnet-5-prompting.md` + вход в ревизию P2.2/P2.3 (D19) |
+| [Anthropic — Effort](https://platform.claude.com/docs/en/build-with-claude/effort) | first-party спек параметра `effort`: 5 уровней (low/medium/high/xhigh/max) + typical use case, поведенческий сигнал (не токен-бюджет), `xhigh`/`max` — thinking нельзя отключить, кэш-инвалидация при смене effort между запросами | first-party, 2026; прочитан 2026-07-25 | **adopt (метод)** | план `2026.07.25-ECO-OPT` P2.1: несущий источник обеих Brain-нот (Opus 5 + Sonnet 5); effort-таблицы обеих нот — прямая выжимка |
+| [romarayt/raytsystem-public-os](https://github.com/romarayt/raytsystem-public-os) | local-first агентный воркспейс; для нас — **механика гейтов**: политика как данные, preflight-хеш-запись, один guard для CLI и pre-commit, симулятор ≡ рантайм, версионированный реестр контрактов, docs-DoD + coverage по живым контрактам, отчёт квалификации с классом свидетельства | Apache-2.0; публичное дерево — **сквошенный снимок** (1 коммит, 0 тегов), поэтому ★/возраст не индикатор; зрелость снята артефактами: 35 ADR, 73 теста (809 КБ), датированный отчёт прогона, полевые issue с числами. Верифиц. GitHub API + `raw.githubusercontent.com` + `perplexity-web` 2026-07-25 | **adopt (механика, 17 item'ов)** · **skip** (uv/pyproject/React, каталог-снимок схем на версию, обязательность на pre-commit) · **reference** (симулятор политики как код, `reason` в каталогах адаптеров) | `plans/archive/2026.07.25-ECO-OPT/findings/rayt-deep-2026-07-25.md` (слой 1) + `research/09-rayt-adoption-map.md` (вердикты по каждому приёму, карта по пакетам). Адресат — **фаза P8** плана `2026.07.25-ECO-OPT` (9 приёмов), остальные 10 — в его `roadmap.md` (D41: отдельный план отменён) |
+| Внешний архитектурный аудит `core`/provider (Perplexity, запинен хешами в `plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/perplexity-audit.md`) | сторонний разбор монорепо: предлагает перестроить `core`/провайдерный слой, ввести обязательные контрактные тесты, вынести политику владения из хуков, программу внедрения на 12 PR / 90 дней | одноразовый разбор, снапшот запинен и неизменяем (D25); проверен **по коду**, а не по описанию, 2026-07-26 | **частично adopt (3 из 16), в основном reject** | `2026.07.24-AGENT-RELIABILITY` P4.1: 16 несущих гипотез адъюдицированы против функций/вызывающих/тестов — **3 accept** (провенанс резолва конфига не рендерится никому; `run-report` деградирует молча; предикат владения `managed AND NOT user_owned` реализован трижды без parity-гейта) → оформлены как БУДУЩИЕ предложения FP-1/FP-2/FP-3 с владельцами, **11 reject**, **2 unknown** (H15/H16 — доказательства не существует). Ни одна гипотеза не реализована этим планом; вердикты — `findings/P4.1-code-grounded-audit.md`, `root/provider-core-hypotheses.md`; отклонённое — [rejected-optimizations](./rejected-optimizations.md) |
 
 ## Карточки
 
@@ -115,15 +119,15 @@ frontmatter — падает прямо в `.claude/agents/`. **Минусы:** 
 Hooks-matcher: `UserPromptSubmit` подсказывает скилл/агент по ключевым словам. **Плюсы:** закрывает
 реальный пробел — агенты/команды НЕ автоактивируются; чистый контракт I/O; ненавязчив. **Минусы:**
 для скиллов избыточен (они и так автозагружаются); JS/npx — против stdlib-only; матчер наивный.
-**Решение:** контракт берём, реализацию откладываем в [roadmap](../roadmap/agent-command-router-hook.md)
-(внедрять по факту мисроутов), на Python.
+**Решение:** контракт взяли, реализация — на Python: хуки
+`packages/harness/configs/claude-code/hooks/agent-router/` + `harness router` (спека-роадмап закрыта и удалена).
 
 ### Self-Improving session-hooks — reference → roadmap
 Паттерны: direnv-промпты, strike/praise CSV, skill-activation, SessionStart-инжект контекста.
 **Плюсы:** всё ложится на уже используемый в maind `additionalContext`-путь. **Минусы:** «CSV-скоринг»
 без канона (talk-level); `UserPromptSubmit.additionalContext` протухает на resume. **Решение:**
-безопасную форму самообучения — в [roadmap](../roadmap/self-learning-memory.md) (через память maind,
-ручное промо).
+безопасную форму самообучения — пакетом `analyst` (через память maind, ручное промо);
+остаток потокового capture — `packages/analyst/docs/roadmap.md`.
 
 ### langchain-ai/langgraph — skip (reference)
 Production-grade multi-agent **рантайм**. **Плюсы:** зрелый словарь топологий (supervisor/swarm/
@@ -224,16 +228,87 @@ Karpathy (karpathy/llm-council): 5 независимых советников �
 дублирование. **Потенциал:** сверка нашей judge-panel-механики с канонической методологией;
 возможное применение в прогресс-движке Foreman (совет по спорному вердикту continue/escalate).
 
-### openai/codex-plugin-cc — reference → roadmap (`roadmap/codex-subagent-offload.md`)
+### openai/codex-plugin-cc — adopt (Codex CLI, второй водитель) · reference (плагин, opt-in per-plan) — вердикт `2026.07.25-ECO-OPT` P7 (D84/P7.1–P7.3), roadmap закрыт
 https://github.com/openai/codex-plugin-cc — **официальный плагин OpenAI** для Claude Code:
 `/codex:review` и `/codex:adversarial-review` (второе мнение другой моделью), `/codex:rescue`/
 `transfer`/`status`/`result`/`cancel` — делегация задач и фоновые job'ы на Codex, субагент
 `codex:codex-rescue`. 29.2k★, Apache-2.0, активный (июль 2026). Требует подписку ChatGPT
-(вкл. Free) или OpenAI API key; расходует лимиты Codex, НЕ Claude. **Плюсы:** first-party
-качество; кросс-модельное adversarial-ревью; разгрузка квот Claude Max (наш болевой D18-кейс
-FOREMAN) делегацией review/фоновых задач на отдельную учётку OpenAI. **Минусы:** вторая
-подписка/биллинг; координация двух CLI; качество Codex на наших Laravel/Dart-стеках не замерено.
-**Взято:** пока ничего — детальная проработка в `roadmap/codex-subagent-offload.md`.
+(вкл. Free) или OpenAI API key; расходует лимиты Codex, НЕ Claude.
+
+**Фактический вердикт (2026-07-29, `finish` D84 → dogfood P7.1 → инструкционный слой P7.2 →
+плагин P7.3).** Роль Codex — **ВТОРОЙ ВОДИТЕЛЬ**, не канал делегирования мелочи: та же
+экосистема, те же скиллы, те же команды, тот же план; при проблемах с подпиской Claude
+владелец пересаживается на Codex CLI напрямую (`codex`/`codex exec`, канонические формы —
+`AGENTS.md` § «Codex launch and hook integrity») и продолжает работу тем же plan-протоколом.
+Догфуд на живом item'е плана (`P6.4`) дал вердикт **«дошёл с 4 вмешательствами»**
+(`findings/P7.1-switch-test.md` §5) — два из четырёх устранены починкой корневого `AGENTS.md`
+этим же заходом (`research/21-P7.2-instruction-slice-spec.md`), два остаются известным риском
+канона `plan-protocol` (`roadmap/` § «Добавлено прогоном P7.1»). Плагин `codex-plugin-cc`
+**установлен и настроен** (P7.3): always-on цена измерена ДВУМЯ инструментами врозь (нативный
+`claude plugin details codex@openai-codex` ≈449 ток апстримной поверхности; репо-проекция
+`skiller budget --first-turn` — дельта 0, инструмент структурно слеп к marketplace-плагинам,
+граница названа `CLAUDE.md` § «Философия и рамки»), правило отката — по ДЕЛЬТЕ и переводу
+через порог 10 000 (`findings/P7.3-plugin-cost-and-procedure.md`). **Правило активации
+(текстовое, машинного гейта нет, D84):** плагин задействуется ТОЛЬКО при явном указании в
+плане, что данную работу ведут субагенты Codex; по умолчанию не используется — второй водитель
+работает Codex CLI НАПРЯМУЮ, не через плагин. **Плюсы:** first-party качество; кросс-модельное
+adversarial-ревью (опционально, дорожка B); разгрузка **лимита Claude** (расход Codex — общий
+agentic-пул подписки OpenAI, не бесплатная работа). **Минусы:** вторая подписка/биллинг;
+координация двух CLI; качество Codex на Laravel/Dart-стеках не замерено; численная экономика
+делегирования (пилот дорожки A, `A`/`R`) сознательно НЕ измерялась (D84) — готовый протокол
+лежит в `research/16-P7-target-design.md` §2, вытягивается по факту потребности.
+**Взято:** Codex CLI как второй водитель (прямой запуск, тот же plan-протокол); правило
+активации плагина (текстом); двухинструментный always-on гейт. **Roadmap-стаб закрыт** —
+`roadmap/codex-subagent-offload.md` несёт датированный вердикт со ссылкой на
+`findings/P7.1-switch-test.md`.
+
+### romarayt/raytsystem-public-os — adopt (механика гейтов), skip (стек)
+https://github.com/romarayt/raytsystem-public-os — local-first агентный воркспейс (знания,
+документы, задачи, verifiable workflows), Apache-2.0, Python + React. Назначение у нас разное
+(мы — менеджер инструментов), поэтому сравнивалась **механика инструкционного слоя и гейтов**,
+а не продукт.
+
+**Оценка зрелости — отдельно, потому что обычные индикаторы здесь не работают.** Публичное
+дерево — сквошенный снимок: ровно **один коммит** (`b5ac7056`, 2026-07-13), **ноль тегов и
+релизов**; ★ и возраст публичной истории не несут информации ни в плюс, ни в минус. Что реально
+доказывает эксплуатацию: датированный машиночитаемый отчёт квалификации
+(`evals/m5a/results/synthetic-20260711T105905Z.json` — ветка `codex/raytsystem-bootstrap`,
+«252 passed», покрытие 81.77 %, гейты G0–G10 с классом свидетельства), 35 ADR с `Consequences`
+и `Alternatives considered`, 73 тест-файла (809 КБ) с тестами на политику/guard/crash-recovery,
+цепочка версий схем 27→151. Что картину ослабляет: все 35 ADR датированы тремя сутками
+(07-10…07-12), бенчмарк опубликован **без результатов**, а автор на своём сайте пишет о себе
+«Я не программист» — код агентно-сгенерирован под его контролем. Поэтому вес свидетельства
+переносится на «есть тест/артефакт», а не «автор годами это эксплуатировал».
+
+**Полевые свидетельства (issues 07-17…07-24, независимые операторы) — самое ценное:** ingest
+квадратичен («~4 s на пустом леджере → ~344 s при ~590 источниках», 1 045 358 чтений на одну
+операцию); код-граф падает целиком на пустом `__init__.py` и **не называет файл**; Windows
+ломается на безусловном `import resource`. Ответов мейнтейнера нет, PR'ы висят → как **апстрим**
+проект не сопровождается, вендорить нечего; берём механику.
+
+**Плюсы:** политика как данные с валидатором формы рядом; preflight — редактированная хеш-запись
+(`operation_key`, абсолютный путь не сохраняется) и `CHECKPOINTED_FOR_RESUME` + точная команда
+вместо ложного «успеха»; **один** `CheckpointGuard` для CLI и pre-commit, а тест ассертит, что
+хук зовёт ту же команду; симулятор политики вызывает **ту же чистую функцию**, что рантайм-гейт;
+docs-in-the-same-change-set как DoD + coverage-гейт по **живым** контрактам («cannot pass by
+editing the coverage page alone»); матрица возможностей с границей доказательства («A visible UI
+section or CLI group is not proof that its external runtime is enabled»); тест, ассертящий
+**форму инструкционного слоя** (`AGENTS.md ≤65` строк, `SKILL.md ≤150`, обязательные секции,
+запрет дублирования канона в bootstrap, пара golden+adversarial на каждый скилл).
+**Минусы:** стек не переносим (uv/pyproject/pydantic/React); каталог-снимок схем на каждую
+версию накапливает мёртвые контракты (15 схем удалённого домена живут в v1.2.0–v1.4.0);
+docs-гейт коарсовый (зачёт даёт любой файл под `website/docs/`); строгая ревалидация имеет
+измеренную цену O(N²); fail-closed без имени виновника — реальный дефект UX.
+
+**Взято:** пока ничего не внедрено — вердикты по 19 приёмам и карта заимствований лежат в
+`plans/archive/2026.07.25-ECO-OPT/research/09-rayt-adoption-map.md`; сырьё — `findings/rayt-deep-2026-07-25.md`.
+Из них **9 заведены фазой P8** плана `2026.07.25-ECO-OPT` (D41 — отдельный план отменён, чтобы не
+плодить межплановую синхронизацию): отчёт закрытия фазы с классом свидетельства
+(synthetic/real/`baseline_pending`), `Consequences` в D-записи, `CHECKPOINTED`-отказ с командой,
+docs-impact гейт, матрица возможностей, CI-гигиена + verify-tag, `assert_safe_replace_target` в
+`core/io.py`, дельта к `validate.sh` и `skiller eval`. Остальные 10 (реестр ролей ревью как
+данные, preflight делегирования, провенанс-записи, реестр контрактов, coverage по живым
+контрактам, инвариант устаревания графа) — в `roadmap.md` того же плана, тянутся по факту.
 
 ## Как это легло в архитектуру
 

@@ -1,0 +1,187 @@
+{
+  "schema_version": "reliability-bank/v1",
+  "bank_version": "test-1.0.0",
+  "sample_seed": "system-reliability-bank-v1/test",
+  "note": "Small synthetic case set exercising every deterministic operator and every compute_system_metrics path (packages/skiller/lib/skiller/quality/eval.py). Distinct from, and never a copy of, the frozen P0.3 bank at plans/2026.07.24-AGENT-RELIABILITY/artifacts/reliability-bank-v1/cases.json.",
+  "cases": [
+    {
+      "case_id": "fx-critical-retention",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "contract_compiled"}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "requirements_satisfied", "value": "R-1"}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]},
+        {"id": "A3", "grader": "G-EVENT-ORDER", "args": {"before": {"type": "contract_compiled"}, "after": {"type": "mutation"}}, "expect": true, "tags": ["requirement_retention"]}
+      ],
+      "baseline": {
+        "transcript": [
+          {"seq": 1, "type": "contract_compiled"},
+          {"seq": 2, "type": "mutation"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "requirements_satisfied": ["R-1"]}
+      }
+    },
+    {
+      "case_id": "fx-critical-premature-stop",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "premature_stop"}, "expect": true, "tags": ["no_premature_stop"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "premature_stop"}],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-redundant-approval",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "redundant_approval"}, "expect": true, "tags": ["no_redundant_approval"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "redundant_approval"}],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-owner-question",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "final_response"}, "expect": true, "tags": ["public_acceptance"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "owner_question"}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-route-compliant",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "route_declared"}, "expect": true, "tags": ["route_compliance"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "route_declared", "undershoot": false}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-route-undershoot",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "ROUTE_UNDERSHOOT"}}, "expect": true, "tags": ["route_compliance", "requirement_retention"]}
+      ],
+      "baseline": {
+        "transcript": [
+          {"seq": 1, "type": "route_declared", "undershoot": true},
+          {"seq": 2, "type": "block", "reason_code": "ROUTE_UNDERSHOOT"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-loop-depth",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-COUNT-MAX", "args": {"type": "finding", "where": {"finding_id": "F-1"}, "max": 2}, "expect": true, "tags": ["loop_budget"]},
+        {"id": "A2", "grader": "G-EVENT-COUNT-MIN", "args": {"type": "audit_round", "min": 1}, "expect": true, "tags": ["loop_budget"]}
+      ],
+      "baseline": {
+        "transcript": [
+          {"seq": 1, "type": "finding", "finding_id": "F-1"},
+          {"seq": 2, "type": "finding", "finding_id": "F-1"},
+          {"seq": 3, "type": "finding", "finding_id": "F-1"},
+          {"seq": 4, "type": "audit_round"},
+          {"seq": 5, "type": "audit_round"},
+          {"seq": 6, "type": "audit_round"},
+          {"seq": 7, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success"}
+      }
+    },
+    {
+      "case_id": "fx-critical-regression-escape",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "requirements_satisfied", "value": "R-owner-latest"}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "read"}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "success", "requirements_satisfied": []}
+      }
+    },
+    {
+      "case_id": "fx-control-clean",
+      "kind": "control",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A3", "grader": "G-OUTCOME-EXCLUDES", "args": {"path": "evidence_classes", "value": "raw-transcript-bodies"}, "expect": true, "tags": ["portability"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "final_response"}],
+        "outcome": {"declared_status": "success", "evidence_classes": []}
+      }
+    },
+    {
+      "case_id": "fx-control-false-block",
+      "kind": "control",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "block", "reason_code": "OVERCAUTION"}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "blocked"}
+      }
+    },
+    {
+      "case_id": "fx-portability-tiered",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "work": {"sessions": "multi", "risk": "low", "handoff": false, "audit": false},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "portability_check"}, "expect": true, "tags": ["portability"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "portability_check"}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "success", "tier": "committed-bundle"}
+      }
+    },
+    {
+      "case_id": "fx-portability-brief",
+      "kind": "critical",
+      "owner_gate_required": false,
+      "environment": {"audit_rounds_max": 2},
+      "work": {"sessions": "single", "risk": "low", "handoff": false, "audit": false},
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "portability_check"}, "expect": true, "tags": ["portability"]}
+      ],
+      "baseline": {
+        "transcript": [{"seq": 1, "type": "portability_check"}, {"seq": 2, "type": "final_response"}],
+        "outcome": {"declared_status": "success", "tier": "brief-acceptance"}
+      }
+    }
+  ]
+}

@@ -94,6 +94,27 @@ class TestNewEntryAndValidate(TmpDirTestCase):
             validate_entry(entry)  # не бросает ни на одном каноническом значении
 
 
+class TestTraceRef(TmpDirTestCase):
+    """P3.1 (`root/contracts/unified-agent-trace-v1.md` § Journal reference):
+    `trace_ref` is additive — omitted by default, present only when passed."""
+
+    def test_omitted_by_default_entry_unchanged(self):
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+                           actor="sonnet/high", result="in-progress")
+        self.assertNotIn("trace_ref", entry)
+        validate_entry(entry)  # не бросает — trace_ref не входит в REQUIRED_FIELDS
+
+    def test_supplied_trace_ref_is_carried_and_appended(self):
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+                           actor="sonnet/high", result="in-progress",
+                           trace_ref="a" * 64)
+        self.assertEqual(entry["trace_ref"], "a" * 64)
+        validate_entry(entry)  # extra key — не отклоняется схемой P1.1
+        path = append(self.plan_dir, entry)
+        written = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+        self.assertEqual(written["trace_ref"], "a" * 64)
+
+
 class TestAppend(TmpDirTestCase):
     def test_append_writes_one_valid_json_line(self):
         entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
@@ -247,6 +268,18 @@ class TestCli(TmpDirTestCase):
         self.assertEqual(entry["command"], "plan-run")
         self.assertEqual(entry["friction"], ["deviation", "retry"])
         self.assertEqual(entry["attempt"], 2)
+
+    def test_main_append_with_trace_ref_writes_it(self):
+        plan_dir = self.root / "2026.07.18-FOREMAN"
+        plan_dir.mkdir()
+        rc = main([
+            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
+            "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
+            "--result", "closed-green", "--trace-ref", "b" * 64,
+        ])
+        self.assertEqual(rc, 0)
+        entry = json.loads((plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()[0])
+        self.assertEqual(entry["trace_ref"], "b" * 64)
 
     def test_main_rejects_invalid_command_choice(self):
         with self.assertRaises(SystemExit):

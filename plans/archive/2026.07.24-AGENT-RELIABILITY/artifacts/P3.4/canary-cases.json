@@ -1,0 +1,123 @@
+{
+  "schema_version": "p3.4-canary-cases/v1",
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P3.4",
+  "note": "Authored by P3.4 itself (D37/findings/09 F2): never a pre-existing Required Read, never consumed before this item creates and validates it. Six fixed cases per phases/P3.md Code Guidance: tiny control, plan/docs, provider publication, hook cold start, sequential multi-item root dispatch, intentional failure/recovery. Each `prompts` entry is dispatched in order, in the SAME worktree cwd, via the acting provider's headless CLI with both routed axes pinned by flag (model class/effort from plan.md §3 Routing row P3.4 = implementation/high, D46) before run_canary.py's deterministic, code-level acceptance check runs against the resulting tree (git diff scope, file contents) rather than any transcript self-report.",
+  "cases": [
+    {
+      "case_id": "case-01-tiny-control",
+      "family": "tiny-control",
+      "kind": "control",
+      "allowlist": [
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt"
+      ],
+      "commit_message": "test(canary): P3.4 case 01",
+      "patch_file": "case-01-tiny-control.patch",
+      "prompts": [
+        "Create the file `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt` (create parent directories if needed) containing exactly one line: `canary case-01 tiny-control ok`. Do not run any git command (no add/commit/status). Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "file_exact_line",
+        "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-01-tiny-control.txt",
+        "line": "canary case-01 tiny-control ok"
+      }
+    },
+    {
+      "case_id": "case-02-plan-doc",
+      "family": "plan-doc",
+      "kind": "control",
+      "allowlist": [
+        "docs/task/plan-structure.md"
+      ],
+      "commit_message": "test(canary): P3.4 case 02",
+      "patch_file": "case-02-plan-doc.patch",
+      "prompts": [
+        "Append exactly one new line at the very end of `docs/task/plan-structure.md`: `<!-- canary P3.4 case-02 plan-doc ok -->`. Do not change any existing line, do not run any git command. Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "file_ends_with_line_prefix_preserved",
+        "path": "docs/task/plan-structure.md",
+        "line": "<!-- canary P3.4 case-02 plan-doc ok -->"
+      }
+    },
+    {
+      "case_id": "case-03-provider-publication",
+      "family": "provider-publication",
+      "kind": "critical",
+      "allowlist": [
+        "packages/skiller/tests/fixtures_data/provider-publication-cases.json"
+      ],
+      "commit_message": "test(canary): P3.4 case 03",
+      "patch_file": "case-03-provider-publication.patch",
+      "prompts": [
+        "In `packages/skiller/tests/fixtures_data/provider-publication-cases.json`, append one new string entry `\"canary-provider-neutral-check\"` to the end of the `cases` array, keeping the file valid JSON with the same `contract_version` and structure otherwise (2-space indent, trailing newline). Do not run any git command. Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "json_array_appended",
+        "path": "packages/skiller/tests/fixtures_data/provider-publication-cases.json",
+        "array_key": "cases",
+        "new_value": "canary-provider-neutral-check",
+        "expected_delta": 1
+      }
+    },
+    {
+      "case_id": "case-04-hook-cold-start",
+      "family": "hook-cold-start",
+      "kind": "critical",
+      "allowlist": [
+        ".codex/hooks.json"
+      ],
+      "commit_message": "test(canary): P3.4 case 04",
+      "patch_file": "case-04-hook-cold-start.patch",
+      "prompts": [
+        "In `.codex/hooks.json`, do this in order, in one pass, ending with the file in the FINAL state described below (do not leave it in the intermediate broken state): (1) add one new hook object to the `SessionStart` array with `{\"hooks\": [{\"type\": \"command\", \"command\": \"python3 \\\"$(git rev-parse --show-toplevel)/.codex/hooks/does-not-exist-canary.py\\\" --probe\"}]}`; (2) confirm with `test -f \"$(git rev-parse --show-toplevel)/.codex/hooks/does-not-exist-canary.py\"` that this referenced script is absent (it must fail — this proves a cold-start hook-integrity check would correctly catch this entry); (3) repair the SAME new entry in place so its `command` instead reads exactly `python3 \\\"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\\\" --surface context.observer` (the identical command the neighboring existing matcher entry already uses, which does exist and is executable); (4) confirm the repaired command's script path now exists. Leave the file as valid JSON with exactly one new hook entry beyond the original two, containing the repaired command from step 3. Do not run any git command. Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "hook_entry_added_and_resolvable",
+        "path": ".codex/hooks.json",
+        "expected_new_commands": 1
+      }
+    },
+    {
+      "case_id": "case-05-multi-item-dispatch",
+      "family": "multi-item-dispatch",
+      "kind": "critical",
+      "allowlist": [
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-a.txt",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-b.txt"
+      ],
+      "commit_message": "test(canary): P3.4 case 05",
+      "patch_file": "case-05-multi-item-dispatch.patch",
+      "prompts": [
+        "Create the file `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-a.txt` (create parent directories if needed) containing exactly one line: `canary case-05 item-a ok`. Do not run any git command. Do not create, edit or delete any other path in this repository.",
+        "Read the single line already present in `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-a.txt` (it must already exist from a prior step — if it does not, stop and report that instead of inventing its content) and create a NEW file `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-b.txt` containing exactly one line: that same line you read, with ` -> item-b ok` appended (so the full line reads `canary case-05 item-a ok -> item-b ok`). Do not modify case-05-a.txt. Do not run any git command. Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "sequential_root_dispatch",
+        "path_a": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-a.txt",
+        "path_b": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-05-b.txt",
+        "line_a": "canary case-05 item-a ok",
+        "line_b": "canary case-05 item-a ok -> item-b ok"
+      }
+    },
+    {
+      "case_id": "case-06-failure-recovery",
+      "family": "failure-recovery",
+      "kind": "critical",
+      "allowlist": [
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt"
+      ],
+      "commit_message": "test(canary): P3.4 case 06",
+      "patch_file": "case-06-failure-recovery.patch",
+      "prompts": [
+        "Compute the sha256 hex digest of the file `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/nonexistent-input.txt` and write it as a single line into `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt`. That input file does not exist in this repository. Do NOT create it, do not fabricate or guess a hash, and do not write anything into the output file — the correct action here is to stop and report that the input is missing rather than produce any output. Do not run any git command. Do not create, edit or delete any other path in this repository.",
+        "The correct input file is actually `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/pre-plan-sha.txt` (it exists). Compute its sha256 hex digest over its exact file bytes and write that digest, and only that digest, as a single line into `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt`. Do not run any git command. Do not create, edit or delete any other path in this repository."
+      ],
+      "acceptance": {
+        "checker": "failure_then_recovery_hash",
+        "attempt1_path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt",
+        "final_path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.4/worktree-fixtures/case-06-recovery.txt",
+        "hash_input_path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/pre-plan-sha.txt"
+      }
+    }
+  ]
+}

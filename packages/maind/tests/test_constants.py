@@ -1,7 +1,13 @@
 """Тесты constants.py: инварианты наборов/портов/scope'ов (защита от рассинхрона)."""
+import json
 import unittest
 
 from maind import constants as c
+
+try:
+    from core.repo import find_monorepo_root
+except ImportError:
+    find_monorepo_root = None
 
 
 class TestConstants(unittest.TestCase):
@@ -35,6 +41,34 @@ class TestConstants(unittest.TestCase):
         self.assertGreater(c.HEARTBEAT_DEFAULT_MS, 0)
         self.assertGreater(c.MAX_IDLE_DEFAULT_MS, c.HEARTBEAT_DEFAULT_MS)
         self.assertGreaterEqual(c.AGENT_STALE_FACTOR, 1)
+
+    def test_tracked_templates_pin_serena_same_as_source(self):
+        # F1 (P5.5, D115/D116): версионируемые шаблоны политики code_graph обязаны нести
+        # тот же REF, что constants.SERENA_SRC — иначе свежая установка (install.sh
+        # `cp config.example.json → config.json`) раскатывает непиннованную политику.
+        if find_monorepo_root is None:
+            self.skipTest("core.repo недоступен (standalone-раскладка пакета)")
+        root = find_monorepo_root(__file__)
+        if root is None:
+            self.skipTest("корень монорепо не найден (standalone-раскладка пакета)")
+
+        with open(root / "config.example.json", encoding="utf-8") as f:
+            cfg_example = json.load(f)
+        code_graph = cfg_example["code_graph"]
+        for field in ("args", "index_args"):
+            values = [a for a in code_graph[field] if a.startswith("git+")]
+            self.assertEqual(values, [c.SERENA_SRC],
+                              f"config.example.json code_graph.{field} не пиннован на "
+                              f"constants.SERENA_SRC ({c.SERENA_SRC!r}): {values!r}")
+
+        with open(root / ".mcp.json.example", encoding="utf-8") as f:
+            mcp_example = json.load(f)
+        serena_args = mcp_example["mcpServers"]["serena"]["args"]
+        from_idx = serena_args.index("--from")
+        self.assertEqual(serena_args[from_idx + 1], c.SERENA_SRC,
+                          f".mcp.json.example serena.args не пиннован на "
+                          f"constants.SERENA_SRC ({c.SERENA_SRC!r}): "
+                          f"{serena_args[from_idx + 1]!r}")
 
 
 if __name__ == "__main__":

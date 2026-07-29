@@ -1,11 +1,16 @@
 """P3.3 native Codex projection conformance tests."""
+import hashlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from skiller.common import Env
-from skiller.registry import build_codex_publication, build_registry
+from skiller.publication import (assert_root_bootstrap_set_completeness,
+                                 load_repository_bootstrap_config,
+                                 render_repository_bootstrap_projections)
+from skiller.registry import (build_codex_publication, build_registry,
+                              build_repository_bootstrap_publication)
 
 
 class TestCodexPublication(unittest.TestCase):
@@ -60,10 +65,16 @@ class TestCodexPublication(unittest.TestCase):
             self.assertNotIn("..", Path(plugin["source"]).parts)
         manifests = [item for item in first if item.target.name == "plugin.json"]
         self.assertTrue(manifests)
+        # D27: per-unit manifest version now comes from configs/publication-versions.json —
+        # a bumped unit (core/skm) diverges from the frozen default every other unit keeps.
+        versions = json.loads((self.repo_root / "packages" / "skiller" / "configs" /
+                               "publication-versions.json").read_text(encoding="utf-8"))
+        unit_versions, default_version = versions["units"], versions["default_unit_version"]
         for item in manifests:
             data = json.loads(item.managed_bytes)
             self.assertTrue(set(self.golden["required_plugin_fields"]).issubset(data))
-            self.assertEqual(data["version"], "0.4.0")
+            self.assertEqual(data["version"], unit_versions.get(data["name"], default_version),
+                             data["name"])
 
     def test_core_bundle_is_allowlisted_and_cache_contained(self):
         core_root, core = self._core_artifacts()
@@ -118,6 +129,236 @@ class TestCodexPublication(unittest.TestCase):
     def test_repository_core_cache_matches_current_catalog(self):
         core_root, core = self._core_artifacts()
         self._assert_core_cache_matches_catalog(core_root, core_root, core)
+
+    def test_repository_bootstrap_bucket_never_leaks_into_normal_codex_publication(self):
+        """P1.2 (D31): the private/source-only bucket must never surface as an ordinary
+        Codex unit/plugin/marketplace entry, even though `build_registry` indexes its 13
+        members for ownership/hash lookup."""
+        member_ids = {skill["path"] for skill in self.registry["skills"]
+                      if skill["bucket"] == "repository-bootstrap"}
+        self.assertEqual(len(member_ids), 13)
+        first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
+        marketplace = json.loads(next(item.managed_bytes for item in first
+                                      if item.target.name == "marketplace.json"))
+        names = {plugin["name"] for plugin in marketplace["plugins"]}
+        self.assertNotIn("repository-bootstrap", names)
+        self.assertFalse(any(item.publication_unit_id in {"bucket:repository-bootstrap",
+                                                           "repository-bootstrap"}
+                             for item in first))
+        for item in first:
+            self.assertNotIn("repository-bootstrap", item.target.as_posix())
+
+
+def _build_isolated_bootstrap_fixture(tmp):
+    """Minimal repo_root/package_root pair with one class-A + one class-B identity, isolated
+    from the real repo — used to prove the version/tuple discipline without touching real
+    canon (P1.5 negative fixture: canon drift without a unit-version bump)."""
+    repo_root = tmp
+    package_root = tmp / "pkg"
+    canon_dir = package_root / "skills" / "repository-bootstrap" / "alpha"
+    canon_dir.mkdir(parents=True)
+    (canon_dir / "SKILL.ru.md").write_text("RU body\n", encoding="utf-8")
+    (canon_dir / "SKILL.md").write_text(
+        "---\nname: alpha\ndescription: Alpha desc\n---\n\nAlpha canon body.\n", encoding="utf-8")
+    donor_dir = package_root / "skills" / "general" / "beta"
+    donor_dir.mkdir(parents=True)
+    (donor_dir / "SKILL.md").write_text(
+        "---\nname: beta\ndescription: Beta desc\n---\n\nBeta canon body v1.\n", encoding="utf-8")
+    (package_root / "configs").mkdir()
+    (package_root / "configs" / "repository-bootstrap-skills.json").write_text(json.dumps({
+        "schema_version": 1, "bucket": "repository-bootstrap",
+        "publication_unit": "repository-bootstrap", "generator": "gen",
+        "lock_path": "adapters/repository-bootstrap/publication-lock.json",
+        "class_a_content_version": "0.1.0",
+        "identities": ["alpha"],
+        "class_b": [{
+            "identity": "beta", "source_class": "public-bucket",
+            "canonical": "pkg/skills/general/beta/SKILL.md",
+            "providers": ["codex"], "asymmetry_reason": "test fixture",
+            "precondition": "no enabled unit serves this identity",
+        }],
+    }), encoding="utf-8")
+    (package_root / "configs" / "publication-versions.json").write_text(json.dumps({
+        "default_unit_version": "0.1.0",
+        "units": {"repository-bootstrap": "0.1.0"},
+    }), encoding="utf-8")
+    return repo_root, package_root
+
+
+class ClassBCanonDriftCase(unittest.TestCase):
+    """P1.5 negative fixture: editing the class-B canonical WITHOUT bumping the unit's
+    version must yield different rendered bytes at the SAME `(name, version)` tuple — the
+    generator always reflects live source; a stale committed target is therefore visible as
+    drift under `registry --check`, never silently absorbed (D27 tuple/bytes discipline)."""
+
+    def test_canon_edit_without_version_bump_changes_rendered_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root, package_root = _build_isolated_bootstrap_fixture(Path(tmp))
+            first = render_repository_bootstrap_projections(
+                repo_root=repo_root, package_root=package_root)
+            beta_first = next(a for a in first if a.identity == "beta" and a.provider == "codex")
+            lock_first = next(a for a in first if a.provider == "lock")
+
+            donor = package_root / "skills" / "general" / "beta" / "SKILL.md"
+            donor.write_text(
+                "---\nname: beta\ndescription: Beta desc\n---\n\nBeta canon body v2 EDITED.\n",
+                encoding="utf-8")
+
+            second = render_repository_bootstrap_projections(
+                repo_root=repo_root, package_root=package_root)
+            beta_second = next(a for a in second if a.identity == "beta" and a.provider == "codex")
+            lock_second = next(a for a in second if a.provider == "lock")
+
+            # same declared unit tuple (version untouched)…
+            versions = json.loads((package_root / "configs" /
+                                   "publication-versions.json").read_text())
+            self.assertEqual(versions["units"]["repository-bootstrap"], "0.1.0")
+            # …but the rendered bytes AND lock hashes moved — never a same-tuple silent reuse.
+            self.assertNotEqual(beta_first.managed_bytes, beta_second.managed_bytes)
+            self.assertNotEqual(beta_first.rendered_hash, beta_second.rendered_hash)
+            self.assertNotEqual(lock_first.managed_bytes, lock_second.managed_bytes)
+
+
+class TestRepositoryBootstrapPublication(unittest.TestCase):
+    """P1.2 (D31/D38): the sole root-bootstrap producer — 26 thin projections + 1 lock."""
+
+    def setUp(self):
+        self.repo_root = Path(__file__).resolve().parents[3]
+        self.package_root = self.repo_root / "packages" / "skiller"
+        self.env = Env(self.package_root)
+        self.config = load_repository_bootstrap_config(self.package_root)
+
+    def test_config_names_exactly_thirteen_sorted_unique_identities(self):
+        identities = self.config["identities"]
+        self.assertEqual(len(identities), 13)
+        self.assertEqual(identities, sorted(identities))
+        self.assertEqual(len(set(identities)), 13)
+
+    def test_renders_exactly_26_class_a_projections_byte_identical_shape(self):
+        artifacts = build_repository_bootstrap_publication(self.env)
+        self.assertEqual(len(artifacts), 28)  # 26 class-A + 1 class-B + 1 lock
+        by_provider = {}
+        lock_artifact = None
+        for artifact in artifacts:
+            if artifact.provider == "lock":
+                lock_artifact = artifact
+                continue
+            if artifact.identity == "workflow-craft":
+                continue  # class-B (P1.5), asserted separately below
+            by_provider.setdefault(artifact.provider, set()).add(artifact.identity)
+        self.assertEqual(by_provider.keys(), {"claude", "codex"})
+        self.assertEqual(by_provider["claude"], set(self.config["identities"]))
+        self.assertEqual(by_provider["codex"], set(self.config["identities"]))
+        self.assertIsNotNone(lock_artifact)
+        self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
+        lock_data = json.loads(lock_artifact.managed_bytes)
+        self.assertEqual(len(lock_data["records"]), 27)  # 26 class-A + 1 class-B
+        for artifact in artifacts:
+            if artifact.provider == "lock" or artifact.identity == "workflow-craft":
+                continue
+            body = artifact.managed_bytes.decode("utf-8")
+            canonical = self.package_root / "skills" / "repository-bootstrap" / \
+                artifact.identity / "SKILL.md"
+            canonical_body = canonical.read_text(encoding="utf-8")
+            # The projection is thin: it must not carry the canonical file's own prose body
+            # (checked via a body-only marker line unlikely to appear in a pointer stub).
+            self.assertNotIn("## Provenance (root-bootstrap, P1.2)", body)
+            self.assertIn(f"canonical: packages/skiller/skills/repository-bootstrap/"
+                          f"{artifact.identity}/SKILL.md", body)
+            self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
+
+    def test_targets_are_exactly_the_declared_27_and_globally_unique(self):
+        artifacts = build_repository_bootstrap_publication(self.env)
+        targets = [item.target for item in artifacts if item.provider != "lock"]
+        self.assertEqual(len(targets), 27)  # 26 class-A + 1 class-B
+        self.assertEqual(len(set(targets)), 27)
+        expected = set()
+        for identity in self.config["identities"]:
+            expected.add(self.repo_root / ".claude" / "skills" / identity / "SKILL.md")
+            expected.add(self.repo_root / ".agents" / "skills" / identity / "SKILL.md")
+        expected.add(self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
+        self.assertEqual(set(targets), expected)
+
+    def test_second_render_is_byte_identical_noop(self):
+        first = build_repository_bootstrap_publication(self.env)
+        second = build_repository_bootstrap_publication(self.env)
+        self.assertEqual([(a.target, a.managed_bytes) for a in first],
+                         [(a.target, a.managed_bytes) for a in second])
+
+
+class TestClassBRootBootstrapProjection(unittest.TestCase):
+    """P1.5 (D43): the one class-B record (`workflow-craft`) — thin, Codex-only, provenance-
+    hashed, precondition-gated. Class-A byte/count guards are asserted separately above."""
+
+    def setUp(self):
+        self.repo_root = Path(__file__).resolve().parents[3]
+        self.package_root = self.repo_root / "packages" / "skiller"
+        self.env = Env(self.package_root)
+
+    def _class_b_artifacts(self):
+        artifacts = build_repository_bootstrap_publication(self.env)
+        return [item for item in artifacts if item.identity == "workflow-craft"]
+
+    def test_workflow_craft_is_codex_only_and_thin(self):
+        artifacts = self._class_b_artifacts()
+        providers = {item.provider for item in artifacts}
+        self.assertEqual(providers, {"codex"})  # declared asymmetry (D43) — no Claude target
+        [artifact] = artifacts
+        self.assertEqual(artifact.target,
+                         self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
+        body = artifact.managed_bytes.decode("utf-8")
+        canonical = self.package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
+        canonical_body = canonical.read_text(encoding="utf-8")
+        canonical_sha256 = hashlib.sha256(canonical.read_bytes()).hexdigest()
+        # thin: no copied canon body (a paragraph unique to the canonical procedure text)
+        self.assertNotIn("Match the 4 canonical templates first", body)
+        self.assertIn("Match the 4 canonical templates first", canonical_body)
+        self.assertIn(f"canonical_sha256: {canonical_sha256}", body)
+        self.assertIn("canonical: packages/skiller/skills/general/workflow-craft/SKILL.md", body)
+
+    def test_precondition_fails_closed_when_donor_bucket_is_enabled(self):
+        with self.assertRaises(ValueError) as ctx:
+            render_repository_bootstrap_projections(
+                repo_root=self.repo_root, package_root=self.package_root,
+                donor_enabled={"general": True})
+        self.assertIn("precondition", str(ctx.exception))
+        self.assertIn("workflow-craft", str(ctx.exception))
+
+    def test_lock_carries_source_and_rendered_hash_for_class_b(self):
+        artifacts = build_repository_bootstrap_publication(self.env)
+        lock_artifact = next(item for item in artifacts if item.provider == "lock")
+        lock_data = json.loads(lock_artifact.managed_bytes)
+        record = next(item for item in lock_data["records"] if item["identity"] == "workflow-craft")
+        self.assertEqual(record["source_class"], "public-bucket")
+        self.assertTrue(record["canonical_sha256"])
+        self.assertTrue(record["rendered_sha256"])
+
+
+class RootBootstrapCompletenessCase(unittest.TestCase):
+    """P1.5 (D40 invariant i): the declared root-bootstrap target set is exact, not a floor —
+    an undeclared root directory is a hard failure naming the path, never a silent pass."""
+
+    def test_real_repo_root_set_is_currently_clean(self):
+        repo_root = Path(__file__).resolve().parents[3]
+        package_root = repo_root / "packages" / "skiller"
+        env = Env(package_root)
+        artifacts = build_repository_bootstrap_publication(env)
+        self.assertEqual(assert_root_bootstrap_set_completeness(repo_root, artifacts), [])
+
+    def test_undeclared_directory_is_named_as_a_failure(self):
+        repo_root = Path(__file__).resolve().parents[3]
+        package_root = repo_root / "packages" / "skiller"
+        env = Env(package_root)
+        artifacts = build_repository_bootstrap_publication(env)
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_repo = Path(tmp)
+            (fake_repo / ".agents" / "skills" / "stray-adapter").mkdir(parents=True)
+            (fake_repo / ".claude" / "skills" / "stray-adapter").mkdir(parents=True)
+            failures = assert_root_bootstrap_set_completeness(fake_repo, artifacts)
+            self.assertTrue(any("stray-adapter" in item and "undeclared" in item
+                                for item in failures))
+            self.assertTrue(any("codex" in item for item in failures))
+            self.assertTrue(any("claude" in item for item in failures))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,57 @@
+{
+  "records": [
+    {
+      "contract_ref": {
+        "contract_id": "ar-p3-9",
+        "version_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "dispatch": {
+        "event": "dispatch",
+        "state": "EXECUTING"
+      },
+      "finding_refs": [
+        "F-smoke"
+      ],
+      "occurred_at": "2026-07-26T00:00:00Z",
+      "plan_ref": {
+        "command": "plan-run",
+        "item_id": "P3.9",
+        "plan_id": "2026.07.24-AGENT-RELIABILITY"
+      },
+      "privacy": {
+        "excluded": [
+          "raw_transcript",
+          "chain_of_thought",
+          "tool_payload",
+          "secret"
+        ]
+      },
+      "provenance": {
+        "provider_id": "claude-code",
+        "raw_ref": "p3.9/smoke",
+        "reader_id": "p3.9-smoke",
+        "reader_version": "1.0.0",
+        "sha256": "08102becad6027345002c9fde1bb6ade0f850e1ae1f227b7e6aac5f8b6dbb259"
+      },
+      "public_outcome": {
+        "check": "p3.9 smoke",
+        "evidence_ref": "p3.9/smoke",
+        "scope": "internal"
+      },
+      "quality": {
+        "completeness": 1.0,
+        "degraded": false,
+        "missing": []
+      },
+      "reasons": {},
+      "route": {
+        "effort": "high",
+        "model": "opus",
+        "model_class": "frontier"
+      },
+      "schema_version": "unified-agent-trace/v1",
+      "trace_id": "a13c3ee5fc302d2ffbd2a4800b7fc99bb34e87582db95e8a80e18bb620c04e11"
+    }
+  ],
+  "schema_version": "p3.9-sanitized-raw/v1"
+}

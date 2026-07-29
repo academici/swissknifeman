@@ -50,6 +50,9 @@ Template: snippets/rules-example.md. Not skills: SKILL.md already loads lazily (
 - `/compact` — after finishing a feature (summarizes history, keeps decisions).
 - `/clear` — on topic switch (full reset).
 - Large tasks → separate sessions: plan to file (`/plan` → `.claude/plans/<task>.md`) → `/clear` → execute loading only the plan (`/execute`). Intermediate planning attempts don't carry into execution context. Command templates: snippets/command-{prime,plan,execute}.md → copy into project `.claude/commands/`.
+- **Session boundary — by task seam, not percentage.** A finished unit of work, a phase switch research→impl→verification, a repeated `/compact` in a row — split the task. The model can't see its actual context percentage (`/usage`/`/context` are user commands, not agent-visible), so a rule like "suggest /clear above 70%" is unworkable by construction.
+- **What compaction loses.** Conclusions and "what we did" survive; rejected alternatives and "why we did NOT choose X" don't — without a written trace the agent risks rediscovering an already-rejected approach. Write decisions and rejection reasons to a file (plan/handoff), not only the chat history.
+- **`# Compact instructions` in CLAUDE.md** — a first-party section controlling what compaction preserves (e.g. "focus on test output and code changes"); the addressed `/compact <focus>` does the same one-off. Keep it additive and short: CLAUDE.md is resident every turn, don't bloat it with compaction prose.
 
 ## 4. Tool output
 
@@ -96,6 +99,7 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - [ ] CLAUDE.md ≤200 lines, each line passes "would it surprise an experienced dev"
 - [ ] Read-heavy recon delegated to subagents; files/logs read as slices (tail/rg/diff), not whole
 - [ ] Topic/local rules moved to `.claude/rules/` with `paths:`
+- [ ] Session boundary by task seam (not percentage); decisions/rejected alternatives written to a file, not just chat
 - [ ] deny noise preset applied; `vendor/**` not blocked in Boost projects
 - [ ] prime/plan/execute commands copied into `.claude/commands/`
 - [ ] MCP servers checked within last 30 days
@@ -114,4 +118,4 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 - Skill `ecosystem-mcp` (maind) — project memory/graph MCP tools: when to call graph/Serena instead of file search
 
-<!-- ru-source-sha256: e671b5d90b8e2bdcfe31c70c8de933915f8c8adbf40cfafb815e367a65e4223d -->
+<!-- ru-source-sha256: 2b1c1c5af1b7a4677b20fbae7e74227abb32c07c05847f9ccf0fafe8ccfbdb6e -->

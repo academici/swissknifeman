@@ -101,7 +101,7 @@ def update_one(env, target, dry_run=False):
         opts["dry_run"] = dry_run
         opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
         print(f"--- update (marketplace): {target} ---")
-        # P7.5: бакет слит (alias) — старое имя ещё включено у проекта → одна строка,
+        # 2026.07.02-SKM-MASTER-002 P7.5: бакет слит (alias) — старое имя ещё включено у проекта → одна строка,
         # без нагнетания (сам update ничего не переключает, только подсказывает).
         if mk_file:
             for hint in alias_migration_hints(

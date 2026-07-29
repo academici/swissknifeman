@@ -98,7 +98,36 @@ def load_json_db(path, default, *, max_version=None):
     return db
 
 
-def atomic_write_text(path, text, *, encoding="utf-8", mode=None):
+def assert_safe_replace_target(path):
+    """Отказывает, если существующая `path` — НЕ безопасная цель для `os.replace`:
+    symlink, не-регулярный файл (сокет/FIFO/устройство) или жёсткая ссылка (`st_nlink != 1`).
+    Несуществующая цель — норма (не отказывает). Один `lstat`, обход/резолв цепочки
+    симлинков и рекурсивные проверки родителей НЕ производятся (containment —
+    задача `core.paths`).
+
+    Без этой проверки `os.replace` тихо заменял бы саму symlink-цель, отвязывая её от
+    реального файла (P8.7, перенос raytsystem: дубль ручных проверок в
+    `packages/maind/lib/maind/provider_deploy.py` — `plan_project_carrier`,
+    `_rollback_project_carrier`, `_d108_rollback_operation_error`,
+    `plan_exact_artifact_adoption`; перевод их на этот хелпер — roadmap-кандидат,
+    не выполняется этим item'ом)."""
+    path = Path(path)
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError:
+        return
+    if os.path.islink(path):
+        raise OSError(f"{path}: небезопасная цель для атомарной замены — символьная ссылка")
+    if not os.path.isfile(path):
+        raise OSError(f"{path}: небезопасная цель для атомарной замены — не регулярный файл")
+    if st.st_nlink != 1:
+        raise OSError(
+            f"{path}: небезопасная цель для атомарной замены — st_nlink={st.st_nlink} "
+            f"(жёсткая ссылка)"
+        )
+
+
+def atomic_write_text(path, text, *, encoding="utf-8", mode=None, check_target=True):
     """Пишет текст атомарно: `<name>.tmp` рядом → `os.replace`. Создаёт
     родительские каталоги. Краш в процессе не оставляет битого целевого файла; при
     ошибке записи/замены подчищает и осиротевший `.tmp` (иначе он копится на диске
@@ -106,7 +135,11 @@ def atomic_write_text(path, text, *, encoding="utf-8", mode=None):
 
     mode (напр. 0o600) — права доступа целевого файла; ставятся на `.tmp` ДО замены,
     чтобы итоговый файл НИКОГДА не существовал с дефолтными (umask) правами. Нужно для
-    файлов с секретами (config узла): иначе короткое окно world-readable."""
+    файлов с секретами (config узла): иначе короткое окно world-readable.
+
+    check_target=False отключает `assert_safe_replace_target` (см. docstring) для
+    ОДНОГО точечного вызова — только если пакет монорепо ЛЕГАЛЬНО пишет через
+    symlink-цель (законный выход, не глобальное отключение)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
@@ -114,18 +147,20 @@ def atomic_write_text(path, text, *, encoding="utf-8", mode=None):
         tmp.write_text(text, encoding=encoding)
         if mode is not None:
             os.chmod(tmp, mode)
+        if check_target:
+            assert_safe_replace_target(path)
         os.replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
 
 
-def atomic_write_json(path, data, *, version=None, indent=2, mode=None):
+def atomic_write_json(path, data, *, version=None, indent=2, mode=None, check_target=True):
     """Пишет JSON атомарно c финальным '\\n'. Если version задан и data — dict,
-    проставляет data['version']=version первым ключом. mode — см. atomic_write_text
-    (напр. 0o600 для конфигов с секретами)."""
+    проставляет data['version']=version первым ключом. mode/check_target — см.
+    atomic_write_text (напр. 0o600 для конфигов с секретами)."""
     if version is not None and isinstance(data, dict):
         rest = {k: v for k, v in data.items() if k != "version"}
         data = {"version": version, **rest}
     atomic_write_text(path, json.dumps(data, indent=indent, ensure_ascii=False) + "\n",
-                      mode=mode)
+                      mode=mode, check_target=check_target)

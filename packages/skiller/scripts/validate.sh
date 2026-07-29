@@ -304,6 +304,71 @@ for _bn_key in sorted(DESC_BURNDOWN):
         warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (description "
                         f"уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери строку")
 
+# --- 1c. CORE-девятка — обязательные секции тела (P8.8, рэтчет) ------------
+# Сплошной гейт по всем скиллам неисполним (замер: активационную секцию несут
+# 38/160). Сужено до резидентных CORE_SKILLS (core-policy.json::skills, 9 шт.).
+# (б) секция ссылок — ERROR без исключений (долг нулевой, 9/9 проходят).
+# (а) активационная секция — ERROR с рэтчетом skill-sections-burndown.txt (та
+# же механика, что desc-burndown.txt выше): запись легальна, пока скилл
+# существует И секции у него всё ещё нет.
+CORE_ACTIVATION_RE = re.compile(r"(?i)^\s*\d*\.?\s*(when\b|activate\b)")
+CORE_LINKS_RE = re.compile(r"(?i)^\s*\d*\.?\s*(links|references|related skills|related)\s*$")
+HEADING2_RE = re.compile(r"^##[^#](.*)$", re.MULTILINE)
+
+def _load_sections_burndown(repo_root_pkg):
+    """scripts/skill-sections-burndown.txt → set('bucket/name'); тот же формат,
+    что desc-burndown.txt."""
+    p = repo_root_pkg / "scripts" / "skill-sections-burndown.txt"
+    if not p.is_file():
+        return set()
+    out = set()
+    for ln in p.read_text(encoding="utf-8").splitlines():
+        ln = ln.strip()
+        if not ln or ln.startswith("#"):
+            continue
+        out.add(ln)
+    return out
+
+SECTIONS_BURNDOWN = _load_sections_burndown(root)
+SECTIONS_BURNDOWN_SEEN = set()
+
+_core_policy_skills = []
+if _core_policy_path.is_file():
+    try:
+        _csp = json.loads(_core_policy_path.read_text(encoding="utf-8"))
+        if isinstance(_csp, dict):
+            _core_policy_skills = _csp.get("skills", []) or []
+    except json.JSONDecodeError:
+        pass  # уже ERROR от core-policy.json-проверки выше
+
+for _core_key in _core_policy_skills:
+    _core_skill_md = root / "skills" / _core_key / "SKILL.md"
+    if not _core_skill_md.is_file():
+        continue  # уже ERROR от core-policy.json-проверки выше
+    _core_headings = [m.group(1).strip()
+                      for m in HEADING2_RE.finditer(_core_skill_md.read_text(encoding="utf-8"))]
+    has_activation = any(CORE_ACTIVATION_RE.match(h) for h in _core_headings)
+    has_links = any(CORE_LINKS_RE.match(h) for h in _core_headings)
+    if not has_links:
+        errors.append(f"skills/{_core_key}/SKILL.md: нет секции ссылок "
+                      f"(##Links/References/Related skills/Related) — CORE-скилл")
+    if not has_activation:
+        if _core_key in SECTIONS_BURNDOWN:
+            SECTIONS_BURNDOWN_SEEN.add(_core_key)
+            warnings.append(f"skills/{_core_key}/SKILL.md: нет активационной секции и скилл "
+                            f"в scripts/skill-sections-burndown.txt (унаследованный долг)")
+        else:
+            errors.append(f"skills/{_core_key}/SKILL.md: нет активационной секции и скилла "
+                          f"нет в skill-sections-burndown.txt")
+
+for _sb_key in sorted(SECTIONS_BURNDOWN):
+    if _sb_key not in _core_policy_skills:
+        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — протухшая "
+                        f"запись (скилла нет в CORE-девятке core-policy.json), убери строку")
+    elif _sb_key not in SECTIONS_BURNDOWN_SEEN:
+        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — протухшая "
+                        f"запись (скилл уже несёт активационную секцию), убери строку")
+
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         sorted((root / "generate-skill").glob("**/upstream.json")):
@@ -603,6 +668,105 @@ for tr_file in sorted(root.glob("skills/*/*/evals/triggers.json")):
         if not isinstance(v, list) or not v:
             errors.append(f"{rel}: '{key}' должен быть непустым массивом")
 
+# --- 5c. Pressure-кейсы обязательны при evals.json + покрытие triggers[] (P8.8) --
+# Долг нулевой (замер: 4/4 evals.json уже несут pressure.json) ⇒ ERROR без рэтчета.
+# triggers[]-покрытие — WARNING (поле новое, у существующих сценариев его пока нет).
+for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
+    sd = skill_md.parent
+    if (sd / "upstream.json").exists():
+        continue
+    ev_p8 = sd / "evals" / "evals.json"
+    if not ev_p8.exists():
+        continue
+    rel_sd = sd.relative_to(root)
+    pr_p8 = sd / "evals" / "pressure.json"
+    if not pr_p8.exists():
+        errors.append(f"{rel_sd}: есть evals.json, нет pressure.json")
+        continue
+    try:
+        pr_p8_data = json.loads(pr_p8.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        continue  # уже ERROR от 5b выше
+    p8_scenarios = pr_p8_data.get("scenarios") if isinstance(pr_p8_data, dict) else None
+    if not isinstance(p8_scenarios, list) or not p8_scenarios:
+        errors.append(f"{rel_sd}: есть evals.json, pressure.json без сценариев")
+        continue
+    tr_p8 = sd / "evals" / "triggers.json"
+    if not tr_p8.exists():
+        continue
+    try:
+        tr_p8_data = json.loads(tr_p8.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        continue  # уже ERROR от 5b выше
+    should_trigger = tr_p8_data.get("should_trigger") if isinstance(tr_p8_data, dict) else None
+    if not isinstance(should_trigger, list):
+        continue
+    covered = set()
+    for _sc in p8_scenarios:
+        if isinstance(_sc, dict):
+            covered.update(t for t in (_sc.get("triggers") or []) if isinstance(t, str))
+    for q in should_trigger:
+        if q not in covered:
+            warnings.append(f"{rel_sd}: should_trigger {q!r} не покрыт ни одним "
+                            f"pressure-сценарием (поле triggers[])")
+
+# --- 5d. Тонкие проекции не дублируют канон (P8.8, D50/D89) -----------------
+# Пары «проекция↔канон» из publication-lock.json (repository-bootstrap), при
+# его отсутствии — configs/repository-bootstrap-skills.json. Проекции есть,
+# источника нет ⇒ ERROR (противоречивое состояние); ни проекций, ни источника
+# ⇒ проверка молча пропускается (standalone-раскладка пакета).
+PROJECTION_MAX_BODY_LINES = 15
+_proj_lock = root / "adapters" / "repository-bootstrap" / "publication-lock.json"
+_proj_lock_fallback = root / "configs" / "repository-bootstrap-skills.json"
+_proj_glob = list(repo_root.glob(".claude/skills/*/SKILL.md")) + \
+             list(repo_root.glob(".agents/skills/*/SKILL.md"))
+if _proj_glob:
+    _proj_source = _proj_lock if _proj_lock.is_file() else (
+        _proj_lock_fallback if _proj_lock_fallback.is_file() else None)
+    if _proj_source is None:
+        errors.append(f"проекции ({len(_proj_glob)}) есть, но нет объявленного источника "
+                      f"пар (adapters/repository-bootstrap/publication-lock.json или "
+                      f"configs/repository-bootstrap-skills.json)")
+    else:
+        try:
+            _proj_data = json.loads(_proj_source.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as _pe:
+            errors.append(f"{_proj_source.relative_to(repo_root)}: invalid JSON: {_pe}")
+            _proj_data = {}
+        _proj_records = _proj_data.get("records", []) if isinstance(_proj_data, dict) else []
+        for _pr in _proj_records:
+            _p_target = _pr.get("target")
+            _p_canon = _pr.get("canonical_en")
+            if not _p_target or not _p_canon:
+                continue
+            _p_path = repo_root / _p_target
+            if not _p_path.is_file():
+                continue  # проекция не сгенерена — вне scope P8.8 (не гейт генератора)
+            _p_text = _p_path.read_text(encoding="utf-8")
+            _p_lines = _p_text.splitlines()
+            _p_start = 0
+            if _p_lines and _p_lines[0].strip() == "---":
+                for _i in range(1, len(_p_lines)):
+                    if _p_lines[_i].strip() == "---":
+                        _p_start = _i + 1
+                        break
+            _p_body = [ln for ln in _p_lines[_p_start:] if ln.strip()]
+            if len(_p_body) > PROJECTION_MAX_BODY_LINES:
+                errors.append(f"{_p_target}: тело {len(_p_body)} строк "
+                              f"(> {PROJECTION_MAX_BODY_LINES}) — проекция дублирует "
+                              f"канон {_p_canon}")
+            if _p_canon not in _p_text:
+                errors.append(f"{_p_target}: нет ссылки на канон {_p_canon}")
+            _p_canon_path = repo_root / _p_canon
+            if _p_canon_path.is_file():
+                _p_canon_headings = {m.group(1).strip() for m in
+                                     HEADING2_RE.finditer(_p_canon_path.read_text(encoding="utf-8"))}
+                _p_proj_headings = {m.group(1).strip() for m in HEADING2_RE.finditer(_p_text)}
+                _p_dup = _p_canon_headings & _p_proj_headings
+                if _p_dup:
+                    errors.append(f"{_p_target}: проекция воспроизводит заголовки канона "
+                                  f"{sorted(_p_dup)} — тело <проекция> дублирует канон {_p_canon}")
+
 # --- 6. buckets.json --------------------------------------------------------
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
@@ -717,7 +881,13 @@ def expected_skills_dirs(plugin_root):
 
 
 STALE_HINT = "run 'skiller registry' (or ./sync.sh --update-registry)"
-plugin_roots = {b: root / "skills" / b for b in bucket_dirs}
+# P1.2 (D31): a private/source-only bucket (repository-bootstrap) never gets an ordinary
+# `.claude-plugin/plugin.json` — `publication.py`'s catalog builder excludes it from unit
+# construction outright, so validating one here would demand an artifact the generator never
+# produces. Same `private_source_only` flag `skillset.py`/`publication.py` already read.
+plugin_roots = {b: root / "skills" / b for b in bucket_dirs
+               if not (isinstance(bucket_meta.get(b), dict)
+                       and bucket_meta[b].get("private_source_only"))}
 plugin_roots["generate-skill"] = root / "generate-skill"
 # Management plugin (командное лицо CLI, без скиллов) — валидируем как обычный плагин,
 # если каталог есть; registry.py добавляет его в marketplace.json синхронно.

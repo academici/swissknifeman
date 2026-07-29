@@ -39,13 +39,81 @@ effort: low
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
 
+**Pre-final — Task Contract (P2.7/P2.11, ОБЯЗАТЕЛЬНЫЙ шаг).** Шаг 4 режима `Pn.m` ниже собирает и
+проверяет Task Contract v1 через `packages/task/lib/task/task_contract.py` (`task-contract-v1.md`
+§Pre-mutation predicate + §Pre-final predicate) ДО вердикта — компилятор владеет hash/precedence/
+portability/evidence логикой, эта команда его ЗОВЁТ безусловно, а не пересказывает. **Гейт
+БИНАРЕН:** зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`; `n/a` — НЕ зелёное
+(D76: «сессия заблокирована, объявлять сдачу нечего»). Маршрут `actual_route` на этой границе —
+маршрут ИСПОЛНИТЕЛЯ item'а (D75), не пин этой команды. `pre_final` утверждает свойство ФОРМЫ
+спеки item'а, а не то, что item исполнен хорошо (D77) — вердикт material/process остаётся за
+status-rule ниже. Точная команда, лестница маршрута и таблица код→действие — в самом шаге 4.
+
 ## Режим `Pn.m` — реконсиляция item'а
 
 1. Прочитай `plans/<PLAN-ID>/plan.md` (Status Board) и item Pn.m в `phases/Pn.md`.
 2. Сверь заявленное с git-фактами: `git log --oneline -- <Files item'а>` ·
    `git diff <до>..<после> -- <Files>` — правки реально есть и соответствуют Scope Included?
 3. Прогони команды из **Validation** item'а, зафиксируй результат.
-4. **Вердикт по фактам — по предикату material/process** (6 триггеров, не «на глаз»; §6
+4. **Pre-final — Task Contract, ОБЯЗАТЕЛЬНЫЙ шаг, не условный.** ДО вердикта — собери и
+   проверь контракт тем же Python API, что `plan-exec.md`'s pre-mutation/pre-final (CLI-форма
+   `check` не годится по той же причине — `route.actual` неразрешён по конструкции, флага на
+   живой route у `build` нет).
+
+   **Маршрут `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а, лестница D75, fail-closed:**
+   1. Строка routing-adherence в **Completion Notes** закрываемого item'а (`phases/Pn.md`) —
+      носитель КЛАССА и effort'а (`plan-protocol` §9 уже обязывает исполнителя `plan-run`
+      печатать фактическую пару «класс, effort» в отчёте и Update Log). Основной источник.
+   2. Терминальная запись `journal.jsonl` этого item'а — `actor` = `<model>/<effort>` (D72:
+      модель, не класс). Перекрёстная сверка: effort обязан совпасть с п.1; модель обязана
+      отображаться в заявленный класс по committed-карте
+      `command-routing.json::mappings.*.class_selectors`. **Расхождение п.1↔п.2 → СТОП + D#**,
+      а не выбор в пользу удобного.
+   3. **Ни того, ни другого** (item не исполнялся; легаси-запись без маршрута) → **СТОП** с
+      текстом «маршрут исполнителя <Pn.m> неразрешим: нет routing-adherence в Completion Notes
+      и нет терминальной записи journal.jsonl» и названным ПРОХОДОМ (записать фактический
+      маршрут по §9). Подстановка собственного пина команды, `unknown` и «продолжай как
+      раньше» ЗАПРЕЩЕНЫ.
+
+   Частный случай `plan-run`: сессия исполняет и закрывает item в ОДНОЙ сессии — «фактический
+   маршрут сессии» И ЕСТЬ маршрут исполнителя, лестница схлопывается в п.1 тривиально.
+
+   ```
+   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   import sys
+   from task import task_contract, route_evidence
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "<ФАКТИЧЕСКИЙ model_class с шага лестницы D75 выше>", "<ФАКТИЧЕСКИЙ effort>",
+       source="self-attested", model="<ФАКТИЧЕСКАЯ модель>"))
+   result = task_contract.evaluate(contract)
+   print(result)
+   sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
+   PY
+   ```
+
+   **Гейт бинарен.** Зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`.
+   `n/a`, любой `block:*` и любое иное значение — красное; формулировки «условно зелёное»,
+   «предупреждение», «продолжай, если …» и синонимы ЗАПРЕЩЕНЫ (`plan-protocol` §6 прямо
+   запрещает «мягкий пункт Validation»). Таблица код→действие:
+
+   | `pre_mutation` | `pre_final` | Действие |
+   |:--|:--|:--|
+   | `allow` | `allow` | зелёное — item честно резолвится в публично проверяемый факт; вердикт по status-rule ниже |
+   | `block:*` | `n/a` | **`n/a` — НЕ зелёное** (`task-contract-v1.md:164-165`: «evaluated only when pre-mutation allowed; otherwise it reports `n/a` — a blocked session has nothing to declare done»): item НЕ закрывается; разбери код `pre_mutation` по код→действие таблице `plan-exec.md`'s Pre-mutation (реальные коды — эскалация п.5 analog / структурные — D#-запись, реопен-кандидат P2.6) |
+   | `allow` | `block:ACCEPTANCE_NOT_PUBLIC` | реальный — заводит material-триггер «Validation осталась красной / acceptance-критерий не выполнен» ниже: `🟠 Done with deviations` с Known Deviations, НЕ тихий `🟢` |
+   | `allow` | `block:EVIDENCE_REF_UNKNOWN` / `block:EVIDENCE_PROOF_CLASS_INSUFFICIENT` | структурный (`build()` этого не производит при корректной работе) — СТОП, D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
+
+   **Что утверждает `pre_final` (D77, названо, не подразумевается).** Предикат проверяет
+   свойство ФОРМЫ спеки item'а — есть ли хотя бы один публично проверяемый acceptance-пункт на
+   детерминированном классе доказательства — и НЕ утверждает, что item исполнен ХОРОШО: он
+   зелен и на не стартовавшем `⬜`-item'е. Вердикт material/process остаётся за status-rule
+   ниже, `pre_final: allow` его не заменяет.
+
+   Модуль `task.task_contract`/`task.route_evidence` недоступен (standalone-раскладка вне
+   монорепо) → СТОП с явным текстом «шаг недоступен: `task.task_contract` не импортируется» —
+   fail-closed.
+
+   **Вердикт по фактам — по предикату material/process** (6 триггеров, не «на глаз»; §6
    канона, дословно как `plan-exec.md`). Непустые Known Deviations САМИ ПО СЕБЕ статус item'а
    НЕ меняют. `🟠 Done with deviations` ОБЯЗАТЕЛЕН при **material**-отклонении (любое из):
    Scope Included выполнен не полностью или иначе, чем предписано · Validation осталась
@@ -58,6 +126,11 @@ effort: low
    порядок правок, стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    **Нет подтверждения (нет коммитов/диффа, Validation красная) — НЕ 🟢:** оставь/верни
    `🟡 In progress` или `🔴 Blocked`, причина — в Completion Notes item'а (`phases/Pn.md`).
+   **`🔴 Blocked`/`⛔ Skipped by decision` при `Closure Protocol | v1` (opt-in, D44/P8.3):**
+   допиши в **Pending Work** строку `Возобновление: <точная команда>` (🔴 — команда
+   продолжения или `— (внешний блокер: <что ждём>)`, если локального шага нет в принципе;
+   ⛔ — РОВНО `Возобновление: —` И ссылка `D<номер>`, предъявляющая решение о пропуске) —
+   иначе `plan_lint.py` даёт ERROR.
    Файлы item'а НЕ закоммичены (`git status` modified/untracked) → item ещё не `🟢`: дождись
    коммита либо допиши в Completion Notes «не закоммичено, коммит — за оркестратором волны»
    (иначе cold-start по git-истории не увидит работу).
@@ -66,7 +139,18 @@ effort: low
    <sha>», не оставляй пугать несуществующим долгом.
 6. Синхронизируй `## Phase Status` (в `phases/Pn.md`) и `## 4. Phase Index & Status Board`
    (в `plan.md`); перезапиши `handoff.md`, если статус изменился (заголовок `after Pn.m`,
-   форма `Next` — из enum выше).
+   форма `Next` — из enum выше). **Печать кодов границ (D88/P10.1):** если вердикт шага 4
+   закрывает item `🟢`/`🟠`, а Completion Notes ещё не несёт строку `write-site:
+   pre_mutation: <код> · pre_final: <код>` — допиши её ОДНОЙ строкой из
+   `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
+   пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
+   **Цитаты-доказательства (P11.6), на итоговом дереве (после перезаписи handoff'а выше):**
+   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 plans/verify-citations.py
+   plans/<PLAN-ID> --strict`; счёт публикуется С АТРИБУЦИЕЙ: «цитаты: N находок — новых от
+   диффа item'а: K» (baseline перечня `verify-citations-known-exceptions.json` чист — P11.5 —
+   поэтому находка на итоговом дереве атрибутируется диффу ЭТОГО item'а). K > 0 — чинится
+   ДО коммита реконсиляции; N − K > 0 (остаточные находки вне Scope item'а) — строка в
+   Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
@@ -103,6 +187,19 @@ effort: low
    класс B1). Блок несёт первой строкой маркер `> УСТАРЕЛ — фаза реопенена <D#>` (фаза
    реопенена, §3 скилла) — **сними маркер, перезаписав блок ЦЕЛИКОМ** актуальным
    сдачным текстом (снимает ТОЛЬКО эта команда); маркера нет — заполни блок как обычно.
+4a. **Отчёт закрытия фазы `closure/<Pn>.json`** (P8.1/D42) — ТОЛЬКО если `## 0. Meta` плана
+   несёт `Closure Protocol | v1` (нет поля — шаг пропускается молча, это opt-in). Собери файл
+   **МЕХАНИЧЕСКИ из полей items фазы**, пересказ запрещён: `items[]` — по строке на item
+   (`id`/`status` из `## Phase Status` БЕЗ расхождений, `evidence_class` + `evidence`);
+   `gates[]` — гейты сдачи; `metrics[]` — числа сдачи (`value` строкой); `phase_status` —
+   байт-в-байт строка фазы из Status Board; `git` — `head_sha`/`branch`/`dirty` на момент
+   закрытия; `inputs_sha256` — sha256 `plan.md` и `phases/<Pn>.md` (`sha256sum`).
+   **Класс свидетельства — enum РОВНО из трёх** (`real` — прогон на закоммиченном дереве,
+   evidence несёт команду и число · `synthetic` — фикстура/один кейс, evidence это НАЗЫВАЕТ ·
+   `baseline_pending` — числа нет, названа ПРИЧИНА). «Нет числа» выражается ЗАПИСЬЮ
+   `baseline_pending`, а НЕ отсутствием ключа/строки; `real` с пустым evidence = ERROR линтера.
+   Схема и правила заполнения — `snippets/closure-template.md` скилла `plan-protocol` (§8);
+   файл входит в коммит закрытия (шаг 9, `git add plans/<PLAN-ID>`).
 5. Перезапиши `plans/<PLAN-ID>/handoff.md` **целиком**: заголовок
    `# HANDOFF — <ISO-дата> — after Pn` (закрывается ФАЗА, не item — D30); Next — launch-
    block с формой из enum выше (первый item следующей фазы или закрытие плана) + сверка
@@ -126,6 +223,11 @@ effort: low
    АТРИБУЦИЕЙ: `N ERROR / M WARN — новых от закрытия: K` (`--baseline HEAD`). K > 0 —
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
+   Следом (та же граница — после перезаписи handoff, на итоговом дереве): `python3
+   plans/verify-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
+   N находок — новых от закрытия: K» (baseline перечня `verify-citations-known-exceptions.json`
+   чист — P11.5). K > 0 — чинится ДО коммита закрытия фазы; N − K > 0 (остаточные находки вне
+   этой фазы) — строка в Open risks `handoff.md`.
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
    --command plan-close --actor sonnet/low --result <closed-green — все items 🟢 |

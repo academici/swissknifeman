@@ -18,4 +18,4 @@ state-machine `recompute`; **P4** — [`suggest`](./guide/suggest) → черн�
 
 - Числовые гейты `suggest` (`--min-tier`) станут дешёвыми, когда P3 начнёт штамповать
   агрегат-confidence в индекс паттерна (сейчас confidence — per-lesson).
-- Дизайн P4 целиком — [`roadmap/analyst-suggest-draft-skill.md`](/roadmap) в корне репо.
+- Дизайн P4 целиком — спека `roadmap/analyst-suggest-draft-skill.md` (закрыта реализацией и удалена 2026-07-25; текст — в git-истории репо).

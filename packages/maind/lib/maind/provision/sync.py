@@ -681,7 +681,7 @@ def _instruction_semantics(operation):
 
 
 def generate_instruction_conformance(env, output_path):
-    """Generate the P6.2 temporary-root matrix through public mAInd APIs only."""
+    """Generate the 2026.07.19-DUAL-PROVIDER P6.2 temporary-root matrix through public mAInd APIs only."""
     from ..common import Env, atomic_write_json, atomic_write_text
     from dataclasses import replace
     from ..doctor import provider_trust_report

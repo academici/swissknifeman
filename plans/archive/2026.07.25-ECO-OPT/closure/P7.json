@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P7",
+  "closed_at": "2026-07-29",
+  "closed_by": {
+    "command": "plan-close",
+    "actor": "sonnet/low"
+  },
+  "phase_status": "🟠 Done with deviations",
+  "git": {
+    "head_sha": "e0ffe762fb143e282070f6ba156f0a4307beacf8",
+    "branch": "codex/provider-project-sync",
+    "dirty": true
+  },
+  "inputs_sha256": {
+    "plan.md": "b85dcecf8808a0a49045bf5fbf64617aa8b54558d3031f106d17b92f0b30e2f3",
+    "phases/P7.md": "b3eab29a410e30313024a967adbc8ece50e78c3e444ef57ac06e5c03ed4b270f"
+  },
+  "items": [
+    {
+      "id": "P7.1",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "synthetic",
+      "evidence": "Dogfood-тест на одном заведённом кандидате (P6.4), не 1–2 отобранных из готовой очереди; Codex (gpt-5.6-terra/medium) провёл item от cold start до закрытия по §8 — вердикт «дошёл с 4 вмешательствами», 7 поломок с адресами (findings/P7.1-switch-test.md §6, artifacts/P7.1/breakage-log.md)"
+    },
+    {
+      "id": "P7.2",
+      "status": "🟢 Done",
+      "evidence_class": "real",
+      "evidence": "router-таблица (Operation|Canonical procedure, приём A2) + untrusted-import инвариант (F1) в секции ## Operation router корневого AGENTS.md; 4 поломки P7.1 (№1,2,5,6) починены по адресу; owner-вопрос per-package AGENTS.md снят D62(3)-b; вердикт в docs/reference.md + roadmap/codex-subagent-offload.md закрыт; item-коммит cccec4eb"
+    },
+    {
+      "id": "P7.3",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "плагин как явно маршрутизируемая возможность после ре-дизайна D142 (снял эскалацию D141): двухинструментный гейт по классу инжекта, правило отката привязано к дельте; артефакты budget-first-turn-{before,after,after-claude-md}.json; вердикт в docs/rejected-optimizations.md + roadmap/budget-first-turn-plugin-visibility.md. Переклассифицирован 2026-07-29 (D146, аудит RED F4): проба маршрутизированного вызова сделана прямым codex-companion.mjs task, обёртка /codex:rescue как таковая НЕ проверялась — Scope выполнен иначе ⇒ отклонение material, статус 🟢 → 🟠"
+    },
+    {
+      "id": "P7.4",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, аудит RED F2/F12): преflight-буллет AGENTS.md перестал утверждать, что `codex doctor` не принимает `-c` (принимает, отвергает только `-m` — подтверждено живым `codex doctor --help`/`codex doctor -m x --json`), launch-буллет разделил TUI-путь (`-a never`) и headless-путь (`-c 'approval_policy=\"never\"'`); синхрон research/21 §3.4; item-коммит 8b3221ea. Known Deviation: closure/P7.json items[] не сходился со статусом фазы до этого закрытия (material, вне Scope item'а)"
+    },
+    {
+      "id": "P7.5",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, находки F8/F9/F10): цитата команды find получила `-not -path \"*/node_modules/*\"`, CHANGELOG.md «Три из четырёх» → «Четыре» (+4-й пункт), «пятикратный» → «≈4,5×» (32768/7252) в CHANGELOG.md/phases/P7.md/research/21 §5-6; item-коммит 1338b655. Known Deviations: Validation-ассершен «ровно 2 попадания» дал фактически 14 (designated носители все исправлены, остальные попадания вне Scope/self-referential) — material → 🟠; тот же остаточный closure/P7.json items[]-К, что у P7.4"
+    },
+    {
+      "id": "P7.6",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, находки F1/F7/F13): агрегат ## Phase Handoff пересобран ГРЕПОМ полей Known Deviations шести items (не по памяти), строка Session: Claude Opus 5/high вписана в Completion Notes P7.1 с оговоркой перебора тира, протухший Pending Work P7.1 про закрытую P6 снят. Known Deviations: собственные Validation-ассершены (2)-(5) не сошлись числом из-за self-reference (живой текст верен по существу); тот же остаточный closure/P7.json items[]-К (снимается этим закрытием)"
+    }
+  ],
+  "gates": [
+    {
+      "id": "plan-lint:baseline",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "python3 packages/task/scripts/plan-lint.py plans/2026.07.25-ECO-OPT --baseline HEAD — 0 ERROR новых от рабочего дерева (3 ERROR унаследованных — closure/P7.json items[]-соответствие, снимается этой перезаписью файла; 28 WARN — ровно baseline)"
+    },
+    {
+      "id": "verify-citations:strict",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "python3 plans/verify-citations.py plans/2026.07.25-ECO-OPT --strict — 16 находок, все в phases/P11.md (унаследованный Open risk (62)), новых от закрытия фазы P7 — 0"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "items_green_of_total",
+      "value": "1/6",
+      "label": "real"
+    }
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items этой реконсиляции (plan-close низкоэффортный, механическая сверка git-фактами, не повторный полный прогон validate.sh фазы)",
+    "P7.1 evidence_class=synthetic: тест на одном кандидате, вывод об устойчивости поведения на других item'ах не делается (граница названа в findings/P7.1-switch-test.md §7)",
+    "P7.3: slash-обёртка /codex:rescue как поверхность НЕ проверена — верифицирован только путь кода codex-companion.mjs task (D146, отклонение material); зелёный статус этой поверхности не подтверждает",
+    "P7.5/P7.6: собственные Validation grep-ассершены не сошлись буквальным числом из-за self-reference (искомые паттерны встречаются в ТЗ-прозе items и в этом же research/29 как описание правки, не как утверждение о реальности) — живой целевой текст исправлен полностью, расхождение только в счёте self-referential grep",
+    "предыдущее закрытие фазы 2026-07-29 (head_sha 54485004) было отменено вердиктом аудита RED (D144) до ремедиации P7.4–P7.6; это закрытие — финальное, после доведения ремедиации до конца"
+  ],
+  "external_side_effects": []
+}

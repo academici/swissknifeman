@@ -28,12 +28,13 @@ from task import journal  # noqa: E402
 from task import route_evidence as re  # noqa: E402
 from task import task_contract  # noqa: E402
 from task.command_catalog import build_command_catalog  # noqa: E402
+from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMAND_ROOT = REPO_ROOT / "packages/task/commands"
 ROUTING_PATH = REPO_ROOT / "packages/task/configs/command-routing.json"
-EXAMPLES_PATH = (REPO_ROOT / "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.2/"
-                 "task-contract-examples.json")
+EXAMPLES_PATH = (resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")
+                  / "artifacts/P0.2/task-contract-examples.json")
 
 
 def _load_base_contract():

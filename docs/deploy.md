@@ -79,7 +79,7 @@ scripts/bootstrap-machine.sh --projects ~/.swissknifeman/machine-manifest.json
 Начиная с `2026.07.25-ECO-OPT P4`, память (`agent-memory`) может жить **на одной машине-хосте**,
 а остальные постоянные машины владельца — сетевые **клиенты** (вариант 1
 [`roadmap/cross-machine-memory.md`](https://github.com/academici/swissknifeman/blob/main/roadmap/cross-machine-memory.md),
-решения — `plans/2026.07.25-ECO-OPT/root/adr/ADR-0001-cross-machine-memory.md`). Роль узла — поле
+решения — `packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`). Роль узла — поле
 `memory.role` в локальном (гитигнорённом) `config.json`: `standalone` (дефолт, back-compat,
 свой демон) · `host` (держит демон, слушает LAN-адрес) · `client` (демона НЕ поднимает, ходит к
 хосту по `memory.url`).

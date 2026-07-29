@@ -422,7 +422,7 @@ PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-au
 Продавать обновление ниже как выигрыш бюджета листинга **запрещено** (та же
 рамка, что и у раздела выше). Исполнение по-прежнему не производится этим или
 любым последующим item'ом текущей волны — решение уходит владельцу как
-**OQ-10** (`plans/2026.07.25-ECO-OPT/open-questions.md`), закрыт на `finish`
+**OQ-10** (`plans/archive/2026.07.25-ECO-OPT/open-questions.md`), закрыт на `finish`
 вариантом **(b)**: консолидация не исполняется вовсе.
 
 **Что изменилось со среза 2026-07-02:** реестр вырос **46 → 48 бакетов**
@@ -475,9 +475,9 @@ print('included', inc, 'excluded', exc)
 "
 ```
 
-Источники: `plans/2026.07.25-ECO-OPT/findings/P3.1-listing-diagnosis.md` §0/§3
-(корректировка бюджета 30 000/6 000) · `plans/2026.07.25-ECO-OPT/findings/P3.5-listing-hygiene.md`
-(полный расчёт этого захода) · `plans/2026.07.25-ECO-OPT/phases/P3.md` D74–D77/D83
+Источники: `plans/archive/2026.07.25-ECO-OPT/findings/P3.1-listing-diagnosis.md` §0/§3
+(корректировка бюджета 30 000/6 000) · `plans/archive/2026.07.25-ECO-OPT/findings/P3.5-listing-hygiene.md`
+(полный расчёт этого захода) · `plans/archive/2026.07.25-ECO-OPT/phases/P3.md` D74–D77/D83
 (рамка мотива, запрет продавать как выигрыш бюджета) · `open-questions.md` OQ-10.
 
 ## Как воспроизвести

@@ -97,3 +97,23 @@ self-reference в Known Deviations P7.5/P7.6 — дальнейшего дейс
 — не наш, вне `Files` этой реконсиляции). Правки этой реконсиляции — `plan.md`, `phases/P7.md`,
 `closure/P7.json`, `handoff.md`, `plans/ACTIVE.md`, `journal.jsonl` — коммитятся одним закрытием
 фазы (§8, только плановые пути).
+
+## Архивация (2026-07-29)
+
+План перенесён `plans/2026.07.25-ECO-OPT` → `plans/archive/2026.07.25-ECO-OPT`.
+
+**Чек-лист миграции `root/` → docs:**
+- `root/adr/ADR-0001-cross-machine-memory.md` → перенесён в
+  `packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`, со ссылкой из
+  `packages/maind/docs/architecture.md` (раздел «Cross-machine память»).
+
+**Осталось в архиве** (не мигрирует в docs): `artifacts/`, `findings/`, `research/`,
+`brief/`, `closure/`, `open-questions.md`, `roadmap.md`, `journal.jsonl`, `plan.md`,
+`phases/*`.
+
+**Реестры/ссылки обновлены** на `plans/archive/2026.07.25-ECO-OPT/...`:
+`docs/develop.md`, `docs/deploy.md`, `docs/reference.md`, `docs/rejected-optimizations.md`,
+`packages/maind/docs/guide/memory.md`, `packages/skiller/docs/guide/profiles.md`,
+`packages/skiller/docs/guide/bucket-audit-2026-07.md`,
+`packages/harness/configs/claude-code/agent-packs/README.md`, `plans/README.md`.
+`plans/ACTIVE.md` уже указывал `—` до архивации (план закрыт целиком раньше этой команды).

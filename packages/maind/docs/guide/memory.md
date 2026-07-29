@@ -182,7 +182,7 @@ Recall объединяет `project:<id>` + `ns:<все группы>` + `globa
 `Authorization: Bearer <секрет>` (`core.http` — аддитивный параметр `headers`, дефолт не
 меняет ничего); `GET /agentmemory/health` — исключение, он публичен всегда. Бюджет ожидания
 (таймауты/ретраи) — `MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES` в
-`constants.py`, измерено в `plans/2026.07.25-ECO-OPT/findings/P4.2-remote-link-measure.md`;
+`constants.py`, измерено в `plans/archive/2026.07.25-ECO-OPT/findings/P4.2-remote-link-measure.md`;
 ретраятся только read-вызовы (`export`), не мутации (`store`/`forget` — риск дубля без
 operation-id в контракте).
 

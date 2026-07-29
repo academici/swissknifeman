@@ -68,7 +68,7 @@ marketplace; consumer vendor/connect отклоняет source-only записи
 проект-потребитель. Единственный производитель root-проекций — `registry.py` →
 `publication.py` root-bootstrap рендерер из `configs/repository-bootstrap-skills.json`;
 `skillset.py` реализует только consumer-исключение, никогда не является этим self-host
-продюсером (см. [semantic-identity-ownership-v1](../../../../../plans/2026.07.24-AGENT-RELIABILITY/root/contracts/semantic-identity-ownership-v1.md)).
+продюсером (см. [semantic-identity-ownership-v1](../../../../../plans/archive/2026.07.24-AGENT-RELIABILITY/root/contracts/semantic-identity-ownership-v1.md)).
 
 ## Два конфига проекта (не путать, не сливать)
 

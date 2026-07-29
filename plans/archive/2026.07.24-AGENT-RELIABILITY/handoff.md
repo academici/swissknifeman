@@ -139,3 +139,32 @@ adversarial-аудита фазы нет. Захотеть его позже —
   в `Files` P4.3 не входил; носитель — ближайший будущий item, трогающий этот файл (packet § 4.3).
 - Литерал `GREEN` в `docs/task/methodology.md` — имя вердикта аудита в enum `plan-audit`, а не
   утверждение о приёмке; вместо правки канона добавлен разделяющий абзац.
+
+## Архивация (2026-07-29)
+
+План перенесён `plans/2026.07.24-AGENT-RELIABILITY` → `plans/archive/2026.07.24-AGENT-RELIABILITY`.
+
+**Чек-лист миграции `root/` → docs:** пропущен по прецеденту — `root/contracts/` (9 frozen-
+контрактов) и `root/provider-core-hypotheses.md` **остаются в архиве**, а не мигрируют в
+`docs/`: тот же паттерн уже применён к `plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/`
+(осталось в архиве, читается функциональным кодом через `core.repo.resolve_plan_dir`/
+`scripts/provider-docs.py::resolve_plan_dir`, устойчивый к обеим локациям). Контракты этого
+плана — те же по природе (frozen-спеки, узкий predicate/schema материал, не Diátaxis-проза для
+читателя проекта) — тот же путь.
+
+**Осталось в архиве:** `artifacts/`, `findings/`, `research/`, `brief/`, `root/` (contracts +
+provider-core-hypotheses.md), `workflows/`, `index.md`, `roadmap.md`, `journal.jsonl`, `plan.md`,
+`phases/*`.
+
+**Реестры/ссылки обновлены** на `plans/archive/2026.07.24-AGENT-RELIABILITY/...`:
+`packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md` и `SKILL.ru.md`
+(единственные markdown-ссылки на `root/contracts/semantic-identity-ownership-v1.md`).
+`plans/ACTIVE.md` уже указывал `—` до архивации.
+
+**Портабельность кода (не docs-ссылка, но того же класса риска):**
+`packages/task/tests/test_task_contract.py` зашивал `plans/2026.07.24-AGENT-RELIABILITY/...`
+напрямую — исправлено на `core.repo.resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")`
+ДО переноса (коммит `68dff7db`, тесты зелёные: `72 passed`). Прочие ссылки на
+`root/contracts/...`/`plans/2026.07.24-AGENT-RELIABILITY` в `packages/{task,harness,analyst}/lib`
+— docstring-цитаты провенанса (`<PLAN-ID> Pn.m`), не файловые пути кода; правки не требуют
+(канон D3: полный `<PLAN-ID>` остаётся grep-адресным после архивации).

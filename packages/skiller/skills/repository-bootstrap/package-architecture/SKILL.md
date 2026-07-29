@@ -65,7 +65,7 @@ source-only records instead of copying them into a consumer project. The sole pr
 projections is `registry.py` → `publication.py`'s root-bootstrap renderer from
 `configs/repository-bootstrap-skills.json`; `skillset.py` implements only the consumer exclusion,
 never this self-host producer (see
-[semantic-identity-ownership-v1](../../../../../plans/2026.07.24-AGENT-RELIABILITY/root/contracts/semantic-identity-ownership-v1.md)).
+[semantic-identity-ownership-v1](../../../../../plans/archive/2026.07.24-AGENT-RELIABILITY/root/contracts/semantic-identity-ownership-v1.md)).
 
 ## Two project configs (don't confuse, don't merge)
 

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-29 (третий заход `finish` по находкам design-аудита захода 3: B1–B5 → D68–D70 + design-коммит истории ветки; design-бюджет НЕ тратится — см. Design Passes) |
+| Last Updated | 2026-07-29 (P0.1 закрыт: процедура изоляции worktree, `root/isolation-procedure.md`) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -117,7 +117,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 0/5 | ⬜ Not started |
+| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 1/5 | 🟡 In progress |
 | P1 | Паритет корневых инструкций | 0/5 | ⬜ Not started |
 | P2 | Паритет capability второго провайдера | 0/5 | ⬜ Not started |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | ⬜ Not started |
@@ -313,6 +313,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-design/Claude Opus 5/high | **`finish` по находкам аудита захода 2 — пять находок закрыты, Nit закрыт (D63–D67).** Обе новые проверки P0.5 ПРОГНАНЫ на `8e16a811` и их вывод вклеен в ТЗ: предикат `STALE_ACTIVE` сужен до строк таблицы реестра — было 2 строки, стала 1 = предмет item'а (D63); первый конъюнкт grep №2 сужен до реестра и launch-block'а, второй стал машинным гейтом (D64); в `need` гейта переадресации P1.1 дописан `P4.3` — девять адресов (D65); порядок коммитов P1.5 назван «принятие → гейт» + машинная проверка по `git log --pretty=%s -2` (D66); Scope Included P3.2 приведён к D51 (D67); `index.md` — «D1–D67» и «кроме производимых 03 и 05». Статусы items, Status Board (0/29) и `Design Passes: 3/3` не менялись |
 | 2026-07-29 | plan-audit/Claude Opus 5/xhigh | **Design-аудит, заход 3 — вердикт ATTENTION (`AUDIT-CAP` исчерпан, повторный аудит не назначается)**: одиннадцать блокирующих находок заходов 1–2 закрыты и их закрытие проверено прогонами; остаток — B1 (design-работа не в истории ветки, бесхозный `verify-citations-known-exceptions.json`), B2 (штамп версии карты), B3 (пропущенная запись журнала), B4 (гейт P1.1 считает читателей, а не адреса), B5 (Nit) — детали см. `plan.md` § `Audit design (заход 3) — 2026-07-29` |
 | 2026-07-29 | plan-design/Claude Opus 5/high | **`finish` по находкам аудита захода 3 — все пять находок закрыты (D68–D70).** B1: design-состояние положено в историю ОДНИМ коммитом (каталог плана + `ACTIVE.md` + `2026.07.18-FOREMAN/plan.md` + `verify-citations-known-exceptions.json`), правило «файл вне каталога плана, тронутый дизайном, — в design-коммит» закреплено D69. B4: гейт переадресации P1.1 (`phases/P1.md:82`) переведён с девяти item-ID на девять АДРЕСОВ — литералы + `len(rows)==9` + «каждая строка несёт литерал», ручная приписка отменена (D68). B3: ретроспективная запись design pass 3/3 добавлена штатным writer'ом с пометкой в `note` (D70). B2: `roadmap.md:3` → v0.8.2, шапка карты дополнена всеми тремя заходами `finish`. B5: Р1/Р2/Р3 получили собственные строки в `research/00-user-intent.md`. Статусы items, Status Board (0/29) и `Design Passes: 3/3` не менялись; ТЗ фаз P0, P2–P5 не трогалось |
+| 2026-07-29 | plan-exec/Sonnet/medium | P0.1 закрыт: `root/isolation-procedure.md` (изоляция worktree `swissknifeman-next` + bin-dir `~/.local/bin-skm-next`), чек «старый контур цел» зелёный по всем четырём проверкам — детали см. `phases/P0.md` P0.1 Completion Notes |
 
 ## 7. Contracts
 

@@ -7,15 +7,15 @@
     "command": "plan-close",
     "actor": "sonnet/low"
   },
-  "phase_status": "🟡 In progress",
+  "phase_status": "🟠 Done with deviations",
   "git": {
-    "head_sha": "544850047a8dde339d5693f5797afb29dab7d982",
+    "head_sha": "e0ffe762fb143e282070f6ba156f0a4307beacf8",
     "branch": "codex/provider-project-sync",
     "dirty": true
   },
   "inputs_sha256": {
-    "plan.md": "c46d24aab0dd9a22664c4ca97306b9a1f6eb3f30b0e06c885a45da8c3524753a",
-    "phases/P7.md": "432ab372bf7f91de885c105ef02ca02af528bde5ca0e3225ff8e78f2dc6b8bc8"
+    "plan.md": "b85dcecf8808a0a49045bf5fbf64617aa8b54558d3031f106d17b92f0b30e2f3",
+    "phases/P7.md": "b3eab29a410e30313024a967adbc8ece50e78c3e444ef57ac06e5c03ed4b270f"
   },
   "items": [
     {
@@ -38,21 +38,21 @@
     },
     {
       "id": "P7.4",
-      "status": "⬜ Not started",
-      "evidence_class": "baseline_pending",
-      "evidence": "заведён реопеном 2026-07-29 (D144, аудит RED F2/F12): корневой AGENTS.md утверждает «codex doctor does not accept -m/-c» — -c принимается (живой прогон codex-cli 0.145.0), плюс буллет launch-блока требует -a never от headless-формы codex exec, у которой такого флага нет; тексты правок запинены research/29 §2.1–2.3; чисел нет: item не исполнялся"
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, аудит RED F2/F12): преflight-буллет AGENTS.md перестал утверждать, что `codex doctor` не принимает `-c` (принимает, отвергает только `-m` — подтверждено живым `codex doctor --help`/`codex doctor -m x --json`), launch-буллет разделил TUI-путь (`-a never`) и headless-путь (`-c 'approval_policy=\"never\"'`); синхрон research/21 §3.4; item-коммит 8b3221ea. Known Deviation: closure/P7.json items[] не сходился со статусом фазы до этого закрытия (material, вне Scope item'а)"
     },
     {
       "id": "P7.5",
-      "status": "⬜ Not started",
-      "evidence_class": "baseline_pending",
-      "evidence": "заведён реопеном 2026-07-29 (D144, находки F8/F9/F10): цитата команды find без -not -path node_modules, «Три из четырёх поломок» при фактических четырёх, «запас пятикратный» при 32768/7252=4,52 — четыре носителя, тексты в research/29 §2.4–2.6; чисел нет: item не исполнялся"
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, находки F8/F9/F10): цитата команды find получила `-not -path \"*/node_modules/*\"`, CHANGELOG.md «Три из четырёх» → «Четыре» (+4-й пункт), «пятикратный» → «≈4,5×» (32768/7252) в CHANGELOG.md/phases/P7.md/research/21 §5-6; item-коммит 1338b655. Known Deviations: Validation-ассершен «ровно 2 попадания» дал фактически 14 (designated носители все исправлены, остальные попадания вне Scope/self-referential) — material → 🟠; тот же остаточный closure/P7.json items[]-К, что у P7.4"
     },
     {
       "id": "P7.6",
-      "status": "⬜ Not started",
-      "evidence_class": "baseline_pending",
-      "evidence": "заведён реопеном 2026-07-29 (D144, находки F1/F7/F13): агрегат Known Deviations фазы пересказал поля items неверно (у P7.3 их две), у P7.1 не названа модель/effort исполняющей сессии и протух Pending Work про закрытую P6; тексты в research/29 §2.7–2.9; чисел нет: item не исполнялся"
+      "status": "🟠 Done with deviations",
+      "evidence_class": "real",
+      "evidence": "ремедиация реопена (D144, находки F1/F7/F13): агрегат ## Phase Handoff пересобран ГРЕПОМ полей Known Deviations шести items (не по памяти), строка Session: Claude Opus 5/high вписана в Completion Notes P7.1 с оговоркой перебора тира, протухший Pending Work P7.1 про закрытую P6 снят. Known Deviations: собственные Validation-ассершены (2)-(5) не сошлись числом из-за self-reference (живой текст верен по существу); тот же остаточный closure/P7.json items[]-К (снимается этим закрытием)"
     }
   ],
   "gates": [
@@ -60,7 +60,13 @@
       "id": "plan-lint:baseline",
       "status": "PASS",
       "evidence_class": "real",
-      "evidence": "python3 packages/task/scripts/plan-lint.py plans/2026.07.25-ECO-OPT --baseline HEAD — 0 ERROR новых от закрытия фазы (после фикса Items 🟢/всего и closure/P7.json)"
+      "evidence": "python3 packages/task/scripts/plan-lint.py plans/2026.07.25-ECO-OPT --baseline HEAD — 0 ERROR новых от рабочего дерева (3 ERROR унаследованных — closure/P7.json items[]-соответствие, снимается этой перезаписью файла; 28 WARN — ровно baseline)"
+    },
+    {
+      "id": "verify-citations:strict",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "python3 plans/verify-citations.py plans/2026.07.25-ECO-OPT --strict — 16 находок, все в phases/P11.md (унаследованный Open risk (62)), новых от закрытия фазы P7 — 0"
     }
   ],
   "metrics": [
@@ -74,7 +80,8 @@
     "evidence_class=real опирается на Completion Notes items этой реконсиляции (plan-close низкоэффортный, механическая сверка git-фактами, не повторный полный прогон validate.sh фазы)",
     "P7.1 evidence_class=synthetic: тест на одном кандидате, вывод об устойчивости поведения на других item'ах не делается (граница названа в findings/P7.1-switch-test.md §7)",
     "P7.3: slash-обёртка /codex:rescue как поверхность НЕ проверена — верифицирован только путь кода codex-companion.mjs task (D146, отклонение material); зелёный статус этой поверхности не подтверждает",
-    "отчёт РЕОПЕНЕН 2026-07-29 (D144): закрытие 2026-07-29 (head_sha 54485004) отменено вердиктом аудита RED; поля closed_at/git/inputs_sha256 фиксируют ОТМЕНЁННОЕ закрытие и перегенерируются следующим plan-close после P7.4/P7.5/P7.6"
+    "P7.5/P7.6: собственные Validation grep-ассершены не сошлись буквальным числом из-за self-reference (искомые паттерны встречаются в ТЗ-прозе items и в этом же research/29 как описание правки, не как утверждение о реальности) — живой целевой текст исправлен полностью, расхождение только в счёте self-referential grep",
+    "предыдущее закрытие фазы 2026-07-29 (head_sha 54485004) было отменено вердиктом аудита RED (D144) до ремедиации P7.4–P7.6; это закрытие — финальное, после доведения ремедиации до конца"
   ],
   "external_side_effects": []
 }

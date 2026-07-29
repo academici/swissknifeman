@@ -7,10 +7,10 @@
 | Plan ID | 2026.07.25-ECO-OPT |
 | Title | Волна оптимизаций: закрытие хвостов TOKEN-ECON/CONTEXT-ECONOMY, Claude 5 guidance, cross-machine память mAInd, пилот code-review-graph, контекст-гигиена, Codex-делегирование |
 | Version | 0.25.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-29 (**фаза P7 РЕОПЕНЕНА `🟡` по вердикту аудита RED — D144**: ложный факт о `codex doctor` в резидентном `AGENTS.md` (F2), граница D143(2) ↔ авто-драйв `AGENTS.md` названа (D145), статус P7.3 `🟢` → `🟠` с переклассификацией отклонения в `material` (D146); заведены P7.4/P7.5/P7.6, доска `1/6`. Ранее — **P7.2 закрыт 🟢, фаза P7 терминальна** (2/3 🟢, 1/3 🟠): router-таблица + untrusted-инвариант в корневом `AGENTS.md`, четыре поломки P7.1 починены по адресу, owner-вопрос per-package `AGENTS.md` снят (D62(3)-b, D143) — детали `phases/P7.md` P7.2 Completion Notes. Ранее этим же заходом — P7.3 доисполнен и закрыт 🟢 по ТЗ D142 (обе цены гейта врозь, хуки/процедура вкл-выкл проверены фактически), эскалация P7.3 (D141) и её снятие ре-дизайном (D142), P7.1 закрыт 🟠 dogfood-тест, реопен P6 под P6.4 (D140) и его закрытие 🟠) |
+| Last Updated | 2026-07-29 (**фаза P7 закрыта повторно `🟠 Done with deviations` — ремедиация реопена D144 доведена до конца**: P7.4/P7.5/P7.6 терминальны (ложное основание `codex doctor`/headless-`-a` снято, счёт поломок/цитата `find`/«≈4,5×» приведены к фактам, агрегат `Known Deviations` фазы пересобран грепом полей), доска `1/6` (зелёных, все 6/6 items терминальны). **Все 11 фаз плана терминальны — план 2026.07.25-ECO-OPT закрыт целиком.** Ранее — реопен по вердикту аудита RED (D144: ложный факт о `codex doctor` F2, граница D143(2) ↔ авто-драйв D145, статус P7.3 `🟢`→`🟠` D146); до реопена — P7.2/P7.3 закрыты 🟢, P7.1 закрыт 🟠 dogfood-тест, реопен P6 под P6.4 (D140) и его закрытие 🟠 — детали `phases/P7.md` Phase Handoff) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -219,7 +219,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟠 Done with deviations |
-| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 1/6 | 🟡 In progress |
+| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 1/6 | 🟠 Done with deviations |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
@@ -670,6 +670,8 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-29 | plan-run/Claude Sonnet 5/high (P7.3 закрыт 🟢, доисполнение по D142) | P7.3 закрыт 🟢: обе цены гейта предъявлены врозь, хуки/процедура вкл-выкл/проба проверены фактически, `CLAUDE.md`/`rejected-optimizations`/`roadmap/` правлены — детали см. `phases/P7.md` P7.3 Completion Notes. |
 | 2026-07-29 | plan-run/Claude Sonnet 5/high (P7.2 закрыт 🟢) | P7.2 закрыт 🟢: router-таблица + untrusted-инвариант в корневом `AGENTS.md`, четыре поломки P7.1 (№1/№2/№5/№6) починены по адресу, owner-вопрос per-package `AGENTS.md` снят (D62(3)-b), D143 (операционная форма роли) — фаза P7 терминальна — детали см. `phases/P7.md` P7.2 Completion Notes. |
 | 2026-07-29 | plan-design/Claude Opus 5/high (реопен P7 по аудиту RED) | Фаза P7 реопенена `🟡` (D144): заведены P7.4/P7.5/P7.6 под F1–F13, доска `1/6`. D145 — граница D143(2) ↔ авто-драйв `AGENTS.md`; D146 — P7.3 `🟢` → `🟠` (отклонение `material`). F5/F6 исполнены заходом. |
+| 2026-07-29 | plan-exec/Claude Sonnet 5/medium (P7.4/P7.5/P7.6 закрыты 🟠) | Батч B7R: ремедиация реопена P7 доведена до конца (F2/F8/F9/F10/F12/F1/F7/F13 сняты) — детали `phases/P7.md` P7.4–P7.6 Completion Notes. |
+| 2026-07-29 | plan-close/Sonnet 5/low (фаза P7 закрыта повторно, план закрыт целиком) | Фаза P7 закрыта `🟠 Done with deviations` (1/6 зелёных, 6/6 items терминальны, агрегат Known Deviations пересобран грепом полей); все 11 фаз плана терминальны — **план 2026.07.25-ECO-OPT закрыт целиком** — детали `phases/P7.md` Phase Handoff. |
 
 ## 7. Contracts
 

@@ -87,3 +87,30 @@ item **P0.5** поглощающего плана.
 - open_questions: OQ-6 (дом rollout-конфигов) и OQ-7 (дом Brain-скилла) закрываются вместе со
   своими фазами (`⛔`) — если тема вернётся, её носитель будет назван спекой остатка, а не этим
   планом. Судьба parse-контракта (OQ-2 поглощающего плана) — измерена, исполнитель P4.5.
+
+## Чек-лист миграции (P0.5, `2026.07.29-HARNESS-AGNOSTIC`)
+
+- **Перенесено:** сам план `plans/2026.07.18-FOREMAN/**` → `plans/archive/2026.07.18-FOREMAN/**`
+  (`git mv`, коммит `e4a9875d`), без физического переноса `root/contracts/`.
+- **Осталось в архиве:** `root/contracts/` (пять контрактов — `artifex-policy-schema.md`,
+  `artifex-run-folder.md`, `driver-plan-protocol.md`, `plan-index-schema.md`,
+  `plan-journal-schema.md`) — прецедент `9b1b5fef` (DUAL-PROVIDER/AGENT-RELIABILITY):
+  контракты остаются, переносятся только ссылки. Живых markdown-ссылок на
+  `plans/2026.07.18-FOREMAN/root/contracts/*` вне каталогов планов не найдено
+  (`grep -rln`) — переносить нечего.
+- **Починенные потребители пути в живом дереве:**
+  - `packages/skiller/tests/test_provider_publication_parity.py:156` — хардкод пути заменён на
+    `core.repo.resolve_plan_dir(self.repo_root, "2026.07.18-FOREMAN")` (не хардкод нового пути).
+  - `AGENTS.md:24` — путь/факт архивации обновлён («archived, do not execute»); содержательная
+    переработка не тронута (P1).
+  - `roadmap/codex-subagent-offload.md` — проверен: три упоминания (строки 44/68/81) — bare-ID
+    provenance-цитаты (`План \`2026.07.18-FOREMAN\`: D18 …`), НЕ путь; тот же класс, что D3-цитаты
+    в коде (Scope Excluded этого item'а) — правки не требуют, остаются как есть.
+  - `plans/README.md` — статус донора в регистре очереди переведён в «архивирован, поглощён
+    `2026.07.29-HARNESS-AGNOSTIC` (его D2)»; добавлена строка `2026.07.29-HARNESS-AGNOSTIC`;
+    починен статус `2026.07.25-ECO-OPT` (терминален, архивирован 2026-07-29) — все три правки D61.
+- **Не тронуто** (Scope Excluded item'а): D3-цитаты `2026.07.18-FOREMAN Pn.m` в
+  `packages/task/lib/task/journal.py`/`plan_lint.py`; `CHANGELOG.md`; провенансные упоминания
+  старого пути внутри плана `2026.07.29-HARNESS-AGNOSTIC` (§5 D-лог, D50); секции `plans/README.md`
+  вне трёх названных правок («Почему такой порядок», «Кросс-плановая последовательность»,
+  «Принципы кросс-плановой работы», Такт 6, launch-block'ы payload C — bare-ID цитаты, не пути).

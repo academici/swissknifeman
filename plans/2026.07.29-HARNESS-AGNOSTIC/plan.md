@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-29 (P0.4 закрыт: контракт определения паритета провайдеров запечатан — sealed v1) |
+| Last Updated | 2026-07-29 (P0.5 закрыт: донор `2026.07.18-FOREMAN` архивирован, регистр `plans/README.md` синхронизирован) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -117,7 +117,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 4/5 | 🟡 In progress |
+| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 5/5 | 🟠 Done with deviations |
 | P1 | Паритет корневых инструкций | 0/5 | ⬜ Not started |
 | P2 | Паритет capability второго провайдера | 0/5 | ⬜ Not started |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | ⬜ Not started |
@@ -318,6 +318,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P0.2 закрыт: вердикты аудита приземлены в постоянные каталоги — карточка `wshobson/agents` + 5 строк `docs/reference.md`, 4 строки `docs/rejected-optimizations.md` (15→19), round-trip гейт пунктом 7 в `roadmap/codex-publication-consumer-acceptance.md`, `audits/` удалён — детали см. `phases/P0.md` P0.2 Completion Notes |
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P0.3 закрыт: инвентарь поглощения (46 судеб — 22 артефакта + 24 items), донор терминализован (24 items `⛔`, D60, 0.23.0), OQ-2 закрыта D71 — вариант B — детали см. phases/P0.md P0.3 Completion Notes |
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P0.4 закрыт: контракт определения паритета запечатан (`root/contracts/provider-parity-definition.md`, sealed v1) — три исхода, планка evidence, C1–C6 и чек-лист из 15 условий; §7 Exported переведён в `sealed (P0.4)` — детали см. phases/P0.md P0.4 Completion Notes |
+| 2026-07-29 | plan-exec/Sonnet/medium | P0.4 (фаза) → P0.5 закрыт: донор архивирован (`plans/archive/2026.07.18-FOREMAN`, конвейер `plan-close archive`), потребители пути починены (`resolve_plan_dir`, `AGENTS.md`), регистр `plans/README.md` приведён в соответствие (D61: статус донора, строка этого плана, статус `2026.07.25-ECO-OPT`) — детали см. phases/P0.md P0.5 Completion Notes |
 
 ## 7. Contracts
 

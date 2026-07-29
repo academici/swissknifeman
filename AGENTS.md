@@ -21,8 +21,8 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
   available. Its scope for this repository is `project:swissknifeman`.
 - Preserve Claude Code compatibility. Provider-specific files are adapters over a shared
   contract, not replacements for `.claude*`, `CLAUDE.md`, or existing commands.
-- Do not execute `plans/2026.07.18-FOREMAN` beyond its current checkpoint until the
-  dual-provider bootstrap and migration plan are approved.
+- `plans/archive/2026.07.18-FOREMAN` is archived (terminal, absorbed by
+  `2026.07.29-HARNESS-AGNOSTIC`); do not execute it.
 - Python packages remain stdlib-only. Preserve unrelated user changes.
 
 ## Operation router

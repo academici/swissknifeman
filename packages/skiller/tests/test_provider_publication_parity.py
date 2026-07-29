@@ -152,8 +152,9 @@ class TestProviderPublicationParity(unittest.TestCase):
 
     def test_render_only_leaves_protected_repository_paths_unchanged(self):
         """Render receives explicit roots and must not mutate bootstrap/FOREMAN paths."""
+        from core.repo import resolve_plan_dir
         protected = [self.repo_root / ".claude-plugin", self.repo_root / ".agents" / "skills",
-                     self.repo_root / "plans" / "2026.07.18-FOREMAN"]
+                     resolve_plan_dir(self.repo_root, "2026.07.18-FOREMAN")]
         before = {str(path): _snapshot(path) if path.exists() else {} for path in protected}
         registry, metadata, buckets = build_registry(self.env)
         build_claude_publication(self.env, metadata, buckets, registry)

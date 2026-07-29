@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-29 (P1.2 закрыт `🟠`: 8/18 фрагментов канона актуализированы по матрице P1.1) |
+| Last Updated | 2026-07-29 (P1.3 закрыт `🟠`: девять аддитивных ID канона 1.1.0 + аддендум-контракт) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -324,6 +324,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-exec/Sonnet/medium | P0.4 (фаза) → P0.5 закрыт: донор архивирован (`plans/archive/2026.07.18-FOREMAN`, конвейер `plan-close archive`), потребители пути починены (`resolve_plan_dir`, `AGENTS.md`), регистр `plans/README.md` приведён в соответствие (D61: статус донора, строка этого плана, статус `2026.07.25-ECO-OPT`) — детали см. phases/P0.md P0.5 Completion Notes |
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P1.1 закрыт: матрица «правило → дом» по семи живым руководствам (`research/05-instruction-canon-routing.md`) — 41 раздел покрыт, 67 существующих ID разнесены (34 обновляются / 33 без изменений), 9 новых ID для P1.3, 6 выносов в скиллы, 8 снятий, переадресация девяти адресов; приняты D72–D74 — детали см. phases/P1.md P1.1 Completion Notes |
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.2 закрыт `🟠`: 8 из 18 фрагментов канона переписаны по матрице P1.1, `catalog.json`/фикстура синхронизированы (28 записей, `1.0.1`), набор из 67 ID не менялся; Known Deviation — фикстурный `provenance` не дополнен (конфликт с зелёным тестом вне `Files`) — детали см. phases/P1.md P1.2 Completion Notes |
+| 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.3 закрыт `🟠`: девять аддитивных ID (7 common + 2 extension) заведены, `catalog.json`/фикстура выросли до 76 записей (`1.1.0`), аддендум-контракт `root/contracts/instruction-canon-addendum-v1.md` запечатан; Known Deviations — два файла вне `Files` (тест-счётчик, сгенерированная доков-справка) синхронизированы вслед за ростом инвентаря — детали см. phases/P1.md P1.3 Completion Notes |
 
 ## 7. Contracts
 
@@ -347,7 +348,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | определение паритета провайдеров: что считается «capability закрыта», что — легальным `Claude-only`, что — снятой интенцией, и какая evidence обязательна — носитель `root/contracts/provider-parity-definition.md` (D8) | **v1** (запечатан P0.4, коммит `49ffd07e`) | **sealed (P0.4)** | P1 (только §2 и §3 п. 4 — §0.2 контракта), P2.1–P2.5, P5.3; будущие планы, трогающие каталог | — (потребители — фазы этого плана; кросс-плановых потребителей нет) |
 | вердикты паритета Codex: по каждой записи `unsupported` — вердикт (`closed-by-adapter` · `claude-only` · `intent-withdrawn`), нативный носитель Codex, требуемая evidence и черновик `limitations`; носитель — `root/contracts/codex-parity-verdicts-v1.md` (D19) | draft (запечатывает P2.1) | draft | P2.2–P2.5; evidence записей `configs/provider-capabilities.json`; P5.1; будущие планы, трогающие каталог | — |
 | политика исполнения: четыре раздела (`spawn_threshold` · `max_parallel_agents` · `allowed_agent_roles` · `delegation_contract`), потолки таблицей по субъекту и провайдеру, пять обязательных полей задания субагенту, жизненный цикл точки принуждения `pending`/`enforced` + `pending_until` (D58); носитель схемы — `root/contracts/execution-policy-v1.md` (D31/D32), носитель данных — `packages/harness/configs/common/agent-packs/execution-policy.json` под валидатором `lib/harness/execpolicy.py` и ПОСЛЕДНИМ шагом `validate.sh` (`[10/10]` после шага инструкций P1.5 — уточнено D48; в D31 записан довыясненный номер `[9/9]`) | draft (запечатывает P4.2; данные и гейт — P4.3, приземление в грамматику — P4.4) | draft | грамматика `PLAN` оркестратора обеих провайдерских проекций; проза «кап делегирования» в `packages/task/commands/{design,research,review,plan-design}.md` (переводится на ссылку к SSOT вне этой фазы); будущая обвязка из `roadmap/artifex-thin-wrapper.md` | — |
-| аддендум канона инструкций: аддитивная дельта семантических ID поверх замороженного `provider-instruction-contract` v1.0.0 (что добавлено, в какой scope, почему аддитивно) — носитель `root/contracts/instruction-canon-addendum-v1.md` (D16) | draft (запечатывает P1.3) | draft | P1.5; P3.1 и P4.3, если их правило живёт в каноне; будущие планы, трогающие инструкции | — |
+| аддендум канона инструкций: аддитивная дельта семантических ID поверх замороженного `provider-instruction-contract` v1.0.0 (что добавлено, в какой scope, почему аддитивно) — носитель `root/contracts/instruction-canon-addendum-v1.md` (D16) | **v1** (запечатан P1.3, коммит `b02e48be`) | **sealed (P1.3)** | P1.5; P3.1 и P4.3, если их правило живёт в каноне; будущие планы, трогающие инструкции | — (потребители — фазы этого плана; кросс-плановых потребителей нет) |
 
 ## Обсуждение
 

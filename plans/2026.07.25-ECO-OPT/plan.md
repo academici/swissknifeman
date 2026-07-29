@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-28 (P2.3 закрыт `🟠 Done with deviations` — кап делегирования в `plan-design.md`, ось `confidence` в `plan-audit.md`, пункт DoR по спеке D81; класс A снова пуст, все items P2 терминальны) |
+| Last Updated | 2026-07-29 (реконсиляция фазы P6 по отчёту аудита `## Audit P6 — 2026-07-29`: числа Completion Notes P6.3, Known Deviations, `gates[]` `closure/P6.json`, атрибуция handoff — статусы не менялись) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |

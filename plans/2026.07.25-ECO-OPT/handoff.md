@@ -13,6 +13,9 @@ P6.2/P6.3 доставляются через `skiller registry` (тела ск�
 - P6.2: item-коммит несёт дифф вне `Files` — `packages/skiller/docs/guide/budget.md`,
   `adapters/codex/core/publication-lock.json` и codex-зеркала правленых `SKILL.md`
   (детерминированный продукт `skiller registry`).
+- P6.3 (material): item-коммит несёт дифф вне `Files` — `packages/skiller/docs/guide/budget.md`,
+  `adapters/codex/core/publication-lock.json` и codex-зеркало `.../SKILL.md` правленого
+  `verify-claims` (детерминированный продукт `skiller registry`).
 - P6.3 (material): `skiller eval` вернул 6/7 — красный `pressure#2` пре-существующий
   (коммит `34ae85f1`, вне Scope P6.3), не почищен этим item'ом.
 - P6.3 (process): Validation ТЗ несла несуществующие флаги CLI `skiller eval` — прогнан
@@ -63,6 +66,10 @@ git-историей, записи (49)–(52)):
 Новое этим заходом:
 (53) P6.3: красный `pressure#2` (`general/verify-claims`, коммит `34ae85f1`) остаётся
 непочищенным — вне Scope P6, требует отдельного item'а.
+(54) P6.1: наблюдённая отмена in-flight (реконсиляция F6, `findings/P6.1-statusline-measure.md`
+§4) выявила осиротевший `*.tmp` в 3/40 SIGKILL-прогонов — стартовая уборка чистит только
+`*.state`. Минорный файловый мусор, не искажает полосу/доставку; roadmap-кандидат: расширить
+glob уборки `context-notify.sh` на `*.tmp` — правка кода вне Scope этого захода.
 
 **Workarounds / Deferred / Open questions:** без изменений этим заходом (см. предыдущий
 `handoff.md` — F1 roadmap-кандидат, расхождение flexcrm, апстрим-URL 404, backup-restore,
@@ -73,6 +80,9 @@ git-историей, записи (49)–(52)):
 `plans/2026.07.25-ECO-OPT/{plan.md,phases/P2.md,closure/P2.json,journal.jsonl}` (наследие
 незавершённого прохода P2-реконсиляции ДО этой сессии — вне `Files` items фазы P6, не
 трогать в рамках этого закрытия) и untracked
-`packages/skiller/skills/general/verify-claims/evals/benchmark.json`,
 `.swissknife/`, `packages/task/lib/.claude/` — не идентифицированы как продукт P6, оставлены
 как есть (не удалялись, не коммитились).
+`packages/skiller/skills/general/verify-claims/evals/benchmark.json` — прямой продукт прогона
+P6.3 (`generated_at 2026-07-28T22:33:29`, назван в `findings/P6.3-pressure-run.md:16-18`), не
+неопознанный untracked; судьба решена этим заходом — паттерн
+`packages/skiller/skills/**/evals/benchmark.json` добавлен в `.gitignore` (F5).

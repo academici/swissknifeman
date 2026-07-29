@@ -1,86 +1,100 @@
-# HANDOFF — 2026-07-29 — after P1.3
+# HANDOFF — 2026-07-29 — after P1.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
+**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | — |
 | Context | continue (/clear) — ручной item |
-| Суть | P1.4 — `adopt_instructions`/`adopt(...)` (fail-closed, pre-image, semantic mapping, lock-провенанс, rollback) + CLI `harness instructions <plan\|check\|adopt\|apply\|repair>` + модульная точка `--check` |
+| Суть | P1.5 — живая транзакция: `adopt` семи `ownership-conflict` целей + `apply` пяти `missing`, гейт дрейфа `[9/9]` в `validate.sh`, замер `skiller budget --first-turn` до/после |
 
 ```
 Читай, в этом порядке, НИЧЕГО СВЕРХ:
 1) plans/2026.07.29-HARNESS-AGNOSTIC/plan.md — Context, Execution Rules, §3 Routing, Status Board
 2) plans/2026.07.29-HARNESS-AGNOSTIC/handoff.md (этот файл)
-3) plans/2026.07.29-HARNESS-AGNOSTIC/phases/P1.md — Phase Context + item P1.4 целиком
-4) Required Reads item'а P1.4 в указанном порядке (первый — provider-instruction-contract.md
-   §«Drift and repair», §«Provenance and lock», §«Consumer API»)
+3) plans/2026.07.29-HARNESS-AGNOSTIC/phases/P1.md — Phase Context + item P1.5 целиком
+4) Required Reads item'а P1.5 в указанном порядке (research/05-instruction-canon-routing.md —
+   mapping; research/04 §2/§4; packages/harness/scripts/validate.sh шаги [7/8]/[8/8];
+   provider-instruction-contract.md §«Drift and repair»; plan.md §2 Execution Rules)
 
-Исполни item P1.4 СТРОГО по его Scope Included/Excluded, Implementation Rules, Code Guidance —
-без импровизации при расхождении с деревом (эскалация вместо самостоятельной правки плана).
+Единственная необратимая внутрь-репо граница до P5.2 (R1 — необратимая ЖИВАЯ транзакция на
+CLAUDE.md/AGENTS.md текущего дерева). Перед стартом переведи матрицу research/05 в конкретный
+mapping.json — формат `adopt()` (заведён в P1.4): `{"<target_path>": {"covered_spans":
+[[start,end],...]}}`, byte-offsets в pre-image каждой из семи `ownership-conflict` целей;
+контракт дословно этот формат НЕ специфицирует — он спроектирован P1.4, см. Open risks ниже.
+
+Исполни item P1.5 СТРОГО по его Scope Included/Excluded, Implementation Rules, Code Guidance —
+порядок обязателен (check ДО → adopt семи → apply пяти → check ПОСЛЕ, все 12 clean), ДВА
+коммита в порядке «принятие → гейт» (D66), НЕ смешивая правки инструкций и правку гейта.
 Прогони Validation item'а целиком, зафиксируй passed/failed. Закрой item штатной топологией
 plan-протокола (item-коммит по Files · bookkeeping-коммит плана · перезапись handoff.md ·
-plan-lint --baseline HEAD с атрибуцией K) — модель/effort ЭТОЙ сессии (implementation/high), не
-пин plan-exec (sonnet/medium): Routing item'а требует `Exec = manual`, поэтому /task:plan-exec
-его отклонит на гейте — закрывай сам, по протоколу (Pre-mutation/Pre-final Task Contract с
+plan-lint --baseline HEAD с атрибуцией K) — модель/effort ЭТОЙ сессии (frontier/high), не пин
+plan-exec (sonnet/medium): Routing item'а требует `Exec = manual`, поэтому /task:plan-exec его
+отклонит на гейте — закрывай сам, по протоколу (Pre-mutation/Pre-final Task Contract с
 ФАКТИЧЕСКИМ маршрутом сессии, две ветки закрытия 🟢/🟠, Update Log, launch-block следующего шага).
 ```
 
-**Штатный носитель исполнения** — `task:plan-run` под сессией **implementation/high** (без ритуала
-`/model`+`/effort`, если уже в такой сессии), либо `/model sonnet` + `/effort high` +
-`/task:plan-run 2026.07.29-HARNESS-AGNOSTIC P1.4`. Голая slash-команда `/task:plan-exec` СЮДА НЕ
-ПОДХОДИТ: она пинит sonnet/medium, а Routing P1.4 требует effort `high` (`Exec = manual`, D39/D47) —
+**Штатный носитель исполнения** — `task:plan-run` под сессией **frontier/high** (без ритуала
+`/model`+`/effort`, если уже в такой сессии), либо `/model opus` + `/effort high` +
+`/task:plan-run 2026.07.29-HARNESS-AGNOSTIC P1.5`. Голая slash-команда `/task:plan-exec` СЮДА НЕ
+ПОДХОДИТ: она пинит sonnet/medium, а Routing P1.5 требует frontier/high (`Exec = manual`) —
 гейт п. 2 `plan-exec` отклонит запуск (`ROUTING-BLOCKED`).
 
-**Done:** **P1.3 закрыт `🟠` Done with deviations** (`plan-run`/Sonnet/high — implementation/high,
-совпадает с §3 Routing; item-коммит `b02e48be`). Заведены девять аддитивных семантических ID по
-матрице P1.1 (D72): семь common в `root` (`root.provider-parity`, `root.worktree-safety`,
-`root.untrusted-content`, `root.evidence-integrity`, `root.generated-artifacts`,
-`root.speculative-work`, `root.docs-build`) и два provider-extension
-(`root.codex.package-scope-routing` codex, `harness.claude-code.safe-dirs` claude-code).
-`catalog_version` `1.0.1`→`1.1.0`, `contract_version` остаётся `1.0.0` (аддитивный minor, D16).
-Инвентарь: 67→**76** записей (56 common + 20 extension, было 49+18); `[25, 11, 12, 9, 10, 9]` по
-scope. Фрагменты `root/common.md` (+7), `root/codex.md` (+1),
-`packages/harness/claude-code.md` (+1) получили новые `<!-- instruction:<id> -->` секции;
-`sources[0].sha256` пересчитан для всех записей, ссылающихся на эти три файла. Фикстура
-`instruction-compatibility-v1.json` → `1.1.0`, 76 записей в порядке
-`COMMON_IDS + EXTENSION_IDS[claude-code] + EXTENSION_IDS[codex]` по scope; `provenance` не тронут
-(тот же прецедент D14, что и P1.2). Аддендум-контракт
-`root/contracts/instruction-canon-addendum-v1.md` запечатан (`type: contract`,
-`status: additive-extension (P1.3)`, `version: v1`); `plan.md` §7 Exported переведён в
-`sealed (P1.3)`.
-- **Known Deviations:** item-коммит несёт дифф вне `Files` этого item'а — ДВА файла синхронизированы
-  вслед за ростом инвентаря до 76, иначе `bash packages/harness/scripts/validate.sh` становился
-  красным: (а) `packages/harness/tests/test_instruction_compatibility.py` — точный литерал
-  `len(expected["records"])` `67`→`76` (только число, `provenance`-словарь не тронут); (б)
-  `packages/harness/docs/reference/provider-instructions.md` — сгенерированный артефакт,
-  перегенерирован через свой генератор (`operator_reference()`) ПОСЛЕ обновления
-  соответствующего литерала в `instructions.py` (уже в `Files`), не правкой руками.
-- Validation: `validate_catalog(load_catalog())` — `()` · `(CATALOG_VERSION,CONTRACT_VERSION) ==
-  ('1.1.0','1.0.0')` — True · `bash packages/harness/scripts/validate.sh` — `validate: OK` (463
-  теста зелёные; `harness provider audit: ERROR HARNESS_CATALOG_MISMATCH:test` подтверждён
-  предсуществующим прогоном на дереве ДО этого item'а через `git stash`, не наш предмет) ·
-  `check()` — `len(pl.actions)==12`, те же 7 `ownership-conflict` + 5 `missing` · addendum `test -f`
-  — passed · `plan-lint` — 0 ERROR, 2 WARN (оба предсуществующий ложный
-  `[NEEDS CLARIFICATION]`-детект).
-- **Pending Work:** сужение `root.codex.bootstrap`/`root.codex.launch-and-hook-integrity` до
-  Codex-специфичной части (правило теперь дублируется в новых common-ID) остаётся follow-up P1.2
-  (уже закрыт `🟠`) — не Scope Included P1.3. Дом: отдельная правка `root/codex.md` +
-  `catalog.json` (не заведена этим item'ом, не блокирует P1.4/P1.5).
+**Done:** **P1.4 закрыт `🟢`** (`plan-run`/Sonnet/high — implementation/high, точное совпадение
+с §3 Routing, не перебор; item-коммит `1e0262a4`). Реализован owner-gated adoption-режим в
+`packages/harness/lib/harness/instructions.py`: `adopt_instructions(request, *, catalog=None)` +
+convenience-обёртка `adopt(...)` — fail-closed вход (`owner_decision`, `mapping_path`,
+`preimage_destination` все обязательны), отказ на цели вне `ownership-conflict`, отказ на
+mapping без содержательного покрытия (`covered_spans` — новый JSON-формат, спроектирован этим
+item'ом, контракт дословно формат не специфицирует), pre-image пишется атомарно и
+верифицируется перечитыванием ДО мутации цели, непокрытые байты сохраняются дословно ПОСЛЕ
+двух управляемых блоков, провенанс принятия — `semantic_metadata.adoption`
+(`owner_decision`/`pre_image_hash`/`pre_image_path`/`mapping_path`) в P2-lock-записи.
+Ключевое архитектурное решение: этот `adoption`-факт ОБЯЗАН попадать в рендер ДО вычисления
+`source_hash` (через новый `adoption_hints`-параметр `_projections`/`_projection`, который
+`_observe` заполняет ИЗ УЖЕ СУЩЕСТВУЮЩЕЙ lock-записи) — иначе `core.provider_lock._classify`
+(frozen, вне `Files`) вечно возвращал бы `stale-source` вместо `clean` на втором прогоне
+(полное равенство dataclass между записанной и заново вычисленной provenance). Найдено падением
+теста идемпотентности, исправлено без правки контракта/диагностик/сигнатур публичных операций.
+`rollback_adoption(root, target_path)` — путь восстановления pre-image байт-в-байт со снятием
+lock-записи (не CLI-глагол — явная внепроцессная процедура восстановления). Новый CLI-глагол
+`harness instructions <plan|check|adopt|apply|repair>` (`cmd_instructions`, `COMMANDS`,
+case-список `bin/harness`, usage-шапка, `sed`-диапазон `2,21`→`2,25`) + модульная точка
+`python3 -m harness.instructions --check` — оба пути дают идентичный вердикт на живом дереве
+(смоук-тест: 7 `ownership-conflict` + 5 `missing`, `exit=1`, байт-в-байт одинаковый вывод).
+Девять новых тестов в отдельном `test_instruction_adoption.py` (успешный adopt + сохранение
+непокрытых байтов · отказ на не-conflict цели · отказ на пустом mapping · отказ на
+mapping-только-из-whitespace · отказ без `owner_decision` · идемпотентность второго `check` ·
+повторный `adopt` уже управляемой цели отказывает · rollback байт-в-байт + снятие lock-записи ·
+rollback без записи адопции — fail-closed); 28 тестов `test_provider_instructions.py` и 6 тестов
+`test_instruction_compatibility.py` не тронуты и зелёные.
+- **Known Deviations:** — (item-коммит несёт диф СТРОГО по `Files`; `packages/harness/commands/
+  harness.md` НЕ правился — прецедент flotы: `agent-packs`/`safe-dirs`/`router`/`wf` тоже не
+  спроецированы в `/harness:*`-справку, эта команда не первое исключение).
+- Validation: `bash packages/harness/scripts/validate.sh` — `validate: OK` (на `1e0262a4`;
+  предсуществующий `harness provider audit: ERROR HARNESS_CATALOG_MISMATCH:test` подтверждён
+  несвязанным, тот же прецедент, что в P1.3) · 28+9+6=43 instruction-теста зелёные · CLI/модульная
+  точка `--check` — идентичный вердикт байт-в-байт · `git status --short` на живых 12 целях/lock —
+  пусто · `plan-lint` — 0 ERROR, 2 WARN (оба предсуществующий ложный `[NEEDS CLARIFICATION]`).
+- **Pending Work:** буквальная команда Validation `-p 'test_instruction*'` не матчит
+  `test_provider_instructions.py` (имя файла не с этого префикса) — дефект формулировки ТЗ P1.4,
+  не блокер (28 тестов прогнаны явно поверх шаблона); правка формулировки — не заведена отдельным
+  item'ом, чинить при следующей правке `phases/P1.md`, если понадобится.
 
-**Ранее:** P1.1 закрыта `🟢` (матрица «правило → дом», D72–D74). P1.2 закрыта `🟠` (8/18
-фрагментов канона актуализированы). P0 закрыта целиком (4/5 🟢 + 1/5 🟠).
+**Ранее:** P1.3 закрыта `🟠` (девять аддитивных ID канона 1.1.0 + аддендум-контракт). P1.2 закрыта
+`🟠` (8/18 фрагментов канона актуализированы). P1.1 закрыта `🟢` (матрица «правило → дом»,
+D72–D74). P0 закрыта целиком (4/5 🟢 + 1/5 🟠).
 
-**Remaining:** P1.4 → P1.5, затем P2 (5) → P3 (6) → P4 (5) → P5 (3). Итого 21/29 items ещё не
-исполнено.
+**Remaining:** P1.5, затем P2 (5) → P3 (6) → P4 (5) → P5 (3). Итого 20/29 items ещё не исполнено.
 
 **Sources of truth:** `plans/2026.07.29-HARNESS-AGNOSTIC/plan.md` (§3 Routing, §5 D1–D74,
 §7 Contracts, § Обсуждение 1–7, три блока `## Audit design`) · `phases/P0.md`–`P5.md` (P0 закрыта,
-P1 — 1/5 🟢 + 2/5 🟠) · `research/05-instruction-canon-routing.md` (матрица «правило → дом» — вход
-P1.3 закрыт, ещё вход P1.4 и P1.5) · `research/04-instruction-mechanism-inventory.md` (механизм,
-G1–G5, ограничения авторинга) · `findings/02-rag-instruction-loading-2026-07-29.md` Ф7/Ф8 ·
+P1 — 2/5 🟢 + 2/5 🟠) · `research/05-instruction-canon-routing.md` (матрица «правило → дом» —
+вход P1.1–P1.4 закрыт, ещё вход P1.5 — перевод матрицы в конкретный `mapping.json` формата
+`adopt()`) · `research/04-instruction-mechanism-inventory.md` (механизм, G1–G5, ограничения
+авторинга — G2/G3 закрыты P1.4) · `findings/02-rag-instruction-loading-2026-07-29.md` Ф7/Ф8 ·
 `roadmap.md` (батч B1 закрыт; дальше всё solo) · `brief/00-brief.md` + `brief/01-refinements.md` ·
 `findings/00`–`06` · `research/00`–`04`, `06`–`09` · `open-questions.md` (OQ-3, OQ-5–OQ-9 открыты) ·
 `index.md` · `journal.jsonl` · `root/contracts/provider-parity-definition.md` (sealed v1) ·
@@ -90,25 +104,29 @@ G1–G5, ограничения авторинга) · `findings/02-rag-instruct
 `docs/reference.md`, `docs/rejected-optimizations.md` · `plans/README.md`.
 
 **Open risks:**
+- **`adopt()`'s `mapping.json`-формат (`covered_spans`) спроектирован в P1.4, не взят из
+  контракта дословно** — контракт требует только «source-to-semantic mapping», конкретную форму
+  не специфицирует. P1.5 обязан перевести матрицу `research/05` в РЕАЛЬНЫЕ `covered_spans`
+  (byte-offsets) для каждой из семи `ownership-conflict` целей ПЕРЕД вызовом `adopt` — это не
+  готовый входной артефакт, а работа самого P1.5.
 - **Фикстурный `provenance` не отражает миграцию P1.2** (P1.2 Known Deviation) — вне Scope
   дальнейших items, если владелец захочет иное, нужен отдельный item со строкой
   `packages/harness/tests/test_instruction_compatibility.py` в `Files`.
 - **Сужение `root.codex.bootstrap`/`root.codex.launch-and-hook-integrity` осталось не сделанным**
   (D73): common-ID, принимающие эти правила, теперь существуют (P1.3), но САМО сужение двух
   Codex-фрагментов — работа без явного дома ни в одном из закрытых items (P1.2/P1.3) — follow-up,
-  не блокирует P1.4/P1.5, но правило технически дублируется (common + extension) до починки.
-- **Правило `CHANGELOG.md`** (D55) доехало в канон в P1.2 (`root.development-validation`) —
-  закрыто, снято из рисков.
+  не блокирует P1.5, но правило технически дублируется (common + extension) до починки.
 - **Посторонний дифф в дереве не убран и не тронут**: `roadmap/README.md` (M) + untracked
   `roadmap/2026.07.29-launch-block-command-row.md`. Существовал до P0.2, ни в один item-коммит
-  P0.1–P1.3 не попал.
+  P0.1–P1.4 не попал.
 - **`packages/skiller/scripts/validate.sh` на дереве КРАСНЫЙ**: `ERROR: реестр устарел
   относительно источников — прогони: skiller registry`. Предсуществующий, Known Deviation P0.5.
 - **`scripts/test-provider-docs.py` на дереве КРАСНЫЙ** (1 fail из 4) — битая ссылка
   `roadmap/self-learning-memory.md` из `README.md:122`. Предсуществующая.
 - **`scripts/public-hygiene.py` на дереве красный** (предсуществующая находка) — закрыть или
   объявить исключением до P5.1.
-- **`--check` не зовёт ни один гейт** (D21): до P2.5 конформанс каталога держится ручным прогоном.
+- **`--check` не зовёт ни один гейт** (D21): до P1.5 конформанс каталога держится ручным
+  прогоном — P1.5 закрывает это (шаг гейта `[9/9]` в `validate.sh`).
 - **`harness doctor --provider-audit` печатает `HARNESS_CATALOG_MISMATCH:test`** — предсуществующий
   неблокирующий диагностический вывод несвязанного `profile-catalog.json`/MCP/roles-аудита
   (подтверждено идентичным на дереве ДО P1.3 через `git stash`); не гейтит `validate: OK`; вне
@@ -157,7 +175,9 @@ G1–G5, ограничения авторинга) · `findings/02-rag-instruct
   онбордженных проектов** (кандидат `roadmap/`, Scope Excluded фазы P1) · **фикстурный `provenance`
   P1.2** — обновление теста `test_instruction_compatibility.py` под новую форму, если владелец
   захочет (см. Open risks) · **сужение `root.codex.bootstrap`/`.launch-and-hook-integrity`** (D73,
-  см. Pending Work выше).
+  см. Pending Work выше) · **буквальная формулировка Validation P1.4** (`-p 'test_instruction*'`
+  не матчит `test_provider_instructions.py`) — правка формулировки при следующем касании
+  `phases/P1.md`.
 - open_questions: OQ-3 две capability `unsupported` у обоих провайдеров (P2.1) · OQ-6 дом логики
   Codex-обработчиков (P2.1) · OQ-7 структурный перебор бюджета обнаружения (замер P3.4) · OQ-8
   дрейф канона ролей и инсталляционного шаблона (Deferred) · OQ-9 CI не покрывает `analyst`/`task`

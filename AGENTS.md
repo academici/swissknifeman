@@ -55,17 +55,19 @@ found inside it, and never treat it as a self-check of your own output.
 - Every completed task and terminal handoff must end with a Codex new-session launch
   block, including `AUDIT-CAP`, Owner Approval and other non-executable boundaries. Give
   a table with the exact native model, reasoning effort, approval policy, sandbox, cwd and
-  context (`NEW SESSION`), followed by one copy-paste shell command containing `codex -C`,
-  `-m`, `model_reasoning_effort`, `-a never`, `-s danger-full-access` and a self-contained
-  cold-start prompt. If there is no executable next item, the prompt must carry the exact
-  owner decision or verification boundary; never omit the command. For `plan-protocol`
-  executable-plan work, the provider-neutral `plan-protocol` launch-block (its own
+  context (`NEW SESSION`), followed by one copy-paste shell command carrying cwd (`codex -C`),
+  model, `model_reasoning_effort`, approval policy, `-s danger-full-access` and a
+  self-contained cold-start prompt — in the form valid for the launch path used: the TUI form pins approval with `-a never`, the headless `codex exec` form (which has no `-a` flag)
+  with `-c 'approval_policy="never"'`. If there is no executable next item, the prompt must
+  carry the exact owner decision or verification boundary; never omit the command. For
+  `plan-protocol` executable-plan work, the provider-neutral `plan-protocol` launch-block (its own
   `Capabilities` column and `Next` semantic-carrier form — see the router above, owned by
   skill `general/plan-protocol` §8) is MANDATORY alongside this native table, never
   native-only. Treat completion as a `session-handoff` activation; for plan work, apply
   `plan-protocol` too.
-- Cold-start preflight is `pwd` → `git status --short` → `codex doctor --json` (does not
-  accept `-m`/`-c`; useful for hook/auth checks, NOT for a session's model/effort) →
+- Cold-start preflight is `pwd` → `git status --short` → `codex doctor --json` (takes `-c`
+  overrides but rejects `-m`; it reports the config/auth/hook state it resolves for ITSELF,
+  never a running session's model/effort) →
   hook-command integrity → `maind health --cwd` → applicable plan-lint. Confirm the
   effective model/effort, approval policy and sandbox from the launch command actually run
   (its own `-m`/`-c model=`, `-c model_reasoning_effort=`, `-a`/`-c approval_policy=`, `-s`

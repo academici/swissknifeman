@@ -1,102 +1,89 @@
-# HANDOFF — 2026-07-25 — after P1.4
+# HANDOFF — 2026-07-29 — after P7
 
-**P1.4 закрыт 🟠 по git-фактам** (D50): его работа была исполнена ещё 2026-07-19
-(`c37b3379` — plan-protocol 2.9.0 с journal/index + lint + snippets; bootstrap-журнал
-`9844f499`), но осталась незакрытой из-за перехвата ACTIVE планом DUAL-PROVIDER.
-Не выполнен один Deliverable — re-пин контракта P0.2; он вынесен в новый item **P1.5**.
+**План ТЕРМИНАЛИЗОВАН поглощением** (D60; решение владельца Р1, зафиксированное D2 плана
+`2026.07.29-HARNESS-AGNOSTIC`, который несёт `supersedes: 2026.07.18-FOREMAN`). Плановая работа
+по этому ID больше не ведётся: `P1.5` и все 23 items фаз P2–P7 переведены в
+`⛔ Skipped by decision`, фаза P1 → `🟠 Done with deviations`, фазы P2–P7 → `⛔ Skipped by decision`.
+Осталось одно действие вне этого плана — архивация конвейером `plan-close archive`, её носитель
+item **P0.5** поглощающего плана.
 
-**Мёртвый гейт снят.** Прежний `Next` ждал «`2026.07.19-DUAL-PROVIDER` P7.4 GREEN» —
-тот план терминален со статусом **🟠**, его P7.4 остался literal `ATTENTION`, условие
-не наступит никогда. Заменено реальной зависимостью (D49).
-
-**Очередь экосистемы (D49):** этот план идёт ПОСЛЕ `2026.07.24-AGENT-RELIABILITY`
-(`Paused By` обновлён). Регистр очереди и владения поверхностями —
-`plans/README.md` § «Очередь планов и владение поверхностями».
-
-**Next:** run-items: task:plan-run 2026.07.18-FOREMAN P1.5
+**Next:** archive: task:plan-close archive 2026.07.18-FOREMAN
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Sonnet (`implementation`) |
-| Thinking | high — сверка якорей parse-контракта против канона, вердикт breaking/non-breaking |
-| Context | `NEW SESSION`, запускать ИЗ репо `~/projects/packages/swissknifeman` |
-| Гейт | **fail closed, пока фаза P2 плана `2026.07.24-AGENT-RELIABILITY` не терминальна** — она уводит `plan-protocol` на `2.12.0` и переписывает все пять команд; пин на промежуточную версию запрещён |
-| Суть | Re-пин `root/contracts/driver-plan-protocol.md` (сейчас отстал: `v2.8.0 @ 2cf26e8` против живых `2.11.0`) + построчная сверка четырёх якорей §1–§4 |
+| Model class | implementation |
+| Effort | low |
+| Capabilities | — |
+| Context | continue (/clear) — ручной item |
+| Суть | Перенести терминальный план в `plans/archive/`, мигрировать ссылки, починить потребителей пути (`resolve_plan_dir`) и регистр очереди `plans/README.md` |
 
 ```
-# НЕ раньше: фаза P2 плана 2026.07.24-AGENT-RELIABILITY терминальна (🟢/🟠 в её Status Board)
-/task:plan-run 2026.07.18-FOREMAN P1.5
+/task:plan-close archive 2026.07.18-FOREMAN
 ```
 
-(Cold-start reads: `phases/P1.md` P1.5 (все 16 полей) + P1.4 Completion Notes/Known Deviations;
-`root/contracts/driver-plan-protocol.md` целиком; `packages/skiller/skills/general/plan-protocol/SKILL.md`
-frontmatter + §§1–4; `plans/2026.07.24-AGENT-RELIABILITY/phases/P2.md` P2.2 Completion Notes;
-`plan.md` §5 D47/D49/D50.)
+(Cold-start reads: `plans/2026.07.29-HARNESS-AGNOSTIC/phases/P0.md` item **P0.5** — все 16 полей;
+`plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` — судьба каждого
+артефакта; `packages/task/commands/plan-close.md` §«Режим `archive <ID>`» — шесть шагов;
+`git show 9b1b5fef` — прецедент миграции `root/` без физического переноса.)
 
-**Пере-скоуп P2/P5 — решение владельца от 2026-07-25 (D49), исполняется отдельным заходом.**
-Artifex становится ТОНКОЙ обвязкой над контрактами `2026.07.24-AGENT-RELIABILITY`
-(`execution-state-machine-v1`, `risk-review-loop-budget-v1`, `unified-agent-trace-v1`), а не
-собственным движком решений: CLI-запуск headless-сессий и Telegram-эскалация остаются, движок
-next/retry/escalate — потребляется. Design-заход по P2/P5 запускать только когда те контракты
-заморожены (после P2/P3.1 того плана), иначе проектирование против движущейся цели.
+**Штатный носитель исполнения — item `2026.07.29-HARNESS-AGNOSTIC` P0.5**, а не голый запуск
+конвейера: его ТЗ добавляет к шести шагам режима `archive` починку четырёх потребителей пути в
+живом дереве и правку регистра очереди (D50/D61 того плана). Запускать так:
+`/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P0.5`.
 
-**Done:** **P1.3 закрыт 🟢** (Exec под sonnet/high, plan-run):
-- Реализован `lib/task/journal.py` (stdlib-only): `validate_entry`/`new_entry`/`append`
-  (append-only NDJSON, один `write()` на строку) + CLI `python3 -m task.journal append`.
-- Шаг записи журнала врезан в close-протокол ВСЕХ 5 команд `plan-{exec,run,close,audit,design}.md`
-  (D21): старт+финал у exec/run, финал у close (item- и phase-режим)/audit/design.
-- SessionEnd-backstop-хук: design уже в контракте P1.1 (§«Дом записи», D26) — включение вне Scope
-  (owner-review, MVP без него).
-- Commits: item `94eada8` (lib/task/journal.py + 5 команд + test_journal.py — ТОЛЬКО пути Files
-  item'а, `plan-audit.md` выделен из параллельного диффа владельца вручную); bookkeeping — см.
-  §6 Update Log (хеш появится этой сессией после текущего коммита).
-- Validation: `compileall` OK; `unittest tests.test_journal` — 16 passed; `bash
-  packages/task/scripts/validate.sh` — OK (0 ошибок, 56 warning — все на чужих планах);
-  `plan-lint plans/2026.07.18-FOREMAN` — 0 ошибок/0 предупреждений (без `--baseline`).
-- **Known Deviations:** — (чистое закрытие; факт-заметка про первый коммит плана в git-историю
-  swissknifeman — в Completion Notes, не отклонение).
-Ранее: **P1.1/P1.2 закрыты 🟢** (схемы журнала/индекса sealed v1, исполнялись в Brain); **P1
-reconcile** (D46/D47); **P0 6/6 ТЕРМИНАЛЬНА**.
+**Done:**
+- **P0 — 6/6 🟢, терминальна.** Пять sealed-контрактов: parse-контракт драйвер↔plan-protocol
+  (`driver-plan-protocol.md`), policy-схема (`artifex-policy-schema.md`), run-folder + мандат
+  (`artifex-run-folder.md`) и, из P1, схемы журнала (`plan-journal-schema.md`) и индекса
+  (`plan-index-schema.md`).
+- **P1 — 🟠.** P1.1/P1.2 🟢 (схемы sealed v1), P1.3 🟢 (`lib/task/journal.py` + запись во всех
+  пяти командах `task:plan-*`, коммит `94eada8`), P1.4 🟠 (канон plan-protocol 2.9.0 с
+  journal/index + lint + snippets, коммит `c37b3379`, bootstrap-журнал `9844f499`), P1.5 —
+  `⛔`: re-пин parse-контракта передан item'у **P4.5** поглощающего плана (его D37).
+- **Терминализация 2026-07-29** (`2026.07.29-HARNESS-AGNOSTIC` P0.3): статусы, D60, version bump
+  0.22.1 → 0.23.0, строка Update Log, причина в `## Phase Context` каждой `⛔`-фазы.
 
-**Remaining:** P1.5 (re-пин P0.2 — закрывает фазу P1) → пере-скоуп P2/P5 отдельным
-design-заходом → P2→P7 phase-first по roadmap.md. Всё — после терминальной P2 плана
-`2026.07.24-AGENT-RELIABILITY` (D49). Открыто 24 items из 33.
+**Remaining:** по этому плану — ничего. 24 незакрытых items получили адрес в инвентаре
+поглощения: 19 → **P4.1** поглощающего плана (вердикт «потребляем · строим · отменяем» + спека
+остатка `roadmap/artifex-thin-wrapper.md`, его D38), P1.5 → **P4.5**, четыре items фазы P5
+отменены по существу (движок решений потребляется из `2026.07.24-AGENT-RELIABILITY`, D49 выше).
 
-**Sources of truth:** исполнительская карта — `roadmap.md`; фаза — `phases/P1.md`; журнал —
-`root/contracts/plan-journal-schema.md` (P1.1 sealed v1) + `lib/task/journal.py` (реализация,
-P1.3); §3 Routing — модель/effort per item; §7 Contracts — Consumed sealed (plan-protocol
-v2.8.0@2cf26e8, P1.4 бампает на v2.9.0), Exported sealed (policy v1, run-folder v1, журнал v1,
-индекс v1), draft (decision-лог P5.4); D-лог — `plan.md §5` (D1–D48); контракты —
-`root/contracts/{plan-journal-schema,plan-index-schema,artifex-run-folder,artifex-policy-schema,
-driver-plan-protocol}.md`; OQ — `open-questions.md`.
+**Sources of truth:**
+- **инвентарь поглощения** — `plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md`
+  (§2 судьба каждого артефакта и item'а · §3 поимённая сверка пяти якорей parse-контракта ·
+  §4 вердикт OQ-2);
+- решения этого плана — `plan.md` §5 (D1–D60), контракты — `root/contracts/` (остаются в архиве,
+  переносятся только ссылки — прецедент `9b1b5fef`);
+- живая реализация журнала — `packages/task/lib/task/journal.py`; канон схемы — `plan-journal-schema.md`;
+- поглощающий план — `plans/2026.07.29-HARNESS-AGNOSTIC/` (§5 D2/D9/D10/D37/D38, фаза P4).
 
 **Open risks:**
-- **Repo↔Brain sync (новый, P1.3):** P1.3 — ПЕРВЫЙ item, чей код-коммит лёг в git-историю репо
-  swissknifeman (Home плана — `brain`, P0–P1.2 исполнялись там же со своей git-историей — разные
-  репозитории). Штатный `brain sync` не прогнан этой сессией (вне scope P1.3, Execution Rules
-  относят его к владельцу/отдельному шагу) — до синка Brain-зеркало плана не видит P1.3-правок.
-- **plan-audit design:** P0 исполнена без явной отметки о прохождении `/task:plan-audit design`
-  (roadmap-гейт). При желании владельца pre-exec-ревью P1 — его гейт (не блокирует P1.4).
-- **Owner-гейты посреди волны** (не пропускать): P1.4 (канон, эта фаза) · rulebook P5.3 ·
-  contribution harness P6.1/OQ-6 · вердикт пилота P6.3 · канон P7.3 · дом скилла P7.4/OQ-7.
-- **Реconcile-долг P5.4↔P0.6:** decision-событие run-folder ↔ decision-лог — полный reconcile при
-  детализации/exec P5.
-- **Остаток rename вне плана:** repo-код `packages/artifex/` ещё не создан (P2 exec); `docs/
-  reference.md` SKM — при касании.
-- **Посторонний дифф в дереве** (владелец правит параллельно, НЕ трогать): `packages/task/
-  commands/plan-audit.md` (scope-payload launch-block, вкраплён в файл — выделен из него П1.3-
-  правка, остальное нетронуто) + `packages/task/lib/task/plan_lint.py` + `packages/task/tests/
-  test_plan_lint.py` + `packages/skiller/skills/general/plan-protocol/{SKILL.md,SKILL.ru.md,
-  snippets/launch-block-template.md}` + `packages/skiller/scripts/check-translations.sh` (та же
-  scope-payload волна) + `docs/reference.md` SKM + AzGuard/docs+plans + CoreX/COREX-CORE +
-  `plans/2026.07.15-TOKEN-ECON-P6/plan.md` + `.maind-feature-log.last`.
-- **MAX base-URL** (P4.1): миграция platform-api→platform-api2, дедлайн 2026-07-19 — сверить
-  перед кодом P4.1.
+- **Пин `driver-plan-protocol.md` просрочен и остаётся просроченным**: `plan-protocol`
+  **v2.8.0 @ `2cf26e8`** против живого канона **v2.21.0**. Замер P0.3 (§3 инвентаря): из пяти
+  якорей §4 сломан один — **форма `Next`** (канон перешёл на провайдер-нейтральные семантические
+  формы `exec-items:`/`run-items:`/…), значит по критерию D9 поглощающего плана это **вариант B
+  (breaking)**, а по его D37 вариант B эскалируется владельцу, а не исполняется командой. До
+  этого момента любой парсер, читающий handoff по запиненной схеме, на новых планах шаг не
+  классифицирует.
+- **Приёмка `2026.07.24-AGENT-RELIABILITY` формально не выполнена** (его D88/D89), а вся
+  «тонкая обвязка» стоит на его контрактах — утверждения «стоим на доказанном контракте» в
+  будущей спеке обязаны нести `[UNVERIFIED]` (`research/08` §2 поглощающего плана).
+- **`execution-state-machine-v1` живой библиотекой не существует** — машина решений лежит
+  ДАННЫМИ в каталоге артефактов архивированного плана (135 ячеек); объём работы «потребить
+  `decide`» этим не покрыт.
+- **Потребители пути `plans/2026.07.18-FOREMAN` в живом дереве не починены** — это скоуп P0.5:
+  `packages/skiller/tests/test_provider_publication_parity.py:156` (хардкод под охраной
+  `path.exists()` — после переноса теряет покрытие, не падает), `AGENTS.md:24`,
+  `roadmap/codex-subagent-offload.md:81`, регистр `plans/README.md`.
+- **Каталог принципов владельца** (`findings/owner-principles-catalog.md`) остаётся со статусом
+  «🔒 на утверждение владельцем»: его гейт истёк вместе с носителем (`.artifex/policy.toml`
+  отменён), живого потребителя в поглощающем плане нет.
 
 **Workarounds / Deferred / Open questions:**
 - workarounds: —
-- deferred: генератор index.md (P1.2 follow-up, опц.) — MVP ручной по шаблону P1.4; Layer 3/
-  defer-resume (OQ-2) — по данным пилота P6.3; корневой супервизор D11 (OQ-4) — v2.
-- open_questions: OQ-6 (дом rollout-конфигов, гейт P6.1); OQ-7 (дом Brain-скилла, гейт P7.4);
-  философия-ЗНАЧЕНИЯ P0.3 (owner-гейт P0.5); D13-находка (ось process-governance) —
-  owner-решение.
+- deferred: постройка тонкой обвязки супервизора целиком — `roadmap/artifex-thin-wrapper.md`
+  (производит P4.1 поглощающего плана, D38); каналы эскалации TG/MAX, run-folder и dry-run пилот
+  — там же.
+- open_questions: OQ-6 (дом rollout-конфигов) и OQ-7 (дом Brain-скилла) закрываются вместе со
+  своими фазами (`⛔`) — если тема вернётся, её носитель будет назван спекой остатка, а не этим
+  планом. Судьба parse-контракта (OQ-2 поглощающего плана) — измерена, исполнитель P4.5.

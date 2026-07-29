@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-29 (P6.4 закрыт 🟠: стартовая уборка `context-notify.sh` очищает устаревшие `*.tmp`; фаза P6 ждёт отдельного `/task:plan-close`) |
+| Last Updated | 2026-07-29 (P7.1 закрыт 🟠: dogfood-тест переключения, вердикт «дошёл с 4 вмешательствами», семь поломок с адресами → вход P7.2; ранее этим же заходом — реопен P6 под P6.4 (D140) и его закрытие 🟠) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -216,7 +216,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟡 In progress |
-| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | ⬜ Not started |
+| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 0/3 | 🟡 In progress |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
@@ -546,6 +546,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-29 | plan-run/Claude Opus 5/high (P7.1 закрыт 🟠) | Dogfood-тест переключения: Codex (`gpt-5.6-terra`/`medium`) провёл P6.4 от cold start до закрытия по §8. Вердикт «дошёл с 4 вмешательствами», 7 поломок с адресами — детали см. `phases/P7.md` P7.1 Completion Notes. |
 | 2026-07-29 | plan-exec/gpt-5.6-terra/medium (P6.4 закрыт 🟠) | Стартовая уборка statusline теперь очищает устаревшие `*.state` и `*.tmp` одним `find`; добавлен регресс-тест — детали см. phases/P6.md P6.4 Completion Notes. |
 | 2026-07-29 | plan-design/Claude Opus 5/high (реопен P6 под P6.4) | Сверка P7.1 нашла блокер: живых `plan-exec` items в плане нет (все три кандидата dogfood закрыты). По owner-развилке заведён **P6.4**, фаза P6 реопенена по канону §3, счёт items 52 → 53 — детали см. §5 D140. |
 | 2026-07-29 | plan-close/Sonnet 5/low (реконсиляция P6 по Audit P6, заход 2) | F1–F8 захода 1 применены (реконсиляция `838cae56`): якорь чисел P6.3, Known Deviations вне-`Files` P6.3, `Last Updated`, `gates[]` `closure/P6.json`, атрибуция `benchmark.json` в handoff, недостающий элемент Deliverables P6.1 доделан (D139) — статусы не менялись. |

@@ -7,7 +7,7 @@
     "command": "plan-close",
     "actor": "sonnet/low"
   },
-  "phase_status": "🟠 Done with deviations",
+  "phase_status": "🟡 In progress",
   "git": {
     "head_sha": "61ad855d93ebcdebf73660f36933b397be4a7746",
     "branch": "codex/provider-project-sync",
@@ -35,6 +35,12 @@
       "status": "🟠 Done with deviations",
       "evidence_class": "real",
       "evidence": "3 дельты в general/verify-claims + аддитивный абзац CLAUDE.md + 3 pressure-сценария; skiller eval general/verify-claims — 6/7 passed (findings/P6.3-pressure-run.md); research/14-P6.3-dor-delta-spec.md для P2.3 (D81, потреблена); Known Deviations: item-коммит несёт дифф вне Files (docs/guide/budget.md, adapters/codex/core/** проекции verify-claims), pressure#2 пре-существующий красный (34ae85f1, вне Scope), Validation-опечатка CLI-флагов, прирост тела ~17 строк vs ориентир ~15"
+    },
+    {
+      "id": "P6.4",
+      "status": "⬜ Not started",
+      "evidence_class": "baseline_pending",
+      "evidence": "заведён реопеном 2026-07-29 (D140) под находку F6/D139 P6.1: стартовая уборка context-notify.sh чистит только *.state, осиротевшие *.tmp (3/40 SIGKILL-прогонов, findings/P6.1-statusline-measure.md §4) накапливаются бессрочно — расширение glob + регресс-тест; чисел нет: item не исполнялся"
     }
   ],
   "gates": [

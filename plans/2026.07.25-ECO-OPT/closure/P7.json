@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P7",
+  "closed_at": "2026-07-29",
+  "closed_by": {
+    "command": "plan-close",
+    "actor": "sonnet/low"
+  },
+  "phase_status": "🟠 Done with deviations",
+  "git": {
+    "head_sha": "544850047a8dde339d5693f5797afb29dab7d982",
+    "branch": "codex/provider-project-sync",
+    "dirty": true
+  },
+  "inputs_sha256": {
+    "plan.md": "c46d24aab0dd9a22664c4ca97306b9a1f6eb3f30b0e06c885a45da8c3524753a",
+    "phases/P7.md": "432ab372bf7f91de885c105ef02ca02af528bde5ca0e3225ff8e78f2dc6b8bc8"
+  },
+  "items": [
+    {
+      "id": "P7.1",
+      "status": "🟠 Done with deviations",
+      "evidence_class": "synthetic",
+      "evidence": "Dogfood-тест на одном заведённом кандидате (P6.4), не 1–2 отобранных из готовой очереди; Codex (gpt-5.6-terra/medium) провёл item от cold start до закрытия по §8 — вердикт «дошёл с 4 вмешательствами», 7 поломок с адресами (findings/P7.1-switch-test.md §6, artifacts/P7.1/breakage-log.md)"
+    },
+    {
+      "id": "P7.2",
+      "status": "🟢 Done",
+      "evidence_class": "real",
+      "evidence": "router-таблица (Operation|Canonical procedure, приём A2) + untrusted-import инвариант (F1) в секции ## Operation router корневого AGENTS.md; 4 поломки P7.1 (№1,2,5,6) починены по адресу; owner-вопрос per-package AGENTS.md снят D62(3)-b; вердикт в docs/reference.md + roadmap/codex-subagent-offload.md закрыт; item-коммит cccec4eb"
+    },
+    {
+      "id": "P7.3",
+      "status": "🟢 Done",
+      "evidence_class": "real",
+      "evidence": "плагин как явно маршрутизируемая возможность после ре-дизайна D142 (снял эскалацию D141): двухинструментный гейт по классу инжекта, правило отката привязано к дельте; артефакты budget-first-turn-{before,after,after-claude-md}.json; вердикт в docs/rejected-optimizations.md + roadmap/budget-first-turn-plugin-visibility.md"
+    }
+  ],
+  "gates": [
+    {
+      "id": "plan-lint:baseline",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "python3 packages/task/scripts/plan-lint.py plans/2026.07.25-ECO-OPT --baseline HEAD — 0 ERROR новых от закрытия фазы (после фикса Items 🟢/всего и closure/P7.json)"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "items_green_of_total",
+      "value": "2/3",
+      "label": "real"
+    }
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items этой реконсиляции (plan-close низкоэффортный, механическая сверка git-фактами, не повторный полный прогон validate.sh фазы)",
+    "P7.1 evidence_class=synthetic: тест на одном кандидате, вывод об устойчивости поведения на других item'ах не делается (граница названа в findings/P7.1-switch-test.md §7)"
+  ],
+  "external_side_effects": []
+}

@@ -1,71 +1,46 @@
-# HANDOFF — 2026-07-29 — after P7.2
+# HANDOFF — 2026-07-29 — after P7
 
-**P7.2 закрыт 🟢 Done (`plan-run`, sonnet/high).** Router-таблица (`Operation | Canonical
-procedure`, приём A2) + untrusted-import инвариант (приём F1) внесены секцией `## Operation
-router` корневого `AGENTS.md`. Четыре поломки dogfood-прогона P7.1 (`findings/
-P7.1-switch-test.md` §6) починены по адресу: №1 headless launch-форма для `codex exec` (нет
-флага `-a`, подтверждено context7 `/openai/codex` — `-a`/`--ask-for-approval` объявлен только
-в TUI CLI, `codex exec` использует `SharedCliOptions` без него); №2 preflight больше не
-предписывает `codex doctor --json` для model/effort (структурно не умеет `-m`) — источник
-истины теперь сама запущенная команда; №5 launch-block для plan-protocol-работы объявлен
-MANDATORY нейтральной таблицей (с `Capabilities`) поверх нативной; №6 форма `Next` — через
-роутер к канону `general/plan-protocol` §8. Поломки №3/№4/№7 (чужой носитель — канон/применение)
-уже внесены в `roadmap.md` § «Добавлено прогоном P7.1» закрытием P7.1, здесь не дублировались.
-Owner-вопрос (судьба per-package `AGENTS.md`, D62) снят: владелец делегировал выбор с критерием
-«без хвостов, агенты работают идеально» → вариант D62(3)-b, правило `-C packages/<name>` в
-router-таблице. D143 фиксирует операционную форму роли «второй водитель» с полем `Consequences`.
-Вердикт записан при любом исходе: `docs/reference.md` (строка + карточка с числами
-`findings/P7.3-plugin-cost-and-procedure.md`), `roadmap/codex-subagent-offload.md` закрыт
-датированным вердиктом. `open-questions.md`: OQ-2 подтверждён `Resolved → D84` (owner-вопрос
-закрыт), OQ-4 `Resolved → трек 1 закрыт P7.2`. Размер `AGENTS.md` — 7 252 б против потолка
-32 768 б (запас ≈78%). Item-коммит `cccec4eb` (7 файлов вне `plans/**` + `research/21` +
-`open-questions.md`); bookkeeping-коммит — следующим шагом этого же захода.
+**Фаза P7 закрыта `🟠 Done with deviations`** (`plan-close`, sonnet/low): все три item'а
+терминальны — P7.1 `🟠 Done with deviations` (dogfood-тест переключения на Codex, кандидат
+заведён под тест, реопен фазы P6 → P6.4), P7.2 `🟢 Done` (тонкий инструкционный слой по
+перечню поломок P7.1 + трек 1 OQ-4/A2/F1, запись роли Codex D143, per-package `AGENTS.md`
+снят D62(3)-b), P7.3 `🟢 Done` (плагин как явно маршрутизируемая возможность, ре-дизайн D142
+после эскалации D141, обе цены гейта врозь, хуки/процедура проверены фактически). Доска §4
+`plan.md` синхронизирована статусом `🟡 In progress` → `🟠 Done with deviations` (счётчик
+`Items 🟢/всего` остаётся `2/3` — считает только 🟢, канон plan-lint). `Phase Handoff` в
+`phases/P7.md` написан (агрегат Known Deviations по items, docs-sync, что дальше).
 
-**Фаза P7 ТЕРМИНАЛЬНА** (2/3 🟢, 1/3 🟠: P7.1 `🟠`, P7.2 `🟢`, P7.3 `🟢`) — фазовое закрытие
-отдельным `/task:plan-close`, не входит в `plan-run`.
+**Docs-sync:** обновлено — внутри items P7.2/P7.3 (`docs/reference.md`,
+`docs/rejected-optimizations.md`, `AGENTS.md`, `roadmap/codex-subagent-offload.md`,
+`roadmap/budget-first-turn-plugin-visibility.md`), закоммичено вместе с их закрытием; на
+границе закрытия фазы дополнительных доко-правок не требуется.
 
-**Docs-sync:** не требуется — правки `docs/` этого захода (`docs/reference.md`) зонтичные, а не
-per-package; `scripts/docs-sync.sh` их не касается.
-
-**Next:** фаза P7 терминальна (все три item'а закрыты) → `/task:plan-close 2026.07.25-ECO-OPT P7`
-(шаг-не-item, реконсиляция по git-фактам + Phase Handoff + lint).
+**Next:** фаза несёт 🟠 (P7.1) — перед следующим шагом плана обязателен аудит фазы.
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation (Claude Sonnet 5) |
-| Effort | low (пин команды `plan-close`) |
-| Capabilities | — |
+| Model | opus |
+| Thinking | xhigh — adversarial-аудит закрытой фазы с 🟠-item'ом |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть фазу P7: сверить статусы items с git-фактами, написать Phase Handoff, прогнать lint |
+| Суть | Аудит фазы P7: сверка 🟢/🟠 с кодом/git, no-op/scope-drift чек, целостность handoff |
 
 ```
-/task:plan-close 2026.07.25-ECO-OPT P7
+/task:plan-audit 2026.07.25-ECO-OPT P7
 ```
 
-**Done:** **57/57 items в фазах P1–P6/P8–P11 + P7.1–P7.3 терминальны.** Фаза P7 несёт P7.1
-`🟠 Done with deviations`, P7.2 `🟢 Done` (этот заход), P7.3 `🟢 Done` — все три терминальны,
-фаза P7 сама ждёт формального закрытия (`Phase Handoff` не написан, `closure/P7.json` не
-заведён — обязанность следующего `plan-close`).
+**Done:** все 60 items плана (P1–P11) терминальны; фаза P7 формально закрыта этим заходом
+(была последней незакрытой фазой). План в целом ЕЩЁ НЕ терминален целиком — фазы P2–P6,
+P8–P11 несут `🟠 Done with deviations` со своими открытыми рисками (см. §4 Status Board),
+P1 `🟢`, P7 теперь `🟠`.
 
-**Remaining:** формальное закрытие фазы **P7** (`/task:plan-close`). Отдельно в очереди висит
-невыполненный `/task:plan-audit 2026.07.25-ECO-OPT P2` (унаследовано, этим заходом не
-проверялось).
+**Remaining:** `/task:plan-audit 2026.07.25-ECO-OPT P7` (следующий шаг, выше). Отдельно в
+очереди унаследован невыполненный `/task:plan-audit 2026.07.25-ECO-OPT P2` (этим заходом не
+трогался).
 
-**Sources of truth:** `phases/P7.md` P7.2 Completion Notes (полный ход, коды границ, командные
-выводы) · `research/21-P7.2-instruction-slice-spec.md` (целевой файл, якорь, формулировки,
-поимённое соответствие 7 поломок, размер до/после) · `findings/P7.1-switch-test.md` §5–§6 (вердикт
-и поломки) · `artifacts/P7.1/breakage-log.md` (полный журнал с адресами) · `plan.md` §5 D62/D84/
-D143 · `open-questions.md` OQ-2/OQ-4 · item-коммит `cccec4eb`.
+**Sources of truth:** `phases/P7.md` (Phase Status + Phase Handoff + все три Completion Notes)
+· `plan.md` §4 Status Board строка P7 · §6 Update Log (запись `plan-close/Sonnet 5/low`).
 
-**Open risks:** унаследованные без изменений плюс два новых, названных этим заходом:
-(63) **НОВЫЙ.** Поломки P7.1 №3 (`Files` реопененной фазы не называет `closure/<Pn>.json`) и №4
-(перенос `Open risks` при перезаписи `handoff.md` не гарантирован каноном) остаются живым риском
-канона `plan-protocol` — носитель чужой (`roadmap.md` § «Добавлено прогоном P7.1»), эта фаза их
-не правит (D84). Следующий догфуд-заход на реопененной фазе или на потере рисков может их
-повторить.
-(64) **НОВЫЙ.** Численный пилот делегирования (дорожки A/B, `research/16-P7-target-design.md`
-§2) сознательно не запускался этим заходом (D84) — экономика делегирования остаётся неизмеренной;
-готовый протокол не устарел, вытягивается отдельным заходом по факту потребности.
+**Open risks:** унаследованные без изменений (49)–(62), плюс (63)–(64) из предыдущего handoff:
 (49) `Files` items, правящих `packages/task/commands/*.md`, структурно неполон — не называет
 golden-фикстуры и сгенерированный `docs/reference/provider-commands.md`.
 (50) Пре-существующий дрейф Codex-проекции (`render-provider-commands.py --check`).
@@ -76,27 +51,25 @@ golden-фикстуры и сгенерированный `docs/reference/provid
 (55) Класс «Files не называет машинно-обязательный побочный продукт» — кандидат `roadmap.md`,
 носитель чужой (канон).
 (56) Канон §8 разрешает терять незакрытые риски при перезаписи `handoff.md` — кандидат
-`roadmap.md` + машинный чек `plan_lint` (этот риск сам демонстрируется списком выше — перенесён
-руками, не машиной).
+`roadmap.md` + машинный чек `plan_lint` (демонстрируется этим же списком — перенесён руками).
 (57) Конфликт формы launch-блока: канон §8 предписывает нейтральную таблицу, корневой
-`AGENTS.md` — нативную форму Codex; **починен этим заходом** (P7.2) — launch-block теперь
-объявляет нейтральную таблицу MANDATORY поверх нативной; риск снят фактом.
-(58) Канонический launch-блок корневого `AGENTS.md` не работает на headless-пути; **починен
-этим заходом** (P7.2) — headless-форма `codex exec` добавлена; риск снят фактом.
+`AGENTS.md` — нативную форму Codex; починен P7.2 — риск снят фактом.
+(58) Канонический launch-блок корневого `AGENTS.md` не работал на headless-пути; починен
+P7.2 — headless-форма `codex exec` добавлена; риск снят фактом.
 (60) Две оценки цены (плагин/проект) имеют разную природу и разных оценщиков — их сумма
 остаётся ОЦЕНКОЙ; `claude plugin details` без `--json`, формат может измениться.
 (61) Правило отката (три ветви) и правило активации плагина (D84) живут ТЕКСТОМ, машинного
 гейта у обоих нет — названо явно.
 (62) **Унаследованный:** `verify-citations --strict` даёт 16 находок (все в `phases/P11.md`),
-идентичны до и после этого захода — новых от диффа 0. Остаток вне скоупа, владелец не назначен.
-
-**Workarounds / Deferred / Open questions:** унаследованные без изменений (F1 roadmap-кандидат,
-расхождение flexcrm, апстрим-URL 404, backup-restore, `PreCompact`/`PostCompact` хук вне скоупа
-P6 — кандидат roadmap, D53). Правило дорожки B (`U`/`P`, D64) в `roadmap.md`. «Единый измеритель
-always-on» — стаб `roadmap/budget-first-turn-plugin-visibility.md` (P7.3). Numeric-пилот
-делегирования (дорожки A/B) — deferred, протокол в `research/16-P7-target-design.md` §2.
+идентичны до и после захода P7.2 — новых от диффа 0. Остаток вне скоупа, владелец не назначен.
+(63) Поломки P7.1 №3 (`Files` реопененной фазы не называет `closure/<Pn>.json`) и №4 (перенос
+`Open risks` при перезаписи `handoff.md` не гарантирован каноном) остаются живым риском канона
+`plan-protocol` — носитель чужой (`roadmap.md` § «Добавлено прогоном P7.1»), эта фаза их не
+правит (D84).
+(64) Численный пилот делегирования (дорожки A/B, `research/16-P7-target-design.md` §2)
+сознательно не запускался (D84) — экономика делегирования остаётся неизмеренной; готовый
+протокол не устарел, вытягивается отдельным заходом по факту потребности.
 
 **Дерево на момент handoff:** `git status --porcelain` несёт унаследованные untracked
-`.swissknife/` и `packages/task/lib/.claude/` (не идентифицированы как продукт этого захода,
-оставлены как есть, посторонний дифф — не наш). Item-коммит P7.2 — `cccec4eb`. Bookkeeping-коммит
-по `plans/2026.07.25-ECO-OPT/**` — следующим шагом этого же захода.
+`.swissknife/` и `packages/task/lib/.claude/` (runtime-артефакты analyst/task, не продукт этой
+фазы, посторонний дифф — не наш). Bookkeeping-коммит закрытия P7 — следующим шагом.

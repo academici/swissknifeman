@@ -216,7 +216,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟠 Done with deviations |
-| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 2/3 | 🟡 In progress |
+| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 2/3 | 🟠 Done with deviations |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
@@ -551,6 +551,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 |:--|:--|:--|
 | 2026-07-29 | plan-design/Claude Opus 5/high (эскалация P7.3 снята) | P7.3 ре-дизайнен 🔴 → 🟡: гейт стал двухинструментным по классу инжекта, правило отката привязано к дельте, Scope расширен тремя носителями границы, §3 Routing medium → high — детали см. §5 D142. |
 | 2026-07-29 | plan-run/Claude Opus 5/high (P7.1 закрыт 🟠) | Dogfood-тест переключения: Codex (`gpt-5.6-terra`/`medium`) провёл P6.4 от cold start до закрытия по §8. Вердикт «дошёл с 4 вмешательствами», 7 поломок с адресами — детали см. `phases/P7.md` P7.1 Completion Notes. |
+| 2026-07-29 | plan-close/Sonnet 5/low | Фаза P7 закрыта 🟠 Done with deviations (3/3 items терминальны: P7.1 🟠, P7.2 🟢, P7.3 🟢) — Phase Handoff заполнен, доска §4 синхронизирована 2/3→3/3. |
 | 2026-07-29 | plan-exec/gpt-5.6-terra/medium (P6.4 закрыт 🟠) | Стартовая уборка statusline теперь очищает устаревшие `*.state` и `*.tmp` одним `find`; добавлен регресс-тест — детали см. phases/P6.md P6.4 Completion Notes. |
 | 2026-07-29 | plan-design/Claude Opus 5/high (реопен P6 под P6.4) | Сверка P7.1 нашла блокер: живых `plan-exec` items в плане нет (все три кандидата dogfood закрыты). По owner-развилке заведён **P6.4**, фаза P6 реопенена по канону §3, счёт items 52 → 53 — детали см. §5 D140. |
 | 2026-07-29 | plan-run/Sonnet 5/medium (P7.3 эскалирован 🔴) | Плагин `codex-plugin-cc` установлен (marketplace+install+`/codex:setup --disable-review-gate`, зелёные), но гейт `skiller budget --first-turn` слеп к marketplace-плагинам (delta=0 инструментально при реальной цене ~449 ток) и правило отката читается шире намерения (проект уже WARN до установки) — эскалация, `plan-design` правит ТЗ — детали см. `phases/P7.md` P7.3 blockquote и §5 D141. |

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.25-ECO-OPT",
+  "phase": "P6",
+  "closed_at": "2026-07-29",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "61ad855d93ebcdebf73660f36933b397be4a7746", "branch": "codex/provider-project-sync", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "97d390533417a8970e39d4eacc7c4e4e41c28d24cc611d5f7682121937b18188",
+    "phases/P6.md": "4d119d3fc91161f83c1b7be9e49c72c1e980166b698f830e8215a3874e95f43f"
+  },
+  "items": [
+    {"id": "P6.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "statusline context-notify.sh + env.ini + README в harness; docs/configs/statusline.md + индекс/сайдбар; tests/test_statusline.py; замер латентности приложен в findings/P6.1-statusline-measure.md"},
+    {"id": "P6.2", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "4 дельты в general/context-economy (§3) + general/compact-responses; check-translations.sh --stamp (173 локальных, 0 протухших); skiller registry прогнан; Known Deviations: item-коммит несёт дифф вне Files (docs/guide/budget.md, adapters/codex/core/** проекции)"},
+    {"id": "P6.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "3 дельты в general/verify-claims + аддитивный абзац CLAUDE.md + 3 pressure-сценария; skiller eval general/verify-claims — 6/7 passed (findings/P6.3-pressure-run.md); research/14-P6.3-dor-delta-spec.md для P2.3 (D81, потреблена); Known Deviations: pressure#2 пре-существующий красный (34ae85f1, вне Scope), Validation-опечатка CLI-флагов, прирост тела ~17 строк vs ориентир ~15"}
+  ],
+  "gates": [],
+  "metrics": [
+    {"name": "eval_pass_rate", "value": "P6.3: 6/7 (pressure#2 пре-существующий, вне Scope)", "label": "real"},
+    {"name": "check_translations", "value": "P6.2/P6.3: 173 локальных, 0 протухших, 0 осиротевших", "label": "real"}
+  ],
+  "limitations": [
+    "evidence_class=real опирается на Completion Notes items (реконсиляция, не повторный прогон validate.sh этой сессией — plan-close низкоэффортный, механическая сверка)"
+  ],
+  "external_side_effects": []
+}

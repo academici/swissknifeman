@@ -11,15 +11,19 @@
     "phases/P2.md": "c5919f3a2c1640530ea419cb633a8d5a2dc2d30a23e95ff1a61540a7286a7399"
   },
   "items": [
-    {"id": "P2.1", "status": "🟢 Done", "evidence_class": "real",
-     "evidence": "две model-notes в Brain (opus-5-prompting.md 122 строки, sonnet-5-prompting.md 108 строк) на Brain HEAD 16e1ec6, указатели в prompting.md, две строки в docs/reference.md; validate прошёл на swissknifeman HEAD 8b88d8fd"},
+    {"id": "P2.1", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "две model-notes в Brain (opus-5-prompting.md 150 строк, sonnet-5-prompting.md 101 строка — перепрогнано git -C Brain show 16e1ec6:... | wc -l реконсиляцией /task:plan-close P2.1 2026-07-28) на Brain HEAD 16e1ec6, указатели в prompting.md, две строки в docs/reference.md; validate прошёл на swissknifeman HEAD 8b88d8fd; Known Deviations: K=1 (WARN DoR §7 от флипа Status Board)"},
     {"id": "P2.2", "status": "🟠 Done with deviations", "evidence_class": "real",
      "evidence": "карта artifacts/P2.2/opus5-revision-map.md — 18 разделов; validate.sh OK (456 тестов) на item-коммите aec18754; Known Deviations: 4 пути вне Files (golden-фикстуры + сгенерированный отчёт)"},
     {"id": "P2.3", "status": "🟠 Done with deviations", "evidence_class": "real",
      "evidence": "карта artifacts/P2.3/opus5-revision-map.md — 5 разделов; validate.sh OK (456 тестов) на item-коммите e067a7dc; Known Deviations: 3 пути вне Files + пункт DoR §1.1 канона не внесён (вне Scope)"}
   ],
   "gates": [],
-  "metrics": [],
+  "metrics": [
+    {"name": "lint_new_from_closure", "value": "P2.1: новых от рабочего дерева 1 (baseline 03c529ba/8b88d8fd, worktree 844615ad, 0 ERROR / 22 WARN)", "label": "real"},
+    {"name": "lint_new_from_closure", "value": "P2.2: новых от диффа item'а 0 (baseline aec18754, 0 ERROR / 27 WARN)", "label": "real"},
+    {"name": "lint_new_from_closure", "value": "P2.3: новых от диффа item'а 0 (baseline e067a7dc, 0 ERROR / 27 WARN)", "label": "real"}
+  ],
   "limitations": [
     "evidence_class=real опирается на Completion Notes items (реконсиляция, не повторный прогон validate.sh этой сессией — plan-close низкоэффортный, механическая сверка)"
   ],

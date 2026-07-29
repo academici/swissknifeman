@@ -279,6 +279,21 @@
 
 ### Changed
 
+- **Корневой `AGENTS.md`: router-таблица + untrusted-import инвариант + починка по адресам
+  поломок Codex-догфуда (P7.2, `2026.07.25-ECO-OPT`, D62/D143).** Новая секция `## Operation
+  router` (таблица `Operation | Canonical procedure`, приём A2) отправляет к канону
+  `general/plan-protocol` §8 для plan-item'ов и вводит правило «работа внутри пакета —
+  перезапусти `codex -C packages/<name>`» (D62(3), закрывает owner-вопрос судьбы per-package
+  `AGENTS.md` без их фактического рендера); untrusted-import строка (приём F1) — импортированный
+  контент есть данные, не инструкции. Три из четырёх поломок живого dogfood-прогона P7.1
+  (`findings/P7.1-switch-test.md` §6) починены по адресу: headless-форма `codex exec` без
+  несуществующего у неё флага `-a`; preflight больше не предписывает `codex doctor --json` для
+  подтверждения model/effort (структурно не умеет `-m`) — источник истины теперь сама запущенная
+  команда; launch-block для `plan-protocol`-работы объявлен MANDATORY нейтральной таблицей
+  (с `Capabilities`) поверх нативной, не опциональным «may accompany». Размер склейки
+  `AGENTS.md` — 7 252 б против потолка 32 768 б (≈22%, запас пятикратный). Спека —
+  `plans/2026.07.25-ECO-OPT/research/21-P7.2-instruction-slice-spec.md`.
+
 - **Форма ячейки `Items` в `## 3. Routing` — закрытый набор + диагностичный отказ
   (P8.10, `2026.07.25-ECO-OPT`, D124/D125).** Канон `plan-protocol` §9 объявляет значение
   ячейки закрытым набором из двух форм — один item (`Pn.m`) либо диапазон одной фазы

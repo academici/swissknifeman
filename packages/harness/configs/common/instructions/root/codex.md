@@ -7,3 +7,6 @@ For this trusted repository, a Codex launch names the repository cwd, routed mod
 <!-- instruction:root.codex.fresh-agent-execution -->
 ## root.codex.fresh-agent-execution
 For an active executable plan, delegate each next executable item from its committed handoff; fix audit regressions forward through the owning item and escalate only an authority or frozen-contract change.
+<!-- instruction:root.codex.package-scope-routing -->
+## root.codex.package-scope-routing
+Project docs are read root→cwd and never past the repository root; restart with `codex -C packages/<name>` to pick up package rules before working inside `packages/<name>/**`.

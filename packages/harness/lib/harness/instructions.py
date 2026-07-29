@@ -24,7 +24,7 @@ from core.provider_lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.0.1"
+CATALOG_VERSION = "1.1.0"
 PROVIDERS = ("claude-code", "codex")
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task")
 TARGETS = {
@@ -40,7 +40,9 @@ COMMON_IDS = {
              "root.cli-routing", "root.shared-core", "root.marketplace",
              "root.engineering-invariants", "root.plan-lifecycle",
              "root.development-validation", "root.reference-provenance",
-             "root.decision-verification"),
+             "root.decision-verification", "root.provider-parity", "root.worktree-safety",
+             "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
+             "root.speculative-work", "root.docs-build"),
     "skiller": ("skiller.identity", "skiller.distribution-channels",
                 "skiller.configuration-ownership", "skiller.core-policy",
                 "skiller.layout-and-generation", "skiller.module-boundaries",
@@ -64,13 +66,15 @@ EXTENSION_IDS = {
                               "root.claude-code.context-budget",
                               "root.claude-code.research-routing"),
     ("root", "codex"): ("root.codex.bootstrap", "root.codex.launch-and-hook-integrity",
-                        "root.codex.fresh-agent-execution"),
+                        "root.codex.fresh-agent-execution",
+                        "root.codex.package-scope-routing"),
     ("skiller", "claude-code"): ("skiller.claude-code.marketplace-connect",
                                  "skiller.claude-code.vendor-targets",
                                  "skiller.claude-code.agent-hub"),
     ("harness", "claude-code"): ("harness.claude-code.config-surfaces",
                                  "harness.claude-code.lifecycle-surfaces",
-                                 "harness.claude-code.settings-precedence"),
+                                 "harness.claude-code.settings-precedence",
+                                 "harness.claude-code.safe-dirs"),
     ("maind", "claude-code"): ("maind.claude-code.plugin-and-mcp",
                                "maind.claude-code.workspace-trust"),
     ("analyst", "claude-code"): ("analyst.claude-code.capture-surfaces",
@@ -481,8 +485,8 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
             f"`{TARGETS[scope_id]['codex']}` | {len(COMMON_IDS[scope_id])} | "
             f"{len(EXTENSION_IDS[(scope_id, 'claude-code')])} | "
             f"{len(EXTENSION_IDS[(scope_id, 'codex')])} |")
-    lines += ["", "The frozen inventory contains 49 common and 18 provider-extension IDs "
-              "(67 total) across exactly 12 targets.", "",
+    lines += ["", "The frozen inventory contains 56 common and 20 provider-extension IDs "
+              "(76 total) across exactly 12 targets.", "",
               "## Public API", "",
               "`InstructionRequest` carries contract/catalog versions, operation ID, explicit "
               "ordered scope/provider IDs, an absolute target root, and config/authorization "

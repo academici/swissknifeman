@@ -7,3 +7,6 @@ Claude Code lifecycle surfaces include `PreToolUse` auto-approval, memory, notif
 <!-- instruction:harness.claude-code.settings-precedence -->
 ## harness.claude-code.settings-precedence
 Claude Code keeps `outputStyle` in `.claude/settings.local.json`, uses top-level `plansDirectory` in `.claude/settings.json`, and keeps the agent-pack lock at `.claude/agent-pack.lock.json`.
+<!-- instruction:harness.claude-code.safe-dirs -->
+## harness.claude-code.safe-dirs
+The `PreToolUse` auto-approve hook lets `rm`/`rmdir` inside trusted directories pass `deny_hard`: the safe-dirs allowlist is machine-owned and its verdict is fail-closed, and a project-level hook override never affects the allowlist.

@@ -52,7 +52,7 @@ def root_records(catalog):
 def set_conflict(catalog, *, common_modality="must", extension_modality="must",
                  extension_boundary=None, equivalent=False, shadow=False):
     common = root_records(catalog)[0]["obligations"][0]
-    extension = root_records(catalog)[14]["obligations"][0]
+    extension = root_records(catalog)[21]["obligations"][0]
     common["modality"] = common_modality
     extension.update({
         "modality": extension_modality,
@@ -65,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_49_common_18_extension_67_total_and_twelve_targets(self):
+    def test_exact_56_common_20_extension_76_total_and_twelve_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (49, 18, 67))
+        self.assertEqual((common, extensions, common + extensions), (56, 20, 76))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
@@ -128,7 +128,7 @@ class SemanticCatalogTests(unittest.TestCase):
 
     def test_provider_mismatch_and_namespace_refuse_before_p2(self):
         def mismatch(value):
-            record = root_records(value)[14]
+            record = root_records(value)[21]
             record["provider_id"] = "claude-code"
         result = altered_result(mismatch)
         self.assertIn("INSTRUCTION_EXTENSION_ID_INVALID", diagnostic_codes(result))

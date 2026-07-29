@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-29 (реопен фазы P6 под item **P6.4** — носитель dogfood-кандидата P7.1, решение владельца D140: §3 Routing, §4 Status Board `1/4 🟡`, `phases/P6.md` (Phase Status + ТЗ P6.4 + инвалидация Phase Handoff), `roadmap.md`, `roadmap/context-notify-tmp-cleanup.md`) |
+| Last Updated | 2026-07-29 (P6.4 закрыт 🟠: стартовая уборка `context-notify.sh` очищает устаревшие `*.tmp`; фаза P6 ждёт отдельного `/task:plan-close`) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -546,6 +546,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-29 | plan-exec/gpt-5.6-terra/medium (P6.4 закрыт 🟠) | Стартовая уборка statusline теперь очищает устаревшие `*.state` и `*.tmp` одним `find`; добавлен регресс-тест — детали см. phases/P6.md P6.4 Completion Notes. |
 | 2026-07-29 | plan-design/Claude Opus 5/high (реопен P6 под P6.4) | Сверка P7.1 нашла блокер: живых `plan-exec` items в плане нет (все три кандидата dogfood закрыты). По owner-развилке заведён **P6.4**, фаза P6 реопенена по канону §3, счёт items 52 → 53 — детали см. §5 D140. |
 | 2026-07-29 | plan-close/Sonnet 5/low (реконсиляция P6 по Audit P6, заход 2) | F1–F8 захода 1 применены (реконсиляция `838cae56`): якорь чисел P6.3, Known Deviations вне-`Files` P6.3, `Last Updated`, `gates[]` `closure/P6.json`, атрибуция `benchmark.json` в handoff, недостающий элемент Deliverables P6.1 доделан (D139) — статусы не менялись. |
 | 2026-07-29 | plan-close/Sonnet 5/low (реконсиляция P6 по Audit P6, заход 2) | G1–G7 захода 2 применены: Update Log, D139, агрегат Known Deviations P6.1, roadmap-носитель, `handoff.md` — детали см. `phases/P6.md` `## Phase Handoff`. Последняя бухгалтерская правка P6, повторный `plan-audit P6` не назначается. |

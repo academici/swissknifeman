@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Claude Fable 5/high (design pass 1) · Claude Opus 5/high (passes 2–3) |
-| Last Updated | 2026-07-29 (**P7.3 доисполнен и закрыт 🟢** по ТЗ D142: обе цены гейта предъявлены врозь, целостность хуков + процедура вкл/выкл проверены фактически, буллет `CLAUDE.md`/`rejected-optimizations`/`roadmap/` правлены — детали `phases/P7.md` P7.3 Completion Notes. Ранее этим же заходом — эскалация P7.3 (D141) и её снятие ре-дизайном (D142), P7.1 закрыт 🟠 dogfood-тест, реопен P6 под P6.4 (D140) и его закрытие 🟠) |
+| Last Updated | 2026-07-29 (**P7.2 закрыт 🟢, фаза P7 терминальна** (2/3 🟢, 1/3 🟠): router-таблица + untrusted-инвариант в корневом `AGENTS.md`, четыре поломки P7.1 починены по адресу, owner-вопрос per-package `AGENTS.md` снят (D62(3)-b, D143) — детали `phases/P7.md` P7.2 Completion Notes. Ранее этим же заходом — P7.3 доисполнен и закрыт 🟢 по ТЗ D142 (обе цены гейта врозь, хуки/процедура вкл-выкл проверены фактически), эскалация P7.3 (D141) и её снятие ре-дизайном (D142), P7.1 закрыт 🟠 dogfood-тест, реопен P6 под P6.4 (D140) и его закрытие 🟠) |
 | Repository | swissknifeman |
 | Related Packages | skiller, harness, maind, task, analyst |
 | Execution Mode | phase-first |
@@ -216,7 +216,7 @@ CP-P2 — сняты**, и ждать больше нечего ни одном�
 | P4 | Cross-machine память mAInd (демон-хост + Tailscale/LAN) | 1/3 | 🟠 Done with deviations |
 | P5 | Пилот code-review-graph vs Serena | 5/6 | 🟠 Done with deviations |
 | P6 | Контекст-гигиена: notify + compact-дисциплина + anti-overconfidence | 1/4 | 🟠 Done with deviations |
-| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 1/3 | 🟡 In progress |
+| P7 | Codex как второй водитель (переключение + инструкционный слой + плагин) | 2/3 | 🟡 In progress |
 | P8 | Инженерные гейты и честность закрытия (механика raytsystem) | 7/10 | 🟠 Done with deviations |
 | P9 | Стабильность ревью: гейт с содержанием + роли как данные + эталон | 3/4 | 🟠 Done with deviations |
 | P10 | Долги, унаследованные от AGENT-RELIABILITY | 1/4 | 🟠 Done with deviations |
@@ -658,6 +658,7 @@ P2.1/P5.2. **Названная граница инструмента:** `normal
 | 2026-07-28 | plan-run/Claude Sonnet 5/high (P6.3 закрыт 🟠) | P6.3 закрыт `🟠 Done with deviations`: три дельты в `verify-claims` + три pressure-сценария + спека `research/14` для P2.3 — детали см. `phases/P6.md` P6.3 Completion Notes. Все items P6 терминальны; фазовое закрытие — отдельным `/task:plan-close`. |
 | 2026-07-29 | plan-close/Sonnet 5/low (фаза P6 закрыта после реопена D140) | Фаза P6 закрыта повторно `🟠 Done with deviations`, реопен D140 снят (P6.4 закрыт `b445a727`) — детали см. `phases/P6.md` Phase Handoff. |
 | 2026-07-29 | plan-run/Claude Sonnet 5/high (P7.3 закрыт 🟢, доисполнение по D142) | P7.3 закрыт 🟢: обе цены гейта предъявлены врозь, хуки/процедура вкл-выкл/проба проверены фактически, `CLAUDE.md`/`rejected-optimizations`/`roadmap/` правлены — детали см. `phases/P7.md` P7.3 Completion Notes. |
+| 2026-07-29 | plan-run/Claude Sonnet 5/high (P7.2 закрыт 🟢) | P7.2 закрыт 🟢: router-таблица + untrusted-инвариант в корневом `AGENTS.md`, четыре поломки P7.1 (№1/№2/№5/№6) починены по адресу, owner-вопрос per-package `AGENTS.md` снят (D62(3)-b), D143 (операционная форма роли) — фаза P7 терминальна — детали см. `phases/P7.md` P7.2 Completion Notes. |
 
 ## 7. Contracts
 

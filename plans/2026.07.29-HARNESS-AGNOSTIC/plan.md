@@ -117,7 +117,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 5/5 | 🟠 Done with deviations |
+| P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 4/5 | 🟠 Done with deviations |
 | P1 | Паритет корневых инструкций | 0/5 | ⬜ Not started |
 | P2 | Паритет capability второго провайдера | 0/5 | ⬜ Not started |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | ⬜ Not started |

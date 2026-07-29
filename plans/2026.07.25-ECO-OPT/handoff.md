@@ -1,35 +1,42 @@
-# HANDOFF — 2026-07-29 — after P7.4
+# HANDOFF — 2026-07-29 — after P7.5
 
-**P7.4 закрыт `🟠 Done with deviations`** (item-коммит `8b3221ea`): починены F2/F12 из RED-аудита
-P7 — резидентный `AGENTS.md` больше не утверждает, что `codex doctor --json` не принимает `-c`
-(принимает; отвергает только `-m`), и launch-буллет больше не требует `-a never` от headless
-`codex exec` (флага у него нет) — форма разделена на TUI-путь (`-a never`) и headless-путь
-(`-c 'approval_policy="never"'`). Синхронизирована цитата и добавлен абзац «Уточнение
-2026-07-29» в `research/21-P7.2-instruction-slice-spec.md` §3.4. `wc -c AGENTS.md` = 7 501 б,
-запас до потолка склейки 32 768 б — 25 267 б (≈77%). Единственное отклонение — остаточная 1
-lint-ERROR (`closure/P7.json` items[]-соответствие для P7.4), структурно вне Scope item'а
-(файл только читается до повторного `plan-close`, `research/29` §2.10) → статус `🟠`, не `🟢`.
+**P7.4 и P7.5 закрыты `🟠 Done with deviations`** (item-коммиты `8b3221ea`, `1338b655`).
+P7.4 — F2/F12: резидентный `AGENTS.md` больше не утверждает, что `codex doctor --json` не
+принимает `-c` (принимает; отвергает только `-m`), launch-буллет разделён на TUI-путь
+(`-a never`) и headless-путь (`-c 'approval_policy="never"'`); синхронизирована `research/21`
+§3.4. `wc -c AGENTS.md` = 7 501 б, запас до 32 768 б — 25 267 б (≈77%). P7.5 — F8/F9/F10:
+`CHANGELOG.md` теперь говорит «Четыре поломки» (не «Три из четырёх») с четвёртым пунктом и
+строкой о правке P7.4; цитата `find . -name AGENTS.md` получила исключение `node_modules`
+(голая форма даёт 5 попаданий); «пятикратный запас» → «≈4,5× (32 768 / 7 252 = 4,52)» в трёх
+носителях. Оба item'а — deviations: (а) остаточная lint-ERROR `closure/P7.json` items[]
+per-item (файл вне Scope, не пишется до повторного `plan-close`, `research/29` §2.10) — растёт
+на 1 с каждым закрытым item'ом фазы; (б) у P7.5 Validation-ассершен «ровно 2 попадания
+пятикратн» не сошёлся (фактически 14 — `research/29` карта правок + собственная ТЗ-проза
+items + Scope-Excluded носители; все четыре ЦЕЛЕВЫХ носителя исправлены, детали в Known
+Deviations P7.5).
 
-**Next:** батч B7R продолжается — P7.5 (числа/цитаты в четырёх носителях).
+**Next:** батч B7R завершается — P7.6 (бухгалтерия закрытых items + сверка `closure/P7.json`).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | continue (/clear) — ручной item |
-| Суть | Правка счёта поломок (F9), формы `find` (F8) и «пятикратный» → «≈4,5×» (F10) в `CHANGELOG.md`/`phases/P7.md`/`research/21`, плюс строка CHANGELOG о правке P7.4 |
+| Суть | Переписать агрегат `## Phase Handoff` фазы P7 грепом полей (F1), вставить `Session:` P7.1 (F7), снять протухший `Pending Work` P7.1 (F13), сверить `closure/P7.json` |
 
 ```
-/task:plan-exec 2026.07.25-ECO-OPT P7.5
+/task:plan-exec 2026.07.25-ECO-OPT P7.6
 ```
 
-**Done:** 54 items плана (P1–P11) терминальны из 56 (P7.4 закрыт этим заходом; P7.5/P7.6
-остаются). Все фазы кроме P7 терминальны. Внутри P7: P7.1 `🟠`, P7.2 `🟢`, P7.3 `🟠`, P7.4 `🟠`.
+**Done:** 55 items плана (P1–P11) терминальны из 56 (P7.4/P7.5 закрыты этим заходом; P7.6
+остаётся). Все фазы кроме P7 терминальны. Внутри P7: P7.1 `🟠`, P7.2 `🟢`, P7.3 `🟠`, P7.4 `🟠`,
+P7.5 `🟠`.
 
-**Remaining:** P7.5 → P7.6 → повторный `/task:plan-close 2026.07.25-ECO-OPT P7` (снимет маркер
+**Remaining:** P7.6 → повторный `/task:plan-close 2026.07.25-ECO-OPT P7` (снимет маркер
 `УСТАРЕЛ`, перегенерирует `closure/P7.json` целиком — обязан перенести обе новые записи
-`limitations[]`, см. P7.6 Pending Work) → повторный `/task:plan-audit 2026.07.25-ECO-OPT P7`.
-Отдельно в очереди унаследован невыполненный `/task:plan-audit 2026.07.25-ECO-OPT P2`.
+`limitations[]` И снять накопленный items[]-К трёх items P7.4–P7.6, см. P7.6 Pending Work) →
+повторный `/task:plan-audit 2026.07.25-ECO-OPT P7`. Отдельно в очереди унаследован
+невыполненный `/task:plan-audit 2026.07.25-ECO-OPT P2`.
 
 **Sources of truth:** `phases/P7.md` (блок `## Audit P7 — 2026-07-29` — находки F1–F13; ТЗ
 P7.5/P7.6; `## Phase Status`; P7.4 Completion Notes) · `research/29-P7-reopen-2026-07-29-remediation-map.md`

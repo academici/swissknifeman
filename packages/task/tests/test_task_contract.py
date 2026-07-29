@@ -17,11 +17,11 @@ from pathlib import Path
 
 import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 from task import task_contract  # noqa: E402
+from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-EXAMPLES_PATH = (REPO_ROOT / "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.2/"
-                 "task-contract-examples.json")
-PLAN_ROOT = REPO_ROOT / "plans/2026.07.24-AGENT-RELIABILITY"
+PLAN_ROOT = resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")
+EXAMPLES_PATH = PLAN_ROOT / "artifacts/P0.2/task-contract-examples.json"
 
 
 def _load_base_contract():

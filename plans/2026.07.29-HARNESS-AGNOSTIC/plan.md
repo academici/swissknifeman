@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-29 (P1.1 закрыт: матрица «правило → дом» по семи живым руководствам, D72–D74) |
+| Last Updated | 2026-07-29 (P1.2 закрыт `🟠`: 8/18 фрагментов канона актуализированы по матрице P1.1) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -323,6 +323,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P0.4 закрыт: контракт определения паритета запечатан (`root/contracts/provider-parity-definition.md`, sealed v1) — три исхода, планка evidence, C1–C6 и чек-лист из 15 условий; §7 Exported переведён в `sealed (P0.4)` — детали см. phases/P0.md P0.4 Completion Notes |
 | 2026-07-29 | plan-exec/Sonnet/medium | P0.4 (фаза) → P0.5 закрыт: донор архивирован (`plans/archive/2026.07.18-FOREMAN`, конвейер `plan-close archive`), потребители пути починены (`resolve_plan_dir`, `AGENTS.md`), регистр `plans/README.md` приведён в соответствие (D61: статус донора, строка этого плана, статус `2026.07.25-ECO-OPT`) — детали см. phases/P0.md P0.5 Completion Notes |
 | 2026-07-29 | plan-run/Claude Opus 5/high (frontier/high, `Exec = manual`) | P1.1 закрыт: матрица «правило → дом» по семи живым руководствам (`research/05-instruction-canon-routing.md`) — 41 раздел покрыт, 67 существующих ID разнесены (34 обновляются / 33 без изменений), 9 новых ID для P1.3, 6 выносов в скиллы, 8 снятий, переадресация девяти адресов; приняты D72–D74 — детали см. phases/P1.md P1.1 Completion Notes |
+| 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.2 закрыт `🟠`: 8 из 18 фрагментов канона переписаны по матрице P1.1, `catalog.json`/фикстура синхронизированы (28 записей, `1.0.1`), набор из 67 ID не менялся; Known Deviation — фикстурный `provenance` не дополнен (конфликт с зелёным тестом вне `Files`) — детали см. phases/P1.md P1.2 Completion Notes |
 
 ## 7. Contracts
 

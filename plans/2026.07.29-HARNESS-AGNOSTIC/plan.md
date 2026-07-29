@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-29 (P1.4 закрыт `🟢`: adoption-режим + CLI `harness instructions` + модульная точка `--check`) |
+| Last Updated | 2026-07-29 (P1.5 закрыт `🟠`: двенадцать проекций под управлением, гейт дрейфа `[9/9]`, бюджет 7620→5322 ток) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -326,6 +326,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.2 закрыт `🟠`: 8 из 18 фрагментов канона переписаны по матрице P1.1, `catalog.json`/фикстура синхронизированы (28 записей, `1.0.1`), набор из 67 ID не менялся; Known Deviation — фикстурный `provenance` не дополнен (конфликт с зелёным тестом вне `Files`) — детали см. phases/P1.md P1.2 Completion Notes |
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.3 закрыт `🟠`: девять аддитивных ID (7 common + 2 extension) заведены, `catalog.json`/фикстура выросли до 76 записей (`1.1.0`), аддендум-контракт `root/contracts/instruction-canon-addendum-v1.md` запечатан; Known Deviations — два файла вне `Files` (тест-счётчик, сгенерированная доков-справка) синхронизированы вслед за ростом инвентаря — детали см. phases/P1.md P1.3 Completion Notes |
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.4 закрыт `🟢`: adoption-режим (`adopt_instructions`/`adopt()`/`rollback_adoption`, fail-closed pre-image + mapping + lock-провенанс) и CLI `harness instructions <plan\|check\|adopt\|apply\|repair>` + модульная точка `--check`, 9 новых тестов, 28 предшественника не тронуты — детали см. phases/P1.md P1.4 Completion Notes |
+| 2026-07-29 | plan-run/Claude Opus 5 (1M context)/high (frontier/high, `Exec = manual`) | P1.5 закрыт `🟠`: живая транзакция принята — 12 проекций `clean`, гейт дрейфа `[9/9]` в `validate.sh`, бюджет 7620→5322 ток (ELEVATED→OK); Known Deviation — предсуществующая краснота `skiller validate.sh` вне Scope — детали см. phases/P1.md P1.5 Completion Notes |
 
 ## 7. Contracts
 

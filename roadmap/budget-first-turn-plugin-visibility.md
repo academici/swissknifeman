@@ -42,7 +42,7 @@
 
 ## Источник
 
-`plans/2026.07.25-ECO-OPT/phases/P7.md` P7.3 (D142, конфликт правил бюджет-гейта с
-marketplace-плагинами) · `plans/2026.07.25-ECO-OPT/findings/P7.3-budget-tool-boundary.md` ·
-`plans/2026.07.25-ECO-OPT/research/28-P7.3-redesign-2026-07-29.md` §2.1/§2.3 ·
+`plans/archive/2026.07.25-ECO-OPT/phases/P7.md` P7.3 (D142, конфликт правил бюджет-гейта с
+marketplace-плагинами) · `plans/archive/2026.07.25-ECO-OPT/findings/P7.3-budget-tool-boundary.md` ·
+`plans/archive/2026.07.25-ECO-OPT/research/28-P7.3-redesign-2026-07-29.md` §2.1/§2.3 ·
 `docs/rejected-optimizations.md` (строка D142).

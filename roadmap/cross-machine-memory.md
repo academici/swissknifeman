@@ -4,7 +4,7 @@
 роадмап-стаб вместо реализации; в релиз машинного bootstrap (P7) не входит.
 
 **2026-07-28:** статус Deferred снят по существу — вариант 1 зафиксирован ADR'ом
-`plans/2026.07.25-ECO-OPT/root/adr/ADR-0001-cross-machine-memory.md` (P4.1, D78/D80); реализация —
+`packages/maind/docs/adr/ADR-0001-cross-machine-memory.md` (P4.1, D78/D80); реализация —
 фазой P4 того же плана. Текст вариантов ниже не переписывается (историческая постановка).
 
 **Дом (при реализации):** `packages/maind` (`lib/maind/memory.py` + `provision/service.py`,

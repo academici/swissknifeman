@@ -1,80 +1,86 @@
-# HANDOFF — 2026-07-29 — after P0.3
+# HANDOFF — 2026-07-29 — after P0.4
 
-**Next:** run-items: task:plan-run 2026.07.29-HARNESS-AGNOSTIC P0.4
+**Next:** exec-items: task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P0.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
+| Model class | implementation |
+| Effort | low |
 | Capabilities | — |
 | Context | continue (/clear) — ручной item |
-| Суть | P0.4 — запечатать контракт «что считается паритетом провайдеров»: три исхода триажа (закрыть адаптером · legal `Claude-only` · интенция снята), планка evidence поверх поля `evidence[]` каталога, требования к диагностике, машинная проверка и чек-лист самопроверки |
+| Суть | P0.5 — архивировать терминальный `2026.07.18-FOREMAN` конвейером `plan-close archive`, починить ссылки на его путь в живом дереве и привести регистр очереди `plans/README.md` в соответствие (статус донора, новая строка этого плана, статус `2026.07.25-ECO-OPT`) |
 
 ```
-/task:plan-run 2026.07.29-HARNESS-AGNOSTIC P0.4
+/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P0.5
 ```
 
-§3 Routing P0.4 — `frontier/high`, `Exec = manual`: сессию перед запуском выставить
-`/model opus` + `/effort high` (`/task:plan-exec` пинит sonnet/medium и отклонит item по
-Routing-гейту). По `roadmap.md` P0.4 идёт **solo** — батча нет, склейка с P0.5 запрещена (тот
-`implementation/low`, `plan-exec`). Гейта владельца у item'а нет (D14: развилки закрывает
-исполнитель). Ключевой риск ТЗ — R2 pre-mortem: контракт, требующий живого прогона Codex,
-объявлен дефектом дизайна, а не строгостью.
+§3 Routing P0.5 — `implementation/low`, `Exec = plan-exec`: команда пинит sonnet/medium, это
+ПЕРЕБОР над предписанным тиром (безвредно, `plan-exec` §2) — исполнителю записать
+process-отклонение в Known Deviations. По `roadmap.md` P0.5 идёт **solo**; предусловие
+конвейера (терминальность всех фаз донора) выполнено P0.3. Ключевой риск — R7: путь плана
+захардкожен в `packages/skiller/tests/test_provider_publication_parity.py:156` под охраной
+`path.exists()`, после переноса тест не падает, а теряет покрытие — чинить через
+`core.repo.resolve_plan_dir`, а не хардкодом.
 
-**Done:** **P0.3 закрыт** (`plan-run`, сессия **Claude Opus 5/high** = frontier/high, `Exec =
-manual`). Item-коммит `2dbef470` (10 файлов, +342/−142).
-- **Инвентарь** `research/03-foreman-absorption-inventory.md` — **46 строк судеб** из закрытого
-  набора: 22 артефакта донора (5 sealed-контрактов §7, 9 `findings/`, 6 `research/`,
-  `workflows/`, `roadmap.md`) + 24 незакрытых item'а. Пустых ячеек нет. Свод: 20 items переходят
-  в фазу P4 (19 → **P4.1**, P1.5 → **P4.5**), 4 items фазы P5 отменены по существу (движок
-  решений потребляется из `2026.07.24-AGENT-RELIABILITY`, D49 донора); из артефактов 4
-  переиспользуются как есть (журнал, индекс, reuse-гейт, P1↔P0 reconcile), 8 переходят в P4,
-  10 отменены с причиной.
-- **Сверка пяти якорей §4 `driver-plan-protocol.md` против канона v2.21.0** — сломан **один**:
-  enum форм `Next` (канон перешёл на семантические `exec-items:`/`run-items:`/…, исторические
-  `/task:…` остались compatibility-входом). Целы: шесть канонических статусов, форма заголовка
-  `handoff.md`, шапка Status Board, поля JSON-конверта (план-протокол их вовсе не описывает).
-- **Вердикт OQ-2 = вариант B** (D71), OQ-2 переведена в `Resolved → D71`. Эскалации на P0.3 нет:
-  закрытый список Code Guidance (JSON-конверт · статусы · заголовок handoff) цел полностью.
-- **Донор терминален:** 24 item'а `⛔ Skipped by decision`, P1 → `🟠`, P2–P7 → `⛔`, D60,
-  Version 0.22.1 → 0.23.0, причина в `## Phase Context` каждой `⛔`-фазы, финальный `handoff.md`
-  (`after P7`, Next = `archive:`). Предусловие конвейера P0.5 выполнено.
-- `plan-lint`: наш план — 0 ERROR / 1 WARN (новых от диффа item'а: 0); донор — 0 ERROR / 41 WARN,
-  из них **6 новых** (см. Open risks).
+**Done:** **P0.4 закрыт** (`plan-run`, сессия **Claude Opus 5/high** = frontier/high, `Exec =
+manual`). Item-коммит `49ffd07e` (1 файл, +216).
+- **Запечатан контракт** `root/contracts/provider-parity-definition.md` (216 строк, sealed v1):
+  §1 три исхода (`closed-by-adapter` · `claude-only` · `intent-withdrawn`) таблицей «когда
+  легален → форма записи в каталоге → чем проверяется» · §2 планка evidence (пять требований
+  поверх замороженной формы четырёх ключей) · §3 семь пунктов «что доказательством НЕ является» ·
+  §4 fail-closed диагностика · §5 «интенция снята» · §6 машинная проверка C1–C6 · §7 чек-лист
+  самопроверки из 15 условий, по которому P2.1 ведёт триаж.
+- **R2 снят измерением:** ни одно условие контракта не требует живого прогона Codex; все шесть
+  проверок — команды, уже существующие в дереве, каждая прогнана на `99cb35f3`
+  (`provider-docs.py --check` exit 0 · аудит `green: true`/`diagnostics: []` · проба
+  потребителей · `load_provider_manifest` → `manifest OK`).
+- **Новое измерение, вошедшее в контракт (§6.2):** `harness doctor --provider-audit` покрывает
+  **23 из 35** capability; вне его — 12, из них одна Codex-`unsupported`
+  (`analytics.legacy-migration`). Ссылаться на «зелёный аудит» для capability вне `surface_map`
+  запрещено.
+- **Правило принуждения исхода (§1):** `claude-only`/`intent-withdrawn` легальны только при нуле
+  строгих потребителей по пробе C3 (`skills.repository` — 24 строгих, значит `claude-only`
+  структурно невозможен; `lifecycle.daemon-safety` — 0, значит исход §5 доступен).
+- **Определение паритета для приёмки P5.3** зафиксировано тремя одновременными условиями; §7
+  Exported плана переведён в `sealed (P0.4)`.
+- `plan-lint`: 0 ERROR / 1 WARN (новых от диффа item'а: 0).
 
-**Ранее:** P0.2 (`plan-run`/Opus 5/high) — адъюдикация аудита в `docs/reference.md`,
-`docs/rejected-optimizations.md`, `roadmap/` (коммит `8aebf200`). P0.1 (`plan-exec`/Sonnet/medium)
-— процедура изоляции worktree (`1dcdd8e2`). Design-фаза: три прогона + три `finish`, `AUDIT-CAP`
-исчерпан.
+**Ранее:** P0.3 (`plan-run`/Opus 5/high) — инвентарь поглощения FOREMAN, терминализация донора,
+OQ-2 закрыта D71 (`2dbef470`). P0.2 (`plan-run`/Opus 5/high) — адъюдикация аудита в
+`docs/reference.md`, `docs/rejected-optimizations.md`, `roadmap/` (`8aebf200`). P0.1
+(`plan-exec`/Sonnet/medium) — процедура изоляции worktree (`1dcdd8e2`). Design-фаза: три прогона
++ три `finish`, `AUDIT-CAP` исчерпан.
 
-**Remaining:** P0.4–P0.5 (фаза P0, 3/5 закрыто) → P1 (5) → P2 (5) → P3 (6) → P4 (5) → P5 (3).
-Итого 26/29 items ещё не исполнено.
+**Remaining:** P0.5 (фаза P0, 4/5 закрыто) → P1 (5) → P2 (5) → P3 (6) → P4 (5) → P5 (3).
+Итого 25/29 items ещё не исполнено.
 
-**Sources of truth:** `plans/2026.07.29-HARNESS-AGNOSTIC/plan.md` (§3 Routing, §5 D1–**D71**,
-§7 Contracts, § Обсуждение 1–7, три блока `## Audit design`) · `phases/P0.md`–`P5.md` (P0.1–P0.3
-закрыты) · `roadmap.md` (батч B1 = P0.2+P0.3 **закрыт целиком**; дальше всё solo до конца P0) ·
-`brief/00-brief.md` + `brief/01-refinements.md` · `findings/00`–`findings/06` · `research/00`,
-`01`, `02`, **`03`**, `04`, `06`, `07`, `08`, `09` · `open-questions.md` (OQ-3, OQ-5–OQ-9
+**Sources of truth:** `plans/2026.07.29-HARNESS-AGNOSTIC/plan.md` (§3 Routing, §5 D1–D71,
+§7 Contracts — одна строка Exported уже `sealed`, § Обсуждение 1–7, три блока `## Audit design`) ·
+`phases/P0.md`–`P5.md` (P0.1–P0.4 закрыты) · `roadmap.md` (батч B1 закрыт целиком; дальше всё
+solo до конца P0) · `brief/00-brief.md` + `brief/01-refinements.md` · `findings/00`–`findings/06` ·
+`research/00`, `01`, `02`, `03`, `04`, `06`, `07`, `08`, `09` · `open-questions.md` (OQ-3, OQ-5–OQ-9
 открыты; OQ-2 закрыта D71) · `index.md` · `journal.jsonl` · `root/isolation-procedure.md` ·
-`plans/2026.07.18-FOREMAN/` (донор **терминален**, ждёт архивации item'ом P0.5) ·
-`docs/reference.md` и `docs/rejected-optimizations.md` (каталоги провенанса, пополнены P0.2)
+**`root/contracts/provider-parity-definition.md` (sealed v1 — вход P1/P2/P5.3)** ·
+`plans/2026.07.18-FOREMAN/` (донор терминален, ждёт архивации item'ом P0.5) · `docs/reference.md`
+и `docs/rejected-optimizations.md` (каталоги провенанса, пополнены P0.2)
 
 **Open risks:**
 - **Посторонний дифф в дереве не убран и не тронут** (правило коммит-гигиены): `roadmap/README.md`
   (M) + untracked `roadmap/2026.07.29-launch-block-command-row.md`. Существовал до P0.2, в
-  item-коммиты `8aebf200`/`2dbef470` не попал; исполнителю P0.4 достаётся в том же виде.
-- **6 новых WARN `plan-lint` на доноре — ложное срабатывание, которое некому починить в этом
-  плане.** Правило `plan_lint.py:1941-1948` считает «маркером `[NEEDS CLARIFICATION]`» саму строку
-  DoR-чеклиста (`- [x] Все \`[NEEDS CLARIFICATION]\` сняты …`), присутствующую в шаблоне фазы у
-  каждой фазы флота, и срабатывает на любом статусе ≠ `⬜`. Терминализация фаз P2–P7 подняла шесть
-  таких WARN. Правка текстов донора запрещена ТЗ P0.3, правка `plan_lint.py` — чужой предмет;
-  фикс-предложение вынесено в отчёт item'а.
+  item-коммиты `8aebf200`/`2dbef470`/`49ffd07e` не попал; исполнителю P0.5 достаётся в том же виде.
+- **`scripts/test-provider-docs.py` на дереве КРАСНЫЙ** (1 fail из 4) — битая ссылка
+  `roadmap/self-learning-memory.md` из `README.md:122`, файла в `roadmap/` нет. Предсуществующая,
+  к каталогу провайдеров отношения не имеет; названа в §6.3 контракта, чтобы P2.x не принял её за
+  свою регрессию. Чинится одной строкой `README.md` (или заведением файла) — вне Scope P0.4.
+- **`--check` не зовёт ни один гейт** (D21): до P2.5 конформанс каталога держится только ручным
+  прогоном исполнителя, меняющего каталог.
+- **6 новых WARN `plan-lint` на доноре — ложное срабатывание** правила
+  `plan_lint.py:1941-1948` на строке DoR-чеклиста; правка текстов донора запрещена, правка
+  линтера — чужой предмет.
 - **`§7 Consumed`, строка AR-контрактов, обещает «пин снимается в P0.3», но Scope P0.3 этого не
-  несёт** — пин `execution-state-machine-v1`/`risk-review-loop-budget-v1`/`unified-agent-trace-v1`
-  не снят. Фактический адресат — P4.1. Правит `plan-design` одной строкой §7.
-- **Parse-контракт донора остаётся просроченным и теперь измеренно breaking**: P4.5 по D37 обязан
-  эскалировать, а не исполнять. Вариант A (дешёвая minor-правка пина) снят измерением — планировать
-  P4.5 как «пятиминутную правку frontmatter» больше нельзя.
+  нёс** — фактический адресат P4.1. Правит `plan-design` одной строкой §7.
+- **Parse-контракт донора остаётся просроченным и измеренно breaking**: P4.5 по D37 обязан
+  эскалировать, а не исполнять.
 - **`scripts/public-hygiene.py` на дереве красный** (предсуществующая находка:
   `plans/archive/2026.07.25-ECO-OPT/artifacts/p5-pilot/stage0/install.log`) — закрыть или объявить
   исключением до P5.1.
@@ -114,12 +120,15 @@ manual`). Item-коммит `2dbef470` (10 файлов, +342/−142).
   листинга на стороне Codex (OQ-7 → `roadmap/`, D29 в редакции D52) · перекалибровка токенайзера
   `budget.py` (чужой ECO-OPT) · общий differ «канон ↔ инсталляционный шаблон» ролей (OQ-8) ·
   машинный гейт «новая Validation прогнана» (PROMOTE-CANDIDATE) · машинный гейт «design-заход
-  оставил состояние в истории» (PROMOTE-CANDIDATE D69) · **починка ложного срабатывания
-  `[NEEDS CLARIFICATION]` в `plan_lint.py`** (новое, P0.3) · перевод прозы «кап делегирования» в
-  командах `task:*` на ссылку к SSOT · раскатка на потребителей (D45) · push/PR/тег и публикация
-  доков (D41) · расширение CI на `analyst`/`task` (OQ-9) · русский канон скиллов в `.gitignore` (Р5)
-  · собственный замер бюджета обнаружения на живом Codex CLI (`[UNVERIFIED]`, смежно с P3.4).
-- open_questions: OQ-3 две capability `unsupported` у обоих провайдеров (P2.1) · OQ-6 дом логики
+  оставил состояние в истории» (PROMOTE-CANDIDATE D69) · починка ложного срабатывания
+  `[NEEDS CLARIFICATION]` в `plan_lint.py` (P0.3) · **починка битой ссылки `README.md:122` →
+  `roadmap/self-learning-memory.md`, красящей `scripts/test-provider-docs.py` (новое, P0.4)** ·
+  перевод прозы «кап делегирования» в командах `task:*` на ссылку к SSOT · раскатка на
+  потребителей (D45) · push/PR/тег и публикация доков (D41) · расширение CI на `analyst`/`task`
+  (OQ-9) · русский канон скиллов в `.gitignore` (Р5) · собственный замер бюджета обнаружения на
+  живом Codex CLI (`[UNVERIFIED]`, смежно с P3.4).
+- open_questions: OQ-3 две capability `unsupported` у обоих провайдеров (P2.1 — исход §5
+  запечатанного контракта и проба C3 дают ему машинный критерий) · OQ-6 дом логики
   Codex-обработчиков (P2.1) · OQ-7 структурный перебор бюджета обнаружения (замер P3.4) · OQ-8
   дрейф канона ролей и инсталляционного шаблона (Deferred) · OQ-9 CI не покрывает `analyst`/`task`
   (Deferred). **OQ-2 закрыта D71** (вариант B), OQ-1 закрыта D31, OQ-4 закрыта D27.

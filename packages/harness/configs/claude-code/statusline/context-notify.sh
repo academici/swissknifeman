@@ -156,9 +156,9 @@ STATE="$STATE_DIR/$sid.state"
 fresh=0
 if [[ ! -f "$STATE" ]]; then
   fresh=1
-  # Старт сессии — ЕДИНСТВЕННОЕ место уборки: состояния старше суток удаляются,
-  # иначе каталог растёт вечно. На рендерах внутри сессии этой ветки нет.
-  find "$STATE_DIR" -maxdepth 1 -name '*.state' -mtime +1 -delete 2>/dev/null || true
+  # Старт сессии — ЕДИНСТВЕННОЕ место уборки: состояния и временные файлы старше
+  # суток удаляются, иначе каталог растёт вечно. На рендерах внутри сессии этой ветки нет.
+  find "$STATE_DIR" -maxdepth 1 \( -name '*.state' -o -name '*.tmp' \) -mtime +1 -delete 2>/dev/null || true
 fi
 
 prev_band=0; last_notify=0

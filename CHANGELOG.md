@@ -318,6 +318,11 @@
 
 ### Fixed
 
+- **harness: стартовая уборка statusline удаляет осиротевшие `*.tmp` (P6.4,
+  `2026.07.25-ECO-OPT`).** Единственный `find` в ветке новой сессии теперь убирает
+  устаревшие `*.state` и `*.tmp` с тем же порогом `-mtime +1`; регресс-тест сохраняет
+  свежие файлы обоих видов.
+
 - **Пин Serena восстановлен в первопричину — `SERENA_SRC`/`config.json`/`.mcp.json` флота (P5.3, `2026.07.25-ECO-OPT`, D109/D110).**
   Политика `code_graph.args`/`index_args` корневого `config.json` перебивала пиннованный дефолт
   `SERENA_SRC` (`packages/maind/lib/maind/constants.py`) непиннованным

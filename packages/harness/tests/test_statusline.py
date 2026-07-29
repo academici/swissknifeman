@@ -243,6 +243,27 @@ class StatuslineScriptCase(unittest.TestCase):
         leftovers = list((self.runtime / "claude-statusline").glob("*.tmp"))
         self.assertEqual(leftovers, [], f"частично записанное состояние: {leftovers}")
 
+    def test_fresh_session_cleans_old_state_and_tmp_files(self):
+        """Старт сессии убирает только устаревшие state/tmp, не свежие файлы."""
+        state_dir = self.runtime / "claude-statusline"
+        state_dir.mkdir()
+        old_state = state_dir / "old.state"
+        old_tmp = state_dir / "old.tmp"
+        fresh_state = state_dir / "fresh.state"
+        fresh_tmp = state_dir / "fresh.tmp"
+        for path in (old_state, old_tmp, fresh_state, fresh_tmp):
+            path.write_text("state\n")
+        old = time.time() - 3 * 24 * 60 * 60
+        for path in (old_state, old_tmp):
+            os.utime(path, (old, old))
+
+        self.render(5, session="cleanup")
+
+        self.assertFalse(old_state.exists())
+        self.assertFalse(old_tmp.exists())
+        self.assertTrue(fresh_state.exists())
+        self.assertTrue(fresh_tmp.exists())
+
     def test_drop_resets_band_down(self):
         self.render(95)
         self.render(30)

@@ -150,3 +150,75 @@ plan-lint: OK (1 план(ов), 0 ошибок, 5 предупреждений)
 
 5 WARN — известные false positives (легенда DoR-маркера + phase-first за
 незакрытую P2), задокументированы в `handoff.md` Open risks с P3.1.
+
+## P3.5 — дельта листинга после починки blocker-набора (39 описаний)
+
+Замер `--profiles` ДО (git stash починки, дерево до P3.5) и ПОСЛЕ (item-коммит
+P3.5), оба провайдера, все поставляемые профили:
+
+```
+ДО:
+| Профиль | Codex (симв) | Claude Code (ток) |
+|:--|--:|--:|
+| blender | 7308 | 2179 |
+| dart-flutter | 10417 | 3107 |
+| laravel-project | 18602 | 5550 |
+| node-frontend | 18128 | 5404 |
+| node-package | 10146 | 3030 |
+| obsidian-vault | 13192 | 3941 |
+| php-package | 16959 | 5058 |
+| platform-service | 24705 | 7363 |
+| python-backend | 13069 | 3901 |
+| standalone | 52954 | 15778 |
+
+ПОСЛЕ:
+| Профиль | Codex (симв) | Claude Code (ток) |
+|:--|--:|--:|
+| blender | 7391 (+83) | 2203 (+24) |
+| dart-flutter | 10612 (+195) | 3164 (+57) |
+| laravel-project | 18874 (+272) | 5630 (+80) |
+| node-frontend | 18368 (+240) | 5474 (+70) |
+| node-package | 10236 (+90) | 3056 (+26) |
+| obsidian-vault | 13559 (+367) | 4047 (+106) |
+| php-package | 17121 (+162) | 5107 (+49) |
+| platform-service | 25019 (+314) | 7456 (+93) |
+| python-backend | 13297 (+228) | 3967 (+66) |
+| standalone | 53589 (+635) | 15964 (+186) |
+```
+
+**Вердикт:** починка растит листинг, как и предупреждает Implementation Rules
+item'а — цена измерена, не подразумевается. Ни один профиль не пересёк границу
+вердикта: девять профилей, УЖЕ переполнявшие Codex-фолбэк ДО правки, остаются
+переполненными (структурный перебор из P3.4, `roadmap/codex-skill-listing-
+fallback-overflow.md`, D29/OQ-7 — без изменений в счёте вердикта, только в
+абсолютных симв/ток); на стороне Claude Code переполняет по-прежнему только
+`standalone` (именованное исключение, не новый долг). Рычаг №4 владельца
+(сжатие описаний) этим item'ом не нарушен — гейт работает на оси качества
+триггера, не сжатия (D52 граница item'а).
+
+## `skiller budget --check-core --strict` — после починки
+
+```
+$ bash packages/skiller/bin/skiller budget --check-core --strict
+CORE резидент (⊕ tier-0): 663 ток / target 750 — OK (9/9 скиллов)
+```
+
+Ни один CORE-скилл (`core-policy.json::skills`) не входит в blocker-набор 39 —
+резидентный бюджет не пострадал от починки.
+
+## Негативный прогон нового гейта (description-триггер)
+
+```
+$ sed -i 's/description: .*/description: "short"/' packages/skiller/skills/roles/tech-lead/SKILL.md
+$ bash packages/skiller/scripts/validate.sh 2>&1 | grep tech-lead
+ERROR: skills/roles/tech-lead/SKILL.md: description без триггерной фразы (...) и НЕ в
+scripts/desc-trigger-burndown.txt — новый долг запрещён (рэтчет P3.5): ...
+$ # восстановлено git-чекаутом сразу после прогона
+```
+
+## Blocker-набор до/после (Validation-скрипт item'а)
+
+```
+ДО:  BLOCKERS 39 [architect/agent-design, architect/api-design, ... roles/tech-lead]
+ПОСЛЕ: BLOCKERS 0 []
+```

@@ -2,7 +2,7 @@
 name: new-project
 bucket: founder
 version: 0.1.0
-description: "Launch a new startup project: concept, competitors, risks, full folder structure"
+description: "Use when launching a new startup project: concept, competitors, risks, full folder structure."
 risk: write
 persona: founder
 tags: [discovery, requirements, market, gtm]
@@ -104,4 +104,4 @@ Orchestrator: does not duplicate domain skills, calls them by stage. Chain:
 - `pm/monetization-design` — adjacent: business-model choice before unit-economics
 - `roles/solo-founder`, `roles/startup-cto` — personas that activate this chain
 
-<!-- ru-source-sha256: adb0d28dff9a98e504b104278fd02f8df7da48615131c25800fab10218d3b4db -->
+<!-- ru-source-sha256: 6816f0c482ed5c8b9774bd8a8a728a7f15f0e58182f2aaef14427d978bb2a653 -->

@@ -2,7 +2,7 @@
 name: open-source-maintainer
 bucket: roles
 version: 0.2.0
-description: "OSS Maintainer — triage, review, releases"
+description: "Используй в роли OSS Maintainer: triage, review, releases."
 risk: read
 persona: open-source-maintainer
 role_agent_pack: role-maintainer

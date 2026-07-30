@@ -2,7 +2,7 @@
 name: pitch-deck
 bucket: founder
 version: 0.1.0
-description: 10-slide investor deck per YC/Sequoia canon from existing project artifacts
+description: Use when building a 10-slide investor deck per YC/Sequoia canon from existing project artifacts.
 risk: draft
 persona: founder
 tags: [gtm, market, monetization]
@@ -158,4 +158,4 @@ Deck consumes ready artifacts, recomputes nothing. Slide sources:
 - `pm/product-roadmap` — Product slide + optional Roadmap.
 - `founder/risk-assessment` — optional Risk-acknowledgement slide in appendix.
 
-<!-- ru-source-sha256: f7292354956c8efc9870985459cf8cd1c4af6ed4c7e7175a81915eb2aee832cc -->
+<!-- ru-source-sha256: 4e1f9e4eb3d6c779b3fd248c5e0d7929ab01d75dd36657564db5566ba0eee1e5 -->

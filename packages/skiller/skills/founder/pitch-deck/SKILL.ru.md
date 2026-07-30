@@ -2,7 +2,7 @@
 name: pitch-deck
 bucket: founder
 version: 0.1.0
-description: 10-слайдовая инвесторская дека по канону YC/Sequoia на основе готовых артефактов проекта
+description: Используй при создании 10-слайдовой инвесторской деки по канону YC/Sequoia на основе готовых артефактов проекта.
 risk: draft
 persona: founder
 tags: [gtm, market, monetization]

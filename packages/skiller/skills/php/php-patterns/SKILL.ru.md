@@ -2,7 +2,7 @@
 name: php-patterns
 bucket: php
 version: 0.2.0
-description: "PHP domain patterns: VO, DTO, pipeline, specification"
+description: "Используй при выборе PHP domain pattern: VO, DTO, pipeline, specification."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "patterns", "dto", "architecture"]

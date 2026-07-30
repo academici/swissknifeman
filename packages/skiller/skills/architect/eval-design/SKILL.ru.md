@@ -2,7 +2,7 @@
 name: eval-design
 bucket: architect
 version: 0.1.0
-description: Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review
+description: Используй при оценке качества LLM/AI-выводов: eval-set, метрики, regression-харнес, automated + human review.
 risk: draft
 persona: architect
 tags: [agentic, validation, llm, metrics, testing]

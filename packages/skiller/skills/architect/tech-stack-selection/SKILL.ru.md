@@ -2,7 +2,7 @@
 name: tech-stack-selection
 bucket: architect
 version: 0.1.0
-description: Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый шаг
+description: Используй при выборе технологического стека: trade-off матрица до архитектурного дизайна, ADR-первый шаг.
 risk: draft
 persona: architect
 tags: [stack-choice, architecture, adr, trade-off]

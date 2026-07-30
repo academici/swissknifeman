@@ -2,7 +2,7 @@
 name: ml-project-structure
 bucket: python
 version: 0.1.0
-description: "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science"
+description: "Используй при структурировании ML/Data Science проекта по подходу Cookiecutter Data Science."
 risk: write
 persona: oss-dev
 tags: [python, ml, structure, architecture, data, conventions]

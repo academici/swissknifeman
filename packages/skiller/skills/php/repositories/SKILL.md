@@ -2,7 +2,7 @@
 name: repositories
 bucket: php
 version: 0.1.0
-description: "Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService"
+description: "Use when building Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "repository", "architecture"]
@@ -79,4 +79,4 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 - `php/database` — models and scopes the queries build on.
 - `laravel-auth/laravel-permissions` / `azguard/azguard` — where rights read by `VisibilityService` are defined.
 
-<!-- ru-source-sha256: 1d285385a8437272f357a835012184306c8490d13873c8f5f7371b5dd9cb03fa -->
+<!-- ru-source-sha256: 29c61ce3d81695d6194dd68014d4e92d869cacc72914254f0b5decc6ea67158e -->

@@ -15,12 +15,16 @@ from pathlib import Path
 PKG_ROOT = Path(__file__).resolve().parents[1]
 VALIDATE_SCRIPT = PKG_ROOT / "scripts" / "validate.sh"
 
+# Триггерная фраза-префикс (P3.5 description-триггер-гейт) — держит эти фикстуры вне
+# scope нового гейта, чтобы длина оставалась единственной проверяемой осью здесь
+# (см. test_desc_trigger_gate.py — гейт триггера тестируется отдельно).
+_TRIGGER_PREFIX = "Use when testing: "
 # 451 симв — единственный симв сверх DESC_ERROR_MAX.
-DESC_451 = "x" * 451
+DESC_451 = _TRIGGER_PREFIX + "x" * (451 - len(_TRIGGER_PREFIX))
 # 320 симв — между DESC_WARN_MAX(300) и DESC_ERROR_MAX(450).
-DESC_320 = "y" * 320
+DESC_320 = _TRIGGER_PREFIX + "y" * (320 - len(_TRIGGER_PREFIX))
 # 250 симв — легальная норма (<= DESC_WARN_MAX).
-DESC_250 = "z" * 250
+DESC_250 = _TRIGGER_PREFIX + "z" * (250 - len(_TRIGGER_PREFIX))
 
 
 class DescBurndownGateCase(unittest.TestCase):

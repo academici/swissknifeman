@@ -2,7 +2,7 @@
 name: tech-lead
 bucket: roles
 version: 0.2.0
-description: "Tech Lead persona — sprint kickoff, 1:1s, team coordination"
+description: "Use when acting as Tech Lead: sprint kickoff, 1:1s, team coordination."
 risk: read
 persona: tech-lead
 role_agent_pack: role-tech-lead
@@ -91,4 +91,4 @@ Tech Lead = engineering lead of one team. Owns team technical health + workflow 
 - `devops/gitops` · `oss-dev/github-flow` · `oss-dev/gh-review` · `general/git-commit-rules` — workflow and review.
 - `general/session-handoff` — context handoff.
 
-<!-- ru-source-sha256: d7f69cf756b2805a55e2d6facba9d88fa0f1d169690de6a3e1f9ecfba56e84a6 -->
+<!-- ru-source-sha256: 1a7062fb0cccb3e5df1a9c59264800ba8618f3f146016c41092edb52edfcbbeb -->

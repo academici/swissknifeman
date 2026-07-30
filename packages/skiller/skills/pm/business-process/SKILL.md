@@ -2,7 +2,7 @@
 name: business-process
 bucket: pm
 version: 0.1.0
-description: Business processes, workflow, FSM, sequence/state diagrams, error handling
+description: Use when modeling business processes: workflow, FSM, sequence/state diagrams, error handling.
 risk: draft
 persona: pm
 tags: [requirements, workflow]
@@ -88,4 +88,4 @@ After creating a file — update `docs/02_Workflow/_index.md`.
 - `architect/api-design` — FSM transitions often become endpoints/commands; sequence diagram helps design the contract.
 - `laravel-architecture/enum-state-machine` — FSM implementation (enum + transitions) in Laravel code.
 
-<!-- ru-source-sha256: afe67d528cdb1b06fab7649820ca0fcac99f00b84dab9eac851e604643001a9b -->
+<!-- ru-source-sha256: 21c43437414875751ad7871a146744eb844e3b3c1be5700e0df9df23e6686c01 -->

@@ -90,10 +90,17 @@ CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 # иначе — error (новый долг запрещён). См. scripts/desc-burndown.txt.
 DESC_WARN_MAX = 300
 DESC_ERROR_MAX = 450
+# Нижняя граница качества description как ТРИГГЕРА (P3.5, рэтчет по образцу верхней —
+# см. desc-trigger-burndown.txt): описание обязано отвечать «когда звать», не только «что
+# это». Регулярка — набор устойчивых маркеров условия применения (не жанра скилла).
+DESC_TRIGGER_RE = re.compile(
+    r"(use when|activate|use for|use to|when you|whenever|trigger|use this)", re.I
+)
 
-def _load_desc_burndown(repo_root_pkg):
-    """scripts/desc-burndown.txt → set('bucket/name'), комменты(#)/пустые строки игнор."""
-    p = repo_root_pkg / "scripts" / "desc-burndown.txt"
+def _load_burndown_file(repo_root_pkg, filename):
+    """scripts/<filename> → set('bucket/name'), комменты(#)/пустые строки игнор.
+    Общий загрузчик для desc-burndown.txt и desc-trigger-burndown.txt (тот же формат)."""
+    p = repo_root_pkg / "scripts" / filename
     if not p.is_file():
         return set()
     out = set()
@@ -104,9 +111,12 @@ def _load_desc_burndown(repo_root_pkg):
         out.add(ln)
     return out
 
-DESC_BURNDOWN = _load_desc_burndown(root)
+DESC_BURNDOWN = _load_burndown_file(root, "desc-burndown.txt")
 DESC_BURNDOWN_SEEN = set()
 DESC_BY_KEY = {}  # 'bucket/name' -> len(description), для протухшей-записи гейта ниже
+TRIG_BURNDOWN = _load_burndown_file(root, "desc-trigger-burndown.txt")
+TRIG_BURNDOWN_SEEN = set()
+TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(есть триггер), для протухшей-записи гейта ниже
 
 
 def _collect_block_scalar(lines, start):
@@ -237,6 +247,24 @@ for skill_md in skill_files:
                           f"сократи description до <= {DESC_WARN_MAX} симв или добавь в "
                           f"desc-burndown.txt с обоснованием")
 
+    # --- 1·триггер: description отвечает «когда звать» (P3.5 рэтчет, upstream пропускаем) ---
+    if _desc_key and upstream is None:
+        has_trigger = bool(DESC_TRIGGER_RE.search(desc))
+        TRIG_HAS_TRIGGER_BY_KEY[_desc_key] = has_trigger
+        if not has_trigger:
+            if _desc_key in TRIG_BURNDOWN:
+                TRIG_BURNDOWN_SEEN.add(_desc_key)
+                warnings.append(f"{rel}: description без триггерной фразы (use when/activate/"
+                                f"use for/…) — унаследованный долг в "
+                                f"scripts/desc-trigger-burndown.txt (легально, но чини при "
+                                f"следующей правке)")
+            else:
+                errors.append(f"{rel}: description без триггерной фразы (use when/activate/"
+                              f"use for/use to/when you/whenever/trigger/use this) и НЕ в "
+                              f"scripts/desc-trigger-burndown.txt — новый долг запрещён "
+                              f"(рэтчет P3.5): опиши, КОГДА звать скилл, или добавь в "
+                              f"desc-trigger-burndown.txt с обоснованием")
+
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts
     path_bucket = parts[1] if parts[0] == "skills" and len(parts) > 2 else None
@@ -303,6 +331,16 @@ for _bn_key in sorted(DESC_BURNDOWN):
     elif DESC_BY_KEY[_bn_key] <= DESC_WARN_MAX:
         warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (description "
                         f"уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери строку")
+
+# --- 1b·триггер. desc-trigger-burndown.txt — протухшие записи (one-way рэтчет, P3.5) -----
+# Запись легальна, только пока: скилл существует И его description всё ещё без триггера.
+for _tb_key in sorted(TRIG_BURNDOWN):
+    if _tb_key not in TRIG_HAS_TRIGGER_BY_KEY:
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
+                        f"(скилла нет в реестре под этим bucket/name), убери строку")
+    elif TRIG_HAS_TRIGGER_BY_KEY[_tb_key]:
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
+                        f"(description уже несёт триггерную фразу), убери строку")
 
 # --- 1c. CORE-девятка — обязательные секции тела (P8.8, рэтчет) ------------
 # Сплошной гейт по всем скиллам неисполним (замер: активационную секцию несут

@@ -2,7 +2,7 @@
 name: threading
 bucket: blender-modeling
 version: 0.1.0
-description: "Threads on FDM/SLA parts: material, print physics, radial clearance by fit type"
+description: "Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by fit type."
 risk: write
 persona: oss-dev
 tags: [blender, 3d, fdm, sla, threading, geometry, bpy]
@@ -62,4 +62,4 @@ scr.iterations   = turns       # number of turns
 - `blender-modeling/build-loop` — overall build/check cycle with thread printing embedded.
 - `blender/version-gotchas` — SCREW modifier and `temp_override` gotchas in Blender 5.0.
 
-<!-- ru-source-sha256: 410a05a99ebde51362cd683f2b94d9394b3ed61f5fcf4497b868a8a06c1d95e0 -->
+<!-- ru-source-sha256: cab1e3f06b6610d1a4e94b976cbc03a9014d7fa45a045021c149b75cc598caa9 -->

@@ -2,7 +2,7 @@
 name: laravel-packages
 bucket: php-packages
 version: 0.3.0
-description: "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish"
+description: "Используй при создании Laravel-пакета: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev", "skills"]

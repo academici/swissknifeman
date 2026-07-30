@@ -2,7 +2,7 @@
 name: competitive-analysis
 bucket: founder
 version: 0.1.0
-description: Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep
+description: Используй при анализе рынка, конкурентов, JTBD, незанятой ниши, вектора атаки. Использует Perplexity search_deep.
 risk: external
 persona: founder
 tags: [discovery, market, gtm]

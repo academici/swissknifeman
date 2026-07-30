@@ -2,7 +2,7 @@
 name: git-commit-rules
 bucket: general
 version: 0.2.0
-description: "Git workflow: commit prep, husky/commitlint, message format, safe action order."
+description: "Use when preparing a Git commit: husky/commitlint, message format, safe action order."
 risk: write
 persona: oss-dev
 tags: [git, conventions, conventional-commits, gitops]
@@ -103,4 +103,4 @@ ci(deps): добавить php-расширения для composer install
 - `devops/node-pnpm-preflight` — Node/pnpm check before commit with husky/commitlint hooks.
 - `oss-dev/github-flow` — Issue → Branch → PR → Merge → Tag chain and SemVer Oracle (commit type → version bump).
 
-<!-- ru-source-sha256: 4747a3144dbb40cf871cecc0757c62015ac8b17ed8a5dd106ffdfc2fe8255730 -->
+<!-- ru-source-sha256: bffa72134a2da2d0a57a2f91c69fd335cef9e3605e3d2b3a5be88b251f380c94 -->

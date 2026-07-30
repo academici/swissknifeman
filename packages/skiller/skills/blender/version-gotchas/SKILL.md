@@ -2,7 +2,7 @@
 name: version-gotchas
 bucket: blender
 version: 0.1.0
-description: "Known breaking changes and pitfalls of the Blender 5.0 API"
+description: "Use when hitting Blender 5.0 API issues: known breaking changes and pitfalls."
 risk: write
 persona: oss-dev
 tags: [blender, api, bpy, 3d, python, gotchas, advisory, version]
@@ -69,4 +69,4 @@ for obj in bpy.data.objects:
 - `blender-modeling/parametric-config` — mesh build via `bmesh`/SCREW where these 5.0-API rules apply.
 - `blender-modeling/threading` — SCREW thread modifier, sensitive to API changes.
 
-<!-- ru-source-sha256: 21f87e4580de4e17251bd8a179f4239b6ba0f8f42b6c848ab0f952f057e5cfa4 -->
+<!-- ru-source-sha256: c5afde33c4d11ad26c65367c66e8c6aac46391454d9dcc4f63923bf9b4d19430 -->

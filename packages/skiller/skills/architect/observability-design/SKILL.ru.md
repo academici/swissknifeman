@@ -2,7 +2,7 @@
 name: observability-design
 bucket: architect
 version: 0.1.0
-description: Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности
+description: Используй при проектировании observability для прод-готовности: logging, metrics, tracing, alerting, SLO/SLI, error budget, runbooks.
 risk: draft
 persona: architect
 tags: [observability, logging, metrics, tracing, alerting, slo, runbook]

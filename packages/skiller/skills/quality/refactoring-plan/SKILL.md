@@ -2,7 +2,7 @@
 name: refactoring-plan
 bucket: quality
 version: 0.1.0
-description: Safe refactoring plan: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback
+description: Use when planning a safe refactor: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback.
 risk: draft
 persona: quality
 tags: [quality, refactor, refactoring, validation, workflow]
@@ -161,4 +161,4 @@ MUST NOT:
 - Plans > 15 steps or > 8 weeks without splitting
 - "Along the way" bump a major framework version — separate plan
 
-<!-- ru-source-sha256: 7c4b2f0f9463f55b6b73fa6f3a11c0497ac41ca9542c46f6aee0ab937f612e73 -->
+<!-- ru-source-sha256: c2031981a00657b20c898a25725bad1216f18475a0ba17fb736a404f5955a408 -->

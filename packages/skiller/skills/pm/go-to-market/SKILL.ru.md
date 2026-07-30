@@ -2,7 +2,7 @@
 name: go-to-market
 bucket: pm
 version: 0.1.0
-description: GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan
+description: Используй при построении GTM-стратегии: ICP, messaging framework, каналы привлечения, launch plan.
 risk: draft
 persona: pm
 tags: [gtm, market, monetization]

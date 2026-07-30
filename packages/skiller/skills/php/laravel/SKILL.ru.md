@@ -2,7 +2,7 @@
 name: laravel
 bucket: php
 version: 0.4.0
-description: "Laravel architecture patterns: actions, repositories, resources"
+description: "Используй при применении Laravel architecture patterns: actions, repositories, resources."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "patterns"]

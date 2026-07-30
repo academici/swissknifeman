@@ -1,12 +1,16 @@
 """Тесты валидатора политики исполнения (harness.execpolicy) — изоляция в tmpdir.
 
-Позитив: состояние, которое ЗАПЕЧАТЫВАЕТ этот item (P4.3) — обе точки принуждения
+Позитив (pending): состояние, которое ЗАПЕЧАТЫВАЕТ P4.3 — обе точки принуждения
 `pending` с `pending_until: 2026.07.29-HARNESS-AGNOSTIC P4.4`, блоки физически
-отсутствуют в носителях, `--check` зелёный. Шесть негативных фикстур — по одному
-классу нарушения на пункт чек-листа §10 контракта (Deliverables item'а P4.3):
-неизвестный ключ (#1) · отсутствующее обязательное поле (#3) · число без
-provenance (#10) · роль вне канона (#12) · enforced-точка с несуществующим
-адресом (#19) · pending-точка без pending_until (#18)."""
+отсутствуют в носителях, `--check` зелёный. Позитив (enforced): состояние,
+которое ЗАПЕЧАТЫВАЕТ P4.4 — блок физически лёг в ОБА носителя, точки переведены
+`enforced`, `--check` зелёный своим ходом (D58). Негативные фикстуры — по одному
+классу нарушения на пункт чек-листа §10 контракта: неизвестный ключ (#1) ·
+отсутствующее обязательное поле (#3) · число без provenance (#10) · роль вне
+канона (#12) · enforced-точка с несуществующим адресом (#19) · pending-точка без
+pending_until (#18) · enforced-точка с резолвящимся адресом, но отсутствующим
+физически маркером — по одному на каждое из пяти полей плюс grammar_marker
+(Deliverables P4.4: «тест на удаление любого из пяти полей»)."""
 import copy
 import json
 import tempfile
@@ -25,6 +29,19 @@ _ROLES_CANON = {
 }
 
 _TEMPLATE_TEXT = "# Оркестратор\n\ninstallation template without markers\n"
+
+_LANDED_ROLE_CONTENT = (
+    "Ты — оркестратор задач.\n\n"
+    "PLAN\nTask 1 -> @role : goal ; deps: none ; output: <формат возврата>\nEND\n\n"
+    "## Контракт задания\n\n"
+    "- objective: одна цель задачи\n"
+    "- output: формат возврата результата\n"
+    "- tools: тулы и скиллы\n"
+    "- sources: источники и проверка фактов\n"
+    "- boundaries: где заканчивается работа роли\n"
+)
+
+_LANDED_TEMPLATE_TEXT = _LANDED_ROLE_CONTENT
 
 
 def _base_policy():
@@ -190,6 +207,52 @@ class ExecPolicyTestCase(unittest.TestCase):
         violations, code = ep.run_checks(self.root / "nope.json")
         self.assertEqual(code, 2)
         self.assertTrue(violations)
+
+    def _landed_policy(self):
+        """Оба носителя физически несут блок (P4.4), обе точки — status: enforced."""
+        (self.root / "roles.json").write_text(
+            json.dumps({"catalog_version": "1.0.0", "roles": [
+                {"pack_id": "_common", "role_id": "orchestrator", "content": _LANDED_ROLE_CONTENT},
+            ]}), encoding="utf-8")
+        (self.root / "orchestrator.md").write_text(_LANDED_TEMPLATE_TEXT, encoding="utf-8")
+        data = _base_policy()
+        for point in data["delegation_contract"]["enforcement_points"]:
+            point["status"] = "enforced"
+            del point["pending_until"]
+        return data
+
+    def test_positive_enforced_state_is_clean(self):
+        violations, code = self._run(self._landed_policy())
+        self.assertEqual([str(v) for v in violations], [])
+        self.assertEqual(code, 0)
+
+    def test_negative_enforced_point_missing_each_field_marker(self):
+        for field_id, marker in ep._FIELD_MARKERS.items():
+            with self.subTest(field=field_id):
+                data = self._landed_policy()
+                for point in data["delegation_contract"]["enforcement_points"]:
+                    point["field_markers"][field_id] = marker  # keep declared marker as-is
+                canon = json.loads((self.root / "roles.json").read_text(encoding="utf-8"))
+                stripped = canon["roles"][0]["content"].replace(marker, "")
+                canon["roles"][0]["content"] = stripped
+                (self.root / "roles.json").write_text(json.dumps(canon), encoding="utf-8")
+                violations, code = self._run(data)
+                self.assertEqual(code, 1)
+                self.assertTrue(any(
+                    v.check == "delegation-contract" and "маркеры отсутствуют физически" in v.message
+                    and field_id in v.message
+                    for v in violations), [str(v) for v in violations])
+
+    def test_negative_enforced_point_missing_grammar_marker(self):
+        data = self._landed_policy()
+        canon = json.loads((self.root / "roles.json").read_text(encoding="utf-8"))
+        canon["roles"][0]["content"] = canon["roles"][0]["content"].replace(ep._GRAMMAR_MARKER, "")
+        (self.root / "roles.json").write_text(json.dumps(canon), encoding="utf-8")
+        violations, code = self._run(data)
+        self.assertEqual(code, 1)
+        self.assertTrue(any(
+            v.check == "delegation-contract" and "grammar_marker отсутствует физически" in v.message
+            for v in violations), [str(v) for v in violations])
 
 
 if __name__ == "__main__":

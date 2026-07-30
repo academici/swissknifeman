@@ -163,8 +163,7 @@
           "boundaries": "- boundaries:"
         },
         "grammar_marker": "; output:",
-        "status": "pending",
-        "pending_until": "2026.07.29-HARNESS-AGNOSTIC P4.4"
+        "status": "enforced"
       },
       {
         "id": "plan-grammar-template",
@@ -178,8 +177,7 @@
           "boundaries": "- boundaries:"
         },
         "grammar_marker": "; output:",
-        "status": "pending",
-        "pending_until": "2026.07.29-HARNESS-AGNOSTIC P4.4"
+        "status": "enforced"
       }
     ]
   }

@@ -41,9 +41,9 @@ color: blue
 ```text
 PLAN
 mode: Sequential | Parallel-max2 | Gated
-Task 1 -> @{{PACK_PREFIX}}-slice-builder : <одна строка цели> ; deps: none ; files: app/... ; risk: LOW|MED|HIGH ; skills: a,b
-Task 2 -> @{{PACK_PREFIX}}-test-writer  : <цель> ; deps: 1 ; files: tests/...
-Task 3 -> @{{PACK_PREFIX}}-reviewer     : <цель> ; deps: 2 ; gate: acceptance
+Task 1 -> @{{PACK_PREFIX}}-slice-builder : <одна строка цели> ; deps: none ; files: app/... ; risk: LOW|MED|HIGH ; skills: a,b ; output: <формат возврата>
+Task 2 -> @{{PACK_PREFIX}}-test-writer  : <цель> ; deps: 1 ; files: tests/... ; output: <формат возврата>
+Task 3 -> @{{PACK_PREFIX}}-reviewer     : <цель> ; deps: 2 ; gate: acceptance ; output: <формат возврата>
 END
 ```
 
@@ -53,6 +53,9 @@ END
 - `deps:` — номера задач-предшественников или `none`.
 - `files:` — ожидаемые пути (для оценки независимости при Parallel-max2).
 - `gate: acceptance` — задача требует approve от reviewer перед следующей.
+- `output:` — обязательный формат возврата результата (напр. «диф + список тестов», «одна строка
+  вердикта», «JSON {file,line}»): без объявленного формата задание не выдаётся (см. «Контракт
+  задания» ниже).
 - `risk:` — blast-radius среза (`LOW|MED|HIGH`: concurrency/transactions/data-integrity/queue-semantics/
   connectors). Задаёт глубину ревью и модель/effort (Lean-tiered: Sonnet impl / Opus+xhigh на HIGH-review /
   Haiku тривиал), а НЕ размер.
@@ -64,6 +67,18 @@ END
   `context7` — для точного API библиотек. Правок ради правок не плоди — проверка показала, что изменение не
   нужно → убери его из плана.
 - Каждая задача — одна цель; не сливай несколько ролей в одну строку.
+
+## Контракт задания (пять полей — без них задание не выдаётся)
+
+- objective: одна цель задачи, одной строкой (поле `Task N -> @<role> : <цель>` в PLAN)
+- output: формат, в котором роль обязана вернуть результат (поле `; output:` в PLAN)
+- tools: тулы и скиллы, которыми делается работа (`skills:` в PLAN + `tools:` роли)
+- sources: источники, которым доверять, и как проверяются факты (RAG-правило в теле роли)
+- boundaries: где заканчивается работа роли и чего она не трогает (`files:`/`deps:`/анти-триггер роли)
+
+Правило: задание без объявленного формата возврата не выдаётся — без него основная сессия
+получает произвольную прозу и вынуждена перечитывать сырьё, теряя ту компрессию, ради которой
+субагент заводится.
 
 После плана коротко объясни выбор режима и зависимостей. Не начинай реализацию — это
 делают роли пака по плану.

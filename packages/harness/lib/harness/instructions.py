@@ -6,6 +6,7 @@ fragment, parity, extension, or compatibility input never reaches artifact plann
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -1122,6 +1123,52 @@ def _validate_compatibility_fixture(records: dict[str, dict],
                                      observed="catalog compatibility record differs"))
 
 
+_PLAN_RELATIVE_SOURCE = re.compile(r"^plans/([^/]+)/(.+)$")
+
+
+def _literal_coverage_source_text(source: object) -> str:
+    """Read the D76/D81 provenance source, archive-resilient: `plans/<PLAN-ID>/…`
+    resolves `<PLAN-ID>` through `resolve_plan_dir` (same precedent as
+    `contract_path()`), so archiving the donor plan does not turn this gate red.
+    Patchable by name from tests."""
+    if not isinstance(source, str):
+        raise ValueError("provenance.source must be a string")
+    match = _PLAN_RELATIVE_SOURCE.match(source)
+    if match:
+        plan_id, rest = match.group(1), match.group(2)
+        path = resolve_plan_dir(repository_root(), plan_id) / rest
+    else:
+        path = repository_root() / source
+    return path.read_text(encoding="utf-8")
+
+
+def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:
+    """D81 equality gate: the recorded `source_sha256` must equal the hash of the
+    RIGHT NOW extracted §2 section — independent of the literal-coverage check below,
+    since a stale provenance and a stale literal set are different failures."""
+    if not isinstance(provenance, dict):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="D81 provenance object", observed=_shape(provenance)),)
+    scope = provenance.get("source_hash_scope")
+    if scope != "section":
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="section", observed=_display(scope)),)
+    try:
+        text = _literal_coverage_source_text(provenance.get("source"))
+    except (OSError, ValueError) as error:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=type(error).__name__),)
+    section = literal_coverage_section(text, provenance.get("source_section"))
+    if section is None:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed="section not found"),)
+    actual = hashlib.sha256(section.encode("utf-8")).hexdigest()
+    if actual != provenance.get("source_sha256"):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=actual),)
+    return ()
+
+
 def validate_literal_coverage(value: dict[str, object]) -> tuple[InstructionDiagnostic, ...]:
     """Validate D76 coverage: every matrix-mandated literal is asserted by its own
     record. Wired only into `check_instructions` (P1.6) — never into `validate_catalog`
@@ -1139,7 +1186,7 @@ def validate_literal_coverage(value: dict[str, object]) -> tuple[InstructionDiag
         return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
                       expected="D76 literal coverage fixture schema", observed=_shape(fixture)),)
     records = {record["id"]: record for scope in value["scopes"] for record in scope["sections"]}
-    diagnostics: list[InstructionDiagnostic] = []
+    diagnostics: list[InstructionDiagnostic] = list(_provenance_diagnostics(fixture["provenance"]))
     for item in fixture["literals"]:
         if not isinstance(item, dict) or set(item) != {"semantic_id", "literal"}:
             diagnostics.append(_diag(

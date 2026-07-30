@@ -17,6 +17,7 @@ from harness.instructions import (
 )
 
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA = Path(__file__).resolve().parent / "fixtures_data/instruction-literal-coverage-v1.json"
 
 
@@ -97,6 +98,50 @@ class LiteralCoverageValidatorTests(unittest.TestCase):
         self.assertEqual(len(diagnostics), 1)
         self.assertEqual(diagnostics[0].code, "INSTRUCTION_COMPATIBILITY_MISMATCH")
         self.assertEqual(diagnostics[0].expected, "D76 literal coverage fixture")
+
+
+class LiteralCoverageProvenanceTests(unittest.TestCase):
+    """D81 equality gate: the recorded `source_sha256` must equal the hash of the
+    RIGHT NOW extracted §2 section, independently of the literal set below it."""
+
+    def _tampered(self, **overrides):
+        fixture = json.loads(DATA.read_text(encoding="utf-8"))
+        fixture["provenance"] = {**fixture["provenance"], **overrides}
+        return fixture
+
+    def test_tampered_recorded_hash_yields_exactly_one_diagnostic(self):
+        fixture = self._tampered(source_sha256="0" * 64)
+        with tempfile.TemporaryDirectory() as temp:
+            path = write_fixture(temp, fixture)
+            with patch("harness.instructions.literal_coverage_path", return_value=path):
+                diagnostics = validate_literal_coverage(load_catalog())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
+        self.assertEqual(diagnostics[0].observation, "provenance-invalid")
+
+    def test_unreadable_source_yields_diagnostic_not_exception(self):
+        with patch("harness.instructions._literal_coverage_source_text",
+                   side_effect=FileNotFoundError("boom")):
+            diagnostics = validate_literal_coverage(load_catalog())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
+
+    def test_unknown_source_hash_scope_yields_exactly_one_diagnostic(self):
+        fixture = self._tampered(source_hash_scope="file")
+        with tempfile.TemporaryDirectory() as temp:
+            path = write_fixture(temp, fixture)
+            with patch("harness.instructions.literal_coverage_path", return_value=path):
+                diagnostics = validate_literal_coverage(load_catalog())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
+
+    def test_edit_outside_section_leaves_gate_green(self):
+        source_path = REPO_ROOT / json.loads(
+            DATA.read_text(encoding="utf-8"))["provenance"]["source"]
+        text = source_path.read_text(encoding="utf-8") + "\n<!-- P2.6 edit outside §2 -->\n"
+        with patch("harness.instructions._literal_coverage_source_text", return_value=text):
+            diagnostics = validate_literal_coverage(load_catalog())
+        self.assertEqual(diagnostics, ())
 
 
 class LiteralCoverageWiringTests(unittest.TestCase):

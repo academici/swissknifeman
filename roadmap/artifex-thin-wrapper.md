@@ -18,7 +18,8 @@
 
 1. **Каркас пакета** `packages/artifex/` по раскладке `packages/skiller/` (донор P2.1).
 2. **Ядро цикла**: `plan_reader` (Status Board + `handoff.md` `**Next:**`), `worker` (запуск
-   воркера под таймаутом, дефенсивный JSON-parse) (P2.2).
+   воркера под таймаутом, дефенсивный JSON-parse) (P2.2)
+   (предусловие — переиздание parse-подмножества, см. §Ограничения).
 3. **State + retry-лестница** tier1 transport / tier2 semantic / tier3 quota (P2.3).
 4. **Run-folder**: `state.json` (атомарная запись), событийный `journal.jsonl`, resume-by-folder,
    crash recovery (P2.4; парный sealed-контракт донора `root/contracts/artifex-run-folder.md`).
@@ -76,6 +77,15 @@ continue/point-fix/escalate, rulebook правил прогресса, отде�
   (`notify-send`/`osascript`), Telegram/MAX в дереве отсутствуют.
 - **Квота и биллинг**: пилот донора упирался в исчерпание учёток; экономика прогона — часть
   приёмки, а не следствие.
+- **Parse-контракт донора историчен — переиздание подмножества обязательно.**
+  `plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` запинен на
+  `plan-protocol` v2.8.0 @ `2cf26e8`, живой канон на 2026-07-30 — v2.21.0; якорь 3 §4 (enum форм
+  `Next`) сломан переходом канона на провайдер-нейтральные семантические формы (замер —
+  `plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` §3, решение —
+  его D93). Документ оставлен ИСТОРИЧЕСКИМ и как спека парсера не используется.
+  **Предусловие п. 2 «Ядро цикла»:** до первой строки `plan_reader` parse-подмножество
+  переиздаётся против канона ТОГО дня — пин на КОММИТ, не на «latest», — и закрывается не
+  измеренный вопрос «чем парсится прогон Codex» (§2 контракта знает только `claude -p`).
 
 ## Критерий внедрения
 

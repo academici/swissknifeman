@@ -2,7 +2,7 @@
 name: brd
 bucket: pm
 version: 0.1.0
-description: Business Requirements Document: функциональные требования, user stories, acceptance criteria
+description: Используй при написании Business Requirements Document: функциональные требования, user stories, acceptance criteria.
 risk: draft
 persona: pm
 tags: [requirements, template]

@@ -2,7 +2,7 @@
 name: brd
 bucket: pm
 version: 0.1.0
-description: Business Requirements Document: functional requirements, user stories, acceptance criteria
+description: Use when writing a Business Requirements Document: functional requirements, user stories, acceptance criteria.
 risk: draft
 persona: pm
 tags: [requirements, template]
@@ -59,4 +59,4 @@ BRD = WHAT the system does, not HOW. Audience: developers, in-repo AI agents, te
 - `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — third layer (HOW), consume BRD.
 - `general/spec-interview` — one-question-at-a-time interview technique to gather missing requirements before BRD.
 
-<!-- ru-source-sha256: a56d6f35e68ab49fc39eda0b5bc2cfacbbdaf920fba88b8f421f7dbc21d1602d -->
+<!-- ru-source-sha256: c16ab7ef517ecdfc675a22cf0f7a08c407e8c7749f951967b9ad1814d5958a58 -->

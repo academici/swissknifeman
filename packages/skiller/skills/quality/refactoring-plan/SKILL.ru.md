@@ -2,7 +2,7 @@
 name: refactoring-plan
 bucket: quality
 version: 0.1.0
-description: План безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback
+description: Используй при планировании безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback.
 risk: draft
 persona: quality
 tags: [quality, refactor, refactoring, validation, workflow]

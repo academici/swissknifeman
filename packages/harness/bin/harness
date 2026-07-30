@@ -17,6 +17,10 @@
 #                <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global] [--target P] [--all-projects] [--dry-run]
 #   wf           статус фонового workflow-прогона Claude Code (детерминированный парс)
 #                status [--run WF_ID] [--project PATH] [--json] [--last N] [--watch] [--interval S]
+#   instructions владение корневых/пакетных CLAUDE.md/AGENTS.md (паритет провайдеров,
+#                owner-gated adoption, гейт дрейфа): <plan|check|adopt|apply|repair>
+#                [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
+#                [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
 #   doctor       диагностика окружения (пресеты, скрипт, файлы хуков в ~/.claude)
 #   version      версия (git SHA) и путь к пакету
 set -euo pipefail
@@ -34,7 +38,7 @@ if [[ ! -d "$REPO_ROOT/lib/harness" || ! -d "$REPO_ROOT/configs/claude-code" ]];
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,25p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -45,7 +49,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "harness $sha ($REPO_ROOT)"
     exit 0 ;;
-  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|doctor) ;;
+  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|instructions|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

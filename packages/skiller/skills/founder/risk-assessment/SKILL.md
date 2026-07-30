@@ -2,7 +2,7 @@
 name: risk-assessment
 bucket: founder
 version: 0.1.0
-description: 6 risk categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks
+description: Use when assessing startup risk: 6 categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks.
 risk: read
 persona: founder
 tags: [validation, compliance, security, agentic]
@@ -132,4 +132,4 @@ DON'T:
 - `architect/security-design` — deepens technical category (auth, OWASP, STRIDE threat modeling)
 - `quality/tech-debt-audit` — adjacent for technical risks of existing code (impact × effort)
 
-<!-- ru-source-sha256: dc1c0898b6a2be6b12d99937ae58c645e4578c2c520e1b425a78ef5172814e43 -->
+<!-- ru-source-sha256: cf205cf0a5dd928f7eb18a5eefca1700bbc2c87ece25ed3ec54149d9d946a748 -->

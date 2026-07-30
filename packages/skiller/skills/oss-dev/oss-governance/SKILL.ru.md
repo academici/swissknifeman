@@ -2,7 +2,7 @@
 name: oss-governance
 bucket: oss-dev
 version: 0.1.0
-description: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта
+description: Используй при настройке governance OSS-проекта: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy.
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, license, security, documentation]

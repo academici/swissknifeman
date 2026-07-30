@@ -2,7 +2,7 @@
 name: dependency-audit
 bucket: oss-dev
 version: 0.2.0
-description: Dependency audit — lockfile sanity, vuln scan, license compatibility, supply-chain risk, SBOM
+description: Use when auditing dependencies: lockfile sanity, vuln scan, license compatibility, supply-chain risk, SBOM.
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, security, dependencies, php]
@@ -111,4 +111,4 @@ NEVER:
 - Skip committing lockfile in an app (for libraries — see discussion above)
 - Rely on `npm audit` as the only tool — it does not catch supply-chain
 
-<!-- ru-source-sha256: 8af7db936e3aad76b45e08d5cbf27fe0be1da64d840fdf688e63efaa9f9b4205 -->
+<!-- ru-source-sha256: 2e15dfacdad9304e665aaf8bea3581015319ba94d994254f938ededc354a4a0e -->

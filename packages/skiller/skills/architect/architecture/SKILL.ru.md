@@ -2,7 +2,7 @@
 name: architecture
 bucket: architect
 version: 0.1.0
-description: Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability
+description: Используй при выборе архитектуры системы: стек, ADR, C4-диаграммы, deployment, scalability.
 risk: draft
 persona: architect
 tags: [architecture, adr, c4, scalability, deployment]

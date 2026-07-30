@@ -2,7 +2,7 @@
 name: agent-design
 bucket: architect
 version: 0.1.0
-description: Agent design, agentic loop, tool contracts, harness, permission gates
+description: Use when designing an agent: agentic loop, tool contracts, harness, permission gates.
 risk: draft
 persona: architect
 tags: [agentic, architecture, security, validation]
@@ -171,4 +171,4 @@ DO NOT:
 - `ai/ai-agents` — external compendium on building agents/MCP/RAG (analysis, not mirror).
 - `security/security` — external defensive playbook on prompt injection and tool-use safety.
 
-<!-- ru-source-sha256: 023165b355d45b5d452365c49ee3da43f9cd83ceecc4e6a67e6128928dc0a0d6 -->
+<!-- ru-source-sha256: b456f12838d88c22cba9a919c1d2c4f941433772b41de9192f725bf11c189cd6 -->

@@ -9,10 +9,10 @@ Keep this package as layer-1 data and pipeline work; prompt-discipline skills re
 Keep `bin/analyst` as the launcher, `lib/analyst/` as stdlib-only logic, temporary-directory tests, and package documentation that builds standalone and in the umbrella site.
 <!-- instruction:analyst.module-boundaries -->
 ## analyst.module-boundaries
-Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.
+Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules. The documented exception is `extract_pathologies`, which reads run-report history to detect recurrence and is limited to read-only I/O.
 <!-- instruction:analyst.data-lifecycle -->
 ## analyst.data-lifecycle
-Store lessons in explicit lifecycle directories, append audit and confidence events without rewriting them, and move lessons through `lessons.move_lesson` rather than duplicating state.
+Store lessons in explicit lifecycle directories, append audit and confidence events without rewriting them, and move lessons through `lessons.move_lesson` rather than duplicating state. Also, `events.ndjson` is the source of truth for confidence recomputation, and lesson snapshot fields stay additive and reproducible from a fixed `--now`.
 <!-- instruction:analyst.privacy -->
 ## analyst.privacy
 Keep raw transcripts local; send only abstracted curated lessons to shared memory and reference secrets without storing their values.

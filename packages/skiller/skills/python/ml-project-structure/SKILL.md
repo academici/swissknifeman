@@ -2,7 +2,7 @@
 name: ml-project-structure
 bucket: python
 version: 0.1.0
-description: "Standardized ML/Data Science project structure (Cookiecutter Data Science)"
+description: "Use when structuring an ML/Data Science project per Cookiecutter Data Science."
 risk: write
 persona: oss-dev
 tags: [python, ml, structure, architecture, data, conventions]
@@ -56,4 +56,4 @@ my_ml_project/
 - `php/laravel-structure` — analogous structure canon for Laravel projects.
 - `oss-dev/oss-development` — OSS-repo structure (README, ADR, CI) on top of project code.
 
-<!-- ru-source-sha256: f3256dc2528418358d7ab40e4b76cdd0f05df8cb8cd8b030bbbca4b32c3286b6 -->
+<!-- ru-source-sha256: b291fb17577086bb7c8b8f914d7529dcb127687a28d5c78af16cfe0259e8d760 -->

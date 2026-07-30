@@ -1,0 +1,91 @@
+# desc-trigger-burndown.txt — рэтчет качества frontmatter `description` как ТРИГГЕРА
+# (P3.5, plans/2026.07.29-HARNESS-AGNOSTIC/phases/P3.md).
+#
+# Формат: одна запись на строку — `<bucket>/<name>` (совпадает с frontmatter bucket:name).
+# Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.
+#
+# Правила (see validate.sh, секция description-триггер-гейта):
+#   - description БЕЗ триггерной фразы (regex: use when|activate|use for|use to|when you|
+#     whenever|trigger|use this, case-insensitive) — легально, ТОЛЬКО пока скилл в этом
+#     списке (унаследованный долг). Скилла НЕТ в списке → error (новый долг запрещён).
+#   - Запись «протухла» (скилл удалён/переименован ИЛИ его description уже несёт триггер) →
+#     validate.sh печатает warn «протухшая запись, убери» — удали строку при починке.
+#
+# One-way: список ТОЛЬКО уменьшается. Добавление новых строк вне bootstrap этого item —
+# осознанное решение отдельного item'а с обоснованием в его Completion Notes, не тихая правка.
+#
+# Bootstrap (2026-07-30, P3.5): унаследованный остаток без триггера ПОСЛЕ починки
+# измеренного blocker-набора (39 записей < 100 симв, P3.5 Scope Included) — 69 записей на
+# 8e16a811 (findings/04 оценивал 86 на момент замера 2026-07-29; расхождение — часть
+# скиллов из набора «< 100 симв без триггера, upstream или ранее правленные» уже вышла из
+# выборки к моменту bootstrap, число фиксируется живым прогоном, не документом).
+
+architect/security-design
+axioma/axioma-doctrine
+axioma/axioma-glossary
+axioma/axioma-stack
+axioma/ecosystem-map
+azguard/azguard
+devops/ci-cd
+devops/docker-dev-prod
+devops/docker-php
+devops/docker-postgres
+devops/docker-services
+devops/docker-vite
+devops/makefile
+devops/node-pnpm-preflight
+founder/adversarial-check
+founder/customer-discovery
+founder/defensibility
+founder/idea-audit
+founder/idea-discovery
+founder/startup-lifecycle
+frontend-backend/inertia-vue
+frontend-vite/vite-multi-build
+frontend-vue/vitest
+frontend-vue/vue-composition-api
+frontend-wayfinder/wayfinder
+general/anti-drift
+general/complex-task-orchestrator
+general/context-economy
+general/plan-protocol
+general/session-handoff
+general/skills-ssot
+general/spec-interview
+general/task-brief-template
+laravel-architecture/laravel-subagents
+laravel-architecture/modular-architecture
+laravel-auth/laravel-permissions
+laravel-auth/laravel-security-audit
+laravel-testing/laravel-dusk
+laravel-testing/laravel-testing
+operator/capacity-planning
+operator/incident-response
+operator/oncall-rotation
+operator/postmortem
+operator/runbook
+oss-dev/github-flow
+oss-dev/oss-development
+oss-dev/release-engineering
+php/dependency-injection
+php/laravel-structure
+php/pao
+php/static-analysis
+pm/monetization-design
+pm/pmf-diagnostics
+pm/prd-from-brd
+pm/product-roadmap
+pm/requirement-critic
+quality/code-review
+quality/code-simplifier
+quality/tech-debt-audit
+quality/test-strategy
+quality/testing-safety-report
+repository-bootstrap/docs-maintenance
+repository-bootstrap/ecosystem-mcp
+repository-bootstrap/field-feedback-loop
+system/brain-locator
+system/cross-project-coordinator
+system/local-topology
+system/shared-memory
+system/swissknifeman-locator

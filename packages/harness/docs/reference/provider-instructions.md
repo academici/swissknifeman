@@ -4,14 +4,14 @@ Generated from the validated D86 catalog.
 
 | Scope | Claude target | Codex target | Common IDs | Claude extensions | Codex extensions |
 |:--|:--|:--|--:|--:|--:|
-| `root` | `CLAUDE.md` | `AGENTS.md` | 11 | 3 | 3 |
+| `root` | `CLAUDE.md` | `AGENTS.md` | 18 | 3 | 4 |
 | `skiller` | `packages/skiller/CLAUDE.md` | `packages/skiller/AGENTS.md` | 8 | 3 | 0 |
-| `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | 8 | 3 | 0 |
+| `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | 8 | 4 | 0 |
 | `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | 7 | 2 | 0 |
 | `analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` | 8 | 2 | 0 |
 | `task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` | 7 | 2 | 0 |
 
-The frozen inventory contains 49 common and 18 provider-extension IDs (67 total) across exactly 12 targets.
+The frozen inventory contains 56 common and 20 provider-extension IDs (76 total) across exactly 12 targets.
 
 ## Public API
 

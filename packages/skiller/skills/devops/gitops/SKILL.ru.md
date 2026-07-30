@@ -2,7 +2,7 @@
 name: gitops
 bucket: devops
 version: 0.3.0
-description: "Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток"
+description: "Используй при определении командной Git-стратегии: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток."
 risk: read
 persona: operator
 tags: ["git", "gitops", "github"]

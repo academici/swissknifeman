@@ -83,6 +83,14 @@
     {
       "citation": "plans/2026.07.25-ECO-OPT/handoff.md:62-63",
       "reason": "P3 close (2026-07-28): handoff.md перезаписывается ЦЕЛИКОМ при каждом закрытии — цитата в phases/P9.md:970 (СКОУП реконсиляции P9, пункт 7) описывает правку, уже выполненную в прошлых закрытиях; исторический пункт чек-листа P9, не текущее состояние handoff, вне Scope P3."
+    },
+    {
+      "citation": "codex-rs/config/src/config_toml.rs:68",
+      "reason": "R2 (2026.07.29-HARNESS-AGNOSTIC finish, D54): исходник внешнего репозитория `openai/codex@main` (курл raw-файла 2026-07-29), не вендорится — не резолвится ни от корня репо, ни от каталога плана по построению. Цитата несёт провенанс факта `DEFAULT_PROJECT_DOC_MAX_BYTES = 32 * 1024` (findings/02 Ф8)."
+    },
+    {
+      "citation": "codex-rs/core/src/agents_md.rs:40",
+      "reason": "R2 (2026.07.29-HARNESS-AGNOSTIC finish, D54): исходник внешнего репозитория `openai/codex@main` (курл raw-файла 2026-07-29), не вендорится. Цитата несёт провенанс факта `LOCAL_AGENTS_MD_FILENAME = \"AGENTS.override.md\"` (findings/02 Ф8)."
     }
   ]
 }

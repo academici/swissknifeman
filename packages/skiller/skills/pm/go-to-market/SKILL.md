@@ -2,7 +2,7 @@
 name: go-to-market
 bucket: pm
 version: 0.1.0
-description: GTM strategy, ICP, messaging framework, acquisition channels, launch plan
+description: Use when building a GTM strategy: ICP, messaging framework, acquisition channels, launch plan.
 risk: draft
 persona: pm
 tags: [gtm, market, monetization]
@@ -126,4 +126,4 @@ DO NOT:
 - `founder/defensibility` — supplier of moat narrative for investor/enterprise voice at Scale.
 - `founder/pitch-deck` — consumer: deck GTM section comes from here.
 
-<!-- ru-source-sha256: 23940414311fab6ab75f8d64dc0d488e413a80070f58682e4796b9f485d6438b -->
+<!-- ru-source-sha256: 3228e986b165cc465b3170976ddf6650bc6a97f80f6cdf4c9355d29f9e4e7848 -->

@@ -2,7 +2,7 @@
 name: repositories
 bucket: php
 version: 0.1.0
-description: "Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService"
+description: "Используй при построении системы репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "repository", "architecture"]

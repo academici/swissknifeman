@@ -2,7 +2,7 @@
 name: medialibrary
 bucket: laravel-extras
 version: 0.1.0
-description: "spatie/laravel-medialibrary: attach files to Eloquent models, collections, conversions, get URLs"
+description: "Use when attaching files to Eloquent models: spatie/laravel-medialibrary collections, conversions, URLs."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "media", "spatie", "uploads", "images"]
@@ -68,4 +68,4 @@ sha256: ""
 - https://spatie.be/docs/laravel-medialibrary
 - Related skills: `frontend/filepond-upload` (frontend file upload, server-side model binding), `laravel-testing/test-isolation-guard` (isolated `media-test` disk in tests), `laravel-data-layer/laravel-data` (media URLs in DTOs/resources), `laravel-filament/filament` (media fields in admin)
 
-<!-- ru-source-sha256: e74c686ad0625207e437530170742d46abbd7b6fa16ff5dfa0608c045e99c523 -->
+<!-- ru-source-sha256: 91ab1d555ae064bd59b0c21aaf475929ed9499cf4f389d5ee9f5cc0b8f548dd6 -->

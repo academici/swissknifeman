@@ -2,7 +2,7 @@
 name: unit-economics
 bucket: pm
 version: 0.1.0
-description: "Unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios"
+description: "Use when modeling unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios."
 risk: draft
 persona: pm
 tags: [monetization]
@@ -97,4 +97,4 @@ Place in `docs/01_Business/04_Unit_Economics.md`. Structure:
 - `founder/pitch-deck` — consumer: financial slide of deck relies on these numbers.
 - `founder/risk-assessment` — negative unit economics → entry in Risk Register.
 
-<!-- ru-source-sha256: 5f24a65cf9afec41fa348376b1ea6e13c55e3da2735cb6ecc97b10d370a95646 -->
+<!-- ru-source-sha256: 4a3c226a1cd929b2106e7f02c740fc1beb0f8b318e2247276c090e1df621b9c0 -->

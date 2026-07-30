@@ -20,7 +20,7 @@ swissknifeman — **зонтик из четырёх пакетов**, а не �
 | **Контент / методики** | скиллы, чеклисты, стандарты, stack-инструкции | пакет **skiller** (`skills/`, `presets/`, `profiles/`) | github-ops, tdd-discipline, mcp-advisor |
 | **Оркестрация / политика / память** | провижининг, граф, namespace-память, MCP-хаб | пакет **maind** (`lib/maind/`) | sync, health, fleet, MCP-сервер `maind_*` |
 | **Обучение / уроки** | захват уроков из прогонов, cross-project паттерны, человеко-гейт | пакет **analyst** (`lib/analyst/`) | digest, scan, suggest, promote |
-| **Окружение** | permissions, хуки, проводка MCP-серверов | пакет **harness** (`configs/claude-code/`) | пресеты permissions, каталог MCP |
+| **Окружение** | permissions, хуки, проводка MCP-серверов, канон корневых инструкций | пакет **harness** (`configs/claude-code/`) | пресеты permissions, каталог MCP, `harness instructions` |
 | **Внешний движок** | зрелый runtime, который не пишем сами | подключается извне | GitHub CLI, Serena (код-граф), agentmemory, browser |
 
 **Правило:** новая способность — это новая **запись в одном из слоёв**, а не код в maind «на всякий

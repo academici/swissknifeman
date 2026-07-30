@@ -2,6 +2,19 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.5.0] - 2026-07-30
+
+### Added
+
+- **Delegation contract в грамматике PLAN** (`2026.07.29-HARNESS-AGNOSTIC` P4.4, D58): новое
+  поле формата возврата `; output: <формат возврата>` в строке `Task N -> @<role> : <цель>` и
+  секция «Контракт задания» с пятью обязательными элементами задания субагенту
+  (`objective`/`output`/`tools`/`sources`/`boundaries`, first-party Anthropic) и правилом
+  «задание без формата возврата не выдаётся». Аддитивно — существующие поля грамматики
+  (`deps:`/`files:`/`risk:`/`skills:`/`gate:`) не переименованы и не удалены. Затронут
+  install-файл `.claude/agents/{PACK_PREFIX}-orchestrator.md` и провайдер-нейтральный канон
+  `configs/common/agent-packs/roles.json::_common.orchestrator.content`.
+
 ## [0.4.1] - 2026-07-12
 
 ### Changed

@@ -125,6 +125,7 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 | `swissknifeman validate` | `scripts/validate.sh` (то же, что CI) |
 | `skiller doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
 | `skiller budget --first-turn [--target DIR] [--json] [--strict]` | always-on футпринт первого хода проекта (skills+agents+CLAUDE.md/rules+живой прогон SessionStart-хуков+MCP); вердикт OK ≤7K / ELEVATED ≤10K / WARN >10K ток; `--strict` — exit 1 при WARN (CI). Флот — `maind doctor --context` |
+| `skiller budget --provider claude-code\|codex [--profile P\|--config F\|--target DIR]` | добавляет к отчёту provider-aware бюджет обнаружения (листинга) и режим деградации; дефолт без флага — `claude-code`. `--profiles` — тот же замер по КАЖДОМУ поставляемому профилю против обоих провайдеров разом (WARN-гейт в `validate.sh` при переборе фолбэк-бюджета Codex, D26) |
 | `swissknifeman version` | git SHA + путь к реестру |
 
 ## Карта проектов: `~/.swissknifeman/projects.json`

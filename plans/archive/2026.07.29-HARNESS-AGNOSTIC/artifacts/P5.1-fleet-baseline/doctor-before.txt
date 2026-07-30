@@ -1,0 +1,105 @@
+== skiller ==
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: include: 'frontend/antfu' переехал → 'frontend-linting/antfu' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue' переехал → 'frontend-vue/vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-best-practices' переехал → 'frontend-vue/vue-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-router-best-practices' переехал → 'frontend-vue/vue-router-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-testing-best-practices' переехал → 'frontend-vue/vue-testing-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vueuse-functions' переехал → 'frontend-vue/vueuse-functions' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/pinia' переехал → 'frontend-vue/pinia' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vite' переехал → 'frontend-vite/vite' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vitest-vue' переехал → 'frontend-vue/vitest-vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vitepress' переехал → 'frontend-vite/vitepress' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt' переехал → 'frontend-nuxt/nuxt' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt-modules' переехал → 'frontend-nuxt/nuxt-modules' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt-seo' переехал → 'frontend-nuxt/nuxt-seo' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/motion' переехал → 'frontend-animations/motion' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/ts-library' переехал → 'frontend-linting/ts-library' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/figma-to-vue' переехал → 'frontend-figma/figma-to-vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: include: 'frontend/antfu' переехал → 'frontend-linting/antfu' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue' переехал → 'frontend-vue/vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-best-practices' переехал → 'frontend-vue/vue-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-router-best-practices' переехал → 'frontend-vue/vue-router-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vue-testing-best-practices' переехал → 'frontend-vue/vue-testing-best-practices' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vueuse-functions' переехал → 'frontend-vue/vueuse-functions' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/pinia' переехал → 'frontend-vue/pinia' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vite' переехал → 'frontend-vite/vite' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vitest-vue' переехал → 'frontend-vue/vitest-vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/vitepress' переехал → 'frontend-vite/vitepress' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt' переехал → 'frontend-nuxt/nuxt' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt-modules' переехал → 'frontend-nuxt/nuxt-modules' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/nuxt-seo' переехал → 'frontend-nuxt/nuxt-seo' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/motion' переехал → 'frontend-animations/motion' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/ts-library' переехал → 'frontend-linting/ts-library' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: include: 'frontend/figma-to-vue' переехал → 'frontend-figma/figma-to-vue' (раскол бакетов) — обновите .swissknifeman/config.json
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена
+skiller doctor (реестр: /home/vostrikov/projects/packages/swissknifeman/packages/skiller)
+  [ok ] python3 3.12.3
+  [ok ] симлинк /home/vostrikov/.local/bin/skiller
+  [ok ] /home/vostrikov/.local/bin в PATH
+  [ok ] projects.json (записей: 42)
+  [FAIL] записи projects.json указывают на существующие каталоги — 6 устаревших — skiller list --prune
+  [ok ] реестр — git-репозиторий
+  [ok ] реестр чистый (HEAD 8e16a811)
+  [ok ] профили загружаются (10)
+  [ok ] harness исполняется (/home/vostrikov/projects/packages/swissknifeman/packages/harness/bin/harness)
+  [ok ] схема swissknife.schema.json ⇄ ключи .swissknife.json
+  [ok ] схема swissknife.schema.json ⇄ типы .swissknife.json
+  [ok ] схема swissknifeman-config.schema.json ⇄ ключи .swissknifeman/config.json
+  [ok ] схема swissknifeman-config.schema.json ⇄ типы .swissknifeman/config.json
+  [FAIL] хабы проектов свежие (реестр sha 041735a37bd6) — 18 устарел(и): agelto, flexcrm, sova, corex, memster, cms, edufy, dterema, app, app, agelto, chatom, perplexity-web-mcp, cms, dterema, loqum, flexcrm, sova — перегенерируй (skiller update / generate-hub.sh)
+  [warn] downstream CLAUDE.md: 16/36 проектов > 200 строк (always-loaded; детали: skiller doctor --downstream)
+  [warn] vendor-скиллы: 19 проект(ов) отстали от реестра (детали: skiller doctor --vendor-drift)
+
+Проблем: 2
+
+== harness ==
+harness doctor:
+  ✓ configs/claude-code/ — /home/vostrikov/projects/packages/swissknifeman/packages/harness/configs/claude-code
+  ✓ permissions-пресеты: agent-teams, base, docker, global, laravel, node, observer, php-package, product-boundary, python, yolo
+  ✓ MCP-пресеты: bindings, context7, fetch, filesystem, github, memory, perplexity, playwright, sequential-thinking
+  ✓ scripts/apply-permissions.sh — /home/vostrikov/projects/packages/swissknifeman/packages/harness/scripts/apply-permissions.sh
+  ✓ agent-packs: _common, backend-laravel, dart-flutter, laravel-package, node-frontend, python-backend, role-cto, role-founder, role-maintainer, role-tech-lead
+  ✓ файлы хуков установлены глобально (~/.claude/hooks/)
+  · review-gate: configured: G1, G2 (strict), W1, plan-citations (warn)
+  · route evidence: live model — из пейлоада хука/`codex doctor --json`; effort остаётся self-attested (`task.route_evidence capture --source self-attested`)
+
+harness: OK
+
+== maind ==
+maind doctor (узел: /home/vostrikov/projects/packages/swissknifeman/packages/maind)
+  [ok ] python3 3.12.3
+  [ok ] node в PATH
+  [ok ] agentmemory установлен
+  [ok ] config/memory/iii-config.yaml на месте
+  [ok ] /home/vostrikov/.maind доступен для записи
+  [ok ] конфиг узла валиден (источник: config.json)
+  [warn] managed-скиллы (ecosystem-mcp/setup): 18 проект(ов) отстали от шаблона (детали: maind doctor --skill-drift)
+  [warn] дубль-канал skiller (connect+vendor): 5 проект(ов) раздают скиллы дважды (детали: maind doctor --channel-drift)
+  [ok ] пин Serena/схема .serena/project.yml связны
+  [info] память http://192.168.31.93:4111 — не запущена (maind start --only memory)
+  [info] порты: http :4111, stream :4112 (override через .env AGENTMEMORY_PORT/STREAM_PORT)
+
+Все проверки пройдены.
+
+== analyst ==
+
+analyst doctor — /home/vostrikov/projects/packages/swissknifeman/packages/analyst
+
+  ✓ python>=3.8
+  ✓ core (общий фундамент на PYTHONPATH)
+  ✓ maind (surfacing curated в память, опц.)
+  · task.route_evidence (route/budget evidence, опц.)
+
+Окружение готово.
+

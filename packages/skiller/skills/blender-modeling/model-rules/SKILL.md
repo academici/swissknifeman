@@ -2,7 +2,7 @@
 name: model-rules
 bucket: blender-modeling
 version: 0.1.0
-description: "Template models/{name}/ai/rules.md — model-specific rules read by the agent before any task"
+description: "Use this template before any task on a model: read models/{name}/ai/rules.md, the model-specific rules file."
 risk: write
 persona: oss-dev
 tags: [blender, template, rules, 3d, cad, conventions]
@@ -97,4 +97,4 @@ set_viewport_camera(z_mm=<z>,  distance=<d>)  # <zone 2>
 - `blender-modeling/threading` — source of values for "Thread parameters" table.
 - `blender-modeling/config-conventions` — rules for cross-config deps recorded in this file.
 
-<!-- ru-source-sha256: a18a01b91220535dacac4149950b73e3f457a4c6708b62e147e9c64c3a2f580d -->
+<!-- ru-source-sha256: 3e171c3d050da25fbe5e44bebef2ea93a4630b2e96af1b303303e4ba2760f82d -->

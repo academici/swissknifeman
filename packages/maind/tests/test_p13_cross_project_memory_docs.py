@@ -23,12 +23,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]  # .../packages/maind/tests →
 
 _ECOSYSTEM_MCP_TEMPLATE = (_REPO_ROOT / "packages" / "maind" / "templates" / "skills"
                            / "ecosystem-mcp" / "SKILL.md")
+_BOOTSTRAP_SKILLS = _REPO_ROOT / "packages" / "skiller" / "skills" / "repository-bootstrap"
 _LOCAL_SKILLS = {
-    "maind-overview": _REPO_ROOT / ".claude" / "skills" / "maind-overview" / "SKILL.md",
-    "cross-project-optimizer": _REPO_ROOT / ".claude" / "skills" / "cross-project-optimizer"
-                                / "SKILL.md",
-    "ecosystem-integration": _REPO_ROOT / ".claude" / "skills" / "ecosystem-integration"
-                              / "SKILL.md",
+    # Root-bootstrap projections under .claude/skills/ are thin pointer stubs (Class-A
+    # projection design, P1.2 2026.07.24-AGENT-RELIABILITY) — no copied body, so the caveat
+    # phrase is checked against the canonical source they point back at.
+    "maind-overview": _BOOTSTRAP_SKILLS / "maind-overview" / "SKILL.md",
+    "cross-project-optimizer": _BOOTSTRAP_SKILLS / "cross-project-optimizer" / "SKILL.md",
+    "ecosystem-integration": _BOOTSTRAP_SKILLS / "ecosystem-integration" / "SKILL.md",
 }
 _MEMORY_DOC = _REPO_ROOT / "packages" / "maind" / "docs" / "guide" / "memory.md"
 
@@ -79,7 +81,8 @@ class TestDigestOnDemandCaveat(unittest.TestCase):
         for name, path in _LOCAL_SKILLS.items():
             text = path.read_text(encoding="utf-8")
             has_caveat = ("shared_max=0" in text or "project-only" in text
-                          or "дайджест" in text.lower())
+                          or "дайджест" in text.lower()
+                          or "does not carry it by default" in text.lower())
             self.assertTrue(has_caveat, f"{name}: нет оговорки project-only/on-demand про digest")
 
 

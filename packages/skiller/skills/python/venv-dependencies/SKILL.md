@@ -2,7 +2,7 @@
 name: venv-dependencies
 bucket: python
 version: 0.1.0
-description: "Python dependency management and virtual environments for project reproducibility"
+description: "Use when managing Python dependencies and virtual environments for project reproducibility."
 risk: write
 persona: oss-dev
 tags: [python, venv, dependencies, tooling, quality, conventions]
@@ -76,4 +76,4 @@ __pycache__/
 - `php/static-analysis` — PHP analog of Black/Ruff/Mypy (Pint, PHPStan, Rector) locally and in CI.
 - `oss-dev/dependency-audit` — dependency audit (vuln scan, licenses, supply-chain, SBOM) on top of pinned versions.
 
-<!-- ru-source-sha256: 2063e2ad8e0022ebd6b18468c7e7bf1527f75227cd44207f4ff8357fcae0637a -->
+<!-- ru-source-sha256: d8811ab8cbf6d1f65e2f36e651db4fc67c2e27354627b9d16bb627ad3ef345db -->

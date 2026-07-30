@@ -40,6 +40,11 @@ jobs:
           python3 scripts/test-public-hygiene.py -v
           python3 scripts/public-hygiene.py
 
+      - name: provider-docs (конформанс манифеста возможностей провайдеров)
+        run: |
+          python3 scripts/test-provider-docs.py -v
+          python3 scripts/provider-docs.py --check
+
   release-tag:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest

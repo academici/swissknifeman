@@ -2,7 +2,7 @@
 name: agent-design
 bucket: architect
 version: 0.1.0
-description: Проектирование агентов, agentic loop, tool contracts, harness, permission gates
+description: Используй при проектировании агента: agentic loop, tool contracts, harness, permission gates.
 risk: draft
 persona: architect
 tags: [agentic, architecture, security, validation]

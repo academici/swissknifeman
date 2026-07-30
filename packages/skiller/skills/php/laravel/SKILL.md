@@ -2,7 +2,7 @@
 name: laravel
 bucket: php
 version: 0.4.0
-description: "Laravel architecture patterns: actions, repositories, resources"
+description: "Use when applying Laravel architecture patterns: actions, repositories, resources."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "patterns"]
@@ -84,4 +84,4 @@ Each class knows its altitude, never reaches into another's. Full map + forbidde
 - Tests for architecture layers → `laravel-testing/laravel-testing`
 - General Laravel best practices → `php/laravel-best-practices` (external)
 
-<!-- ru-source-sha256: e097cfa2333db63da2a87d4005133dea1d88cbd3e79bae72329ec538084a46f6 -->
+<!-- ru-source-sha256: 142796f0e7cf5493eeb9339a9534ba0c0d5c358d0468ed6d9a2ae49328428d2d -->

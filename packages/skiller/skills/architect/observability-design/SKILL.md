@@ -2,7 +2,7 @@
 name: observability-design
 bucket: architect
 version: 0.1.0
-description: Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks for prod-readiness
+description: Use when designing observability for prod-readiness: logging, metrics, tracing, alerting, SLO/SLI, error budget, runbooks.
 risk: draft
 persona: architect
 tags: [observability, logging, metrics, tracing, alerting, slo, runbook]
@@ -158,4 +158,4 @@ NEVER:
 - `operator/capacity-planning` — what to monitor for scaling, based on USE-metrics here.
 - `laravel-testing/health-checks` — Laravel liveness/readiness (spatie/laravel-health) for design here.
 
-<!-- ru-source-sha256: 652348b32c37677c634dd0dba0cc63dc9e1843df2c6f5be60e94b91db1b73eda -->
+<!-- ru-source-sha256: f4c632f1d6c4cde196fef3463ad5aeb7dfa8b2900e4758483646149bc7db922c -->

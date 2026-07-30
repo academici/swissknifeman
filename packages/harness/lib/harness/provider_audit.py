@@ -161,7 +161,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
                 evidence.append(("security", provider.value, f"profile:{profile.id}", "positive",
                                  "supported", "HARNESS_PROFILE_RESOLVED"))
         requests = tuple(LifecycleRequest(surface.id, False) for surface in catalog.surfaces
-                         if surface.kind in {"lifecycle", "context"})
+                         if surface.kind in {"lifecycle", "context", "security"})
         lifecycle = plan_lifecycle(catalog, provider_id=provider, trusted=True, requests=requests,
                                   codex_bindings_path=root / "configs/codex/hooks/lifecycle-context-bindings.json")
         unsupported = {item.surface_id: item.code for item in lifecycle.diagnostics}
@@ -345,11 +345,10 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "settings.audit":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
-        return "non-artifact:claude-only-settings-audit", "unsupported", "HARNESS_ACTIVATION_UNSUPPORTED"
-    if surface_id == "security.safe-dirs":
-        if provider is ProviderId.CLAUDE_CODE:
-            return "non-artifact:machine-owned-safe-dirs", "supported", "HARNESS_SAFE_DIRS_NAMED"
-        return "non-artifact:no-codex-safe-dirs-binding", "unsupported", "HARNESS_ACTIVATION_UNSUPPORTED"
+        # bounded closure (codex-parity-verdicts-v1.md §3.11, P2.4): Codex gets its own
+        # smaller named check set (settings_audit.run_codex_checks) over the documented
+        # Codex layers — not a generalization of the 13 Claude checks.
+        return "non-artifact:named-codex-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
     if surface_id in bindings:
         binding = bindings[surface_id]
         code = lifecycle_codes.get(surface_id, "")
@@ -366,9 +365,11 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
-        return ("non-artifact:missing-native-codex-pack-lifecycle", "unsupported",
-                "HARNESS_ACTIVATION_UNSUPPORTED:codex:agent-packs.lifecycle:"
-                "missing-native-codex-pack-lifecycle")
+        # bounded closure (codex-parity-verdicts-v1.md §3.12, P2.4): role-projection
+        # lifecycle only (render/check/remove/diagnose over .codex/agents/*.toml,
+        # provider-qualified lock) — Claude-runtime pack members stay excluded by name.
+        return ("non-artifact:named-codex-agent-role-lifecycle", "supported",
+                "HARNESS_AGENTPACK_LIFECYCLE_NAMED")
     if surface_id == "workflows.status":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-workflow-status", "supported", "HARNESS_WORKFLOW_STATUS_NAMED"

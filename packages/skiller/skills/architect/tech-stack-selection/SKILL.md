@@ -2,7 +2,7 @@
 name: tech-stack-selection
 bucket: architect
 version: 0.1.0
-description: Tech stack selection with trade-off matrix before architecture design. ADR-first step
+description: Use when selecting a tech stack: trade-off matrix before architecture design, ADR-first step.
 risk: draft
 persona: architect
 tags: [stack-choice, architecture, adr, trade-off]
@@ -192,4 +192,4 @@ NEVER:
 - `oss-dev/dependency-audit` — dependency licenses for OSS spin-off.
 - `php/laravel-structure` — if Laravel chosen: project structure canon for next step.
 
-<!-- ru-source-sha256: f029fc24b100bce2dd641aa2e82defbef25af00c618995b6ade6b568176b7e9a -->
+<!-- ru-source-sha256: a3bfe04d531aacfc8f1e2ad2147dba28423bf8d5b288b9425f7e984db5add101 -->

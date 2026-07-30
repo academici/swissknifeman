@@ -6,11 +6,15 @@ fragment, parity, extension, or compatibility input never reaches artifact plann
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 from typing import Mapping
 
+from core.cli import parse_args
+from core.io import atomic_write_text
 from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.repo import resolve_plan_dir
 from core.provider_artifact import (
@@ -19,12 +23,12 @@ from core.provider_artifact import (
 )
 from core.provider_lock import (
     ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
-    parse_lock, plan_artifact_lock,
+    parse_lock, plan_artifact_lock, serialize_lock,
 )
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.0.0"
+CATALOG_VERSION = "1.1.1"
 PROVIDERS = ("claude-code", "codex")
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task")
 TARGETS = {
@@ -40,7 +44,9 @@ COMMON_IDS = {
              "root.cli-routing", "root.shared-core", "root.marketplace",
              "root.engineering-invariants", "root.plan-lifecycle",
              "root.development-validation", "root.reference-provenance",
-             "root.decision-verification"),
+             "root.decision-verification", "root.provider-parity", "root.worktree-safety",
+             "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
+             "root.speculative-work", "root.docs-build"),
     "skiller": ("skiller.identity", "skiller.distribution-channels",
                 "skiller.configuration-ownership", "skiller.core-policy",
                 "skiller.layout-and-generation", "skiller.module-boundaries",
@@ -64,13 +70,15 @@ EXTENSION_IDS = {
                               "root.claude-code.context-budget",
                               "root.claude-code.research-routing"),
     ("root", "codex"): ("root.codex.bootstrap", "root.codex.launch-and-hook-integrity",
-                        "root.codex.fresh-agent-execution"),
+                        "root.codex.fresh-agent-execution",
+                        "root.codex.package-scope-routing"),
     ("skiller", "claude-code"): ("skiller.claude-code.marketplace-connect",
                                  "skiller.claude-code.vendor-targets",
                                  "skiller.claude-code.agent-hub"),
     ("harness", "claude-code"): ("harness.claude-code.config-surfaces",
                                  "harness.claude-code.lifecycle-surfaces",
-                                 "harness.claude-code.settings-precedence"),
+                                 "harness.claude-code.settings-precedence",
+                                 "harness.claude-code.safe-dirs"),
     ("maind", "claude-code"): ("maind.claude-code.plugin-and-mcp",
                                "maind.claude-code.workspace-trust"),
     ("analyst", "claude-code"): ("analyst.claude-code.capture-surfaces",
@@ -156,6 +164,8 @@ class InstructionRequest:
     authorized_target_paths: tuple[str, ...] = ()
     observed_hashes: tuple[tuple[str, str], ...] = ()
     preimage_destination: str | None = None
+    owner_decision: str | None = None
+    mapping_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -219,6 +229,8 @@ class InstructionOperationResult:
                 "authorized_target_paths": list(self.request.authorized_target_paths),
                 "observed_hashes": dict(self.request.observed_hashes),
                 "preimage_destination": self.request.preimage_destination,
+                "owner_decision": self.request.owner_decision,
+                "mapping_path": self.request.mapping_path,
             },
             "targets": [item.as_dict() for item in self.targets],
             "diagnostics": [item.as_dict() for item in self.diagnostics],
@@ -245,6 +257,23 @@ def contract_path() -> Path:
 
 def compatibility_path() -> Path:
     return package_root() / "tests/fixtures_data/instruction-compatibility-v1.json"
+
+
+def literal_coverage_path() -> Path:
+    return package_root() / "tests/fixtures_data/instruction-literal-coverage-v1.json"
+
+
+def literal_coverage_section(text: str, section_heading: str) -> str | None:
+    """Text from `section_heading` up to the next `^## ` line (or end of file) — the
+    byte-exact rule the D76/D81 coverage fixture provenance is keyed to. `None` if
+    `section_heading` is absent (fail-closed at the caller)."""
+    start = text.find(section_heading)
+    if start == -1:
+        return None
+    tail_start = start + len(section_heading)
+    next_match = re.search(r"^## ", text[tail_start:], re.M)
+    end = tail_start + next_match.start() if next_match else len(text)
+    return text[start:end]
 
 
 def load_catalog(path: Path | None = None) -> dict[str, object]:
@@ -360,7 +389,14 @@ def check_instructions(request: InstructionRequest, *,
     if request_diagnostics:
         return InstructionOperationResult(request, (), request_diagnostics, False)
     planned = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
-    return replace(planned, request=request)
+    try:
+        value = load_catalog() if catalog is None else catalog
+    except InstructionValidationError:
+        value = None
+    coverage_diagnostics = validate_literal_coverage(value) if value is not None else ()
+    diagnostics = _ordered_diagnostics(planned.diagnostics + coverage_diagnostics)
+    return replace(planned, request=request, diagnostics=diagnostics,
+                  green=planned.green and not coverage_diagnostics)
 
 
 def apply_instructions(request: InstructionRequest, *,
@@ -417,6 +453,166 @@ def repair_instructions(request: InstructionRequest, *,
     return _completed_write(request, repaired_probe, writable)
 
 
+def adopt_instructions(request: InstructionRequest, *,
+                       catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    """Owner-gated adoption of an existing unmanaged target (contract §Consumer API).
+
+    Not ordinary ``apply``/``repair``: it requires ``owner_decision``, ``mapping_path``
+    (source-to-semantic mapping) and ``preimage_destination``, refuses any target that
+    is not currently `ownership-conflict`, records a byte-verified pre-image before any
+    mutation, and preserves mapping-uncovered bytes verbatim after the two managed
+    blocks. See ``rollback_adoption`` for the recovery path.
+    """
+    diagnostics = _validate_request(request, {"adopt"}, write=True)
+    if diagnostics:
+        return InstructionOperationResult(request, (), diagnostics, False)
+    if not request.owner_decision or not request.mapping_path or not request.preimage_destination:
+        return _write_refusal(request, InstructionOperationResult(request, (), (), False),
+                              "owner_decision, mapping_path, and preimage_destination are required")
+    fresh = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
+    if fresh.artifact_plan is None:
+        return replace(fresh, request=request)
+    conflicts = {item.target_path: item for item in fresh.targets
+                if item.observation == "ownership-conflict"}
+    if (not request.authorized_target_paths
+            or len(set(request.authorized_target_paths)) != len(request.authorized_target_paths)
+            or any(path not in conflicts for path in request.authorized_target_paths)):
+        return _write_refusal(request, fresh, "authorized ownership-conflict targets only")
+    try:
+        mapping = json.loads(Path(request.mapping_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _write_refusal(request, fresh, "mapping file unreadable")
+    if not isinstance(mapping, dict):
+        return _write_refusal(request, fresh, "mapping must be a JSON object")
+    value = load_catalog() if catalog is None else catalog
+    root = _absolute_root(Path(request.target_root))
+    # Validate every authorized target (read-only) before writing anything at all —
+    # an incomplete/non-covering mapping must refuse without a single write.
+    plans = []
+    for target_path in request.authorized_target_paths:
+        target = root / target_path
+        try:
+            raw = target.read_bytes()
+        except OSError:
+            return _write_refusal(request, fresh, f"target unreadable: {target_path}")
+        spans = _adoption_spans(mapping.get(target_path), len(raw))
+        if spans is None:
+            return _write_refusal(request, fresh, f"incomplete mapping for {target_path}")
+        if not b"".join(raw[start:end] for start, end in spans).strip():
+            return _write_refusal(request, fresh,
+                                  f"mapping does not cover substantive bytes of {target_path}")
+        plans.append((target_path, target, raw, spans))
+    preimage_dir = Path(request.preimage_destination)
+    written = []
+    for target_path, target, raw, spans in plans:
+        pre_image_hash = sha256_digest(raw)
+        pre_image_path = preimage_dir / (target_path.replace("/", "__") + ".preimage")
+        try:
+            atomic_write_text(pre_image_path, raw.decode("utf-8"))
+        except (OSError, UnicodeDecodeError):
+            return _write_refusal(request, fresh, f"pre-image write failed for {target_path}")
+        if sha256_digest(pre_image_path.read_bytes()) != pre_image_hash:
+            return _write_refusal(request, fresh, f"pre-image verification failed for {target_path}")
+        try:
+            pre_image_relative = pre_image_path.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            pre_image_relative = str(pre_image_path)
+        written.append((target_path, target, raw, spans, pre_image_hash, pre_image_relative))
+    # Adoption facts become part of `semantic_metadata` *before* rendering the adopted
+    # projection (not patched on afterwards): the lock record's `source_hash` already
+    # covers `semantic_metadata` (core.provider_artifact._source_envelope), so the
+    # record written here and the one a future plain check re-derives from this same
+    # lock (via `_adoption_hints`/`_projection`) must come from the identical render —
+    # patching semantic_metadata post-hoc on the un-hinted provenance would leave
+    # `source_hash` mismatched against every later check (`stale-source` forever).
+    hints = {conflicts[target_path].artifact_id: {
+        "owner_decision": request.owner_decision, "pre_image_hash": pre_image_hash,
+        "pre_image_path": pre_image_relative, "mapping_path": request.mapping_path,
+    } for target_path, _target, _raw, _spans, pre_image_hash, pre_image_relative in written}
+    projections = {item.target_path: item for item in _projections(
+        value, request.scope_ids, request.provider_ids, adoption_hints=hints)}
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    try:
+        existing_lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
+                         else ArtifactLock(1, ()))
+    except ValueError:
+        return _write_refusal(request, fresh, "existing lock is corrupt")
+    augmented_records = {}
+    adopted_targets = {}
+    for target_path, target, raw, spans, _pre_image_hash, _pre_image_relative in written:
+        projection = projections[target_path]
+        provenance = projection.result.provenance
+        preserved = _uncovered_bytes(raw, spans)
+        final_bytes = projection.result.managed_bytes + (b"\n" + preserved if preserved else b"")
+        try:
+            atomic_write_text(target, final_bytes.decode("utf-8"))
+        except (OSError, UnicodeDecodeError):
+            return _write_refusal(request, fresh, f"target write failed for {target_path}")
+        augmented_records[provenance.artifact_id] = provenance
+        adopted_targets[target_path] = InstructionTargetResult(
+            provenance.artifact_id, projection.scope_id, projection.provider_id, target_path,
+            projection.common_ids + projection.extension_ids, "clean", "adopt",
+            provenance.source_hash, provenance.rendered_hash,
+            _marker_ids(provenance.managed_boundary[1]), provenance.managed_boundary[1], (), True)
+    retained = tuple(record for record in existing_lock.records
+                     if record.artifact_id not in augmented_records)
+    new_lock = ArtifactLock(1, retained + tuple(augmented_records.values()))
+    try:
+        atomic_write_text(lock_path, serialize_lock(new_lock).decode("utf-8"))
+    except OSError:
+        return _write_refusal(request, fresh, "lock write failed")
+    targets = tuple(adopted_targets.get(item.target_path, item) for item in fresh.targets)
+    result_diagnostics = _ordered_diagnostics(tuple(
+        diagnostic for target in targets for diagnostic in target.diagnostics))
+    green = not result_diagnostics and all(item.observation == "clean" for item in targets)
+    return InstructionOperationResult(request, targets, result_diagnostics, green, fresh.artifact_plan)
+
+
+def rollback_adoption(root: Path, target_path: str) -> bytes:
+    """Restore ``target_path`` to its recorded adoption pre-image, byte-for-byte.
+
+    Fail-closed recovery path required by the contract's "rollback" adoption field: no
+    CLI verb (adoption is owner-gated, rollback is an explicit out-of-band recovery
+    action). Drops the lock record for the adopted artifact so a subsequent `check`
+    sees the target as `ownership-conflict` again, exactly as before adoption. Raises
+    ``InstructionValidationError`` (reusing existing diagnostic codes) if no adoption
+    record exists or the pre-image no longer matches its recorded hash.
+    """
+    root = _absolute_root(Path(root))
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    try:
+        lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
+                else ArtifactLock(1, ()))
+    except ValueError as error:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected="valid lock", observed=type(error).__name__),)
+            ) from error
+    record = next((item for item in lock.records if item.target_path == target_path), None)
+    adoption = dict(record.semantic_metadata).get("adoption") if record is not None else None
+    if record is None or adoption is None:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_OWNERSHIP_CONFLICT", observation="ownership-conflict",
+            target_path=target_path, expected="adoption record", observed="none"),))
+    pre_image_path = root / adoption["pre_image_path"]
+    try:
+        pre_image_bytes = pre_image_path.read_bytes()
+    except OSError as error:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected="readable pre-image",
+            observed=type(error).__name__),)) from error
+    if sha256_digest(pre_image_bytes) != adoption["pre_image_hash"]:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected=adoption["pre_image_hash"],
+            observed="hash-mismatch"),))
+    atomic_write_text(root / target_path, pre_image_bytes.decode("utf-8"))
+    remaining = tuple(item for item in lock.records if item.artifact_id != record.artifact_id)
+    atomic_write_text(lock_path, serialize_lock(ArtifactLock(1, remaining)).decode("utf-8"))
+    return pre_image_bytes
+
+
 def plan(root: Path, *, repairs: tuple[str, ...] = (),
          catalog: dict[str, object] | None = None) -> tuple[tuple[InstructionProjection, ...], ArtifactPlan]:
     """Backward-compatible convenience wrapper; explicit catalogs are still validated."""
@@ -428,7 +624,10 @@ def plan(root: Path, *, repairs: tuple[str, ...] = (),
     result = _observe(request, value, repairs=repairs)
     if result.artifact_plan is None:
         raise InstructionValidationError(result.diagnostics)
-    projections = _projections(value, request.scope_ids, request.provider_ids)
+    lock_path = Path(request.target_root) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    projections = _projections(value, request.scope_ids, request.provider_ids,
+                               adoption_hints=_adoption_hints(lock_bytes))
     return projections, result.artifact_plan
 
 
@@ -459,6 +658,17 @@ def repair(root: Path, artifact_plan: ArtifactPlan, *, authorized_targets: tuple
     return apply_plan(_absolute_root(root), artifact_plan)
 
 
+def adopt(root: Path, *, authorized_targets: tuple[str, ...], owner_decision: str,
+          mapping_path: str, preimage_destination: str,
+          catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    """Backward-compatible convenience wrapper; explicit catalogs are still validated."""
+    request = replace(default_request("adopt", root),
+                      authorized_target_paths=authorized_targets,
+                      owner_decision=owner_decision, mapping_path=mapping_path,
+                      preimage_destination=preimage_destination)
+    return adopt_instructions(request, catalog=catalog)
+
+
 def default_request(operation_id: str, root: Path) -> InstructionRequest:
     return InstructionRequest(
         CONTRACT_VERSION, CATALOG_VERSION, operation_id, SCOPES, PROVIDERS,
@@ -481,8 +691,8 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
             f"`{TARGETS[scope_id]['codex']}` | {len(COMMON_IDS[scope_id])} | "
             f"{len(EXTENSION_IDS[(scope_id, 'claude-code')])} | "
             f"{len(EXTENSION_IDS[(scope_id, 'codex')])} |")
-    lines += ["", "The frozen inventory contains 49 common and 18 provider-extension IDs "
-              "(67 total) across exactly 12 targets.", "",
+    lines += ["", "The frozen inventory contains 56 common and 20 provider-extension IDs "
+              "(76 total) across exactly 12 targets.", "",
               "## Public API", "",
               "`InstructionRequest` carries contract/catalog versions, operation ID, explicit "
               "ordered scope/provider IDs, an absolute target root, and config/authorization "
@@ -503,12 +713,13 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
 def _observe(request: InstructionRequest, value: dict[str, object], *,
              repairs: tuple[str, ...] = ()) -> InstructionOperationResult:
     root = Path(request.target_root)
-    projections = _projections(value, request.scope_ids, request.provider_ids)
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    projections = _projections(value, request.scope_ids, request.provider_ids,
+                               adoption_hints=_adoption_hints(lock_bytes))
     projection_diagnostics = _validate_projection_semantics(value, projections)
     if projection_diagnostics:
         return InstructionOperationResult(request, (), projection_diagnostics, False)
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
-    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     codecs = {item.result.provenance.artifact_id: _codec(item.scope_id, item.provider_id)
               for item in projections}
     artifact_plan = plan_artifact_lock(
@@ -583,13 +794,17 @@ def _validate_projection_semantics(value: dict[str, object],
 
 
 def _projections(value: dict[str, object], scope_ids: tuple[str, ...],
-                 provider_ids: tuple[str, ...]) -> tuple[InstructionProjection, ...]:
+                 provider_ids: tuple[str, ...], *,
+                 adoption_hints: Mapping[str, Mapping[str, object]] | None = None
+                 ) -> tuple[InstructionProjection, ...]:
     by_scope = {scope["id"]: scope for scope in value["scopes"]}
-    return tuple(_projection(value, by_scope[scope_id], provider_id)
+    return tuple(_projection(value, by_scope[scope_id], provider_id, adoption_hints=adoption_hints)
                  for scope_id in scope_ids for provider_id in provider_ids)
 
 
-def _projection(value: dict[str, object], scope: dict, provider: str) -> InstructionProjection:
+def _projection(value: dict[str, object], scope: dict, provider: str, *,
+                adoption_hints: Mapping[str, Mapping[str, object]] | None = None
+                ) -> InstructionProjection:
     scope_id = scope["id"]
     target = TARGETS[scope_id][provider]
     common_ids = COMMON_IDS[scope_id]
@@ -612,6 +827,7 @@ def _projection(value: dict[str, object], scope: dict, provider: str) -> Instruc
     identity = ArtifactAdapterIdentity(
         f"harness.instruction.{provider}", "1.0.0", ProviderId(provider), "1.0.0",
         requirements)
+    artifact_id = f"harness.instruction-projection.{scope_id}.{provider}"
     semantic = {
         "instruction_contract_version": CONTRACT_VERSION,
         "catalog_version": CATALOG_VERSION, "scope_id": scope_id, "provider_id": provider,
@@ -620,8 +836,17 @@ def _projection(value: dict[str, object], scope: dict, provider: str) -> Instruc
         "marker_ids": markers, "block_ids": blocks,
         "capabilities": ("instructions.project",), "registry": "explicit",
     }
+    # P1.4: once a target is adopted, its lock record carries a `semantic_metadata.adoption`
+    # sidecar (owner_decision/pre_image_hash/pre_image_path/mapping_path). Re-deriving the
+    # identical entry here from the lock on every later plan/check keeps the "expected"
+    # projection equal to the recorded one (core.provider_lock._classify compares them by
+    # full dataclass equality) — the fixed point that makes a re-check `clean`, not
+    # `provenance-invalid`.
+    hint = (adoption_hints or {}).get(artifact_id)
+    if hint is not None:
+        semantic["adoption"] = dict(hint)
     result = plan_artifact_render(ArtifactRenderRequest(
-        f"harness.instruction-projection.{scope_id}.{provider}", sources,
+        artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,
         lambda _request: _managed(
             scope_id, provider, common.read_text(encoding="utf-8"),
@@ -898,6 +1123,91 @@ def _validate_compatibility_fixture(records: dict[str, dict],
                                      observed="catalog compatibility record differs"))
 
 
+_PLAN_RELATIVE_SOURCE = re.compile(r"^plans/([^/]+)/(.+)$")
+
+
+def _literal_coverage_source_text(source: object) -> str:
+    """Read the D76/D81 provenance source, archive-resilient: `plans/<PLAN-ID>/…`
+    resolves `<PLAN-ID>` through `resolve_plan_dir` (same precedent as
+    `contract_path()`), so archiving the donor plan does not turn this gate red.
+    Patchable by name from tests."""
+    if not isinstance(source, str):
+        raise ValueError("provenance.source must be a string")
+    match = _PLAN_RELATIVE_SOURCE.match(source)
+    if match:
+        plan_id, rest = match.group(1), match.group(2)
+        path = resolve_plan_dir(repository_root(), plan_id) / rest
+    else:
+        path = repository_root() / source
+    return path.read_text(encoding="utf-8")
+
+
+def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:
+    """D81 equality gate: the recorded `source_sha256` must equal the hash of the
+    RIGHT NOW extracted §2 section — independent of the literal-coverage check below,
+    since a stale provenance and a stale literal set are different failures."""
+    if not isinstance(provenance, dict):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="D81 provenance object", observed=_shape(provenance)),)
+    scope = provenance.get("source_hash_scope")
+    if scope != "section":
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="section", observed=_display(scope)),)
+    try:
+        text = _literal_coverage_source_text(provenance.get("source"))
+    except (OSError, ValueError) as error:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=type(error).__name__),)
+    section = literal_coverage_section(text, provenance.get("source_section"))
+    if section is None:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed="section not found"),)
+    actual = hashlib.sha256(section.encode("utf-8")).hexdigest()
+    if actual != provenance.get("source_sha256"):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=actual),)
+    return ()
+
+
+def validate_literal_coverage(value: dict[str, object]) -> tuple[InstructionDiagnostic, ...]:
+    """Validate D76 coverage: every matrix-mandated literal is asserted by its own
+    record. Wired only into `check_instructions` (P1.6) — never into `validate_catalog`
+    or `plan_instructions`, both called from `apply`/`repair`/`adopt`, where a red
+    coverage verdict would deadlock the very operation that repairs it."""
+    try:
+        fixture = json.loads(literal_coverage_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture", observed=type(error).__name__),)
+    if (not isinstance(fixture, dict)
+            or set(fixture) != {"contract_version", "fixture_version", "provenance", "literals"}
+            or fixture.get("contract_version") != CONTRACT_VERSION
+            or not isinstance(fixture.get("literals"), list)):
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture schema", observed=_shape(fixture)),)
+    records = {record["id"]: record for scope in value["scopes"] for record in scope["sections"]}
+    diagnostics: list[InstructionDiagnostic] = list(_provenance_diagnostics(fixture["provenance"]))
+    for item in fixture["literals"]:
+        if not isinstance(item, dict) or set(item) != {"semantic_id", "literal"}:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                expected="literal-coverage entry {semantic_id, literal}", observed=_shape(item)))
+            continue
+        semantic_id, literal = item["semantic_id"], item["literal"]
+        record = records.get(semantic_id)
+        if record is None:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="unknown semantic id"))
+            continue
+        if not any(literal in assertion for assertion in record["compatibility_assertions"]):
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", scope_id=record.get("scope_id"),
+                provider_id=record.get("provider_id"), observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="matrix literal not asserted"))
+    return _ordered_diagnostics(tuple(diagnostics))
+
+
 def _validate_request(request: object, operations: set[str], *,
                       write: bool = False) -> tuple[InstructionDiagnostic, ...]:
     if not isinstance(request, InstructionRequest):
@@ -977,9 +1287,7 @@ def _target_result(projection: InstructionProjection, action,
             observation="write-forbidden", expected="known P2 observation",
             observed=observation, next_action="refuse"),)
     block_ids = projection.result.provenance.managed_boundary[1]
-    marker_ids = tuple(block_id.replace("instructions.", "swissknifeman:instructions:", 1)
-                       .replace(".common", ":common").replace(".extension", ":extension")
-                       .replace(".", ":", 2) for block_id in block_ids)
+    marker_ids = _marker_ids(block_ids)
     return InstructionTargetResult(
         projection.result.provenance.artifact_id, projection.scope_id,
         projection.provider_id, projection.target_path,
@@ -1011,6 +1319,62 @@ def _write_refusal(request: InstructionRequest, result: InstructionOperationResu
     return InstructionOperationResult(request, result.targets,
                                       _ordered_diagnostics(result.diagnostics + (diagnostic,)),
                                       False, result.artifact_plan)
+
+
+def _marker_ids(block_ids: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(block_id.replace("instructions.", "swissknifeman:instructions:", 1)
+                .replace(".common", ":common").replace(".extension", ":extension")
+                .replace(".", ":", 2) for block_id in block_ids)
+
+
+def _adoption_hints(lock_bytes: bytes | None) -> dict[str, Mapping[str, object]]:
+    """Per-artifact `semantic_metadata.adoption` already recorded in the P2 lock."""
+    if lock_bytes is None:
+        return {}
+    try:
+        lock = parse_lock(lock_bytes)
+    except ValueError:
+        return {}
+    hints = {}
+    for record in lock.records:
+        adoption = dict(record.semantic_metadata).get("adoption")
+        if adoption is not None:
+            hints[record.artifact_id] = adoption
+    return hints
+
+
+def _adoption_spans(entry: object, raw_length: int) -> tuple[tuple[int, int], ...] | None:
+    """Validated, sorted, non-overlapping in-bounds `covered_spans` for one mapping entry."""
+    if not isinstance(entry, dict):
+        return None
+    spans = entry.get("covered_spans")
+    if not isinstance(spans, list) or not spans:
+        return None
+    normalized = []
+    for item in spans:
+        if (not isinstance(item, list) or len(item) != 2
+                or any(isinstance(value, bool) or not isinstance(value, int) for value in item)):
+            return None
+        start, end = item
+        if start < 0 or end > raw_length or start >= end:
+            return None
+        normalized.append((start, end))
+    normalized.sort()
+    for (_start, previous_end), (next_start, _end) in zip(normalized, normalized[1:]):
+        if next_start < previous_end:
+            return None
+    return tuple(normalized)
+
+
+def _uncovered_bytes(raw: bytes, spans: tuple[tuple[int, int], ...]) -> bytes:
+    """Bytes of ``raw`` outside every span in ``spans``, in original order."""
+    pieces = []
+    cursor = 0
+    for start, end in spans:
+        pieces.append(raw[cursor:start])
+        cursor = end
+    pieces.append(raw[cursor:])
+    return b"".join(pieces)
 
 
 def _preserve_unselected_lock(plan_value: ArtifactPlan,
@@ -1193,3 +1557,89 @@ def _shape(value: object) -> str:
     if isinstance(value, Mapping):
         return _display(tuple(sorted(value)))
     return type(value).__name__
+
+
+_OPERATIONS = {
+    "plan": plan_instructions, "check": check_instructions, "adopt": adopt_instructions,
+    "apply": apply_instructions, "repair": repair_instructions,
+}
+
+
+def _cli_request(operation_id: str, root: Path, **overrides) -> InstructionRequest:
+    base = InstructionRequest(
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, SCOPES, PROVIDERS,
+        str(_absolute_root(root)), (("source", "harness-cli"),),
+        (("authority", "operator-cli"),))
+    return replace(base, **overrides)
+
+
+def _print_report(result: InstructionOperationResult) -> None:
+    print(f"harness instructions {result.request.operation_id}: "
+          f"{'OK' if result.green else 'ERROR'} — {len(result.targets)} целей")
+    for target in result.targets:
+        mark = "✓" if target.observation == "clean" else "✗"
+        print(f"  {mark} {target.target_path} [{target.provider_id}] "
+              f"— {target.observation}/{target.action}")
+    for diagnostic in result.diagnostics:
+        print(f"  ! {diagnostic.code}: {diagnostic.scope_id or '-'}/{diagnostic.provider_id or '-'} "
+              f"{diagnostic.target_path or ''} — "
+              f"{diagnostic.next_action or diagnostic.observed or ''}", file=sys.stderr)
+
+
+def cmd_instructions(env, argv):
+    """`harness instructions <plan|check|adopt|apply|repair>` — operator surface over
+    the D86 instruction-projection mechanism (see module docstring/contract)."""
+    opts, positional = parse_args(argv, {
+        "--target": "str", "--scope": "str", "--provider": "str",
+        "--authorize": "str", "--owner-decision": "str", "--mapping": "str",
+        "--preimage-dir": "str", "--observed-hash": "str", "--json": "bool",
+    }, max_pos=1)
+    if opts["help"] or not positional:
+        print("harness instructions <plan|check|adopt|apply|repair> [--target P] "
+              "[--scope a,b] [--provider a,b] [--authorize a,b] "
+              "[--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] "
+              "[--observed-hash path=hash,...] [--json]")
+        return
+    operation = positional[0]
+    handler = _OPERATIONS.get(operation)
+    if handler is None:
+        print(f"harness instructions: неизвестная операция {operation}", file=sys.stderr)
+        sys.exit(2)
+    root = Path(opts["target"]).resolve() if opts["target"] else repository_root()
+    request = _cli_request(
+        operation, root,
+        scope_ids=tuple(opts["scope"].split(",")) if opts["scope"] else SCOPES,
+        provider_ids=tuple(opts["provider"].split(",")) if opts["provider"] else PROVIDERS,
+        authorized_target_paths=tuple(opts["authorize"].split(",")) if opts["authorize"] else (),
+        observed_hashes=tuple(tuple(item.split("=", 1))
+                              for item in opts["observed_hash"].split(","))
+            if opts["observed_hash"] else (),
+        preimage_destination=opts["preimage_dir"] or None,
+        owner_decision=opts["owner_decision"] or None,
+        mapping_path=opts["mapping"] or None,
+    )
+    result = handler(request)
+    if opts["json"]:
+        print(json.dumps(result.as_dict(), ensure_ascii=False))
+    else:
+        _print_report(result)
+    sys.exit(0 if result.green else 1)
+
+
+def main(argv=None):
+    """`python3 -m harness.instructions --check` — the modular drift-gate entry point
+    for `validate.sh` (P1.5); must agree with `harness instructions check`."""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--check" not in argv:
+        print("usage: python3 -m harness.instructions --check [--json]", file=sys.stderr)
+        return 2
+    result = check_instructions(_cli_request("check", repository_root()))
+    if "--json" in argv:
+        print(json.dumps(result.as_dict(), ensure_ascii=False))
+    else:
+        _print_report(result)
+    return 0 if result.green else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

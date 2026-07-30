@@ -2,7 +2,7 @@
 name: competitive-analysis
 bucket: founder
 version: 0.1.0
-description: Market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep
+description: Use when researching market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep.
 risk: external
 persona: founder
 tags: [discovery, market, gtm]
@@ -106,4 +106,4 @@ Mandatory positioning table at the end:
 - `founder/new-project` — orchestrator: calls this skill at stage 2 of the launch chain
 - `pm/monetization-design` — adjacent: business-model choice relies on competitors' segment and models
 
-<!-- ru-source-sha256: 7779347c7e6ac3bd8369f92b71206b95c8f220a523fcddb8fa0245bf06efd807 -->
+<!-- ru-source-sha256: 38b1449b985efb8bf9b5625d982425b84fd808936c6ba63bddf794c64dd8985d -->

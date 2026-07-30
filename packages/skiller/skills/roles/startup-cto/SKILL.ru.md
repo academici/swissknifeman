@@ -2,7 +2,7 @@
 name: startup-cto
 bucket: roles
 version: 0.2.0
-description: "Startup CTO persona — tech radar, hiring, architecture decisions"
+description: "Используй в роли Startup CTO: tech radar, hiring, architecture decisions."
 risk: read
 persona: startup-cto
 role_agent_pack: role-cto

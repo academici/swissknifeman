@@ -2,7 +2,7 @@
 name: vite-module-loader
 bucket: frontend-vite
 version: 0.1.0
-description: "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики"
+description: "Используй при настройке Vite как основного сборщика Frontend-проектов: базовая конфигурация, алиасы, build-практики."
 risk: write
 persona: oss-dev
 tags: [vite, frontend, build, laravel, vue]

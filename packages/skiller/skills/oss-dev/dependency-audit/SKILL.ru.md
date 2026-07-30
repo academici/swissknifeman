@@ -2,7 +2,7 @@
 name: dependency-audit
 bucket: oss-dev
 version: 0.2.0
-description: Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM
+description: Используй при аудите зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM.
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, security, dependencies, php]

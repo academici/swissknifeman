@@ -2,7 +2,7 @@
 name: botkit
 bucket: botkit
 version: 0.2.0
-description: "Bot framework patterns: BotDefinition contract, package service provider, webhook handling"
+description: "Используй при разработке функций bot framework: BotDefinition contract, package service provider, webhook handling."
 risk: write
 persona: oss-dev
 tags: [php, laravel, bots, botkit]

@@ -2,7 +2,7 @@
 name: data-schema
 bucket: architect
 version: 0.1.0
-description: Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы
+description: Используй при проектировании схемы данных: сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы.
 risk: draft
 persona: architect
 tags: [data, architecture, schema, entities, erd]

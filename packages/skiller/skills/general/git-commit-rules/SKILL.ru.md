@@ -2,7 +2,7 @@
 name: git-commit-rules
 bucket: general
 version: 0.2.0
-description: "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий."
+description: "Используй при подготовке Git-коммита: husky/commitlint, формат сообщений, безопасный порядок действий."
 risk: write
 persona: oss-dev
 tags: [git, conventions, conventional-commits, gitops]

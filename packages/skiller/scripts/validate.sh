@@ -1248,3 +1248,98 @@ PY
 bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
   echo "ERROR: CORE резидентный бюджет превышен — сократи описания/скиллы ядра (skiller budget)" >&2
   exit 1; }
+
+# --- 16. канон каркаса: таблица «пак → версия» vs pack.json (гейт свежести) ------
+# `docs/agent-framework/framework-overview.md` объявлен ВХОДОМ следующего прогона
+# framework-audit — и один раз уже отстал от дерева на 36 дней: аудитор получил семь
+# «🔜 в работе» при готовой реализации и добросовестно предложил построить уже стоящее
+# (docs/audits/2026-07-29-harness-agnostic — мета-находка). Ручное напоминание «обнови
+# обзор» этот класс отказа не поймало, поэтому свежесть входа держит машина.
+# Проверка того же класса, что drift-гейт реестра (§12b): ни сети, ни git-истории, ни
+# календарных порогов — сверка ОБЪЯВЛЕННЫХ версий с `pack.json` каждого пака.
+# В standalone-раскладке (пакет без соседнего `harness`) гейт деградирует в явный пропуск.
+_AGENT_PACKS_DIR="$(cd "$REPO_ROOT/../harness/configs/claude-code/agent-packs" 2>/dev/null && pwd || true)"
+python3 - "$REPO_ROOT" "${_AGENT_PACKS_DIR:-}" <<'PY'
+import json, re, sys, pathlib
+
+root = pathlib.Path(sys.argv[1])
+packs_dir = sys.argv[2]
+overview = root / "docs" / "agent-framework" / "framework-overview.md"
+
+if not packs_dir:
+    print("канон каркаса: packages/harness/configs/claude-code/agent-packs не найден "
+          "(standalone-раскладка) — гейт свежести пропущен")
+    sys.exit(0)
+if not overview.is_file():
+    print("канон каркаса: docs/agent-framework/framework-overview.md нет — "
+          "гейт свежести пропущен")
+    sys.exit(0)
+
+# Формат якоря закрыт (P3.1): заголовок «| Пак | Версия |», разделитель, строки
+# «| <пак> | <x.y.z> |». Эвристик нет — что не легло в форму, то ERROR с фиксом.
+HEADER = re.compile(r"^\|\s*Пак\s*\|\s*Версия\s*\|\s*$")
+SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
+ROW = re.compile(r"^\|\s*([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*\|\s*(\d+\.\d+\.\d+)\s*\|\s*$")
+
+errors = []
+declared = {}
+in_table = False
+for ln, line in enumerate(overview.read_text(encoding="utf-8").splitlines(), 1):
+    if HEADER.match(line):
+        in_table = True
+        continue
+    if not in_table:
+        continue
+    if SEP.match(line):
+        continue
+    if not line.startswith("|"):
+        in_table = False
+        continue
+    m = ROW.match(line)
+    if not m:
+        errors.append(f"docs/agent-framework/framework-overview.md:{ln}: строка таблицы "
+                      f"«пак → версия» не в формате `| <пак> | <x.y.z> |`: {line.strip()}")
+        continue
+    declared[m.group(1)] = m.group(2)
+
+if not declared and not errors:
+    errors.append("docs/agent-framework/framework-overview.md: нет таблицы «пак → версия» "
+                  "(заголовок `| Пак | Версия |`) — она машинный якорь гейта свежести")
+
+actual = {}
+for pj in sorted(pathlib.Path(packs_dir).glob("*/pack.json")):
+    name = pj.parent.name
+    try:
+        data = json.loads(pj.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        errors.append(f"agent-packs/{name}/pack.json: невалидный JSON: {e}")
+        continue
+    version = data.get("version")
+    if not isinstance(version, str):
+        errors.append(f"agent-packs/{name}/pack.json: нет строкового поля version")
+        continue
+    actual[name] = version
+
+for name in sorted(actual):
+    if name not in declared:
+        errors.append(f"пак `{name}` не объявлен в каноне — обнови таблицу в "
+                      f"`framework-overview.md`: `{name}` `{actual[name]}`")
+    elif declared[name] != actual[name]:
+        errors.append(f"пак `{name}`: канон объявляет `{declared[name]}`, pack.json несёт "
+                      f"`{actual[name]}` — обнови таблицу в `framework-overview.md`: "
+                      f"`{name}` `{actual[name]}`")
+for name in sorted(declared):
+    if name not in actual:
+        errors.append(f"строка `{name}` в каноне лишняя (пака нет в "
+                      f"packages/harness/configs/claude-code/agent-packs) — убери строку из "
+                      f"таблицы в `framework-overview.md`")
+
+if errors:
+    print(f"ERROR: канон каркаса отстал от дерева ({len(errors)}) — "
+          f"`framework-overview.md` объявлен входом следующего аудита:", file=sys.stderr)
+    for e in errors:
+        print("  " + e, file=sys.stderr)
+    sys.exit(1)
+
+print(f"канон каркаса: таблица «пак → версия» совпадает с pack.json ({len(actual)} паков)")
+PY

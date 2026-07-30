@@ -16,7 +16,7 @@
 | Execution Mode | phase-first · contract-first design |
 | Target Operator Classes | implementation (exec) · frontier (design/контракты/аудит) · economy (механические сверки) |
 | Approval Owner | Dmitry Vostrikov |
-| Home | repo:/home/vostrikov/projects/packages/swissknifeman-next |
+| Home | repo:/home/vostrikov/projects/packages/swissknifeman (после merge P5.2 и снятия дерева изоляции P5.3 — D46; прежний дом `…/swissknifeman-next` снят) |
 | supersedes | 2026.07.18-FOREMAN |
 | Paused By | — |
 | Design Passes | 3/3 (исчерпан) — ядро экосистемы, шесть пакетов в Related, кросс-пакетные замороженные контракты и открытая развилка исполнительского слоя (SKILL §5: кросс-репо/ядро/высокая неопределённость → N=3). Прогон 1 = бриф + верификация входа + скелеты фаз с контракт-блоками; прогон 2 = детализация P0–P5 до DoR; прогон 3 = reconcile контрактов + finish + roadmap. Заходы `finish` по находкам design-аудита (2026-07-29: заход 1 → D56–D62, заход 2 → D63–D67, заход 3 → D68–D70) четвёртым проходом НЕ считаются: они не переразрабатывают фазы и не открывают решений — закрывают названные аудитом дыры, решение владельца в исходной команде каждого захода |
@@ -128,7 +128,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 | P2 | Паритет capability второго провайдера (+ follow-up блок аудита P1, D80) | 5/9 | 🟠 Done with deviations |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | 🟠 Done with deviations |
 | P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 4/5 | 🟠 Done with deviations |
-| P5 | Возврат в основное дерево и верификация флота | 0/3 | 🟡 In progress |
+| P5 | Возврат в основное дерево и верификация флота | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 

@@ -93,7 +93,7 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertTrue(all(f"agent:codex:{role}" in hashes for role in fixture["agent_roles"]
                             if role != "_common.orchestrator"))
         self.assertNotIn("agent:codex:_common.orchestrator", hashes)
-        self.assertEqual(len(hashes), 6 + 2 + 44 + 43 + 28)
+        self.assertEqual(len(hashes), 6 + 2 + 44 + 43 + 30)
         expected = {(provider, surface) for provider in ("claude-code", "codex")
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
@@ -171,7 +171,7 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertEqual(artifact.read_text(), render_p5_artifact(report))
         evidence = report.as_dict()["evidence"]
         self.assertIn({"category": "activation", "provider": "codex",
-                       "identity": "surface:lifecycle.daemon-safety", "polarity": "negative",
+                       "identity": "surface:context.output-style", "polarity": "negative",
                        "state": "unsupported", "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED"}, evidence)
         self.assertIn({"category": "security", "provider": "codex",
                        "identity": "origin:fleet-defaults", "polarity": "negative",
@@ -226,7 +226,7 @@ class ProviderConformanceTests(unittest.TestCase):
             origin="operation", effective_provider=effective)
         self.assertEqual({item.code for item in untrusted.diagnostics}, {"HARNESS_TRUST_REQUIRED"})
         lifecycle = plan_lifecycle(catalog, provider_id=ProviderId.CODEX, trusted=True,
-            requests=(LifecycleRequest("lifecycle.daemon-safety", True),),
+            requests=(LifecycleRequest("context.output-style", True),),
             codex_bindings_path=PACKAGE / "configs/codex/hooks/lifecycle-context-bindings.json")
         self.assertEqual(lifecycle.diagnostics[0].code, "HARNESS_ACTIVATION_UNSUPPORTED")
         mcp = load_mcp_catalog(PACKAGE / "configs/common/mcp/catalog.json")

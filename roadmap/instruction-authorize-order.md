@@ -69,6 +69,6 @@ Excluded).
 
 ## Связанные
 
-- `plans/2026.07.29-HARNESS-AGNOSTIC/phases/P1.md` — P1.5 Pending Work (1), P1.6 Known Deviations.
-- `plans/2026.07.29-HARNESS-AGNOSTIC/plan.md` — D84.
-- `plans/2026.07.29-HARNESS-AGNOSTIC/research/11-p2-followup-audit-p1-round2.md` §5.
+- `plans/archive/2026.07.29-HARNESS-AGNOSTIC/phases/P1.md` — P1.5 Pending Work (1), P1.6 Known Deviations.
+- `plans/archive/2026.07.29-HARNESS-AGNOSTIC/plan.md` — D84.
+- `plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/11-p2-followup-audit-p1-round2.md` §5.

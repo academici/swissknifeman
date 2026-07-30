@@ -42,7 +42,7 @@ class LiteralCoverageFixtureTests(unittest.TestCase):
         self.assertEqual(fixture["contract_version"], CONTRACT_VERSION)
         provenance = fixture["provenance"]
         self.assertEqual(provenance["source"],
-                         "plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md")
+                         "plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md")
         self.assertEqual(provenance["owner_decision"], "2026.07.29-HARNESS-AGNOSTIC D76")
         self.assertEqual(provenance["row_count"], 121)
         self.assertEqual(provenance["literal_count"], 105)

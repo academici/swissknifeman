@@ -245,7 +245,7 @@ alongside the canonical `roles.json`.
 - **провенанс фикстуры** — путь матрицы, её `sha256`
   (`b2df0bceb39dc45c98febb005ff4e921d99f41d0cabbfc0861d5ccc9bfd5f219` на 2026-07-30), номер §,
   генератор, `owner_decision`, число строк (121) и число литералов (105);
-- **генератор** — `plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.6-extract-literals.py` (прецедент
+- **генератор** — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.6-extract-literals.py` (прецедент
   P1.5: генератор mapping'а `artifacts/P1.5-build-mapping.py` жил в carve-out плана). Так фикстура
   остаётся ГЕНЕРИРУЕМЫМ артефактом (`root.generated-artifacts`), а зависимость от `plans/**` живёт
   в плане, а не в пакете;

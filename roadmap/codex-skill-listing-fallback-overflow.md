@@ -80,7 +80,7 @@ Codex может **выбросить скилл из листинга цели�
 - `packages/skiller/lib/skiller/budget.py` (`measure_listing_budget`,
   `profiles_listing_report`, `CODEX_LISTING_FALLBACK_CHARS`).
 - `packages/skiller/scripts/validate.sh` §17 (WARN-гейт, не ERROR — D26).
-- `plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P3-skill-listing-budget.md` (полный
+- `plans/archive/2026.07.29-HARNESS-AGNOSTIC/artifacts/P3-skill-listing-budget.md` (полный
   замер).
 - Живой прогон Codex CLI против реестра — round-trip вне скоупа `HARNESS-AGNOSTIC`
   (D3); первый источник, который перевёл бы это из арифметики в наблюдение.

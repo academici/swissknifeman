@@ -4,7 +4,7 @@ plan: 2026.07.29-HARNESS-AGNOSTIC
 contract: provider-instruction-contract
 status: additive-extension (P1.3)
 version: v1
-basis: "plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md §«Common canon» — «Adding an optional common section is contract/catalog-minor and requires both provider projections in the same release»; matrix plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md §3; D15/D16/D72–D74"
+basis: "plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md §«Common canon» — «Adding an optional common section is contract/catalog-minor and requires both provider projections in the same release»; matrix plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md §3; D15/D16/D72–D74"
 consumers: "packages/harness/lib/harness/instructions.py (COMMON_IDS/EXTENSION_IDS/CATALOG_VERSION), packages/harness/configs/common/instructions/catalog.json, packages/harness/tests/fixtures_data/instruction-compatibility-v1.json, packages/harness/tests/test_provider_instructions.py; downstream consumers of the D86 catalog inventory"
 verdict: "RAG:— (repo-grounded: provider-instruction-contract.md §«Common canon» permits an additive catalog-minor without touching contract_version; instructions.py:38-110 holds the inventory as code constants; catalog.json inventory measured at 67 records before this addendum, 76 after)"
 ---
@@ -70,7 +70,7 @@ module boundaries, and the neutral part of the pin policy.
 ## Traceability
 
 Full one-line-per-record rationale and source citation lives in
-`plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md` §3 "Новые
+`plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md` §3 "Новые
 семантические ID (перечень для P1.3)"; D-log entries `D15`, `D16`, `D72`, `D73`, `D74` in
-`plans/2026.07.29-HARNESS-AGNOSTIC/plan.md` §5 record the owner decisions this addendum
+`plans/archive/2026.07.29-HARNESS-AGNOSTIC/plan.md` §5 record the owner decisions this addendum
 implements.

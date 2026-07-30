@@ -3,7 +3,7 @@
 Носитель `packages/harness/configs/common/agent-packs/execution-policy.json` отвечает на два
 вопроса, которые раньше решались ad hoc в каждой сессии: *когда оправдан спавн субагента* и
 *что обязан нести таск субагента*. Схема запечатана контрактом
-`plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/execution-policy-v1.md` (P4.2) — четыре
+`plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/execution-policy-v1.md` (P4.2) — четыре
 раздела, значения копируются оттуда дословно вместе с `provenance`.
 
 ## Четыре раздела

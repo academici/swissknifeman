@@ -18,7 +18,7 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1`. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4`. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex |
 |:--|:--:|:--:|

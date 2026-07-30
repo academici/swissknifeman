@@ -50,6 +50,34 @@ P5.1/P5.2/P5.3) · `artifacts/P5.3-fleet-delta.md` (дельта, вердикт
 `root/contracts/provider-parity-definition.md` · `docs/provider-support.md`
 §«Security and operations» · `install.sh` · `roadmap.md` · `journal.jsonl`.
 
+## Миграция `root/` → docs (архивация, 2026-07-30)
+
+Чек-лист режима `archive` (`plan-protocol` §12, шаг 3): состав `root/` — четыре
+запечатанных контракта (`root/contracts/*.md`) + два процедурных документа
+(`root/isolation-procedure.md`, `root/executor-layer-rescope-v1.md`).
+
+- **Оставлено в архиве, НЕ мигрировано в `docs/`** — прецедент репо: сиквел-донор
+  `2026.07.18-FOREMAN` держит свои запечатанные контракты (напр.
+  `root/contracts/artifex-policy-schema.md`) в архиве и цитируется по архивному
+  пути живыми `packages/*/docs/reference/*` без физического дублирования. Тот же
+  паттерн применён здесь: `root/contracts/{codex-parity-verdicts-v1,
+  execution-policy-v1,instruction-canon-addendum-v1,provider-parity-definition}.md`
+  и оба процедурных документа остаются в `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/`.
+- **Живые ссылки на путь до архивации переписаны** (`plans/2026.07.29-HARNESS-AGNOSTIC/…`
+  → `plans/archive/2026.07.29-HARNESS-AGNOSTIC/…`) в: `packages/harness/docs/reference/execution-policy.md`,
+  `packages/harness/tests/test_codex_lifecycle_gates.py`,
+  `packages/harness/tests/test_codex_lifecycle_surfaces.py`,
+  `packages/harness/tests/test_instruction_literal_coverage.py`,
+  `packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json`,
+  `configs/provider-capabilities.json` (+ регенерация `docs/provider-support.md` и
+  `README.md` через `python3 scripts/provider-docs.py --write`), `roadmap/*.md`
+  (четыре файла), `CHANGELOG.md`, `packages/skiller/docs/audits/2026-07-29-harness-agnostic*.md`,
+  `docs/rejected-optimizations.md`, `docs/reference.md`, `plans/README.md` (строка
+  очереди планов переведена в терминальный статус).
+- Не тронуты архивные перекрёстные ссылки внутри `plans/archive/2026.07.18-FOREMAN/*`
+  (не «живые» доки/реестры — правило шага 4 режима `archive` на них не
+  распространяется).
+
 ## Open risks
 
 - **`main` слит локально и НЕ отправлен наружу.** Откат стоит одной команды

@@ -46,8 +46,8 @@ R1/R5 · `plan.md` §5 D2/D9/D10/D37/D38 · развилка «Обсужден�
 | Артефакт | Судьба | Потребитель здесь / причина |
 |:--|:--|:--|
 | `root/contracts/driver-plan-protocol.md` (P0.2, parse-контракт драйвер↔plan-protocol) | переходит item'ом в P4 | **P4.5** — исполнитель вердикта OQ-2 (§3–§4 ниже); вердикт = **вариант B**, а он по D37 этой командой не исполняется, а эскалируется по триггеру `public contract/SemVer` |
-| `root/contracts/plan-journal-schema.md` (P1.1, журнал плана v1) | переиспользуется как есть | живой потребитель в дереве: `packages/task/lib/task/journal.py` + шаг записи во всех пяти командах `task:plan-*`; `plans/2026.07.29-HARNESS-AGNOSTIC/journal.jsonl` пишется по этой схеме |
-| `root/contracts/plan-index-schema.md` (P1.2, корневой индекс плана v1) | переиспользуется как есть | живой потребитель: `plans/2026.07.29-HARNESS-AGNOSTIC/index.md` (карта слоёв и внешних входов) |
+| `root/contracts/plan-journal-schema.md` (P1.1, журнал плана v1) | переиспользуется как есть | живой потребитель в дереве: `packages/task/lib/task/journal.py` + шаг записи во всех пяти командах `task:plan-*`; `plans/archive/2026.07.29-HARNESS-AGNOSTIC/journal.jsonl` пишется по этой схеме |
+| `root/contracts/plan-index-schema.md` (P1.2, корневой индекс плана v1) | переиспользуется как есть | живой потребитель: `plans/archive/2026.07.29-HARNESS-AGNOSTIC/index.md` (карта слоёв и внешних входов) |
 | `root/contracts/artifex-policy-schema.md` (P0.3, per-project policy TOML v1) | отменяется | **не тот субъект** (`research/08` §3): per-project политика ПРОГОНА несуществующего драйвера + opt-in маркер, тогда как политика спавна/делегирования — флотский канон. Флотская схема запечатывается заново в **P4.2** (`root/contracts/execution-policy-v1.md`, дом данных `packages/harness/configs/common/agent-packs/execution-policy.json`); из отменяемого контракта наследуется ОДНА дисциплина — «поле несёт названного потребителя» (его §7) |
 | `root/contracts/artifex-run-folder.md` (P0.6, run-folder + мандат запуска v1) | переходит item'ом в P4 | **P4.1** — run-folder осмыслен только вместе с драйвером, которого этот план не строит (D38); дом остатка — `roadmap/artifex-thin-wrapper.md` |
 
@@ -81,7 +81,7 @@ R1/R5 · `plan.md` §5 D2/D9/D10/D37/D38 · развилка «Обсужден�
 | Артефакт | Судьба | Потребитель здесь / причина |
 |:--|:--|:--|
 | `workflows/wf-foreman-principles-mining.js` | отменяется | одноразовый майнинг P0.5 исполнен, продукт (`findings/owner-principles-catalog.md`) произведён и отменён выше; повторного прогона план не предусматривает |
-| `roadmap.md` | отменяется | карта исполнения восьми фаз, семь из которых терминализуются `⛔` этим item'ом; порядок работ несёт собственный `plans/2026.07.29-HARNESS-AGNOSTIC/roadmap.md` |
+| `roadmap.md` | отменяется | карта исполнения восьми фаз, семь из которых терминализуются `⛔` этим item'ом; порядок работ несёт собственный `plans/archive/2026.07.29-HARNESS-AGNOSTIC/roadmap.md` |
 
 ### §2.5 Незакрытые items — 24 (P1.5 + фазы P2–P7)
 
@@ -194,7 +194,7 @@ P0.3, R5 pre-mortem): терминализация — только смена �
 **Проверено (repo-grounded, дерево `next/harness-agnostic`):** состав `## 7. Contracts` донора и
 статусы пяти контрактов · доска `## 4` донора (P0 6/6 🟢, P1 3/5, P2–P7 ⬜) и поимённый список
 24 незакрытых items по `## Phase Status` семи фаз · наличие живых потребителей журнала и индекса
-(`packages/task/lib/task/journal.py`, `plans/2026.07.29-HARNESS-AGNOSTIC/index.md`) · пять якорей
+(`packages/task/lib/task/journal.py`, `plans/archive/2026.07.29-HARNESS-AGNOSTIC/index.md`) · пять якорей
 §4 parse-контракта против `SKILL.md` v2.21.0 и против живого `plan_lint.py` (команды — в §3) ·
 предусловие конвейера архивации (`packages/task/commands/plan-close.md` §«Режим `archive <ID>`»
 п. 1).

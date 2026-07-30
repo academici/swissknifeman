@@ -18,7 +18,7 @@
   запечатан контракт декларативной политики исполнения (`execution-policy.json` +
   `execpolicy.py`, гейт `[10/10]` в `validate.sh`), delegation contract приземлён в грамматику
   оркестратора PLAN и переведён `pending → enforced`. Подробности, D-лог и артефакты —
-  `plans/2026.07.29-HARNESS-AGNOSTIC/`.
+  `plans/archive/2026.07.29-HARNESS-AGNOSTIC/`.
 - **Плановые команды `plan-*.md`: кап делегирования, `confidence` в находке аудита, пункт DoR
   «внешние факт-классы» (P2.3, `2026.07.25-ECO-OPT`).** То же правило A/B/C и тот же ФОРМАТ карты,
   что у P2.2, применены к пяти `packages/task/commands/plan-{design,exec,run,close,audit}.md`.

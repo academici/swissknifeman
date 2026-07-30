@@ -95,7 +95,7 @@ Items фаз донора P2–P7 названы с суффиксом «дон�
 
 | Item донора | Предмет | Судьба | Что уже готово (живой адрес) |
 |:--|:--|:--|:--|
-| P1.5 | re-пин parse-контракта `driver-plan-protocol.md` на терминальную версию канона | `остаётся работой, дом: plans/2026.07.29-HARNESS-AGNOSTIC/phases/P4.md` item P4.5 (D37; адрес-класс — D90) | измерение OQ-2 выполнено: `research/03` §3–§4, вердикт «вариант B, сломан якорь 3 из 5» |
+| P1.5 | re-пин parse-контракта `driver-plan-protocol.md` на терминальную версию канона | `остаётся работой, дом: plans/archive/2026.07.29-HARNESS-AGNOSTIC/phases/P4.md` item P4.5 (D37; адрес-класс — D90) | измерение OQ-2 выполнено: `research/03` §3–§4, вердикт «вариант B, сломан якорь 3 из 5» |
 | P2.1 | каркас пакета `packages/artifex` (лаунчер, CLI-скелет, `validate.sh`, plugin.json) | `остаётся работой, дом: roadmap/artifex-thin-wrapper.md` | образец раскладки пакета — `packages/skiller/` (живой), собственного каркаса нет |
 | P2.2 | ядро цикла: очередь → `claude -p` → defensive parse → решение | `остаётся работой, дом: roadmap/artifex-thin-wrapper.md` | ничего: и `plan_reader`, и `worker` отсутствуют; решение — `decide` (§2, данные в архиве) |
 | P2.3 | state прогона + запись в журнал + retry-лестница tier1/2/3 | `остаётся работой, дом: roadmap/artifex-thin-wrapper.md` | журнал плана — `packages/task/lib/task/journal.py`; классификатор retry отсутствует |

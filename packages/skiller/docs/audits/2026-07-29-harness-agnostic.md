@@ -5,7 +5,7 @@
 - **Тема:** (1) harness-агностик и паритет второго провайдера, (2) смена единицы упаковки
   знаний bucket → plugin/pack, (3) токен-бюджет и правила разбиения, (4) декларативная
   политика спавна/делегирования (foreman).
-- **Полная адъюдикация:** `plans/2026.07.29-HARNESS-AGNOSTIC/research/01-audit-adjudication.md`
+- **Полная адъюдикация:** `plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/01-audit-adjudication.md`
   (посекционный вердикт с основаниями). Здесь — только сводка и адреса приземления;
   таблица ниже не пересказывает адъюдикацию.
 
@@ -22,7 +22,7 @@
 ## Проверка утверждений
 
 Первоисточники сверялись отдельным слоем разведки, не внутри аудита:
-`plans/2026.07.29-HARNESS-AGNOSTIC/findings/01-rag-cross-harness-2026-07-29.md`
+`plans/archive/2026.07.29-HARNESS-AGNOSTIC/findings/01-rag-cross-harness-2026-07-29.md`
 (кросс-харнес факты, `wshobson/agents`, состояние провайдер-контракта) и
 `findings/04-rag-agent-surface-and-skill-listing-2026-07-29.md` (first-party
 `code.claude.com/docs` и `learn.chatgpt.com/docs/build-skills` — бюджет листинга скиллов,

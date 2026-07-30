@@ -53,7 +53,7 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             self.assertTrue(support.evidence)
             for evidence in support.evidence:
                 self.assertEqual(evidence.source,
-                                 "plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/"
+                                 "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/"
                                  "codex-parity-verdicts-v1.md")
 
     def test_bindings_are_hook_native_with_manifest_synchronized(self):

@@ -4,7 +4,7 @@ plan: 2026.07.29-HARNESS-AGNOSTIC
 contract: codex-parity-verdicts
 status: sealed (P2.1)
 version: v1
-basis: "plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/provider-parity-definition.md (sealed P0.4) §1 verdict enum, §2 evidence bar, §5 both-provider outcome, §7 self-check; plans/2026.07.29-HARNESS-AGNOSTIC/research/06-codex-parity-triage-groundwork.md §1-§5 candidate map; plans/2026.07.29-HARNESS-AGNOSTIC/findings/03-rag-codex-capability-surfaces-2026-07-29.md Ф9/Ф10/Ф11/Ф12; plan.md D3/D18-D22/D56 and D86-D89"
+basis: "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/provider-parity-definition.md (sealed P0.4) §1 verdict enum, §2 evidence bar, §5 both-provider outcome, §7 self-check; plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/06-codex-parity-triage-groundwork.md §1-§5 candidate map; plans/archive/2026.07.29-HARNESS-AGNOSTIC/findings/03-rag-codex-capability-surfaces-2026-07-29.md Ф9/Ф10/Ф11/Ф12; plan.md D3/D18-D22/D56 and D86-D89"
 consumers: "P2.2 (class A observers), P2.3 (class B gates), P2.4 (class C carriers and honest claude-only records), P2.5 (conformance artifact and drift gate), P5.1 (release maturity wording), P5.3 (parity acceptance); evidence[] rows of configs/provider-capabilities.json cite this file by its non-archive path (D19)"
 verdict: "RAG:— (repo-grounded, tree 2640e8cf: configs/provider-capabilities.json — 35 capabilities, 17 codex unsupported, 3 claude-code unsupported; scripts/provider-docs.py production_requirements() — 170 requirement rows, 0 strict consumers over all 17; packages/harness/lib/harness/hooks.py:84-230; packages/harness/lib/harness/provider_audit.py:244-260,341-382; core/provider_manifest.py:331-383; packages/harness/configs/claude-code/settings.global.json; packages/harness/scripts/apply-permissions.sh:61-73; packages/harness/lib/harness/{wf_status,settings_audit,agentpacks,safedirs}.py; .github/workflows/test.yml:15) · RAG:✅ 2026-07-29 findings/03 Ф9/Ф10/Ф11 (first-party learn.chatgpt.com/docs/**) · RAG:✅ 2026-07-30 code.claude.com/docs/en/hooks (WebFetch — Stop/SubagentStop exit-2 semantics, see §5)"
 ---
@@ -136,7 +136,7 @@ canonical `source` of a verdict row is this file's non-archive path (D19).
 ### 3.1 `lifecycle.command-log` — `closed-by-adapter` (P2.2)
 
 - carrier: `PreToolUse`, matcher `^Bash$`; the payload carries `tool_name`/`tool_input`.
-- evidence: `source` = `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md`;
+- evidence: `source` = `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md`;
   `scope` = "codex lifecycle.command-log surface, hook-native binding on PreToolUse";
   `claim` = "the deterministic adapter `harness.codex.lifecycle.command-log` writes one
   provider-qualified command-log line per matched Bash tool call and is observed as a green

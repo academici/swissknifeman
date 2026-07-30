@@ -46,7 +46,7 @@
 «оркестрация НЕ объявляется» в `phases/P4.md` и `phases/P5.md`). После замера сцепленности
 критерий склейки выполняется ровно у одной пары — **B1**; остальное идёт solo, и у каждого solo
 названа причина. **Workflow-групп нет ни одной**: ни одна фаза не прошла критерий «N≥3 items с
-независимым scope» (`plan-protocol` §7), каталог `plans/2026.07.29-HARNESS-AGNOSTIC/workflows/`
+независимым scope» (`plan-protocol` §7), каталог `plans/archive/2026.07.29-HARNESS-AGNOSTIC/workflows/`
 не заводится.
 
 **Чем `plan-run` отличается от `plan-exec` в этой карте.** `plan-exec` запинен

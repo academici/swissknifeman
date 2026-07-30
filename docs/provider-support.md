@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1`
-- Carrier SHA-256 (canonical bytes plus one LF): `153d13bf98df0de172d59771af45ffef9d308ec445bb8f3dc789da3cf22def1a`
+- Canonical JSON SHA-256 (without carrier LF): `9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4`
+- Carrier SHA-256 (canonical bytes plus one LF): `2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d`
 - Common capabilities: `35`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -107,7 +107,7 @@ Render, check, upgrade, remove and diagnose locked packs.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.agent-packs.lifecycle`.
   Diagnostic: deterministic harness adapter satisfies codex agent-packs.lifecycle (bounded: role projections only)
   Limitations: covers role projections only: pack members that are Claude-runtime artifacts (.claude/workflows/*.js, .claude/rules/*, the review-gate shell hook and its ini) have no Codex projection and are excluded; a role that requires command.workflow-carrier is refused for Codex by the frozen renderer, so such roles are absent from the Codex projection; interview answers and pack versions stay shared with the Claude projection: the Codex lifecycle does not fork the pack catalog.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members).
 
 ### `agents.catalog`
 
@@ -135,7 +135,7 @@ Plan, dry-run, check and copy-verify supported legacy analytics into the neutral
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported for Codex: there is no committed Codex legacy analytics carrier to migrate; fail closed instead of inventing one
   Limitations: the intent does not apply to Codex: there is no legacy Codex analytics carrier to migrate; new Codex writes already target the neutral store; a future Codex legacy source would be an additive change, not a reopened verdict.
-  Evidence: [2026-07-30] no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex analytics.legacy-migration applicability).
+  Evidence: [2026-07-30] no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex analytics.legacy-migration applicability).
 
 ### `analytics.normalized-events`
 
@@ -289,7 +289,7 @@ Select a provider-native output/context style.
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported codex context.output-style: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: Codex documents no output-style configuration key; session style at Codex is a provider-owned behaviour with no project-scoped key to bind; if such a key appears, raising the level is an additive change.
-  Evidence: [2026-07-30] the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.output-style configuration key).
+  Evidence: [2026-07-30] the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.output-style configuration key).
 
 ### `context.plans-directory`
 
@@ -303,7 +303,7 @@ Declare the project plan directory through a native configuration binding.
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported codex context.plans-directory: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: Codex documents no plan-directory configuration key; plan location for a Codex session is a repository convention, not a provider-bound setting; if such a key appears, raising the level is an additive change.
-  Evidence: [2026-07-30] the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.plans-directory configuration key).
+  Evidence: [2026-07-30] the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.plans-directory configuration key).
 
 ### `doctor.environment`
 
@@ -373,7 +373,7 @@ Gate declared release-sensitive operations.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.changelog-gate`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.changelog-gate
   Limitations: inactive by default; reads the commit type only from a -m message: an editor-composed message is not inspected; the non-blocking warning is delivered as a systemMessage hint, not byte-identical to Claude's hookSpecificOutput.additionalContext.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.changelog-gate refusal on release-sensitive commits).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.changelog-gate refusal on release-sensitive commits).
 
 ### `lifecycle.command-log`
 
@@ -387,7 +387,7 @@ Record provider-native command execution evidence.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.command-log`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.command-log
   Limitations: records only tool calls Codex exposes as `Bash`; a shell invocation routed through another tool name is out of the log; writes to a Codex-qualified log path; the Claude-side log at `~/.claude/logs/bash-commands.jsonl` is untouched.
-  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.command-log surface, hook-native binding on PreToolUse).
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.command-log surface, hook-native binding on PreToolUse).
 
 ### `lifecycle.daemon-safety`
 
@@ -396,12 +396,12 @@ Reject unsafe shared-daemon operations.
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.daemon-safety`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.daemon-safety
   Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; registered by the harness global preset (settings.global.json, PreToolUse/Bash) and installed by apply-permissions.sh; the record previously claimed no binding satisfied the surface, which was false.
-  Evidence: [2026-07-30] settings.global.json registers ~/.claude/hooks/daemon-safety/block-daemon-ops.sh on PreToolUse/Bash and apply-permissions.sh installs it, so the surface is satisfied by a committed deterministic adapter — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.daemon-safety registration already shipped by the harness global preset).
+  Evidence: [2026-07-30] settings.global.json registers ~/.claude/hooks/daemon-safety/block-daemon-ops.sh on PreToolUse/Bash and apply-permissions.sh installs it, so the surface is satisfied by a committed deterministic adapter — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.daemon-safety registration already shipped by the harness global preset).
 
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.daemon-safety`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.daemon-safety
   Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; the pattern set is embedded into the generated dispatcher, so a change of the Claude-side patterns requires regenerating the Codex artifact; Codex-side activation is project-scoped opt-in via harness hooks --provider codex, unlike the Claude side which is a machine-wide always-on install.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.daemon-safety refusal on destructive shared-daemon commands).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.daemon-safety refusal on destructive shared-daemon commands).
 
 ### `lifecycle.git-guardrails`
 
@@ -410,12 +410,12 @@ Reject declared dangerous version-control operations.
 - **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported claude-code lifecycle.git-guardrails; committed implementation is not registered by any preset or install branch
   Limitations: the implementation is committed (configs/claude-code/hooks/git-guardrails/block-dangerous-git.sh) but no registration ships: no preset, install branch or operator flag activates it, so the surface fails closed; activating it fleet-wide is a behaviour change of the live contour and is not part of the parity phase.
-  Evidence: [2026-07-30] the implementation is committed but nothing registers or installs it: no preset, apply-permissions.sh branch or harness hooks flag activates it — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.git-guardrails activation state).
+  Evidence: [2026-07-30] the implementation is committed but nothing registers or installs it: no preset, apply-permissions.sh branch or harness hooks flag activates it — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.git-guardrails activation state).
 
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.git-guardrails`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.git-guardrails
   Limitations: inactive by default; pattern-based refusal: a command phrased outside the declared pattern set passes; the Claude half of this surface stays unsupported (see its own record): only the Codex half is closed here.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.git-guardrails refusal on declared dangerous version-control commands).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.git-guardrails refusal on declared dangerous version-control commands).
 
 ### `lifecycle.memory`
 
@@ -429,7 +429,7 @@ Activate selected memory lifecycle integration.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.memory`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.memory
   Limitations: per-project overrides are read from the Codex-side project files; Claude's `.claude/memory.*` overrides do not apply to a Codex session; the backend, its groups and its state remain owned by skiller/maind: this surface only activates them.
-  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership).
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership).
 
 ### `lifecycle.notification`
 
@@ -443,7 +443,7 @@ Notify on provider-native waiting or approval events.
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported codex lifecycle.notification: no managed project artifact can satisfy a machine-local, non-overridable surface; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: Codex has no Notification hook event; notifications are user-scope notify only, which a project-scoped configuration may not override, so the surface stays fail-closed under the managed-artifact model; replacement inside project scope: none; the operator may configure notify at machine level by hand.
-  Evidence: [2026-07-30] Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.notification within the managed-project-artifact model).
+  Evidence: [2026-07-30] Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.notification within the managed-project-artifact model).
 
 ### `lifecycle.pack-guard`
 
@@ -457,7 +457,7 @@ Guard managed agent-pack assets before mutation.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.pack-guard`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.pack-guard
   Limitations: inactive by default; the operator enables a mode explicitly, as on the Claude side; matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate; detects a touched managed path by a best-effort substring match over the serialized apply_patch tool_input, because the exact Codex apply_patch payload shape beyond tool_name is unverified.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock).
 
 ### `lifecycle.review-gate`
 
@@ -471,7 +471,7 @@ Gate declared review-sensitive lifecycle completion.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.review-gate`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.review-gate
   Limitations: enforcement means forced continuation with feedback, not cancellation of the subagent: neither provider can cancel it from this event; the loop-guard counter lives in the dispatcher (a per-session/agent attempt count capped at 3), because stop_hook_active is documented at neither provider as reliable; inactive by default, and the check command comes only from the machine-owned hook configuration shared with the Claude review-gate install.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping).
 
 ### `lifecycle.router`
 
@@ -485,7 +485,7 @@ Project semantic routing into native lifecycle activation.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.router`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.router
   Limitations: delivers the bias as `systemMessage`, the form the generated Codex handler already uses, not as Claude's `hookSpecificOutput.additionalContext`; the `SessionStart` half of the Claude pair (static policy) is not part of this surface at Codex, where `SessionStart` is owned by `context.observer`.
-  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.router bias injection on UserPromptSubmit).
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.router bias injection on UserPromptSubmit).
 
 ### `lifecycle.run-report`
 
@@ -499,7 +499,7 @@ Capture a provider-qualified run report at a native lifecycle boundary.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.run-report`.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.run-report
   Limitations: captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`; `reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes; outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook.
-  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
 
 ### `mcp.catalog`
 
@@ -527,7 +527,7 @@ Maintain a fail-closed destructive-operation allowlist.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.security.safe-dirs`.
   Diagnostic: deterministic harness adapter satisfies codex security.safe-dirs
   Limitations: covers the hook half only: sandbox_workspace_write.writable_roots is not projected, because the sandbox axis belongs to lifecycle.auto-approval; requires the harness checkout reachable from the project, since the verdict core is called rather than copied; an unreachable core is a refusal, not a pass; the allowlist itself stays machine-owned and is never written by this surface.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only).
 
 ### `settings.audit`
 
@@ -541,7 +541,7 @@ Read layered settings and report named policy conformance.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.settings.audit`.
   Diagnostic: deterministic harness adapter satisfies codex settings.audit (bounded: Codex-specific check set)
   Limitations: the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart; layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming; read-only, like the Claude auditor: nothing in ~/.codex or .codex is written.
-  Evidence: [2026-07-30] the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex settings.audit over the documented Codex configuration layers, Codex-specific check set).
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex settings.audit over the documented Codex configuration layers, Codex-specific check set).
 
 ### `settings.permissions`
 
@@ -583,7 +583,7 @@ Read and report provider-qualified workflow run status.
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported codex workflows.status: the reported object does not exist at Codex; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: the Claude surface reads an internal, undocumented Claude Code run directory; Codex documents no equivalent run store; the Codex orchestration carrier is a rendered instruction, not a runtime that leaves a run directory; session-level reporting for Codex is covered by analytics.run-report, which is adapted for both providers.
-  Evidence: [2026-07-30] the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex workflows.status as a reader of workflow run state).
+  Evidence: [2026-07-30] the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex workflows.status as a reader of workflow run state).
 
 ## Native Extensions
 

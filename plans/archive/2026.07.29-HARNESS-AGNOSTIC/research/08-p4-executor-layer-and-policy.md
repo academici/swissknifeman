@@ -277,7 +277,7 @@ Consumed, D-лог, Update Log), его `handoff.md` и фазы НЕ правя
 
 ```yaml
 status: historical (2026-07-30, P4.5 плана 2026.07.29-HARNESS-AGNOSTIC, D93) — запечатан P0.2 2026-07-18, пин просрочен, якорь 3 §4 сломан; см. §0
-pin_status: expired (живой канон plan-protocol v2.21.0 на 2026-07-30; замер — plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md §3)
+pin_status: expired (живой канон plan-protocol v2.21.0 на 2026-07-30; замер — plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md §3)
 ```
 
 **(2) Блок `## §0`** — вставляется СРАЗУ ПОСЛЕ заголовка `# Контракт драйвер↔plan-protocol (Artifex)`
@@ -294,7 +294,7 @@ pin_status: expired (живой канон plan-protocol v2.21.0 на 2026-07-30
 (2026-07-18); живой канон на 2026-07-30 — **v2.21.0**
 (`packages/skiller/skills/general/plan-protocol/SKILL.md:4`). Сверка закрытого перечня якорей §4
 (замер 2026-07-29, поимённо по каждому якорю —
-`plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` §3):
+`plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` §3):
 
 - якоря 1 (шесть канонических статусов), 2 (форма заголовка `handoff.md`), 4 (шапка Status Board)
   — **целы**;
@@ -326,7 +326,7 @@ pin_status: expired (живой канон plan-protocol v2.21.0 на 2026-07-30
   `plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` запинен на
   `plan-protocol` v2.8.0 @ `2cf26e8`, живой канон на 2026-07-30 — v2.21.0; якорь 3 §4 (enum форм
   `Next`) сломан переходом канона на провайдер-нейтральные семантические формы (замер —
-  `plans/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` §3, решение —
+  `plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/03-foreman-absorption-inventory.md` §3, решение —
   его D93). Документ оставлен ИСТОРИЧЕСКИМ и как спека парсера не используется.
   **Предусловие п. 2 «Ядро цикла»:** до первой строки `plan_reader` parse-подмножество
   переиздаётся против канона ТОГО дня — пин на КОММИТ, не на «latest», — и закрывается не

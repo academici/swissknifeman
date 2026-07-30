@@ -14,7 +14,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from harness.instructions import literal_coverage_section  # noqa: E402
 
-MATRIX_PATH = REPO_ROOT / "plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md"
+MATRIX_PATH = REPO_ROOT / "plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md"
 FIXTURE_PATH = (REPO_ROOT
                 / "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json")
 SOURCE_SECTION = "## 2. Матрица покрытия"
@@ -89,11 +89,11 @@ def build_fixture(section: str, rows: list[list[str]], literals: list[dict]) -> 
         "contract_version": "1.0.0",
         "fixture_version": FIXTURE_VERSION,
         "provenance": {
-            "source": "plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md",
+            "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md",
             "source_section": SOURCE_SECTION,
             "source_sha256": hashlib.sha256(section.encode("utf-8")).hexdigest(),
             "source_hash_scope": SOURCE_HASH_SCOPE,
-            "generator": "plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.6-extract-literals.py",
+            "generator": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.6-extract-literals.py",
             "owner_decision": OWNER_DECISION,
             "row_count": len(rows),
             "literal_count": len(literals),

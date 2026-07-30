@@ -3,11 +3,11 @@
 > **Provenance.** Источник: Perplexity-аудит по наброскам владельца (консолидация двух
 > предыдущих прогонов), дата прогона — 2026-07-29. Это **вход мастер-плана**
 > `2026.07.29-HARNESS-AGNOSTIC`; исходный носитель —
-> `plans/2026.07.29-HARNESS-AGNOSTIC/findings/00-owner-audit-perplexity-2026-07-29.md`.
+> `plans/archive/2026.07.29-HARNESS-AGNOSTIC/findings/00-owner-audit-perplexity-2026-07-29.md`.
 > Файл — **verbatim-копия**, неизменяемая по конвенции архива (`index.md` §«Как добавить
 > прогон», шаг 2): содержание не редактируется и не сокращается. Триаж —
 > [2026-07-29-harness-agnostic](./2026-07-29-harness-agnostic); полная адъюдикация —
-> `plans/2026.07.29-HARNESS-AGNOSTIC/research/01-audit-adjudication.md`.
+> `plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/01-audit-adjudication.md`.
 
 ---
 

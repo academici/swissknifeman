@@ -14,7 +14,7 @@
 и в объединении дают весь файл: байтов «вне маркеров, которые назвала матрица», нет.
 
 Запуск (из корня репо):
-    python3 plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.5-build-mapping.py
+    python3 plans/archive/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.5-build-mapping.py
 """
 import json
 import pathlib
@@ -30,7 +30,7 @@ TARGETS = (
     ("packages/task/CLAUDE.md", "research/05 §2.7"),
 )
 HEADING = re.compile(rb"(?m)^##[^#\n].*$")
-OUT = pathlib.Path("plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.5-mapping.json")
+OUT = pathlib.Path("plans/archive/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.5-mapping.json")
 
 
 def sections(raw: bytes) -> list[tuple[int, int, str]]:

@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.1.1",
   "provenance": {
     "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-contract-review.md",
     "evidence_tree": "722d4825254b40cec52bdb6043403a242d116607",
@@ -68,7 +68,8 @@
         "`maind`",
         "`analyst`",
         "`task`",
-        "cross-package onboarding lives once in `maind/onboard.py`"
+        "cross-package onboarding lives once in `maind/onboard.py`",
+        "the umbrella owns the `swissknifeman` launcher alias"
       ]
     },
     {
@@ -83,7 +84,8 @@
         "`core/`",
         "`core`",
         "`PYTHONPATH`",
-        "bash launchers resolve the repository root independently"
+        "bash launchers resolve the repository root independently",
+        "deduplicate rather than maintain parallel implementations"
       ]
     },
     {
@@ -96,7 +98,8 @@
         "Maintain one generated `swissknifeman` marketplace with package provenance",
         "plugin names remain unprefixed for backward compatibility.",
         "`swissknifeman`",
-        "the curated `core` plugin lists skills explicitly"
+        "the curated `core` plugin lists skills explicitly",
+        "The `harness` and `maind` plugins ship commands only, without an MCP server."
       ]
     },
     {
@@ -123,7 +126,8 @@
         "Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
         "`plans/<ID>/`",
         "`plan-protocol`",
-        "reference plan items by the full `<PLAN-ID> Pn.m`"
+        "reference plan items by the full `<PLAN-ID> Pn.m`",
+        "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon."
       ]
     },
     {
@@ -164,7 +168,8 @@
         "`context7`",
         "`perplexity-web`",
         "`WebSearch`",
-        "cover every external fact class a verdict stands on"
+        "cover every external fact class a verdict stands on",
+        "prefer `perplexity-web` aggressively over `WebSearch`"
       ]
     },
     {
@@ -278,7 +283,8 @@
         "codex"
       ],
       "assertions": [
-        "Treat `.agents/skills/*` as thin Codex adapters, keep canonical skill and command content under `packages/skiller/skills/` and `packages/task/commands/`, use worktree-local package CLIs for writes, and preserve Claude Code compatibility.",
+        "Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth",
+        "canonical skill and command content stays under `packages/skiller/skills/`",
         "`.agents/skills/*`",
         "`packages/skiller/skills/`",
         "`packages/task/commands/`"
@@ -298,7 +304,8 @@
         "`git status --short`",
         "`codex doctor --json`",
         "`maind health --cwd`",
-        "`127`"
+        "`127`",
+        "never native-only"
       ]
     },
     {
@@ -508,13 +515,14 @@
         "codex"
       ],
       "assertions": [
-        "Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
+        "Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, `instructions`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
         "`permissions`",
         "`mcp`",
         "`hooks`",
         "`router`",
         "`agent-packs`",
         "`safe-dirs`",
+        "`instructions`",
         "`doctor`",
         "`--target`"
       ]
@@ -530,7 +538,8 @@
         "their lock records preserve ownership.",
         "`*.pack-new`",
         "A pack file entry may declare `src_pack` to share content from another pack without copying it",
-        "the review-role registry indexes roles as an extension table alongside the canonical `roles.json`"
+        "the review-role registry indexes roles without copying their rules",
+        "as an extension table alongside the canonical `roles.json`"
       ]
     },
     {

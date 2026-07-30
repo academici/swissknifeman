@@ -27,7 +27,7 @@ from core.provider_lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.1.0"
+CATALOG_VERSION = "1.1.1"
 PROVIDERS = ("claude-code", "codex")
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task")
 TARGETS = {

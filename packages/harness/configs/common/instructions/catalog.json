@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.1.0",
+  "catalog_version": "1.1.1",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -36,7 +36,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -101,7 +101,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -118,7 +118,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`.",
+          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.",
           "obligations": [
             {
               "modality": "must",
@@ -132,7 +132,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -144,7 +144,8 @@
             "`maind`",
             "`analyst`",
             "`task`",
-            "cross-package onboarding lives once in `maind/onboard.py`"
+            "cross-package onboarding lives once in `maind/onboard.py`",
+            "the umbrella owns the `swissknifeman` launcher alias"
           ]
         },
         {
@@ -153,7 +154,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Put shared primitives in `core/`; package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback. In addition, bash launchers resolve the repository root independently — a deliberate exception, since `core` is not yet on `PYTHONPATH` at that point.",
+          "intent": "Apply this source-derived instruction: Put shared primitives in `core/`; package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback. In addition, bash launchers resolve the repository root independently — a deliberate exception, since `core` is not yet on `PYTHONPATH` at that point. One source of truth beats copies: deduplicate rather than maintain parallel implementations.",
           "obligations": [
             {
               "modality": "must",
@@ -167,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -176,7 +177,8 @@
             "`core/`",
             "`core`",
             "`PYTHONPATH`",
-            "bash launchers resolve the repository root independently"
+            "bash launchers resolve the repository root independently",
+            "deduplicate rather than maintain parallel implementations"
           ]
         },
         {
@@ -185,7 +187,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 6,
-          "intent": "Apply this source-derived instruction: Maintain one generated `swissknifeman` marketplace with package provenance; plugin names remain unprefixed for backward compatibility. In addition, the curated `core` plugin lists skills explicitly.",
+          "intent": "Apply this source-derived instruction: Maintain one generated `swissknifeman` marketplace with package provenance; plugin names remain unprefixed for backward compatibility. In addition, the curated `core` plugin lists skills explicitly. The `harness` and `maind` plugins ship commands only, without an MCP server.",
           "obligations": [
             {
               "modality": "must",
@@ -199,14 +201,15 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
             "Maintain one generated `swissknifeman` marketplace with package provenance",
             "plugin names remain unprefixed for backward compatibility.",
             "`swissknifeman`",
-            "the curated `core` plugin lists skills explicitly"
+            "the curated `core` plugin lists skills explicitly",
+            "The `harness` and `maind` plugins ship commands only, without an MCP server."
           ]
         },
         {
@@ -229,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -246,7 +249,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`.",
+          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`. The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon.",
           "obligations": [
             {
               "modality": "must",
@@ -260,14 +263,15 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
             "Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
             "`plans/<ID>/`",
             "`plan-protocol`",
-            "reference plan items by the full `<PLAN-ID> Pn.m`"
+            "reference plan items by the full `<PLAN-ID> Pn.m`",
+            "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon."
           ]
         },
         {
@@ -290,7 +294,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -318,7 +322,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -336,7 +340,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 11,
-          "intent": "Apply this source-derived instruction: Verify external claims through `context7` → `perplexity-web` → `WebSearch`; verify repository claims by reading code and recorded evidence. Also, cover every external fact class a verdict stands on, treating a tool-poor delegate's summary as a draft to verify, not an exhaustive list.",
+          "intent": "Apply this source-derived instruction: Verify external claims through `context7` → `perplexity-web` → `WebSearch`; verify repository claims by reading code and recorded evidence. Also, cover every external fact class a verdict stands on, treating a tool-poor delegate's summary as a draft to verify, not an exhaustive list. Delegate retrieval and synthesis of external facts to flat-rate tooling: prefer `perplexity-web` aggressively over `WebSearch`.",
           "obligations": [
             {
               "modality": "must",
@@ -350,7 +354,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -359,7 +363,8 @@
             "`context7`",
             "`perplexity-web`",
             "`WebSearch`",
-            "cover every external fact class a verdict stands on"
+            "cover every external fact class a verdict stands on",
+            "prefer `perplexity-web` aggressively over `WebSearch`"
           ]
         },
         {
@@ -382,7 +387,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -409,7 +414,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -436,7 +441,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -463,7 +468,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -491,7 +496,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -518,7 +523,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -545,7 +550,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "0435899f40bc0685c86bbef52418243b990b3ac90930e6520624f7348e2c7282"
+              "sha256": "99f6802b4e1e3188925b6a479d4eec82773f0b5b3fd425ea49d00a420b5c0ee7"
             }
           ],
           "compatibility_assertions": [
@@ -646,7 +651,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Treat `.agents/skills/*` as thin Codex adapters, keep canonical skill and command content under `packages/skiller/skills/` and `packages/task/commands/`, use worktree-local package CLIs for writes, and preserve Claude Code compatibility.",
+          "intent": "Apply this source-derived instruction: Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth: canonical skill and command content stays under `packages/skiller/skills/` and `packages/task/commands/`.",
           "obligations": [
             {
               "modality": "must",
@@ -660,11 +665,12 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "de71d014a5c419c45fad0590cb7b1241ab4a4621616755e734718fcf43f8751e"
+              "sha256": "872a30b391e716c092c2519bfbe47890e7a4df6532d8addc62dc4775a866ad45"
             }
           ],
           "compatibility_assertions": [
-            "Treat `.agents/skills/*` as thin Codex adapters, keep canonical skill and command content under `packages/skiller/skills/` and `packages/task/commands/`, use worktree-local package CLIs for writes, and preserve Claude Code compatibility.",
+            "Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth",
+            "canonical skill and command content stays under `packages/skiller/skills/`",
             "`.agents/skills/*`",
             "`packages/skiller/skills/`",
             "`packages/task/commands/`"
@@ -676,7 +682,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 2,
-          "intent": "Apply this source-derived instruction: For this trusted repository, a Codex launch names the repository cwd, routed model and effort, `-a never`, and `-s danger-full-access`; preflight checks `pwd`, `git status --short`, `codex doctor --json`, hook integrity, `maind health --cwd`, and applicable plan lint. Treat hook exit `127` as a path defect and repair its effective registration.",
+          "intent": "Apply this source-derived instruction: For this trusted repository, a Codex launch names the repository cwd, routed model and effort, `-a never`, and `-s danger-full-access`; preflight checks `pwd`, `git status --short`, `codex doctor --json`, hook integrity, `maind health --cwd`, and applicable plan lint. Treat hook exit `127` as a path defect and repair its effective registration. Every finished task and terminal handoff ends with a launch block, and for plan work the provider-neutral `plan-protocol` form is mandatory alongside the native table — never native-only.",
           "obligations": [
             {
               "modality": "must",
@@ -690,7 +696,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "de71d014a5c419c45fad0590cb7b1241ab4a4621616755e734718fcf43f8751e"
+              "sha256": "872a30b391e716c092c2519bfbe47890e7a4df6532d8addc62dc4775a866ad45"
             }
           ],
           "compatibility_assertions": [
@@ -702,7 +708,8 @@
             "`git status --short`",
             "`codex doctor --json`",
             "`maind health --cwd`",
-            "`127`"
+            "`127`",
+            "never native-only"
           ]
         },
         {
@@ -725,7 +732,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "de71d014a5c419c45fad0590cb7b1241ab4a4621616755e734718fcf43f8751e"
+              "sha256": "872a30b391e716c092c2519bfbe47890e7a4df6532d8addc62dc4775a866ad45"
             }
           ],
           "compatibility_assertions": [
@@ -753,7 +760,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "de71d014a5c419c45fad0590cb7b1241ab4a4621616755e734718fcf43f8751e"
+              "sha256": "872a30b391e716c092c2519bfbe47890e7a4df6532d8addc62dc4775a866ad45"
             }
           ],
           "compatibility_assertions": [
@@ -1129,7 +1136,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1156,7 +1163,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1184,7 +1191,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1202,7 +1209,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
+          "intent": "Apply this source-derived instruction: Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, `instructions`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
           "obligations": [
             {
               "modality": "must",
@@ -1216,17 +1223,18 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
-            "Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
+            "Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, `instructions`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
             "`permissions`",
             "`mcp`",
             "`hooks`",
             "`router`",
             "`agent-packs`",
             "`safe-dirs`",
+            "`instructions`",
             "`doctor`",
             "`--target`"
           ]
@@ -1237,7 +1245,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Agent packs render templates, upgrade only safe managed files, write conflicts as `*.pack-new`, and remove only unmodified managed files; their lock records preserve ownership. A pack file entry may declare `src_pack` to share content from another pack without copying it, and the review-role registry indexes roles as an extension table alongside the canonical `roles.json` without duplicating its rules.",
+          "intent": "Apply this source-derived instruction: Agent packs render templates, upgrade only safe managed files, write conflicts as `*.pack-new`, and remove only unmodified managed files; their lock records preserve ownership. A pack file entry may declare `src_pack` to share content from another pack without copying it, and the review-role registry indexes roles without copying their rules, as an extension table alongside the canonical `roles.json`.",
           "obligations": [
             {
               "modality": "must",
@@ -1251,7 +1259,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1259,7 +1267,8 @@
             "their lock records preserve ownership.",
             "`*.pack-new`",
             "A pack file entry may declare `src_pack` to share content from another pack without copying it",
-            "the review-role registry indexes roles as an extension table alongside the canonical `roles.json`"
+            "the review-role registry indexes roles without copying their rules",
+            "as an extension table alongside the canonical `roles.json`"
           ]
         },
         {
@@ -1282,7 +1291,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1312,7 +1321,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [
@@ -1343,7 +1352,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "ef75eff7b23ea3c106e245da0061562dada113d443305caeca80cf4ce37003c3"
+              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
             }
           ],
           "compatibility_assertions": [

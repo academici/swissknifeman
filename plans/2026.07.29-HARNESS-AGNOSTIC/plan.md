@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
-| Last Updated | 2026-07-30 (P2.7 закрыт `🟢`; поле ведётся по дате ПОСЛЕДНЕЙ строки `## 6. Update Log` — F5) |
+| Last Updated | 2026-07-30 (P2.8 закрыт `🟢`; поле ведётся по дате ПОСЛЕДНЕЙ строки `## 6. Update Log` — F5) |
 | Repository | swissknifeman |
 | Related Packages | harness · skiller · task · maind · analyst · core |
 | Execution Mode | phase-first · contract-first design |
@@ -125,7 +125,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 |:--|:--|:--|:--|
 | P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 4/5 | 🟠 Done with deviations |
 | P1 | Паритет корневых инструкций | 4/7 | 🟠 Done with deviations |
-| P2 | Паритет capability второго провайдера (+ follow-up блок аудита P1, D80) | 2/9 | 🟡 In progress |
+| P2 | Паритет capability второго провайдера (+ follow-up блок аудита P1, D80) | 3/9 | 🟡 In progress |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | ⬜ Not started |
 | P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 0/5 | ⬜ Not started |
 | P5 | Возврат в основное дерево и верификация флота | 0/3 | ⬜ Not started |
@@ -369,6 +369,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-30 | plan-design/Claude Opus 5/high | **Фаза P2 расширена блоком follow-up по находкам аудита P1 (заход 2) — БЕЗ реопена P1 (D80–D85).** Заведены четыре items: P2.6 (провенанс фикстуры покрытия — сужение до §2 + перегенерация + гейт равенства, D81), P2.7 (docs-sync `harness instructions`/adoption/канона, D85), P2.8 (дом долга порядка `--authorize` в `roadmap/`, D84), P2.9 (бухгалтерия захода 2 — дубль строки §6 по D82, два пункта Validation, приписка `Last Updated` по D83, две подписи). Порядок: блок перед P2.1. Слои: `research/11-p2-followup-audit-p1-round2.md`, `brief/01-refinements.md` Р9/Р10, трассировка A1–A8 в `research/00-user-intent.md`. Статусы items и фазы P1 не менялись; ТЗ P2.1–P2.5 не переписывалось; приписка `Last Updated` оставлена как есть — её правка является Deliverable P2.9 (D83). Доска `0/9`, `roadmap.md` пересобран (35 items) — детали см. `phases/P2.md` Phase Context § блок follow-up |
 | 2026-07-30 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P2.6 закрыт `🟢` (item-коммиты `317622c0` сужение+перегенерация + `23c1090c` гейт равенства): провенанс фикстуры покрытия сужен до РОВНО §2 через общий хелпер `literal_coverage_section` (генератор больше не хеширует файл целиком), фикстура перегенерирована (`fixture_version` `1.1.2`, `source_hash_scope: "section"`), гейт равенства заведён в `validate_literal_coverage` на существующем `INSTRUCTION_PROVENANCE_INVALID` без нового шага и без перенумерации `[9/9]`, четыре новых теста (негатив на подменённый хеш, негатив на недоступный источник, негатив на неизвестный `source_hash_scope`, позитив «правка вне §2 не краснит») — 485 тестов пакета зелёные — детали см. phases/P2.md P2.6 Completion Notes |
 | 2026-07-30 | plan-exec/Sonnet/medium | P2.7 закрыт `🟢` (item-коммит `e16082a1`): раздел `### harness instructions` в `packages/harness/docs/index.md` (пять операций `plan`/`check`/`adopt`/`apply`/`repair`, алфавитный `--authorize` по D84), новая страница `packages/harness/docs/reference/instruction-canon.md` (механизм, управляемые блоки, три наблюдения `stale-source`/`managed-drift`/`ownership-conflict`, adoption/откат, два машинных гейта), регистрация в обоих сайдбарах, два перекрёстка (`docs/control-surface.md` § «Три слоя источника», ячейка `docs/routing.md`), `docs-sync.sh` подтверждён, `vitepress build` не прогонялся (нет `node_modules`) — заменён машинными проверками ссылок/регистрации — детали см. phases/P2.md P2.7 Completion Notes |
+| 2026-07-30 | plan-exec/Sonnet/medium | P2.8 закрыт `🟢` (item-коммит `a264a339`): единственный дом двух сцепленных долгов — `roadmap/instruction-authorize-order.md` (order-sensitivity `apply_instructions` к порядку `--authorize`, на практике алфавитный по `target_path`, против сравнения множеством у `adopt_instructions`; два воспроизведённых случая P1.5/P1.6; два варианта починки с ценой; критерий внедрения; раздел «Противоречие плановых носителей» — авторитетна алфавитная формулировка P1.5, формулировка Implementation Rules закрытого P1.6 отменена D84 и не правится), строка в `roadmap/README.md` § «Отложено — критерий не сработал»; посторонний незакоммиченный дифф `roadmap/README.md` (строка спеки `2026.07.29-launch-block-command-row.md`) сохранён процедурой stash → правка → коммит → pop — детали см. phases/P2.md P2.8 Completion Notes |
 
 ## 7. Contracts
 

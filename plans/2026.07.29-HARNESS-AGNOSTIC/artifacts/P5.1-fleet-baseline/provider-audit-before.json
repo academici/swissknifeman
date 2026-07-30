@@ -1,0 +1,2013 @@
+{
+  "catalog_hash": "sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835",
+  "diagnostics": [],
+  "evidence": [
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44",
+      "identity": "agents.catalog",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:_common.orchestrator",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.blade-review",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.db-impact",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.route-mapper",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.security-review",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.slice-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.spec-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.test-verifier",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.test-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.ffi-reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.slice-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.spec-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.test-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.api-surface",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.security-review",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.slice-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.spec-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.test-verifier",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.test-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.component-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.slice-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.spec-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.test-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.slice-builder",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.spec-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.test-writer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.type-checker",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.ai-viability-assessor",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.architecture-decision",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.tech-radar-curator",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.founder-cadence",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.idea-validator",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.mvp-scoper",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.contribution-reviewer",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.issue-triager",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.release-conductor",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.delegation-triage",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.review-gatekeeper",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.sprint-planner",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:context.observer",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:context.output-style",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:context.plans-directory",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.auto-approval",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.changelog-gate",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.command-log",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.daemon-safety",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.git-guardrails",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.memory",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.notification",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.pack-guard",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.review-gate",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.router",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.run-report",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:43",
+      "identity": "agents.catalog",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4",
+      "identity": "role:_common.orchestrator",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.blade-review",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.db-impact",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.route-mapper",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.security-review",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.slice-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.spec-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.test-verifier",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:backend-laravel.test-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.ffi-reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.slice-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.spec-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:dart-flutter.test-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.api-surface",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.security-review",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.slice-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.spec-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.test-verifier",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:laravel-package.test-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.component-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.slice-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.spec-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:node-frontend.test-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.slice-builder",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.spec-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.test-writer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:python-backend.type-checker",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.ai-viability-assessor",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.architecture-decision",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-cto.tech-radar-curator",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.founder-cadence",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.idea-validator",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-founder.mvp-scoper",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.contribution-reviewer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.issue-triager",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-maintainer.release-conductor",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.delegation-triage",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.review-gatekeeper",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "identity": "role:role-tech-lead.sprint-planner",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:context.observer",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:context.output-style",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:context.plans-directory",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "identity": "surface:lifecycle.auto-approval",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.changelog-gate",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.command-log",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.daemon-safety",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.git-guardrails",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.memory",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.notification",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.pack-guard",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.review-gate",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.router",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "activation",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "identity": "surface:lifecycle.run-report",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "unsupported"
+    },
+    {
+      "category": "capability",
+      "diagnostic": "HARNESS_MCP_PROJECTION_RENDERED",
+      "identity": "mcp:catalog",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "capability",
+      "diagnostic": "HARNESS_CATALOG_MISMATCH",
+      "identity": "mcp:missing-capability",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "capability",
+      "diagnostic": "HARNESS_MCP_PROJECTION_RENDERED",
+      "identity": "mcp:catalog",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "capability",
+      "diagnostic": "HARNESS_CATALOG_MISMATCH",
+      "identity": "mcp:missing-capability",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "secret",
+      "diagnostic": "HARNESS_SECRET_VALUE_EXPOSED",
+      "identity": "mcp:catalog",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "secret",
+      "diagnostic": "HARNESS_SECRET_REFERENCES_ONLY",
+      "identity": "mcp:catalog",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "value-free"
+    },
+    {
+      "category": "secret",
+      "diagnostic": "HARNESS_SECRET_VALUE_EXPOSED",
+      "identity": "mcp:catalog",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "secret",
+      "diagnostic": "HARNESS_SECRET_REFERENCES_ONLY",
+      "identity": "mcp:catalog",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "value-free"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:fleet-defaults",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:fleet-project",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:project",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:observe",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_EXPLICIT_REQUIRED",
+      "identity": "profile:trusted-full-access",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_EXPLICIT",
+      "identity": "profile:trusted-full-access",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:trusted-full-access",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:workspace-contained",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:fleet-defaults",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:fleet-project",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN",
+      "identity": "origin:project",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:observe",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_EXPLICIT_REQUIRED",
+      "identity": "profile:trusted-full-access",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_FULL_ACCESS_EXPLICIT",
+      "identity": "profile:trusted-full-access",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:trusted-full-access",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "security",
+      "diagnostic": "HARNESS_PROFILE_RESOLVED",
+      "identity": "profile:workspace-contained",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    },
+    {
+      "category": "trust",
+      "diagnostic": "HARNESS_TRUST_REQUIRED",
+      "identity": "mcp:catalog",
+      "polarity": "negative",
+      "provider": "claude-code",
+      "state": "refused"
+    },
+    {
+      "category": "trust",
+      "diagnostic": "HARNESS_TRUST_SATISFIED",
+      "identity": "profile:workspace-contained",
+      "polarity": "positive",
+      "provider": "claude-code",
+      "state": "supported"
+    },
+    {
+      "category": "trust",
+      "diagnostic": "HARNESS_TRUST_REQUIRED",
+      "identity": "mcp:catalog",
+      "polarity": "negative",
+      "provider": "codex",
+      "state": "refused"
+    },
+    {
+      "category": "trust",
+      "diagnostic": "HARNESS_TRUST_SATISFIED",
+      "identity": "profile:workspace-contained",
+      "polarity": "positive",
+      "provider": "codex",
+      "state": "supported"
+    }
+  ],
+  "green": true,
+  "managed_lifecycle": [
+    {
+      "artifact": "profile:codex:trusted-full-access",
+      "check": "noop",
+      "create": "create",
+      "drift": "refuse",
+      "outside_managed_preserved": true,
+      "repair": "repair"
+    },
+    {
+      "artifact": "mcp:codex:catalog",
+      "check": "noop",
+      "create": "create",
+      "drift": "refuse",
+      "outside_managed_preserved": true,
+      "repair": "repair"
+    },
+    {
+      "artifact": "agent:codex:backend-laravel.blade-review",
+      "check": "noop",
+      "create": "create",
+      "drift": "refuse",
+      "outside_managed_preserved": true,
+      "repair": "repair"
+    },
+    {
+      "artifact": "lifecycle:codex:context.observer",
+      "check": "noop+noop",
+      "create": "create+create",
+      "drift": "refuse+noop",
+      "outside_managed_preserved": true,
+      "repair": "repair+noop"
+    }
+  ],
+  "render_hashes": {
+    "agent:claude-code:_common.orchestrator": "sha256:8db394632cb998b2ce813b727d4681e75cda8c702c9ada0f823afba3e34333c0",
+    "agent:claude-code:backend-laravel.blade-review": "sha256:7acea6225d35efaaeff4f36c01730ef8fed3f6e90a2dfbb89d3f28be17fefb6d",
+    "agent:claude-code:backend-laravel.db-impact": "sha256:ba75d260f123daf4435f513cfa3bd8fa55b4fdea327ae3edd1e6d4060778b056",
+    "agent:claude-code:backend-laravel.reviewer": "sha256:b1530f8028e399470dc7893fb9dc45af2171719ec016c0123c2acb25e7a518da",
+    "agent:claude-code:backend-laravel.route-mapper": "sha256:cdfe427d7b5bbd35e5a870786e260eeb60e99b5ecd006a4a46183e93dfa9d9ed",
+    "agent:claude-code:backend-laravel.security-review": "sha256:e8b47ed14319052c543e00fcb6720ff10e93d6f200b55ec0e516cd83bfa50ad4",
+    "agent:claude-code:backend-laravel.slice-builder": "sha256:8e4fc45f74f325a9ce4e9f3119fb79181c7c3a0f93efbebc007dfeb917d07371",
+    "agent:claude-code:backend-laravel.spec-writer": "sha256:0853a744011c9dd1d5fc74cfce2353fe0a605f522646f462889c0cb095e7f505",
+    "agent:claude-code:backend-laravel.test-verifier": "sha256:9a0ae57e7733631b46f3b96a93bde83b5c553a763e468e985a8c5842395cb152",
+    "agent:claude-code:backend-laravel.test-writer": "sha256:cff000fbc73d27e50c0f2557ba843d3e00eb435dea7c44937b271d52e1e771d6",
+    "agent:claude-code:dart-flutter.ffi-reviewer": "sha256:72a73fbd72ee026d586eb44e79de6cf1432050875f9de23be93cf4b5bf9b0215",
+    "agent:claude-code:dart-flutter.reviewer": "sha256:bf3e05276aadbdf3f0feca92efeb2642513417b771ea1357f7aa824d0b7970e4",
+    "agent:claude-code:dart-flutter.slice-builder": "sha256:7f04a4b406a5e1e262b11a6a4e8effb95b586b36bddc685fad557e14f0318452",
+    "agent:claude-code:dart-flutter.spec-writer": "sha256:f9f8085b0edc499e5fd578a9c880d60c2d44f3850a1d23e903566f46da8f8c2f",
+    "agent:claude-code:dart-flutter.test-writer": "sha256:b248a8bd47057929d5b13f0454459d9f4121e7d92bf9740a51bcd04d787476b6",
+    "agent:claude-code:laravel-package.api-surface": "sha256:a57493260d7e643790d344b08ab7602ba3000ef88f95e26c792e77027e76677b",
+    "agent:claude-code:laravel-package.reviewer": "sha256:7da8f1d82fe3e964370a01703b29636f5c18e8287e72abb41bca8f3c946d57df",
+    "agent:claude-code:laravel-package.security-review": "sha256:2d77bc11ba19fe71a7666dbac0f0f3a82a80c99dcb0dd79c2ffdbeb22d4e0bb5",
+    "agent:claude-code:laravel-package.slice-builder": "sha256:d26b3177dc25c3b2c6ea13c4b693375d85ebea91faaef8b0f18bdc47f108b633",
+    "agent:claude-code:laravel-package.spec-writer": "sha256:661cf375872648594ed7470dfc2fdb0481aeffac7f3dc98f5f5f9f8bf8bd6428",
+    "agent:claude-code:laravel-package.test-verifier": "sha256:007de80e781247dd922de3f825a501e3fed744572eb1f0ae57d14c6f0c264b00",
+    "agent:claude-code:laravel-package.test-writer": "sha256:d9848c8a1401121b9adfc16bb06ace733a4a0f358a067ab3712f7b46f4defc9b",
+    "agent:claude-code:node-frontend.component-builder": "sha256:a8ae9c96b7d0df1adb5c00d5ac4859ad252db595a1391934749d57973698a40a",
+    "agent:claude-code:node-frontend.reviewer": "sha256:936ef32962792dda04657da09591706e6c283d3e794dfb0c4e386b6d3a6653f2",
+    "agent:claude-code:node-frontend.slice-builder": "sha256:e3d4ae320357e6311274242589b04becddd9ebf0a4637a3a598afbbace52a380",
+    "agent:claude-code:node-frontend.spec-writer": "sha256:b21e134fc71d10316cebf6aa29ec7524821facdd8236857af774dbc3b96681f8",
+    "agent:claude-code:node-frontend.test-writer": "sha256:989d747723ce929bfa6b074f2072ef00d06ed8b421fb25d1e10c92142fea2c7c",
+    "agent:claude-code:python-backend.reviewer": "sha256:e7a7eec7c96527f88e9ad95ec2c873970c0578d48268bf169fdb86a048fb3c50",
+    "agent:claude-code:python-backend.slice-builder": "sha256:316011a9e5434ac455e89349d617c84f320ded57ddc7ffc05a94516881079c59",
+    "agent:claude-code:python-backend.spec-writer": "sha256:0564a0cdad424db176249aeacb2a8cfe173a610a95580d45654b65cbcad21786",
+    "agent:claude-code:python-backend.test-writer": "sha256:9cff26f188b4608e7414739a784341f162a3d88a00eb3dcb0b0592cc60ed6ded",
+    "agent:claude-code:python-backend.type-checker": "sha256:9eb986f819cd94a9d282fc14c56ae3aee625b3911b07c8d25fa109730011213b",
+    "agent:claude-code:role-cto.ai-viability-assessor": "sha256:5d25759c139336cb2922005c1e02e993371176f80db7c79dac10632db8ea8120",
+    "agent:claude-code:role-cto.architecture-decision": "sha256:73f68c6fa29ac99a52fc5c0c1a21cea953798cb3fc791a0d01037ee3c649e570",
+    "agent:claude-code:role-cto.tech-radar-curator": "sha256:524e5a76d3d645ac5c64adf997e40626e19f9af4998d77de802f0dfc45e90f6c",
+    "agent:claude-code:role-founder.founder-cadence": "sha256:6edc3ec28eb21c5e48860469e349c07d7d4f76cf61855303a86a33d98ae86b3b",
+    "agent:claude-code:role-founder.idea-validator": "sha256:65a7f7cf311d5ff668fedfef72c844b4af87c22bc86688d6d583a8d0f490c290",
+    "agent:claude-code:role-founder.mvp-scoper": "sha256:b917a4d3410c6b7597075365dc518bc6057804c9b029f317f04f07b2576727b7",
+    "agent:claude-code:role-maintainer.contribution-reviewer": "sha256:9f32c45848c6ff368a88b10cdb538b9d84615f9ab57774df5c9dffb1c20dfa96",
+    "agent:claude-code:role-maintainer.issue-triager": "sha256:664ed5969d0d5619edd96f8d0bbeece43ed70481ebb43abe0ff7f80515d5f041",
+    "agent:claude-code:role-maintainer.release-conductor": "sha256:b3c8d8407e56ca5b97973d2acf1807919fe1629d63c3f445a8235d1db102d61a",
+    "agent:claude-code:role-tech-lead.delegation-triage": "sha256:b4fb1a4c35a96c9eca18845892f1da8e6015a53191f8826631e52c93f22f1329",
+    "agent:claude-code:role-tech-lead.review-gatekeeper": "sha256:5a27588ce3efd342a7462fcdbc3cc0d5fe4f96a31e3478f5e0480d35c0fbf1b2",
+    "agent:claude-code:role-tech-lead.sprint-planner": "sha256:4451e6d19766a8be5ab42000feeca333fd182ae14b69672b870a6c1e1e780e8f",
+    "agent:codex:backend-laravel.blade-review": "sha256:5c3d11e62783353f39654ce7998aa860ae377009c004f2b6035ba697cd80adcf",
+    "agent:codex:backend-laravel.db-impact": "sha256:18d84a23178fd6bd64cd724b91a807c8501f0bfe0aa4002f3896669b8ab78c4c",
+    "agent:codex:backend-laravel.reviewer": "sha256:3f7154839cf615fc724b2b356397dc112c7314460d5b235c7ee50e5e4c553d2f",
+    "agent:codex:backend-laravel.route-mapper": "sha256:5b74b0dfdce54becf07e811db8eb20aef66a3c2fc78ff4cdb83fd9046bef5484",
+    "agent:codex:backend-laravel.security-review": "sha256:9f5549962921c03e070e78d6f00bad7d5247bc8a5d317ae59e6697163dad67c2",
+    "agent:codex:backend-laravel.slice-builder": "sha256:1927ddfda8ad9b7c11ba75e0ecaefde3e8eb333a415994204776c53ac0216dd9",
+    "agent:codex:backend-laravel.spec-writer": "sha256:d1af61ddb7622b9248b2f4b17614587b72c01d509e7716ce1286f36bf673ec2c",
+    "agent:codex:backend-laravel.test-verifier": "sha256:c1fc7cf2e4751399558e9ce3b68c59f67388b484340ac246875091322406c756",
+    "agent:codex:backend-laravel.test-writer": "sha256:158164387ffcc3a743ba6cd9a6778168dd0fd3315d47cb0bac06ff5cc781f01d",
+    "agent:codex:dart-flutter.ffi-reviewer": "sha256:f047cf3b489fbd56fde5c2351d2bd6f248c6d2757333b14d19ed674ac3d49035",
+    "agent:codex:dart-flutter.reviewer": "sha256:3db5163204426766ea575d7aa272a27bde436059071b3174a3ca01a4ca824147",
+    "agent:codex:dart-flutter.slice-builder": "sha256:91045d5f4d9272d94859544cd81724886b1a6938ef32e3a4985d3b4b01b1b8cd",
+    "agent:codex:dart-flutter.spec-writer": "sha256:c76d20d113a03ddd849868c7907ff96401454c81672f10484644dd73099c3a16",
+    "agent:codex:dart-flutter.test-writer": "sha256:558a18158410a4b922ca25e5012b89a35f5738bf706564968bfe7432d9f598eb",
+    "agent:codex:laravel-package.api-surface": "sha256:214819eb7764b56910a0dfb5f065d7e354e748b653b8d64478770854471ff0a6",
+    "agent:codex:laravel-package.reviewer": "sha256:21ad6792e90d466a6a61e757ade0cb43d748b3a1b1524c43269f1012b9e4763e",
+    "agent:codex:laravel-package.security-review": "sha256:bcbe62caff8079da80c1f4e5428fd3a3550f7bf52d5b5455aeead855dd1ff96f",
+    "agent:codex:laravel-package.slice-builder": "sha256:734f00f667d0e16663e6bd84cf73148c3ed422c0d8ed207350d8cdd91ff25b55",
+    "agent:codex:laravel-package.spec-writer": "sha256:5099c43036a48b9fe18510255859700d1e27435760fc5d9246b6f86cacf8491e",
+    "agent:codex:laravel-package.test-verifier": "sha256:a9507dd574d91dd4bb2716d3335eaaf18acfcfc177d0d0bdbef8318e685cd3ab",
+    "agent:codex:laravel-package.test-writer": "sha256:479710ba5e72d5e320b704d0e698ce09accf956b96b6f5f6223ad740bbed34e8",
+    "agent:codex:node-frontend.component-builder": "sha256:5cf93789e1afb6de8466b3374c41e6ed4600a8c5223868fe803c5ecede36e26b",
+    "agent:codex:node-frontend.reviewer": "sha256:c1eb39bc74fdd2e1e13ce41d3a4778ba7448959ad77539fba5d2a70e8229c3a2",
+    "agent:codex:node-frontend.slice-builder": "sha256:cba8f5e0f248364f52d38f683d9f20fc0b1effd1511b47ae57edb27e34687543",
+    "agent:codex:node-frontend.spec-writer": "sha256:2e4aaceb786b425e133570863cbdcb76143d93f8d5796fc6d61035b2d8ecfead",
+    "agent:codex:node-frontend.test-writer": "sha256:8e1f7307dced90f028b4a5204890722b66acdf97c074119b8727116e27103a6d",
+    "agent:codex:python-backend.reviewer": "sha256:6eeb08b5f0bf2b6e3e6e018fcc5d68cb32fbc0a67fdf392e41f0751803f6e070",
+    "agent:codex:python-backend.slice-builder": "sha256:6559d2a445245b79d21e4bae79badf0838676e61534d2a98cec14d1ae640911c",
+    "agent:codex:python-backend.spec-writer": "sha256:5b334109a5fac9e1f3b883d7cd313cd6cfd900fb71f11fccd1e945f9c7cdbf1e",
+    "agent:codex:python-backend.test-writer": "sha256:3acf3fd6685b3c0b630eff29094cab6ffcb84ba070e1f13b86f222777ec09646",
+    "agent:codex:python-backend.type-checker": "sha256:5075fdbc2a0a98e6a2ad02f34823398bbee992bff36c5969a6fb0ec764cd8bf5",
+    "agent:codex:role-cto.ai-viability-assessor": "sha256:fed32824db47a7ba143bc648ecbee3a8ce77cbd28778de1b17a9c4e421acec06",
+    "agent:codex:role-cto.architecture-decision": "sha256:8292152b44ea5c75016452dd70c4ee3d190b77709b7530b1d1b0fb441f3775f4",
+    "agent:codex:role-cto.tech-radar-curator": "sha256:151ddd8b05176223274ef6996cccbb210a3979ec5c42de43b13b04d62fe1dd72",
+    "agent:codex:role-founder.founder-cadence": "sha256:7f87e6aa709a3f827cfc58c2caa6ddaa4429d98203074b317ef6fa78b4907d0d",
+    "agent:codex:role-founder.idea-validator": "sha256:241d9db032792edbd9d4345e1e4415d45e522f8f5e46582394ec5d2021f0e6f7",
+    "agent:codex:role-founder.mvp-scoper": "sha256:415490ca895ddd1488bccd1896688ab718b1e4fe44cb6e0b61ecfa31e7744f3b",
+    "agent:codex:role-maintainer.contribution-reviewer": "sha256:03ad66a7affe84c9cc6847490781dc92161c2150401fa0ea7539698be24eb23d",
+    "agent:codex:role-maintainer.issue-triager": "sha256:7e2892634ac27a77477382044dd2d595218973e6e5abb745e830635c93e927de",
+    "agent:codex:role-maintainer.release-conductor": "sha256:977f7109ec5f7c4779aa8281a2bb53b93e2888919828870a81cef6cb81e41652",
+    "agent:codex:role-tech-lead.delegation-triage": "sha256:e7803485d9f9a95302d60b135cf05560a801ad5cc5a4e9af0956732da9e1c49d",
+    "agent:codex:role-tech-lead.review-gatekeeper": "sha256:73fa87ef1275bdf9f591aeb8fea96e22b7962d87f36e919096a7e17fabb1d2ae",
+    "agent:codex:role-tech-lead.sprint-planner": "sha256:ac533d1ec693c0c4a0fccdab7b4ed657baddaedccad2b0183490c5e69556c1e0",
+    "lifecycle:claude-code:context.observer": "sha256:db22340b4ab1c14985368cde0220a9cc5e558b6e1a6f01aaa560520c115533b3",
+    "lifecycle:claude-code:context.output-style": "sha256:9ff9501093e6c6a1b5c67f8f1a66c31430c69aaa3fb20d51f4ec76464f7f5c73",
+    "lifecycle:claude-code:context.plans-directory": "sha256:dcd7dd6938b774862558b2eb386e2cda34f82bb3e83dd36bce90d772c4dce4eb",
+    "lifecycle:claude-code:lifecycle.auto-approval": "sha256:070f26836d5cf54e33f0f35c2814d17873768873be6459b1878080082cd16958",
+    "lifecycle:claude-code:lifecycle.changelog-gate": "sha256:9857fb27433e506c315e93948dbbf166353f5a53f206053660d587dfce28758b",
+    "lifecycle:claude-code:lifecycle.command-log": "sha256:0c67bda0b42563beab8d6c4106b1ac5b2bbbee608341226509266e7558248976",
+    "lifecycle:claude-code:lifecycle.daemon-safety": "sha256:c29d680865c0ff894ebcb0b3a8ea4b88c21102cb40b7cbd486327a4c4f3ca3c4",
+    "lifecycle:claude-code:lifecycle.git-guardrails": "sha256:cd25d386881a60072a11d8995b54e5e3548d4608ac26d97e701e8db5bd7ad45a",
+    "lifecycle:claude-code:lifecycle.memory": "sha256:728faa4ee5aeb2552f0faeef0d54811962222315b46fc32abdf8be5c5df583bd",
+    "lifecycle:claude-code:lifecycle.notification": "sha256:1ccbd2c5297fa5b38919ddc7c4eee016aa41909c71a938082c1e56c8db61a3f6",
+    "lifecycle:claude-code:lifecycle.pack-guard": "sha256:87be9efd66e8cc07540b8cd326e0d20d85965810d6b64ecf11b752649d7f463d",
+    "lifecycle:claude-code:lifecycle.review-gate": "sha256:c6258720d9a7d8281d1f42a0fdc5948d4816314d0d2f23cc24f3b91562a99080",
+    "lifecycle:claude-code:lifecycle.router": "sha256:c4fa31281237d5fc734efb79896f38f3c6ce83aedffcece7b7668f2a3d20a008",
+    "lifecycle:claude-code:lifecycle.run-report": "sha256:dc44dcf98dd47546b87df5435466865a2161bc98a200c824f4c6f2f52ca10a3b",
+    "lifecycle:codex:context.observer": "sha256:433acc3471ac55f520f6d8e7e232350a226fcf4f88dbf5b4a75b375274dc50ab",
+    "lifecycle:codex:context.output-style": "sha256:2c9ecf35ea9f3c836cb27308797d65a16be4d9fc5806e0eb4fc2354362635d82",
+    "lifecycle:codex:context.plans-directory": "sha256:00ce41a21c22e79b185264b1be88b1338da8e5b57536642b861792676e4203b8",
+    "lifecycle:codex:lifecycle.auto-approval": "sha256:46f3d80ce7d935f23d6f50bd989f6f327b4a1ae95718b5ac3846c1fdb9f20bdb",
+    "lifecycle:codex:lifecycle.changelog-gate": "sha256:1d83d598502c714dafa8339d1d276a6bb734d06b37cff55d230130a3589f3460",
+    "lifecycle:codex:lifecycle.command-log": "sha256:0c1b7951951bc400097d9eb93f66530e5e909519ae267cde7740c2a0d9afe163",
+    "lifecycle:codex:lifecycle.daemon-safety": "sha256:c29d680865c0ff894ebcb0b3a8ea4b88c21102cb40b7cbd486327a4c4f3ca3c4",
+    "lifecycle:codex:lifecycle.git-guardrails": "sha256:cd25d386881a60072a11d8995b54e5e3548d4608ac26d97e701e8db5bd7ad45a",
+    "lifecycle:codex:lifecycle.memory": "sha256:497068f2bb0b8f98bbb0ae437cdcd7b41836afa419ede06e18f05142ba7c85b9",
+    "lifecycle:codex:lifecycle.notification": "sha256:89b2622c6be37f3ed98ae9079d98eae5cde3b340207043f4fbe40dbe67a7a4f4",
+    "lifecycle:codex:lifecycle.pack-guard": "sha256:90df71494a9f0c00e28a24b4ce6e6d3cfc60a2e9e72d0e3e447edf65ea0b0188",
+    "lifecycle:codex:lifecycle.review-gate": "sha256:8b9e86000ac0e5346715e188c7ef61e17ff972001f1756a75f6617c7fa694219",
+    "lifecycle:codex:lifecycle.router": "sha256:b91d991d01d1b58ce29753be00cb6490bd7c57c010ce8b48ed68f810b023e5aa",
+    "lifecycle:codex:lifecycle.run-report": "sha256:2bac187c65e61c0b190bf54b006b0c91216ed99e0f54a7e5b624f42bc9e4e70c",
+    "mcp:claude-code:catalog": "sha256:831a8f5cad81278c47193dc1689ff861ceaf49a57e2675c24a2f245ee327306b",
+    "mcp:codex:catalog": "sha256:9f2f0c17b5e5fe3307872415ff4a06f9eba60dc88c499dcc28e961d29a59aaae",
+    "profile:claude-code:observe": "sha256:6f0bfdb7a445b4000beaf125c62e249b82698881d97b266d6939e75014388804",
+    "profile:claude-code:trusted-full-access": "sha256:6d083d404f610b5023d801d4453152ae22988dac32453dedf0a6a5a54556c052",
+    "profile:claude-code:workspace-contained": "sha256:5b820fcd5af055ff56b9ab996aa89360dcdb8ed506f6014127fd6f46271b3f17",
+    "profile:codex:observe": "sha256:5daab0d9cf23dedf9942eaa84ec321d71f6cb9c88271285545743f1fefd01bbd",
+    "profile:codex:trusted-full-access": "sha256:10789e70ce1d19ec38d93fbfd5d4a07715fdb952dea6e0f6400904a4b0a87d56",
+    "profile:codex:workspace-contained": "sha256:7c39569dfc57a8121239bb9f95dfcd43448981d08277c22ef7b7397ef0d9e12e"
+  },
+  "rows": [
+    {
+      "actual": [
+        "_common.orchestrator",
+        "backend-laravel.blade-review",
+        "backend-laravel.db-impact",
+        "backend-laravel.reviewer",
+        "backend-laravel.route-mapper",
+        "backend-laravel.security-review",
+        "backend-laravel.slice-builder",
+        "backend-laravel.spec-writer",
+        "backend-laravel.test-verifier",
+        "backend-laravel.test-writer",
+        "dart-flutter.ffi-reviewer",
+        "dart-flutter.reviewer",
+        "dart-flutter.slice-builder",
+        "dart-flutter.spec-writer",
+        "dart-flutter.test-writer",
+        "laravel-package.api-surface",
+        "laravel-package.reviewer",
+        "laravel-package.security-review",
+        "laravel-package.slice-builder",
+        "laravel-package.spec-writer",
+        "laravel-package.test-verifier",
+        "laravel-package.test-writer",
+        "node-frontend.component-builder",
+        "node-frontend.reviewer",
+        "node-frontend.slice-builder",
+        "node-frontend.spec-writer",
+        "node-frontend.test-writer",
+        "python-backend.reviewer",
+        "python-backend.slice-builder",
+        "python-backend.spec-writer",
+        "python-backend.test-writer",
+        "python-backend.type-checker",
+        "role-cto.ai-viability-assessor",
+        "role-cto.architecture-decision",
+        "role-cto.tech-radar-curator",
+        "role-founder.founder-cadence",
+        "role-founder.idea-validator",
+        "role-founder.mvp-scoper",
+        "role-maintainer.contribution-reviewer",
+        "role-maintainer.issue-triager",
+        "role-maintainer.release-conductor",
+        "role-tech-lead.delegation-triage",
+        "role-tech-lead.review-gatekeeper",
+        "role-tech-lead.sprint-planner"
+      ],
+      "actual_duplicates": [],
+      "duplicates": [],
+      "expected": [
+        "_common.orchestrator",
+        "backend-laravel.blade-review",
+        "backend-laravel.db-impact",
+        "backend-laravel.reviewer",
+        "backend-laravel.route-mapper",
+        "backend-laravel.security-review",
+        "backend-laravel.slice-builder",
+        "backend-laravel.spec-writer",
+        "backend-laravel.test-verifier",
+        "backend-laravel.test-writer",
+        "dart-flutter.ffi-reviewer",
+        "dart-flutter.reviewer",
+        "dart-flutter.slice-builder",
+        "dart-flutter.spec-writer",
+        "dart-flutter.test-writer",
+        "laravel-package.api-surface",
+        "laravel-package.reviewer",
+        "laravel-package.security-review",
+        "laravel-package.slice-builder",
+        "laravel-package.spec-writer",
+        "laravel-package.test-verifier",
+        "laravel-package.test-writer",
+        "node-frontend.component-builder",
+        "node-frontend.reviewer",
+        "node-frontend.slice-builder",
+        "node-frontend.spec-writer",
+        "node-frontend.test-writer",
+        "python-backend.reviewer",
+        "python-backend.slice-builder",
+        "python-backend.spec-writer",
+        "python-backend.test-writer",
+        "python-backend.type-checker",
+        "role-cto.ai-viability-assessor",
+        "role-cto.architecture-decision",
+        "role-cto.tech-radar-curator",
+        "role-founder.founder-cadence",
+        "role-founder.idea-validator",
+        "role-founder.mvp-scoper",
+        "role-maintainer.contribution-reviewer",
+        "role-maintainer.issue-triager",
+        "role-maintainer.release-conductor",
+        "role-tech-lead.delegation-triage",
+        "role-tech-lead.review-gatekeeper",
+        "role-tech-lead.sprint-planner"
+      ],
+      "expected_duplicates": [],
+      "extra": [],
+      "missing": [],
+      "surface": "agents"
+    },
+    {
+      "actual": [
+        "context7",
+        "fetch",
+        "filesystem",
+        "github",
+        "memory",
+        "perplexity",
+        "playwright",
+        "sequential-thinking"
+      ],
+      "actual_duplicates": [],
+      "duplicates": [],
+      "expected": [
+        "context7",
+        "fetch",
+        "filesystem",
+        "github",
+        "memory",
+        "perplexity",
+        "playwright",
+        "sequential-thinking"
+      ],
+      "expected_duplicates": [],
+      "extra": [],
+      "missing": [],
+      "surface": "mcp"
+    },
+    {
+      "actual": [
+        "observe",
+        "trusted-full-access",
+        "workspace-contained"
+      ],
+      "actual_duplicates": [],
+      "duplicates": [],
+      "expected": [
+        "observe",
+        "trusted-full-access",
+        "workspace-contained"
+      ],
+      "expected_duplicates": [],
+      "extra": [],
+      "missing": [],
+      "surface": "profiles"
+    },
+    {
+      "actual": [
+        "agent-packs.lifecycle",
+        "agents.catalog",
+        "context.observer",
+        "context.output-style",
+        "context.plans-directory",
+        "doctor.environment",
+        "doctor.provider",
+        "lifecycle.auto-approval",
+        "lifecycle.changelog-gate",
+        "lifecycle.command-log",
+        "lifecycle.daemon-safety",
+        "lifecycle.git-guardrails",
+        "lifecycle.memory",
+        "lifecycle.notification",
+        "lifecycle.pack-guard",
+        "lifecycle.review-gate",
+        "lifecycle.router",
+        "lifecycle.run-report",
+        "mcp.catalog",
+        "security.safe-dirs",
+        "settings.audit",
+        "settings.permissions",
+        "workflows.status"
+      ],
+      "actual_duplicates": [],
+      "duplicates": [],
+      "expected": [
+        "agent-packs.lifecycle",
+        "agents.catalog",
+        "context.observer",
+        "context.output-style",
+        "context.plans-directory",
+        "doctor.environment",
+        "doctor.provider",
+        "lifecycle.auto-approval",
+        "lifecycle.changelog-gate",
+        "lifecycle.command-log",
+        "lifecycle.daemon-safety",
+        "lifecycle.git-guardrails",
+        "lifecycle.memory",
+        "lifecycle.notification",
+        "lifecycle.pack-guard",
+        "lifecycle.review-gate",
+        "lifecycle.router",
+        "lifecycle.run-report",
+        "mcp.catalog",
+        "security.safe-dirs",
+        "settings.audit",
+        "settings.permissions",
+        "workflows.status"
+      ],
+      "expected_duplicates": [],
+      "extra": [],
+      "missing": [],
+      "surface": "surfaces"
+    }
+  ],
+  "source_hashes": {
+    "configs/claude-code/agent-packs/role-bindings.json": "sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b",
+    "configs/claude-code/mcp/bindings.json": "sha256:dfe5e893b876f2450f9b0ce94274df61ff7ac6de928e0b9ccded48de7b8dcfd8",
+    "configs/codex/config/profile-bindings.json": "sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e",
+    "configs/codex/hooks/lifecycle-context-bindings.json": "sha256:0d8a6aa8d9c0fecb753c00c769fb498d7b9d2f378090ed45495d040066acb1ce",
+    "configs/codex/mcp/bindings.json": "sha256:96edfa4686ff45bc8a886dd14418be1fde29dbee3098777574a21f1fc79e483a",
+    "configs/common/agent-packs/roles.json": "sha256:9c5d803b2da977d2875cb8f71ba4505dad077321edcf138e0fd0998c9cd94e24",
+    "configs/common/mcp/catalog.json": "sha256:26bddfc7f495650855ea183936aaf2d4c7ffa6e8cd91391e1a8fb25156a0842f",
+    "configs/common/profile-catalog.json": "sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835"
+  },
+  "surface_map": [
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:named-agent-pack-engine",
+      "diagnostic": "HARNESS_AGENTPACK_LIFECYCLE_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.agent-packs.lifecycle",
+      "semantic_hash": "sha256:6b1474a5f1639a652540c5db8fd351ca5aed822ca2c20f48ba7cde99a3750d76",
+      "surface_id": "agent-packs.lifecycle"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:44-named-agent-targets",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.agents.catalog",
+      "semantic_hash": "sha256:31178a06201f890a47e2398758a442712966070d36f336b5ac0eafa542921a36",
+      "surface_id": "agents.catalog"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.observer",
+      "semantic_hash": "sha256:98df3b65365820591b7a28539560e3180527b9337c8faf018afd25adf9e376ce",
+      "surface_id": "context.observer"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:new-session",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.output-style",
+      "semantic_hash": "sha256:bdb667e3bbd31f2fb10de42a11d8f8f07d0a0e8536c28d9961e8ae1149fd27b0",
+      "surface_id": "context.output-style"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.plans-directory",
+      "semantic_hash": "sha256:55d7f15dcab4a4c1a5c657fddb5b305450afc5e5a2db40bf8e451d39b63638ce",
+      "surface_id": "context.plans-directory"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:named-harness-doctor",
+      "diagnostic": "HARNESS_DOCTOR_ENVIRONMENT_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.doctor.environment",
+      "semantic_hash": "sha256:a559d78d9d698deeebe696353405507b85f3eaefe96a7f0a621d3be04033c5ec",
+      "surface_id": "doctor.environment"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:provider-audit",
+      "diagnostic": "HARNESS_PROVIDER_AUDIT_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.doctor.provider",
+      "semantic_hash": "sha256:b697fe554c9c0d0271f950bd875c6a81373c03bf97aaf4e6ba11352ca184273a",
+      "surface_id": "doctor.provider"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.auto-approval",
+      "semantic_hash": "sha256:8681c3e09d1ef2a59015ccda5efebf4c4d2417b73f6b47c45bdda4d5bff7e6d9",
+      "surface_id": "lifecycle.auto-approval"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.changelog-gate",
+      "semantic_hash": "sha256:6a1579586594df0a691221c4aca2efe7d7f4835be82c0f807d3ba785b2ea8a9d",
+      "surface_id": "lifecycle.changelog-gate"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:global-hook",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.command-log",
+      "semantic_hash": "sha256:6c2900af6956f64747429488e3177132cbed547a935cf98bda46a26fe57fe8ad",
+      "surface_id": "lifecycle.command-log"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.daemon-safety",
+      "semantic_hash": "sha256:d7eefb087ebafb37c2dfd19240e1611c6150925d12977d337c78a6e126ebbf2b",
+      "surface_id": "lifecycle.daemon-safety"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.git-guardrails",
+      "semantic_hash": "sha256:4d5c38147dc736cb1d6b93c38e04d98324f48c057cc9ebb4ab294c4181559610",
+      "surface_id": "lifecycle.git-guardrails"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:global-hook-plus-project-config",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.memory",
+      "semantic_hash": "sha256:1c68623b21d4eafa0887b798cedea70ec3cf7d0674d35320f61328686e02e3fb",
+      "surface_id": "lifecycle.memory"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:global-hook",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.notification",
+      "semantic_hash": "sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00",
+      "surface_id": "lifecycle.notification"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.pack-guard",
+      "semantic_hash": "sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e",
+      "surface_id": "lifecycle.pack-guard"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:global-hook",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.review-gate",
+      "semantic_hash": "sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368",
+      "surface_id": "lifecycle.review-gate"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.router",
+      "semantic_hash": "sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283",
+      "surface_id": "lifecycle.router"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:project-settings",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.run-report",
+      "semantic_hash": "sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b",
+      "surface_id": "lifecycle.run-report"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:.mcp.json",
+      "diagnostic": "HARNESS_MCP_PROJECTION_RENDERED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.mcp.catalog",
+      "semantic_hash": "sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394",
+      "surface_id": "mcp.catalog"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:machine-owned-safe-dirs",
+      "diagnostic": "HARNESS_SAFE_DIRS_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.security.safe-dirs",
+      "semantic_hash": "sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312",
+      "surface_id": "security.safe-dirs"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:named-settings-audit",
+      "diagnostic": "HARNESS_SETTINGS_AUDIT_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.settings.audit",
+      "semantic_hash": "sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7",
+      "surface_id": "settings.audit"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:.claude/settings.local.json",
+      "diagnostic": "HARNESS_PROFILE_RENDERED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.settings.permissions",
+      "semantic_hash": "sha256:9049fe9aad45b74bce05c1f7d565cd7f76816605eb3ffd7ffed6b3df6820a745",
+      "surface_id": "settings.permissions"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:named-workflow-status",
+      "diagnostic": "HARNESS_WORKFLOW_STATUS_NAMED",
+      "provider": "claude-code",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.workflows.status",
+      "semantic_hash": "sha256:a535a27aec70899044ca8ca0995cc7bd93e1b1783ae577eb5445b50104db3d27",
+      "surface_id": "workflows.status"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:missing-native-codex-pack-lifecycle",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED:codex:agent-packs.lifecycle:missing-native-codex-pack-lifecycle",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.agent-packs.lifecycle",
+      "semantic_hash": "sha256:6b1474a5f1639a652540c5db8fd351ca5aed822ca2c20f48ba7cde99a3750d76",
+      "surface_id": "agent-packs.lifecycle"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:43-named-agent-targets",
+      "diagnostic": "HARNESS_AGENT_ACTIVATION_NATIVE",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.agents.catalog",
+      "semantic_hash": "sha256:31178a06201f890a47e2398758a442712966070d36f336b5ac0eafa542921a36",
+      "surface_id": "agents.catalog"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.observer",
+      "semantic_hash": "sha256:98df3b65365820591b7a28539560e3180527b9337c8faf018afd25adf9e376ce",
+      "surface_id": "context.observer"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.output-style",
+      "semantic_hash": "sha256:bdb667e3bbd31f2fb10de42a11d8f8f07d0a0e8536c28d9961e8ae1149fd27b0",
+      "surface_id": "context.output-style"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.context.plans-directory",
+      "semantic_hash": "sha256:55d7f15dcab4a4c1a5c657fddb5b305450afc5e5a2db40bf8e451d39b63638ce",
+      "surface_id": "context.plans-directory"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:named-harness-doctor",
+      "diagnostic": "HARNESS_DOCTOR_ENVIRONMENT_NAMED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.doctor.environment",
+      "semantic_hash": "sha256:a559d78d9d698deeebe696353405507b85f3eaefe96a7f0a621d3be04033c5ec",
+      "surface_id": "doctor.environment"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "non-artifact:provider-audit",
+      "diagnostic": "HARNESS_PROVIDER_AUDIT_NAMED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.doctor.provider",
+      "semantic_hash": "sha256:b697fe554c9c0d0271f950bd875c6a81373c03bf97aaf4e6ba11352ca184273a",
+      "surface_id": "doctor.provider"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "native-binding:P5.2-config-security-projection",
+      "diagnostic": "HARNESS_ACTIVATION_NATIVE",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.auto-approval",
+      "semantic_hash": "sha256:8681c3e09d1ef2a59015ccda5efebf4c4d2417b73f6b47c45bdda4d5bff7e6d9",
+      "surface_id": "lifecycle.auto-approval"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.changelog-gate",
+      "semantic_hash": "sha256:6a1579586594df0a691221c4aca2efe7d7f4835be82c0f807d3ba785b2ea8a9d",
+      "surface_id": "lifecycle.changelog-gate"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.command-log",
+      "semantic_hash": "sha256:6c2900af6956f64747429488e3177132cbed547a935cf98bda46a26fe57fe8ad",
+      "surface_id": "lifecycle.command-log"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.daemon-safety",
+      "semantic_hash": "sha256:d7eefb087ebafb37c2dfd19240e1611c6150925d12977d337c78a6e126ebbf2b",
+      "surface_id": "lifecycle.daemon-safety"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.git-guardrails",
+      "semantic_hash": "sha256:4d5c38147dc736cb1d6b93c38e04d98324f48c057cc9ebb4ab294c4181559610",
+      "surface_id": "lifecycle.git-guardrails"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.memory",
+      "semantic_hash": "sha256:1c68623b21d4eafa0887b798cedea70ec3cf7d0674d35320f61328686e02e3fb",
+      "surface_id": "lifecycle.memory"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.notification",
+      "semantic_hash": "sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00",
+      "surface_id": "lifecycle.notification"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.pack-guard",
+      "semantic_hash": "sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e",
+      "surface_id": "lifecycle.pack-guard"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.review-gate",
+      "semantic_hash": "sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368",
+      "surface_id": "lifecycle.review-gate"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.router",
+      "semantic_hash": "sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283",
+      "surface_id": "lifecycle.router"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:unsupported-native-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.lifecycle.run-report",
+      "semantic_hash": "sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b",
+      "surface_id": "lifecycle.run-report"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:.codex/config.toml",
+      "diagnostic": "HARNESS_MCP_PROJECTION_RENDERED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.mcp.catalog",
+      "semantic_hash": "sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394",
+      "surface_id": "mcp.catalog"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:no-codex-safe-dirs-binding",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.security.safe-dirs",
+      "semantic_hash": "sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312",
+      "surface_id": "security.safe-dirs"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:claude-only-settings-audit",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.settings.audit",
+      "semantic_hash": "sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7",
+      "surface_id": "settings.audit"
+    },
+    {
+      "activation_state": "supported",
+      "artifact_or_state": "artifact:project:.codex/config.toml",
+      "diagnostic": "HARNESS_PROFILE_RENDERED",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.settings.permissions",
+      "semantic_hash": "sha256:9049fe9aad45b74bce05c1f7d565cd7f76816605eb3ffd7ffed6b3df6820a745",
+      "surface_id": "settings.permissions"
+    },
+    {
+      "activation_state": "unsupported",
+      "artifact_or_state": "non-artifact:missing-native-codex-workflow-status-consumer",
+      "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:missing-native-codex-workflow-status-consumer",
+      "provider": "codex",
+      "required_capabilities": "—",
+      "security_or_ownership": "harness.workflows.status",
+      "semantic_hash": "sha256:a535a27aec70899044ca8ca0995cc7bd93e1b1783ae577eb5445b50104db3d27",
+      "surface_id": "workflows.status"
+    }
+  ]
+}
+

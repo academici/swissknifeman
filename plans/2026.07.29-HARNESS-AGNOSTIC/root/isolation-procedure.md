@@ -68,7 +68,46 @@ PATH="$HOME/.local/bin-skm-next:$PATH"
 Проверка: `grep -n "bin-skm-next" ~/.bashrc ~/.profile ~/.zshrc` — пусто (exit 1), rc-файлы
 не тронуты.
 
-## Снятие worktree и откат (справочно, НЕ выполняется этим item'ом — P5.3)
+## Возврат в основное дерево (P5.2, ОСНОВНОЕ рабочее дерево)
+
+Единственная необратимая граница плана (D43): пять CLI флота и `.mcp.json` онбордженных
+проектов зашиты в ОСНОВНОЕ дерево (`/home/vostrikov/projects/packages/swissknifeman`), и его
+содержимое переключается для потребителей В МОМЕНТ КОММИТА, ещё до реинсталла. Порядок ниже —
+жёсткий: якорь → merge → пост-мердж валидация → смоук ПРЕЖНИМ контуром → (при красном —
+откат по якорю).
+
+1. Предусловие: рабочее дерево основного каталога чистое —
+   `cd /home/vostrikov/projects/packages/swissknifeman && git status --short` пусто. Непустой
+   вывод = чужая работа в дереве → СТОП, не продолжать (владелец правил параллельно).
+2. Якорь отката ДО первой мутации: `git -C /home/vostrikov/projects/packages/swissknifeman
+   rev-parse --short main` — записать значение в Completion Notes P5.2 и в этот раздел.
+3. Merge из основного дерева: `cd /home/vostrikov/projects/packages/swissknifeman && git
+   fetch . next/harness-agnostic:next/harness-agnostic && git merge --no-ff
+   next/harness-agnostic -m "<Conventional Commit RU с PLAN-ID>"` (репозиторий один — общий
+   `.git` через `git worktree` — обычный локальный merge веток, без сетевого fetch).
+   `--squash`/rebase запрещены (D41/провенанс пяти фаз). Конфликт → `git merge --abort` +
+   ESCALATION-блок в P5.2, разрешение руками запрещено.
+4. Пост-мердж валидация В ОСНОВНОМ дереве: пять `packages/{skiller,harness,maind,analyst,task}
+   /scripts/validate.sh` + `PYTHONPATH=. python3 -m unittest discover -s core/tests` — все
+   зелёные (та же дисциплина, что в P5.1); красный гейт → откат по якорю (шаг 2), не «дочинить
+   по месту».
+5. Смоук флота НЕМЕДЛЕННО, ПРЕЖНИМ контуром (без префикса PATH к `bin-skm-next`):
+   `readlink -f "$(command -v swissknifeman)"` — обязан резолвиться в
+   `/home/vostrikov/projects/packages/swissknifeman/bin/swissknifeman`; `swissknifeman doctor`
+   — вердикт сверяется построчно с `artifacts/P5.1-fleet-baseline/doctor-before.txt`.
+6. Дозаписать в этот раздел (после фактического прогона P5.2): дату, якорь (SHA до merge),
+   SHA merge-коммита, число коммитов `main` до/после.
+7. С этого момента рабочий дом плана — ОСНОВНОЕ дерево (D46): P5.2/P5.3 коммитят там; ветка
+   `next/harness-agnostic` коммитов больше не принимает и НЕ удаляется (второй якорь отката,
+   пока `main` не отправлен наружу).
+
+## Снятие worktree и откат (P5.3, ПОСЛЕДНИЙ шаг — после зелёной дельты)
+
+Порядок необратим по цене, а не по технике (R4): снятие обратимо (процедура «Создание» выше
+воспроизводит контур заново), но делать его РАНЬШЕ зелёной дельты превращает откат в ручную
+археологию. Предусловие: `artifacts/P5.3-fleet-delta.md` существует, непуст и вердикт по
+инварианту М10 зафиксирован; read-only проверка выборки онбордженных проектов пройдена;
+коммиты P5.3 сделаны. Снимаемое дерево — НЕ рабочий каталог текущей сессии (D46, п. 7 выше).
 
 ```
 git worktree remove /home/vostrikov/projects/packages/swissknifeman-next
@@ -76,7 +115,10 @@ rm -rf ~/.local/bin-skm-next
 ```
 
 Откат безопасен: оба шага удаляют только артефакты нового контура, старый контур
-(`~/.local/bin` → основное дерево) не затрагивается ни одним из них.
+(`~/.local/bin` → основное дерево) не затрагивается ни одним из них. Ветка
+`next/harness-agnostic` этими командами НЕ удаляется (D46) — проверка:
+`git branch --list next/harness-agnostic` непусто и `git worktree list --porcelain` не
+содержит записи `/home/vostrikov/projects/packages/swissknifeman-next`.
 
 ## Общие поверхности (ОБЩАЯ ПОВЕРХНОСТЬ)
 

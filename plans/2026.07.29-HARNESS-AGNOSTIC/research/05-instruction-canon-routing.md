@@ -259,7 +259,7 @@ provider_id)`, плотность `1..n` сохраняется.
 | # | Что снимается | Источник | Причина | Куда девается смысл |
 |:--|:--|:--|:--|:--|
 | 1 | ASCII-дерево раскладки репо | `./CLAUDE.md § Раскладка` | (а) выводимо | нормативная часть — `root.repository-layout` |
-| 2 | Таблица «пакет · роль · CLI · деталь» | `./CLAUDE.md § Пакеты` | (а) выводимо: роль каждого пакета нормативна в его собственном scope (`<pkg>.identity`) | `root.package-boundaries` + шесть `<pkg>.identity` |
+| 2 | Таблица «пакет · роль · CLI · деталь» | `./CLAUDE.md § Пакеты` | (а) выводимо: роль каждого пакета нормативна в его собственном scope (`<pkg>.identity`) | `root.package-boundaries` + четыре записи формы `<pkg>.identity` (`skiller`, `harness`, `maind`, `task`; у `analyst` роль пакета несёт `analyst.identity-human-gate`) — уточнено P1.7, D79/F10 |
 | 3 | Полный листинг команд каждого CLI | `./CLAUDE.md § CLI` | (а) выводимо из `<cli> --help` | `root.cli-routing`, `<pkg>.command-surface` |
 | 4 | Тезис «Изоляция по namespace» в корне | `./CLAUDE.md § Философия и рамки` | (б) дубль `maind.engineering-invariants` | scope `maind` |
 | 5 | «`plans/archive/2026.07.18-FOREMAN` архивирован — не исполнять» | `./AGENTS.md § Codex bootstrap` | (в) транзиентное: донор архивирован P0.5, always-on-строка про один план не переживает следующего | `plans/README.md`, `plans/archive/` |

@@ -119,7 +119,7 @@ analyst <cmd>                 # continuous learning (digest, scan, review, promo
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
   [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
-- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md)).
+- Развитие: [`roadmap/`](roadmap/) — реализованные спеки называют результат без ссылки (см. `roadmap/README.md`).
 
 ## Разработка
 

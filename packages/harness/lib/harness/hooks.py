@@ -160,24 +160,40 @@ def _lifecycle_diagnostic(code, provider_id, request):
                              next_action="select a supported provider binding")
 
 
+_CODEX_EVENT_REQUIRED_FIELDS = {
+    "SessionStart": ("source",),
+    "SessionEnd": ("reason",),
+    "UserPromptSubmit": ("prompt",),
+    "PreToolUse": ("tool_name", "tool_input"),
+    "PostToolUse": ("tool_name", "tool_input"),
+    "PermissionRequest": ("tool_name", "tool_input"),
+}
+
+
 def adapt_codex_hook_payload(binding: LifecycleBinding, payload: dict) -> dict:
-    """Translate documented Codex payload fields to the portable handler envelope."""
+    """Translate documented Codex payload fields to the portable handler envelope.
+
+    `permission_mode` is documented "for most events" without a named list (Ф9); only
+    `SessionStart` has it confirmed present, so every other event treats it as optional
+    rather than rejecting an otherwise-valid payload (`codex-parity-verdicts-v1.md` §3.3).
+    """
     if (not isinstance(binding, LifecycleBinding) or not isinstance(payload, dict)
             or binding.support_level != "hook-native"):
         raise TypeError("binding and payload are required")
-    required = {"session_id", "cwd", "hook_event_name", "model", "permission_mode"}
+    required = {"session_id", "cwd", "hook_event_name", "model"}
+    if binding.event == "SessionStart":
+        required.add("permission_mode")
+    event_fields = _CODEX_EVENT_REQUIRED_FIELDS.get(binding.event, ())
+    required.update(event_fields)
     if not required.issubset(payload) or payload["hook_event_name"] != binding.event:
         raise ValueError("HARNESS_MAPPING_MISSING")
-    if binding.event in {"PreToolUse", "PostToolUse", "PermissionRequest"} and not isinstance(payload.get("tool_name"), str):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    if binding.event == "SessionStart" and not isinstance(payload.get("source"), str):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    if binding.event == "UserPromptSubmit" and not isinstance(payload.get("user_input"), str):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    return {"surface_id": binding.surface_id, "event": binding.event,
-            "session_id": payload["session_id"], "cwd": payload["cwd"],
-            "turn_id": payload.get("turn_id", ""), "tool_name": payload.get("tool_name", ""),
-            "user_input": payload.get("user_input", ""), "permission_mode": payload["permission_mode"]}
+    envelope = {"surface_id": binding.surface_id, "event": binding.event,
+                "session_id": payload["session_id"], "cwd": payload["cwd"],
+                "turn_id": payload.get("turn_id", ""),
+                "permission_mode": payload.get("permission_mode", "")}
+    for field in event_fields:
+        envelope[field] = payload[field]
+    return envelope
 
 
 def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
@@ -197,9 +213,175 @@ def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
                        ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
+_CODEX_ROUTER_CATALOG_PATH = ("packages/harness/configs/claude-code/hooks/"
+                              "agent-router/config.json")
+
+
+def _codex_router_catalog():
+    """Read the same catalog `~/.claude/hooks/agent-router/config.json` uses and project
+    its command names into Codex's own bare invocation form (`task:x`, not `/task:x`)."""
+    root = Path(__file__).resolve().parents[4]
+    catalog = json.loads((root / _CODEX_ROUTER_CATALOG_PATH).read_text(encoding="utf-8"))
+    commands = [{"name": entry["name"].replace("/task:", "task:", 1),
+                "weight": entry.get("weight", 1), "keywords": entry["keywords"]}
+               for entry in catalog.get("commands", [])]
+    hint_template = catalog.get(
+        "hint_template", "[intent-router] bias (non-authoritative): top={name} score={score}{runners}")
+    return commands, hint_template
+
+
 def render_codex_hook_handler() -> bytes:
-    """Generate only the implemented observer handler, with fail-closed input validation."""
-    return b'''#!/usr/bin/env python3\nimport argparse, json, sys\n\nparser = argparse.ArgumentParser()\nparser.add_argument("--surface", required=True)\nargs = parser.parse_args()\nif args.surface != "context.observer":\n    sys.exit(2)\ntry:\n    payload = json.load(sys.stdin)\nexcept (json.JSONDecodeError, TypeError):\n    sys.exit(2)\nrequired = {"session_id", "cwd", "hook_event_name", "model", "permission_mode", "source"}\nif not required.issubset(payload) or payload["hook_event_name"] != "SessionStart":\n    sys.exit(2)\nprint(json.dumps({"systemMessage": "[harness observer] read-only policy active"}))\n'''
+    """Generate the multi-surface dispatcher: one generator, one per-surface handler table.
+
+    Fail-closed on every path: unknown `--surface`, malformed JSON, or a payload missing a
+    field required for the resolved event all exit 2 with no side effect. Each handler is a
+    thin, best-effort adapter (never raises past its own try/except) so a runtime failure
+    inside one handler degrades to silence, exactly like the Claude-side hooks it mirrors.
+    """
+    router_commands, hint_template = _codex_router_catalog()
+    router_catalog_literal = json.dumps(router_commands, ensure_ascii=False)
+    return f'''#!/usr/bin/env python3
+import argparse, datetime, json, os, sys
+from pathlib import Path
+
+_SURFACE_EVENTS = {{
+    "context.observer": "SessionStart",
+    "lifecycle.command-log": "PreToolUse",
+    "lifecycle.run-report": "SessionEnd",
+    "lifecycle.router": "UserPromptSubmit",
+    "lifecycle.memory": "SessionStart",
+}}
+_EVENT_FIELDS = {{
+    "SessionStart": ("source",),
+    "PreToolUse": ("tool_name", "tool_input"),
+    "SessionEnd": ("reason",),
+    "UserPromptSubmit": ("prompt",),
+}}
+_ROUTER_CATALOG = {router_catalog_literal}
+_ROUTER_HINT_TEMPLATE = {hint_template!r}
+_ROUTER_THRESHOLD = 2
+
+
+def _observer(payload):
+    print(json.dumps({{"systemMessage": "[harness observer] read-only policy active"}}))
+
+
+def _command_log(payload):
+    log_dir = Path.home() / ".codex" / "logs"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        tool_input = payload.get("tool_input") or {{}}
+        entry = {{"ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                 "cwd": payload.get("cwd", ""), "session": payload.get("session_id", ""),
+                 "command": tool_input.get("command"), "description": tool_input.get("description")}}
+        with (log_dir / "bash-commands.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False) + "\\n")
+    except OSError:
+        pass
+
+
+def _run_report(payload):
+    cwd = payload.get("cwd")
+    if not cwd:
+        return
+    runs_dir = Path(cwd) / ".codex" / "runs"
+    try:
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        gitignore = runs_dir / ".gitignore"
+        if not gitignore.exists():
+            gitignore.write_text("*\\n", encoding="utf-8")
+        record = {{"schema": 1, "session_id": payload.get("session_id", ""), "cwd": cwd,
+                  "reason": payload.get("reason", ""),
+                  "transcript_path": payload.get("transcript_path")}}
+        target = runs_dir / (str(payload.get("session_id") or "session") + ".json")
+        tmp = target.with_name(target.name + ".tmp")
+        tmp.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+        os.replace(tmp, target)
+    except OSError:
+        pass
+
+
+def _router(payload):
+    text = payload.get("prompt") or ""
+    if not isinstance(text, str) or not text.strip():
+        return
+    low = text.lower()
+    scored = []
+    for entry in _ROUTER_CATALOG:
+        score = sum(entry.get("weight", 1) for keyword in entry["keywords"] if keyword in low)
+        if score > 0:
+            scored.append((entry["name"], score))
+    scored.sort(key=lambda item: item[1], reverse=True)
+    if not scored or scored[0][1] < _ROUTER_THRESHOLD:
+        return
+    top_name, top_score = scored[0]
+    runners = ", ".join(f"{{name}} ({{score}})" for name, score in scored[1:3])
+    try:
+        hint = _ROUTER_HINT_TEMPLATE.format(
+            name=top_name, score=top_score,
+            runners=("; runners-up: " + runners) if runners else "")
+    except (KeyError, IndexError):
+        return
+    print(json.dumps({{"systemMessage": hint}}))
+
+
+def _memory(payload):
+    cwd = payload.get("cwd")
+    mode, brain = "maind", "core"
+    if cwd:
+        ini = Path(cwd) / ".codex" / "memory.env.ini"
+        try:
+            for line in ini.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = (part.strip() for part in line.split("=", 1))
+                if key == "MODE":
+                    mode = value
+                elif key == "BRAIN":
+                    brain = value
+        except OSError:
+            pass
+    if mode != "maind":
+        return
+    try:
+        import subprocess
+        result = subprocess.run(["maind", "memory", "status", "--brain", brain],
+                                capture_output=True, text=True, timeout=5, check=False)
+        if result.returncode == 0 and result.stdout.strip():
+            print(json.dumps({{"systemMessage": "[harness memory] " + result.stdout.strip()}}))
+    except Exception:
+        pass
+
+
+_HANDLERS = {{
+    "context.observer": _observer,
+    "lifecycle.command-log": _command_log,
+    "lifecycle.run-report": _run_report,
+    "lifecycle.router": _router,
+    "lifecycle.memory": _memory,
+}}
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--surface", required=True)
+args = parser.parse_args()
+if args.surface not in _SURFACE_EVENTS:
+    sys.exit(2)
+try:
+    payload = json.load(sys.stdin)
+except (json.JSONDecodeError, TypeError):
+    sys.exit(2)
+if not isinstance(payload, dict):
+    sys.exit(2)
+event = _SURFACE_EVENTS[args.surface]
+required = {{"session_id", "cwd", "hook_event_name", "model"}}
+if event == "SessionStart":
+    required.add("permission_mode")
+required.update(_EVENT_FIELDS.get(event, ()))
+if not required.issubset(payload) or payload["hook_event_name"] != event:
+    sys.exit(2)
+_HANDLERS[args.surface](payload)
+'''.encode("utf-8")
 
 
 def codex_d104_observer_fragment(plan: LifecycleRenderPlan) -> CodexLifecycleFragment:

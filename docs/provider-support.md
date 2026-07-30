@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1`
-- Carrier SHA-256 (canonical bytes plus one LF): `32975d675cf252bba87b06aaee53bfe37e63a9a97dc74cb7a12a8a2b0c0394eb`
+- Canonical JSON SHA-256 (without carrier LF): `2b96cd63ae049827e47708dc41c7c5a704069595b0d1aec5465b318201d30c6f`
+- Carrier SHA-256 (canonical bytes plus one LF): `c9c1d0137433d74373e3872f5b730da1565504c1caa48de1b2fc8034b3849718`
 - Common capabilities: `35`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -36,15 +36,15 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `instructions.project` | native | native |
 | `lifecycle.auto-approval` | adapted | native |
 | `lifecycle.changelog-gate` | adapted | unsupported |
-| `lifecycle.command-log` | adapted | unsupported |
+| `lifecycle.command-log` | adapted | adapted |
 | `lifecycle.daemon-safety` | unsupported | unsupported |
 | `lifecycle.git-guardrails` | unsupported | unsupported |
-| `lifecycle.memory` | adapted | unsupported |
+| `lifecycle.memory` | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported |
 | `lifecycle.pack-guard` | adapted | unsupported |
 | `lifecycle.review-gate` | adapted | unsupported |
-| `lifecycle.router` | adapted | unsupported |
-| `lifecycle.run-report` | adapted | unsupported |
+| `lifecycle.router` | adapted | adapted |
+| `lifecycle.run-report` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
 | `security.safe-dirs` | adapted | unsupported |
 | `settings.audit` | adapted | unsupported |
@@ -384,10 +384,10 @@ Record provider-native command execution evidence.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.command-log; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.command-log`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.command-log
+  Limitations: records only tool calls Codex exposes as `Bash`; a shell invocation routed through another tool name is out of the log; writes to a Codex-qualified log path; the Claude-side log at `~/.claude/logs/bash-commands.jsonl` is untouched.
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.command-log surface, hook-native binding on PreToolUse).
 
 ### `lifecycle.daemon-safety`
 
@@ -426,10 +426,10 @@ Activate selected memory lifecycle integration.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.memory; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.memory`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.memory
+  Limitations: per-project overrides are read from the Codex-side project files; Claude's `.claude/memory.*` overrides do not apply to a Codex session; the backend, its groups and its state remain owned by skiller/maind: this surface only activates them.
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership).
 
 ### `lifecycle.notification`
 
@@ -482,10 +482,10 @@ Project semantic routing into native lifecycle activation.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.router; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.router`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.router
+  Limitations: delivers the bias as `systemMessage`, the form the generated Codex handler already uses, not as Claude's `hookSpecificOutput.additionalContext`; the `SessionStart` half of the Claude pair (static policy) is not part of this surface at Codex, where `SessionStart` is owned by `context.observer`.
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.router bias injection on UserPromptSubmit).
 
 ### `lifecycle.run-report`
 
@@ -496,10 +496,10 @@ Capture a provider-qualified run report at a native lifecycle boundary.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.run-report; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.run-report`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.run-report
+  Limitations: captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`; `reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes; outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook.
+  Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
 
 ### `mcp.catalog`
 

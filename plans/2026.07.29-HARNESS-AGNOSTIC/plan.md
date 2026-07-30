@@ -118,7 +118,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Изоляция, адъюдикация входа, поглощение FOREMAN | 4/5 | 🟠 Done with deviations |
-| P1 | Паритет корневых инструкций | 2/5 | 🟡 In progress |
+| P1 | Паритет корневых инструкций | 2/5 | 🟠 Done with deviations |
 | P2 | Паритет capability второго провайдера | 0/5 | ⬜ Not started |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | ⬜ Not started |
 | P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 0/5 | ⬜ Not started |
@@ -327,6 +327,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.3 закрыт `🟠`: девять аддитивных ID (7 common + 2 extension) заведены, `catalog.json`/фикстура выросли до 76 записей (`1.1.0`), аддендум-контракт `root/contracts/instruction-canon-addendum-v1.md` запечатан; Known Deviations — два файла вне `Files` (тест-счётчик, сгенерированная доков-справка) синхронизированы вслед за ростом инвентаря — детали см. phases/P1.md P1.3 Completion Notes |
 | 2026-07-29 | plan-run/Sonnet/high (implementation/high, `Exec = manual`) | P1.4 закрыт `🟢`: adoption-режим (`adopt_instructions`/`adopt()`/`rollback_adoption`, fail-closed pre-image + mapping + lock-провенанс) и CLI `harness instructions <plan\|check\|adopt\|apply\|repair>` + модульная точка `--check`, 9 новых тестов, 28 предшественника не тронуты — детали см. phases/P1.md P1.4 Completion Notes |
 | 2026-07-29 | plan-run/Claude Opus 5 (1M context)/high (frontier/high, `Exec = manual`) | P1.5 закрыт `🟠`: живая транзакция принята — 12 проекций `clean`, гейт дрейфа `[9/9]` в `validate.sh`, бюджет 7620→5322 ток (ELEVATED→OK); Known Deviation — предсуществующая краснота `skiller validate.sh` вне Scope — детали см. phases/P1.md P1.5 Completion Notes |
+| 2026-07-30 | plan-close/Sonnet/low | Фаза P1 закрыта `🟠 Done with deviations` (реконсиляция всех пяти items, статусы подтверждены без правок): docs-sync — follow-up (`harness instructions`/adoption-режим/канон нигде в `docs/` не описаны) — детали см. phases/P1.md Phase Handoff |
 
 ## 7. Contracts
 

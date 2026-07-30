@@ -1,37 +1,23 @@
-# HANDOFF — 2026-07-30 — after P1.7
+# HANDOFF — 2026-07-30 — after P1
 
-**Next:** `/task:plan-close 2026.07.29-HARNESS-AGNOSTIC P1`
+**Next:** `/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P1`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Sonnet |
-| Thinking | low — реконсиляция терминальной фазы по git-фактам, без принятия решений |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Все семь items P1.1–P1.7 терминальны — закрыть фазу P1 повторно (реконсиляция статусов, `## Phase Status`/`## 4. Phase Index & Status Board`, новый `## Phase Handoff`, снятие пометки `> УСТАРЕЛ`), чтобы стал достижим P2 |
+| Model | Claude Opus 5 |
+| Thinking | xhigh — adversarial-аудит закрытой фазы против кода/git |
+| Context | NEW SESSION |
+| Суть | Фаза P1 закрыта (все семь items терминальны — 4 🟢 + 3 🟠), но три `🟠 Done with deviations` (P1.2, P1.3, P1.5) требуют аудита перед стартом P2; заход 1 (2026-07-30) дал RED и был закрыт ремедиацией P1.6/P1.7 — саму ремедиацию (и остающиеся `🟠`-items) второй adversarial-заход ещё не проверял |
 
 ```
-/task:plan-close 2026.07.29-HARNESS-AGNOSTIC P1
+/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P1
 ```
 
-**P1.7 закрыт `🟢 Done` (сессия sonnet/medium, `Exec = plan-exec`, точное совпадение §3 Routing).**
-Карта «коммит → item» восстановлена в `## 6. Update Log` — все шесть строк, закрывающих P1.1–P1.6,
-несут item-коммиты (`fd5183af` · `e574fdda` · `b02e48be` · `1e0262a4` · `c3b3a8a3`+`4647ad4b` ·
-`d5e01ef7`+`eb64ea6c`), проверено `git show --stat --oneline -s` на каждом. `Last Updated` уже
-совпадала с датой последней строки Update Log на старте item'а — правки не потребовалось (F5).
-Атрибуция WARN честна: `plan-lint --baseline 4bdc4a5e` даёт 1 WARN новым от рабочего дерева
-(`phases/P1.md:73`, рождён DoR-блоком реопена D75, а не P1.6/P1.7); ERROR-гейт `K = 0` (F6).
-Known Deviations (2) P1.5 дополнены порядком коммитов пре-имиджей: материал отката
-(`artifacts/P1.5-preimages/`) впервые закоммичен `d052698f`, а lock со ссылками на него — предыдущим
-`c3b3a8a3` — откат по контракту с того дерева был невозможен (F7). Три ложные подписи приведены к
-фактам: 135 строк §2 `research/05` = 121 строка данных + 14 разметки, число строк матрицы — 121
-(F8); «семь codex-фрагментов» = 4 `codex.md` + 3 `claude-code.md` (F9); «шесть `<pkg>.identity`» =
-четыре записи (`skiller`/`harness`/`maind`/`task`), у `analyst` — `analyst.identity-human-gate`
-(F10, D79). Item-коммит `003180bf`; validate.sh — `validate: OK`.
-
-**Фаза P1 теперь терминальна по items (все семь 🟢/🟠), но статус фазы и `## Phase Handoff`
-остаются устаревшими (D75) до штатного `plan-close`.** Не закрывать P1.7-исполнением напрямую —
-это отдельный шаг-не-item со своей ролью реконсиляции (не принимает новых решений, сверяет статусы
-с git-фактами).
+**Фаза P1 закрыта повторно `🟠 Done with deviations` (реконсиляция после реопена D75).** Все семь
+items терминальны: P1.1/P1.4/P1.6/P1.7 `🟢`, P1.2/P1.3/P1.5 `🟠 Done with deviations`. `## Phase
+Status` (`phases/P1.md`) и `## 4. Phase Index & Status Board` (`plan.md`) сверены и совпадают
+(`4/7`, `🟠 Done with deviations`). Пометка `> УСТАРЕЛ` в `## Phase Handoff` снята — раздел
+переписан целиком под финальное состояние фазы.
 
 **Done:** P0 целиком (5/5 терминальны) · P1.1–P1.7 терминальны (4 `🟢` + 3 `🟠`): матрица «правило →
 дом» по семи живым руководствам (P1.1); канон догнал реальность — фрагменты + каталог 76 ID `1.1.1`
@@ -40,19 +26,16 @@ Known Deviations (2) P1.5 дополнены порядком коммитов �
 управление, гейт дрейфа `[9/9]` в `packages/harness/scripts/validate.sh`, always-on бюджет
 7620 → 5322 ток (P1.5); ремедиация канона — шесть правил, D73, `instructions`, гейт покрытия
 105/105, бюджет 5322→5495 ток (P1.6); бухгалтерия ремонта — карта хешей, честная атрибуция WARN,
-три подписи (P1.7). **Не сдано:** реконсиляция фазы P1 штатным `plan-close`.
+три подписи (P1.7).
 
 **Карта «item → коммит» (P1; item-коммит | сопутствующие bookkeeping):**
 P1.1 `fd5183af` | `340d0846` · P1.2 `e574fdda` | `d1e393af` · P1.3 `b02e48be` | `4ae56350`
 (bookkeeping), `5996d92d` (дозапись журнала), `b191a19c` (Known Deviations) · P1.4 `1e0262a4` |
 `d5482b37` · P1.5 `c3b3a8a3` (принятие) + `4647ad4b` (гейт) | `d052698f` · P1.6 `d5e01ef7`
 (канон+рендер) + `eb64ea6c` (гейт покрытия) | `4416322e` (bookkeeping) · P1.7 `003180bf` (карта
-хешей + три подписи) | bookkeeping-коммит этого закрытия (следующий в истории после этой
-перезаписи `handoff.md`). Фаза закрыта коммитом `81886a14` (устарело — реопенена D75, повторное
-закрытие — задача следующего шага). Карта дословно перенесена в `## 6. Update Log` — предмет
-P1.7 исполнен (находка F4 закрыта).
+хешей + три подписи).
 
-**Известные отклонения (агрегат по items — полный текст в `phases/P1.md`):**
+**Известные отклонения (агрегат по items — полный текст в `phases/P1.md` § `Phase Handoff`):**
 - P1.2 — process: `provenance` фикстуры совместимости НЕ дополнен полями миграции (существующий
   тест держит точный 4-ключевой словарь; ограничено `fixture_version` → `1.0.1`). Долг открыт.
 - P1.3 — process: item-коммит несёт дифф вне `Files` (тест-литерал 67 → 76, регенерированная
@@ -60,44 +43,52 @@ P1.7 исполнен (находка F4 закрыта).
 - P1.5 — material: `bash packages/skiller/scripts/validate.sh` красный (предсуществующая P0.5-
   краснота, починка вне `Files`); process: `mapping.json` + pre-image'ы в carve-out `artifacts/`;
   process: `apply` перезапущен после `INSTRUCTION_WRITE_FORBIDDEN` (no-write, дерево не тронуто);
-  порядок коммитов пре-имиджей теперь дописан в Known Deviations (2) — откат с дерева `c3b3a8a3`
-  был невозможен (P1.7, F7).
+  порядок коммитов пре-имиджей (P1.7, F7) — откат с дерева `c3b3a8a3` был невозможен.
 - P1.6 — process: `--authorize` порядок из собственного ТЗ item'а не рабочий — исполнено верным
-  алфавитным порядком; Scope/семантика не затронуты. Точечная правка формулировки (кандидат — новый
-  D# или follow-up item) остаётся открытым риском ниже — P1.7 её не касался (вне Scope).
+  алфавитным порядком; Scope/семантика не затронуты. Точечная правка формулировки остаётся открытым
+  риском.
 
-**Lint:** `python3 packages/task/scripts/plan-lint.py plans/2026.07.29-HARNESS-AGNOSTIC` — **0 ERROR,
-2 WARN** (на дереве item-коммита `003180bf`). Атрибуция (`--baseline 4bdc4a5e`, дерево до фазы P1):
-**1 новый от рабочего дерева** — `phases/P1.md:73`, ложный `[NEEDS CLARIFICATION]`-детект внутри
-DoR-блока реопена D75 (текст «Все `[NEEDS CLARIFICATION]` сняты»), не самим P1.6/P1.7;
-`phases/P0.md:42` предсуществует всему плану. ERROR-гейт **K = 0**.
+**Docs-sync:** подтверждён follow-up, крупнее этой фазы. Новый CLI `harness instructions`,
+adoption-режим и механизм канона (`instructions.py`, гейт дрейфа и гейт покрытия литералов в
+`validate.sh`) нигде в `docs/` не описаны. Целевое место — `packages/harness/docs/`
+(environment/CLI-поверхность) + перекрёстная ссылка из `docs/routing.md`/`docs/control-surface.md`.
 
-**Sources of truth:** `plan.md` (§3 Routing, §5 **D1–D79**, §6 Update Log с картой хешей, §7
-Contracts) · `phases/P0.md` (закрыта) · `phases/P1.md` (**🟡** — все items терминальны, фаза ждёт
-`plan-close`, блок `## Audit P1 — 2026-07-30`) · `research/10-p1-remediation-canon-and-coverage.md`
-(грунт ремедиации — прогон покрытия, целевые формулировки, форма гейта, F1–F10) ·
-`research/05-instruction-canon-routing.md` (матрица — read-only вход, 121 строка/105 литералов,
-снятие 2 §5 уточнено D79) · `research/04-instruction-mechanism-inventory.md` ·
-`brief/01-refinements.md` Р7/Р8 · `artifacts/P1.5-mapping.json` + `artifacts/P1.5-preimages/`
-(держатся до архивации плана) · `artifacts/P1.6-extract-literals.py` (генератор фикстуры покрытия,
-идемпотентен) · `packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json` (105
-литералов, провенанс) · `roadmap.md` (v0.9.0, 31 item) ·
-`root/contracts/provider-parity-definition.md` (sealed v1) ·
+**Sources of truth:** `plan.md` (§3 Routing, §5 D1–D79, §6 Update Log с картой хешей, §7 Contracts,
+§4 Phase Index & Status Board — P1 `4/7 🟠 Done with deviations`) · `phases/P0.md` (закрыта) ·
+`phases/P1.md` (закрыта `🟠 Done with deviations`, `## Phase Handoff` актуален, блок
+`## Audit P1 — 2026-07-30` — заход 1, RED) · `research/10-p1-remediation-canon-and-coverage.md`
+(грунт ремедиации) · `research/05-instruction-canon-routing.md` (матрица, read-only вход) ·
+`research/04-instruction-mechanism-inventory.md` · `brief/01-refinements.md` Р7/Р8 ·
+`artifacts/P1.5-mapping.json` + `artifacts/P1.5-preimages/` (держатся до архивации плана) ·
+`artifacts/P1.6-extract-literals.py` (генератор фикстуры покрытия, идемпотентен) ·
+`packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json` (105 литералов) ·
+`roadmap.md` (v0.9.0, 31 item) · `root/contracts/provider-parity-definition.md` (sealed v1) ·
 `root/contracts/instruction-canon-addendum-v1.md` (sealed v1) · `journal.jsonl` ·
 `plans/archive/2026.07.18-FOREMAN/`.
 
-**Remaining:** реконсиляция P1 (`plan-close`) → P2 (5) → P3 (6) → P4 (5) → P5 (3). Итого
-19/31 items ещё не исполнено (реконсиляция фазы — не item).
+**Remaining:** аудит P1 (обязателен из-за трёх `🟠`) → P2 (5) → P3 (6) → P4 (5) → P5 (3). Итого
+19/31 items ещё не исполнено плюс сам аудит P1.
+
+**Почему `Next` — аудит, а не P2:** протокол требует adversarial-аудит фазы перед стартом следующей,
+если ХОТЯ БЫ один item закрыт `🟠 Done with deviations` — здесь их три (P1.2, P1.3, P1.5). Заход 1
+аудита (2026-07-30) уже состоялся и дал RED, но его мандат был «выполнены ли Deliverables Scope
+Included фазы», и находки были закрыты ремедиацией (P1.6/P1.7) под `plan-run`/`plan-exec` —
+самопроверкой исполнителя, а не независимым adversarial-заходом. Сами `🟠`-items (P1.2/P1.3/P1.5)
+по протоколу реопена не правились (только Known Deviations/Pending Work и три названные подписи в
+P1.7) и никогда не проходили собственный аудит на предмет «сверка 🟠 с кодом/git, no-op, scope
+drift». Поэтому обязательство «аудит перед P2» остаётся неисполненным, и `Next` указывает на второй
+заход `plan-audit`, а не на `plan-design P2` или `plan-run P2.1`.
 
 **Open risks:**
+- **Обязательный второй заход `plan-audit P1`** (см. выше) — до его зелёного/ATTENTION-вердикта
+  переход к P2 нарушает протокол.
 - **Гейт покрытия литералов заведён в P1.6 и обязан остаться единственным носителем проверки
   ПОКРЫТИЯ.** Любая будущая правка канона обязана держать его зелёным; фикстура покрытия
   генерируемая — правка руками запрещена (`root.generated-artifacts`), только повторный прогон
   `artifacts/P1.6-extract-literals.py`.
-- **Дефект собственного ТЗ P1.6, найден и раскрыт, но не починен (вне Scope P1.7):** формулировка
-  «`--authorize` порядок — scope × provider, не алфавитный» неверна; корректная (алфавитная, как
-  P1.5 изначально утверждал) требует отдельной точечной правки текста — кандидат: новая D-запись
-  или follow-up item; решение владельца.
+- **Дефект собственного ТЗ P1.6, найден и раскрыт, но не починен:** формулировка «`--authorize`
+  порядок — scope × provider, не алфавитный» неверна; корректная (алфавитная, как P1.5 изначально
+  утверждал) требует отдельной точечной правки текста — кандидат: новая D-запись или follow-up item.
 - **Слепота `_validate_conflicts` к дублю СМЫСЛА** (`obligations` с самореферентным `object`,
   `instructions.py:1005-1022`): зелёный `validate_catalog()` НЕ доказывает отсутствия дубля
   common-правила внутри provider-extension. Дом правки — `roadmap/`, вне этой фазы (Р8).
@@ -125,15 +116,14 @@ Contracts) · `phases/P0.md` (закрыта) · `phases/P1.md` (**🟡** — в
 - workarounds: правка общего `plans/verify-citations-known-exceptions.json` (D54) — дом
   design-коммит, не `Files` какого-либо item'а.
 - deferred: правка `_validate_conflicts`/схемы `obligations` (кандидат `roadmap/`, Р8) ·
-  порядок-чувствительный `--authorize` у `apply_instructions` (формулировка нуждается в правке,
-  см. Open risks) · фикстурный `provenance` P1.2 · изоляция общего state (OQ-5) · тонкая обвязка
-  супервизора (P4.1, D38) · round-trip гейт живым прогоном Codex · структурный перебор листинга
-  Codex (OQ-7) · общий differ канона ролей (OQ-8) · машинные гейты PROMOTE-CANDIDATE («Validation
-  прогнана», «design-заход в истории» D69) · `skiller registry` не прогнан (P0.5) · раскатка на
-  потребителей (D45) · push/PR/тег и публикация доков (D41) · расширение CI на `analyst`/`task`
-  (OQ-9) · русский канон скиллов в `.gitignore` (Р5) · раскатка adoption-режима на онбордженные
-  проекты · удаление pre-image'ов P1.5 (держатся до архивации плана) · docs-sync `harness
-  instructions`/adoption/канон.
+  формулировка порядка `--authorize` у `apply_instructions` (см. Open risks) · фикстурный
+  `provenance` P1.2 · изоляция общего state (OQ-5) · тонкая обвязка супервизора (P4.1, D38) ·
+  round-trip гейт живым прогоном Codex · структурный перебор листинга Codex (OQ-7) · общий differ
+  канона ролей (OQ-8) · машинные гейты PROMOTE-CANDIDATE («Validation прогнана», «design-заход в
+  истории» D69) · `skiller registry` не прогнан (P0.5) · раскатка на потребителей (D45) ·
+  push/PR/тег и публикация доков (D41) · расширение CI на `analyst`/`task` (OQ-9) · русский канон
+  скиллов в `.gitignore` (Р5) · раскатка adoption-режима на онбордженные проекты · удаление
+  pre-image'ов P1.5 (держатся до архивации плана) · docs-sync `harness instructions`/adoption/канон.
 - open_questions: OQ-3 две capability `unsupported` у обоих провайдеров (P2.1) · OQ-6 дом логики
   Codex-обработчиков (P2.1) · OQ-7 структурный перебор бюджета обнаружения (P3.4) · OQ-8 дрейф
   канона ролей (Deferred) · OQ-9 CI не покрывает `analyst`/`task` (Deferred). OQ-2 закрыта D71,

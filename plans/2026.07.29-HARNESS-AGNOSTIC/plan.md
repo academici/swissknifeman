@@ -127,7 +127,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 | P1 | Паритет корневых инструкций | 4/7 | 🟠 Done with deviations |
 | P2 | Паритет capability второго провайдера (+ follow-up блок аудита P1, D80) | 5/9 | 🟠 Done with deviations |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | 🟠 Done with deviations |
-| P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 3/5 | 🟡 In progress |
+| P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 3/5 | 🔴 Blocked |
 | P5 | Возврат в основное дерево и верификация флота | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -394,6 +394,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | 2026-07-30 | plan-run/Claude Opus 5 (1M context)/high (frontier/high, `Exec = manual`) | **P4.1 закрыт `🟢`** (item-коммит `7ed90cd0`, фаза P4 открыта): вынесен вердикт по 24 незакрытым items донора `2026.07.18-FOREMAN` (1 `потребляется готовым` + 15 `остаётся работой` + 8 `отменяется по существу`), замер входа поставлен ПЕРЕД таблицей судеб и подтвердил, что `decide` живёт данными в архиве, а не модулем; заведены D90 (адрес-классы судеб + граница фазы) и D91 (шесть поимённых `[UNVERIFIED]` как вход строителя обвязки), дом остатка — `roadmap/artifex-thin-wrapper.md` — детали см. phases/P4.md P4.1 Completion Notes |
 | 2026-07-30 | plan-run/Claude Opus 5 (1M context)/high (frontier/high, `Exec = manual`) | **P4.2 закрыт `🟢`** (item-коммит `4d70e7a1`): запечатана схема политики исполнения `root/contracts/execution-policy-v1.md` — четыре раздела, потолки по трём субъектам, шесть канонических marker-литералов, жизненный цикл точки принуждения (D58) и чек-лист самопроверки для P4.3; строка §7 Exported переведена `draft`→`sealed (P4.2)`; замером найден невыполнимый пункт Validation P4.4 (Codex-проекция роли оркестратора запрещена замороженным рендером) — детали см. phases/P4.md P4.2 Completion Notes |
 | 2026-07-30 | plan-exec/Sonnet/medium | **P4.3 закрыт `🟢`** (item-коммит `95ab0492`): данные `execution-policy.json` (четыре раздела дословно из P4.2, обе точки принуждения `delegation_contract` — `status: pending` с адресатом P4.4, D58); валидатор `execpolicy.py` (stdlib-only, `--check`, семь функций-проверок покрывают 20 пунктов §10 контракта) по образцу `reviewroles.py`; тесты с шестью негативными фикстурами + позитивным `pending`-кейсом (8 тестов); шаг `[10/10]` в `validate.sh` (фактический знаменатель ПЕРЕД правкой — девять, совпал с ожиданием ТЗ), деградирует в пропуск при отсутствии `core/` — детали см. phases/P4.md P4.3 Completion Notes |
+| 2026-07-30 | plan-run/Claude Opus 5 (1M context)/high (frontier/high, `Exec = manual`) | **P4.4 остановлен `🔴 Blocked` — эскалация к `plan-design`** (предметных правок нет, дифф `packages/harness/**` пуст): acceptance item'а требует недостижимого — Codex-проекция роли `_common.orchestrator` запрещена замороженным рендерером (`HARNESS_ACTIVATION_UNSUPPORTED:command.workflow-carrier`, воспроизведено на `c457205c`), а запечатанная схема P4.2 §5.5/§9.2 адресует эту формулировку `plan-design` дословно; статус фазы P4 `🟡`→`🔴 Blocked`, точка `delegation_contract` остаётся `pending` (D58) — детали см. phases/P4.md P4.4 ESCALATION-блок |
 
 ## 7. Contracts
 

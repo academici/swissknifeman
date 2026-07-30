@@ -31,6 +31,7 @@ export default defineConfig({
             { text: 'Statusline: контекст и уведомления', link: '/configs/statusline' },
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
+            { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
           ],
         },
         {

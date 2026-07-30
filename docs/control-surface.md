@@ -96,6 +96,10 @@ health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 диагностика деградирует к `unknown` с названным пробелом). Детали и разбор частых случаев —
 [диагностика skiller](/skiller/guide/troubleshooting).
 
+Один конкретный механизм, живущий целиком в слое `generated` (двенадцать проекций
+`CLAUDE.md`/`AGENTS.md` из общего канона, два наблюдения дрейфа, два машинных гейта) —
+[канон корневых инструкций](/harness/reference/instruction-canon).
+
 ## Полная настройка проекта
 
 Порядок «дать проекту всё» (все 4 слоя) — операционный раннбук `project-tooling-runbook`

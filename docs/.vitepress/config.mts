@@ -40,6 +40,7 @@ export default withMermaid(defineConfig({
             { text: 'Permissions для Claude Code', link: '/harness/configs/claude-permissions' },
             { text: 'Конфиги (обзор)', link: '/harness/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/harness/setup/claude' },
+            { text: 'Канон корневых инструкций', link: '/harness/reference/instruction-canon' },
           ],
         },
         {

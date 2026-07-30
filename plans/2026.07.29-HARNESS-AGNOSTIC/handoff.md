@@ -1,42 +1,34 @@
-# HANDOFF — 2026-07-30 — after P4.4
+# HANDOFF — 2026-07-30 — after P4.5
 
-**Next:** `/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P4.5` — судьба parse-контракта
-`driver-plan-protocol.md` (вариант A/B по вердикту P0.3, OQ-2)
+**Next:** `/task:plan-design 2026.07.29-HARNESS-AGNOSTIC P4.5` — ре-дизайн ТЗ P4.5 по вердикту
+OQ-2 = вариант B (сломан якорь 3 §4 `driver-plan-protocol.md`)
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Sonnet (`implementation` — §3 Routing строка P4.5) |
-| Thinking | medium — исполнение готового вердикта P0.3, решений не принимается (вариант A: минимальная правка пина; вариант B: НЕ исполняется этой командой, эскалация) |
-| Context | continue (/clear) — ручной item |
-| Суть | Прочитать вердикт P0.3 по якорям §4 контракта из `research/03-foreman-absorption-inventory.md`; вариант A — re-пин `pinned` архивного контракта на живую версию `plan-protocol` (текущий канон v2.21.0) + датированная строка + синхронная строка §7 Consumed этого плана + ссылка в `roadmap/artifex-thin-wrapper.md`; вариант B — НЕ исполнять, ESCALATION-блок, `plan-design` |
+| Model | Opus (`frontier` — design-работа с необратимой ценой ошибки) |
+| Thinking | high — переписывание чужого замороженного контракта против канона, ушедшего на 13 minor вперёд; открытое design-решение |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Прочитать вердикт OQ-2 (`research/03-foreman-absorption-inventory.md` §3–§4, D71) и ESCALATION-блок `phases/P4.md` P4.5; решить судьбу контракта `driver-plan-protocol.md` под сломанным якорем 3 (переписать под живой канон `plan-protocol` v2.21.0 / зафиксировать как исторический артефакт с явной пометкой сломанного якоря / другое) и переписать ТЗ P4.5 под выбранное решение |
 
 ```
-/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P4.5
+/task:plan-design 2026.07.29-HARNESS-AGNOSTIC P4.5
 ```
 
-**Session:** Claude Sonnet 5/high — `plan-run` под implementation/high (совпадает с §3 Routing
-строкой P4.4, перебора/недобора нет).
+**Session:** Claude Sonnet 5/medium — `plan-exec` под implementation/medium (совпадает с §3 Routing
+строкой P4.5, item не исполнялся — эскалация).
 
-**Done:** P0 целиком (5/5) · P1 целиком (7/7) · **P2 закрыта `plan-close`'ом (9/9 — 5 🟢 + 4 🟠,
-`🟠 Done with deviations`)** · **P3 закрыта `plan-close`'ом (6/6 — 0 🟢 + 6 🟠,
-`🟠 Done with deviations`), аудит P3 проведён (ATTENTION) и реконсилирован** · **P4.1 закрыт `🟢`**
-(item-коммит `7ed90cd0`) — вердикт по 24 незакрытым items `2026.07.18-FOREMAN`, дом остатка
-`roadmap/artifex-thin-wrapper.md`, D90/D91 · **P4.2 закрыт `🟢`** (item-коммит `4d70e7a1`) —
-запечатана схема политики исполнения `root/contracts/execution-policy-v1.md` · **P4.3 закрыт `🟢`**
-(item-коммит `95ab0492`) — данные `execution-policy.json` (обе точки `delegation_contract` в
-`status: pending` с адресатом P4.4, D58), валидатор `packages/harness/lib/harness/execpolicy.py`
-(stdlib-only, `--check`, семь функций-проверок на 20 пунктов §10 контракта), тесты
-`test_exec_policy.py` (8 тестов), шаг `[10/10]` в `packages/harness/scripts/validate.sh` ·
-**P4.4 закрыт `🟠 Done with deviations`** (item-коммит `c20d40af` + фикс-коммит `65343d45`) —
-delegation contract приземлён в грамматику `PLAN` оркестратора: новое поле `; output:` +
-секция «Контракт задания» (пять маркеров §5.3 дословно), синхронно в каноне
-`roles.json::_common.orchestrator.content` и шаблоне `_common/agents/orchestrator.md`; версия
-пака `_common` `0.4.1`→`0.5.0`+CHANGELOG; обе точки `delegation_contract` переведены
-`pending`→`enforced` ПОСЛЕДНИМ шагом (D58), `execpolicy.py --check` подтвердил физическое
-присутствие маркеров в обоих носителях (проверка была доставлена P4.3, добавлены 5 недостающих
-тестов — 11 всего); acceptance провайдерских поверхностей (D92, §5.5/§9.2) зелёный. `🟠` —
-фикс-коммит регенерирует ДВА `provider_audit`-артефакта вне `Files` (тот же класс дрейфа, что у
-P2.2–P2.4) — детали см. phases/P4.md P4.4 Known Deviations.
+**Done:** P0 целиком (5/5) · P1 целиком (7/7) · P2 закрыта `plan-close`'ом (9/9 — 5 🟢 + 4 🟠,
+`🟠 Done with deviations`) · P3 закрыта `plan-close`'ом (6/6 — 0 🟢 + 6 🟠,
+`🟠 Done with deviations`), аудит P3 проведён (ATTENTION) и реконсилирован · P4.1 закрыт `🟢`
+(item-коммит `7ed90cd0`) · P4.2 закрыт `🟢` (item-коммит `4d70e7a1`) · P4.3 закрыт `🟢`
+(item-коммит `95ab0492`) · P4.4 закрыт `🟠 Done with deviations` (item-коммит `c20d40af` +
+фикс-коммит `65343d45`) · **P4.5 остановлен `🔴 Blocked` — ESCALATION** (без правок `Files`):
+вердикт OQ-2 (`research/03-foreman-absorption-inventory.md` §4, D71) — сломан якорь 3 §4 контракта
+(enum форм `Next`) живым каноном `plan-protocol` v2.21.0 (провайдер-нейтральные семантические формы
+`exec-items:`/`run-items:`/… вместо исторических `/task:…`/`ЗАПУСК ВРУЧНУЮ`/`ОЖИДАНИЕ:`), по
+критерию D9 это вариант B — переписывание чужого замороженного контракта дешёвой моделью
+запрещено (D37). Статус фазы P4 `🟡`→`🔴 Blocked` (3/5 🟢), item P4.5 несёт три грепаемых
+артефакта эскалации.
 
 **Карта «item → коммит» (P2, реконсилировано 2026-07-30, аудит P2, находка F1):**
 P2.1 `ed306ca6` · P2.2 `632e75d3`(+`ad325a5e`) · P2.3 `c97e5cfb`(+`3e883a68`) ·
@@ -48,28 +40,33 @@ P3.1 `f61ac378` · P3.2 `dd6a1404` · P3.3 `41f2156b` · P3.4 `599878e0` · P3.5
 без item-коммита (законный исход «покрыто существующим скиллом», ноль диффа зафиксирован).
 
 **Карта «item → коммит» (P4):** P4.1 `7ed90cd0` · P4.2 `4d70e7a1` · P4.3 `95ab0492` ·
-P4.4 `c20d40af`(+`65343d45`).
+P4.4 `c20d40af`(+`65343d45`) · P4.5 — без item-коммита (эскалация, диффа по `Files` нет).
 
-**Remaining:** P4.5, затем P5 (3 items). Итого **4 из 35** items плана не исполнено. Сверх items
-остаётся **рекомендованный аудит фазы P2** (`/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P2`),
-владельцем не запускался; он не блокирует P4 (фаза P2 терминальна), но чем дальше уходит exec,
-тем дороже его находки.
+**Remaining:** P4.5 ждёт `plan-design` (ре-дизайн ТЗ по вердикту варианта B), затем P5 (3 items).
+Итого **4 из 35** items плана не исполнено (P4.5 заблокирован, не закрыт). Сверх items остаётся
+**рекомендованный аудит фазы P2** (`/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P2`), владельцем
+не запускался; он не блокирует P4 (фаза P2 терминальна), но чем дальше уходит exec, тем дороже его
+находки.
 
-**Sources of truth:** `plan.md` (§3 Routing, §5 D1–**D92**, §6 Update Log, §4 Status Board — P2
-`5/9`, P3 `0/6` обе `🟠`, P4 `3/5` `🟡`; §7 Exported — политика исполнения `sealed (P4.2)`) ·
-`root/contracts/execution-policy-v1.md` (запечатанная схема: канонические marker-литералы §5.3,
-жизненный цикл точки §5.4, измеренная граница Codex-стороны §5.5, «что НЕ является доказательством»
-§9) · `packages/harness/configs/common/agent-packs/execution-policy.json` (живой носитель, ОБЕ
-точки `delegation_contract` теперь `enforced`) · `packages/harness/lib/harness/execpolicy.py`
+**Sources of truth:** `plan.md` (§3 Routing, §5 D1–D92, §6 Update Log, §4 Status Board — P2
+`5/9`, P3 `0/6` обе `🟠`, P4 `3/5` `🔴 Blocked`; §7 Exported — политика исполнения `sealed (P4.2)`) ·
+`research/03-foreman-absorption-inventory.md` §3–§4 (вердикт OQ-2, D71 — вариант B, якорь 3) ·
+`plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` (контракт, пин
+не тронут — вариант A не исполнялся) · `root/contracts/execution-policy-v1.md` (запечатанная
+схема P4.2) · `packages/harness/configs/common/agent-packs/execution-policy.json` (обе точки
+`delegation_contract` теперь `enforced`) · `packages/harness/lib/harness/execpolicy.py`
 (валидатор, P4.3) · `packages/harness/configs/common/agent-packs/roles.json` и
-`packages/harness/configs/claude-code/agent-packs/_common/agents/orchestrator.md` (оба носителя
+`packages/harness/configs/claude-code/agent-packs/_common/agents/orchestrator.md` (носители
 приземлённого блока, P4.4) · `phases/P4.md` (Phase Context + контракт фазы, Completion Notes
-P4.1–P4.4, ТЗ P4.5, порядок P4.1→P4.5) · `research/08` §4 + блок «Поправка 2026-07-30» ·
+P4.1–P4.4, ESCALATION-блок P4.5) · `research/08` §4 + блок «Поправка 2026-07-30» ·
 `root/executor-layer-rescope-v1.md` (граница «строит / не строит») ·
 `roadmap/artifex-thin-wrapper.md` (дом остатка супервизора) · `phases/P2.md`/`phases/P3.md`
 (Completion Notes, Phase Handoff) · `roadmap.md` §«Карта запуска» · `journal.jsonl`.
 
 **Open risks:**
+- **P4.5 заблокирован вариантом B (OQ-2)** — контракт `driver-plan-protocol.md` пинуется на
+  `plan-protocol` v2.8.0 при живом каноне v2.21.0; переписывание против живого канона (13 minor
+  вперёд) требует design-решения владельца/`plan-design`, не механической правки пина.
 - **Delegation contract доказуемо приземлён только для провайдер-нейтрального канона и
   Claude-шаблона; Codex-хост НЕ покрыт** (D92, §5.5): роль `_common.orchestrator` не рендерится
   для Codex по замороженному ограничению `command.workflow-carrier` — контракт достигает Codex-хоста
@@ -87,12 +84,10 @@ P4.1–P4.4, ТЗ P4.5, порядок P4.1→P4.5) · `research/08` §4 + бл�
   кейсов `unmappable`, Codex-сторона наблюдаемости не пробовалась — четыре долга плюс два наших
   (§4 `root/executor-layer-rescope-v1.md`).
 - **`plan-lint`: 0 ERROR / 6 WARN, все шесть — false positive предикатов линтера**, не контентные
-  дефекты (`--baseline HEAD` на bookkeeping-коммите P4.4 → «новых: 0»; состав шести WARN не
-  изменился с прошлой записи). Пять — DoR-гейт (SKILL §7) на строке-легенде каждой фазы
-  (`plan_lint.py:1941-1948`). Шестая — «фаза P4 заявляет оркестрацию без workflow-скрипта»:
-  `ORCHESTRATION_MARKER_RE` (`plan_lint.py:223`) матчит подстроку «оркестрац» в предложении
-  «**Оркестрация НЕ объявляется**». Сужение предикатов — правка `packages/task`, дом `roadmap/`
-  либо follow-up fix-item.
+  дефекты. Пять — DoR-гейт (SKILL §7) на строке-легенде каждой фазы (`plan_lint.py:1941-1948`).
+  Шестая — «фаза P4 заявляет оркестрацию без workflow-скрипта»: `ORCHESTRATION_MARKER_RE`
+  (`plan_lint.py:223`) матчит подстроку «оркестрац» в предложении «**Оркестрация НЕ объявляется**».
+  Сужение предикатов — правка `packages/task`, дом `roadmap/` либо follow-up fix-item.
 - **69 длинных описаний без триггера** в `desc-trigger-burndown.txt` (унаследованный долг P3.5) —
   сокращаются по одному при следующей содержательной правке скилла; критерий держит
   `roadmap/skill-description-quality.md`.
@@ -151,9 +146,10 @@ P4.1–P4.4, ТЗ P4.5, порядок P4.1→P4.5) · `research/08` §4 + бл�
   на ссылку к SSOT `execution-policy-v1.md` (Scope Excluded P4.2 — вне этой фазы) · рычаг №4
   владельца (ECO-OPT D74, OQ-7) · **Codex-досягаемость delegation contract** (D92 — до закрытия
   capability-разрыва `command.workflow-carrier`) · общий differ «канон ↔ инсталляционный шаблон»
-  для ВСЕХ ролей (OQ-8, замечен повторно на P4.4).
+  для ВСЕХ ролей (OQ-8, замечен повторно на P4.4) · **судьба parse-контракта `driver-plan-protocol.md`
+  под сломанным якорем 3** — предмет ре-дизайна P4.5.
 - open_questions: OQ-7 структурный перебор бюджета обнаружения Codex — ИЗМЕРЕН P3.4/P3.5 (9/10),
   решение между тремя вариантами открыто · OQ-8 дрейф канона ролей (Deferred) · OQ-9 CI не
-  покрывает `analyst`/`task` (Deferred). **OQ-2 (якоря parse-контракта) закрыта измерением P0.3;
-  её исполнитель — P4.5, и вердикт «вариант B» заранее переводит item в ветку эскалации** (D37,
-  `research/03` §4). OQ-3/OQ-6 закрыты D86/D87 (P2.1); OQ-1 — D31; OQ-4 — P3.4/D27.
+  покрывает `analyst`/`task` (Deferred). **OQ-2 закрыта измерением P0.3/D71 (вариант B); её
+  исполнитель P4.5 эскалировал по D37 — контракт ждёт ре-дизайна.** OQ-3/OQ-6 закрыты D86/D87
+  (P2.1); OQ-1 — D31; OQ-4 — P3.4/D27.

@@ -45,16 +45,16 @@ class ProviderHookTests(unittest.TestCase):
         unsupported = {binding.surface_id for binding in plan.bindings
                        if binding.support_level == "unsupported"}
         self.assertEqual(unsupported, {
-            "lifecycle.notification", "lifecycle.pack-guard",
-            "lifecycle.changelog-gate", "lifecycle.review-gate", "lifecycle.daemon-safety",
-            "lifecycle.git-guardrails", "context.output-style", "context.plans-directory"})
+            "lifecycle.notification", "context.output-style", "context.plans-directory"})
         self.assertEqual({binding.surface_id for binding in plan.bindings
                           if binding.support_level == "config-native"},
                          {"lifecycle.auto-approval"})
         self.assertEqual({binding.surface_id for binding in plan.bindings
                           if binding.support_level == "hook-native"},
                          {"context.observer", "lifecycle.command-log", "lifecycle.run-report",
-                          "lifecycle.router", "lifecycle.memory"})
+                          "lifecycle.router", "lifecycle.memory", "lifecycle.pack-guard",
+                          "lifecycle.changelog-gate", "lifecycle.review-gate",
+                          "lifecycle.daemon-safety", "lifecycle.git-guardrails"})
         self.assertEqual({item.code for item in plan.diagnostics},
                          {"HARNESS_ACTIVATION_UNSUPPORTED"})
 
@@ -85,14 +85,14 @@ class ProviderHookTests(unittest.TestCase):
     def test_config_native_and_unsupported_surfaces_never_leak_into_hooks_json(self):
         plan = plan_lifecycle(self.catalog, provider_id=ProviderId.CODEX, trusted=True,
                               requests=(LifecycleRequest("lifecycle.auto-approval"),
-                                        LifecycleRequest("lifecycle.pack-guard"),
+                                        LifecycleRequest("context.output-style"),
                                         LifecycleRequest("context.observer")),
                               codex_bindings_path=BINDINGS)
         self.assertTrue(plan.green)
         rendered = json.loads(render_codex_hooks(plan))
         commands = json.dumps(rendered["hooks"])
         self.assertNotIn("lifecycle.auto-approval", commands)
-        self.assertNotIn("lifecycle.pack-guard", commands)
+        self.assertNotIn("context.output-style", commands)
 
     def test_payload_adapter_fixture_and_malformed_shape_fail_closed(self):
         plan = plan_lifecycle(self.catalog, provider_id=ProviderId.CODEX, trusted=True,

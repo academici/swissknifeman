@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `2b96cd63ae049827e47708dc41c7c5a704069595b0d1aec5465b318201d30c6f`
-- Carrier SHA-256 (canonical bytes plus one LF): `c9c1d0137433d74373e3872f5b730da1565504c1caa48de1b2fc8034b3849718`
+- Canonical JSON SHA-256 (without carrier LF): `4d2a42d6c5e5a42bf3f390c30d68f2dc0f0b118150bbdfe3fd2a45d294c0bd92`
+- Carrier SHA-256 (canonical bytes plus one LF): `de1d9cbd7420016577bfbc30ab78f33ac016eed114dc6d8fb289b456be9830f5`
 - Common capabilities: `35`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -35,18 +35,18 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `doctor.provider` | adapted | adapted |
 | `instructions.project` | native | native |
 | `lifecycle.auto-approval` | adapted | native |
-| `lifecycle.changelog-gate` | adapted | unsupported |
+| `lifecycle.changelog-gate` | adapted | adapted |
 | `lifecycle.command-log` | adapted | adapted |
-| `lifecycle.daemon-safety` | unsupported | unsupported |
-| `lifecycle.git-guardrails` | unsupported | unsupported |
+| `lifecycle.daemon-safety` | adapted | adapted |
+| `lifecycle.git-guardrails` | unsupported | adapted |
 | `lifecycle.memory` | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported |
-| `lifecycle.pack-guard` | adapted | unsupported |
-| `lifecycle.review-gate` | adapted | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted |
+| `lifecycle.review-gate` | adapted | adapted |
 | `lifecycle.router` | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
-| `security.safe-dirs` | adapted | unsupported |
+| `security.safe-dirs` | adapted | adapted |
 | `settings.audit` | adapted | unsupported |
 | `settings.permissions` | adapted | adapted |
 | `skills.repository` | native | native |
@@ -370,10 +370,10 @@ Gate declared release-sensitive operations.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.changelog-gate; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.changelog-gate`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.changelog-gate
+  Limitations: inactive by default; reads the commit type only from a -m message: an editor-composed message is not inspected; the non-blocking warning is delivered as a systemMessage hint, not byte-identical to Claude's hookSpecificOutput.additionalContext.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.changelog-gate refusal on release-sensitive commits).
 
 ### `lifecycle.command-log`
 
@@ -393,29 +393,29 @@ Record provider-native command execution evidence.
 
 Reject unsafe shared-daemon operations.
 
-- **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported claude-code lifecycle.daemon-safety; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.daemon-safety`.
+  Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.daemon-safety
+  Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; registered by the harness global preset (settings.global.json, PreToolUse/Bash) and installed by apply-permissions.sh; the record previously claimed no binding satisfied the surface, which was false.
+  Evidence: [2026-07-30] settings.global.json registers ~/.claude/hooks/daemon-safety/block-daemon-ops.sh on PreToolUse/Bash and apply-permissions.sh installs it, so the surface is satisfied by a committed deterministic adapter — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.daemon-safety registration already shipped by the harness global preset).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.daemon-safety; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.daemon-safety`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.daemon-safety
+  Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; the pattern set is embedded into the generated dispatcher, so a change of the Claude-side patterns requires regenerating the Codex artifact; Codex-side activation is project-scoped opt-in via harness hooks --provider codex, unlike the Claude side which is a machine-wide always-on install.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.daemon-safety refusal on destructive shared-daemon commands).
 
 ### `lifecycle.git-guardrails`
 
 Reject declared dangerous version-control operations.
 
 - **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported claude-code lifecycle.git-guardrails; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+  Diagnostic: unsupported claude-code lifecycle.git-guardrails; committed implementation is not registered by any preset or install branch
+  Limitations: the implementation is committed (configs/claude-code/hooks/git-guardrails/block-dangerous-git.sh) but no registration ships: no preset, install branch or operator flag activates it, so the surface fails closed; activating it fleet-wide is a behaviour change of the live contour and is not part of the parity phase.
+  Evidence: [2026-07-30] the implementation is committed but nothing registers or installs it: no preset, apply-permissions.sh branch or harness hooks flag activates it — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (claude-code lifecycle.git-guardrails activation state).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.git-guardrails; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.git-guardrails`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.git-guardrails
+  Limitations: inactive by default; pattern-based refusal: a command phrased outside the declared pattern set passes; the Claude half of this surface stays unsupported (see its own record): only the Codex half is closed here.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.git-guardrails refusal on declared dangerous version-control commands).
 
 ### `lifecycle.memory`
 
@@ -454,10 +454,10 @@ Guard managed agent-pack assets before mutation.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.pack-guard; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.pack-guard`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.pack-guard
+  Limitations: inactive by default; the operator enables a mode explicitly, as on the Claude side; matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate; detects a touched managed path by a best-effort substring match over the serialized apply_patch tool_input, because the exact Codex apply_patch payload shape beyond tool_name is unverified.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock).
 
 ### `lifecycle.review-gate`
 
@@ -468,10 +468,10 @@ Gate declared review-sensitive lifecycle completion.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.review-gate; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.review-gate`.
+  Diagnostic: deterministic harness adapter satisfies codex lifecycle.review-gate
+  Limitations: enforcement means forced continuation with feedback, not cancellation of the subagent: neither provider can cancel it from this event; the loop-guard counter lives in the dispatcher (a per-session/agent attempt count capped at 3), because stop_hook_active is documented at neither provider as reliable; inactive by default, and the check command comes only from the machine-owned hook configuration shared with the Claude review-gate install.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping).
 
 ### `lifecycle.router`
 
@@ -524,10 +524,10 @@ Maintain a fail-closed destructive-operation allowlist.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex security.safe-dirs; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.security.safe-dirs`.
+  Diagnostic: deterministic harness adapter satisfies codex security.safe-dirs
+  Limitations: covers the hook half only: sandbox_workspace_write.writable_roots is not projected, because the sandbox axis belongs to lifecycle.auto-approval; requires the harness checkout reachable from the project, since the verdict core is called rather than copied; an unreachable core is a refusal, not a pass; the allowlist itself stays machine-owned and is never written by this surface.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only).
 
 ### `settings.audit`
 

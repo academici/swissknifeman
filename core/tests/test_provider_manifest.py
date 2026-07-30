@@ -13,8 +13,8 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-APPROVED_CANONICAL_SHA256 = "4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1"
-APPROVED_CARRIER_SHA256 = "32975d675cf252bba87b06aaee53bfe37e63a9a97dc74cb7a12a8a2b0c0394eb"
+APPROVED_CANONICAL_SHA256 = "603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1"
+APPROVED_CARRIER_SHA256 = "153d13bf98df0de172d59771af45ffef9d308ec445bb8f3dc789da3cf22def1a"
 
 
 def manifest_value():
@@ -120,10 +120,14 @@ class TestProviderManifest(unittest.TestCase):
         adapted["limitations"] = []
         cases.append(("adapted-without-limitations", value, "MANIFEST_SUPPORT_INVARIANT"))
 
-        value = manifest_value(); unsupported = value["capabilities"][0]["support"]["codex"]
+        value = manifest_value()
+        unsupported_idx = next(i for i, cap in enumerate(value["capabilities"])
+                                if cap["support"]["codex"]["level"] == "unsupported")
+        unsupported = value["capabilities"][unsupported_idx]["support"]["codex"]
         unsupported["binding"] = {"surface": "invented"}
         cases.append(("unsupported-with-binding", value, "MANIFEST_SUPPORT_INVARIANT"))
-        value = manifest_value(); unsupported = value["capabilities"][0]["support"]["codex"]
+        value = manifest_value()
+        unsupported = value["capabilities"][unsupported_idx]["support"]["codex"]
         unsupported["diagnostic"] = "not available"
         cases.append(("unsupported-without-fail-closed", value, "MANIFEST_SUPPORT_INVARIANT"))
 

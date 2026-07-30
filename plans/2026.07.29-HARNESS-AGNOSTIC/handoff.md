@@ -1,37 +1,46 @@
 # HANDOFF — 2026-07-30 — after P4.4
 
-**Next:** `/task:plan-design 2026.07.29-HARNESS-AGNOSTIC P4.4` — ре-дизайн acceptance P4.4
-(item остановлен `🔴 Blocked`, эскалация)
+**Next:** `/task:plan-run 2026.07.29-HARNESS-AGNOSTIC P4.4` — приземление delegation contract в
+грамматику оркестратора (item разблокирован, acceptance переписан D92)
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — правка acceptance item'а против запечатанного контракта, D-запись |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Синхронизировать Scope Included и Validation P4.4 с честной границей §5.5/§9.2 схемы P4.2: доказательством Codex-стороны служит запись КАНОНА, а не рендер `.codex/agents/*-orchestrator.toml`, запрещённый замороженным рендерером; оформить новой D-записью, затем item исполняется штатным `plan-run` под `implementation/high` |
+| Model | Sonnet (`implementation` — §3 Routing строка P4.4) |
+| Thinking | high — кросс-поверхностная синхронизация ДВУХ носителей тела роли без гейта сверки (D35) |
+| Context | NEW SESSION |
+| Суть | Аддитивно расширить грамматику `PLAN` полем формата возврата (`; output:`) и блоком «Контракт задания» с пятью маркерами §5.3 — синхронно в каноне `roles.json` (`_common.orchestrator.content`) и в шаблоне `_common/agents/orchestrator.md`; бамп `version` пака `_common` (> `0.4.1`) + запись в `_common/CHANGELOG.md`; расширить `execpolicy.py` проверкой присутствия пяти полей в обоих носителях + тест; ПОСЛЕДНИМ шагом перевести точку `delegation_contract` `pending → enforced` (D58) — только если блок физически лёг и строгий `--check` зелён своим ходом |
 
 ```
-/task:plan-design 2026.07.29-HARNESS-AGNOSTIC P4.4
+/task:plan-run 2026.07.29-HARNESS-AGNOSTIC P4.4
 ```
 
-**Session:** Claude Opus 5 (1M context)/high (frontier/high при предписанном Routing
-`implementation/high`, `Exec = manual` — перебор тира, зафиксирован в Known Deviations P4.4):
-попытка исполнения P4.4 остановлена эскалацией ДО любой предметной правки.
+**Session:** Claude Opus 5 (1M context)/high — design-заход `plan-design` по item'у P4.4
+(шаг-не-item; предметные файлы `packages/**` не тронуты).
 
 **Done:** P0 целиком (5/5) · P1 целиком (7/7) · **P2 закрыта `plan-close`'ом (9/9 — 5 🟢 + 4 🟠,
 `🟠 Done with deviations`)** · **P3 закрыта `plan-close`'ом (6/6 — 0 🟢 + 6 🟠,
-`🟠 Done with deviations`), аудит P3 проведён (ATTENTION) и реконсилирован** ·
-**P4 заблокирована: P4.1 закрыт `🟢`** (item-коммит `7ed90cd0`) — вердикт по 24 незакрытым items
-`2026.07.18-FOREMAN`, дом остатка `roadmap/artifex-thin-wrapper.md`, D90/D91 · **P4.2 закрыт `🟢`**
-(item-коммит `4d70e7a1`) — запечатана схема политики исполнения
-`root/contracts/execution-policy-v1.md` · **P4.3 закрыт `🟢`** (item-коммит `95ab0492`) — данные
-`execution-policy.json` (четыре раздела, обе точки принуждения `delegation_contract` в
+`🟠 Done with deviations`), аудит P3 проведён (ATTENTION) и реконсилирован** · **P4.1 закрыт `🟢`**
+(item-коммит `7ed90cd0`) — вердикт по 24 незакрытым items `2026.07.18-FOREMAN`, дом остатка
+`roadmap/artifex-thin-wrapper.md`, D90/D91 · **P4.2 закрыт `🟢`** (item-коммит `4d70e7a1`) —
+запечатана схема политики исполнения `root/contracts/execution-policy-v1.md` · **P4.3 закрыт `🟢`**
+(item-коммит `95ab0492`) — данные `execution-policy.json` (обе точки `delegation_contract` в
 `status: pending` с адресатом P4.4, D58), валидатор `packages/harness/lib/harness/execpolicy.py`
-(stdlib-only, `--check`, семь функций-проверок покрывают 20 пунктов §10 контракта), тесты
+(stdlib-only, `--check`, семь функций-проверок на 20 пунктов §10 контракта), тесты
 `test_exec_policy.py` (8 тестов), шаг `[10/10]` в `packages/harness/scripts/validate.sh` ·
-**P4.4 остановлен `🔴 Blocked`** (item-коммита нет — предметный дифф пуст): дефект acceptance
-подтверждён прогоном, ре-дизайн адресован `plan-design` (подробности ниже, в Open risks первой
-строкой).
+**P4.4 РАЗБЛОКИРОВАН design-заходом (D92), статус `⬜ Not started`, предметной работы не сделано:**
+acceptance провайдерских сторон переписан на честную границу §5.5/§9.2 запечатанной схемы —
+вместо невыполнимого «обе проекции роли рендерятся» четыре проверки: (1) канон грузится
+`semantic_agent_roles`, (2) Claude-проекция рендерится, (3) Codex отказывает РОВНО
+`HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4` (иной исход = `PREMISE-CHANGED`
+→ эскалация, а не правка проверки), (4) посылка отказа на месте в
+`configs/provider-capabilities.json` `capabilities[0].support.codex.limitations[1]`. Попутно
+исправлена фактическая ошибка Code Guidance: гейты чистоты канона стоят на ЧТЕНИИ каталога
+(`agentpacks.py:991` — запрещённый литерал, `:993-994` — неизвестный токен, внутри
+`load_agentpack_catalog`), а не на рендере. Правки: `phases/P4.md` (ESCALATION-блок → строка
+снятия, Status, Why, Scope Included, Required Reads, Code Guidance, Validation, Deliverables,
+Pending Work/Known Deviations → «—»), `plan.md` (Version `0.10.0`→`0.10.1`, Status Board P4
+`🔴`→`🟡`, D92, Update Log), `research/08` §4 (датированный блок поправки), `roadmap.md` (штамп
+версии), `journal.jsonl` (запись `plan-design`/`in-progress`).
 
 **Карта «item → коммит» (P2, реконсилировано 2026-07-30, аудит P2, находка F1):**
 P2.1 `ed306ca6` · P2.2 `632e75d3`(+`ad325a5e`) · P2.3 `c97e5cfb`(+`3e883a68`) ·
@@ -42,45 +51,36 @@ P2.8 `a264a339` · P2.9 `ffda7173`.
 P3.1 `f61ac378` · P3.2 `dd6a1404` · P3.3 `41f2156b` · P3.4 `599878e0` · P3.5 `1373fccf` · P3.6 —
 без item-коммита (законный исход «покрыто существующим скиллом», ноль диффа зафиксирован).
 
-**Карта «item → коммит» (P4):** P4.1 `7ed90cd0` · P4.2 `4d70e7a1` · P4.3 `95ab0492` · P4.4 — без
-item-коммита (эскалация до правок; только bookkeeping-коммит плана).
+**Карта «item → коммит» (P4):** P4.1 `7ed90cd0` · P4.2 `4d70e7a1` · P4.3 `95ab0492` · P4.4 — ещё
+не исполнен (остановленный прогон 2026-07-30 предметного диффа не дал; design-заход того же дня —
+только bookkeeping плана).
 
-**Remaining:** **P4.4 (заблокирован — сначала `plan-design`)** → P4.5, затем P5 (3 items). Итого
-**5 из 35** items плана не исполнено. Сверх items остаётся **рекомендованный аудит фазы P2**
-(`/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P2`), владельцем не запускался; он не блокирует P4
-(фаза P2 терминальна), но чем дальше уходит exec, тем дороже его находки.
+**Remaining:** P4.4 → P4.5, затем P5 (3 items). Итого **5 из 35** items плана не исполнено. Сверх
+items остаётся **рекомендованный аудит фазы P2** (`/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P2`),
+владельцем не запускался; он не блокирует P4 (фаза P2 терминальна), но чем дальше уходит exec,
+тем дороже его находки.
 
-**Sources of truth:** `plan.md` (§3 Routing, §5 D1–D91, §6 Update Log, §4 Status Board — P2 `5/9`,
-P3 `0/6` обе `🟠`, P4 `3/5` `🔴 Blocked`; §7 Exported — политика исполнения `sealed (P4.2)`) ·
-`root/contracts/execution-policy-v1.md` (**запечатанная схема — вход P4.3 и P4.4**, включая
-канонические marker-литералы §5.3, жизненный цикл точки §5.4, измеренную границу Codex-стороны
-§5.5 и «что НЕ является доказательством» §9) ·
-`packages/harness/configs/common/agent-packs/execution-policy.json` (живой носитель данных,
-P4.3 — точка `delegation_contract` по-прежнему `pending`) ·
-`packages/harness/lib/harness/execpolicy.py` (валидатор, P4.3) · `phases/P4.md` (Phase
-Context + контракт фазы, Completion Notes P4.1–P4.3, **ESCALATION-блок P4.4**, порядок P4.1→P4.5) ·
-`root/executor-layer-rescope-v1.md` (граница «строит / не строит») ·
-`roadmap/artifex-thin-wrapper.md` (дом остатка супервизора) · `phases/P2.md`/`phases/P3.md`
-(Completion Notes, Phase Handoff) · `roadmap.md` §«Карта запуска» · `journal.jsonl`.
+**Sources of truth:** `plan.md` (§3 Routing, §5 D1–**D92**, §6 Update Log, §4 Status Board — P2
+`5/9`, P3 `0/6` обе `🟠`, P4 `3/5` `🟡`; §7 Exported — политика исполнения `sealed (P4.2)`) ·
+`root/contracts/execution-policy-v1.md` (**запечатанная схема — вход P4.4**: канонические
+marker-литералы §5.3, жизненный цикл точки §5.4, измеренная граница Codex-стороны §5.5, «что НЕ
+является доказательством» §9) · `packages/harness/configs/common/agent-packs/execution-policy.json`
+(живой носитель, точка `delegation_contract` по-прежнему `pending`) ·
+`packages/harness/lib/harness/execpolicy.py` (валидатор, P4.3) · `phases/P4.md` (Phase Context +
+контракт фазы, Completion Notes P4.1–P4.3, ТЗ P4.4 после ре-дизайна, порядок P4.1→P4.5) ·
+`research/08` §4 + блок «Поправка 2026-07-30» · `root/executor-layer-rescope-v1.md` (граница
+«строит / не строит») · `roadmap/artifex-thin-wrapper.md` (дом остатка супервизора) ·
+`phases/P2.md`/`phases/P3.md` (Completion Notes, Phase Handoff) · `roadmap.md` §«Карта запуска» ·
+`journal.jsonl`.
 
 **Open risks:**
-- **P4.4 ЗАБЛОКИРОВАН дефектом собственного acceptance — нужен заход `plan-design` ДО повторной
-  попытки.** Scope Included требует «сверка, что обе провайдерские проекции роли рендерятся без
-  ошибок после правки», Validation — прогон `plan_agent_artifact(r, provider_id='codex',
-  catalog_path=c)` с ожиданием `codex OK`. Для `_common.orchestrator` это НЕВЫПОЛНИМО: роль несёт
-  `activation_requirements: ('command.workflow-carrier',)`, и `project_agent_role` безусловно
-  отказывает — `ValueError: HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4`
-  (`packages/harness/lib/harness/agentpacks.py:1120`; воспроизведено прямым прогоном
-  Validation-команды на `c457205c`). Запечатанная схема P4.2 фиксирует честную границу и адресует
-  правку дословно: §5.5 — «any Validation phrased as «both projections of the role render» is
-  unsatisfiable for the orchestrator by the frozen contract — a spec matter for `plan-design`, not
-  something an executor may work around»; §9.2 запрещает предъявлять Codex-проекцию этой роли как
-  доказательство приземления. Предмет ре-дизайна ровно один (acceptance Codex-стороны + D-запись);
-  остальные девять пунктов Scope Included исполнимы как есть, и точка `delegation_contract`
-  осталась `pending` с адресатом `2026.07.29-HARNESS-AGNOSTIC P4.4` (D58: перевод в `enforced`
-  «чтобы Validation была зелёной» запрещён Code Guidance item'а). Дефект был ЗАМЕЧЕН ещё замером
-  P4.2 (см. его строку `## 6. Update Log`), но синхронизации ТЗ не получил — это и есть работа
-  следующего шага.
+- **Delegation contract доказуемо НЕ доезжает до Codex-хоста** (D92, цена (1)): приземление
+  доказывается только для провайдер-нейтрального канона и Claude-шаблона; Codex-досягаемость
+  остаётся долгом до закрытия capability-разрыва. Отдельный дом долгу НЕ заводится — он записан
+  `limitations[1]` каталога capability и §3.12 `root/contracts/codex-parity-verdicts-v1.md`.
+- **Новый acceptance P4.4 зелён и ДО предметной правки** (D92, цена (2)): он доказывает
+  сохранность поверхностей, а не приземление. Доказательство приземления — маркеры §5.3 в ОБОИХ
+  носителях + строгий `--check` после перевода точки в `enforced`; подмена запрещена Code Guidance.
 - **`packages/skiller/scripts/validate.sh` красный на ОДНОМ предсуществующем гейте** (долг P0.5):
   §14 `ERROR: протухшие переводы SKILL.ru.md→SKILL.md`
   (`skills/repository-bootstrap/package-architecture/SKILL.md`, 225-строчный чужой RU-источник).
@@ -93,13 +93,13 @@ Context + контракт фазы, Completion Notes P4.1–P4.3, **ESCALATION-
   кейсов `unmappable`, Codex-сторона наблюдаемости не пробовалась — четыре долга плюс два наших
   (§4 `root/executor-layer-rescope-v1.md`).
 - **`plan-lint`: 0 ERROR / 6 WARN, все шесть — false positive предикатов линтера**, не контентные
-  дефекты (на `3b00f48a`, `--baseline HEAD` → новых 0; контентных новых прогон P4.4 не добавил, а
-  единственный «новый» при `--baseline c457205c` есть текстовая дельта сообщения DoR-гейта, в которое
-  встроен статус фазы `🟡` → `🔴`). Пять — DoR-гейт (SKILL §7) на строке-легенде каждой фазы,
-  чей статус перешёл в `🟡`/`🟠`/`🟢`/`🔴` (`plan_lint.py:1941-1948`). Шестая — «фаза P4 заявляет
-  оркестрацию без workflow-скрипта»: `ORCHESTRATION_MARKER_RE` (`plan_lint.py:223`) матчит подстроку
-  «оркестрац» в предложении Phase Context «**Оркестрация НЕ объявляется**». Сужение предикатов —
-  правка `packages/task`, дом `roadmap/` либо follow-up fix-item.
+  дефекты (на рабочем дереве с `--baseline HEAD` → «новых: 1», и это та же текстовая дельта
+  сообщения DoR-гейта, в которое встроен статус фазы: прогон перевёл его `🔴 Blocked` → `🟡 In
+  progress`; состав шести WARN не изменился). Пять — DoR-гейт (SKILL §7) на строке-легенде каждой
+  фазы (`plan_lint.py:1941-1948`). Шестая — «фаза P4 заявляет оркестрацию без workflow-скрипта»:
+  `ORCHESTRATION_MARKER_RE` (`plan_lint.py:223`) матчит подстроку «оркестрац» в предложении
+  «**Оркестрация НЕ объявляется**». Сужение предикатов — правка `packages/task`, дом `roadmap/`
+  либо follow-up fix-item.
 - **69 длинных описаний без триггера** в `desc-trigger-burndown.txt` (унаследованный долг P3.5) —
   сокращаются по одному при следующей содержательной правке скилла; критерий держит
   `roadmap/skill-description-quality.md`.
@@ -156,10 +156,11 @@ Context + контракт фазы, Completion Notes P4.1–P4.3, **ESCALATION-
   добор таблицы внешних источников (P3.3) · сокращение 69 длинных описаний, one-way (P3.5) ·
   перевод прозы «кап делегирования» в `packages/task/commands/{design,research,review,plan-design}.md`
   на ссылку к SSOT `execution-policy-v1.md` (Scope Excluded P4.2 — вне этой фазы) · рычаг №4
-  владельца (ECO-OPT D74, OQ-7).
+  владельца (ECO-OPT D74, OQ-7) · **Codex-досягаемость delegation contract** (D92 — до закрытия
+  capability-разрыва `command.workflow-carrier`).
 - open_questions: OQ-7 структурный перебор бюджета обнаружения Codex — ИЗМЕРЕН P3.4/P3.5 (9/10),
   решение между тремя вариантами открыто · OQ-8 дрейф канона ролей (Deferred) · OQ-9 CI не
   покрывает `analyst`/`task` (Deferred). **OQ-2 (якоря parse-контракта) закрыта измерением P0.3;
   её исполнитель — P4.5, и вердикт «вариант B» заранее переводит item в ветку эскалации** (D37,
   `research/03` §4). OQ-3/OQ-6 закрыты D86/D87 (P2.1); OQ-1 — D31; OQ-4 — P3.4/D27. Новых
-  открытых вопросов прогон P4.4 не добавил.
+  открытых вопросов design-заход P4.4 не добавил.

@@ -137,6 +137,23 @@ first-party (Ф19: «duplicate work, leave gaps»): без объявленно�
 присутствия блока в обоих — в валидатор; общий канон↔проекция differ — отдельная работа с
 собственным владельцем, не хвост этой фазы.
 
+**Поправка 2026-07-30 (design-заход P4.4, D92).** Фраза выше «обе проекции
+(`plan_agent_artifact`) читают первый» верна про ЧТЕНИЕ канона, но её нельзя читать как «обе
+проекции роли оркестратора рендерятся»: `_common.orchestrator` несёт
+`activation_requirements: ("command.workflow-carrier",)`, и рендерер безусловно отказывает
+Codex — `ValueError: HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4`
+(`packages/harness/lib/harness/agentpacks.py:1120`; прямой прогон на `8f733849`). Ограничение
+запечатано P2.1 (`configs/provider-capabilities.json`
+`capabilities[0].support.codex.limitations[1]`; `root/contracts/codex-parity-verdicts-v1.md`
+§3.12) и границей названо в `root/contracts/execution-policy-v1.md` §5.5. Второе уточнение
+того же замера: гейт чистоты канона (запрещённые провайдерские литералы, неизвестные токены)
+стоит на ЧТЕНИИ каталога — `load_agentpack_catalog`, `agentpacks.py:991` и `:993-994`, — а не
+на рендере, поэтому провайдер-нейтральность нового блока доказывается успешной
+`semantic_agent_roles`, Claude-сторона — успешным `plan_agent_artifact(..., 'claude-code')`, а
+Codex-сторона — ОЖИДАЕМЫМ отказом. Вывод 4 (пробел ровно один — `output format`, приземление
+расширением грамматики) поправкой не затронут. RAG:— (repo-grounded: перечисленные адреса на
+дереве `8f733849`).
+
 ## 5. Два потолка параллелизма — не одна цифра
 
 `findings/04` Ф17 прямо предупреждает, что для политики спавна это два разных субъекта.

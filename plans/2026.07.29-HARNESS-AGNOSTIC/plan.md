@@ -338,6 +338,9 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-30 | plan-close/Sonnet/low | Фаза P5 закрыта `🟠 Done with deviations` (1 🟢 + 2 🟠, все терминальны); все фазы P0–P5 плана теперь терминальны — **план закрыт целиком** — детали см. `phases/P5.md` § Phase Handoff |
+| 2026-07-30 | implementation/Sonnet 5/high | Item P5.1 закрыт `🟠 Done with deviations` — коммиты `e42cd412`,`11fbf79e`,`485b9702`,`fab160fc`,`503dc68d` — детали см. `phases/P5.md` Completion Notes P5.1 |
+| 2026-07-30 | frontier/Opus 5/high | Item P5.2 закрыт `🟠 Done with deviations` — коммиты `56eae069`(merge)+`44864fec` — детали см. `phases/P5.md` Completion Notes P5.2 |
+| 2026-07-30 | frontier/Opus 5/high | Item P5.3 закрыт `🟢 Done` — коммиты `e50c1e7b`+`95663990` — детали см. `phases/P5.md` Completion Notes P5.3 |
 | 2026-07-30 | plan-close/Sonnet/low | Фаза P4 закрыта `🟠 Done with deviations` (4 🟢 + 1 🟠, все терминальны; Phase Handoff заполнен, docs-sync — не требуется сейчас, мигрирует в docs при архивации плана) — детали см. `phases/P4.md` § Phase Handoff |
 | 2026-07-29 | plan-design/Claude Opus 5/high | План создан (design pass 1/3): слои 0–2, скелеты 6 фаз / 19 items с контракт-блоками, D1–D7, §7 Contracts. ACTIVE перехвачен (был «—»), FOREMAN помечен `Paused By` (поглощение) — детали см. `handoff.md` § Done |
 | 2026-07-29 | plan-design/Claude Opus 5/high | Фаза P0 детализирована до DoR (design pass 2, первая из шести фаз): 5 items (был 4 — добавлен P0.5, D10), pre-mortem `research/02-p0-premortem.md` (R1–R7), D8–D11; §3 Routing и Status Board синхронизированы; §7 Consumed исправлен по замеру — живой канон plan-protocol **v2.21.0**, не «≥2.11.0» |

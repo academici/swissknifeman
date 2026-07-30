@@ -1,62 +1,74 @@
-# HANDOFF — 2026-07-30 — after P2.5
+# HANDOFF — 2026-07-30 — after P3.1
 
-**Next:** `/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P3.1`
+**Next:** `/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P3.2`
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | medium — §3 Routing строка P3.1 (`implementation/medium`, `Exec = plan-exec`) |
+| Thinking | medium — §3 Routing строка P3.1–P3.2 (`implementation/medium`, `Exec = plan-exec`) |
 | Context | continue (/clear) — ручной item |
-| Суть | P3.1 — сверить канон каркаса против дерева и первоисточника (открывает фазу P3, батч B3 расформирован D53 — item solo) |
+| Суть | P3.2 — реестр решений каркаса: packaging-модель, решения аудита, проверенные факты платформы |
 
 ````
-/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P3.1
+/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P3.2
 ````
 
 **Что сделано этим заходом (`task:plan-exec`, Sonnet/medium — пин команды, совпадает с §3
-Routing строкой P2.5).** Перед стартом обнаружено и починено расхождение: `Home` в `## 0. Meta`
-указывал на репо-донор `swissknifeman` (стоит на `main`, ветки `next/harness-agnostic` не
-видит), хотя вся история P0–P2.4 плана лежит в worktree `swissknifeman-next` — правлено
-(коммит `975f7808`, до старта item'а). P2.5 закрыт `🟢` (item-коммит `fa826d47`): шаг гейта
-`provider-docs` в `.github/workflows/hygiene.yml` (`test-provider-docs.py -v` +
-`provider-docs.py --check`, без ослабления) и артефакт
-`artifacts/P2-codex-parity-conformance.md` — 35 capability до/после фазы неизменны, 17
-вердиктов вердикт-контракта (12 `closed-by-adapter` сверены программно с манифестом — 0
-расхождений `adapter_id`/`level`; 5 `claude-only` с непустым `limitations`; 0
-`intent-withdrawn`). Попутно найден и починен предсуществующий красный
-`test-provider-docs.py` (дохлая ссылка `README.md:122` на архивированный
-`roadmap/self-learning-memory.md`, commit `9b057723`) — без починки сам добавляемый гейт
-немедленно краснел бы в CI. **Фаза P2 закрывается этим item'ом: 5/9 (P2.1/P2.5–P2.8 `🟢`;
-P2.2/P2.3/P2.4/P2.9 `🟠`), все девять items терминальны.**
+Routing строкой P3.1).** Фаза P3 открыта: P3.1 закрыт `🟠 Done with deviations` (item-коммит
+`f61ac378`). Пять доков `packages/skiller/docs/agent-framework/` приведены к дереву по
+постатейной таблице `research/07-framework-canon-drift-2026-07-29.md` §1 — 10 из 11
+расхождений сняты по доказательству из дерева (agent-packs, lock, фикс видимости, универсальные
+роли, review-gate, dev-loop, ponytail-дисциплина `🔜`→`✅`); одно (`path-scoped rules — индекс
+правил в hub`) остаётся `🔜` с точным сужением остатка (правила есть у пяти паков, индекса в
+hub нет — код `generate-hub.sh`, вне скоупа item'а). Глобальная «Версия каркаса `v0.1.0-wip`»
+удалена как противоречащая D24 (per-pack версионность) и заменена штампом `Проверено против
+дерева: 2026-07-30` + машинно-проверяемой таблицей «пак → версия» (10 паков) — машинный якорь
+будущего гейта свежести P3.3. `roles.md`/`agent-teams.md` несут записанную оговорку о
+неприменимости `skills:`-preload к teammate-режиму (first-party
+`code.claude.com/docs/en/agent-teams`, проверено 2026-07-29); `agent-teams.md` обновлён по
+актуальным версиям/режимам/событиям/наследованию effort (дефолт `teammateMode` — `in-process` с
+v2.1.179, три события команды, effort лида наследуется с v2.1.186). `skills-index-and-hub.md`
+снят с `🔜` на `✅` (все три добавки Фазы 1 реализованы), уточнена формулировка «молча no-op» до
+first-party формы (пропуск + debug-лог). `index.md` — рабочая ссылка на скилл
+`system/agent-packs` вместо битой `#`.
 
 **Session:** Claude Sonnet 5/medium (implementation/medium, `Exec = plan-exec` — совпадает с §3
-Routing строкой P2.5, перебора/недобора нет).
+Routing строкой P3.1, перебора/недобора нет).
 
-**Done:** P0 целиком (5/5) · P1 целиком (7/7) · **P2 целиком (9/9 — 5 🟢 + 4 🟠, все items
-терминальны).**
+**Done:** P0 целиком (5/5) · P1 целиком (7/7) · P2 целиком (9/9 — 5 🟢 + 4 🟠, формально не
+закрыта `plan-close`'ом) · **P3.1 (1/6 фазы).**
 
-**Карта «item → коммит» (P2, продолжение — P2.5):**
-P2.5 `fa826d47` (item-коммит, единственный — Files включал только README.md/hygiene.yml/новый
-артефакт; `configs/provider-capabilities.json`/`docs/provider-support.md` не изменились от
-`--write`).
+**Карта «item → коммит» (P3, начало):**
+P3.1 `f61ac378` (item-коммит, единственный — Files включал только пять доков
+`agent-framework/`).
 
-**Remaining:** Фаза P2 не закрыта формально (`plan-close Pn` реконсиляция — не входит в этот
-заход plan-exec одного item'а) → затем P3 (6) → P4 (5) → P5 (3). Итого **14 из 35** items
-плана ещё не исполнено (плюс формальное закрытие фазы P2).
+**Remaining:** Фаза P2 не закрыта формально (`plan-close P2`) — открытый долг с предыдущего
+захода, не тронут этим item'ом. P3.2–P3.6 (5 items фазы P3) → P4 (5) → P5 (3). Итого **13 из
+35** items плана ещё не исполнено (плюс формальные закрытия фаз P2 и, впоследствии, P3).
 
-**Sources of truth:** `root/contracts/codex-parity-verdicts-v1.md` (**sealed v1** — все 17
-записей закрыты P2.1–P2.5) · `root/contracts/provider-parity-definition.md` (**sealed v1**) ·
-`plan.md` (§3 Routing, §5 D1–D89, §6 Update Log, §4 Status Board — P2 `5/9`, все items
-терминальны) · `phases/P2.md` (P2.1–P2.5 Completion Notes) · `configs/provider-capabilities.json`
-(35 capability: 12 Codex-адаптированных, 5 честных Codex-`unsupported`) ·
-`artifacts/P2-codex-parity-conformance.md` (снимок «до/после» этой фазы) ·
-`.github/workflows/hygiene.yml` (новый шаг `provider-docs`) · `roadmap.md` (v0.10.0, 35 items) ·
-`journal.jsonl`.
+**Sources of truth:** `plan.md` (§3 Routing, §5 D1–D89, §6 Update Log, §4 Status Board — P3
+`0/6` `🟡 In progress`) · `phases/P3.md` (Phase Context, P3.1 Completion Notes — таблица
+«утверждение → было → стало → доказательство») · `research/07-framework-canon-drift-2026-07-29.md`
+(вход P3.1–P3.2) · `findings/04-rag-agent-surface-and-skill-listing-2026-07-29.md` (Ф13–Ф18,
+first-party платформенные факты) · пять доков `packages/skiller/docs/agent-framework/*` (новое
+состояние канона) · `journal.jsonl`.
 
 **Open risks:**
-- **Фаза P2 требует формального закрытия** (`plan-close 2026.07.29-HARNESS-AGNOSTIC P2` —
-  реконсиляция девяти items, таблицы, Phase Handoff) — этим заходом НЕ сделано (вне скоупа
-  одного item'а `plan-exec`).
+- **Фаза P2 требует формального закрытия** (`plan-close 2026.07.29-HARNESS-AGNOSTIC P2`) —
+  не сделано ни этим, ни предыдущим заходом.
+- **`plan-lint` DoR-гейт (SKILL §7) даёт false positive на строке-легенде** («Все `[NEEDS
+  CLARIFICATION]` сняты…» матчится как сам маркер) для КАЖДОЙ фазы, чей статус переходит в
+  `🟡`/`🟠`/`🟢` — предсуществующий класс на P0/P1/P2, теперь и на P3 (4 WARN, 0 ERROR при
+  закрытии P3.1). Не контентный дефект, чинить в самом линтере (вне скоупа документационных
+  items).
+- **`packages/skiller/scripts/validate.sh` красный на дереве** — предсуществующий
+  `ERROR: реестр устарел относительно источников` (DRIFT `package-architecture`/`skills.json`/
+  `publication-lock.json`/`docs/guide/budget.md`), долг P0.5, не пересекается с `Files` P3.1.
+  Требует отдельного фикс-item'а (`skiller registry` + коммит регенерированных артефактов) —
+  дом либо P0.5 follow-up, либо `roadmap/`.
+- **path-scoped rules — индекс правил в hub не заведён** (P3.1 Pending Work): rules-каталоги
+  есть у пяти паков, `generate-hub.sh` их не индексирует. Код, вне скоупа документационного
+  item'а — кандидат `roadmap/` или отдельный item, если владелец сочтёт нужным.
 - **CLI-обвязка `harness doctor --settings --provider codex` не заведена** (P2.4 Pending Work
   (1)): движок настоящий, покрыт тестами напрямую, роутинг вне `Files` P2.4. Дом — follow-up
   item или `roadmap/`.
@@ -65,10 +77,10 @@ P2.5 `fa826d47` (item-коммит, единственный — Files вклю�
   поверхности/паки при каждом вызове; merge-режим — кандидат `roadmap/`.
 - **Точная схема пейлоада Codex `apply_patch`** за пределами `tool_name` — `[UNVERIFIED]`
   (`findings/03`); носитель — `roadmap/`.
-- **`plan-lint` WARN — три штуки, все предсуществующие** (K=0 не задет): `NEEDS
-  CLARIFICATION`-маркеры в DoR-прозе фаз P0/P1/P2 (не предмет закрытых items).
+- **`plan-lint` WARN — три предсуществующих**: `NEEDS CLARIFICATION`-маркеры в DoR-прозе фаз
+  P0/P1/P2 (не предмет закрытых items).
 - **Посторонний незакоммиченный дифф в дереве не убран и не тронут:** `roadmap/README.md` (M) +
-  untracked `roadmap/2026.07.29-launch-block-command-row.md`. Живучесть подтверждена восьмой
+  untracked `roadmap/2026.07.29-launch-block-command-row.md`. Живучесть подтверждена девятый
   заход подряд — не наш предмет.
 - **Слепота `_validate_conflicts` к дублю СМЫСЛА** (`instructions.py:1005-1022`) — дом правки
   `roadmap/`, спека не заведена.
@@ -79,8 +91,6 @@ P2.5 `fa826d47` (item-коммит, единственный — Files вклю�
   маркерами запрещена навсегда.
 - **Гейт `[9/9]` живёт только в `packages/harness/scripts/validate.sh`** — `analyst`/`task` в CI
   не покрыты (OQ-9).
-- **`packages/skiller/scripts/validate.sh` на дереве КРАСНЫЙ** (долг P0.5); `scripts/public-hygiene.py`
-  — предсуществующе красный (не тронут этим item'ом).
 - **`vitepress build` в дереве не прогоняется** — `node_modules` отсутствуют.
 - **Маршруты мягче:** items с `effort high` идут через `plan-run` (D47) — строка
   `Session: <model>/<effort>` в отчёте и Update Log обязательна.
@@ -97,17 +107,17 @@ P2.5 `fa826d47` (item-коммит, единственный — Files вклю�
   починка order-sensitivity `apply_instructions` (дом заведён P2.8) · фикстурный `provenance`
   P1.2 · изоляция общего state (OQ-5) · тонкая обвязка супервизора (P4.1, D38) · round-trip гейт
   живым прогоном Codex (D3) · структурный перебор листинга Codex (OQ-7) · общий differ канона
-  ролей (OQ-8) · машинные гейты PROMOTE-CANDIDATE · `skiller registry` не прогнан (P0.5) ·
-  раскатка на потребителей (D45) · push/PR/тег и публикация доков (D41) · расширение CI на
-  `analyst`/`task` (OQ-9) · русский канон скиллов в `.gitignore` (Р5) · раскатка adoption-режима ·
-  удаление pre-image'ов P1.5 · починка архивных упоминаний A7 в `phases/P1.md` · декларативный
-  merge-режим `harness hooks --provider codex` (заведён P2.3) · декларативный merge-режим
-  `harness agent-packs --provider codex render` (заведён P2.4) · точная схема Codex
-  `apply_patch` (заведён P2.3) · отдельный machine-owned `check_command` для Codex `review-gate`
-  (заведён P2.3) · CLI-флаг `harness doctor --settings --provider codex` (заведён P2.4) ·
-  формальное закрытие фазы P2 (`plan-close`).
-  **Снято из deferred:** golden-хеш `test-provider-docs.py`/сгенерированные provider-audit
-  артефакты — гейт `provider-docs` в `hygiene.yml` теперь ловит дрейф механически (P2.5).
+  ролей (OQ-8) · машинные гейты PROMOTE-CANDIDATE · `skiller registry` не прогнан (P0.5, теперь
+  ещё и красный DRIFT на дереве) · раскатка на потребителей (D45) · push/PR/тег и публикация
+  доков (D41) · расширение CI на `analyst`/`task` (OQ-9) · русский канон скиллов в `.gitignore`
+  (Р5) · раскатка adoption-режима · удаление pre-image'ов P1.5 · починка архивных упоминаний A7
+  в `phases/P1.md` · декларативный merge-режим `harness hooks --provider codex` (заведён P2.3) ·
+  декларативный merge-режим `harness agent-packs --provider codex render` (заведён P2.4) ·
+  точная схема Codex `apply_patch` (заведён P2.3) · отдельный machine-owned `check_command` для
+  Codex `review-gate` (заведён P2.3) · CLI-флаг `harness doctor --settings --provider codex`
+  (заведён P2.4) · формальное закрытие фазы P2 (`plan-close`) · индекс `path-scoped rules` в hub
+  (P3.1 Pending Work).
 - open_questions: OQ-7 структурный перебор бюджета обнаружения (P3.4) · OQ-8 дрейф канона ролей
   (Deferred) · OQ-9 CI не покрывает `analyst`/`task` (Deferred). OQ-3/OQ-6 закрыты D86/D87 (P2.1);
-  OQ-2 закрыта D71, OQ-1 — D31, OQ-4 — D27. Новых открытых вопросов P2.5 не добавил.
+  OQ-2 закрыта D71, OQ-1 — D31, OQ-4 закрыта D27 (P3.1 подтвердил вывод: 37 скиллов > 8 KB не
+  сломаны). Новых открытых вопросов P3.1 не добавил.

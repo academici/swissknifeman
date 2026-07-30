@@ -81,12 +81,22 @@ PATH="$HOME/.local/bin-skm-next:$PATH"
    вывод = чужая работа в дереве → СТОП, не продолжать (владелец правил параллельно).
 2. Якорь отката ДО первой мутации: `git -C /home/vostrikov/projects/packages/swissknifeman
    rev-parse --short main` — записать значение в Completion Notes P5.2 и в этот раздел.
-3. Merge из основного дерева: `cd /home/vostrikov/projects/packages/swissknifeman && git
-   fetch . next/harness-agnostic:next/harness-agnostic && git merge --no-ff
-   next/harness-agnostic -m "<Conventional Commit RU с PLAN-ID>"` (репозиторий один — общий
-   `.git` через `git worktree` — обычный локальный merge веток, без сетевого fetch).
-   `--squash`/rebase запрещены (D41/провенанс пяти фаз). Конфликт → `git merge --abort` +
-   ESCALATION-блок в P5.2, разрешение руками запрещено.
+3. Merge из основного дерева: `cd /home/vostrikov/projects/packages/swissknifeman && git merge
+   --no-ff next/harness-agnostic -F <файл с Conventional Commit RU и PLAN-ID>` (репозиторий
+   один — общий `.git` через `git worktree` — обычный локальный merge веток, без сетевого
+   fetch). `--squash`/rebase запрещены (D41/провенанс пяти фаз). Конфликт → `git merge --abort`
+   + ESCALATION-блок в P5.2, разрешение руками запрещено.
+
+   **Исправлено по факту прогона P5.2 (2026-07-30):** шаг нёс лишний
+   `git fetch . next/harness-agnostic:next/harness-agnostic &&` перед merge. Эта команда
+   не просто избыточна (ref уже общий), а **невыполнима**: git отказывается обновлять ref
+   ветки, выкачанной в другом worktree —
+   `fatal: refusing to fetch into branch 'refs/heads/next/harness-agnostic' checked out at
+   '/home/vostrikov/projects/packages/swissknifeman-next'` (exit 128), и `&&` оборвал бы
+   всю цепочку до merge. Тождественность ref проверяется вместо fetch — обе команды дают
+   `acf73d6104c77fd1117ccf5c231134955b4e2cd0`:
+   `git rev-parse next/harness-agnostic` (из основного дерева) и
+   `git -C /home/vostrikov/projects/packages/swissknifeman-next rev-parse HEAD`.
 4. Пост-мердж валидация В ОСНОВНОМ дереве: пять `packages/{skiller,harness,maind,analyst,task}
    /scripts/validate.sh` + `PYTHONPATH=. python3 -m unittest discover -s core/tests` — все
    зелёные (та же дисциплина, что в P5.1); красный гейт → откат по якорю (шаг 2), не «дочинить
@@ -96,10 +106,40 @@ PATH="$HOME/.local/bin-skm-next:$PATH"
    `/home/vostrikov/projects/packages/swissknifeman/bin/swissknifeman`; `swissknifeman doctor`
    — вердикт сверяется построчно с `artifacts/P5.1-fleet-baseline/doctor-before.txt`.
 6. Дозаписать в этот раздел (после фактического прогона P5.2): дату, якорь (SHA до merge),
-   SHA merge-коммита, число коммитов `main` до/после.
+   SHA merge-коммита, число коммитов `main` до/после. → **Выполнено, см. «Факты прогона»
+   ниже.**
 7. С этого момента рабочий дом плана — ОСНОВНОЕ дерево (D46): P5.2/P5.3 коммитят там; ветка
    `next/harness-agnostic` коммитов больше не принимает и НЕ удаляется (второй якорь отката,
    пока `main` не отправлен наружу).
+
+### Факты прогона P5.2 (заполнено после merge)
+
+| Факт | Значение |
+|:--|:--|
+| Дата прогона | 2026-07-30 |
+| **Якорь отката** (`main` ДО merge) | **`8e16a811`** |
+| Коммитов `main` ДО merge | 1473 |
+| Слитая ветка (`next/harness-agnostic` HEAD) | `acf73d61` (`acf73d6104c77fd1117ccf5c231134955b4e2cd0`) |
+| Ветка впереди `main` на | 102 коммита |
+| **SHA merge-коммита** | **`56eae069`** |
+| Родители merge-коммита | `8e16a811 acf73d61` (два — не fast-forward) |
+| Коммитов `main` ПОСЛЕ merge | 1576 (+103 = 102 ветки + merge) |
+| Конфликты | нет (`git merge` exit 0) |
+| Пост-мердж валидация | пять `validate.sh` + `core/tests` (251 тест) — все зелёные, python 3.12.3 |
+| Смоук ПРЕЖНИМ контуром | `readlink -f "$(command -v swissknifeman)"` → `/home/vostrikov/projects/packages/swissknifeman/bin/swissknifeman`; в `PATH` префикса `bin-skm-next` НЕТ |
+| `swissknifeman doctor` vs базлайн | 105/105 строк, вердикт тот же (`Проблем: 2` · `harness: OK` · `Все проверки пройдены.` · `Окружение готово.`); расходятся ДВЕ строки, обе — прямое следствие merge: HEAD `8e16a811`→`56eae069` и sha реестра `041735a37bd6`→`b4675c93e617` (перечень 18 отставших хабов совпадает дословно) |
+
+**Откат** (пока `main` не отправлен наружу): `git -C /home/vostrikov/projects/packages/swissknifeman
+reset --hard 8e16a811`. Ветка `next/harness-agnostic` — второй, независимый от reflog якорь.
+
+**Предусловие шага 1 при фактическом прогоне:** `git status --short` основного дерева был
+НЕ пуст — три untracked-пути (`.swissknife/` — runtime-состояние analyst; `audits/` — документ
+владельца; `packages/task/lib/.claude/` — runtime `runs`/`analyze` со своими `.gitignore`).
+Замер показал, что риск R1 («чужая правка попала в merge») не реализуем: tracked-изменений
+ноль (`git status --short --untracked-files=no` пусто), и `git diff --stat
+main..next/harness-agnostic -- .swissknife audits packages/task/lib/.claude` пусто — ветка эти
+пути не трогает, в merge-коммит они не входят. Продолжение — по явному решению владельца
+(вопрос задан ДО первой мутации). После merge все три пути на месте, нетронуты.
 
 ## Снятие worktree и откат (P5.3, ПОСЛЕДНИЙ шаг — после зелёной дельты)
 

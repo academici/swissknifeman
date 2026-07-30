@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `4d2a42d6c5e5a42bf3f390c30d68f2dc0f0b118150bbdfe3fd2a45d294c0bd92`
-- Carrier SHA-256 (canonical bytes plus one LF): `de1d9cbd7420016577bfbc30ab78f33ac016eed114dc6d8fb289b456be9830f5`
+- Canonical JSON SHA-256 (without carrier LF): `603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1`
+- Carrier SHA-256 (canonical bytes plus one LF): `153d13bf98df0de172d59771af45ffef9d308ec445bb8f3dc789da3cf22def1a`
 - Common capabilities: `35`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -16,7 +16,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 
 | Capability | Claude Code | Codex |
 |:--|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | unsupported |
+| `agent-packs.lifecycle` | adapted | adapted |
 | `agents.catalog` | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported |
 | `analytics.normalized-events` | adapted | adapted |
@@ -47,7 +47,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `lifecycle.run-report` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
 | `security.safe-dirs` | adapted | adapted |
-| `settings.audit` | adapted | unsupported |
+| `settings.audit` | adapted | adapted |
 | `settings.permissions` | adapted | adapted |
 | `skills.repository` | native | native |
 | `workflows.status` | adapted | unsupported |
@@ -104,10 +104,10 @@ Render, check, upgrade, remove and diagnose locked packs.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex agent-packs.lifecycle; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.agent-packs.lifecycle`.
+  Diagnostic: deterministic harness adapter satisfies codex agent-packs.lifecycle (bounded: role projections only)
+  Limitations: covers role projections only: pack members that are Claude-runtime artifacts (.claude/workflows/*.js, .claude/rules/*, the review-gate shell hook and its ini) have no Codex projection and are excluded; a role that requires command.workflow-carrier is refused for Codex by the frozen renderer, so such roles are absent from the Codex projection; interview answers and pack versions stay shared with the Claude projection: the Codex lifecycle does not fork the pack catalog.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members).
 
 ### `agents.catalog`
 
@@ -134,8 +134,8 @@ Plan, dry-run, check and copy-verify supported legacy analytics into the neutral
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported for Codex: there is no committed Codex legacy analytics carrier to migrate; fail closed instead of inventing one
-  Limitations: new Codex normalized writes already target the neutral store.
-  Evidence: [2026-07-22] accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md` (frozen neutral analytics readers, store and migration).
+  Limitations: the intent does not apply to Codex: there is no legacy Codex analytics carrier to migrate; new Codex writes already target the neutral store; a future Codex legacy source would be an additive change, not a reopened verdict.
+  Evidence: [2026-07-30] no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex analytics.legacy-migration applicability).
 
 ### `analytics.normalized-events`
 
@@ -287,9 +287,9 @@ Select a provider-native output/context style.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex context.output-style; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+  Diagnostic: unsupported codex context.output-style: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
+  Limitations: Codex documents no output-style configuration key; session style at Codex is a provider-owned behaviour with no project-scoped key to bind; if such a key appears, raising the level is an additive change.
+  Evidence: [2026-07-30] the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.output-style configuration key).
 
 ### `context.plans-directory`
 
@@ -301,9 +301,9 @@ Declare the project plan directory through a native configuration binding.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex context.plans-directory; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+  Diagnostic: unsupported codex context.plans-directory: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
+  Limitations: Codex documents no plan-directory configuration key; plan location for a Codex session is a repository convention, not a provider-bound setting; if such a key appears, raising the level is an additive change.
+  Evidence: [2026-07-30] the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.plans-directory configuration key).
 
 ### `doctor.environment`
 
@@ -441,9 +441,9 @@ Notify on provider-native waiting or approval events.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex lifecycle.notification; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+  Diagnostic: unsupported codex lifecycle.notification: no managed project artifact can satisfy a machine-local, non-overridable surface; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
+  Limitations: Codex has no Notification hook event; notifications are user-scope notify only, which a project-scoped configuration may not override, so the surface stays fail-closed under the managed-artifact model; replacement inside project scope: none; the operator may configure notify at machine level by hand.
+  Evidence: [2026-07-30] Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.notification within the managed-project-artifact model).
 
 ### `lifecycle.pack-guard`
 
@@ -538,10 +538,10 @@ Read layered settings and report named policy conformance.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
-- **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex settings.audit; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.settings.audit`.
+  Diagnostic: deterministic harness adapter satisfies codex settings.audit (bounded: Codex-specific check set)
+  Limitations: the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart; layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming; read-only, like the Claude auditor: nothing in ~/.codex or .codex is written.
+  Evidence: [2026-07-30] the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex settings.audit over the documented Codex configuration layers, Codex-specific check set).
 
 ### `settings.permissions`
 
@@ -581,9 +581,9 @@ Read and report provider-qualified workflow run status.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
 - **codex** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: unsupported codex workflows.status; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
-  Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
-  Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+  Diagnostic: unsupported codex workflows.status: the reported object does not exist at Codex; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
+  Limitations: the Claude surface reads an internal, undocumented Claude Code run directory; Codex documents no equivalent run store; the Codex orchestration carrier is a rendered instruction, not a runtime that leaves a run directory; session-level reporting for Codex is covered by analytics.run-report, which is adapted for both providers.
+  Evidence: [2026-07-30] the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report — `plans/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex workflows.status as a reader of workflow run state).
 
 ## Native Extensions
 

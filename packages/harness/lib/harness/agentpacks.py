@@ -837,15 +837,37 @@ def cmd_agent_packs(env, argv):
     opts = parse_flags(rest, {
         "--pack": "str", "--target": "str", "--auto": "bool", "--dry-run": "bool",
         "--install-only": "bool", "--allow-shell": "str", "--list": "bool", "--json": "bool",
-        "--drift": "bool", "--strict": "bool",
+        "--drift": "bool", "--strict": "bool", "--provider": "str",
     })
     if opts.get("help"):
         print("harness agent-packs <list|render|upgrade|remove|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
               "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
-              "[--drift [--strict]]")
+              "[--drift [--strict]] [--provider claude-code|codex]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
+    provider = opts.get("provider") or "claude-code"
+    if provider not in ("claude-code", "codex"):
+        die(f"--provider неизвестен: {provider} (claude-code|codex)")
+
+    if provider == "codex":
+        if sub not in ("render", "remove", "doctor"):
+            die(f"--provider codex не поддерживает подкоманду '{sub}' "
+                f"(render объединяет install/upgrade — декларативная пересборка, D89)")
+        if not opts.get("target"):
+            die(f"нужен --target DIR для {sub} --provider codex")
+        target = Path(os.path.expanduser(opts["target"])).resolve()
+        if not target.is_dir():
+            die(f"target не каталог: {target}")
+        dry = bool(opts.get("dry_run"))
+        if sub == "render":
+            raise SystemExit(do_codex_role_render(env, target, pack=opts.get("pack"), dry=dry))
+        if sub == "remove":
+            if not opts.get("pack"):
+                die("нужен --pack P для remove --provider codex")
+            raise SystemExit(do_codex_role_remove(env, target, opts["pack"], dry=dry))
+        raise SystemExit(do_codex_role_doctor(env, target, json_out=bool(opts.get("json")),
+                                              strict=bool(opts.get("strict"))))
 
     if sub == "list":
         for pk in list_packs(env):
@@ -1191,3 +1213,178 @@ def classify_agent_projection(*, managed: bool, observed: bytes | None, expected
     if not managed:
         return "ownership-conflict"
     return "clean" if observed == expected else "managed-drift"
+
+
+# ── Codex role-projection lifecycle (P2.4, codex-parity-verdicts-v1.md §3.12, bounded
+#    closure, D89 §6) ──────────────────────────────────────────────────────────
+# Render/check/remove/diagnose `.codex/agents/*.toml` role projections through the
+# SAME semantic role catalog and the SAME `project_agent_role`/`plan_agent_artifact`/
+# `classify_agent_projection` machinery already proven by the `agents.catalog`
+# create/noop self-test (`provider_audit.py`). Scoped to packs already installed
+# under Claude (`.claude/agent-pack.lock.json` is the single source of the resolved
+# `PACK_PREFIX` — no second interview pass). Excludes role members that are
+# Claude-runtime pack artifacts (`.claude/workflows/*.js`, rules, the review-gate
+# shell hook) — `project_agent_role` already refuses `command.workflow-carrier`
+# roles for Codex, and this closure names the exclusion instead of hiding it. This
+# is NOT the interview-driven pack engine above: Codex carries no `pack.json`
+# manifest of its own, only the provider-neutral role catalog.
+CODEX_ROLES_LOCK_REL = ".codex/agent-roles.lock.json"
+
+
+def codex_roles_lock_path(target):
+    return Path(target) / CODEX_ROLES_LOCK_REL
+
+
+def load_codex_roles_lock(target):
+    return safe_load_json(codex_roles_lock_path(target), default={"schema": 1, "roles": {}})
+
+
+def write_codex_roles_lock(target, lock, dry):
+    lp = codex_roles_lock_path(target)
+    if dry:
+        print(f"  [dry-run] обновил бы {lp}")
+        return
+    lp.parent.mkdir(parents=True, exist_ok=True)
+    from core import atomic_write_json
+    atomic_write_json(lp, lock)
+    print(f"  lock: {lp}")
+
+
+def _codex_installed_pack_prefix(target, pack):
+    """`PACK_PREFIX` для codex-проекции пака — переиспользуется результат
+    интервью уже установленного Claude-пака; `None`, если пак под Claude не
+    установлен (второй интервью-проход этот item не заводит)."""
+    entry = (load_lock(target).get("packs") or {}).get(pack)
+    return None if entry is None else entry.get("answers", {}).get("PACK_PREFIX")
+
+
+def expected_codex_role_projections(env, target, catalog_path=None, *, pack=None):
+    """`(role, projection)`-пары для Codex, ограниченные паками, установленными
+    под Claude в `target`. Роли, отказанные замороженным рендерером
+    (`command.workflow-carrier`), возвращаются поимённо во втором элементе, не
+    молча. Чистая функция — диска не пишет."""
+    catalog_path = catalog_path or (Path(env.root) / "configs" / "common" /
+                                    "agent-packs" / "roles.json")
+    roles = semantic_agent_roles(catalog_path)
+    installed_packs = load_lock(target).get("packs") or {}
+    pairs, excluded = [], []
+    for role in roles:
+        if role.pack_id not in installed_packs:
+            continue
+        if pack is not None and role.pack_id != pack:
+            continue
+        prefix = _codex_installed_pack_prefix(target, role.pack_id)
+        if not prefix:
+            continue
+        try:
+            pairs.append((role, project_agent_role(role, "codex", pack_prefix=prefix)))
+        except ValueError as error:
+            excluded.append((role.pack_id, role.role_id, str(error)))
+    return tuple(pairs), tuple(excluded)
+
+
+def codex_role_state(target, projection):
+    """`classify_agent_projection`-состояние ОДНОЙ codex-проекции: managed
+    определяется по НАШЕМУ lock'у (`.codex/agent-roles.lock.json`), не по факту
+    существования файла — иначе любой сторонний файл читался бы как наш."""
+    path = Path(target) / projection.target_path
+    observed = path.read_bytes() if path.exists() else None
+    managed = projection.target_path in (load_codex_roles_lock(target).get("roles") or {})
+    return classify_agent_projection(managed=managed, observed=observed, expected=projection.rendered)
+
+
+def do_codex_role_render(env, target, *, pack=None, dry=False):
+    """render и upgrade объединены (декларативная пересборка, тот же приём, что
+    `harness hooks --provider codex`, D89): missing → create, managed-drift →
+    repair (запись у нас в lock'е — мы владеем файлом), ownership-conflict →
+    отказ (чужой файл не трогаем, никогда не перезаписываем молча)."""
+    pairs, excluded = expected_codex_role_projections(env, target, pack=pack)
+    lock = load_codex_roles_lock(target)
+    roles_lock = lock.setdefault("roles", {})
+    changed = False
+    print(f"=== agent-packs render --provider codex → {target} ===" + (" [dry-run]" if dry else ""))
+    for role, projection in pairs:
+        state = codex_role_state(target, projection)
+        path = Path(target) / projection.target_path
+        if state == "ownership-conflict":
+            warn(f"  {projection.target_path}: файл существует и не отслежен этим lock'ом — пропуск")
+            continue
+        if state == "clean":
+            continue
+        if dry:
+            print(f"  [dry-run] {'создал' if state == 'missing' else 'обновил'} бы "
+                 f"{projection.target_path}")
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(projection.rendered)
+        roles_lock[projection.target_path] = {
+            "pack_id": role.pack_id, "role_id": role.role_id,
+            "base_sha256": hashlib.sha256(projection.rendered).hexdigest(),
+        }
+        changed = True
+        print(f"  {'create' if state == 'missing' else 'repair'}: {projection.target_path}")
+    for pack_id, role_id, reason in excluded:
+        print(f"  · {pack_id}.{role_id}: не проецируется на Codex — {reason}")
+    if changed:
+        write_codex_roles_lock(target, lock, dry)
+    return 0
+
+
+def do_codex_role_remove(env, target, pack, *, dry=False):
+    """Обратная операция render'у — тот же консервативный приём, что
+    Claude-сторона (`do_remove`): сносятся ТОЛЬКО неправленные файлы
+    (`state == "clean"`); `managed-drift`/`ownership-conflict` — только warn."""
+    pairs, _excluded = expected_codex_role_projections(env, target, pack=pack)
+    if not pairs:
+        print(f"agent-pack '{pack}' не спроецирован на Codex в {target} — нечего удалять")
+        return 0
+    lock = load_codex_roles_lock(target)
+    roles_lock = lock.setdefault("roles", {})
+    print(f"=== agent-packs remove --provider codex: {pack} ← {target} ===" + (" [dry-run]" if dry else ""))
+    for _role, projection in pairs:
+        state = codex_role_state(target, projection)
+        path = Path(target) / projection.target_path
+        if state not in ("clean", "missing"):
+            warn(f"  {projection.target_path}: {state} — оставлен, remove сносит только "
+                 f"неправленные файлы")
+            continue
+        if state == "clean":
+            print(f"  [{'dry-run' if dry else 'remove'}] {projection.target_path}")
+            if not dry:
+                path.unlink()
+        if not dry:
+            roles_lock.pop(projection.target_path, None)
+    if dry:
+        return 0
+    if roles_lock:
+        write_codex_roles_lock(target, lock, dry=False)
+    else:
+        lp = codex_roles_lock_path(target)
+        if lp.exists():
+            lp.unlink()
+        print(f"  lock: {lp} удалён (пуст)")
+    return 0
+
+
+def do_codex_role_doctor(env, target, *, json_out=False, strict=False):
+    """Таблица «роль → состояние» + счётчик дрейфа; `--strict` — CI-гейт
+    (rc=1 при найденном дрейфе), тот же режим, что `do_doctor_drift`."""
+    pairs, excluded = expected_codex_role_projections(env, target)
+    rows = [{"pack_id": role.pack_id, "role_id": role.role_id,
+             "target": projection.target_path, "state": codex_role_state(target, projection)}
+            for role, projection in pairs]
+    drift = [row for row in rows if row["state"] in ("managed-drift", "ownership-conflict")]
+    if json_out:
+        print(json.dumps({
+            "rows": rows,
+            "excluded": [{"pack_id": p, "role_id": r, "reason": reason}
+                        for p, r, reason in excluded],
+            "drift": len(drift),
+        }, ensure_ascii=False, indent=2))
+        return 1 if drift and strict else 0
+    for row in rows:
+        print(f"[{row['state']}] {row['pack_id']}.{row['role_id']} → {row['target']}")
+    for pack_id, role_id, reason in excluded:
+        print(f"  · {pack_id}.{role_id}: excluded — {reason}")
+    print("[OK] дрейф не найден" if not drift else f"[WARN] дрейф: {len(drift)} запис(ей)")
+    return 1 if drift and strict else 0

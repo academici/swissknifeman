@@ -18,11 +18,11 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `4d2a42d6c5e5a42bf3f390c30d68f2dc0f0b118150bbdfe3fd2a45d294c0bd92`. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1`. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex |
 |:--|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | unsupported |
+| `agent-packs.lifecycle` | adapted | adapted |
 | `agents.catalog` | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported |
 | `analytics.normalized-events` | adapted | adapted |
@@ -53,7 +53,7 @@
 | `lifecycle.run-report` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
 | `security.safe-dirs` | adapted | adapted |
-| `settings.audit` | adapted | unsupported |
+| `settings.audit` | adapted | adapted |
 | `settings.permissions` | adapted | adapted |
 | `skills.repository` | native | native |
 | `workflows.status` | adapted | unsupported |

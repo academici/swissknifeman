@@ -221,6 +221,24 @@ SKILL_LISTING_MAX_ENTRY_CHARS = 1_536
 SKILL_LISTING_BUDGET_FRACTION = 0.01
 SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 
+# --- модель листингового бюджета Codex (P3.4, RAG:✅ learn.chatgpt.com/docs/build-skills,
+# 2026-07-29) --------------------------------------------------------------------------
+# «The skills list uses at most 2% of the model's context window, or 8,000 characters when
+# the context window is unknown.» / «If many skills are installed, Codex shortens skill
+# descriptions first. For large skill sets, Codex may omit some skills from the initial list
+# and show a warning.» ЕДИНИЦА — СИМВОЛЫ напрямую (не токены, не переводится ×3, как у
+# Claude Code выше) — единицы двух моделей НЕ смешиваются (D52). Реальное контекстное окно,
+# которое Codex CLI считает «известным» для текущей модели, не измерено (round-trip вне
+# скоупа, D3) — поэтому расчёт всегда ведётся по ХУДШЕМУ случаю: фолбэк-бюджету, а не по
+# `CODEX_LISTING_BUDGET_FRACTION * окно` (зависимость от реального окна — [UNVERIFIED],
+# см. artifacts/P3-skill-listing-budget.md). Per-entry cap на запись Codex первоисточник не
+# называет (в отличие от `SKILL_LISTING_MAX_ENTRY_CHARS` у Claude) — измеряется сырая сумма.
+CODEX_LISTING_FALLBACK_CHARS = 8_000
+CODEX_LISTING_BUDGET_FRACTION = 0.02
+
+LISTING_PROVIDERS = ("claude-code", "codex")
+DEFAULT_LISTING_PROVIDER = "claude-code"
+
 
 def _listing_entry_tokens(skill_dir):
     """⊕ tier-0 ОДНОЙ записи листинга, как считает клиент: `name` без обрезки +
@@ -237,6 +255,84 @@ def _listing_entry_tokens(skill_dir):
     desc_text = (fm.get("description", "") + " " + fm.get("when_to_use", "")).strip()
     return estimate_tokens(name) + estimate_tokens(
         desc_text[:SKILL_LISTING_MAX_ENTRY_CHARS])
+
+
+def _listing_entry_chars(skill_dir):
+    """Запись листинга Codex в СЫРЫХ СИМВОЛАХ: `name` + `description`(+`when_to_use`),
+    БЕЗ капа — первоисточник не называет числа для Codex (в отличие от 1 536 у Claude
+    Code), поэтому честный замер — сырая сумма, не угаданный потолок."""
+    skill_dir = Path(skill_dir)
+    md = skill_dir / "SKILL.md"
+    if not md.is_file():
+        return 0
+    fm = parse_frontmatter(md)
+    name = fm.get("name", "") or skill_dir.name
+    desc_text = (fm.get("description", "") + " " + fm.get("when_to_use", "")).strip()
+    return len(name) + len(desc_text)
+
+
+def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
+    """Provider-aware бюджет обнаружения (листинга) для активного набора скиллов
+    `[(bucket, rel, dir, fm_name)]` (P3.4). Две модели, две единицы — НЕ смешиваются
+    (D52): Claude Code — 1% контекстного окна в ТОКЕНАХ (см. `_listing_entry_tokens`);
+    Codex — фолбэк 8 000 СИМВОЛОВ (худший случай — реальное окно [UNVERIFIED], D3).
+    → {provider, unit, raw, budget, over, degradation}."""
+    if provider not in LISTING_PROVIDERS:
+        die(f"неизвестный --provider: {provider} (ожидается: "
+            f"{', '.join(LISTING_PROVIDERS)})")
+    dirs = [d for _bucket, _rel, d, _fm in skills]
+    if provider == "codex":
+        raw = sum(_listing_entry_chars(d) for d in dirs)
+        budget = CODEX_LISTING_FALLBACK_CHARS
+        unit = "симв"
+        degradation = "скилл может быть выброшен из листинга целиком"
+    else:
+        raw = sum(_listing_entry_tokens(d) for d in dirs)
+        budget = int(SKILL_LISTING_CONTEXT_WINDOW * SKILL_LISTING_BUDGET_FRACTION)
+        unit = "ток"
+        degradation = "описание усекается, имя остаётся"
+    return {"provider": provider, "unit": unit, "raw": raw, "budget": budget,
+            "over": raw > budget, "degradation": degradation}
+
+
+def format_listing_report(report):
+    """Человекочитаемая строка `measure_listing_budget` для CLI (--profile + --provider)."""
+    status = "ПЕРЕБОР" if report["over"] else "ок"
+    ratio = (f" (×{report['raw'] / report['budget']:.1f})"
+             if report["over"] and report["budget"] else "")
+    return "\n".join([
+        "", f"─── Бюджет обнаружения (листинг), provider: {report['provider']} ───",
+        f"Листинг: {report['raw']} {report['unit']}  vs  бюджет {report['budget']} "
+        f"{report['unit']}  — {status}{ratio}",
+        f"Режим деградации: {report['degradation']}", ""])
+
+
+def profiles_listing_report(env):
+    """Бюджет обнаружения КАЖДОГО поставляемого профиля (`profiles/*.json`) против ОБОИХ
+    провайдеров — режим замера `--profiles` (P3.4 Scope Included). Тот же производственный
+    путь, что раздача connect-канала (`resolve_active_set` + курируемый `core@`)."""
+    rows = []
+    for name in sorted(p.stem for p in (env.root / "profiles").glob("*.json")):
+        skills, _meta = resolve_active_set(env, env.root, {}, profile=name)
+        rows.append({
+            "profile": name, "count": len(skills),
+            "codex": measure_listing_budget(skills, "codex"),
+            "claude-code": measure_listing_budget(skills, "claude-code"),
+        })
+    return rows
+
+
+def format_profiles_listing_report(rows):
+    out = ["", "━━━ БЮДЖЕТ ОБНАРУЖЕНИЯ ПО ПРОФИЛЯМ (provider-aware, P3.4) ━━━━━━━━━━━━━━━",
+          "", "| Профиль | Скиллов | Codex (симв) | vs фолбэк 8000 | Claude Code (ток) "
+          "| vs бюджет 1% @1M |", "|:--|--:|--:|:--|--:|:--|"]
+    for r in rows:
+        c, k = r["codex"], r["claude-code"]
+        out.append(f"| {r['profile']} | {r['count']} | {c['raw']} | "
+                   f"{'ПЕРЕБОР' if c['over'] else 'ок'} | {k['raw']} | "
+                   f"{'ПЕРЕБОР' if k['over'] else 'ок'} |")
+    out.append("")
+    return "\n".join(out)
 
 
 def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
@@ -542,10 +638,12 @@ def cmd_budget(env, argv):
         "--profile": "str", "--buckets": "str", "--exclude": "str",
         "--json": "bool", "--no-core": "bool", "--write-map": "bool",
         "--check-core": "bool", "--strict": "bool", "--first-turn": "bool",
+        "--provider": "str", "--profiles": "bool",
     })
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
+              "               [--provider claude-code|codex] [--profiles]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
               "               [--first-turn [--json] [--strict]]\n"
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
@@ -556,12 +654,25 @@ def cmd_budget(env, argv):
               "  код при превышении ИЛИ недоборе (CI).\n"
               "  --first-turn: always-on футпринт первого хода проекта (skills meta +\n"
               "  agents + CLAUDE.md/rules + живой прогон SessionStart-хуков + MCP) —\n"
-              "  target ≤7K / warn >10K ток; --strict — exit 1 при WARN (CI).")
+              "  target ≤7K / warn >10K ток; --strict — exit 1 при WARN (CI).\n"
+              "  --provider claude-code|codex (с --profile/--config/--target): добавляет к\n"
+              "  отчёту provider-aware бюджет обнаружения (листинга) и режим деградации;\n"
+              "  без флага поведение не меняется (дефолт — claude-code).\n"
+              "  --profiles: бюджет обнаружения КАЖДОГО поставляемого профиля против ОБОИХ\n"
+              "  провайдеров (P3.4).")
         return
     no_core = opts.get("no_core", False)
 
     if opts.get("write_map"):
         write_budget_map(env)
+        return
+
+    if opts.get("profiles"):
+        rows = profiles_listing_report(env)
+        if opts.get("json"):
+            print(json.dumps(rows, ensure_ascii=False, indent=2))
+        else:
+            print(format_profiles_listing_report(rows))
         return
 
     if opts.get("first_turn"):
@@ -652,13 +763,20 @@ def cmd_budget(env, argv):
         env, target, config, profile=opts.get("profile", ""),
         flag_buckets=flag_buckets, flag_exclude=flag_exclude, no_core=no_core)
     b = budget_for_set(skills, meta["pulled"])
+    listing = (measure_listing_budget(skills, opts["provider"])
+              if opts.get("provider") else None)
     if opts.get("json"):
-        print(json.dumps({"label": label, "meta": {
+        out = {"label": label, "meta": {
             "buckets": meta["buckets"], "profile": meta["profile"],
-            "source": meta["source"]}, **b}, indent=2, ensure_ascii=False))
+            "source": meta["source"]}, **b}
+        if listing is not None:
+            out["listing"] = listing
+        print(json.dumps(out, indent=2, ensure_ascii=False))
         return
     print(format_report(f"{label}  [profile: {meta['profile'] or '-'} "
                         f"via {meta['source']}]", b))
+    if listing is not None:
+        print(format_listing_report(listing))
 
 
 # --- генератор карты docs/guide/budget.md -------------------------------------

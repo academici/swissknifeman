@@ -4284,8 +4284,8 @@
       "path": "skills/repository-bootstrap/package-architecture/SKILL.md",
       "version": "0.1.0",
       "description": "Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, generated artifacts and what regenerates them. Activate at the start of any task in this repository touching skills/, bin/, scripts/, configs/, profiles/, the registry, or manifests.",
-      "sha256": "564b9764c9720b32e8452f63e6f90e8d0767cacd31e36d1efeb0f981473966a0",
-      "content_sha256": "c2651b47da9e20f6c4a7decb8dc2ee0b48f95f0c3713846e97d9e3abec20fff1",
+      "sha256": "e0bfa9d75b6b6d73d260181517c75a9b935df70076d9cc3b55d9848abc4755a8",
+      "content_sha256": "9382812872ce699b0559567e4acb3594f8eaa0465fd9502abeaf43eac5160d78",
       "tags": [
         "skiller",
         "architecture",
@@ -4332,8 +4332,8 @@
       "path": "skills/repository-bootstrap/skill-authoring/SKILL.md",
       "version": "0.1.0",
       "description": "Rules for creating/editing registry skills (skills/**, generate-skill/): bilingual SKILL.ru.md (full RU source) -> SKILL.md (compact EN canon) model, overlap check, completeness, frontmatter, mandatory upstream.json. Activate on any skill add/edit/move/removal or SKILL.ru.md edit.",
-      "sha256": "0962285ea33b0703108a6729f49930dbf65de2f2c6deda168131e1ab5821dc79",
-      "content_sha256": "984673f1b2c74a4cdc132e45f823e8266939de9a55b316c4d3df3c76ed6289f0",
+      "sha256": "7759416d7b69c1dd7ccce343ea746c787bfaf52049983c3a8cade73d9e1984d0",
+      "content_sha256": "58a72b502d6980bfe29c7af01c3a3aa0ac7a50b7609c2fcfb8b4a61f24ba58fe",
       "tags": [
         "skill-authoring",
         "bilingual",

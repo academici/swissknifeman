@@ -102,6 +102,18 @@ Briefly — **where** a skill should live and **how much** it's split:
    `validate.sh` softly warns on bloated bodies. Channel: connect = whole bucket (coarse), vendor
    = per-skill (fine) — tune fine-grained via vendor.
 
+## `SKILL.md` body size — no platform cap (OQ-4, D27)
+
+The provider reads a selected skill's body **in full** — Codex first-party states the
+discovery budget applies "only to the initial skills list", no cap on `SKILL.md` size
+itself; same fact for Claude Code. The real constraint is the **discovery listing**
+(name+description of every active skill, resident every request), not the file — see
+`docs/guide/budget.md`. So **no body-size cap is introduced** (`2026.07.29-HARNESS-AGNOSTIC`
+D27, OQ-4 closed negative) — don't trim long bodies against an imagined platform limit.
+The only limiter stays the existing soft `validate.sh` warn on non-empty body line count
+(see "Lean SKILL.md" above) — that's about readability (progressive disclosure), not the
+platform.
+
 ## Completeness requirement ("maximally complete" skill)
 
 A skill must contain:
@@ -243,4 +255,4 @@ canonical source is this file's `SKILL.ru.md`; thin projections —
 private/source-only: never published as an ordinary unit/core/marketplace entry, never
 vendored/connected into a consumer project.
 
-<!-- ru-source-sha256: d649d651afb8ec3574b05bad63012a3bc5a05aca365c082e25c407f7d5b96435 -->
+<!-- ru-source-sha256: 1fc0403937df4755a982b14f48413f0d5a0c7462460c8752d6827456a88d3cb8 -->

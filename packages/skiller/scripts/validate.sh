@@ -1343,3 +1343,35 @@ if errors:
 
 print(f"канон каркаса: таблица «пак → версия» совпадает с pack.json ({len(actual)} паков)")
 PY
+
+# --- 17. WARN: листинг обнаружения профилей против фолбэк-бюджета Codex (P3.4) ---
+# Гейт WARN, не ERROR (D26/D29): структурный перебор — известная проблема состава раздачи,
+# не гигиены, красный CI её не чинит (см. budget.py CODEX_LISTING_FALLBACK_CHARS). Профиль,
+# чей листинг превышает фолбэк-бюджет Codex 8 000 симв, печатает число и профиль; решение
+# (сужение/skillOverrides/принятая деградация) — roadmap/, не этот скрипт (D29/OQ-7).
+# Python сам зовёт CLI сабпроцессом (а не читает его stdout через pipe в `python3 -
+# <<heredoc`) — конфликт: heredoc и pipe одновременно кормят один stdin, второй молча
+# теряется (питон читает СВОЙ скрипт из heredoc, а не JSON из pipe).
+python3 - "$REPO_ROOT" <<'PY'
+import json, subprocess, sys
+
+repo_root = sys.argv[1]
+result = subprocess.run(["bash", f"{repo_root}/bin/skiller", "budget",
+                        "--profiles", "--json"], capture_output=True, text=True)
+try:
+    rows = json.loads(result.stdout)
+except json.JSONDecodeError:
+    print("листинг обнаружения Codex: пропущен (--profiles --json не отдал валидный вывод)")
+    sys.exit(0)
+
+over = [r for r in rows if r["codex"]["over"]]
+if over:
+    print(f"WARN: {len(over)} профил(ей) листинга превышают фолбэк-бюджет обнаружения "
+          f"Codex (8 000 симв) — структурный перебор, см. roadmap/ "
+          f"(D29/OQ-7, 2026.07.29-HARNESS-AGNOSTIC P3.4):")
+    for r in over:
+        c = r["codex"]
+        print(f"  {r['profile']}: {c['raw']} симв (×{c['raw'] / c['budget']:.1f})")
+else:
+    print("листинг обнаружения Codex: все профили укладываются в фолбэк-бюджет 8 000 симв")
+PY

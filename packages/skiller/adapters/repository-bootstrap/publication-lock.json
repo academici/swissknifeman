@@ -188,20 +188,20 @@
       "provider": "claude",
       "target": ".claude/skills/package-architecture/SKILL.md",
       "canonical_ru": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.ru.md",
-      "canonical_ru_sha256": "16a3d675f6daaeb1ecb86836736b6f0b828033ec3bf4d9dae739766b6d6a2e65",
+      "canonical_ru_sha256": "68be962ca3d6f35daa57814a7d121d203084d4eaa73b480fd2de9a74e003a3f1",
       "canonical_en": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
-      "canonical_en_sha256": "564b9764c9720b32e8452f63e6f90e8d0767cacd31e36d1efeb0f981473966a0",
-      "rendered_sha256": "909848189399d43c23bf847d40241e6edc1105ac6b3c6f2c04d0e5a62c27b6d0"
+      "canonical_en_sha256": "e0bfa9d75b6b6d73d260181517c75a9b935df70076d9cc3b55d9848abc4755a8",
+      "rendered_sha256": "ff53fe3bb288537cc7bcc3a9748dba43323944c081fcb5c0c3e57db6b4646072"
     },
     {
       "identity": "package-architecture",
       "provider": "codex",
       "target": ".agents/skills/package-architecture/SKILL.md",
       "canonical_ru": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.ru.md",
-      "canonical_ru_sha256": "16a3d675f6daaeb1ecb86836736b6f0b828033ec3bf4d9dae739766b6d6a2e65",
+      "canonical_ru_sha256": "68be962ca3d6f35daa57814a7d121d203084d4eaa73b480fd2de9a74e003a3f1",
       "canonical_en": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
-      "canonical_en_sha256": "564b9764c9720b32e8452f63e6f90e8d0767cacd31e36d1efeb0f981473966a0",
-      "rendered_sha256": "909848189399d43c23bf847d40241e6edc1105ac6b3c6f2c04d0e5a62c27b6d0"
+      "canonical_en_sha256": "e0bfa9d75b6b6d73d260181517c75a9b935df70076d9cc3b55d9848abc4755a8",
+      "rendered_sha256": "ff53fe3bb288537cc7bcc3a9748dba43323944c081fcb5c0c3e57db6b4646072"
     },
     {
       "identity": "project-tooling-runbook",
@@ -248,20 +248,20 @@
       "provider": "claude",
       "target": ".claude/skills/skill-authoring/SKILL.md",
       "canonical_ru": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.ru.md",
-      "canonical_ru_sha256": "d649d651afb8ec3574b05bad63012a3bc5a05aca365c082e25c407f7d5b96435",
+      "canonical_ru_sha256": "1fc0403937df4755a982b14f48413f0d5a0c7462460c8752d6827456a88d3cb8",
       "canonical_en": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
-      "canonical_en_sha256": "0962285ea33b0703108a6729f49930dbf65de2f2c6deda168131e1ab5821dc79",
-      "rendered_sha256": "ce837edcf0f837b511c16cc0c50ab29e078c4354d0e30093a34ea94d3d0398cb"
+      "canonical_en_sha256": "7759416d7b69c1dd7ccce343ea746c787bfaf52049983c3a8cade73d9e1984d0",
+      "rendered_sha256": "e9427b3f2dc16c8441af514bc03f753a8ead4970d868a18181e323cde06f8926"
     },
     {
       "identity": "skill-authoring",
       "provider": "codex",
       "target": ".agents/skills/skill-authoring/SKILL.md",
       "canonical_ru": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.ru.md",
-      "canonical_ru_sha256": "d649d651afb8ec3574b05bad63012a3bc5a05aca365c082e25c407f7d5b96435",
+      "canonical_ru_sha256": "1fc0403937df4755a982b14f48413f0d5a0c7462460c8752d6827456a88d3cb8",
       "canonical_en": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
-      "canonical_en_sha256": "0962285ea33b0703108a6729f49930dbf65de2f2c6deda168131e1ab5821dc79",
-      "rendered_sha256": "ce837edcf0f837b511c16cc0c50ab29e078c4354d0e30093a34ea94d3d0398cb"
+      "canonical_en_sha256": "7759416d7b69c1dd7ccce343ea746c787bfaf52049983c3a8cade73d9e1984d0",
+      "rendered_sha256": "e9427b3f2dc16c8441af514bc03f753a8ead4970d868a18181e323cde06f8926"
     },
     {
       "identity": "workflow-craft",

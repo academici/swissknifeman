@@ -16,6 +16,8 @@
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
 | [`codex-publication-consumer-acceptance.md`](codex-publication-consumer-acceptance.md) | Изолированный гейт `source → marketplace → install/cache → clean consumer → fresh session` для Codex plugins + circuit breaker item-исполнения | ⬜ к внедрению | Сработал (azguard 2026-07-21: формальный GREEN при пустых скиллах новой сессии). **Решение владельца 2026-07-25:** оформить item'ом плана (ECO-OPT P7.3 либо AGENT-RELIABILITY) — гейт трогает publication-поверхность, которую AR перестраивает; смежно AR P1/P3.4 (self-host canary, consumer-запись исключена) |
+| [`2026.07.29-launch-block-command-row.md`](2026.07.29-launch-block-command-row.md) | launch-block: команда — последняя строка таблицы параметров, отдельный code-block с голым промптом — только при отклонении от стандартного маршрута | ⬜ к внедрению | Сработал (2026-07-29: двукратная неверная выдача в одной сессии из-за конструкции формата). Готово к оформлению отдельным маленьким планом, независимым от `HARNESS-AGNOSTIC` |
+| [`codex-skill-listing-fallback-overflow.md`](codex-skill-listing-fallback-overflow.md) | Девять из десяти поставляемых профилей превышают фолбэк-бюджет обнаружения Codex (8 000 симв) — рычаги 1–3 владельца (D74) сузку Claude-оси уже сняли, Codex не закрывают | ⬜ к внедрению | Сработал (замер `2026.07.29-HARNESS-AGNOSTIC P3.4`, `artifacts/P3-skill-listing-budget.md`, WARN-гейт `validate.sh` §17). Решение владельца между Codex-специфичным профилем / принятой деградацией / отложить до живого прогона Codex CLI (OQ-7, D29) |
 
 ## Частично реализовано — остаток здесь
 

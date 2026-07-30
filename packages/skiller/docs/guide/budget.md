@@ -305,10 +305,10 @@ flowchart LR
     field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1373"]:::warm
     harness_operations["harness-operations<br/>⊕87 ↻2135"]:::warm
     maind_overview["maind-overview<br/>⊕80 ↻1656"]:::mild
-    package_architecture["package-architecture<br/>⊕85 ↻3771"]:::warm
+    package_architecture["package-architecture<br/>⊕85 ↻3773"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻7001"]:::warm
     release_discipline["release-discipline<br/>⊕64 ↻835"]:::mild
-    skill_authoring["skill-authoring<br/>⊕88 ↻3724"]:::warm
+    skill_authoring["skill-authoring<br/>⊕88 ↻3949"]:::warm
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕103 ↻4221"]:::warm
@@ -439,14 +439,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **15960** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356106 ток · ⌥ on-demand 828278 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **15960** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356333 ток · ⌥ on-demand 828278 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 22 | 1508 | 55850 | 20971 |
-| `repository-bootstrap` | 13 | 1120 | 28676 | 0 |
+| `repository-bootstrap` | 13 | 1120 | 28903 | 0 |
 | `php` | 17 | 1048 | 19298 | 54837 |
 | `architect` | 15 | 964 | 23520 | 33458 |
 | `quality` | 11 | 831 | 20564 | 7447 |
@@ -521,8 +521,8 @@ flowchart LR
 | `vueuse-functions` | frontend-vue | 10838 |
 | `project-tooling-runbook` | repository-bootstrap | 7001 |
 | `query-craft` | research | 4221 |
-| `package-architecture` | repository-bootstrap | 3771 |
-| `skill-authoring` | repository-bootstrap | 3724 |
+| `skill-authoring` | repository-bootstrap | 3949 |
+| `package-architecture` | repository-bootstrap | 3773 |
 | `workflow-craft` | general | 3376 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |

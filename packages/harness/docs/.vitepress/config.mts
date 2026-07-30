@@ -32,6 +32,7 @@ export default defineConfig({
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
             { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
+            { text: 'Политика исполнения', link: '/reference/execution-policy' },
           ],
         },
         {

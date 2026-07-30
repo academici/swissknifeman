@@ -41,6 +41,7 @@ export default withMermaid(defineConfig({
             { text: 'Конфиги (обзор)', link: '/harness/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/harness/setup/claude' },
             { text: 'Канон корневых инструкций', link: '/harness/reference/instruction-canon' },
+            { text: 'Политика исполнения', link: '/harness/reference/execution-policy' },
           ],
         },
         {

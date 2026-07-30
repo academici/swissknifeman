@@ -258,6 +258,10 @@ def compatibility_path() -> Path:
     return package_root() / "tests/fixtures_data/instruction-compatibility-v1.json"
 
 
+def literal_coverage_path() -> Path:
+    return package_root() / "tests/fixtures_data/instruction-literal-coverage-v1.json"
+
+
 def load_catalog(path: Path | None = None) -> dict[str, object]:
     try:
         value = json.loads((path or catalog_path()).read_text(encoding="utf-8"))
@@ -371,7 +375,14 @@ def check_instructions(request: InstructionRequest, *,
     if request_diagnostics:
         return InstructionOperationResult(request, (), request_diagnostics, False)
     planned = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
-    return replace(planned, request=request)
+    try:
+        value = load_catalog() if catalog is None else catalog
+    except InstructionValidationError:
+        value = None
+    coverage_diagnostics = validate_literal_coverage(value) if value is not None else ()
+    diagnostics = _ordered_diagnostics(planned.diagnostics + coverage_diagnostics)
+    return replace(planned, request=request, diagnostics=diagnostics,
+                  green=planned.green and not coverage_diagnostics)
 
 
 def apply_instructions(request: InstructionRequest, *,
@@ -1096,6 +1107,45 @@ def _validate_compatibility_fixture(records: dict[str, dict],
                                      observation="semantic-invalid",
                                      expected=_display(item),
                                      observed="catalog compatibility record differs"))
+
+
+def validate_literal_coverage(value: dict[str, object]) -> tuple[InstructionDiagnostic, ...]:
+    """Validate D76 coverage: every matrix-mandated literal is asserted by its own
+    record. Wired only into `check_instructions` (P1.6) — never into `validate_catalog`
+    or `plan_instructions`, both called from `apply`/`repair`/`adopt`, where a red
+    coverage verdict would deadlock the very operation that repairs it."""
+    try:
+        fixture = json.loads(literal_coverage_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture", observed=type(error).__name__),)
+    if (not isinstance(fixture, dict)
+            or set(fixture) != {"contract_version", "fixture_version", "provenance", "literals"}
+            or fixture.get("contract_version") != CONTRACT_VERSION
+            or not isinstance(fixture.get("literals"), list)):
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture schema", observed=_shape(fixture)),)
+    records = {record["id"]: record for scope in value["scopes"] for record in scope["sections"]}
+    diagnostics: list[InstructionDiagnostic] = []
+    for item in fixture["literals"]:
+        if not isinstance(item, dict) or set(item) != {"semantic_id", "literal"}:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                expected="literal-coverage entry {semantic_id, literal}", observed=_shape(item)))
+            continue
+        semantic_id, literal = item["semantic_id"], item["literal"]
+        record = records.get(semantic_id)
+        if record is None:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="unknown semantic id"))
+            continue
+        if not any(literal in assertion for assertion in record["compatibility_assertions"]):
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", scope_id=record.get("scope_id"),
+                provider_id=record.get("provider_id"), observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="matrix literal not asserted"))
+    return _ordered_diagnostics(tuple(diagnostics))
 
 
 def _validate_request(request: object, operations: set[str], *,

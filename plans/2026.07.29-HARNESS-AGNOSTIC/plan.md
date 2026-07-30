@@ -7,7 +7,7 @@
 | Plan ID | 2026.07.29-HARNESS-AGNOSTIC |
 | Title | Harness-агностик по факту: паритет Codex, ремонт канона каркаса, декларативная политика спавна/делегирования; поглощает супервизор-трек FOREMAN |
 | Version | 0.11.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier (Claude Opus 5/high — design pass 1) |
 | Last Updated | 2026-07-30 (правило: дата равна дате последней строки `## 6. Update Log`, без перечисления событий — F5, A6, D83) |
@@ -128,7 +128,7 @@ git-worktree (P0.1) и возвращаются в `main` штатным merge (
 | P2 | Паритет capability второго провайдера (+ follow-up блок аудита P1, D80) | 5/9 | 🟠 Done with deviations |
 | P3 | Живой канон каркаса и гигиена реестра | 0/6 | 🟠 Done with deviations |
 | P4 | Декларативная политика исполнения (поглощённый супервизор-трек) | 4/5 | 🟠 Done with deviations |
-| P5 | Возврат в основное дерево и верификация флота | 1/3 | 🟡 In progress |
+| P5 | Возврат в основное дерево и верификация флота | 1/3 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -337,6 +337,7 @@ P3.3–P3.4 и P4.3–P4.4 — правка в этих фазах запрещ�
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-30 | plan-close/Sonnet/low | Фаза P5 закрыта `🟠 Done with deviations` (1 🟢 + 2 🟠, все терминальны); все фазы P0–P5 плана теперь терминальны — **план закрыт целиком** — детали см. `phases/P5.md` § Phase Handoff |
 | 2026-07-30 | plan-close/Sonnet/low | Фаза P4 закрыта `🟠 Done with deviations` (4 🟢 + 1 🟠, все терминальны; Phase Handoff заполнен, docs-sync — не требуется сейчас, мигрирует в docs при архивации плана) — детали см. `phases/P4.md` § Phase Handoff |
 | 2026-07-29 | plan-design/Claude Opus 5/high | План создан (design pass 1/3): слои 0–2, скелеты 6 фаз / 19 items с контракт-блоками, D1–D7, §7 Contracts. ACTIVE перехвачен (был «—»), FOREMAN помечен `Paused By` (поглощение) — детали см. `handoff.md` § Done |
 | 2026-07-29 | plan-design/Claude Opus 5/high | Фаза P0 детализирована до DoR (design pass 2, первая из шести фаз): 5 items (был 4 — добавлен P0.5, D10), pre-mortem `research/02-p0-premortem.md` (R1–R7), D8–D11; §3 Routing и Status Board синхронизированы; §7 Consumed исправлен по замеру — живой канон plan-protocol **v2.21.0**, не «≥2.11.0» |

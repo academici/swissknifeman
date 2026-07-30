@@ -1,34 +1,35 @@
-# HANDOFF — 2026-07-30 — after P4
+# HANDOFF — 2026-07-30 — after P4.5
 
-**Next:** exec-items: task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P4.5 — исполнить закрытое
-решение D93 по дословным шаблонам `research/08` §9.4
+**Next:** close-phase: task:plan-close 2026.07.29-HARNESS-AGNOSTIC P4 — фаза терминальна
+(4/5 🟢 + 1 🟠), нужно закрыть Phase Handoff и синхронизировать Status Board.
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation (§3 Routing строка P4.5) |
-| Effort | medium |
+| Model class | implementation (§3 Routing — `plan-close` пин Sonnet/low) |
+| Effort | low |
 | Capabilities | — |
-| Context | same-session — item |
-| Суть | Три текстовые правки без единого открытого решения: блок `## §0` + `status: historical` + `pin_status: expired` в историческом контракте `plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` (§1–§6 и `pinned:` неприкосновенны, дифф обязан нести РОВНО одну удалённую строку); пункт «Parse-контракт донора историчен» в §Ограничения и пометка предусловия у п. 2 §Суть спеки `roadmap/artifex-thin-wrapper.md`; отметка об исполнении в §7 Consumed (bookkeeping) |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть фазу P4 (сверка Status Board, заполнение `## Phase Handoff` в `phases/P4.md`, lint) перед стартом P5 |
 
 ```
-/task:plan-exec 2026.07.29-HARNESS-AGNOSTIC P4.5
+/task:plan-close 2026.07.29-HARNESS-AGNOSTIC P4
 ```
 
-**Session:** Claude Opus 5 (1M context)/high — `plan-design` (frontier/high), ре-дизайн ТЗ P4.5
-после эскалации; items не закрывались.
+**Session:** Sonnet 5/medium — `plan-exec`, исполнение P4.5.
 
 **Done:** P0 целиком (5/5) · P1 целиком (7/7) · P2 закрыта `plan-close`'ом (9/9 — 5 🟢 + 4 🟠,
 `🟠 Done with deviations`) · P3 закрыта `plan-close`'ом (6/6 — 0 🟢 + 6 🟠,
 `🟠 Done with deviations`), аудит P3 проведён (ATTENTION) и реконсилирован · P4.1 закрыт `🟢`
 (item-коммит `7ed90cd0`) · P4.2 закрыт `🟢` (item-коммит `4d70e7a1`) · P4.3 закрыт `🟢`
 (item-коммит `95ab0492`) · P4.4 закрыт `🟠 Done with deviations` (item-коммит `c20d40af` +
-фикс-коммит `65343d45`) · **P4.5 ре-дизайнен этим заходом: эскалация снята (D93/D94), item
-`🔴`→`⬜`, фаза P4 `🔴 Blocked`→`🟡 In progress` (3/5)**. Форма исполнения варианта B — контракт
-`driver-plan-protocol.md` фиксируется ИСТОРИЧЕСКИМ артефактом, под живой канон не переписывается
-и не перепинывается (замер на `300124fc`: ноль машинных потребителей вне архива донора),
-обязательство переиздания parse-подмножества перенесено к строителю обвязки предусловием п. 2
-`roadmap/artifex-thin-wrapper.md`; дословные шаблоны трёх правок — `research/08` §9.4.
+фикс-коммит `65343d45`) · **P4.5 закрыт `🟢` этим заходом** (item-коммит `58845143`):
+`driver-plan-protocol.md` получил `status: historical`/`pin_status: expired` и блок `## §0`
+дословно из `research/08` §9.4 (§1–§6 и `pinned:` нетронуты); `roadmap/artifex-thin-wrapper.md`
+получил пункт «Parse-контракт донора историчен» в §Ограничения и пометку предусловия у п. 2
+§Суть; `plan.md` §7 Consumed отмечен «исполнено 2026-07-30, item-коммит `58845143`». Фаза P4
+терминальна (4/5 🟢, P4.4 `🟠`) — Status Board `plan.md` синхронизирован
+(`3/5 🟡`→`4/5 🟠 Done with deviations`), но `## Phase Handoff` в `phases/P4.md` ещё не
+заполнен (это предмет `plan-close`, не `plan-exec`).
 
 **Карта «item → коммит» (P2, реконсилировано 2026-07-30, аудит P2, находка F1):**
 P2.1 `ed306ca6` · P2.2 `632e75d3`(+`ad325a5e`) · P2.3 `c97e5cfb`(+`3e883a68`) ·
@@ -40,35 +41,37 @@ P3.1 `f61ac378` · P3.2 `dd6a1404` · P3.3 `41f2156b` · P3.4 `599878e0` · P3.5
 без item-коммита (законный исход «покрыто существующим скиллом», ноль диффа зафиксирован).
 
 **Карта «item → коммит» (P4):** P4.1 `7ed90cd0` · P4.2 `4d70e7a1` · P4.3 `95ab0492` ·
-P4.4 `c20d40af`(+`65343d45`) · P4.5 — item-коммита ещё нет (ТЗ переписано, исполнение впереди).
+P4.4 `c20d40af`(+`65343d45`) · P4.5 `58845143`.
 
-**Remaining:** P4.5 (исполнимо сразу, `plan-exec`), затем закрытие фазы P4 и P5 (3 items).
-Итого **4 из 35** items плана не исполнено. Сверх items остаётся **рекомендованный аудит фазы P2**
+**Remaining:** закрытие фазы P4 (`plan-close`), затем P5 (3 items). Итого **3 из 35** items плана
+не исполнено (все — P5). Сверх items остаётся **рекомендованный аудит фазы P2**
 (`/task:plan-audit 2026.07.29-HARNESS-AGNOSTIC P2`), владельцем не запускался; он не блокирует P4
 (фаза P2 терминальна), но чем дальше уходит exec, тем дороже его находки.
 
 **Sources of truth:** `plan.md` (§3 Routing, §5 D1–D94, §6 Update Log, §4 Status Board — P2
-`5/9`, P3 `0/6` обе `🟠`, P4 `3/5` `🟡`; §7 Consumed — строка `driver-plan-protocol.md` несёт
-решение D93) · `research/08-p4-executor-layer-and-policy.md` §9 (разбор трёх форм + ДОСЛОВНЫЕ
-шаблоны правок P4.5) · `research/03-foreman-absorption-inventory.md` §3–§4 (таблица пяти якорей,
-вердикт OQ-2 D71 + поправка 2026-07-30) ·
-`plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` (контракт, пин и §1–§6
-не тронуты) · `root/contracts/execution-policy-v1.md` (запечатанная схема P4.2) ·
+`5/9`, P3 `0/6` обе `🟠`, P4 `4/5` `🟠`; §7 Consumed — строка `driver-plan-protocol.md` несёт
+«исполнено 2026-07-30, item-коммит `58845143`») ·
+`research/08-p4-executor-layer-and-policy.md` §9 (разбор трёх форм + дословные шаблоны, уже
+перенесены) · `research/03-foreman-absorption-inventory.md` §3–§4 (таблица пяти якорей, вердикт
+OQ-2 D71 + поправка 2026-07-30) ·
+`plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md` (контракт,
+`status: historical`, блок `## §0`, §1–§6 и `pinned:` нетронуты) ·
+`root/contracts/execution-policy-v1.md` (запечатанная схема P4.2) ·
 `packages/harness/configs/common/agent-packs/execution-policy.json` (обе точки
 `delegation_contract` `enforced`) · `packages/harness/lib/harness/execpolicy.py` (валидатор, P4.3) ·
 `packages/harness/configs/common/agent-packs/roles.json` и
 `packages/harness/configs/claude-code/agent-packs/_common/agents/orchestrator.md` (носители
-приземлённого блока, P4.4) · `phases/P4.md` (Phase Context + контракт фазы, Completion Notes
-P4.1–P4.4, ТЗ P4.5) · `root/executor-layer-rescope-v1.md` (граница «строит / не строит») ·
-`roadmap/artifex-thin-wrapper.md` (дом остатка супервизора и адрес обязательства переиздания) ·
-`phases/P2.md`/`phases/P3.md` (Completion Notes, Phase Handoff) · `roadmap.md` §«Карта запуска» ·
-`journal.jsonl`.
+приземлённого блока, P4.4) · `roadmap/artifex-thin-wrapper.md` (дом остатка супервизора,
+теперь несёт предусловие переиздания parse-подмножества) · `phases/P4.md` (Phase Context +
+контракт фазы, Completion Notes P4.1–P4.5) · `root/executor-layer-rescope-v1.md` (граница
+«строит / не строит») · `phases/P2.md`/`phases/P3.md` (Completion Notes, Phase Handoff) ·
+`roadmap.md` §«Карта запуска» · `journal.jsonl`.
 
 **Open risks:**
 - **Схема парсера НЕ починена — починен только статус документа.** `driver-plan-protocol.md`
   после P4.5 честно объявлен историческим, но §1–§6 остаются описанием канона v2.8.0; строитель
-  обвязки обязан переиздать parse-подмножество против канона СВОЕГО дня (предусловие п. 2
-  `roadmap/artifex-thin-wrapper.md`). Цена решения записана в `Consequences` D93.
+  обвязки обязан переиздать parse-подмножество против канона СВОЕГО дня (предусловие в
+  `roadmap/artifex-thin-wrapper.md` §Ограничения). Цена решения записана в `Consequences` D93.
 - **«Чем парсится прогон Codex» — открытый вопрос без дома в этом плане** (`[UNVERIFIED]`): §2
   контракта знает только `claude -p`, а канон v2.21.0 несёт два провайдерских рендерера.
 
@@ -130,10 +133,11 @@ P4.1–P4.4, ТЗ P4.5) · `root/executor-layer-rescope-v1.md` (граница �
   design-коммит, не `Files` какого-либо item'а. · Доказательство §16/§17 `validate.sh`
   изолированным раннером — вынужденная форма, пока §14 краснеет раньше по порядку.
 - deferred: **весь остаток супервизора — ОДИН адрес `roadmap/artifex-thin-wrapper.md`** (каркас
-  пакета · ядро цикла · retry-лестница · run-folder · unattended-профиль · поведенческий канон
-  супервизора · каналы TG/MAX + remote-approve · репортинг в mAInd · пак раскатки · документация ·
-  боевой пилот; три критерия внедрения в спеке) · замер формата транскрипта Codex · opt-in флаг
-  Claude-половины `git-guardrails` · проекция `writable_roots` из allowlist'а · правка
+  пакета · ядро цикла (предусловие — переиздание parse-подмножества) · retry-лестница ·
+  run-folder · unattended-профиль · поведенческий канон супервизора · каналы TG/MAX +
+  remote-approve · репортинг в mAInd · пак раскатки · документация · боевой пилот; три критерия
+  внедрения в спеке) · замер формата транскрипта Codex · opt-in флаг Claude-половины
+  `git-guardrails` · проекция `writable_roots` из allowlist'а · правка
   `_validate_conflicts`/схемы `obligations` · починка order-sensitivity `apply_instructions` (дом
   P2.8) · фикстурный `provenance` P1.2 · изоляция общего state (OQ-5) · round-trip гейт живым
   прогоном Codex (D3) · структурный перебор листинга Codex (заведён P3.4, решение — OQ-7) · общий
@@ -154,7 +158,5 @@ P4.1–P4.4, ТЗ P4.5) · `root/executor-layer-rescope-v1.md` (граница �
   для ВСЕХ ролей (OQ-8, замечен повторно на P4.4).
 - open_questions: OQ-7 структурный перебор бюджета обнаружения Codex — ИЗМЕРЕН P3.4/P3.5 (9/10),
   решение между тремя вариантами открыто · OQ-8 дрейф канона ролей (Deferred) · OQ-9 CI не
-  покрывает `analyst`/`task` (Deferred). **OQ-2 закрыта полностью: измерение — D71 (вариант B),
-  форма исполнения — D93/D94 (исторический артефакт + перенос обязательства к строителю), ТЗ P4.5
-  переписано, эскалация снята.** OQ-3/OQ-6 закрыты D86/D87
-  (P2.1); OQ-1 — D31; OQ-4 — P3.4/D27.
+  покрывает `analyst`/`task` (Deferred). OQ-2 закрыта полностью (D71 + D93/D94, исполнено P4.5).
+  OQ-3/OQ-6 закрыты D86/D87 (P2.1); OQ-1 — D31; OQ-4 — P3.4/D27.

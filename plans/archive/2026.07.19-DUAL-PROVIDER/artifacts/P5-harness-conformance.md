@@ -27,10 +27,10 @@ The audit and named Claude settings doctor are separate consumers. It writes no 
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
 | source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:e02e83d821b69bd9e80c8eeb95d63406e3ac9f859910c5d17f1baee20a43f847` |
 | source:configs/codex/mcp/bindings.json | `sha256:96edfa4686ff45bc8a886dd14418be1fde29dbee3098777574a21f1fc79e483a` |
-| source:configs/common/agent-packs/roles.json | `sha256:9c5d803b2da977d2875cb8f71ba4505dad077321edcf138e0fd0998c9cd94e24` |
+| source:configs/common/agent-packs/roles.json | `sha256:2ba25a3a8f4ef52655403b0d0655f10b1cae3a850594b16c443dc6053462ee75` |
 | source:configs/common/mcp/catalog.json | `sha256:26bddfc7f495650855ea183936aaf2d4c7ffa6e8cd91391e1a8fb25156a0842f` |
 | source:configs/common/profile-catalog.json | `sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835` |
-| render-manifest:all-provider-qualified-outputs | `sha256:b68ada07619cc14cb979513f65759c58ca76f54c74d8d348bbbab37d8acbf9c6` |
+| render-manifest:all-provider-qualified-outputs | `sha256:4471072a7e14891159193dd9916a5f97ccb06db8cfabc9c3e02e560378aa9439` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

@@ -4284,8 +4284,8 @@
       "path": "skills/repository-bootstrap/package-architecture/SKILL.md",
       "version": "0.1.0",
       "description": "Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, generated artifacts and what regenerates them. Activate at the start of any task in this repository touching skills/, bin/, scripts/, configs/, profiles/, the registry, or manifests.",
-      "sha256": "e0bfa9d75b6b6d73d260181517c75a9b935df70076d9cc3b55d9848abc4755a8",
-      "content_sha256": "9382812872ce699b0559567e4acb3594f8eaa0465fd9502abeaf43eac5160d78",
+      "sha256": "ed38973000f6efd7c1ef6656b486d59f37d153d764f0f2c05060ad915b1af09f",
+      "content_sha256": "9f741d61cbe7d69804da154628a1b6b6a0ddfe1b8921f9a13b070c49dc0ce3e0",
       "tags": [
         "skiller",
         "architecture",

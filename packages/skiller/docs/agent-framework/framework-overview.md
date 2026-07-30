@@ -15,7 +15,7 @@
   `pack.json` (semver) + `CHANGELOG.md` + agents/workflows/hooks/settings/docs.
   Per-pack версия. Установка/upgrade — агент-driven через скилл `system/agent-packs`.
   Десять живых паков (`configs/claude-code/agent-packs/backend-laravel/pack.json` 0.12.2,
-  `_common/pack.json` 0.4.1, `dart-flutter/pack.json` 0.5.2, `laravel-package/pack.json`
+  `_common/pack.json` 0.5.0, `dart-flutter/pack.json` 0.5.2, `laravel-package/pack.json`
   0.2.2, `node-frontend/pack.json` 0.5.2, `python-backend/pack.json` 0.5.2,
   `role-cto/pack.json` 0.1.2, `role-founder/pack.json` 0.1.2, `role-maintainer/pack.json`
   0.2.2, `role-tech-lead/pack.json` 0.2.2).
@@ -99,7 +99,7 @@
 
 | Пак | Версия |
 |:--|:--|
-| _common | 0.4.1 |
+| _common | 0.5.0 |
 | backend-laravel | 0.12.2 |
 | dart-flutter | 0.5.2 |
 | laravel-package | 0.2.2 |

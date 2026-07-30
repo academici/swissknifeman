@@ -2,7 +2,7 @@
 name: oss-governance
 bucket: oss-dev
 version: 0.1.0
-description: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process, security policy for an OSS project
+description: Use when setting up OSS governance: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process, security policy.
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, license, security, documentation]
@@ -158,4 +158,4 @@ NEVER:
 - Accept PR without CONTRIBUTING.md (no rules → every PR review negotiated from scratch).
 - Ignore SECURITY.md (without it vulnerabilities arrive in public issues).
 
-<!-- ru-source-sha256: 03f32cb4066de3775af032de292ae6635c04c887eb7c377517130cfce2635bf0 -->
+<!-- ru-source-sha256: 2b633007d5fbe1d4291e989e2f8120fd66513ba9f048686311b3f851fb62647b -->

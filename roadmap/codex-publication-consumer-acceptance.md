@@ -26,6 +26,13 @@ Package-level GREEN без прохождения всей цепочки не �
 5. Версия publication входит в provenance; изменение export surface без version bump — RED.
 6. Claude compatibility остаётся отдельным consumer check; repo-local adapters не могут служить
    доказательством marketplace/install результата.
+7. **Round-trip гейт живым прогоном второго провайдера в CI** — сгенерированное для Codex читается
+   настоящим `codex` CLI в CI, а не только сверяется схемой и `--check`'ами. Пункт пришёл сюда со
+   скоупа плана `2026.07.29-HARNESS-AGNOSTIC` (D3, решение владельца Р3: паритет Codex догоняется,
+   round-trip гейт в скоуп того плана НЕ входит) — единственное доказательство паритета, которого
+   не даёт ни одна статическая сверка. Референс формы — `make test` у `wshobson/agents`: CI ставит
+   чужие харнесы и гоняет их против сгенерированного ([`docs/reference.md`](../docs/reference.md)).
+   Наследует circuit breaker ниже.
 
 ## Execution circuit breaker
 

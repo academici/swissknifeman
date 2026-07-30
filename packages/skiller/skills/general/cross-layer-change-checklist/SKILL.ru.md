@@ -2,7 +2,7 @@
 name: cross-layer-change-checklist
 bucket: general
 version: 0.1.0
-description: "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты."
+description: "Используй, когда изменение затрагивает несколько слоёв: код, доступы, UI, документацию и тесты."
 risk: read
 persona: oss-dev
 tags: [checklist, workflow, validation]

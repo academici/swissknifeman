@@ -2,7 +2,7 @@
 name: legal-compliance
 bucket: architect
 version: 0.1.0
-description: GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска
+description: Используй при проверке регуляторных требований перед запуском: GDPR, CCPA, AI Act, DMCA, COPPA, DSA.
 risk: draft
 persona: architect
 tags: [compliance, gdpr, privacy, ai-act, regulatory]

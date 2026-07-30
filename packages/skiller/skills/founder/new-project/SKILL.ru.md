@@ -2,7 +2,7 @@
 name: new-project
 bucket: founder
 version: 0.1.0
-description: Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок
+description: Используй при запуске нового стартап-проекта: концепция, конкуренты, риски, полная структура папок.
 risk: write
 persona: founder
 tags: [discovery, requirements, market, gtm]

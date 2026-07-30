@@ -2,7 +2,7 @@
 name: version-gotchas
 bucket: blender
 version: 0.1.0
-description: "Известные breaking changes и ловушки Blender 5.0 API"
+description: "Используй при проблемах с Blender 5.0 API: известные breaking changes и ловушки."
 risk: write
 persona: oss-dev
 tags: [blender, api, bpy, 3d, python, gotchas, advisory, version]

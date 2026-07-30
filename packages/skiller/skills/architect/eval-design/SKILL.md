@@ -2,7 +2,7 @@
 name: eval-design
 bucket: architect
 version: 0.1.0
-description: Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human review
+description: Use when evaluating LLM/AI output quality: eval-set, metrics, regression harness, automated + human review.
 risk: draft
 persona: architect
 tags: [agentic, validation, llm, metrics, testing]
@@ -152,4 +152,4 @@ NEVER:
 - `quality/test-strategy` — overall test pyramid; eval is its AI-specific layer.
 - `security/security` — external reference for adversarial/jailbreak scenarios.
 
-<!-- ru-source-sha256: 5af71d94e6e8631cdc09eb14892bfd169bdcdee9cb17ca8c0aba3719efdc3836 -->
+<!-- ru-source-sha256: 91386804ac248241f5a5d8d8b0a0e81798b1d85db543e53fff392641e0ade711 -->

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "_common",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Стек-агностичный оркестратор-субагент: delegate-only tech-lead, читает доступные роли проекта и выдаёт машиночитаемый план (Task N -> @<prefix>-<role>) с режимами Sequential/Parallel-max2/Gated. Тянется как общий prerequisite стек-паками (backend-laravel/node-frontend/dart-flutter/python-backend).",
   "stack": {
     "shape": "agnostic"

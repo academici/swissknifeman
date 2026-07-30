@@ -2,7 +2,7 @@
 name: business-process
 bucket: pm
 version: 0.1.0
-description: Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок
+description: Используй при моделировании бизнес-процессов: workflow, FSM, sequence/state-диаграммы, обработка ошибок.
 risk: draft
 persona: pm
 tags: [requirements, workflow]

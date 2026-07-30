@@ -2,7 +2,7 @@
 name: unit-economics
 bucket: pm
 version: 0.1.0
-description: Unit economics: LTV, CAC, payback, churn, break-even, 3 сценария
+description: Используй при моделировании unit economics: LTV, CAC, payback, churn, break-even, 3 сценария.
 risk: draft
 persona: pm
 tags: [monetization]

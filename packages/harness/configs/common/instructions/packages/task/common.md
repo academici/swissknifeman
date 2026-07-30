@@ -3,10 +3,10 @@
 `task` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.
 <!-- instruction:task.command-catalog -->
 ## task.command-catalog
-Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`.
+Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`. Also, each intent command declares its routed model class and effort.
 <!-- instruction:task.plan-protocol -->
 ## task.plan-protocol
-Keep executable plans in `plans/<PLAN-ID>/`; plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers.
+Keep executable plans in `plans/<PLAN-ID>/`; plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers. Also, `plan-run` inherits the owner session route.
 <!-- instruction:task.layout -->
 ## task.layout
 Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task/plan_lint.py`, its launcher in `scripts/plan-lint.py`, and isolated tests in `tests/`.

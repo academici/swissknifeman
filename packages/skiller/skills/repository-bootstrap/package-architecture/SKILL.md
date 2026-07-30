@@ -214,4 +214,4 @@ canonical source is this file's `SKILL.ru.md`; thin projections —
 private/source-only: never published as an ordinary unit/core/marketplace entry, never
 vendored/connected into a consumer project.
 
-<!-- ru-source-sha256: 16a3d675f6daaeb1ecb86836736b6f0b828033ec3bf4d9dae739766b6d6a2e65 -->
+<!-- ru-source-sha256: 68be962ca3d6f35daa57814a7d121d203084d4eaa73b480fd2de9a74e003a3f1 -->

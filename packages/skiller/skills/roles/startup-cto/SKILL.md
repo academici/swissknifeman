@@ -2,7 +2,7 @@
 name: startup-cto
 bucket: roles
 version: 0.2.0
-description: "Startup CTO persona — tech radar, hiring, architecture decisions"
+description: "Use when acting as Startup CTO: tech radar, hiring, architecture decisions."
 risk: read
 persona: startup-cto
 role_agent_pack: role-cto
@@ -84,4 +84,4 @@ Persona-dispatcher: stance "think like a startup CTO" + route to capability skil
 - `oss-dev/dependency-audit` · `oss-dev/dx-design` — build-vs-buy & DX.
 - `founder/risk-assessment` · `quality/tech-debt-audit` · `general/complex-task-orchestrator` — risks, debt, large initiatives.
 
-<!-- ru-source-sha256: b3e4497201a75d78215505af9b83ec6fc9069dbc79d03891eb4888556fceb0ff -->
+<!-- ru-source-sha256: d88745bbec38f4f8a33b3d3515382ce6ea4e568ccb64bec5d293c466f2c0846a -->

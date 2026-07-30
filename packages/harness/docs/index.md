@@ -107,6 +107,33 @@ harness agent-packs doctor  --target . [--drift [--strict]]
   локально мимо override; тот же сигнал попадает в `pack_drift` вердикта
   `maind analyze` (ATTENTION, не RED).
 
+### `harness instructions`
+
+Управляет двенадцатью проекциями корневых/пакетных инструкций (`CLAUDE.md`/`AGENTS.md`
+в корне и по одному на пакет) из общего канона `configs/common/instructions/**` —
+механизм, три наблюдения (`stale-source`/`managed-drift`/`ownership-conflict`) и
+два машинных гейта подробно разобраны в [канон корневых инструкций](./reference/instruction-canon).
+
+```
+harness instructions plan                         # no-write снимок
+harness instructions check                        # + гейт покрытия литералов
+python3 -m harness.instructions --check            # модульная точка (тот же вердикт)
+harness instructions apply --authorize CLAUDE.md,packages/harness/AGENTS.md
+harness instructions repair --authorize <цели> --observed-hash <target=hash,...> \
+  --preimage-dir adjacent-backup
+harness instructions adopt --authorize <цель> --owner-decision D# \
+  --mapping mapping.json --preimage-dir preimages/
+```
+
+- `plan`/`check` — no-write; `apply`/`repair`/`adopt` пишут только после явной
+  авторизации оператора (`--authorize`), список целей — АЛФАВИТНЫЙ по пути.
+- `apply`/`repair` создают/чинят цели, уже находящиеся под управлением;
+  `--preimage-dir` у `repair` — фиксированная строка `adjacent-backup`.
+- `adopt` принимает под управление СУЩЕСТВУЮЩИЙ неуправляемый файл: требует
+  `--owner-decision`, `--mapping` и `--preimage-dir` (каталог pre-image'ов) все три.
+- Ручная правка управляемых блоков (между HTML-маркерами) запрещена навсегда —
+  следующий `check`/`repair` увидит это как `managed-drift`.
+
 ### `harness doctor`
 
 Диагностика: наличие пресетов и `apply-permissions.sh`, установлены ли файлы

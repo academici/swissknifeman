@@ -2,7 +2,7 @@
 name: venv-dependencies
 bucket: python
 version: 0.1.0
-description: "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов"
+description: "Используй при управлении зависимостями и виртуальными окружениями Python для воспроизводимости проектов."
 risk: write
 persona: oss-dev
 tags: [python, venv, dependencies, tooling, quality, conventions]

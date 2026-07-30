@@ -2,7 +2,7 @@
 name: threading
 bucket: blender-modeling
 version: 0.1.0
-description: "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки"
+description: "Используй при проектировании резьбы на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки."
 risk: write
 persona: oss-dev
 tags: [blender, 3d, fdm, sla, threading, geometry, bpy]

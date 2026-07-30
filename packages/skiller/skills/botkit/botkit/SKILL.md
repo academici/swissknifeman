@@ -2,7 +2,7 @@
 name: botkit
 bucket: botkit
 version: 0.2.0
-description: "Bot framework patterns: BotDefinition contract, package service provider, webhook handling"
+description: "Use when building bot framework features: BotDefinition contract, package service provider, webhook handling."
 risk: write
 persona: oss-dev
 tags: [php, laravel, bots, botkit]
@@ -35,4 +35,4 @@ Refs:
 - `php-packages/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
 - `php/laravel-structure` — placement of bot classes in the project tree.
 
-<!-- ru-source-sha256: 44c4e0db7dc7edd8875869556a134e6a7e0536b8bb413af88ad6fd4c03f31126 -->
+<!-- ru-source-sha256: 553d8a600c74f2c1f1d5775e73c71050b1ef0a60ee686001044bd217f16d9335 -->

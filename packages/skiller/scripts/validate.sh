@@ -90,10 +90,17 @@ CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 # иначе — error (новый долг запрещён). См. scripts/desc-burndown.txt.
 DESC_WARN_MAX = 300
 DESC_ERROR_MAX = 450
+# Нижняя граница качества description как ТРИГГЕРА (P3.5, рэтчет по образцу верхней —
+# см. desc-trigger-burndown.txt): описание обязано отвечать «когда звать», не только «что
+# это». Регулярка — набор устойчивых маркеров условия применения (не жанра скилла).
+DESC_TRIGGER_RE = re.compile(
+    r"(use when|activate|use for|use to|when you|whenever|trigger|use this)", re.I
+)
 
-def _load_desc_burndown(repo_root_pkg):
-    """scripts/desc-burndown.txt → set('bucket/name'), комменты(#)/пустые строки игнор."""
-    p = repo_root_pkg / "scripts" / "desc-burndown.txt"
+def _load_burndown_file(repo_root_pkg, filename):
+    """scripts/<filename> → set('bucket/name'), комменты(#)/пустые строки игнор.
+    Общий загрузчик для desc-burndown.txt и desc-trigger-burndown.txt (тот же формат)."""
+    p = repo_root_pkg / "scripts" / filename
     if not p.is_file():
         return set()
     out = set()
@@ -104,9 +111,12 @@ def _load_desc_burndown(repo_root_pkg):
         out.add(ln)
     return out
 
-DESC_BURNDOWN = _load_desc_burndown(root)
+DESC_BURNDOWN = _load_burndown_file(root, "desc-burndown.txt")
 DESC_BURNDOWN_SEEN = set()
 DESC_BY_KEY = {}  # 'bucket/name' -> len(description), для протухшей-записи гейта ниже
+TRIG_BURNDOWN = _load_burndown_file(root, "desc-trigger-burndown.txt")
+TRIG_BURNDOWN_SEEN = set()
+TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(есть триггер), для протухшей-записи гейта ниже
 
 
 def _collect_block_scalar(lines, start):
@@ -237,6 +247,24 @@ for skill_md in skill_files:
                           f"сократи description до <= {DESC_WARN_MAX} симв или добавь в "
                           f"desc-burndown.txt с обоснованием")
 
+    # --- 1·триггер: description отвечает «когда звать» (P3.5 рэтчет, upstream пропускаем) ---
+    if _desc_key and upstream is None:
+        has_trigger = bool(DESC_TRIGGER_RE.search(desc))
+        TRIG_HAS_TRIGGER_BY_KEY[_desc_key] = has_trigger
+        if not has_trigger:
+            if _desc_key in TRIG_BURNDOWN:
+                TRIG_BURNDOWN_SEEN.add(_desc_key)
+                warnings.append(f"{rel}: description без триггерной фразы (use when/activate/"
+                                f"use for/…) — унаследованный долг в "
+                                f"scripts/desc-trigger-burndown.txt (легально, но чини при "
+                                f"следующей правке)")
+            else:
+                errors.append(f"{rel}: description без триггерной фразы (use when/activate/"
+                              f"use for/use to/when you/whenever/trigger/use this) и НЕ в "
+                              f"scripts/desc-trigger-burndown.txt — новый долг запрещён "
+                              f"(рэтчет P3.5): опиши, КОГДА звать скилл, или добавь в "
+                              f"desc-trigger-burndown.txt с обоснованием")
+
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts
     path_bucket = parts[1] if parts[0] == "skills" and len(parts) > 2 else None
@@ -303,6 +331,16 @@ for _bn_key in sorted(DESC_BURNDOWN):
     elif DESC_BY_KEY[_bn_key] <= DESC_WARN_MAX:
         warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (description "
                         f"уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери строку")
+
+# --- 1b·триггер. desc-trigger-burndown.txt — протухшие записи (one-way рэтчет, P3.5) -----
+# Запись легальна, только пока: скилл существует И его description всё ещё без триггера.
+for _tb_key in sorted(TRIG_BURNDOWN):
+    if _tb_key not in TRIG_HAS_TRIGGER_BY_KEY:
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
+                        f"(скилла нет в реестре под этим bucket/name), убери строку")
+    elif TRIG_HAS_TRIGGER_BY_KEY[_tb_key]:
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
+                        f"(description уже несёт триггерную фразу), убери строку")
 
 # --- 1c. CORE-девятка — обязательные секции тела (P8.8, рэтчет) ------------
 # Сплошной гейт по всем скиллам неисполним (замер: активационную секцию несут
@@ -1248,3 +1286,130 @@ PY
 bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
   echo "ERROR: CORE резидентный бюджет превышен — сократи описания/скиллы ядра (skiller budget)" >&2
   exit 1; }
+
+# --- 16. канон каркаса: таблица «пак → версия» vs pack.json (гейт свежести) ------
+# `docs/agent-framework/framework-overview.md` объявлен ВХОДОМ следующего прогона
+# framework-audit — и один раз уже отстал от дерева на 36 дней: аудитор получил семь
+# «🔜 в работе» при готовой реализации и добросовестно предложил построить уже стоящее
+# (docs/audits/2026-07-29-harness-agnostic — мета-находка). Ручное напоминание «обнови
+# обзор» этот класс отказа не поймало, поэтому свежесть входа держит машина.
+# Проверка того же класса, что drift-гейт реестра (§12b): ни сети, ни git-истории, ни
+# календарных порогов — сверка ОБЪЯВЛЕННЫХ версий с `pack.json` каждого пака.
+# В standalone-раскладке (пакет без соседнего `harness`) гейт деградирует в явный пропуск.
+_AGENT_PACKS_DIR="$(cd "$REPO_ROOT/../harness/configs/claude-code/agent-packs" 2>/dev/null && pwd || true)"
+python3 - "$REPO_ROOT" "${_AGENT_PACKS_DIR:-}" <<'PY'
+import json, re, sys, pathlib
+
+root = pathlib.Path(sys.argv[1])
+packs_dir = sys.argv[2]
+overview = root / "docs" / "agent-framework" / "framework-overview.md"
+
+if not packs_dir:
+    print("канон каркаса: packages/harness/configs/claude-code/agent-packs не найден "
+          "(standalone-раскладка) — гейт свежести пропущен")
+    sys.exit(0)
+if not overview.is_file():
+    print("канон каркаса: docs/agent-framework/framework-overview.md нет — "
+          "гейт свежести пропущен")
+    sys.exit(0)
+
+# Формат якоря закрыт (P3.1): заголовок «| Пак | Версия |», разделитель, строки
+# «| <пак> | <x.y.z> |». Эвристик нет — что не легло в форму, то ERROR с фиксом.
+HEADER = re.compile(r"^\|\s*Пак\s*\|\s*Версия\s*\|\s*$")
+SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
+ROW = re.compile(r"^\|\s*([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*\|\s*(\d+\.\d+\.\d+)\s*\|\s*$")
+
+errors = []
+declared = {}
+in_table = False
+for ln, line in enumerate(overview.read_text(encoding="utf-8").splitlines(), 1):
+    if HEADER.match(line):
+        in_table = True
+        continue
+    if not in_table:
+        continue
+    if SEP.match(line):
+        continue
+    if not line.startswith("|"):
+        in_table = False
+        continue
+    m = ROW.match(line)
+    if not m:
+        errors.append(f"docs/agent-framework/framework-overview.md:{ln}: строка таблицы "
+                      f"«пак → версия» не в формате `| <пак> | <x.y.z> |`: {line.strip()}")
+        continue
+    declared[m.group(1)] = m.group(2)
+
+if not declared and not errors:
+    errors.append("docs/agent-framework/framework-overview.md: нет таблицы «пак → версия» "
+                  "(заголовок `| Пак | Версия |`) — она машинный якорь гейта свежести")
+
+actual = {}
+for pj in sorted(pathlib.Path(packs_dir).glob("*/pack.json")):
+    name = pj.parent.name
+    try:
+        data = json.loads(pj.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        errors.append(f"agent-packs/{name}/pack.json: невалидный JSON: {e}")
+        continue
+    version = data.get("version")
+    if not isinstance(version, str):
+        errors.append(f"agent-packs/{name}/pack.json: нет строкового поля version")
+        continue
+    actual[name] = version
+
+for name in sorted(actual):
+    if name not in declared:
+        errors.append(f"пак `{name}` не объявлен в каноне — обнови таблицу в "
+                      f"`framework-overview.md`: `{name}` `{actual[name]}`")
+    elif declared[name] != actual[name]:
+        errors.append(f"пак `{name}`: канон объявляет `{declared[name]}`, pack.json несёт "
+                      f"`{actual[name]}` — обнови таблицу в `framework-overview.md`: "
+                      f"`{name}` `{actual[name]}`")
+for name in sorted(declared):
+    if name not in actual:
+        errors.append(f"строка `{name}` в каноне лишняя (пака нет в "
+                      f"packages/harness/configs/claude-code/agent-packs) — убери строку из "
+                      f"таблицы в `framework-overview.md`")
+
+if errors:
+    print(f"ERROR: канон каркаса отстал от дерева ({len(errors)}) — "
+          f"`framework-overview.md` объявлен входом следующего аудита:", file=sys.stderr)
+    for e in errors:
+        print("  " + e, file=sys.stderr)
+    sys.exit(1)
+
+print(f"канон каркаса: таблица «пак → версия» совпадает с pack.json ({len(actual)} паков)")
+PY
+
+# --- 17. WARN: листинг обнаружения профилей против фолбэк-бюджета Codex (P3.4) ---
+# Гейт WARN, не ERROR (D26/D29): структурный перебор — известная проблема состава раздачи,
+# не гигиены, красный CI её не чинит (см. budget.py CODEX_LISTING_FALLBACK_CHARS). Профиль,
+# чей листинг превышает фолбэк-бюджет Codex 8 000 симв, печатает число и профиль; решение
+# (сужение/skillOverrides/принятая деградация) — roadmap/, не этот скрипт (D29/OQ-7).
+# Python сам зовёт CLI сабпроцессом (а не читает его stdout через pipe в `python3 -
+# <<heredoc`) — конфликт: heredoc и pipe одновременно кормят один stdin, второй молча
+# теряется (питон читает СВОЙ скрипт из heredoc, а не JSON из pipe).
+python3 - "$REPO_ROOT" <<'PY'
+import json, subprocess, sys
+
+repo_root = sys.argv[1]
+result = subprocess.run(["bash", f"{repo_root}/bin/skiller", "budget",
+                        "--profiles", "--json"], capture_output=True, text=True)
+try:
+    rows = json.loads(result.stdout)
+except json.JSONDecodeError:
+    print("листинг обнаружения Codex: пропущен (--profiles --json не отдал валидный вывод)")
+    sys.exit(0)
+
+over = [r for r in rows if r["codex"]["over"]]
+if over:
+    print(f"WARN: {len(over)} профил(ей) листинга превышают фолбэк-бюджет обнаружения "
+          f"Codex (8 000 симв) — структурный перебор, см. roadmap/ "
+          f"(D29/OQ-7, 2026.07.29-HARNESS-AGNOSTIC P3.4):")
+    for r in over:
+        c = r["codex"]
+        print(f"  {r['profile']}: {c['raw']} симв (×{c['raw'] / c['budget']:.1f})")
+else:
+    print("листинг обнаружения Codex: все профили укладываются в фолбэк-бюджет 8 000 симв")
+PY

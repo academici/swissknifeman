@@ -20,21 +20,21 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `agent-design` | Agent design, agentic loop, tool contracts, harness, permission gates | `agentic`, `architecture`, `security`, `validation` |
-| `api-design` | Designing REST/GraphQL APIs, endpoints, contracts, versioning, authentication | `api`, `architecture`, `rest`, `contracts` |
-| `architecture` | System architecture, stack choice, ADR, C4 diagrams, deployment, scalability | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
+| `agent-design` | Use when designing an agent: agentic loop, tool contracts, harness, permission gates. | `agentic`, `architecture`, `security`, `validation` |
+| `api-design` | Use when designing REST/GraphQL APIs: endpoints, contracts, versioning, authentication. | `api`, `architecture`, `rest`, `contracts` |
+| `architecture` | Use when choosing system architecture: stack choice, ADR, C4 diagrams, deployment, scalab… | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
 | `codebase-design` | Shared vocabulary and discipline for designing DEEP modules (Ousterhout/Feathers): Module… | `design`, `deep-modules`, `ousterhout`, `seam`, `testability` |
-| `data-schema` | Data schema, entities, attributes, relations. DB-agnostic — markdown tables only | `data`, `architecture`, `schema`, `entities`, `erd` |
+| `data-schema` | Use when designing a data schema: entities, attributes, relations. DB-agnostic — markdown… | `data`, `architecture`, `schema`, `entities`, `erd` |
 | `dev-engineering-super-skill` | Broad engineering-bucket navigator (composite of external dev skills). For specific work … |  |
 | `domain-modeling` | Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the g… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
 | `ecosystem-reuse-gate` | Gate against reinventing functionality when designing a new project/feature: before build… | `ecosystem`, `reuse`, `vendor-vs-build`, `gate`, `architecture` |
-| `eval-design` | Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
+| `eval-design` | Use when evaluating LLM/AI output quality: eval-set, metrics, regression harness, automat… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
 | `figma-mcp-core` | Figma Dev Mode MCP discipline: real tools (get_metadata, get_variable_defs, get_code, get… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
-| `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
-| `observability-design` | Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks for prod-readiness | `observability`, `logging`, `metrics`, `tracing`, `alerting`, `slo`, `runbook` |
+| `legal-compliance` | Use when checking regulatory compliance before launch: GDPR, CCPA, AI Act, DMCA, COPPA, D… | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
+| `observability-design` | Use when designing observability for prod-readiness: logging, metrics, tracing, alerting,… | `observability`, `logging`, `metrics`, `tracing`, `alerting`, `slo`, `runbook` |
 | `package-contribution-protocol` | Gate against bloating a depended-on package from a consumer project: Rule of Three, propo… | `governance`, `package`, `monorepo`, `contribution`, `semver`, `anti-bloat`, `boundary` |
 | `security-design` | Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
-| `tech-stack-selection` | Tech stack selection with trade-off matrix before architecture design. ADR-first step | `stack-choice`, `architecture`, `adr`, `trade-off` |
+| `tech-stack-selection` | Use when selecting a tech stack: trade-off matrix before architecture design, ADR-first s… | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
 ### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (4)
 
@@ -56,7 +56,7 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `mcp-blender` | MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_s… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
-| `version-gotchas` | Known breaking changes and pitfalls of the Blender 5.0 API | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
+| `version-gotchas` | Use when hitting Blender 5.0 API issues: known breaking changes and pitfalls. | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
 
 ### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (6)
 
@@ -64,16 +64,16 @@
 |:--|:--|:--|
 | `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recomput… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
 | `config-conventions` | Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
-| `model-rules` | Template models/{name}/ai/rules.md — model-specific rules read by the agent before any ta… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
+| `model-rules` | Use this template before any task on a model: read models/{name}/ai/rules.md, the model-s… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
 | `parametric-config` | Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/t… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
 | `scene-conventions` | Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hie… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
-| `threading` | Threads on FDM/SLA parts: material, print physics, radial clearance by fit type | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
+| `threading` | Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by… | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
 
 ### botkit — botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo) (1)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `botkit` | Bot framework patterns: BotDefinition contract, package service provider, webhook handling | `php`, `laravel`, `bots`, `botkit` |
+| `botkit` | Use when building bot framework features: BotDefinition contract, package service provide… | `php`, `laravel`, `bots`, `botkit` |
 
 ### creative — Creative studio: video, design, content production (1)
 
@@ -93,7 +93,7 @@
 | `docker-postgres` | PostgreSQL in Docker: pg_isready healthcheck, named volume for data, init script creating… | `docker`, `devops`, `postgres`, `testing` |
 | `docker-services` | Full Laravel service stack from one image: app (fpm-nginx), queue, scheduler, reverb, opt… | `docker`, `devops`, `compose`, `laravel`, `queue`, `websocket` |
 | `docker-vite` | Vite dev server as separate compose service for Laravel: named volume for node_modules, H… | `docker`, `devops`, `vite`, `frontend`, `laravel` |
-| `gitops` | Team Git strategy: branch model (main/develop/feature/hotfix), PR workflow, branch protec… | `git`, `gitops`, `github` |
+| `gitops` | Use when defining team Git strategy: branch model (main/develop/feature/hotfix), PR workf… | `git`, `gitops`, `github` |
 | `makefile` | Makefile as single entrypoint: help, .PHONY, Docker command aliases; delegating root Make… | `make`, `devops`, `docker` |
 | `node-pnpm-preflight` | Check Node/pnpm availability on host before commands and git hooks that use pnpm (commitl… | `node`, `pnpm`, `devops`, `preflight`, `ci` |
 
@@ -108,14 +108,14 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `adversarial-check` | Structured devil's advocate — 3 strongest counterarguments, failed competitors, negative … | `validation`, `market` |
-| `competitive-analysis` | Market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep | `discovery`, `market`, `gtm` |
+| `competitive-analysis` | Use when researching market, competitors, JTBD, open niche, attack vector. Uses Perplexit… | `discovery`, `market`, `gtm` |
 | `customer-discovery` | Systematic discovery — target profile, interview framework (past not future), post-interv… | `discovery`, `validation`, `market` |
 | `defensibility` | Moat analysis for Scale stage — accumulated depth, data flywheel, workflow lock-in, domai… | `market`, `validation` |
 | `idea-audit` | Full destructive audit of an idea / concept / spec — first-principles → market skepticism… | `validation`, `market`, `architecture` |
 | `idea-discovery` | Structured interview of a raw idea — JTBD, problem statement, hypothesis, before competit… | `discovery`, `requirements`, `market` |
-| `new-project` | Launch a new startup project: concept, competitors, risks, full folder structure | `discovery`, `requirements`, `market`, `gtm` |
-| `pitch-deck` | 10-slide investor deck per YC/Sequoia canon from existing project artifacts | `gtm`, `market`, `monetization` |
-| `risk-assessment` | 6 risk categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks | `validation`, `compliance`, `security`, `agentic` |
+| `new-project` | Use when launching a new startup project: concept, competitors, risks, full folder struct… | `discovery`, `requirements`, `market`, `gtm` |
+| `pitch-deck` | Use when building a 10-slide investor deck per YC/Sequoia canon from existing project art… | `gtm`, `market`, `monetization` |
+| `risk-assessment` | Use when assessing startup risk: 6 categories (incl. AI/Agentic), Risk Matrix, RAID log, … | `validation`, `compliance`, `security`, `agentic` |
 | `startup-lifecycle` | 4 AI-native startup stages (Idea→MVP→Launch→Scale) with exit-criteria, failure modes, ant… | `validation`, `requirements`, `market` |
 
 ### frontend — Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload) (3)
@@ -187,7 +187,7 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `vite` | Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when w… |  |
-| `vite-module-loader` | Vite as primary frontend bundler: base config, aliases, build practices | `vite`, `frontend`, `build`, `laravel`, `vue` |
+| `vite-module-loader` | Use when configuring Vite as the primary frontend bundler: base config, aliases, build pr… | `vite`, `frontend`, `build`, `laravel`, `vue` |
 | `vite-multi-build` | Two independent Vite builds in one Laravel project: main app + Filament admin, with separ… | `vite`, `laravel`, `filament`, `tailwind`, `build`, `multi-config`, `frontend` |
 | `vitepress` | VitePress static site generator powered by Vite and Vue. Use when building documentation … |  |
 
@@ -221,8 +221,8 @@
 | `compact-responses` | Activate ultra-compact response mode: minimal prose, code-only, no explanations unless as… | `conventions`, `style`, `tokens`, `context`, `workflow` |
 | `complex-task-orchestrator` | Complex-task orchestration: decomposition, context routing, risk management, Definition o… | `workflow`, `orchestration`, `checklist`, `agents` |
 | `context-economy` | Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules… | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
-| `cross-layer-change-checklist` | Universal checklist for changes spanning multiple layers: code, authorization, UI, docs, … | `checklist`, `workflow`, `validation` |
-| `git-commit-rules` | Git workflow: commit prep, husky/commitlint, message format, safe action order. | `git`, `conventions`, `conventional-commits`, `gitops` |
+| `cross-layer-change-checklist` | Use when a change spans multiple layers: code, authorization, UI, docs, tests. | `checklist`, `workflow`, `validation` |
+| `git-commit-rules` | Use when preparing a Git commit: husky/commitlint, message format, safe action order. | `git`, `conventions`, `conventional-commits`, `gitops` |
 | `git-safety` | Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/res… | `git`, `safety`, `hooks`, `guardrails`, `init` |
 | `grill-with-docs` | Ruthless grilling session that SIMULTANEOUSLY builds a domain model: refines a plan/desig… | `grilling`, `requirements`, `domain`, `adr`, `docs` |
 | `implement` | Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on ag… | `workflow`, `implementation`, `tdd`, `review` |
@@ -270,7 +270,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `medialibrary` | spatie/laravel-medialibrary: attach files to Eloquent models, collections, conversions, g… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
+| `medialibrary` | Use when attaching files to Eloquent models: spatie/laravel-medialibrary collections, con… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
 | `pennant-development` | Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activatio… | `php`, `laravel`, `pennant`, `feature-flags` |
 | `spatie-settings` | spatie/laravel-settings: typed settings classes (extends Settings, group()), migrations a… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
 
@@ -328,13 +328,13 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `dependency-audit` | Dependency audit — lockfile sanity, vuln scan, license compatibility, supply-chain risk, … | `oss`, `compliance`, `security`, `dependencies`, `php` |
-| `dx-design` | Developer Experience: README, quick-start (≤60s), API ergonomics, error messages, types, … | `oss`, `documentation`, `api`, `cli` |
+| `dependency-audit` | Use when auditing dependencies: lockfile sanity, vuln scan, license compatibility, supply… | `oss`, `compliance`, `security`, `dependencies`, `php` |
+| `dx-design` | Use when designing developer experience: README, quick-start (≤60s), API ergonomics, erro… | `oss`, `documentation`, `api`, `cli` |
 | `gh-review` | Review and handoff changes via GitHub CLI (gh) with context economy: gh pr diff/view/comm… | `github`, `gh`, `review`, `handoff`, `tokens`, `context` |
 | `github-flow` | Chain Issue → Branch → PR → Merge → Tag → Release on GitHub: naming, labels, SemVer oracl… | `oss`, `github`, `git`, `semver`, `release` |
 | `issue-triage` | State machine for handling issues and external PRs: category (bug/enhancement) + status (… | `triage`, `issues`, `github`, `state-machine`, `governance` |
 | `oss-development` | OSS project: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP specifics in .… | `oss`, `architecture`, `documentation`, `ci` |
-| `oss-governance` | LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process, security policy for an OSS project | `oss`, `compliance`, `license`, `security`, `documentation` |
+| `oss-governance` | Use when setting up OSS governance: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process,… | `oss`, `compliance`, `license`, `security`, `documentation` |
 | `release-engineering` | SemVer strategy, CHANGELOG, release pipeline (CI/CD), pre-releases, deprecation policy fo… | `oss`, `semver`, `release`, `changelog`, `ci` |
 | `resolving-merge-conflicts` | Discipline for resolving an active git merge/rebase conflict: understand the state and th… | `git`, `merge`, `rebase`, `conflicts` |
 | `to-issues` | Split a plan/spec/PRD into independently-grabbable GitHub issues by VERTICAL slices (trac… | `issues`, `github`, `vertical-slices`, `decomposition`, `planning` |
@@ -347,17 +347,17 @@
 | `cursor-pagination-design` | Stable keyset (seek) pagination for infinite scroll/feeds: sortable non-nullable key, com… | `php`, `laravel`, `pagination`, `cursor`, `database` |
 | `database` | Database migrations, models, and table naming. Activate when writing migrations, creating… | `php`, `laravel`, `database`, `migrations` |
 | `dependency-injection` | Layer interaction via constructor injection: final readonly + promotion, injection matrix… | `php`, `laravel`, `di`, `architecture` |
-| `laravel` | Laravel architecture patterns: actions, repositories, resources | `php`, `laravel`, `architecture`, `patterns` |
+| `laravel` | Use when applying Laravel architecture patterns: actions, repositories, resources. | `php`, `laravel`, `architecture`, `patterns` |
 | `laravel-best-practices` | Laravel best practices: 20 rule categories (Eloquent, validation, cache, queues, security… | `php`, `laravel`, `best-practices` |
 | `laravel-structure` | Laravel project structure canon for greenfield and adding domains: domain taxonomy, layer… | `php`, `laravel`, `architecture`, `structure` |
 | `named-arguments` | PHP rule: method/function calls use named arguments; exceptions; activate when writing/re… | `php`, `code-style`, `readability`, `conventions` |
 | `namespace-refactor-safety` | Discipline for large PHP/Laravel namespace or class-move refactors: three-phase alias → u… | `php`, `refactor`, `namespace`, `safety` |
 | `pao` | Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artis… | `php`, `laravel`, `testing`, `tokens`, `agent-output` |
 | `php-naming-conventions` | Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
-| `php-patterns` | PHP domain patterns: VO, DTO, pipeline, specification — selection guide | `php`, `laravel`, `patterns`, `dto`, `architecture` |
+| `php-patterns` | Use when choosing a PHP domain pattern: VO, DTO, pipeline, specification — selection guid… | `php`, `laravel`, `patterns`, `dto`, `architecture` |
 | `php-upgrade-checklist` | PHP version upgrade checklist (minor/major): sync image/CI, composer update + clear depre… | `php`, `upgrade`, `version`, `rector`, `phpstan`, `composer` |
 | `production-readiness-checklist` | Verify production-readiness invariants happy-path tests miss: transaction atomicity, race… | `php`, `laravel`, `review`, `production`, `reliability`, `quality` |
-| `repositories` | Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService | `php`, `laravel`, `repository`, `architecture` |
+| `repositories` | Use when building Laravel repositories: read/store split, model scopes, delta-DTO, facade… | `php`, `laravel`, `repository`, `architecture` |
 | `static-analysis` | PHP/Laravel static analysis & linting: Laravel Pint, PHPStan, Rector locally + CI, refere… | `php`, `laravel`, `quality` |
 | `transactional-outbox-relay` | At-least-once async event delivery via transactional outbox: write+outbox in one transact… | `php`, `laravel`, `queue`, `outbox`, `reliability`, `async` |
 
@@ -373,29 +373,29 @@
 | `laravel-package-scaffold` | Use this skill when adding Laravel package capabilities or package shape changes after cr… | `php`, `laravel`, `package-dev` |
 | `laravel-package-service-provider` | Use this skill when changing a Laravel package service provider: config merges, routes, v… | `php`, `laravel`, `package-dev` |
 | `laravel-package-testing` | Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and … | `php`, `laravel`, `package-dev` |
-| `laravel-packages` | Build Laravel packages: scaffold, tests, publish package skills to consumers via vendor:p… | `php`, `laravel`, `package-dev`, `skills` |
+| `laravel-packages` | Use when building a Laravel package: scaffold, tests, publish package skills to consumers… | `php`, `laravel`, `package-dev`, `skills` |
 
 ### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (10)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `brd` | Business Requirements Document: functional requirements, user stories, acceptance criteria | `requirements`, `template` |
-| `business-process` | Business processes, workflow, FSM, sequence/state diagrams, error handling | `requirements`, `workflow` |
-| `go-to-market` | GTM strategy, ICP, messaging framework, acquisition channels, launch plan | `gtm`, `market`, `monetization` |
+| `brd` | Use when writing a Business Requirements Document: functional requirements, user stories,… | `requirements`, `template` |
+| `business-process` | Use when modeling business processes: workflow, FSM, sequence/state diagrams, error handl… | `requirements`, `workflow` |
+| `go-to-market` | Use when building a GTM strategy: ICP, messaging framework, acquisition channels, launch … | `gtm`, `market`, `monetization` |
 | `monetization-design` | Pick business model (SaaS / marketplace / ads / freemium / hybrid) with trade-off matrix … | `monetization`, `market` |
 | `pm-super-skill` | Broad PM-bucket navigator (composite of external PM skills). For specific work prefer the… |  |
 | `pmf-diagnostics` | Product-market fit diagnostics — pre-launch measurement framework, Sean Ellis test (>40%)… | `validation`, `market` |
 | `prd-from-brd` | Product Requirements Document — expands BRD into detailed user stories with acceptance cr… | `requirements`, `template` |
 | `product-roadmap` | MVP definition, Impact/Effort prioritization, MVP → v1 → v2 → Backlog phases, phase-trans… | `requirements`, `gtm`, `market` |
 | `requirement-critic` | Audit of a written spec/BRD: completeness, conflicts, assumptions, gap analysis, MoSCoW +… | `requirements`, `validation` |
-| `unit-economics` | Unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios | `monetization` |
+| `unit-economics` | Use when modeling unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios. | `monetization` |
 
 ### python — Python: ML project structure, virtualenv and dependency management (2)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `ml-project-structure` | Standardized ML/Data Science project structure (Cookiecutter Data Science) | `python`, `ml`, `structure`, `architecture`, `data`, `conventions` |
-| `venv-dependencies` | Python dependency management and virtual environments for project reproducibility | `python`, `venv`, `dependencies`, `tooling`, `quality`, `conventions` |
+| `ml-project-structure` | Use when structuring an ML/Data Science project per Cookiecutter Data Science. | `python`, `ml`, `structure`, `architecture`, `data`, `conventions` |
+| `venv-dependencies` | Use when managing Python dependencies and virtual environments for project reproducibilit… | `python`, `venv`, `dependencies`, `tooling`, `quality`, `conventions` |
 
 ### quality — Code review, refactoring plans, tech debt audits, test strategy (11)
 
@@ -407,7 +407,7 @@
 | `diagnosing-bugs` | Discipline for diagnosing hard bugs and performance regressions: FIRST build a tight repr… | `debugging`, `diagnostics`, `feedback-loop`, `performance`, `testing` |
 | `mutation-testing` | PHP mutation testing via Infection: infection.json5 (source/excludes, mutators, logs, min… | `quality`, `testing`, `mutation`, `infection`, `php`, `ci`, `coverage` |
 | `playwright-e2e` | Browser E2E with Playwright for a web app (frontend-agnostic: Vue/Inertia/Livewire): play… | `playwright`, `e2e`, `browser`, `testing`, `storage-state`, `ci`, `quality`, `frontend`, `typescript` |
-| `refactoring-plan` | Safe refactoring plan: scope, Mikado / strangler pattern, atomic steps, done criteria, ro… | `quality`, `refactor`, `refactoring`, `validation`, `workflow` |
+| `refactoring-plan` | Use when planning a safe refactor: scope, Mikado / strangler pattern, atomic steps, done … | `quality`, `refactor`, `refactoring`, `validation`, `workflow` |
 | `tdd-discipline` | TDD discipline via red-green-refactor by VERTICAL slices (tracer bullets), NOT horizontal… | `tdd`, `testing`, `red-green-refactor`, `vertical-slices` |
 | `tech-debt-audit` | Tech-debt inventory, classification (architectural/code/dependency/test/process), priorit… | `quality`, `validation`, `refactor`, `dependencies`, `workflow` |
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
@@ -442,10 +442,10 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `open-source-maintainer` | OSS Maintainer — triage, review, releases | `role`, `persona`, `oss`, `github`, `review`, `release`, `triage` |
-| `solo-founder` | Solo Founder — weekly review, decision log | `role`, `persona`, `discovery`, `market`, `validation` |
-| `startup-cto` | Startup CTO persona — tech radar, hiring, architecture decisions | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
-| `tech-lead` | Tech Lead persona — sprint kickoff, 1:1s, team coordination | `role`, `persona`, `orchestration`, `review`, `workflow` |
+| `open-source-maintainer` | Use when acting as OSS Maintainer: triage, review, releases. | `role`, `persona`, `oss`, `github`, `review`, `release`, `triage` |
+| `solo-founder` | Use when acting as Solo Founder: weekly review, decision log. | `role`, `persona`, `discovery`, `market`, `validation` |
+| `startup-cto` | Use when acting as Startup CTO: tech radar, hiring, architecture decisions. | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
+| `tech-lead` | Use when acting as Tech Lead: sprint kickoff, 1:1s, team coordination. | `role`, `persona`, `orchestration`, `review`, `workflow` |
 
 ### sales — Sales: pipeline, outreach, CRM, negotiation (1)
 

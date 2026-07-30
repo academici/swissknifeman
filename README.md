@@ -18,11 +18,11 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1`. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1`. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex |
 |:--|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | unsupported |
+| `agent-packs.lifecycle` | adapted | adapted |
 | `agents.catalog` | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported |
 | `analytics.normalized-events` | adapted | adapted |
@@ -41,19 +41,19 @@
 | `doctor.provider` | adapted | adapted |
 | `instructions.project` | native | native |
 | `lifecycle.auto-approval` | adapted | native |
-| `lifecycle.changelog-gate` | adapted | unsupported |
-| `lifecycle.command-log` | adapted | unsupported |
-| `lifecycle.daemon-safety` | unsupported | unsupported |
-| `lifecycle.git-guardrails` | unsupported | unsupported |
-| `lifecycle.memory` | adapted | unsupported |
+| `lifecycle.changelog-gate` | adapted | adapted |
+| `lifecycle.command-log` | adapted | adapted |
+| `lifecycle.daemon-safety` | adapted | adapted |
+| `lifecycle.git-guardrails` | unsupported | adapted |
+| `lifecycle.memory` | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported |
-| `lifecycle.pack-guard` | adapted | unsupported |
-| `lifecycle.review-gate` | adapted | unsupported |
-| `lifecycle.router` | adapted | unsupported |
-| `lifecycle.run-report` | adapted | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted |
+| `lifecycle.review-gate` | adapted | adapted |
+| `lifecycle.router` | adapted | adapted |
+| `lifecycle.run-report` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
-| `security.safe-dirs` | adapted | unsupported |
-| `settings.audit` | adapted | unsupported |
+| `security.safe-dirs` | adapted | adapted |
+| `settings.audit` | adapted | adapted |
 | `settings.permissions` | adapted | adapted |
 | `skills.repository` | native | native |
 | `workflows.status` | adapted | unsupported |
@@ -119,7 +119,7 @@ analyst <cmd>                 # continuous learning (digest, scan, review, promo
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
   [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
-- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md)).
+- Развитие: [`roadmap/`](roadmap/) — реализованные спеки называют результат без ссылки (см. `roadmap/README.md`).
 
 ## Разработка
 

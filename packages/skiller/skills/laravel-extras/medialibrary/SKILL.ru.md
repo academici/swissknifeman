@@ -2,7 +2,7 @@
 name: medialibrary
 bucket: laravel-extras
 version: 0.1.0
-description: "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL"
+description: "Используй при привязке файлов к Eloquent-моделям: spatie/laravel-medialibrary, коллекции, конверсии, URL."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "media", "spatie", "uploads", "images"]

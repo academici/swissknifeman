@@ -2,7 +2,7 @@
 name: risk-assessment
 bucket: founder
 version: 0.1.0
-description: 6 категорий рисков (вкл. AI/Agentic), Risk Matrix, RAID-лог, pre-mortem для критичных рисков
+description: Используй при оценке рисков стартапа: 6 категорий (вкл. AI/Agentic), Risk Matrix, RAID-лог, pre-mortem для критичных рисков.
 risk: read
 persona: founder
 tags: [validation, compliance, security, agentic]

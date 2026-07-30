@@ -2,7 +2,7 @@
 name: dx-design
 bucket: oss-dev
 version: 0.1.0
-description: Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX
+description: Используй при проектировании Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX.
 risk: draft
 persona: oss-dev
 tags: [oss, documentation, api, cli]

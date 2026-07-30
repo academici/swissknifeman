@@ -2,7 +2,7 @@
 name: data-schema
 bucket: architect
 version: 0.1.0
-description: Data schema, entities, attributes, relations. DB-agnostic — markdown tables only
+description: Use when designing a data schema: entities, attributes, relations. DB-agnostic — markdown tables only.
 risk: draft
 persona: architect
 tags: [data, architecture, schema, entities, erd]
@@ -114,4 +114,4 @@ Relation types: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
 - `php/database` — schema implementation in Laravel migrations/models (boundary: design vs implementation).
 - `php/repositories` — data access layer over implemented schema.
 
-<!-- ru-source-sha256: 2b7f7d894ecfe970bdb5fb73b4c7b0a78418b4ab40be309f01b9e3f2721024fe -->
+<!-- ru-source-sha256: da7fc0660c7c581c3c92ce73619fe32ccb27d740c1c9606836c4a27f60f512c1 -->

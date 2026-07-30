@@ -16,6 +16,8 @@
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
 | [`codex-publication-consumer-acceptance.md`](codex-publication-consumer-acceptance.md) | Изолированный гейт `source → marketplace → install/cache → clean consumer → fresh session` для Codex plugins + circuit breaker item-исполнения | ⬜ к внедрению | Сработал (azguard 2026-07-21: формальный GREEN при пустых скиллах новой сессии). **Решение владельца 2026-07-25:** оформить item'ом плана (ECO-OPT P7.3 либо AGENT-RELIABILITY) — гейт трогает publication-поверхность, которую AR перестраивает; смежно AR P1/P3.4 (self-host canary, consumer-запись исключена) |
+| [`2026.07.29-launch-block-command-row.md`](2026.07.29-launch-block-command-row.md) | launch-block: команда — последняя строка таблицы параметров, отдельный code-block с голым промптом — только при отклонении от стандартного маршрута | ⬜ к внедрению | Сработал (2026-07-29: двукратная неверная выдача в одной сессии из-за конструкции формата). Готово к оформлению отдельным маленьким планом, независимым от `HARNESS-AGNOSTIC` |
+| [`codex-skill-listing-fallback-overflow.md`](codex-skill-listing-fallback-overflow.md) | Девять из десяти поставляемых профилей превышают фолбэк-бюджет обнаружения Codex (8 000 симв) — рычаги 1–3 владельца (D74) сузку Claude-оси уже сняли, Codex не закрывают | ⬜ к внедрению | Сработал (замер `2026.07.29-HARNESS-AGNOSTIC P3.4`, `artifacts/P3-skill-listing-budget.md`, WARN-гейт `validate.sh` §17). Решение владельца между Codex-специфичным профилем / принятой деградацией / отложить до живого прогона Codex CLI (OQ-7, D29) |
 
 ## Частично реализовано — остаток здесь
 
@@ -24,13 +26,14 @@
 | [`plan-audit-loop.md`](plan-audit-loop.md) | Правила остановки аудита внедрены (`packages/task/commands/plan-audit.md`: две ступени, порог severity, потолок 2 раунда). **Остаток — детерминированная CLI-ступень** `plan-lint --conflicts` (машинная сверка трёх SSOT перед дорогим проходом) | 🟡 остаток | Ручной конфликт-скан повторно съедает opus-раунды — тогда механизируем |
 | [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
 | [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | Эмит `.mcp.json.example` + ведение `.gitignore` реализованы **opt-in** (`mcp.emit_example`). **Остаток — default-on** | 🟡 остаток | Повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example`. Файл также — якорь ссылки из `.claude/skills/project-tooling-runbook` (не трогать до AR P1) |
+| [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, ECO-OPT D74) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
 
 ## Отложено — критерий не сработал
 
 | Файл | Что | Критерий внедрения |
 |:--|:--|:--|
 | [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Диета-фаза упирается в notify-скилл, который жалко сжимать без гарантии сохранности |
-| [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` (134/207 скиллов без явного «Use when») | Рычаг **№4** по решению владельца (ECO-OPT D74): включается, только если рычаги 1–3 листинговой гигиены (ECO-OPT P3.1/P3.5) переполнение не сняли |
+| [`agent-scoped-skill-loading-vs-connect-default.md`](agent-scoped-skill-loading-vs-connect-default.md) | Идея владельца (2026-07-30): дефолт `connect` (целый бакет, грубо) даёт токен-переполнение корневой сессии независимо от вызова агента; per-role `skills:` preload agent-packs уже построен, но это другой слой | Владелец формулирует явное D-решение о дефолтной политике подключения И проходит design-проход — меняет дефолт для всего флота |
 | [`analyst-plan-scan.md`](analyst-plan-scan.md) | `analyst digest` читает Known Deviations/Pending Work закрытых `plans/*` как источник уроков | ≥2–3 плана с содержательными Known Deviations — ручной просмотр перестаёт масштабироваться |
 | [`analyst-fleet-coverage.md`](analyst-fleet-coverage.md) | Покрытие analyst-цикла по флоту: хук `run-report` включён у 5/20 проектов, analyst-state — 2/20 | Осознанное решение по umbrella-политике хуков на чужих проектах (не одностороннее включение) |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
@@ -39,6 +42,8 @@
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
 | [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
 | [`context-notify-tmp-cleanup.md`](context-notify-tmp-cleanup.md) | Стартовая уборка `context-notify.sh` не чистит осиротевшие `*.tmp` (3/40 SIGKILL-прогонов, ECO-OPT P6.1) | Следующая содержательная правка того же скрипта |
+| [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | Любой из трёх (спека §Критерий): замер ручного ритуала ≥20 закрытий с <25 % вмешательств · `decide` стал импортируемым модулем в `packages/**` (сейчас — данные в архиве AR) · измеренный выигрыш стоимости ≥2× против Workflow-марафона. Вердикт пере-скоупа — `2026.07.29-HARNESS-AGNOSTIC` P4.1 (D38/D90) |
+| [`instruction-authorize-order.md`](instruction-authorize-order.md) | Order-sensitivity `apply_instructions` к порядку `--authorize` (алфавитный по `target_path`) + неинформативная диагностика `INSTRUCTION_WRITE_FORBIDDEN` (`2026.07.29-HARNESS-AGNOSTIC` D84) | Следующий ложный отказ ИЛИ следующая содержательная правка `apply_instructions` |
 
 ## Входы активных планов (не трогать вне их items)
 

@@ -2,7 +2,7 @@
 name: vite-module-loader
 bucket: frontend-vite
 version: 0.1.0
-description: "Vite as primary frontend bundler: base config, aliases, build practices"
+description: "Use when configuring Vite as the primary frontend bundler: base config, aliases, build practices."
 risk: write
 persona: oss-dev
 tags: [vite, frontend, build, laravel, vue]
@@ -95,4 +95,4 @@ export default defineConfig({
 - https://github.com/laravel/vite-plugin
 - Related: `frontend-vite/vite-multi-build` (two independent builds: app + Filament), `devops/docker-vite` (Vite dev server as separate compose service, HMR in Docker), `frontend-wayfinder/wayfinder` (`wayfinder()` vite plugin in build), `frontend-tailwind/tailwind-conventions` (`@tailwindcss/vite` plugin, Tailwind v4 build)
 
-<!-- ru-source-sha256: 3101147779e30b27aefa2597806d24a4b6e6d6339367360294c079b3ca87a590 -->
+<!-- ru-source-sha256: 787e470a397fe9543fe68c4ae41829c75b2389782b6fd018511750729affdccd -->

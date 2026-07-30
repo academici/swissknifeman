@@ -57,14 +57,27 @@
 | 2026-07-01 | Текст-маркер возврата вместо строгой схемы на длинных возвратах | ✅ accept | dev-loop.js; StructuredOutput retry-cap (5) рантайма обрывал прогон — обходим, не переживаем |
 | 2026-07-01 | `perplexity-web` — bounded concurrency (не «sequential only») | ✅ accept | background-agents.md таблица; репо-доки `query-craft` уже описывают daemon v1.3.0 pools; инцидентный 13-way fan-out просто превысил лимит |
 
-## Проверенные факты Claude Code (офиц. доки, 2026-06-23)
+## Из аудита #4 (harness-agnostic, 2026-07-29)
+
+| Дата | Идея | Вердикт | Обоснование / куда |
+|---|---|---|---|
+| 2026-07-29 | Канонический установочный юнит — плагин/пак, бакет — человеческая рубрикация | ✅ accept | описание уже сложившегося (48 бакетов, 10 паков, marketplace ~50 плагинов), не изменение — `2026.07.29-HARNESS-AGNOSTIC` D3/§13 |
+| 2026-07-29 | Корневой always-on контекст остаётся коротким индексом | ✅ accept | число для корневой цены: `CLAUDE.md` 88 строк / 7 520 байт (на `4647ad4b`, `wc -l -c CLAUDE.md`) против прежних 194/20 705 — `2026.07.29-HARNESS-AGNOSTIC P1.5` Completion Notes |
+| 2026-07-29 | Шаблоны ролей тонкие по знанию, глубину дают скиллы по требованию | ✅ DONE | фиксируется каноном; `roles.md` (self-load fallback скиллов в теле промта роли) |
+| 2026-07-29 | Политика спавна/делегирования — от контекст-бюджета | ✅ accept | принято, содержание и носитель — `2026.07.29-HARNESS-AGNOSTIC P4` (декларативная схема политики), здесь только ссылка |
+| 2026-07-29 | Каждый пак поставляет verification-контракты и eval-фикстуры | ⚠ частично DONE | SubagentStop review-gate (`hooks/review-gate.sh` + `REVIEW_GATE_CMD`) есть в 4/10 паков (`backend-laravel`, `dart-flutter`, `node-frontend`, `python-backend`); честностной агент `test-verifier` — только у `backend-laravel` (1/10); 6/10 паков (`laravel-package`, `_common`, `role-cto`, `role-founder`, `role-maintainer`, `role-tech-lead`) не несут ни того ни другого — разрыв реален, не закрывается этой записью |
+
+## Проверенные факты Claude Code (офиц. доки, версия факта — своя дата)
 
 | Факт | Вердикт |
 |---|---|
-| `.claude/rules/` с `paths:` — авто-загрузка по путям | ✅ нативно (docs/en/memory) |
-| Субагент `extends:`/`@include` наследование | ❌ не существует |
-| Frontmatter `triggers/role/version/project_type` у агента | ❌ не существует |
-| Agent Teams + `teammateMode` + хуки TeammateIdle/TaskCompleted | ✅ реально, экспериментально, CC ≥2.1.178 |
-| Нумерация файлов агентов → приоритет `/agents` | ❌ не влияет |
-| `${CLAUDE_PROJECT_DIR}` / `${CLAUDE_PLUGIN_ROOT}` в командах хуков | ✅ нативно |
-| Конкурентность субагентов | ~16 одновременно / 1000 на прогон |
+| `.claude/rules/` с `paths:` — авто-загрузка по путям | ✅ нативно (docs/en/memory, 2026-06-23) |
+| Субагент `extends:`/`@include` наследование | ❌ не существует (2026-06-23) |
+| Frontmatter `triggers/role/version/project_type` у агента | ❌ не существует (2026-06-23) |
+| Нумерация файлов агентов → приоритет `/agents` | ❌ не влияет (2026-06-23) |
+| `${CLAUDE_PROJECT_DIR}` / `${CLAUDE_PLUGIN_ROOT}` в командах хуков | ✅ нативно (2026-06-23) |
+| Agent Teams — экспериментально (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), `teammateMode` дефолт `in-process` с v2.1.179 (было `auto`), `iterm2`-режим с v2.1.186; хук-события команды: `TeammateIdle`/`TaskCreated`/`TaskCompleted`; teammates не наследуют `/model` лида, effort лида наследуют с v2.1.186 в split-pane | ✅ подтверждено `code.claude.com/docs/en/agent-teams` (2026-07-29) |
+| Поля `skills`/`mcpServers` определения субагента НЕ применяются, когда оно запущено как teammate (загружает скиллы/MCP из настроек проекта/пользователя как обычная сессия) | ⚠ ограничивает модель ролей каркаса — оговорка внесена в `roles.md`/`agent-teams.md`, `code.claude.com/docs/en/agent-teams` (2026-07-29) |
+| Лимиты Agent-тула: 200 субагентов за сессию (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`, v2.1.212+), 20 одновременно (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, v2.1.217+), глубина вложенности 3 (v2.1.219) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) — отдельный потолок от workflow-рантайма ниже, не смешивать |
+| Workflow-рантайм (`agent()` из `Workflow`): ~16 конкуррентно, до 1000 на прогон — в лимит Agent-тула НЕ засчитывается | ✅ repo-grounded (workflow tool description), проверено против Ф17 (2026-07-29) |
+| `skills:` преднагрузка субагента: полное тело скилла инжектится в контекст; неизвестное/выключенное имя — молчаливый пропуск + запись в debug-лог (видимой ошибки нет) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) |

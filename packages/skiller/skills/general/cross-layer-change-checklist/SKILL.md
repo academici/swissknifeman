@@ -2,7 +2,7 @@
 name: cross-layer-change-checklist
 bucket: general
 version: 0.1.0
-description: "Universal checklist for changes spanning multiple layers: code, authorization, UI, docs, tests."
+description: "Use when a change spans multiple layers: code, authorization, UI, docs, tests."
 risk: read
 persona: oss-dev
 tags: [checklist, workflow, validation]
@@ -68,4 +68,4 @@ Use for changes spanning multiple system layers.
 - `complex-task-orchestrator` (general) — decomposition & DoD; this checklist = final layer sync before closing.
 - `quality/code-review` — final per-layer change review.
 
-<!-- ru-source-sha256: 67376b60c6dd248304374ed9c3fb41d3175fd984a0ded6a4ae2e9673f43dba0e -->
+<!-- ru-source-sha256: 6c20bb9c52e68cc8475df52c12df41f1c7f3f9584807af8faa9b7f79d72376f1 -->

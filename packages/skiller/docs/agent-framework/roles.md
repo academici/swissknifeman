@@ -1,7 +1,9 @@
 # Универсальные роли-агенты
 
-> Статус: 🔜 наполняется в Фазе 3. Здесь — модель; seed-агенты придут паком
-> `backend-laravel` (обобщены из проверенных memster-агентов).
+> Статус: ✅ реализовано (`configs/claude-code/agent-packs/role-bindings.json`,
+> `binding_version 1.0.0`). Здесь — модель; seed-агенты рендерятся из `_common` и
+> стек-паков (`backend-laravel`, `node-frontend`, `python-backend`, `dart-flutter`,
+> `laravel-package`) через связывание ролей.
 
 Ключевая идея универсальности: **роли одинаковы для любого проекта, меняется только
 стек — через профиль.** Reviewer на Laravel и на Nuxt — одна роль; различается набор
@@ -20,8 +22,14 @@
 
 ## Как роль становится стек-специфичной
 
-- `skills:` preload из профиля (`skills_map`) + self-load fallback в промте (на случай
-  silent no-op неизвестного имени).
+- `skills:` preload из профиля (`skills_map`) + self-load fallback в промте — на
+  неизвестном/отключённом имени preload пропускается с записью в debug-лог, не тихим
+  no-op без следа (first-party `https://code.claude.com/docs/en/sub-agents`, проверено
+  2026-07-29). **Оговорка (teammate):** этот preload не применяется, когда роль запущена
+  как teammate агент-команды — там skills/mcpServers берутся из проектных/user settings
+  сессии, а не из определения агента (first-party `https://code.claude.com/docs/en/agent-teams`,
+  проверено 2026-07-29). На этом пути self-load fallback в промте — ЕДИНСТВЕННЫЙ носитель,
+  не подстраховка (см. [agent-teams](./agent-teams)).
 - Стек-гейты (php8.4 vs node, PHPUnit vs Pest, access-layer вкл/выкл) — из ответов
   интервью пака, не хардкод в роли.
 - path-scoped rules по путям стека (`app/**` vs `resources/js/**`).

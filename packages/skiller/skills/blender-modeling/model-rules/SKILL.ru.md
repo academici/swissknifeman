@@ -2,7 +2,7 @@
 name: model-rules
 bucket: blender-modeling
 version: 0.1.0
-description: "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей"
+description: "Используй этот шаблон перед любой задачей над моделью: читай models/{name}/ai/rules.md — моделе-специфичные правила."
 risk: write
 persona: oss-dev
 tags: [blender, template, rules, 3d, cad, conventions]

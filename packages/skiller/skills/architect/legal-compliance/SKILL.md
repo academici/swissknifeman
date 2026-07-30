@@ -2,7 +2,7 @@
 name: legal-compliance
 bucket: architect
 version: 0.1.0
-description: GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist
+description: Use when checking regulatory compliance before launch: GDPR, CCPA, AI Act, DMCA, COPPA, DSA.
 risk: draft
 persona: architect
 tags: [compliance, gdpr, privacy, ai-act, regulatory]
@@ -169,4 +169,4 @@ Basic ToS draft. Same — DRAFT until lawyer.
 - `architect/observability-design` — audit trail + log retention under Article 30 / breach-response.
 - `legal/legal` — external body on contracts/NDA/compliance (analysis, not mirror).
 
-<!-- ru-source-sha256: 4e3c90dc8145ce8a7ac7f2d1c695523b2766e56402823bd009a9f31707cb44ec -->
+<!-- ru-source-sha256: 1e4c9500df7143ec5ea9eafc470fe05cf4f13b88ecf68f34f3f9ace4245ce905 -->

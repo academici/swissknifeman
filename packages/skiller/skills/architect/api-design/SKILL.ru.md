@@ -2,7 +2,7 @@
 name: api-design
 bucket: architect
 version: 0.1.1
-description: Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации
+description: Используй при проектировании REST/GraphQL API: эндпоинты, контракты, версионирование, аутентификация.
 risk: draft
 persona: architect
 tags: [api, architecture, rest, contracts]

@@ -1072,6 +1072,128 @@ def run_checks(ctx, checks=CHECKS):
     return findings
 
 
+# --- Codex settings audit (P2.4, codex-parity-verdicts-v1.md §3.11, bounded closure) ---
+# Отдельный, МЕНЬШИЙ набор проверок над документированными слоями Codex
+# (learn.chatgpt.com/docs/config-file/config-reference, findings/03 Ф10):
+# ~/.codex/config.toml → .codex/config.toml → profile, плюс `projects.<path>.trust_level`
+# и `features.hooks`. НЕ обобщение 13 Claude-проверок выше — их таксономия
+# permission/settings-shape у Codex носителя не имеет. Читалка **fail-soft**, как и
+# Claude-сторона: битый/непрочитанный слой — Finding, никогда не «конформно».
+# `tomllib` — stdlib только с Python 3.11 (матрица CI 3.9…3.13, D89 п.2): на 3.9/3.10
+# слой репортится нечитаемым, второй TOML-парсер не заводится (вне скоупа, запрет
+# новых рантайм-зависимостей).
+
+# Ф10: «Project-scoped config can't override machine-local provider, auth,
+# host-owned app request metadata, notification, configuration profile selection,
+# or telemetry routing keys» — ключи верхнего уровня TOML, которые проектный слой
+# переопределять не вправе.
+CODEX_NON_OVERRIDABLE_PROJECT_KEYS = ("model_provider", "auth", "notify", "profile", "otel")
+
+
+def _load_codex_toml_layer(name, path):
+    """Слой Codex TOML: отсутствующий файл — норма; неразрешённый интерпретатор
+    (`tomllib` < 3.11) и битый TOML — ОТЧЁТ (fail-soft), не исключение."""
+    if not path.exists():
+        return Layer(name, path, data=None, error=None)
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        return Layer(name, path, data=None,
+                     error="интерпретатор < 3.11: tomllib недоступен, слой не читается")
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
+        return Layer(name, path, data=None, error=str(error))
+    if not isinstance(data, dict):
+        return Layer(name, path, data=None, error="верхний уровень TOML не таблица")
+    return Layer(name, path, data=data, error=None)
+
+
+def load_codex_layers(env, target):
+    """Два документированных слоя Codex (Ф10), по возрастанию приоритета —
+    `user` → `project`; профиль (`profile`) выбирается ВНУТРИ этих слоёв, не
+    отдельным файлом, и здесь не разворачивается (вне объёма bounded closure)."""
+    target = Path(target)
+    return [
+        _load_codex_toml_layer("user", Path(env.home) / ".codex" / "config.toml"),
+        _load_codex_toml_layer("project", target / ".codex" / "config.toml"),
+    ]
+
+
+def codex_check_1_layers_readable(layers):
+    """№1: каждый слой, который существует, обязан быть прочитан; иначе — warn,
+    никогда молчаливое "conformant"."""
+    return [Finding(1, "warn", f"слой '{layer.name}' не прочитан",
+                    detail=f"{layer.path}: {layer.error}",
+                    hint="слой репортится нечитаемым, а не конформным")
+            for layer in layers if layer.error]
+
+
+def codex_check_2_project_overrides_machine_local_key(layers):
+    """№2: проектный слой не вправе переопределять machine-local ключи (Ф10)."""
+    project = next((layer for layer in layers if layer.name == "project" and layer.data), None)
+    if project is None:
+        return []
+    conflicts = sorted(key for key in CODEX_NON_OVERRIDABLE_PROJECT_KEYS if key in project.data)
+    if not conflicts:
+        return []
+    return [Finding(2, "error", "проектный слой переопределяет machine-local ключ",
+                    detail=f"{', '.join(conflicts)} в {project.path}",
+                    hint="Ф10: project-scoped config не может переопределять provider/auth/"
+                         "notification/profile-selection/telemetry — перенеси ключ(и) в "
+                         "~/.codex/config.toml")]
+
+
+def codex_check_3_hooks_feature_disabled(layers):
+    """№3: `features.hooks=false` эффективно — задеплоенные `harness hooks
+    --provider codex` поверхности не активируются (не ошибка, info)."""
+    effective = {}
+    for layer in layers:
+        if layer.data:
+            effective.update(layer.data)
+    features = effective.get("features")
+    if isinstance(features, dict) and features.get("hooks") is False:
+        return [Finding(3, "info", "features.hooks выключен",
+                        detail="эффективная конфигурация несёт features.hooks=false",
+                        hint="раскатанные harness hooks --provider codex поверхности "
+                             "не активируются, пока флаг не включён")]
+    return []
+
+
+CODEX_CHECKS = (
+    (1, codex_check_1_layers_readable),
+    (2, codex_check_2_project_overrides_machine_local_key),
+    (3, codex_check_3_hooks_feature_disabled),
+)
+
+
+def run_codex_checks(layers, checks=CODEX_CHECKS):
+    """Прогоняет Codex-реестр проверок над списком `Layer`, тот же плоский
+    список `Finding`, что и Claude-сторона (общие `counts`/`exit_code` ниже)."""
+    findings = []
+    for _id, fn in checks:
+        findings.extend(fn(layers))
+    return findings
+
+
+def render_codex_text(target, findings):
+    """Человекочитаемый отчёт Codex-аудита — тот же формат, что `render_text`,
+    без policy-профиля (Codex-сторона его не резолвит в этом bounded closure)."""
+    lines = [f"harness doctor --settings --provider codex (target: {target})"]
+    if not findings:
+        lines.append("  находок нет — эффективная конфигурация чистая.")
+    for level in _LEVEL_ORDER:
+        for f in (x for x in findings if x.level == level):
+            lines.append(f"[{level}] #{f.id} {f.title}")
+            if f.detail:
+                lines.append(f"    — {f.detail}")
+            if f.hint:
+                lines.append(f"    → {f.hint}")
+    c = counts(findings)
+    lines.append(f"ошибок: {c['error']}, предупреждений: {c['warn']}, заметок: {c['info']}")
+    return "\n".join(lines)
+
+
 # --- Рендер отчёта, счётчики, код возврата (2026.07.10-SKM-ROADMAP-005 P1.4) ----------------------------
 # Контракт CLI (`harness doctor --settings`): человекочитаемый отчёт ЛИБО единый
 # JSON-документ + exit-code 0/1/2. На `--json` стоит fleet-скан P1.6 — форма ниже

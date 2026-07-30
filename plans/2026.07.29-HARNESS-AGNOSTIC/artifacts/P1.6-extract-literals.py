@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extract the 105 mandatory literals from research/05 §2 and write the D76 coverage
 fixture. Re-running this script must reproduce `instruction-literal-coverage-v1.json`
-byte-for-byte (2026.07.29-HARNESS-AGNOSTIC P1.6)."""
+byte-for-byte (2026.07.29-HARNESS-AGNOSTIC P1.6, provenance narrowed to §2 — P2.6/D81)."""
 import hashlib
 import json
 import re
@@ -9,10 +9,17 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "packages/harness/lib"))
+sys.path.insert(0, str(REPO_ROOT))
+
+from harness.instructions import literal_coverage_section  # noqa: E402
+
 MATRIX_PATH = REPO_ROOT / "plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md"
 FIXTURE_PATH = (REPO_ROOT
                 / "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json")
 SOURCE_SECTION = "## 2. Матрица покрытия"
+SOURCE_HASH_SCOPE = "section"
+FIXTURE_VERSION = "1.1.2"
 OWNER_DECISION = "2026.07.29-HARNESS-AGNOSTIC D76"
 CATALOG_VERSION_AT_CAPTURE = "1.1.1"
 
@@ -38,13 +45,6 @@ def _cells(line: str) -> list[str]:
 
 def _is_separator(cells: list[str]) -> bool:
     return all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells)
-
-
-def extract_section(text: str) -> str:
-    start = text.index(SOURCE_SECTION)
-    next_match = re.search(r"^## 3\. ", text[start:], re.M)
-    end = start + next_match.start() if next_match else len(text)
-    return text[start:end]
 
 
 def extract_rows(section: str) -> list[list[str]]:
@@ -84,14 +84,15 @@ def extract_literals(rows: list[list[str]]) -> list[dict]:
     return literals
 
 
-def build_fixture(matrix_text: str, rows: list[list[str]], literals: list[dict]) -> dict:
+def build_fixture(section: str, rows: list[list[str]], literals: list[dict]) -> dict:
     return {
         "contract_version": "1.0.0",
-        "fixture_version": "1.1.1",
+        "fixture_version": FIXTURE_VERSION,
         "provenance": {
             "source": "plans/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md",
             "source_section": SOURCE_SECTION,
-            "source_sha256": hashlib.sha256(matrix_text.encode("utf-8")).hexdigest(),
+            "source_sha256": hashlib.sha256(section.encode("utf-8")).hexdigest(),
+            "source_hash_scope": SOURCE_HASH_SCOPE,
             "generator": "plans/2026.07.29-HARNESS-AGNOSTIC/artifacts/P1.6-extract-literals.py",
             "owner_decision": OWNER_DECISION,
             "row_count": len(rows),
@@ -105,10 +106,12 @@ def build_fixture(matrix_text: str, rows: list[list[str]], literals: list[dict])
 def main() -> int:
     raw = MATRIX_PATH.read_bytes()
     text = raw.decode("utf-8")
-    section = extract_section(text)
+    section = literal_coverage_section(text, SOURCE_SECTION)
+    if section is None:
+        raise ValueError(f"section {SOURCE_SECTION!r} not found in {MATRIX_PATH}")
     rows = extract_rows(section)
     literals = extract_literals(rows)
-    fixture = build_fixture(text, rows, literals)
+    fixture = build_fixture(section, rows, literals)
     FIXTURE_PATH.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n",
                             encoding="utf-8")
     print(f"rows={len(rows)} literals={len(literals)} -> {FIXTURE_PATH}")

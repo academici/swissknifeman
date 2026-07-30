@@ -262,6 +262,19 @@ def literal_coverage_path() -> Path:
     return package_root() / "tests/fixtures_data/instruction-literal-coverage-v1.json"
 
 
+def literal_coverage_section(text: str, section_heading: str) -> str | None:
+    """Text from `section_heading` up to the next `^## ` line (or end of file) — the
+    byte-exact rule the D76/D81 coverage fixture provenance is keyed to. `None` if
+    `section_heading` is absent (fail-closed at the caller)."""
+    start = text.find(section_heading)
+    if start == -1:
+        return None
+    tail_start = start + len(section_heading)
+    next_match = re.search(r"^## ", text[tail_start:], re.M)
+    end = tail_start + next_match.start() if next_match else len(text)
+    return text[start:end]
+
+
 def load_catalog(path: Path | None = None) -> dict[str, object]:
     try:
         value = json.loads((path or catalog_path()).read_text(encoding="utf-8"))

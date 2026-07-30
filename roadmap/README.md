@@ -39,6 +39,7 @@
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
 | [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
 | [`context-notify-tmp-cleanup.md`](context-notify-tmp-cleanup.md) | Стартовая уборка `context-notify.sh` не чистит осиротевшие `*.tmp` (3/40 SIGKILL-прогонов, ECO-OPT P6.1) | Следующая содержательная правка того же скрипта |
+| [`instruction-authorize-order.md`](instruction-authorize-order.md) | Order-sensitivity `apply_instructions` к порядку `--authorize` (алфавитный по `target_path`) + неинформативная диагностика `INSTRUCTION_WRITE_FORBIDDEN` (`2026.07.29-HARNESS-AGNOSTIC` D84) | Следующий ложный отказ ИЛИ следующая содержательная правка `apply_instructions` |
 
 ## Входы активных планов (не трогать вне их items)
 

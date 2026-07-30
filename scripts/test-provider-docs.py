@@ -30,9 +30,9 @@ class ProviderDocsTests(unittest.TestCase):
                     "analytics_contract_missing_sections"):
             self.assertEqual(report[key], [])
         self.assertEqual(report["canonical_sha256"],
-                         "4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1")
+                         "2b96cd63ae049827e47708dc41c7c5a704069595b0d1aec5465b318201d30c6f")
         self.assertEqual(report["carrier_sha256"],
-                         "32975d675cf252bba87b06aaee53bfe37e63a9a97dc74cb7a12a8a2b0c0394eb")
+                         "c9c1d0137433d74373e3872f5b730da1565504c1caa48de1b2fc8034b3849718")
         self.assertTrue(report["carrier_terminal_lf"])
         self.assertEqual(sum(len(values) for values in report["contributors"].values()), 35)
         self.assertEqual(len(set().union(*map(set, report["contributors"].values()))), 35)

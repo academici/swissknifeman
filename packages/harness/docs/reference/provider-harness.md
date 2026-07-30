@@ -17,12 +17,12 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/claude-code/agent-packs/role-bindings.json | `sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b` |
 | source:configs/claude-code/mcp/bindings.json | `sha256:dfe5e893b876f2450f9b0ce94274df61ff7ac6de928e0b9ccded48de7b8dcfd8` |
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
-| source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:0d8a6aa8d9c0fecb753c00c769fb498d7b9d2f378090ed45495d040066acb1ce` |
+| source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:9a6759333b7726ff9524eb2fa35063abf690db2769ad743cb800cb1a95c91cbc` |
 | source:configs/codex/mcp/bindings.json | `sha256:96edfa4686ff45bc8a886dd14418be1fde29dbee3098777574a21f1fc79e483a` |
 | source:configs/common/agent-packs/roles.json | `sha256:9c5d803b2da977d2875cb8f71ba4505dad077321edcf138e0fd0998c9cd94e24` |
 | source:configs/common/mcp/catalog.json | `sha256:26bddfc7f495650855ea183936aaf2d4c7ffa6e8cd91391e1a8fb25156a0842f` |
 | source:configs/common/profile-catalog.json | `sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835` |
-| render-manifest:all-provider-qualified-outputs | `sha256:bdc4e200d23d8383195b4bf8e34745891c4ad604bc63f56c8082ae20c802ae73` |
+| render-manifest:all-provider-qualified-outputs | `sha256:aa1584bb70d5a5cd20ba3de555f1d0b277a396e872fcf0ccfadf55955c66c6fd` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 
@@ -64,15 +64,15 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | codex | doctor.provider | `sha256:b697fe554c9c0d0271f950bd875c6a81373c03bf97aaf4e6ba11352ca184273a` | — | harness.doctor.provider | non-artifact:provider-audit | supported | `HARNESS_PROVIDER_AUDIT_NAMED` |
 | codex | lifecycle.auto-approval | `sha256:8681c3e09d1ef2a59015ccda5efebf4c4d2417b73f6b47c45bdda4d5bff7e6d9` | — | harness.lifecycle.auto-approval | native-binding:P5.2-config-security-projection | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.changelog-gate | `sha256:6a1579586594df0a691221c4aca2efe7d7f4835be82c0f807d3ba785b2ea8a9d` | — | harness.lifecycle.changelog-gate | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| codex | lifecycle.command-log | `sha256:6c2900af6956f64747429488e3177132cbed547a935cf98bda46a26fe57fe8ad` | — | harness.lifecycle.command-log | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| codex | lifecycle.command-log | `sha256:6c2900af6956f64747429488e3177132cbed547a935cf98bda46a26fe57fe8ad` | — | harness.lifecycle.command-log | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.daemon-safety | `sha256:d7eefb087ebafb37c2dfd19240e1611c6150925d12977d337c78a6e126ebbf2b` | — | harness.lifecycle.daemon-safety | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | lifecycle.git-guardrails | `sha256:4d5c38147dc736cb1d6b93c38e04d98324f48c057cc9ebb4ab294c4181559610` | — | harness.lifecycle.git-guardrails | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| codex | lifecycle.memory | `sha256:1c68623b21d4eafa0887b798cedea70ec3cf7d0674d35320f61328686e02e3fb` | — | harness.lifecycle.memory | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| codex | lifecycle.memory | `sha256:1c68623b21d4eafa0887b798cedea70ec3cf7d0674d35320f61328686e02e3fb` | — | harness.lifecycle.memory | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| codex | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| codex | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| codex | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
+| codex | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | mcp.catalog | `sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394` | — | harness.mcp.catalog | artifact:project:.codex/config.toml | supported | `HARNESS_MCP_PROJECTION_RENDERED` |
 | codex | security.safe-dirs | `sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312` | — | harness.security.safe-dirs | non-artifact:no-codex-safe-dirs-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:claude-only-settings-audit | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |

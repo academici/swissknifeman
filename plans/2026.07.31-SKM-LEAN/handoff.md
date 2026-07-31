@@ -1,71 +1,66 @@
-# HANDOFF — 2026-07-31 — after P2.2
+# HANDOFF — 2026-07-31 — after P2.3
 
-**Next:** run-items: task:plan-run 2026.07.31-SKM-LEAN P2.3
+**Next:** /task:plan-exec 2026.07.31-SKM-LEAN P2.4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high — пере-издание модели стоимости MCP затрагивает смысл каждого числа плана и контракт флот-потребителя (`maind doctor`), effort high+ по §9 |
-| Capabilities | — |
-| Context | same-session — item |
-| Суть | Режим-зависимая модель стоимости MCP (tool search default-on), обход подкаталогов `.claude/rules/**` в измерителе, прополка состава `.mcp.json` umbrella, перезамер «до/после» |
+| Model | sonnet |
+| Thinking | medium — из §3 Routing (P2.4 `implementation/medium`, `plan-exec`) |
+| Context | continue (/clear) — ручной item |
+| Суть | Дефолт `mcp.emit_example` → `true` с opt-out, dry-run по флоту, удаление `roadmap/mcp-config-example-emit.md` |
 
 ```
-run-items: task:plan-run 2026.07.31-SKM-LEAN P2.3
-
-РЕЖИМ: исполнение item'а по готовому ТЗ (DoR пройден design-проходами), контракт НЕ переиздаётся, повторная разведка не нужна
-ВХОД: plans/2026.07.31-SKM-LEAN/phases/P2.md §P2.3 (спека целиком) → plan.md §5 D19/D22 → open-questions.md OQ-4 → packages/skiller/skills/general/mcp-advisor/SKILL.md:100–130
-СКОУП: 1) чтение эффективного режима tool search (env → settings.local.json → settings.json → дефолт «включён») 2) режим-зависимая оценка MCP (deferred/off/auto) с печатью режима и класса оценки НОВЫМИ ключами (аддитивность D16) 3) ревизия KNOWN_MCP_TOOLS (алиас boost/laravel-boost) 4) починка обхода подкаталогов .claude/rules/** в _measure_claude_md 5) прополка .mcp.json umbrella по критериям mcp-advisor 6) тесты + перезамер umbrella и трёх проектов флота «до/после»
-НЕ ТРОГАТЬ: ключи total/verdict и пороги измерителя (P1, D16); .mcp.json чужих проектов; проводку в maind doctor (D17); Serena как код-граф (канон по замеру)
+/task:plan-exec 2026.07.31-SKM-LEAN P2.4
 ```
 
-**Done:** **P2.2 закрыт: 🟢** (item-коммит `a91e1fd6b8871dae09998ac30f651e3ecb6cb97b`, доска P2
-`1/6` → `2/6`). Пилот **сменён с ТЗ-кандидата `vintera/cms` на `dterema/app`**: структурная
-проверка ДО первой мутации (D21 — необратимая правка чужого дерева) показала, что `CLAUDE.md`
-во ВСЕХ крупных 0 %-хаб кандидатах реестра (`vintera/cms`, `sibintek-insiders`, `diabox`) —
-сгенерированный Boost/скриптом артефакт с явным «не редактировать вручную»; правка через их
-источник (`.ai/guidelines/**`) вышла бы за периметр `Files` item'а (`CLAUDE.md` +
-`.claude/rules/**`) — Implementation Rule (1) допускает выбор другого пилота с обоснованием
-числом, таблица пяти отвергнутых кандидатов — `findings/P2-rules-pilot.md` §1. На `dterema/app`
-инвентаризованы 14 секций/подсекций проектного `CLAUDE.md`, 11 path-специфичных перенесены в
-4 новых `.claude/rules/*.md` (`app-code-style.md`/`design-system.md`/`server-nitro.md`/
-`vue-components.md`), `## Запрещено` сокращён с 11 до 1 честно общего пункта. Числа «до/после»
-(`skiller budget --first-turn`): `CLAUDE.md + rules` **13 658 → 11 284 ток (−2 374, −12,0 %
-первого хода)**. Поведенческая проба (`claude -p … --output-format json`, клиент 2.1.220):
-без касания файла из `paths:` — «Нет», после чтения `app/config/theme.ts` — «Да.» — поведение
-совпадает с first-party документацией. Коммит в пилоте (его ветка `fix/cta-hover-feedback`):
-`9df78915448b4d8cc45610b8fa9ed4beb842f116`. **Вердикт: раскатывать** — с оговоркой: проекты
-флота с Boost/`.ai`-generated `CLAUDE.md` этой процедурой напрямую не покрываются (отдельное
-design-решение нужно до включения их в P2.6). Процедура для P2.6 — 9 шагов,
-`findings/P2-rules-pilot.md` §7. Пять секций-кандидатов P2.1 остаются резидентными — D89,
-отрицательный вердикт, не хвост.
+**Done:** **P2.3 закрыт: 🟢** (item-коммит `c2c0f1f6` — завершающий из двух атомарных: `77be6a4f`
+код/тесты/доки/скилл + `c2c0f1f6` регенерация `skiller registry`, доска P2 `2/6` → `3/6`).
+Модель стоимости MCP в измерителе (`_measure_mcp`, `budget.py`) пере-издана режим-зависимой
+(D19/D22): `ENABLE_TOOL_SEARCH` читается в порядке env-процесса → `settings.local.json` →
+`settings.json` → дефолт «включён»; три ветки — `deferred` (дефолт, имена инструментов +
+инструкции сервера, нижняя граница; для `maind` инструкции измерены фактически = 0) / `auto`
+(верхняя граница, явно названное допущение) / `off` (старая эйджер-модель, честна только при
+`ENABLE_TOOL_SEARCH=false`); режим/источник/класс оценки — новые аддитивные ключи
+`mcp.mode`/`mcp.mode_source`/`mcp.estimate_class` (`total`/`verdict` не тронуты, D16 — контракт
+`maind doctor --context` цел). `KNOWN_MCP_TOOLS` получил алиас `boost` рядом с `laravel-boost`.
+Обход подкаталогов `.claude/rules/**` в `_measure_claude_md` починен (`glob("*.md")` →
+`glob("**/*.md")`) — на живом флоте сегодня вложенных правил нет, фикс латентный. `.mcp.json`
+umbrella прополот критериями `core:mcp-advisor` — состав **подтверждён без изменений** (3
+сервера, у каждого назван сигнал в `phases/P2.md` P2.3 Completion Notes). Перезамер «до/после»
+живым `skiller budget --first-turn` по 4 проектам: umbrella `10 757 → 7 572` (WARN → OK), agelto
+`32 611 → 24 165` (WARN), flexcrm `29 354 → 23 418` (WARN), `vintera/cms` `23 836 → 19 416`
+(WARN → ELEVATED) — падение объяснено исправлением прибора (D19), не диетой; ни один проект
+флота этим item'ом не изменён. Тесты `packages/skiller/tests/test_budget_first_turn.py`:
+11 → 19 (+8), `test.sh` 541 → 549. `docs/guide/cli.md` и `mcp-advisor` `SKILL.ru.md`/`SKILL.md`
+обновлены под новую модель. **OQ-4** (закрыт РАНЬШЕ, внутри P1.3 — `Resolved → D84`) — его
+структурный критерий пересмотра «пере-считать `session_total` и подтвердить/пере-издать пару
+16 000/23 000» ВЫПОЛНЕН этим закрытием: 3 из 4 проектов замера остаются `session_verdict: WARN`
+(только umbrella перешёл в OK) — распределение флота не переворачивается, пара **подтверждена**
+без новой D-записи; трекер `open-questions.md` не правится, счёт открытых вопросов (пять) не
+меняется.
 
-**Прежде (P2.1, 🟢 Done, item-коммит `7b63b21e`):** правило «резидентный канон инструкций
-≤ 200 строк» стало машинным (`validate_canon_size`); аудит 21 секции корневого канона;
-`CLAUDE.md + rules` 2 387 → 2 370 ток на umbrella.
+**Прежде (P2.2, 🟢 Done, item-коммит `a91e1fd6`):** пилот path-scoped правил на `dterema/app`,
+`CLAUDE.md + rules` 13 658 → 11 284 ток (−2 374, −12,0 % первого хода); вердикт «раскатывать»
+с оговоркой про Boost/`.ai`-generated проекты флота.
 
-**Remaining:** **P2.3** готов к исполнению (⬜, маршрут §3 — implementation/high, `manual`).
-Дальше по фазе — P2.4 → P2.5 → P2.6, затем P3 → P7 по `roadmap.md`; порядок фазы строгий
-(`phases/P2.md` §Phase Context). Доска: P1 `3/4` (закрыта 🟠) · P2 `2/6` 🟡 · P3 `0/5` ·
-P4 `0/6` · P5 `0/9` · P6 `0/3` · P7 `0/4`.
+**Remaining:** **P2.4** готов к исполнению (⬜, маршрут §3 — `implementation/medium`,
+`plan-exec`) — дефолт `mcp.emit_example`, dry-run по флоту, закрытие roadmap-остатка. Дальше по
+фазе — P2.5 → P2.6, затем P3 → P7 по `roadmap.md`; порядок фазы строгий (`phases/P2.md`
+§Phase Context). Доска: P1 `3/4` (закрыта 🟠) · P2 `3/6` 🟡 · P3 `0/5` · P4 `0/6` · P5 `0/9` ·
+P6 `0/3` · P7 `0/4`.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P2.md` §P2.3 (спека) · `plan.md`
-(§0 Meta v1.0.5, §3 Routing, §4 доска, §5 D1–D90, §6 Update Log, `## Обсуждение` развилка 30) ·
-`findings/P2-rules-pilot.md` (пилот P2.2: инвентаризация, числа, проба, вердикт, процедура
-P2.6) · `findings/P2-rules-carrier-contract-conflict.md` (почему носитель в проекторе снят,
-D89) · `research/10-validation-acceptance-form-2026-07-31.md` (класс дефекта формы
-`Validation`, D90) · `open-questions.md` (открытых пять: OQ-2 · OQ-3 · OQ-5 · OQ-6 · OQ-8) ·
-`roadmap.md`.
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P2.md` §P2.3 (спека + Completion Notes —
+таблица «до/после», обоснование констант) · `plan.md` (§0 Meta v1.0.5, §3 Routing, §4 доска,
+§5 D1–D90, §6 Update Log) · `findings/P2-resident-layer-probe-2026-07-31.md` §5, §5.1, §9
+(baseline «до», tool-search RAG) · `packages/skiller/skills/general/mcp-advisor/SKILL.ru.md`
+§«Прополка резидентного MCP» (обновлённый caveat) · `open-questions.md` (открытых по-прежнему
+пять: OQ-2 · OQ-3 · OQ-5 · OQ-6 · OQ-8; OQ-4 закрыт РАНЬШЕ, внутри P1.3) · `roadmap.md`.
 
 **Open risks:**
 
-- **Гейт приёмки `pre_final` сегодня вырожден почти по всему плану.** До этого захода 36 из
-  37 items давали РОВНО ОДНУ acceptance-запись (после правки P2.2 — 35 из 37): при разделителе
-  «; » компилятор склеивает все проверки в одну, и её `public`/`internal` решает случайный
-  токен пути. **P3.4** и **P5.5** уже красные (`block:ACCEPTANCE_NOT_PUBLIC` из-за
-  `/dev/null` в склеенной записи) — они не закроются механически, как не закрылся P2.2.
-  *Предложение (C3/D6):* отдельный заход `plan-design`, механическая замена разделителя на
-  ` · ` без изменения текста проверок, приоритет — два красных item'а:
+- **Гейт приёмки `pre_final` вырожден почти по всему плану вне закрытых items.** Предложение
+  (C3/D6) прежнее — отдельный заход `plan-design` на разделитель ` · ` для P3.4/P5.5, приоритет
+  без изменений:
 
   ```
   design-item: task:plan-design 2026.07.31-SKM-LEAN P3.4
@@ -73,29 +68,23 @@ D89) · `research/10-validation-acceptance-form-2026-07-31.md` (класс де�
   РЕЖИМ: правка ФОРМЫ Validation (разделитель), НЕ пере-дизайн предмета items
   ВХОД: plans/2026.07.31-SKM-LEAN/research/10-validation-acceptance-form-2026-07-31.md → §2 таблица, §4 предложение; затем plan.md §5 D90
   СКОУП: 1) P3.4 и P5.5 — разделить существующие проверки ` · ` вместо «; », текст проверок не менять 2) прогон §2 до/после: ноль красных 3) дальше — остальные items с «; » тем же приёмом
-  НЕ ТРОГАТЬ: предмет и число проверок items; Scope/Deliverables; статусы; закрытые items P1.x, P2.1, P2.2
+  НЕ ТРОГАТЬ: предмет и число проверок items; Scope/Deliverables; статусы; закрытые items P1.x, P2.1, P2.2, P2.3
   ```
 
 - **Проекты флота с Boost/`.ai`-generated `CLAUDE.md` не покрыты процедурой P2.2 напрямую**
   (`findings/P2-rules-pilot.md` §6) — минимум `vintera/cms`, `sibintek-insiders`, `diabox`;
-  возможно частично `agelto`/`flexcrm`. До входа в **P2.6** для них нужно отдельное
-  design-решение о пути правки (через `.ai/guidelines/**` + регенерация штатным инструментом
-  пилота, шире периметра `CLAUDE.md`+`.claude/rules/**`) — не переносится механически процедурой
-  §7 без этого решения.
-- **Пять секций-кандидатов P2.1 остаются резидентными (436 ток)** — по D89 это решение, а не
-  долг; при чтении отчёта P2.1 строку «кандидат в path-scoped правило» следует читать вместе
-  с D89, иначе она выглядит незакрытой работой.
-- **Падение строки измерителя ≠ поведение клиента** — `budget.py:405–412` намеренно не считает
-  правила с `paths:`; поведение стоит на first-party документации (RAG:✅) и на поведенческой
-  пробе класса «наблюдение» (P2.2 подтвердил её отдельно на `dterema/app`). Смешать эти два
-  утверждения в отчёте раскатки P2.6 — дефект.
-- (прежнее, в силе) **Порог заморожен поверх модели стоимости MCP, которую P2.3 пере-издаст**
-  (D84) · **гейт размера меряет файл целиком, включая байты вне управляемых блоков** ·
+  до входа в **P2.6** для них нужно отдельное design-решение о пути правки.
+- **Пять секций-кандидатов P2.1 остаются резидентными (436 ток)** — по D89 это решение, не долг.
+- **Обход подкаталогов `.claude/rules/**` починен, но сегодня не проявлен на живом флоте** —
+  ни umbrella, ни agelto/flexcrm/`vintera-cms` не несут вложенных правил; проверить на первом
+  проекте, где P2.6 создаст `.claude/rules/<subdir>/`.
+- **agelto/flexcrm остаются `WARN` и после исправления модели MCP** — фантомная доля там была
+  меньше, чем у umbrella/`vintera-cms`; их диета — предмет **P2.6**, не этого item'а.
+- (прежнее, в силе) **гейт размера меряет файл целиком, включая байты вне управляемых блоков** ·
   **токенная оценка продублирована в двух пакетах** (тест-сверка пропускается в standalone) ·
   **`closure/P1.json` `inputs_sha256["phases/P1.md"]` больше не совпадает с живым файлом** (D87).
 
-**Workarounds/Deferred/Open questions:** «—» / **носитель path-scoped правил в проекторе —
-снят с плана (D89), не отложен**; сквозная правка формы `Validation` — отложена до отдельного
-захода (см. Open risks) / проекты флота с Boost/`.ai`-generated `CLAUDE.md` — отложены до
-отдельного design-решения (см. Open risks) / OQ-2 · OQ-3 · OQ-5 · OQ-6 · OQ-8 (пять открытых),
-см. `open-questions.md`.
+**Workarounds/Deferred/Open questions:** «—» / сквозная правка формы `Validation` — отложена
+до отдельного захода (см. Open risks) / проекты флота с Boost/`.ai`-generated `CLAUDE.md` —
+отложены до отдельного design-решения (см. Open risks) / OQ-2 · OQ-3 · OQ-5 · OQ-6 · OQ-8
+(пять открытых, без изменений — OQ-4 закрыт РАНЬШЕ, внутри P1.3), см. `open-questions.md`.

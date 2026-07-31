@@ -118,7 +118,7 @@ Claude Code уже несёт нативные механизмы сужения
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
-| P2 | Резидент-диета | 2/6 | 🟡 In progress |
+| P2 | Резидент-диета | 3/6 | 🟡 In progress |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
@@ -269,6 +269,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | plan-run/opus-high | **P2.2 заблокирован: 🔴** — носитель path-scoped правил не вписывается в замороженный `provider-instruction-contract` v1.0.0; кода не тронуто, доска P2 → 🔴 — детали см. `phases/P2.md` P2.2 Completion Notes |
 | 2026-07-31 | plan-design/opus-high | **P2.2 ре-дизайн (🔴 → ⬜), вердикт владельца — вариант C (D89)**: предмет сведён к пилоту, носитель в проекторе снят, доска P2 → 🟡; форма `Validation` — по D90 — детали см. `phases/P2.md` §P2.2 |
 | 2026-07-31 | plan-run/sonnet-high | **P2.2 закрыт: 🟢** — пилот `dterema/app` (не `vintera/cms` из ТЗ), −2 374 ток, вердикт «раскатывать», доска P2 → 2/6 — детали см. `phases/P2.md` P2.2 Completion Notes |
+| 2026-07-31 | plan-run/sonnet-high | **P2.3 закрыт: 🟢** — модель MCP пере-издана режим-зависимой (D19/D22), `.claude/rules/**` починен, D84-критерий OQ-4 выполнен (пара 16 000/23 000 подтверждена), доска P2 → 3/6 — детали см. `phases/P2.md` P2.3 Completion Notes |
 
 ## 7. Contracts
 

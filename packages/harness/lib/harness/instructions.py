@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import sys
@@ -105,6 +106,36 @@ OBSERVATION_CODES = frozenset({
     "managed-drift", "boundary-invalid", "provenance-invalid", "ownership-conflict",
     "write-forbidden",
 })
+# --- потолок размера канона (2026.07.31-SKM-LEAN P2.1, D86) -------------------
+# Потолок СТРОК — не наше изобретение: апстрим прямо рекомендует держать `CLAUDE.md`
+# под 200 строк и уводить справочный материал в скиллы, которые грузятся по
+# требованию (RAG:✅ 2026-07-31 https://code.claude.com/docs/en/features-overview
+# §«Understand how features load → CLAUDE.md»; то же основание у рекомендации
+# разносить файл по `.claude/rules/` https://code.claude.com/docs/en/claude-directory).
+# Потолок НЕ подгонялся под текущий размер: на момент ввода гейта корневые проекции
+# 88 (`CLAUDE.md`) и 92 (`AGENTS.md`) строки — запас ~2,2×.
+ROOT_CANON_LINE_LIMIT = 200
+# Токенный потолок корневого класса выведен из наблюдаемой плотности ЭТОГО канона на
+# потолке строк: 2 387 ток / 88 строк и 2 584 / 92 ⇒ ~27–28 ток на строку, 200 × 28 ≈
+# 5 600, округлено вверх до 6 000. Второе, независимое основание того же числа: 6 000 —
+# 37 % target'а первого хода 16 000 (2026.07.31-SKM-LEAN D83), то есть один только
+# корневой канон никогда не съедает больше трети цели бюджета.
+ROOT_CANON_TOKEN_LIMIT = 6_000
+# Пакетные проекции грузятся В ДОПОЛНЕНИЕ к корневой, когда агент заходит в пакет,
+# поэтому их класс вдвое строже: пара «корень + пакет» остаётся в порядке одного
+# корневого потолка. Запас к факту тот же ~2× (максимум по дереву — 52 строки /
+# 1 326 ток у `packages/harness/CLAUDE.md`).
+PACKAGE_CANON_LINE_LIMIT = 100
+PACKAGE_CANON_TOKEN_LIMIT = 3_000
+# Оценка токенов ОБЯЗАНА совпадать с измерителем `skiller budget`, иначе два счёта
+# одного файла разойдутся и заспорят. Первоисточник формулы и обеих констант —
+# `packages/skiller/lib/skiller/budget.py:48–64` (`estimate_tokens`,
+# `CHARS_PER_TOKEN_CYR`/`CHARS_PER_TOKEN_LAT`). Импортировать его отсюда нельзя:
+# harness не зависит от skiller (`root.package-boundaries`), поэтому формула
+# продублирована ЯВНО, а равенство двух реализаций на общем входе пинится тестом
+# `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
+CHARS_PER_TOKEN_CYR = 2.9
+CHARS_PER_TOKEN_LAT = 3.4
 _IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _DIGEST = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$")
 _TAG = re.compile(r"^<!-- instruction:([a-z][a-z0-9.-]*) -->$", re.M)
@@ -208,12 +239,40 @@ class InstructionTargetResult:
 
 
 @dataclass(frozen=True)
+class CanonSizeFinding:
+    """Одна превышенная граница размера канона (P2.1).
+
+    НЕ `InstructionDiagnostic`: таблица кодов диагностик заморожена контрактом
+    `provider-instruction-contract` v1.0.0 («Unknown codes or observation values fail
+    closed for a writer»), а размер — новый класс наблюдения, которого в ней нет.
+    Заводить семнадцатый код значило бы бампнуть замороженный контракт (это P5.7),
+    а переиспользовать чужой — соврать в машинно-читаемом поле. Поэтому гейт
+    аддитивен: собственный канал находок поверх неизменных диагностик, ровно как
+    `validate_literal_coverage` — только `check`, никогда `apply`/`repair`.
+    """
+    scope_id: str
+    provider_id: str
+    target_path: str
+    metric: str
+    limit: int
+    observed: int
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "scope_id": self.scope_id, "provider_id": self.provider_id,
+            "target_path": self.target_path, "metric": self.metric,
+            "limit": self.limit, "observed": self.observed,
+        }
+
+
+@dataclass(frozen=True)
 class InstructionOperationResult:
     request: InstructionRequest
     targets: tuple[InstructionTargetResult, ...]
     diagnostics: tuple[InstructionDiagnostic, ...]
     green: bool
     artifact_plan: ArtifactPlan | None = None
+    size_findings: tuple[CanonSizeFinding, ...] = ()
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -234,6 +293,7 @@ class InstructionOperationResult:
             },
             "targets": [item.as_dict() for item in self.targets],
             "diagnostics": [item.as_dict() for item in self.diagnostics],
+            "size_findings": [item.as_dict() for item in self.size_findings],
             "green": self.green,
         }
 
@@ -383,6 +443,52 @@ def plan_instructions(request: InstructionRequest, *,
     return _observe(request, value)
 
 
+def estimate_tokens(text: str) -> int:
+    """Языко-зависимая оценка токенов: кириллица ~2.9 chars/tok, остальное ~3.4.
+
+    Осознанный дубль `skiller.budget.estimate_tokens` (см. комментарий у констант
+    `CHARS_PER_TOKEN_*`): harness не зависит от skiller, а два РАЗНЫХ счёта одного
+    файла спорили бы цифрами. Равенство пинится тестом на общем входе."""
+    if not text:
+        return 0
+    cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
+    return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
+
+
+def canon_size_limits(scope_id: str) -> tuple[int, int]:
+    """(потолок строк, потолок токенов) класса артефакта: корневой vs пакетный."""
+    if scope_id == "root":
+        return ROOT_CANON_LINE_LIMIT, ROOT_CANON_TOKEN_LIMIT
+    return PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT
+
+
+def validate_canon_size(root: Path, *, scope_ids: tuple[str, ...] = SCOPES,
+                        provider_ids: tuple[str, ...] = PROVIDERS) -> tuple[CanonSizeFinding, ...]:
+    """Гейт размера канона (P2.1): каждая существующая проекция обязана уместиться
+    в потолок своего класса — по строкам И по оценке токенов.
+
+    Меряется ФАЙЛ ЦЕЛИКОМ, а не только управляемые блоки: сессия платит за весь
+    `CLAUDE.md`, включая байты вне маркеров, и апстрим-рекомендация «под 200 строк»
+    тоже про файл. Отсутствующая цель пропускается — её ловит `INSTRUCTION_TARGET_MISSING`,
+    и дублировать этот сигнал вторым классом находок нечестно."""
+    findings: list[CanonSizeFinding] = []
+    for scope_id in scope_ids:
+        line_limit, token_limit = canon_size_limits(scope_id)
+        for provider_id in provider_ids:
+            target_path = TARGETS[scope_id][provider_id]
+            path = root / target_path
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            for metric, limit, observed in (
+                    ("lines", line_limit, len(text.splitlines())),
+                    ("tokens", token_limit, estimate_tokens(text))):
+                if observed > limit:
+                    findings.append(CanonSizeFinding(scope_id, provider_id, target_path,
+                                                     metric, limit, observed))
+    return tuple(findings)
+
+
 def check_instructions(request: InstructionRequest, *,
                        catalog: dict[str, object] | None = None) -> InstructionOperationResult:
     request_diagnostics = _validate_request(request, {"check"})
@@ -395,8 +501,12 @@ def check_instructions(request: InstructionRequest, *,
         value = None
     coverage_diagnostics = validate_literal_coverage(value) if value is not None else ()
     diagnostics = _ordered_diagnostics(planned.diagnostics + coverage_diagnostics)
+    size_findings = validate_canon_size(Path(request.target_root),
+                                        scope_ids=request.scope_ids,
+                                        provider_ids=request.provider_ids)
     return replace(planned, request=request, diagnostics=diagnostics,
-                  green=planned.green and not coverage_diagnostics)
+                  size_findings=size_findings,
+                  green=planned.green and not coverage_diagnostics and not size_findings)
 
 
 def apply_instructions(request: InstructionRequest, *,
@@ -1584,6 +1694,11 @@ def _print_report(result: InstructionOperationResult) -> None:
         print(f"  ! {diagnostic.code}: {diagnostic.scope_id or '-'}/{diagnostic.provider_id or '-'} "
               f"{diagnostic.target_path or ''} — "
               f"{diagnostic.next_action or diagnostic.observed or ''}", file=sys.stderr)
+    for finding in result.size_findings:
+        print(f"  ! CANON_SIZE_EXCEEDED: {finding.target_path} — {finding.metric} "
+              f"{finding.observed} > {finding.limit} (класс "
+              f"{'root' if finding.scope_id == 'root' else 'package'}); уводи справочный "
+              f"материал в скилл или path-scoped правило", file=sys.stderr)
 
 
 def cmd_instructions(env, argv):

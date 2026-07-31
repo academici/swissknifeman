@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-07-31 |
+| Last Updated | 2026-07-31 (P2.6 закрыт) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -118,7 +118,7 @@ Claude Code уже несёт нативные механизмы сужения
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
-| P2 | Резидент-диета | 5/6 | 🟡 In progress |
+| P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
@@ -277,6 +277,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | plan-design/frontier | Тем же заходом: заведён `findings/P2.4-provider-emit-probe-2026-07-31.md` (проверка утверждений эскалации по коду и живым прогонам); P2.6 получил вход, Implementation Rule 10 и приёмку 6в по D93; `brief/01-refinements.md` дополнен вердиктом владельца |
 | 2026-07-31 | plan-run/sonnet-high | **P2.4 закрыт: 🟢** — точка эффекта заведена в provider-ветке `deploy_project` (предикат Rule 2), `write_example` идемпотентен по факту, живой dry-run по 22 проектам (4/1/17) + применение на `botkit` (`a7261e25`), доска P2 → 4/6 — детали см. `phases/P2.md` P2.4 Completion Notes |
 | 2026-07-31 | plan-run/opus-high | **P2.5 закрыт: 🟢** — форма хаб-блока провайдер-зависима (D20), флаг отката `--full-index`, сверка обнаружения, первые тесты генератора (12), пилот `agelto` 24 240 → 14 671 ток (`0e60c559`), доска P2 → 5/6 — детали см. `phases/P2.md` P2.5 Completion Notes |
+| 2026-07-31 | plan-exec/sonnet-medium | **P2.6 закрыт: 🟠 Done with deviations** — хаб-блок раскатан на 9 проектов, замер «после» опубликован, rules-миграция и `.mcp.json.example` A-класса не раскатаны, **фаза P2 терминальна** — детали см. `phases/P2.md` P2.6 Completion Notes |
 
 ## 7. Contracts
 

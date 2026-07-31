@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P2",
+  "closed_at": "2026-08-01",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "e2616e9d7cd17f4421c013d05ab4c82ba8fee6e8", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "90ad3cf5399785d7bc04437978689db3c193f1173a87e2f93eba1d219e4212ce",
+    "phases/P2.md": "d23be9c43a27ef90dce3209ab8fd5d7551b053d7a83be83d075c35b3d2a82969"
+  },
+  "items": [
+    {"id": "P2.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "аудит 21 секции канона (сжата 1 · приведена к факту 1 · 5 кандидатов в правила), правило гейтом в `instructions check`"},
+    {"id": "P2.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "пилот `dterema/app`: −2374 ток, вердикт «раскатывать»"},
+    {"id": "P2.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "модель MCP пере-издана режим-зависимой (D19/D22), OQ-4 закрыт (пара 16000/23000 подтверждена)"},
+    {"id": "P2.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "живой dry-run по 22 проектам (4/1/17) + применение на `botkit` (a7261e25)"},
+    {"id": "P2.5", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "пилот `agelto` 24240 → 14671 ток (0e60c559), 12 тестов генератора"},
+    {"id": "P2.6", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "findings/P2-fleet-after.md — хаб-блок раскатан на 9 проектов (7 коммитов + 2 gitignored), rules-миграция и .mcp.json.example A-класс не раскатаны"}
+  ],
+  "gates": [
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh — зелёный (на item-коммитах P2.1–P2.5)"},
+    {"id": "validate.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/validate.sh — зелёный"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "5/6", "label": "real"},
+    {"name": "fleet_hub_block_rolled_of_measured", "value": "9/22", "label": "real"}
+  ],
+  "limitations": [
+    "P2.6: rules-миграция сверх пилота (0 новых проектов — vintera/brain кандидаты) и .mcp.json.example A-класс (vintera/dterema/dterema-app) не раскатаны",
+    "P2.6: найден дефект генератора write_example (перезапись вместо мержа .mcp.json.example) — эмиссия A-класса недоступна до фикса"
+  ],
+  "external_side_effects": [
+    "P2.6 коммитил хаб-блок в 7 репозиториях флота (corex, memster, edufy, dterema-app, chatom, loqum, sibintek-insiders)"
+  ]
+}

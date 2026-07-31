@@ -278,6 +278,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | plan-run/sonnet-high | **P2.4 закрыт: 🟢** — точка эффекта заведена в provider-ветке `deploy_project` (предикат Rule 2), `write_example` идемпотентен по факту, живой dry-run по 22 проектам (4/1/17) + применение на `botkit` (`a7261e25`), доска P2 → 4/6 — детали см. `phases/P2.md` P2.4 Completion Notes |
 | 2026-07-31 | plan-run/opus-high | **P2.5 закрыт: 🟢** — форма хаб-блока провайдер-зависима (D20), флаг отката `--full-index`, сверка обнаружения, первые тесты генератора (12), пилот `agelto` 24 240 → 14 671 ток (`0e60c559`), доска P2 → 5/6 — детали см. `phases/P2.md` P2.5 Completion Notes |
 | 2026-07-31 | plan-exec/sonnet-medium | **P2.6 закрыт: 🟠 Done with deviations** — хаб-блок раскатан на 9 проектов, замер «после» опубликован, rules-миграция и `.mcp.json.example` A-класса не раскатаны, **фаза P2 терминальна** — детали см. `phases/P2.md` P2.6 Completion Notes |
+| 2026-08-01 | plan-close/sonnet-low | **Фаза P2 закрыта: 🟠 Done with deviations** (все 6 items терминальны, материальное отклонение — P2.6 частично не раскатан) — детали см. `phases/P2.md` § Phase Handoff |
 
 ## 7. Contracts
 

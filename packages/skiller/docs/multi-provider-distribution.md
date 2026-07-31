@@ -26,9 +26,14 @@ skiller сегодня раздаёт **только свой реестр** (`e
 - `vendor.py` `collect_skills()` (≈`vendor.py:154`) и `skillset.py` `resolve_skillset()`
   (`skillset.py:130-179`) резолвят выбор против индекса реестра (`skills.json`), не против каталога
   целевого проекта. Источник — всегда реестр.
-- Хаб-генератор (`scripts/generate-hub.sh`, обёртка `hub.py:14`) умеет писать управляемый блок в
-  `CLAUDE.md`/`AGENTS.md` (маркеры `<!-- swissknifeman:hub:start/end -->`) — но это **индекс**
-  установленных скиллов, а не **агрегация текста** `.ai/guidelines/*.md`.
+- Хаб-генератор (`scripts/generate-hub.sh` — тонкий лаунчер поверх `lib/skiller/hub.py`) умеет
+  писать управляемый блок в `CLAUDE.md`/`AGENTS.md` (маркеры
+  `<!-- swissknifeman:hub:start/end -->`) — но это **индекс** установленных скиллов, а не
+  **агрегация текста** `.ai/guidelines/*.md`. Форма блока провайдер-зависима: цели с нативным
+  листингом скиллов (`CLAUDE.md`, Boost-фрагмент) получают краткую форму без индекса, цели без
+  него (`AGENTS.md`/`GEMINI.md`, раскладки Cursor) — полную; `--full-index` возвращает индекс
+  всем целям. Сокращение допускается только после машинной сверки обнаружения — см.
+  [installation.md](./guide/installation) («Форма блока: по каналу-цели, а не по проекту»).
 - Фан-аут провайдеров узкий: `AGENT_DEFAULTS` (`common.py:23`) знает только пути скиллов для
   `claude`/`cursor`/`generic`. Нет генерации `.cursor/rules/*.mdc`, `GEMINI.md`, нет агрегации
   guidelines.

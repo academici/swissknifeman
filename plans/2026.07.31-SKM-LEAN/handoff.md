@@ -1,4 +1,4 @@
-# HANDOFF — 2026-07-31 — after P2.4 (ESCALATED)
+# HANDOFF — 2026-07-31 — after P2.4
 
 **Next:** /task:plan-design 2026.07.31-SKM-LEAN P2.4
 

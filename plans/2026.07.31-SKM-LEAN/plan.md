@@ -118,7 +118,7 @@ Claude Code уже несёт нативные механизмы сужения
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
-| P2 | Резидент-диета | 3/6 | 🟡 In progress |
+| P2 | Резидент-диета | 3/6 | 🔴 Blocked |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |

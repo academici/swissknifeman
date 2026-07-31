@@ -117,7 +117,7 @@ Claude Code уже несёт нативные механизмы сужения
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Измеритель first-turn | 3/4 | 🟡 In progress |
+| P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
 | P2 | Резидент-диета | 0/6 | ⬜ Not started |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
@@ -257,6 +257,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | plan-exec/sonnet-medium | **P1.2 закрыт: 🟢** — baseline-обход 22/26 записей реестра инструментом P1.4, unparsed 0/22 (эскалация P1.1/D81 не сработала), `memster` `plugins Σ` 10852 сверен ручным прогоном байт-в-байт, доска P1 → 2/4 — детали см. `phases/P1.md` P1.2 Completion Notes |
 | 2026-07-31 | plan-run/opus-high | **P1.3 закрыт: 🟢** — пороги 7000/10000 → 16000/23000 по гейту владельца (D83), канон переиздан в пяти носителях, доска P1 → 3/4 (фаза терминальна по items) — детали см. `phases/P1.md` P1.3 Completion Notes |
 | 2026-07-31 | plan-run/opus-high | Тем же заходом: **OQ-1 и OQ-4 закрыты** (D83/D84, открытых 7 → 5), `Files` P1.3 расширен на пятый носитель канона (D85) — детали см. `plan.md` §5 D83–D85 |
+| 2026-07-31 | plan-close/sonnet-low | **Фаза P1 закрыта: 🟠 Done with deviations** (все 4 items терминальны, единственное материальное отклонение — P1.1) — детали см. `phases/P1.md` § Phase Handoff |
 
 ## Обсуждение
 

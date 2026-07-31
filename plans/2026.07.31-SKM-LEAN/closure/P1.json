@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P1",
+  "closed_at": "2026-07-31",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "58c60965fe8f21e3d51f03d5ffd0644caa0ac133", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "de9b47ba18d332dfe2f8bb7e551e527f4e5c2e714acf83abd056eb1d454aba33",
+    "phases/P1.md": "94839a38293e695ddcc9f771ca29491fe58d55d0289059d95394a8c7f1df6eb7"
+  },
+  "items": [
+    {"id": "P1.1", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/test.sh — OK (536 тестов); item-коммит 487e68d0 (на HEAD)"},
+    {"id": "P1.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "findings/P1-fleet-baseline.md — 26/26 записей реестра, unparsed 0/22 измеренных; item-коммит 84a89e4e"},
+    {"id": "P1.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "OQ-1 → D83 (вариант A, пороги 16000/23000), harness.instructions --check зелён; item-коммит 58c60965"},
+    {"id": "P1.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "живой смоук memster: plugins Σ 2946 → 10852 (сверено ручным прогоном), item-коммит 3003d352"}
+  ],
+  "gates": [
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh — exit 0 (на item-коммитах P1.1/P1.2/P1.4)"},
+    {"id": "validate.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/validate.sh — validate: OK, [9/9] clean (на 487e68d0)"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "3/4", "label": "real"},
+    {"name": "fleet_baseline_measured_of_enabled", "value": "22/26", "label": "real"}
+  ],
+  "limitations": [
+    "P1.1 несёт материальное отклонение (дифф вне Files: .swissknifeman/provider-artifacts.lock.json)",
+    "baseline P1.2 покрывает 22/26 enabled-записей реестра (4 — stale registry entries, D15)"
+  ],
+  "external_side_effects": [
+    "P1.2 запускал SessionStart-хуки 20+ чужих онбордженных проектов флота (baseline-обход, побочный эффект _measure_hooks)"
+  ]
+}

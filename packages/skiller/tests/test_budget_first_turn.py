@@ -62,7 +62,7 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertEqual(s["mcp"]["tokens"], 0)        # нет .mcp.json
         expected_total = sum(s[k]["tokens"] for k in s)
         self.assertEqual(report["total"], expected_total)
-        self.assertEqual(report["verdict"], "OK")      # синтетика << 7K
+        self.assertEqual(report["verdict"], "OK")      # синтетика << 16K
 
     def test_broken_hook_is_na_not_exception(self):
         _write_hook(self.proj / ".claude" / "hooks" / "broken.sh",
@@ -147,10 +147,29 @@ class FirstTurnReportCase(unittest.TestCase):
         # always-on rule (без paths) даёт вклад — рост целиком от always.md
         self.assertGreater(with_always["tokens"], with_scoped["tokens"])
 
-    def test_verdict_warn_above_10k_and_strict_cli_exits(self):
-        # раздуваем CLAUDE.md, чтобы гарантированно перевалить warn-порог 10K
-        (self.proj / "CLAUDE.md").write_text("padding word " * 6000, encoding="utf-8")
+    def test_verdict_ladder_matches_declared_thresholds(self):
+        # лестница пиновывается ПОИМЁННО на своих границах: пере-издание порога
+        # (P1.3 Implementation Rules §6) обязано ронять этот кейс, а не тихо
+        # менять смысл вердикта у флота и у `maind doctor --context`.
+        from skiller.budget import (FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN,
+                                    _first_turn_verdict)
+        self.assertEqual((FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN), (16_000, 23_000))
+        self.assertEqual(_first_turn_verdict(FIRST_TURN_TARGET_MAX), "OK")
+        self.assertEqual(_first_turn_verdict(FIRST_TURN_TARGET_MAX + 1), "ELEVATED")
+        self.assertEqual(_first_turn_verdict(FIRST_TURN_WARN), "ELEVATED")
+        self.assertEqual(_first_turn_verdict(FIRST_TURN_WARN + 1), "WARN")
+
+    def test_verdict_warn_above_threshold_and_strict_cli_exits(self):
+        # раздуваем CLAUDE.md заведомо выше warn-порога; объём выводится ИЗ
+        # константы, иначе при следующем пере-издании порога тест «просто
+        # перестанет падать» вместо того, чтобы потребовать разбора.
+        from skiller.budget import FIRST_TURN_WARN, estimate_tokens
+        chunk = "padding word "
+        (self.proj / "CLAUDE.md").write_text(
+            chunk * (2 * FIRST_TURN_WARN // estimate_tokens(chunk) + 1),
+            encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
+        self.assertGreater(report["total"], FIRST_TURN_WARN)
         self.assertEqual(report["verdict"], "WARN")
         with contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaises(SystemExit):

@@ -261,8 +261,8 @@
       ],
       "assertions": [
         "Run skiller budget --first-turn",
-        "target 3–7K, warn at 10K, and require an Owner verdict above the gate.",
-        "run `skiller budget --first-turn --with-plugins` for marketplace plugins and escalate only when the sum crosses 10K"
+        "target 16K, warn at 23K, and require an Owner verdict above the gate.",
+        "run `skiller budget --first-turn --with-plugins` for marketplace plugins and escalate only when the sum crosses 23K"
       ]
     },
     {

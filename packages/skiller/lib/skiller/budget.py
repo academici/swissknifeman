@@ -187,12 +187,21 @@ def budget_for_set(skills, pulled=None):
 
 # --- first-turn footprint (2026.07.12-CONTEXT-ECONOMY P5.1) --------------------
 # Невидимый always-on бюджет — первопричина инцидента (findings/P0-rag-context-economy.md,
-# RAG:✅ 2026-07-12): стартовый контекст 3–7K ток норма, >10K — аномалия. Пять
-# источников always-on нагрузки первого хода проекта: skills meta (⊕ tier-0),
-# .claude/agents description, CLAUDE.md + path-less rules, живой прогон
-# SessionStart-хуков, MCP tool-defs.
-FIRST_TURN_TARGET_MAX = 7_000
-FIRST_TURN_WARN = 10_000
+# RAG:✅ 2026-07-12). Пять источников always-on нагрузки первого хода проекта:
+# skills meta (⊕ tier-0), .claude/agents description, CLAUDE.md + path-less rules,
+# живой прогон SessionStart-хуков, MCP tool-defs.
+#
+# Пороги пере-изданы 2026-07-31 (2026.07.31-SKM-LEAN D83, решение владельца по OQ-1)
+# против baseline флота — plans/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+# n=22, якорь 3003d352. Прежняя пара 7 000/10 000 калибровалась на величине, которая
+# НЕ считала marketplace-плагины (считать их было нечем до P1.1), и потому давала
+# WARN у 95 % флота: гейт, красный у всех, нормы от аварии не отличает. Медиана
+# плагинной суммы по флоту — 8 741 ток, поэтому тот же по смыслу порог на
+# плагин-инклюзивной величине равен 7 000 + 8 741 ≈ 16 000, а полоса сохраняет
+# прежнее отношение warn/target 1,43 → 23 000. Распределение флота на новой паре
+# (session_total): OK 23 % · ELEVATED 32 % · WARN 45 %.
+FIRST_TURN_TARGET_MAX = 16_000
+FIRST_TURN_WARN = 23_000
 HOOK_TIMEOUT = 10
 
 # Известные MCP-серверы → число tool-схем, резидентных в system prompt (грубо;
@@ -519,8 +528,10 @@ def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
                       listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
     """Сумма always-on футпринта первого хода проекта по пяти источникам.
     n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
-    что реально измерено. Вердикт: OK ≤7K · ELEVATED ≤10K · WARN >10K
-    (findings/P0-rag-context-economy.md, RAG:✅ 2026-07-12). `listing_fraction`/
+    что реально измерено. Вердикт: OK ≤16K · ELEVATED ≤23K · WARN >23K
+    (пороги — FIRST_TURN_TARGET_MAX/FIRST_TURN_WARN, обоснование там же:
+    baseline флота plans/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+    D83). `listing_fraction`/
     `listing_context_window` — доля бюджета листинга скиллов и контекстное окно
     целевой модели; параметры, а не константы (P3.4 Implementation Rules —
     захардкоженный дефолт протухнет при смене `skillListingBudgetFraction`)."""
@@ -692,7 +703,7 @@ def cmd_budget(env, argv):
               "  код при превышении ИЛИ недоборе (CI).\n"
               "  --first-turn: always-on футпринт первого хода проекта (skills meta +\n"
               "  agents + CLAUDE.md/rules + живой прогон SessionStart-хуков + MCP) —\n"
-              "  target ≤7K / warn >10K ток; --strict — exit 1 при WARN (CI).\n"
+              "  target ≤16K / warn >23K ток; --strict — exit 1 при WARN (CI).\n"
               "  --with-plugins (только вместе с --first-turn): добавляет always-on цену\n"
               "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
               "  аддитивными ключами `plugins`/`session_total`/`session_verdict` — без\n"

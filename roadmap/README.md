@@ -58,7 +58,7 @@
 |:--|:--|:--|
 | [`otel-preset.md`](otel-preset.md) | OTEL-пресет harness (opt-in телеметрия Claude Code) | ⛔ Skipped by decision (D7, CONTEXT-ECONOMY P5.4) — стаб; строка вердикта в [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md). Вернуться при реальном коллекторе |
 
-## Закрыто и удалено (2026-07-25)
+## Закрыто и удалено
 
 Спеки реализованы; текст — в git-истории, ТЗ и решения — в закрывших планах.
 
@@ -76,6 +76,7 @@
 | `agent-packs-upgrade-drift.md` | `do_upgrade` строит план из хэшей (источник/диск против `base_sha256` лока), пропавший target восстанавливается при равной версии, дрейф источника без бампа — warn; `doctor` предупреждает о targets двух паков (`shared_targets` в `--json`). Тесты — `packages/harness/tests/test_agentpacks_upgrade_fact.py` |
 | `2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md` | per-item `asOf` — канон `packages/task/workflows/README.md` §«Правила заполнения слотов»; чек-пункт «глобальный ли cache-bust маркер?» перед третьим resume — скилл `general/workflow-craft` §4.1 |
 | `ecosystem-glossary.md` | механизм — скилл `architect/domain-modeling` (CONTEXT.md, Rule of Two, term-index) + ревью-паки; наполнение term-index — ТЗ `plans/archive/2026.07.10-SKM-ROADMAP-005/phases/P6.md` (P6.4, vault) |
+| `budget-first-turn-plugin-visibility.md` | `packages/skiller/lib/skiller/plugins.py` + `skiller budget --first-turn --with-plugins` (аддитивные ключи `plugins`/`session_total`/`session_verdict`, D13/D14/D16) — `plans/2026.07.31-SKM-LEAN` P1.1 |
 
 ## Принцип
 

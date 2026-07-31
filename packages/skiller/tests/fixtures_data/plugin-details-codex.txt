@@ -1,0 +1,31 @@
+codex 1.0.6
+  Use Codex from Claude Code to review code or delegate tasks.
+  Source: codex@openai-codex
+
+Component inventory
+  Skills (11)  adversarial-review, cancel, codex-cli-runtime, codex-result-handling, gpt-5-4-prompting, rescue, result, review, setup, status, transfer
+  Agents (1)  codex-rescue
+  Hooks (3)  SessionStart, SessionEnd, Stop  (harness-only — no model context cost)
+  MCP servers (0)
+  LSP servers (0)
+
+Projected token cost
+  Always-on:   ~449 tok   added to every session
+
+Per-component (rounded)
+  component              always-on  on-invoke
+  codex-cli-runtime            ~40      ~1.1k
+  codex-result-handling        ~30       ~580
+  gpt-5-4-prompting            ~60      ~1.3k
+  codex-rescue                 ~80      ~1.1k
+  cancel                       ~20        ~30
+  result                       ~30       ~170
+  status                       ~30       ~210
+  transfer                     ~30        ~80
+  review                       ~20        ~1k
+  rescue                       ~40      ~1.2k
+  adversarial-review           ~40      ~1.2k
+  setup                        ~40       ~320
+
+  On-invoke cost is paid each time a skill or agent fires.
+  Token counts are estimates and may differ from actual usage.

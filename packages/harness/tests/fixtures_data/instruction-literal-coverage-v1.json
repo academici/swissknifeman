@@ -103,7 +103,7 @@
     },
     {
       "semantic_id": "root.claude-code.context-budget",
-      "literal": "use `claude plugin details` for marketplace plugins and escalate only when the sum crosses 10K"
+      "literal": "run `skiller budget --first-turn --with-plugins` for marketplace plugins and escalate only when the sum crosses 10K"
     },
     {
       "semantic_id": "root.plan-lifecycle",

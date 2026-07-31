@@ -29,6 +29,7 @@ from .common import die, parse_flags, parse_frontmatter
 from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      all_buckets, core_skill_tuples, find_project_root,
                      load_config, resolve_selection, validate_config)
+from .plugins import plugins_summary
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
 # Символов на токен — РАЗНЫЕ для кириллицы и латиницы/кода: кириллица у токенайзера
@@ -502,6 +503,17 @@ _FIRST_TURN_SOURCE_LABELS = (
 )
 
 
+def _first_turn_verdict(total):
+    """Трёхветочный вердикт OK/ELEVATED/WARN по порогам FIRST_TURN_TARGET_MAX/
+    FIRST_TURN_WARN — единственный носитель лестницы (используется и для
+    проектного `total`, и для плагин-инклюзивного `session_total`, D16)."""
+    if total <= FIRST_TURN_TARGET_MAX:
+        return "OK"
+    elif total <= FIRST_TURN_WARN:
+        return "ELEVATED"
+    return "WARN"
+
+
 def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
                       listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
                       listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
@@ -522,13 +534,30 @@ def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
         "mcp": _measure_mcp(target),
     }
     total = sum(s["tokens"] for s in sources.values() if s["tokens"] is not None)
-    if total <= FIRST_TURN_TARGET_MAX:
-        verdict = "OK"
-    elif total <= FIRST_TURN_WARN:
-        verdict = "ELEVATED"
-    else:
-        verdict = "WARN"
-    return {"target": str(target), "sources": sources, "total": total, "verdict": verdict}
+    return {"target": str(target), "sources": sources, "total": total,
+           "verdict": _first_turn_verdict(total)}
+
+
+def _format_plugins_block(plugins):
+    """Блок сводки always-on marketplace-плагинов (--with-plugins, D16 —
+    вызывается ТОЛЬКО когда ключ `plugins` уже в отчёте, иначе вывод не
+    меняется вовсе)."""
+    out = ["  Marketplace-плагины (always-on)"]
+    if plugins["status"] != "ok":
+        out.append(f"    n/a — {'; '.join(plugins['warnings']) or 'листинг недоступен'}")
+        return out
+    if not plugins["entries"]:
+        out.append("    нет enabled-плагинов")
+    for e in plugins["entries"]:
+        tok_str = "   n/a" if e["tokens"] is None else f"{e['tokens']:>6}"
+        out.append(f"    {e['id']} ({e['scope']})".ljust(30) + f" {tok_str} ток")
+    if plugins["unparsed"]:
+        out.append(f"    unparsed: {'; '.join(plugins['unparsed'])}")
+    if plugins["warnings"]:
+        out.append(f"    warnings: {'; '.join(plugins['warnings'])}")
+    out.append(f"    Итого плагины: {'n/a' if plugins['total'] is None else plugins['total']} ток"
+               + ("  (partial)" if plugins["partial"] else ""))
+    return out
 
 
 def format_first_turn_report(report):
@@ -542,9 +571,15 @@ def format_first_turn_report(report):
         raw = s.get("raw_tokens")
         if raw is not None and raw != tok:
             out.append(f"  {'  (сумма описаний до бюджета)':<28} {raw:>6} ток")
+    if "plugins" in report:
+        out.append("")
+        out.extend(_format_plugins_block(report["plugins"]))
     out.append("")
     out.append(f"Итого: {report['total']:>6} ток — {report['verdict']}  "
                f"(target ≤{FIRST_TURN_TARGET_MAX} · warn >{FIRST_TURN_WARN})")
+    if "session_total" in report:
+        out.append(f"Итого с плагинами: {report['session_total']:>6} ток — "
+                   f"{report['session_verdict']}")
     out.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     out.append("")
     return "\n".join(out)
@@ -638,7 +673,7 @@ def cmd_budget(env, argv):
         "--profile": "str", "--buckets": "str", "--exclude": "str",
         "--json": "bool", "--no-core": "bool", "--write-map": "bool",
         "--check-core": "bool", "--strict": "bool", "--first-turn": "bool",
-        "--provider": "str", "--profiles": "bool",
+        "--provider": "str", "--profiles": "bool", "--with-plugins": "bool",
     })
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
@@ -655,6 +690,10 @@ def cmd_budget(env, argv):
               "  --first-turn: always-on футпринт первого хода проекта (skills meta +\n"
               "  agents + CLAUDE.md/rules + живой прогон SessionStart-хуков + MCP) —\n"
               "  target ≤7K / warn >10K ток; --strict — exit 1 при WARN (CI).\n"
+              "  --with-plugins (только вместе с --first-turn): добавляет always-on цену\n"
+              "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
+              "  аддитивными ключами `plugins`/`session_total`/`session_verdict` — без\n"
+              "  флага вывод не меняется.\n"
               "  --provider claude-code|codex (с --profile/--config/--target): добавляет к\n"
               "  отчёту provider-aware бюджет обнаружения (листинга) и режим деградации;\n"
               "  без флага поведение не меняется (дефолт — claude-code).\n"
@@ -662,6 +701,8 @@ def cmd_budget(env, argv):
               "  провайдеров (P3.4).")
         return
     no_core = opts.get("no_core", False)
+    if opts.get("with_plugins") and not opts.get("first_turn"):
+        die("--with-plugins требует --first-turn")
 
     if opts.get("write_map"):
         write_budget_map(env)
@@ -683,6 +724,13 @@ def cmd_budget(env, argv):
             if target is None:
                 die("корень проекта не найден выше CWD — укажи --target")
         report = first_turn_report(env, target)
+        if opts.get("with_plugins"):
+            plugins = plugins_summary(target)
+            report["plugins"] = plugins
+            session_total = (report["total"] if plugins["total"] is None
+                            else report["total"] + plugins["total"])
+            report["session_total"] = session_total
+            report["session_verdict"] = _first_turn_verdict(session_total)
         if opts.get("json"):
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:

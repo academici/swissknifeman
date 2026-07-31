@@ -577,7 +577,7 @@
             {
               "source_id": "instruction.fragment.root.claude-code",
               "path": "packages/harness/configs/common/instructions/root/claude-code.md",
-              "sha256": "76969c928ce80ae8d8a07d034c5f11d9b0e476044ba92cb79f9eacaff4245b3e"
+              "sha256": "ac60ccb8484e5825209e24d2a28eaca959b4ca2f76c064a5ef6b8f1f7cbc6b15"
             }
           ],
           "compatibility_assertions": [
@@ -592,7 +592,7 @@
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 2,
-          "intent": "Apply this source-derived instruction: Run skiller budget --first-turn; target 3–7K, warn at 10K, and require an Owner verdict above the gate. Also, use `claude plugin details` for marketplace plugins and escalate only when the sum crosses 10K.",
+          "intent": "Apply this source-derived instruction: Run skiller budget --first-turn; target 3–7K, warn at 10K, and require an Owner verdict above the gate. Also, run `skiller budget --first-turn --with-plugins` for marketplace plugins and escalate only when the sum crosses 10K.",
           "obligations": [
             {
               "modality": "must",
@@ -606,13 +606,13 @@
             {
               "source_id": "instruction.fragment.root.claude-code",
               "path": "packages/harness/configs/common/instructions/root/claude-code.md",
-              "sha256": "76969c928ce80ae8d8a07d034c5f11d9b0e476044ba92cb79f9eacaff4245b3e"
+              "sha256": "ac60ccb8484e5825209e24d2a28eaca959b4ca2f76c064a5ef6b8f1f7cbc6b15"
             }
           ],
           "compatibility_assertions": [
             "Run skiller budget --first-turn",
             "target 3–7K, warn at 10K, and require an Owner verdict above the gate.",
-            "use `claude plugin details` for marketplace plugins and escalate only when the sum crosses 10K"
+            "run `skiller budget --first-turn --with-plugins` for marketplace plugins and escalate only when the sum crosses 10K"
           ]
         },
         {
@@ -635,7 +635,7 @@
             {
               "source_id": "instruction.fragment.root.claude-code",
               "path": "packages/harness/configs/common/instructions/root/claude-code.md",
-              "sha256": "76969c928ce80ae8d8a07d034c5f11d9b0e476044ba92cb79f9eacaff4245b3e"
+              "sha256": "ac60ccb8484e5825209e24d2a28eaca959b4ca2f76c064a5ef6b8f1f7cbc6b15"
             }
           ],
           "compatibility_assertions": [

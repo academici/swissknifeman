@@ -159,7 +159,7 @@ flowchart LR
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻911"]:::warm
     implement["implement<br/>⊕88 ↻479"]:::warm
-    mcp_advisor["mcp-advisor<br/>⊕107 ↻3135"]:::hot
+    mcp_advisor["mcp-advisor<br/>⊕107 ↻3215"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
     plan_protocol["plan-protocol<br/>⊕51 ↻25497"]:::mild
@@ -439,13 +439,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **16146** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356333 ток · ⌥ on-demand 828278 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **16146** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356413 ток · ⌥ on-demand 828278 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1504 | 55850 | 20971 |
+| `general` | 22 | 1504 | 55930 | 20971 |
 | `repository-bootstrap` | 13 | 1120 | 28903 | 0 |
 | `php` | 17 | 1065 | 19298 | 54837 |
 | `architect` | 15 | 1005 | 23520 | 33458 |
@@ -524,6 +524,6 @@ flowchart LR
 | `skill-authoring` | repository-bootstrap | 3949 |
 | `package-architecture` | repository-bootstrap | 3773 |
 | `workflow-craft` | general | 3376 |
+| `mcp-advisor` | general | 3215 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
-| `mcp-advisor` | general | 3135 |

@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:d6c2092a697a3a8f995cfbef34c2ec922992e603cce149adf5b98c2e071950dd",
+      "source_hash": "sha256:ddd5644434fa1b4fc639ec538fe4400fc42f73648ccfefc9487fd79b9210cfc7",
       "rendered_hash": "sha256:d96c652216d1b105f5146966e2da890c1e3d24d48762b369fd39ab11475a4191"
     },
     {
@@ -90,8 +90,8 @@
     },
     {
       "path": "skills/general/mcp-advisor/SKILL.md",
-      "source_hash": "sha256:c47b75f6124ed44be4823fc6dfead201d4690336878de0c8c28cfc087709aa3e",
-      "rendered_hash": "sha256:8500c7c73b661c9dce0ea16acdd841508a1be4bd2ef24605a63b34d3800c3059"
+      "source_hash": "sha256:1b59b740342991e60c4e896b9fec069f32c678397560021ac3e989a4773766d2",
+      "rendered_hash": "sha256:dac802ae6d521d2333ef659014e67fd9a7d42d97cc36f2f84c47d49d2249af8f"
     },
     {
       "path": "skills/general/verify-claims/SKILL.md",

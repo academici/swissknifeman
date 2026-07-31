@@ -2202,8 +2202,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.2.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "8500c7c73b661c9dce0ea16acdd841508a1be4bd2ef24605a63b34d3800c3059",
-      "content_sha256": "7146b2f762d958f4fde22f4f52347dd4d7dfa6294405b8ada9adb41a0162b390",
+      "sha256": "dac802ae6d521d2333ef659014e67fd9a7d42d97cc36f2f84c47d49d2249af8f",
+      "content_sha256": "9ad2525dbf5c22f168f3ca7de1b0a2baaedcc1b73d67b0b3f120d3d0abaf3bcc",
       "tags": [
         "mcp",
         "onboarding",

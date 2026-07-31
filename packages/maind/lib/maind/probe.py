@@ -126,7 +126,9 @@ def drift_hints(env, config, report):
                           "fix": "maind start --only memory"})
         elif c.get("deployed_flag") and not c.get("maind_mcp"):
             hints.append({"layer": "mcp",
-                          "issue": "deployed-флаг есть, но maind-сервер не в .mcp.json",
+                          "issue": "deployed-флаг есть, но maind-сервер не в .mcp.json "
+                                   "(починка не сработает, если провайдерский план проекта "
+                                   "отказал unmanaged-target)",
                           "fix": f"maind sync --only mcp --project {pid}"})
     # Роли/агенты: профиль типа проекта ожидает паки, которых нет в lock.
     try:

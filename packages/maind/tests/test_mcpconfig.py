@@ -98,6 +98,26 @@ class TestMcpConfig(unittest.TestCase):
             self.assertEqual(ex["mcpServers"]["maind"]["command"], "${MAIND_BIN:-maind}")
             self.assertNotIn(str(proj), json.dumps(ex))
 
+    def test_write_example_is_idempotent_and_reports_changed(self):
+        """write_example: первый прогон changed=True и пишет файл; повтор на идентичных
+        данных changed=False и НЕ переписывает файл (dry на совпадении ничего не печатает);
+        изменившиеся данные снова дают changed=True и переписывают файл."""
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp) / "proj"
+            proj.mkdir()
+            data = {"mcpServers": {"maind": {"command": "maind", "args": ["mcp"]}}}
+            self.assertTrue(write_example(proj / ".mcp.json", data, proj))
+            ex_path = proj / (".mcp.json" + EXAMPLE_SUFFIX)
+            before = ex_path.stat().st_mtime_ns
+            self.assertFalse(write_example(proj / ".mcp.json", data, proj))
+            self.assertEqual(ex_path.stat().st_mtime_ns, before)   # не переписан
+            self.assertFalse(write_example(proj / ".mcp.json", data, proj, dry=True))
+            other = {"mcpServers": {"maind": {"command": "maind", "args": ["mcp", "--x"]}}}
+            self.assertTrue(write_example(proj / ".mcp.json", other, proj, dry=True))
+            self.assertTrue(write_example(proj / ".mcp.json", other, proj))
+            self.assertEqual(json.loads(ex_path.read_text())["mcpServers"]["maind"]["args"],
+                             ["mcp", "--x"])
+
     def test_reconcile_gitignore(self):
         """real MCP-конфиг → В .gitignore; его .example → НЕ в .gitignore (даже если был);
         чужие правила не тронуты; идемпотентно."""

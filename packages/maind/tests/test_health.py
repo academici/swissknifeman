@@ -166,6 +166,8 @@ class TestReport(unittest.TestCase):
             self.assertEqual(len(rep["mcp_hygiene"]), 1)
             self.assertIn("missing-example", rep["mcp_hygiene"][0]["problems"])
             self.assertTrue(any("sync --only mcp" in h and ".example" in h for h in rep["hints"]))
+            # граница: подсказка называет условие, при котором чинить нечем (P2.4, D91-D93).
+            self.assertTrue(any("unmanaged-target" in h for h in rep["hints"]))
 
 
 class TestHealthDoc(unittest.TestCase):

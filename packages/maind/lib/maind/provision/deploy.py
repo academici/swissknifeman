@@ -13,7 +13,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import apply_plan
+from core import ProviderId, apply_plan
 from .. import codegraph, pplxweb
 from ..common import die, now_iso, parse_args, warn
 from ..config import load_config, resolve_provider_config
@@ -352,6 +352,16 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         written = [{"file": row.target_path, "servers": list(row.server_ids),
                     "changed": provider_changed} for row in provider_plan.results
                    if row.status == "planned"]
+        # provider-managed .example + .gitignore (P2.4, D91): предикат — emit_example
+        # включён, операция не refused, строка "planned", канал claude-code; байты
+        # .example — из row.rendered (тот же рендер, что лёг в цель), второго рендера нет.
+        if emit_example and not refused:
+            for row in provider_plan.results:
+                if row.status == "planned" and row.provider_id is ProviderId.CLAUDE_CODE:
+                    example_data = json.loads(row.rendered.decode("utf-8"))
+                    write_example(project_path / row.target_path, example_data,
+                                 project_path, dry=dry)
+                    reconcile_gitignore(project_path, row.target_path, dry=dry)
 
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),

@@ -149,7 +149,9 @@ def health_report(env, config, project, *, memory_reachable=None, provider_conte
                          f"git rm --cached {f} (файл на диске останется)")
         if "missing-example" in issue["problems"]:
             hints.append(f"нет {f}.example → maind sync --only mcp --project {pid} "
-                         "(эмитит портируемый шаблон + .gitignore)")
+                         "(эмитит портируемый шаблон + .gitignore; чинит только если "
+                         "провайдерский план проекта зелёный — отказавший unmanaged-target "
+                         "эмиссии не получит)")
     result = {
         "id": pid, "scope": rep.get("memory_scope", f"project:{pid}"),
         "namespaces": sorted(namespaces_of(project)),

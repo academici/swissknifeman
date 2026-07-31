@@ -98,14 +98,24 @@ def _placeholderize(obj, project_root, home):
 def write_example(real_path, data, project_root, *, dry=False):
     """Эмитит <real_path>.example с плейсхолдерами вместо machine-specific абс. путей —
     портируемая карта MCP-структуры (коммитится, в отличие от реального файла). Один
-    генератор → два выхода из одного `data`: расхождение real↔.example невозможно by design."""
+    генератор → два выхода из одного `data`: расхождение real↔.example невозможно by design.
+    Идемпотентно: при совпадении с уже записанным содержимым файл не переписывается (в `dry`
+    ничего не печатается). Возвращает `changed` (bool)."""
     home = os.path.expanduser("~")
     example = _placeholderize(data, str(project_root), home)
     ex_path = Path(str(real_path) + EXAMPLE_SUFFIX)
+    if ex_path.is_file():
+        try:
+            existing = json.loads(ex_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            existing = None
+        if existing == example:
+            return False
     if dry:
         print(f"[dry-run] {ex_path} (плейсхолдеры machine-specific путей)")
-        return
+        return True
     atomic_write_json(ex_path, example)
+    return True
 
 
 def _is_tracked(project_root, rel):
@@ -154,7 +164,9 @@ def check_hygiene(project_root):
     (напр. чистый `php artisan boost:mcp`), проверка их вслепую даёт шум без пользы.
     Источник хинтов `maind health`: tracked-in-git чинится вручную (git rm --cached, гигиена
     выше это не автоматизирует), missing-example чинит `maind sync --only mcp`
-    (default-on — config.mcp.emit_example=false выключает, см. provision/deploy.py)."""
+    (default-on — config.mcp.emit_example=false выключает, см. provision/deploy.py) — но
+    только если провайдерский план проекта зелёный: отказавший `unmanaged-target` эмиссии
+    не получает."""
     rel = MCP_FILES["claude"]
     path = Path(project_root) / rel
     if not path.is_file():

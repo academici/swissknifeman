@@ -930,6 +930,104 @@ class TestProviderDeploy(unittest.TestCase):
             (target / ".mcp.json").write_text('{"foreign": true}', encoding="utf-8")
             self.assertEqual(plan_provider_artifacts(target, deploy)["severity"], "error")
 
+    def test_provider_managed_emit_example_writes_portable_template_and_gitignore(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            deploy_project(env, config, config["projects"][0], with_code=False,
+                           provider_projections=(claude,))
+            self.assertTrue((target / ".mcp.json.example").is_file())
+            example = json.loads((target / ".mcp.json.example").read_text())
+            real = json.loads((target / ".mcp.json").read_text())
+            self.assertEqual(example, real)  # только серверы maind — плейсхолдеров нет
+            gitignore = (target / ".gitignore").read_text().splitlines()
+            self.assertIn(".mcp.json", gitignore)
+            self.assertNotIn(".mcp.json.example", gitignore)
+
+    def test_provider_managed_emit_example_opt_out(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            config = merge_defaults({"mcp": {"emit_example": False},
+                "projects": [{"id": "demo", "name": "Demo", "local_path": str(target),
+                              "memory_scope": "project:demo"}]})
+            deploy_project(env, config, config["projects"][0], with_code=False,
+                           provider_projections=(claude,))
+            self.assertTrue((target / ".mcp.json").is_file())
+            self.assertFalse((target / ".mcp.json.example").exists())
+            self.assertFalse((target / ".gitignore").exists())
+
+    def test_provider_managed_emit_example_skips_refused_row(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            (target / ".mcp.json").write_text('{"mcpServers":{"foreign":{"command":"x"}}}',
+                                                encoding="utf-8")
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            result = deploy_project(env, config, config["projects"][0], with_code=False,
+                                    provider_projections=(claude,))
+            self.assertEqual(result["provider_plan"].results[0].status, "failed")
+            self.assertEqual(result["provider_plan"].results[0].diagnostic, "unmanaged-target")
+            self.assertFalse((target / ".mcp.json.example").exists())
+            self.assertFalse((target / ".gitignore").exists())
+
+    def test_provider_managed_emit_example_dry_run_is_no_write(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            deploy_project(env, config, config["projects"][0], with_code=False,
+                           provider_projections=(claude,), dry=True)
+            self.assertFalse((target / ".mcp.json").exists())
+            self.assertFalse((target / ".mcp.json.example").exists())
+            self.assertFalse((target / ".gitignore").exists())
+
+    def test_provider_managed_emit_example_repeat_is_idempotent(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            deploy_project(env, config, config["projects"][0], with_code=False,
+                           provider_projections=(claude,))
+            example_path = target / ".mcp.json.example"
+            self.assertTrue(example_path.is_file())
+            example_path.chmod(0o444)          # переписать нельзя — второй прогон обязан не писать
+            try:
+                deploy_project(env, config, config["projects"][0], with_code=False,
+                               provider_projections=(claude,))
+            finally:
+                example_path.chmod(0o644)
+
 
 if __name__ == "__main__":
     unittest.main()

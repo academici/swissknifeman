@@ -117,7 +117,7 @@ Claude Code уже несёт нативные механизмы сужения
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Измеритель first-turn | 1/4 | 🟡 In progress |
+| P1 | Измеритель first-turn | 2/4 | 🟡 In progress |
 | P2 | Резидент-диета | 0/6 | ⬜ Not started |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
@@ -251,6 +251,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | issue-planner/frontier | **P1.2 ре-дизайн после эскалации (v1.0.4), D79–D82:** заведён item **P1.4**, P1.2 перезапущен, baseline первого захода отброшен (занижение 3,7×) — детали см. `phases/P1.md` P1.2/P1.4 |
 | 2026-07-31 | issue-planner/frontier | Тем же заходом: `.swissknifeman/provider-artifacts.lock.json` назван в `Files` P1.3/P2.1/P5.4 (D82, закрывает Known Deviations P1.1); две ложноположительные DoR-строки фазы P1 переформулированы (закрывает Pending Work P1.1/P1.2); доска P1 → `🟡 In progress` 0/4 |
 | 2026-07-31 | plan-run/sonnet-high | **P1.4 закрыт: 🟢** — `cwd` в `plugin details`, разделитель тысяч, класс `broken` отдельно от `unparsed`; живой смоук `memster` 2 946 → 10 852 (сверен ручным прогоном), доска P1 → 1/4 — детали см. `phases/P1.md` P1.4 Completion Notes |
+| 2026-07-31 | plan-exec/sonnet-medium | **P1.2 закрыт: 🟢** — baseline-обход 22/26 записей реестра инструментом P1.4, unparsed 0/22 (эскалация P1.1/D81 не сработала), `memster` `plugins Σ` 10852 сверен ручным прогоном байт-в-байт, доска P1 → 2/4 — детали см. `phases/P1.md` P1.2 Completion Notes |
 
 ## Обсуждение
 

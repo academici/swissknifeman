@@ -180,6 +180,43 @@ class TestDeploy(unittest.TestCase):
             self.assertEqual(servers["maind"]["command"], "maind")
             self.assertNotIn("/", servers["maind"]["command"])
 
+    def test_emits_example_by_default(self):
+        # P2.4: default-on — без явного mcp.emit_example деплой пишет .mcp.json.example
+        # и вносит реальный файл в .gitignore.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            self.assertTrue((ppath / ".mcp.json.example").exists())
+            gitignore = (ppath / ".gitignore").read_text(encoding="utf-8").splitlines()
+            self.assertIn(".mcp.json", gitignore)
+            self.assertNotIn(".mcp.json.example", gitignore)
+
+    def test_emit_example_opt_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            cfg["mcp"]["emit_example"] = False
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            self.assertTrue((ppath / ".mcp.json").exists())
+            self.assertFalse((ppath / ".mcp.json.example").exists())
+            self.assertFalse((ppath / ".gitignore").exists())
+
+    def test_emit_example_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            first_example = (ppath / ".mcp.json.example").read_text(encoding="utf-8")
+            first_gitignore = (ppath / ".gitignore").read_text(encoding="utf-8")
+            deploy.deploy_project(env, cfg, cfg["projects"][0])  # второй прогон — без дублей
+            self.assertEqual((ppath / ".mcp.json.example").read_text(encoding="utf-8"),
+                             first_example)
+            self.assertEqual((ppath / ".gitignore").read_text(encoding="utf-8"), first_gitignore)
+
     def test_removes_stale_agentmemory(self):
         # старый .mcp.json с raw-сервером agentmemory → деплой его убирает (footgun)
         with tempfile.TemporaryDirectory() as tmp:

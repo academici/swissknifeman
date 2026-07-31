@@ -291,7 +291,9 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
                     raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
             if not dry:
                 apply_plan(project_path, provider_check["plan"])
-    emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
+    # default-on (P2.4): merge_defaults уже подставил EMIT_EXAMPLE_DEFAULT, если ключ
+    # не задан — здесь только читаем итог, opt-out `false` в config.json уважается.
+    emit_example = bool((config.get("mcp") or {}).get("emit_example"))
 
     st = codegraph.settings(config)
     if with_code is None:

@@ -154,7 +154,7 @@ def check_hygiene(project_root):
     (напр. чистый `php artisan boost:mcp`), проверка их вслепую даёт шум без пользы.
     Источник хинтов `maind health`: tracked-in-git чинится вручную (git rm --cached, гигиена
     выше это не автоматизирует), missing-example чинит `maind sync --only mcp`
-    (при config.mcp.emit_example=true — см. provision/deploy.py)."""
+    (default-on — config.mcp.emit_example=false выключает, см. provision/deploy.py)."""
     rel = MCP_FILES["claude"]
     path = Path(project_root) / rel
     if not path.is_file():

@@ -23,9 +23,10 @@ from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
 from .common import (detect_project_type, die, docs_visibility_for, sanitize,
                      warn)
 from .constants import (CODE_GRAPH_DEFAULTS, DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS,
-                        DIGEST_SHARED_MAX, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
-                        LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
-                        MEMORY_STREAM_PORT, PERPLEXITY_WEB_DEFAULTS, SERVICE_NAME)
+                        DIGEST_SHARED_MAX, EMIT_EXAMPLE_DEFAULT, GRAPH_ADAPTERS,
+                        HEARTBEAT_DEFAULT_MS, LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS,
+                        MEMORY_HTTP_PORT, MEMORY_STREAM_PORT, PERPLEXITY_WEB_DEFAULTS,
+                        SERVICE_NAME)
 
 # project.id попадает в scope-маркер памяти `[[s:project:<id>]]` (memory.mark_scope) и в
 # имя namespace — поэтому ограничиваем безопасным алфавитом, иначе спецсимволы (']', пробел,
@@ -285,6 +286,7 @@ def merge_defaults(config):
         pw = mcp["perplexity_web"]
         for k, v in PERPLEXITY_WEB_DEFAULTS.items():
             pw.setdefault(k, v)
+    mcp.setdefault("emit_example", EMIT_EXAMPLE_DEFAULT)  # default-on (P2.4), opt-out: false
     config["mcp"] = mcp
     return config
 

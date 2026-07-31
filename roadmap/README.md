@@ -25,7 +25,6 @@
 |:--|:--|:--|:--|
 | [`plan-audit-loop.md`](plan-audit-loop.md) | Правила остановки аудита внедрены (`packages/task/commands/plan-audit.md`: две ступени, порог severity, потолок 2 раунда). **Остаток — детерминированная CLI-ступень** `plan-lint --conflicts` (машинная сверка трёх SSOT перед дорогим проходом) | 🟡 остаток | Ручной конфликт-скан повторно съедает opus-раунды — тогда механизируем |
 | [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
-| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | Эмит `.mcp.json.example` + ведение `.gitignore` реализованы **opt-in** (`mcp.emit_example`). **Остаток — default-on** | 🟡 остаток | Повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example`. Файл также — якорь ссылки из `.claude/skills/project-tooling-runbook` (не трогать до AR P1) |
 | [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, ECO-OPT D74) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
 
 ## Отложено — критерий не сработал
@@ -77,6 +76,7 @@
 | `2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md` | per-item `asOf` — канон `packages/task/workflows/README.md` §«Правила заполнения слотов»; чек-пункт «глобальный ли cache-bust маркер?» перед третьим resume — скилл `general/workflow-craft` §4.1 |
 | `ecosystem-glossary.md` | механизм — скилл `architect/domain-modeling` (CONTEXT.md, Rule of Two, term-index) + ревью-паки; наполнение term-index — ТЗ `plans/archive/2026.07.10-SKM-ROADMAP-005/phases/P6.md` (P6.4, vault) |
 | `budget-first-turn-plugin-visibility.md` | `packages/skiller/lib/skiller/plugins.py` + `skiller budget --first-turn --with-plugins` (аддитивные ключи `plugins`/`session_total`/`session_verdict`, D13/D14/D16) — `plans/2026.07.31-SKM-LEAN` P1.1 |
+| `mcp-config-example-emit.md` | `mcp.emit_example` default-on с opt-out (`EMIT_EXAMPLE_DEFAULT`, `packages/maind/lib/maind/constants.py` + `config.py::merge_defaults`) — `plans/2026.07.31-SKM-LEAN` P2.4 |
 
 ## Принцип
 

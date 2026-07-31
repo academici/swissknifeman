@@ -108,6 +108,15 @@ class TestDefaults(unittest.TestCase):
         m = merge_defaults({"memory": {"role": "host"}})
         self.assertEqual(m["memory"]["role"], "host")
 
+    def test_emit_example_defaults_on(self):
+        # P2.4: конфиг без ключа mcp вовсе → emit_example включён (дефолт, не фикстура).
+        m = merge_defaults({})
+        self.assertTrue(m["mcp"]["emit_example"])
+
+    def test_emit_example_opt_out_preserved(self):
+        m = merge_defaults({"mcp": {"emit_example": False}})
+        self.assertFalse(m["mcp"]["emit_example"])
+
 
 class TestProviderConfig(unittest.TestCase):
     def test_fleet_and_project_layers_use_shared_resolver(self):

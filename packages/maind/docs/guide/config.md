@@ -21,7 +21,7 @@ difflib), неизвестный вложенный — предупрежден
 | `providers` | необязательные fleet defaults provider selection; точный контракт ниже |
 | `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
 | `integrations` | `swissknifeman`, `brain` (синк) |
-| `mcp` | `servers[]` — внешние MCP-серверы узла; `emit_example` (opt-in `.mcp.json.example`); `perplexity_web` — hub-managed раскатка keyless-моста perplexity-web (см. ниже) |
+| `mcp` | `servers[]` — внешние MCP-серверы узла; `emit_example` (default-on `.mcp.json.example`, opt-out `false`); `perplexity_web` — hub-managed раскатка keyless-моста perplexity-web (см. ниже) |
 | `observability` | `service_name`, `log_level`, `metrics_enabled`, `traces_enabled` |
 
 ## Проект

@@ -139,6 +139,12 @@ PERPLEXITY_WEB_DEFAULTS = {
     "server_name": "perplexity-web",
 }
 
+# mcp.emit_example — default-on (P2.4): рядом с реальным .mcp.json эмитить портируемый
+# .mcp.json.example с плейсхолдерами вместо machine-specific путей и вести .gitignore.
+# Единственный носитель дефолта — merge_defaults читает отсюда; opt-out — явный `false`
+# в config.json (уважается, см. mcpconfig.write_example/reconcile_gitignore).
+EMIT_EXAMPLE_DEFAULT = True
+
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}

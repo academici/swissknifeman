@@ -43,6 +43,8 @@ P3.1 и P4.6), `root/contracts/` — фазой **P4** (P4.1).
 | `findings/P6-manifest-drift-2026-07-31.md` | findings | `P6.3`, косвенно `P6.1`, `P5.2` | разбор красного baseline `test_provider_manifest` для гейта OQ-7: когда покраснел, полный семантический дифф манифеста (29 `evidence`-путей), таблица четырёх носителей хеша (два устаревших — оба тестовые), область поражения CI, класс второго провала |
 | `research/08-premortem-and-oq7-verdict.md` | research | `P6.3`, `P2.6`, `P5.1`, `P1.3` | вердикт владельца по OQ-7 и что он меняет в детализации; pre-mortem по Klein трёх high-stakes поверхностей (17 причин → 15 кластеров → 6 mitigations без носителя), сводка D61–D66 |
 | `research/09-validation-executability-2026-07-31.md` | research | все items `Exec = plan-exec` | свип исполнимости команд `Validation` на живом дереве: 41 проверка, три дефекта (F5 `task/scripts/test.sh` не существует · F6 флаг `--dry` не существует · F7 протухший размер файла), подтверждённые числа приёмок |
+| `findings/P2-rules-carrier-contract-conflict.md` | findings | `P2.2`, D89 | диагноз эскалации P2.2: четыре клаузы замороженного `provider-instruction-contract` v1.0.0 против носителя path-scoped правил, пять зеркалящих сверок в `instructions.py`, потолок выгоды 436 ток, варианты A/B/C с ценой |
+| `research/10-validation-acceptance-form-2026-07-31.md` | research | все items (форма `Validation`), `P5.9`, D90 | замер по 37 items: разделитель «; » склеивает приёмку в одну acceptance-запись, повтор поля в теле item'а красит `pre_final` в ложно-зелёный; поимённо красные — P3.4 и P5.5 |
 
 Ожидаемые к появлению (производятся items плана, потребляются позднее):
 

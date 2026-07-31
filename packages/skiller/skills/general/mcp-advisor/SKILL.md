@@ -105,18 +105,21 @@ Selection (above) is about adding. Symmetric ritual — about what's ALREADY sit
 `.mcp.json`:
 
 1. **Audit:** `skiller budget --first-turn --target <path>` → the MCP line of the report (server list +
-   tokens, eager model `budget.py::_measure_mcp`). Check each resident server against the map above:
-   connected by a project signal (stack/role/tasks), or "connected earlier, signal no longer holds"?
+   tokens + tool-search mode + estimate class, `budget.py::_measure_mcp`, P2.3). Check each resident
+   server against the map above: connected by a project signal (stack/role/tasks), or "connected earlier,
+   signal no longer holds"?
 2. **"1-2 servers per task" rule.** A typical session uses 1-2 MCP servers out of the connected set (the
    rest are a silent resident "tax" on every request). More than 4-5 servers on a small project without
    an explicit multi-domain stack is a signal for owner review, not automatic disconnection.
-3. **Tool-search caveat:** first-party Claude Code CLI keeps tool search / deferred MCP-loading **on by
-   default** — resident content is summaries + per-server instructions, not full tool schemas;
-   `_measure_mcp` counts the EAGER ceiling (full schemas), which is **not** the actual resident footprint
-   on a typical run. Don't claim weeding savings on the eager number ("disabling server X saves N
-   tokens") — that figure is honest only as an upper bound when tool search is off/unavailable. Weeding
-   still has value (a server is still a summary line + permissions surface + Node/uvx dep), but its ROI
-   is lower than the eager ceiling implies.
+3. **Tool-search mode is now mode-aware in the measurer itself (P2.3), not just in prose.**
+   `_measure_mcp` no longer always counts the EAGER ceiling: by default (tool search on,
+   `ENABLE_TOOL_SEARCH` unset) it estimates the `deferred` model (tool names + server instructions — a
+   lower bound) and prints the mode + source + estimate class (`mcp.mode`/`mcp.mode_source`/
+   `mcp.estimate_class` in JSON). The EAGER model (full schemas, the old behavior) remains the `off`
+   branch (`ENABLE_TOOL_SEARCH=false`) or `auto` (upper bound — the "within 10% of the window" assumption
+   is not checked against a live `/context`). Don't claim weeding savings on the eager number outside
+   those two branches — it's honest only there. Weeding still has value (a server is still a summary line
+   + permissions surface + Node/uvx dep), but its ROI is lower than the eager ceiling alone implied.
 4. **A heavy resident is not justified by its author's claim.** A server selling "×N context savings"
    (code graph, semantic search, repo packers) is checked by YOUR measurement on YOUR repo — see the
    "Graph-retrieval MCP" block above: for the candidate we measured, the ×82 claim stood against a
@@ -144,4 +147,4 @@ Selection (above) is about adding. Symmetric ritual — about what's ALREADY sit
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
 - `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
 
-<!-- ru-source-sha256: 4e926a520d834270e90769a13248f0309968b7f871b94e09b3057bb147e43738 -->
+<!-- ru-source-sha256: 9cc73ee4c23181feddec38e205b1f90eaa17d27ad58497a0faba92d00edeacdf -->

@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
@@ -89,10 +90,76 @@ class FirstTurnReportCase(unittest.TestCase):
             "totally-unknown-server": {"command": "x"}}}), encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
         mcp = report["sources"]["mcp"]
-        # maind (11 tools) + неизвестный (fallback) — обе учтены, > 0
-        self.assertGreater(mcp["tokens"], 11 * 150)
+        # deferred (дефолт) — maind (11 имён, инструкции измерены = 0) +
+        # неизвестный (fallback tools + fallback инструкции) — обе учтены, > 0
+        self.assertGreater(mcp["tokens"], 0)
         self.assertIn("maind", mcp["detail"])
         self.assertIn("totally-unknown-server", mcp["detail"])
+
+    def test_mcp_default_mode_is_deferred_lower_bound(self):
+        from skiller.budget import KNOWN_MCP_TOOLS, TOKENS_PER_MCP_TOOL_NAME
+        (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
+            "maind": {"command": "maind"}}}), encoding="utf-8")
+        report = first_turn_report(self.env, self.proj)
+        mcp = report["sources"]["mcp"]
+        self.assertEqual(mcp["mode"], "deferred")
+        self.assertEqual(mcp["mode_source"], "default")
+        self.assertIn("нижняя граница", mcp["estimate_class"])
+        # maind — единственный сервер с локально проверенным текстом инструкций
+        # (=0, `_maind_server_instructions_tokens`) → только имена
+        self.assertEqual(mcp["tokens"], KNOWN_MCP_TOOLS["maind"] * TOKENS_PER_MCP_TOOL_NAME)
+
+    def test_mcp_tool_search_off_uses_eager_schema_model(self):
+        from skiller.budget import (FALLBACK_MCP_TOOLS, KNOWN_MCP_TOOLS,
+                                    TOKENS_PER_MCP_TOOL)
+        (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
+            "maind": {"command": "maind"},
+            "totally-unknown-server": {"command": "x"}}}), encoding="utf-8")
+        (self.proj / ".claude" / "settings.json").write_text(json.dumps({
+            "env": {"ENABLE_TOOL_SEARCH": "false"}}), encoding="utf-8")
+        report = first_turn_report(self.env, self.proj)
+        mcp = report["sources"]["mcp"]
+        self.assertEqual(mcp["mode"], "off")
+        self.assertEqual(mcp["mode_source"], "settings.json")
+        self.assertIn("точная модель полных схем", mcp["estimate_class"])
+        expected = (KNOWN_MCP_TOOLS["maind"] + FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+        self.assertEqual(mcp["tokens"], expected)
+
+    def test_mcp_tool_search_auto_mode_from_settings_local(self):
+        (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
+            "maind": {"command": "maind"}}}), encoding="utf-8")
+        (self.proj / ".claude" / "settings.local.json").write_text(json.dumps({
+            "env": {"ENABLE_TOOL_SEARCH": "auto"}}), encoding="utf-8")
+        report = first_turn_report(self.env, self.proj)
+        mcp = report["sources"]["mcp"]
+        self.assertEqual(mcp["mode"], "auto")
+        self.assertEqual(mcp["mode_source"], "settings.local.json")
+        self.assertIn("верхняя граница", mcp["estimate_class"])
+
+    def test_mcp_tool_search_mode_order_env_over_settings_local(self):
+        # окружение процесса ПЕРЕБИВАЕТ settings.local.json (порядок Implementation
+        # Rules P2.3 §2): local несёт auto, но живой env говорит false.
+        (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
+            "maind": {"command": "maind"}}}), encoding="utf-8")
+        (self.proj / ".claude" / "settings.local.json").write_text(json.dumps({
+            "env": {"ENABLE_TOOL_SEARCH": "auto"}}), encoding="utf-8")
+        with mock.patch.dict("os.environ", {"ENABLE_TOOL_SEARCH": "false"}):
+            report = first_turn_report(self.env, self.proj)
+        mcp = report["sources"]["mcp"]
+        self.assertEqual(mcp["mode"], "off")
+        self.assertEqual(mcp["mode_source"], "env")
+
+    def test_mcp_no_servers_reports_mode_without_estimate(self):
+        (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {}}),
+                                             encoding="utf-8")
+        report = first_turn_report(self.env, self.proj)
+        mcp = report["sources"]["mcp"]
+        self.assertEqual(mcp["tokens"], 0)
+        self.assertIsNone(mcp["estimate_class"])
+
+    def test_boost_alias_known_next_to_laravel_boost(self):
+        from skiller.budget import KNOWN_MCP_TOOLS
+        self.assertEqual(KNOWN_MCP_TOOLS["boost"], KNOWN_MCP_TOOLS["laravel-boost"])
 
     def test_listing_entry_capped_at_1536_chars(self):
         # first-party: "combined description and when_to_use text is truncated
@@ -146,6 +213,30 @@ class FirstTurnReportCase(unittest.TestCase):
         with_always = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
         # always-on rule (без paths) даёт вклад — рост целиком от always.md
         self.assertGreater(with_always["tokens"], with_scoped["tokens"])
+
+    def test_rules_subdirectory_without_paths_is_counted(self):
+        # P2.3 находка: плоский `rules_dir.glob("*.md")` пропускал подкаталоги
+        # `.claude/rules/**`, хотя апстрим их грузит always-on наравне с
+        # верхним уровнем (RAG:✅ `findings/…probe §6` — «subdirectories …
+        # discovered automatically»).
+        before = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        sub = self.proj / ".claude" / "rules" / "sub"
+        sub.mkdir(parents=True)
+        (sub / "rule.md").write_text("nested always-on rule body " * 50,
+                                     encoding="utf-8")
+        after = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        self.assertGreater(after["tokens"], before["tokens"])
+
+    def test_rules_subdirectory_with_paths_is_excluded(self):
+        before = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        sub = self.proj / ".claude" / "rules" / "sub"
+        sub.mkdir(parents=True)
+        (sub / "scoped.md").write_text(
+            "---\npaths:\n  - \"**/tests/**\"\n---\n" + "nested scoped body " * 200,
+            encoding="utf-8")
+        after = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        # path-scoped вложенное правило по-прежнему не даёт вклада
+        self.assertEqual(after["tokens"], before["tokens"])
 
     def test_verdict_ladder_matches_declared_thresholds(self):
         # лестница пиновывается ПОИМЁННО на своих границах: пере-издание порога

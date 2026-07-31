@@ -206,14 +206,90 @@ HOOK_TIMEOUT = 10
 
 # Известные MCP-серверы → число tool-схем, резидентных в system prompt (грубо;
 # maind точный — packages/maind/lib/maind/mcp.py::TOOLS). Неизвестный сервер из
-# .mcp.json — FALLBACK_MCP_TOOLS (flat-оценка, не 0 и не завышение).
+# .mcp.json — FALLBACK_MCP_TOOLS (flat-оценка, не 0 и не завышение). `boost` —
+# алиас `laravel-boost`, замечен у vintera/cms (одна раздача, два имени сервера
+# во флоте — P2.3 Scope Included).
 KNOWN_MCP_TOOLS = {
     "maind": 11, "perplexity-web": 4, "context7": 2, "sequential-thinking": 1,
     "fetch": 1, "memory": 9, "filesystem": 11, "github": 20, "playwright": 21,
-    "serena": 20, "laravel-boost": 15,
+    "serena": 20, "laravel-boost": 15, "boost": 15,
 }
 FALLBACK_MCP_TOOLS = 5
 TOKENS_PER_MCP_TOOL = 150
+
+# --- режим-зависимая модель стоимости MCP (P2.3, D19/D22) ---------------------
+# RAG:✅ 2026-07-31 <https://code.claude.com/docs/en/mcp> §«Scale with MCP tool
+# search» + <https://code.claude.com/docs/en/context-window> §«MCP tools
+# (deferred)» + <https://code.claude.com/docs/en/features-overview> §«Context
+# cost by feature»: tool search включён ПО УМОЛЧАНИЮ (deferred) — на старте
+# сессии резидентны только ИМЕНА инструментов + инструкции сервера, полные
+# схемы подгружаются по запросу; `ENABLE_TOOL_SEARCH=auto` — пороговый режим
+# (грузит схемы вперёд, если укладываются в 10% контекстного окна модели);
+# `ENABLE_TOOL_SEARCH=false` — старая модель, все схемы вперёд (TOKENS_PER_MCP_TOOL
+# выше — эта ветка). Переменная НЕ выставляется нигде в репозитории (D22) —
+# измеритель её только ЧИТАЕТ.
+ENABLE_TOOL_SEARCH_ENV = "ENABLE_TOOL_SEARCH"
+MCP_MODE_DEFERRED = "deferred"
+MCP_MODE_AUTO = "auto"
+MCP_MODE_OFF = "off"
+MCP_MODE_SOURCE_DEFAULT = "default"
+
+# Резидентное имя инструмента в deferred-режиме — НИЖНЯЯ граница, не измерение:
+# `context-economy/SKILL.md:89` уже несёт цифру «lazy tool-search cuts schemas
+# ~84%» (тот же факт, что прозой знает `mcp-advisor/SKILL.md:113-117`) —
+# 150 ток/схема × (1 − 0.84) ≈ 24 ток/имя. Точность — не наша (репозиторий не
+# видит `/context` изнутри агента, RAG:— repo-grounded `findings/…probe §9`).
+TOKENS_PER_MCP_TOOL_NAME = 24
+# Инструкции сервера, когда их текст НЕ доступен локально (внешний бинарник/
+# пакет, напр. perplexity-web/serena) — грубый фолбэк на короткий блок
+# инструкций одного сервера (симметрично FALLBACK_MCP_TOOLS у эйджер-модели):
+# не 0 и не завышение.
+FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS = 40
+
+
+def _maind_server_instructions_tokens():
+    """`maind` — единственный известный сервер, чей исходник лежит в этом
+    монорепо (`packages/maind/lib/maind/mcp.py`): ответ `initialize` не несёт
+    поля `instructions` (`mcp.py` — `_result(req_id, {"protocolVersion": …,
+    "capabilities": …, "serverInfo": …})`) — резидентный текст инструкций
+    равен 0 ФАКТИЧЕСКИ, это не фолбэк."""
+    return 0
+
+
+# Серверы, чей текст инструкций проверен по локальному исходнику (Implementation
+# Rules P2.3 §4) — ключ отсутствует ⇒ фолбэк FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS.
+_LOCAL_MCP_SERVER_INSTRUCTIONS = {"maind": _maind_server_instructions_tokens}
+
+
+def _tool_search_mode(target):
+    """Эффективный режим tool search: окружение процесса → `env` в
+    `.claude/settings.local.json` → `env` в `.claude/settings.json` → дефолт
+    «включён» (D22, Implementation Rules P2.3 §2). Возвращает (mode, source);
+    source печатается в отчёте — число без происхождения не публикуется."""
+    val = os.environ.get(ENABLE_TOOL_SEARCH_ENV)
+    source = "env" if val is not None else None
+    if val is None:
+        target = Path(target)
+        for fname in ("settings.local.json", "settings.json"):
+            f = target / ".claude" / fname
+            if not f.is_file():
+                continue
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            v = data.get("env", {}).get(ENABLE_TOOL_SEARCH_ENV)
+            if v is not None:
+                val, source = v, fname
+                break
+    if val is None:
+        return MCP_MODE_DEFERRED, MCP_MODE_SOURCE_DEFAULT
+    val_norm = str(val).strip().lower()
+    if val_norm == "auto":
+        return MCP_MODE_AUTO, source
+    if val_norm in ("false", "0", "off"):
+        return MCP_MODE_OFF, source
+    return MCP_MODE_DEFERRED, source
 
 # --- модель листингового бюджета Claude Code (P3.4, RAG:✅ /docs/en/skills) ----
 # «The listing always contains every skill name … Claude Code shortens
@@ -386,9 +462,11 @@ def _measure_agents(target):
 
 
 def _measure_claude_md(target):
-    """CLAUDE.md проекта + .claude/rules/*.md БЕЗ `paths:` (path-scoped rules
+    """CLAUDE.md проекта + .claude/rules/**/*.md БЕЗ `paths:` (path-scoped rules
     не always-on — грузятся только на затронутый файл, см. skill-authoring/
-    context-economy канон)."""
+    context-economy канон). `**` — подкаталоги `.claude/rules/` тоже always-on
+    источник (апстрим: «subdirectories … are discovered automatically»,
+    RAG:✅ `findings/…probe §6`) — плоский `*.md` их пропускал (P2.3 находка)."""
     target = Path(target)
     total, parts, n_rules = 0, [], 0
     claude_md = target / "CLAUDE.md"
@@ -401,7 +479,7 @@ def _measure_claude_md(target):
             parts.append("CLAUDE.md=n/a")
     rules_dir = target / ".claude" / "rules"
     if rules_dir.is_dir():
-        for p in sorted(rules_dir.glob("*.md")):
+        for p in sorted(rules_dir.glob("**/*.md")):
             try:
                 fm = parse_frontmatter(p)
             except Exception:
@@ -484,23 +562,57 @@ def _measure_hooks(target, timeout=HOOK_TIMEOUT):
 
 
 def _measure_mcp(target):
-    """Статичная оценка tool-defs подключённых MCP-серверов проекта (.mcp.json):
-    известные серверы — по числу tool-схем (KNOWN_MCP_TOOLS), неизвестные —
-    flat FALLBACK_MCP_TOOLS. Не парсим реальные схемы (сервер может быть недоступен
-    из этого окружения) — это оценка, как и весь budget.py."""
+    """Режим-зависимая оценка резидентной цены MCP-серверов проекта (.mcp.json,
+    P2.3/D19/D22): `mode`/`mode_source` — НОВЫЕ ключи (аддитивность D16), не
+    меняют `tokens`/`detail` по форме. Три ветки:
+      off      — старая эйджер-модель (KNOWN_MCP_TOOLS × TOKENS_PER_MCP_TOOL),
+                 честна только при ENABLE_TOOL_SEARCH=false;
+      auto     — допущение «в пределах 10% контекстного окна» НЕ проверено
+                 живым /context (агенту недоступен) → берём тот же эйджер-
+                 потолок как явно названную верхнюю границу (Implementation
+                 Rules P2.3 §3, Scope Included «auto — с явно названным
+                 допущением»);
+      deferred — дефолт клиента: имена инструментов (TOKENS_PER_MCP_TOOL_NAME)
+                 + инструкции сервера (измерены фактически для серверов с
+                 локальным исходником, иначе FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS)
+                 — нижняя граница.
+    Не парсим реальные схемы (сервер может быть недоступен из этого окружения)
+    — это оценка, как и весь budget.py."""
     f = Path(target) / ".mcp.json"
     if not f.is_file():
-        return {"tokens": 0, "detail": "нет .mcp.json"}
+        return {"tokens": 0, "detail": "нет .mcp.json", "mode": None,
+                "mode_source": None, "estimate_class": None}
     try:
         data = json.loads(f.read_text(encoding="utf-8"))
     except Exception:
-        return {"tokens": None, "detail": "n/a (.mcp.json invalid JSON)"}
+        return {"tokens": None, "detail": "n/a (.mcp.json invalid JSON)",
+                "mode": None, "mode_source": None, "estimate_class": None}
     servers = sorted(data.get("mcpServers", {}))
+    mode, source = _tool_search_mode(target)
     if not servers:
-        return {"tokens": 0, "detail": "нет серверов"}
-    total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
-               for n in servers)
-    return {"tokens": total, "detail": f"{len(servers)} сервер(ов): " + ", ".join(servers)}
+        return {"tokens": 0, "detail": "нет серверов", "mode": mode,
+                "mode_source": source, "estimate_class": None}
+    if mode == MCP_MODE_OFF:
+        total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+                   for n in servers)
+        est_class = "точная модель полных схем (ENABLE_TOOL_SEARCH=false)"
+    elif mode == MCP_MODE_AUTO:
+        total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+                   for n in servers)
+        est_class = ("верхняя граница (auto: допущение «в пределах 10% окна» "
+                     "не проверено живым /context)")
+    else:
+        total = 0
+        for n in servers:
+            n_tools = KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS)
+            total += n_tools * TOKENS_PER_MCP_TOOL_NAME
+            if n in _LOCAL_MCP_SERVER_INSTRUCTIONS:
+                total += _LOCAL_MCP_SERVER_INSTRUCTIONS[n]()
+            else:
+                total += FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS
+        est_class = "нижняя граница (deferred: имена инструментов + инструкции сервера)"
+    return {"tokens": total, "detail": f"{len(servers)} сервер(ов): " + ", ".join(servers),
+           "mode": mode, "mode_source": source, "estimate_class": est_class}
 
 
 _FIRST_TURN_SOURCE_LABELS = (
@@ -585,6 +697,9 @@ def format_first_turn_report(report):
         raw = s.get("raw_tokens")
         if raw is not None and raw != tok:
             out.append(f"  {'  (сумма описаний до бюджета)':<28} {raw:>6} ток")
+        if key == "mcp" and s.get("mode"):
+            out.append(f"  {'  tool search':<28} {s['mode']} "
+                       f"(источник: {s['mode_source']}) — {s['estimate_class']}")
     if "plugins" in report:
         out.append("")
         out.extend(_format_plugins_block(report["plugins"]))

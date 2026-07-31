@@ -118,7 +118,7 @@ Claude Code уже несёт нативные механизмы сужения
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
-| P2 | Резидент-диета | 4/6 | 🟡 In progress |
+| P2 | Резидент-диета | 5/6 | 🟡 In progress |
 | P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
@@ -276,6 +276,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | plan-design/frontier | **P2.4 ре-дизайн после эскалации (🔴 → 🟡), вердикт владельца — вариант (а) (v1.0.6, D91–D93):** предмет пере-издан со смены дефолта на точку эффекта в provider-ветке; Routing P2.4 → implementation/high + `Exec = manual`; доска P2 🔴 → 🟡 — детали см. `phases/P2.md` P2.4 |
 | 2026-07-31 | plan-design/frontier | Тем же заходом: заведён `findings/P2.4-provider-emit-probe-2026-07-31.md` (проверка утверждений эскалации по коду и живым прогонам); P2.6 получил вход, Implementation Rule 10 и приёмку 6в по D93; `brief/01-refinements.md` дополнен вердиктом владельца |
 | 2026-07-31 | plan-run/sonnet-high | **P2.4 закрыт: 🟢** — точка эффекта заведена в provider-ветке `deploy_project` (предикат Rule 2), `write_example` идемпотентен по факту, живой dry-run по 22 проектам (4/1/17) + применение на `botkit` (`a7261e25`), доска P2 → 4/6 — детали см. `phases/P2.md` P2.4 Completion Notes |
+| 2026-07-31 | plan-run/opus-high | **P2.5 закрыт: 🟢** — форма хаб-блока провайдер-зависима (D20), флаг отката `--full-index`, сверка обнаружения, первые тесты генератора (12), пилот `agelto` 24 240 → 14 671 ток (`0e60c559`), доска P2 → 5/6 — детали см. `phases/P2.md` P2.5 Completion Notes |
 
 ## 7. Contracts
 

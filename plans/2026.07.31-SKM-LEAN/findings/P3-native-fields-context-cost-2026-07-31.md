@@ -97,9 +97,20 @@ preloaded listing/context entirely».
 `packages/skiller/lib/skiller/quality/eval.py` уже несёт процессный раннер:
 
 - `:19` — «РАННЕР (`run_case` через `claude -p`) — online, opt-in; нет `claude` в PATH → …»;
-- `:388` `_build_argv` — сборка argv для `claude -p`, скилл инъектируется в workspace;
-- `:398` — разбор `(text, tokens)` из JSON-вывода `claude -p`;
-- `:414–441` `run_case` — один прогон в каталоге workspace, `DEFAULT_TIMEOUT = 180` (`:49`).
+- `:387` `build_run_cmd` — сборка argv для `claude -p`;
+- `:397` `_parse_claude_json` — разбор `(text, tokens)` из JSON-вывода `claude -p`;
+- `:412–441` `run_case` — один прогон в каталоге workspace, `DEFAULT_TIMEOUT = 180` (`:49`).
+
+> **Исправление 2026-08-01 (заход `plan-design <ID> P3.1`, фактура —
+> `findings/P3.1-bench-harness-probe-2026-08-01.md` §5).** Прежняя редакция этих трёх строк
+> называла символ `_build_argv` (в дереве его НЕТ: `grep -rn "_build_argv" packages/` → 0) и
+> утверждала, что «скилл инъектируется в workspace». Фактически `build_run_cmd` подмешивает
+> ТЕЛО скилла в системный промпт (`--append-system-prompt`), а в workspace пишутся только
+> `case.files[]`. Для P3.1 этот способ непригоден по ПРЕДМЕТУ: поля frontmatter действуют на
+> механизм скиллов клиента, а инъекция тела в системный промпт его обходит — пробник кладётся
+> на диск настоящим скиллом (D94). Формула токенов раннера (`input_tokens + output_tokens`)
+> для оси A тоже непригодна: резидентный префикс приезжает в кэш-поля (`input_tokens` = 2 на
+> живом прогоне), см. §3 того же файла.
 
 То есть A/B-замер «одинаковый промпт в фикстурном workspace, поле включено/выключено →
 дельта входных токенов из `--output-format json`» — **исполним агентом**, без участия

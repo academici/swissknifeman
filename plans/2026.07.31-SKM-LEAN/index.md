@@ -45,6 +45,7 @@ P3.1 и P4.6), `root/contracts/` — фазой **P4** (P4.1).
 | `research/09-validation-executability-2026-07-31.md` | research | все items `Exec = plan-exec` | свип исполнимости команд `Validation` на живом дереве: 41 проверка, три дефекта (F5 `task/scripts/test.sh` не существует · F6 флаг `--dry` не существует · F7 протухший размер файла), подтверждённые числа приёмок |
 | `findings/P2-rules-carrier-contract-conflict.md` | findings | `P2.2`, D89 | диагноз эскалации P2.2: четыре клаузы замороженного `provider-instruction-contract` v1.0.0 против носителя path-scoped правил, пять зеркалящих сверок в `instructions.py`, потолок выгоды 436 ток, варианты A/B/C с ценой |
 | `research/10-validation-acceptance-form-2026-07-31.md` | research | все items (форма `Validation`), `P5.9`, D90 | замер по 37 items: разделитель «; » склеивает приёмку в одну acceptance-запись, повтор поля в теле item'а красит `pre_final` в ложно-зелёный; поимённо красные — P3.4 и P5.5 |
+| `findings/P2.4-provider-emit-probe-2026-07-31.md` | findings | `P2.4`, `P2.6`, D91–D93 | проверка утверждений эскалации P2.4 по коду и живым прогонам: мёртвая ветка `emit_example` (§1), отказ провайдерского плана у 17 из 22 проектов (§2), гигиена флота поимённо (§3), четыре носителя ложной подсказки (§4), позиция замороженных контрактов и измеренная цена managed-варианта (§5), точка врезки без нового пакета (§6) |
 
 Ожидаемые к появлению (производятся items плана, потребляются позднее):
 
@@ -53,6 +54,7 @@ P3.1 и P4.6), `root/contracts/` — фазой **P4** (P4.1).
 | `findings/P1-fleet-baseline.md` | findings | `P1.2` | `P1.3`, `P2.6`, `P3` |
 | `artifacts/p1-2-fleet-sweep.sh` | artifacts | `P1.2` | повторный замер после P2/P3 (судьба — архив плана) |
 | `findings/P2-rules-pilot.md` · `findings/P2-hub-pilot.md` | findings | `P2.2`, `P2.5` | `P2.6` |
+| `findings/P2.4-fleet-emit-dryrun.md` | findings | `P2.4` | `P2.6` (перечень отказавших `unmanaged-target`, D93) |
 | `findings/P2-fleet-after.md` | findings | `P2.6` | `P1.3`/OQ-4, `P3` |
 | `artifacts/p3-1-native-fields-bench.sh` + `artifacts/p3-1-fixtures/**` | artifacts | `P3.1` | `P3.2`, `P3.3`, `P3.4`, `P3.5` |
 | `findings/P3-native-fields-smoke.md` | findings | `P3.1` | `P3.2`, `P3.4`, `P3.5` |

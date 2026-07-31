@@ -551,6 +551,9 @@ def _format_plugins_block(plugins):
     for e in plugins["entries"]:
         tok_str = "   n/a" if e["tokens"] is None else f"{e['tokens']:>6}"
         out.append(f"    {e['id']} ({e['scope']})".ljust(30) + f" {tok_str} ток")
+    if plugins["broken"]:
+        broken_str = "; ".join(f"{b['id']} ({b['reason']})" for b in plugins["broken"])
+        out.append(f"    broken: {broken_str}")
     if plugins["unparsed"]:
         out.append(f"    unparsed: {'; '.join(plugins['unparsed'])}")
     if plugins["warnings"]:

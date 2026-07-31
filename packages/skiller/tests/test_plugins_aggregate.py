@@ -22,16 +22,19 @@ import tests.fixtures as fx
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
 LIST_FIXTURE = (FIXTURES_DATA / "plugin-list.json").read_text(encoding="utf-8")
 CODEX_DETAILS = (FIXTURES_DATA / "plugin-details-codex.txt").read_text(encoding="utf-8")
+ARCHITECT_DETAILS = (FIXTURES_DATA / "plugin-details-architect.txt").read_text(encoding="utf-8")
 
 # id -> (stdout, exit_code). task@swissknifeman и codex — валидные ответы;
-# brain@brain дословно несёт дрейф формата (`~1.1k`, как в per-component
-# таблице зонда, но НЕ в строке Always-on — регэксп якорится на целые токены).
+# brain@brain дословно несёт живой факт P1.4 (`findings/P1-plugins-cwd-defect-
+# 2026-07-31.md` §5): листинг объявляет плагин сломанным полем `errors`, а
+# `claude plugin details brain@brain` отвечает "not found" (rc=1) из ЛЮБОГО
+# cwd — источник для класса `broken`, а не дрейф формата.
 DETAILS = {
     "codex@openai-codex": (CODEX_DETAILS, 0),
     "task@swissknifeman": ("task 0.9.0\n\nProjected token cost\n"
                            "  Always-on:   ~100 tok   added to every session\n", 0),
-    "brain@brain": ("brain 1.0.0\n\nProjected token cost\n"
-                    "  Always-on:   ~1.1k tok   added to every session\n", 0),
+    "brain@brain": ('Plugin "brain@brain" not found. Run `claude plugin list` to see '
+                    "installed plugins, or pass --plugin-dir <path> to load one from disk.\n", 1),
 }
 
 
@@ -61,6 +64,31 @@ def _write_fake_plugin_cli(tmp_dir, *, list_payload=LIST_FIXTURE, list_exit=0,
     return script
 
 
+def _write_cwd_gated_details_cli(tmp_dir, plugin_id, expected_cwd, success_text):
+    """Фейковый `claude` для `details`, резолвящий `plugin_id` ТОЛЬКО под
+    `expected_cwd` (P1.4 §1 — local-scope плагин чужого проекта не резолвится
+    без `cwd`): проверяет `os.getcwd()`, а не что аргумент был передан
+    строкой — фиктивный кейс, зелёный ДО правки, ничего не защищает."""
+    script = tmp_dir / "fake_claude_cwd_gated.py"
+    script.write_text(
+        "#!/usr/bin/env python3\n"
+        "import os, sys\n"
+        f"PLUGIN_ID = {plugin_id!r}\n"
+        f"EXPECTED_CWD = {str(expected_cwd)!r}\n"
+        f"SUCCESS_TEXT = {success_text!r}\n"
+        "argv = sys.argv[1:]\n"
+        "if argv[:2] == ['plugin', 'details'] and len(argv) >= 3 and argv[2] == PLUGIN_ID:\n"
+        "    if os.getcwd() == EXPECTED_CWD:\n"
+        "        sys.stdout.write(SUCCESS_TEXT)\n"
+        "        sys.exit(0)\n"
+        "    sys.stdout.write('Plugin \"' + PLUGIN_ID + '\" not found.\\n')\n"
+        "    sys.exit(1)\n"
+        "sys.exit(1)\n",
+        encoding="utf-8")
+    script.chmod(0o755)
+    return script
+
+
 class PluginsAggregateCase(unittest.TestCase):
     """`plugins_summary` напрямую — без CLI-обвязки `cmd_budget`."""
 
@@ -83,7 +111,7 @@ class PluginsAggregateCase(unittest.TestCase):
     def _use_fake(self, **kwargs):
         os.environ["SKM_CLAUDE_BIN"] = str(_write_fake_plugin_cli(self.tmp, **kwargs))
 
-    def test_happy_path_sum_dedup_exclusion_and_warnings(self):
+    def test_happy_path_sum_dedup_exclusion_and_broken(self):
         self._use_fake()
         summary = pl.plugins_summary(self.proj)
         self.assertEqual(summary["status"], "ok")
@@ -91,24 +119,72 @@ class PluginsAggregateCase(unittest.TestCase):
         # ai@swissknifeman (enabled:false) исключён; task@swissknifeman дважды
         # в листинге (scope local/project) — дедуп по id даёт ОДНУ запись.
         self.assertEqual(ids, ["brain@brain", "codex@openai-codex", "task@swissknifeman"])
-        # happy-path сумма: codex(449) + task(100); brain не распознан (drift) —
-        # unparsed, вне суммы; молчаливого 0 нет — total считает только 549.
+        # happy-path сумма: codex(449) + task(100); brain — объявленно
+        # сломанный листингом (errors) И details не дал цены → broken, НЕ
+        # unparsed; молчаливого 0 нет — total считает только 549.
         self.assertEqual(summary["total"], 549)
         self.assertTrue(summary["partial"])
-        self.assertTrue(any("brain@brain" in u for u in summary["unparsed"]))
-        # errors из записи листинга brain@brain доезжают до warnings[]
+        self.assertEqual(summary["unparsed"], [])
+        self.assertEqual(len(summary["broken"]), 1)
+        self.assertEqual(summary["broken"][0]["id"], "brain@brain")
+        self.assertIn("invalid manifest", summary["broken"][0]["reason"])
+        # broken не дублируется в warnings — это ОТДЕЛЬНЫЙ класс неполноты.
+        self.assertFalse(any("brain@brain" in w for w in summary["warnings"]))
+
+    def test_errors_entry_that_resolves_counts_in_total_and_warnings(self):
+        # Implementation Rules §4: запись с errors, ВСЁ-ТАКИ отдавшая цену, —
+        # обычная (в total), errors остаётся в warnings, НЕ в broken.
+        self._use_fake(details={
+            "codex@openai-codex": (CODEX_DETAILS, 0),
+            "task@swissknifeman": ("task 0.9.0\n\nProjected token cost\n"
+                                   "  Always-on:   ~100 tok   added to every session\n", 0),
+            "brain@brain": ("brain 1.0.0\n\nProjected token cost\n"
+                            "  Always-on:   ~42 tok   added to every session\n", 0),
+        })
+        summary = pl.plugins_summary(self.proj)
+        self.assertEqual(summary["total"], 449 + 100 + 42)
+        self.assertEqual(summary["broken"], [])
         self.assertTrue(any("brain@brain" in w for w in summary["warnings"]))
 
     def test_always_on_suffix_format_is_not_guessed(self):
         # Implementation Rules §Code Guidance: суффикс (~1.1k) НЕ наблюдался в
-        # замере и не угадывается — уходит в unparsed, а не домножается.
-        tokens, error = None, None
+        # замере и не угадывается — уходит в unparsed (не broken — запись без
+        # errors листинга), а не домножается.
         with mock.patch.object(pl, "claude_bin", return_value=str(
                 _write_fake_plugin_cli(self.tmp, details={"x@y": (
                     "Always-on:   ~1.1k tok   added to every session\n", 0)}))):
-            tokens, error = pl.plugin_always_on_tokens("x@y")
+            tokens, error = pl.plugin_always_on_tokens("x@y", self.proj)
         self.assertIsNone(tokens)
         self.assertIn("не распознана", error)
+
+    def test_thousands_separator_is_parsed(self):
+        # P1.4 §1/§3: cwd проброшен в `details`, `~1,275` разбирается в 1275
+        # (было unparsed до починки) — фикстура ДОСЛОВНОГО живого вывода.
+        script = _write_fake_plugin_cli(self.tmp, details={
+            "architect@swissknifeman": (ARCHITECT_DETAILS, 0)})
+        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+            tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
+        self.assertEqual(tokens, 1275)
+        self.assertIsNone(error)
+
+    def test_cwd_reaches_details_call(self):
+        # P1.4 §1 (живой факт): local-scope плагин чужого проекта резолвится
+        # ТОЛЬКО под cwd его проекта — фейк реально проверяет os.getcwd(),
+        # падает без ожидаемого cwd, а не просто принимает параметр.
+        target_cwd = str(self.proj.resolve())
+        script = _write_cwd_gated_details_cli(
+            self.tmp, "architect@swissknifeman", target_cwd,
+            "architect 0.1.0\n\nProjected token cost\n"
+            "  Always-on:   ~1,275 tok   added to every session\n")
+        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+            tokens, error = pl.plugin_always_on_tokens("architect@swissknifeman", self.proj)
+            self.assertEqual(tokens, 1275)
+            self.assertIsNone(error)
+            pl._details_cache.clear()
+            wrong_cwd_tokens, wrong_cwd_error = pl.plugin_always_on_tokens(
+                "architect@swissknifeman", self.tmp)
+        self.assertIsNone(wrong_cwd_tokens)
+        self.assertIn("код 1", wrong_cwd_error)
 
     def test_missing_claude_binary_gives_na_not_zero(self):
         with mock.patch.object(pl, "claude_bin", return_value=None):
@@ -125,8 +201,8 @@ class PluginsAggregateCase(unittest.TestCase):
         self.assertIsNone(summary["total"])
 
     def test_details_cached_per_run(self):
-        # `details` CWD-независим — один вызов на УНИКАЛЬНЫЙ id, не на пару
-        # проект×плагин (D14 §5).
+        # успех кэшируется по id глобально — один вызов на УНИКАЛЬНЫЙ id
+        # (P1.4 §2, экономия фан-аута по флоту сохраняется).
         self._use_fake()
         calls = []
         real_run = pl._run_claude
@@ -136,9 +212,27 @@ class PluginsAggregateCase(unittest.TestCase):
             return real_run(argv, **kw)
 
         with mock.patch.object(pl, "_run_claude", side_effect=_counting_run):
-            pl.plugin_always_on_tokens("codex@openai-codex")
-            pl.plugin_always_on_tokens("codex@openai-codex")
+            pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
+            pl.plugin_always_on_tokens("codex@openai-codex", self.proj)
         self.assertEqual(len(calls), 1)
+
+    def test_failure_not_cached_retries_under_different_cwd(self):
+        # P1.4 §2: неудача НЕ кэшируется по id — тот же id под другим cwd
+        # резолвится заново, иначе первый чужой проект отравил бы кэш.
+        target_cwd = str(self.proj.resolve())
+        script = _write_cwd_gated_details_cli(
+            self.tmp, "architect@swissknifeman", target_cwd,
+            "architect 0.1.0\n\nProjected token cost\n"
+            "  Always-on:   ~1,275 tok   added to every session\n")
+        with mock.patch.object(pl, "claude_bin", return_value=str(script)):
+            miss_tokens, miss_error = pl.plugin_always_on_tokens(
+                "architect@swissknifeman", self.tmp)
+            self.assertIsNone(miss_tokens)
+            self.assertIsNotNone(miss_error)
+            hit_tokens, hit_error = pl.plugin_always_on_tokens(
+                "architect@swissknifeman", self.proj)
+        self.assertEqual(hit_tokens, 1275)
+        self.assertIsNone(hit_error)
 
 
 class PluginsCliIntegrationCase(unittest.TestCase):

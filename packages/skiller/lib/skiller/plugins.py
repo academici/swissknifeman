@@ -17,7 +17,7 @@ from .quality.eval import CLAUDE_BIN_ENV, claude_bin
 
 PLUGIN_CALL_TIMEOUT = 15
 
-_ALWAYS_ON_RE = re.compile(r"(?m)^\s*Always-on:\s*~(\d+)\s*tok\b")
+_ALWAYS_ON_RE = re.compile(r"(?m)^\s*Always-on:\s*~([\d,]+)\s*tok\b")
 
 _details_cache = {}
 
@@ -45,8 +45,10 @@ def list_enabled_plugins(target):
     приходит дважды при разных `scope` — `claude plugin list --json` резолвит
     эффективный набор ПРОЕКТА через `cwd=target`, разбор `enabledPlugins` из
     `settings.json` не делается — отвергнутая D142 конструкция). Возвращает
-    (entries, status, warnings): status — 'ok'|'n/a'; warnings — диагностики
-    апстрима из ключа `errors` записей листинга."""
+    (entries, status, detail): status — 'ok'|'n/a'; на 'n/a' detail называет
+    причину. Записи несут поле `errors` листинга как есть — классификация
+    `broken` против `unparsed` требует ИСХОДА `details` и решается позже, в
+    `plugins_summary`, не здесь."""
     ok, stdout, detail = _run_claude(["plugin", "list", "--json"], cwd=str(target))
     if not ok:
         return [], "n/a", [detail]
@@ -57,57 +59,76 @@ def list_enabled_plugins(target):
     if not isinstance(data, list):
         return [], "n/a", ["claude plugin list --json — ожидался список записей"]
     dedup = {}
-    warnings = []
     for entry in data:
         if not isinstance(entry, dict) or not entry.get("enabled") or not entry.get("id"):
             continue
-        if entry.get("errors"):
-            warnings.append(f"{entry['id']}: {'; '.join(entry['errors'])}")
         dedup.setdefault(entry["id"], entry)
-    return list(dedup.values()), "ok", warnings
+    return list(dedup.values()), "ok", []
 
 
-def plugin_always_on_tokens(plugin_id):
+def plugin_always_on_tokens(plugin_id, cwd):
     """Always-on цена ОДНОГО плагина — единственная строка `Always-on: ~N tok`
-    вывода `claude plugin details <id>`. `details` описывает ПЛАГИН, не
-    проект, и от CWD не зависит → кэш по `id` в пределах прогона (фан-аут по
-    флоту иначе платит проект×плагин вместо уникальных плагинов). Возвращает
+    вывода `claude plugin details <id>`. `details` резолвит local-scope
+    плагин ТОЛЬКО под `cwd` его проекта (RAG:✅ 2026-07-31 живой `claude
+    2.1.220`: `architect@swissknifeman` — код 1 без `cwd`, код 0 под
+    `cwd=memster`) — `cwd` ОБЯЗАТЕЛЬНЫЙ параметр, догадываться о нём внутри
+    модуля запрещено. ЗНАЧЕНИЕ цены при этом не меняется между CWD (проверено
+    на четырёх плагинах из двух CWD) → успех кэшируется по `id` глобально,
+    экономя фан-аут по флоту; неудача (резолвинг ИЛИ разбор) НЕ кэшируется —
+    тот же `id` под другим `cwd` в следующем вызове резолвится заново, иначе
+    первый же чужой проект отравил бы кэш на весь прогон. Возвращает
     (tokens|None, detail|None); суффикс (`~1.1k`) в замере не наблюдался — при
     несовпадении регэкспа строка уходит в unparsed, множитель не угадывается."""
     if plugin_id in _details_cache:
         return _details_cache[plugin_id]
-    ok, stdout, detail = _run_claude(["plugin", "details", plugin_id])
+    ok, stdout, detail = _run_claude(["plugin", "details", plugin_id], cwd=str(cwd))
     if not ok:
-        result = (None, detail)
-    else:
-        m = _ALWAYS_ON_RE.search(stdout)
-        result = ((int(m.group(1)), None) if m else
-                 (None, f"{plugin_id}: строка Always-on не распознана"))
+        return None, detail
+    m = _ALWAYS_ON_RE.search(stdout)
+    if not m:
+        return None, f"{plugin_id}: строка Always-on не распознана"
+    tokens = int(m.group(1).replace(",", ""))
+    result = (tokens, None)
     _details_cache[plugin_id] = result
     return result
 
 
 def plugins_summary(target):
     """Сводка always-on плагинов проекта `target`:
-    `{status, entries[], total, partial, unparsed[], warnings[]}`. `entries` —
-    `{id, scope, tokens}` (tokens=None на нераспознанной цене). `total` считает
-    ТОЛЬКО распознанные записи; `partial=True`, если хоть одна не распозналась
-    ИЛИ листинг целиком дал n/a. Молчаливого 0 нет ни в одной ветке."""
+    `{status, entries[], total, partial, unparsed[], broken[], warnings[]}`.
+    `entries` — `{id, scope, tokens}` (tokens=None на невзятой цене). `total`
+    считает ТОЛЬКО распознанные записи; `partial=True`, если хоть одна не
+    распозналась (`unparsed`/`broken` непусты) ИЛИ листинг целиком дал n/a.
+    Неполнота — ДВЕ разные природы, не смешиваются в одном списке: `broken[]`
+    (`{id, reason}`) — сам листинг объявил плагин сломанным (`errors`) И
+    `details` цену не дал; `unparsed[]` — details не распознан БЕЗ объявленной
+    поломки (дрейф формата апстрима). Запись с `errors`, ВСЁ-ТАКИ отдавшая
+    цену, обычная: учитывается в `total`, `errors` — в `warnings[]`.
+    Молчаливого 0 нет ни в одной ветке."""
     plugins, status, list_warnings = list_enabled_plugins(target)
     if status != "ok":
         return {"status": "n/a", "entries": [], "total": None, "partial": True,
-               "unparsed": [], "warnings": list_warnings}
+               "unparsed": [], "broken": [], "warnings": list_warnings}
     entries = []
     unparsed = []
+    broken = []
+    warnings = []
     total = 0
     for entry in plugins:
         pid = entry["id"]
-        tokens, error = plugin_always_on_tokens(pid)
+        errors = entry.get("errors")
+        tokens, error = plugin_always_on_tokens(pid, target)
         entries.append({"id": pid, "scope": entry.get("scope"), "tokens": tokens})
         if tokens is None:
-            unparsed.append(error)
+            if errors:
+                broken.append({"id": pid, "reason": "; ".join(errors)})
+            else:
+                unparsed.append(error)
         else:
             total += tokens
+            if errors:
+                warnings.append(f"{pid}: {'; '.join(errors)}")
     entries.sort(key=lambda e: (e["id"], e["scope"] or ""))
     return {"status": "ok", "entries": entries, "total": total,
-           "partial": bool(unparsed), "unparsed": unparsed, "warnings": list_warnings}
+           "partial": bool(unparsed or broken), "unparsed": unparsed,
+           "broken": broken, "warnings": warnings}

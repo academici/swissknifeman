@@ -1,54 +1,58 @@
-# HANDOFF — 2026-08-01 — after P5.8
+# HANDOFF — 2026-08-01 — after P5.9
 
 **Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | implementation |
-| Thinking | high — канон `plan-lint --conflicts` (P5.9 Routing); инвариант fail-safe «гейт не зеленеет на пустоте», effort high+ по §9 |
+| Thinking | high — ремедиация §3.1 supply-chain (P5.10 Routing); необратимая правка вендоренного бандла + пиновка внешнего SHA, effort high+ по §9 |
 | Context | continue (/clear) — ручной item |
-| Суть | P5.9: флаг `--conflicts` в `plan_lint.py`; строго ПОСЛЕ P5.8 (D43, оба правят один файл) — P5.8 терминален, путь открыт; текущая сессия уже sonnet/high (= предписанному) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
+| Суть | P5.10: вендоринг пинованного payload `web-design-guidelines` + перевод бандла в `strategy=fork`; P5.9 не блокирует (независимые файлы) — текущая сессия уже sonnet/high (= предписанному) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
 | Команда | `—` (нет single-command эквивалента) |
 
 ```
 /model sonnet
 /effort high
-/task:plan-run 2026.07.31-SKM-LEAN P5.9
+/task:plan-run 2026.07.31-SKM-LEAN P5.10
 ```
 
-**Done:** **P5.8 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.8 =
+**Done:** **P5.9 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.9 =
 implementation/high, точное совпадение, без перебора/недобора).
 
-- **P5.8 🟢 Done** — форма launch-block доведена до однозначной: строка `| Команда |`
-  живёт последней в таблице параметров и, когда полностью выражает следующий шаг, является
-  всем ответом; отдельный code-block стал ОПЦИОНАЛЬНЫМ и появляется только у `Exec = manual`
-  (строка `Команда` = `—`), scope-payload находок/реопена или формы `ОЖИДАНИЕ:`. Гейт
-  `plan_lint.py` переписан с `has_table and has_fence` на `has_table and (has_command_row or
-  has_fence)` — «ровно один из двух» реализовано как МИНИМУМ один, не «строго не оба»: оба
-  носителя сразу остаются зелёными (back-compat старой формы 26+ живых планов флота), решение
-  зафиксировано пятью новыми тестами. Правило scope-payload (`## Audit Pn`) не тронуто —
-  по-прежнему требует code-block дословно. Синхронизированы пять команд `plan-{design,exec,
-  close,audit}.md` (`plan-run.md` не тронут — ссылается на `plan-exec.md` целиком, литерала
-  не несёт по конструкции), их Codex-зеркала (`render-provider-commands.py --write
-  --repair-owned`), golden-фикстуры, Codex-проекция скилла (`skiller registry`). Скилл
-  `plan-protocol` `2.22.0 → 2.23.0`, литерал `Команда` зарегистрирован (`i18n-keep` +
-  `CANON_LITERALS`). `check-translations.sh --strict` — OK, `validate.sh` (task/skiller/
-  harness) — все зелёные, паритетные тесты 18/18. Парный прогон корня `plans/` (D53):
-  `ERROR Δ 0 · WARN Δ 0` (243 → 243). `plan-lint plans/2026.07.31-SKM-LEAN --baseline HEAD`:
-  0 ошибок, новых от рабочего дерева — 0. Контракт `driver-plan-protocol-v2.md` — строка
-  `pinned` бампнута на `v2.23.0 @ 26d3efe3` (D72). Item-коммит `26d3efe3`, дополнительный
-  атомарный коммит контракт-пина `dc3574ee` (item-коммит завершающий — этот хеш). Known
-  Deviations: —. Pending Work: `packages/task/adapters/codex/{provider-artifacts.lock.json,
-  publication-lock.json}` намеренно не ресинхронизированы (пре-существующая дрейф-находка
-  ДРУГИХ команд вне `Files` P5.8 — см. `phases/P5.md` P5.8 Completion Notes).
+- **P5.9 🟠 Done with deviations** — флаг `--conflicts` в `plan_lint.py`: `main()` несёт
+  `--conflicts` (`path` стал опциональным), `run_conflicts_check` сверяет шесть реестров-констант
+  линтера с их объявлениями в `SKILL.ru.md` (статусы, 16 полей item'а, формы `Next` — читает
+  альтернацию `SEMANTIC_NEXT_RE`, не переиздаёт списком, — значения `Context` — новый реестр
+  `CONTEXT_VALUES`, единственный класс без предшествующей реализации, — литералы `i18n-keep` —
+  реюз `CANON_LITERALS`, — регекс-носители формы launch-block'а); каждая находка — обе стороны с
+  `файл:строка`. Стandalone-раскладка деградирует (WARN + exit 0). Попутно — диагностика ПОВТОРА
+  поля в теле item'а (D90): `**Поле:**`-строка внутри прозы другого поля (напр. инлайн-заметка
+  `**Validation:**` в Completion Notes) молча подменяла приёмочное значение — новый ERROR с обеими
+  строками. Гейт нашёл 4 такие находки на ЖИВОМ дереве, все в АРХИВНЫХ планах
+  (`2026.07.07-SKM-AUDIT-004` P3.3/P6.2/P6.4, `2026.07.13-PLAN-PROTOCOL-GAP` P2.10) — точечно
+  починены (вердикт «первична реализация», правка по существу, не подгонка реестра). Это диф ВНЕ
+  `Files` item'а → material по status-rule → `🟠`, а не `🟢`. Регистрация: ступень в
+  `packages/task/scripts/validate.sh`, `--conflicts` назван первой дешёвой командой конфликт-скана
+  в `packages/task/commands/plan-audit.md` §1, новый раздел `packages/task/docs/reference/
+  plan-tooling.md`. `roadmap/plan-audit-loop.md` удалён (`find … -delete`), строка перенесена в
+  `roadmap/README.md` «Закрыто и удалено». Правка `plan-audit.md` потребовала
+  `render-provider-commands.py --write --repair-owned` (регенерация провайдер-проекций) + ручной
+  синхронизации golden-фикстуры и `docs/reference/provider-commands.md` — попутно снят
+  ПРЕ-существующий дрейф Codex-адаптеров `task-design`/`task-research`/`task-review` + оба
+  lock-файла (был назван P5.8 Pending Work как нетронутый там; теперь закрыт, carve-out (б)).
+  `test_canon_literals.py` реюзает `I18N_KEEP_RE`/`_find_skill_ru` из `plan_lint.py` (не вторая
+  копия). `validate.sh` (task) — OK, 478 тестов, `plan-lint: OK` (16 планов, 0 ошибок), `--conflicts:
+  OK`. `check-translations.sh --strict` — OK. Item-коммит `5e3d65e4`. Known Deviations: диф вне
+  `Files` (три архивных плана, названо выше). Pending Work: стray-упоминание `plan-audit-loop.md` в
+  `roadmap/plan-design-vs-exec-status-check.md:70` (неформальная заметка, не машинная ссылка) —
+  следующей содержательной правкой того файла.
 
 **Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-**P5 4/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.9–P5.11. Следующий по
-порядку — **P5.9** (`solo`, `manual`, implementation/high, строго ПОСЛЕ P5.8 — D43).
+**P5 4/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.10–P5.11. Следующий по
+порядку — **P5.10** (`solo`, `manual`, implementation/high) → **P5.11** (D110, идёт ПОСЛЕ P5.10).
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.9 и далее) · `plan.md` §3
-Routing · `roadmap.md` (карта батчей — P5.8/P5.9 строго последовательны, D43: оба правят
-`plan_lint.py`).
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.10 и далее) · `plan.md` §3
+Routing · `roadmap.md` (карта батчей).
 
 **Open risks:**
 
@@ -65,14 +69,15 @@ Routing · `roadmap.md` (карта батчей — P5.8/P5.9 строго по
 - Окружной дефект `codex exec -s read-only` (bwrap/AppArmor, обход `--dangerously-bypass-approvals-
   and-sandbox`) остаётся в силе для будущих item'ов, зовущих `codex exec` в sandboxed режиме.
 - P5.5 Pending Work (не изменилось этим заходом): `codex plugin update` отдельным тестом не покрыт.
-- **Новое (P5.8):** `packages/task/adapters/codex/{provider-artifacts.lock.json,
-  publication-lock.json}` несут пре-существующую дрейф-находку у команд `design`/`research`/
-  `review`/`plugin`/`publication-lock` (подтверждено на чистом дереве ДО P5.8) — вне `Files`
-  P5.8, не тронуто; `render-provider-commands.py` не несёт per-artifact `--only`-селектора.
-  Ни `validate.sh`, ни тестовый набор на реальный `REPO_ROOT`-lock не смотрят — Validation не
-  затронута. Рекомендация — roadmap-запись/мелкий item на `--only` флаг.
-- **P5.9 — строго ПОСЛЕ P5.8** (D43, roadmap.md, оба правят `plan_lint.py`) — путь теперь
-  открыт (P5.8 терминален).
+- **Закрыто этим заходом (было открыто с P5.8):** `packages/task/adapters/codex/
+  {provider-artifacts.lock.json, publication-lock.json}` и Codex-артефакты `task-design`/
+  `task-research`/`task-review` ресинхронизированы (`render-provider-commands.py --write
+  --repair-owned`, попутный эффект правки `plan-audit.md` в P5.9). `render-provider-commands.py`
+  по-прежнему не несёт per-artifact `--only`-селектора — не критично, раз whole-catalog regen уже
+  штатно применяется на каждой правке команды.
+- **Новое (P5.9):** стray-упоминание `plan-audit-loop.md` в прозе
+  `roadmap/plan-design-vs-exec-status-check.md:70` — не машинная ссылка, вне `Files` P5.9, чинится
+  следующей содержательной правкой того файла (см. P5.9 Pending Work).
 
 **Workarounds/Deferred/Open questions:**
 

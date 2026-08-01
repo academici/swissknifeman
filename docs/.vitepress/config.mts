@@ -81,6 +81,7 @@ export default withMermaid(defineConfig({
             { text: 'Создание скиллов', link: '/skiller/guide/creating-skills' },
             { text: 'Скиллы из пакетов', link: '/skiller/guide/vendor-skills' },
             { text: 'Upstream-sync', link: '/skiller/guide/upstream-sync' },
+            { text: 'Вендоренные скиллы: доверие и триаж', link: '/skiller/guide/vendored-skills' },
             { text: 'Реестр skills.json', link: '/skiller/guide/registry' },
             { text: 'Граф зависимостей', link: '/skiller/guide/graph' },
             { text: 'Сканер сниппетов', link: '/skiller/guide/scanner' },

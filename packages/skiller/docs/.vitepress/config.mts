@@ -48,6 +48,7 @@ export default withMermaid(defineConfig({
             { text: 'Поведенческие тесты (evals)', link: '/guide/evals' },
             { text: 'Скиллы из пакетов', link: '/guide/vendor-skills' },
             { text: 'Upstream-sync', link: '/guide/upstream-sync' },
+            { text: 'Вендоренные скиллы: доверие и триаж', link: '/guide/vendored-skills' },
             { text: 'Реестр skills.json', link: '/guide/registry' },
             { text: 'Граф зависимостей', link: '/guide/graph' },
             { text: 'Карта токенового бюджета', link: '/guide/budget' },

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P4",
+  "closed_at": "2026-08-01",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟢 Done",
+  "git": {"head_sha": "7d0352f597b64d378fe4199b2dad99554d582ee3", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "8e82d80c4c39b455a52e8197883d8a3a7a7cc37a3c191ea57e91229e51239bf3",
+    "phases/P4.md": "180bc0fcac6550109be226a2f92aeb8b03e33177369d726e25ceafe21d418d8b"
+  },
+  "items": [
+    {"id": "P4.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`root/contracts/driver-plan-protocol-v2.md` издан, пин на `06fefc87`, 11 форм Next и 6 статусов сверены байт-в-байт, живой канон v2.22.0 — дельта только frontmatter/штамп"},
+    {"id": "P4.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`plan_reader` — очередь фазы, маршрут, `Exec`, форма `Next`, без известных отклонений"},
+    {"id": "P4.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`worker` — `claude -p /task:plan-exec` под таймаутом, без известных отклонений"},
+    {"id": "P4.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`gate` — `plan-lint` + git-проверка двух коммитов → три исхода, 598 тестов, вердикт из 4 источников (D103–D106)"},
+    {"id": "P4.5", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`journal` — дозапись в journal.jsonl + сводка волны, 618 тестов зелены"},
+    {"id": "P4.6", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`harness run` CLI, двупронговая приёмка (`--dry-run` на живой фазе P5 + сквозная волна GREEN на изолированной фикстуре, cost_usd_total=1.8969, вмешательств 0/2), 630 тестов"}
+  ],
+  "gates": [
+    {"id": "test.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/test.sh — 630 тестов зелены (было 618 на P4.5, +12 в test_run_cli.py)"},
+    {"id": "validate.sh:harness", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/harness/scripts/validate.sh — 10/10 шагов зелены"},
+    {"id": "plan-lint", "status": "PASS", "evidence_class": "real",
+     "evidence": "plan-lint на item-коммите 0bb9e42b (до bookkeeping) — 0 ERROR, 0 новых; после bookkeeping-флипа Board — 1 новая ERROR структурна (closure/P4.json отсутствовал), ремедиация этим заходом"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "6/6", "label": "real"},
+    {"name": "fixture_wave_cost_usd_total", "value": "1.8969", "label": "synthetic"},
+    {"name": "fixture_wave_duration_ms_total", "value": "309897", "label": "synthetic"},
+    {"name": "fixture_wave_interventions", "value": "0/2", "label": "synthetic"}
+  ],
+  "limitations": [
+    "U1/U2 контракта P4.1 остаются [UNVERIFIED] — конверт при исчерпании квоты, exit-коды на сбоях; адрес — первое боевое наблюдение",
+    "фикстурная волна P4.6 — синтетическое число (не боевая статистика), вход OQ-3/P7.1",
+    "worker.py остаётся единственным источником знания о command-routing.json в драйвере",
+    "два преэкзистентных WARN линтера по фазе P4 (ложные срабатывания) без адресата в этой фазе"
+  ],
+  "external_side_effects": []
+}

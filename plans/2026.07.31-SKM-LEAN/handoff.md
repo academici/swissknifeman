@@ -1,7 +1,7 @@
-# HANDOFF — 2026-08-01 — after P4.1
+# HANDOFF — 2026-08-01 — after P4.2
 
-**Next:** manual: `implementation/high` — P4.2 `Exec = manual` (`plan.md` §3, `roadmap.md`
-строка P4.2: solo, батч запрещён критерием §9 — P4.4/P4.6 сцеплены с ним по данным).
+**Next:** manual: `implementation/high` — P4.3 `Exec = manual` (`plan.md` §3, `roadmap.md`
+строка P4.3: solo, батч запрещён критерием §9 — P4.4/P4.6 сцеплены с ним по данным).
 
 | Параметр | Значение |
 |:--|:--|
@@ -9,97 +9,79 @@
 | Effort | high |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | `plan_reader` — очередь фазы, маршрут, ячейка `Exec`, форма `Next`; чистые функции против пинованного контракта P4.1 |
+| Суть | `worker` — запуск `claude -p /task:plan-exec` под таймаутом, дефенсивный разбор конверта живой версии |
 
 ````
-Прочитай plans/2026.07.31-SKM-LEAN/phases/P4.md item P4.2 целиком (Intent, Why, Scope
+Прочитай plans/2026.07.31-SKM-LEAN/phases/P4.md item P4.3 целиком (Intent, Why, Scope
 Included/Excluded, Inputs, Files, Required Reads, Implementation Rules, Code Guidance,
-Validation, Deliverables) и исполни его строго по ТЗ. ПЕРВЫМ Required Read — целиком
-plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md (без него item не
-исполняется): §2 даёт закрытый список источников и команды, §3.1 — зеркало матчера ячейки
-Exec, §3.2 — границы разбора формы Next, §4 — дословные литералы канона. Пометь item
-🟡 In progress до начала практической работы, затем закрой по правилам plan-protocol
-(Task Contract pre-mutation/pre-final, Completion Notes, Known Deviations, журнал, два
-коммита).
+Validation, Deliverables) и исполни его строго по ТЗ. ПЕРВЫМ Required Read —
+plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md §6 (транспортный слой,
+поля конверта) и §9 U1-U3 ([UNVERIFIED] пункты, закрываются этим item'ом наблюдением).
+Пометь item 🟡 In progress до начала практической работы, затем закрой по правилам
+plan-protocol (Task Contract pre-mutation/pre-final, Completion Notes, Known Deviations,
+журнал, два коммита).
 ````
 
-**Done:** Этим заходом — **P4.1** (`manual`-путь, сессия opus/high), первый item фазы P4.
+**Done:** Этим заходом — **P4.2** (`plan_reader`, `manual`-путь, сессия sonnet/high), второй
+item фазы P4.
 
-- Издан `plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md` (item-коммит
-  **`07c87638`**) — действующая parse-спека драйвера exec-волны; каталог `root/contracts/`
-  заведён этим item'ом.
-- **Пин на КОММИТ, не на «latest»:** скилл `plan-protocol` **v2.22.0** @ **`06fefc87`**
-  (родитель item-коммита), клиент **`2.1.220 (Claude Code)`**, дата сверки якорей 2026-08-01;
-  воспроизведение — `git rev-parse 06fefc87^{commit}`.
-- **Транспортный §JSON пере-снят ЖИВЫМ прогоном 2026-08-01** (не унаследован из `findings/`):
-  тот же 21 ключ конверта, `type=result · subtype=success · is_error=False ·
-  terminal_reason=completed`, exit 0; флаг лимита ходов — **0** совпадений на 230 строках
-  `claude --help`, утверждение донора о нём не унаследовано ни строкой.
-- **У драйвера ДВА собственных разбора, а не один.** Второй заведён по Implementation Rules (2)
-  с обоснованием: `plan-lint.py --json` отдаёт СЫРОЕ поле `**Next:**`, а резолвленную форму
-  внутрь модели не кладёт (ключи `handoff` = `path`/`title_ref`/`fields`). §3.2 сводит разбор к
-  префиксному токену по закрытому набору `plan_lint.SEMANTIC_NEXT_RE` и называет границы:
-  легальность формы гейтит линтер, условие формы `waiting:` драйвер НЕ вычисляет.
-- Контракт несёт: таблицу «читаемый факт → источник → команда» (S1–S5), дословные enum'ы 11
-  форм `Next` и 6 статусов, шапки Status Board / `## Phase Status`, топологию двух коммитов с
-  уточнением состава по D75, таблицу «событие → КЛАСС вердикта» + три правила поверх неё,
-  **шесть** якорей breaking-детекта с единственным действием «стоп волны + эскалация»,
-  **пять** `[UNVERIFIED]` с адресами, границу провайдера v2 (`claude -p`; Codex — незакрытый
-  вопрос, не умолчание) и §11 «что контракт НЕ фиксирует».
-- Историчный контракт донора не правился (`git status --porcelain plans/archive/` — пусто),
-  назван в frontmatter полем `provenance`.
-- Журнал: `plan-run`/`opus/high` — старт-запись `in-progress` и финал `closed-green` для
-  `P4.1` (`run_id: null` — строки исполнителя, не волны).
+- Реализован `packages/harness/lib/harness/run/plan_reader.py` (item-коммит **`69629f30`**) —
+  очередь исполнения фазы: item'ы в порядке `## Phase Status`, терминальные исключены
+  (`excluded_terminal`), маршрут (S2 — `task.task_contract build`), значение ячейки `Exec` (S4 —
+  собственный разбор, зеркало `task_contract._find_routing_row`), форма `Next` (S5 —
+  ТОЛЬКО префиксный токен закрытого enum'а 11 форм, легаси-входы совместимости НЕ резолвятся).
+- Закрытый набор причин отказа вождения реализован целиком: `EXEC-NOT-PLAN-EXEC` ·
+  `ROUTING-INCONSISTENT` · `ROUTING-UNRESOLVED` · `NEXT-FORM-UNSUPPORTED` · `PLAN-UNREADABLE`
+  (через `degraded`) · `ITEM-TERMINAL`. Деривация §9 маршрута используется РОВНО на отказ
+  (D31) — право вождения только из дословного значения `Exec`.
+- Drift-тест «зеркало матчера»: синтетическая таблица §3 (одиночная форма/диапазон/список
+  через запятую) через `plan_reader._resolve_exec_cell` и через
+  `task_contract._find_routing_row` дала совпадающее множество покрытых item'ов.
+- Committed-фикстура `packages/harness/tests/fixtures_data/run/sample-plan/` заведена
+  (переиспользуется P4.3–P4.6): порядок очереди, исключение терминального item'а, диапазонная
+  форма §3, drivable-кейс.
+- `bash packages/harness/scripts/test.sh` — **562 теста**, зелёный (10 новых); `validate.sh` —
+  `OK`; `grep -rn "import task\|packages/task/lib" packages/harness/lib/harness/run/` — пусто
+  (D29 держится); ручной прогон на живых фазах P4/P5 — очередь и причины отказов печатаются без
+  трейсбека.
+- Task Contract (D76): `pre_mutation: allow`, `pre_final: allow` (actual_route
+  `implementation/high`, `source=self-attested`, `model=sonnet`).
 
-**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠, терминальна) · **P4 1/6
+**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠, терминальна) · **P4 2/6
 (🟡 In progress)** · P5 0/9 (⬜) · P6 0/3 (⬜) · P7 0/4 (⬜). Всего 38 items. Следующий —
-**P4.2** (`plan_reader`), далее строго последовательно P4.3 → P4.4 → P4.5 → P4.6: items фазы
-сцеплены по данным, оркестрация не заявлена.
+**P4.3** (`worker`), далее строго последовательно P4.4 → P4.5 → P4.6: items фазы сцеплены по
+данным, оркестрация не заявлена.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md`
-(единственная действующая parse-спека драйвера; §2 — источники, §3 — собственные разборы, §8 —
-breaking-детект) · `phases/P4.md` P4.1 Completion Notes · `plan.md` §4 доска, §6 Update Log,
-`## 0. Meta` · `roadmap.md` (маршрут P4.2 — `Exec = manual`, solo) · `journal.jsonl` (две
-записи `P4.1`) · `research/04-p4-driver-model.md` (модель фазы).
+**Sources of truth:** `packages/harness/lib/harness/run/plan_reader.py` (реализация) ·
+`plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md` (§2 источники, §3
+собственные разборы) · `phases/P4.md` P4.2 Completion Notes · `plan.md` §4 доска, §6 Update
+Log, `## 0. Meta` · `roadmap.md` (маршрут P4.3 — `Exec = manual`, solo) · `journal.jsonl`.
 
 **Open risks:** без изменений по содержанию от предыдущего handoff, кроме закрытия пункта про
-P4.1, плюс:
+P4.2, плюс:
 
-- **Пять `[UNVERIFIED]` контракта с адресами:** U1 конверт при исчерпании квоты · U2 exit-коды
-  на сбоях · U3 применимость `--effort` в `-p` — все три закрываются наблюдением в **P4.3**;
-  U4 «чем парсится прогон Codex» — вне скоупа плана (D9), адрес вне плана; U5 экономика
-  волны — меряет **P4.6**. Умолчание вместо пометки в контракте запрещено — при закрытии
-  пункта контракт бампается.
-- **Контракт пинован на `06fefc87`, канон живёт своей жизнью** (13 minor за 11 дней июля):
-  перед волной сверяются три строки — версия скилла из frontmatter, `git rev-parse HEAD`,
-  `claude --version`. Расхождение любой — требование сверить шесть якорей §8 и бампнуть
-  контракт, невозможность сверить — стоп и эскалация.
-- **Гейт цитат не покрывает `root/**`** (находка этого захода): поверхность —
-  семь шаблонов внутри `plans/<ID>/` (`verify-citations.py:109–121`), каталог долгоживущих
-  контрактов в неё не входит, поэтому цитаты изданного parse-контракта прибором НЕ проверены
-  (сверены вручную — 13/13 ссылок `файл:строка` резолвятся). Предложение — расширить
-  `SCAN_PATTERNS` на `root/**`; правка вне `Files` P4.1, владелец прибора — план, канонизировавший
-  D128.
-- **Два WARN линтера по фазе P4** — латентные ложные срабатывания на ТЕКСТЕ фазы (DoR-строка с
-  буквальной формой маркера-плейсхолдера `phases/P4.md:67`; `оркестрац` без понимания отрицания
-  в `:87` и в `Required Reads` P4.6 `:211`), вскрывшиеся стартом фазы, а не диффом item'а — тот
-  же класс, что уже зафиксирован P1.1 и живёт в фазах P1/P3. Адрес — `plan-close <ID> P4` либо
-  отдельный fix-item.
-- **Второй собственный разбор драйвера (токен формы `Next`)** — точка, где легко вырасти
-  третьему: любой новый факт без источника из S1–S3 обязан править КОНТРАКТ, а не заводить
-  парсер (правило §8, зеркало Code Guidance P4.2).
+- **Пять `[UNVERIFIED]` контракта с адресами** — без изменений: U1/U2/U3 закрываются
+  наблюдением в **P4.3** (следующий item); U4 вне скоупа плана (D9); U5 меряет **P4.6**.
+- **Контракт пинован на `06fefc87`, канон живёт своей жизнью** — перед волной сверяются три
+  строки (версия скилла, `git rev-parse HEAD`, `claude --version`); расхождение — сверить шесть
+  якорей §8 и бампнуть контракт, невозможность сверить — стоп и эскалация.
+- **Два WARN линтера по фазе P4** — латентные ложные срабатывания на ТЕКСТЕ фазы (без
+  изменений от предыдущего захода): DoR-строка с буквальной формой маркера-плейсхолдера
+  `phases/P4.md:67`; `оркестрац` без понимания отрицания в `:87` и в `Required Reads` P4.6.
+  Адрес — `plan-close <ID> P4` либо отдельный fix-item.
+- **Второй собственный разбор драйвера теперь РЕАЛИЗОВАН** (не только контрактом назван) —
+  любой новый факт без источника из S1–S3 обязан править контракт P4.1, а не расширять
+  `plan_reader.py` третьей точкой разбора (правило §8 контракта, зеркало Code Guidance P4.2).
 - (в силе) остаток `desc-trigger-burndown.txt` 61 запись · 221/229 скиллов без тиров
   `model:`/`effort:` · `paths:` не раскатан (D98) · `disable-model-invocation` только на 4
   пилотных · 14 файлов evals-заглушек · **OQ-9** (`ACCEPTANCE_NOT_PUBLIC` против D77, владелец
-  вне плана) · долг **D90** (33 items дают ОДНУ acceptance-запись — P4.1 в их числе: его
-  `Validation` компилируется в одну публичную запись, `pre_final: allow` получен на ней) · 3
-  дефекта в `snippets/` `devops/db-test-preflight` · кандидаты под `context: fork` отложены ·
-  конфликт правил в ТЗ P3.6 · токен `contradictory evidence` вне enum §10 · дефект генератора
-  `.mcp.json.example` · path-scoped rules только на пилоте `dterema/app` · `resolve_active_set`
-  слеп к плагинам · Boost/`.ai`-CLAUDE.md флот не покрыт P2.2 · пять секций-кандидатов P2.1
-  резидентны (D89) · гейт размера файла целиком · токенная оценка продублирована в двух
-  пакетах · `closure/P1.json` hash устарел (D87) · остаточная находка `verify-citations` в
-  `phases/P2.md` (P2.3).
+  вне плана) · долг **D90** · 3 дефекта в `snippets/` `devops/db-test-preflight` · кандидаты под
+  `context: fork` отложены · конфликт правил в ТЗ P3.6 · токен `contradictory evidence` вне
+  enum §10 · дефект генератора `.mcp.json.example` · path-scoped rules только на пилоте
+  `dterema/app` · `resolve_active_set` слеп к плагинам · Boost/`.ai`-CLAUDE.md флот не покрыт
+  P2.2 · пять секций-кандидатов P2.1 резидентны (D89) · гейт размера файла целиком · токенная
+  оценка продублирована в двух пакетах · `closure/P1.json` hash устарел (D87) · остаточная
+  находка `verify-citations` в `phases/P2.md` (P2.3).
 - **В рабочем дереве есть чужой дифф** (`.gitignore`, удалённый `RESEARCH/AUDIT-loqum-findings.md`,
   неотслеживаемые `.swissknife/`, `audits/`) — этим заходом не тронут и не коммитился.
 

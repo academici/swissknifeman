@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P4.1 закрыт 🟢 — издан parse-контракт драйвера `root/contracts/driver-plan-protocol-v2.md`, фаза P4 начата 1/6) |
+| Last Updated | 2026-08-01 (P4.2 закрыт 🟢 — `plan_reader` реализован против контракта P4.1, фаза P4 2/6) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -121,7 +121,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
 | P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
-| P4 | Драйвер exec-волны | 1/6 | 🟡 In progress |
+| P4 | Драйвер exec-волны | 2/6 | 🟡 In progress |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
 | P7 | Закрытие roadmap в ноль | 0/4 | ⬜ Not started |
@@ -304,6 +304,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-run/sonnet-high | **P3.5 закрыт: 🟠 Done with deviations** — гейты пере-базированы, `general`-бакет закрыт целиком, **фаза P3 терминальна** — детали см. `phases/P3.md` P3.5 Completion Notes |
 | 2026-08-01 | plan-close/sonnet-low | **Фаза P3 закрыта: 🟠 Done with deviations** — 2/6 🟢, 4/6 🟠, docs-sync не требуется (обновлено внутри items), `closure/P3.json` записан — детали см. `phases/P3.md` §Phase Handoff |
 | 2026-08-01 | plan-run/opus-high | **P4.1 закрыт: 🟢 Done** — издан `root/contracts/driver-plan-protocol-v2.md`: пин на коммит `06fefc87`, скилл v2.22.0, клиент 2.1.220 — детали см. `phases/P4.md` P4.1 Completion Notes |
+| 2026-08-01 | plan-run/sonnet-high | **P4.2 закрыт: 🟢 Done** — `plan_reader.py` реализован, 562 теста зелены — детали см. `phases/P4.md` P4.2 Completion Notes |
 
 ## 7. Contracts
 

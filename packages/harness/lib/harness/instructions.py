@@ -522,7 +522,10 @@ def apply_instructions(request: InstructionRequest, *,
     if (any(action.action not in {ArtifactActionKind.CREATE, ArtifactActionKind.UPDATE}
             for action in writable)
             or tuple(action.target_path for action in writable) != request.authorized_target_paths):
-        return _write_refusal(request, fresh, "authorized missing/create or stale-source/update targets")
+        return _write_refusal(
+            request, fresh, "authorized missing/create or stale-source/update targets",
+            message="ожидался порядок целей (алфавитный по target_path): "
+                    + ",".join(action.target_path for action in writable))
     if not writable:
         return replace(fresh, request=request, green=True)
     try:
@@ -1422,10 +1425,10 @@ def _completed_write(request: InstructionRequest, fresh: InstructionOperationRes
 
 
 def _write_refusal(request: InstructionRequest, result: InstructionOperationResult,
-                   observed: str) -> InstructionOperationResult:
+                   observed: str, *, message: str | None = None) -> InstructionOperationResult:
     diagnostic = _diag("INSTRUCTION_WRITE_FORBIDDEN", observation="write-forbidden",
                        expected="fresh explicitly authorized write plan", observed=observed,
-                       next_action="refuse")
+                       next_action="refuse", message=message)
     return InstructionOperationResult(request, result.targets,
                                       _ordered_diagnostics(result.diagnostics + (diagnostic,)),
                                       False, result.artifact_plan)
@@ -1693,7 +1696,8 @@ def _print_report(result: InstructionOperationResult) -> None:
     for diagnostic in result.diagnostics:
         print(f"  ! {diagnostic.code}: {diagnostic.scope_id or '-'}/{diagnostic.provider_id or '-'} "
               f"{diagnostic.target_path or ''} — "
-              f"{diagnostic.next_action or diagnostic.observed or ''}", file=sys.stderr)
+              f"{diagnostic.message or diagnostic.next_action or diagnostic.observed or ''}",
+              file=sys.stderr)
     for finding in result.size_findings:
         print(f"  ! CANON_SIZE_EXCEEDED: {finding.target_path} — {finding.metric} "
               f"{finding.observed} > {finding.limit} (класс "

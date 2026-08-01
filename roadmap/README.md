@@ -39,7 +39,6 @@
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
 | [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
 | [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | Любой из трёх (спека §Критерий): замер ручного ритуала ≥20 закрытий с <25 % вмешательств · `decide` стал импортируемым модулем в `packages/**` (сейчас — данные в архиве AR) · измеренный выигрыш стоимости ≥2× против Workflow-марафона. Вердикт пере-скоупа — `2026.07.29-HARNESS-AGNOSTIC` P4.1 (D38/D90) |
-| [`instruction-authorize-order.md`](instruction-authorize-order.md) | Order-sensitivity `apply_instructions` к порядку `--authorize` (алфавитный по `target_path`) + неинформативная диагностика `INSTRUCTION_WRITE_FORBIDDEN` (`2026.07.29-HARNESS-AGNOSTIC` D84) | Следующий ложный отказ ИЛИ следующая содержательная правка `apply_instructions` |
 
 ## Входы активных планов (не трогать вне их items)
 
@@ -77,6 +76,7 @@
 | `budget-first-turn-plugin-visibility.md` | `packages/skiller/lib/skiller/plugins.py` + `skiller budget --first-turn --with-plugins` (аддитивные ключи `plugins`/`session_total`/`session_verdict`, D13/D14/D16) — `plans/2026.07.31-SKM-LEAN` P1.1 |
 | `mcp-config-example-emit.md` | `mcp.emit_example` default-on с opt-out (`EMIT_EXAMPLE_DEFAULT`, `packages/maind/lib/maind/constants.py` + `config.py::merge_defaults`) — `plans/2026.07.31-SKM-LEAN` P2.4 |
 | `codex-publication-consumer-acceptance.md` | Изолированный consumer-acceptance гейт `packages/skiller/tests/test_codex_consumer_acceptance.py` (temp `CODEX_HOME` → `codex plugin`/`debug prompt-input` живым CLI) + регистрация в `validate.sh` (гейт 18, явный skip без `codex`) — `plans/2026.07.31-SKM-LEAN` P5.5 |
+| `instruction-authorize-order.md` | `INSTRUCTION_WRITE_FORBIDDEN` от `apply_instructions` печатает ожидаемый порядок целей (алфавитный по `target_path`, копипастопригодный) через новое поле `message` — `packages/harness/lib/harness/instructions.py::_write_refusal`/`apply_instructions`, `_print_report` — `plans/2026.07.31-SKM-LEAN` P5.7 |
 
 ## Принцип
 

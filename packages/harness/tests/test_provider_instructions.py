@@ -15,7 +15,7 @@ from core.provider_lock import serialize_lock
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
     PROVIDERS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
-    apply_instructions, check_instructions, load_catalog,
+    adopt_instructions, apply_instructions, check_instructions, load_catalog,
     plan_instructions, repair_instructions,
 )
 
@@ -268,6 +268,65 @@ class PublicOperationTests(unittest.TestCase):
             self.assertFalse(result.green)
             self.assertEqual(diagnostic_codes(result)[-1], "INSTRUCTION_WRITE_FORBIDDEN")
             self.assertEqual(snapshot(root), ())
+
+    def test_authorize_order_mismatch_message_shows_copyable_expected_order(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            planned = plan_instructions(request("plan", root, scope_ids=("root",)))
+            expected_order = tuple(action.target_path for action in planned.artifact_plan.actions)
+            self.assertGreater(len(expected_order), 1)
+            wrong_order = tuple(reversed(expected_order))
+            self.assertNotEqual(wrong_order, expected_order)
+            refused = apply_instructions(request(
+                "apply", root, scope_ids=("root",), authorized_target_paths=wrong_order))
+            self.assertFalse(refused.green)
+            diagnostic = next(item for item in refused.diagnostics
+                              if item.code == "INSTRUCTION_WRITE_FORBIDDEN")
+            self.assertIsNotNone(diagnostic.message)
+            self.assertIn("алфавитный по target_path", diagnostic.message)
+            self.assertTrue(diagnostic.message.endswith(",".join(expected_order)))
+            self.assertEqual(snapshot(root), ())
+            copied = apply_instructions(request(
+                "apply", root, scope_ids=("root",), authorized_target_paths=expected_order))
+            self.assertTrue(copied.green)
+
+    def test_authorize_order_message_derived_not_hardcoded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            planned = plan_instructions(request(
+                "plan", root, scope_ids=("root", "harness"), provider_ids=("codex",)))
+            expected_order = tuple(action.target_path for action in planned.artifact_plan.actions)
+            self.assertEqual(expected_order, ("AGENTS.md", "packages/harness/AGENTS.md"))
+            refused = apply_instructions(request(
+                "apply", root, scope_ids=("root", "harness"), provider_ids=("codex",),
+                authorized_target_paths=tuple(reversed(expected_order))))
+            diagnostic = next(item for item in refused.diagnostics
+                              if item.code == "INSTRUCTION_WRITE_FORBIDDEN")
+            self.assertEqual(diagnostic.message.rsplit(": ", 1)[-1], ",".join(expected_order))
+
+    def test_other_write_refusal_call_sites_leave_message_unset(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            planned = plan_instructions(request("plan", root))
+            targets = tuple(action.target_path for action in planned.artifact_plan.actions)
+            self.assertTrue(apply_instructions(request(
+                "apply", root, authorized_target_paths=targets)).green)
+            target = root / "AGENTS.md"
+            target.write_bytes(b"user before\n" + target.read_bytes() + b"user after\n")
+            target.write_bytes(target.read_bytes().replace(b"<!-- semantic:", b"<!-- local:", 1))
+            wrong_hash_repair = repair_instructions(request(
+                "repair", root, authorized_target_paths=("AGENTS.md",),
+                observed_hashes=(("AGENTS.md", "not-the-real-hash"),),
+                preimage_destination="adjacent-backup"))
+            self.assertFalse(wrong_hash_repair.green)
+            repair_diag = next(item for item in wrong_hash_repair.diagnostics
+                               if item.code == "INSTRUCTION_WRITE_FORBIDDEN")
+            self.assertIsNone(repair_diag.message)
+            adopt_refused = adopt_instructions(request("adopt", root))
+            self.assertFalse(adopt_refused.green)
+            adopt_diag = next(item for item in adopt_refused.diagnostics
+                              if item.code == "INSTRUCTION_WRITE_FORBIDDEN")
+            self.assertIsNone(adopt_diag.message)
 
     def test_managed_drift_update_refuses_and_explicit_repair_preserves_outside(self):
         with tempfile.TemporaryDirectory() as temp:

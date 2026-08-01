@@ -69,7 +69,7 @@ items не перенумеровываются. Во всех остальны�
 | P3.3 | solo | manual | implementation/high | ✅ **OQ-5** `disable-model-invocation` | гейт владельца ВНУТРИ item'а → батчить запрещено (§9 D6) |
 | P3.4 | **B1** | run-items | implementation/high | — | отбор под `context: fork`; независим от P3.5 (оба потребляют P3.1/P3.2, не друг друга) |
 | P3.5 | **B1** | ↑ | implementation/high | — | `when_to_use` + сжатие + пере-база гейтов `validate.sh`; правит Статус `roadmap/skill-description-quality.md`, НЕ удаляя её (D57) |
-| P4.1 | solo | manual | frontier/high | — | переиздание parse-контракта — замораживаемая поверхность драйвера |
+| P4.1 | solo | manual | frontier/high | — | **закрыт 🟢 2026-08-01** (`07c87638`) — parse-контракт `root/contracts/driver-plan-protocol-v2.md` издан: пин на коммит `06fefc87` + скилл v2.22.0 + клиент 2.1.220, у драйвера ДВА собственных разбора (ячейка `Exec`, токен формы `Next`) |
 | P4.2 | solo | manual | implementation/high | — | **сцеплен по данным:** P4.4/P4.6 потребляют его поля — батч запрещён критерием §9 |
 | P4.3 | solo | manual | implementation/high | — | процессный запуск чужого CLI; P4.4/P4.5 потребляют его класс исхода |
 | P4.4 | solo | manual | implementation/high | — | вердиктная таблица; Inputs — от P4.2 и P4.3 |

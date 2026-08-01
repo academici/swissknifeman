@@ -1,91 +1,109 @@
-# HANDOFF — 2026-08-01 — after P3
+# HANDOFF — 2026-08-01 — after P4.1
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: `frontier/high`» — P4.1 `Exec = manual` (`roadmap.md` строка P4.1);
-Execution Rules плана и `roadmap.md` не называют `plan-exec`/`plan-run` для P4.1, издающего
-голый промпт item'а отдельным code-block.
+**Next:** manual: `implementation/high` — P4.2 `Exec = manual` (`plan.md` §3, `roadmap.md`
+строка P4.2: solo, батч запрещён критерием §9 — P4.4/P4.6 сцеплены с ним по данным).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Opus 5 |
-| Thinking | high — замораживаемая поверхность драйвера, решения необратимы (`roadmap.md` P4.1) |
-| Context | continue (/clear) — ручной item |
-| Суть | Издать `root/contracts/driver-plan-protocol-v2.md` — переиздание parse-контракта против живого `plan-protocol` v2.21.0+ |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | `plan_reader` — очередь фазы, маршрут, ячейка `Exec`, форма `Next`; чистые функции против пинованного контракта P4.1 |
 
-```
-Прочитай plans/2026.07.31-SKM-LEAN/phases/P4.md item P4.1 целиком (Intent, Why, Scope
+````
+Прочитай plans/2026.07.31-SKM-LEAN/phases/P4.md item P4.2 целиком (Intent, Why, Scope
 Included/Excluded, Inputs, Files, Required Reads, Implementation Rules, Code Guidance,
-Validation, Deliverables) и исполни его строго по ТЗ. Пометь item 🟡 In progress до начала
-практической работы, затем закрой по правилам plan-protocol (Task Contract pre-mutation/
-pre-final, Completion Notes, Known Deviations, журнал, два коммита).
-```
+Validation, Deliverables) и исполни его строго по ТЗ. ПЕРВЫМ Required Read — целиком
+plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md (без него item не
+исполняется): §2 даёт закрытый список источников и команды, §3.1 — зеркало матчера ячейки
+Exec, §3.2 — границы разбора формы Next, §4 — дословные литералы канона. Пометь item
+🟡 In progress до начала практической работы, затем закрой по правилам plan-protocol
+(Task Contract pre-mutation/pre-final, Completion Notes, Known Deviations, журнал, два
+коммита).
+````
 
-**Done:** Этим заходом — **`plan-close` режим Pn (закрытие фазы)** (сессия sonnet/low,
-механическая реконсиляция) — фаза **P3**.
+**Done:** Этим заходом — **P4.1** (`manual`-путь, сессия opus/high), первый item фазы P4.
 
-- Все 6 items фазы терминальны: P3.1 🟢 · P3.6 🟠 · P3.2 🟠 · P3.3 🟠 · P3.4 🟢 · P3.5 🟠
-  (сверено с `## Phase Status` `phases/P3.md` и `## 4. Phase Index & Status Board` `plan.md` —
-  без расхождений, `2/6` до и после).
-- Docs-sync: **не требуется** — `docs/guide/skill-taxonomy.md` (критерий отбора под форк +
-  таблица тиров) и `docs/guide/cli.md` (строка «исключено записей») уже обновлены внутри
-  item-коммитов `8f5206ba`/`51d68837`/`a4adcd3b`.
-- `## Phase Handoff` в `phases/P3.md` заполнен: сдача, механически собранные Known Deviations
-  всех 6 items (перечислены по item'ам, без пересказа), docs-sync вердикт, «что дальше».
-- `closure/P3.json` (Closure Protocol v1) записан: 6 items, `evidence_class: real`, гейты
-  `validate.sh`/`test.sh`/`registry --check` PASS, метрики (`items_green_of_total: 2/6`,
-  `first_turn_repo_tokens: 7179 → 7176`, `desc_trigger_burndown: 69 → 61`,
-  `context_fork_skills: 4`), `limitations` — три пункта (нераскатанный `paths:`,
-  `disable-model-invocation` за пределы пилота, остаток burn-down/тиров).
-- `plan.md`: строка `## 6. Update Log` добавлена, `Last Updated` в `## 0. Meta` обновлён;
-  `Status` плана НЕ трогается — P4–P7 ещё не терминальны, план не закрыт целиком.
-- Журнал: `plan-close/sonnet-low/closed-deviations` для item `P3` (`journal.jsonl`).
-- Все фазы плана НЕ терминальны целиком (P4–P7 ещё `⬜`) — `plans/ACTIVE.md` не тронут,
-  остаётся `2026.07.31-SKM-LEAN`.
+- Издан `plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md` (item-коммит
+  **`07c87638`**) — действующая parse-спека драйвера exec-волны; каталог `root/contracts/`
+  заведён этим item'ом.
+- **Пин на КОММИТ, не на «latest»:** скилл `plan-protocol` **v2.22.0** @ **`06fefc87`**
+  (родитель item-коммита), клиент **`2.1.220 (Claude Code)`**, дата сверки якорей 2026-08-01;
+  воспроизведение — `git rev-parse 06fefc87^{commit}`.
+- **Транспортный §JSON пере-снят ЖИВЫМ прогоном 2026-08-01** (не унаследован из `findings/`):
+  тот же 21 ключ конверта, `type=result · subtype=success · is_error=False ·
+  terminal_reason=completed`, exit 0; флаг лимита ходов — **0** совпадений на 230 строках
+  `claude --help`, утверждение донора о нём не унаследовано ни строкой.
+- **У драйвера ДВА собственных разбора, а не один.** Второй заведён по Implementation Rules (2)
+  с обоснованием: `plan-lint.py --json` отдаёт СЫРОЕ поле `**Next:**`, а резолвленную форму
+  внутрь модели не кладёт (ключи `handoff` = `path`/`title_ref`/`fields`). §3.2 сводит разбор к
+  префиксному токену по закрытому набору `plan_lint.SEMANTIC_NEXT_RE` и называет границы:
+  легальность формы гейтит линтер, условие формы `waiting:` драйвер НЕ вычисляет.
+- Контракт несёт: таблицу «читаемый факт → источник → команда» (S1–S5), дословные enum'ы 11
+  форм `Next` и 6 статусов, шапки Status Board / `## Phase Status`, топологию двух коммитов с
+  уточнением состава по D75, таблицу «событие → КЛАСС вердикта» + три правила поверх неё,
+  **шесть** якорей breaking-детекта с единственным действием «стоп волны + эскалация»,
+  **пять** `[UNVERIFIED]` с адресами, границу провайдера v2 (`claude -p`; Codex — незакрытый
+  вопрос, не умолчание) и §11 «что контракт НЕ фиксирует».
+- Историчный контракт донора не правился (`git status --porcelain plans/archive/` — пусто),
+  назван в frontmatter полем `provenance`.
+- Журнал: `plan-run`/`opus/high` — старт-запись `in-progress` и финал `closed-green` для
+  `P4.1` (`run_id: null` — строки исполнителя, не волны).
 
-**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · **P3 2/6, 🟠 Done with deviations,
-терминальна, `closure/P3.json` записан** · P4 0/6 (⬜) · P5 0/9 (⬜) · P6 0/3 (⬜) · P7 0/4
-(⬜). Всего 38 items. P4.1 — первый нетерминальный item (уже задетализирован, не скелет).
+**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠, терминальна) · **P4 1/6
+(🟡 In progress)** · P5 0/9 (⬜) · P6 0/3 (⬜) · P7 0/4 (⬜). Всего 38 items. Следующий —
+**P4.2** (`plan_reader`), далее строго последовательно P4.3 → P4.4 → P4.5 → P4.6: items фазы
+сцеплены по данным, оркестрация не заявлена.
 
-**Sources of truth:** `phases/P3.md` §Phase Handoff (сдача фазы, собранные Known Deviations) ·
-`closure/P3.json` · `plan.md` §4 доска, §6 Update Log, `## 0. Meta` · `journal.jsonl` (запись
-`P3`, `plan-close/closed-deviations`) · `roadmap.md` (маршрут P4.1 — `Exec = manual`).
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/root/contracts/driver-plan-protocol-v2.md`
+(единственная действующая parse-спека драйвера; §2 — источники, §3 — собственные разборы, §8 —
+breaking-детект) · `phases/P4.md` P4.1 Completion Notes · `plan.md` §4 доска, §6 Update Log,
+`## 0. Meta` · `roadmap.md` (маршрут P4.2 — `Exec = manual`, solo) · `journal.jsonl` (две
+записи `P4.1`) · `research/04-p4-driver-model.md` (модель фазы).
 
 **Open risks:** без изменений по содержанию от предыдущего handoff, кроме закрытия пункта про
-P3, плюс:
+P4.1, плюс:
 
-- **Остаток `desc-trigger-burndown.txt` — 61 запись** вне бакета `general`; следующий по
-  приоритету — `devops` (score 0.216, 8 записей) — продолжение той же usage-приоритизацией,
-  не батчем (`findings/P3-desc-burndown.md` §1). Адрес — вне этого плана (roadmap-долг фазы P3).
-- **221 из 229 скиллов реестра без тиров `model:`/`effort:`** — таблица/гейт применимости
-  готовы (`docs/guide/skill-taxonomy.md`), раскатка не входила в Validation P3.5.
-- **`paths:` не раскатан на реестр** (0 из 229) — отрицательный вердикт (доминирование
-  `disable-model-invocation`, D98) — названная граница, не долг.
-- **`disable-model-invocation` не раскатан за пределы 4 пилотных скиллов** — решение владельца
-  OQ-5 → (A), структурный критерий пере-открытия D99.
-- **14 файлов `evals.json`/`pressure.json`-заглушек** (7 скиллов) — TODO-скаффолд, `rm`
-  заблокирован харнесс-гейтом — не мусор, валидная схема.
-- **OQ-9:** табличная строка `ACCEPTANCE_NOT_PUBLIC` остаётся в клетке «реальный» вопреки D77 —
-  владелец вне этого плана.
-- **Долг D90 не закрыт:** 33 items плана дают ОДНУ acceptance-запись и зелены случайно.
-- **3 реальных дефекта в `snippets/` скилла `devops/db-test-preflight`**
-  (`findings/P3-fork-selection.md` §5) — вне Scope P3.4, отдельный fix-item.
-- **`oss-dev/to-issues`/`oss-dev/issue-triage`** — правдоподобные кандидаты под `context: fork`,
-  отложены до безопасного стенд-режима (внешний side-effect).
-- **`quality/tech-debt-audit`** — правдоподобный кандидат, не разобран поштучно — реопен тем же
-  критерием.
-- **Фиксированная обвязка записи листинга ≈28–30 ток не смоделирована** — отдельный item и
-  решение владельца.
-- **Стенд `p3-1-native-fields-bench.sh` не умеет гонять произвольный бакет реестра** — граница
-  осталась как есть.
-- (в силе) конфликт правил в ТЗ P3.6 · токен `contradictory evidence` вне enum §10 · дефект
-  генератора `.mcp.json.example` · path-scoped rules только на пилоте `dterema/app` ·
-  `resolve_active_set` слеп к плагинам и «сырым» `.claude/skills/**` · Boost/`.ai`-CLAUDE.md
-  флот не покрыт P2.2 · пять секций-кандидатов P2.1 резидентны (D89) · гейт размера файла
-  целиком · токенная оценка продублирована в двух пакетах · `closure/P1.json` hash устарел
-  (D87, теперь и `phases/P3.md` снова изменён этим заходом) · остаточная находка
-  `verify-citations` в `phases/P2.md` (P2.3).
-- **В рабочем дереве есть чужой дифф** (`.gitignore`, удалённый
-  `RESEARCH/AUDIT-loqum-findings.md`, неотслеживаемые `.swissknife/`, `audits/`) — этим заходом
-  не тронут и не коммитился.
+- **Пять `[UNVERIFIED]` контракта с адресами:** U1 конверт при исчерпании квоты · U2 exit-коды
+  на сбоях · U3 применимость `--effort` в `-p` — все три закрываются наблюдением в **P4.3**;
+  U4 «чем парсится прогон Codex» — вне скоупа плана (D9), адрес вне плана; U5 экономика
+  волны — меряет **P4.6**. Умолчание вместо пометки в контракте запрещено — при закрытии
+  пункта контракт бампается.
+- **Контракт пинован на `06fefc87`, канон живёт своей жизнью** (13 minor за 11 дней июля):
+  перед волной сверяются три строки — версия скилла из frontmatter, `git rev-parse HEAD`,
+  `claude --version`. Расхождение любой — требование сверить шесть якорей §8 и бампнуть
+  контракт, невозможность сверить — стоп и эскалация.
+- **Гейт цитат не покрывает `root/**`** (находка этого захода): поверхность —
+  семь шаблонов внутри `plans/<ID>/` (`verify-citations.py:109–121`), каталог долгоживущих
+  контрактов в неё не входит, поэтому цитаты изданного parse-контракта прибором НЕ проверены
+  (сверены вручную — 13/13 ссылок `файл:строка` резолвятся). Предложение — расширить
+  `SCAN_PATTERNS` на `root/**`; правка вне `Files` P4.1, владелец прибора — план, канонизировавший
+  D128.
+- **Два WARN линтера по фазе P4** — латентные ложные срабатывания на ТЕКСТЕ фазы (DoR-строка с
+  буквальной формой маркера-плейсхолдера `phases/P4.md:67`; `оркестрац` без понимания отрицания
+  в `:87` и в `Required Reads` P4.6 `:211`), вскрывшиеся стартом фазы, а не диффом item'а — тот
+  же класс, что уже зафиксирован P1.1 и живёт в фазах P1/P3. Адрес — `plan-close <ID> P4` либо
+  отдельный fix-item.
+- **Второй собственный разбор драйвера (токен формы `Next`)** — точка, где легко вырасти
+  третьему: любой новый факт без источника из S1–S3 обязан править КОНТРАКТ, а не заводить
+  парсер (правило §8, зеркало Code Guidance P4.2).
+- (в силе) остаток `desc-trigger-burndown.txt` 61 запись · 221/229 скиллов без тиров
+  `model:`/`effort:` · `paths:` не раскатан (D98) · `disable-model-invocation` только на 4
+  пилотных · 14 файлов evals-заглушек · **OQ-9** (`ACCEPTANCE_NOT_PUBLIC` против D77, владелец
+  вне плана) · долг **D90** (33 items дают ОДНУ acceptance-запись — P4.1 в их числе: его
+  `Validation` компилируется в одну публичную запись, `pre_final: allow` получен на ней) · 3
+  дефекта в `snippets/` `devops/db-test-preflight` · кандидаты под `context: fork` отложены ·
+  конфликт правил в ТЗ P3.6 · токен `contradictory evidence` вне enum §10 · дефект генератора
+  `.mcp.json.example` · path-scoped rules только на пилоте `dterema/app` · `resolve_active_set`
+  слеп к плагинам · Boost/`.ai`-CLAUDE.md флот не покрыт P2.2 · пять секций-кандидатов P2.1
+  резидентны (D89) · гейт размера файла целиком · токенная оценка продублирована в двух
+  пакетах · `closure/P1.json` hash устарел (D87) · остаточная находка `verify-citations` в
+  `phases/P2.md` (P2.3).
+- **В рабочем дереве есть чужой дифф** (`.gitignore`, удалённый `RESEARCH/AUDIT-loqum-findings.md`,
+  неотслеживаемые `.swissknife/`, `audits/`) — этим заходом не тронут и не коммитился.
 
-**Workarounds/Deferred/Open questions:** без изменений от предыдущего handoff (см. Open risks
-выше) — фаза P3 закрыта, новых open questions этим заходом не заведено.
+**Workarounds/Deferred/Open questions:** обходных приёмов этим заходом не применялось. Отложено
+контрактом явно: экономика волны (U5 → P4.6), Codex-водитель (U4 → вне плана, D9). Новых open
+questions не заведено; открытых остаётся **три** — OQ-3 · OQ-6 · OQ-8 — плюс OQ-9 (владелец
+протокола, вне этого плана).

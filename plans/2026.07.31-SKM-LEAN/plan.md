@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P3.5 закрыт 🟠 — гейты `validate.sh` пере-базированы на совокупную запись листинга, бакет `general` закрыт целиком, фаза P3 терминальна; ждёт штатного `plan-close P3`) |
+| Last Updated | 2026-08-01 (Фаза P3 закрыта 🟠 Done with deviations — 2/6 🟢, 4/6 🟠, `closure/P3.json` записан) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -302,6 +302,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-design/frontier | Тем же заходом: заведён слой 2 разбора (`research/12-D100-acceptance-not-public-2026-08-01.md`), заведён **OQ-9** (табличная строка `ACCEPTANCE_NOT_PUBLIC` против D77 — владелец протокола, вне этого плана), развилка **34** `## Обсуждение` |
 | 2026-08-01 | plan-close/sonnet-low | **P3.4 закрыт: 🟢 Done** — сверка по фактам, Task Contract свежим прогоном `pre_mutation: allow · pre_final: allow`, `validate.sh`/`registry --check`/`plan-lint` зелены — детали см. `phases/P3.md` P3.4 Completion Notes |
 | 2026-08-01 | plan-run/sonnet-high | **P3.5 закрыт: 🟠 Done with deviations** — гейты пере-базированы, `general`-бакет закрыт целиком, **фаза P3 терминальна** — детали см. `phases/P3.md` P3.5 Completion Notes |
+| 2026-08-01 | plan-close/sonnet-low | **Фаза P3 закрыта: 🟠 Done with deviations** — 2/6 🟢, 4/6 🟠, docs-sync не требуется (обновлено внутри items), `closure/P3.json` записан — детали см. `phases/P3.md` §Phase Handoff |
 
 ## 7. Contracts
 

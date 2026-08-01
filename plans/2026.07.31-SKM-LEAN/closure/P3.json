@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P3",
+  "closed_at": "2026-08-01",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "c578a74dd0bdf556fa21c44cfc6ee35fd6743885", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "c1975a808b45e6697fc532e47a2ddd62bbc1d0edf3b319ad7fb69b4ee2b3168a",
+    "phases/P3.md": "7afdf02ca64a60dd9da7f7104ece194d3167f7b8b2cedfde00a10390ccada095"
+  },
+  "items": [
+    {"id": "P3.1", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "A/B-стенд на живой 2.1.220, вердикт по 5/6 полей подтверждён доком, `paths:` дал противоречащий доку результат (D95/D96/D97)"},
+    {"id": "P3.6", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "дозамер механизма `paths:` — Механизм: (C) условная загрузка (B1→B2 переключение); полная матрица P3.1 прогнана живьём вопреки собственному запрету (Known Deviations #1)"},
+    {"id": "P3.2", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "модель листинга пере-издана (`a4adcd3b`, −393 ток на репозитории), вердикт `paths:` — не раскатываем (доминирование), OQ-2 → (A)"},
+    {"id": "P3.3", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "гейт владельца OQ-5 предъявлен до правки, решение — (A) не применяем (D99), раскатка 0/48 бакетов знаменатель явный"},
+    {"id": "P3.4", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`context: fork` на 4 скиллах (`8f5206ba`), 8/8 стенд-прогонов непустые, эскалация D100 снята D101"},
+    {"id": "P3.5", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "гейты `validate.sh` пере-базированы на совокупную запись листинга, бакет `general` закрыт целиком (69→61), `test.sh` 567→571 (`51d68837`)"}
+  ],
+  "gates": [
+    {"id": "validate.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/validate.sh — зелёный на item-коммитах P3.1–P3.6"},
+    {"id": "test.sh:skiller", "status": "PASS", "evidence_class": "real",
+     "evidence": "bash packages/skiller/scripts/test.sh — 567→571 тестов, OK (`51d68837`)"},
+    {"id": "registry --check", "status": "PASS", "evidence_class": "real",
+     "evidence": "skiller registry --check — артефакты актуальны (все item-коммиты фазы)"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "2/6", "label": "real"},
+    {"name": "first_turn_repo_tokens", "value": "7179 → 7176", "label": "real"},
+    {"name": "desc_trigger_burndown", "value": "69 → 61", "label": "real"},
+    {"name": "context_fork_skills", "value": "4", "label": "real"}
+  ],
+  "limitations": [
+    "P3.2/P3.3: `paths:` не раскатан на реестр (отрицательный вердикт — доминирование `disable-model-invocation`)",
+    "P3.3: OQ-5 закрыт решением (A) — `disable-model-invocation` за пределы 4 пилотных скиллов не раскатан",
+    "P3.5: остаток `desc-trigger-burndown.txt` — 61 запись вне бакета `general`; тиры `model:`/`effort:` не назначены 221 из 229 скиллов"
+  ],
+  "external_side_effects": []
+}

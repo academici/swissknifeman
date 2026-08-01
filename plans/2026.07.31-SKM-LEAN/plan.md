@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P4.5 закрыт 🟢 — `run/journal.py` реализован, фаза P4 5/6) |
+| Last Updated | 2026-08-01 (P4.6 закрыт 🟢 — `harness run` CLI + двупронговая приёмка, фаза P4 6/6) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -121,7 +121,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
 | P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
-| P4 | Драйвер exec-волны | 5/6 | 🟡 In progress |
+| P4 | Драйвер exec-волны | 6/6 | 🟢 Done |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
 | P7 | Закрытие roadmap в ноль | 0/4 | ⬜ Not started |
@@ -315,6 +315,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-design/frontier | **Эскалация P4.4 снята (v1.0.10, D103–D106):** «закрытие не закоммичено» → RED, ATTENTION за бандлом, таблица тотальна; P4.4 `🔴 → ⬜`, четыре носителя ТЗ синхронизированы — детали см. `phases/P4.md` P4.4, `research/13-D102-bookkeeping-verdict-2026-08-01.md` |
 | 2026-08-01 | plan-run/sonnet-high | **P4.4 закрыт: 🟢 Done** — `run/gate.py` реализован (вердикт из 4 источников, таблица тотальна), 598 тестов зелены, фаза P4 4/6 — детали см. `phases/P4.md` P4.4 Completion Notes |
 | 2026-08-01 | plan-run/sonnet-high | **P4.5 закрыт: 🟢 Done** — `run/journal.py` реализован (`WHO_WRITES`/`classify`/`maybe_write`/`summarize_wave`, D32 без двойной записи), 618 тестов зелены, фаза P4 5/6 — детали см. `phases/P4.md` P4.5 Completion Notes |
+| 2026-08-01 | plan-run/sonnet-high | **P4.6 закрыт: 🟢 Done** — `harness run` CLI + двупронговая приёмка (D33, `findings/P4-wave-acceptance.md`), 630 тестов зелены, фаза P4 6/6 — детали см. `phases/P4.md` P4.6 Completion Notes |
 
 ## 7. Contracts
 

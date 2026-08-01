@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 try:  # package invocation used by the focused P4 command-projection gate
@@ -20,8 +21,13 @@ except ImportError:  # direct discovery from packages/task remains supported
         active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
         phase_md, plan_md, write_closure, write_valid_plan,
     )
+import task.plan_lint as plan_lint_module  # noqa: E402 — --conflicts: monkeypatch реестров
 from task.plan_lint import (  # noqa: E402
-    Diagnostics, _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
+    CANON_LITERALS, CONTEXT_VALUES, REQUIRED_ITEM_FIELDS, SEMANTIC_NEXT_RE, STATUSES,
+    Diagnostics, _conflicts_context_values, _conflicts_i18n_literals, _conflicts_item_fields,
+    _conflicts_launch_table_regex, _conflicts_next_forms, _conflicts_statuses, _find_skill_ru,
+    _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
+    run_conflicts_check,
 )
 from task.journal import append_exception, line_sha256, new_exception  # noqa: E402
 
@@ -2075,6 +2081,205 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
             code = main([str(self.root / "no-such-plans")])
         self.assertEqual(code, 1)
         self.assertIn("ERROR:", err.getvalue())
+
+
+class TestDuplicateItemFieldGate(unittest.TestCase):
+    """D90 (2026.07.31-SKM-LEAN P5.9) — `**Поле:**`-строка внутри свободной прозы другого
+    поля (напр. Completion Notes) молча подменяла приёмочное значение: и `plan_lint`, и
+    `task_contract` берут ПОСЛЕДНЕЕ вхождение ключа. Воспроизведено на P2.2 2026-07-31
+    (`research/10-validation-acceptance-form-2026-07-31.md`)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_duplicate_validation_field_in_completion_notes_is_error(self):
+        plan_dir = write_valid_plan(self.root)
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        needle = "**Completion Notes:** сделано, тест зелёный"
+        self.assertIn(needle, text)
+        injected = (needle + "\n**Validation:** переприёмка на item-коммите abc123 — зелёная "
+                   "(инлайн-заметка, НЕ настоящее поле)")
+        p1.write_text(text.replace(needle, injected, 1), encoding="utf-8")
+        diag = Diagnostics()
+        lint_plan(plan_dir, diag)
+        hits = _errors_containing(diag, "поле «Validation» встречается повторно")
+        self.assertTrue(hits, diag.errors)
+        self.assertTrue(any("P1.1" in h for h in hits), hits)
+
+    def test_no_duplicate_is_silent(self):
+        plan_dir = write_valid_plan(self.root)
+        diag = Diagnostics()
+        lint_plan(plan_dir, diag)
+        self.assertEqual(_errors_containing(diag, "встречается повторно"), [])
+
+
+class TestConflictsFlagUnits(unittest.TestCase):
+    """Юниты `--conflicts` (2026.07.31-SKM-LEAN P5.9) на СИНТЕТИЧЕСКОМ каноне — фиксируют
+    ФОРМУ сверки, независимо от текущего текста живого `SKILL.ru.md` (тот же принцип, что
+    `test_canon_literals.py::TestT1CollectorVectors`). Живой прогон против реального канона
+    покрыт `TestConflictsFlagLiveRepo` ниже."""
+
+    def _diag(self):
+        return Diagnostics()
+
+    # --- статусы -------------------------------------------------------------
+    def test_statuses_consistent_is_silent(self):
+        lines = ["РОВНО 6 канонических строк — копировать байт-в-байт:", "```text",
+                 *STATUSES, "```"]
+        diag = self._diag()
+        _conflicts_statuses(lines, Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_statuses_mismatch_is_error_with_both_sides(self):
+        corrupted = STATUSES[:3] + ("🟠 Done with STRANGE deviations",) + STATUSES[4:]
+        lines = ["РОВНО 6 канонических строк — копировать байт-в-байт:", "```text",
+                 *corrupted, "```"]
+        diag = self._diag()
+        _conflicts_statuses(lines, Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        [msg] = diag.errors
+        self.assertIn("SKILL.ru.md:", msg)
+        self.assertIn("plan_lint.py:", msg)
+        self.assertIn("STRANGE", msg)
+
+    # --- 16 полей item'а -------------------------------------------------------
+    def test_item_fields_consistent_is_silent(self):
+        lines = ["- **Items.** Поля — СТРОГО строками",
+                 "  `**Поле:** значение`, в этом порядке:",
+                 f"  `{', '.join(REQUIRED_ITEM_FIELDS)}`."]
+        diag = self._diag()
+        _conflicts_item_fields(lines, Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_item_fields_reordered_is_error(self):
+        shuffled = REQUIRED_ITEM_FIELDS[1:] + REQUIRED_ITEM_FIELDS[:1]
+        lines = ["- **Items.** Поля — СТРОГО строками",
+                 "  `**Поле:** значение`, в этом порядке:",
+                 f"  `{', '.join(shuffled)}`."]
+        diag = self._diag()
+        _conflicts_item_fields(lines, Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "16-полей"), diag.errors)
+
+    # --- формы Next ------------------------------------------------------------
+    def _code_next_kinds(self):
+        import re
+        gm = re.search(r"\^\((.*?)\):", SEMANTIC_NEXT_RE.pattern)
+        return gm.group(1).split("|")
+
+    def test_next_forms_consistent_is_silent(self):
+        lines = ["**Допустимые формы `Next`**:", "```text", "| Форма Next | Когда |",
+                 "|:--|:--|"]
+        lines += [f"| {kind}: пример | пояснение |" for kind in self._code_next_kinds()]
+        lines += ["Иная форма = ERROR plan-lint.", "```"]
+        diag = self._diag()
+        _conflicts_next_forms(lines, Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_next_forms_missing_one_is_error(self):
+        kinds = self._code_next_kinds()[:-1]  # без последней формы (waiting)
+        lines = ["**Допустимые формы `Next`**:", "```text", "| Форма Next | Когда |",
+                 "|:--|:--|"]
+        lines += [f"| {kind}: пример | пояснение |" for kind in kinds]
+        lines += ["Иная форма = ERROR plan-lint.", "```"]
+        diag = self._diag()
+        _conflicts_next_forms(lines, Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "формы Next"), diag.errors)
+
+    # --- три значения Context ----------------------------------------------
+    def test_context_values_consistent_is_silent(self):
+        lines = ["Context launch-block'а несёт РОВНО одно из трёх значений — не общее:"]
+        lines += [f"- **`{v}`** — пояснение." for v in CONTEXT_VALUES]
+        diag = self._diag()
+        _conflicts_context_values(lines, Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_context_values_mismatch_is_error(self):
+        corrupted = ("same-session — item", "cold-start — orchestration", "cold-start — WRONG")
+        lines = ["Context launch-block'а несёт РОВНО одно из трёх значений — не общее:"]
+        lines += [f"- **`{v}`** — пояснение." for v in corrupted]
+        diag = self._diag()
+        _conflicts_context_values(lines, Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "Context"), diag.errors)
+
+    # --- литералы i18n-keep ------------------------------------------------
+    def test_i18n_undeclared_literal_is_error(self):
+        fake_literal = "тестовый-небъявленный-литерал-P5-9"
+        diag = self._diag()
+        with unittest.mock.patch.object(
+                plan_lint_module, "CANON_LITERALS", CANON_LITERALS + (fake_literal,)):
+            _conflicts_i18n_literals("текст канона без директив", ["текст канона без директив"],
+                                     Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, fake_literal), diag.errors)
+
+    def test_i18n_all_declared_is_silent(self):
+        skill_text = "".join(f"<!-- i18n-keep: {lit} -->\n" for lit in CANON_LITERALS)
+        diag = self._diag()
+        _conflicts_i18n_literals(skill_text, skill_text.splitlines(), Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    # --- регекс-носители формы launch-block'а -------------------------------
+    def test_launch_table_regex_matches_canon_rows_is_silent(self):
+        lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
+                 "| Effort | ... |", "| Context | ... |", "| Суть | ... |",
+                 "| Команда | `...` |"]
+        diag = self._diag()
+        _conflicts_launch_table_regex(lines, Path("SKILL.ru.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_launch_table_missing_command_row_is_error(self):
+        lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
+                 "| Effort | ... |"]
+        diag = self._diag()
+        _conflicts_launch_table_regex(lines, Path("SKILL.ru.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "LAUNCH_COMMAND_ROW_RE"), diag.errors)
+
+
+class TestConflictsFlagLiveRepo(unittest.TestCase):
+    """`--conflicts` против РЕАЛЬНОГО `SKILL.ru.md` — Validation п.6 (первый прогон на живом
+    дереве). Standalone-раскладка (пакет `task` вне монорепо) — тест пропускается, не падает:
+    тот же класс деградации, что `test_canon_literals.py`."""
+
+    def setUp(self):
+        if _find_skill_ru() is None:
+            self.skipTest("standalone-раскладка: SKILL.ru.md не найден от plan_lint.py вверх")
+
+    def test_conflicts_green_on_live_canon(self):
+        diag = Diagnostics()
+        run_conflicts_check(diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_main_conflicts_flag_exit_0(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main(["--conflicts"])
+        self.assertEqual(code, 0)
+        self.assertIn("OK", out.getvalue())
+
+    def test_main_path_optional_with_conflicts(self):
+        """Implementation Rule 5: `path` необязателен при `--conflicts` (back-compat
+        позиционного `path` без флага сохраняется — см. `test_main_without_conflicts_or_path_errors`)."""
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main(["--conflicts"])
+        self.assertEqual(code, 0)
+
+    def test_main_without_conflicts_or_path_errors(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as ctx:
+            with contextlib.redirect_stdout(io.StringIO()):
+                main([])
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn("path обязателен без --conflicts", err.getvalue())
 
 
 if __name__ == "__main__":

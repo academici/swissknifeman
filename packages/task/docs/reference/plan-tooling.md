@@ -3,7 +3,9 @@
 Два stdlib-скрипта в `plans/` (не в `packages/task/lib/`, не встроены в `plan_lint.py` —
 у каждого свой предмет): `cross-plan-files.py` (межплановые пересечения `Files`) и
 `verify-citations.py` (ссылки-доказательства резолвятся до факта). Оба — CLI одной формы:
-человекочитаемый отчёт всегда, `--strict` переключает только exit-код.
+человекочитаемый отчёт всегда, `--strict` переключает только exit-код. Третий гейт живёт
+В `plan_lint.py` самом (`packages/task/lib/task/plan_lint.py` + лаунчер
+`packages/task/scripts/plan-lint.py`) — режим `--conflicts`, задокументирован ниже.
 
 ## `plans/verify-citations.py`
 
@@ -86,3 +88,39 @@ Pending Work (правка ТЗ закрытых items вне скоупа тр�
 
 См. докстринг файла — сверка `Files` между живыми планами, `--strict` baseline-режим против
 `cross-plan-known-intersections.json`.
+
+## `plan-lint.py --conflicts`
+
+Третья нога конфликт-скана `plan-audit-loop.md` §A.1 (2026.07.31-SKM-LEAN P5.9) — детерминированная
+сверка «канон (`SKILL.ru.md`) ↔ реализация (реестры-константы `plan_lint.py`)», **без аргумента-плана**
+(артефакт-проверка, не линт конкретного `plans/<ID>`; `path`, если передан, игнорируется):
+
+```bash
+python3 packages/task/scripts/plan-lint.py --conflicts
+```
+
+Первые две ноги конфликт-скана (свежесть перевода RU→EN, присутствие `i18n-keep` литералов в
+EN-каноне и в теле RU-источника) — `packages/skiller/scripts/check-translations.sh`; `--conflicts`
+их НЕ дублирует. Шесть сверяемых классов, каждая находка — обе стороны с `файл:строка`
+(«канон говорит X → реализация говорит Y»):
+
+1. шесть канонических статусов (`STATUSES`) ↔ SKILL.ru.md §6;
+2. 16 полей item'а и их порядок (`REQUIRED_ITEM_FIELDS`) ↔ SKILL.ru.md §5;
+3. закрытый enum форм `Next` (альтернация `SEMANTIC_NEXT_RE`) ↔ SKILL.ru.md §8 «Допустимые формы Next»;
+4. три значения `Context` (`CONTEXT_VALUES`) ↔ SKILL.ru.md §8 «Session-restart discipline»;
+5. литералы `i18n-keep` (`CANON_LITERALS`) ↔ директивы `<!-- i18n-keep: … -->` в SKILL.ru.md (тот
+   же предикат, что T2 `packages/task/tests/test_canon_literals.py`, доступный из CLI без unittest);
+6. регекс-носители формы launch-block'а (`LAUNCH_TABLE_ROW_RE`/`LAUNCH_COMMAND_ROW_RE`) ↔ строки
+   канон-таблицы `| Параметр | Значение |` в SKILL.ru.md §8.
+
+Standalone-раскладка (пакет `task` вне монорепо, `SKILL.ru.md` недоступен от расположения
+`plan_lint.py` вверх) — `WARN` + exit 0, сверка пропущена (та же деградация, что
+`test_canon_literals.py`). Зарегистрирован ступенью `packages/task/scripts/validate.sh` и первой,
+самой дешёвой командой конфликт-скана `packages/task/commands/plan-audit.md` (§1).
+
+Отдельно, в РЕЖИМЕ ПЛАНА (без `--conflicts`, обычный `plan-lint.py plans/<ID>`) — диагностика
+**повтора поля** внутри тела item'а (D90): строка `**Поле:** значение`, случайно совпавшая по
+форме внутри свободной прозы другого поля (например, `**Validation:** …`, дописанная как
+инлайн-заметка в Completion Notes), молча подменяла собой РАННЕЕ легитимное значение поля — и у
+`plan_lint`, и у `task_contract`, оба берут ПОСЛЕДНЕЕ вхождение. ERROR называет item, поле и обе
+строки (`файл:строка` каждой).

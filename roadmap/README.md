@@ -21,7 +21,6 @@
 
 | Файл | Остаток | Статус | Критерий остатка |
 |:--|:--|:--|:--|
-| [`plan-audit-loop.md`](plan-audit-loop.md) | Правила остановки аудита внедрены (`packages/task/commands/plan-audit.md`: две ступени, порог severity, потолок 2 раунда). **Остаток — детерминированная CLI-ступень** `plan-lint --conflicts` (машинная сверка трёх SSOT перед дорогим проходом) | 🟡 остаток | Ручной конфликт-скан повторно съедает opus-раунды — тогда механизируем |
 | [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
 | [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, ECO-OPT D74) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
 
@@ -61,6 +60,7 @@
 |:--|:--|
 | `agent-command-router-hook.md` | `packages/harness/configs/claude-code/hooks/agent-router/` + `harness router` + провиженер `router-config` в `maind sync` |
 | `playwright-mcp-output-dir.md` | `--output-dir .playwright-mcp` + пиновка `@playwright/mcp@0.0.78` на трёх носителях обоих провайдеров (`2026.07.31-SKM-LEAN` P5.6) |
+| `plan-audit-loop.md` | Правила остановки — `packages/task/commands/plan-audit.md` (две ступени, порог severity, потолок 2 раунда). CLI-ступень — `plan-lint.py --conflicts` (`packages/task/lib/task/plan_lint.py`, `2026.07.31-SKM-LEAN` P5.9), названа первой, дешёвой командой конфликт-скана в `plan-audit.md` §1 |
 | `settings-doctor.md` | `harness doctor --settings` (`lib/harness/settings_audit.py`) · `skiller doctor --settings` · `maind doctor --audit settings` |
 | `workflow-status-cli.md` | `harness wf status` (`lib/harness/wf_status.py`), роутинг `swissknifeman wf` |
 | `plan-homes.md` | plan-protocol §12 «два дома», канон имён + `supersedes`, `brain` CLI |

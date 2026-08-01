@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:0f677ce2d2c6092167aa551afe6e1e24fe15c247f8a29eb893ef163bb937d078
+Canonical SHA-256: sha256:7d7d987630ab91b064f5979ed8fc8493cb6a20730ec8e098687748b3746d2afa
 Adapter: task.codex-command/1.0.3
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -60,11 +60,16 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    закрытия** — проверь, не съехал ли scope (`git log -p` по файлу фазы после `closed_at`); (в)
    `limitations[]`/`external_side_effects[]` — заявленные границы сдачи, сверяются с Completion
    Notes. Отчёта нет при включённом протоколе — это ERROR линтера, не твоя находка; протокол не
-   включён — пункт пропускается, ступень 1 идёт как ниже. Затем — **конфликт-скан** (детерминированный):
-   `validate.sh` затронутых пакетов · тесты линтера · `check-translations.sh` (фаза правила скилл) ·
-   `plan-lint plans/<PLAN-ID> --baseline <sha до фазы>` · сверка enum'ов и литералов между SSOT (канон ↔
-   EN-копия ↔ `plan_lint.py`): механический класс (противоречие правил, слип перевода, дыра гейта) даёт
-   БОЛЬШИНСТВО окупающихся находок и ловится скриптом за минуты. Затем — adversarial-чтение **свежим
+   включён — пункт пропускается, ступень 1 идёт как ниже. Затем — **конфликт-скан** (детерминированный),
+   ПЕРВОЙ, самой дешёвой командой — **`plan-lint.py --conflicts`** (без аргумента-плана, roadmap
+   `plan-audit-loop.md` §A.1, 2026.07.31-SKM-LEAN P5.9): сверяет реестры-константы `plan_lint.py`
+   (шесть статусов, 16 полей item'а, закрытый enum форм `Next`, три значения `Context`, литералы
+   `i18n-keep`, регекс-носители формы launch-block'а) с их объявлениями в `SKILL.ru.md` — тот же класс
+   «канон ↔ EN-копия ↔ `plan_lint.py`», что дал БОЛЬШИНСТВО окупающихся находок трёх RED-раундов
+   `plan-audit-loop.md` (слип перевода `Items 🟢/всего` → `Items 🟢/total`), ловится за секунды. Следом —
+   остальные ступени скана: `validate.sh` затронутых пакетов · тесты линтера · `check-translations.sh`
+   (фаза правила скилл — свежесть перевода и присутствие литералов, `--conflicts` их НЕ дублирует) ·
+   `plan-lint plans/<PLAN-ID> --baseline <sha до фазы>`. Затем — adversarial-чтение **свежим
    контекстом**: Completion Notes писал исполнитель сам себе — суди по git/коду (`git log`/`git diff` по
    `Files` каждого item'а: slice, не файлы целиком).
 

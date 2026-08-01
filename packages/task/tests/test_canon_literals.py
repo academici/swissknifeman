@@ -36,12 +36,18 @@ from pathlib import Path
 import fixtures  # noqa: F401,E402  — ПЕРВЫМ: его импорт кладёт lib/ в sys.path (голый
                  # `python3 -m unittest discover -s tests`, без PYTHONPATH, иначе не найдёт task)
 import task.plan_lint as plan_lint  # noqa: E402
-from task.plan_lint import CANON_LITERALS, HEURISTIC_LITERALS  # noqa: E402
+from task.plan_lint import (  # noqa: E402
+    CANON_LITERALS, HEURISTIC_LITERALS, I18N_KEEP_RE, SKILL_RU_RELPATH, _find_skill_ru,
+)
 
 PLAN_LINT_PY = Path(plan_lint.__file__).resolve()
 # Скилл-SSOT канона: ищем от пакета вверх до корня монорепо. Standalone-раскладка (пакет
 # task вне монорепо, скиллов рядом нет) — тест пропускается, а не падает.
-SKILL_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.ru.md")
+# `_find_skill_ru`/`I18N_KEEP_RE` — реюз `plan_lint.py` (2026.07.31-SKM-LEAN P5.9, Required
+# Reads п. 4 «расширяется, не дублируется»): до этого item'а тот же обход и та же директива
+# были определены здесь ВТОРЫМ носителем; теперь единственный владелец — модуль, `--conflicts`
+# которого сверяет то же самое из CLI.
+SKILL_RELPATH = SKILL_RU_RELPATH
 
 CYRILLIC_RUN_RE = re.compile(r"[А-Яа-яЁё]")
 # Кириллическая ФРАЗА литерала — то, что обязано найтись в реестре ЦЕЛИКОМ. Пословная сверка
@@ -56,22 +62,12 @@ CYRILLIC_PHRASE_RE = re.compile(r"[А-Яа-яЁё][А-Яа-яЁё\s—-]*")
 RE_WHITESPACE_META_RE = re.compile(r"\\s[+*?]?")
 RE_SYNTAX_RE = re.compile(r"\\[a-zA-Z]|\{\d+(?:,\d+)?\}|[\^$()\[\]{}*+?\\|]")
 PHRASE_BREAK = "\x00"
-# Директива — тот же формат, что парсит check-translations.sh (SSOT формата — там).
-I18N_KEEP_RE = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")
 # Функции `re`, чей ПЕРВЫЙ аргумент — шаблон (сверяется с текстом плана). `finditer`/`subn`
 # были дырой (J8): идиома `re.finditer("<литерал>", text)` проходила мимо сборщика.
 RE_PATTERN_FUNCS = ("compile", "escape", "match", "search", "fullmatch", "sub", "subn",
                     "split", "findall", "finditer")
 # Строковые методы-грепы: их аргумент — строка, которую ищут в тексте плана.
 STR_GREP_METHODS = ("startswith", "endswith", "count", "find", "index", "partition", "split")
-
-
-def _find_skill_ru():
-    for parent in PLAN_LINT_PY.parents:
-        candidate = parent / SKILL_RELPATH
-        if candidate.is_file():
-            return candidate
-    return None
 
 
 def _is_string_expr(node):

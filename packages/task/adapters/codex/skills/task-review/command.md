@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
-Canonical SHA-256: sha256:47375319311f6e441bfc9cff37542ac05136d109f519a6e43fbedb4003a66c0c
+Canonical SHA-256: sha256:79f984c396e74cc0d1b866d6258d768217d92e6b64945240273d70855c1968c0
 Adapter: task.codex-command/1.0.3
 -->
 Это задача РЕВЬЮ (read-only). Ввод пользователя: «$ARGUMENTS».
@@ -46,6 +46,10 @@ Adapter: task.codex-command/1.0.3
    Нет секции `## Conformance` — finder берёт свод правил из тела SKILL (чеклист качества /
    жёсткие запреты). Один скилл = одно измерение; в fan-out-раскладке — finder-агент на скилл
    (шаблон `wf-audit-adversarial.js`), в single-agent — последовательные проходы.
+   **Кап делегирования:** finder заводится только под скилл, который реально даёт отдельное
+   измерение на ЭТОМ диффе; смежные скиллы, закрываемые одним проходом, объединяй в один finder —
+   хватает одного, запускай один, а не несколько, число спавнов держи низким. Что проверишь сам
+   за несколько тул-вызовов (1–2 применимых скилла) — гони single-agent'ом, без fan-out.
    Оркестрация мультиагентным `*.js`-скриптом → сначала скилл `general/workflow-craft` (матчинг 4
    канонических шаблонов + обязательные стадии design vs dev) и конструктор
    `packages/task/workflows/README.md`, не изобретай оркестрацию с нуля.
@@ -65,7 +69,9 @@ Adapter: task.codex-command/1.0.3
 1. Дедуп сырых находок Stage B, затем adversarial-проверка каждой: воспроизводим ли
    failure_scenario на этом диффе, не ложный ли матч правила. Отсев только с обоснованием.
 2. **Детект ≠ гейтинг.** Репортишь ВСЕ подтверждённые находки. Формат находки (оси —
-   `quality/artifact-review`): `severity ∈ {Blocker,Major,Minor,Nit}` + лейбл
+   `quality/artifact-review`): `severity ∈ {Blocker,Major,Minor,Nit}` + `confidence ∈
+   {high,med,low}` (уверенность в самой находке — чтобы фильтр ниже по потоку мог ранжировать;
+   низкая уверенность — повод пометить, а не отбросить) + лейбл
    `issue/suggestion/question/nitpick` + `file:line` + `failure_scenario` +
    **ссылка скилл→правило** (`<bucket>/<skill> ## Conformance: "<строка правила>"`;
    для классики — измерение correctness/security/perf). При сомнении severity ставь ВЫШЕ,

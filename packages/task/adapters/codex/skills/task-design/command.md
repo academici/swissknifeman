@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
-Canonical SHA-256: sha256:60fe19dcf6ffb14dd1489a2d65db76d40681069fbcf855693a7dc1a1d42bc59f
+Canonical SHA-256: sha256:2375c5d8d953aa704f9b96aac97bcc3800e6c97f198a0ec86c67fda61b3318ac
 Adapter: task.codex-command/1.0.3
 -->
 Это задача ПРОЕКТИРОВАНИЯ — выход артефакты, НЕ код. Ввод пользователя: «$ARGUMENTS».
@@ -9,6 +9,11 @@ Adapter: task.codex-command/1.0.3
 Профиль `design`:
 1. **Research-fan-out оправдан** (breadth-first): несколько независимых исследователей (implementation) по разным
    граням + adversarial-verify + синтез (frontier). Это тот случай, когда параллель окупает ≈15× токенов.
+   **Кап делегирования:** субагент — только под крупный, реально независимый и параллелимый трек
+   (широкая многофайловая разведка). Что доделаешь сам за несколько тул-вызовов — не делегируй;
+   хватает одного субагента — запускай один, а не несколько; число спавнов держи низким. Субагент
+   «перепроверь мою же работу» запрещён; adversarial-verify ЧУЖИХ находок под кап не попадает —
+   это независимая проверка, а не самопроверка.
    Оркестрация мультиагентным `*.js`-скриптом → сначала скилл `general/workflow-craft` (матчинг 4
    канонических шаблонов + обязательные стадии design vs dev) и конструктор
    `packages/task/workflows/README.md`, не изобретай оркестрацию с нуля.

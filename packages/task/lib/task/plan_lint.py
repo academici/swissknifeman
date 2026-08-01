@@ -18,6 +18,7 @@ plan-protocol/SKILL.ru.md` + его `snippets/{plan,phase,handoff}-template.md`;
 stdlib-only (re/argparse/pathlib/json/sys), сообщения — на русском.
 """
 import argparse
+import ast
 import io
 import json
 import re
@@ -177,6 +178,20 @@ RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED
 LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
 LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
+# `Context` launch-block'а (SKILL §8 «Session-restart discipline», D16/D30) — РОВНО три
+# значения. Реестр НЕ используется НИГДЕ вне `--conflicts` (2026.07.31-SKM-LEAN P5.9): до этого
+# item'а поле `Context` не гейтилось ни одним registry ни разу — сверка канон↔реализация для
+# него добавляется здесь ВПЕРВЫЕ, а не переиздаётся из существующего гейта (Pending Work P5.9
+# называет расширение до live-гейта отдельной задачей — этот item лишь делает класс сверяемым).
+CONTEXT_VALUES = (
+    "same-session — item",
+    "cold-start — orchestration",
+    "cold-start — plan-step",
+)
+# Директива непереводимого литерала (D28) — тот же формат, что грепает
+# `check-translations.sh` и (до P5.9) дублировал `test_canon_literals.py`; единственный
+# владелец регекса теперь этот модуль (`--conflicts` и тест реюзают его, не переиздают).
+I18N_KEEP_RE = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
 PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
 PLAN_SECTION_TITLES = {
@@ -873,14 +888,31 @@ C2_WAITING_STEMS_RE = re.compile(
 C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "audit",
                                "audit-design", "close", "close-archive"})
 
+# Якоря `--conflicts` (2026.07.31-SKM-LEAN P5.9) — грепаются в SKILL.ru.md (RU-ИСТОЧНИКЕ)
+# САМИМ этим модулем, не в теле плана автором. Кириллические, поэтому T1
+# (`test_canon_literals.py`) их ловит; в CANON_LITERALS (⇒ директива i18n-keep, EN-фиделити)
+# не идут — «--conflicts» никогда не читает `SKILL.md`, EN-параллель ему не нужна ни для
+# чего. Регистрация — ниже, в HEURISTIC_LITERALS, тем же основанием, что у
+# `оркестрац`/`фаза закрыта`: детектор смысла в известном (нашем же) тексте, не
+# канон-токен для стороннего автора.
+CONFLICTS_ANCHOR_STATUSES = "РОВНО 6 канонических строк"
+CONFLICTS_ANCHOR_ITEM_FIELDS = "`**Поле:** значение`, в этом порядке:"
+CONFLICTS_ANCHOR_NEXT_FORMS = "| Форма Next | Когда |"
+CONFLICTS_ANCHOR_CONTEXT = "РОВНО одно из трёх значений"
+CONFLICTS_ANCHOR_LAUNCH_TABLE = "| Параметр | Значение |"
+
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
 # D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
 # `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении (D50); C2-стемы
-# (кириллические) — детект прозы-оговорки в `Next` (D8). Все группы ищут СМЫСЛ в прозе автора,
-# а не канонический токен ⇒ присутствие в EN не требуется (i18n-keep не нужен).
+# (кириллические) — детект прозы-оговорки в `Next` (D8); CONFLICTS_ANCHOR_* — см. комментарий
+# выше. Все группы ищут СМЫСЛ в прозе автора/канона, а не канонический токен для стороннего
+# читателя ⇒ присутствие в EN не требуется (i18n-keep не нужен).
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
                       + PHASE_HANDOFF_NEGATION_LITERALS
                       + ("не раньше", "делать нечего", "тайм-гейт")
+                      + (CONFLICTS_ANCHOR_STATUSES, CONFLICTS_ANCHOR_ITEM_FIELDS,
+                         CONFLICTS_ANCHOR_NEXT_FORMS, CONFLICTS_ANCHOR_CONTEXT,
+                         CONFLICTS_ANCHOR_LAUNCH_TABLE)
                       # 2026.07.25-ECO-OPT P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
                       # (отмена/замена решения) в свободной прозе D-лога; EN-канон их не
                       # несёт и нести не обязан (research/23 §3).
@@ -1094,14 +1126,29 @@ def _parse_table(body_lines, body_start_lineno):
 def _parse_fields(body_lines, body_start_lineno, field_re):
     """Разбирает строки-поля `**Поле:** значение` (значение может продолжаться
     на следующих строках до следующего поля/конца блока). Возвращает
-    fields: dict[name] = (value, lineno)."""
+    (fields, duplicates): fields — dict[name] = (value, lineno) ПОСЛЕДНЕГО вхождения
+    (back-compat: потребители как читали dict, так и читают); duplicates —
+    [(name, first_lineno, first_value, dup_lineno, dup_value)] на КАЖДОЕ повторное
+    вхождение ключа, по порядку появления (D90: `**Поле:**`-строка внутри свободной прозы
+    другого поля — напр. `**Validation:**`, дописанная в Completion Notes, — матчит тот же
+    `field_re` и молча подменяет собой раннее легитимное значение поля; вызывающий решает,
+    диагностировать находку или пропустить — handoff-поля вне Scope 2026.07.31-SKM-LEAN P5.9,
+    только item-поля)."""
     fields = {}
+    first_seen = {}
+    duplicates = []
     cur_key = cur_lineno = None
     cur_val = []
 
     def flush():
         if cur_key is not None:
-            fields[cur_key] = ("\n".join(cur_val).strip(), cur_lineno)
+            value = "\n".join(cur_val).strip()
+            if cur_key in first_seen:
+                prev_lineno, prev_value = first_seen[cur_key]
+                duplicates.append((cur_key, prev_lineno, prev_value, cur_lineno, value))
+            else:
+                first_seen[cur_key] = (cur_lineno, value)
+            fields[cur_key] = (value, cur_lineno)
 
     for i, ln in enumerate(body_lines):
         m = field_re.match(ln)
@@ -1115,7 +1162,14 @@ def _parse_fields(body_lines, body_start_lineno, field_re):
             if ln.strip() or cur_val:
                 cur_val.append(ln.rstrip())
     flush()
-    return fields
+    return fields, duplicates
+
+
+def _preview(text, limit=72):
+    """Первая непустая строка значения, усечённая до `limit` (D90-диагностика: обе стороны
+    расхождения в одной строке отчёта — полное многострочное значение там не читается)."""
+    first_line = next((ln.strip() for ln in text.splitlines() if ln.strip()), "")
+    return first_line if len(first_line) <= limit else first_line[:limit].rstrip() + "…"
 
 
 def _find_items(lines):
@@ -1606,13 +1660,27 @@ def parse_phase_md(path, phase_id, diag):
             diag.error(path, header_lineno,
                        f"item {item_id}: префикс «{item_id.split('.')[0]}» не совпадает "
                        f"с файлом фазы «{phase_id}»")
-        fields = _parse_fields(body_lines, body_start, FIELD_RE)
+        fields, dup_fields = _parse_fields(body_lines, body_start, FIELD_RE)
         for f in REQUIRED_ITEM_FIELDS:
             if f not in fields:
                 diag.error(path, header_lineno,
                            f"item {item_id}: нет обязательного поля «{f}» (item фазы-скелета "
                            f"обязан нести все 16 полей со значением «—»; детализация — "
                            f"/task:plan-design <ID> {phase_id})")
+
+        # --- D90: повтор поля в теле item'а — последнее вхождение молча подменяет
+        # раннее легитимное значение (у linter'а И у task_contract) --------------
+        for name, first_ln, first_val, dup_ln, dup_val in dup_fields:
+            if name in REQUIRED_ITEM_FIELDS:
+                diag.error(path, dup_ln,
+                           f"item {item_id}: поле «{name}» встречается повторно "
+                           f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
+                           f"повтор {path.name}:{dup_ln} → «{_preview(dup_val)}») — плановый "
+                           f"парсер и task_contract молча берут ПОСЛЕДНЕЕ вхождение (D90): "
+                           f"строка `**{name}:**` внутри прозы другого поля (например, "
+                           f"Completion Notes) подменяет собой приёмочное значение — уберите "
+                           f"звёздочки/двоеточие у инлайн-упоминания или перенесите его в "
+                           f"свободный текст без формы поля")
 
         # --- 2.0 WARNING: порядок 16 канонических полей (P0.3 рек#6) ------------
         canon_index = {f: i for i, f in enumerate(REQUIRED_ITEM_FIELDS)}
@@ -1746,7 +1814,9 @@ def parse_handoff_md(path, diag):
         diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m» / «… — after Pn»")
 
     body_start = (title_lineno or 0) + 1
-    fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
+    # handoff-поля вне Scope 2026.07.31-SKM-LEAN P5.9 (D90 — только REQUIRED_ITEM_FIELDS
+    # items'ов) — duplicates осознанно отброшены, не диагностируются здесь.
+    fields, _dup_handoff_fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
     for f in HANDOFF_REQUIRED_FIELDS:
         if f not in fields:
             diag.error(path, body_start, f"нет обязательного поля «{f}»")
@@ -2285,6 +2355,247 @@ def discover_plan_dirs(root):
     return dirs
 
 
+# --- --conflicts: канон ↔ реализация (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) -----
+# Третья нога конфликт-скана — сверка `SKILL.ru.md` с реестрами-константами ЭТОГО модуля.
+# Первые две ноги (свежесть перевода RU→EN, присутствие i18n-keep литералов в EN и в теле RU)
+# уже покрыты `check-translations.sh` — не переиздаются здесь (Implementation Rule 2).
+#
+# Работает БЕЗ аргумента-плана (Implementation Rule 5): сверяет АРТЕФАКТЫ канона, не
+# конкретный `plans/<ID>`. Каждая сверка — структурная (код-фенс/бэктик-спан/маркированный
+# список — устойчивый якорь), не эвристический парс свободной прозы (Implementation Rule 3).
+# Находка несёт ОБЕ стороны с `файл:строка` (Implementation Rule 4). `--conflicts` ничего не
+# ОБЪЯВЛЯЕТ заново — сравнивает канон и уже существующие реестры `plan_lint.py`; единственное
+# исключение — `CONTEXT_VALUES` (см. её комментарий выше), которую этот item вводит именно
+# затем, чтобы для класса «значения Context» было ЧТО сравнивать (без неё сверка этого
+# класса структурно невозможна — Scope Included этого item'а прямо требует её как одну из
+# шести граней).
+
+SKILL_RU_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.ru.md")
+
+
+def _find_skill_ru():
+    """Канон-SSOT (`SKILL.ru.md`), от расположения ЭТОГО модуля вверх до корня монорепо —
+    тот же приём, что `test_canon_literals.py::_find_skill_ru` (не дублируется: тест этого
+    item'а импортирует функцию отсюда, см. Implementation Rules). Standalone-раскладка
+    (пакет `task` вне монорепо) — `None`, не исключение: `run_conflicts_check` предупреждает
+    и выходит зелёным (тот же класс деградации, что `core.term.warn`-фолбэк вверху модуля)."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / SKILL_RU_RELPATH
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _own_const_lineno(name):
+    """Строка объявления `NAME = …` в исходнике ЭТОГО модуля (AST по собственному файлу) —
+    self-referential приём `test_canon_literals.py`: `--conflicts` не заводит второй реестр
+    «где что объявлено», читает у самого модуля."""
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"), filename=__file__)
+    for node in tree.body:
+        if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name) and node.targets[0].id == name):
+            return node.lineno
+    return None
+
+
+def _fence_content(lines, open_idx):
+    """Содержимое ``` fence, открытого на 0-индексной строке `open_idx`. Возвращает
+    (content_lines, first_content_lineno) — 1-индексная строка первой строки внутри фенса."""
+    content = []
+    i = open_idx + 1
+    while i < len(lines) and not CODE_FENCE_RE.match(lines[i]):
+        content.append(lines[i])
+        i += 1
+    return content, open_idx + 2
+
+
+def _find_line(lines, needle, start=0):
+    """Индекс первой строки, содержащей `needle` (0-индексный), либо `None`."""
+    for i in range(start, len(lines)):
+        if needle in lines[i]:
+            return i
+    return None
+
+
+NEXT_FORM_TABLE_ROW_RE = re.compile(r"^\|\s*([a-z-]+):")
+CONTEXT_BULLET_RE = re.compile(r"^-\s+\*\*`([^`]+)`\*\*")
+
+
+def _conflicts_statuses(skill_lines, skill_path, diag):
+    """Класс 1/6: шесть канонических статусов (STATUSES) — SKILL.ru.md §6."""
+    header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_STATUSES)
+    if header_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts статусы: не найден якорь «{CONFLICTS_ANCHOR_STATUSES}» "
+                   "(SKILL.ru.md §6) — сверка невозможна")
+        return
+    fence_idx = _find_line(skill_lines, "```text", header_idx)
+    if fence_idx is None:
+        diag.error(skill_path, header_idx + 1,
+                   "--conflicts статусы: код-фенс после якоря не найден")
+        return
+    content, content_lineno = _fence_content(skill_lines, fence_idx)
+    canon_statuses = tuple(ln for ln in content if ln.strip())
+    code_lineno = _own_const_lineno("STATUSES")
+    if canon_statuses != STATUSES:
+        diag.error(Path(__file__), code_lineno,
+                   f"--conflicts статусы: канон {skill_path.name}:{content_lineno} = "
+                   f"{canon_statuses!r} → реализация {Path(__file__).name}:{code_lineno} = "
+                   f"{STATUSES!r}")
+
+
+def _conflicts_item_fields(skill_lines, skill_path, diag):
+    """Класс 2/6: 16 полей item'а и их порядок (REQUIRED_ITEM_FIELDS) — SKILL.ru.md §5."""
+    anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_ITEM_FIELDS)
+    if anchor_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts 16-полей: не найден якорь «{CONFLICTS_ANCHOR_ITEM_FIELDS}» "
+                   "(SKILL.ru.md §5)")
+        return
+    joined = " ".join(skill_lines[anchor_idx + 1:anchor_idx + 4])
+    m = re.search(r"`([^`]+)`", joined)
+    if not m:
+        diag.error(skill_path, anchor_idx + 2,
+                   "--conflicts 16-полей: бэктик-список после якоря не найден")
+        return
+    normalized = re.sub(r"\s+", " ", m.group(1)).strip()
+    canon_fields = tuple(f.strip() for f in normalized.split(","))
+    code_lineno = _own_const_lineno("REQUIRED_ITEM_FIELDS")
+    if canon_fields != REQUIRED_ITEM_FIELDS:
+        diag.error(Path(__file__), code_lineno,
+                   f"--conflicts 16-полей: канон {skill_path.name}:{anchor_idx + 2} = "
+                   f"{canon_fields!r} → реализация {Path(__file__).name}:{code_lineno} = "
+                   f"{REQUIRED_ITEM_FIELDS!r}")
+
+
+def _conflicts_next_forms(skill_lines, skill_path, diag):
+    """Класс 3/6: закрытый enum форм `Next` — SKILL.ru.md §8 «Допустимые формы Next» ↔
+    альтернация `SEMANTIC_NEXT_RE` (читается у неё самой — не переиздаётся вторым списком)."""
+    header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_NEXT_FORMS)
+    if header_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts формы Next: не найдена шапка таблицы "
+                   f"«{CONFLICTS_ANCHOR_NEXT_FORMS}»")
+        return
+    canon_forms = []
+    canon_lineno = None
+    i = header_idx + 1
+    while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):
+        m = NEXT_FORM_TABLE_ROW_RE.match(skill_lines[i].strip())
+        if m:
+            if canon_lineno is None:
+                canon_lineno = i + 1
+            canon_forms.append(m.group(1))
+        i += 1
+    code_lineno = _own_const_lineno("SEMANTIC_NEXT_RE")
+    gm = re.search(r"\^\((.*?)\):", SEMANTIC_NEXT_RE.pattern)
+    code_forms = gm.group(1).split("|") if gm else []
+    if tuple(canon_forms) != tuple(code_forms):
+        diag.error(Path(__file__), code_lineno,
+                   f"--conflicts формы Next: канон {skill_path.name}:{canon_lineno} = "
+                   f"{canon_forms!r} → реализация {Path(__file__).name}:{code_lineno} = "
+                   f"{tuple(code_forms)!r}")
+
+
+def _conflicts_context_values(skill_lines, skill_path, diag):
+    """Класс 4/6: три значения `Context` (CONTEXT_VALUES) — SKILL.ru.md §8 «Session-restart
+    discipline». Единственный класс, где реализация ДО этого item'а не существовала вовсе
+    (см. комментарий у `CONTEXT_VALUES`) — сверка новая, не переиздание старой."""
+    anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_CONTEXT)
+    if anchor_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts Context: не найден якорь «{CONFLICTS_ANCHOR_CONTEXT}» "
+                   "(SKILL.ru.md §8)")
+        return
+    canon_values = []
+    canon_lineno = None
+    for i in range(anchor_idx + 1, min(anchor_idx + 20, len(skill_lines))):
+        m = CONTEXT_BULLET_RE.match(skill_lines[i])
+        if m:
+            if canon_lineno is None:
+                canon_lineno = i + 1
+            canon_values.append(m.group(1))
+            if len(canon_values) == 3:
+                break
+    code_lineno = _own_const_lineno("CONTEXT_VALUES")
+    if tuple(canon_values) != CONTEXT_VALUES:
+        diag.error(Path(__file__), code_lineno,
+                   f"--conflicts Context: канон {skill_path.name}:{canon_lineno} = "
+                   f"{canon_values!r} → реализация {Path(__file__).name}:{code_lineno} = "
+                   f"{CONTEXT_VALUES!r}")
+
+
+def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
+    """Класс 5/6: литералы `i18n-keep` — CANON_LITERALS ⊆ директивы, объявленные в
+    SKILL.ru.md (T2 `test_canon_literals.py` уже проверяет то же самое; здесь — тот же
+    предикат, доступный из CLI без запуска unittest, Required Reads п. 4 «расширяется, не
+    дублируется»: обе стороны читают один и тот же `CANON_LITERALS`/`I18N_KEEP_RE`)."""
+    declared = set(I18N_KEEP_RE.findall(skill_text))
+    code_lineno = _own_const_lineno("CANON_LITERALS")
+    for lit in CANON_LITERALS:
+        if lit in declared:
+            continue
+        found_idx = _find_line(skill_lines, lit)
+        canon_ref = (f"{skill_path.name}:{found_idx + 1} (найден в теле, БЕЗ директивы "
+                    f"`i18n-keep`)" if found_idx is not None
+                    else f"{skill_path.name}: нигде не найден")
+        diag.error(Path(__file__), code_lineno,
+                   f"--conflicts i18n-keep: литерал «{lit}» — канон {canon_ref} → реализация "
+                   f"{Path(__file__).name}:{code_lineno} несёт его в CANON_LITERALS без "
+                   f"директивы `<!-- i18n-keep: {lit} -->`")
+
+
+def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
+    """Класс 6/6: регекс-носители формы launch-block'а (LAUNCH_TABLE_ROW_RE/
+    LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.ru.md §8."""
+    header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
+    if header_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts launch-block регекс: не найдена шапка "
+                   f"«{CONFLICTS_ANCHOR_LAUNCH_TABLE}»")
+        return
+    rows = []
+    i = header_idx + 1
+    while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):
+        rows.append((skill_lines[i], i + 1))
+        i += 1
+    checks = (("LAUNCH_TABLE_ROW_RE", LAUNCH_TABLE_ROW_RE, "Model class"),
+             ("LAUNCH_COMMAND_ROW_RE", LAUNCH_COMMAND_ROW_RE, "Команда"))
+    for const_name, pattern, label in checks:
+        matched = any(pattern.match(row) for row, _ln in rows)
+        if not matched:
+            code_lineno = _own_const_lineno(const_name)
+            diag.error(Path(__file__), code_lineno,
+                       f"--conflicts launch-block регекс: {const_name} не матчит ни одну "
+                       f"строку канон-таблицы {skill_path.name}:{header_idx + 2}-{i} "
+                       f"(ожидалась строка «{label}») → реализация "
+                       f"{Path(__file__).name}:{code_lineno}")
+
+
+def run_conflicts_check(diag):
+    """`--conflicts`: сверка канон↔реализация по шести классам (см. блок-докстринг выше),
+    без плана на входе. Standalone-раскладка (SKILL.ru.md недоступен) — предупреждает и
+    оставляет `diag` зелёным (та же деградация, что `test_canon_literals.py::skipTest`)."""
+    skill_path = _find_skill_ru()
+    if skill_path is None:
+        # `print` напрямую, не `_core_warn` (T1 `test_canon_literals.py` иначе требует
+        # регистрации этой прозы как грепаемого литерала — она им не является, это вывод
+        # диагностики; `print` — задокументированное исключение T1, см. его же
+        # `test_print_argument_is_not_a_grep_site`).
+        print("WARN: --conflicts: standalone-раскладка — SKILL.ru.md (канон plan-protocol) "
+             "не найден от расположения plan_lint.py вверх — сверка пропущена", file=sys.stderr)
+        return
+    skill_lines = _read_lines(skill_path)
+    skill_text = skill_path.read_text(encoding="utf-8")
+    _conflicts_statuses(skill_lines, skill_path, diag)
+    _conflicts_item_fields(skill_lines, skill_path, diag)
+    _conflicts_next_forms(skill_lines, skill_path, diag)
+    _conflicts_context_values(skill_lines, skill_path, diag)
+    _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag)
+    _conflicts_launch_table_regex(skill_lines, skill_path, diag)
+
+
 # --- --baseline: детерминированный счёт новых ошибок (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1/D5/D6) ---------
 
 def _git_run(args, cwd, timeout=15):
@@ -2354,7 +2665,9 @@ def main(argv=None):
         prog="plan-lint.py",
         description="Детерминированный валидатор plan-протокола (plans/<PLAN-ID>/…).",
     )
-    parser.add_argument("path", help="путь к plans/<PLAN-ID> или к plans/")
+    parser.add_argument("path", nargs="?", default=None,
+                         help="путь к plans/<PLAN-ID> или к plans/ (необязателен при "
+                              "--conflicts — та сверяет канон, не конкретный план)")
     parser.add_argument("--json", action="store_true",
                          help="вывести распарсенную модель (планы→фазы→items) в stdout как JSON")
     parser.add_argument("--baseline", nargs="?", const="HEAD", default=None, metavar="REF",
@@ -2364,7 +2677,26 @@ def main(argv=None):
                          help="exit-код по всем диагностикам (all, дефолт — back-compat CI) "
                               "или только по новым от --baseline (new); при недоступном "
                               "baseline gate=new деградирует к all (красное не пропускается)")
+    parser.add_argument("--conflicts", action="store_true",
+                         help="сверка «канон (SKILL.ru.md) ↔ реализация (реестры этого "
+                              "модуля)» без плана на входе (roadmap plan-audit-loop.md §A.1, "
+                              "третья нога конфликт-скана); `path`, если передан, игнорируется")
     args = parser.parse_args(argv)
+
+    if args.conflicts:
+        diag = Diagnostics()
+        run_conflicts_check(diag)
+        for msg in diag.errors:
+            print(f"ERROR: {msg}", file=sys.stderr)
+        for msg in diag.warnings:
+            _core_warn(msg)
+        status = "OK" if diag.ok else "ПРОВАЛ"
+        print(f"plan-lint --conflicts: {status} ({len(diag.errors)} расхождений, "
+              f"{len(diag.warnings)} предупреждений)")
+        return 0 if diag.ok else 1
+
+    if args.path is None:
+        parser.error("path обязателен без --conflicts")
 
     root = Path(args.path)
     plan_dirs = discover_plan_dirs(root)

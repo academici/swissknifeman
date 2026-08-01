@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
-Canonical SHA-256: sha256:18a3496b60197e30100f8e8910e241983d4f2c989a98806023ca0fb05071ea23
+Canonical SHA-256: sha256:14cbac2b918121ebaeefd88c00cf6bd5137ac9d2e4ac39415eeca2d7377c38c5
 Adapter: task.codex-command/1.0.3
 -->
 Это задача ИССЛЕДОВАНИЯ. Ввод пользователя: «$ARGUMENTS».
@@ -12,6 +12,11 @@ Adapter: task.codex-command/1.0.3
    дроби на узкие.
 2. **Fan-out оправдан** (breadth-first): независимые искатели (implementation) по разным граням + adversarial-verify;
    синтез (frontier) с явными цитатами/источниками. Reduce-фаза отделена от discovery.
+   **Кап делегирования:** искатель — только под крупную, реально независимую и параллелимую грань.
+   Что доделаешь сам за несколько тул-вызовов — не делегируй; хватает одного искателя — запускай
+   одного, а не нескольких; число спавнов держи низким. Субагент «перепроверь мою же работу»
+   запрещён; adversarial-verify ЧУЖИХ находок под кап не попадает — это независимая проверка,
+   а не самопроверка.
    Оркестрация мультиагентным `*.js`-скриптом → сначала скилл `general/workflow-craft` (матчинг 4
    канонических шаблонов + обязательные стадии design vs dev) и конструктор
    `packages/task/workflows/README.md`, не изобретай оркестрацию с нуля.

@@ -77,5 +77,11 @@ else
   echo "  (plans/ нет в монорепо — пропуск plan-lint, это не ошибка)"
 fi
 
+# --conflicts (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) — дешёвая
+# сверка «канон ↔ реализация» без плана на входе; standalone-раскладка (SKILL.ru.md
+# недоступен) деградирует сама (WARN + exit 0), отдельного guard'а здесь не нужно.
+PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 scripts/plan-lint.py --conflicts || err "plan-lint.py --conflicts — см. вывод выше"
+
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: ПРОВАЛ" >&2; exit 1; fi

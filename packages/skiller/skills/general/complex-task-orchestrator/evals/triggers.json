@@ -1,0 +1,11 @@
+{
+  "skill": "complex-task-orchestrator",
+  "should_trigger": [
+    "decompose this multi-week feature into subtasks across three layers",
+    "plan risk management and Definition of Done for a complex cross-package task"
+  ],
+  "should_not": [
+    "fix a single failing unit test",
+    "rename a variable across one file"
+  ]
+}

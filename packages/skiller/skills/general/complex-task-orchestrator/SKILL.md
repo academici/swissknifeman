@@ -1,8 +1,9 @@
 ---
 name: complex-task-orchestrator
 bucket: general
-version: 0.1.0
-description: "Complex-task orchestration: decomposition, context routing, risk management, Definition of Done, minimal verification loop."
+version: 0.2.0
+description: "Complex-task orchestration: decomposition, context routing, risk, Definition of Done."
+when_to_use: "Use when scoping a multi-step task before implementation."
 risk: write
 persona: oss-dev
 tags: [workflow, orchestration, checklist, agents]
@@ -68,4 +69,4 @@ sha256: ""
 - `laravel-architecture/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
 - `session-handoff` (general) — hand off unfinished task to next session.
 
-<!-- ru-source-sha256: 66ae5eedab46b76be070aa5aca80d3f7eea397eda88ead00cc922c5cdb01f92f -->
+<!-- ru-source-sha256: 5529d543d480b95c8164ae36be61c354b1ef05c2deb7439a96bc17bda87febf7 -->

@@ -1,8 +1,9 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.21.0
-description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
+version: 2.22.0
+description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, routing, semantic Next, handoff."
+when_to_use: "Use when running plan-design/exec/run/close/audit, or citing a plan ID."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -1343,4 +1344,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 0b0d6682efb9cc90fa19ec857f1fefefbb50c2765b679e7f2b9882f2c5c4c6e5 -->
+<!-- ru-source-sha256: 16e6124e54b4602dbc9e26821dff506924a6fc64c1d62f62557c2cbb478e61fb -->

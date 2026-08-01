@@ -1,8 +1,9 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.21.0
-description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
+version: 2.22.0
+description: "Исполняемые мастер-планы в plans/<ID>: схемы, 6 статусов, DoR, routing, semantic Next, handoff."
+when_to_use: "Используй, когда запускаешь plan-design/exec/run/close/audit или ссылаешься на ID плана."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]

@@ -66,7 +66,7 @@ flowchart LR
     ci_cd["ci-cd<br/>⊕55 ↻1150"]:::mild
     db_test_preflight["db-test-preflight<br/>⊕104 ↻1703"]:::warm
     docker["docker<br/>⊕66 ↻400"]:::mild
-    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::cool
+    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::mild
     docker_php["docker-php<br/>⊕40 ↻794"]:::cool
     docker_postgres["docker-postgres<br/>⊕43 ↻834"]:::mild
     docker_services["docker-services<br/>⊕48 ↻885"]:::mild
@@ -82,13 +82,13 @@ flowchart LR
     adversarial_check["adversarial-check<br/>⊕55 ↻1162"]:::mild
     competitive_analysis["competitive-analysis<br/>⊕37 ↻1343"]:::cool
     customer_discovery["customer-discovery<br/>⊕55 ↻1315"]:::mild
-    defensibility["defensibility<br/>⊕42 ↻1151"]:::cool
+    defensibility["defensibility<br/>⊕42 ↻1151"]:::mild
     idea_audit["idea-audit<br/>⊕61 ↻2502"]:::mild
     idea_discovery["idea-discovery<br/>⊕35 ↻1668"]:::cool
     new_project["new-project<br/>⊕31 ↻1476"]:::cool
     pitch_deck["pitch-deck<br/>⊕32 ↻1583"]:::cool
     risk_assessment["risk-assessment<br/>⊕40 ↻1302"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::cool
+    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::mild
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
@@ -150,10 +150,10 @@ flowchart LR
     wayfinder["wayfinder<br/>⊕48 ↻994"]:::mild
   end
   subgraph general["general"]
-    anti_drift["anti-drift<br/>⊕43 ↻1998"]:::mild
+    anti_drift["anti-drift<br/>⊕32 ↻1998"]:::cool
     compact_responses["compact-responses<br/>⊕60 ↻597"]:::mild
-    complex_task_orchestrator["complex-task-orchestrator<br/>⊕44 ↻659"]:::mild
-    context_economy["context-economy<br/>⊕71 ↻2700"]:::mild
+    complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻659"]:::cool
+    context_economy["context-economy<br/>⊕48 ↻2700"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻461"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1124"]:::cool
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
@@ -162,13 +162,13 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3215"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
-    plan_protocol["plan-protocol<br/>⊕51 ↻25497"]:::mild
+    plan_protocol["plan-protocol<br/>⊕31 ↻25497"]:::cool
     project_map["project-map<br/>⊕83 ↻645"]:::warm
-    session_handoff["session-handoff<br/>⊕41 ↻618"]:::cool
+    session_handoff["session-handoff<br/>⊕29 ↻618"]:::cool
     shell["shell<br/>⊕73 ↻2024"]:::mild
-    skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
-    spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
-    task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
+    skills_ssot["skills-ssot<br/>⊕29 ↻1771"]:::cool
+    spec_interview["spec-interview<br/>⊕35 ↻753"]:::cool
+    task_brief_template["task-brief-template<br/>⊕47 ↻1253"]:::mild
     verify_claims["verify-claims<br/>⊕110 ↻3032"]:::hot
     workflow_craft["workflow-craft<br/>⊕48 ↻3376"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
@@ -439,13 +439,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **16146** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356413 ток · ⌥ on-demand 828278 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **16008** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356413 ток · ⌥ on-demand 828278 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1504 | 55930 | 20971 |
+| `general` | 22 | 1366 | 55930 | 20971 |
 | `repository-bootstrap` | 13 | 1120 | 28903 | 0 |
 | `php` | 17 | 1065 | 19298 | 54837 |
 | `architect` | 15 | 1005 | 23520 | 33458 |

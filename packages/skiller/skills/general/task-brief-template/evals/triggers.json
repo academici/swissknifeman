@@ -1,0 +1,11 @@
+{
+  "skill": "task-brief-template",
+  "should_trigger": [
+    "give me the brief template for this complex task before I delegate it",
+    "fill out goal/scope/invariants/DoD for a multi-step task"
+  ],
+  "should_not": [
+    "run the test suite",
+    "explain what this skill does in general"
+  ]
+}

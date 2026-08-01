@@ -1,8 +1,9 @@
 ---
 name: skills-ssot
 bucket: general
-version: 0.1.0
-description: "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления"
+version: 0.2.0
+description: "Единый источник истины скиллов для AI-агентов: .ai/skills, симлинки, gitignore."
+when_to_use: "Используй, когда скиллы расходятся между инструментами-агентами."
 risk: write
 persona: oss-dev
 tags: [ai-context, skills, ssot, workflow, conventions, ai]

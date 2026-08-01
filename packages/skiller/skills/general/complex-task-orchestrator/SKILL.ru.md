@@ -1,8 +1,9 @@
 ---
 name: complex-task-orchestrator
 bucket: general
-version: 0.1.0
-description: "Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition of Done и минимальный верификационный контур."
+version: 0.2.0
+description: "Оркестрация сложных задач: декомпозиция, контекст-роутинг, риски, Definition of Done."
+when_to_use: "Используй, когда планируешь многошаговую задачу перед реализацией."
 risk: write
 persona: oss-dev
 tags: [workflow, orchestration, checklist, agents]

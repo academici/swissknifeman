@@ -1,8 +1,11 @@
 ---
 name: task-brief-template
 bucket: general
-version: 0.4.0
-description: "Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, out of scope, acceptance criteria, definition of done. Plus Plan→Clear→Execute pattern and loop fields for iterative runs: verifier, exit condition, hard-stop."
+version: 0.5.0
+description: "Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acceptance criteria, definition of done, loop fields."
+when_to_use: "Use when scoping a complex task before delegating."
+model: sonnet
+effort: low
 risk: draft
 persona: oss-dev
 tags: [workflow, template, requirements, context]
@@ -112,4 +115,4 @@ If the task needs several rounds with intermediate checks — fill the Loop fiel
 - `context-economy` (general) — Plan→Clear→Execute and `/plan`, `/execute` commands.
 - `anti-drift` (general) — iteration discipline, relies on fixed scope.
 
-<!-- ru-source-sha256: ec328ef1ad906f5d528b45b57a61b597ed600afcbca41e0f4d00c9cf7fc5c0b7 -->
+<!-- ru-source-sha256: 15af13a31cb9eef8ee0912cbe4222c2b50aba39d8e815b9d52cde6120700e6b0 -->

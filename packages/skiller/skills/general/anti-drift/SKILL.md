@@ -1,8 +1,9 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.4.0
-description: "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations."
+version: 0.5.0
+description: "Discipline against agent rabbit-holing: think first, simplicity, surgical edits, circuit-breaker."
+when_to_use: "Use when a session drags, retries approaches, or piles on flags."
 risk: read
 persona: oss-dev
 tags: [workflow, discipline, orchestration, context]
@@ -105,4 +106,4 @@ Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, 
 
 `snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
 
-<!-- ru-source-sha256: 688d0a494558c7c7f588f5b4c8899f6e8edc41ba865ad68941b1d9e3539d235d -->
+<!-- ru-source-sha256: 089c8ce42cd7e2586c00994357d9e46b5f81f99f8d414d28fbeff89f7a2b947d -->

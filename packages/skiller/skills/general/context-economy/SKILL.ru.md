@@ -1,8 +1,9 @@
 ---
 name: context-economy
 bucket: general
-version: 1.2.1
-description: "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore."
+version: 1.3.0
+description: "Экономия контекста Claude Code: CLAUDE.md ≤200 строк, path-scoped правила, /compact vs /clear, аудит MCP, маршрутизация моделей. Без мифов вроде .claudeignore."
+when_to_use: "Используй, когда контекст сессии раздут или быстро растёт."
 risk: read
 persona: oss-dev
 tags: [tokens, context, claude-code, workflow, conventions]

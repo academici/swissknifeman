@@ -1,8 +1,9 @@
 ---
 name: session-handoff
 bucket: general
-version: 0.2.0
-description: "Cross-session/agent context handoff: compress a session into a structured doc — state, decisions, open items, next steps."
+version: 0.3.0
+description: "Cross-session/agent handoff: compress a session into state, decisions, open items."
+when_to_use: "Use when ending a session or handing off to another agent."
 risk: read
 persona: oss-dev
 tags: [workflow, context, tokens, handoff]
@@ -49,4 +50,4 @@ NOT `.claude/handoffs/`.
 - `complex-task-orchestrator` (general) — open subtasks and risks go into the handoff.
 - `system/shared-memory` — if projects share memory, key facts go there (remember), not only the handoff file.
 
-<!-- ru-source-sha256: f4f2dc1f77dfc591ceb06d2acb89d898f6ab86bd6f853ad7fa36ee9d67781262 -->
+<!-- ru-source-sha256: cdc4a4999c68f1121b16b8b20d5461b1e8d69f7aca9e137f4d06038612be1616 -->

@@ -1,8 +1,9 @@
 ---
 name: spec-interview
 bucket: general
-version: 0.1.0
-description: "Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, предлагает рекомендованный ответ; итог — заполненное ТЗ по task-brief-template."
+version: 0.2.0
+description: "Интервью перед кодом: вопросы по одному, сам читает кодовую базу, предлагает рекомендованный ответ."
+when_to_use: "Используй, когда начинаешь неоднозначную задачу перед написанием кода."
 risk: draft
 persona: oss-dev
 tags: [workflow, requirements, discovery]

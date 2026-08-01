@@ -1,0 +1,11 @@
+{
+  "skill": "session-handoff",
+  "should_trigger": [
+    "I'm ending this session, write a handoff doc for the next agent",
+    "summarize open items and decisions before /clear"
+  ],
+  "should_not": [
+    "start planning a new multi-phase master plan",
+    "review this pull request for bugs"
+  ]
+}

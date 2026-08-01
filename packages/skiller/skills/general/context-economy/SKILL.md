@@ -1,8 +1,9 @@
 ---
 name: context-economy
 bucket: general
-version: 1.2.1
-description: "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore."
+version: 1.3.0
+description: "Claude Code context economy: CLAUDE.md ≤200 lines, path-scoped rules, /compact vs /clear, MCP audit, model routing. No myths like .claudeignore."
+when_to_use: "Use when a session's context is bloated or growing fast."
 risk: read
 persona: oss-dev
 tags: [tokens, context, claude-code, workflow, conventions]
@@ -118,4 +119,4 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 - Skill `ecosystem-mcp` (maind) — project memory/graph MCP tools: when to call graph/Serena instead of file search
 
-<!-- ru-source-sha256: 2b1c1c5af1b7a4677b20fbae7e74227abb32c07c05847f9ccf0fafe8ccfbdb6e -->
+<!-- ru-source-sha256: 966c3415b17b7162691ae8b32b7780233b7281ab1fb013e1fe94d7975a8a4a4e -->

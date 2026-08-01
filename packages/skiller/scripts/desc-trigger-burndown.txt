@@ -45,14 +45,6 @@ frontend-vite/vite-multi-build
 frontend-vue/vitest
 frontend-vue/vue-composition-api
 frontend-wayfinder/wayfinder
-general/anti-drift
-general/complex-task-orchestrator
-general/context-economy
-general/plan-protocol
-general/session-handoff
-general/skills-ssot
-general/spec-interview
-general/task-brief-template
 laravel-architecture/laravel-subagents
 laravel-architecture/modular-architecture
 laravel-auth/laravel-permissions

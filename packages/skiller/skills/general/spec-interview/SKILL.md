@@ -1,8 +1,11 @@
 ---
 name: spec-interview
 bucket: general
-version: 0.1.0
-description: "Pre-code interview: agent asks one question at a time, reads the codebase itself where it can, proposes a recommended answer; output — a filled task brief per task-brief-template."
+version: 0.2.0
+description: "Pre-code interview: one question at a time, reads the codebase itself, proposes a recommended answer."
+when_to_use: "Use when starting an ambiguous task before writing code."
+model: sonnet
+effort: medium
 risk: draft
 persona: oss-dev
 tags: [workflow, requirements, discovery]
@@ -60,4 +63,4 @@ sha256: ""
 - `implement` (general) — implement per fixed spec/issue (explicit invocation).
 - `pm/requirement-critic` — audit a larger BRD for completeness and conflicts (different scale: product requirements, not a one-off task).
 
-<!-- ru-source-sha256: 3ba170b1b7f88e4ca8bb3814ec32e47c39f11bc63eb1a0f81c797c651394bf03 -->
+<!-- ru-source-sha256: f60c43fcc65b8c26e1fd28f41afd5b09148bc24a70f11622926cd852f0380493 -->

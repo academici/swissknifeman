@@ -1,8 +1,9 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.4.0
-description: "Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургические правки, circuit-breaker при затянувшихся итерациях."
+version: 0.5.0
+description: "Дисциплина против «закапывания» агента: думай сначала, простота, хирургические правки, circuit-breaker."
+when_to_use: "Используй, когда сессия затягивается, агент перебирает подходы или обрастает флагами."
 risk: read
 persona: oss-dev
 tags: [workflow, discipline, orchestration, context]

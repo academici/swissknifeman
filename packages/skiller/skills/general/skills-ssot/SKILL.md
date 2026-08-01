@@ -1,8 +1,9 @@
 ---
 name: skills-ssot
 bucket: general
-version: 0.1.0
-description: "Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitignore, update cycle"
+version: 0.2.0
+description: "Single source of truth for skills across AI agents: .ai/skills, symlinks, gitignore."
+when_to_use: "Use when skills drift between agent tools."
 risk: write
 persona: oss-dev
 tags: [ai-context, skills, ssot, workflow, conventions, ai]
@@ -114,4 +115,4 @@ Rule: change only **sources**, never hand-edit generated.
 - `references/ssot-source-layout.md` — detailed `.ai/` design: data flows, three priority layers, guidelines vs skills, commands, common errors.
 - `references/ssot-scenarios.md` — "scenario → skill" table for typical agent tasks.
 
-<!-- ru-source-sha256: 6b8d0347ee4d9197f7ad94512b21e52086c0fff1d738ff3c87b4663ed9e044f8 -->
+<!-- ru-source-sha256: 9fe3b660fbf8509db6f7b4e85a3db1d94a506554fa5e25fe916661507f66e451 -->

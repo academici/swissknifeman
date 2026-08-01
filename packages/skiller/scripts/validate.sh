@@ -84,15 +84,24 @@ LEAN_MAX_BODY_LINES = 150
 # именно он попадает в контекст; русский держим в SKILL.ru.md. Жёсткий гейт на frontmatter
 # `description` (резидентный ⊕ tier-0 — постоянный налог в КАЖДОМ запросе).
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
-# Пороги description-гейта (резидентный tier-0, P3.2 рэтчет). DESC_ERROR_MAX — жёсткий
-# потолок, без исключений (burn-down не спасает выше него). DESC_WARN_MAX — целевая норма;
-# скиллы между WARN и ERROR легальны только если внесены в burn-down (унаследованный долг),
-# иначе — error (новый долг запрещён). См. scripts/desc-burndown.txt.
+# Пороги гейта СОВОКУПНОЙ записи листинга (резидентный tier-0, P3.2 рэтчет,
+# пере-базировано на объединённое поле P3.5): first-party кап записи листинга —
+# 1 536 симв (`name` + `description` + `when_to_use`, см. budget.py `_listing_entry_tokens`/
+# `_listing_entry_chars` — та же формула `(description + " " + when_to_use).strip()`).
+# DESC_WARN_MAX/DESC_ERROR_MAX — консервативный ВНУТРЕННИЙ запас под этим капом (не сам кап):
+# DESC_ERROR_MAX — жёсткий потолок, без исключений (burn-down не спасает выше него).
+# DESC_WARN_MAX — целевая норма; скиллы между WARN и ERROR легальны только если внесены в
+# burn-down (унаследованный долг), иначе — error (новый долг запрещён). См.
+# scripts/desc-burndown.txt. Считается ПО СУММЕ `description` + `when_to_use` — перенос
+# триггер-фразы между полями эту сумму не меняет (§4 findings/P3-native-fields-context-cost).
 DESC_WARN_MAX = 300
 DESC_ERROR_MAX = 450
-# Нижняя граница качества description как ТРИГГЕРА (P3.5, рэтчет по образцу верхней —
-# см. desc-trigger-burndown.txt): описание обязано отвечать «когда звать», не только «что
-# это». Регулярка — набор устойчивых маркеров условия применения (не жанра скилла).
+# Нижняя граница качества СОВОКУПНОЙ записи листинга как ТРИГГЕРА (P3.5, рэтчет по образцу
+# верхней — см. desc-trigger-burndown.txt): запись обязана отвечать «когда звать», не только
+# «что это» — фраза ищется в `description` + `when_to_use` вместе (та же сумма, что у гейта
+# длины выше), а не в одном `description`, иначе перенос фразы в `when_to_use` при переносе
+# создал бы ложный новый долг. Регулярка — набор устойчивых маркеров условия применения (не
+# жанра скилла).
 DESC_TRIGGER_RE = re.compile(
     r"(use when|activate|use for|use to|when you|whenever|trigger|use this)", re.I
 )
@@ -113,10 +122,10 @@ def _load_burndown_file(repo_root_pkg, filename):
 
 DESC_BURNDOWN = _load_burndown_file(root, "desc-burndown.txt")
 DESC_BURNDOWN_SEEN = set()
-DESC_BY_KEY = {}  # 'bucket/name' -> len(description), для протухшей-записи гейта ниже
+DESC_BY_KEY = {}  # 'bucket/name' -> len(description + " " + when_to_use), протухшая запись ниже
 TRIG_BURNDOWN = _load_burndown_file(root, "desc-trigger-burndown.txt")
 TRIG_BURNDOWN_SEEN = set()
-TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(есть триггер), для протухшей-записи гейта ниже
+TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(триггер в description+when_to_use), протухшая запись ниже
 
 
 def _collect_block_scalar(lines, start):
@@ -224,46 +233,54 @@ for skill_md in skill_files:
                       f"EN-канон (резидентный tier-0 в КАЖДОМ запросе); русский держи в SKILL.ru.md")
     if CYRILLIC_RE.search(fm.get("name", "")):
         errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
+    # СОВОКУПНАЯ запись листинга (P3.5) — та же формула, что budget.py
+    # `_listing_entry_tokens`/`_listing_entry_chars`: `description` + `when_to_use` одной
+    # строкой (пустой when_to_use не меняет результат). Гейты длины/триггера ниже читают
+    # ИМЕННО её, не голый `desc`, — иначе перенос фразы в `when_to_use` рвёт оба гейта.
+    listing_text = (desc + " " + fm.get("when_to_use", "")).strip()
     # ключ бакета — из ПУТИ (не frontmatter): upstream-скиллы часто без поля `bucket`.
     _desc_parts = rel.parts
     _desc_bn = _desc_parts[1] if _desc_parts[0] == "skills" and len(_desc_parts) > 2 else None
     _desc_nm = fm.get("name", "").strip('"').strip("'") or skill_dir.name
     _desc_key = f"{_desc_bn}/{_desc_nm}" if _desc_bn and _desc_nm else None
     if _desc_key:
-        DESC_BY_KEY[_desc_key] = len(desc)
-    if len(desc) > DESC_ERROR_MAX:
-        errors.append(f"{rel}: description {len(desc)} симв (> {DESC_ERROR_MAX} hard-потолок) — "
-                      f"сократи description (триггеры можно ужать), burn-down не спасает "
-                      f"выше {DESC_ERROR_MAX}, см. skiller budget")
-    elif len(desc) > DESC_WARN_MAX:
+        DESC_BY_KEY[_desc_key] = len(listing_text)
+    if len(listing_text) > DESC_ERROR_MAX:
+        errors.append(f"{rel}: запись листинга (description+when_to_use) {len(listing_text)} симв "
+                      f"(> {DESC_ERROR_MAX} hard-потолок) — сократи (триггеры можно ужать), "
+                      f"burn-down не спасает выше {DESC_ERROR_MAX}, см. skiller budget")
+    elif len(listing_text) > DESC_WARN_MAX:
         if _desc_key and _desc_key in DESC_BURNDOWN:
             DESC_BURNDOWN_SEEN.add(_desc_key)
-            warnings.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) — "
-                            f"унаследованный долг в scripts/desc-burndown.txt (легально, но "
-                            f"сокращай при следующей правке)")
+            warnings.append(f"{rel}: запись листинга (description+when_to_use) "
+                            f"{len(listing_text)} симв (> {DESC_WARN_MAX}) — унаследованный долг "
+                            f"в scripts/desc-burndown.txt (легально, но сокращай при следующей "
+                            f"правке)")
         else:
-            errors.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) и НЕ в "
+            errors.append(f"{rel}: запись листинга (description+when_to_use) "
+                          f"{len(listing_text)} симв (> {DESC_WARN_MAX}) и НЕ в "
                           f"scripts/desc-burndown.txt — новый долг запрещён (рэтчет P3.2): "
-                          f"сократи description до <= {DESC_WARN_MAX} симв или добавь в "
+                          f"сократи запись до <= {DESC_WARN_MAX} симв или добавь в "
                           f"desc-burndown.txt с обоснованием")
 
-    # --- 1·триггер: description отвечает «когда звать» (P3.5 рэтчет, upstream пропускаем) ---
+    # --- 1·триггер: запись листинга отвечает «когда звать» (P3.5 рэтчет, upstream пропускаем) ---
     if _desc_key and upstream is None:
-        has_trigger = bool(DESC_TRIGGER_RE.search(desc))
+        has_trigger = bool(DESC_TRIGGER_RE.search(listing_text))
         TRIG_HAS_TRIGGER_BY_KEY[_desc_key] = has_trigger
         if not has_trigger:
             if _desc_key in TRIG_BURNDOWN:
                 TRIG_BURNDOWN_SEEN.add(_desc_key)
-                warnings.append(f"{rel}: description без триггерной фразы (use when/activate/"
-                                f"use for/…) — унаследованный долг в "
+                warnings.append(f"{rel}: description+when_to_use без триггерной фразы (use "
+                                f"when/activate/use for/…) — унаследованный долг в "
                                 f"scripts/desc-trigger-burndown.txt (легально, но чини при "
                                 f"следующей правке)")
             else:
-                errors.append(f"{rel}: description без триггерной фразы (use when/activate/"
-                              f"use for/use to/when you/whenever/trigger/use this) и НЕ в "
-                              f"scripts/desc-trigger-burndown.txt — новый долг запрещён "
-                              f"(рэтчет P3.5): опиши, КОГДА звать скилл, или добавь в "
-                              f"desc-trigger-burndown.txt с обоснованием")
+                errors.append(f"{rel}: description+when_to_use без триггерной фразы (use "
+                              f"when/activate/use for/use to/when you/whenever/trigger/use "
+                              f"this) и НЕ в scripts/desc-trigger-burndown.txt — новый долг "
+                              f"запрещён (рэтчет P3.5): опиши, КОГДА звать скилл (в description "
+                              f"или when_to_use), или добавь в desc-trigger-burndown.txt с "
+                              f"обоснованием")
 
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts
@@ -321,26 +338,29 @@ for skill_md in skill_files:
                         f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
                         f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")
 
-# --- 1b. desc-burndown.txt — протухшие записи (one-way рэтчет, P3.2) -----------
-# Запись легальна, только пока: скилл существует И его description всё ещё > DESC_WARN_MAX.
-# Иначе — протухла (скилл удалён/переименован, либо уже сокращён до нормы) — убери строку.
+# --- 1b. desc-burndown.txt — протухшие записи (one-way рэтчет, P3.2/P3.5) -----------
+# Запись легальна, только пока: скилл существует И его запись листинга
+# (description+when_to_use) всё ещё > DESC_WARN_MAX. Иначе — протухла (скилл
+# удалён/переименован, либо уже сокращён до нормы) — убери строку.
 for _bn_key in sorted(DESC_BURNDOWN):
     if _bn_key not in DESC_BY_KEY:
         warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (скилла нет "
                         f"в реестре под этим bucket/name), убери строку")
     elif DESC_BY_KEY[_bn_key] <= DESC_WARN_MAX:
-        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (description "
-                        f"уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери строку")
+        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (запись "
+                        f"листинга уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери "
+                        f"строку")
 
 # --- 1b·триггер. desc-trigger-burndown.txt — протухшие записи (one-way рэтчет, P3.5) -----
-# Запись легальна, только пока: скилл существует И его description всё ещё без триггера.
+# Запись легальна, только пока: скилл существует И его запись листинга
+# (description+when_to_use) всё ещё без триггера.
 for _tb_key in sorted(TRIG_BURNDOWN):
     if _tb_key not in TRIG_HAS_TRIGGER_BY_KEY:
         warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
                         f"(скилла нет в реестре под этим bucket/name), убери строку")
     elif TRIG_HAS_TRIGGER_BY_KEY[_tb_key]:
         warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
-                        f"(description уже несёт триггерную фразу), убери строку")
+                        f"(description+when_to_use уже несёт триггерную фразу), убери строку")
 
 # --- 1c. CORE-девятка — обязательные секции тела (P8.8, рэтчет) ------------
 # Сплошной гейт по всем скиллам неисполним (замер: активационную секцию несут

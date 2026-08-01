@@ -1,8 +1,9 @@
 ---
 name: task-brief-template
 bucket: general
-version: 0.4.0
-description: "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute и поля для итеративного (loop) исполнения: verifier, exit condition, hard-stop."
+version: 0.5.0
+description: "Шаблон постановки сложных задач: цель, границы, инварианты, предположения, out of scope, критерии приемки, definition of done, loop-поля."
+when_to_use: "Используй, когда ставишь сложную задачу перед делегированием."
 risk: draft
 persona: oss-dev
 tags: [workflow, template, requirements, context]

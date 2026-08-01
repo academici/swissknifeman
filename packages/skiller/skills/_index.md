@@ -217,10 +217,10 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `anti-drift` | Discipline against agent rabbit-holing: think before coding, simplicity first, surgical e… | `workflow`, `discipline`, `orchestration`, `context` |
+| `anti-drift` | Discipline against agent rabbit-holing: think first, simplicity, surgical edits, circuit-… | `workflow`, `discipline`, `orchestration`, `context` |
 | `compact-responses` | Activate ultra-compact response mode: minimal prose, code-only, no explanations unless as… | `conventions`, `style`, `tokens`, `context`, `workflow` |
-| `complex-task-orchestrator` | Complex-task orchestration: decomposition, context routing, risk management, Definition o… | `workflow`, `orchestration`, `checklist`, `agents` |
-| `context-economy` | Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules… | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
+| `complex-task-orchestrator` | Complex-task orchestration: decomposition, context routing, risk, Definition of Done. | `workflow`, `orchestration`, `checklist`, `agents` |
+| `context-economy` | Claude Code context economy: CLAUDE.md ≤200 lines, path-scoped rules, /compact vs /clear,… | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
 | `cross-layer-change-checklist` | Use when a change spans multiple layers: code, authorization, UI, docs, tests. | `checklist`, `workflow`, `validation` |
 | `git-commit-rules` | Use when preparing a Git commit: husky/commitlint, message format, safe action order. | `git`, `conventions`, `conventional-commits`, `gitops` |
 | `git-safety` | Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/res… | `git`, `safety`, `hooks`, `guardrails`, `init` |
@@ -229,13 +229,13 @@
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
-| `plan-protocol` | Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
+| `plan-protocol` | Executable plans in plans/<ID>: schemas, 6 statuses, DoR, routing, semantic Next, handoff. | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
-| `session-handoff` | Cross-session/agent context handoff: compress a session into a structured doc — state, de… | `workflow`, `context`, `tokens`, `handoff` |
+| `session-handoff` | Cross-session/agent handoff: compress a session into state, decisions, open items. | `workflow`, `context`, `tokens`, `handoff` |
 | `shell` | Growing cookbook of shell constructs compatible with this environment's hooks (currently … | `workflow`, `bash`, `shell`, `safety`, `hooks` |
-| `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
-| `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
-| `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
+| `skills-ssot` | Single source of truth for skills across AI agents: .ai/skills, symlinks, gitignore. | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
+| `spec-interview` | Pre-code interview: one question at a time, reads the codebase itself, proposes a recomme… | `workflow`, `requirements`, `discovery` |
+| `task-brief-template` | Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acc… | `workflow`, `template`, `requirements`, `context` |
 | `verify-claims` | Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |

@@ -990,8 +990,8 @@
       "path": "skills/devops/db-test-preflight/SKILL.md",
       "version": "0.1.0",
       "description": "Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (docker compose ps / pg_isready), target DB exists and its name ends with _test (not dev/prod), migrations applied; distinguishes host vs docker connection. Activate when running Postgres tests, wiring hooks/CI, or when 'tests fail on DB connection'.",
-      "sha256": "e23eded288d73514b81cad7633fc2c269b62fb26e7ea194bbe87c3917903d3ba",
-      "content_sha256": "a783c30844ebaf0566dfcee8c62fb3fa61018ee6e385a6cb84e723cc5cd80b5b",
+      "sha256": "22b479844f1d4e8879cba5a4a24d1aae58b14d38831cea715a31f0717af3b7a5",
+      "content_sha256": "49cfb0abb40b53d1bd803c7233110902755c4e170a1c29e4e26fd9d9fd86d099",
       "tags": [
         "postgres",
         "docker",
@@ -1176,8 +1176,8 @@
       "path": "skills/devops/node-pnpm-preflight/SKILL.md",
       "version": "0.1.0",
       "description": "Check Node/pnpm availability on host before commands and git hooks that use pnpm (commitlint, lint, build).",
-      "sha256": "7a45c7cdf985588fc1ff03db729a211d5ddf19fcefbf5abc68b35f78b1c0df96",
-      "content_sha256": "b0e07aa1332dbdf6e5a44352601452bfe282c35c218c7609e578a300caff4abd",
+      "sha256": "aa61c87ad3684b7b0dd0939e1678497d3d99d6f6bdfe567f2dc1d302c59112bf",
+      "content_sha256": "eb51f02926749bc1d5add91044bceccee5dc8eaf3540ad823ada1bb9dddf19de",
       "tags": [
         "node",
         "pnpm",
@@ -3177,8 +3177,8 @@
       "path": "skills/oss-dev/resolving-merge-conflicts/SKILL.md",
       "version": "0.1.0",
       "description": "Discipline for resolving an active git merge/rebase conflict: understand the state and the primary source of each change (commits/PRs/issues), resolve each hunk preserving both intents where possible (don't invent behavior, never --abort), run project checks, finish the merge/rebase. Activate on a merge/rebase conflict.",
-      "sha256": "8e17bf9c58ecb7519a8f0191284e052938509019134915e8a727d814390b0c42",
-      "content_sha256": "c5f4a5d4471f8f74ed9b59f22d1a47ffa7e599cd8e133a9f5f91fff8c5137f8a",
+      "sha256": "cac20e582a084bf38386bec359c28f4d4b745b36589798dcedc5a5f1a255302d",
+      "content_sha256": "c8aee1a1bbee08044d2d4c64b73f43ae245efa1b1f274b4922631d2b8a6a455a",
       "tags": [
         "git",
         "merge",
@@ -4032,8 +4032,8 @@
       "path": "skills/quality/refactoring-plan/SKILL.md",
       "version": "0.1.0",
       "description": "Use when planning a safe refactor: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback.",
-      "sha256": "626ac874746c15da99d45f2c195f381378877aa307b97303793d441c4cac2298",
-      "content_sha256": "1a9c565daa4a825b361dd69ace45af9a43ae8c7cdfb2cc3a2478f45e43fbc89f",
+      "sha256": "2b3ad9adabba54cc73d9eeed82db65329adff57144e6e6b28ce4dd4cc34ff5af",
+      "content_sha256": "dde8dcdae501ebd3f09f34b9961cc0bac7ac2b44574ba327f17f5a5ea19636ac",
       "tags": [
         "quality",
         "refactor",

@@ -3,6 +3,8 @@ name: db-test-preflight
 bucket: devops
 version: 0.1.0
 description: "Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (docker compose ps / pg_isready), target DB exists and its name ends with _test (not dev/prod), migrations applied; distinguishes host vs docker connection. Activate when running Postgres tests, wiring hooks/CI, or when 'tests fail on DB connection'."
+context: fork
+background: false
 risk: read
 persona: operator
 tags: [postgres, docker, testing, preflight, devops, ci, isolation]

@@ -3,6 +3,8 @@ name: refactoring-plan
 bucket: quality
 version: 0.1.0
 description: Use when planning a safe refactor: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback.
+context: fork
+background: false
 risk: draft
 persona: quality
 tags: [quality, refactor, refactoring, validation, workflow]

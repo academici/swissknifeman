@@ -3,6 +3,8 @@ name: resolving-merge-conflicts
 bucket: oss-dev
 version: 0.1.0
 description: "Discipline for resolving an active git merge/rebase conflict: understand the state and the primary source of each change (commits/PRs/issues), resolve each hunk preserving both intents where possible (don't invent behavior, never --abort), run project checks, finish the merge/rebase. Activate on a merge/rebase conflict."
+context: fork
+background: false
 risk: write
 persona: oss-dev
 tags: [git, merge, rebase, conflicts]

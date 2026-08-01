@@ -3,6 +3,8 @@ name: node-pnpm-preflight
 bucket: devops
 version: 0.1.0
 description: "Check Node/pnpm availability on host before commands and git hooks that use pnpm (commitlint, lint, build)."
+context: fork
+background: false
 risk: read
 persona: operator
 tags: [node, pnpm, devops, preflight, ci]

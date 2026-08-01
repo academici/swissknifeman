@@ -13,6 +13,7 @@ from .instructions import cmd_instructions
 from .mcp import cmd_mcp
 from .permissions import cmd_permissions
 from .router import cmd_router
+from .run import cmd_run
 from .safedirs import cmd_safedirs
 from .wf_status import cmd_wf
 
@@ -27,6 +28,7 @@ COMMANDS = {
     "instructions": cmd_instructions,
     "doctor": cmd_doctor,
     "wf": cmd_wf,
+    "run": cmd_run,
 }
 
 

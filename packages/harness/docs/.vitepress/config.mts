@@ -33,6 +33,7 @@ export default defineConfig({
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
             { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
             { text: 'Политика исполнения', link: '/reference/execution-policy' },
+            { text: 'Драйвер exec-волны', link: '/reference/exec-wave' },
           ],
         },
         {

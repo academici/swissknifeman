@@ -41,6 +41,7 @@ export default withMermaid(defineConfig({
             { text: 'Конфиги (обзор)', link: '/harness/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/harness/setup/claude' },
             { text: 'Канон корневых инструкций', link: '/harness/reference/instruction-canon' },
+            { text: '*.env.ini: хуковый интент', link: '/harness/reference/hook-intent-files' },
             { text: 'Политика исполнения', link: '/harness/reference/execution-policy' },
             { text: 'Драйвер exec-волны', link: '/harness/reference/exec-wave' },
           ],

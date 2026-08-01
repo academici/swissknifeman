@@ -32,6 +32,7 @@ export default defineConfig({
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
             { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
+            { text: '*.env.ini: хуковый интент', link: '/reference/hook-intent-files' },
             { text: 'Политика исполнения', link: '/reference/execution-policy' },
             { text: 'Драйвер exec-волны', link: '/reference/exec-wave' },
           ],

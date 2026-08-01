@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.hooks import _parse_memory_flag, block_autoapprove, block_memory, block_plans_dir
 import tests.fixtures as fx
+
+_HOOKS_ROOT = Path(__file__).resolve().parent.parent / "configs/claude-code/hooks"
+
+
+def _read_mode(common_sh, hookdir, project_dir=None):
+    """Зовёт `read_mode` реального `common.sh` (bash) в изолированном subprocess — та
+    же лестница приоритета (`$CLAUDE_PROJECT_DIR/.claude/<hook>.env.ini` → `<hookdir>/env.ini`),
+    что и в живом хуке; unit-тест на копии логики её бы не проверял (P5.3)."""
+    env = {"PATH": "/usr/bin:/bin"}
+    if project_dir is not None:
+        env["CLAUDE_PROJECT_DIR"] = str(project_dir)
+    result = subprocess.run(
+        ["bash", "-c", f'source "{common_sh}"; read_mode "{hookdir}"'],
+        capture_output=True, text=True, env=env, check=True)
+    return result.stdout.strip()
 
 
 def run(fn, *a, **kw):
@@ -129,6 +145,37 @@ class HooksCase(unittest.TestCase):
     def test_plans_dir_dry_run_does_not_write(self):
         run(block_plans_dir, self.proj, "plans", "settings.json", True)
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
+
+    # --- *.env.ini лестница приоритета (P5.3) --------------------------------
+    def test_autoapprove_read_mode_priority_ladder(self):
+        common_sh = _HOOKS_ROOT / "auto-approve/lib/common.sh"
+        hookdir = _HOOKS_ROOT / "auto-approve"
+        # оба отсутствуют → дефолт "off"
+        self.assertEqual(_read_mode(common_sh, self.tmp / "no-such-hookdir", self.proj), "off")
+        # только <hookdir>/env.ini → используется он
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "strict")
+        # per-project .claude/auto-approve.env.ini перекрывает <hookdir>/env.ini
+        cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
+        (cdir / "auto-approve.env.ini").write_text("MODE=bypass\n")
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "bypass")
+
+    def test_memory_read_mode_priority_ladder(self):
+        common_sh = _HOOKS_ROOT / "memory/lib/common.sh"
+        hookdir = _HOOKS_ROOT / "memory"
+        self.assertEqual(_read_mode(common_sh, self.tmp / "no-such-hookdir", self.proj), "off")
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "federation")
+        cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
+        (cdir / "memory.env.ini").write_text("MODE=off\n")
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "off")
+
+    def test_read_mode_ignores_unknown_key(self):
+        # Измеренное поведение (не предположение, D-«правило внешних фактов»): неизвестный
+        # ключ рядом с MODE не ломает разбор — reader просто его не видит.
+        common_sh = _HOOKS_ROOT / "auto-approve/lib/common.sh"
+        cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
+        (cdir / "auto-approve.env.ini").write_text("FOO=bar\nMODE=permissive\n")
+        self.assertEqual(
+            _read_mode(common_sh, _HOOKS_ROOT / "auto-approve", self.proj), "permissive")
 
 
 if __name__ == "__main__":

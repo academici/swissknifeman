@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P5.4 закрыт 🟠 — провенанс модели в каноне + видимость Codex, plan-run) |
+| Last Updated | 2026-08-01 (P5.5 закрыт 🟠 — Codex publication consumer-acceptance гейт, plan-run) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -330,6 +330,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-exec/sonnet-medium | **P5.3 закрыт: 🟢 Done** — вердикт-правило трекинга `*.env.ini` по классу, 2 файла untracked, новая док-страница + тесты лестницы, фаза P5 2/11 — детали см. `phases/P5.md` P5.3 Completion Notes |
 | 2026-08-01 | plan-exec/sonnet-medium | **P5.6 закрыт: 🟠 Done with deviations** — `--output-dir`+пиновка `0.0.78` на трёх носителях, тест согласованности; побочный regen двух provider-audit доков вне номинального `Files` — детали см. `phases/P5.md` P5.6 Completion Notes |
 | 2026-08-01 | plan-run/sonnet-high | **P5.4 закрыт: 🟠 Done with deviations** — провенанс модели в `root.plan-lifecycle`, живой `codex exec` подтвердил видимость служебных каталогов (разрыв не подтверждён), фаза P5 2/11 — детали см. `phases/P5.md` P5.4 Completion Notes |
+| 2026-08-01 | plan-run/sonnet-high | **P5.5 закрыт: 🟠 Done with deviations** — изолированный consumer-acceptance гейт Codex publication живым `codex-cli`, гейт 18 `validate.sh`, фаза P5 2/11 — детали см. `phases/P5.md` P5.5 Completion Notes |
 
 ## 7. Contracts
 

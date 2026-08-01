@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (эскалация P3.4 снята D101: форма `Validation` P3.4 и P5.5 приведена к D90, `pre_final` → `allow`; P3.4 🟡 ждёт штатного `plan-close`; более широкий дефект таблицы кодов передан владельцу протокола как OQ-9) |
+| Last Updated | 2026-08-01 (P3.5 закрыт 🟠 — гейты `validate.sh` пере-базированы на совокупную запись листинга, бакет `general` закрыт целиком, фаза P3 терминальна; ждёт штатного `plan-close P3`) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -120,7 +120,7 @@ Claude Code уже несёт нативные механизмы сужения
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
-| P3 | Нативные поля скиллов | 2/6 | 🟡 In progress |
+| P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
@@ -301,6 +301,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-design/frontier | **Эскалация P3.4 снята (v1.0.9, D101):** форма `Validation` P3.4 и P5.5 приведена к D90 (« · », 6 замен, текст проверок не тронут) — `pre_final` обоих → `allow`; P3.4 `🔴 → 🟡` (ждёт `plan-close`), доска P3 `🔴 → 🟡` — детали см. `phases/P3.md` §P3.4, `plan.md` §5 D101 |
 | 2026-08-01 | plan-design/frontier | Тем же заходом: заведён слой 2 разбора (`research/12-D100-acceptance-not-public-2026-08-01.md`), заведён **OQ-9** (табличная строка `ACCEPTANCE_NOT_PUBLIC` против D77 — владелец протокола, вне этого плана), развилка **34** `## Обсуждение` |
 | 2026-08-01 | plan-close/sonnet-low | **P3.4 закрыт: 🟢 Done** — сверка по фактам, Task Contract свежим прогоном `pre_mutation: allow · pre_final: allow`, `validate.sh`/`registry --check`/`plan-lint` зелены — детали см. `phases/P3.md` P3.4 Completion Notes |
+| 2026-08-01 | plan-run/sonnet-high | **P3.5 закрыт: 🟠 Done with deviations** — гейты пере-базированы, `general`-бакет закрыт целиком, **фаза P3 терминальна** — детали см. `phases/P3.md` P3.5 Completion Notes |
 
 ## 7. Contracts
 

@@ -1,72 +1,90 @@
-# HANDOFF — 2026-08-01 — after P3.4
+# HANDOFF — 2026-08-01 — after P3.5
 
-**Next:** `/task:plan-run 2026.07.31-SKM-LEAN P3.5` — последний item фазы P3 (Exec = manual,
-D18: модель/effort сессии не пинуются командой — задай `/model`/`/effort` перед запуском).
-Правит ГЕЙТЫ `validate.sh`, поэтому идёт строго после P3.1–P3.4 (все закрыты).
+**Next:** `/task:plan-close 2026.07.31-SKM-LEAN P3` — фаза P3 терминальна (все 6 items
+🟢/🟠), режим закрытия фазы (реконсиляция + `closure/P3.json`).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | Sonnet 5 |
-| Thinking | high — предписанная реализация против пинованного D27, effort high+ (Routing §3 P3.5) |
-| Context | continue (/clear) — ручной item |
-| Суть | `when_to_use` + сжатие записи листинга + тиры `model:`/`effort:`, пере-база гейтов `validate.sh` на совокупную запись листинга |
+| Thinking | low — реконсиляция по фактам, новых решений не принимает (`plan-close` пин) |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть фазу P3: сверить Completion Notes items против git-фактов, `closure/P3.json`, снять phase-level вердикт |
 
 ```
-/model sonnet
-/effort high
-/task:plan-run 2026.07.31-SKM-LEAN P3.5
+/task:plan-close 2026.07.31-SKM-LEAN P3
 ```
 
-**Done:** Этим заходом — **`plan-close` режим Pn.m** (sonnet/low) — реконсиляция P3.4 по
-git-фактам.
+**Done:** Этим заходом — **`plan-run` режим Pn.m** (сессия sonnet/high, D18) — P3.5.
 
-- Git-факты сверены со Scope Included: коммит `8f5206ba` несёт `context: fork` +
-  `background: false` на 4 отобранных скиллах (`devops/node-pnpm-preflight`,
-  `devops/db-test-preflight`, `quality/refactoring-plan`, `oss-dev/resolving-merge-conflicts`),
-  критерий отбора и таблицу в `findings/P3-fork-selection.md`, `docs/guide/skill-taxonomy.md`,
-  новый стенд `artifacts/p3-4-fork-selection-bench.sh` — Files item'а не превышены.
-- Маршрут исполнителя разрешён п.1/п.2 лестницы D75 без расхождения: Completion Notes несут
-  routing-adherence «`implementation/high`, сессия `sonnet/high`»; терминальная запись
-  `journal.jsonl` (`ts 2026-08-01T07:29:53Z`, `plan-run`) — `actor: sonnet/high` — совпадает.
-- **Task Contract, свежий прогон:** `task_contract.build/evaluate` над закоммиченным ТЗ
-  (actual_route `implementation/high`, `sonnet`, `source: self-attested`) →
-  `pre_mutation: allow` / `pre_final: allow` (7 acceptance-записей после правки формы D101/D90,
-  6 `public`). Устаревшая строка `write-site (… УСТАРЕЛ) …` в Completion Notes ЗАМЕНЕНА (не
-  дописана) на каноническую `write-site: pre_mutation: allow · pre_final: allow`.
-- **Validation item'а прогнана целиком:** `validate.sh` — exit 0 (230 skills checked, 567
-  тестов OK, `registry --check` актуален); `grep "^context: fork"` по реестру → **4**; контур
-  `task:plan-*` и CORE-девятка → **0** форкнутых (оба совпадают с заявленным); `skiller budget
-  --first-turn` — `7179 ток OK` без изменений (ось A не задета, как и заявлено).
-- **Status-rule:** три Known Deviations item'а — все класса **process** (routing перебора нет;
-  бухгалтерия `🟡`/журнал после начала практической работы; правка спеки ПОСЛЕ исполнения —
-  D101, ужесточает приёмку, текст проверок не тронут байт-в-байт) — ни один material-триггер
-  §6 не сработал (Scope выполнен полностью, Validation зелена, public contract не задет,
-  workaround в коде не принят, дифф вне Files отсутствует). Вердикт — **`🟢 Done`**.
-- `## Phase Status` (`phases/P3.md`) и Status Board (`plan.md` §4) синхронизированы: P3.4
-  `🟡 → 🟢`, доска P3 `1/6 → 2/6` (P3.1, P3.4 зелены; P3.6/P3.2/P3.3 — 🟠; P3.5 — ⬜).
-- `python3 packages/task/scripts/plan-lint.py plans/2026.07.31-SKM-LEAN --baseline HEAD` —
-  **OK, 0 ошибок, 1 пре-существующий WARN** (P1 workflow-скрипт, D29, к P3.4 не относится),
-  новых от закрытия: 0.
-- `python3 plans/verify-citations.py plans/2026.07.31-SKM-LEAN --strict` — **202 цитаты
-  проверено, 5 находок, новых от диффа P3.4: 0** (все 5 — пре-существующие ссылки на
-  `context-economy/SKILL.md` в чужих файлах и `plan-protocol/SKILL.md:1228` в `plan.md`/
-  `research/12-…`, вне Files этого item'а).
-- Журнал: `plan.md` §6 Update Log — строка о закрытии P3.4; `journal.jsonl` — запись
-  `plan-close/sonnet-low/closed-green`.
+- Гейты `validate.sh` (длина `DESC_WARN_MAX`/`DESC_ERROR_MAX` и триггер-регулярка)
+  пере-базированы на СОВОКУПНУЮ запись листинга `(description + " " + when_to_use).strip()`
+  — идентичная формула `budget.py::_listing_entry_tokens`/`_listing_entry_chars`. Новые тесты
+  `tests/test_desc_listing_combined_gate.py` (4 кейса) + существующие гейт-тесты без правки
+  прошли неизменными — `test.sh`: 567→571, OK.
+- Приоритизация — `skiller bucket-audit --json` (usage, `scanned_projects: 24`) × доля `tier0`
+  в записи листинга, агрегация по БАКЕТУ: `general` — score 9.775 (доминирует, следующий
+  `devops` — 0.216) за счёт `plan-protocol` (usage 354, резидентный CORE-скилл) и CORE-статуса
+  трёх из восьми записей бакета. Бакет `general` (8 из 69 записей `desc-trigger-burndown.txt`)
+  закрыт целиком: `plan-protocol`/`anti-drift`/`complex-task-orchestrator`/`context-economy`/
+  `session-handoff`/`skills-ssot`/`spec-interview`/`task-brief-template` получили `when_to_use`;
+  суммарная дельта записи листинга по бакету **−9 симв** (Implementation Rule 3, `≤0` на уровне
+  бакета). `desc-trigger-burndown.txt`: **69 → 61**. Полные числа/таблицы —
+  `findings/P3-desc-burndown.md`.
+- Обе провайдерные оси (`budget --profiles`) и реестр целиком (`⊕ always` 16146→16008 ток) —
+  ни один профиль не сменил вердикт `ок`/`ПЕРЕБОР` (Codex-разрыв — не в Scope, вход владельцу
+  по `roadmap/codex-skill-listing-fallback-overflow.md`, файл не тронут). `budget --first-turn`
+  этого репозитория: 7179→7176 ток, `OK`. `budget --check-core`: 663→597/750, `OK`.
+- Тиры `model:`/`effort:`: гейт применимости (`docs/guide/skill-taxonomy.md` §«Тиры») отсёк
+  advisory/meta-скиллы (override сломал бы тир основной задачи сессии) и `plan-protocol`
+  (собственная per-item таблица маршрутизации) — назначены ДВУМ дискретным задачам:
+  `spec-interview` → `sonnet/medium`, `task-brief-template` → `sonnet/low`.
+- Триггер-точность: `anti-drift` (единственный с готовым `evals/`) — `--triggers` даёт
+  честную офлайн-границу (`claude` CLI недоступен), схема валидна. Остальным семи
+  `triggers.json` заведён РЕАЛЬНЫМ содержимым через `--scaffold` (единственный CLI-путь;
+  побочный эффект — `evals.json`/`pressure.json`-заглушки, см. Known Deviations ниже).
+- `roadmap/skill-description-quality.md` Статус обновлён (69→61, файл на месте — D57).
+  Двуязычие: 8 `SKILL.ru.md` синхронно правлены, `check-translations.sh --strict` — 0 проблем.
+- **Status-rule:** `🟠 Done with deviations` — MATERIAL-отклонение: item-коммит несёт дифф вне
+  `Files` (14 файлов `evals.json`/`pressure.json`, неустранимый побочный эффект
+  `skiller eval --scaffold`, `rm` заблокирован харнесс-гейтом `deny_hard`) + один
+  process-пункт (Pre-mutation Task Contract прогнан постфактум, не строго до первой мутации) —
+  оба зафиксированы в Known Deviations `phases/P3.md` §P3.5, оба НЕ скрыты.
+- **Фаза P3 терминальна** (P3.1🟢/P3.6🟠/P3.2🟠/P3.3🟠/P3.4🟢/P3.5🟠, доска `plan.md` §4
+  → `2/6`, статус фазы `🟡 In progress → 🟠 Done with deviations`).
+- `validate.sh`/`test.sh`/`registry --check`/`check-translations.sh --strict` — все зелёные
+  на item-коммите `51d68837`. Task Contract свежим прогоном:
+  `pre_mutation: allow · pre_final: allow`.
+- Журнал: старт-запись + финал `plan-run/sonnet-high/closed-deviations` (`journal.jsonl`).
 
-**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · **P3 2/6, 🟡 In progress**
-(P3.1 `🟢`, P3.6 `🟠`, P3.2 `🟠`, P3.3 `🟠`, P3.4 `🟢`, P3.5 `⬜` — единственный незакрытый item
-фазы). Всего 38 items. После P3.5 — фаза P3 терминальна целиком → `/task:plan-close
-2026.07.31-SKM-LEAN P3` (режим `Pn`, закрытие фазы).
+**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · **P3 2/6, 🟠 Done with deviations, все 6
+items терминальны** · P4 0/6 (⬜) · P5 0/9 (⬜) · P6 0/3 (⬜) · P7 0/4 (⬜). Всего 38 items.
+После `plan-close P3` — фаза P4 (Драйвер exec-волны) первая нетерминальная, но её items ещё
+СКЕЛЕТЫ (не задетализированы) → следующий реальный шаг после закрытия P3 —
+`/task:plan-design 2026.07.31-SKM-LEAN P4`, не `plan-exec`/`plan-run` (упадёт на
+предусловии «фаза ещё скелет»).
 
-**Sources of truth:** `phases/P3.md` §P3.4 (Completion Notes с каноническим `write-site:`,
-Pending Work без инструкции — выполнена) · `findings/P3-fork-selection.md` · `plan.md` §4
-доска, §6 Update Log · `journal.jsonl` (записи `P3.4` — 4 шт., последняя `plan-close`) ·
-`research/12-D100-acceptance-not-public-2026-08-01.md` (разбор снятой эскалации, не тронут
-этим заходом).
+**Sources of truth:** `phases/P3.md` §P3.5 (Completion Notes, Pending Work, Known Deviations)
+· `findings/P3-desc-burndown.md` (приоритизация, числа, тиры) · `plan.md` §4 доска, §6 Update
+Log, `## 0. Meta` · `journal.jsonl` (записи `P3.5` — 2 шт., последняя `plan-run`) ·
+`roadmap/skill-description-quality.md` (Статус) · `docs/guide/skill-taxonomy.md` §«when_to_use
++ сжатие»/§«Тиры» (канон формулы и гейта применимости тиров).
 
-**Open risks:** без изменений от предыдущего handoff, кроме закрытия пункта про P3.4:
+**Open risks:** без изменений от предыдущего handoff, кроме закрытия пункта про P3.5, плюс:
 
+- **Остаток `desc-trigger-burndown.txt` — 61 запись** вне бакета `general`; следующий по
+  приоритету — `devops` (score 0.216, 8 записей) — продолжение той же usage-приоритизацией,
+  не батчем (`findings/P3-desc-burndown.md` §1).
+- **221 из 229 скиллов реестра без тиров `model:`/`effort:`** — таблица/гейт применимости
+  готовы (`docs/guide/skill-taxonomy.md`), раскатка не входила в Validation этого item'а.
+- **`P4` Phase Context (`phases/P4.md:5`) пинует «живой канон `plan-protocol` v2.21.0»** —
+  P3.5 бампнул `plan-protocol` до **2.22.0** (правка frontmatter, семантика канона не
+  тронута). Пин — «на КОММИТ, не на latest» (сам текст это предвидит), но строка версии в
+  Phase Context теперь буквально устарела — не блокер (P4 ещё скелет, P4.1 при детализации
+  перечитает живую версию), но названо явно, чтобы не удивлять `plan-design P4`.
+- **14 файлов `evals.json`/`pressure.json`-заглушек** (7 скиллов) — TODO-скаффолд, не
+  заполненные поведенческие тесты; `rm` для очистки заблокирован харнесс-гейтом — если
+  политика `safe-dirs` когда-нибудь допустит `rm` в `packages/skiller/skills/**/evals/`,
+  можно перечистить вручную (не блокер, не мусор — валидная схема).
 - **OQ-9:** табличная строка `ACCEPTANCE_NOT_PUBLIC` остаётся в клетке «реальный» вопреки D77 —
   владелец вне этого плана.
 - **Долг D90 не закрыт:** 33 items плана дают ОДНУ acceptance-запись и зелены случайно.
@@ -95,4 +113,5 @@ Pending Work без инструкции — выполнена) · `findings/P3
   не тронут и не коммитился.
 
 **Workarounds/Deferred/Open questions:** без изменений от предыдущего handoff (см. Open risks
-выше) — P3.4 закрыт штатно, новых workaround'ов не добавлено.
+выше) — P3.5 закрыт с process/material-отклонениями, оба задокументированы, новых open
+questions не заведено.

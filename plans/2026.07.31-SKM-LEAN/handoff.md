@@ -1,50 +1,52 @@
-# HANDOFF — 2026-08-01 — after P5.7
+# HANDOFF — 2026-08-01 — after P5.8
 
 **Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | implementation |
-| Thinking | high — канон launch-block, которому следует весь флот планов (5 команд + 5 Codex-зеркал + 11 golden-фикстур + semver-бамп скилла); аддитивность гейта против 26+ живых планов — инварианты, effort high+ по §9 (Routing P5.8) |
+| Thinking | high — канон `plan-lint --conflicts` (P5.9 Routing); инвариант fail-safe «гейт не зеленеет на пустоте», effort high+ по §9 |
 | Context | continue (/clear) — ручной item |
-| Суть | P5.8: строка `\| Команда \|` в форме launch-block; текущая сессия уже sonnet/high (= предписанному) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
+| Суть | P5.9: флаг `--conflicts` в `plan_lint.py`; строго ПОСЛЕ P5.8 (D43, оба правят один файл) — P5.8 терминален, путь открыт; текущая сессия уже sonnet/high (= предписанному) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
+| Команда | `—` (нет single-command эквивалента) |
 
 ```
 /model sonnet
 /effort high
-/task:plan-run 2026.07.31-SKM-LEAN P5.8
+/task:plan-run 2026.07.31-SKM-LEAN P5.9
 ```
 
-**Done:** **P5.7 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.7 =
+**Done:** **P5.8 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.8 =
 implementation/high, точное совпадение, без перебора/недобора).
 
-- **P5.7 🟢 Done** — диагностируемый отказ `INSTRUCTION_WRITE_FORBIDDEN` от `apply_instructions`
-  теперь печатает ожидаемый порядок целей `--authorize` (алфавитный по `target_path`,
-  копипастопригодный — тот же разделитель `,`, что парсит CLI) через новое опциональное
-  keyword-only поле `_write_refusal(..., message=…)`. Обогащение адресное: message передаёт
-  ТОЛЬКО вызов из `apply_instructions` при позиционном/составном рассогласовании; остальные
-  восемь вызовов `_write_refusal` `message` не передают (проверено тестом — `repair_instructions`
-  и `adopt_instructions` остаются `None`). Попутно починена немая механика `_print_report`:
-  `next_action="refuse"` у ВСЕХ `_write_refusal`-отказов забивал `observed` в дефолтном
-  (не-`--json`) текстовом выводе CLI — без этой правки новое `message` было бы видно только в
-  `--json`, а не в обычном прогоне `harness instructions apply`. Позиционная сверка не изменена
-  ни строкой (Implementation Rule 1). Долг воспроизведён живым CLI до/после: `apply --authorize
-  CLAUDE.md,AGENTS.md` (неверный порядок) → отказ, stderr называет `AGENTS.md,CLAUDE.md`; тот же
-  порядок скопирован буквально → `OK`. Три новых теста в `test_provider_instructions.py`
-  (`packages/harness/tests/`): копипастопригодность + round-trip · порядок берётся из живого
-  `fresh.artifact_plan.actions`, не хардкодится (сужённый scope-набор) · `message` не затронут у
-  двух других вызовов. `docs/reference/instruction-canon.md` дополнен строкой, что отказ печатает
-  порядок целиком (существующая строка про алфавитный порядок — от 2026-07-30, предшествует
-  плану). Roadmap-запись `instruction-authorize-order.md` закрыта и удалена (`find … -delete`),
-  строка в `roadmap/README.md` §«Закрыто и удалено». `bash packages/harness/scripts/test.sh` —
-  637/637, `validate.sh` — `OK` (10/10, включая дрейф инструкций 12/12 `clean/noop`),
-  `python3 -m harness.instructions --check` — `OK`. Item-коммит `578eb1ca`. Known Deviations: —.
+- **P5.8 🟢 Done** — форма launch-block доведена до однозначной: строка `| Команда |`
+  живёт последней в таблице параметров и, когда полностью выражает следующий шаг, является
+  всем ответом; отдельный code-block стал ОПЦИОНАЛЬНЫМ и появляется только у `Exec = manual`
+  (строка `Команда` = `—`), scope-payload находок/реопена или формы `ОЖИДАНИЕ:`. Гейт
+  `plan_lint.py` переписан с `has_table and has_fence` на `has_table and (has_command_row or
+  has_fence)` — «ровно один из двух» реализовано как МИНИМУМ один, не «строго не оба»: оба
+  носителя сразу остаются зелёными (back-compat старой формы 26+ живых планов флота), решение
+  зафиксировано пятью новыми тестами. Правило scope-payload (`## Audit Pn`) не тронуто —
+  по-прежнему требует code-block дословно. Синхронизированы пять команд `plan-{design,exec,
+  close,audit}.md` (`plan-run.md` не тронут — ссылается на `plan-exec.md` целиком, литерала
+  не несёт по конструкции), их Codex-зеркала (`render-provider-commands.py --write
+  --repair-owned`), golden-фикстуры, Codex-проекция скилла (`skiller registry`). Скилл
+  `plan-protocol` `2.22.0 → 2.23.0`, литерал `Команда` зарегистрирован (`i18n-keep` +
+  `CANON_LITERALS`). `check-translations.sh --strict` — OK, `validate.sh` (task/skiller/
+  harness) — все зелёные, паритетные тесты 18/18. Парный прогон корня `plans/` (D53):
+  `ERROR Δ 0 · WARN Δ 0` (243 → 243). `plan-lint plans/2026.07.31-SKM-LEAN --baseline HEAD`:
+  0 ошибок, новых от рабочего дерева — 0. Контракт `driver-plan-protocol-v2.md` — строка
+  `pinned` бампнута на `v2.23.0 @ 26d3efe3` (D72). Item-коммит `26d3efe3`, дополнительный
+  атомарный коммит контракт-пина `dc3574ee` (item-коммит завершающий — этот хеш). Known
+  Deviations: —. Pending Work: `packages/task/adapters/codex/{provider-artifacts.lock.json,
+  publication-lock.json}` намеренно не ресинхронизированы (пре-существующая дрейф-находка
+  ДРУГИХ команд вне `Files` P5.8 — см. `phases/P5.md` P5.8 Completion Notes).
 
 **Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-**P5 3/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.8–P5.11. Следующий по
-порядку — **P5.8** (`solo`, `manual`, implementation/high).
+**P5 4/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.9–P5.11. Следующий по
+порядку — **P5.9** (`solo`, `manual`, implementation/high, строго ПОСЛЕ P5.8 — D43).
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.8 и далее) · `plan.md` §3
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.9 и далее) · `plan.md` §3
 Routing · `roadmap.md` (карта батчей — P5.8/P5.9 строго последовательны, D43: оба правят
 `plan_lint.py`).
 
@@ -61,11 +63,16 @@ Routing · `roadmap.md` (карта батчей — P5.8/P5.9 строго по
 - P5.3 Pending Work: унификация четырёх самописных парсеров `*.env.ini` — вне Scope, уходит в
   `roadmap/` при подтверждении владельцем.
 - Окружной дефект `codex exec -s read-only` (bwrap/AppArmor, обход `--dangerously-bypass-approvals-
-  and-sandbox`) остаётся в силе для будущих item'ов, зовущих `codex exec` в sandboxed режиме;
-  P5.7 его не задел — весь прогон шёл через прямые `harness instructions`/`test.sh`.
+  and-sandbox`) остаётся в силе для будущих item'ов, зовущих `codex exec` в sandboxed режиме.
 - P5.5 Pending Work (не изменилось этим заходом): `codex plugin update` отдельным тестом не покрыт.
-- **P5.8/P5.9 — строго последовательны** (D43, roadmap.md): оба правят `plan_lint.py`; если
-  свип `finish` найдёт скрытую зависимость — батч распускается (roadmap.md примечание).
+- **Новое (P5.8):** `packages/task/adapters/codex/{provider-artifacts.lock.json,
+  publication-lock.json}` несут пре-существующую дрейф-находку у команд `design`/`research`/
+  `review`/`plugin`/`publication-lock` (подтверждено на чистом дереве ДО P5.8) — вне `Files`
+  P5.8, не тронуто; `render-provider-commands.py` не несёт per-artifact `--only`-селектора.
+  Ни `validate.sh`, ни тестовый набор на реальный `REPO_ROOT`-lock не смотрят — Validation не
+  затронута. Рекомендация — roadmap-запись/мелкий item на `--only` флаг.
+- **P5.9 — строго ПОСЛЕ P5.8** (D43, roadmap.md, оба правят `plan_lint.py`) — путь теперь
+  открыт (P5.8 терминален).
 
 **Workarounds/Deferred/Open questions:**
 

@@ -24,6 +24,7 @@ MODE="run"
 case "${1:-}" in
   -h|--help) MODE="help" ;;
   --self-check) MODE="self-check" ;;
+  --paths-mechanism) MODE="paths-mechanism" ;;
   "") MODE="run" ;;
   *) echo "unknown flag: $1 (use --help)" >&2; exit 2 ;;
 esac
@@ -71,6 +72,17 @@ AXIS_A_PAIRS = [
 LISTING_PROMPT = "List the names of every skill available to you, one per line. Nothing else."
 TRIGGER_PROMPT = "zzp31trigger — please proceed accordingly."
 
+# P3.6 — дозамер механизма paths: (research/11-p3-paths-mechanism-2026-08-01.md §4).
+# Единственная переменная — совпадает ли файл в workspace с glob скилла. Существующий
+# _root/probe.zzp31paths непригоден (называет скилл по имени, findings/P3-native-fields-smoke.md
+# §3.1) — используется отдельная чистая фикстура.
+PATHS_MATCH_FILE = "probe-clean.zzp31paths"
+PATHS_NOMATCH_FILE = "probe.txt"
+B2_PROMPT = ("There is exactly one file in the current directory. First, open and read its "
+             "contents. Then run /zz-p31-paths and reply with only what it outputs.")
+B3_PROMPT = ("There is exactly one file in the current directory. First, open and read its "
+             "contents. Then say exactly: " + TRIGGER_PROMPT)
+
 
 def claude_bin():
     """Резолв бинаря claude: env-override SKM_CLAUDE_BIN -> PATH (форма eval.py:377-384)."""
@@ -105,12 +117,29 @@ workspace — временный каталог вне дерева репози
 p3-1-fixtures/ и убирается за собой.
 
 Флаги:
-  --help          эта справка (код 0)
-  --self-check    офлайн-проверка прибора без единого сетевого прогона (код 0/1)
-  (без флагов)    полный прогон стенда (код 0/1) — печатает по каждому прогону три
-                  компонента usage + сумму, по каждой паре — медиану, дельту, разброс,
-                  число прогонов, и по полям context/model/effort/paths/disable-model-invocation
-                  строки со strong-signal проверками (маркер в result).
+  --help             эта справка (код 0)
+  --self-check       офлайн-проверка прибора без единого сетевого прогона (код 0/1)
+  --paths-mechanism  дозамер механизма paths: (P3.6) — шесть плеч, отдельный подрежим,
+                     полную матрицу НЕ трогает (код 0/1)
+  (без флагов)       полный прогон стенда (код 0/1) — печатает по каждому прогону три
+                     компонента usage + сумму, по каждой паре — медиану, дельту, разброс,
+                     число прогонов, и по полям context/model/effort/paths/disable-model-invocation
+                     строки со strong-signal проверками (маркер в result).
+
+Плечи --paths-mechanism (research/11-p3-paths-mechanism-2026-08-01.md §4), единственная
+переменная — совпадает ли root-файл workspace с glob `*.zzp31paths` скилла zz-p31-paths:
+  A1  zz-p31-paths, root=probe.txt (не совпадает) -> root=probe-clean.zzp31paths (совпадает)
+      наблюдаемая величина: дельта медианы суммы usage (та же формула, что ось A выше)
+  A2  zz-p31-ctrl, тот же пара root-файлов — калибровка: обязана быть «неразличимо»
+      наблюдаемая величина: дельта медианы суммы usage
+  B0  `/zz-p31-paths` без root-файла (ре-baseline)
+      наблюдаемая величина: exit + маркер ZZP31-PATHS-BODY в result
+  B1  `/zz-p31-paths` при совпавшем root-файле
+      наблюдаемая величина: exit + маркер в result
+  B2  промпт «прочитать файл, затем вызвать скилл явно» при совпавшем root-файле
+      наблюдаемая величина: exit + маркер в result
+  B3  промпт «прочитать файл, затем триггер-фраза» при совпавшем root-файле
+      наблюдаемая величина: exit + маркер в result
 
 Клиент: {claude_bin() or '(claude не найден)'}
 """
@@ -157,7 +186,7 @@ def axis_a_sum(data):
     return i, cc, cr, i + cc + cr
 
 
-def run_axis_a_pair(claude, field, skill_a, skill_b, n=3):
+def _alternating_order(n):
     order = []
     pattern = ["A", "B", "B", "A", "A", "B"]
     ai = bi = 0
@@ -168,6 +197,22 @@ def run_axis_a_pair(claude, field, skill_a, skill_b, n=3):
             order.append("B"); bi += 1
         if ai >= n and bi >= n:
             break
+    return order
+
+
+def _axis_a_verdict(sums):
+    med_a, med_b = statistics.median(sums["A"]), statistics.median(sums["B"])
+    spread_a = max(sums["A"]) - min(sums["A"]) if len(sums["A"]) > 1 else 0
+    spread_b = max(sums["B"]) - min(sums["B"]) if len(sums["B"]) > 1 else 0
+    delta = med_b - med_a
+    spread = max(spread_a, spread_b)
+    verdict = "неразличимо" if abs(delta) <= spread else ("выросла" if delta > 0 else "снизилась")
+    return {"median_a": med_a, "median_b": med_b, "spread_a": spread_a, "spread_b": spread_b,
+            "delta": delta, "verdict": verdict}
+
+
+def run_axis_a_pair(claude, field, skill_a, skill_b, n=3):
+    order = _alternating_order(n)
     print(f"\n=== ось A: {field} ({skill_a} -> {skill_b}), порядок плеч: {','.join(order)} ===")
     sums = {"A": [], "B": []}
     for i, tag in enumerate(order, 1):
@@ -181,17 +226,39 @@ def run_axis_a_pair(claude, field, skill_a, skill_b, n=3):
         sums[tag].append(s)
         print(f"  прогон {i} [{tag}={skill}] exit={res['returncode']} "
               f"input={it} cache_creation={cc} cache_read={cr} sum={s}")
-    med_a, med_b = statistics.median(sums["A"]), statistics.median(sums["B"])
-    spread_a = max(sums["A"]) - min(sums["A"]) if len(sums["A"]) > 1 else 0
-    spread_b = max(sums["B"]) - min(sums["B"]) if len(sums["B"]) > 1 else 0
-    delta = med_b - med_a
-    spread = max(spread_a, spread_b)
-    verdict = "неразличимо" if abs(delta) <= spread else ("выросла" if delta > 0 else "снизилась")
-    print(f"  медиана A={med_a} (разброс {spread_a})  медиана B={med_b} (разброс {spread_b})  "
-          f"delta={delta:+.0f}  вердикт(ось A)={verdict}  n={len(sums['A'])}+{len(sums['B'])}")
-    return {"field": field, "skill_a": skill_a, "skill_b": skill_b, "sums": sums,
-            "median_a": med_a, "median_b": med_b, "spread_a": spread_a, "spread_b": spread_b,
-            "delta": delta, "verdict": verdict}
+    stats = _axis_a_verdict(sums)
+    print(f"  медиана A={stats['median_a']} (разброс {stats['spread_a']})  "
+          f"медиана B={stats['median_b']} (разброс {stats['spread_b']})  "
+          f"delta={stats['delta']:+.0f}  вердикт(ось A)={stats['verdict']}  "
+          f"n={len(sums['A'])}+{len(sums['B'])}")
+    return {"field": field, "skill_a": skill_a, "skill_b": skill_b, "sums": sums, **stats}
+
+
+def run_paths_axis_a_pair(claude, label, skill, root_files_a, root_files_b, n=3):
+    """A1/A2 — тот же скилл на обоих плечах, различие ТОЛЬКО в root-файле workspace
+    (research/11-p3-paths-mechanism-2026-08-01.md §4)."""
+    order = _alternating_order(n)
+    print(f"\n=== ось A ({label}, paths-mechanism): {skill} "
+          f"(root={root_files_a or '—'} -> root={root_files_b or '—'}), "
+          f"порядок плеч: {','.join(order)} ===")
+    sums = {"A": [], "B": []}
+    for i, tag in enumerate(order, 1):
+        rf = root_files_a if tag == "A" else root_files_b
+        ws = deploy([skill], root_files=rf)
+        try:
+            res = run_claude(ws, LISTING_PROMPT, claude)
+        finally:
+            shutil.rmtree(ws, ignore_errors=True)
+        it, cc, cr, s = axis_a_sum(res["data"])
+        sums[tag].append(s)
+        print(f"  прогон {i} [{tag}, root={rf or '—'}] exit={res['returncode']} "
+              f"input={it} cache_creation={cc} cache_read={cr} sum={s}")
+    stats = _axis_a_verdict(sums)
+    print(f"  медиана A={stats['median_a']} (разброс {stats['spread_a']})  "
+          f"медиана B={stats['median_b']} (разброс {stats['spread_b']})  "
+          f"delta={stats['delta']:+.0f}  вердикт(ось A)={stats['verdict']}  "
+          f"n={len(sums['A'])}+{len(sums['B'])}")
+    return {"label": label, "skill": skill, "sums": sums, **stats}
 
 
 def strong_signal(claude, label, skill, prompt, root_files=None):
@@ -222,12 +289,24 @@ def self_check():
         else:
             print(f"[FAIL] фикстура отсутствует: {f}")
             ok = False
-    for f in ("CLAUDE.md", "probe.zzp31paths", "probe.txt"):
+    for f in ("CLAUDE.md", "probe.zzp31paths", "probe.txt", PATHS_MATCH_FILE):
         p = FIXTURES_DIR / "_root" / f
         if p.is_file():
             print(f"[ok] root-фикстура на месте: {p.relative_to(ROOT)}")
         else:
             print(f"[FAIL] root-фикстура отсутствует: {p}")
+            ok = False
+    clean_fixture = FIXTURES_DIR / "_root" / PATHS_MATCH_FILE
+    if clean_fixture.is_file():
+        text = clean_fixture.read_text(encoding="utf-8")
+        clean_ok = "zz-p31-paths" not in text and MARKERS["zz-p31-paths"] not in text
+        control_size = (FIXTURES_DIR / "_root" / "probe.txt").stat().st_size
+        size_ok = abs(clean_fixture.stat().st_size - control_size) <= control_size * 0.10
+        if clean_ok and size_ok:
+            print(f"[ok] чистая фикстура {PATHS_MATCH_FILE}: без имени/маркера скилла, "
+                  f"размер сопоставим с контролем")
+        else:
+            print(f"[FAIL] чистая фикстура {PATHS_MATCH_FILE}: clean={clean_ok} size_ok={size_ok}")
             ok = False
     tmp = deploy(["zz-p31-ctrl"], root_files=["CLAUDE.md"])
     try:
@@ -340,11 +419,55 @@ def full_run():
     return True
 
 
+def paths_mechanism_run():
+    """P3.6 — дозамер механизма paths: шесть плеч A1/A2/B0/B1/B2/B3
+    (research/11-p3-paths-mechanism-2026-08-01.md §4). Не трогает состав полной
+    матрицы P3.1 (`full_run`) — отдельный подрежим."""
+    claude = claude_bin()
+    if not claude:
+        print("🔴 ESCALATION P3.6: `claude` недоступен как процесс | trigger: unclear "
+              "acceptance | нужен: plan-design", file=sys.stderr)
+        return False
+    proc = subprocess.run([claude, "--version"], capture_output=True, text=True, check=False)
+    print(f"claude --version -> {proc.stdout.strip()}")
+
+    report = {"version": proc.stdout.strip(), "axis_a": [], "strong": []}
+
+    a1 = run_paths_axis_a_pair(claude, "A1", "zz-p31-paths",
+                                [PATHS_NOMATCH_FILE], [PATHS_MATCH_FILE])
+    report["axis_a"].append(a1)
+    a2 = run_paths_axis_a_pair(claude, "A2", "zz-p31-ctrl",
+                                [PATHS_NOMATCH_FILE], [PATHS_MATCH_FILE])
+    report["axis_a"].append(a2)
+
+    if a2["verdict"] != "неразличимо":
+        print("\n🔴 ESCALATION P3.6: прибор не различает совпадение файла и его присутствие "
+              "| trigger: unclear acceptance | нужен: plan-design", file=sys.stderr)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return False
+
+    print("\n=== ось B / strong-signal: B0 (re-baseline) .. B3 (после чтения) ===")
+    report["strong"].append(strong_signal(claude, "B0", "zz-p31-paths", "/zz-p31-paths"))
+    report["strong"].append(strong_signal(claude, "B1", "zz-p31-paths", "/zz-p31-paths",
+                                           root_files=[PATHS_MATCH_FILE]))
+    report["strong"].append(strong_signal(claude, "B2", "zz-p31-paths", B2_PROMPT,
+                                           root_files=[PATHS_MATCH_FILE]))
+    report["strong"].append(strong_signal(claude, "B3", "zz-p31-paths", B3_PROMPT,
+                                           root_files=[PATHS_MATCH_FILE]))
+
+    print("\n=== JSON report (paths-mechanism) ===")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return True
+
+
 if MODE == "help":
     print(help_text())
     sys.exit(0)
 elif MODE == "self-check":
     ok = self_check()
+    sys.exit(0 if ok else 1)
+elif MODE == "paths-mechanism":
+    ok = paths_mechanism_run()
     sys.exit(0 if ok else 1)
 else:
     ok = full_run()

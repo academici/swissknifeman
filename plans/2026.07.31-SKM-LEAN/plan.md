@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P3.1 ре-детализирован) |
+| Last Updated | 2026-08-01 (P3.1 эскалирован — 🔴 Blocked) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -119,7 +119,7 @@ Claude Code уже несёт нативные механизмы сужения
 |:--|:--|:--|:--|
 | P1 | Измеритель first-turn | 3/4 | 🟠 Done with deviations |
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
-| P3 | Нативные поля скиллов | 0/5 | ⬜ Not started |
+| P3 | Нативные поля скиллов | 0/5 | 🔴 Blocked |
 | P4 | Драйвер exec-волны | 0/6 | ⬜ Not started |
 | P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
@@ -282,6 +282,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-close/sonnet-low | **Фаза P2 закрыта: 🟠 Done with deviations** (все 6 items терминальны, материальное отклонение — P2.6 частично не раскатан) — детали см. `phases/P2.md` § Phase Handoff |
 | 2026-08-01 | plan-design/frontier | **P3.1 ре-детализирован (v1.0.7, D94):** механика стенда пинована четырьмя прогонами `claude -p` на 2.1.220; форма `Validation` приведена к D90 — детали см. `phases/P3.md` §P3.1 |
 | 2026-08-01 | plan-design/frontier | Тем же заходом заведён `findings/P3.1-bench-harness-probe-2026-08-01.md` (слой 1) и исправлена фактура §5 в `findings/P3-native-fields-context-cost-2026-07-31.md` |
+| 2026-08-01 | plan-run/implementation-high | **P3.1 эскалирован: 🔴 Blocked** — стенд дважды прогнан на 2.1.220, 5/6 полей подтверждены доком, `paths:` расходится с D23 (#49835 жив) — доска P3 → 0/5 🔴 Blocked — детали см. `phases/P3.md` P3.1 Completion Notes |
 
 ## 7. Contracts
 

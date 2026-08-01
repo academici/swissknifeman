@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.22.0
+version: 2.23.0
 description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, routing, semantic Next, handoff."
 when_to_use: "Use when running plan-design/exec/run/close/audit, or citing a plan ID."
 risk: write
@@ -607,7 +607,7 @@ history lives in git, not in the file). Skeleton — `snippets/handoff-template.
 
 **Launch-block.** Every "what to launch next" output — handoff.Next and the finals of
 plan-exec/plan-close/plan-audit reports — must take the fixed form
-(`snippets/launch-block-template.md`):
+(`snippets/launch-block-template.md`), the command living as the table's **last row**:
 
 ```markdown
 **Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
@@ -619,17 +619,26 @@ plan-exec/plan-close/plan-audit reports — must take the fixed form
 | Capabilities | <semantic capability IDs; `—` if none are additional> |
 | Context | <одно из трёх значений enum'а ниже> |
 | Суть | <1 строка> |
-
-````
-<provider renderer: Claude `/task:…` OR Codex `$ task:…`; preserve semantic payload>
-````
+| Команда | `<provider-rendered invocation>` — ONLY the command itself, WITHOUT repeating
+`/model`/`/effort` (already named by the `Model class`/`Effort` rows above) |
 ```
+
+**Строка `Команда` vs a separate code block (P5.8).** If the next step is fully expressed
+by ONE provider-rendered command, the `Команда` table row is the whole answer — no separate
+`code-block` is added. A separate `code-block` (provider invocation OR a bare prompt) remains
+and appears ONLY when the next step actually differs from what one table row can express:
+`Exec = manual` (no single-command equivalent), scope-payload findings/reopen (needs
+РЕЖИМ:/ВХОД:/СКОУП:/НЕ ТРОГАТЬ:), the `ОЖИДАНИЕ:` form (needs a `# НЕ раньше:` guard line).
+Both carriers present at once is NOT an error — back-compat for the pre-P5.8 form (fleet
+plans carried only the code block); `plan-lint` requires AT LEAST ONE of the two, not
+"strictly not both".
 
 **Self-sufficiency (cold-start).** The launch-block command must work from a cold session:
 plan-ID + input-doc paths (cold-start reads) + an embedded gate approval if the execution is
 gated. References like "this session" — only as a supplement. `plan-lint` checks: handoff.Next
-contains the launch-block table and a code block (greppable; for date-based plans from
-2026.07.16 a missing launch-block is an ERROR, older/legacy — WARNING).
+contains the launch-block table AND (a `| Команда |` row in that same table OR a code block —
+greppable; for date-based plans from 2026.07.16 missing BOTH is an ERROR, older/legacy —
+WARNING).
 
 **Scope-payload: a launch-block CARRYING FINDINGS (D-canon 2026-07-17).** A command that hands
 findings to the next session — a `plan-audit` verdict `RED`/`ATTENTION` (§3) and a C3/D6 fix
@@ -681,8 +690,9 @@ payload.
 
 **The session's final message = a launch-block.** Any `task:plan-*` session (design / exec /
 run / close / audit) that has a next step ENDS its last message to the owner with a full
-launch-block (semantic Next + Model class/Effort/Capabilities/Context/Essence + a provider-
-rendered invocation in a separate code block). Invocation without semantic Next/route is a defect.
+launch-block (semantic Next + Model class/Effort/Capabilities/Context/Суть/Команда, a separate
+code block only when required by the "Строка `Команда` vs a separate code block" rule above).
+Invocation without semantic Next/route is a defect.
 
 **Execution roadmap — `plans/<ID>/roadmap.md` (D-canon 2026-07-16).** Assembled after all phases
 are fully detailed (§5 default) — the plan's execution map answering "which command next?" without
@@ -892,12 +902,15 @@ the next step's type:
   audit is also adversarial — inheriting the executor's context is forbidden).
 
 **An item with `Exec = manual` (§9) — semantic `manual` form.** Such an item has no
-command, therefore the launch-block:
+single-command equivalent (no `task:plan-exec` would execute it — it must reject
+undershoot), therefore the launch-block:
 
 - `Next` = `manual: <model-class/effort>`;
 - `Model class`/`Effort` — as PRESCRIBED by Routing (§9);
-- the code block carries the item's **BARE PROMPT**, NOT a provider invocation;
-  `task:plan-exec` has minimum `implementation/medium` and must reject undershoot;
+- the `Команда` table row — `—` (no single-command equivalent);
+- the code block is **MANDATORY** (not optional for this case — the "Строка `Команда` vs a
+  separate code block" rule above) and carries the item's **BARE PROMPT** or the
+  `/model`+`/effort`+`/task:plan-run <ID> Pn.m` sequence (D18), NOT a provider invocation;
 - `Context` — from the same enum of THREE values, by the type of the next step. A manual item
   is regular item-by-item exec under the prescribed route ⇒ `same-session — item`.
 
@@ -1344,4 +1357,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 16e6124e54b4602dbc9e26821dff506924a6fc64c1d62f62557c2cbb478e61fb -->
+<!-- ru-source-sha256: ef2fbd50f71126b5c1ccb3494e4fc5160d84c93bf02f33bfbc8009cb439f60bd -->

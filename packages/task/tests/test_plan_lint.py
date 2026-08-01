@@ -92,6 +92,57 @@ class TestBriefLayer(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "Next без launch-block"), diag.errors)
 
+    def test_dated_plan_next_table_without_command_row_or_fence_is_error(self):
+        # P5.8: таблица есть (`| Model |`), но нет НИ строки `| Команда |`, НИ code-block'а —
+        # ни один из двух носителей команды не назван, гейт остаётся ERROR.
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        lines = [ln for ln in text.splitlines() if "```" not in ln]
+        handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Next без launch-block"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Команда"), diag.errors)
+
+    def test_dated_plan_next_command_row_without_fence_is_green(self):
+        # P5.8: строка `| Команда |` в таблице параметров без отдельного code-block'а —
+        # достаточный носитель, гейт зелёный (форма «команда в таблице»).
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace(
+            "| Суть | закрыть следующий item |\n",
+            "| Суть | закрыть следующий item |\n"
+            "| Команда | `/task:plan-exec 2026.07.16-DEMO P1.1` |\n",
+        )
+        lines = [ln for ln in text.splitlines() if "```" not in ln
+                 and not ln.startswith("/task:plan-exec")]
+        handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
+
+    def test_dated_plan_next_fence_without_command_row_is_green(self):
+        # Back-compat: старая форма (только code-block, без строки `| Команда |`) остаётся
+        # валидной — 26+ живых планов флота её несут (SKILL §8, аддитивность правила).
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
+
+    def test_dated_plan_next_command_row_and_fence_both_present_is_green(self):
+        # Оба носителя одновременно — НЕ ошибка: «ровно один из двух» = минимум один, не
+        # запрет на оба сразу (решение зафиксировано этим тестом, см. plan_lint.py:2.0).
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace(
+            "| Суть | закрыть следующий item |\n",
+            "| Суть | закрыть следующий item |\n"
+            "| Команда | `/task:plan-exec 2026.07.16-DEMO P1.1` |\n",
+        )
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
+
     def test_empty_brief_md_does_not_count(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
         (plan_dir / "brief" / "00-brief.md").write_text("", encoding="utf-8")

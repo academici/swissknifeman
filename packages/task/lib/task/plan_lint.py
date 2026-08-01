@@ -171,8 +171,11 @@ AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\b")
 # D-логу. `RAG:—` (repo-grounded) пишется через em dash, как EMPTY_PLACEHOLDER;
 # ASCII-дефис не канонизирован.
 RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED\]")
-# launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + code-block.
+# launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + (строка `| Команда |`
+# В ТОЙ ЖЕ таблице ИЛИ code-block ниже — P5.8, аддитивно: обе формы валидны, back-compat
+# 26+ живых планов флота, писавших только code-block, не ломается).
 LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
+LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
 PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
@@ -854,6 +857,7 @@ CANON_LITERALS = (
                                                                # регистрация решением, T1 её не ловит
     RESUME_LITERAL,                                           # §6, 2026.07.25-ECO-OPT P8.3/D44: кириллица — обязательна
                                                                # i18n-директива в SKILL.ru.md
+    "Команда",                                                # строка таблицы launch-block'а (§8, P5.8/LAUNCH_COMMAND_ROW_RE)
 )
 # --- 2026.07.15-PLANFLOW-UX P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -2068,22 +2072,32 @@ def lint_plan(plan_dir, diag):
         # --- 2.0: launch-block в handoff.Next (SKILL §8) --------------------------
         # Severity как у brief-гейта: датовые планы от BRIEF_CANON_DATE — ERROR
         # (владелец не должен переспрашивать модель/настройки), старее/legacy — WARNING.
-        # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
-        # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
+        # Таблица `| Model | …`, строка `| Команда |` и code-block грепаются по всему
+        # файлу: шаблон кладёт launch-block продолжением Next, но точное место не гейтим
+        # (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
         # Условие СОЗНАТЕЛЬНО мягче резолвера (`kind`): любое утверждение о закрытии в
         # ЛЮБОМ месте поля снимает требование launch-block'а. Ужесточение до `kind` дало бы
         # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
         # целиком», и lint-ссылку `/task:plan-exec` → резолвится как exec) — back-compat §2.
+        #
+        # P5.8: команда теперь либо строка `| Команда |` В ТОЙ ЖЕ таблице, либо
+        # code-block ниже — «ровно один из двух» = ХОТЯ БЫ ОДИН, не «строго не оба»:
+        # план, несущий и строку, и code-block (back-compat старой формы, либо
+        # manual/scope-payload/ОЖИДАНИЕ item, которому code-block нужен по канону §8
+        # независимо от строки), гейтом не наказывается — «ровно один из двух» описывает
+        # МИНИМУМ носителя команды, а не запрет на оба сразу (SKILL §8, snippets/
+        # launch-block-template.md). Решение зафиксировано тестом (test_plan_lint.py).
         if LITERAL_PLAN_CLOSED not in next_val.lower():
             has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
+            has_command_row = any(LAUNCH_COMMAND_ROW_RE.match(ln) for ln in handoff["lines"])
             has_fence = any(CODE_FENCE_RE.match(ln) for ln in handoff["lines"])
-            if not (has_table and has_fence):
+            if not (has_table and (has_command_row or has_fence)):
                 missing = []
                 if not has_table:
                     missing.append("таблицы `| Model | …`")
-                if not has_fence:
-                    missing.append("code-block с командой")
+                if not (has_command_row or has_fence):
+                    missing.append("строки `| Команда |` в таблице или code-block'а с командой")
                 _lb_msg = ("Next без launch-block: нет " + " и ".join(missing) +
                            " (форма — snippets/launch-block-template.md)")
                 if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:

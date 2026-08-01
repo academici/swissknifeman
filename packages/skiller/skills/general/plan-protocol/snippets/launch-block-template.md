@@ -2,7 +2,9 @@
 
 Каждая выдача следующего шага — handoff.Next и финалы отчётов
 plan-exec/plan-close/plan-audit — обязана иметь эту форму (SKILL раздел 8):
-semantic carrier + таблица требований + provider-rendered invocation одним code-block.
+semantic carrier + таблица требований, чья последняя строка — сама команда.
+Отдельный code-block ниже — ОПЦИОНАЛЕН (правило «Строка `Команда`
+vs code-block» ниже).
 
 `````markdown
 **Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
@@ -14,10 +16,39 @@ semantic carrier + таблица требований + provider-rendered invoc
 | Capabilities | <минимальный набор semantic capability IDs; `—` если дополнительных нет> |
 | Context | <enum §8: same-session — item · cold-start — orchestration · cold-start — plan-step> |
 | Суть | <1 строка: что делает запуск> |
+| Команда | `<provider-rendered invocation>` — ТОЛЬКО сама команда, БЕЗ повторного `/model`/`/effort` (они уже названы строками `Model class`/`Effort` выше в той же таблице) |
+`````
 
-````
-<provider renderer: Claude `/task:…` ИЛИ Codex `$ task:…`; не править semantic payload>
-````
+**Строка `Команда` vs code-block (P5.8).** Если следующий шаг полностью выражается
+ОДНОЙ provider-rendered командой — строка `Команда` в таблице есть весь ответ,
+отдельный code-block НЕ заводится. Отдельный code-block (provider invocation ИЛИ
+голый промпт) остаётся и появляется ТОЛЬКО когда следующий шаг реально отличается
+от того, что одна строка способна выразить:
+
+- **`Exec = manual`** — эквивалента в одну команду нет (последовательность
+  `/model`+`/effort`+`/task:plan-run`, либо ГОЛЫЙ ПРОМПТ item'а): строка `Команда` =
+  `—`, code-block ОБЯЗАТЕЛЕН (не опционален для этого случая);
+- **scope-payload** (находки/реопен, см. ниже) — code-block несёт invocation ПЛЮС
+  четыре строки `РЕЖИМ:`/`ВХОД:`/`СКОУП:`/`НЕ ТРОГАТЬ:`, в одну строку таблицы не
+  умещается;
+- **форма `ОЖИДАНИЕ:`** (ниже) — code-block несёт guard-строку `# НЕ раньше: …`.
+
+Присутствие ОБОИХ носителей одновременно (строка `Команда` И code-block) не
+является ошибкой — back-compat старой формы, planы флота до P5.8 несли только
+code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, не «строго не оба».
+
+`````markdown
+<!-- пример: обычный exec-item, следующий шаг полностью выражается командой -->
+**Next:** exec-items: task:plan-exec <PLAN-ID> Pn.k
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | закрыть Pn.k |
+| Команда | `/task:plan-exec <PLAN-ID> Pn.k` |
 `````
 
 Правила:
@@ -56,12 +87,14 @@ semantic carrier + таблица требований + provider-rendered invoc
     `plan-design`): читает план с диска свежим контекстом.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
   (единственный SSOT), здесь только напоминание: `Model class` = предписанная Routing,
-  code-block = **ГОЛЫЙ ПРОМПТ item'а** вместо invocation, `Context` = обычное значение
-  enum'а по типу шага (`same-session — item`).
+  строка `Команда` = `—` (эквивалента в одну команду нет), code-block ОБЯЗАТЕЛЕН и несёт
+  **ГОЛЫЙ ПРОМПТ item'а** (либо последовательность `/model`+`/effort`+`/task:plan-run`)
+  вместо invocation, `Context` = обычное значение enum'а по типу шага (`same-session —
+  item`).
 - **Форма «ОЖИДАНИЕ: `<условие>` → `<целевая форма>`» (§8, D8)** — шаг реален, но неисполним
   сейчас (time-gate/накопление данных/кросс-план-гейт не терминален; НЕ дефект `🔴`, НЕ терминал
   «план закрыт»). Правило целиком в SKILL разделе 8; здесь напоминание: условие СТРУКТУРНО
   (дата/гейт), первая строка code-block'а — **guard `# НЕ раньше: <условие>`**, `Model class`/`Effort`/
   `Context` — **целевого шага**. Прозаическую оговорку в объявлении не писать (`plan-lint` метит C2).
-- `plan-lint` проверяет: semantic `Next`, таблицу с `| Model class |`
-  и code-block (грепаемо).
+- `plan-lint` проверяет: semantic `Next`, таблицу с `| Model class |` И (строку
+  `| Команда |` в той же таблице ИЛИ code-block ниже — хотя бы один из двух; грепаемо).

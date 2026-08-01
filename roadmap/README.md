@@ -15,7 +15,6 @@
 
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
-| [`2026.07.29-launch-block-command-row.md`](2026.07.29-launch-block-command-row.md) | launch-block: команда — последняя строка таблицы параметров, отдельный code-block с голым промптом — только при отклонении от стандартного маршрута | ⬜ к внедрению | Сработал (2026-07-29: двукратная неверная выдача в одной сессии из-за конструкции формата). Готово к оформлению отдельным маленьким планом, независимым от `HARNESS-AGNOSTIC` |
 | [`codex-skill-listing-fallback-overflow.md`](codex-skill-listing-fallback-overflow.md) | Девять из десяти поставляемых профилей превышают фолбэк-бюджет обнаружения Codex (8 000 симв) — рычаги 1–3 владельца (D74) сузку Claude-оси уже сняли, Codex не закрывают | ⬜ к внедрению | Сработал (замер `2026.07.29-HARNESS-AGNOSTIC P3.4`, `artifacts/P3-skill-listing-budget.md`, WARN-гейт `validate.sh` §17). Решение владельца между Codex-специфичным профилем / принятой деградацией / отложить до живого прогона Codex CLI (OQ-7, D29) |
 
 ## Частично реализовано — остаток здесь
@@ -77,6 +76,7 @@
 | `mcp-config-example-emit.md` | `mcp.emit_example` default-on с opt-out (`EMIT_EXAMPLE_DEFAULT`, `packages/maind/lib/maind/constants.py` + `config.py::merge_defaults`) — `plans/2026.07.31-SKM-LEAN` P2.4 |
 | `codex-publication-consumer-acceptance.md` | Изолированный consumer-acceptance гейт `packages/skiller/tests/test_codex_consumer_acceptance.py` (temp `CODEX_HOME` → `codex plugin`/`debug prompt-input` живым CLI) + регистрация в `validate.sh` (гейт 18, явный skip без `codex`) — `plans/2026.07.31-SKM-LEAN` P5.5 |
 | `instruction-authorize-order.md` | `INSTRUCTION_WRITE_FORBIDDEN` от `apply_instructions` печатает ожидаемый порядок целей (алфавитный по `target_path`, копипастопригодный) через новое поле `message` — `packages/harness/lib/harness/instructions.py::_write_refusal`/`apply_instructions`, `_print_report` — `plans/2026.07.31-SKM-LEAN` P5.7 |
+| `2026.07.29-launch-block-command-row.md` | Команда — строка `| Команда |` таблицы launch-block (последняя), отдельный code-block стал опциональным («ровно один из двух»); аддитивный гейт `plan_lint.py`, пять команд + пять Codex-зеркал + golden-фикстуры, version bump скилла `plan-protocol` (2.23.0) — `plans/2026.07.31-SKM-LEAN` P5.8 |
 
 ## Принцип
 

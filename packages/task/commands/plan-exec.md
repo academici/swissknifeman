@@ -274,8 +274,12 @@ effort: medium
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
+   | Команда | `<голая команда>` — ТОЛЬКО сама команда, без повторного `/model`/`/effort` |
 
-   <голая команда ИЛИ голый промпт — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
+   <опционально, ТОЛЬКО когда следующий шаг реально отличается от того, что строка `Команда`
+   способна выразить (Exec = manual — нет single-command эквивалента, scope-payload
+   находок/реопена, форма ОЖИДАНИЕ — guard-строка): голый промпт ИЛИ полная команда с
+   scope-payload — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
    ```
    При `ROUTING-BLOCKED` / `ROUTING-INCONSISTENT` (п. 2) блок несёт ТОЛЬКО эту строку + launch-block:
    работа не начиналась, статуса/коммитов/lint'а нет.
@@ -290,13 +294,16 @@ effort: medium
    (SKILL §8): если roadmap существует и следующий шаг входит в batch/workflow-группу —
    launch-block несёт КОМАНДУ ГРУППЫ (`/task:plan-run <ID> Pn.a-Pn.b` / `Workflow({scriptPath})`),
    а не одиночный item; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
-   - Следующий item, `Exec = plan-exec` → голая команда `/task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
-     — из Routing (дефолт `sonnet/medium`).
+   - Следующий item, `Exec = plan-exec` → строка `Команда` = `/task:plan-exec <PLAN-ID> Pn.k`
+     (весь ответ, code-block не заводится); Model/Thinking — из Routing (дефолт `sonnet/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
      `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
-     sonnet/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
-     (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан такой item отклонить — команда в
-     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID> Pn.m` (D18).
+     sonnet/medium; строка `Команда` = `—` (нет single-command эквивалента); code-block
+     ОБЯЗАТЕЛЕН (не опционален для этого случая) и несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
+     правок), а НЕ slash-команду (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан
+     такой item отклонить — команда в code-block'е была бы инструкцией нарушить гейт); `Context` =
+     `continue (/clear) — ручной item`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID>
+     Pn.m` (D18) — тем же обязательным code-block'ом (три строки не умещаются в ячейку таблицы).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `/task:plan-design <PLAN-ID> Pn`, не
      `plan-exec` (упадёт на предусловии). Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`.
    - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (/clear) — ручной

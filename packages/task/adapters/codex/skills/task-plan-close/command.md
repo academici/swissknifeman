@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:667f59d8e4a6ed1a45985787f9798bc81fb84a7ea902167a18a5876c84cd82aa
+Canonical SHA-256: sha256:c26baa1ce25fc8ea0afecc74495b48e9c6269cc71b4a38fb5b0c104ad35cff7b
 Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
@@ -25,9 +25,12 @@ Adapter: task.codex-command/1.0.3
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
   предписанную модель и голый промпт item'а отдельным code-block (либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) |
-- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть` + голая команда
-  (или, у `Exec = manual`, голый промпт item'а) ОТДЕЛЬНЫМ code-block'ом (копипаст без
-  правок); самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
+- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть / Команда` — строка
+  `Команда` несёт голую команду и, когда она полностью выражает следующий шаг, является всем
+  ответом; отдельный code-block ОПЦИОНАЛЕН и появляется, только когда шаг реально отличается от
+  строки (у `Exec = manual` — строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт голый промпт
+  item'а либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18; копипаст без правок);
+  самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
   только как дополнение. Скелет — `snippets/launch-block-template.md` скилла `plan-protocol`.
 - **`Context` — РОВНО одно из трёх значений** (§8, статичное общее значение вне enum'а —
   дефект): `continue (reset the session context) — ручной item` (обычный item-by-item exec, включая
@@ -125,6 +128,11 @@ status-rule ниже. Точная команда, лестница маршру
    порядок правок, стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    **Нет подтверждения (нет коммитов/диффа, Validation красная) — НЕ 🟢:** оставь/верни
    `🟡 In progress` или `🔴 Blocked`, причина — в Completion Notes item'а (`phases/Pn.md`).
+   **`🔴 Blocked`/`⛔ Skipped by decision` при `Closure Protocol | v1` (opt-in, D44/P8.3):**
+   допиши в **Pending Work** строку `Возобновление: <точная команда>` (🔴 — команда
+   продолжения или `— (внешний блокер: <что ждём>)`, если локального шага нет в принципе;
+   ⛔ — РОВНО `Возобновление: —` И ссылка `D<номер>`, предъявляющая решение о пропуске) —
+   иначе `plan_lint.py` даёт ERROR.
    Файлы item'а НЕ закоммичены (`git status` modified/untracked) → item ещё не `🟢`: дождись
    коммита либо допиши в Completion Notes «не закоммичено, коммит — за оркестратором волны»
    (иначе cold-start по git-истории не увидит работу).
@@ -138,6 +146,13 @@ status-rule ниже. Точная команда, лестница маршру
    pre_mutation: <код> · pre_final: <код>` — допиши её ОДНОЙ строкой из
    `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
    пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
+   **Цитаты-доказательства (P11.6), на итоговом дереве (после перезаписи handoff'а выше):**
+   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 plans/verify-citations.py
+   plans/<PLAN-ID> --strict`; счёт публикуется С АТРИБУЦИЕЙ: «цитаты: N находок — новых от
+   диффа item'а: K» (baseline перечня `verify-citations-known-exceptions.json` чист — P11.5 —
+   поэтому находка на итоговом дереве атрибутируется диффу ЭТОГО item'а). K > 0 — чинится
+   ДО коммита реконсиляции; N − K > 0 (остаточные находки вне Scope item'а) — строка в
+   Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result
@@ -210,6 +225,11 @@ status-rule ниже. Точная команда, лестница маршру
    АТРИБУЦИЕЙ: `N ERROR / M WARN — новых от закрытия: K` (`--baseline HEAD`). K > 0 —
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
+   Следом (та же граница — после перезаписи handoff, на итоговом дереве): `python3
+   plans/verify-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
+   N находок — новых от закрытия: K» (baseline перечня `verify-citations-known-exceptions.json`
+   чист — P11.5). K > 0 — чинится ДО коммита закрытия фазы; N − K > 0 (остаточные находки вне
+   этой фазы) — строка в Open risks `handoff.md`.
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
    --command plan-close --actor implementation/low --result <closed-green — все items 🟢 |
@@ -271,13 +291,15 @@ launch-block не требуется, следующий план выбирае
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |
 | Суть | <1 строка: что делает следующий шаг> |
+| Команда | `<голая команда>` — оценка по факту закрытой фазы: фаза 🟢 без Known
+  Deviations и без эскалаций по её items → `$ task:plan-exec <PLAN-ID> P(n+1).1`
+  (implementation/medium); была хоть одна `🟠`/эскалация → сперва `$ task:plan-audit <PLAN-ID>
+  Pn` (frontier/xhigh); план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
+  `$ task:plan-close archive <PLAN-ID>` либо вне протокола; команда не должна
+  противоречить Execution Rules плана — правила в шапке; у `Exec = manual` — `—`
+  (нет single-command эквивалента) |
 
-<голая команда (форма из enum 8) ИЛИ, у Exec=manual, голый промпт item'а — ОТДЕЛЬНЫМ
-  code-block'ом, копипаст без правок; оценка по факту закрытой фазы:
-  фаза 🟢 без Known Deviations и без эскалаций по её items → `$ task:plan-exec <PLAN-ID>
-  P(n+1).1` (implementation/medium) либо форма «ЗАПУСК ВРУЧНУЮ» при `Exec = manual`;
-  была хоть одна `🟠`/эскалация → сперва `$ task:plan-audit <PLAN-ID> Pn` (frontier/xhigh);
-  план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
-  `$ task:plan-close archive <PLAN-ID>` либо вне протокола;
-  команда не должна противоречить Execution Rules плана — правила в шапке>
+<опционально — ТОЛЬКО у `Exec = manual` (голый промпт item'а либо
+  `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) ИЛИ когда строка `Команда` не
+  выражает следующий шаг целиком — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
 ```

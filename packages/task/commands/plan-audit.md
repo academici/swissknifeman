@@ -168,10 +168,13 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
 failure_scenario); третий
 и далее заход — строка `AUDIT-CAP:` (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
-Thinking | Context | Суть |` + команда ОТДЕЛЬНЫМ code-block'ом (следующий item с `Exec = manual` —
-форма «ЗАПУСК ВРУЧНУЮ»: `Model`/`Thinking` из Routing, в code-block'е ГОЛЫЙ ПРОМПТ item'а, не
-slash-команда), копипаст без правок. Тот же launch-block дословно — подсекцией `### Что запускать`
-в конце твоего audit-блока (п. 5).
+Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
+чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
+`RED`/`ATTENTION` несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
+(четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:
+`Model`/`Thinking` из Routing, строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт ГОЛЫЙ ПРОМПТ
+item'а, не slash-команда, копипаст без правок. Тот же launch-block дословно — подсекцией
+`### Что запускать` в конце твоего audit-блока (п. 5).
 
 **`RED`/`ATTENTION` → команда несёт SCOPE-PAYLOAD (канон §8), голая ЗАПРЕЩЕНА.** Твой вердикт
 передаёт находки следующей сессии; голая команда их теряет — она заставляет принимающую сессию

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.22.0
+version: 2.23.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы, 6 статусов, DoR, routing, semantic Next, handoff."
 when_to_use: "Используй, когда запускаешь plan-design/exec/run/close/audit или ссылаешься на ID плана."
 risk: write
@@ -625,7 +625,7 @@ item/фазы (история версий — в git, не в файле). Ск
 
 **Launch-block.** Каждая выдача «что запускать дальше» — handoff.Next и финалы отчётов
 plan-exec/plan-close/plan-audit — обязана иметь фиксированную форму
-(`snippets/launch-block-template.md`):
+(`snippets/launch-block-template.md`), команда — **последней строкой таблицы**:
 
 ```markdown
 **Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
@@ -637,17 +637,27 @@ plan-exec/plan-close/plan-audit — обязана иметь фиксирова
 | Capabilities | <semantic capability IDs; `—` если дополнительных нет> |
 | Context | <одно из трёх значений enum'а ниже> |
 | Суть | <1 строка> |
-
-````
-<provider renderer: Claude `/task:…` ИЛИ Codex `$ task:…`; semantic payload не менять>
-````
+| Команда | `<provider-rendered invocation>` — ТОЛЬКО сама команда, БЕЗ повторного
+`/model`/`/effort` (они уже названы строками `Model class`/`Effort` выше) |
 ```
+
+**Строка `Команда` vs отдельный code-block (P5.8).** Если следующий шаг полностью
+выражается ОДНОЙ provider-rendered командой — строка `Команда` в таблице является
+всем ответом, отдельный `code-block` НЕ заводится. Отдельный `code-block` (provider
+invocation ИЛИ голый промпт) остаётся и появляется ТОЛЬКО когда следующий шаг реально
+отличается от того, что одна строка таблицы способна выразить: `Exec = manual` (нет
+single-command эквивалента), scope-payload находок/реопена (нужны РЕЖИМ:/ВХОД:/СКОУП:/
+НЕ ТРОГАТЬ:), форма `ОЖИДАНИЕ:` (нужна guard-строка `# НЕ раньше:`). Присутствие ОБОИХ
+носителей одновременно не является ошибкой — back-compat старой формы (планы флота до
+P5.8 несли только `code-block`); `plan-lint` требует ХОТЯ БЫ ОДИН из двух, не «строго
+не оба».
 
 **Самодостаточность (cold-start).** Команда в launch-block обязана работать из холодной
 сессии: plan-ID + пути входных доков (cold-start reads) + встроенное утверждение гейта,
 если исполнение гейтится. Ссылки вида «эта сессия» — только как дополнение.
-`plan-lint` проверяет: handoff.Next содержит launch-block-таблицу и code-block (грепаемо;
-для датовых планов от 2026.07.16 отсутствие — ERROR, старее/legacy — WARNING).
+`plan-lint` проверяет: handoff.Next содержит launch-block-таблицу И (строку `| Команда |`
+в той же таблице ИЛИ `code-block` — грепаемо; для датовых планов от 2026.07.16 отсутствие
+ОБОИХ — ERROR, старее/legacy — WARNING).
 
 **Scope-payload: launch-block, несущий НАХОДКИ (D-канон 2026-07-17).** Команда, передающая
 следующей сессии находки, — вердикт `plan-audit` `RED`/`ATTENTION` (§3) и фикс-предложение
@@ -699,9 +709,10 @@ payload от произвольного `## Audit`-заголовка). Верд
 **Финальное сообщение сессии = launch-block.** Любая `task:plan-*` сессия (design / exec /
 run / close / audit), у которой есть следующий шаг, ЗАКАНЧИВАЕТ своё последнее сообщение
 владельцу полным launch-block'ом (semantic Next + таблица Model class/Effort/Capabilities/
-Context/Суть + provider-rendered invocation
-отдельным code-block'ом) — не «выполните такую-то команду» прозой: владелец не должен
-переспрашивать route и настройки. Invocation без semantic Next/route в финале = дефект.
+Context/Суть/Команда, code-block'ом отдельно — только когда того требует правило «Строка
+`Команда` vs отдельный code-block» выше) — не «выполните такую-то команду» прозой: владелец
+не должен переспрашивать route и настройки. Invocation без semantic Next/route в финале =
+дефект.
 
 **Roadmap исполнения — `plans/<ID>/roadmap.md` (D-канон 2026-07-16).** После полной
 детализации всех фаз (§5 дефолт) собирается исполнительская карта плана — ответ на
@@ -911,13 +922,16 @@ Context launch-block'а несёт РОВНО одно из трёх значе�
   (`plan-audit` / `plan-close` / `plan-design`): он читает план заново с диска (аудит —
   ещё и adversarial: наследовать контекст исполнителя ему запрещено).
 
-**Item с `Exec = manual` (§9) — semantic форма `manual`.** Команды у такого item'а не
-существует, поэтому launch-block:
+**Item с `Exec = manual` (§9) — semantic форма `manual`.** Команды-эквивалента в одну
+строку у такого item'а не существует (нет `task:plan-exec`, который его исполнил бы —
+он обязан отклонить undershoot), поэтому launch-block:
 
 - `Next` = `manual: <model-class/effort>`;
 - `Model class`/`Effort` — **предписанные Routing** (§9);
-- code-block несёт **ГОЛЫЙ ПРОМПТ item'а**, а НЕ provider invocation:
-  `task:plan-exec` имеет минимум `implementation/medium` и обязан отклонить undershoot;
+- строка `Команда` в таблице — `—` (нет single-command эквивалента);
+- code-block **ОБЯЗАТЕЛЕН** (не опционален для этого случая — правило «Строка `Команда`
+  vs отдельный code-block» выше) и несёт **ГОЛЫЙ ПРОМПТ item'а** либо последовательность
+  `/model`+`/effort`+`/task:plan-run <ID> Pn.m` (D18), а НЕ provider invocation;
 - `Context` — из того же enum'а ТРЁХ значений, по типу следующего шага. Manual-item — это
   обычный item-by-item exec под предписанным route ⇒ `same-session — item`.
 
@@ -1401,6 +1415,7 @@ acceptance-предикат не опирается на `pinned-not-recomputabl
 <!-- i18n-keep: Дата | Кто (role/model) | Что -->
 <!-- i18n-keep: Контракт | Версия | Статус | Потребители | Уведомлены -->
 <!-- i18n-keep: Контракт | Донор-план | Pinned | Замечено | Реакция -->
+<!-- i18n-keep: Команда -->
 <!-- i18n-keep: > СКЕЛЕТ — не детализирован -->
 <!-- i18n-keep: ЗАПУСК ВРУЧНУЮ -->
 <!-- i18n-keep: [NEEDS CLARIFICATION -->

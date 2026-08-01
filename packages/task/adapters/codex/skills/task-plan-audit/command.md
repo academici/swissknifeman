@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:541ffc9dd5b7fca94a55681460b7ba00099d0b7c8a0a6341ff7c31e033b52e9e
+Canonical SHA-256: sha256:0f677ce2d2c6092167aa551afe6e1e24fe15c247f8a29eb893ef163bb937d078
 Adapter: task.codex-command/1.0.3
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -40,6 +40,12 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    покрывает ВСЕ items без дыр, батчи обоснованы (сцепленный scope + одна модель), у каждого
    solo — причина «почему нельзя объединить», у batch/workflow-групп — готовые launch-block'и,
    гейты владельца — только там, где решение реально его; roadmap не противоречит §3 Routing.
+7. **D-лог: `Consequences` у отменяющих/заменяющих записей (SKILL §6).** Каждая D-запись,
+   объявляющая `supersedes D#`/отмену/замену ранее принятого решения, несёт инлайн-подполе
+   `**Consequences:**` внутри ячейки `Решение` — независимо от того, включён ли `Closure
+   Protocol` (машинный `plan_lint.py`-гейт покрывает только подкласс при включённом протоколе
+   и дате ≥ cutoff, SKILL §6); отсутствие — Minor находка design-ревью (дисциплина, не только
+   машинный гейт).
 Находки НЕ чинишь — отчёт владельцу; после фиксов design-ревью повторяется до GREEN.
 Остальные пункты ниже (git-сверка, no-op, Completion Notes) относятся к режиму `Pn` — в
 `design` их пропусти.
@@ -135,7 +141,9 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
      модель/effort обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
      есть находка).
 
-4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` + лейбл
+4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` +
+   `confidence ∈ {high,med,low}` (уверенность в самой находке — чтобы владелец мог ранжировать;
+   низкая уверенность — повод пометить, а не отбросить) + лейбл
    `issue/suggestion/question/nitpick` (ось `quality/artifact-review`) + `file:line` + `failure_scenario`
    (сценарий поломки); при сомнении ставь ВЫШЕ. Вердикт фазы — по порогу п. 2, не по максимуму severity.
 
@@ -156,12 +164,16 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
 
 **Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (Minor/Nit либо дефект бухгалтерии
 плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
-(`N ERROR / M WARN (на <git-ref>)`) + findings (severity · item · `file:line` · failure_scenario); третий
+(`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
+failure_scenario); третий
 и далее заход — строка `AUDIT-CAP:` (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
-Thinking | Context | Суть |` + команда ОТДЕЛЬНЫМ code-block'ом (следующий item с `Exec = manual` —
-форма «ЗАПУСК ВРУЧНУЮ»: `Model`/`Thinking` из Routing, в code-block'е ГОЛЫЙ ПРОМПТ item'а, не
-slash-команда), копипаст без правок. Тот же launch-block дословно — подсекцией `### Что запускать`
-в конце твоего audit-блока (п. 5).
+Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
+чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
+`RED`/`ATTENTION` несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
+(четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:
+`Model`/`Thinking` из Routing, строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт ГОЛЫЙ ПРОМПТ
+item'а, не slash-команда, копипаст без правок. Тот же launch-block дословно — подсекцией
+`### Что запускать` в конце твоего audit-блока (п. 5).
 
 **`RED`/`ATTENTION` → команда несёт SCOPE-PAYLOAD (канон §8), голая ЗАПРЕЩЕНА.** Твой вердикт
 передаёт находки следующей сессии; голая команда их теряет — она заставляет принимающую сессию

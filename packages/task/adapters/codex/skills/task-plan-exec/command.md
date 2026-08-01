@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:04e18fe3838ffc1b7aaf902146124337c9380c4e1d8bcef924746198c70c21fd
+Canonical SHA-256: sha256:49e64ee7f847e5248bb026a935b7c8a255d98526ac1b487578768bb6bda07608
 Adapter: task.codex-command/1.0.3
 -->
 Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -115,6 +115,11 @@ Adapter: task.codex-command/1.0.3
    При срабатывании оставь ТРИ greppable-артефакта и остановись:
    - blockquote в item: `> 🔴 ESCALATION Pn.m: <причина> | trigger: <из enum> | нужен: plan-design`;
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
+   - **при `Closure Protocol | v1` (opt-in, D44/P8.3):** строка `Возобновление: <точная
+     команда>` в **Pending Work** — точная команда, которой продолжится работа (обычно
+     `$ task:plan-design <PLAN-ID> Pn.m`), а не «пропущено»; локального шага продолжения
+     не существует в принципе (внешний блокер) → `Возобновление: — (внешний блокер:
+     <что именно ждём>)`, выдумывать команду запрещено;
    - обнови `handoff.md` (Next: $ task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
    - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
@@ -268,8 +273,12 @@ Adapter: task.codex-command/1.0.3
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
+   | Команда | `<голая команда>` — ТОЛЬКО сама команда, без повторного `select the session model class`/`select the session effort` |
 
-   <голая команда ИЛИ голый промпт — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
+   <опционально, ТОЛЬКО когда следующий шаг реально отличается от того, что строка `Команда`
+   способна выразить (Exec = manual — нет single-command эквивалента, scope-payload
+   находок/реопена, форма ОЖИДАНИЕ — guard-строка): голый промпт ИЛИ полная команда с
+   scope-payload — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
    ```
    При `ROUTING-BLOCKED` / `ROUTING-INCONSISTENT` (п. 2) блок несёт ТОЛЬКО эту строку + launch-block:
    работа не начиналась, статуса/коммитов/lint'а нет.
@@ -284,13 +293,16 @@ Adapter: task.codex-command/1.0.3
    (SKILL §8): если roadmap существует и следующий шаг входит в batch/workflow-группу —
    launch-block несёт КОМАНДУ ГРУППЫ (`$ task:plan-run <ID> Pn.a-Pn.b` / `native orchestration carrier for the referenced plan-owned workflow script`),
    а не одиночный item; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
-   - Следующий item, `Exec = plan-exec` → голая команда `$ task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
-     — из Routing (дефолт `implementation/medium`).
+   - Следующий item, `Exec = plan-exec` → строка `Команда` = `$ task:plan-exec <PLAN-ID> Pn.k`
+     (весь ответ, code-block не заводится); Model/Thinking — из Routing (дефолт `implementation/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
      `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
-     implementation/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
-     (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан такой item отклонить — команда в
-     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (reset the session context) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID> Pn.m` (D18).
+     implementation/medium; строка `Команда` = `—` (нет single-command эквивалента); code-block
+     ОБЯЗАТЕЛЕН (не опционален для этого случая) и несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
+     правок), а НЕ slash-команду (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан
+     такой item отклонить — команда в code-block'е была бы инструкцией нарушить гейт); `Context` =
+     `continue (reset the session context) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID>
+     Pn.m` (D18) — тем же обязательным code-block'ом (три строки не умещаются в ячейку таблицы).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `$ task:plan-design <PLAN-ID> Pn`, не
      `plan-exec` (упадёт на предусловии). Фаза терминальна → `$ task:plan-close <PLAN-ID> Pn`.
    - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (reset the session context) — ручной

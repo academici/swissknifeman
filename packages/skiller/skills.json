@@ -1452,11 +1452,11 @@
       "path": "skills/frontend/web-design-guidelines/SKILL.md",
       "version": "0.1.0",
       "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
-      "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
-      "content_sha256": "f3d59f38e691787a34d02ad9a1e27aca7c644d9dd2ec16c98587b80110c12ef5",
+      "sha256": "41d130e3113c7bd5a2c3a55dfab4092b65483513b801402a2a2ce7df32a9f38b",
+      "content_sha256": "abe8a6e42e52a17d279cf2db15a3d9b416966a06b33867878cf8a6aae30aeac8",
       "source": "github",
-      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/web-design-guidelines/SKILL.md",
-      "fetched_at": "2026-06-17"
+      "upstream": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/4e799d45c17aec1498c269287a83b9dba22b966b/command.md",
+      "fetched_at": "2026-08-01"
     },
     {
       "name": "motion",

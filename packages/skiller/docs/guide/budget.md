@@ -93,7 +93,7 @@ flowchart LR
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
     filepond_upload["filepond-upload<br/>⊕114 ↻2242"]:::hot
-    web_design_guidelines["web-design-guidelines<br/>⊕61 ↻270"]:::mild
+    web_design_guidelines["web-design-guidelines<br/>⊕61 ↻296"]:::mild
   end
   subgraph frontend_animations["frontend-animations"]
     motion["motion<br/>⊕55 ↻920"]:::mild
@@ -439,7 +439,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **16008** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356770 ток · ⌥ on-demand 828860 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **16008** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356796 ток · ⌥ on-demand 830891 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -465,7 +465,7 @@ flowchart LR
 | `laravel-testing` | 4 | 294 | 7993 | 15335 |
 | `ai` | 3 | 284 | 4578 | 51473 |
 | `frontend-backend` | 3 | 269 | 5488 | 7851 |
-| `frontend` | 3 | 263 | 3795 | 5927 |
+| `frontend` | 3 | 263 | 3821 | 7958 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
 | `frontend-tailwind` | 2 | 216 | 4458 | 5218 |
 | `laravel-auth` | 3 | 202 | 3358 | 5640 |

@@ -2,15 +2,24 @@
   "schema_version": 1,
   "source": "github",
   "repo": "antfu/skills",
-  "strategy": "notify",
+  "strategy": "fork",
+  "review_pending": false,
+  "last_review": "2026-08-01",
   "license": "MIT",
   "files": [
     {
-      "path": "SKILL.md",
+      "path": "",
       "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/web-design-guidelines/SKILL.md",
       "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
       "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/web-interface-guidelines.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/4e799d45c17aec1498c269287a83b9dba22b966b/command.md",
+      "sha256": "eea73cb6dd46fee9faec9973e8e7fe198b5f07ec326f14d276a56e50287e1cab",
+      "fetched_at": "2026-08-01"
     }
   ],
-  "notes": "Imported from antfu/skills (skills/web-design-guidelines/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+  "body_path": "references/web-interface-guidelines.md",
+  "notes": "Форк: SKILL.md/SKILL.ru.md — навигаторы, написаны нами, не пересказывают payload. Зеркало апстримной обёртки antfu/skills НЕ вендорится (D111): её текст сам предписывает сетевой fetch правил, поэтому первая запись files[] несёт пустой path — это provenance-ссылка (url/sha256 f4647ca8…/fetched_at 2026-06-17), sha не сверяется. Тело бандла (body_path) — вендоренный payload references/web-interface-guidelines.md, pristine-копия пинованного коммита 4e799d45c17aec1498c269287a83b9dba22b966b репозитория vercel-labs/web-interface-guidelines, куда SKILL.md раньше ходил сетью на каждый вызов (PRM_REMOTE_INSTRUCTIONS). Пере-пиновка правил — явная процедура: скачать новый SHA-URL (никогда /main/), сверить sha256 полученных байт с ожидаемым ДО записи, только тогда обновить files[1].sha256/fetched_at и эту заметку; --apply реестра этот файл не трогает (fork)."
 }

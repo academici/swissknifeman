@@ -13,27 +13,24 @@ Review files for compliance with Web Interface Guidelines.
 
 ## How It Works
 
-1. Fetch the latest guidelines from the source URL below
+1. Read the rules from the vendored payload: [`references/web-interface-guidelines.md`](references/web-interface-guidelines.md)
 2. Read the specified files (or prompt user for files/pattern)
-3. Check against all rules in the fetched guidelines
+3. Check against all rules in the payload
 4. Output findings in the terse `file:line` format
 
 ## Guidelines Source
 
-Fetch fresh guidelines before each review:
-
-```
-https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
-```
-
-Use WebFetch to retrieve the latest rules. The fetched content contains all the rules and output format instructions.
+Rules are vendored locally — pinned `vercel-labs/web-interface-guidelines` commit
+`4e799d45c17aec1498c269287a83b9dba22b966b` (provenance and re-pinning procedure in
+`upstream.json`). No network fetch: read
+[`references/web-interface-guidelines.md`](references/web-interface-guidelines.md) directly.
 
 ## Usage
 
 When a user provides a file or pattern argument:
-1. Fetch guidelines from the source URL above
+1. Read `references/web-interface-guidelines.md`
 2. Read the specified files
-3. Apply all rules from the fetched guidelines
-4. Output findings using the format specified in the guidelines
+3. Apply all rules from the payload
+4. Output findings using the format specified in the payload
 
 If no files specified, ask the user which files to review.

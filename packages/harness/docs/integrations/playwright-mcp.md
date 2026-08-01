@@ -28,9 +28,22 @@ skiller integrate --mcp playwright
 ```json
 {
   "command": "npx",
-  "args": ["@playwright/mcp@latest", "--headless"]
+  "args": ["@playwright/mcp@0.0.78", "--headless", "--output-dir", ".playwright-mcp"]
 }
 ```
+
+**Версия пинована** (`0.0.78`, проверено `npm view @playwright/mcp version` 2026-08-01) — не
+`@latest`: незакреплённая версия дрейфует между сессиями и меняет поведение сервера незаметно
+(P5.3/P5.6). **`--output-dir .playwright-mcp`** чинит причину, по которой скриншоты с явным
+(не auto-generated) `filename` резолвились от CWD агента и оседали в корне проекта вопреки
+описанию инструмента («Prefer relative file names to stay within the output directory») —
+подтверждено фактом на `dterema` (27 файлов за одну фазу), не по документации. `.playwright-mcp/`
+уже в `.gitignore`. Носитель — три файла (паритет провайдеров): `configs/claude-code/mcp/
+playwright.json`, `configs/claude-code/mcp/bindings.json`, `configs/codex/mcp/bindings.json`.
+
+**`.gitignore`:** harness не раздаёт консьюмерам управляемый `.gitignore`-шаблон — проверено
+на этом репозитории (`.playwright-mcp/` там не было ни разу, добавлено этим item'ом). Проект,
+подключивший пресет `playwright`, обязан сам добавить `.playwright-mcp/` в свой `.gitignore`.
 
 Браузеры ставятся отдельно: `npx playwright install chromium`.
 

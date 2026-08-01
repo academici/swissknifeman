@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "configs" / "common" / "mcp" / "catalog.json"
 CLAUDE_BINDINGS = ROOT / "configs" / "claude-code" / "mcp" / "bindings.json"
 CODEX_BINDINGS = ROOT / "configs" / "codex" / "mcp" / "bindings.json"
+CLAUDE_PLAYWRIGHT_PRESET = ROOT / "configs" / "claude-code" / "mcp" / "playwright.json"
 
 
 def assert_mcp_url(case, text, server_id, expected):
@@ -117,6 +118,22 @@ class ProviderMcpCase(unittest.TestCase):
             repaired = plan_artifact_lock(root, (expected,), lock_bytes=serialize_lock(plan.next_lock),
                                           repair_artifact_ids=(expected.provenance.artifact_id,))
             self.assertEqual(repaired.actions[0].action, ArtifactActionKind.REPAIR)
+
+    def test_playwright_output_dir_and_pinned_version_consistent_across_carriers(self):
+        # P5.3/P5.6: `--output-dir .playwright-mcp` + пинованная версия обязаны совпадать во
+        # всех трёх носителях (не только зайти в один и молча разъехаться с остальными).
+        preset = json.loads(CLAUDE_PLAYWRIGHT_PRESET.read_text(encoding="utf-8"))
+        claude_bindings = json.loads(CLAUDE_BINDINGS.read_text(encoding="utf-8"))
+        codex_bindings = json.loads(CODEX_BINDINGS.read_text(encoding="utf-8"))
+        args = tuple(preset["args"])
+        self.assertEqual(tuple(claude_bindings["servers"]["playwright"]["args"]), args)
+        self.assertEqual(tuple(codex_bindings["servers"]["playwright"]["args"]), args)
+        self.assertIn("--output-dir", args)
+        self.assertEqual(args[args.index("--output-dir") + 1], ".playwright-mcp")
+        version_arg = next(a for a in args if a.startswith("@playwright/mcp@"))
+        self.assertNotEqual(version_arg, "@playwright/mcp@latest")
+        catalog = load_mcp_catalog(CATALOG)
+        self.assertIn("playwright", {item.id for item in catalog})
 
     def test_current_claude_merge_only_consumer_preserves_foreign_server(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -15,14 +15,14 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | Identity | SHA-256 |
 |:--|:--|
 | source:configs/claude-code/agent-packs/role-bindings.json | `sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b` |
-| source:configs/claude-code/mcp/bindings.json | `sha256:dfe5e893b876f2450f9b0ce94274df61ff7ac6de928e0b9ccded48de7b8dcfd8` |
+| source:configs/claude-code/mcp/bindings.json | `sha256:669011d1fa6042f7abdb143a3761e9d84673795426cdbd3b934f54b802c8ce26` |
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
 | source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:e02e83d821b69bd9e80c8eeb95d63406e3ac9f859910c5d17f1baee20a43f847` |
-| source:configs/codex/mcp/bindings.json | `sha256:96edfa4686ff45bc8a886dd14418be1fde29dbee3098777574a21f1fc79e483a` |
+| source:configs/codex/mcp/bindings.json | `sha256:bd876ab14dcb1d253bb2d0b5771dc335bebc03ea1abcc8fb84718b44541aa087` |
 | source:configs/common/agent-packs/roles.json | `sha256:2ba25a3a8f4ef52655403b0d0655f10b1cae3a850594b16c443dc6053462ee75` |
 | source:configs/common/mcp/catalog.json | `sha256:26bddfc7f495650855ea183936aaf2d4c7ffa6e8cd91391e1a8fb25156a0842f` |
 | source:configs/common/profile-catalog.json | `sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835` |
-| render-manifest:all-provider-qualified-outputs | `sha256:4471072a7e14891159193dd9916a5f97ccb06db8cfabc9c3e02e560378aa9439` |
+| render-manifest:all-provider-qualified-outputs | `sha256:5436b5577d6b4dab022c66dd99e5cb7858a3100d09b1c0b254e84e1215dd3075` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

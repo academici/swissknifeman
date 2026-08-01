@@ -37,7 +37,6 @@
 | [`analyst-fleet-coverage.md`](analyst-fleet-coverage.md) | Покрытие analyst-цикла по флоту: хук `run-report` включён у 5/20 проектов, analyst-state — 2/20 | Осознанное решение по umbrella-политике хуков на чужих проектах (не одностороннее включение) |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | Агент рекомендует `plan-design` вместо `plan-exec`, не проверив фактический статус фазы | Повтор на ещё одном плане/проекте (пока один замер — `insiders` P1) |
-| [`playwright-mcp-output-dir.md`](playwright-mcp-output-dir.md) | `--output-dir` в шаблоне `.mcp.json` + пиновка версии: скриншоты с явным `filename` мусорят в корне | Повтор на ещё одном проекте ИЛИ решение владельца внедрить сразу (правка одной строки) |
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
 | [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
 | [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | Любой из трёх (спека §Критерий): замер ручного ритуала ≥20 закрытий с <25 % вмешательств · `decide` стал импортируемым модулем в `packages/**` (сейчас — данные в архиве AR) · измеренный выигрыш стоимости ≥2× против Workflow-марафона. Вердикт пере-скоупа — `2026.07.29-HARNESS-AGNOSTIC` P4.1 (D38/D90) |
@@ -64,6 +63,7 @@
 | Спека | Где живёт результат |
 |:--|:--|
 | `agent-command-router-hook.md` | `packages/harness/configs/claude-code/hooks/agent-router/` + `harness router` + провиженер `router-config` в `maind sync` |
+| `playwright-mcp-output-dir.md` | `--output-dir .playwright-mcp` + пиновка `@playwright/mcp@0.0.78` на трёх носителях обоих провайдеров (`2026.07.31-SKM-LEAN` P5.6) |
 | `settings-doctor.md` | `harness doctor --settings` (`lib/harness/settings_audit.py`) · `skiller doctor --settings` · `maind doctor --audit settings` |
 | `workflow-status-cli.md` | `harness wf status` (`lib/harness/wf_status.py`), роутинг `swissknifeman wf` |
 | `plan-homes.md` | plan-protocol §12 «два дома», канон имён + `supersedes`, `brain` CLI |

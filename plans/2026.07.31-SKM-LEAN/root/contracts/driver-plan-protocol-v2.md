@@ -7,7 +7,7 @@ status: active (издан item'ом P4.1, 2026-08-01) — действующа�
 amended: "2026-08-01, plan-design (D103–D106): §5 подпись закрытия + отказ судить число/порядок коммитов; §7 строка «закрытие не закоммичено» ATTENTION → RED, тотальность таблицы, строки no-op и незакоммиченного остатка. Пин §1 не менялся — канон не дрейфовал"
 pin_status: current (сверен 2026-08-01 против живого канона и живого клиента)
 consumes: core:plan-protocol
-pinned: "plan-protocol SKILL v2.22.0 @ swissknifeman commit 06fefc87 (2026-08-01)"
+pinned: "plan-protocol SKILL v2.23.0 @ swissknifeman commit 26d3efe3 (2026-08-01)"
 client_pinned: "Claude Code 2.1.220 (claude --version, 2026-08-01)"
 provider_scope: "claude -p — единственный водитель v2; codex — незакрытый вопрос, не умолчание (§10)"
 provenance: plans/archive/2026.07.18-FOREMAN/root/contracts/driver-plan-protocol.md (историчный, v2.8.0 @ 2cf26e8 — НЕ спека, только происхождение)

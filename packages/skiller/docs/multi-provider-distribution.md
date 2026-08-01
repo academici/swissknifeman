@@ -120,6 +120,45 @@ per-provider: реестровый источник → копия (как се�
   симлинки указывают на `.ai/skills`, управляемый блок ограничен маркерами, `--dry-run` без записи;
 - `scripts/validate.sh` зелёный; после правок реестра — `skiller registry`.
 
+## Codex publication — consumer-acceptance гейт (P5.5)
+
+> Не относится к `skiller distribute` (фича выше остаётся нереализованным dev-планом) — это
+> отдельная, уже РАБОТАЮЩАЯ проверка существующей раздачи Codex-плагинов через
+> `.agents/plugins/marketplace.json`. Помещена на этой странице как единственном месте,
+> где документируется поведение мультипровайдерной раздачи Codex.
+
+**Зачем.** Внутренние generator/unit-проверки (`test_codex_publication.py` и др.) сверяют
+только СТАТИЧЕСКУЮ схему сгенерированных артефактов — они никогда не спрашивают ничего у
+настоящего `codex` CLI. Azguard, 2026-07-21: этот класс проверок был GREEN, а свежая
+Codex-сессия не видела `task-plan-run`/`task-plan-exec` — sibling-плагин `task` был
+невидим нативному marketplace discovery. Package-level GREEN без прохождения всей цепочки
+`source → marketplace → install/cache → clean consumer → fresh session` не является release
+GREEN (`roadmap/codex-publication-consumer-acceptance.md`, снят этим item'ом).
+
+**Что проверяет** `packages/skiller/tests/test_codex_consumer_acceptance.py`:
+
+1. Независимый (не через `publication.render_codex_publication`) inventory ожидаемых
+   Codex-плагинов — собран напрямую с диска (`buckets.json`, `configs/core-policy.json`,
+   `skm/.claude-plugin/plugin.json`, `.codex-plugin/plugin.json` соседних пакетов) — сверяется
+   с тем, что реально отдаёт `codex plugin list --available --json` из изолированного
+   `CODEX_HOME`.
+2. Установка `task@swissknifeman` в изолированный temp `CODEX_HOME` + сверка кэша
+   байт-в-байт с исходником, без касания реального `~/.codex`.
+3. `codex debug prompt-input` (офлайн-рендер prompt'а модели, без сети/auth) из temp
+   consumer-каталога ВНЕ репозитория — подтверждает, что `task-plan-run`/`task-plan-exec`
+   видны по имени и резолвятся из изолированного кэша, а не из репозиторного
+   `.agents/skills` (последнее — доказанный источник ложного GREEN, см. тест
+   `test_repo_local_skills_would_mask_a_real_publication_failure`: тот же прогон из корня
+   репозитория действительно подмешивает `.agents/skills` в discovery).
+4. Дрейф экспортируемой поверхности без version bump — RED (`InventoryDriftDetectionCase`,
+   не требует живого `codex`).
+
+**Явное поведение при отсутствии `codex`.** `scripts/validate.sh` (гейт 18) печатает
+`SKIP: ... гейт НЕ прогонялся` и остаётся зелёным, если бинарь `codex` не найден в `PATH` —
+skip и GREEN различимы в выводе. Локально (где `codex` установлен) гейт исполняется
+живым прогоном; в CI бинарь сегодня недоступен — гейт там SKIP, вопрос установки `codex`
+в CI-раннер вне скоупа этого item'а.
+
 ## Связанное
 
 - [Совместимость с Laravel Boost](./boost-compatibility) — текущая модель сосуществования (Boost как

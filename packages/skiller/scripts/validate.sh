@@ -1433,3 +1433,31 @@ if over:
 else:
     print("листинг обнаружения Codex: все профили укладываются в фолбэк-бюджет 8 000 симв")
 PY
+
+# --- 18. Codex publication consumer-acceptance (P5.5) -----------------------
+# Изолированный round-trip живым `codex` CLI: marketplace add → plugin list/add →
+# clean-consumer discovery в temp CODEX_HOME — то, чего НЕ проверяет статическая
+# схема (`test_codex_publication.py`). Azguard, 2026-07-21: пакетный GREEN был,
+# consumer path — нет. Явное различение skip/GREEN/RED в выводе — "гейт не
+# прогонялся" и "гейт прошёл" не одно и то же (roadmap/codex-publication-consumer-
+# acceptance.md). Тест сам предполагает монорепо-раскладку (sibling packages/task) —
+# та же граница портируемости, что у остального пакета tests/ этого гейта.
+if [ ! -d "$REPO_ROOT/../task" ]; then
+  echo "SKIP: Codex publication consumer-acceptance гейт — нет sibling packages/task (standalone-раскладка skiller вне монорепо)"
+elif ! command -v codex >/dev/null 2>&1; then
+  echo "SKIP: Codex publication consumer-acceptance гейт — бинарь 'codex' не найден в PATH (гейт НЕ прогонялся, не считать за GREEN)"
+else
+  codex_version="$(codex --version 2>/dev/null || echo unknown)"
+  _MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+  _codex_gate_log="$(mktemp)"
+  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${_MONOREPO_ROOT:+:$_MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+      python3 -m unittest tests.test_codex_consumer_acceptance -v) > "$_codex_gate_log" 2>&1; then
+    echo "Codex publication consumer-acceptance: GREEN (codex ${codex_version})"
+  else
+    cat "$_codex_gate_log" >&2
+    echo "ERROR: Codex publication consumer-acceptance гейт красный (codex ${codex_version})" >&2
+    rm -f "$_codex_gate_log"
+    exit 1
+  fi
+  rm -f "$_codex_gate_log"
+fi

@@ -164,8 +164,10 @@ def render_readme_block(manifest, report) -> str:
         "",
         (f"Единый manifest: contract `{manifest.contract_version}`, catalog "
          f"`{manifest.catalog_version}`, canonical SHA-256 "
-         f"`{report['canonical_sha256']}`. Подробности и операции: "
-         "[provider support](docs/provider-support.md)."),
+         f"`{report['canonical_sha256']}`. Manifest ("
+         "`configs/provider-capabilities.json`) — source of truth, hand-edited, no "
+         "generator: `root.generated-artifacts` does not apply to it. Подробности и "
+         "операции: [provider support](docs/provider-support.md)."),
         "",
         _matrix(manifest),
         END,
@@ -189,6 +191,16 @@ def render_guide(manifest, report) -> bytes:
         "Support levels, provider bindings, limitations, evidence and diagnostics below come only from "
         "[`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own "
         "semantic intent and requirements, not a second support matrix.",
+        "",
+        "## Manifest provenance",
+        "",
+        "`configs/provider-capabilities.json` is the source of truth, hand-written, with no "
+        "generator; it is edited by a human or agent directly. `root.generated-artifacts` "
+        "(\"generated manifests and documents are produced by their generator and never "
+        "hand-edited\") does not apply to it — the manifest is this page's *input*, not one of "
+        "`scripts/provider-docs.py`'s outputs. After editing the manifest: run "
+        "`python3 scripts/provider-docs.py --write` to regenerate this page and the README "
+        "block, then `python3 scripts/provider-docs.py --check` to confirm both are in sync.",
         "",
         "## Capability matrix",
         "",

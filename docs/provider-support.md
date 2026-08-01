@@ -12,6 +12,10 @@
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
 
+## Manifest provenance
+
+`configs/provider-capabilities.json` is the source of truth, hand-written, with no generator; it is edited by a human or agent directly. `root.generated-artifacts` ("generated manifests and documents are produced by their generator and never hand-edited") does not apply to it — the manifest is this page's *input*, not one of `scripts/provider-docs.py`'s outputs. After editing the manifest: run `python3 scripts/provider-docs.py --write` to regenerate this page and the README block, then `python3 scripts/provider-docs.py --check` to confirm both are in sync.
+
 ## Capability matrix
 
 | Capability | Claude Code | Codex |

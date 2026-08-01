@@ -82,6 +82,17 @@ class ProviderDocsTests(unittest.TestCase):
             self.assertEqual((root / "README.md").read_bytes(), first)
             self.assertEqual(provider_docs.run("check", root), 0)
 
+    def test_manifest_is_not_an_output_of_the_generator(self):
+        # configs/provider-capabilities.json is the generator's INPUT (P5.2, D-provenance):
+        # a hand-written SSOT with no owning generator, so `root.generated-artifacts`
+        # ("regenerate through the owning tool") does not apply to it. This is a structural
+        # assertion about expected_outputs(), not a text-presence check.
+        expected = provider_docs.expected_outputs(ROOT)
+        self.assertNotIn(ROOT / "configs/provider-capabilities.json", expected)
+        guide = expected[ROOT / "docs/provider-support.md"].decode()
+        self.assertIn("no generator", guide)
+        self.assertIn("root.generated-artifacts", guide)
+
     def test_internal_markdown_links_resolve_and_examples_keep_provider_syntax_separate(self):
         readme = provider_docs.expected_outputs(ROOT)[ROOT / "README.md"].decode()
         guide = provider_docs.expected_outputs(ROOT)[ROOT / "docs/provider-support.md"].decode()

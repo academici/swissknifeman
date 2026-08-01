@@ -13,7 +13,11 @@
 connect-канала (`config.resolve_selection` + `budget.resolve_active_set` +
 `core_skill_tuples`) — сумма frontmatter `description` (в этом реестре нет
 `when_to_use`) по всем скиллам выбранных бакетов плюс курируемый `core@`,
-без дублей по каталогу. Тесты читают РЕАЛЬНЫЙ `profiles/`, не пишут в него."""
+без дублей по каталогу. Записи, снятые с листинга нативным полем
+(`budget._listing_exclusion` — `disable-model-invocation`/`paths`, наблюдение
+стенда P3.1/P3.6, план 2026.07.31-SKM-LEAN P3.2), в сумму НЕ входят: инвариант
+о бюджете ЛИСТИНГА, а не о размере реестра. Тесты читают РЕАЛЬНЫЙ `profiles/`,
+не пишут в него."""
 import sys
 import tempfile
 import unittest
@@ -21,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import resolve_active_set
+from skiller.budget import _listing_exclusion, resolve_active_set
 from skiller.common import Env, parse_frontmatter
 import tests.fixtures as fx
 
@@ -42,12 +46,14 @@ def profile_char_total(env, target, profile):
     """Сумма символов frontmatter `description` активного набора профиля
     (бакеты профиля + core@, минус DEFAULT_EXCLUDE) — тот же путь, которым
     реально собирается connect-канал. Дедуп по каталогу (core@ может
-    пересекаться с бакетом профиля)."""
+    пересекаться с бакетом профиля). Запись, снятая нативным полем, в листинг не
+    попадает и в сумму не входит (P3.2) — иначе инвариант считал бы символы,
+    которых у клиента нет."""
     skills, _meta = resolve_active_set(env, target, {}, profile=profile)
     total, seen = 0, set()
     for _bucket, _rel, d, _fm_name in skills:
         key = str(d)
-        if key in seen:
+        if key in seen or _listing_exclusion(d) is not None:
             continue
         seen.add(key)
         fm = parse_frontmatter(d / "SKILL.md")

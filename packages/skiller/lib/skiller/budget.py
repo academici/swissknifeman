@@ -325,6 +325,76 @@ CODEX_LISTING_BUDGET_FRACTION = 0.02
 LISTING_PROVIDERS = ("claude-code", "codex")
 DEFAULT_LISTING_PROVIDER = "claude-code"
 
+# --- какие записи в резидентный листинг НЕ входят (P3.2, D95/D96) --------------
+# Пере-издание модели по НАБЛЮДЕНИЮ стенда P3.1/P3.6 на живой 2.1.220, а не по
+# доку (`plan.md` §2 «Правило внешних фактов»). Оба поля сняли запись целиком,
+# дельта воспроизведена байт-в-байт в обоих прогонах:
+#   • `disable-model-invocation: true` — ось A −88
+#     (`plans/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.2), это же
+#     говорит first-party док: «Description **not** in context»
+#     (<https://code.claude.com/docs/en/skills> §«Control who invokes a skill»);
+#   • `paths:` — ось A −88, ТА ЖЕ величина (там же §3.1/§4). Доку это
+#     противоречит («The listing always contains every skill name»), поэтому
+#     основание — наблюдение. Дозамер P3.6 назвал механизм: (C) условная
+#     загрузка с условием «сессия ПРОЧЛА совпавший файл», а НЕ «файл лежит в
+#     дереве» (`findings/P3-paths-mechanism.md` §2). Условие по ДЕРЕВУ в модель
+#     не вносится: плечо A1 дозамера («совпавший файл лежит») дало
+#     «неразличимо» в обоих прогонах — запись не возвращается (там же §3), а
+#     недоказанное занижение хуже известного завышения (Implementation Rules
+#     P3.2 §2). На ПЕРВОМ ходу прочитанных файлов нет по построению, поэтому для
+#     first-turn-модели исключение безусловно.
+# Поля НЕ измерены для Codex (стенд гонял только Claude Code — версия клиента
+# первой строкой файла-вердикта), поэтому исключение применяется ТОЛЬКО к
+# provider `claude-code`; codex-ветка сознательно продолжает завышать.
+LISTING_EXCLUDED_BY_FIELDS = ("disable-model-invocation", "paths")
+LISTING_EXCLUSION_PROVIDERS = ("claude-code",)
+
+
+def _listing_exclusion(skill_dir):
+    """Поле frontmatter, по которому запись скилла НЕ входит в резидентный
+    листинг Claude Code, либо None. Порядок проверки = порядок
+    `LISTING_EXCLUDED_BY_FIELDS`; первое совпадение и есть причина (запись
+    снимается один раз, двух причин у одной записи не бывает)."""
+    md = Path(skill_dir) / "SKILL.md"
+    if not md.is_file():
+        return None
+    try:
+        fm = parse_frontmatter(md)
+    except Exception:
+        return None
+    if str(fm.get("disable-model-invocation", "")).strip().lower() == "true":
+        return "disable-model-invocation"
+    if fm.get("paths"):
+        return "paths"
+    return None
+
+
+def _split_listing_entries(dirs, provider=DEFAULT_LISTING_PROVIDER):
+    """(включённые в листинг каталоги, {поле-причина: [каталоги]}) для провайдера.
+    Провайдер вне `LISTING_EXCLUSION_PROVIDERS` — исключений нет вовсе (поля для
+    него не измерены)."""
+    if provider not in LISTING_EXCLUSION_PROVIDERS:
+        return list(dirs), {}
+    included, excluded = [], {}
+    for d in dirs:
+        field = _listing_exclusion(d)
+        if field is None:
+            included.append(d)
+        else:
+            excluded.setdefault(field, []).append(d)
+    return included, excluded
+
+
+def format_listing_exclusions(excluded_by):
+    """Каноническая строка отчёта об исключённых записях (`{поле: N}`) —
+    ОДНА форма для first-turn и для `--provider`-отчёта, чтобы число исключений
+    не разошлось между двумя печатями."""
+    if not excluded_by:
+        return "исключено записей: 0"
+    total = sum(excluded_by.values())
+    by = ", ".join(f"{f}: {n}" for f, n in sorted(excluded_by.items()))
+    return f"исключено записей: {total} (по полю {by})"
+
 
 def _listing_entry_tokens(skill_dir):
     """⊕ tier-0 ОДНОЙ записи листинга, как считает клиент: `name` без обрезки +
@@ -362,23 +432,33 @@ def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
     `[(bucket, rel, dir, fm_name)]` (P3.4). Две модели, две единицы — НЕ смешиваются
     (D52): Claude Code — 1% контекстного окна в ТОКЕНАХ (см. `_listing_entry_tokens`);
     Codex — фолбэк 8 000 СИМВОЛОВ (худший случай — реальное окно [UNVERIFIED], D3).
-    → {provider, unit, raw, budget, over, degradation}."""
+    Записи, снятые с листинга нативным полем (`LISTING_EXCLUDED_BY_FIELDS`,
+    P3.2/D95/D96), в `raw` не входят; их число и цена приезжают АДДИТИВНЫМИ
+    ключами `excluded`/`excluded_by`/`excluded_raw` (D16 — смысл прежних ключей
+    не меняется).
+    → {provider, unit, raw, budget, over, degradation, excluded, excluded_by,
+       excluded_raw}."""
     if provider not in LISTING_PROVIDERS:
         die(f"неизвестный --provider: {provider} (ожидается: "
             f"{', '.join(LISTING_PROVIDERS)})")
-    dirs = [d for _bucket, _rel, d, _fm in skills]
+    all_dirs = [d for _bucket, _rel, d, _fm in skills]
+    dirs, excluded = _split_listing_entries(all_dirs, provider)
+    entry = _listing_entry_chars if provider == "codex" else _listing_entry_tokens
     if provider == "codex":
-        raw = sum(_listing_entry_chars(d) for d in dirs)
         budget = CODEX_LISTING_FALLBACK_CHARS
         unit = "симв"
         degradation = "скилл может быть выброшен из листинга целиком"
     else:
-        raw = sum(_listing_entry_tokens(d) for d in dirs)
         budget = int(SKILL_LISTING_CONTEXT_WINDOW * SKILL_LISTING_BUDGET_FRACTION)
         unit = "ток"
         degradation = "описание усекается, имя остаётся"
+    raw = sum(entry(d) for d in dirs)
+    excluded_raw = sum(entry(d) for ds in excluded.values() for d in ds)
     return {"provider": provider, "unit": unit, "raw": raw, "budget": budget,
-            "over": raw > budget, "degradation": degradation}
+            "over": raw > budget, "degradation": degradation,
+            "excluded": sum(len(ds) for ds in excluded.values()),
+            "excluded_by": {f: len(ds) for f, ds in sorted(excluded.items())},
+            "excluded_raw": excluded_raw}
 
 
 def format_listing_report(report):
@@ -386,11 +466,15 @@ def format_listing_report(report):
     status = "ПЕРЕБОР" if report["over"] else "ок"
     ratio = (f" (×{report['raw'] / report['budget']:.1f})"
              if report["over"] and report["budget"] else "")
-    return "\n".join([
+    lines = [
         "", f"─── Бюджет обнаружения (листинг), provider: {report['provider']} ───",
         f"Листинг: {report['raw']} {report['unit']}  vs  бюджет {report['budget']} "
-        f"{report['unit']}  — {status}{ratio}",
-        f"Режим деградации: {report['degradation']}", ""])
+        f"{report['unit']}  — {status}{ratio}"]
+    if report.get("excluded"):
+        lines.append(f"{format_listing_exclusions(report['excluded_by'])} — "
+                     f"{report['excluded_raw']} {report['unit']} вне листинга")
+    lines += [f"Режим деградации: {report['degradation']}", ""]
+    return "\n".join(lines)
 
 
 def profiles_listing_report(env):
@@ -431,14 +515,22 @@ def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTI
     try:
         config = load_config(env, target)
         skills, meta = resolve_active_set(env, target, config)
-        raw = sum(_listing_entry_tokens(d) for _bucket, _rel, d, _fm in skills)
+        all_dirs = [d for _bucket, _rel, d, _fm in skills]
+        dirs, excluded = _split_listing_entries(all_dirs, DEFAULT_LISTING_PROVIDER)
+        raw = sum(_listing_entry_tokens(d) for d in dirs)
         budget = int(listing_context_window * listing_fraction)
         resident = min(raw, budget)
         detail = f"{len(skills)} скиллов"
+        if excluded:
+            detail += f", в листинге {len(dirs)}"
         if raw > budget:
             detail += (f", листинг {raw} > бюджет {budget} ток → резидент "
                       f"{resident} (клиент дропает редко вызываемые описания)")
         return {"tokens": resident, "raw_tokens": raw, "listing_budget": budget,
+                "excluded": sum(len(ds) for ds in excluded.values()),
+                "excluded_by": {f: len(ds) for f, ds in sorted(excluded.items())},
+                "excluded_raw": sum(_listing_entry_tokens(d)
+                                    for ds in excluded.values() for d in ds),
                 "detail": detail}
     except (Exception, SystemExit) as e:
         return {"tokens": None, "detail": f"n/a ({e})"}
@@ -697,6 +789,11 @@ def format_first_turn_report(report):
         raw = s.get("raw_tokens")
         if raw is not None and raw != tok:
             out.append(f"  {'  (сумма описаний до бюджета)':<28} {raw:>6} ток")
+        if key == "skills" and s.get("excluded"):
+            # P3.2: запись, снятая нативным полем, в резидент не входит — число
+            # публикуется отдельной строкой (эффект ПРИБОРА, не диеты реестра).
+            out.append(f"  {'  ' + format_listing_exclusions(s['excluded_by']):<28} "
+                       f"{-s['excluded_raw']:>6} ток вне листинга")
         if key == "mcp" and s.get("mode"):
             out.append(f"  {'  tool search':<28} {s['mode']} "
                        f"(источник: {s['mode_source']}) — {s['estimate_class']}")

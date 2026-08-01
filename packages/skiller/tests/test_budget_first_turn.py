@@ -277,6 +277,99 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertEqual(set(data["sources"]),
                          {"skills", "agents", "claude_md", "hooks", "mcp"})
 
+    # --- модель листинга: нативные поля, снимающие запись (P3.2, D95/D96) ------
+    def _write_skill_fm(self, name, extra_fm=""):
+        """Скилл в бакете `quality` синтетического реестра с ДОПОЛНИТЕЛЬНЫМИ
+        строками frontmatter (fixtures.write_skill их не умеет, а трогать общий
+        хелпер ради одного кейса — заводить второй носитель формата)."""
+        d = self.registry_root / "skills" / "quality" / name
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "SKILL.md").write_text(
+            f"---\nname: {name}\nversion: 0.1.0\n"
+            f"description: {'listing weight ' * 20}\n{extra_fm}---\n\nBody.\n",
+            encoding="utf-8")
+        return d
+
+    def _skills_source(self):
+        return first_turn_report(self.env, self.proj)["sources"]["skills"]
+
+    def test_disable_model_invocation_entry_leaves_listing_sum(self):
+        # first-party: «Description **not** in context» + наблюдение стенда P3.1
+        # (ось A −88, оба прогона) — `findings/P3-native-fields-smoke.md` §3.2.
+        base = self._skills_source()
+        self._write_skill_fm("plain-entry")
+        with_plain = self._skills_source()
+        self.assertGreater(with_plain["raw_tokens"], base["raw_tokens"])
+        self.assertEqual(with_plain["excluded"], 0)
+
+        self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
+        with_silent = self._skills_source()
+        # запись добавлена в активный набор, но в сумму листинга не вошла
+        self.assertEqual(with_silent["raw_tokens"], with_plain["raw_tokens"])
+        self.assertEqual(with_silent["excluded"], 1)
+        self.assertEqual(with_silent["excluded_by"], {"disable-model-invocation": 1})
+        self.assertGreater(with_silent["excluded_raw"], 0)
+
+    def test_same_skill_without_field_is_counted(self):
+        # обратная половина того же кейса: поле снято → запись возвращается в сумму
+        d = self._write_skill_fm("toggle-entry", "disable-model-invocation: true\n")
+        excluded = self._skills_source()
+        self._write_skill_fm("toggle-entry")  # тот же скилл, поля больше нет
+        included = self._skills_source()
+        self.assertEqual(excluded["excluded"], 1)
+        self.assertEqual(included["excluded"], 0)
+        self.assertGreater(included["raw_tokens"], excluded["raw_tokens"])
+        self.assertTrue(d.is_dir())
+
+    def test_paths_entry_leaves_listing_sum(self):
+        # НАБЛЮДЕНИЕ, а не док: `paths:` снял запись целиком (ось A −88,
+        # байт-в-байт как `disable-model-invocation`) — `findings/
+        # P3-native-fields-smoke.md` §3.1/§4; механизм назван P3.6 —
+        # `findings/P3-paths-mechanism.md` §2 (условие «файл ПРОЧИТАН», на первом
+        # ходу недостижимо ⇒ исключение безусловно).
+        self._write_skill_fm("plain-entry")
+        with_plain = self._skills_source()
+        self._write_skill_fm("scoped-entry", "paths:\n  - \"*.zzp31paths\"\n")
+        with_scoped = self._skills_source()
+        self.assertEqual(with_scoped["raw_tokens"], with_plain["raw_tokens"])
+        self.assertEqual(with_scoped["excluded_by"], {"paths": 1})
+
+    def test_indistinguishable_fields_do_not_change_the_model(self):
+        # стенд P3.1 дал «неразличимо»/«прибора нет» по `model:`, `effort:` и
+        # `context: fork` (§2 таблица) — Implementation Rules P3.2 §2: такое поле
+        # в модель НЕ вносится, лучше известное завышение, чем недоказанное
+        # занижение.
+        self._write_skill_fm("plain-entry")
+        base = self._skills_source()
+        self._write_skill_fm("plain-entry",
+                             "model: claude-haiku-4-5-20251001\neffort: high\n"
+                             "context: fork\n")
+        after = self._skills_source()
+        self.assertEqual(after["raw_tokens"], base["raw_tokens"])
+        self.assertEqual(after["excluded"], 0)
+
+    def test_json_top_level_keys_unchanged_for_maind_doctor(self):
+        # флот-потребитель читает d["total"]/d["verdict"] и падает в n/a на любом
+        # KeyError (`packages/maind/lib/maind/doctor.py:128–158`, D16) — новые
+        # сведения приезжают ТОЛЬКО аддитивно, внутри sources.skills.
+        self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--json"])
+        data = json.loads(buf.getvalue())
+        self.assertEqual(set(data), {"target", "sources", "total", "verdict"})
+        self.assertIsInstance(data["total"], int)
+        self.assertIn(data["verdict"], ("OK", "ELEVATED", "WARN"))
+        self.assertEqual(data["sources"]["skills"]["excluded_by"],
+                         {"disable-model-invocation": 1})
+
+    def test_report_prints_exclusion_line(self):
+        self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
+        from skiller.budget import format_first_turn_report
+        text = format_first_turn_report(first_turn_report(self.env, self.proj))
+        self.assertIn("исключено записей: 1 (по полю disable-model-invocation: 1)",
+                      text)
+
 
 if __name__ == "__main__":
     unittest.main()

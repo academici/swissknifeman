@@ -1,90 +1,50 @@
-# HANDOFF — 2026-08-01 — after P5.1
+# HANDOFF — 2026-08-01 — after P5.2
 
-**Next:** решение владельца по **OQ-6**, затем ре-дизайн P5 под выбранную ветку
+**Next:** exec-items: task:plan-exec 2026.07.31-SKM-LEAN P5.3 P5.6
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — политика доверия на 56 внешних бандлах, цена ошибки необратима в обе стороны |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Владелец выбирает ветку OQ-6 (A/B/C) по входу `findings/P5-vendored-audit.md` §8; `plan-design` заводит follow-up item под ремедиацию находки §3.1 и снимает 🔴 с P5.1 |
+| Model | Sonnet |
+| Thinking | medium |
+| Context | continue (/clear) — ручной item |
+| Суть | Два оставшихся scope-независимых item'а батча **B2**: `*.env.ini` граница/трекинг/схема (P5.3) · playwright `--output-dir`+пиновка (P5.6) |
 
 ```
-/task:plan-design 2026.07.31-SKM-LEAN P5
+/task:plan-exec 2026.07.31-SKM-LEAN P5.3
 ```
 
-> Порядок обязателен: `plan-design` без решения владельца по OQ-6 заведёт item под
-> невыбранную ветку. Вход решения — `plans/2026.07.31-SKM-LEAN/findings/P5-vendored-audit.md`
-> §8 (что аудит говорит о каждой из веток A/B/C).
->
-> Если владелец хочет двигать фазу дальше **не** закрывая OQ-6, следующий исполнимый item —
-> P5.2 (`Exec = plan-exec`, implementation/medium): `/task:plan-exec 2026.07.31-SKM-LEAN P5.2`.
-> P5.1 при этом остаётся 🔴 на доске — это и есть его назначение (D65).
+**Done:** **P5.2 закрыт 🟢 Done** (одна сессия plan-exec) — провенанс `configs/provider-capabilities.json`
+зафиксирован ВНЕ файла, в генерируемых носителях.
 
-**Done:** Этим заходом — **P5.1 закрыт 🔴 Blocked** (`plan-run`, opus/high). Оба deliverable'а
-item'а сданы полностью; `🔴` — не недоделка, а Implementation Rule 12 (D65): незакрытый гейт
-владельца держит находку на доске вместо того, чтобы увезти её в закрытый item.
-
-- **Разовый человеческий аудит 56 вендоренных бандлов** — первый за историю реестра (до него
-  проверялась ТОЛЬКО целостность байтов). `findings/P5-vendored-audit.md`: 56 поимённых
-  вердиктов — **50 clean / 6 attention / 0 risk**. Метод и его границы названы в §2:
-  сплошное машинное покрытие **100 % байтов** (599 файлов / 3 070 592 б) по четырём классам
-  угрозы + обфускации, полное чтение всех 56 `SKILL.md` (291 КБ) и всех 27 файлов с
-  исполняемым содержимым (68 КБ); справочные корпуса (≈2,4 МБ, 447 файлов) построчно НЕ
-  читались — граница объявлена, вердикт для них сформулирован строго.
-- **Триаж-ступень внутри `--check`** — 13 стдлиб-правил + `BIN_UNREADABLE`, выведенных ИЗ
-  таблицы аудита; отдельный код выхода **11** (не `10`), ключи `triage`/`stale_verdicts`/
-  `triage_disclaimer` в `--json`, дословная оговорка «no findings != safe» в обоих каналах,
-  отметка «вердикт протух» при дрейфе относительно `audited_at` (D65).
-- **Починен живой дефект**, найденный аудитом: `files[]`-запись с пустым `path`
-  (`skills/voice-ai/voice-ai`) резолвилась в САМ каталог скилла и роняла ВЕСЬ `--check`
-  `IsADirectoryError`-ом — сверка целостности реестра была неработоспособна целиком.
-- Тесты `packages/skiller/tests/test_upstreams_scan.py` (10 кейсов, без сети), док-страница
-  `skiller/guide/vendored-skills` в обоих sidebar'ах, провенанс паттернов в `docs/reference.md`,
-  запись в корневом `CHANGELOG.md`.
-- Коммиты: item `c615ddcb`, bookkeeping — см. git-историю фазы.
-
-**Lint:** `python3 packages/task/scripts/plan-lint.py plans/2026.07.31-SKM-LEAN --baseline HEAD` —
-счёт с атрибуцией опубликован в отчёте захода; остаточные ошибки плана вне Scope item'а (если
-есть) названы в Pending Work P5.1, а не замолчаны.
+- Блок «Manifest provenance» в `render_guide()` (`docs/provider-support.md`) + симметричная строка в
+  `render_readme_block()` (`README.md`): манифест — рукописный SSOT без генератора, `root.generated-artifacts`
+  к нему не применяется, процедура правки — `--write` → `--check`.
+- Структурный тест `test_manifest_is_not_an_output_of_the_generator` (`scripts/test-provider-docs.py`):
+  `Path('configs/provider-capabilities.json') not in expected_outputs()`.
+- Негативный прогон `--check` подтверждён (искажение строки → drift → код 1; восстановление → 0).
+- `python3 scripts/test-provider-docs.py`: 5 тестов, 2 FAIL — те же два имени, что на baseline ДО правки
+  (устаревшие `APPROVED_*_SHA256`, адрес P6.3/D63); новый тест и остальные три зелёные.
+- Item-коммит `b09bab62`; bookkeeping — этим заходом.
 
 **Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-**P5 0/9 (🔴 Blocked — держит P5.1)** · P6 0/3 (⬜) · P7 0/4 (⬜). Внутри P5 исполнимы
-P5.2–P5.9 (гейт OQ-6 сидит только в P5.1); фаза не станет терминальной, пока P5.1 в 🔴.
-`plans/ACTIVE.md` не трогался.
+**P5 1/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.3–P5.11.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/findings/P5-vendored-audit.md` (вердикты,
-границы покрытия, вход OQ-6) · `phases/P5.md` P5.1 Completion Notes · `open-questions.md` OQ-6 ·
-`packages/skiller/docs/guide/vendored-skills.md` (процедура и её границы) ·
-`plan.md` §4 Phase Index & Status Board.
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.3, P5.6, …) · `plan.md` §3 Routing ·
+`findings/P5-hygiene-surfaces-2026-07-31.md` §4 (инвентаризация `*.env.ini`) и §7 (три носителя playwright).
 
 **Open risks:**
 
-- **Открыт `attention` §3.1** — `frontend/web-design-guidelines` на каждом вызове тянет правила
-  с `raw.githubusercontent.com/vercel-labs/…/main/command.md` и применяет их как инструкции:
-  канал вне бандла, sha256 его не покрывает, ссылка на ветку, а не на коммит. Ремедиация
-  запрещена Scope Excluded P5.1 — это OQ-6.
-- **Гейт триажа на живом реестре красен постоянно** (`security/security` — корпус атакующих
-  строк по назначению). Правило под него НЕ ослаблялось; механизм подавления не заведён
-  сознательно — он и есть решение о политике доверия.
-- **Преэкзистентный HTTP 404** апстрима `oss-dev/to-issues` (`mattpocock/skills` убрал путь) —
-  `--check` из-за него возвращает `2`; вне Scope P5.1.
-- Правила триажа англоязычные (RU-ветка только у `PRM_REMOTE_INSTRUCTIONS`) — 55 `SKILL.ru.md`
-  покрыты частично.
-- `audits/skm.md` (Inputs P5.1) не под git: каталог `audits/` untracked в рабочем дереве.
-- Без изменений от предыдущего handoff: U1/U2 `[UNVERIFIED]`, остаток риска D106, контракт P4.1
-  пинован на `06fefc87`, два преэкзистентных WARN линтера по P4, отсутствие статического примера
-  `journal.jsonl` в `fixtures_data/run/**`.
+- Прежние (не изменились этим заходом): supply-chain находка §3.1 живая до закрытия P5.10 · гейт триажа
+  красен по конструкции (D109) · пинованный внешний источник может исчезнуть · ветка (C) OQ-6 не проверена
+  данными · преэкзистентный HTTP 404 `oss-dev/to-issues` · U1/U2 `[UNVERIFIED]`, остаток риска D106,
+  контракт P4.1 пинован на `06fefc87`.
 - **Чужой дифф в рабочем дереве** (этим заходом не тронут): `.gitignore` (modified), удалённый
   `RESEARCH/AUDIT-loqum-findings.md`, untracked `.swissknife/` и `audits/`.
+- `scripts/test-provider-docs.py` несёт 2 известных FAIL (устаревшие утверждённые хеши манифеста) —
+  адрес P6.3, не трогать здесь.
 
 **Workarounds/Deferred/Open questions:**
 
-- **workarounds:** отметка «вердикт протух» detectable только ДО `--apply` (после него дрейф
-  исчезает вместе с отметкой) — рабочий порядок «`--check` → перечитать → обновить таблицу →
-  `--apply`» зафиксирован в §6 отчёта и на док-странице; скрипт намеренно не читает таблицу
-  вердиктов, чтобы не заводить связь «скрипт `skiller` читает файл плана».
-- **deferred:** RU-покрытие остальных правил триажа; смена мёртвого URL `oss-dev/to-issues`;
-  постановка `audits/` под git.
-- **open_questions:** открытых четыре — **OQ-6** (адрес: этот item, вход подготовлен, решения
-  нет) · OQ-3 · OQ-8 (адрес — P7.1) · OQ-9 (владелец протокола, вне этого плана).
+- **workarounds:** —
+- **deferred:** без изменений (см. предыдущий handoff).
+- **open_questions:** три открытых — OQ-3 (P4.6/P7.1) · OQ-8 (P7.1) · OQ-9 (владелец протокола).

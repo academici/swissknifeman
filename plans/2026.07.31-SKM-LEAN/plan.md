@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (фаза P4 закрыта 🟢 Done — `closure/P4.json` издан, plan-close) |
+| Last Updated | 2026-08-01 (P5.1 закрыт 🔴 Blocked — аудит 56 бандлов сдан, гейт владельца OQ-6 открыт, plan-run) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -122,7 +122,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
 | P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
 | P4 | Драйвер exec-волны | 6/6 | 🟢 Done |
-| P5 | Гигиена и безопасность | 0/9 | ⬜ Not started |
+| P5 | Гигиена и безопасность | 0/9 | 🔴 Blocked |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
 | P7 | Закрытие roadmap в ноль | 0/4 | ⬜ Not started |
 
@@ -317,6 +317,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-run/sonnet-high | **P4.5 закрыт: 🟢 Done** — `run/journal.py` реализован (`WHO_WRITES`/`classify`/`maybe_write`/`summarize_wave`, D32 без двойной записи), 618 тестов зелены, фаза P4 5/6 — детали см. `phases/P4.md` P4.5 Completion Notes |
 | 2026-08-01 | plan-run/sonnet-high | **P4.6 закрыт: 🟢 Done** — `harness run` CLI + двупронговая приёмка (D33, `findings/P4-wave-acceptance.md`), 630 тестов зелены, фаза P4 6/6 — детали см. `phases/P4.md` P4.6 Completion Notes |
 | 2026-08-01 | plan-close/sonnet-low | **Фаза P4 закрыта: 🟢 Done** (все 6 items терминальны, отклонения только process-класса) — `closure/P4.json` издан — детали см. `phases/P4.md` § Phase Handoff |
+| 2026-08-01 | plan-run/opus-high | **P5.1 закрыт: 🔴 Blocked** — оба deliverable'а сданы (56 вердиктов `findings/P5-vendored-audit.md`, триаж-ступень в `--check` с кодом 11), закрытие `🔴` по Implementation Rule 12/D65: гейт владельца OQ-6 не закрыт — детали см. `phases/P5.md` P5.1 Completion Notes |
 
 ## 7. Contracts
 

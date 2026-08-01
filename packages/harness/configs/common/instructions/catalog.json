@@ -36,7 +36,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -101,7 +101,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -132,7 +132,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -168,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -201,7 +201,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -232,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -249,7 +249,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`. The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon.",
+          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`. The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon. A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect.",
           "obligations": [
             {
               "modality": "must",
@@ -257,13 +257,20 @@
               "action": "manage",
               "object": "root.plan-lifecycle.requirements",
               "boundary": "root.all"
+            },
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "record",
+              "object": "root.plan-lifecycle.model-provenance",
+              "boundary": "root.all"
             }
           ],
           "sources": [
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -271,7 +278,8 @@
             "`plans/<ID>/`",
             "`plan-protocol`",
             "reference plan items by the full `<PLAN-ID> Pn.m`",
-            "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon."
+            "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon.",
+            "A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect."
           ]
         },
         {
@@ -294,7 +302,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -322,7 +330,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -354,7 +362,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -387,7 +395,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -414,7 +422,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -441,7 +449,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -468,7 +476,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -496,7 +504,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -523,7 +531,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [
@@ -550,7 +558,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "16efab3f40ae3814bee32cee4f24beedf6b58b7197f46c549ab2b3b557730b5a"
+              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
             }
           ],
           "compatibility_assertions": [

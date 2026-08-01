@@ -1,142 +1,98 @@
 # HANDOFF — 2026-08-01 — after P3.4
 
-**Next:** `/task:plan-design 2026.07.31-SKM-LEAN P3.4` — P3.4 эскалирован (не закрыт): предмет
-работы готов и закоммичен (`context: fork` на 4 скиллах, item-коммит `8f5206ba`), но
-бухгалтерия закрытия механически заблокирована конфликтом правил (D100, см. Open risks) между
-табличной строкой `ACCEPTANCE_NOT_PUBLIC` (`plan-close.md`/skill §13 — «реальный, закрывается
-🟠») и бинарным гейтом `plan_lint.py` D76 («Closure gate is BINARY», ошибается на ЛЮБОМ
-закрытии при `pre_final != allow`). Владелец решает между (а) правкой формы Validation этого
-item'а (разделитель «; » → « · ») и (б) сверкой/правкой табличной строки против D76.
+**Next:** `/task:plan-run 2026.07.31-SKM-LEAN P3.5` — последний item фазы P3 (Exec = manual,
+D18: модель/effort сессии не пинуются командой — задай `/model`/`/effort` перед запуском).
+Правит ГЕЙТЫ `validate.sh`, поэтому идёт строго после P3.1–P3.4 (все закрыты).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — design-решение (конфликт правил протокола, не механическая правка) |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Разобрать конфликт D100 между табличной строкой ACCEPTANCE_NOT_PUBLIC и D76, решить (а) правку формы Validation P3.4 (и, при подтверждении того же дефекта, P5.5) или (б) правку табличной строки/skill §13 |
+| Model | Sonnet 5 |
+| Thinking | high — предписанная реализация против пинованного D27, effort high+ (Routing §3 P3.5) |
+| Context | continue (/clear) — ручной item |
+| Суть | `when_to_use` + сжатие записи листинга + тиры `model:`/`effort:`, пере-база гейтов `validate.sh` на совокупную запись листинга |
 
 ```
-/task:plan-design 2026.07.31-SKM-LEAN P3.4
+/model sonnet
+/effort high
+/task:plan-run 2026.07.31-SKM-LEAN P3.5
 ```
 
-**Done:** Этим заходом — работа P3.4 выполнена и закоммичена, закрытие эскалировано
-(`plan-run`, implementation/high — Sonnet 5 / high; item-коммит `8f5206ba`).
+**Done:** Этим заходом — **`plan-close` режим Pn.m** (sonnet/low) — реконсиляция P3.4 по
+git-фактам.
 
-- **Критерий «процедурный скилл с задачей, не справочник»** сформулирован ДО просмотра списка
-  (5 правил), записан также как правило авторинга в `docs/guide/skill-taxonomy.md`.
-- **Прогон по 229 скиллам реестра**: ~18 кандидатов разобраны поштучно
-  (`findings/P3-fork-selection.md` §2), 4 отобраны и получили `context: fork` + `background:
-  false`: `devops/node-pnpm-preflight`, `devops/db-test-preflight`, `quality/refactoring-plan`,
-  `oss-dev/resolving-merge-conflicts`.
-- **Поштучная проверка на живой 2.1.220**, новый артефакт `artifacts/p3-4-fork-selection-bench.sh`
-  (флот раскладывает скиллы ПЛОСКО по `name`). Все 4 скилла, ОБА пути активации — **8/8
-  прогонов дали непустой содержательный результат**, включая корректный разбор РЕАЛЬНОГО
-  git-конфликта у `resolving-merge-conflicts` (заблокирован только на permission-грант записи
-  в headless `-p`, не на форке).
-- **Ось A не изменилась**: `skiller budget --first-turn --target "$PWD"` — **7179 ток, verdict
-  OK**, до и после.
-- `bash packages/skiller/scripts/validate.sh` — зелёный (230 skills checked — all valid, tests
-  OK, `registry --check` актуален) на `8f5206ba`.
-- **Item-коммит закоммичен `8f5206ba`**; бухгалтерия закрытия — эскалирована, НЕ закрыта.
-  **Найден конфликт правил протокола (D100)**: попытка закрыть 🟠 (как предписывает табличная
-  строка `plan-close.md`/skill §13 для «реального» кода `ACCEPTANCE_NOT_PUBLIC`) даёт
-  `plan_lint.py` ERROR «закрытие на не-allow (D76)» — гейт бинарен для ЛЮБОГО статуса closure,
-  без исключения для «реальных» кодов. Причина конкретно у P3.4 — пре-существующий дефект
-  ФОРМЫ Validation (разделитель «; » вместо « · »), уже назван в прошлом заходе как открытый
-  риск P3.4/P5.5; конфликт табличной строки против D76 — отдельный, более широкий дефект
-  протокола.
-- **Файл-вердикт:** `findings/P3-fork-selection.md` — критерий, таблица кандидатов, таблица
-  поштучной проверки, честная граница (побочные находки).
+- Git-факты сверены со Scope Included: коммит `8f5206ba` несёт `context: fork` +
+  `background: false` на 4 отобранных скиллах (`devops/node-pnpm-preflight`,
+  `devops/db-test-preflight`, `quality/refactoring-plan`, `oss-dev/resolving-merge-conflicts`),
+  критерий отбора и таблицу в `findings/P3-fork-selection.md`, `docs/guide/skill-taxonomy.md`,
+  новый стенд `artifacts/p3-4-fork-selection-bench.sh` — Files item'а не превышены.
+- Маршрут исполнителя разрешён п.1/п.2 лестницы D75 без расхождения: Completion Notes несут
+  routing-adherence «`implementation/high`, сессия `sonnet/high`»; терминальная запись
+  `journal.jsonl` (`ts 2026-08-01T07:29:53Z`, `plan-run`) — `actor: sonnet/high` — совпадает.
+- **Task Contract, свежий прогон:** `task_contract.build/evaluate` над закоммиченным ТЗ
+  (actual_route `implementation/high`, `sonnet`, `source: self-attested`) →
+  `pre_mutation: allow` / `pre_final: allow` (7 acceptance-записей после правки формы D101/D90,
+  6 `public`). Устаревшая строка `write-site (… УСТАРЕЛ) …` в Completion Notes ЗАМЕНЕНА (не
+  дописана) на каноническую `write-site: pre_mutation: allow · pre_final: allow`.
+- **Validation item'а прогнана целиком:** `validate.sh` — exit 0 (230 skills checked, 567
+  тестов OK, `registry --check` актуален); `grep "^context: fork"` по реестру → **4**; контур
+  `task:plan-*` и CORE-девятка → **0** форкнутых (оба совпадают с заявленным); `skiller budget
+  --first-turn` — `7179 ток OK` без изменений (ось A не задета, как и заявлено).
+- **Status-rule:** три Known Deviations item'а — все класса **process** (routing перебора нет;
+  бухгалтерия `🟡`/журнал после начала практической работы; правка спеки ПОСЛЕ исполнения —
+  D101, ужесточает приёмку, текст проверок не тронут байт-в-байт) — ни один material-триггер
+  §6 не сработал (Scope выполнен полностью, Validation зелена, public contract не задет,
+  workaround в коде не принят, дифф вне Files отсутствует). Вердикт — **`🟢 Done`**.
+- `## Phase Status` (`phases/P3.md`) и Status Board (`plan.md` §4) синхронизированы: P3.4
+  `🟡 → 🟢`, доска P3 `1/6 → 2/6` (P3.1, P3.4 зелены; P3.6/P3.2/P3.3 — 🟠; P3.5 — ⬜).
+- `python3 packages/task/scripts/plan-lint.py plans/2026.07.31-SKM-LEAN --baseline HEAD` —
+  **OK, 0 ошибок, 1 пре-существующий WARN** (P1 workflow-скрипт, D29, к P3.4 не относится),
+  новых от закрытия: 0.
+- `python3 plans/verify-citations.py plans/2026.07.31-SKM-LEAN --strict` — **202 цитаты
+  проверено, 5 находок, новых от диффа P3.4: 0** (все 5 — пре-существующие ссылки на
+  `context-economy/SKILL.md` в чужих файлах и `plan-protocol/SKILL.md:1228` в `plan.md`/
+  `research/12-…`, вне Files этого item'а).
+- Журнал: `plan.md` §6 Update Log — строка о закрытии P3.4; `journal.jsonl` — запись
+  `plan-close/sonnet-low/closed-green`.
 
-**Remaining:** доска: P1 3/4 (закрыта 🟠) · P2 5/6 (закрыта 🟠) · **P3 1/6, 🟡 In progress**
-(P3.1 `🟢`, P3.6 `🟠`, P3.2 `🟠`, P3.3 `🟠`, **P3.4 `🔴 Blocked`**; P3.5 не начат). Всего 38
-items. Следующий шаг — **design-решение по D100** (см. Next), НЕ `plan-run P3.5`: P3.5
-формально не зависит от P3.4 данными, но фаза несёт незакрытый эскалированный item — начинать
-P3.5 до вердикта владельца по D100 не рекомендуется (тот же класс правила, что «Phase-first»,
-хоть формально это не межфазовая, а внутрифазовая ситуация).
+**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · **P3 2/6, 🟡 In progress**
+(P3.1 `🟢`, P3.6 `🟠`, P3.2 `🟠`, P3.3 `🟠`, P3.4 `🟢`, P3.5 `⬜` — единственный незакрытый item
+фазы). Всего 38 items. После P3.5 — фаза P3 терминальна целиком → `/task:plan-close
+2026.07.31-SKM-LEAN P3` (режим `Pn`, закрытие фазы).
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/findings/P3-fork-selection.md` (предмет P3.4:
-критерий, таблица отбора, поштучная проверка, честная граница) · `phases/P3.md` §P3.4
-(эскалирован, `> 🔴 ESCALATION P3.4`) · `plan.md` §5 **D100** (конфликт правил, полное
-описание), §3 Routing, §4 доска, §6 Update Log · `packages/task/lib/task/plan_lint.py:402-435`
-(`_lint_write_site_codes_44`, D76) · `packages/task/commands/plan-close.md` шаг 4 (табличная
-строка ACCEPTANCE_NOT_PUBLIC) · `packages/skiller/skills/general/plan-protocol/SKILL.md:1228`
-(«Closure gate is BINARY») · `open-questions.md` (три открытых, без изменений) · `roadmap.md`.
+**Sources of truth:** `phases/P3.md` §P3.4 (Completion Notes с каноническим `write-site:`,
+Pending Work без инструкции — выполнена) · `findings/P3-fork-selection.md` · `plan.md` §4
+доска, §6 Update Log · `journal.jsonl` (записи `P3.4` — 4 шт., последняя `plan-close`) ·
+`research/12-D100-acceptance-not-public-2026-08-01.md` (разбор снятой эскалации, не тронут
+этим заходом).
 
-**Open risks:**
+**Open risks:** без изменений от предыдущего handoff, кроме закрытия пункта про P3.4:
 
-- **D100 — конфликт правил протокола (НОВОЕ, этот заход):** табличная строка
-  `ACCEPTANCE_NOT_PUBLIC` (`plan-close.md`/skill §13, классификация «реальный» → закрывается
-  🟠) противоречит бинарному гейту D76 (`plan_lint.py`), который ошибается на ЛЮБОМ закрытии
-  при `pre_final != allow` без исключения по классу кода. Затрагивает не только P3.4 — ЛЮБОЙ
-  item с этим (или структурно аналогичным) пре-финал кодом, закрываемый как «реальный» по
-  табличной классификации, наткнётся на тот же ERROR. Решение владельца нужно на уровне
-  протокола (skill §13 / `plan-close.md` таблица), не только на уровне P3.4.
-- **Форма Validation даёт `ACCEPTANCE_NOT_PUBLIC` у P3.4 (подтверждено этим заходом) и P5.5**
-  (разделитель «; » вместо « · » схлопывает все пункты в одну клаузу, которая по случайности
-  содержит внешний путь-префикс `/dev/null`) — фикс вне мандата P3.5 (тот правит
-  `validate.sh`-гейты описаний, не форму Validation этого протокола); нужен отдельный
-  design-item (см. Next) — точный скоуп:
-
-  ```
-  РЕЖИМ: правка ФОРМЫ Validation (разделитель), НЕ пере-дизайн предмета items
-  ВХОД: research/10-validation-acceptance-form-2026-07-31.md §2/§4; plan.md §5 D90/D100; phases/P3.md §P3.4 (ESCALATION-блок, Completion Notes write-site)
-  СКОУП: 1) P3.4 и P5.5 — разделить существующие проверки ` · ` вместо «; », текст проверок не менять 2) прогон task_contract.build() до/после: ACCEPTANCE_NOT_PUBLIC снят у P3.4 3) снять ESCALATION-блок P3.4 (Status → 🟠 Done with deviations, Escalation Needed: no), бухгалтерию закрытия довести штатно 4) при подтверждении: сверить/предложить правку табличной строки ACCEPTANCE_NOT_PUBLIC в plan-close.md/skill §13 против D76 (отдельный owner, вне этого плана, если решение — «таблица не разбирает форму»)
-  НЕ ТРОГАТЬ: предмет и число проверок items; Scope/Deliverables; статусы уже закрытых items
-  ```
-
-- **3 реальных дефекта в `snippets/` скилла `devops/db-test-preflight`**, найденных попутно на
-  стенде (`findings/P3-fork-selection.md` §5): `composer-scripts.json:8` неэкранированный `$c`
-  ломает PHP-скрипт; `preflight.sh:82-91` падение миграции проглатывается `|| echo`; `preflight.sh:33-35`
-  не учитывает `tests/bootstrap.php` как со-SSOT имени тестовой БД. Вне Scope P3.4 — отдельный
-  fix-item на `devops/db-test-preflight`.
-- **`oss-dev/to-issues`/`oss-dev/issue-triage`** — правдоподобные кандидаты под критерий
-  `context: fork`, но пишут во внешний GitHub-tracker; стенд не умеет безопасно проверить
-  внешний side-effect без реального постинга — отложены до отдельного режима стенда.
-- **`quality/tech-debt-audit`** — правдоподобный кандидат под тот же критерий, не разобран
-  поштучно в заходе P3.4 (держит запрет батча) — реопен тем же критерием при следующем проходе.
-- **Структурный критерий пере-открытия OQ-5 (D99):** инструмент, различающий явный `/name`-вызов
-  и авто-триггер по листингу в транскрипт-скане, ЛИБО usage-окно ≥3× текущего (24 проекта) на
-  затронутый нишевый стек — без этого ветка (B)/(C) остаётся непригодной основанием.
-- **Фиксированная обвязка записи листинга ≈28–30 ток не смоделирована** — измеритель занижает
-  цену КАЖДОЙ записи на треть (58 против 88 на фикстуре стенда). Внесение поднимет `total`
-  всему флоту и заденет пороги, замороженные P1.3/D83 → нужен отдельный item и решение
-  владельца.
-- **Стенд `p3-1-native-fields-bench.sh` не умеет гонять произвольный бакет реестра** синтетическими
-  фикстурами — P3.4 решил это для СВОЕГО набора отдельным новым артефактом
-  (`p3-4-fork-selection-bench.sh`, плоская раскладка по `name`); P3.1 не тронут.
+- **OQ-9:** табличная строка `ACCEPTANCE_NOT_PUBLIC` остаётся в клетке «реальный» вопреки D77 —
+  владелец вне этого плана.
+- **Долг D90 не закрыт:** 33 items плана дают ОДНУ acceptance-запись и зелены случайно.
+- **3 реальных дефекта в `snippets/` скилла `devops/db-test-preflight`**
+  (`findings/P3-fork-selection.md` §5) — вне Scope P3.4, отдельный fix-item.
+- **`oss-dev/to-issues`/`oss-dev/issue-triage`** — правдоподобные кандидаты под `context: fork`,
+  отложены до безопасного стенд-режима (внешний side-effect).
+- **`quality/tech-debt-audit`** — правдоподобный кандидат, не разобран поштучно — реопен тем же
+  критерием.
+- **Структурный критерий пере-открытия OQ-5 (D99).**
+- **Фиксированная обвязка записи листинга ≈28–30 ток не смоделирована** — отдельный item и
+  решение владельца.
+- **Стенд `p3-1-native-fields-bench.sh` не умеет гонять произвольный бакет реестра** — P3.4
+  решил это для своего набора отдельным артефактом; P3.1 не тронут.
 - **Ветка `paths` в модели заведена, но не срабатывает ни на одной записи** (0 из 229) —
-  покрыта тестом, не живым скиллом. Названная граница, не долг: при (A) поле на реестр не
-  ставится.
-- (в силе) **Конфликт правил в ТЗ P3.6** (Validation «полная матрица» против forbidden-shortcut
-  «пере-прогон запрещён») — не починен, разрешён вручную на прошлом заходе.
-- (в силе) **Токен `contradictory evidence`** в Code Guidance items P3.1–P3.5 не входит в
-  закрытый enum триггеров `plan-protocol` §10 — замечено, не чинилось.
-- (в силе) **Найденный дефект генератора `.mcp.json.example`** (`write_example` перезаписывает
-  файл вместо мержа `mcpServers`) — отдельный fix-item, не входит ни в один открытый item.
-- (в силе) **Path-scoped rules-миграция раскатана только на пилоте `dterema/app`**; кандидаты
-  `vintera` (7288 ток), `brain` (6695 ток) — отдельный item по образцу P2.2.
-- (в силе) **`resolve_active_set` слеп к каналу плагинов** и к «сырым» `.claude/skills/**`
-  вне реестра.
-- (в силе) **Проекты флота с Boost/`.ai`-generated `CLAUDE.md`** (`vintera/cms`,
-  `sibintek-insiders`, `diabox`) процедурой P2.2 не покрыты — решение не принято.
-- (в силе) **Пять секций-кандидатов P2.1 остаются резидентными (436 ток)** — по D89 это
-  решение, не долг.
-- (в силе) **гейт размера меряет файл целиком** · **токенная оценка продублирована в двух
-  пакетах** · **`closure/P1.json` `inputs_sha256["phases/P1.md"]` больше не совпадает с живым
-  файлом** (D87).
-- (в силе) **Остаточная находка `verify-citations`:** `phases/P2.md` Completion Notes закрытого
-  P2.3 несут сокращённую ссылку на `context-economy/SKILL.md`.
+  названная граница, не долг.
+- (в силе) конфликт правил в ТЗ P3.6 · токен `contradictory evidence` вне enum §10 · дефект
+  генератора `.mcp.json.example` · path-scoped rules только на пилоте `dterema/app` ·
+  `resolve_active_set` слеп к плагинам и «сырым» `.claude/skills/**` · Boost/`.ai`-CLAUDE.md
+  флот не покрыт P2.2 · пять секций-кандидатов P2.1 резидентны (D89) · гейт размера файла
+  целиком · токенная оценка продублирована в двух пакетах · `closure/P1.json` hash устарел
+  (D87, теперь и `phases/P3.md` изменён этим заходом) · остаточная находка `verify-citations` в
+  `phases/P2.md` (P2.3).
 - **В рабочем дереве есть чужой дифф** (`.gitignore`, удалённый
   `RESEARCH/AUDIT-loqum-findings.md`, неотслеживаемые `.swissknife/`, `audits/`) — этим заходом
   не тронут и не коммитился.
 
-**Workarounds/Deferred/Open questions:** «—» / конфликт правил D100 — эскалирован, вход
-следующему design-item / фикс формы Validation (`; ` → ` · ` у P3.4/P5.5) — отложен, тот же
-design-item / дефекты `db-test-preflight/snippets/` — отложены, отдельный fix-item /
-`to-issues`/`issue-triage` под `context: fork` — отложены до безопасного стенд-режима внешних
-side-effects / `tech-debt-audit` под `context: fork` — не разобран, реопен тем же критерием /
-константа обвязки записи листинга — отложена / rules-миграция сверх пилота — отложена /
-эмиссия `.mcp.json.example` A-класса — отложена до починки `write_example` / выравнивание
-токена `contradictory evidence` с enum `plan-protocol` §10 — отложено / OQ-5 закрыт (ветка (A),
-D99); OQ-3 · OQ-6 · OQ-8 без изменений — см. `open-questions.md`.
+**Workarounds/Deferred/Open questions:** без изменений от предыдущего handoff (см. Open risks
+выше) — P3.4 закрыт штатно, новых workaround'ов не добавлено.

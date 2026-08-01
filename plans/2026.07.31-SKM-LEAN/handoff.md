@@ -1,52 +1,52 @@
-# HANDOFF — 2026-08-01 — after P5.5
+# HANDOFF — 2026-08-01 — after P5.7
 
 **Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | implementation |
-| Thinking | high — переиздание диагностируемого отказа `INSTRUCTION_WRITE_FORBIDDEN` для драйвера P4 против замороженного parse-контракта P4.1: закрытый перечень якорей, effort high+ по §9 (Routing P5.7) |
+| Thinking | high — канон launch-block, которому следует весь флот планов (5 команд + 5 Codex-зеркал + 11 golden-фикстур + semver-бамп скилла); аддитивность гейта против 26+ живых планов — инварианты, effort high+ по §9 (Routing P5.8) |
 | Context | continue (/clear) — ручной item |
-| Суть | P5.7: `instruction-authorize-order` — диагностируемый отказ, называющий ожидаемый порядок целей; текущая сессия уже sonnet/high (≥ предписанного) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
+| Суть | P5.8: строка `\| Команда \|` в форме launch-block; текущая сессия уже sonnet/high (= предписанному) — можно продолжить тем же `plan-run` без ритуала `/model`+`/effort` |
 
 ```
 /model sonnet
 /effort high
-/task:plan-run 2026.07.31-SKM-LEAN P5.7
+/task:plan-run 2026.07.31-SKM-LEAN P5.8
 ```
 
-**Done:** **P5.5 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.5 =
-implementation/high, соответствие).
+**Done:** **P5.7 закрыт этим заходом** (`task:plan-run`, сессия sonnet/high — Routing P5.7 =
+implementation/high, точное совпадение, без перебора/недобора).
 
-- **P5.5 🟠 Done with deviations** — изолированный consumer-acceptance гейт Codex publication:
-  новый `packages/skiller/tests/test_codex_consumer_acceptance.py` (8 тестов) гоняет живой
-  `codex-cli 0.146.0` из temp `CODEX_HOME` + temp consumer-каталога ВНЕ репозитория —
-  `plugin marketplace add` → `plugin add task@swissknifeman` → `codex debug prompt-input`
-  (офлайн-рендер промпта модели, без сети/auth) подтверждает `task:task-plan-run`/
-  `task:task-plan-exec` поимённо, `file:`-локатор резолвится в изолированный кэш, не в репо.
-  `test_repo_local_skills_would_mask_a_real_publication_failure` живьём воспроизводит класс
-  отказа Azguard (2026-07-21): тот же прогон из `REPO_ROOT` подмешивает `.agents/skills` в
-  discovery — доказательство, почему consumer-каталог обязан быть вне репозитория. Независимый
-  expected-inventory (диск: `buckets.json`/`configs/core-policy.json`/соседские
-  `.codex-plugin/plugin.json`, НЕ `publication.render_codex_publication`) сверен с
-  `codex plugin list --available --json`. `InventoryDriftDetectionCase` (3 теста, без живого
-  `codex`) доказывает: пропавший/лишний плагин краснит гейт. Регистрация — гейт 18
-  `validate.sh`, явный `SKIP` без `codex`, `GREEN` с ним (проверено обоими путями). Реальный
-  `~/.codex/plugins/cache/swissknifeman/task` (у оператора уже стоит независимая установка) —
-  проверен по `mtime` до/после, не тронут. `docs/multi-provider-distribution.md` дополнен
-  секцией о гейте (дописана, не переписана). Roadmap-запись удалена
-  (`find … -delete`, без `rm`) + строка `roadmap/README.md` §«Закрыто и удалено». Item-коммит
-  `ea96ed26`. Known Deviations: (1) pre-mutation-гейт/`🟡`/журнальная старт-запись прогнаны
-  пост-фактум (та же форма, что P5.4); (2) Scope Included дословно называет
-  `plugin add/update` — реализован и проверен только `add` (путь, воспроизводящий измеренный
-  отказ Azguard), `update` — в Pending Work.
+- **P5.7 🟢 Done** — диагностируемый отказ `INSTRUCTION_WRITE_FORBIDDEN` от `apply_instructions`
+  теперь печатает ожидаемый порядок целей `--authorize` (алфавитный по `target_path`,
+  копипастопригодный — тот же разделитель `,`, что парсит CLI) через новое опциональное
+  keyword-only поле `_write_refusal(..., message=…)`. Обогащение адресное: message передаёт
+  ТОЛЬКО вызов из `apply_instructions` при позиционном/составном рассогласовании; остальные
+  восемь вызовов `_write_refusal` `message` не передают (проверено тестом — `repair_instructions`
+  и `adopt_instructions` остаются `None`). Попутно починена немая механика `_print_report`:
+  `next_action="refuse"` у ВСЕХ `_write_refusal`-отказов забивал `observed` в дефолтном
+  (не-`--json`) текстовом выводе CLI — без этой правки новое `message` было бы видно только в
+  `--json`, а не в обычном прогоне `harness instructions apply`. Позиционная сверка не изменена
+  ни строкой (Implementation Rule 1). Долг воспроизведён живым CLI до/после: `apply --authorize
+  CLAUDE.md,AGENTS.md` (неверный порядок) → отказ, stderr называет `AGENTS.md,CLAUDE.md`; тот же
+  порядок скопирован буквально → `OK`. Три новых теста в `test_provider_instructions.py`
+  (`packages/harness/tests/`): копипастопригодность + round-trip · порядок берётся из живого
+  `fresh.artifact_plan.actions`, не хардкодится (сужённый scope-набор) · `message` не затронут у
+  двух других вызовов. `docs/reference/instruction-canon.md` дополнен строкой, что отказ печатает
+  порядок целиком (существующая строка про алфавитный порядок — от 2026-07-30, предшествует
+  плану). Roadmap-запись `instruction-authorize-order.md` закрыта и удалена (`find … -delete`),
+  строка в `roadmap/README.md` §«Закрыто и удалено». `bash packages/harness/scripts/test.sh` —
+  637/637, `validate.sh` — `OK` (10/10, включая дрейф инструкций 12/12 `clean/noop`),
+  `python3 -m harness.instructions --check` — `OK`. Item-коммит `578eb1ca`. Known Deviations: —.
 
 **Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-**P5 2/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.7–P5.11. Следующий по
-порядку — **P5.7** (`solo`, `manual`, implementation/high).
+**P5 3/11 (🟡 In progress)** · P6 0/3 (⬜) · P7 0/4 (⬜). Открыты P5.8–P5.11. Следующий по
+порядку — **P5.8** (`solo`, `manual`, implementation/high).
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.7 и далее) · `plan.md` §3
-Routing · `roadmap.md` (карта батчей — B2 закрыт, P5.7 вне батча).
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (ТЗ P5.8 и далее) · `plan.md` §3
+Routing · `roadmap.md` (карта батчей — P5.8/P5.9 строго последовательны, D43: оба правят
+`plan_lint.py`).
 
 **Open risks:**
 
@@ -62,14 +62,14 @@ Routing · `roadmap.md` (карта батчей — B2 закрыт, P5.7 вн�
   `roadmap/` при подтверждении владельцем.
 - Окружной дефект `codex exec -s read-only` (bwrap/AppArmor, обход `--dangerously-bypass-approvals-
   and-sandbox`) остаётся в силе для будущих item'ов, зовущих `codex exec` в sandboxed режиме;
-  P5.5 его не задел — весь round-trip прошёл через `plugin`/`debug prompt-input` (без sandbox).
-- **Новое (этим заходом): P5.5 Pending Work** — `codex plugin update` (обновление уже
-  установленного плагина в изолированном `CODEX_HOME`) отдельным тестом не покрыт; если
-  всплывёт update-специфичный отказ — новый bounded item.
+  P5.7 его не задел — весь прогон шёл через прямые `harness instructions`/`test.sh`.
+- P5.5 Pending Work (не изменилось этим заходом): `codex plugin update` отдельным тестом не покрыт.
+- **P5.8/P5.9 — строго последовательны** (D43, roadmap.md): оба правят `plan_lint.py`; если
+  свип `finish` найдёт скрытую зависимость — батч распускается (roadmap.md примечание).
 
 **Workarounds/Deferred/Open questions:**
 
 - **workarounds:** —
-- **deferred:** без изменений (см. предыдущий handoff); + унификация парсеров `*.env.ini` (P5.3
-  Pending Work); + `codex plugin update` round-trip (P5.5 Pending Work) — обе решением владельца.
+- **deferred:** без изменений (см. предыдущий handoff): унификация парсеров `*.env.ini` (P5.3
+  Pending Work); `codex plugin update` round-trip (P5.5 Pending Work) — обе решением владельца.
 - **open_questions:** три открытых — OQ-3 (P4.6/P7.1) · OQ-8 (P7.1) · OQ-9 (владелец протокола).

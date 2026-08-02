@@ -3,6 +3,6 @@
   "version": "0.4.0",
   "description": "Legal operations: contracts, compliance, risk",
   "skills": [
-    "./"
+    "./legal"
   ]
 }

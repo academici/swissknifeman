@@ -3,6 +3,6 @@
   "version": "0.4.0",
   "description": "Naive UI component library theming (GlobalThemeOverrides)",
   "skills": [
-    "./"
+    "./naive-ui-theming"
   ]
 }

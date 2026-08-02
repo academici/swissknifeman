@@ -350,7 +350,7 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
             meta = metadata[unit.plugin_id]
             root = package_root / "skills" / unit.plugin_id
             data = _codex_plugin_manifest(unit.plugin_id, unit.content_version,
-                                          meta["description"], ["./"])
+                                          meta["description"], _codex_skill_dirs(unit, by_id))
             artifacts.append(_render_codex_artifact(
                 root / ".codex-plugin" / "plugin.json", unit, data,
                 tuple(by_id[item] for item in unit.member_ids), repo_root,
@@ -525,6 +525,15 @@ def _claude_skill_dirs(unit: PublicationUnit, by_id: Mapping[str, SemanticSkill]
         relative = Path(skill.source_path).parent.parent.relative_to("skills" / Path(skill.bucket))
         dirs.add("./" if str(relative) == "." else f"./{relative.as_posix()}")
     return sorted(dirs)
+
+
+def _codex_skill_dirs(unit: PublicationUnit, by_id: Mapping[str, SemanticSkill]) -> list[str]:
+    """Return explicit skill directories for native Codex plugin discovery."""
+    bucket_root = Path("skills") / unit.plugin_id
+    return sorted(
+        f"./{Path(by_id[item].source_path).parent.relative_to(bucket_root).as_posix()}"
+        for item in unit.member_ids
+    )
 
 
 def _skill_from_registry(value: object) -> SemanticSkill:

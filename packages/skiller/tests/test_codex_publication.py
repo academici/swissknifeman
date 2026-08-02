@@ -76,6 +76,11 @@ class TestCodexPublication(unittest.TestCase):
             self.assertEqual(data["version"], unit_versions.get(data["name"], default_version),
                              data["name"])
 
+        blender = next(item for item in manifests
+                       if json.loads(item.managed_bytes)["name"] == "blender")
+        self.assertEqual(json.loads(blender.managed_bytes)["skills"],
+                         ["./mcp-blender", "./version-gotchas"])
+
     def test_core_bundle_is_allowlisted_and_cache_contained(self):
         core_root, core = self._core_artifacts()
         skill_paths = sorted(item.target.relative_to(core_root).as_posix() for item in core

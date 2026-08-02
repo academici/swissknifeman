@@ -3,6 +3,16 @@
   "version": "0.4.0",
   "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
   "skills": [
-    "./"
+    "./pinia",
+    "./pinia-stores",
+    "./vitest",
+    "./vitest-vue",
+    "./vue",
+    "./vue-best-practices",
+    "./vue-composition-api",
+    "./vue-dynamic-icons",
+    "./vue-router-best-practices",
+    "./vue-testing-best-practices",
+    "./vueuse-functions"
   ]
 }

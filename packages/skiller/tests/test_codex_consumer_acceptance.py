@@ -146,6 +146,11 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
         assert install_result.returncode == 0, install_result.stderr
         cls.task_install = json.loads(install_result.stdout)
 
+        blender_result = _run_codex(["plugin", "add", "blender@swissknifeman", "--json"],
+                                    codex_home=cls.codex_home, cwd=cls.consumer_dir)
+        assert blender_result.returncode == 0, blender_result.stderr
+        cls.blender_install = json.loads(blender_result.stdout)
+
         prompt_result = _run_codex(["debug", "prompt-input"],
                                    codex_home=cls.codex_home, cwd=cls.consumer_dir)
         assert prompt_result.returncode == 0, prompt_result.stderr
@@ -198,6 +203,16 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
             match = re.search(rf"- task:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
             self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex "
                                         f"session (codex {self.codex_version})")
+            self.assertTrue(match.group(1).startswith(str(self.codex_home)),
+                            f"{skill_name} resolved outside the isolated cache: "
+                            f"{match.group(1)}")
+
+    def test_clean_consumer_session_discovers_bucket_skills_from_isolated_cache(self):
+        text = self._skills_instructions_text(self.prompt_input)
+        for skill_name in ("mcp-blender", "version-gotchas"):
+            match = re.search(rf"- blender:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
+            self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex session "
+                                        f"(codex {self.codex_version})")
             self.assertTrue(match.group(1).startswith(str(self.codex_home)),
                             f"{skill_name} resolved outside the isolated cache: "
                             f"{match.group(1)}")

@@ -78,18 +78,19 @@
 | [`packages/harness`](packages/harness/) | настройка окружения Claude Code (permissions, MCP, хуки, agent-packs) | `harness` |
 | [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` |
 | [`packages/analyst`](packages/analyst/) | continuous learning: захват уроков из прогонов, человеко-гейт, провенанс | `analyst` |
-| [`packages/task`](packages/task/) | плагин интент-команд задач (`/task:*`) | плагин Claude Code |
+| [`packages/task`](packages/task/) | плагин интент-команд задач (`/task:*`, `$ task:*`) | плагины Claude Code и Codex |
 
 Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
 
 ## Установка
 
 ```bash
-./install.sh                  # ставит skiller, harness, maind, analyst + корневой роутер swissknifeman в PATH
+./install.sh                  # CLI + роутер + базовые Codex-плагины core/task (если Codex установлен)
 ```
 
-`install.sh` делегирует пакетную пост-настройку их собственным установщикам
-(`packages/*/install.sh`) и ставит симлинк `swissknifeman` → корневой роутер (router + setup-фасад).
+`install.sh` делегирует пакетную пост-настройку их собственным установщикам,
+ставит симлинк `swissknifeman` → корневой роутер и подключает в Codex локальный
+marketplace с базовыми `core`/`task`. Opt-out: `--no-codex-plugins`.
 
 > `.mcp.json` этого репо машинно-специфичен (абсолютные пути к `maind`) и не коммитится —
 > шаблон [`.mcp.json.example`](.mcp.json.example), реальный файл генерит/обновляет `maind` (sync/deploy).

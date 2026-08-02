@@ -5,19 +5,22 @@
 # управляющий слой `swissknifeman` (router + setup-фасад над тремя пакетами).
 #
 # Использование:
-#   ./install.sh [--bin-dir DIR] [--force]
+#   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins]
 #   --bin-dir DIR   куда ставить симлинки (по умолчанию ~/.local/bin)
 #   --force         перезаписывать чужие симлинки без вопроса
+#   --no-codex-plugins  не устанавливать базовые Codex-плагины core + task
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
+NO_CODEX_PLUGINS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force)   FORCE=true; shift ;;
+    --no-codex-plugins) NO_CODEX_PLUGINS=true; shift ;;
     -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,11p'; exit 0 ;;
     *) echo "ERROR: неизвестный аргумент: $1" >&2; exit 1 ;;
   esac
@@ -36,7 +39,11 @@ for pkg in skiller harness maind analyst; do
   inst="$REPO_ROOT/packages/$pkg/install.sh"
   [[ -x "$inst" ]] || continue
   echo "— $pkg:"
-  "$inst" "${fwd[@]}" || { echo "  ($pkg install.sh завершился с ошибкой — проверьте вручную)" >&2; failed+=("$pkg"); }
+  pkg_fwd=("${fwd[@]}")
+  if [[ "$pkg" == skiller && "$NO_CODEX_PLUGINS" == true ]]; then
+    pkg_fwd+=(--no-codex-plugins)
+  fi
+  "$inst" "${pkg_fwd[@]}" || { echo "  ($pkg install.sh завершился с ошибкой — проверьте вручную)" >&2; failed+=("$pkg"); }
 done
 
 # Корневой управляющий слой: симлинк `swissknifeman` → bin/swissknifeman (router).

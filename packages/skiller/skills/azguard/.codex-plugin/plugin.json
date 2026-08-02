@@ -3,6 +3,6 @@
   "version": "0.4.0",
   "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
   "skills": [
-    "./"
+    "./azguard"
   ]
 }

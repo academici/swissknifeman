@@ -3,6 +3,9 @@
   "version": "0.4.0",
   "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
   "skills": [
-    "./"
+    "./vite",
+    "./vite-module-loader",
+    "./vite-multi-build",
+    "./vitepress"
   ]
 }

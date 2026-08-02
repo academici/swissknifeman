@@ -15,7 +15,8 @@ scripts/bootstrap-machine.sh
 Скрипт (`scripts/bootstrap-machine.sh`, роут `swissknifeman setup --machine`) прогоняет
 7 ступеней по порядку, проверяя каждую отдельно:
 
-1. `install.sh` — CLI пакетов (skiller/harness/maind/analyst) + симлинк `swissknifeman`.
+1. `install.sh` — CLI пакетов + симлинк `swissknifeman` + базовые Codex-плагины
+   `core`/`task` (если Codex установлен; opt-out `--no-codex-plugins`).
 2. `harness hooks --global` — глобальные хуки Claude Code (merge-only).
 3. `harness permissions --global` — глобальный пресет permissions (merge-only).
 4. MCP-пресеты — **soft-skip**: у harness/maind сейчас нет `--global`-механизма для MCP,

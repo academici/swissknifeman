@@ -3,6 +3,7 @@
   "version": "0.4.0",
   "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
   "skills": [
-    "./"
+    "./mcp-blender",
+    "./version-gotchas"
   ]
 }

@@ -87,7 +87,7 @@ docs/                      # документация (VitePress)
 
 ```bash
 cd ~/projects/packages/swissknifeman
-./install.sh        # симлинк ~/.local/bin/skiller → bin/skiller
+./install.sh        # CLI + базовые Codex-плагины core/task (если Codex установлен)
 skiller doctor
 ```
 

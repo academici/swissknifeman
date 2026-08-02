@@ -15,14 +15,21 @@ cd ~/projects/packages/swissknifeman
 ./install.sh
 ```
 
-`install.sh` создаёт симлинк `~/.local/bin/skiller → <repo>/bin/skiller`
-и каталог состояния `~/.swissknifeman/`. Симлинк означает: после `git pull`
+`install.sh` создаёт симлинк `~/.local/bin/skiller → <repo>/bin/skiller`,
+каталог состояния `~/.swissknifeman/` и, если Codex CLI доступен, автоматически
+добавляет локальный marketplace `swissknifeman` и устанавливает базовые плагины
+`core` + `task`. Поэтому `$ task:*` доступен в новой Codex-сессии без ручного
+`codex plugin add` или симлинка внутри проекта. Симлинк означает: после `git pull`
 CLI всегда свежий, а путь к реестру он определяет сам (через `readlink`).
-Репозиторий переехал — просто перезапустите `./install.sh` из нового места.
+Репозиторий переехал — перезапустите `./install.sh` из нового места, чтобы обновить
+также источник Codex marketplace.
 
 Флаги: `--bin-dir DIR` (по умолчанию `~/.local/bin`), `--force` (заменить
-чужой файл без вопроса). Если `~/.local/bin` не в `PATH`, установщик подскажет
-команду для вашего шелла. Проверка установки: `skiller doctor`.
+чужой файл без вопроса), `--no-codex-plugins` (осознанно пропустить машинную
+установку `core` + `task`). Дополнительный плагин можно поставить повторяемым
+`./packages/skiller/install.sh --codex-plugin NAME`; базовые плагины при этом
+сохраняются. Если `~/.local/bin` не в `PATH`, установщик подскажет команду для
+вашего шелла. Проверка установки: `skiller doctor`.
 
 ## Шаг 2. Подключение проекта
 
@@ -45,10 +52,10 @@ skiller vendor --agent cursor
 | **Cursor / generic** | `skiller vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
 | **Codex (vendor)** | `skiller sync` с `providers.codex.enabled=true` | managed copies в `.agents/skills` + provider-qualified lock |
 
-Codex marketplace/plugin installation не является побочным эффектом подключения
-или обновления. Для self-host checkout используйте отдельную явную команду
-`./packages/skiller/install.sh --codex-plugin core`; она может менять user-global Codex state.
-Внешний проект получает Codex skills через vendor sync, а не внешнюю thin-ссылку.
+Базовые Codex-плагины устанавливаются один раз на машину шагом 1 и доступны во
+всех проектах. Профильные Codex skills по-прежнему доставляются в конкретный проект
+через vendor sync: установщик сознательно не включает глобально все профильные
+плагины, чтобы один проект не раздувал остальные сессии.
 
 ::: tip Агенты — только в plugin-канале
 Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне

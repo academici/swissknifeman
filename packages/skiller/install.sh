@@ -10,11 +10,12 @@
 # установке только skiller алиаса `swissknifeman` не будет (используйте `skiller`).
 #
 # Использование:
-#   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME]
+#   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME] [--no-codex-plugins]
 #
 #   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
 #   --force         заменить чужой файл/симлинк без вопроса
-#   --codex-plugin  явно добавить этот marketplace в Codex и установить NAME
+#   --codex-plugin  установить дополнительный Codex-плагин NAME (можно повторять)
+#   --no-codex-plugins  не устанавливать базовые Codex-плагины core + task
 #
 # Дальше — из любого потребляющего проекта:
 #   skiller connect    # Claude Code (plugin marketplace)
@@ -29,7 +30,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI="$REPO_ROOT/bin/skiller"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
-CODEX_PLUGIN=""
+CODEX_PLUGIN_EXTRAS=()
+CODEX_PLUGINS_ENABLED=true
+CODEX_PLUGIN_EXPLICIT=false
 MARKETPLACE="swissknifeman"
 
 usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
@@ -38,7 +41,11 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force) FORCE=true; shift ;;
-    --codex-plugin) CODEX_PLUGIN="$2"; shift 2 ;;
+    --codex-plugin)
+      CODEX_PLUGIN_EXTRAS+=("$2")
+      CODEX_PLUGIN_EXPLICIT=true
+      shift 2 ;;
+    --no-codex-plugins) CODEX_PLUGINS_ENABLED=false; shift ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "ERROR: install.sh теперь устанавливает CLI skiller." >&2
@@ -101,21 +108,58 @@ esac
 
 echo "Проверка: skiller doctor"
 
-# Native Codex state is outside a project distribution transaction.  It is only
-# touched by this explicit install flag; normal install/update/doctor never call
-# `codex plugin`.  The marketplace root is the monorepo root, where P3.3 emits
-# `.agents/plugins/marketplace.json`.
-if [[ -n "$CODEX_PLUGIN" ]]; then
+# Базовые `core` + `task` — машинный bootstrap Codex: после установки зонтика
+# TASK-команды должны работать в любом проекте без ручного link/plugin add.
+# Список берём из декларативной CORE-политики, не дублируем его в shell.
+# Профильные плагины остаются явными: их глобальная установка здесь раздула бы
+# все Codex-сессии независимо от проекта.
+if [[ "$CODEX_PLUGINS_ENABLED" == false && "$CODEX_PLUGIN_EXPLICIT" == false ]]; then
+  echo "Codex plugins: пропуск (--no-codex-plugins)"
+elif ! command -v codex >/dev/null 2>&1; then
+  if [[ "$CODEX_PLUGIN_EXPLICIT" == true ]]; then
+    echo "ERROR: codex CLI not found — native install was not attempted" >&2
+    exit 1
+  fi
+  echo "INFO: codex CLI не найден — базовые Codex-плагины не установлены"
+else
   MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
   [[ -f "$MONOREPO_ROOT/.agents/plugins/marketplace.json" ]] || {
     echo "ERROR: Codex marketplace not generated: $MONOREPO_ROOT/.agents/plugins/marketplace.json" >&2
     exit 1
   }
-  command -v codex >/dev/null 2>&1 || {
-    echo "ERROR: codex CLI not found — native install was not attempted" >&2
-    exit 1
-  }
+
+  policy_plugins=""
+  if [[ "$CODEX_PLUGINS_ENABLED" == true ]]; then
+    policy_plugins="$(
+      PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
+        python3 - <<'PY'
+from skiller.config import CORE_PLUGIN, DEFAULT_COMMAND_PLUGINS
+
+for plugin in (CORE_PLUGIN, *DEFAULT_COMMAND_PLUGINS):
+    print(plugin)
+PY
+    )" || {
+      echo "ERROR: не удалось прочитать базовые плагины из skiller.config" >&2
+      exit 1
+    }
+  fi
+
+  CODEX_PLUGINS=()
+  declare -A seen_codex_plugins=()
+  while IFS= read -r plugin; do
+    [[ -n "$plugin" && -z "${seen_codex_plugins[$plugin]:-}" ]] || continue
+    CODEX_PLUGINS+=("$plugin")
+    seen_codex_plugins["$plugin"]=1
+  done <<< "$policy_plugins"
+  for plugin in "${CODEX_PLUGIN_EXTRAS[@]}"; do
+    [[ -n "$plugin" && -z "${seen_codex_plugins[$plugin]:-}" ]] || continue
+    CODEX_PLUGINS+=("$plugin")
+    seen_codex_plugins["$plugin"]=1
+  done
+
   codex plugin marketplace add "$MONOREPO_ROOT"
-  codex plugin add "$CODEX_PLUGIN@$MARKETPLACE"
-  echo "Codex plugin installed explicitly: $CODEX_PLUGIN@$MARKETPLACE"
+  for plugin in "${CODEX_PLUGINS[@]}"; do
+    codex plugin add "$plugin@$MARKETPLACE"
+  done
+  echo "Codex plugins installed: ${CODEX_PLUGINS[*]}"
 fi

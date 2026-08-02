@@ -26,9 +26,11 @@ Provider selection берётся из `.swissknife.json::providers`: при о�
 использует thin Codex marketplace, а внешний connect-проект получает
 repo-contained marketplace и self-contained bundles только выбранных plugins,
 включая runtime-файлы скиллов (`snippets/`, `references/`, scripts/assets).
-Публикация не устанавливает и не включает plugin на user-level: это отдельная
-явная операция ниже. Dual-selection проходит preflight всех provider-целей до
-первой записи, поэтому конфликт не оставляет успешную половину подключения.
+Проектная публикация не меняет user-level plugin state: базовые `core` + `task`
+устанавливает машинный `install.sh`, а профильные Codex plugins добавляются только
+явно. Native manifest каждого bucket перечисляет skill-каталоги явно, поэтому Codex
+раскрывает их после установки. Dual-selection проходит preflight всех provider-целей
+до первой записи, поэтому конфликт не оставляет успешную половину подключения.
 
 ```
 skiller connect [--profile P | --plugins a,b]
@@ -36,13 +38,16 @@ skiller connect [--profile P | --plugins a,b]
                       [--cleanup-vendored] [--list] [--dry-run] [--hub]
 ```
 
-### `./packages/skiller/install.sh --codex-plugin NAME`
+### `./install.sh [--no-codex-plugins]`
 
-Единственная явная операция, которая меняет user-global Codex: добавляет
-marketplace текущего checkout и устанавливает выбранный plugin. `connect`,
-`sync`, `update`, `doctor` и `--dry-run` её не вызывают. Если Codex CLI или
-generated marketplace недоступны, installer отказывает до native вызова;
-проектные artifacts остаются отдельной транзакцией.
+Машинная установка добавляет marketplace текущего checkout в Codex и по умолчанию
+устанавливает базовые плагины из CORE-политики (`core` + `task`). Если Codex CLI
+отсутствует, этот шаг явно пропускается без поломки установки остальных CLI;
+`--no-codex-plugins` — явный opt-out. Дополнительный глобальный плагин ставится
+повторяемым `./packages/skiller/install.sh --codex-plugin NAME`.
+
+`connect`, `sync`, `update`, `doctor` и `--dry-run` user-global Codex state не
+меняют. Профильные плагины не устанавливаются глобально автоматически.
 
 ### `skiller vendor`
 
@@ -135,7 +140,7 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 НАБЛЮДЕНИЕ стенда на живой 2.1.220, не документация: оба поля дали одну и ту же дельту оси A
 (−88 на запись, воспроизведено байт-в-байт в двух прогонах), причём для `paths:` это
 противоречит доковой строке «The listing always contains every skill name»
-(`plans/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.1–3.2). Условие механизма
+(`plans/archive/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.1–3.2). Условие механизма
 `paths:` — «сессия ПРОЧЛА совпавший файл», а не «файл лежит в дереве»
 (`findings/P3-paths-mechanism.md` §2), и на ПЕРВОМ ходу прочитанных файлов нет по построению,
 поэтому исключение безусловно. В JSON сведения приезжают аддитивно:

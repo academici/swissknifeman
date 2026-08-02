@@ -3,6 +3,11 @@
   "version": "0.4.0",
   "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
   "skills": [
-    "./"
+    "./config-driven-abstraction",
+    "./eloquent-accessors",
+    "./enum-attributes",
+    "./enum-state-machine",
+    "./laravel-subagents",
+    "./modular-architecture"
   ]
 }

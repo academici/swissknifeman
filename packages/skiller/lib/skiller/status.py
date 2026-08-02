@@ -7,7 +7,7 @@ from core import find_repo_root
 
 from .budget import budget_for_set, resolve_active_set
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, parse_frontmatter
-from .config import find_project_root, load_config, resolve_selection
+from .config import ProjectConfig, find_project_root, load_config, resolve_selection
 from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
@@ -32,9 +32,10 @@ def detect_raw_vendor_path(target, config):
     и `channel_overlap` на нём молчит (репо-факт `flexcrm`,
     `findings/P3-listing-hygiene-and-vendoring-facts.md` §2.3). Возвращает первый
     непустой из тех же кандидатов, что и `detect_vendor_path`, БЕЗ требования манифеста."""
+    config = ProjectConfig.coerce(config)  # исторические вызовы передают dict
     candidates = []
-    if config.get("skills_path"):
-        candidates.append(config["skills_path"])
+    if config.skills_path:
+        candidates.append(config.skills_path)
     candidates += [p for p in AGENT_DEFAULTS.values() if p not in candidates]
     for p in candidates:
         d = target / p

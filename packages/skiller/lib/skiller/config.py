@@ -1,6 +1,8 @@
 """Project config (.swissknife.json), профили и выбор скиллов/плагинов."""
 import json
 import os
+from collections.abc import Mapping
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
@@ -8,7 +10,7 @@ from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
                   provider_config_catalog,
                   resolve_provider_config as resolve_shared_provider_config)
 
-from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
+from .common import (AGENT_DEFAULTS, confirm, die,
                      parse_frontmatter_fields, warn)
 
 # CORE-политика раздачи: токен-экономные скиллы, которые swissknifeman кладёт в
@@ -104,6 +106,103 @@ def core_skill_tuples(env, exclude):
     return out
 
 
+# --- типизированный носитель .swissknife.json --------------------------------
+@dataclass(frozen=True, eq=False)
+class ProjectConfig(Mapping):
+    """Конфиг проекта `.swissknife.json` как объект: типизированный доступ вместо
+    голого `dict` (аудит `audits/skm.md` §4, план 2026.07.31-SKM-LEAN P6.2).
+
+    **Единственный носитель перечня ключей.** Раньше ключи жили в трёх местах
+    (`CONFIG_KEYS` в `common.py`, `schema/swissknife.schema.json`, код); поля этого
+    объекта стали бы четвёртым, поэтому `CONFIG_KEYS` теперь ВЫВОДИТСЯ отсюда —
+    `metadata["json_type"]` каждого поля несёт тот Python-тип, которым `isinstance`
+    валидирует значение (кортеж = мульти-тип, в схеме `oneOf`). Оба гейта синхрона
+    (`skiller doctor` и `tests/test_schema.py`) читают производный `CONFIG_KEYS`
+    и не правятся.
+
+    **Почему НЕ подкласс `dict`** (в отличие от `maind.config.Config`, обёртки конфига
+    УЗЛА): подкласс оставляет мутацию открытой (`cfg["agent"] = …`) и обесценивает
+    типизацию — атрибут и ключ разошлись бы молча. Здесь `frozen=True` плюс
+    read-only Mapping-проекция на `raw`: старый доступ (`cfg.get("agent")`,
+    `cfg["agent"]`, `if cfg:`) продолжает работать байт-в-байт для потребителей,
+    ещё не переведённых на атрибуты, но записи нет ни у кого.
+
+    `raw` — ИСХОДНЫЙ словарь как есть (провайдерная ветка, `_`/`$`-ключи, back-compat
+    файлов из репозиториев флота): нормализации/копии нет, иначе объект стал бы
+    вторым источником истины о содержимом файла.
+    """
+
+    project_type: str = field(default="", metadata={"json_type": str})
+    buckets: list = field(default_factory=list, metadata={"json_type": list})
+    exclude: list = field(default_factory=list, metadata={"json_type": list})
+    presets: list = field(default_factory=list, metadata={"json_type": list})
+    skills_path: str = field(default="", metadata={"json_type": str})
+    agent: str = field(default="", metadata={"json_type": str})
+    # None ≠ {}: провайдерная ветка отличает «ключа нет» (слой не заводится) от
+    # «есть пустой слой» — ровно то, что делал config.get("providers").
+    providers: dict | None = field(default=None, metadata={"json_type": dict})
+    # Строка (путь, back-compat memory-хука) ИЛИ объект {path, sync?} — мульти-тип
+    # уезжает в CONFIG_KEYS кортежем и в схему как oneOf (см. common.CONFIG_KEYS).
+    memory_brain: str | dict | None = field(default=None, metadata={"json_type": (str, dict)})
+    coordinator_ignore: list = field(default_factory=list, metadata={"json_type": list})
+    shape: str = field(default="", metadata={"json_type": str})
+    stacks: list = field(default_factory=list, metadata={"json_type": list})
+    skills_map: dict = field(default_factory=dict, metadata={"json_type": dict})
+    policy_profile: str = field(default="", metadata={"json_type": str})
+    # Не ключ конфига: без "json_type" в metadata поле не попадает в CONFIG_KEYS.
+    raw: Mapping = field(default_factory=dict, repr=False)
+
+    # Mapping-проекция на raw — read-only back-compat поверхность для потребителей
+    # (и тестов), передающих/читающих конфиг словарём. Значения берутся из raw, а не
+    # из полей: `.get("x")` обязан вернуть ровно то, что лежит в файле.
+    def __getitem__(self, key):
+        return self.raw[key]
+
+    def __iter__(self):
+        return iter(self.raw)
+
+    def __len__(self):
+        return len(self.raw)
+
+    @classmethod
+    def from_raw(cls, data):
+        """Собрать объект из прочитанного JSON БЕЗ валидации (её делает
+        `validate_config` до сборки) и без нормализации значений."""
+        known = {f.name: f for f in fields(cls) if "json_type" in f.metadata}
+        return cls(raw=data, **{name: data[name] for name in known if name in data})
+
+    @classmethod
+    def coerce(cls, config):
+        """`ProjectConfig` → как есть; словарь (легаси-вызов, тест, ветка без файла)
+        → типизированный объект. Точка нормализации для функций, которые исторически
+        принимали `dict` и обязаны продолжать его принимать."""
+        if isinstance(config, cls):
+            return config
+        return cls.from_raw(config or {})
+
+    @classmethod
+    def load(cls, env, target):
+        """Прочитать `.swissknife.json` проекта: те же сообщения `die`, тот же порядок
+        проверок и тот же пустой конфиг при отсутствии файла, что у прежнего
+        `load_config` — меняется носитель, не поведение."""
+        cfg_file = target / ".swissknife.json"
+        if not cfg_file.exists():
+            return cls()
+        try:
+            config = json.loads(cfg_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            die(f"{cfg_file}: invalid JSON: {e}")
+        validate_config(env, config, cfg_file)
+        return cls.from_raw(config)
+
+
+# Производное от полей ProjectConfig (P6.2): имя-носитель одно, значение собирается.
+# Реэкспортируется как `skiller.common.CONFIG_KEYS` — исторический дом имени, откуда
+# его берут оба гейта синхрона со схемой и документация.
+CONFIG_KEYS = {f.name: f.metadata["json_type"]
+               for f in fields(ProjectConfig) if "json_type" in f.metadata}
+
+
 def _type_label(pytype):
     """Человекочитаемая метка ожидаемого типа для сообщения об ошибке. Кортеж типов
     (напр. memory_brain = (str, dict)) → «string or object»."""
@@ -154,20 +253,14 @@ def validate_config(env, config, cfg_file):
 
 
 def load_config(env, target):
-    cfg_file = target / ".swissknife.json"
-    if not cfg_file.exists():
-        return {}
-    try:
-        config = json.loads(cfg_file.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        die(f"{cfg_file}: invalid JSON: {e}")
-    validate_config(env, config, cfg_file)
-    return config
+    """Историческое имя фабрики (15 сайтов в пакете + внешние тесты) — теперь
+    возвращает `ProjectConfig`, а не голый `dict`."""
+    return ProjectConfig.load(env, target)
 
 
 def provider_config_layer(config, project_id="local"):
     """Return the project-owned provider layer, or ``None`` when it is absent."""
-    value = config.get("providers")
+    value = ProjectConfig.coerce(config).providers
     if value is None:
         return None
     return ProviderConfigLayer(
@@ -226,7 +319,7 @@ def _expand_presets_buckets(env, config):
     (в connect игнорируется, как и `exclude`). Если пресет несёт лишь `include` без
     `buckets` — предупреждаем, чтобы пустой эффект не выглядел молчаливым багом.
     Ленивый импорт: skillset импортит config → на module-level был бы цикл."""
-    names = config.get("presets") or []
+    names = ProjectConfig.coerce(config).presets or []
     if not names:
         return []
     from .skillset import resolve_presets  # lazy: избегаем циклического импорта
@@ -248,6 +341,7 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
     симметрична vendor sync (resolve_skillset), но на уровне бакетов (каналы
     .swissknife.json bucket-granular). Точность precedence сохранена: presets
     действуют только когда выбор идёт из .swissknife.json (не из flags/профиля)."""
+    config = ProjectConfig.coerce(config)
     buckets = all_buckets(env)
     if flag_items:
         return flag_items, None, "items", "flags", False
@@ -256,21 +350,21 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
     preset_buckets = _expand_presets_buckets(env, config)
-    if config.get("buckets") or preset_buckets:
+    if config.buckets or preset_buckets:
         # (presets ∪ buckets) − exclude. exclude в bucket-granular каналах skill-level
         # (connect его игнорит с NOTE), но на уровне имён бакетов вычитаем корректно —
         # симметрично формуле vendor sync; дедуп сохраняет порядок (presets раньше buckets).
-        merged = list(dict.fromkeys(preset_buckets + list(config.get("buckets") or [])))
-        excl = set(config.get("exclude") or [])
+        merged = list(dict.fromkeys(preset_buckets + list(config.buckets or [])))
+        excl = set(config.exclude or [])
         items = [b for b in merged if b not in excl]
-        label = (".swissknife.json presets+buckets" if preset_buckets and config.get("buckets")
+        label = (".swissknife.json presets+buckets" if preset_buckets and config.buckets
                  else ".swissknife.json presets" if preset_buckets
                  else ".swissknife.json buckets")
         return items, None, "config", label, False
-    if config.get("project_type"):
-        prof = load_profile(env, config["project_type"])
+    if config.project_type:
+        prof = load_profile(env, config.project_type)
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
-        return (items, config["project_type"], "config",
+        return (items, config.project_type, "config",
                 ".swissknife.json project_type", prof.get("include_meta", False))
     name = autodetect(target)
     prof = load_profile(env, name)
@@ -288,12 +382,13 @@ def resolve_profile_name(target, config, flag_profile):
     """Имя профиля по той же иерархии, что resolve_selection: --profile >
     .swissknife.json project_type > autodetect. None — если выбор задан явными
     buckets (профиля нет)."""
+    config = ProjectConfig.coerce(config)
     if flag_profile:
         return flag_profile
-    if config.get("buckets"):
+    if config.buckets:
         return None
-    if config.get("project_type"):
-        return config["project_type"]
+    if config.project_type:
+        return config.project_type
     return autodetect(target)
 
 

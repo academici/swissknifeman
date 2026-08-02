@@ -127,17 +127,17 @@ def do_vendor(env, target, opts, register=True):
             die(f"unknown bucket: {b}")
 
     # exclude = union of flag and config (safety-oriented, not precedence-based)
-    exclude = set(flag_exclude) | set(config.get("exclude", []))
+    exclude = set(flag_exclude) | set(config.exclude)
     no_core = opts.get("no_core", False)
     if not no_core:
         # CORE-политика: не раздаём дубль-хаба/ручные инструменты по умолчанию
         exclude |= set(DEFAULT_EXCLUDE)
 
-    agent = opts.get("agent", "") or config.get("agent", "") or "generic"
+    agent = opts.get("agent", "") or config.agent or "generic"
     if agent not in AGENT_DEFAULTS:
         die(f"unknown agent '{agent}' (available: {', '.join(AGENT_DEFAULTS)})")
 
-    skills_path = opts.get("skills_path", "") or config.get("skills_path", "") \
+    skills_path = opts.get("skills_path", "") or config.skills_path \
         or AGENT_DEFAULTS[agent]
     dest_root = target / skills_path
 

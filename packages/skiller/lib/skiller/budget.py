@@ -27,8 +27,9 @@ from core import atomic_write_text
 
 from .common import die, parse_flags, parse_frontmatter
 from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
-                     all_buckets, core_skill_tuples, find_project_root,
-                     load_config, resolve_selection, validate_config)
+                     ProjectConfig, all_buckets, core_skill_tuples,
+                     find_project_root, load_config, resolve_selection,
+                     validate_config)
 from .plugins import plugins_summary
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
@@ -127,6 +128,7 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
     resolve_selection / collect_skills / core_skill_tuples / resolve_requires —
     та же выборка, что у `skiller vendor`. Возвращает (skills, meta), где
     skills — [(bucket, rel, dir, fm_name)], meta['pulled'] — транзитивные deps."""
+    config = ProjectConfig.coerce(config)  # исторические вызовы передают dict
     flag_buckets = flag_buckets or []
     flag_exclude = flag_exclude or []
     buckets, profile_name, _profile_source, source, _include_meta = \
@@ -135,7 +137,7 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
     for b in buckets:
         if b not in known:
             die(f"unknown bucket: {b}")
-    exclude = set(flag_exclude) | set(config.get("exclude", []))
+    exclude = set(flag_exclude) | set(config.exclude)
     if not no_core:
         exclude |= set(DEFAULT_EXCLUDE)
     skills, _ = collect_skills(env, buckets, exclude)

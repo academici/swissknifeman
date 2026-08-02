@@ -40,25 +40,22 @@ AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
 # SKILL.*.md/evals → утечка RU-источника).
 SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
                 "__pycache__", "*.pyc")
-CONFIG_KEYS = {
-    "project_type": str, "buckets": list, "exclude": list, "presets": list,
-    "skills_path": str, "agent": str,
-    "providers": dict,
-    # memory_brain — строка (путь, back-compat: скармливается memory-хуку) ИЛИ
-    # объект {path, sync?} (doc-sync BRAIN↔проект, см. brain_sync.BrainSync). Кортеж
-    # типов → isinstance принимает оба; в схеме это oneOf[string, object] (гейт
-    # test_schema.py трактует кортеж как «мульти-тип», сверяя каждый член с oneOf).
-    "memory_brain": (str, dict), "coordinator_ignore": list,
-    # Профиль каркаса агентов (данные для agent-packs/универсальности, не движок):
-    # shape — backend|frontend|fullstack; stacks — напр. ["laravel","vue"];
-    # skills_map — домен→скиллы для преднагрузки ролей под стек.
-    "shape": str, "stacks": list, "skills_map": dict,
-    # Ожидаемый policy-профиль настроек Claude Code (harness doctor --settings сверяет
-    # факт слоёв с профилем configs/claude-code/policy/<name>.json; harness читает файл
-    # сам, не импортируя skiller). Дом декларации — здесь, НЕ в .claude/settings.json
-    # (там собственная проверка №2 doctor'а пометила бы ключ как неканонический). D11.
-    "policy_profile": str,
-}
+# CONFIG_KEYS живёт ЗДЕСЬ по имени (его берут оба гейта синхрона со схемой —
+# doctor.py и tests/test_schema.py — и документация), но значение с 2026-08-02
+# (P6.2) ВЫВОДИТСЯ из полей skiller.config.ProjectConfig: перечень ключей
+# .swissknife.json имеет ровно один носитель — объект конфига. Там же — комментарии
+# про мульти-тип memory_brain, зарезервированные shape/stacks/skills_map и
+# policy_profile (D11). Импорт ленивый (PEP 562 module __getattr__): config
+# импортирует common на module-level, поэтому обратная связь возможна только по
+# требованию — иначе цикл импорта.
+def __getattr__(name):
+    if name == "CONFIG_KEYS":
+        from .config import CONFIG_KEYS as derived
+        globals()["CONFIG_KEYS"] = derived  # мемоизация: __getattr__ больше не зовётся
+        return derived
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 SKILL_MANAGED_MARKER = "<!-- swissknifeman:managed -->"
 

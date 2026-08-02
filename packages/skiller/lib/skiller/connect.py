@@ -112,7 +112,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     # CORE-скиллы; отключить точечно можно enabledPlugins[...]=false.
     cmd_added = list(prepared["cmd_added"])
 
-    if config.get("exclude"):
+    if config.exclude:
         print("NOTE: .swissknife.json 'exclude' is skill-granular and is ignored "
               "in plugin mode (plugins are bucket-granular)")
 
@@ -225,7 +225,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         apply_permissions(env, target, settings_file=settings_file, dry_run=dry_run)
 
     # vendored-copy migration
-    skills_path = config.get("skills_path") or AGENT_DEFAULTS["claude"]
+    skills_path = config.skills_path or AGENT_DEFAULTS["claude"]
     manifest_file = target / skills_path / MANIFEST
     if manifest_file.exists():
         manifest = json.loads(manifest_file.read_text(encoding="utf-8"))

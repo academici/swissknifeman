@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, warn
-from .config import load_config, resolve_target
+from .config import ProjectConfig, load_config, resolve_target
 from .connect import do_connect
 from .hub import hub_artifacts_exist
 from .registry import alias_migration_hints, load_bucket_aliases
@@ -32,9 +32,10 @@ def detect_codex_marketplace(target):
 
 
 def detect_vendor_path(target, config):
+    config = ProjectConfig.coerce(config)  # исторические вызовы передают dict
     candidates = []
-    if config.get("skills_path"):
-        candidates.append(config["skills_path"])
+    if config.skills_path:
+        candidates.append(config.skills_path)
     candidates += [p for p in AGENT_DEFAULTS.values() if p not in candidates]
     for p in candidates:
         if (target / p / MANIFEST).is_file():
@@ -144,16 +145,16 @@ def update_one(env, target, dry_run=False):
             print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
         opts = replay_opts(rec)
         # precedence: .swissknife.json > projects.json record > manifest
-        if not config.get("agent"):
+        if not config.agent:
             agent = rec.get("agent") or manifest.get("agent") or ""
             if agent:
                 opts["agent"] = agent
-        if not config.get("skills_path"):
+        if not config.skills_path:
             opts["skills_path"] = vendor_path
         if rec.get("exclude"):
             opts["exclude"] = ",".join(rec["exclude"])
         if not opts.get("profile") and not opts.get("buckets") \
-                and not config.get("buckets") and not config.get("project_type") \
+                and not config.buckets and not config.project_type \
                 and manifest.get("profile"):
             opts["profile"] = manifest["profile"]
         opts["dry_run"] = dry_run

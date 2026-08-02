@@ -26,8 +26,8 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 ## Cross-machine режим: `memory.role` (ADR-0001)
 
 По умолчанию узел — `standalone` (сегодняшний режим, свой демон на loopback; back-compat —
-существующие узлы поведения не меняют). Для нескольких постоянных машин (`ADR-0001
-cross-machine память`, `roadmap/cross-machine-memory.md`) — единственный живой демон на
+существующие узлы поведения не меняют). Для нескольких постоянных машин
+(`docs/adr/ADR-0001-cross-machine-memory.md`) — единственный живой демон на
 **host**-машине, остальные — **client**:
 
 ```json

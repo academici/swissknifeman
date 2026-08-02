@@ -15,31 +15,24 @@
 
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
-| [`provider-docs-snapshot-daemon-noise.md`](provider-docs-snapshot-daemon-noise.md) | `test_committed_outputs_are_exact_and_check_is_no_write` снимает хеши ВСЕГО дерева, ловит чужой mAInd-демон (`packages/maind/data/state_store.db/mem%3Ahealth.bin`), не дрейф манифеста | ⬜ к внедрению | Сработал (измерено `2026.07.31-SKM-LEAN P6.3`, D70 — три изолированных прогона, все `FAILED` на одном и том же пути) |
+| [`provider-docs-snapshot-daemon-noise.md`](provider-docs-snapshot-daemon-noise.md) | `test_committed_outputs_are_exact_and_check_is_no_write` снимает хеши ВСЕГО дерева, ловит чужой mAInd-демон (`packages/maind/data/state_store.db/mem%3Ahealth.bin`), не дрейф манифеста | ⬜ к внедрению | **Пере-открывается ПЕРВЫМ item'ом, правящим `scripts/test-provider-docs.py`** (проверяемое событие: `git log --diff-filter=M --oneline 90afaff1..HEAD -- scripts/test-provider-docs.py` даёт непустой вывод). Измерено `2026.07.31-SKM-LEAN` P6.3, D70 — три изолированных прогона, все `FAILED` на одном пути. Живого потребителя у записи нет: названный ею владелец адреса P5.2 терминален ещё до её появления — критерий пере-открытия назначен `2026.07.31-SKM-LEAN` P7.3 (D113) |
 
 ## Частично реализовано — остаток здесь
 
 | Файл | Остаток | Статус | Критерий остатка |
 |:--|:--|:--|:--|
 | [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
-| [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, ECO-OPT D74) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
+| [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, D74 АРХИВНОГО плана `plans/archive/2026.07.25-ECO-OPT`) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
 | [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | 🟡 ровно остаток | N = 5 боевых exec-волн (`journal.jsonl`, класс НЕ синтетический) с суммарной долей вмешательств драйвера < 25 % (`2026.07.31-SKM-LEAN` D119; фикстурная волна P4.6 — 0/2 — в накопление не засчитывается) ИЛИ `decide` стал импортируемым модулем в `packages/**` ИЛИ измеренный выигрыш стоимости ≥2× против Workflow-марафона |
 
 ## Отложено — критерий не сработал
 
 | Файл | Что | Критерий внедрения |
 |:--|:--|:--|
-| [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Диета-фаза упирается в notify-скилл, который жалко сжимать без гарантии сохранности |
+| [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Любое из двух проверяемых событий: (а) item плана правит **тело** вендорного бандла со `strategy: notify` в `upstream.json` ради диеты; (б) `packages/skiller/scripts/update-upstreams.sh --check` показал дрейф апстрима у любого из шести раздутых `notify`-кандидатов §«Измеренный разрыв». Прежняя проза «диета-фаза упирается в notify-скилл» приведена к структурной форме `2026.07.31-SKM-LEAN` P7.3: сверка показала, что условие (а) фазой P3 того плана НЕ выполнено — правились `description`/`when_to_use`/`context: fork` (frontmatter), тела вендорных бандлов не трогались, а `context: fork` Claude Code — не `strategy: fork` skiller |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | Агент рекомендует `plan-design` вместо `plan-exec`, не проверив фактический статус фазы | Повтор на ещё одном плане/проекте (пока один замер — `insiders` P1) |
-
-## Входы активных планов (не трогать вне их items)
-
-| Файл | Роль | План |
-|:--|:--|:--|
-| [`cross-machine-memory.md`](cross-machine-memory.md) | Постановка «память между машинами» (D12 CONTEXT-ECONOMY) | вход **ECO-OPT P4** (ADR + remote-host режим maind) |
-| [`2026.07.25-memory-hub-service.md`](2026.07.25-memory-hub-service.md) | Хаб-как-сервис: авторизация по scope, раздача конфигов — тяжёлая часть, ВНЕ скоупа P4 | смежно **ECO-OPT P4** (P4 делает только подготовку); критерии активации — в самом файле §12 |
-| [`codex-subagent-offload.md`](codex-subagent-offload.md) | `openai/codex-plugin-cc`: разгрузка квот + кросс-модельное ревью | вход **ECO-OPT P7** (Codex как второй водитель) |
+| [`2026.07.25-memory-hub-service.md`](2026.07.25-memory-hub-service.md) | Хаб памяти как сервис: авторизация по scope, отзыв доступа, серверное назначение конфигов, аудит — тяжёлая часть, ВНЕ скоупа реализованного LAN-хоста | §12 самой записи, любой из четырёх: появился второй человек, которому нужна память экосистемы · машин стало больше двух ИЛИ появилась машина вне LAN/tailnet · потребовалось разграничение памяти по проектам (NDA-проект) · объём памяти вырос до тысяч записей (сегодняшний ориентир — 251) |
 
 ## Отклонено решением
 
@@ -78,6 +71,8 @@
 | `codex-skill-listing-fallback-overflow.md` | OQ-8 закрыт веткой (A) «принять деградацию» — рычаги 1–3 Claude-only, рычаг 4 арифметически недостаточен (D120); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
 | `analyst-plan-scan.md` | Переехала в [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md) §«Перенесено из корневого `roadmap/`» — `plans/2026.07.31-SKM-LEAN` P7.2 |
 | `analyst-fleet-coverage.md` | Переехала в [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md) §«Перенесено из корневого `roadmap/`» — `plans/2026.07.31-SKM-LEAN` P7.2 |
+| `cross-machine-memory.md` | Вариант 1 стаба (единственный демон-хост + сетевые клиенты) реализован фазой P4 АРХИВНОГО плана `plans/archive/2026.07.25-ECO-OPT`: ADR `packages/maind/docs/adr/ADR-0001-cross-machine-memory.md` (P4.1, D78/D80) · `memory.role` standalone/host/client + bearer-аутентификация в `packages/maind` (P4.2) · роль-осознанный `scripts/bootstrap-machine.sh` + `packages/maind/docs/deploy.md` (P4.3). Остаток — не дизайн, а доказательство: три клиент-специфичных гейта требуют второй физической машины и ведутся Pending Work P4.3 того же архивного плана. Класс присвоен `plans/2026.07.31-SKM-LEAN` P7.3 (находка F1) |
+| `codex-subagent-offload.md` | Постановка закрыта вердиктом D84 АРХИВНОГО плана `plans/archive/2026.07.25-ECO-OPT` (P7.1–P7.3): Codex — ВТОРОЙ ВОДИТЕЛЬ, а не канал делегирования мелочи; плагин `codex-plugin-cc` установлен, always-on цена измерена (~449 ток), правило активации текстовое. Карточка провенанса — [`docs/reference.md`](../docs/reference.md) § openai/codex-plugin-cc; готовый (сознательно не запущенный) протокол числового пилота A/B — `plans/archive/2026.07.25-ECO-OPT/research/16-P7-target-design.md` §2. Класс присвоен `plans/2026.07.31-SKM-LEAN` P7.3 (находка F1) |
 
 ## Принцип
 

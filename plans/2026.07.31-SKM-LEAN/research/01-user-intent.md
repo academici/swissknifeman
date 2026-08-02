@@ -88,12 +88,19 @@
 | Поверхность | Фазы | Риск |
 |:--|:--|:--|
 | `packages/skiller/lib/skiller/budget.py` | P1 (агрегатор), P2 (rules/MCP в счёте), P3 (листинг скиллов) | Три фазы читают один измеритель; менять его семантику вправе только **P1** |
-| `roadmap/**` + `roadmap/README.md` | P1, P3, P5, P7 | Главный hotspot: пять фаз удаляют/правят записи одного каталога. Правило — **удаляет запись та фаза, что её закрыла**; P7 сводит остаток и проверяет ноль |
+| `roadmap/**` + `roadmap/README.md` | P1, **P2**, P3, P5, **P6**, P7 | Главный hotspot: **шесть** фаз трогают один каталог (свод обновлён P7.3 по `git log --name-status ebd42655..86bf13e6 -- roadmap/`). Правило — **удаляет запись та фаза, что её закрыла**; P2 выпала из перечня D10 (её P2.4 удаляет `mcp-config-example-emit.md` — **D52**), а **P6 не удаляет, а ЗАВОДИТ** запись (`provider-docs-snapshot-daemon-noise.md`, P6.3 `90afaff1`, D70) — класс правки, которого правило «удаляет закрывшая» не покрывает вовсе (**D122**). P7 сводит остаток и проверяет ноль |
 | `packages/harness/configs/common/instructions/**` | P2 (диета), P5.4 (провенанс/видимость) | Обе правят один SSOT инструкций; P2 идёт первой, P5.4 — дописывает |
 | `packages/harness/lib/harness/cli.py` | P4 (`run`) | Одна фаза — конфликта нет, зафиксировано ради P6 |
 | `core/**` | P6 (переезд), P4 (драйвер импортирует примитивы) | **P6 после P4**: переезд модулей во время написания драйвера ломал бы импорты на лету |
-| `packages/task/lib/task/plan_lint.py` | P4.4 (гейт вызывает), P5.9 (`--conflicts`) | P4 только ВЫЗЫВАЕТ линтер, не правит его; правит только P5.9 |
+| `packages/task/lib/task/plan_lint.py` | P4.4 (гейт вызывает), **P5.8** (переписывает гейт launch-block), **P5.9** (`--conflicts`) | P4 только ВЫЗЫВАЕТ линтер, не правит его; правят ДВА item'а — P5.8 и P5.9, порядок пинован D43 (**D58**) |
 | `docs/rejected-optimizations.md` | P5, P7 | Append-only; конфликта нет |
+| `packages/skiller/scripts/validate.sh` | P3.5 (пере-база гейтов), P5.5 (регистрация ступени) | **D58**: два item'а разных фаз правят один гейт-раннер |
+| `packages/harness/lib/harness/instructions.py` | P2.1, P2.2, P5.7 (логика), P6.1 (только строки импорта) | **D58**: P6.1 переезжает импорты после того, как логику закрыли P2/P5.7 |
+| `packages/harness/docs/reference/instruction-canon.md` | P2.1, P2.2, P5.4, P5.7 | **D58**: канон инструкций правят четыре item'а трёх фаз |
+| `packages/skiller/docs/guide/cli.md` | P1.1, P1.3, P2.3, P3.2 | **D58**: гайд CLI дописывают четыре item'а трёх фаз |
+| `packages/skiller/lib/skiller/publication.py` | P5.5 (логика), P6.1 (импорт) | **D58** |
+| `packages/skiller/docs/guide/installation.md` | P2.5, P6.2 | **D58** |
+| `packages/skiller/docs/multi-provider-distribution.md` | P2.5, P5.5 | **D58** |
 
 ## 5. Порядок фаз — обоснование
 

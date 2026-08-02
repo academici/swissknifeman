@@ -283,9 +283,10 @@ agentic-пул подписки OpenAI, не бесплатная работа).
 делегирования (пилот дорожки A, `A`/`R`) сознательно НЕ измерялась (D84) — готовый протокол
 лежит в `research/16-P7-target-design.md` §2, вытягивается по факту потребности.
 **Взято:** Codex CLI как второй водитель (прямой запуск, тот же plan-протокол); правило
-активации плагина (текстом); двухинструментный always-on гейт. **Roadmap-стаб закрыт** —
-`roadmap/codex-subagent-offload.md` несёт датированный вердикт со ссылкой на
-`findings/P7.1-switch-test.md`.
+активации плагина (текстом); двухинструментный always-on гейт. **Roadmap-стаб закрыт и удалён
+из каталога** (`plans/2026.07.31-SKM-LEAN` P7.3): датированный вердикт со ссылкой на
+`findings/P7.1-switch-test.md` живёт в git-истории `roadmap/codex-subagent-offload.md` и в
+архиве `plans/archive/2026.07.25-ECO-OPT` (D84, P7.1–P7.3).
 
 ### romarayt/raytsystem-public-os — adopt (механика гейтов), skip (стек)
 https://github.com/romarayt/raytsystem-public-os — local-first агентный воркспейс (знания,

@@ -17,7 +17,7 @@
 | [roles](./roles) | Универсальные роли-агенты (reviewer/implementer/…); общие, стек — из профиля |
 | [skills-index-and-hub](./skills-index-and-hub) | Hub как AI Skills Index; фикс регрессии «скиллы не видны» |
 | [post-integration-checklist](./post-integration-checklist) | Проверка целостности после внедрения/upgrade пака |
-| [agent-packs (скилл)](../../skills/system/agent-packs/SKILL.md) | Установка/upgrade версионируемых паков — скилл `system/agent-packs` |
+| `agent-packs` (скилл) | Установка/upgrade версионируемых паков — `skills/system/agent-packs/SKILL.md` |
 
 ## Непрерывный аудит
 

@@ -15,7 +15,7 @@
   `## 3. Routing` — деривация из тира §9 никогда его не выдаёт (только
   отказывает на противоречии).
 - **`worker`** запускает ОДИН item процессом `claude -p "/task:plan-exec
-  <PLAN-ID> <Pn.m>" --output-format json` под таймаутом (по умолчанию 1800s),
+  &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` под таймаутом (по умолчанию 1800s),
   строго один воркер за раз (последовательная волна — параллельный fan-out на
   общей кодовой базе не заводится). Селекторы модели/effort берутся из
   `packages/task/configs/command-routing.json`.

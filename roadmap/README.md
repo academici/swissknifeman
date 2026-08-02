@@ -16,6 +16,7 @@
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
 | [`codex-skill-listing-fallback-overflow.md`](codex-skill-listing-fallback-overflow.md) | Девять из десяти поставляемых профилей превышают фолбэк-бюджет обнаружения Codex (8 000 симв) — рычаги 1–3 владельца (D74) сузку Claude-оси уже сняли, Codex не закрывают | ⬜ к внедрению | Сработал (замер `2026.07.29-HARNESS-AGNOSTIC P3.4`, `artifacts/P3-skill-listing-budget.md`, WARN-гейт `validate.sh` §17). Решение владельца между Codex-специфичным профилем / принятой деградацией / отложить до живого прогона Codex CLI (OQ-7, D29) |
+| [`provider-docs-snapshot-daemon-noise.md`](provider-docs-snapshot-daemon-noise.md) | `test_committed_outputs_are_exact_and_check_is_no_write` снимает хеши ВСЕГО дерева, ловит чужой mAInd-демон (`packages/maind/data/state_store.db/mem%3Ahealth.bin`), не дрейф манифеста | ⬜ к внедрению | Сработал (измерено `2026.07.31-SKM-LEAN P6.3`, D70 — три изолированных прогона, все `FAILED` на одном и том же пути) |
 
 ## Частично реализовано — остаток здесь
 

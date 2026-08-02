@@ -13,8 +13,28 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-APPROVED_CANONICAL_SHA256 = "603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1"
-APPROVED_CARRIER_SHA256 = "153d13bf98df0de172d59771af45ffef9d308ec445bb8f3dc789da3cf22def1a"
+APPROVED_CANONICAL_SHA256 = "9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4"
+APPROVED_CARRIER_SHA256 = "2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d"
+
+REGENERATION_DIAGNOSTIC = (
+    "manifest hash mismatch — configs/provider-capabilities.json was likely "
+    "regenerated via `scripts/provider-docs.py --write`. Before touching the "
+    "approved constants: (1) confirm the diff is benign — "
+    "`python3 -c \"import json,difflib; a=json.load(open('OLD.json')); "
+    "b=json.load(open('configs/provider-capabilities.json')); "
+    "fmt=lambda v: json.dumps(v, indent=1, ensure_ascii=False, sort_keys=True).splitlines(); "
+    "print('\\n'.join(difflib.unified_diff(fmt(a), fmt(b), lineterm='')))\"` — "
+    "only `evidence[].source` path rewrites are benign; anything touching "
+    "providers/capabilities/support/native_extensions/contract_version/catalog_version "
+    "is manifest corruption, not regeneration; (2) if benign, recompute the snapshot — "
+    "`PYTHONPATH=. python3 -c \"import hashlib; from core import "
+    "parse_provider_manifest, provider_manifest_sha256; "
+    "raw=open('configs/provider-capabilities.json','rb').read(); "
+    "print(provider_manifest_sha256(parse_provider_manifest(raw))); "
+    "print(hashlib.sha256(raw).hexdigest())\"` — and update "
+    "APPROVED_CANONICAL_SHA256 / APPROVED_CARRIER_SHA256 in "
+    "core/tests/test_provider_manifest.py (the single home both runners consume)."
+)
 
 
 def manifest_value():
@@ -31,8 +51,10 @@ class TestProviderManifest(unittest.TestCase):
     def test_approved_carrier_round_trips_with_distinct_canonical_and_carrier_hashes(self):
         raw = MANIFEST_PATH.read_bytes()
         manifest = parse_provider_manifest(raw, source_id=str(MANIFEST_PATH))
-        self.assertEqual(provider_manifest_sha256(manifest), APPROVED_CANONICAL_SHA256)
-        self.assertEqual(hashlib.sha256(raw).hexdigest(), APPROVED_CARRIER_SHA256)
+        self.assertEqual(provider_manifest_sha256(manifest), APPROVED_CANONICAL_SHA256,
+                         REGENERATION_DIAGNOSTIC)
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), APPROVED_CARRIER_SHA256,
+                         REGENERATION_DIAGNOSTIC)
         self.assertEqual(raw, provider_manifest_canonical_bytes(manifest) + b"\n")
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
                           len(manifest.native_extensions)), (2, 35, 0))

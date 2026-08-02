@@ -15,6 +15,11 @@ SPEC = importlib.util.spec_from_file_location("provider_docs", ROOT / "scripts/p
 provider_docs = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(provider_docs)
 
+MANIFEST_SPEC = importlib.util.spec_from_file_location(
+    "test_provider_manifest", ROOT / "core/tests/test_provider_manifest.py")
+manifest_snapshot = importlib.util.module_from_spec(MANIFEST_SPEC)
+MANIFEST_SPEC.loader.exec_module(manifest_snapshot)
+
 
 def snapshot(root):
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
@@ -30,9 +35,11 @@ class ProviderDocsTests(unittest.TestCase):
                     "analytics_contract_missing_sections"):
             self.assertEqual(report[key], [])
         self.assertEqual(report["canonical_sha256"],
-                         "603c7949d7b236bbce0f5ec1a682f79b8dfde4bb75a42436600594797d64d4e1")
+                         manifest_snapshot.APPROVED_CANONICAL_SHA256,
+                         manifest_snapshot.REGENERATION_DIAGNOSTIC)
         self.assertEqual(report["carrier_sha256"],
-                         "153d13bf98df0de172d59771af45ffef9d308ec445bb8f3dc789da3cf22def1a")
+                         manifest_snapshot.APPROVED_CARRIER_SHA256,
+                         manifest_snapshot.REGENERATION_DIAGNOSTIC)
         self.assertTrue(report["carrier_terminal_lf"])
         self.assertEqual(sum(len(values) for values in report["contributors"].values()), 35)
         self.assertEqual(len(set().union(*map(set, report["contributors"].values()))), 35)

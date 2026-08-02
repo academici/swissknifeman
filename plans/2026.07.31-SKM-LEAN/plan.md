@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-01 (P5.10 закрыт 🟢 Done — payload vercel вендорен, зеркало снято, plan-exec) |
+| Last Updated | 2026-08-02 (P5.11 закрыт 🟢 Done — блок `audit` + гейт AUDIT_MISSING/AUDIT_STALE, plan-run opus/high) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -124,7 +124,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P2 | Резидент-диета | 5/6 | 🟠 Done with deviations |
 | P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
 | P4 | Драйвер exec-волны | 6/6 | 🟢 Done |
-| P5 | Гигиена и безопасность | 5/11 | 🟡 In progress |
+| P5 | Гигиена и безопасность | 6/11 | 🟡 In progress |
 | P6 | Рефактор `core/` | 0/3 | ⬜ Not started |
 | P7 | Закрытие roadmap в ноль | 0/4 | ⬜ Not started |
 
@@ -338,6 +338,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-01 | plan-run/sonnet-high | **P5.9 закрыт: 🟠 Done with deviations** — `plan-lint.py --conflicts` (6 классов канон↔реализация) + D90-гейт повтора поля item'а; гейт починил 4 находки D90 в архивных планах (диф вне `Files` → material), фаза P5 4/11 — детали см. `phases/P5.md` P5.9 Completion Notes |
 | 2026-08-01 | plan-design/opus-high | **P5.10 ре-спроектирован после эскалации (v1.1.1, D111–D112):** зеркало апстримной обёртки не вендорится, `body_path` — на payload, провенанс antfu — запись с пустым `path`; исключений в триаж-скане не заводится — детали см. `phases/P5.md` P5.10 + `research/15-p5.10-mirror-redesign-2026-08-01.md` |
 | 2026-08-01 | plan-exec/sonnet-medium | **P5.10 закрыт: 🟢 Done** — payload vercel вендорен pristine по SHA `4e799d45…` (sha256 сверен), зеркало обёртки antfu удалено, `upstream.json` → `fork` с provenance-записью пустого `path`, `PRM_REMOTE_INSTRUCTIONS` 2 → 0 по реестру, фаза P5 5/11 — детали см. `phases/P5.md` P5.10 Completion Notes |
+| 2026-08-02 | plan-run/opus-high | **P5.11 закрыт: 🟢 Done** — блок `audit` в `upstream.json` с собственным якорем + находки `AUDIT_MISSING`/`AUDIT_STALE` (код 11), бэкфилл 56/56 (51 clean / 5 attention / 0 risk), `kind: reference-only`, 602 теста; все 11 items фазы P5 терминальны — детали см. `phases/P5.md` P5.11 Completion Notes |
 
 ## 7. Contracts
 

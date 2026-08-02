@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-02 (P7.3 закрыт: каталог `roadmap/` сведён, инвариант «ноль записей без адреса» проверен машинно) |
+| Last Updated | 2026-08-02 (P7.4 закрыт: сводная `[Unreleased]`, матрица зрелости и verdict `docs-maintenance` записаны) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -126,7 +126,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P4 | Драйвер exec-волны | 6/6 | 🟢 Done |
 | P5 | Гигиена и безопасность | 6/11 | 🟠 Done with deviations |
 | P6 | Рефактор `core/` | 0/3 | 🟠 Done with deviations |
-| P7 | Закрытие roadmap в ноль | 1/4 | 🟡 In progress |
+| P7 | Закрытие roadmap в ноль | 2/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -359,6 +359,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-02 | issue-planner/frontier | `roadmap.md`: абзац прогресса приведён к факту (утверждал «items P3–P7 открыты», тогда как терминальны все шесть фаз); батчи, Routing и гейты владельца не менялись |
 | 2026-08-02 | plan-run/sonnet-high | **P7.1 закрыт: 🟢 Done** — D116–D121 (5 предписанных + ТЗ-фикс), OQ-3/OQ-8 сняты гейтом владельца и делегированы исполнителю, четыре roadmap-спеки удалены, фаза P7 1/4 — детали см. `phases/P7.md` P7.1 Completion Notes |
 | 2026-08-02 | plan-run/opus-high | **P7.3 закрыт: 🟠 Done with deviations** — каталог `roadmap/` сведён к 9 спекам, инвариант «ноль записей без адреса» проверен скриптом (0/0/0), F1/F2/F3/F5 разрешены, D122 — детали см. `phases/P7.md` P7.3 Completion Notes |
+| 2026-08-02 | plan-run/opus-high | **P7.4 закрыт: 🟢 Done** — сводная `[Unreleased]`, матрица зрелости и пять verdicts `docs-maintenance`; детали см. `phases/P7.md` P7.4 Completion Notes |
 
 ## 7. Contracts
 

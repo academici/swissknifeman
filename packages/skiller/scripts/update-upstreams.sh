@@ -235,7 +235,7 @@ for cfg in configs:
 # engineering'ом, вторая — внешняя зависимость, запрещена root.engineering-invariants).
 #
 # ПРОВЕНАНС ПРАВИЛ. Набор выведен из разового человеческого аудита 56 вендоренных
-# бандлов (P5.1, plans/2026.07.31-SKM-LEAN/findings/P5-vendored-audit.md), а не
+# бандлов (P5.1, plans/archive/2026.07.31-SKM-LEAN/findings/P5-vendored-audit.md), а не
 # придуман до чтения: правило PRM_REMOTE_INSTRUCTIONS существует ровно потому, что
 # аудит нашёл живой носитель этого паттерна. Источники паттернов — docs/reference.md.
 #
@@ -358,7 +358,7 @@ def triage_bundle(skill_dir, sid):
 # блок `audit` в upstream.json рядом с бандлом: он переживает план (плановый файл
 # смертен, скилл раздаётся дальше) и не заводит связи «skiller читает plans/**».
 # Провенанс правила и разбор веток — docs/guide/vendored-skills.md,
-# plans/2026.07.31-SKM-LEAN (P5.11, D107/D109/D110).
+# plans/archive/2026.07.31-SKM-LEAN (P5.11, D107/D109/D110).
 #
 # ТРИ РАЗНЫХ СОБЫТИЯ — три разных сигнала (тот же принцип, по которому код 11 не
 # слит с 10): «апстрим сдвинулся» (updates/notify) · «вердикта нет НИКОГДА не

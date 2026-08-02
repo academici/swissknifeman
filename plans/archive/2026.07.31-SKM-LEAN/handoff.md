@@ -1,24 +1,23 @@
 # HANDOFF — 2026-08-02 — after P7
 
-**Next:** archive: task:plan-close archive 2026.07.31-SKM-LEAN
+**Next:** terminal: план закрыт
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
-| Thinking | low — механическое архивирование плана |
+| Model | — |
+| Thinking | — |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Перенести терминальный план в архив и записать чек-лист миграции `root/` в docs. |
-| Команда | `task:plan-close archive 2026.07.31-SKM-LEAN` |
+| Суть | План архивирован; следующий план выбирает владелец. |
+| Команда | `—` |
 
 **Done:** P7 закрыта `🟠 Done with deviations`: все 4/4 items терминальны; создан
 `closure/P7.json`. Docs-sync по фазе выполнен существующими item-коммитами; новых страниц
 на фазовом закрытии не потребовалось.
 
-**Remaining:** протокольный перенос терминального плана в `plans/archive/`; `root/contracts/`
-проверяется на миграцию в docs отдельным archive-шагом.
+**Remaining:** протокольной работы по этому плану нет.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/plan.md` · `phases/P7.md` ·
-`closure/P7.json` · commits `d9a8d431`/`428ee35e`.
+**Sources of truth:** `plans/archive/2026.07.31-SKM-LEAN/plan.md` · `phases/P7.md` ·
+`closure/P7.json` · commits `d9a8d431`/`428ee35e`/`7ca3b98e`.
 
 **Open risks:**
 
@@ -36,3 +35,14 @@
   DX-схема `upstream.schema.json` P5.11 · снимок `test_committed_outputs…` P6.3 ·
   типизация `.swissknifeman/config.json` P6.2 · перевод потребителей `load_config` P6.2.
 - **open_questions:** OQ-9 (владелец протокола, вне плана).
+
+## Archive migration checklist
+
+- Перенесено в живую документацию: пользовательская reference exec-волны уже выпущена в
+  `packages/harness/docs/reference/exec-wave.md` (P4.6), релизная сводка и матрица зрелости —
+  в `CHANGELOG.md` и `docs/status.md` (P7.4); ссылки на план направлены в этот архив.
+- Оставлено в архиве: `artifacts/`, `brief/`, `findings/`, `research/`, `closure/`, журнал и
+  roadmap — это доказательства исполнения, не живые руководства.
+- `root/contracts/driver-plan-protocol-v2.md` оставлен в архиве как техническая provenance-
+  спека: действующее пользовательское описание поведения уже живёт в `exec-wave.md`; перенос
+  контракта дословно создал бы второй активный SSOT.

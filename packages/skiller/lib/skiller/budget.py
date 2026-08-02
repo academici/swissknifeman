@@ -194,7 +194,7 @@ def budget_for_set(skills, pulled=None):
 # живой прогон SessionStart-хуков, MCP tool-defs.
 #
 # Пороги пере-изданы 2026-07-31 (2026.07.31-SKM-LEAN D83, решение владельца по OQ-1)
-# против baseline флота — plans/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+# против baseline флота — plans/archive/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
 # n=22, якорь 3003d352. Прежняя пара 7 000/10 000 калибровалась на величине, которая
 # НЕ считала marketplace-плагины (считать их было нечем до P1.1), и потому давала
 # WARN у 95 % флота: гейт, красный у всех, нормы от аварии не отличает. Медиана
@@ -332,7 +332,7 @@ DEFAULT_LISTING_PROVIDER = "claude-code"
 # доку (`plan.md` §2 «Правило внешних фактов»). Оба поля сняли запись целиком,
 # дельта воспроизведена байт-в-байт в обоих прогонах:
 #   • `disable-model-invocation: true` — ось A −88
-#     (`plans/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.2), это же
+#     (`plans/archive/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.2), это же
 #     говорит first-party док: «Description **not** in context»
 #     (<https://code.claude.com/docs/en/skills> §«Control who invokes a skill»);
 #   • `paths:` — ось A −88, ТА ЖЕ величина (там же §3.1/§4). Доку это
@@ -736,7 +736,7 @@ def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
     n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
     что реально измерено. Вердикт: OK ≤16K · ELEVATED ≤23K · WARN >23K
     (пороги — FIRST_TURN_TARGET_MAX/FIRST_TURN_WARN, обоснование там же:
-    baseline флота plans/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+    baseline флота plans/archive/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
     D83). `listing_fraction`/
     `listing_context_window` — доля бюджета листинга скиллов и контекстное окно
     целевой модели; параметры, а не константы (P3.4 Implementation Rules —

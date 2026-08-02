@@ -5,6 +5,14 @@
       "reason": "R2+R3 (P11.5): путь неоднозначен — 2 кандидата в репо (packages/task/commands/plan-exec.md, packages/task/tests/fixtures_data/claude-command-golden/commands/plan-exec.md), исходный не восстановим по контексту цитаты; occurrences также в чужом плане 2026.07.24-AGENT-RELIABILITY (phases/P2.md:77, plan.md:388) — чужая проза не правится (И4-И6)."
     },
     {
+      "citation": "core/tests/test_provider_manifest.py:16",
+      "reason": "R2 (2026.07.31-SKM-LEAN P6.1): файл переехал в core/tests/provider/test_manifest.py тем же item-коммитом. Цитата в plan.md:1310 — датированная запись аудит-блока о замере на ebd42655 (два носителя хешей ДО унификации P6.3); переписать путь значило бы приписать замеру дерево, которого на его дату не существовало."
+    },
+    {
+      "citation": "core/tests/test_provider_manifest.py:16,17",
+      "reason": "R2 (2026.07.31-SKM-LEAN P6.1): тот же переезд. Цитата в findings/P6-manifest-drift-2026-07-31.md:141 — строка таблицы свипа носителей на ebd42655 («устарело»), запись о прошлом состоянии; путь в датированном замере не переписывается."
+    },
+    {
       "citation": "core/tests/test_provider_config.py::TestProviderConfigResolution::test_negative_validation_matrix_covers_frozen_contract",
       "reason": "R4 (P11.5): путь уже полный и существует, но тестовый метод в файле отсутствует (протух после написания находки в phases/P10.md:441, поле закрытого item'а P10.4) — правка ТЗ закрытого item'а вне скоупа фазы P11."
     },

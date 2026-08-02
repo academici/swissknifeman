@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-02 (P7.1 закрыт: пять D-записей владельца, OQ-3/OQ-8 сняты — D116–D121) |
+| Last Updated | 2026-08-02 (P7.2 закрыт: analyst-темы перенесены в `packages/analyst/docs/roadmap.md`) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -269,6 +269,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-07-31 | issue-planner/frontier | План создан (режим `new`): 7 фаз-скелетов с контракт-блоками, 32 item-скелета, D1–D12; слои 0–2 заведены (`brief/`, `findings/` ×2, `research/01`) |
 | 2026-07-31 | issue-planner/frontier | `plans/ACTIVE.md` переведён на `2026.07.31-SKM-LEAN` (предыдущее значение — `—`, D12) |
 | 2026-08-02 | sonnet/low | Фаза P5 закрыта: 11/11 items терминальны (6 🟢 + 5 🟠), `closure/P5.json`, Board синхронизирован |
+| 2026-08-02 | sonnet/medium | P7.2 закрыт 🟠 Done with deviations: analyst-темы перенесены в `packages/analyst/docs/roadmap.md` — детали см. `phases/P7.md` P7.2 Completion Notes |
 | 2026-07-31 | issue-planner/frontier | Design pass **1/3 начат**, `k` не инкрементирован: свип не завершён (7 фаз — скелеты). Не дотянулись — детализация items; фокус следующей сессии `P1`, далее пофазно, `k++` перед `finish` |
 | 2026-07-31 | issue-planner/frontier | **P1 детализирована до DoR** (v0.2.0): P1.1–P1.3 по 16 полей, §3 Routing построчно (P1.2 `low`→`medium`), D14–D17, слой 1 пополнен `findings/P1-plugin-cli-probe-2026-07-31.md` — детали см. `phases/P1.md` |
 | 2026-07-31 | issue-planner/frontier | **P2 детализирована до DoR** (v0.3.0): состав 4 → 6 items (D18), §3 Routing построчно (шесть строк), D18–D22, OQ-4; слои пополнены `findings/P2-resident-layer-probe-2026-07-31.md` и `research/02-p2-resident-model.md`. Плану добавлено 2 items (32 → 34) — детали см. `phases/P2.md` |

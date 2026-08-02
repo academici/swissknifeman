@@ -15,7 +15,6 @@
 
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
-| [`codex-skill-listing-fallback-overflow.md`](codex-skill-listing-fallback-overflow.md) | Девять из десяти поставляемых профилей превышают фолбэк-бюджет обнаружения Codex (8 000 симв) — рычаги 1–3 владельца (D74) сузку Claude-оси уже сняли, Codex не закрывают | ⬜ к внедрению | Сработал (замер `2026.07.29-HARNESS-AGNOSTIC P3.4`, `artifacts/P3-skill-listing-budget.md`, WARN-гейт `validate.sh` §17). Решение владельца между Codex-специфичным профилем / принятой деградацией / отложить до живого прогона Codex CLI (OQ-7, D29) |
 | [`provider-docs-snapshot-daemon-noise.md`](provider-docs-snapshot-daemon-noise.md) | `test_committed_outputs_are_exact_and_check_is_no_write` снимает хеши ВСЕГО дерева, ловит чужой mAInd-демон (`packages/maind/data/state_store.db/mem%3Ahealth.bin`), не дрейф манифеста | ⬜ к внедрению | Сработал (измерено `2026.07.31-SKM-LEAN P6.3`, D70 — три изолированных прогона, все `FAILED` на одном и том же пути) |
 
 ## Частично реализовано — остаток здесь
@@ -24,20 +23,17 @@
 |:--|:--|:--|:--|
 | [`workflow-craft.md`](workflow-craft.md) | Активация конструктора (ч.1/1.5/1.6) внедрена SKM-ROADMAP-005. **Остаток — ч.2: fleet-синтез накопленных `plans/*/workflows/*.js` через analyst** | 🟡 остаток | 10+ полевых скриптов ИЛИ повтор «изобрели то, что уже было шаблоном» |
 | [`skill-description-quality.md`](skill-description-quality.md) | Гейт триггер-фразы в `description` введён + blocker-набор (39 < 100 симв) починен (`2026.07.29-HARNESS-AGNOSTIC` P3.5). **Остаток — 69 длинных описаний без триггера** (унаследованный долг в `desc-trigger-burndown.txt`) и рычаг №4 владельца (сжатие ради слотов, ECO-OPT D74) | 🟡 остаток | Следующая содержательная правка каждого скилла (one-way burn-down) ИЛИ решение владельца включить рычаг №4 |
+| [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | 🟡 ровно остаток | N = 5 боевых exec-волн (`journal.jsonl`, класс НЕ синтетический) с суммарной долей вмешательств драйвера < 25 % (`2026.07.31-SKM-LEAN` D119; фикстурная волна P4.6 — 0/2 — в накопление не засчитывается) ИЛИ `decide` стал импортируемым модулем в `packages/**` ИЛИ измеренный выигрыш стоимости ≥2× против Workflow-марафона |
 
 ## Отложено — критерий не сработал
 
 | Файл | Что | Критерий внедрения |
 |:--|:--|:--|
 | [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Диета-фаза упирается в notify-скилл, который жалко сжимать без гарантии сохранности |
-| [`agent-scoped-skill-loading-vs-connect-default.md`](agent-scoped-skill-loading-vs-connect-default.md) | Идея владельца (2026-07-30): дефолт `connect` (целый бакет, грубо) даёт токен-переполнение корневой сессии независимо от вызова агента; per-role `skills:` preload agent-packs уже построен, но это другой слой | Владелец формулирует явное D-решение о дефолтной политике подключения И проходит design-проход — меняет дефолт для всего флота |
 | [`analyst-plan-scan.md`](analyst-plan-scan.md) | `analyst digest` читает Known Deviations/Pending Work закрытых `plans/*` как источник уроков | ≥2–3 плана с содержательными Known Deviations — ручной просмотр перестаёт масштабироваться |
 | [`analyst-fleet-coverage.md`](analyst-fleet-coverage.md) | Покрытие analyst-цикла по флоту: хук `run-report` включён у 5/20 проектов, analyst-state — 2/20 | Осознанное решение по umbrella-политике хуков на чужих проектах (не одностороннее включение) |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | Агент рекомендует `plan-design` вместо `plan-exec`, не проверив фактический статус фазы | Повтор на ещё одном плане/проекте (пока один замер — `insiders` P1) |
-| [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Замеренные мис-активации скиллов (нативной автозагрузки обычно достаточно) |
-| [`project-freshness-agent.md`](project-freshness-agent.md) | Агент освежения проекта (дрейф стека/конвенций против реестра) | Реальный случай, где устаревшее знание проекта привело к ошибке ревью/разработки — не на упреждение |
-| [`artifex-thin-wrapper.md`](artifex-thin-wrapper.md) | Тонкая обвязка исполнения планов (остаток поглощённого супервизор-трека `2026.07.18-FOREMAN`): каркас пакета, ядро fresh-session цикла, retry-лестница, run-folder, unattended-профиль, каналы эскалации, раскатка и пилот — 14 items донора без дома | Любой из трёх (спека §Критерий): замер ручного ритуала ≥20 закрытий с <25 % вмешательств · `decide` стал импортируемым модулем в `packages/**` (сейчас — данные в архиве AR) · измеренный выигрыш стоимости ≥2× против Workflow-марафона. Вердикт пере-скоупа — `2026.07.29-HARNESS-AGNOSTIC` P4.1 (D38/D90) |
 
 ## Входы активных планов (не трогать вне их items)
 
@@ -78,6 +74,10 @@
 | `codex-publication-consumer-acceptance.md` | Изолированный consumer-acceptance гейт `packages/skiller/tests/test_codex_consumer_acceptance.py` (temp `CODEX_HOME` → `codex plugin`/`debug prompt-input` живым CLI) + регистрация в `validate.sh` (гейт 18, явный skip без `codex`) — `plans/2026.07.31-SKM-LEAN` P5.5 |
 | `instruction-authorize-order.md` | `INSTRUCTION_WRITE_FORBIDDEN` от `apply_instructions` печатает ожидаемый порядок целей (алфавитный по `target_path`, копипастопригодный) через новое поле `message` — `packages/harness/lib/harness/instructions.py::_write_refusal`/`apply_instructions`, `_print_report` — `plans/2026.07.31-SKM-LEAN` P5.7 |
 | `2026.07.29-launch-block-command-row.md` | Команда — строка `| Команда |` таблицы launch-block (последняя), отдельный code-block стал опциональным («ровно один из двух»); аддитивный гейт `plan_lint.py`, пять команд + пять Codex-зеркал + golden-фикстуры, version bump скилла `plan-protocol` (2.23.0) — `plans/2026.07.31-SKM-LEAN` P5.8 |
+| `agent-scoped-skill-loading-vs-connect-default.md` | Вердикт владельца «не делаем» — дефолт `connect` не меняется, резидентную ось фактически закрыли диета канона/хаб-блок/измеритель/сжатие листинга (D116); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
+| `skill-rules-sidecar.md` | Вердикт владельца «не делаем» — закрыт нативным эквивалентом (`when_to_use` + `context: fork`, D117); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
+| `project-freshness-agent.md` | Вердикт владельца «не делаем» — новых ролей не заводим (D118); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
+| `codex-skill-listing-fallback-overflow.md` | OQ-8 закрыт веткой (A) «принять деградацию» — рычаги 1–3 Claude-only, рычаг 4 арифметически недостаточен (D120); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
 
 ## Принцип
 

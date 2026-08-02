@@ -1,67 +1,58 @@
-# HANDOFF — 2026-08-02 — after P5.11
+# HANDOFF — 2026-08-02 — after P5
 
-**Next:** закрыть фазу P5 — все 11 items терминальны
+**Next:** исполнить первый item фазы P6 — **P6.3** (очередь фазы `P6.3 → P6.1 → P6.2`, D62)
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | low — шаг-не-item: сверка терминальности 11 items по git-фактам, Phase Handoff, `closure/P5.json` |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть фазу P5 (таблицы, Phase Handoff, `closure/P5.json` по Closure Protocol v1, lint) — после неё фаза P6 стартует с P6.3 (D62) |
-| Команда | `/task:plan-close 2026.07.31-SKM-LEAN P5` |
+| Thinking | medium — `implementation/medium` по §3 Routing plan.md, effort medium: инвариантов fail-safe у item'а нет, цена ошибки обратима (хеши пересчитываются) |
+| Context | continue (/clear) — ручной item |
+| Суть | Привести два утверждённых хеша `configs/provider-capabilities.json` к живому состоянию манифеста в ОБОИХ носителях (`core/tests/test_provider_manifest.py`, `scripts/test-provider-docs.py`), доказав СОБСТВЕННЫМ прогоном, что дифф манифеста — только переписанные `evidence[].source`, и завести гейт-диагностику регенерации (OQ-7, D61/D62) |
+| Команда | `/task:plan-exec 2026.07.31-SKM-LEAN P6.3` |
 
-**Done:** **P5.11 закрыт 🟢 Done.** Политика доверия вендоренному классу (ветка (B) OQ-6) стала
-исполнимой машиной: человеческий вердикт переехал из таблицы внутри плана в аддитивный блок
-`audit` (`verdict`/`at`/`by`/`upstream_sha`/`note`) рядом со скиллом, форму блока и правила
-`kind` проверяет `validate.sh`, отсутствие блока — находка триажа `AUDIT_MISSING`, расхождение
-якоря — `AUDIT_STALE` (обе в существующем коде выхода **11** и в `--json`). Якорь
-`audit.upstream_sha` хранится ОТДЕЛЬНО от `files[].sha256` и не обновляется ни `--apply`, ни
-`--resolve` — отметка «вердикт протух» переживает применение апстрима (дыра §5 фактуры
-закрыта, доказательство — тест `test_apply_refreshes_files_sha_but_audit_stale_survives`);
-производный `stale_verdicts` не удалён, а сужен до бандлов БЕЗ блока `audit` с различимой
-причиной. Бэкфилл **56/56** блоков по таблице §4 `findings/P5-vendored-audit.md` тем же
-item-коммитом: **51 clean / 5 attention / 0 risk** (на `ab508bbf`), 55/56 свёрток провенансной
-базы совпали с колонкой `audited_at`; единственное расхождение и единственное отличие вердикта
-от таблицы — `frontend/web-design-guidelines` (`attention` → `clean`, `by: … P5.10`), что
-предписано `Inputs` item'а и следует из ремедиации P5.10. `voice-ai/voice-ai` получил
-`kind: "reference-only"` и записан без якоря. `validate.sh` зелёный (`230 skills checked`),
-`test.sh` — **602** теста (порог ТЗ «> 581»), `--check --json` по реестру: 0 `AUDIT_MISSING`,
-0 `AUDIT_STALE`, 6 находок триажа в одном `security/security` (граница §3.2 не ослаблена),
-`plan-lint --baseline HEAD` — 0 новых ERROR. Два коммита: item `ab508bbf`
-(`feat(skiller): …`), bookkeeping — следующий коммит этого захода.
-
-- **Pending Work item'а:** `packages/skiller/schema/upstream.schema.json` (DX-схема) не
-  описывает `audit`/`kind` — вне `Files` item'а, ни один гейт не ломает
-  (`additionalProperties` не закрыт, `test_schema.py` файл не покрывает), закрывается
-  отдельной аддитивной правкой.
+**Done:** Фаза **P5 закрыта 🟠 Done with deviations** (11/11 items терминальны: 6 🟢 Done +
+5 🟠 Done with deviations). Одиннадцать точечных закрытий гигиены/безопасности: supply-chain
+триаж + человеческий аудит 56 вендоренных бандлов (P5.1); провенанс
+`configs/provider-capabilities.json` вне файла (P5.2); граница/трекинг/схема `*.env.ini`
+(P5.3); обязательство провенанса модели в каноне + видимость служебных каталогов Codex (P5.4);
+Codex publication consumer-acceptance гейт (P5.5); Playwright MCP `--output-dir` + пиновка
+версии на трёх носителях (P5.6); диагностируемый `INSTRUCTION_WRITE_FORBIDDEN` (P5.7); строка
+`| Команда |` в форме launch-block (P5.8); `plan-lint --conflicts` (P5.9); ремедиация §3.1 —
+вендоринг пинованного payload + `strategy=fork` (P5.10); машинный носитель политики доверия —
+блок `audit` в `upstream.json` + гейт `AUDIT_MISSING`/`AUDIT_STALE` (P5.11). Полный список
+Known Deviations — `phases/P5.md` `## Phase Handoff`; `closure/P5.json` — отчёт закрытия по
+Closure Protocol v1. Docs-sync: не требуется — все items уже сдали свои докстраницы в
+собственном Scope.
 
 **Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-**P5 6/11 — все 11 items терминальны, фаза ждёт закрытия** · P6 0/3 (⬜) · P7 0/4 (⬜).
-Следующий шаг — `plan-close P5`; далее фаза P6 стартует **с P6.3** (порядок D62).
+**P5 6/11 (🟠 Done with deviations, все 11 items терминальны) — закрыта этим заходом** · P6 0/3 (⬜, ТЗ детализировано,
+очередь P6.3 → P6.1 → P6.2) · P7 0/4 (⬜, скелет). Не все фазы плана терминальны (P6/P7
+`⬜`) — `plans/ACTIVE.md` и `Status` плана не трогаются этим закрытием.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (Completion Notes всех 11 items,
-Phase Handoff — пустой) · `plan.md` §4 Status Board, §5 D107–D112, §6 Update Log ·
-`roadmap.md` (карта батчей, порядок P6.3 → P6.1 → P6.2) · `packages/skiller/docs/guide/
-vendored-skills.md` (носитель политики доверия после P5.11).
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P5.md` (`## Phase Status`, Completion
+Notes всех 11 items, `## Phase Handoff` — заполнен этим закрытием) · `plan.md` §4 Status
+Board, §6 Update Log · `closure/P5.json` · `plans/2026.07.31-SKM-LEAN/phases/P6.md` (три
+детализированных item'а, очередь D62) · `roadmap.md` (карта батчей).
 
 **Open risks:**
 
 - **Чужой дифф в рабочем дереве** (этим заходом не тронут): удалённый
   `RESEARCH/AUDIT-loqum-findings.md`; untracked `.swissknife/` и `audits/`. `git add -A`
-  запрещён.
+  запрещён — эти файлы вне `Files` всех items фазы P5.
 - **Преэкзистентный `HTTP 404` на `oss-dev/to-issues`** даёт `--check` код выхода **2** по
   всему реестру (мёртвый URL, Pending Work P5.1) — не путать с гейтом вердикта: находки
   `AUDIT_*` по реестру нулевые.
-- **85 файлов апстримов разошлись с записанным sha** (notify) — преэкзистентное состояние,
-  не находка. После `--apply` по любому из этих бандлов сработает `AUDIT_STALE`: это ожидаемое
-  поведение (байты, против которых вынесен вердикт, изменились), процедура «перечитал →
-  обнови `audit`» описана на док-странице.
+- **85 файлов апстримов разошлись с записанным sha** (notify) — преэкзистентное состояние;
+  после `--apply` по любому из этих бандлов сработает `AUDIT_STALE` (ожидаемое поведение).
 - Прежние (не изменились): ветка (C) OQ-6 не проверена данными (usage не мерялся) ·
   U1/U2 `[UNVERIFIED]`, остаток риска D106, контракт P4.1 пинован на `06fefc87` ·
-  `scripts/test-provider-docs.py` несёт 2 известных FAIL (адрес P6.3) · окружной дефект
-  `codex exec -s read-only` (bwrap/AppArmor) · P5.3 Pending Work (унификация четырёх парсеров
-  `*.env.ini`) · P5.5 Pending Work (`codex plugin update` без теста) · P5.9 Pending Work
-  (stray-упоминание `plan-audit-loop.md` в `roadmap/plan-design-vs-exec-status-check.md:70`).
+  `scripts/test-provider-docs.py` несёт 2 известных FAIL (адрес P6.3 — следующий item) ·
+  окружной дефект `codex exec -s read-only` (bwrap/AppArmor) · P5.3 Pending Work (унификация
+  четырёх парсеров `*.env.ini`) · P5.5 Pending Work (`codex plugin update` без теста) · P5.9
+  Pending Work (stray-упоминание `plan-audit-loop.md` в
+  `roadmap/plan-design-vs-exec-status-check.md:70`) · P6.3 baseline `core/tests` красен на
+  момент старта P6 (1 провал `test_provider_manifest`) — чинится самим P6.3, очередь фазы
+  жёсткая (D62).
 
 **Workarounds/Deferred/Open questions:**
 

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P5",
+  "closed_at": "2026-08-02",
+  "closed_by": {"command": "plan-close", "actor": "sonnet/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "8a0de6ddf7beecb250fb30f4f9437c6bd0808cb4", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "41cfbafccb079d1c7f57cad9234037d215b0bdabcf78afb5c11bdb633309f60d",
+    "phases/P5.md": "10730dcef064d4fcb714ec1e07db82bc71558162602f1934ffa11aa9eddb8953"
+  },
+  "items": [
+    {"id": "P5.1", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "56/56 бандлов человеческого аудита (`findings/P5-vendored-audit.md`, 50 clean / 6 attention / 0 risk на закрытии item'а), триаж-ступень `update-upstreams.sh --check` (код выхода 11), 5 Known Deviations в силе"},
+    {"id": "P5.2", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "провенанс `configs/provider-capabilities.json` зафиксирован вне файла + машинная сверка, Known Deviations пусты"},
+    {"id": "P5.3", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "`*.env.ini` — граница хук/узел, трекинг починен, схема введена, Known Deviations пусты"},
+    {"id": "P5.4", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "обязательство провенанса модели в каноне + измерение видимости служебных каталогов Codex; 2 Known Deviations (дифф фикстуры вне Files, процессный порядок гейтов пост-фактум)"},
+    {"id": "P5.5", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "Codex publication consumer-acceptance гейт; 2 Known Deviations (процессный порядок гейтов, сужение Scope до `plugin add`)"},
+    {"id": "P5.6", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "Playwright MCP `--output-dir` + пиновка версии на трёх носителях; 1 Known Deviation (регенерация reference-доков вне номинального Files)"},
+    {"id": "P5.7", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "диагностируемый `INSTRUCTION_WRITE_FORBIDDEN`, ожидаемый порядок целей назван; Known Deviations пусты"},
+    {"id": "P5.8", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "строка `| Команда |` в форме launch-block, Known Deviations пусты"},
+    {"id": "P5.9", "status": "🟠 Done with deviations", "evidence_class": "real",
+     "evidence": "`plan-lint --conflicts` со сверкой канон↔реализация; 1 Known Deviation (правка трёх архивных планов вне Files item'а, следствие D90-гейта)"},
+    {"id": "P5.10", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "payload vercel вендорен pristine, зеркало обёртки antfu снято, `PRM_REMOTE_INSTRUCTIONS` 2→0; 1 процессное Known Deviation (журнальная старт-запись после правок)"},
+    {"id": "P5.11", "status": "🟢 Done", "evidence_class": "real",
+     "evidence": "блок `audit` в `upstream.json` + гейт `AUDIT_MISSING`/`AUDIT_STALE`, бэкфилл 56/56 вердиктов, 602 теста, Known Deviations пусты"}
+  ],
+  "gates": [
+    {"id": "phase-status-sync", "status": "PASS", "evidence_class": "real",
+     "evidence": "`## Phase Status` phases/P5.md ↔ `## 4. Phase Index & Status Board` plan.md сведены: 11/11, 🟠 Done with deviations"},
+    {"id": "docs-sync", "status": "PASS", "evidence_class": "real",
+     "evidence": "Docs: не требуется — каждый item уже сдал свою доку в собственном Scope (P5.1/P5.11 vendored-skills.md, P5.4/P5.5/P5.6 reference-доки)"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "6/11", "label": "real"},
+    {"name": "items_terminal_of_total", "value": "11/11", "label": "real"},
+    {"name": "items_done_with_deviations", "value": "5", "label": "real"}
+  ],
+  "limitations": [
+    "OQ-6 ветка (C) не проверена данными (usage не мерялся) — остаётся открытой границей",
+    "P5.1 гейт триажа на живом реестре красен постоянно по назначению (security/security) — механизм подавления не заведён, предмет OQ-6",
+    "стрей untracked-файлы в дереве на момент закрытия (`.swissknife/`, `audits/`, удалённый `RESEARCH/AUDIT-loqum-findings.md`) — вне Files всех items фазы, не тронуты этим закрытием"
+  ],
+  "external_side_effects": []
+}

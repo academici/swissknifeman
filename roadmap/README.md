@@ -30,8 +30,6 @@
 | Файл | Что | Критерий внедрения |
 |:--|:--|:--|
 | [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | Систематическая миграция раздутых вендорных скиллов `notify` → `fork` (механизм есть, нужен критерий отбора + плейбук) | Диета-фаза упирается в notify-скилл, который жалко сжимать без гарантии сохранности |
-| [`analyst-plan-scan.md`](analyst-plan-scan.md) | `analyst digest` читает Known Deviations/Pending Work закрытых `plans/*` как источник уроков | ≥2–3 плана с содержательными Known Deviations — ручной просмотр перестаёт масштабироваться |
-| [`analyst-fleet-coverage.md`](analyst-fleet-coverage.md) | Покрытие analyst-цикла по флоту: хук `run-report` включён у 5/20 проектов, analyst-state — 2/20 | Осознанное решение по umbrella-политике хуков на чужих проектах (не одностороннее включение) |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | Шаг протокола для находок владельца ПОСЛЕ закрытия item'а (`/task:plan-lesson`) | Повтор на ещё одном плане/проекте (пока один замер — `dterema` P6.2/P6.3) |
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | Агент рекомендует `plan-design` вместо `plan-exec`, не проверив фактический статус фазы | Повтор на ещё одном плане/проекте (пока один замер — `insiders` P1) |
 
@@ -78,6 +76,8 @@
 | `skill-rules-sidecar.md` | Вердикт владельца «не делаем» — закрыт нативным эквивалентом (`when_to_use` + `context: fork`, D117); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
 | `project-freshness-agent.md` | Вердикт владельца «не делаем» — новых ролей не заводим (D118); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
 | `codex-skill-listing-fallback-overflow.md` | OQ-8 закрыт веткой (A) «принять деградацию» — рычаги 1–3 Claude-only, рычаг 4 арифметически недостаточен (D120); строка вердикта — [`docs/rejected-optimizations.md`](../docs/rejected-optimizations.md) — `plans/2026.07.31-SKM-LEAN` P7.1 |
+| `analyst-plan-scan.md` | Переехала в [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md) §«Перенесено из корневого `roadmap/`» — `plans/2026.07.31-SKM-LEAN` P7.2 |
+| `analyst-fleet-coverage.md` | Переехала в [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md) §«Перенесено из корневого `roadmap/`» — `plans/2026.07.31-SKM-LEAN` P7.2 |
 
 ## Принцип
 

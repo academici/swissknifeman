@@ -46,7 +46,7 @@ item'а — Status/Completion Notes/Pending Work/Known Deviations строго �
   (`plans/<ID>/`), а не в roadmap swissknifeman. Разный приёмник, но тот же принцип «не глотать
   отклонение молча» — этот файл предлагает для plan-протокола ту же дисциплину, что
   `field-feedback-loop` уже даёт репозиторию swissknifeman.
-- **`analyst-plan-scan.md`** (соседний roadmap-файл) — предлагает СКАНИРОВАТЬ уже закрытые
+- **Смежная спека analyst** (перенесена в [`packages/analyst/docs/roadmap.md`](../packages/analyst/docs/roadmap.md), `2026.07.31-SKM-LEAN` P7.2) — предлагает СКАНИРОВАТЬ уже закрытые
   планы постфактум (`analyst digest` читает `Known Deviations`/`Pending Work`). Эта идея —
   раньше по конвейеру: обеспечить, чтобы находка вообще ПОПАЛА в `Known Deviations`/«Уроки» в
   момент возникновения, а не полагаться на то, что исполнитель сам вспомнит записать. Оба

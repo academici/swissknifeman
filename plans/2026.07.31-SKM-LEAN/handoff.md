@@ -1,75 +1,95 @@
-# HANDOFF — 2026-08-02 — after P6
+# HANDOFF — 2026-08-02 — after P7
 
-**Next:** детализировать фазу **P7** («Закрытие roadmap в ноль») — сегодня скелет (0/4,
-`⬜ Not started`); P6 закрыта 🟠 Done with deviations, следующая фаза по номеру — последняя в
-плане.
+**Next:** manual: implementation/high — исполнить **P7.1** («D-записи по отложенным темам +
+рычаг Codex-фолбэка»). `Exec = manual` по §3 Routing: item несёт ДВА гейта владельца внутри
+себя (OQ-3 — число `N`; OQ-8 — рычаг Codex-фолбэка), одноимённого `plan-exec` у него нет.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — детализация фазы: контракт-блок, четыре ТЗ items, DoR-свип |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | `plan-design 2026.07.31-SKM-LEAN P7` разворачивает скелет P7 в полные ТЗ items |
-| Команда | `/task:plan-design 2026.07.31-SKM-LEAN P7` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | пять D-записей (три вердикта «не делаем» + критерий остатка `artifex` + вердикт по рычагу Codex-фолбэка), удаление трёх спек, две строки гейтов владельца закрываются в `open-questions.md` |
+| Команда | — (нет одно-командного эквивалента: `Exec = manual`) |
 
-**Done:** **Фаза P6 закрыта 🟠 Done with deviations.** Все три item'а терминальны в очереди
-D62 (P6.3 → P6.1 → P6.2). `core/` получил доменный подпакет `core/provider/` (6 модулей без
-префикса) с зеркалом `core/tests/provider/`; фасад `core/__init__.py` не изменил `__all__`
-(108 имён, D68, машинное сравнение); утверждённые хеши манифеста сведены к единственному
-носителю (`core/tests/provider/test_manifest.py`) с диагностическим сообщением при
-регенерации; `core/tests` — 251/251 зелёных (baseline снят P6.3 первым в очереди).
-`.swissknife.json` читается типизированным frozen dataclass `ProjectConfig`
-(`packages/skiller/lib/skiller/config.py`), `CONFIG_KEYS` выведен из его полей (13 ключей, не
-14 — факт разошёлся с числом ТЗ); оба гейта синхрона со схемой не тронуты. `docs/core/index.md`
-и `packages/skiller/docs/guide/installation.md` обновлены (docs-sync: обновлено). Известные
-отклонения по items — в `## Phase Handoff` `phases/P6.md` (агрегат механический, дословно из
-Known Deviations трёх items). `closure/P6.json` написан (Closure Protocol v1).
+```text
+/model sonnet
+/effort high
+/task:plan-run 2026.07.31-SKM-LEAN P7.1
+```
 
-**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) ·
-P5 6/11 (🟠 Done with deviations, терминальна) · **P6 0/3 (🟠 Done with deviations, терминальна)**
-· P7 0/4 (⬜, скелет — последняя нетерминальная фаза плана). `plans/ACTIVE.md` и `Status` плана
-не трогаются — не все фазы плана терминальны.
+**Done:** **Фаза P7 сверена с ФАКТОМ закрытых фаз P1–P6** (`plan-design P7`, reconcile
+contract-first; якорь `970992eb`). Фаза была детализирована ещё прогоном 3 дизайна (скелет-маркеров
+в плане нет ни одного) — этот заход не переписывал ТЗ, а проверял его против сданного и закрыл
+три расхождения:
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P6.md` (`## Phase Status`,
-`## Phase Handoff`, Completion Notes трёх items) · `plan.md` §4 Status Board, §6 Update Log,
-`## 0. Meta` Last Updated · `plans/2026.07.31-SKM-LEAN/closure/P6.json` ·
-`core/provider/` · `core/tests/provider/test_manifest.py` ·
-`packages/skiller/lib/skiller/config.py` (`ProjectConfig`, производный `CONFIG_KEYS`) ·
-`docs/core/index.md` · `packages/skiller/docs/guide/installation.md`.
+- **D113 / находка F5.** Семь ожидаемых `closed-by-item`-удалений пришли поимённо (`487e68d0`
+  P1.1 · `d16e2ce7` P2.4 · `ea96ed26` P5.5 · `1ba21c39` P5.6 · `578eb1ca` P5.7 · `26d3efe3` P5.8 ·
+  `5e3d65e4` P5.9), уборки за другими фазами у P7 не возникло. Но каталог несёт **18 файлов =
+  17 спек + `README.md`**, а не 16: `roadmap/provider-docs-snapshot-daemon-noise.md` заведён
+  ПОСРЕДИ плана item'ом P6.3 (`90afaff1`, D70), объявляет свой критерий сработавшим и называет
+  владельцем адреса item **P5.2**, терминальный `🟢` ещё до её появления. Разрешение — P7.3,
+  процедурой F1 (три исхода `Implementation Rules` (9)).
+- **D114.** Основание вердиктов P7.1 по темам (а)/(б) опиралось на D23/D26/D27; закрытая P3 их
+  переиздала: `paths:` не раскатан вовсе (D98, механизм (C) — P3.6), раскатка
+  `disable-model-invocation` **отклонена владельцем** (D99, 0 бакетов / 0 записей). Нативным
+  эквивалентом сайдкара фактически стали `when_to_use` (P3.5, 8 записей) и `context: fork`
+  (P3.4, 4 скилла); резидентную ось закрыли P2.1 · P2.5/P2.6 · P3.2 · P3.5.
+- **D115.** Блок `[Unreleased]` УЖЕ несёт три записи этого плана (`c615ddcb` P5.1 · `a6f373a9`
+  P5.10 · `ab508bbf` P5.11) — приёмка P7.4, выделявшая «записи с PLAN-ID» скопом, зазеленела бы
+  на чужой строке. Сводная запись опознаётся литералом `(сводная запись плана
+  2026.07.31-SKM-LEAN)`, покрытие проверяется по ТОКЕНАМ (иначе `P5.1` совпадал бы с `P5.10`),
+  перечень релиз-видимых расширен 10 → **18** по названному критерию.
+
+Носители правок: `plan.md` (§0 Version 1.1.1 → 1.2.0, Last Updated, §5 D113–D115, §6 две строки) ·
+`phases/P7.md` (Phase Context, DoR ×2 пункта, ТЗ P7.1/P7.3/P7.4) ·
+`research/07-p7-roadmap-address-map.md` §7 (сверка, F5, итог инвентаря на новом якоре) ·
+`roadmap.md` (абзац прогресса приведён к факту) · `journal.jsonl` (одна запись `P7`,
+`plan-design`, `in-progress`).
+
+**Remaining:** доска: P1 3/4 (🟠) · P2 5/6 (🟠) · P3 2/6 (🟠) · P4 6/6 (🟢 Done) · P5 6/11 (🟠) ·
+P6 0/3 (🟠) · **P7 0/4 (⬜)** — все шесть фаз-доноров терминальны, открыты только четыре item'а
+P7. Очередь строгая: **P7.1 → P7.2 → P7.3 → P7.4** (`Inputs` P7.3 потребляют `Deliverables`
+P7.1/P7.2, `Inputs` P7.4 — Deliverables всех семи фаз). `plans/ACTIVE.md` и `Status` плана не
+трогаются — план не терминален.
+
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P7.md` (Phase Context с пере-сверенным
+контракт-блоком, DoR, четыре ТЗ) · `plan.md` §3 Routing (построчно на четыре item'а), §4 Status
+Board, §5 D113–D115 · `plans/2026.07.31-SKM-LEAN/research/07-p7-roadmap-address-map.md` §7 ·
+`plans/2026.07.31-SKM-LEAN/open-questions.md` (OQ-3 · OQ-8 · OQ-9) ·
+`plans/2026.07.31-SKM-LEAN/roadmap.md` §P7.
 
 **Open risks:**
 
-- **Чужой дифф в рабочем дереве** (этим заходом не тронут, тот же класс что на закрытии P5):
-  удалённый `RESEARCH/AUDIT-loqum-findings.md`; untracked `.swissknife/` и `audits/`.
-  `git add -A` запрещён — эти файлы вне `Files` items фазы P6.
-- **`ruff` несёт пред-существующие ошибки** (3 на путях skiller: `publication.py:1037` B904,
-  `test_budget_listing_providers.py:24` F401, `test_status.py:17` F401): новых от диффа P6 —
-  ноль.
-- **`scripts/test-provider-docs.py` несёт 1 известный FAIL** (`test_committed_outputs…`,
-  средо-зависимая хрупкость снимка дерева — чужой mAInd-демон) — адресован
-  `roadmap/provider-docs-snapshot-daemon-noise.md` (P5.2 владелец адреса).
-- **Остаточный `plan-lint` WARN** систематического класса (D29, оркестрация фазы P6 без
-  workflow-скрипта) — тот же класс, что несут `phases/P1.md`/`P3.md`/`P4.md`/`P5.md`; фикс —
-  завести `plans/2026.07.31-SKM-LEAN/workflows/` для P6 либо решением владельца снять
-  формулировку оркестрации из Phase Context P6.
-- **Типизация не сплошная:** `integrate.py`, `hub.py`, `quality/analyze.py`,
-  `quality/audit.py` читают конфиг через Mapping-проекцию (поведение идентично) — перевод на
-  атрибуты не сделан (Pending Work P6.2).
-- Прежние (не изменились): ветка (C) OQ-6 не проверена данными (usage не мерялся) ·
-  U1/U2 `[UNVERIFIED]`, остаток риска D106, контракт P4.1 пинован на `06fefc87` ·
-  окружной дефект `codex exec -s read-only` (bwrap/AppArmor) · P5.3 Pending Work (унификация
-  четырёх парсеров `*.env.ini`) · P5.5 Pending Work (`codex plugin update` без теста) ·
-  P5.9 Pending Work (stray-упоминание `plan-audit-loop.md` в
-  `roadmap/plan-design-vs-exec-status-check.md:70`).
+- **Два гейта владельца внутри P7.1** (OQ-3 — число `N`; OQ-8 — рычаг Codex-фолбэка). Без ответа
+  ЛЮБОГО из двух item закрывается `🔴 Blocked` с `Возобновление:`, а не 🟢 с прочерком; это
+  заблокирует и P7.3 (его `Inputs` — Deliverables P7.1), и гейт терминальности P7.4.
+- **F5 может не иметь структурного критерия** — тогда P7.3 обязан эскалировать, а не расширять
+  словарь классов; инвариант «ноль записей без адреса» закроется вердиктом владельца.
+- **Чужой дифф в рабочем дереве** (не тронут): удалённый `RESEARCH/AUDIT-loqum-findings.md`;
+  untracked `.swissknife/` и `audits/`. `git add -A` запрещён.
+- **`verify-citations --strict`: 15 находок, все пред-существующие** (P6.md — относительные пути
+  `quality/*.py`, `tests/*.py` без префикса пакета; `plan.md:242` и `research/12` —
+  `plan-protocol/SKILL.md:1228`). Новых от диффа этого захода — **0** (ни одна находка не лежит в
+  `phases/P7.md`, `research/07`, `roadmap.md`, `handoff.md`); чинить их — работа владельцев
+  соответствующих items, не этого захода.
+- **Остаточные WARN `plan-lint`** (8, все пред-существующие): оркестрация фаз P1/P3/P4/P5/P6 без
+  workflow-скрипта (D29) + маркеры `[NEEDS CLARIFICATION]` в закрытых P4/P5/P6. Новых от диффа
+  этого захода — 0.
+- Прежние (не изменились): `ruff` несёт 3 пред-существующие ошибки на путях skiller ·
+  `scripts/test-provider-docs.py` — 1 известный FAIL (адресован `roadmap/provider-docs-snapshot-daemon-noise.md`,
+  предмет F5) · U1/U2 `[UNVERIFIED]`, контракт P4.1 пинован на `06fefc87` · окружной дефект
+  `codex exec -s read-only` (bwrap/AppArmor) · Pending Work P5.3/P5.5/P5.9/P6.2.
 
 **Workarounds/Deferred/Open questions:**
 
 - **workarounds:** —
-- **deferred:** без изменений по составу плюс новое от P6: унификация парсеров `*.env.ini`
-  (P5.3) · `codex plugin update` round-trip (P5.5) · DX-схема `upstream.schema.json` для
-  `audit`/`kind` (P5.11) · снимок `test_committed_outputs…` от чужого mAInd-демона (P6.3) ·
-  типизация `.swissknifeman/config.json` (`SKILLSET_KEYS`, P6.2, соседний носитель, Scope
-  Excluded) · перевод 4 потребителей `load_config` на атрибуты (P6.2 Pending Work) ·
-  `plan-lint` WARN D29 для фазы P6 (workflow-скрипт либо снятие формулировки).
-- **open_questions:** три открытых — OQ-3 (P4.6/P7.1) · OQ-8 (P7.1) · OQ-9 (владелец
-  протокола). Новых этим заходом не заведено.
+- **deferred:** без изменений по составу (унификация парсеров `*.env.ini` P5.3 · `codex plugin
+  update` round-trip P5.5 · DX-схема `upstream.schema.json` P5.11 · снимок
+  `test_committed_outputs…` P6.3 · типизация `.swissknifeman/config.json` P6.2 · перевод
+  4 потребителей `load_config` на атрибуты P6.2 · `plan-lint` WARN D29 по фазам с заявленной
+  оркестрацией).
+- **open_questions:** три открытых — **OQ-3** (гейт внутри P7.1) · **OQ-8** (гейт внутри P7.1) ·
+  OQ-9 (владелец протокола, вне плана). Новых этим заходом не заведено: F5 разрешается
+  проверяемой процедурой P7.3, а не решением владельца.

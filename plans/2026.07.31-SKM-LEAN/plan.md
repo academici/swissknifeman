@@ -12,7 +12,7 @@
 | Authoring Model | frontier |
 | Design Passes | 3/3 — **бюджет исчерпан, `finish` объявлен 2026-07-31** (D67). 7 фаз / 35 items на момент объявления бюджета (после D74 — **36**), ядро экосистемы, изменения затрагивают онбордженный флот; по эвристике SKILL §5 «кросс-репо / ядро экосистемы» → N = 3. Прогон 1 — детализация семи фаз (D13–D56); прогон 2 — сквозной reconcile + DoR-свип + гейт цитат (D57–D60); прогон 3 — гейт владельца OQ-7, pre-mortem трёх high-stakes поверхностей, свип исполнимости `Validation`, финальная консолидация (D61–D67) |
 | Closure Protocol | v1 |
-| Last Updated | 2026-08-02 (P6.2 закрыт 🟠 Done with deviations — фаза P6 0/3 🟢, все 3 items терминальны) |
+| Last Updated | 2026-08-02 (фаза P6 закрыта 🟠 Done with deviations — все 3 items терминальны) |
 | Repository | swissknifeman (`/home/vostrikov/projects/packages/swissknifeman`) |
 | Related Packages | skiller · harness · maind · task · analyst · core |
 | Execution Mode | phase-first |
@@ -125,7 +125,7 @@ Claude Code уже несёт нативные механизмы сужения
 | P3 | Нативные поля скиллов | 2/6 | 🟠 Done with deviations |
 | P4 | Драйвер exec-волны | 6/6 | 🟢 Done |
 | P5 | Гигиена и безопасность | 6/11 | 🟠 Done with deviations |
-| P6 | Рефактор `core/` | 0/3 | 🟡 In progress |
+| P6 | Рефактор `core/` | 0/3 | 🟠 Done with deviations |
 | P7 | Закрытие roadmap в ноль | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -343,6 +343,7 @@ Claude Code уже несёт нативные механизмы сужения
 | 2026-08-02 | plan-exec/sonnet-medium | **P6.3 закрыт: 🟠 Done with deviations** — хеши манифеста актуализированы в единственном носителе, диагностика гейта, `core/tests` 251/0; средо-зависимый провал измерен и адресован — детали см. `phases/P6.md` P6.3 Completion Notes |
 | 2026-08-02 | plan-run/opus-high | **P6.1 закрыт: 🟠 Done with deviations** — provider-кластер переехал в `core/provider/` с зеркалом `core/tests/provider/`, `__all__` 108 неизменен, 251/0, ноль вхождений старых путей; дифф вне `Files` — путь загрузчика снимка — детали см. `phases/P6.md` P6.1 Completion Notes |
 | 2026-08-02 | plan-run/opus-high | **P6.2 закрыт: 🟠 Done with deviations** — frozen `ProjectConfig` (stdlib) несёт `CONFIG_KEYS` выводом из полей, гейты `doctor`/`test_schema` не тронуты, 622 теста, вывод CLI побайтово прежний; `ruff` красен пред-существующим — детали см. `phases/P6.md` P6.2 Completion Notes |
+| 2026-08-02 | sonnet/low | Фаза P6 закрыта: 3/3 items терминальны (0 🟢 + 3 🟠), `closure/P6.json`, Board синхронизирован |
 
 ## 7. Contracts
 

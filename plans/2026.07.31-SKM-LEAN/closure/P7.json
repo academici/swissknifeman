@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "2026.07.31-SKM-LEAN",
+  "phase": "P7",
+  "closed_at": "2026-08-02",
+  "closed_by": {"command": "plan-close", "actor": "implementation/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "428ee35e841104cabd7cc4249fea492e22df6393", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "84fef65e115c1bce5dcc710db2197193d8176d56af1acde40bdcffb122f9ab24",
+    "phases/P7.md": "2d36719592981aae24a706dfcdc34696037a26ce0bc675f7dcdd5355d75f16ce"
+  },
+  "items": [
+    {"id": "P7.1", "status": "🟢 Done", "evidence_class": "real", "evidence": "D116–D121, разрешённые OQ-3/OQ-8 и адресованный roadmap зафиксированы item-коммитом 824aa613"},
+    {"id": "P7.2", "status": "🟠 Done with deviations", "evidence_class": "real", "evidence": "две analyst-темы перенесены в packages/analyst/docs/roadmap.md; отклонение вне Files записано в Completion Notes"},
+    {"id": "P7.3", "status": "🟠 Done with deviations", "evidence_class": "real", "evidence": "roadmap/README.md сведён к адресованному каталогу; 0/0/0 проверка инварианта записана в Completion Notes"},
+    {"id": "P7.4", "status": "🟢 Done", "evidence_class": "real", "evidence": "d9a8d431: `[Unreleased]`, 18/18 item IDs, status-check 29/0, verify-tag v0.9.0 и docs-impact OK"}
+  ],
+  "gates": [
+    {"id": "phase-status-sync", "status": "PASS", "evidence_class": "real", "evidence": "Phase Status P7 ↔ Status Board: 4/4 terminal, 2 🟢 + 2 🟠, фаза 🟠 Done with deviations"},
+    {"id": "docs-sync", "status": "PASS", "evidence_class": "real", "evidence": "фазовые item-коммиты обновили root и package docs; отдельной правки при phase-close не требуется"},
+    {"id": "plan-lint", "status": "PASS", "evidence_class": "real", "evidence": "0 ERROR; 10 inherited WARN, новых от phase-close: 0"}
+  ],
+  "metrics": [
+    {"name": "items_green_of_total", "value": "2/4", "label": "real"},
+    {"name": "items_terminal_of_total", "value": "4/4", "label": "real"},
+    {"name": "items_done_with_deviations", "value": "2", "label": "real"},
+    {"name": "plan_lint_new_from_closure", "value": "0", "label": "real"}
+  ],
+  "limitations": [
+    "material deviations P7.2 и P7.3 перечислены в Phase Handoff",
+    "verify-citations --strict имеет 15 предсуществующих findings вне P7",
+    "план несёт 10 наследованных WARN plan-lint; они не ослаблялись при закрытии"
+  ],
+  "external_side_effects": []
+}

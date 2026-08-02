@@ -1,40 +1,33 @@
-# HANDOFF — 2026-08-02 — after P7.4
+# HANDOFF — 2026-08-02 — after P7
 
-**Next:** `/task:plan-close 2026.07.31-SKM-LEAN P7`
+**Next:** archive: task:plan-close archive 2026.07.31-SKM-LEAN
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | low — фазовая сверка по git-фактам |
+| Model | implementation |
+| Thinking | low — механическое архивирование плана |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть P7: проверить все terminal items, записать Phase Handoff и `closure/P7.json`; архив плана — отдельный следующий шаг. |
-| Команда | `/task:plan-close 2026.07.31-SKM-LEAN P7` |
+| Суть | Перенести терминальный план в архив и записать чек-лист миграции `root/` в docs. |
+| Команда | `task:plan-close archive 2026.07.31-SKM-LEAN` |
 
-**Done:** P7.4 закрыт `🟢 Done` (item-коммит `d9a8d431`): сводная запись
-`[Unreleased]` покрывает 18 релиз-видимых items, матрица зрелости дополнена четырьмя
-строками с фактически прогнанным Evidence, verdict `docs-maintenance` вынесен по пяти
-страницам и sidebar-сверка трёх новых страниц чистая. `status-check` — 29 строк/0 ошибок;
-`verify-tag v0.9.0` — верхний выпущенный заголовок совпадает; `docs-impact` — OK.
+**Done:** P7 закрыта `🟠 Done with deviations`: все 4/4 items терминальны; создан
+`closure/P7.json`. Docs-sync по фазе выполнен существующими item-коммитами; новых страниц
+на фазовом закрытии не потребовалось.
 
-**Remaining:** все четыре items P7 terminal; P7 намеренно ещё не закрыта этим item'ом.
-Следующий `plan-close P7` владеет финальной фазовой сверкой, `closure/P7.json` и Phase
-Handoff; archive всего плана не запускается здесь.
+**Remaining:** протокольный перенос терминального плана в `plans/archive/`; `root/contracts/`
+проверяется на миграцию в docs отдельным archive-шагом.
 
-**Sources of truth:** `plans/2026.07.31-SKM-LEAN/phases/P7.md` (P7.4 Completion Notes) ·
-`plan.md` §3 Routing, §4 Board, D74/D115/D122 · `CHANGELOG.md` `[Unreleased]` ·
-`docs/status.md` · commit `d9a8d431`.
+**Sources of truth:** `plans/2026.07.31-SKM-LEAN/plan.md` · `phases/P7.md` ·
+`closure/P7.json` · commits `d9a8d431`/`428ee35e`.
 
 **Open risks:**
 
-- `plan-lint --baseline HEAD` до Phase Handoff: 0 ERROR, 10 pre-existing WARN; не
-  ослаблять гейт, адреса остаются у фаз P1/P3/P4/P5/P6/P7.
+- `plan-lint --baseline HEAD`: 0 ERROR, 10 pre-existing WARN; не ослаблять гейт,
+  адреса остаются у фаз P1/P3/P4/P5/P6/P7.
 - `verify-citations.py --strict` печатает 15 pre-existing findings в `findings/`, P2/P3/P6
   и `plan.md`; P7.4 их не меняет.
-- У P7.2/P7.3 остаются material deviations, уже записанные в их Completion Notes; phase-close
-  обязан отразить фазовый статус `🟠 Done with deviations`.
-- В рабочем дереве сохранены чужие изменения, включая `CHANGELOG.md` Fixed-hunks,
-  `configs/provider-capabilities.json`, `RESEARCH/AUDIT-loqum-findings.md`, `.swissknife/`
-  и `audits/`; P7.4 их не stage'ила.
+- У P7.2/P7.3 material deviations сохранены в Completion Notes и Phase Handoff.
+- В рабочем дереве есть независимый Codex/install change-set; archive-коммит не должен его взять.
 
 **Workarounds/Deferred/Open questions:**
 

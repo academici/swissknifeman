@@ -25,6 +25,25 @@ PYTHONPATH (без pip); `Env` каждого пакета наследует `c
 | `pathology` | `detect` — детектор «патологий» прогона (общий для `maind analyze` и `analyst digest`) |
 | `usage` | аккумулятор токенов/usage прогона (`new_acc`/`feed_event`/`finish`) |
 | `proc` · `runs` | `pid_alive` · `find_run_report` |
+| **`provider/`** | доменный подпакет провайдерной модели: `values` · `config` · `manifest` · `artifact` · `lock` · `registry` (см. ниже) |
+
+### Подпакет `provider/`
+
+Единственный доменный кластер `core/` — шесть модулей, связанных взаимными импортами и общим
+словарём (остальные модули плоские: доменный подпакет заводится, когда ≥3 модуля связаны
+ВЗАИМНЫМИ импортами и делят доменный словарь, «похожи по теме» — не критерий).
+
+| Модуль | Даёт |
+|:--|:--|
+| `provider.values` | доменные значения и enum'ы: `ProviderId` · `CapabilityId` · `SupportLevel` · `ProviderDecision` · `EffectiveProvider` |
+| `provider.config` | слои и резолв конфигурации провайдера: `ProviderConfigCatalog` · `resolve_provider_config` · `effective_projection` |
+| `provider.manifest` | разбор и канонизация манифеста возможностей: `load_provider_manifest` · `provider_manifest_sha256` · `provider_support_projection` |
+| `provider.artifact` | планирование рендера артефакта и его провенанс: `plan_artifact_render` · `canonical_json_bytes` · `sha256_digest` |
+| `provider.lock` | lock-файл управляемых артефактов и применение плана: `plan_artifact_lock` · `apply_plan` · `artifact_dry_run` · `parse_lock` |
+| `provider.registry` | реестр адаптеров и отбор из каталога: `AdapterCatalog` · `AdapterDescriptor` · `AdapterSelection` |
+
+Ре-экспортов в `core/provider/__init__.py` НЕТ: единственный фасад пакета — `core/__init__.py`
+(`from core import …`), deep-импорт ходит прямо в подмодуль (`core.provider.lock`).
 
 ## Reference: телеметрия прогона (SCHEMA=2)
 

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import core.provider_lock as provider_lock
+import core.provider.lock as provider_lock
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ArtifactActionKind, CapabilityId, CapabilityRequirement,
                   BootstrapTransferAdmission, ChainedBootstrapTransferAdmission, DriftObservation,

@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import unittest
 
-from core.provider_lock import ArtifactActionKind
+from core.provider.lock import ArtifactActionKind
 from task.command_catalog import build_command_catalog
 from task.command_render import (PROVIDER_LOCK_PATH, apply_codex_command_plan,
                                  mapping_from_catalog, plan_codex_command_apply,

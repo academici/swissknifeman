@@ -16,7 +16,7 @@ provider_docs = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(provider_docs)
 
 MANIFEST_SPEC = importlib.util.spec_from_file_location(
-    "test_provider_manifest", ROOT / "core/tests/test_provider_manifest.py")
+    "test_provider_manifest", ROOT / "core/tests/provider/test_manifest.py")
 manifest_snapshot = importlib.util.module_from_spec(MANIFEST_SPEC)
 MANIFEST_SPEC.loader.exec_module(manifest_snapshot)
 

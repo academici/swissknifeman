@@ -16,13 +16,13 @@ from typing import Mapping
 
 from core.cli import parse_args
 from core.io import atomic_write_text
-from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.repo import resolve_plan_dir
-from core.provider_artifact import (
+from core.provider.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest,
 )
-from core.provider_lock import (
+from core.provider.lock import (
     ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
     parse_lock, plan_artifact_lock, serialize_lock,
 )
@@ -633,7 +633,7 @@ def adopt_instructions(request: InstructionRequest, *,
         written.append((target_path, target, raw, spans, pre_image_hash, pre_image_relative))
     # Adoption facts become part of `semantic_metadata` *before* rendering the adopted
     # projection (not patched on afterwards): the lock record's `source_hash` already
-    # covers `semantic_metadata` (core.provider_artifact._source_envelope), so the
+    # covers `semantic_metadata` (core.provider.artifact._source_envelope), so the
     # record written here and the one a future plain check re-derives from this same
     # lock (via `_adoption_hints`/`_projection`) must come from the identical render —
     # patching semantic_metadata post-hoc on the un-hinted provenance would leave
@@ -952,7 +952,7 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     # P1.4: once a target is adopted, its lock record carries a `semantic_metadata.adoption`
     # sidecar (owner_decision/pre_image_hash/pre_image_path/mapping_path). Re-deriving the
     # identical entry here from the lock on every later plan/check keeps the "expected"
-    # projection equal to the recorded one (core.provider_lock._classify compares them by
+    # projection equal to the recorded one (core.provider.lock._classify compares them by
     # full dataclass equality) — the fixed point that makes a re-check `clean`, not
     # `provenance-invalid`.
     hint = (adoption_hints or {}).get(artifact_id)

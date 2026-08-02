@@ -4,9 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from .provider import (CapabilityId, ConfigProvenance, ConfigSource,
-                       DiagnosticSeverity, EffectiveProvider, NativeExtensionId,
-                       ProviderDecision, ProviderDiagnostic, ProviderId, SupportLevel)
+from .values import (CapabilityId, ConfigProvenance, ConfigSource,
+                     DiagnosticSeverity, EffectiveProvider, NativeExtensionId,
+                     ProviderDecision, ProviderDiagnostic, ProviderId, SupportLevel)
 
 
 _RANKS = ("operation", "project", "fleet-project", "fleet-defaults")

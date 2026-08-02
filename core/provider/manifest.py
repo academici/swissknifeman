@@ -15,10 +15,10 @@ import re
 from types import MappingProxyType
 from typing import Mapping
 
-from .provider import (CapabilityId, NativeExtensionId, ProviderId,
-                       SupportLevel)
-from .provider_config import (CapabilitySupport, NativeExtension,
-                              ProviderConfigCatalog)
+from .values import (CapabilityId, NativeExtensionId, ProviderId,
+                     SupportLevel)
+from .config import (CapabilitySupport, NativeExtension,
+                     ProviderConfigCatalog)
 
 
 _CONTRACT_MAJOR = 1

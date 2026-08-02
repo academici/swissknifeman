@@ -11,11 +11,11 @@ from enum import Enum
 import re
 from typing import Callable
 
-from .provider import (CapabilityId, CapabilityRequirement, EffectiveProvider,
-                       NativeExtensionId, ProviderId, SupportLevel)
-from .provider_artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
-                                ArtifactRenderResult, plan_artifact_render)
-from .provider_config import ProviderConfigCatalog
+from .values import (CapabilityId, CapabilityRequirement, EffectiveProvider,
+                     NativeExtensionId, ProviderId, SupportLevel)
+from .artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+                       ArtifactRenderResult, plan_artifact_render)
+from .config import ProviderConfigCatalog
 
 
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")

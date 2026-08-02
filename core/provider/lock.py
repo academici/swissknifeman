@@ -15,11 +15,11 @@ import re
 import tempfile
 from typing import Callable, Iterable, Mapping
 
-from .provider_artifact import (ArtifactProvenance, ArtifactRenderResult,
-                                ArtifactSource, canonical_json_bytes, sha256_digest,
-                                validate_target_path)
-from .provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
-from .paths import is_within, is_within_lexical
+from .artifact import (ArtifactProvenance, ArtifactRenderResult,
+                       ArtifactSource, canonical_json_bytes, sha256_digest,
+                       validate_target_path)
+from .values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from ..paths import is_within, is_within_lexical
 
 
 LOCK_SCHEMA_VERSION = 1

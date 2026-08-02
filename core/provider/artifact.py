@@ -12,7 +12,7 @@ from pathlib import PurePosixPath
 from types import MappingProxyType
 from typing import Callable, Mapping
 
-from .provider import CapabilityRequirement, ProviderId
+from .values import CapabilityRequirement, ProviderId
 
 
 _DEFAULT_CONTRACT_VERSION = "1.0.0"

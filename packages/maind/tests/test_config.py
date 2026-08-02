@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skiller" / "lib"))
 from maind.config import (load_config, map_brain_project, merge_defaults,
                           provider_config_layers, resolve_provider_config,
                           validate_config)
-from core.tests.test_provider_config import catalog, config
+from core.tests.provider.test_config import catalog, config
 from core import effective_projection
 from skiller.config import resolve_provider_config as resolve_skiller_provider_config
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config

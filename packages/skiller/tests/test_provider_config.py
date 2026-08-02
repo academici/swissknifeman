@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.tests.test_provider_config import catalog, config, layer
+from core.tests.provider.test_config import catalog, config, layer
 from skiller.common import Env
 from skiller.config import load_config, provider_config_layer, resolve_provider_config
 from skiller.config import resolve_distribution_providers

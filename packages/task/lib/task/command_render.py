@@ -10,13 +10,13 @@ import re
 import shlex
 from typing import Mapping
 
-from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
-from core.provider_manifest import (ProviderCapabilityManifest, load_provider_manifest,
+from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider.manifest import (ProviderCapabilityManifest, load_provider_manifest,
                                     provider_support_projection)
-from core.provider_artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
+from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
                                     plan_artifact_render)
-from core.provider_lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
+from core.provider.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
 from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_CLASSES,
                                   metadata_value)
 

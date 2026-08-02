@@ -10,8 +10,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from core.provider_artifact import sha256_digest
-from core.provider_lock import serialize_lock
+from core.provider.artifact import sha256_digest
+from core.provider.lock import serialize_lock
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
     PROVIDERS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,

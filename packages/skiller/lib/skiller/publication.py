@@ -22,7 +22,7 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
                   provider_config_catalog)
-from core.provider_lock import LOCK_RELATIVE_PATH
+from core.provider.lock import LOCK_RELATIVE_PATH
 
 
 _CLAUDE_ADAPTER = ArtifactAdapterIdentity(

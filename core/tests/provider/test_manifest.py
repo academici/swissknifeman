@@ -11,7 +11,7 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
                   provider_manifest_sha256, provider_support_projection)
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
 APPROVED_CANONICAL_SHA256 = "9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4"
 APPROVED_CARRIER_SHA256 = "2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d"
@@ -33,7 +33,7 @@ REGENERATION_DIAGNOSTIC = (
     "print(provider_manifest_sha256(parse_provider_manifest(raw))); "
     "print(hashlib.sha256(raw).hexdigest())\"` — and update "
     "APPROVED_CANONICAL_SHA256 / APPROVED_CARRIER_SHA256 in "
-    "core/tests/test_provider_manifest.py (the single home both runners consume)."
+    "core/tests/provider/test_manifest.py (the single home both runners consume)."
 )
 
 

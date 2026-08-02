@@ -16,8 +16,8 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   CapabilitySupport, DriftObservation, EffectiveProvider,
                   ProviderConfigCatalog, ProviderId, SupportLevel, apply_plan,
                   plan_artifact_lock, plan_artifact_render, serialize_lock)
-import core.provider_lock as provider_lock
-from core.provider_lock import (artifact_doctor, artifact_dry_run,
+import core.provider.lock as provider_lock
+from core.provider.lock import (artifact_doctor, artifact_dry_run,
                                 render_artifact_projection)
 
 

@@ -24,16 +24,16 @@ from .proc import pid_alive
 from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
                       LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type,
                       docs_visibility_for)
-from .provider import (CapabilityId, CapabilityRequirement, ConfigProvenance,
-                       ConfigSource, DiagnosticSeverity, EffectiveProvider,
-                       NativeExtensionId, ProviderAdapter, ProviderDecision,
-                       ProviderDiagnostic, ProviderId, ProviderSelection,
-                       SupportLevel)
-from .provider_config import (CapabilitySupport, NativeExtension,
+from .provider.values import (CapabilityId, CapabilityRequirement, ConfigProvenance,
+                              ConfigSource, DiagnosticSeverity, EffectiveProvider,
+                              NativeExtensionId, ProviderAdapter, ProviderDecision,
+                              ProviderDiagnostic, ProviderId, ProviderSelection,
+                              SupportLevel)
+from .provider.config import (CapabilitySupport, NativeExtension,
                               ProviderConfigCatalog, ProviderConfigLayer,
                               ResolvedProviderConfig, effective_projection,
                               resolve_provider_config)
-from .provider_manifest import (ManifestCapability, ManifestEvidence,
+from .provider.manifest import (ManifestCapability, ManifestEvidence,
                                 ManifestNativeExtension, ManifestSupport,
                                 ProviderCapabilityManifest, ProviderManifestDiagnostic,
                                 ProviderManifestError, load_provider_manifest,
@@ -41,12 +41,12 @@ from .provider_manifest import (ManifestCapability, ManifestEvidence,
                                 provider_manifest_canonical_bytes,
                                 provider_manifest_sha256, provider_support_projection,
                                 support_for)
-from .provider_artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
+from .provider.artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
                                 ArtifactRenderRequest, ArtifactRenderResult,
                                 ArtifactSource, ArtifactTarget,
                                 canonical_json_bytes, plan_artifact_render,
                                 sha256_digest, validate_target_path)
-from .provider_lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
+from .provider.lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
                             BootstrapTransferAdmission, ChainedBootstrapTransferAdmission,
                             DriftObservation, LOCK_RELATIVE_PATH,
                             LOCK_SCHEMA_VERSION, apply_plan, artifact_dry_run, parse_lock,
@@ -54,7 +54,7 @@ from .provider_lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, Ar
                             plan_chained_bootstrap_transfer,
                             render_artifact_projection, rollback_chained_bootstrap_transfer,
                             serialize_lock)
-from .provider_registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
+from .provider.registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
                                 AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report

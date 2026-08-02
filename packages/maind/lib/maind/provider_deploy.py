@@ -22,7 +22,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
                   support_for)
-from core.provider_lock import artifact_doctor, rollback_chained_bootstrap_transfer
+from core.provider.lock import artifact_doctor, rollback_chained_bootstrap_transfer
 from .common import atomic_write_text
 
 

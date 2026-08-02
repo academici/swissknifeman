@@ -58,7 +58,7 @@ def compatibility_layers(case_layers):
 
 class TestProviderConfigResolution(unittest.TestCase):
     def test_root_manifest_projection_resolves_supported_and_unsupported(self):
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[3]
         projected = provider_config_catalog(load_provider_manifest(
             root / "configs/provider-capabilities.json"))
         accepted = resolve_provider_config(

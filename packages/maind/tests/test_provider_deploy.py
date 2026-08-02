@@ -507,7 +507,7 @@ class TestProviderDeploy(unittest.TestCase):
                 if state == "created":
                     raise OSError("simulated interruption")
 
-            with patch("core.provider_lock._bootstrap_write_state", side_effect=interrupted):
+            with patch("core.provider.lock._bootstrap_write_state", side_effect=interrupted):
                 with self.assertRaisesRegex(OSError, "simulated interruption"):
                     apply_plan(root, transfer.plan)
             self.assertEqual(hooks_path.read_bytes(), _D104_PREIMAGE)

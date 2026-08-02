@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/skeleton-development; bucket frontmatter added (name expressive-development -> laravel-package-expressive). Do not auto-replace."
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/skeleton-development; bucket frontmatter added (name expressive-development -> laravel-package-expressive). Do not auto-replace.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "b128e79a9a02a3f722e3e457742b867b702244a45a3f8fc6d3bf00a3ca9e917e"
+  }
 }

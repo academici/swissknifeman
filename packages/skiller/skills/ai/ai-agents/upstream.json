@@ -14,5 +14,11 @@
       "fetched_at": "2026-06-25"
     }
   ],
-  "notes": "Форк get-zeked/ai-agent-super-skill: SKILL.md — тонкая обёртка-навигатор, полный апстрим зеркалится в references/source.md (pristine). Апстрим не накатывать автоматом — на дрейфе ручной перенос (см. docs/guide/upstream-sync.md)."
+  "notes": "Форк get-zeked/ai-agent-super-skill: SKILL.md — тонкая обёртка-навигатор, полный апстрим зеркалится в references/source.md (pristine). Апстрим не накатывать автоматом — на дрейфе ручной перенос (см. docs/guide/upstream-sync.md).",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "bb30f388386f647ddfd3e8e7cf8c69826ac59bbefe6b11403e5a498c09f1d2d7"
+  }
 }

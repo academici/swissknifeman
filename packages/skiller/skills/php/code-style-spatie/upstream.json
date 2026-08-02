@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "references/spatie-laravel-php-guidelines.md is derived from the Spatie Laravel & PHP style guide (guidelines.spatie.be). SKILL.md is our RU summary with a final_class conflict note. strategy=notify: merge upstream guideline changes manually."
+  "notes": "references/spatie-laravel-php-guidelines.md is derived from the Spatie Laravel & PHP style guide (guidelines.spatie.be). SKILL.md is our RU summary with a final_class conflict note. strategy=notify: merge upstream guideline changes manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "b202cb682b610bc6d3b319db1b2f455852e6ba545e903363107ad5b23955fcae"
+  }
 }

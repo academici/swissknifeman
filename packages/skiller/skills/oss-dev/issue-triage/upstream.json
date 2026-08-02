@@ -24,5 +24,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/triage (имя -> issue-triage; disable-model-invocation сохранён). Тело сохранено (англ.) + RU description-роутер; /setup-matt-pocock-skills -> конфиг gh+лейблы; /grilling+/domain-modeling -> grill-with-docs; добавлена роль needs-device-access + переходы для embedded (POS/libfptr10); disclaimer на русском; под-файлы -> snippets/; «Связанные скиллы» + привязка к агенту issue-triager. strategy=notify."
+  "notes": "Из mattpocock/skills engineering/triage (имя -> issue-triage; disable-model-invocation сохранён). Тело сохранено (англ.) + RU description-роутер; /setup-matt-pocock-skills -> конфиг gh+лейблы; /grilling+/domain-modeling -> grill-with-docs; добавлена роль needs-device-access + переходы для embedded (POS/libfptr10); disclaimer на русском; под-файлы -> snippets/; «Связанные скиллы» + привязка к агенту issue-triager. strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "0adb1d9356a4b8c4705e4a500e20bbb8f1b97fc22f3cbac04579cb614c57d611"
+  }
 }

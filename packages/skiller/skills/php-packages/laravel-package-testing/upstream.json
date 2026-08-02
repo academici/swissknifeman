@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-testing; bucket frontmatter added (name package-testing -> laravel-package-testing). Do not auto-replace."
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-testing; bucket frontmatter added (name package-testing -> laravel-package-testing). Do not auto-replace.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "a332fe240a5322fc46cfbafe4efa03a746a357b9bb99158b96bd82b90052a5bc"
+  }
 }

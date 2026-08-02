@@ -13,5 +13,12 @@
       "fetched_at": "2026-06-11"
     }
   ],
-  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace.",
+  "audit": {
+    "verdict": "attention",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "cf44f0977bb229f1a6ac1b1a31a81ba97aa123158c9fba33237a4e0bb48bb79b",
+    "note": "references/full.md:2465 — шаблон web-артефакта тянет cdnjs.cloudflare.com (p5.js), :545 — ссылка на shadcn CDN; сторонний код исполняется в браузере ПОЛЬЗОВАТЕЛЯ: принятый класс (аудит 2026.07.31-SKM-LEAN P5.1 §3.5, граница D109)"
+  }
 }

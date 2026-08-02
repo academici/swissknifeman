@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-release; bucket frontmatter added (name package-release -> laravel-package-release). Do not auto-replace."
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-release; bucket frontmatter added (name package-release -> laravel-package-release). Do not auto-replace.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "46da648cd2dbc489c7676d549cc7e984f4b690f11debc976f61c74e7543a52df"
+  }
 }

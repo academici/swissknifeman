@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-13"
     }
   ],
-  "notes": "Извлечено из laravel/boost (.ai/pennant/skill/pennant-development/SKILL.md). strategy=notify: локальная копия адаптирована под реестр (frontmatter бакета, перевод секций) — апстрим только репортится, не replace. Pennant версионно стабилен (нет version-веток в Boost), поэтому скилл переносим как самодостаточный для проектов без Boost."
+  "notes": "Извлечено из laravel/boost (.ai/pennant/skill/pennant-development/SKILL.md). strategy=notify: локальная копия адаптирована под реестр (frontmatter бакета, перевод секций) — апстрим только репортится, не replace. Pennant версионно стабилен (нет version-веток в Boost), поэтому скилл переносим как самодостаточный для проектов без Boost.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "94ceca56fec4be6c8de986b91f13a45e7cebb9440b0faea7bcf6efc312f05c7e"
+  }
 }

@@ -60,7 +60,12 @@ class UpdateUpstreamsBodyPathCase(unittest.TestCase):
         entry = {"path": "references/full.md", "url": "file:///unused",
                  "sha256": "unused", "fetched_at": "2026-07-01", **file_overrides}
         data = {"schema_version": 1, "source": "file", "strategy": "notify",
-                "body_path": "references/full.md", "files": [entry]}
+                "body_path": "references/full.md", "files": [entry],
+                # P5.11: бандл с прочитанным вердиктом — иначе --check добавил бы к
+                # предмету этих кейсов (body_path) ещё и находку AUDIT_MISSING.
+                # Якорь при заданном body_path — sha ИМЕННО названного тела.
+                "audit": {"verdict": "clean", "at": "2026-08-01",
+                          "by": "test P0.0", "upstream_sha": entry["sha256"]}}
         (self.skill_dir / "upstream.json").write_text(
             json.dumps(data, indent=2) + "\n", encoding="utf-8")
 

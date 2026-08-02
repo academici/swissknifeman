@@ -24,5 +24,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/domain-modeling. Тело сохранено (англ.) + RU description-роутер, под-файлы -> snippets/, добавлены мульти-репо блок (общий словарь экосистемы) и финтех-примеры (СБП/libfptr10), секция «Связанные скиллы» (ADR-глубину делегируем architect/architecture, чтобы не дублировать). strategy=notify."
+  "notes": "Из mattpocock/skills engineering/domain-modeling. Тело сохранено (англ.) + RU description-роутер, под-файлы -> snippets/, добавлены мульти-репо блок (общий словарь экосистемы) и финтех-примеры (СБП/libfptr10), секция «Связанные скиллы» (ADR-глубину делегируем architect/architecture, чтобы не дублировать). strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "376760cee9f20dcbf034c018f2aa4247523eb96b32c217049eccc25a160440a2"
+  }
 }

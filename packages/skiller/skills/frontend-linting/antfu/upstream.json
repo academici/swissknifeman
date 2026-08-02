@@ -42,5 +42,11 @@
       "fetched_at": "2026-06-17"
     }
   ],
-  "notes": "Imported from antfu/skills (skills/antfu/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+  "notes": "Imported from antfu/skills (skills/antfu/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "7af74e846013fbc7157cc2f507f1c7274c573d51c8ef41e160dd90dd46b4c8be"
+  }
 }

@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Производное от mattpocock/skills engineering/grill-with-docs (у источника тонкий враппер «/grilling + /domain-modeling»). У нас тело адаптировано (RU) и расширено: spec-interview (наш грилинг) + architect/domain-modeling + сверка с внешней документацией, CONTEXT.md/ADR инлайн. strategy=notify — апстрим только репортится, не перетирает локальную копию."
+  "notes": "Производное от mattpocock/skills engineering/grill-with-docs (у источника тонкий враппер «/grilling + /domain-modeling»). У нас тело адаптировано (RU) и расширено: spec-interview (наш грилинг) + architect/domain-modeling + сверка с внешней документацией, CONTEXT.md/ADR инлайн. strategy=notify — апстрим только репортится, не перетирает локальную копию.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "26923e5ebf0747d4e70fa71989ecb279d10031e6a9cc23d6e7250628cc00fb89"
+  }
 }

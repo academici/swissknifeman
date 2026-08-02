@@ -66,6 +66,15 @@ UPSTREAM_STRATEGIES = {"replace", "notify", "fork", "merge"}
 # Роли источников в composite-скилле (strategy=merge): base — взят за основу;
 # supplement — дополняющий источник-«suggest» (что из него вмерджено — в note/suggest).
 ORIGIN_ROLES = {"base", "supplement"}
+# P5.11 (ветка (B) OQ-6): человеческий вердикт по бандлу — машинно читаемая запись
+# рядом со скиллом, а не строка в таблице внутри плана. verdict — что увидел
+# читавший; kind различает бандл, который не вендорит НИЧЕГО (все files[].path
+# пусты — провенанс-ССЫЛКИ на внешние спеки), от вендоренного: знаменатель
+# «N вендоренных бандлов» иначе неоднороден, а якорь вердикта у такого бандла
+# бессмысленен по конструкции. См. docs/guide/vendored-skills.md.
+AUDIT_VERDICTS = {"clean", "attention", "risk"}
+UPSTREAM_KINDS = {"reference-only"}
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Допустимые значения enum-полей frontmatter + формат версии (semver).
 RISK_VALUES = {"read", "draft", "write", "external"}
@@ -562,6 +571,52 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                     f"SKILL.md under strategy=replace — update-upstreams.sh --apply "
                     f"would overwrite the hand-authored navigator; drop the SKILL.md "
                     f"files[] entry")
+
+    # --- audit: человеческий вердикт по бандлу (P5.11, ветка (B) OQ-6) --------
+    # ОТСУТСТВИЕ блока ловит НЕ этот гейт, а триаж-ступень update-upstreams.sh
+    # --check (находка AUDIT_MISSING): «бандла без вердикта не бывает» — правило
+    # раздачи, а не структурная поломка файла. Здесь проверяется ФОРМА записи:
+    # молчаливый attention неотличим от опечатки, вердикт без адреса читавшего
+    # бессмысленен, а вердикт без собственного якоря не может протухнуть.
+    entry_paths = [entry.get("path", "") for entry in files if isinstance(entry, dict)]
+    ref_only = bool(entry_paths) and not any(entry_paths)
+    kind = data.get("kind")
+    if kind is not None and kind not in UPSTREAM_KINDS:
+        errors.append(f"{rel}: kind must be one of {sorted(UPSTREAM_KINDS)}")
+    elif kind == "reference-only" and not ref_only:
+        errors.append(f"{rel}: kind=reference-only, но files[] несёт локальные "
+                      f"зеркала (непустой path) — признак машинный, не мнение")
+    elif kind is None and ref_only:
+        errors.append(f"{rel}: все files[].path пусты (бандл не вендорит ничего) — "
+                      f"объяви kind: \"reference-only\", иначе класс машинно "
+                      f"неотличим от вендоренного")
+
+    audit = data.get("audit")
+    if audit is not None and not isinstance(audit, dict):
+        errors.append(f"{rel}: audit must be an object")
+    elif isinstance(audit, dict):
+        verdict = audit.get("verdict")
+        if verdict not in AUDIT_VERDICTS:
+            errors.append(f"{rel}: audit.verdict must be one of "
+                          f"{sorted(AUDIT_VERDICTS)}")
+        at = audit.get("at", "")
+        if not at or not DATE_RE.match(at):
+            errors.append(f"{rel}: audit.at must be YYYY-MM-DD (дата чтения бандла)")
+        if not audit.get("by"):
+            errors.append(f"{rel}: audit.by missing — адрес читавшего бандл "
+                          f"(<PLAN-ID> <item> либо дата ручного чтения); запись "
+                          f"без адреса ничего не значит")
+        if verdict in ("attention", "risk") and not audit.get("note"):
+            errors.append(f"{rel}: audit.note обязателен при verdict={verdict} — "
+                          f"молчаливый вердикт неотличим от опечатки")
+        if ref_only:
+            if "upstream_sha" in audit:
+                errors.append(f"{rel}: audit.upstream_sha при kind=reference-only "
+                              f"обязан быть опущен — якорить нечего, зеркал нет")
+        elif not SHA256_RE.match(audit.get("upstream_sha", "")):
+            errors.append(f"{rel}: audit.upstream_sha must be a sha256 hex digest — "
+                          f"без собственного якоря вердикт не может протухнуть "
+                          f"(update-upstreams.sh: AUDIT_STALE)")
 
 # --- 3. profiles/*.json ---------------------------------------------------
 # Канон таксономии — core.project.PROJECT_TYPES; здесь самодостаточный дубль

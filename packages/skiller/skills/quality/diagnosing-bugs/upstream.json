@@ -18,5 +18,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/diagnosing-bugs. Тело сохранено (англ., faithful-first); добавлен RU description-роутер, ссылка scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL пункт (POS/libfptr10), секция «Связанные скиллы». strategy=notify — апстрим репортится, локальная копия не перетирается."
+  "notes": "Из mattpocock/skills engineering/diagnosing-bugs. Тело сохранено (англ., faithful-first); добавлен RU description-роутер, ссылка scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL пункт (POS/libfptr10), секция «Связанные скиллы». strategy=notify — апстрим репортится, локальная копия не перетирается.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "4cea464274844c7be12f4934311976422088e94c343c7e1b0a62cb56433028b9"
+  }
 }

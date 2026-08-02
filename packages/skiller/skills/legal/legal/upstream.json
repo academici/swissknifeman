@@ -13,5 +13,11 @@
       "fetched_at": "2026-06-11"
     }
   ],
-  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "90db165c35aedcd5b8954f19d7485862ab77503d48c90b955e7b9adccd00235c"
+  }
 }

@@ -42,7 +42,9 @@ Modes (default --check):
                      без сети): грубые паттерны четырёх классов угрозы. Находки →
                      код выхода 11 (не 10). Триаж НЕ является границей доверия —
                      no findings != safe, единственная граница — человеческий
-                     аудит бандла (docs/guide/vendored-skills.md).
+                     аудит бандла (docs/guide/vendored-skills.md). Там же гейт
+                     вердикта: AUDIT_MISSING (блока audit нет) и AUDIT_STALE
+                     (вердикт вынесен против других байтов; --apply его не гасит).
   --apply            strategy=replace: overwrite local file, record sha256/fetched_at.
                      strategy=notify: record the seen upstream sha (file untouched).
                      strategy=fork: stage upstream as upstream/<name>.incoming and set
@@ -95,7 +97,7 @@ only = set(filter(None, os.environ["UPSTREAM_SKILLS"].split()))
 report = sys.stderr if json_out else sys.stdout
 results = {"checked": 0, "updates": [], "drift": [], "conflicts": [],
            "notify": [], "applied": [], "noted": [], "failures": [],
-           "triage": [], "stale_verdicts": []}
+           "triage": [], "stale_verdicts": [], "reference_only": []}
 
 # Дословная оговорка (P5.1). Печатается в ОБА канала: человеческий и --json
 # (отдельным ключом, а не только прозой) — чтобы «скан зелёный» нельзя было
@@ -347,12 +349,86 @@ def triage_bundle(skill_dir, sid):
     return found
 
 
+# --- вердикт человека: носитель и его гейт (P5.11, ветка (B) OQ-6) ------------
+# ЗАЧЕМ. Триаж выше — паттерновый скан, границей доверия остаётся ЧЕЛОВЕЧЕСКИЙ
+# аудит бандла (TRIAGE_DISCLAIMER). Разовый аудит без машинного носителя
+# обесценивается структурно: «не проверяли» и «чисто» машинно неотличимы, а
+# отметка «вердикт протух» была ПРОИЗВОДНОЙ от дрейфа и умирала от первого же
+# --apply (граница названа в блоке stale_verdicts ниже). Носитель — аддитивный
+# блок `audit` в upstream.json рядом с бандлом: он переживает план (плановый файл
+# смертен, скилл раздаётся дальше) и не заводит связи «skiller читает plans/**».
+# Провенанс правила и разбор веток — docs/guide/vendored-skills.md,
+# plans/2026.07.31-SKM-LEAN (P5.11, D107/D109/D110).
+#
+# ТРИ РАЗНЫХ СОБЫТИЯ — три разных сигнала (тот же принцип, по которому код 11 не
+# слит с 10): «апстрим сдвинулся» (updates/notify) · «вердикта нет НИКОГДА не
+# было» (AUDIT_MISSING) · «вердикт вынесен против ДРУГИХ байтов» (AUDIT_STALE).
+#
+# ЯКОРЬ. audit.upstream_sha хранится ОТДЕЛЬНО от files[].sha256 и не обновляется
+# ни --apply, ни --resolve — именно поэтому отметка переживает применение
+# апстрима. Описывает он те байты, против которых вынесен вердикт: sha256
+# НАЗВАННОГО тела (body_path), когда бандл его называет, иначе — свёртку всей
+# провенансной базы (пары path:sha256 из files[]/origins[]).
+AUDIT_VERDICTS = ("clean", "attention", "risk")
+
+
+def is_reference_only(data):
+    """Бандл, который не вендорит НИЧЕГО: все files[].path пусты — записи являются
+    провенанс-ССЫЛКАМИ на внешние спеки, локальных зеркал нет. Признак машинный
+    (не мнение); для такого бандла якорить вердикт не к чему, и гейт этого не
+    требует — иначе правило врало бы на классе, ради честности которого заведено."""
+    files = data.get("files") or []
+    return bool(files) and all(not e.get("path") for e in files)
+
+
+def audit_anchor(data):
+    """Байты, против которых вынесен вердикт. None — якорить нечего (reference-only)."""
+    if is_reference_only(data):
+        return None
+    body_path = data.get("body_path")
+    if body_path:
+        for entry in data.get("files", []):
+            if entry.get("path") == body_path:
+                return entry.get("sha256", "")
+    entries = list(data.get("files", [])) + list(data.get("origins", []))
+    base = "".join(f"{e.get('path', '')}:{e.get('sha256', '')}\n"
+                   for e in sorted(entries, key=lambda x: x.get("path", "")))
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()
+
+
+def audit_findings(sid, data):
+    """Находки гейта вердикта. Форма — та же, что у триажа (код 11, --json)."""
+    audit = data.get("audit")
+    if not isinstance(audit, dict):
+        return [{"skill": sid, "file": "upstream.json", "rule": "AUDIT_MISSING",
+                 "class": "unaudited", "hits": 1,
+                 "why": "человеческого вердикта по бандлу нет — «не проверяли» и "
+                        "«чисто» это не одно и то же; прочитай бандл целиком и "
+                        "запиши блок audit (docs/guide/vendored-skills.md)"}]
+    anchor = audit_anchor(data)
+    if anchor is None:
+        return []
+    stored = audit.get("upstream_sha", "")
+    if stored == anchor:
+        return []
+    verdict = audit.get("verdict", "?")
+    at = audit.get("at", "?")
+    seen = f"{stored[:8]}.." if stored else "якорь не записан"
+    return [{"skill": sid, "file": "upstream.json", "rule": "AUDIT_STALE",
+             "class": "stale-verdict", "hits": 1,
+             "why": f"вердикт '{verdict}' от {at} вынесен против других байтов "
+                    f"({seen} -> {anchor[:8]}..) — перечитай бандл и обнови блок "
+                    f"audit; отметка НЕ гаснет от --apply"}]
+
+
 # --- process -----------------------------------------------------------------
 today = date.today().isoformat()
 
 if mode == "check":
     for cfg, sid, data in parsed:
-        for finding in triage_bundle(cfg.parent, sid):
+        if is_reference_only(data):
+            results["reference_only"].append(sid)
+        for finding in triage_bundle(cfg.parent, sid) + audit_findings(sid, data):
             results["triage"].append(finding)
             line("triage", sid, finding["file"],
                  f"{finding['rule']} ({finding['class']}) x{finding['hits']} — "
@@ -582,14 +658,24 @@ for cfg, sid, data in parsed:
 # остался протухшим. Скрипт не читает таблицу вердиктов (она живёт в плане/доках,
 # кросс-пакетной связи здесь быть не должно), поэтому «протух» detectable только до
 # --apply. Процедура: --check → перечитать помеченные бандлы → обновить таблицу.
+#
+# P5.11: механизм НЕ удалён, но сужен до бандлов БЕЗ блока `audit` — то есть ровно
+# до тех, кого ловит AUDIT_MISSING и у кого собственного якоря нет. У бандла с
+# блоком `audit` протухание считает AUDIT_STALE по своему якорю (переживает
+# --apply), и два источника одной отметки не смешиваются: причина печатается
+# различимо, а `reason` в --json называет механизм поимённо.
 if mode == "check":
+    _audited = {sid for _cfg, sid, data in parsed if isinstance(data.get("audit"), dict)}
     _drifted = {e["skill"] for key in ("updates", "drift", "conflicts", "notify")
-                for e in results[key]}
+                for e in results[key]} - _audited
     for sid in sorted(_drifted):
-        results["stale_verdicts"].append({"skill": sid, "reason": "bytes drifted from audited_at"})
+        results["stale_verdicts"].append(
+            {"skill": sid, "reason": "bytes drifted from audited_at (derived: "
+                                     "no audit block — see AUDIT_MISSING)"})
         line("stale", sid, "(verdict)",
              "байты разошлись с audited_at — человеческий вердикт бандла ПРОТУХ, "
-             "перечитай бандл перед тем, как считать его проверенным")
+             "перечитай бандл перед тем, как считать его проверенным "
+             "(производная отметка: блока audit у бандла нет)")
 
 # --- summary -----------------------------------------------------------------
 s = results
@@ -600,7 +686,8 @@ print(f"Summary: {s['checked']} checked | {len(s['updates'])} update | "
 if mode == "check":
     print(f"Triage: {len(s['triage'])} finding(s) in "
           f"{len({f['skill'] for f in s['triage']})} bundle(s) | "
-          f"{len(s['stale_verdicts'])} stale verdict(s)", file=report)
+          f"{len(s['stale_verdicts'])} stale verdict(s) | "
+          f"{len(s['reference_only'])} reference-only bundle(s)", file=report)
     print(f"NOTE: {TRIAGE_DISCLAIMER}", file=report)
 
 if (s["applied"] or s["noted"]) and not json_out:

@@ -78,5 +78,11 @@
       "fetched_at": "2026-06-17"
     }
   ],
-  "notes": "Imported from antfu/skills (skills/vue-testing-best-practices/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+  "notes": "Imported from antfu/skills (skills/vue-testing-best-practices/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "7be4d83c9900beeba3560d1d256672c464af0cef7e011d49a98e77d8f77a590a"
+  }
 }

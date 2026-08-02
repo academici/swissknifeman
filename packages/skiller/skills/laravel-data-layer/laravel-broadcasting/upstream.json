@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "SKILL.md distills Laravel Broadcasting docs (Echo/Reverb, channel auth, presence, pitfalls) for Laravel 12.x. strategy=notify: when laravel/docs broadcasting.md changes, review the skill against the new docs. Bump the branch in the url on new Laravel majors."
+  "notes": "SKILL.md distills Laravel Broadcasting docs (Echo/Reverb, channel auth, presence, pitfalls) for Laravel 12.x. strategy=notify: when laravel/docs broadcasting.md changes, review the skill against the new docs. Bump the branch in the url on new Laravel majors.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "c8dc5204622bfb421a4c0c7716b3d7d6936a92b3a5a6cf15fc084df603e833c9"
+  }
 }

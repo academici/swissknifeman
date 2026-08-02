@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/to-issues (disable-model-invocation сохранён). Тело сохранено (англ.) + RU description-роутер; /setup-matt-pocock-skills заменён на gh+github-flow; в issue-template добавлены секции «Affected projects» и «Environment» (мульти-проект/устройство); секция «Связанные скиллы». strategy=notify."
+  "notes": "Из mattpocock/skills engineering/to-issues (disable-model-invocation сохранён). Тело сохранено (англ.) + RU description-роутер; /setup-matt-pocock-skills заменён на gh+github-flow; в issue-template добавлены секции «Affected projects» и «Environment» (мульти-проект/устройство); секция «Связанные скиллы». strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "3b78611de8420847cff1d2928ee28f8c98b4fd71c0a5cfc34df7eca65d23491e"
+  }
 }

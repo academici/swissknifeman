@@ -30,5 +30,11 @@
       "fetched_at": "2026-06-17"
     }
   ],
-  "notes": "Imported from onmax/nuxt-skills (skills/motion/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+  "notes": "Imported from onmax/nuxt-skills (skills/motion/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "0a30433d4a5a774a536ee3a435b25f142777ab1d6085c87ca4a5aa90df37c1fb"
+  }
 }

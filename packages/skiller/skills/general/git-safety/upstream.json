@@ -12,5 +12,11 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Производное от mattpocock/skills misc/git-guardrails-claude-code. У нас хуки = пакет harness, поэтому SKILL.md переписан как RU-обёртка: сам скрипт block-dangerous-git.sh лежит в packages/harness/configs/claude-code/hooks/git-guardrails/, а этот скилл (lifecycle:init) объясняет и включает. strategy=notify."
+  "notes": "Производное от mattpocock/skills misc/git-guardrails-claude-code. У нас хуки = пакет harness, поэтому SKILL.md переписан как RU-обёртка: сам скрипт block-dangerous-git.sh лежит в packages/harness/configs/claude-code/hooks/git-guardrails/, а этот скилл (lifecycle:init) объясняет и включает. strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "2026.07.31-SKM-LEAN P5.1",
+    "upstream_sha": "aaf010e7ec41bca35c9b402dff8975283b6dd6d918ff444ee8c1fdb74e9c9415"
+  }
 }

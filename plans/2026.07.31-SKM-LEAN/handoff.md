@@ -57,9 +57,11 @@ Completion Notes) · `plan.md` §4 Status Board, §6 Update Log · `core/provide
 - **Чужой дифф в рабочем дереве** (этим заходом не тронут): удалённый
   `RESEARCH/AUDIT-loqum-findings.md`; untracked `.swissknife/` и `audits/`. `git add -A`
   запрещён — эти файлы вне `Files` items фазы P6.
-- **`ruff` несёт 5 пред-существующих ошибок** (те же на `d92f3998^` — `harness/execpolicy.py:11`,
-  `harness/tests/test_exec_policy.py:14`, `skiller/publication.py:1037`,
-  `skiller/tests/test_budget_listing_providers.py:24`, `skiller/tests/test_status.py:17`):
+- **`ruff` несёт 5 пред-существующих ошибок** (те же на `d92f3998^` —
+  `packages/harness/lib/harness/execpolicy.py:11`, `packages/harness/tests/test_exec_policy.py:14`,
+  `packages/skiller/lib/skiller/publication.py:1037`,
+  `packages/skiller/tests/test_budget_listing_providers.py:24`,
+  `packages/skiller/tests/test_status.py:17`):
   новых от диффа P6.1 — ноль, но приёмка «ruff чисто» у следующих items плана красна не по их вине.
 - **`verify-citations --strict` несёт 11 пред-существующих находок** (протухшие цитаты фаз
   P2/P3/P5 и `plan.md:242`): гейт цитат красен НЕ по вине P6.1 (новых от диффа — ноль, две

@@ -1,5 +1,10 @@
 # TASK-AUTHORITY-CARRIER-01 — independent review
 
+Review attempts are append-only. The last attempt is the current verdict; earlier attempts remain
+verbatim evidence and are never rewritten into a later GREEN.
+
+## Attempt 1 — b74027dcf06c4b3e495519102d08b85119a89683
+
 **Verdict:** RED
 **Reviewer route:** gpt-5.6-sol/xhigh
 **Reviewed implementation commit:** b74027dcf06c4b3e495519102d08b85119a89683
@@ -89,3 +94,136 @@ Carrier `State` remains `waiting`. `Independent verification` remains unchanged,
 closed even though the latest design audit is GREEN. The producer must repair F1 in a new scoped
 implementation commit and relaunch a separate cold frontier/xhigh reviewer; this RED artifact is
 durable evidence and is not overwritten.
+
+## Attempt 2 — 8328efe04df54a3f29ba25290feb2e0820cbece5
+
+**Verdict:** RED
+**Reviewer route:** gpt-5.6-sol/xhigh
+**Reviewed implementation commit:** 8328efe04df54a3f29ba25290feb2e0820cbece5
+**Plan snapshot:** sha256:aac6a1f2261dd3875df90d7611a0318219859af4e46e5c02da8b131230f84789
+**Review date:** 2026-08-03
+
+The fix makes gate, branch and scope matching exact and blocks a fabricated owner name, but it
+still does not verify the explicit repository-owner message required by the carrier. It compares
+`owner-source` only to the copyable Meta value `Approval Owner`. A synthetic Decision Log row can
+therefore repeat that public value and obtain protected-transition authority. Both an exact `D999`
+forgery and the old exact `D50` returned `allow`; the full terminal predicate is RED.
+
+### F2 · Blocker · the owner-source identity is not an owner-message carrier
+
+At the reviewed commit, `packages/task/lib/task/task_contract.py:214-231` resolves
+`Approval Owner` to a plain string. Lines 263-289 accept one exact grant row whenever its
+`owner-source` field equals that string. No independent owner-message reference is parsed or
+verified, and no provenance rule distinguishes a genuine later owner decision from a synthetic or
+pre-D64 row. This contradicts Required repair 2, the acceptance row for forged/synthetic D# and
+`roadmap.md:130-134`, which requires a later-than-D64 Decision Log carrier referencing an explicit
+repository-owner message.
+
+The producer regression at `packages/task/tests/test_task_contract.py:348-372` tests `D999` only
+with `owner-source=fabricated`; it does not test an attacker copying the real `Approval Owner`
+value. The repair must bind the exact Decision Log grant to a separately checked explicit owner
+message/provenance carrier, then permanently test both exact-owner `D999` and exact-owner old `D50`
+forgeries. Merely reintroducing a plan-specific numeric cutoff would not satisfy the general Task
+package boundary.
+
+### Acceptance matrix
+
+| Case | Expected | Observed at reviewed commit + input plan snapshot | Result |
+|:--|:--|:--|:--|
+| Ordinary Artifex path | 32/32 build; both predicates allow; no foreign D50 | 32 unique items; routes `frontier/high=12`, `implementation/high=19`, `frontier/xhigh=1`; 32 allow; 32 distinct item carriers; 0 foreign-D50 | GREEN |
+| Exact matching owner grant | `allow` | exact gate/branch/scope plus `owner-source=repository owner` returned `allow` | GREEN |
+| Missing marker | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Forged/synthetic D# | `block:AUTHORITY_BOUNDARY` | fabricated owner blocked, but exact-owner synthetic `D999` and exact-owner old `D50` both returned `allow` | RED |
+| Wrong gate | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Wrong branch | `block:AUTHORITY_BOUNDARY` | exact superstring case blocked | GREEN |
+| Wrong scope | `block:AUTHORITY_BOUNDARY` | exact superstring case blocked | GREEN |
+| Later revocation | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Ambiguous duplicate grant, including one malformed duplicate | `block:AUTHORITY_BOUNDARY` | both variants blocked | GREEN |
+| Caller restores D50 through legacy kwargs | typed refusal or checked carrier wins | `authority_granted_by=` raised `TypeError` | GREEN |
+| Two `plan-exec` boundaries, reconciliation boundary and inherited `plan-run` | one checked compiler/resolver | `plan-exec` 2 build calls; `plan-close` 1; `plan-run` inherits canonical `plan-exec`; 0 manual-authority kwargs | GREEN |
+
+### Exact verification evidence
+
+All implementation and package commands ran in detached worktree
+`/tmp/task-authority-review-8328efe-20260803` at the reviewed commit. The current Artifex input
+snapshot was copied in before evaluation; Task implementation and generated artifacts remained
+read-only.
+
+| Command | Exit/result |
+|:--|:--|
+| `git diff-tree --no-commit-id --name-status -r --no-renames 8328efe04df54a3f29ba25290feb2e0820cbece5` | exit 0; only `packages/task/lib/task/task_contract.py` and `packages/task/tests/test_task_contract.py` |
+| `rg -n -F 'D50 (G-EXEC for self-host P0-P3)' packages/task/lib packages/task/commands` | exit 1; no live runtime/canonical-command match |
+| `PYTHONPATH=packages/task/lib python3 - <<'PY' ... PY` — independent protected-transition matrix below | harness exit 1 by design; 12 cases, 2 semantic failures: exact-owner `D999` and exact-owner old `D50` returned `allow` |
+| Independent Python 32-build evaluator over `phases/P*.md`, using every item’s routed actual route | exit 0; 32 items/32 unique; 32 `allow+allow`; routes 12/19/1; 32 distinct carriers; 0 foreign-D50 |
+| Independent command-boundary counter over canonical `plan-exec.md`, `plan-run.md`, `plan-close.md` | exit 0; `2/0/1` build calls, inherited plan-run marker 1, manual-authority kwargs 0 |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p 'test_task_contract.py'` | exit 0; 78 tests; OK |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p 'test_canon_literals.py'` | exit 0; 15 tests; OK |
+| `python3 packages/task/scripts/render-provider-commands.py --check --root .` | exit 0; check OK/no-op |
+| `bash packages/task/scripts/validate.sh` | exit 0; 484 tests; `validate: OK`; archived-plan warnings remain pre-existing/non-fatal |
+| `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
+| `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
+| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `aac6a1f2261dd3875df90d7611a0318219859af4e46e5c02da8b131230f84789` |
+
+The first matrix invocation used undeclared route-evidence source `independent-review` and stopped
+before authority evaluation with `ROUTE_ACTUAL_SOURCE_UNDECLARED`; it was not counted as a matrix
+result. The exact rerun used canonical `source=self-attested`. Its protected request was
+`gate_id=G-OWNER-P5.4-SINGLE`, `branch=single-provider:codex`,
+`scope=P5.4:five-paired-waves`; it inserted one case-specific Decision Log row into a temporary
+copy of the input plan and evaluated P5.4 at its exact routed route. Cases were: exact, missing,
+fabricated owner source, exact-owner synthetic D999, exact-owner old D50, wrong gate, branch
+superstring, scope superstring, later revocation, exact duplicate, malformed duplicate and manual
+kwargs.
+
+### Preflight and scope
+
+- `pwd`, `git status --short` and commit-object inspection confirmed repository cwd, the unrelated
+  dirty baseline and the two-file implementation commit scope. Only this review artifact is changed
+  by attempt 2.
+- `codex doctor --json`: exit 0, overall `ok`, model `gpt-5.6-sol`, approval `Never`, unrestricted
+  filesystem. The assigned route is xhigh; the runtime does not export effort, so no stronger
+  machine claim is made.
+- `packages/maind/bin/maind health --cwd --json`: exit 0, connected, memory round-trip and both
+  provider-trust rows green. An earlier invalid `--cwd <path>` invocation was discarded and rerun
+  in the canonical flag-only form.
+- `packages/harness/bin/harness doctor --provider-audit --json`: exit 0, diagnostics empty.
+- Trusted Codex hook dry-run and hook-handler compilation exited 0, but the dry-run remains
+  non-green `warning`: lifecycle hook and handler are both
+  `stale-source -> update (source-changed)`. This pre-existing P4.4-owned environment defect is not
+  waived or reported as GREEN; it is independent of F2 and was not repaired here.
+- Producer evidence, carrier `State`, `Independent verification`, P0.1-P6.4 statuses/deliverables,
+  Task implementation/generated artifacts, Artifex code and unrelated dirty paths were not changed.
+
+### Terminalization decision
+
+Carrier `State` remains `waiting`. `Independent verification` remains pending, and P0.1 remains
+closed. Attempt 2 is durable RED evidence for reviewed commit
+`8328efe04df54a3f29ba25290feb2e0820cbece5`; it does not supersede or erase attempt 1.
+
+### Producer relaunch
+
+**Next:** manual: implementation/high
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-code-edit · task-contract-evaluate |
+| Context | cold-start — plan-step |
+| Суть | Исправить F2: связать exact owner grant с проверяемым explicit owner-message carrier и закрыть exact-owner D999/D50 forgeries |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman/packages/task` | `NEW SESSION — шаг-не-item` | Scoped Task producer fix-forward; Artifex execution и terminal review запрещены | — |
+
+```text
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+
+$ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/design/task-authority-carrier-01.md
+
+РЕЖИМ: отдельный implementation/high producer fix-forward после committed reviewer RED; НЕ Artifex item execution и НЕ terminal review
+ВХОД: carrier path выше; task-authority-carrier-01-review.md → Attempt 2/F2; implementation commit 8328efe04df54a3f29ba25290feb2e0820cbece5; plan.md D64–D66; roadmap.md Authority Gate Contract; AGENTS.md от repo root до packages/task
+СКОУП: заменить copyable Meta Approval Owner equality на проверяемую ссылку на отдельный explicit repository-owner message/provenance carrier; сохранить exact gate/branch/scope/ambiguity/revocation checks; добавить permanent negatives для synthetic D999 и old D50 с правильно скопированным owner-source; повторить полный terminal predicate; создать новый scoped implementation commit и обновить только Producer evidence при State=waiting; затем вернуть отдельный cold frontier/xhigh reviewer launch
+НЕ ТРОГАТЬ: review artifact; State; Independent verification; P0.1–P6.4 statuses/deliverables; Artifex product implementation; unrelated dirty worktree; provider/pilot/hook/package-home/docs/fleet/Brain/release state
+```

@@ -9,6 +9,10 @@
   разрешается только exact, scope-matching и неотозванной записью `[OWNER-GRANT:<gate-id>]`
   в Decision Log, иначе остаётся `block:AUTHORITY_BOUNDARY`.
 
+- **`task` fail-closed разбирает protected owner grants.** Запись теперь обязана точно
+  связывать gate, branch, finite scope и `owner-source` с `Approval Owner` плана; synthetic D#,
+  prefix-совпадения и произвольная owner-проза не могут вернуть `allow`.
+
 ### Added
 
 - **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,

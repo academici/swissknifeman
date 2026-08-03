@@ -93,7 +93,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
-| P1 | Freeze supervisor contracts | 0/5 | ⬜ Not started |
+| P1 | Freeze supervisor contracts | 1/5 | 🟡 In progress |
 | P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
@@ -192,6 +192,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.3 закрыт: локальная provider matrix запечатала bounded no-write outcomes без сырого вывода — детали см. phases/P0.md P0.3 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.4 закрыт: trust boundaries, operating envelope и machine-checkable threat/pre-mortem bank запечатаны — детали см. phases/P0.md P0.4 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.5 закрыт: candidate-independent acceptance rubric и P0→P1/P4/P5 evidence crosswalk запечатаны — детали см. phases/P0.md P0.5 Completion Notes. |
+| 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.1 закрыт: durable run/WAL/recovery контракт и live-driver reuse/gap verdict запечатаны — детали см. phases/P1.md P1.1 Completion Notes. |
 
 ## 7. Contracts
 
@@ -199,7 +200,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| `root/contracts/supervisor-run-v1.md` | v1.0.0 | planned P1.1 | P2–P6 | — |
+| `root/contracts/supervisor-run-v1.md` | v1.0.0 | frozen P1.1 (`a784cad7`) | P2–P6 | P1.2–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/slice-manifest-v1.md` | v1.0.0 | planned P1.2 | P2–P6 | — |
 | `root/contracts/authority-policy-v1.md` | v1.0.0 | planned P1.3 | P2–P6 | — |
 | `root/contracts/worker-envelope-v1.md` | v1.0.0 | planned P1.4 | P2–P6 | — |

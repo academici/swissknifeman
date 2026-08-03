@@ -1,46 +1,52 @@
-# HANDOFF — 2026-08-03 — after P0.3
+# HANDOFF — 2026-08-03 — after P0.4
 
 **Next:** «ЗАПУСК ВРУЧНУЮ: frontier/high»
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — ecosystem-core threat boundary review |
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · task-contract-evaluate |
 | Context | continue (/clear) — ручной item |
-| Суть | Исполнить неизменённый P0.4: threat model и pre-mortem на terminal P0 evidence; P0.5 не запускать |
+| Суть | Исполнить неизменённый P0.5: заморозить candidate-independent reliability/security/economy rubric и P0→P1/P4/P5 crosswalk |
 | Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для отдельного frontier/high исполнения P0.5 | — |
+
+**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P0.4 закрыт `🟢 Done`. Item-коммит
+`2c4c2f2d` запечатал trust boundaries, protected assets, operating envelope,
+independent pre-mortem, machine-checkable threat bank и stdlib-валидатор. Все item
+Validation зелёные; Task Contract pre-mutation/pre-final разрешён.
+
+**Remaining:** P0.5 завершает P0 evidence/policy freeze. P1–P6 не запускались.
+P0.5 потребляет terminal P0.1–P0.4 artifacts и создаёт только rubric/cases/crosswalk
+в путях item'а.
+
+**Sources of truth:** `phases/P0.md` P0.4 Completion Notes ·
+`research/08-threat-model-and-premortem.md` · `artifacts/P0/threat-cases-v1.json` ·
+`artifacts/P0/validate-threat-cases.py` · `roadmap.md`.
+
+**Open risks:** Threat freeze задаёт требования, но не доказывает безопасность будущего
+runtime; executable proof остаётся за P4/P5. Claude Code least-privilege bounded probe
+остаётся degraded из-за authentication/access. Известный trusted Codex lifecycle
+`stale-source -> update (source-changed)` warning остаётся у P4.4. В широком worktree
+есть посторонний dirty diff; P0.4 его не трогал.
+
+**Workarounds/Deferred/Open questions:**
+
+- workarounds: none;
+- deferred: executable fault/security/recovery proof P4, measured pilots P5, P0.5 rubric, P1–P6 execution;
+- open_questions: none for P0.4.
 
 ```text
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P0.4
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P0.5
 
-РЕЖИМ: отдельное frontier/high исполнение manual item; только P0.4
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P0.md → P0.4 и его Required Reads
-СКОУП: выполнить неизменённый 2026.08.03-ARTIFEX-SUPERVISOR P0.4 строго по Files/Validation, закрыть item по plan-protocol и подготовить P0.5 launch
-НЕ ТРОГАТЬ: P0.5–P6.4; Artifex candidate; provider configuration/auth/session state; pilot/hook/package-home/docs/fleet/Brain/release state; unrelated dirty worktree
+РЕЖИМ: отдельное frontier/high исполнение manual item; только P0.5
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P0.md → P0.5 и его Required Reads
+СКОУП: выполнить неизменённый 2026.08.03-ARTIFEX-SUPERVISOR P0.5 строго по Files/Validation, закрыть item и фазу P0 по plan-protocol
+НЕ ТРОГАТЬ: P1.1–P6.4; Artifex candidate; provider configuration/auth/session state; pilot/hook/package-home/docs/fleet/Brain/release state; unrelated dirty worktree
 ```
-
-**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P0.3 закрыт `🟢 Done`. Item-коммит
-`055d402c` добавил воспроизводимый stdlib probe driver, validator, dated matrix и два
-redacted provider records. Codex bounded structured-output observation завершился успешно;
-Claude Code `--bare` boundary честно зафиксирован как authentication/access degradation.
-
-**Remaining:** P0.4–P0.5 завершают evidence/policy freeze; P1–P6 не запускались. P0.4
-потребляет terminal P0.1–P0.3 evidence и создаёт только threat model/case bank в путях item'а.
-
-**Sources of truth:** `phases/P0.md` P0.3 Completion Notes ·
-`findings/P0-provider-capability-matrix-2026-08-03.md` ·
-`artifacts/P0/provider-matrix-v1.json` · `artifacts/P0/provider-probes/codex.json` ·
-`artifacts/P0/provider-probes/claude-code.json` · `roadmap.md`.
-
-**Open risks:** Claude Code least-privilege bounded probe is degraded by authentication/access;
-no outcome is imputed as parity or zero. The known trusted Codex lifecycle
-`stale-source -> update (source-changed)` warning remains owned by future P4.4 and was neither
-repaired nor waived. The wider worktree retains unrelated dirty paths.
-
-**Workarounds/Deferred/Open questions:**
-
-- workarounds: none; provider evidence retains missing fields and boundary failures explicitly;
-- deferred: P0.4 threat model, P0.5 rubric, all P1–P6 execution;
-- open_questions: none for P0.3; provider access expansion remains outside this item.

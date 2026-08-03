@@ -92,7 +92,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, owner canons, and acceptance baseline | 3/5 | 🟡 In progress |
+| P0 | Evidence, owner canons, and acceptance baseline | 4/5 | 🟡 In progress |
 | P1 | Freeze supervisor contracts | 0/5 | ⬜ Not started |
 | P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
@@ -190,6 +190,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.1 закрыт: baseline/reuse evidence запечатана с честным `baseline_pending`; детали см. phases/P0.md P0.1 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.2 закрыт: owner canons, narrowing-only mandate и authority cases запечатаны — детали см. phases/P0.md P0.2 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.3 закрыт: локальная provider matrix запечатала bounded no-write outcomes без сырого вывода — детали см. phases/P0.md P0.3 Completion Notes. |
+| 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.4 закрыт: trust boundaries, operating envelope и machine-checkable threat/pre-mortem bank запечатаны — детали см. phases/P0.md P0.4 Completion Notes. |
 
 ## 7. Contracts
 

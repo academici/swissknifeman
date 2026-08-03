@@ -118,29 +118,30 @@ $ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTI
 ## Producer evidence
 
 **Status:** ready-for-review
-**Implementation commit:** 8328efe04df54a3f29ba25290feb2e0820cbece5
+**Implementation commit:** 6c19b201ba815e78e6c1f9d3d725f6990c7f9869
 **Producer route:** `gpt-5.6-terra/high`
-**Commands/results:** Clean detached worktree at implementation commit
-`8328efe04df54a3f29ba25290feb2e0820cbece5` plus Artifex plan snapshot
-`sha256:7b78c27877c969256dcc911cf58d2716e4d564b16a999cda9db7790f02216991`:
+**Commands/results:** Isolated detached worktree at implementation commit
+`6c19b201ba815e78e6c1f9d3d725f6990c7f9869` plus Artifex plan snapshot
+`sha256:9322736f035e0147d6a1fdb52b8bcdc13a105c6f2ff21da53c895f8b126a786f`:
 `python3 packages/task/scripts/render-provider-commands.py --check --root .` — exit 0/no-op;
 `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p
-'test_task_contract.py'` — exit 0, 78 tests (including 32/32 ordinary Artifex builds);
+'test_task_contract.py'` — exit 0, 79 tests (including 32/32 ordinary Artifex builds);
 `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p
 'test_canon_literals.py'` — exit 0, 15 tests; `bash packages/task/scripts/validate.sh` — exit 0,
-484 tests; `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR`
+485 tests; `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR`
 — exit 0 (0 errors/0 warnings); `PYTHONPATH=packages/task/lib python3
 packages/task/scripts/plan-lint.py --conflicts` — exit 0 (0/0); `python3
 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` — exit 0 (2 checked/0
 findings). Independent 32-item evaluation — 32/32 `{pre_mutation=allow, pre_final=allow}` and
 zero foreign-D50 provenance. Protected-transition test matrix includes the exact allow plus
-missing, synthetic `D999`/fabricated source, wrong gate, branch-superstring, scope-superstring
-and revocation `block:AUTHORITY_BOUNDARY` cases. `packages/maind/bin/maind health --cwd` — exit 0,
-but its output reports `HARNESS_TRUST_REQUIRED` for both provider trust rows; it is disclosed as
-an environment defect and not counted green. The dirty producer worktree's direct renderer check
-remains exit 1 only on pre-existing unrelated managed Codex artifact drift (`publication-lock`,
-`plan.close/design/exec`); no canonical command or generated artifact belongs to this repair, and
-the isolated implementation-commit check above is green.
+missing, exact-owner synthetic `D999`, exact-owner old `D50`, wrong message reference, wrong gate,
+branch-superstring, scope-superstring and revocation `block:AUTHORITY_BOUNDARY` cases. `codex
+doctor --json`, `packages/maind/bin/maind health --cwd --json` and `packages/harness/bin/harness
+doctor --provider-audit --json` — each exit 0; memory round-trip and both provider-trust rows are
+green. The dirty producer worktree's direct renderer check remains exit 1 only on pre-existing
+unrelated managed Codex artifact drift (`publication-lock`, `plan.close/design/exec`); no canonical
+command or generated artifact belongs to this repair, and the isolated implementation-commit check
+above is green.
 
 The producer may replace only the four fields in this section after the scoped implementation
 commit exists. `Status: ready-for-review` is legal only with a full commit hash and exact command

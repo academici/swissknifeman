@@ -94,6 +94,16 @@ _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
 _OWNER_GRANT_RE = re.compile(r"\[OWNER-GRANT:([A-Z0-9][A-Z0-9.-]+)\]")
 _OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
+# Protected authority is deliberately a small, exact Decision Log record rather than
+# prose searched by substring.  Backticks make the three values unambiguous even when
+# a branch or scope contains ordinary punctuation.  The owner source must name the
+# plan's canonical Approval Owner exactly; a caller cannot turn an arbitrary D# plus
+# "owner source" prose into a grant.
+_OWNER_GRANT_RECORD_RE = re.compile(
+    r"^\[OWNER-GRANT:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
+    r"branch=`(?P<branch>[^`\n]+)`;\s*"
+    r"scope=`(?P<scope>[^`\n]+)`;\s*"
+    r"owner-source=`(?P<owner_source>[^`\n]+)`$")
 
 SLICE_SUBAGENT_KEYS = ("goal", "must", "never", "done", "authority", "next", "route", "version")
 SLICE_ROOT_ONLY_KEYS = ("evidence", "portability", "conflicts")
@@ -201,16 +211,37 @@ def _decision_number(value: str):
     return int(match.group(1)) if match else None
 
 
+def _approval_owner(plan_lint, plan_lines):
+    """Return the one plan-native owner identity that may source a grant.
+
+    `Approval Owner` is an existing Meta carrier, not a new caller kwarg or a
+    plan-specific D# threshold.  Missing, repeated, or placeholder values are
+    deliberately unusable for a protected transition.
+    """
+    _idx, body, body_start = plan_lint._find_section(plan_lines, plan_lint.META_HEADER_RE)
+    if body is None:
+        return None
+    headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
+    if tuple(headers or ()) != plan_lint.META_TABLE_COLUMNS:
+        return None
+    owners = [str(row.get("Значение", "")).strip() for row, _lineno in rows
+              if str(row.get("Поле", "")).strip() == "Approval Owner"]
+    if len(owners) != 1 or not owners[0] or owners[0] == plan_lint.EMPTY_PLACEHOLDER:
+        return None
+    return owners[0]
+
+
 def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
                        phase_path: Path, implementation_rules: str,
                        protected_transition):
     """Derive authority only from committed plan-native carriers.
 
     The routine path is backed by the item block that `build()` already parsed.  A
-    protected branch additionally needs one later Decision Log row with an exact marker,
-    branch, finite scope and owner-source text; a later revocation wins.  An invalid or
-    absent grant returns an ungranted owner gate so `pre_mutation()` emits the frozen
-    `AUTHORITY_BOUNDARY` code instead of inventing a new bypass code.
+    protected branch additionally needs one exact Decision Log carrier: marker, branch,
+    finite scope, and owner-source must parse and bind to the plan's `Approval Owner`.
+    A later revocation wins.  An invalid or absent grant returns an ungranted owner gate
+    so `pre_mutation()` emits the frozen `AUTHORITY_BOUNDARY` code instead of inventing
+    a new bypass code.
     """
     item_carrier = f"phases/{phase_path.name}:{item_id}"
     request = _authority_request(item_id, protected_transition)
@@ -229,24 +260,30 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
         return "owner-gate", False, item_carrier
     _headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
 
-    grants = []
+    grant_rows = []
     revocations = []
     for row, lineno in rows:
         decision_id = _decision_number(row.get("D#", ""))
         decision = (row.get("Решение", "") or "").strip()
-        if decision_id is None or decision_id <= 64:
+        if decision_id is None:
             continue
         if marker in decision:
-            grants.append((decision_id, lineno, decision))
+            grant_rows.append((decision_id, lineno, decision))
         if request["gate_id"] in _OWNER_REVOKE_RE.findall(decision):
             revocations.append(decision_id)
 
-    if len(grants) != 1:
+    # Count every exact gate marker before parsing.  A malformed duplicate is still an
+    # ambiguity, not a harmless line the resolver may silently skip.
+    if len(grant_rows) != 1:
         return "owner-gate", False, item_carrier
-    decision_id, lineno, decision = grants[0]
-    has_owner_source = "owner source" in decision.lower() or "источник владельца" in decision.lower()
-    matches_request = request["branch"] in decision and request["scope"] in decision
-    if (not matches_request or not has_owner_source
+    decision_id, lineno, decision = grant_rows[0]
+    record = _OWNER_GRANT_RECORD_RE.fullmatch(decision)
+    approval_owner = _approval_owner(plan_lint, plan_lines)
+    if (record is None
+            or record.group("gate_id") != request["gate_id"]
+            or record.group("branch") != request["branch"]
+            or record.group("scope") != request["scope"]
+            or record.group("owner_source") != approval_owner
             or any(revocation > decision_id for revocation in revocations)):
         return "owner-gate", False, item_carrier
     return "owner-gate", True, f"plan.md:D{decision_id}:{lineno} {marker}"

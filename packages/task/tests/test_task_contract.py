@@ -301,7 +301,9 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        decision_rows = "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: repository owner message 2026-08-03 | test |"
+        decision_rows = ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                         "branch=`go-branch`; scope=`finite-scope`; "
+                         "owner-source=`dv` | test |")
         plan_md = fixtures.plan_md("DEMO-AUTH", decision_log_rows=decision_rows).replace(
             "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
         self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-AUTH")
@@ -346,11 +348,20 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {
             "missing": "| D65 | 2026-08-03 | another decision | test |",
-            "forged": "| D50 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: forged | test |",
-            "wrong-gate": "| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] allows go-branch in finite-scope; owner source: repository owner | test |",
-            "wrong-branch": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows other-branch in finite-scope; owner source: repository owner | test |",
-            "wrong-scope": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in other-scope; owner source: repository owner | test |",
-            "revoked": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: repository owner | test |\n| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |",
+            "synthetic-late-decision": ("| D999 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                                        "branch=`go-branch`; scope=`finite-scope`; "
+                                        "owner-source=`fabricated` | test |"),
+            "wrong-gate": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] "
+                           "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
+            "branch-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                                    "branch=`go-branch-extra`; scope=`finite-scope`; "
+                                    "owner-source=`dv` | test |"),
+            "scope-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                                   "branch=`go-branch`; scope=`finite-scope-extra`; "
+                                   "owner-source=`dv` | test |"),
+            "revoked": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                        "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |\n"
+                        "| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |"),
         }
         for name, rows in cases.items():
             with self.subTest(case=name):

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **`task` больше не приписывает всем планам чужой D50 authority grant.** Task Contract
+  выводит routine authority из проверенного item-carrier текущего плана; защищённый переход
+  разрешается только exact, scope-matching и неотозванной записью `[OWNER-GRANT:<gate-id>]`
+  в Decision Log, иначе остаётся `block:AUTHORITY_BOUNDARY`.
+
 ### Added
 
 - **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,

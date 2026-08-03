@@ -92,6 +92,8 @@ _BACKTICK_RE = re.compile(r"`([^`]+)`")
 _ROUTING_HEADER_RE = re.compile(r"^##\s+3\.\s+Routing\s*$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
+_OWNER_GRANT_RE = re.compile(r"\[OWNER-GRANT:([A-Z0-9][A-Z0-9.-]+)\]")
+_OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
 
 SLICE_SUBAGENT_KEYS = ("goal", "must", "never", "done", "authority", "next", "route", "version")
 SLICE_ROOT_ONLY_KEYS = ("evidence", "portability", "conflicts")
@@ -166,6 +168,88 @@ def _count_audit_rounds(phase_lines, phase_id: str) -> int:
         if m and m.group(1) == phase_id:
             count += 1
     return count
+
+
+def _authority_request(item_id: str, protected_transition):
+    """Validate the narrow request shape for a protected plan transition.
+
+    Ordinary item execution never supplies this value: its authority is the checked item
+    carrier.  A validator for an explicitly protected branch may supply the three facts
+    it is asking the plan to prove.  The facts are *not* authority themselves; the
+    Decision Log resolver below must still find the matching committed grant.
+    """
+    if protected_transition is None:
+        return None
+    if not isinstance(protected_transition, dict):
+        raise TaskContractBuildError(item_id, "authority", "protected_transition must be a mapping")
+    expected = {"gate_id", "branch", "scope"}
+    if set(protected_transition) != expected:
+        raise TaskContractBuildError(
+            item_id, "authority",
+            "protected_transition must contain exactly gate_id, branch and scope")
+    request = {key: protected_transition[key] for key in expected}
+    if any(not isinstance(value, str) or not value.strip() for value in request.values()):
+        raise TaskContractBuildError(item_id, "authority",
+                                     "protected_transition values must be non-empty strings")
+    if not _OWNER_GRANT_RE.fullmatch(f"[OWNER-GRANT:{request['gate_id']}]"):
+        raise TaskContractBuildError(item_id, "authority", "gate_id has an illegal form")
+    return {key: value.strip() for key, value in request.items()}
+
+
+def _decision_number(value: str):
+    match = re.fullmatch(r"D(\d+)", (value or "").strip())
+    return int(match.group(1)) if match else None
+
+
+def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
+                       phase_path: Path, implementation_rules: str,
+                       protected_transition):
+    """Derive authority only from committed plan-native carriers.
+
+    The routine path is backed by the item block that `build()` already parsed.  A
+    protected branch additionally needs one later Decision Log row with an exact marker,
+    branch, finite scope and owner-source text; a later revocation wins.  An invalid or
+    absent grant returns an ungranted owner gate so `pre_mutation()` emits the frozen
+    `AUTHORITY_BOUNDARY` code instead of inventing a new bypass code.
+    """
+    item_carrier = f"phases/{phase_path.name}:{item_id}"
+    request = _authority_request(item_id, protected_transition)
+    if request is None:
+        return "routine", True, item_carrier
+
+    marker = f"[OWNER-GRANT:{request['gate_id']}]"
+    # The item must itself declare this exact protected transition.  A caller cannot
+    # redirect a valid grant to another item/branch merely by supplying kwargs.
+    if marker not in implementation_rules:
+        return "owner-gate", False, item_carrier
+
+    _idx, body, body_start = plan_lint._find_section(
+        plan_lines, plan_lint.DECISION_LOG_HEADER_RE)
+    if body is None:
+        return "owner-gate", False, item_carrier
+    _headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
+
+    grants = []
+    revocations = []
+    for row, lineno in rows:
+        decision_id = _decision_number(row.get("D#", ""))
+        decision = (row.get("Решение", "") or "").strip()
+        if decision_id is None or decision_id <= 64:
+            continue
+        if marker in decision:
+            grants.append((decision_id, lineno, decision))
+        if request["gate_id"] in _OWNER_REVOKE_RE.findall(decision):
+            revocations.append(decision_id)
+
+    if len(grants) != 1:
+        return "owner-gate", False, item_carrier
+    decision_id, lineno, decision = grants[0]
+    has_owner_source = "owner source" in decision.lower() or "источник владельца" in decision.lower()
+    matches_request = request["branch"] in decision and request["scope"] in decision
+    if (not matches_request or not has_owner_source
+            or any(revocation > decision_id for revocation in revocations)):
+        return "owner-gate", False, item_carrier
+    return "owner-gate", True, f"plan.md:D{decision_id}:{lineno} {marker}"
 
 
 # D78/2026.07.24-AGENT-RELIABILITY P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9
@@ -304,8 +388,7 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
 
 
 def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_privacy=None,
-         authority_class="routine", authority_granted=True,
-         authority_granted_by="D50 (G-EXEC for self-host P0-P3)",
+         protected_transition=None,
          next_form="exec-items", next_context="same-session — item",
          next_origin="approved-goal", next_changed_by=None, carrier=None,
          routing_config_path=None) -> dict:
@@ -331,6 +414,12 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     (the canonical `"—"` placeholder) where the schema requires a value
     raises `TaskContractBuildError` naming the field and item — never a
     fabricated placeholder dressed up as data.
+
+    `protected_transition` — an optional exact request (`gate_id`, `branch`, `scope`) for
+    a branch that the item itself declares as owner-gated. It never grants authority by
+    itself: `_resolve_authority` verifies a later Decision Log marker. The former
+    `authority_*` kwargs are deliberately absent, so a caller cannot restore a foreign
+    D-number or fabricate an allow result.
 
     `routing_config_path` (2026.07.24-AGENT-RELIABILITY P2.10, D78) — the committed routing carrier
     `_find_routing_row`/`_resolve_model_class` read `mappings.*.class_selectors` from,
@@ -450,6 +539,9 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
     phase_lines = plan_lint._read_lines(phase_path) or []
     observed_rounds = _count_audit_rounds(phase_lines, phase_token)
+    authority_class, authority_granted, authority_granted_by = _resolve_authority(
+        plan_lint, plan_lines, plan_dir, item_id, phase_path, impl_rules_text,
+        protected_transition)
 
     contract = {
         "schema_version": SCHEMA_VERSION,

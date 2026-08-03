@@ -22,6 +22,7 @@ from core.repo import resolve_plan_dir  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PLAN_ROOT = resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")
 EXAMPLES_PATH = PLAN_ROOT / "artifacts/P0.2/task-contract-examples.json"
+ARTIFEX_PLAN_ROOT = REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR"
 
 
 def _load_base_contract():
@@ -292,6 +293,112 @@ class AuthorityTests(unittest.TestCase):
         base["authority"]["granted_by"] = "owner replied 2026-07-26"
         contract = _rehashed(base)
         self.assertIsNone(task_contract.pre_mutation(contract))
+
+
+class AuthorityCarrierBuildTests(unittest.TestCase):
+    """TASK-AUTHORITY-CARRIER-01: build-time provenance is plan-native, never kwargs."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        decision_rows = "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: repository owner message 2026-08-03 | test |"
+        plan_md = fixtures.plan_md("DEMO-AUTH", decision_log_rows=decision_rows).replace(
+            "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
+        self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-AUTH")
+        (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+        phase_path = self.plan_dir / "phases" / "P1.md"
+        phase_path.write_text(
+            fixtures.phase_md().replace(
+                "**Required Reads:** 1) lib/pkg/config.py",
+                "**Required Reads:** 1) `lib/pkg/config.py`").replace(
+                "**Implementation Rules:** stdlib-only.",
+                "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition."),
+            encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _actual_route(self):
+        from task import route_evidence
+        return route_evidence.capture_actual("implementation", "medium",
+                                             source="self-attested", ts="t", model="test")
+
+    def _protected(self, **overrides):
+        request = {"gate_id": "G-TEST", "branch": "go-branch", "scope": "finite-scope"}
+        request.update(overrides)
+        return task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route(),
+                                   protected_transition=request)
+
+    def test_routine_authority_uses_the_current_item_carrier(self):
+        contract = task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
+        self.assertEqual(contract["authority"]["class"], "routine")
+        self.assertTrue(contract["authority"]["granted"])
+        self.assertEqual(contract["authority"]["granted_by"], "phases/P1.md:P1.1")
+        self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
+
+    def test_exact_matching_owner_grant_allows_the_protected_transition(self):
+        contract = self._protected()
+        self.assertEqual(contract["authority"]["class"], "owner-gate")
+        self.assertTrue(contract["authority"]["granted"])
+        self.assertIn("[OWNER-GRANT:G-TEST]", contract["authority"]["granted_by"])
+        self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
+
+    def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
+        cases = {
+            "missing": "| D65 | 2026-08-03 | another decision | test |",
+            "forged": "| D50 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: forged | test |",
+            "wrong-gate": "| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] allows go-branch in finite-scope; owner source: repository owner | test |",
+            "wrong-branch": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows other-branch in finite-scope; owner source: repository owner | test |",
+            "wrong-scope": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in other-scope; owner source: repository owner | test |",
+            "revoked": "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] allows go-branch in finite-scope; owner source: repository owner | test |\n| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |",
+        }
+        for name, rows in cases.items():
+            with self.subTest(case=name):
+                plan = fixtures.plan_md("DEMO-AUTH", decision_log_rows=rows).replace(
+                    "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
+                (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+                self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"],
+                                 "block:AUTHORITY_BOUNDARY")
+
+    def test_legacy_manual_authority_kwargs_are_refused_by_the_api(self):
+        with self.assertRaises(TypeError):
+            task_contract.build(self.plan_dir, "P1.1", authority_granted_by="D50 (foreign)")
+
+
+@unittest.skipUnless(ARTIFEX_PLAN_ROOT.is_dir(), "Artifex plan is not present in this checkout")
+class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
+    """The prerequisite's ordinary-path proof: every current Artifex item stays runnable."""
+
+    def test_all_32_items_allow_without_foreign_d50_provenance(self):
+        item_ids = []
+        for phase_path in sorted((ARTIFEX_PLAN_ROOT / "phases").glob("P*.md")):
+            item_ids.extend(re.findall(r"^###\s+(P\d+\.\d+)\b", phase_path.read_text(encoding="utf-8"), re.M))
+        self.assertEqual(len(item_ids), 32)
+        self.assertEqual(len(set(item_ids)), 32)
+        from task import route_evidence
+        for item_id in item_ids:
+            with self.subTest(item=item_id):
+                required = task_contract.build(ARTIFEX_PLAN_ROOT, item_id)["route"]["required"]
+                actual = route_evidence.capture_actual(
+                    required["model_class"], required["effort"], source="self-attested",
+                    ts="t", model="regression")
+                contract = task_contract.build(ARTIFEX_PLAN_ROOT, item_id, actual_route=actual)
+                self.assertEqual(task_contract.evaluate(contract), {
+                    "pre_mutation": "allow", "pre_final": "allow",
+                    "content_hash": task_contract.content_hash(contract)})
+                self.assertNotIn("D50", contract["authority"]["granted_by"])
+
+
+class AuthorityCommandBoundaryTests(unittest.TestCase):
+    """Both write-sites consume the compiler; plan-run inherits rather than forks it."""
+
+    def test_plan_exec_boundaries_and_plan_run_share_the_checked_compiler(self):
+        exec_text = (REPO_ROOT / "packages/task/commands/plan-exec.md").read_text(encoding="utf-8")
+        run_text = (REPO_ROOT / "packages/task/commands/plan-run.md").read_text(encoding="utf-8")
+        self.assertEqual(exec_text.count("task_contract.build("), 2)
+        self.assertNotIn("authority_granted", exec_text)
+        self.assertNotIn("authority_granted_by", exec_text)
+        self.assertIn("Прочти `packages/task/commands/plan-exec.md` ЦЕЛИКОМ", run_text)
 
 
 class SliceTests(unittest.TestCase):

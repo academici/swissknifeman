@@ -96,14 +96,24 @@ _OWNER_GRANT_RE = re.compile(r"\[OWNER-GRANT:([A-Z0-9][A-Z0-9.-]+)\]")
 _OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
 # Protected authority is deliberately a small, exact Decision Log record rather than
 # prose searched by substring.  Backticks make the three values unambiguous even when
-# a branch or scope contains ordinary punctuation.  The owner source must name the
-# plan's canonical Approval Owner exactly; a caller cannot turn an arbitrary D# plus
-# "owner source" prose into a grant.
+# a branch or scope contains ordinary punctuation.  The Decision Log must reference a
+# separately recorded repository-owner message in the plan's Layer-0 brief; a copyable
+# Meta ``Approval Owner`` label is identity metadata, not an authority carrier.
 _OWNER_GRANT_RECORD_RE = re.compile(
     r"^\[OWNER-GRANT:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
     r"branch=`(?P<branch>[^`\n]+)`;\s*"
     r"scope=`(?P<scope>[^`\n]+)`;\s*"
-    r"owner-source=`(?P<owner_source>[^`\n]+)`$")
+    r"owner-message=`(?P<owner_message>brief/[A-Za-z0-9][A-Za-z0-9._-]*\.md"
+    r"#[A-Za-z0-9][A-Za-z0-9._-]*)`$")
+_OWNER_MESSAGE_REF_RE = re.compile(
+    r"^brief/(?P<filename>[A-Za-z0-9][A-Za-z0-9._-]*\.md)"
+    r"#(?P<message_id>[A-Za-z0-9][A-Za-z0-9._-]*)$")
+_OWNER_MESSAGE_RECORD_RE = re.compile(
+    r"^\[REPOSITORY-OWNER-MESSAGE:(?P<message_id>[A-Za-z0-9][A-Za-z0-9._-]*)\]\s+"
+    r"\[OWNER-GRANT:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
+    r"branch=`(?P<branch>[^`\n]+)`;\s*"
+    r"scope=`(?P<scope>[^`\n]+)`;\s*"
+    r"provenance=`repository-owner`$")
 
 SLICE_SUBAGENT_KEYS = ("goal", "must", "never", "done", "authority", "next", "route", "version")
 SLICE_ROOT_ONLY_KEYS = ("evidence", "portability", "conflicts")
@@ -211,24 +221,32 @@ def _decision_number(value: str):
     return int(match.group(1)) if match else None
 
 
-def _approval_owner(plan_lint, plan_lines):
-    """Return the one plan-native owner identity that may source a grant.
+def _owner_message_matches(plan_dir: Path, reference: str, request: dict) -> bool:
+    """Validate the explicit Layer-0 repository-owner message a grant cites.
 
-    `Approval Owner` is an existing Meta carrier, not a new caller kwarg or a
-    plan-specific D# threshold.  Missing, repeated, or placeholder values are
-    deliberately unusable for a protected transition.
+    The compact reference is confined to one committed ``brief/*.md`` file.  Its
+    referenced line must independently restate the gate, branch and finite scope and
+    declare repository-owner provenance.  Copying an owner identity into a Decision
+    Log row is therefore insufficient to mint authority.
     """
-    _idx, body, body_start = plan_lint._find_section(plan_lines, plan_lint.META_HEADER_RE)
-    if body is None:
-        return None
-    headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
-    if tuple(headers or ()) != plan_lint.META_TABLE_COLUMNS:
-        return None
-    owners = [str(row.get("Значение", "")).strip() for row, _lineno in rows
-              if str(row.get("Поле", "")).strip() == "Approval Owner"]
-    if len(owners) != 1 or not owners[0] or owners[0] == plan_lint.EMPTY_PLACEHOLDER:
-        return None
-    return owners[0]
+    reference_match = _OWNER_MESSAGE_REF_RE.fullmatch(reference or "")
+    if reference_match is None:
+        return False
+    message_path = plan_dir / "brief" / reference_match.group("filename")
+    try:
+        if not message_path.is_file() or message_path.is_symlink():
+            return False
+        records = [_OWNER_MESSAGE_RECORD_RE.fullmatch(line.strip())
+                   for line in message_path.read_text(encoding="utf-8").splitlines()]
+    except (OSError, UnicodeDecodeError):
+        return False
+    matches = [record for record in records
+               if record is not None
+               and record.group("message_id") == reference_match.group("message_id")]
+    return (len(matches) == 1
+            and matches[0].group("gate_id") == request["gate_id"]
+            and matches[0].group("branch") == request["branch"]
+            and matches[0].group("scope") == request["scope"])
 
 
 def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
@@ -238,10 +256,10 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
 
     The routine path is backed by the item block that `build()` already parsed.  A
     protected branch additionally needs one exact Decision Log carrier: marker, branch,
-    finite scope, and owner-source must parse and bind to the plan's `Approval Owner`.
-    A later revocation wins.  An invalid or absent grant returns an ungranted owner gate
-    so `pre_mutation()` emits the frozen `AUTHORITY_BOUNDARY` code instead of inventing
-    a new bypass code.
+    finite scope, and an explicit repository-owner message reference must parse and bind
+    together.  A later revocation wins.  An invalid or absent grant returns an ungranted
+    owner gate so `pre_mutation()` emits the frozen `AUTHORITY_BOUNDARY` code instead of
+    inventing a new bypass code.
     """
     item_carrier = f"phases/{phase_path.name}:{item_id}"
     request = _authority_request(item_id, protected_transition)
@@ -278,12 +296,11 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
         return "owner-gate", False, item_carrier
     decision_id, lineno, decision = grant_rows[0]
     record = _OWNER_GRANT_RECORD_RE.fullmatch(decision)
-    approval_owner = _approval_owner(plan_lint, plan_lines)
     if (record is None
             or record.group("gate_id") != request["gate_id"]
             or record.group("branch") != request["branch"]
             or record.group("scope") != request["scope"]
-            or record.group("owner_source") != approval_owner
+            or not _owner_message_matches(plan_dir, record.group("owner_message"), request)
             or any(revocation > decision_id for revocation in revocations)):
         return "owner-gate", False, item_carrier
     return "owner-gate", True, f"plan.md:D{decision_id}:{lineno} {marker}"

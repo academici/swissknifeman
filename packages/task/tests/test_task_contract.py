@@ -303,11 +303,16 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         self.root = Path(self._tmp.name)
         decision_rows = ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
                          "branch=`go-branch`; scope=`finite-scope`; "
-                         "owner-source=`dv` | test |")
+                         "owner-message=`brief/00-brief.md#grant-g-test` | test |")
         plan_md = fixtures.plan_md("DEMO-AUTH", decision_log_rows=decision_rows).replace(
             "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
         self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-AUTH")
         (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+        (self.plan_dir / "brief" / "00-brief.md").write_text(
+            "# Owner message\n\n"
+            "[REPOSITORY-OWNER-MESSAGE:grant-g-test] [OWNER-GRANT:G-TEST] "
+            "branch=`go-branch`; scope=`finite-scope`; provenance=`repository-owner`\n",
+            encoding="utf-8")
         phase_path = self.plan_dir / "phases" / "P1.md"
         phase_path.write_text(
             fixtures.phase_md().replace(
@@ -348,19 +353,28 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {
             "missing": "| D65 | 2026-08-03 | another decision | test |",
-            "synthetic-late-decision": ("| D999 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                                        "branch=`go-branch`; scope=`finite-scope`; "
-                                        "owner-source=`fabricated` | test |"),
+            "synthetic-d999-with-copied-approval-owner": (
+                "| D999 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
+            "old-d50-with-copied-approval-owner": (
+                "| D50 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
             "wrong-gate": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] "
-                           "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
+                           "branch=`go-branch`; scope=`finite-scope`; "
+                           "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
             "branch-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
                                     "branch=`go-branch-extra`; scope=`finite-scope`; "
-                                    "owner-source=`dv` | test |"),
+                                    "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
             "scope-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
                                    "branch=`go-branch`; scope=`finite-scope-extra`; "
-                                   "owner-source=`dv` | test |"),
+                                   "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "wrong-owner-message-reference": (
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#unknown` | test |"),
             "revoked": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                        "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |\n"
+                        "branch=`go-branch`; scope=`finite-scope`; "
+                        "owner-message=`brief/00-brief.md#grant-g-test` | test |\n"
                         "| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |"),
         }
         for name, rows in cases.items():
@@ -370,6 +384,12 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
                 (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
                 self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"],
                                  "block:AUTHORITY_BOUNDARY")
+
+    def test_explicit_owner_message_not_approval_owner_identity_allows(self):
+        plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(
+            "| Approval Owner | dv |", "| Approval Owner | copied-display-name |")
+        (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+        self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"], "allow")
 
     def test_legacy_manual_authority_kwargs_are_refused_by_the_api(self):
         with self.assertRaises(TypeError):

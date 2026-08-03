@@ -10,8 +10,9 @@
   в Decision Log, иначе остаётся `block:AUTHORITY_BOUNDARY`.
 
 - **`task` fail-closed разбирает protected owner grants.** Запись теперь обязана точно
-  связывать gate, branch, finite scope и `owner-source` с `Approval Owner` плана; synthetic D#,
-  prefix-совпадения и произвольная owner-проза не могут вернуть `allow`.
+  связывать gate, branch и finite scope с отдельным explicit repository-owner message в Layer-0
+  `brief/` и его provenance; копируемый `Approval Owner`, synthetic D#, prefix-совпадения и
+  произвольная owner-проза не могут вернуть `allow`.
 
 ### Added
 

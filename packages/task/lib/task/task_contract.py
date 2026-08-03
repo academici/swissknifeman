@@ -221,6 +221,20 @@ def _decision_number(value: str):
     return int(match.group(1)) if match else None
 
 
+def _has_contiguous_decision_identities(rows) -> bool:
+    """Whether the whole Decision Log is the one checked, append-only carrier.
+
+    A protected grant is meaningful only when its ``D#`` is an identity in the
+    plan's actual Decision Log, rather than a syntactically valid row pasted into
+    the table.  The plan protocol's log is append-only ``D1`` … ``Dn``: reject a
+    gap, duplicate, malformed ID, or reordered old decision here.  This is a
+    resolver-local authority check, deliberately not a new plan-wide lint rule;
+    ordinary Task Contract builds do not need an owner grant.
+    """
+    identities = [_decision_number(row.get("D#", "")) for row, _lineno in rows]
+    return identities == list(range(1, len(identities) + 1))
+
+
 def _owner_message_matches(plan_dir: Path, reference: str, request: dict) -> bool:
     """Validate the explicit Layer-0 repository-owner message a grant cites.
 
@@ -277,6 +291,8 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     if body is None:
         return "owner-gate", False, item_carrier
     _headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
+    if not _has_contiguous_decision_identities(rows):
+        return "owner-gate", False, item_carrier
 
     grant_rows = []
     revocations = []

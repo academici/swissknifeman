@@ -301,9 +301,10 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        decision_rows = ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                         "branch=`go-branch`; scope=`finite-scope`; "
-                         "owner-message=`brief/00-brief.md#grant-g-test` | test |")
+        decision_rows = self._decision_rows(
+            "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+            "branch=`go-branch`; scope=`finite-scope`; "
+            "owner-message=`brief/00-brief.md#grant-g-test` | test |")
         plan_md = fixtures.plan_md("DEMO-AUTH", decision_log_rows=decision_rows).replace(
             "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
         self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-AUTH")
@@ -336,6 +337,18 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         return task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route(),
                                    protected_transition=request)
 
+    @staticmethod
+    def _decision_rows(*tail, prefix_count=64):
+        """A checked D1…Dn Decision Log; tail cases mutate only its final carrier."""
+        prefix = [f"| D{number} | 2026-08-03 | ordinary decision {number} | test |"
+                  for number in range(1, prefix_count + 1)]
+        return "\n".join([*prefix, *tail])
+
+    def _replace_decision_rows(self, rows):
+        plan = fixtures.plan_md("DEMO-AUTH", decision_log_rows=rows).replace(
+            "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
+        (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+
     def test_routine_authority_uses_the_current_item_carrier(self):
         contract = task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
         self.assertEqual(contract["authority"]["class"], "routine")
@@ -352,36 +365,53 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
 
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {
-            "missing": "| D65 | 2026-08-03 | another decision | test |",
-            "synthetic-d999-with-copied-approval-owner": (
+            "missing": self._decision_rows("| D65 | 2026-08-03 | another decision | test |"),
+            "synthetic-d999-with-valid-owner-message": self._decision_rows(
                 "| D999 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
-            "old-d50-with-copied-approval-owner": (
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "duplicate-old-d50-with-valid-owner-message": self._decision_rows(
+                "| D65 | 2026-08-03 | ordinary decision 65 | test |",
                 "| D50 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                "branch=`go-branch`; scope=`finite-scope`; owner-source=`dv` | test |"),
-            "wrong-gate": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] "
-                           "branch=`go-branch`; scope=`finite-scope`; "
-                           "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
-            "branch-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                                    "branch=`go-branch-extra`; scope=`finite-scope`; "
-                                    "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
-            "scope-superstring": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                                   "branch=`go-branch`; scope=`finite-scope-extra`; "
-                                   "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
-            "wrong-owner-message-reference": (
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "wrong-gate": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-OTHER] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "branch-superstring": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch-extra`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "scope-superstring": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope-extra`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "wrong-owner-message-reference": self._decision_rows(
                 "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
                 "branch=`go-branch`; scope=`finite-scope`; "
                 "owner-message=`brief/00-brief.md#unknown` | test |"),
-            "revoked": ("| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
-                        "branch=`go-branch`; scope=`finite-scope`; "
-                        "owner-message=`brief/00-brief.md#grant-g-test` | test |\n"
-                        "| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |"),
+            "ambiguous-two-exact-grants": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |",
+                "| D66 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |"),
+            "ambiguous-malformed-duplicate": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |",
+                "| D66 | 2026-08-03 | [OWNER-GRANT:G-TEST] malformed | test |"),
+            "revoked": self._decision_rows(
+                "| D65 | 2026-08-03 | [OWNER-GRANT:G-TEST] "
+                "branch=`go-branch`; scope=`finite-scope`; "
+                "owner-message=`brief/00-brief.md#grant-g-test` | test |",
+                "| D66 | 2026-08-03 | [OWNER-REVOKE:G-TEST] | test |"),
         }
         for name, rows in cases.items():
             with self.subTest(case=name):
-                plan = fixtures.plan_md("DEMO-AUTH", decision_log_rows=rows).replace(
-                    "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
-                (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+                self._replace_decision_rows(rows)
                 self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"],
                                  "block:AUTHORITY_BOUNDARY")
 

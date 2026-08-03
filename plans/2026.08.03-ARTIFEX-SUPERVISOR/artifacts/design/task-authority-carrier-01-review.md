@@ -463,3 +463,11 @@ Attempts 1-3 remain verbatim RED history.
 - **Unverified -> re-pass:** none.
 - **Workarounds/[POSSIBLE-DEFECT]:** none accepted. The hook `stale-source` warning remains explicit
   P4.4-owned future evidence, not a waived terminal predicate for this Task prerequisite.
+
+### Terminalization record
+
+**Review evidence commit:** d96e7425994747d3895e990d668f117768d8df25
+
+That commit contains the complete literal Attempt 4 GREEN record above. This note and the carrier
+update are committed together: `Independent verification` now references the durable review commit,
+and `State` becomes `terminal`. P0.1 was not launched.

@@ -1,6 +1,6 @@
 # TASK-AUTHORITY-CARRIER-01 — Task Contract authority prerequisite
 
-**State:** waiting
+**State:** terminal
 **Owner:** `packages/task` — Task Contract compiler and `plan-exec`/`plan-run` write-sites
 **Blocks:** every Artifex execution item, beginning with P0.1
 **Created from:** D64 defect · repeat `Audit design — 2026-08-03` F6 · D65 · third audit F7/F8 · D66
@@ -189,7 +189,7 @@ record is not evidence.
 
 ## Independent verification
 
-**Verdict:** pending
-**Reviewed implementation commit:** —
-**Review artifact:** —
-**Review evidence commit:** —
+**Verdict:** GREEN
+**Reviewed implementation commit:** 635cbdb5717ce2438a17fa674338f7b8502cf0f7
+**Review artifact:** `artifacts/design/task-authority-carrier-01-review.md` — Attempt 4
+**Review evidence commit:** d96e7425994747d3895e990d668f117768d8df25

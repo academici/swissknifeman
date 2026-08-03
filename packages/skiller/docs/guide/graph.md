@@ -38,6 +38,7 @@ flowchart LR
     build_loop["build-loop"]
     config_conventions["config-conventions"]
     model_rules["model-rules"]
+    model_verification["model-verification"]
     parametric_config["parametric-config"]
     scene_conventions["scene-conventions"]
     threading["threading"]
@@ -251,6 +252,9 @@ flowchart LR
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
   mcp_blender -->|requires| version_gotchas
+  model_verification -->|requires| mcp_blender
+  model_verification -->|requires| model_rules
+  model_verification -->|requires| parametric_config
   modular_architecture -->|requires| laravel
   monetization_design -->|requires| idea_discovery
   mutation_testing -->|requires| test_strategy
@@ -350,6 +354,7 @@ flowchart LR
   makefile -.->|feeds| docker_dev_prod
   makefile -.->|feeds| docker_services
   mcp_advisor -.->|feeds| context_economy
+  model_verification -.->|feeds| build_loop
   monetization_design -.->|feeds| brd
   mutation_testing -.->|feeds| code_review
   observability_design -.->|feeds| incident_response
@@ -385,7 +390,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 130 скиллов, 95 рёбер requires, 88 рёбер produces_for.
+**В графе:** 131 скиллов, 98 рёбер requires, 89 рёбер produces_for.
 
 ## Изолированные скиллы (99)
 

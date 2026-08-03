@@ -6,6 +6,7 @@
     "./build-loop",
     "./config-conventions",
     "./model-rules",
+    "./model-verification",
     "./parametric-config",
     "./scene-conventions",
     "./threading"

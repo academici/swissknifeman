@@ -31,7 +31,7 @@
     },
     "blender-modeling": {
       "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
-      "count": 6,
+      "count": 7,
       "status": "active"
     },
     "botkit": {
@@ -783,8 +783,8 @@
       "path": "skills/blender-modeling/build-loop/SKILL.md",
       "version": "0.1.0",
       "description": "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot → propose rule fixes. Part docstring template, error-diagnosis table included. Activate on any part build/edit task in Blender.",
-      "sha256": "0831305465c75f65554edc300407ef0f25caf084bb1af30f0c2f260b870a4f41",
-      "content_sha256": "a1f4ca7243d4adc06b99bf6e41425c44a9bfb2a7243565a597364c61c65828a6",
+      "sha256": "cd11cc9bb844ff756e64b309e1cbc75fce2788b030729b1870c8ca8f38859084",
+      "content_sha256": "4a72d0b3c0e4f5fbccf0791b741e50adc65aa4bffac3b26bd707c8e155823832",
       "tags": [
         "blender",
         "cad",
@@ -847,6 +847,33 @@
         "3d",
         "cad",
         "conventions"
+      ],
+      "produces_for": [
+        "build-loop"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "model-verification",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/model-verification/SKILL.md",
+      "version": "0.1.0",
+      "description": "Verify complete parametric Blender models with ordered provenance, config, inventory, evaluated-mesh, interface, visual-evidence, restore, and report gates. Use when preparing release/export, auditing every printable part and mating context, or checking changes to geometry or config.",
+      "sha256": "4206a1b45b6544eb8a67fb4606c87972ed5232417fe83f9122e33febabf19f09",
+      "content_sha256": "f625ffd768441b3764fc6d2620b7fa6bad8a83f2155f553326f34f598d7a4b53",
+      "tags": [
+        "blender",
+        "cad",
+        "verification",
+        "evidence",
+        "release",
+        "fdm",
+        "sla"
+      ],
+      "requires": [
+        "mcp-blender",
+        "model-rules",
+        "parametric-config"
       ],
       "produces_for": [
         "build-loop"

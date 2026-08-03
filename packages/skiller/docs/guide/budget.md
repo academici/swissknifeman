@@ -49,9 +49,10 @@ flowchart LR
     version_gotchas["version-gotchas<br/>⊕28 ↻784"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕103 ↻2137"]:::warm
+    build_loop["build-loop<br/>⊕103 ↻2165"]:::warm
     config_conventions["config-conventions<br/>⊕114 ↻2219"]:::hot
     model_rules["model-rules<br/>⊕36 ↻761"]:::cool
+    model_verification["model-verification<br/>⊕90 ↻1531"]:::warm
     parametric_config["parametric-config<br/>⊕111 ↻2196"]:::hot
     scene_conventions["scene-conventions<br/>⊕95 ↻914"]:::warm
     threading["threading<br/>⊕33 ↻660"]:::cool
@@ -66,7 +67,7 @@ flowchart LR
     ci_cd["ci-cd<br/>⊕55 ↻1150"]:::mild
     db_test_preflight["db-test-preflight<br/>⊕104 ↻1703"]:::warm
     docker["docker<br/>⊕66 ↻400"]:::mild
-    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::mild
+    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::cool
     docker_php["docker-php<br/>⊕40 ↻794"]:::cool
     docker_postgres["docker-postgres<br/>⊕43 ↻834"]:::mild
     docker_services["docker-services<br/>⊕48 ↻885"]:::mild
@@ -82,13 +83,13 @@ flowchart LR
     adversarial_check["adversarial-check<br/>⊕55 ↻1162"]:::mild
     competitive_analysis["competitive-analysis<br/>⊕37 ↻1343"]:::cool
     customer_discovery["customer-discovery<br/>⊕55 ↻1315"]:::mild
-    defensibility["defensibility<br/>⊕42 ↻1151"]:::mild
+    defensibility["defensibility<br/>⊕42 ↻1151"]:::cool
     idea_audit["idea-audit<br/>⊕61 ↻2502"]:::mild
     idea_discovery["idea-discovery<br/>⊕35 ↻1668"]:::cool
     new_project["new-project<br/>⊕31 ↻1476"]:::cool
     pitch_deck["pitch-deck<br/>⊕32 ↻1583"]:::cool
     risk_assessment["risk-assessment<br/>⊕40 ↻1302"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::mild
+    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::cool
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
@@ -389,6 +390,9 @@ flowchart LR
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
   mcp_blender -->|requires| version_gotchas
+  model_verification -->|requires| mcp_blender
+  model_verification -->|requires| model_rules
+  model_verification -->|requires| parametric_config
   modular_architecture -->|requires| laravel
   monetization_design -->|requires| idea_discovery
   mutation_testing -->|requires| test_strategy
@@ -439,7 +443,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 229 скиллов · ⊕ always **16008** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 356796 ток · ⌥ on-demand 830891 ток (сниппеты + references).
+**Итого:** 230 скиллов · ⊕ always **16098** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 358355 ток · ⌥ on-demand 832540 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -455,8 +459,8 @@ flowchart LR
 | `oss-dev` | 10 | 642 | 14491 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `laravel-architecture` | 6 | 596 | 9730 | 7994 |
+| `blender-modeling` | 7 | 582 | 10446 | 14235 |
 | `devops` | 11 | 553 | 9181 | 16993 |
-| `blender-modeling` | 6 | 492 | 8887 | 12586 |
 | `pm` | 10 | 462 | 11072 | 23524 |
 | `founder` | 10 | 430 | 15277 | 578 |
 | `axioma` | 4 | 352 | 4605 | 0 |

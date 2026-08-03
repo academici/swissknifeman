@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 229 скиллов в 48 бакетах.
+Всего: 230 скиллов в 48 бакетах.
 
 ## Скиллы по бакетам
 
@@ -58,13 +58,14 @@
 | `mcp-blender` | MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_s… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
 | `version-gotchas` | Use when hitting Blender 5.0 API issues: known breaking changes and pitfalls. | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
 
-### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (6)
+### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (7)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recomput… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
 | `config-conventions` | Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
 | `model-rules` | Use this template before any task on a model: read models/{name}/ai/rules.md, the model-s… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
+| `model-verification` | Verify complete parametric Blender models with ordered provenance, config, inventory, eva… | `blender`, `cad`, `verification`, `evidence`, `release`, `fdm`, `sla` |
 | `parametric-config` | Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/t… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
 | `scene-conventions` | Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hie… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
 | `threading` | Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by… | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
@@ -514,7 +515,7 @@
 | `best-practices` | `laravel-best-practices` |
 | `bilingual` | `skill-authoring` |
 | `blade` | `livewire-blade-attributes` |
-| `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
+| `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `model-verification`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
 | `botkit` | `botkit` |
 | `bots` | `botkit` |
 | `boundary` | `package-contribution-protocol` |
@@ -525,7 +526,7 @@
 | `browser-testing` | `laravel-dusk` |
 | `build` | `vite-module-loader`, `vite-multi-build` |
 | `c4` | `architecture` |
-| `cad` | `build-loop`, `config-conventions`, `model-rules`, `parametric-config`, `scene-conventions` |
+| `cad` | `build-loop`, `config-conventions`, `model-rules`, `model-verification`, `parametric-config`, `scene-conventions` |
 | `camera` | `mcp-blender` |
 | `casts` | `laravel-data` |
 | `changelog` | `release-discipline`, `release-engineering` |
@@ -607,7 +608,8 @@
 | `epistemics` | `decision-verification` |
 | `erd` | `data-schema` |
 | `eslint` | `eslint-flat-config`, `wayfinder` |
-| `fdm` | `build-loop`, `config-conventions`, `parametric-config`, `threading` |
+| `evidence` | `model-verification` |
+| `fdm` | `build-loop`, `config-conventions`, `model-verification`, `parametric-config`, `threading` |
 | `feature-flags` | `pennant-development` |
 | `feedback-loop` | `diagnosing-bugs` |
 | `field-feedback` | `field-feedback-loop` |
@@ -763,7 +765,7 @@
 | `registry` | `config-driven-abstraction`, `swissknifeman-locator` |
 | `regulatory` | `legal-compliance` |
 | `reka-ui` | `reka-ui-cva` |
-| `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-discipline`, `release-engineering` |
+| `release` | `ci-cd`, `github-flow`, `model-verification`, `open-source-maintainer`, `release-discipline`, `release-engineering` |
 | `reliability` | `production-readiness-checklist`, `transactional-outbox-relay` |
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories` |
@@ -801,7 +803,7 @@
 | `skill-authoring` | `skill-authoring` |
 | `skiller` | `package-architecture` |
 | `skills` | `laravel-packages`, `project-tooling-runbook`, `skills-ssot`, `swissknifeman-locator` |
-| `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
+| `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `model-verification`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
 | `ssot` | `skills-ssot` |
@@ -858,7 +860,7 @@
 | `vault` | `brain-locator` |
 | `vendor-vs-build` | `ecosystem-reuse-gate` |
 | `venv` | `venv-dependencies` |
-| `verification` | `decision-verification`, `testing-safety-report`, `verify-claims` |
+| `verification` | `decision-verification`, `model-verification`, `testing-safety-report`, `verify-claims` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
 | `versioning` | `agent-packs` |
 | `vertical-slices` | `tdd-discipline`, `to-issues` |

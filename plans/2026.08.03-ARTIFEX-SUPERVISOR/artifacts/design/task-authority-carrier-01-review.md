@@ -365,3 +365,101 @@ $ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTI
 СКОУП: fail-closed валидировать Decision Log identity/continuity без plan-specific D64 cutoff; сохранить exact owner-message/gate/branch/scope/ambiguity/revocation checks; добавить permanent negatives, где synthetic D999 и old duplicate D50 используют тот же валидный owner-message reference, что positive D67; повторить полный terminal predicate; создать новый scoped implementation commit и обновить только Producer evidence при State=waiting; затем вернуть отдельный cold frontier/xhigh reviewer launch
 НЕ ТРОГАТЬ: review artifact; State; Independent verification; P0.1-P6.4 statuses/deliverables; Artifex product implementation; unrelated dirty worktree; provider/pilot/hook/package-home/docs/fleet/Brain/release state
 ```
+
+## Attempt 4 — 635cbdb5717ce2438a17fa674338f7b8502cf0f7
+
+**Verdict:** GREEN
+**Reviewer route:** gpt-5.6-sol/xhigh
+**Reviewed implementation commit:** 635cbdb5717ce2438a17fa674338f7b8502cf0f7
+**Plan snapshot:** sha256:de3f7f7d48515be94c8d26f838173e55370f8f6fa666beae0cf66b94068e3970
+**Review date:** 2026-08-03
+
+The final scoped producer commit closes Attempt 3/F3 by validating the complete Decision Log as
+the contiguous identity sequence `D1...Dn` before any protected grant may resolve. The full repair
+chain is preserved in the reviewed tree: foreign D50 removal, exact gate/branch/scope matching,
+explicit Layer-0 repository-owner message provenance, ambiguity/revocation refusal and the final
+Decision-identity check. Independent probes found no remaining correctness or authority-boundary
+failure; every terminal predicate row is GREEN.
+
+### Acceptance matrix
+
+| Case | Expected | Observed at reviewed commit + input plan snapshot | Result |
+|:--|:--|:--|:--|
+| Ordinary Artifex path | 32/32 build; both predicates allow; no foreign D50 | 32 unique items; routes `frontier/high=12`, `implementation/high=19`, `frontier/xhigh=1`; 32 `allow+allow`; 0 foreign-D50 provenance | GREEN |
+| Exact later owner grant | `allow` | actual P5.4 exact contiguous `D67`, exact gate/branch/scope and exact owner-message carrier returned `allow` | GREEN |
+| Missing owner-grant marker | `block:AUTHORITY_BOUNDARY` | synthetic fixture and actual P5.4 both blocked | GREEN |
+| Forged/synthetic D# | `block:AUTHORITY_BOUNDARY` | valid-owner-message `D999`, old duplicate `D50`, a Decision gap and malformed identity all blocked | GREEN |
+| Wrong gate | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Wrong branch | `block:AUTHORITY_BOUNDARY` | different branch and branch-superstring both blocked | GREEN |
+| Wrong scope | `block:AUTHORITY_BOUNDARY` | different scope and scope-superstring both blocked | GREEN |
+| Missing/wrong/duplicate owner-message carrier | `block:AUTHORITY_BOUNDARY` | wrong reference and duplicate message ID blocked; permanent suite also covers exact provenance rules | GREEN |
+| Exact marker revoked by later D# | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Ambiguous duplicate grants | `block:AUTHORITY_BOUNDARY` | two exact grants and one exact plus malformed duplicate both blocked | GREEN |
+| Caller restores D50 through legacy kwargs | typed refusal or checked carrier wins | both `authority_granted=` and `authority_granted_by=` raised `TypeError` | GREEN |
+| Two `plan-exec` boundaries, reconciliation boundary and inherited `plan-run` | one checked compiler/resolver | `plan-exec=2` build calls; `plan-close=1`; `plan-run` direct calls `=0` and exact whole-command inheritance `=1`; manual-authority kwargs `=0` | GREEN |
+| Conditional P6.1 protected transitions without grants | refusal | actual package and root-router requests both returned `block:AUTHORITY_BOUNDARY` | GREEN |
+
+### Exact verification evidence
+
+Implementation/package commands ran in detached worktree
+`/tmp/swissknifeman-task-authority-review.EOv5fa/worktree` at the reviewed commit, with the exact
+input Artifex snapshot copied before execution. Task implementation and generated artifacts were
+read-only throughout review.
+
+| Command | Exit/result |
+|:--|:--|
+| `git diff-tree --no-commit-id --name-status -r --no-renames 635cbdb5717ce2438a17fa674338f7b8502cf0f7` | exit 0; only `packages/task/lib/task/task_contract.py` and `packages/task/tests/test_task_contract.py`; 71 insertions/25 deletions |
+| Live-surface removal/signature probe over `task_contract.py` plus canonical `plan-exec.md`, `plan-run.md`, `plan-close.md` | exit 0; foreign-D50 literal hits `=0`; legacy authority kwargs in `build()` signature `=0` |
+| Independent Python protected-transition matrix over a fresh valid plan | exit 0; 18/18 cases passed: routine/exact allow plus missing, D999, D50, wrong gate/branch/scope, superstrings, wrong/duplicate message, ambiguity, revocation, gap, malformed identity and both legacy kwargs |
+| Independent actual-plan P5.4/P6.1 probes | exit 0; P5.4 missing/D999/D50 blocked and exact D67 allowed; both P6.1 missing protected grants blocked |
+| Independent Python 32-build evaluator over `phases/P*.md`, using each routed actual route | exit 0; 32 items/32 unique; 32 `pre_mutation=allow` + `pre_final=allow`; routes 12/19/1; 0 foreign-D50 provenance |
+| Independent canonical-command boundary counter | exit 0; `plan-exec=2`, `plan-close=1`, `plan-run direct=0`, exact inheritance `=1`, manual-authority kwargs `=0` |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -v -s packages/task/tests -p 'test_task_contract.py'` | exit 0; 79 tests; OK |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -v -s packages/task/tests -p 'test_canon_literals.py'` | exit 0; 15 tests; OK |
+| `python3 packages/task/scripts/render-provider-commands.py --check --root .` | exit 0; check OK/no-op |
+| `bash packages/task/scripts/validate.sh` | exit 0; 485 tests; `validate: OK`; 245 archived-plan warnings are pre-existing/non-fatal |
+| `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
+| `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
+| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `de3f7f7d48515be94c8d26f838173e55370f8f6fa666beae0cf66b94068e3970` |
+
+Two first-pass reviewer harness invocations were invalid and are not counted as implementation
+results: the synthetic matrix compared the entire routine-authority object instead of its three
+contract fields, and the first actual-plan D67 probe inserted the row after the Decision Log table's
+blank terminator. Both stopped before producing a semantic failure; the corrected reruns above
+used narrow assertions and an adjacent table row and exited 0.
+
+### Preflight, conformance and scope
+
+- `codex doctor --json`: exit 0; model `gpt-5.6-sol`, approval `Never`, unrestricted filesystem.
+  The assigned route is xhigh; runtime output does not export effort, so no stronger machine claim
+  is made.
+- `packages/maind/bin/maind health --cwd --json`: exit 0; connected, memory round-trip true and both
+  provider-trust rows GREEN.
+- `packages/harness/bin/harness doctor --provider-audit --json`: exit 0; `green=true`, diagnostics
+  empty, catalog hash `sha256:b14bdcff863dd0738ecfc3ed08151c5cb611bdde1a6a13746e922aab1e0eb835`.
+- `python3 -m py_compile .codex/hooks/lifecycle.py`: exit 0. The trusted Codex hook dry-run also
+  exited 0 but remains non-green `warning`: lifecycle hook and handler are both
+  `stale-source -> update (source-changed)`. This pre-existing P4.4-owned environment defect is
+  neither waived nor reported GREEN and does not alter the Task compiler verdict.
+- Code-profile correctness/security and plan-profile carrier conformance were checked separately.
+  The authority boundary fails closed for spoofed identity, tampered sequence, ambiguous grant and
+  revoked grant; no confirmed finding remains after adversarial verification.
+- Producer evidence, P0.1-P6.4 statuses/deliverables, Task implementation/generated artifacts,
+  Artifex product code, docs, release/fleet/Brain/provider/pilot/hook state and unrelated dirty
+  paths were not changed. P0.1 was not launched.
+
+### Terminalization decision
+
+All conjuncts are reproduced GREEN. Attempt 4 is committed first as the literal independent review
+record; carrier `State` remains `waiting` only until that real review-evidence commit hash is written
+into `Independent verification` by the immediately following evidence-only terminalization commit.
+Attempts 1-3 remain verbatim RED history.
+
+### Verification
+
+- **RAG:** not invoked; the verdict is entirely repo-grounded in the implementation commit, current
+  plan carriers and executable Task Contract results.
+- **Unverified -> re-pass:** none.
+- **Workarounds/[POSSIBLE-DEFECT]:** none accepted. The hook `stale-source` warning remains explicit
+  P4.4-owned future evidence, not a waived terminal predicate for this Task prerequisite.

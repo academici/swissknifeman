@@ -1,0 +1,776 @@
+# 2026.08.03-ARTIFEX-SUPERVISOR — Reliable long-horizon supervisor
+
+## 0. Meta
+
+| Поле | Значение |
+|:--|:--|
+| Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
+| Title | Reliable long-horizon supervisor |
+| Version | 0.9.3 |
+| Status | 🟡 In progress |
+| Document Type | Executable Master Plan |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail and finish; runtime effort not exported) |
+| Last Updated | 2026-08-03 |
+| Repository | swissknifeman |
+| Related Packages | task · harness · core · analyst · maind (prototype plan-local; promotion home unset) |
+| Execution Mode | contract-first, phase-first |
+| Target Operator Classes | implementation (execution) · economy (recon) · frontier (design/audit) |
+| Approval Owner | repository owner |
+| Home | repo:swissknifeman |
+| visibility | private |
+| supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
+| Paused By | — |
+| Design Passes | 8/8 + finish + three audit remediations — F1–F8 repaired in plan carriers without item/carrier execution; fourth independent cold design audit is next |
+
+## 1. Context
+
+Нужен надёжный внешний supervisor для длинных фаз, где владелец заранее задаёт каноны и
+границы, а подавляющее большинство рутинных развилок может быть разрешено без его участия.
+Это не Workflow и не постоянно растущий главный LLM-контекст. Supervisor компилирует план в
+ограниченные слайсы, запускает каждый слайс в свежем worker-контексте, детерминированно
+проверяет результат, ведёт durable run state и объединяет редкие owner-гейты в один пакет.
+
+Архивный FOREMAN сохранил имя Artifex и полезные run-folder/driver идеи, но был поглощён
+HARNESS-AGNOSTIC: живой Harness получил декларативную execution policy, а не runtime
+супервизор. Roadmap-критерий теперь сработал как owner-directed measured prototype: сначала
+проверяем надёжность и токеновую экономику на боевых волнах, затем решаем, заслуживает ли
+результат нового package/CLI home. До этого код живёт только в артефактах плана.
+
+## 2. Execution Rules
+
+- Supervisor является внешней детерминированной control loop; Workflow допустим только как leaf adapter, не как источник состояния или решений.
+- LLM worker не получает ambient authority: его вывод — недоверенное наблюдение, которое проходит schema, scope, validation и authority gates.
+- Один item исполняется за раз; статусы меняются только каноническими командами plan-protocol после принятой проверки.
+- Один write lane по умолчанию; параллельность максимум 2 и только для доказанно независимых read-only либо worktree-isolated слайсов; интеграция последовательна.
+- Каждый слайс стартует в свежем контексте из минимального immutable bundle; обратно возвращается ограниченный structured envelope и ссылки на артефакты.
+- До любого worker/public side effect durable journal получает intent с attempt/idempotency key; после границы — observation; acceptance пишется только после детерминированной проверки.
+- Resume сначала сверяет journal, snapshot, source/plan hashes и внешний pre/postimage; неизвестное третье состояние fail-closed эскалируется владельцу.
+- AUTO-FIX не может ослабить acceptance, тесты, security, scope, budget или frozen contract.
+- Owner-гейты пакетируются; немедленно будят владельца только security, destructive или необратимая граница.
+- Никаких новых pip/npm runtime dependencies; внешние проекты используются только как дизайн-паттерны и переписываются на stdlib.
+- Неизмеренные token/cost/intervention поля не дают зелёный экономический вердикт.
+- После закрытия item/фазы полностью перезаписать `handoff.md` и append-only обновить `journal.jsonl`.
+
+## 3. Routing
+
+| Items | Model class/effort | Exec | Почему |
+|:--|:--|:--|:--|
+| P0.1 | frontier/high | manual | matched-baseline selection and live-driver reuse verdict retain open comparability decisions |
+| P0.2 | frontier/high | manual | owner authority and conflict examples freeze decision semantics |
+| P0.3 | implementation/high | manual | bounded empirical probes follow a fixed matrix; provider/security boundaries require high effort but no open architecture |
+| P0.4 | frontier/high | manual | ecosystem-core threat model and pre-mortem retain open failure-boundary decisions |
+| P0.5 | frontier/high | manual | acceptance rubric and GO/NO-GO evidence freeze are irreversible planning decisions |
+| P1.1 | frontier/high | manual | irreversible freeze of durable run/WAL/recovery semantics; public ecosystem-core contract requires full review |
+| P1.2 | frontier/high | manual | immutable slice/compiler contract still carries open ownership and refusal decisions; full review |
+| P1.3 | frontier/high | manual | authority-class freeze changes which actions may run unattended; full review |
+| P1.4 | frontier/high | manual | provider-neutral public envelope freezes parity and failure taxonomy; full review |
+| P1.5 | frontier/high | manual | economic/privacy verdict contract and aggregate five-contract freeze are irreversible adjudication inputs; full review |
+| P2.1 | implementation/high | manual | canonical plan/Task compiler integration against frozen contracts; high effort and full review, no open architecture |
+| P2.2 | implementation/high | manual | durability/lock/replay implementation is correctness-critical; high effort and full review |
+| P2.3 | implementation/high | manual | prescribed authority evaluator against frozen cases; security/authority boundary requires high effort and full review |
+| P2.4 | implementation/high | manual | scheduler/reconcile/budget implementation is correctness-critical; high effort and full review |
+| P2.5 | implementation/high | manual | control CLI and aggregate candidate freeze cross durability/security boundaries; high effort and full review |
+| P3.1 | implementation/high | manual | prescribed Codex mapper crosses current CLI, permission and structured-output boundaries; high effort/full review |
+| P3.2 | implementation/high | manual | prescribed Claude mapper crosses current CLI, permission and structured-output boundaries; high effort/full review |
+| P3.3 | implementation/high | manual | provider parity/exit conformance implements the frozen P0/P1 matrix; high effort/full review |
+| P3.4 | implementation/high | manual | fresh-process, timeout/orphan, privacy and activity-port binding are correctness/security critical; high effort/full review |
+| P4.1 | implementation/high | manual | exact failure-bank freeze and executable crash harness are correctness-critical; high effort/full review |
+| P4.2 | implementation/high | manual | no-rerun recovery and idempotency repair cross durable side-effect boundaries; high effort/full review |
+| P4.3 | implementation/high | manual | linked-worktree ownership and serialized integration cross Git write/rollback boundaries; high effort/full review |
+| P4.4 | implementation/high | manual | authority, secret, untrusted-output, redaction and effective-hook gates are security-critical; high effort/full review |
+| P4.5 | implementation/high | manual | journal-derived owner/telemetry aggregate must preserve every severe/unknown/provider state; high effort/full review |
+| P5.1 | frontier/high | manual | irreversible trial/baseline/order freeze and archive mapping retain open experiment-design decisions; full review |
+| P5.2 | implementation/high | manual | prescribed three-slice live pilot crosses provider/Git/acceptance boundaries; high effort/full review |
+| P5.3 | implementation/high | manual | prescribed composed crash/reconcile/provider-failure pilot is correctness/security critical; high effort/full review |
+| P5.4 | frontier/high | manual | five-wave comparability, provider-scope and economic GO/NO-GO are irreversible productization inputs; full review |
+| P6.1 | frontier/high | manual | package/CLI promotion can change the frozen five-package/root-router canon and is an Owner gate when expansion is proposed |
+| P6.2 | implementation/high | manual | branch-locked integration or roadmap return crosses package/generated ownership and must preserve one runtime SSOT; full review |
+| P6.3 | implementation/high | manual | opt-in compatibility, state migration, rollback and docs implement frozen P6.1/P6.2 decisions; high effort/full review |
+| P6.4 | frontier/xhigh | manual | cold independent release/rollback audit |
+
+## 4. Phase Index & Status Board
+
+| Phase | Title | Items 🟢/всего | Status |
+|:--|:--|:--|:--|
+| P0 | Evidence, owner canons, and acceptance baseline | 1/5 | 🟡 In progress |
+| P1 | Freeze supervisor contracts | 0/5 | ⬜ Not started |
+| P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
+| P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
+| P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
+| P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
+| P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
+
+## 5. Decision Log
+
+| D# | Дата | Решение | Почему |
+|:--|:--|:--|:--|
+| D1 | 2026-08-03 | Artifex v1 проектируется как внешний durable supervisor, а не named Workflow, agent-pack orchestrator или длинная parent-agent сессия. RAG:✅ current OpenAI/Anthropic long-horizon and subagent docs; repo-grounded current Harness inspection. | Workflow повторно раздувает coordinator context и не владеет durable execution state; живой `_common.orchestrator` только планирует для main session. |
+| D2 | 2026-08-03 | До P5 кандидат живёт plan-local под `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/`; `packages/artifex/` и root CLI не создаются. RAG:— (repo-grounded: five-package, CLI-routing and speculative-work canons). | Проверяем проблему до расширения архитектуры и не создаём шестой package по ожиданию. |
+| D3 | 2026-08-03 | Supervisor scheduler/arbiter/recovery path детерминирован; LLM calls являются activities за side-effect boundary и не принимают state-transition решения. RAG:✅ Temporal workflow/activity patterns; adapted without dependency. | Replay должен давать тот же переход без повторного модельного суждения. |
+| D4 | 2026-08-03 | Authority precedence: system/security/provider hard limits → root/package instructions → frozen plan contracts/D# → signed run mandate, который может только сужать → supervisor defaults. RAG:— (internal authority policy). | Нижний слой не может отменить верхний; конфликт становится машинно разрешимым либо OWNER. |
+| D5 | 2026-08-03 | Действия делятся на `AUTO`, `AUTO-FIX`, `OWNER`; класс вычисляется из scope, reversibility, external visibility, contract/public-API/dependency/security и validation predicates, а не из рекомендации worker. RAG:— (internal policy synthesized from repository authority canons). | Рекомендация модели не является разрешением. |
+| D6 | 2026-08-03 | При нескольких legal AUTO-вариантах supervisor выбирает минимальный blast radius, простейший reversible вариант и пишет decision reason; canon conflict или недоказанная эквивалентность переходят в OWNER. RAG:— (owner brief). | Так автоматизируется рутинное согласие владельца без угадывания новых канонов. |
+| D7 | 2026-08-03 | Каждый слайс получает fresh worker, immutable minimal context bundle и capped structured return; полный parent transcript не переносится. RAG:✅ OpenAI/Anthropic subagent docs. | Изоляция шума экономит coordinator context; сами subagents не объявляются бесплатными по токенам. |
+| D8 | 2026-08-03 | Дефолт — последовательный one-writer scheduler. Parallel max 2 разрешён только по доказанной независимости: read-only fan-out либо отдельные worktrees; merge/integration всегда сериализован. RAG:✅ OpenAI caution for write-heavy parallel work; Maestro/Superset worktree patterns. | Предотвращает конфликтный fan-out и стоимость повторной интеграции. |
+| D9 | 2026-08-03 | Prototype state — hash-chained append-only JSONL + derived atomic snapshot + exclusive writer lock; SQLite/Temporal не являются runtime dependencies. RAG:✅ SQLite WAL and Temporal recovery principles; adapted to stdlib. | JSONL прозрачен, переносим и не зависит от host SQLite WAL/version semantics. |
+| D10 | 2026-08-03 | Каждая side-effect boundary использует `intent → fsync/reopen/verify → call → observation → fsync/reopen/verify → acceptance`; intent несёт stable run/slice/attempt/idempotency key и source/input hashes. RAG:— (reliability design adapted from durable execution patterns and current P5/P6 WAL precedent). | Crash не должен превращать неизвестный side effect в молчаливый повтор. |
+| D11 | 2026-08-03 | Resume/reconcile принимает только exact approved postimage, exact preimage либо контрактно распознанный partial с whole-slice rollback; third state, torn/reordered chain, source drift или missing backup отказывают. RAG:— (repo-grounded P6 WAL precedent; external durable-execution synthesis). | Восстановление не угадывает состояние. |
+| D12 | 2026-08-03 | Codex и Claude являются additive provider adapters одного `worker-envelope-v1`; approvals, exits, quota, budget and structured-output capabilities маппятся явно, unsupported не маскируется. RAG:✅ current official provider docs; repo-grounded provider parity canon. | Один provider не может стать семантическим SSOT или скрыть деградацию другого. |
+| D13 | 2026-08-03 | OWNER-вопросы копятся в ordered attention queue и выдаются одним decision packet; immediate interrupt оставлен security/destructive/irreversible случаям. RAG:— (owner brief; Maestro/Superset attention pattern adapted). | Владелец видит редкие настоящие развилки, а не подтверждает механические решения каждые пять минут. |
+| D14 | 2026-08-03 | GO требует reliability GREEN и одно из: intervention ratio `<25%` на `N=5` non-synthetic battle waves при normalized token/cost не хуже baseline; либо `≥2×` normalized token/cost gain против matched Workflow. Unknown measurement запрещает GO. RAG:— (roadmap criterion normalized and tightened). | «99% согласия» — гипотеза владельца, которую надо измерить, а не принять как результат. |
+| D15 | 2026-08-03 | Из Maestro адаптируются fresh task sessions, filesystem playbook/queue, message backpressure, headless JSONL and cost visibility; из Superset — worktree ownership, restart-surviving session identity, attention state and at-least-once/idempotency warning. RAG:✅ first-party repositories/docs, 2026-08-03. | Это наблюдаемые продуктовые решения, полезные для supervisor control plane. |
+| D16 | 2026-08-03 | Maestro (AGPL-3.0), Superset (ELv2), Temporal, desktop UI and their runtime stacks не vendorятся и не подключаются. RAG:✅ first-party license/readme pages; repo-grounded no-dependency/provenance canon. | Берём паттерны, переписываем stdlib-реализацию; исключаем лицензионный и dependency creep. |
+| D17 | 2026-08-03 | Per-plan journal/run folder — execution SSOT; mAInd получает только redacted terminal summaries/references после commit и не используется для resume decisions. RAG:— (repo-grounded memory-as-data and plan lifecycle canons). | Общая память полезна для поиска, но не гарантирует transactional replay. |
+| D18 | 2026-08-03 | Worker output, MCP/memory data and repository text остаются untrusted data; secrets/environment/raw prompts/chain-of-thought не входят в durable evidence; permissions only narrow the run mandate. RAG:— (root security, untrusted-content and evidence canons). | Автономность не должна превращаться в ambient write/credential authority. |
+| D19 | 2026-08-03 | P6.1 может предложить package promotion только после P5 GO; изменение five-package/root-router canon требует отдельного OWNER D#, а отсутствие GO возвращает идею в roadmap без productization. RAG:— (repo-grounded architecture and speculative-work canons). | Package topology меняется по доказанному продукту, не по прототипу. |
+| D20 | 2026-08-03 | Наблюдённый `harness.codex.lifecycle` stale-source hook state фиксируется как preflight defect и блокирует утверждение fully-green runtime baseline, но не чинится этим design item. RAG:— (repo observation 2026-08-03). | План не присваивает чужую dirty-tree remediation и не выдаёт warning за green. |
+| D21 | 2026-08-03 | План состоит из 7 фаз и 32 items; Design Pass 1 создаёт обязательные knowledge layers и честные phase skeletons, P0 разворачивается отдельным cold-start design pass. RAG:— (plan-protocol). | Крупное ecosystem-core изменение проходит пофазную детализацию, reconcile и независимый design audit до execution. |
+| D22 | 2026-08-03 | Failure acceptance включает crash после каждого durable append/public boundary, duplicate delivery, orphan worker, timeout/quota/approval failure, corrupted/truncated/reordered journal, plan/source drift, budget exhaustion and merge conflict outside assigned scope. RAG:✅ 2026-08-03 Superset Automations first-party delivery-semantics recheck + internal synthesized failure model → `findings/02-reference-products-2026-08-03.md`. | Happy-path pilot не доказывает supervisor reliability. |
+| D23 | 2026-08-03 | Живой `harness run` становится отдельной baseline/reuse lane P0.1 наряду с manual и Workflow; P1/P2 обязаны предъявить gap crosswalk перед повторением его queue/worker/gate/journal семантики. RAG:— (repo-grounded: `packages/harness/docs/reference/exec-wave.md`; `findings/04-p0-design-verification-2026-08-03.md`). | Bootstrap верно отрицал durable supervisor, но пропустил уже существующий последовательный exec-wave driver; игнорировать его означало бы проектировать дубликат. |
+| D24 | 2026-08-03 | P0 freeze хранится тройкой «читаемый Markdown + нормализованный JSON + stdlib verifier»; raw provider streams, prompts, chain-of-thought, secrets и environment dumps в evidence bundle не входят. RAG:— (repo-grounded: evidence-integrity/untrusted-content canons and `research/06-p0-evidence-freeze-design.md`). | Человек должен видеть основания, а следующий дешёвый исполнитель — проверять форму без доверия к прозе или сырым модельным данным. |
+| D25 | 2026-08-03 | Отсутствующая историческая метрика закрывает P0.1 как честный `baseline_pending` с `unknown_reason`, но блокирует любой P5 economic GO branch, которому она нужна; ноль не импутируется. RAG:— (owner-grounded acceptance intent; `research/04-token-economy-and-acceptance.md`). | P0 фиксирует качество доступного evidence, а не фабрикует цифры; экономический вердикт остаётся fail-closed. |
+| D26 | 2026-08-03 | P0 исполняется последовательно без Workflow: P0.2 зависит от baseline/reuse границ P0.1, P0.4 — от authority/provider evidence, P0.5 — от P0.1–P0.4; все items имеют `Exec = manual`. RAG:— (repo-grounded: `research/06-p0-evidence-freeze-design.md`; plan-protocol orchestration criterion). | Фаза не имеет трёх независимых plan-exec slices и не является автономной внешней цепочкой; orchestration carrier здесь создаст лишний контекст и второй scheduler. |
+| D27 | 2026-08-03 | Design budget registrar исправлен с 3 до 8 проходов: bootstrap + отдельные cold-start P0–P6, затем `finish`; это уточняет D21 без изменения семи фаз. **Consequences:** до исполнения добавляются пять обязательных design-сессий P2–P6. RAG:— (repo-grounded: plan-protocol phase-by-phase pipeline; seven-phase board). | Старый знаменатель достигался уже на P1 и противоречил обязательному handoff на оставшиеся скелеты; качество ecosystem-core плана важнее преждевременного `finish`. |
+| D28 | 2026-08-03 | P1 замораживает пять отдельных contracts в порядке run → slice → authority → worker → economy; каждый несёт Markdown + independent JSON cases + stdlib validator, а P1.5 — aggregate manifest/validator. RAG:— (repo-grounded: `research/07-p1-contract-freeze-design.md`). | Mega-contract стирает ownership/versioning; один общий validator даёт поздним items возможность переинтерпретировать ранние expected outcomes. |
+| D29 | 2026-08-03 | P1 execution hard-gated на terminal P0 и green P0 validators; пока P0 0/5, его outputs именуются только как planned preconditions. Donor contracts цитируются, а не копируются; P1 добавляет только supervisor-owned seams. RAG:— (repo-grounded: `findings/05-p1-donor-reconciliation-2026-08-03.md`). | Design может быть DoR до producer execution, но frozen values нельзя изобретать из будущих files или дублировать live Task/Harness carriers. |
+| D30 | 2026-08-03 | P1 не создаёт workflow: P1.2 потребляет P1.1, P1.3 — P1.2, P1.4 — P1.2/P1.3, P1.5 — P1.1–P1.4; все пять contract items manual frontier/high. RAG:— (repo-grounded: `research/07-p1-contract-freeze-design.md`; plan-protocol binary orchestration criterion). | Ни независимый N≥3 fan-out, ни длинная autonomous chain без manual contract checkpoints не существуют. |
+| D31 | 2026-08-03 | P1 high-stakes pre-mortem связывает invented P0 evidence, duplicate SSOT, authority widening, provider leakage, replay duplication, contract-set drift и metric/privacy gaming с наблюдаемыми сигналами, mitigations и owners P1.1–P1.5. RAG:— (repo-grounded: `research/07-p1-contract-freeze-design.md`). | Ecosystem-core contract freeze не считается ready без владельца каждой причины отказа через 6–12 месяцев. |
+| D32 | 2026-08-03 | P2 compiler consumes the worktree-local `harness run --dry-run --json` queue plus canonical `task.task_contract build` output through subprocesses; it cross-checks them and adds only `slice-manifest-v1` semantics. It neither imports private parsers nor parses Markdown. RAG:— (repo-grounded: `findings/06-p2-runtime-recon-2026-08-03.md`). | Reuses the live reader/route owners without binding the experiment to their private Python seams or creating a third status/parser SSOT. |
+| D33 | 2026-08-03 | P2 run storage uses strict canonical hash-chain JSONL, a POSIX advisory single-writer lock and derived atomic snapshots; locking, name replacement and durability are separate evidence claims, and unsupported directory durability stays explicit. RAG:✅ Python 3.12 official API boundaries in `findings/06-p2-runtime-recon-2026-08-03.md`. | Tolerant analytics readers and non-fsync `core.io` writes cannot be reused for a recovery authority; product portability/physical durability remains P4/P6 evidence. |
+| D34 | 2026-08-03 | P2 has no production provider adapter: its default activity port refuses before dispatch, and only deterministic fakes may drive tests. Codex/Claude argv, event parsing and capability degradation belong exclusively to P3. RAG:— (repo-grounded: phase contracts and provider-parity canon). | Durable-core correctness must be testable without credentials or provider effects, and provider empirical seams must not leak backward into the neutral core. |
+| D35 | 2026-08-03 | P2 executes sequentially P2.1→P2.5 with no Workflow; each item is `implementation/high`, `Exec = manual`, full review. **Consequences:** the draft `P2.1–P2.5 implementation/high plan-exec` row is replaced by five legal rows and every P2 item needs a routed manual session. RAG:— (repo-grounded: `research/08-p2-prototype-design.md`; plan-protocol routing/orchestration rules). | All items form one producer chain; `plan-exec` cannot satisfy high effort, and a workflow would become a second scheduler before the candidate is proven. |
+| D36 | 2026-08-03 | P3 keeps Codex/Claude as separate pure argv/event mappers over `worker-envelope-v1`; one shared P3.4 process runner alone owns subprocess, timeout, caps, redaction and orphan handling. RAG:— (repo-grounded: `research/09-p3-provider-adapter-design.md`). | Additive adapters preserve the P1 neutral SSOT, while one runner prevents the reliability boundary from drifting by provider. |
+| D37 | 2026-08-03 | Every attempt starts a new non-persistent provider process with no resume/continue/session reuse; native child-agent surfaces are disabled, and any non-disabled child policy is capability-unsupported/OWNER in v1. RAG:✅ current non-persistence/tool/feature controls in `findings/07-p3-provider-runtime-recon-2026-08-03.md`; child refusal is internal policy. | Current CLIs do not expose one proven common hard cap for child count, scope and budget; a prompt-only limit is not authority. |
+| D38 | 2026-08-03 | P3 permissions are explicit and narrowing-only: Codex uses the verified sandbox plus non-interactive approval config, Claude uses `dontAsk` plus exact available/allowed tools; bypass/yolo, ambient fallback and `--bare` are forbidden. RAG:✅ 2026-08-03 official permission/CLI facts in `findings/07-p3-provider-runtime-recon-2026-08-03.md`; mapping is contract-driven. | A headless worker must refuse rather than wait for approval, widen authority or discard repository instructions/hooks. |
+| D39 | 2026-08-03 | P3.4 binds adapters through P2's typed activity port and adds only explicit provider selection plus hard `--max-slices 1` to existing `start`/`resume`; omission preserves P2's no-provider refusal. RAG:— (repo-grounded: D34 and `research/09-p3-provider-adapter-design.md`). | Provider integration stays additive, one scheduler/state machine remains authoritative, and the prototype cannot become an unattended wave before P4/P5 evidence. |
+| D40 | 2026-08-03 | P3 executes sequentially P3.1→P3.4 without Workflow; all four items are `implementation/high`, `Exec = manual`, full review. RAG:— (repo-grounded: P3 dependency graph and plan-protocol orchestration criterion). | Only two provider mappers are independently shaped; parity and the shared runner depend on both, so N≥3 independent items and long external autonomous chain are absent. |
+| D41 | 2026-08-03 | P3 preflight records two non-green Hook/Harness facts without repair: relative `--target .` raises explicit-root `ValueError`, while absolute target still reports lifecycle hooks/handler `stale-source`; syntax, doctor and mAInd health are green. RAG:— (direct local observation; `findings/07-p3-provider-runtime-recon-2026-08-03.md`). | Validation trust must distinguish a CLI-normalization defect, actual source drift and unrelated green checks; this design pass does not capture foreign dirty scope. |
+| D42 | 2026-08-03 | P4 freezes an independent exact-set fault matrix and child-process cut-point harness before recovery fixes: every durable append/reopen and provider/Git/validation boundary gets before/after rows, plus positive reachability. RAG:— (repo-grounded: `research/10-p4-assurance-design.md`). | Candidate-owned chaos selection or mock-only exceptions could omit the boundary that actually loses state and could let reject-all pass. |
+| D43 | 2026-08-03 | P4.2 repairs only existing P2/P3 store/scheduler/worker/CLI owners; unresolved intent is observed before action and may become exact-post accept, exact-pre retry-with-budget, recognized-partial whole-slice rollback or third-state OWNER—never blind rerun. RAG:— (repo-grounded: D10–D11, `research/10-p4-assurance-design.md`). | Preserves one state machine and makes duplicate external calls machine-observable through stable idempotency keys/counters. |
+| D44 | 2026-08-03 | A write-capable attempt uses a detached identity-locked linked worktree at a pinned base; stable inventory comes from `git worktree list --porcelain -z`, and `--force`/broad prune are forbidden. RAG:✅ 2026-08-03 current official Git worktree semantics in `findings/08-p4-recovery-security-recon-2026-08-03.md`. | Git documents separate working/index state but shared repository state; exact ownership is required before cleanup or integration. |
+| D45 | 2026-08-03 | Linked worktrees prove file/index write-lane isolation only, not security. Integration is one exclusive clean exact-base lane using the validated attempt commit; conflict aborts to verified preimage or enters OWNER, with no automatic resolution or owner-dirty-tree mutation. RAG:— (repo-grounded: D8/D18 and `research/10-p4-assurance-design.md`). | Avoids promoting a Git convenience into credential/process authority and prevents conflict resolution from changing the acceptance contract. |
+| D46 | 2026-08-03 | P4.4 consolidates candidate path/env/content checks, while an independent validator scans actual evidence bytes through public Task `bundle_lint` plus closed P1/P3 schemas. Full security readiness additionally requires the effective hook dry-run itself GREEN; the current `stale-source` warning blocks it and is not repaired in P4. RAG:— (repo-grounded: `findings/08-p4-recovery-security-recon-2026-08-03.md`; `packages/task/lib/task/task_contract.py`). | Candidate declarations and exit zero cannot self-certify privacy or mask environment drift. |
+| D47 | 2026-08-03 | Owner attention and terminal telemetry are bounded derived projections of strict journal replay: immediate protected classes never batch, routine OWNER rows deduplicate/order by dependency, unknown metrics remain unknown, and an independent assurance manifest is P5's sole readiness input. RAG:— (owner/repo-grounded: `research/00-user-intent.md`, `research/10-p4-assurance-design.md`). | Gives the owner one reproducible packet without a second status authority, provider masking, mAInd side effect or premature GO. |
+| D48 | 2026-08-03 | P4 executes sequentially P4.1→P4.5 without Workflow; all five items are `implementation/high`, `Exec = manual`, full review. RAG:— (repo-grounded: P4 producer graph and plan-protocol orchestration criterion). | P4.2 consumes the injector, P4.3 consumes reconcile, P4.4 attacks the integrated candidate and P4.5 aggregates all; N≥3 independent items and a long unattended external chain are absent. |
+| D49 | 2026-08-03 | P5 execution is hard-gated on terminal P4 and exact-green `assurance-manifest-v1`; direct tests, candidate status or hook dry-run exit 0 cannot substitute. The current `stale-source` hook warning therefore keeps P5 closed until separately repaired and revalidated. RAG:— (repo-grounded: `research/10-p4-assurance-design.md` and `findings/09-p5-pilot-economy-recon-2026-08-03.md`). | Business/economic evidence is meaningless if the measured candidate has an unresolved recovery/security/environment floor. |
+| D50 | 2026-08-03 | P5.1 freezes one candidate-independent catalog before any candidate call: explicit archive mappings, one exact three-slice pilot, one recovery pilot and exactly five paired battle rows with base/task/acceptance/provider/baseline/order hashes. RAG:— (repo-grounded: `research/11-p5-pilot-economics-design.md`). | Prevents cherry-picking, post-hoc baseline replacement and importing obsolete FOREMAN parser semantics. |
+| D51 | 2026-08-03 | P5.2 uses a stateless measurement harness over the P4-assured public CLI with `--max-slices 1` for exactly three sequential real repository slices in controlled disposable roots; the harness owns no transition, authority or acceptance state. RAG:— (repo-grounded: P3.4/P4 boundaries and `research/11-p5-pilot-economics-design.md`). | Proves a live reversible path without changing the assured candidate hash or introducing a second scheduler. |
+| D52 | 2026-08-03 | P5.3 composes P4 cut identities with the real P5.2 path; provider failure is induced only through the terminal fake-binary seam or a naturally observed closed failure, never by damaging credentials, forcing quota or widening authority. RAG:— (repo-grounded: `research/11-p5-pilot-economics-design.md`). | Recovery must be exercised at the composed boundary without creating an unrelated external/security incident. |
+| D53 | 2026-08-03 | P5.4 runs exactly five predeclared non-synthetic candidate/incumbent pairs at identical base/task/acceptance/provider/model/effort/capabilities; both providers need eligible evidence unless a prior exact Owner D# approved a single-provider product scope. RAG:— (owner/repo-grounded: D14 and `research/11-p5-pilot-economics-design.md`). | Matched paired work and explicit parity are required to interpret normalized economy instead of pooling incomparable runs. |
+| D54 | 2026-08-03 | P5 GO/NO-GO is emitted only by an independent recomputing validator over all attempts and coordinator/worker costs. Any unknown critical field, unmappable owner channel, failed reliability/security floor, ineligible pair, N<5 or candidate-only success makes the dependent GO branch ineligible/NO-GO; provider price is reported/pinned evidence, never a fetched constant. RAG:✅ 2026-08-03 current provider measurement surfaces and bounded gaps in `findings/09-p5-pilot-economy-recon-2026-08-03.md`; thresholds are D14/D25. | Candidate summaries and missing events cannot self-certify savings or silently become zero. |
+| D55 | 2026-08-03 | P5 executes sequentially P5.1→P5.4 without plan Workflow; P5.1/P5.4 are `frontier/high`, P5.2/P5.3 `implementation/high`, all `Exec = manual` and full review. RAG:— (repo-grounded: P5 dependency graph and plan-protocol orchestration criterion). | The four items are producer-coupled; the autonomous chain inside the pilot is the candidate under measurement, and an outer Workflow would add a second coordinator and contaminate the comparator. |
+| D56 | 2026-08-03 | P6.1 uses a closed home table: terminal P5 NO-GO → `roadmap-only`; GO + plan-only mechanics → `task-extension`; GO + full delegation of transitions/state/acceptance to live Harness → `harness-extension`; retained store+scheduler+authority+worker ownership → `artifex-package`. The last branch needs an exact Owner D#, and root-router approval is a separate explicit axis. RAG:— (repo-grounded: `research/12-p6-productization-design.md`, root/task/harness package canons). | Product evidence must not silently rewrite package topology or hide an independent capability in the wrong owner. |
+| D57 | 2026-08-03 | P6.2 is branch-locked by a validated exact file/generator scope: NO-GO writes roadmap/evidence only; GO leaves plan-local code immutable as non-importable provenance and establishes exactly one live runtime owner. RAG:— (repo-grounded: shared-core, generated-artifact and single-SSOT canons). | Switching homes after a failed implementation or importing `plans/**` would evade the P6.1 authority gate and create duplicate runtimes. |
+| D58 | 2026-08-03 | Any GO integration ships `experimental` and default-off: explicit local enablement only, no fleet/Brain/project rollout, no always-on context, and existing manual Task/Harness paths remain unchanged when absent/disabled. RAG:— (repo-grounded: owner brief, budget gate and project-tooling canons). | N=5 measured waves justify bounded productization evidence, not universal or implicit enablement. |
+| D59 | 2026-08-03 | Run-state compatibility uses validate → separate copy/backup → new-reader proof → rollback/downgrade postimage; uninstall never deletes run history, and the kill switch blocks new starts while preserving inspect/resume/reconcile/rollback. RAG:— (repo-grounded: P1 run contract, P4 recovery design and worktree-safety canon). | In-place migration or a total kill switch can strand the durable evidence needed to recover. |
+| D60 | 2026-08-03 | P6 executes P6.1→P6.2→P6.3→P6.4 sequentially with no Workflow. P6.1/P6.4 are frontier manual decision/audit sessions; P6.2/P6.3 are implementation/high manual full-review sessions. RAG:— (repo-grounded: `phases/P6.md` producer graph and plan-protocol orchestration criterion). | Every item consumes the prior terminal artifact, an Owner wait may intervene, and the final audit must be a distinct cold session. |
+| D61 | 2026-08-03 | P6.4 is read-only outside its own evidence and independently recomputes the branch from raw minimized inputs; NO-GO requires zero live productization diff, GO requires exact authority, one runtime owner, opt-in compatibility, rollback postimages, privacy and green package/root/docs/generated checks. RAG:— (repo-grounded: `research/12-p6-productization-design.md` pre-mortem and evidence-integrity canon). | The implementation authors and their validators may share one mistaken premise; release readiness needs a separate falsifiable verdict. |
+| D62 | 2026-08-03 | `[POSSIBLE-DEFECT]` Until plan-protocol adds a semantic `plan-design finish` Next form, the P6 handoff uses the linter-legal `manual: frontier/high` carrier and keeps the exact Codex finish command in the mandatory code block. RAG:— (repo-grounded: `packages/task/lib/task/plan_lint.py` accepts Pn/Pn.m but not `finish`; plan-design mode 5 requires `finish`). | This preserves an executable next step without falsely repeating P6 or skipping directly to audit; owning protocol code is outside this design pass. |
+| D63 | 2026-08-03 | Cross-phase finish accepts the P0→P6 graph as gap-free after replacing three ambiguous Required Reads entries with exact paths, reconciling repeated candidate files as later repairs in their original owners, and revalidating the 32-item manual roadmap. RAG:— (repo-grounded: `research/13-finish-reconcile.md`, P0–P6 specifications and final roadmap). External provider/runtime/product fact classes remain bounded by the same-day primary-source recheck. RAG:✅ 2026-08-03, `findings/11-finish-verification-2026-08-03.md`. | Every consumer has a prior producer or an exact existing source; execution remains closed behind a cold independent design audit. |
+| D64 | 2026-08-03 | Cold-audit F1–F5 remediation is plan-only and fail-closed: every Required Reads clause carries exactly one path (dynamic P6 input resolves through exact terminal manifests); all 32 compiled Task Contracts have public pre-final acceptance entries; NO-GO executes bounded P6.3 zero-surface evidence and still produces the P6.4 operations input; Context values use the closed enum. Genuine new owner grants are only the conditional P5.4 single-provider GO and P6.1 package/router transitions, each with an exact `[OWNER-GRANT:<gate-id>]` Decision Log carrier defined in `roadmap.md`; provider/hook/validator/audit conditions remain non-waivable evidence gates. `[POSSIBLE-DEFECT]` Task Contract/plan command owners must remove the unrelated default `D50 (G-EXEC for self-host P0-P3)` and derive authority fields from a verified carrier; all plan execution is prohibited until that external protocol defect is fixed and independently checked. RAG:— (repo-grounded: audit F1–F5, P0–P6 specs, `roadmap.md`, `packages/task/lib/task/task_contract.py`, `packages/task/commands/plan-exec.md`). This D# records design remediation only and is not an owner grant. | The plan no longer confuses owner decisions with evidence or silently incomplete cold-start/acceptance/NO-GO carriers; no synthetic D# or manual argument may waive the remaining protocol prerequisite. |
+| D65 | 2026-08-03 | F6 assigns the D64 Task defect to the exact executable prerequisite carrier `artifacts/design/task-authority-carrier-01.md`: its package owner, owned surface, producer launch, terminal predicate and independent reviewer are explicit. P0.1 is structurally `waiting:` until that carrier is `State: terminal` on committed positive/negative and ordinary 32-build evidence; current remediation and a design GREEN are not terminal evidence. This supersedes only D64's carrierless external-owner deferral; D64's F1–F5 decisions and the existing 32 item specs/statuses/deliverables remain unchanged. **Consequences:** Artifex execution pays one bounded Task remediation plus independent-review prerequisite before P0.1, while Task/product implementation remains outside this design session. RAG:— (repo-grounded: repeat `Audit design — 2026-08-03` F6; `artifacts/design/task-authority-carrier-01.md`; `roadmap.md`). | A real producer can now change the blocking state, and the roadmap can represent non-executability structurally without inventing a cross-plan gate or treating prose as authority. |
+| D66 | 2026-08-03 | F7/F8 remediation supersedes D65 only for the prerequisite launch chain and P0.1 waiting predicate: the producer is the exact Codex `gpt-5.6-terra/high` + `task:dev` implementation/high launch; a separately launched cold `gpt-5.6-sol/xhigh` reviewer alone writes committed `task-authority-carrier-01-review.md` GREEN/RED evidence and may terminalize the carrier, while producer self-certification and reviewer code repair are forbidden. P0.1 has one predicate in roadmap/handoff carriers: `latest Audit design verdict = GREEN AND TASK-AUTHORITY-CARRIER-01 State = terminal`; neither conjunct alone exposes a runnable launch. **Consequences:** the prerequisite costs two isolated sessions and a committed review artifact, and P0.1 remains closed through every RED even if the Task repair itself is complete; D64's F1–F5 decisions and all 32 item statuses/deliverables remain unchanged. RAG:— (repo-grounded: third `Audit design — 2026-08-03` F7/F8; `packages/task/configs/command-routing.json`; `artifacts/design/task-authority-carrier-01.md`; `roadmap.md`; `handoff.md`). | The exact provider routes now match the declared neutral classes/efforts, every independent terminal conjunct has a producer, and all executable maps share one fail-closed guard. |
+
+## 6. Update Log
+
+| Дата | Кто (role/model) | Что |
+|:--|:--|:--|
+| 2026-08-03 | plan-design/gpt-5.6-terra (effort not exported by runtime) | Design pass 1/3: owner brief, FOREMAN/absorption/roadmap recon, current Harness/Task/runtime evidence, official external verification, Artifex target architecture and P0–P6 skeletons created; current provider plan paused without item/status/remediation edits. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 2/3: P0 detailed to DoR; live `harness run` added as baseline/reuse donor, five sequential evidence-freeze specs and exact validators pinned. P1–P6 and cross-phase finish were not reached; P1 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 3/8: P1 detailed to DoR with five item-granular manual contract freezes, terminal-P0 gate, donor reconciliation, aggregate validation and ecosystem-core pre-mortem. P2–P6 and finish were not reached; P2 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 4/8: P2 detailed to DoR as a five-item sequential plan-local compiler/store/authority/scheduler/CLI chain, with explicit Harness/Task reuse, no-provider boundary, strict replay and pre-mortem. P3–P6 and finish were not reached; P3 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 5/8: P3 detailed to DoR as pure Codex/Claude mappers, explicit parity evidence and one capped fresh-process activity binding; P4–P6 and finish were not reached; P4 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 6/8: P4 detailed to DoR as a five-item sequential assurance chain with independent fault/recovery/worktree/security/telemetry evidence; P5–P6 and finish were not reached; P5 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 7/8: P5 detailed to DoR as a four-item sequential shadow/pilot/recovery/paired-economics chain with independent adjudication; P6 and finish were not reached; P6 is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 8/8: P6 detailed to DoR as a four-item sequential product-home/integration/operations/cold-audit chain; pre-finish roadmap assembled after the last skeleton was removed; `finish` is next. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Finish: reconciled seven phase contracts and all 32 producer/consumer specs, replaced three ambiguous Required Reads entries with exact paths, refreshed external fact classes, finalized the execution roadmap and handed off to a cold independent design audit; no item executed. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Cold-audit remediation closed F1–F5 in D64/roadmap/P0–P6: exact reads, public acceptance, NO-GO evidence, authority carriers and Context; unchanged 0/32 statuses return to audit-design. No item or product state executed. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Repeat-audit F6 remediation: D65 assigns D64 to exact Task prerequisite carrier, P0.1 is structural `waiting:`, and roadmap/handoff return unchanged 0/32 items to a third audit-design; no Task or Artifex implementation executed. |
+| 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Third-audit F7/F8 remediation: D66 splits the prerequisite into exact implementation/high producer and cold frontier/xhigh reviewer/terminalizer, unifies the two-conjunct P0.1 wait, and returns unchanged 0/32 items to a fourth audit-design; no carrier, Task or Artifex implementation executed. |
+| 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.1 закрыт: baseline/reuse evidence запечатана с честным `baseline_pending`; детали см. phases/P0.md P0.1 Completion Notes. |
+
+## 7. Contracts
+
+### Exported
+
+| Контракт | Версия | Статус | Потребители | Уведомлены |
+|:--|:--|:--|:--|:--|
+| `root/contracts/supervisor-run-v1.md` | v1.0.0 | planned P1.1 | P2–P6 | — |
+| `root/contracts/slice-manifest-v1.md` | v1.0.0 | planned P1.2 | P2–P6 | — |
+| `root/contracts/authority-policy-v1.md` | v1.0.0 | planned P1.3 | P2–P6 | — |
+| `root/contracts/worker-envelope-v1.md` | v1.0.0 | planned P1.4 | P2–P6 | — |
+| `root/contracts/economy-evidence-v1.md` | v1.0.0 | planned P1.5 | P2–P6 | — |
+
+### Consumed
+
+| Контракт | Донор-план | Pinned | Замечено | Реакция |
+|:--|:--|:--|:--|:--|
+| `root/contracts/execution-state-machine-v1.md` | 2026.07.24-AGENT-RELIABILITY | committed v1 (`575a49b2`) | data contract exists; no live `decide` module | P0.2 maps semantics; P1.1 reissues only supervisor-owned transition subset |
+| `root/contracts/risk-review-loop-budget-v1.md` | 2026.07.24-AGENT-RELIABILITY | committed v1 (`575a49b2`) | loop/authority vocabulary available | P1.3 composes without weakening |
+| `root/contracts/unified-agent-trace-v1.md` | 2026.07.24-AGENT-RELIABILITY | committed v1 (`3af26580`) | live acceptance coverage historically incomplete | P1.4/P1.5 reuse trace identities but do not claim old acceptance GREEN |
+| `root/contracts/reliability-acceptance-v1.md` | 2026.07.24-AGENT-RELIABILITY | committed v1 (`f405017a`) | terminal plan recorded unmet F1/F10 and limited observability | P0.5 names inherited debts; candidate gets its own measured gates |
+| `root/contracts/execution-policy-v1.md` | 2026.07.29-HARNESS-AGNOSTIC | sealed v1 | current policy is declarative/prompt-enforced, not runtime interception | P1.2/P1.3 consume ceilings and delegation fields; no duplicate fleet policy |
+| `root/contracts/artifex-run-folder.md` | 2026.07.18-FOREMAN | sealed v1 | useful historical carrier; old driver parse anchor expired | P1.1 reissues compatible successor; old `driver-plan-protocol.md` is historical only |
+
+## Audit design — 2026-08-03
+
+**Вердикт: RED** · заход **1-й** (блоков `## Audit design` до этого — 0) · режим
+`design` (независимый pre-exec cold-аудит после finish) · аудитор `plan-audit` /
+`frontier/xhigh` (`gpt-5.6-sol/xhigh`; effort — route команды, runtime telemetry его отдельно
+не экспортирует).
+
+**Якорь входа:** исходный untracked-каталог плана перед append отчёта —
+`sha256:31e158f0f27ed751fa63170604e76ba4bb41e10e1cd60fbf28e309d9152c321e`; repository
+`HEAD=d9d44245bc39feb1362d762323ec3169fe78a641`. Git-ref самого плана воспроизвести нельзя:
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/` отсутствует в `HEAD`, поэтому абсолютный working-tree
+snapshot назван явно и не выдан за committed baseline.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**; `task.plan_lint --conflicts` —
+**0 расхождений / 0 предупреждений**; `verify-citations.py --strict` — **1 citation checked /
+0 findings**. Структурно найдены 32 уникальных item-заголовка, 32 строки Routing, 32 roadmap
+строки и 32 item-status `⬜ Not started`. Исполняемая компиляция всех items под заведомо
+достаточным `frontier/xhigh` дала `{pre_mutation=allow, pre_final=allow}: 23` и
+`{pre_mutation=allow, pre_final=block:ACCEPTANCE_NOT_PUBLIC}: 9`; следовательно, зелёный
+Markdown lint не доказывает `32/32` executable DoR.
+
+**Проверки audit-carrier после append:** plan-lint повторно — **0 ERROR / 0 WARN**;
+`task.plan_lint --conflicts` — **0 / 0**; strict citations — **2 checked / 0 findings**;
+`git diff --check` чист. Journal получил ровно одну terminal запись
+`item=design · command=plan-audit · actor=frontier/xhigh · result=audit-red · attempt=1`.
+
+**Почему RED, а не ATTENTION.** F1 пропускает реальные owner boundaries через обязательный
+pre-mutation gate, F2 теряет cold-start inputs у 29/32 items, F3 не позволяет девяти первым
+items пройти обязательный binary pre-final, а F4 делает законную NO-GO ветвь P6 незамыкаемой.
+Это разрывы исполняемого продукта плана и producer→consumer closure, не только бухгалтерия.
+Исполнение P0.1 не открывать до повторного независимого audit-design с literal `GREEN`.
+
+### Находки
+
+**F1 · Blocker · high · issue · `roadmap.md:16–19,42–45,65–76` ↔
+`packages/task/lib/task/task_contract.py:306–308,462–465,741–745` ↔
+`packages/task/commands/plan-exec.md:54–75,140–156` — owner gates объявлены в roadmap,
+но обязательный Task Contract компилирует каждый item как уже разрешённый routine.** `build()`
+по умолчанию ставит `authority_class="routine"`, `authority_granted=True` и
+`authority_granted_by="D50 (G-EXEC for self-host P0-P3)"`; `plan-exec`/`plan-run` передают
+только фактический route. В этом плане D50 — каталог P5.1 (`plan.md:156`), а не G-EXEC и не
+разрешение P0.2/P0.5/P5.4/P6.1. Наблюдаемый `build(P0.2) → evaluate()` вернул
+`pre_mutation=allow` с этой ложной provenance. Roadmap одновременно помещает provider
+readiness и hook integrity в колонку владельца, хотя собственная сводка правильно называет их
+неотменяемыми evidence gates. *failure_scenario:* `$ task:plan-run ... P0.2` либо P6.1
+проходит машинный pre-mutation без exact owner decision; аудит затем видит валидный hash
+контракта с фиктивным `D50` и не может отличить реальное разрешение от default allow.
+**Repair ownership:** carrier owner — Task Contract/plan command; plan owner обязан точно
+объявить genuine owner gates и fail-closed prerequisite, а не переносить этот дефект в Artifex.
+**PROMOTE-CANDIDATE:** pre-mutation compiler не должен иметь plan-specific granted-by default и
+должен отказать на owner gate, который не пришёл из проверяемого carrier.
+
+**F2 · Major · high · issue · `phases/P0.md:87` · `phases/P2.md:73,92,111,130` ·
+`phases/P3.md:52,71,90,109` · `phases/P4.md:75,94,113,132` ·
+`phases/P5.md:55,74,93,112` · `phases/P6.md:55,74,93,112` ↔
+`packages/task/lib/task/task_contract.py:87–91,116–118,407–416` — Required Reads не exact
+для исполняемого cold-start carrier.** Консервативный разбор тех же numbered clauses нашёл
+21/32 items хотя бы с одним selector без path (`terminal P2 modules/tests`, `root/package
+canons`, `official links in the finding` и т.п.) и 18/32 хотя бы с одной numbered записью,
+содержащей несколько backtick-paths. Объединение — **29/32 items**; только P0.1, P0.2 и P0.4
+не попали ни в один класс. Компилятор берёт ровно первый backtick каждого numbered clause,
+а clause без backtick сохраняет как свободную строку: например P6.2 экспортирует cold-start
+read `terminal P6.1 decision/scope/cases/validator/finding`, а P1.5 из шести P0 paths одной
+записи сохраняет только первый. *failure_scenario:* новый worker получает hash-valid Task
+Contract, но не получает validator/cases/manifest, который item объявил обязательным; downstream
+consumer начинает работу по неполному evidence set. **Repair ownership:** каждый item producer
+владеет собственным конечным списком; динамические P6 paths разрешаются через один точный
+terminal manifest/resolver carrier, а не прозой. **PROMOTE-CANDIDATE:** plan-lint/Task Contract
+должен отказывать на zero-path selector и на silently truncated multi-path clause.
+
+**F3 · Major · high · issue · `phases/P0.md:52,71,90,109,128` ·
+`phases/P1.md:59,78,97,116` ↔ `packages/task/lib/task/task_contract.py:87,418–426,768–780` —
+9/32 items не проходят обязательный pre-final несмотря на отмеченный DoR.** Validation этих
+items разделяет команды `;`, тогда как Task Contract делит acceptance entries только литералом
+`·`. Вся строка становится одним entry; наличие `>/dev/null` делает его `internal`, поэтому
+P0.1–P0.5 и P1.1–P1.4 возвращают `block:ACCEPTANCE_NOT_PUBLIC`. P1.5 и P2–P6 проходят: итог
+компиляции — **23 allow / 9 block**, а не 32/32. *failure_scenario:* P0.1 может выполнить все
+заявленные команды, но штатный `plan-run` обязан остановиться на binary pre-final и не имеет
+права закрыть первый item; весь producer chain не стартует. **Repair ownership:** Validation
+принадлежит соответствующим P0/P1 item specs; compiler delimiter/public-scope UX — Task owner.
+**PROMOTE-CANDIDATE:** design lint должен компилировать и evaluate каждый detailed item, иначе
+синтаксический 0/0 допускает заведомо незакрываемый план.
+
+**F4 · Major · high · issue · `phases/P6.md:87–97,103–116` ↔
+`research/12-p6-productization-design.md:15–23,69–76` — NO-GO одновременно требует P6.3
+skip и его отсутствующие outputs.** P6.3 line 94 переводит item в `⛔ Skipped by decision` и
+не создаёт surface; P6.4 запрещает GREEN при skipped required check, требует все P0–P6.3
+validators green и безусловно передаёт `operations-manifest-v1.json` своему validator.
+*failure_scenario:* валидный P5 NO-GO → P6.1 `roadmap-only` → P6.3 skipped; producer operations
+manifest/validator отсутствует, поэтому P6.4 либо нарушает собственный no-skipped rule, либо
+падает на отсутствующем `--operations` input. Обещанная NO-GO GREEN ветвь не существует.
+**Repair ownership:** P6.3/P6.4 branch contract — либо NO-GO исполняет bounded zero-surface
+evidence item и производит manifest, либо P6.4 имеет отдельный exact skip input/predicate; эти
+семантики нельзя смешивать.
+
+**F5 · Minor · high · issue · `roadmap.md:8–11,50–63` ↔ `handoff.md:3–12` ↔
+`packages/skiller/skills/general/plan-protocol/SKILL.ru.md:911–936` — launch Context не входит
+в закрытый enum и противоречит manual semantics.** Roadmap задаёт
+`cold-start — item; only after ...`, handoff — `cold-start — plan-step; identity distinct ...`;
+оба дописывают prose к exact enum, а manual P0.1 обязан нести `same-session — item`. Linter
+сверяет enum лишь в `--conflicts`, но не проверяет live launch rows, поэтому остаётся 0/0.
+*failure_scenario:* provider projection читает незнакомый Context как новый режим либо игнорирует
+границу, а roadmap утверждает отдельную новую сессию для каждого manual item вопреки semantic
+carrier. **Repair ownership:** roadmap/handoff launch carriers; provider-native fresh-session
+пояснение остаётся в `Суть`, не в Context. **PROMOTE-CANDIDATE:** добавить live Context enum gate.
+
+### Покрытие брифа
+
+| Мысль владельца | Носитель | Вердикт |
+|:--|:--|:--|
+| Внешний supervisor, fresh workers, durable progress вместо длинного Workflow context | D1/D3/D7/D9–D11 · P1.1/P1.2 · P2–P4 | покрыто |
+| Один раз задать canons; routine legal choice автоматичен, protected/unknown идёт владельцу | P0.2 · P1.3 · P2.3/P2.4 · P4.5 | покрыто по intent, execution gate сломан F1 |
+| Owner questions пакетируются, severe/irreversible будят сразу | D13 · P1.3 · P4.5 | покрыто |
+| Redefinable slices и resume только из durable evidence | P1.1/P1.2 · P2.1/P2.2/P2.4 · P4.2 | покрыто |
+| Token economy и гипотеза 99% измеряются, не предполагаются | P0.1/P0.5 · P1.5 · P5.1–P5.4 | покрыто |
+| FOREMAN/HARNESS-AGNOSTIC/roadmap/current repo/current providers/reference products | findings/00–11 · research/00–13 · Consumed contracts · P0/P1 | покрыто |
+
+Непокрытой мысли brief не найдено. RED возникает из исполняемых carrier/branch разрывов, а не
+из изменения owner intent.
+
+### Проверено без находок
+
+- **Пять exported contracts:** ровно пять строк `planned P1.1`–`planned P1.5`; каждый exact
+  contract path находится в `Files` своего единственного producer, P1.5 агрегирует set, а P2–P6
+  ссылаются на contracts/manifests до productization. Donor contracts существуют и остаются
+  evidence/precedent, не runtime dependency.
+- **Repair ownership:** повторные P2/P3→P4 `compiler.py`, `store.py`, `scheduler.py`, `worker.py`,
+  `cli.py` и README перечислены в `Files` конкретных repair items; второго mutable module/SSOT
+  план не заводит. Динамический P6 scope имеет одного prior producer P6.1; дефект его cold-start
+  представления учтён в F2, параллельный owner не обнаружен.
+- **Routing и roadmap parity:** 32/32 Routing rows, все `Exec=manual`; 32/32 unique roadmap rows,
+  все `solo`, item/command/route mismatch — 0. Solo rationales присутствуют. Незаконных batch или
+  workflow groups нет; ошибки owner/context carrier отдельно названы F1/F5.
+- **Структурный DoR:** 32/32 specs имеют 16 обязательных полей в каноническом порядке, 0 живых
+  `[NEEDS CLARIFICATION]`, семь detailed phases, `Design Passes: 8/8 + finish`; item/board statuses
+  остаются 0/32 `Not started`. Исполняемый DoR отдельно красный по F1–F3.
+- **D-log/provenance:** D1–D63 непрерывен; D27 и D35 несут inline `**Consequences:**`; Meta,
+  Update Log и journal называют authoring model/actor. D63 использовался как проверяемое утверждение,
+  не как доказательство собственного verdict.
+- **Lint/citations:** абсолютный lint, conflict scan и strict citation verifier зелёные на
+  названном untracked snapshot; внешний web/RAG не вызывался этим аудитом, потому что RED опирается
+  только на репозиторные contracts/компилятор/phase graph. Load-bearing external claims остаются
+  назначены execution-time probes и current primary-source finding, но не являются основанием F1–F5.
+- **Hook warning:** trusted observer dry-run exit 0 повторно дал status `warning` с двумя
+  `stale-source → update (source-changed)` строками (`harness.codex.lifecycle.hooks` и
+  `.handler`). План/hand-off не скрывают warning, P4.4 требует effective GREEN; repair не выполнялся
+  и owner D# его не waives.
+
+### Verification
+
+- **RAG:** 0 external queries — verdict не зависит от внешнего fact class; repository claims
+  проверены прямым чтением и executable Task Contract builds.
+- **Unverified → repeat pass:** provider envelopes, crash/power-loss behavior и pilot economics
+  остаются будущими P0/P4/P5 измерениями; ни одно не использовано для RED/GREEN данного аудита.
+- **Workarounds/[POSSIBLE-DEFECT]:** workaround не принят. F1/F2/F3/F5 помечают owning protocol
+  defects; hook warning и отсутствие committed plan-ref сохранены как non-green limitations.
+
+### Что запускать
+
+**Next:** design-phase: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · task-contract-evaluate |
+| Context | cold-start — plan-step |
+| Суть | Точечно реконсилировать F1–F5 и вернуть неизменённые 0/32 statuses на повторный независимый design-аудит |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Codex launch для точечной design-remediation F1–F5; item execution запрещён | — |
+
+```text
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная remediation находок cold design-аудита, НЕ execution items и НЕ реализация продукта
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → блок `## Audit design — 2026-08-03`; прочитать ПЕРВЫМ
+СКОУП: 1) F1 — задать проверяемые fail-closed owner-gate carriers и назначить внешний Task Contract defect его владельцу без фиктивного D50 2) F2 — развернуть Required Reads в one-exact-path clauses/точные terminal resolver manifests и доказать полный compiled cold-start set 3) F3 — исправить delimiter/public-acceptance форму девяти Validation и получить Task Contract pre-final allow 32/32 4) F4 — сделать NO-GO P6 замкнутой: один согласованный skip/evidence/operations contract 5) F5 — отделить evidence gates от owner gates и привести roadmap/handoff Context к exact enum 6) повторить lint, conflicts, strict citations, 32 Task Contract builds/evaluations и handoff на новый audit-design
+НЕ ТРОГАТЬ: brief intent; item и Status Board statuses 0/32; implementation/provider/pilot/hook/package/docs/generated/fleet/Brain/release state; пять exported contract semantics и доказанное P2/P3→P4 repair ownership вне необходимых exact-read ссылок; unrelated dirty worktree
+```
+
+## Audit design — 2026-08-03
+
+**Вердикт: RED** · заход **2-й** (блоков `## Audit design` до этого — 1) · режим
+`design` (повторный независимый pre-exec cold-аудит после D64 remediation) · аудитор
+`plan-audit` / `frontier/xhigh` (`gpt-5.6-sol/xhigh`; effort — route команды, runtime telemetry
+его отдельно не экспортирует).
+
+**Якорь входа:** untracked-каталог плана до append этого отчёта —
+`sha256:c8b3adffb49f7b3155a8a09cfb3c743246364e7f4b1501060a5251bf5b4f1afa`;
+repository `HEAD=d9d44245bc39feb1362d762323ec3169fe78a641`. Git-ref самого плана по-прежнему
+невоспроизводим: каталог отсутствует в `HEAD`, поэтому working-tree snapshot назван явно и не
+выдан за committed baseline.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**; `task.plan_lint --conflicts` —
+**0 расхождений / 0 предупреждений**; `verify-citations.py --strict` — **2 citations checked /
+0 findings**. Найдены 32 уникальных item specs, 32 Routing rows, 32 roadmap rows и 32 статуса
+`⬜ Not started`; все 578 numbered Required Reads clauses содержат ровно один exact path, compiled
+cold-start mismatch — 0. Компиляция всех 32 Task Contracts с routed `frontier/xhigh` дала
+`{pre_mutation=allow, pre_final=allow}: 32`, но каждый из 32 контрактов одновременно получил
+default authority provenance `routine / granted=true / D50 (G-EXEC for self-host P0-P3)`.
+Отдельные synthetic negative evaluations P5.4/P6.1 с вручную переданным
+`authority_granted=false` дают `block:AUTHORITY_BOUNDARY`; штатный command carrier эти kwargs не
+передаёт.
+
+**Почему RED, а не ATTENTION.** D64 точно исправил плановые части прежних F2–F5 и описал
+правильный owner-gate contract для F1, но оставил обязательный внешний repair без исполняемого
+producer/carrier. Roadmap поэтому не отвечает на вопрос «какую команду запустить следующей»:
+готовая команда P0.1 объявлена как runnable `manual`, а её запрет существует только в прозе.
+Обязательный Task Contract write-site при этом реально fail-open. Это разрыв исполняемого
+продукта roadmap и authority boundary, а не бухгалтерия; P0.1 не открывать.
+
+### Находки
+
+**F6 · Blocker · high · issue · `roadmap.md:51–66,88–97` ↔ `handoff.md:21–24,42–47` ↔
+`packages/task/lib/task/task_contract.py:306–308,462–465` ↔
+`packages/task/commands/plan-exec.md:53–80,140–156` — внешний authority-carrier defect назван,
+но не имеет исполняемого prerequisite и потому не закрывает прежнюю F1 на roadmap boundary.**
+`roadmap.md` не ссылается на owning plan/item, terminal cross-plan gate или иной structural
+condition из канонического `waiting:` carrier; он оставляет первым launch block обычный
+`manual: frontier/high` для P0.1 и добавляет условие только в `Суть`. `handoff.md` честно говорит,
+что даже literal GREEN не открывает P0.1, но тоже не даёт команды/адресата/проверяемого результата,
+который способен изменить это состояние. В live write-site `plan-exec`/`plan-run` передают в
+`build()` только `actual_route`, поэтому default `authority_class="routine"`,
+`authority_granted=True`, `authority_granted_by="D50 (G-EXEC for self-host P0-P3)"` остаётся
+машинной истиной; D50 этого плана — P5.1 catalog decision, не grant.
+*failure_scenario:* после design GREEN оператор копирует готовый `$ task:plan-run ... P0.1`;
+pre-mutation возвращает `allow` с ложной D50 provenance, а ни roadmap, ни command не имеют
+структурного guard, который остановит первую запись. Альтернативно все соблюдают prose-запрет,
+но план зависает бессрочно: у owner defect нет ни producer item, ни terminal gate, ни exact resume
+condition. **Repair ownership:** текущий plan owner должен сделать зависимость исполняемой — либо
+ввести точный prerequisite item/carrier, либо связать `waiting:` с реальным terminal cross-plan
+gate — и только затем направить roadmap на P0.1; Task Contract/plan command owner должен убрать
+plan-specific granted-by default, компилировать authority fields из проверяемого carrier и
+доказать negative/positive cases плюс обычные 32 builds без чужого D50. Текстовый запрет,
+synthetic D# и ручная подстановка kwargs не являются fix. **PROMOTE-CANDIDATE:** design lint должен
+отказывать, когда roadmap объявляет runnable Next, а собственный D-log/handoff говорит, что он
+неисполняем до неструктурированного внешнего события.
+
+### Повторная проверка F1–F5
+
+| Предыдущая находка | Результат захода 2 |
+|:--|:--|
+| F1 owner/evidence gates | Три genuine owner grants и exact Decision Log carrier contract заданы; отрицательный evaluator block доказан. Исполняемый external prerequisite не закрыт — F6. |
+| F2 Required Reads | Исправлено: 578/578 clauses имеют один exact path; compiled mismatch 0, динамические P6 inputs идут через prior terminal manifests. |
+| F3 public acceptance | Исправлено: все 32 обычных build/evaluate дают `pre_final=allow`; прежних 9 `ACCEPTANCE_NOT_PUBLIC` нет. |
+| F4 NO-GO P6 | Исправлено: P6.3 на `roadmap-only` исполняет bounded zero-surface branch и производит compatibility/rollback/operations carriers для P6.4. |
+| F5 Context/owner-vs-evidence | Исправлено в live roadmap/handoff: neutral Context exact, provider-native пояснение вынесено в `Суть`; evidence gates не выданы за owner grants. |
+
+### Покрытие брифа и серые зоны
+
+| Мысль владельца | Носитель | Вердикт |
+|:--|:--|:--|
+| Внешний supervisor, fresh workers и durable progress | D1/D3/D7/D9–D11 · P1.1/P1.2 · P2–P4 | покрыто |
+| Один раз задать canons; routine выбор автоматичен, protected/unknown идёт владельцу | P0.2 · P1.3 · P2.3/P2.4 · P4.5 | intent/spec покрыты; первый executable gate красный по F6 |
+| Пакетировать owner questions, severe/irreversible поднимать сразу | D13 · P1.3 · P4.5 | покрыто |
+| Redefinable slices и resume только из durable evidence | P1.1/P1.2 · P2.1/P2.2/P2.4 · P4.2 | покрыто |
+| Token economy и гипотезу 99% измерять, не предполагать | P0.1/P0.5 · P1.5 · P5.1–P5.4 | покрыто |
+| FOREMAN/HARNESS-AGNOSTIC/roadmap/current repo/providers/reference products | findings/00–11 · research/00–13 · consumed contracts · P0/P1 | покрыто |
+
+Непокрытой мысли brief или новой product grey zone не найдено. Интеграция, recovery/security,
+provider parity, migration/rollback, docs/generated artifacts, NO-GO и package/root boundaries
+имеют явных владельцев и terminal consumers; единственная открытая сквозная дыра — F6.
+
+### Проверено без находок
+
+- **Knowledge layers:** `brief/00–01` непусты; repository/external raw evidence живёт в
+  `findings/00–11`, synthesis — в `research/00–13`, `index.md` связывает producers/consumers,
+  D1–D64 ссылаются на carriers. Единственный будущий `[UNVERIFIED]` ограничен назначенными
+  empirical P0/P4/P5 измерениями и не используется как доказательство approval.
+- **Phase contracts/DoR:** P0–P6 detailed, producer chains замкнуты, 32/32 specs имеют 16 полей,
+  Routing покрывает все items, statuses остаются 0/32. `Design Passes: 8/8 + finish + audit
+  remediation` подтверждён Update Log и journal authoring provenance.
+- **Roadmap structure:** 32/32 items представлены ровно один раз, route/command mismatch — 0;
+  все `solo` имеют причину, незаконных batch/workflow groups нет, protected package/router/
+  single-provider transitions отделены от non-waivable evidence gates. Runnable closure отдельно
+  красный по F6.
+- **D-log:** D1–D64 непрерывен; отменяющие/заменяющие D27 и D35 несут inline
+  `**Consequences:**`; других supersede/cancel записей без Consequences не найдено. Meta, Update
+  Log и journal сохраняют три обязательных carrier authoring provenance.
+- **Hook/environment:** `codex doctor --json`, `maind health --cwd` и исправленный вызов
+  `harness doctor` зелёные. Первоначальный диагностический вызов `harness doctor --provider`
+  завершился ошибкой «неизвестный флаг» и не принят за GREEN; канонический вызов без этого флага
+  повторён успешно. Trusted Codex observer dry-run выходит 0, но сохраняет честный `warning`:
+  `harness.codex.lifecycle.hooks` и `.handler` — `stale-source → update (source-changed)`; P4.4
+  по-прежнему требует effective GREEN и owner D# warning не отменяет.
+
+### Verification
+
+- **RAG:** Perplexity Web использован тремя узкими query packets для текущих Codex/Claude/Git
+  surfaces; ответы Codex/Claude с secondary provenance отвергнуты как authority. Проверка
+  продолжена по installed `codex exec --help` / `claude --help` и официальным Git/Claude
+  страницам; они не дали design-bearing противоречия уже записанным same-day primary-source
+  findings. Вердикт F6 основан только на repository carriers и executable builds.
+- **Unverified → execution:** точные provider event/exit/accounting envelopes, physical
+  crash/power-loss durability и pilot economics остаются назначены P0.3/P4/P5; они не повышены
+  до факта и не влияют на RED/GREEN этого захода.
+- **Workarounds/[POSSIBLE-DEFECT]:** workaround не принят. D64 корректно помечает Task defect,
+  но назначение без executable producer/structural wait недостаточно; hook warning и отсутствие
+  committed plan-ref сохранены как non-green limitations.
+
+### Что запускать
+
+**Next:** manual: frontier/high
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · task-contract-evaluate · roadmap-reconcile |
+| Context | cold-start — plan-step |
+| Суть | Точечно закрыть F6 исполняемым prerequisite/structural wait и вернуть план на третий audit-design; items не исполнять |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Codex launch для точечной design-remediation F6; product execution запрещён | — |
+
+```text
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
+
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная remediation повторного cold design-аудита, НЕ execution items и НЕ Task/product implementation
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → последний блок `## Audit design — 2026-08-03` (заход 2); прочитать ПЕРВЫМ; handoff.md сейчас указывает на уже выполненный audit и протух для следующего шага
+СКОУП: 1) F6 — дать D64 defect исполняемого owner: точный prerequisite item/carrier либо реальный terminal cross-plan gate 2) объявить неисполняемый P0.1 через structural `waiting:` с exact target/resume condition, а не prose caveat 3) у Task-owner repair потребовать removal чужого D50, derivation authority fields из verified carrier и ordinary plus negative/positive checks 4) пересобрать roadmap/handoff и повторить lint/conflicts/citations/32 builds перед audit-design
+НЕ ТРОГАТЬ: brief intent; статусы и deliverables существующих P0.1–P6.4; F2–F5 remediation; implementation/provider/pilot/hook/package/docs/generated/fleet/Brain/release state; unrelated dirty worktree
+```
+
+## Audit design — 2026-08-03
+
+**Вердикт: RED** · заход **3-й** (блоков `## Audit design` до этого — 2) · режим
+`design` (третий независимый pre-exec cold-аудит после точечной F6 remediation) · аудитор
+`plan-audit` / `frontier/xhigh` (`gpt-5.6-sol/xhigh`; effort — route команды).
+
+**Якорь входа:** untracked-каталог плана до append этого отчёта —
+`sha256:ad2c7a2fe841616355c19aa8cb65a203e1ec35db60ce3cb11cee3ee2687bd76f` по
+`find … -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum`; repository
+`HEAD=d9d44245bc39feb1362d762323ec3169fe78a641`. Git-ref плана невоспроизводим: каталог
+отсутствует в `HEAD`, поэтому snapshot назван явно и не выдан за committed baseline.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**; `plan-lint.py --conflicts` —
+**0 расхождений / 0 предупреждений**; `verify-citations.py --strict` — **2 citations checked /
+0 findings**. 32 уникальных item specs остаются `⬜ Not started`; 578/578 Required Reads clauses
+несут ровно один exact path. Компиляция и evaluation всех 32 Task Contracts на их routed actual
+route дали `{pre_mutation=allow, pre_final=allow}: 32`, public acceptance присутствует у 32/32,
+а live defect честно воспроизвёл foreign `D50 (G-EXEC for self-host P0-P3)` provenance у 32/32.
+Synthetic negative P5.4/P6.1 без verified carrier дали `block:AUTHORITY_BOUNDARY`.
+
+**Почему RED.** D65 создал bounded carrier с правильным owner, owned surface, acceptance matrix и
+fail-closed terminal predicate, но executable chain этого carrier всё ещё не замкнут: готовый
+producer запускается ниже собственной route и не производит обязательную независимую terminal
+verification. При RED основной roadmap-row также открывает P0.1 по более слабому условию, чем exact
+launch/handoff. Это повторный разрыв продукта roadmap/authority boundary, а не бухгалтерия;
+P0.1 и carrier implementation не открывать.
+
+### Находки
+
+**F7 · Blocker · high · issue · `artifacts/design/task-authority-carrier-01.md:90–116` ↔
+`roadmap.md:54–78` ↔ `packages/task/configs/command-routing.json:29–35` ↔
+`packages/task/adapters/codex/skills/task-fix/command.md:6–10` — producer/terminal chain не
+исполняет заявленную route и не имеет отдельного terminal producer.** Carrier и roadmap объявляют
+`manual: implementation/high`, но единственная готовая команда — `$ task:fix
+TASK-AUTHORITY-CARRIER-01`; canonical catalog пинит её на `implementation/medium`, а runtime
+projection запрещает переключение и fan-out/subagents. Тот же carrier запрещает producer'у
+self-certify independent verification, однако после implementation не содержит exact cold-start
+frontier/xhigh reviewer/terminalizer launch: `Independent verification` остаётся pending prose, и
+никто не назначен записать reviewed commit/evidence и законно сменить `State` только после GREEN.
+*failure_scenario:* оператор копирует готовую команду, security/public-contract repair выполняется
+ниже объявленного effort; затем single-agent `task:fix` не может дать независимый verdict, а P0.1
+остаётся waiting без следующей исполняемой команды — либо тот же producer незаконно self-certifies
+terminal. **Repair contract:** заменить producer на route-compatible `implementation/high` carrier
+и добавить отдельный exact frontier/xhigh cold-review/terminalization launch с durable входом,
+GREEN/RED outcome и запретом terminal на любом неполном conjunct. **PROMOTE-CANDIDATE:** design lint
+должен сверять route semantic command в manual launch с объявленными Model class/Effort и требовать
+producer для каждого независимого terminal conjunct.
+
+**F8 · Major · high · issue · `roadmap.md:17–20,80–96` ↔ `handoff.md:14–24` ↔
+`plan.md:171` — P0.1 имеет два разных structural waiting predicates, один из них fail-open при
+текущем RED.** Основная execution-map row ждёт только `TASK-AUTHORITY-CARRIER-01 State = terminal`,
+тогда как canonical P0.1 launch и handoff называют два conjunct: latest design audit GREEN **и**
+carrier terminal. После этого RED первая строка разрешит `manual: frontier/high`, если carrier
+будет terminalized вне предписанного порядка, хотя второй carrier всё ещё запрещает P0.1.
+*failure_scenario:* cold operator читает только карту из 32 rows, выполняет package prerequisite и
+запускает P0.1 поверх последнего RED; альтернативно два читателя выбирают разные источники и план
+теряет один executable Next. **Repair contract:** оставить один exact predicate во всех трёх
+carriers и сохранить `# НЕ раньше:` guard; до следующего literal GREEN ни один roadmap carrier не
+должен представлять P0.1 runnable.
+
+### Повторная проверка F1–F5
+
+| Предыдущая находка | Результат захода 3 |
+|:--|:--|
+| F1 owner/evidence gates | Три protected owner markers остаются exact; P5.4/P6.1 negative probes блокируют. External Task prerequisite всё ещё RED только по F7/F8. |
+| F2 Required Reads | 578/578 clauses имеют один exact path; compiled cold-start mismatch — 0. |
+| F3 public acceptance | 32/32 builds имеют public acceptance и дают `pre_final=allow`. |
+| F4 NO-GO P6 | P6.3 сохраняет bounded `roadmap-only` zero-surface branch и производит compatibility/rollback/operations carriers для P6.4. |
+| F5 Context/owner-vs-evidence | Context использует закрытый enum; owner grants и non-waivable evidence gates не смешаны. |
+
+### Проверено без находок
+
+- **Carrier acceptance:** Required repair прямо требует removal foreign D50, checked plan-native
+  derivation, общий resolver двух boundaries/`plan-run` и обычные 32 builds; acceptance matrix
+  содержит positive, missing/forged/wrong-scope/revoked/manual-kwargs negative и command-boundary
+  cases. Terminal predicate требует commit, removal, matrix, 32-build, package/plan checks и
+  независимый GREEN. Дефект — executable producers F7, не содержание acceptance.
+- **Plan regression:** D64/D65 связаны, D65 несёт inline `**Consequences:**`; D1–D65 непрерывны.
+  Design Passes 8/8 подтверждены Update Log; 32 Routing rows, 32 roadmap item rows и 0/32 statuses
+  согласованы. P0.1–P6.4 specs/deliverables не исполнялись и этим аудитом не менялись.
+- **Environment:** `codex doctor --json`, `maind health --cwd` и `harness doctor` зелёные.
+  Первый диагностический вызов `maind health --cwd <path>` ошибся на лишнем аргументе и не принят
+  за GREEN; CLI help подтвердил boolean-форму, повторный `maind health --cwd` прошёл. Trusted Codex
+  observer dry-run выходит 0, но честно остаётся `warning`: lifecycle hooks/handler —
+  `stale-source → update (source-changed)`; это известный P4.4 evidence blocker, не F6 regression.
+
+### Verification
+
+- **RAG:** не запускался — F7/F8 и verdict полностью repo-grounded: canonical command catalog,
+  generated runtime projection, plan/carrier/roadmap/handoff и executable Task Contract builds.
+- **Unverified → execution:** provider envelopes, crash/power-loss durability и pilot economics
+  остаются назначены будущим empirical P0/P4/P5 items и не использованы для RED.
+- **Workarounds/[POSSIBLE-DEFECT]:** workaround не принят; task:fix route, prose-only reviewer и
+  ослабленный roadmap predicate нельзя считать terminal evidence.
+
+### Что запускать
+
+**Next:** manual: frontier/high
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · command-route-reconcile · terminal-carrier-design |
+| Context | cold-start — plan-step |
+| Суть | Точечно закрыть F7/F8 в design carriers и вернуть план на четвёртый audit-design; implementation не выполнять |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Codex launch для точечной design-remediation F7/F8; carrier/Task/Artifex execution запрещены | — |
+
+```text
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
+
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная remediation третьего cold design-аудита, НЕ execution items/carrier и НЕ Task/product implementation
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → последний блок `## Audit design — 2026-08-03` (заход 3); прочитать ПЕРВЫМ; handoff.md сейчас указывает на уже выполненный audit и протух для следующего шага
+СКОУП: 1) F7 — заменить task:fix producer на exact route-compatible implementation/high launch 2) F7 — добавить отдельный executable frontier/xhigh cold reviewer/terminalizer с durable GREEN/RED evidence и запретом self-certification 3) F8 — унифицировать P0.1 waiting predicate во всех roadmap/handoff carriers как latest design GREEN AND carrier terminal без runnable bypass 4) повторить lint/conflicts/citations/32 builds и вернуть на audit-design
+НЕ ТРОГАТЬ: brief intent; P0.1–P6.4 statuses/deliverables; Task/Artifex/carrier implementation; F2–F5 remediation; provider/pilot/hook/package/docs/generated/fleet/Brain/release state; unrelated dirty worktree
+```
+
+## Audit design — 2026-08-03
+
+**Вердикт: GREEN** · заход **4-й** (блоков `## Audit design` до этого — 3) · режим
+`design` (четвёртый независимый cold-аудит после точечной F7/F8 remediation) · аудитор
+`plan-audit` / `frontier/xhigh` (`gpt-5.6-sol/xhigh`; effort — route команды).
+
+**Якорь входа:** untracked-каталог плана до append этого отчёта —
+`sha256:1a8346b927077da2469d3dfef9fd65b876081d434de17b6cb8e36ad295bbdba5` по
+`find … -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum`; repository
+`HEAD=d9d44245bc39feb1362d762323ec3169fe78a641`. Git-ref самого плана
+невоспроизводим: каталог отсутствует в `HEAD`, поэтому snapshot назван явно и
+не выдан за committed baseline.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**;
+`plan-lint.py --conflicts` — **0 расхождений / 0 предупреждений**;
+`verify-citations.py --strict` — **2 citations checked / 0 findings**. Все 32 уникальных
+item specs остаются `⬜ Not started`; 578/578 Required Reads clauses несут ровно
+один exact path, compiled cold-start mismatch — 0. Компиляция/оценка всех 32 Task
+Contracts на их exact routed routes дала `{pre_mutation=allow, pre_final=allow}: 32`:
+12 `frontier/high`, 19 `implementation/high`, 1 `frontier/xhigh`; public acceptance есть у
+32/32. Live foreign `D50 (G-EXEC for self-host P0-P3)` provenance ожидаемо
+воспроизводится у 32/32: Task repair не исполнялся и не сертифицирован этим
+GREEN. Synthetic negative P5.4/P6.1 без verified owner carrier оба дали
+`block:AUTHORITY_BOUNDARY`.
+
+### Вердикт F7/F8
+
+- **F7 GREEN · `packages/task/configs/command-routing.json:18–35,142–153` ·
+  `artifacts/design/task-authority-carrier-01.md:69–166` · `roadmap.md:54–108`.** Exact
+  producer — отдельный Codex `gpt-5.6-terra/high` + `$ task:dev` запуск;
+  catalog route — `implementation/high`. В live carrier/roadmap/handoff нет исполняемого
+  `$ task:fix`/`implementation/medium` bypass. Отдельный cold
+  `gpt-5.6-sol/xhigh` reviewer запускается только после committed
+  `ready-for-review`, не меняет Task code и всегда пишет committed review artifact
+  с literal `GREEN|RED`, full reviewed commit, plan snapshot, полной matrix и exact
+  results. Producer не может писать review/Independent verification/менять `State`;
+  reviewer может terminalize только на полном GREEN.
+- **F8 GREEN · `roadmap.md:17–19,110–126,148–157` · `handoff.md:14–29,52–58` ·
+  `plan.md:172`.** Во всех живых roadmap/handoff carriers действует один
+  predicate: `latest Audit design verdict = GREEN AND TASK-AUTHORITY-CARRIER-01 State = terminal`.
+  Roadmap row, `Next` и `# НЕ раньше:` guard буквально совпадают; один
+  conjunct, prose, manual kwargs или synthetic D# не дают runnable P0.1. После
+  этого audit GREEN первый conjunct истинен, но carrier остаётся `State:
+  waiting`, поэтому P0.1 всё ещё закрыт.
+
+### Regression-check F1–F6
+
+| Предыдущая находка | Результат захода 4 |
+|:--|:--|
+| F1 owner/evidence gates | Три protected owner markers остаются exact; P5.4/P6.1 negative probes блокируют. Live D50 defect не скрыт и вынесен в fail-closed carrier. |
+| F2 Required Reads | 578/578 clauses имеют ровно один exact path; compiled cold-start mismatch — 0. |
+| F3 public acceptance | 32/32 routed builds имеют public acceptance и дают `pre_final=allow`. |
+| F4 NO-GO P6 | P6.3 сохраняет bounded `roadmap-only` zero-surface branch и всё равно производит compatibility/rollback/operations carriers для P6.4. |
+| F5 Context/owner-vs-evidence | Neutral и provider-native Context не смешаны; owner grants и non-waivable evidence gates остаются разными predicates. |
+| F6 executable owner | Exact Task-owned carrier, owned surface, producer, terminal predicate, independent reviewer и resume condition присутствуют; ни один из них не выдан за уже исполненный. |
+
+### Проверено без находок
+
+- D64–D66 связны; D65/D66 несут inline `**Consequences:**`; D66 точечно
+  supersedes только launch-chain/P0.1 predicate и не меняет D64 F1–F5 или 32
+  item specs/statuses/deliverables.
+- Routing и roadmap по-прежнему покрывают 32/32 items ровно по одному разу;
+  статусы остаются 0/32 terminal. Carrier/Task/Artifex implementation в этом аудите
+  не исполнялась.
+- `codex doctor --json`, Harness provider audit и strict mAInd health вышли 0/green.
+  Trusted Codex observer dry-run вышел 0, но честно остаётся `warning`: lifecycle
+  hooks/handler — `stale-source → update (source-changed)`. Это известный будущий P4.4
+  evidence blocker, а не regression F1–F8 и не GREEN hook verdict.
+
+Новых findings: **0**.
+
+### Verification
+
+- **RAG:** не запускался — verdict целиком repo-grounded: current command-routing,
+  Codex projections, plan/carrier/roadmap/handoff и executable Task Contract builds.
+- **Unverified → execution:** provider envelopes, crash/power-loss durability и pilot economics
+  остаются назначены будущим empirical P0/P4/P5 items и не использованы для
+  GREEN.
+- **Workarounds/[POSSIBLE-DEFECT]:** workaround не принят; live foreign-D50 состояние
+  остаётся названным blocking prerequisite до producer + independent reviewer GREEN.
+
+### Что запускать
+
+**Next:** manual: implementation/high
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-code-edit · task-contract-evaluate · provider-artifact-regenerate |
+| Context | cold-start — plan-step |
+| Суть | Исправить live Task authority carrier по точному contract; оставить P0.1 закрытым до отдельного reviewer GREEN |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman/packages/task` | `NEW SESSION — шаг-не-item` | Task producer prerequisite; Artifex execution и terminal review запрещены | — |
+
+```text
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+
+$ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/design/task-authority-carrier-01.md
+
+РЕЖИМ: отдельный implementation/high producer prerequisite, НЕ Artifex item execution и НЕ terminal review
+ВХОД: абсолютный carrier path выше; /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md D64–D66 и последний Audit design (GREEN, заход 4); AGENTS.md от repo root до packages/task
+СКОУП: удалить чужой D50 default; вывести authority fields из проверяемого plan-native carrier; добавить acceptance-matrix и ordinary 32-build проверки; регенерировать только owned provider artifacts; прогнать package checks; создать scoped implementation commit; записать его hash и exact producer commands/results только в Producer evidence, сохранив State=waiting; завершить exact Reviewer/terminalizer launch из carrier, но не запускать его в этой сессии
+НЕ ТРОГАТЬ: State; Independent verification; task-authority-carrier-01-review.md; P0.1–P6.4 statuses/deliverables; Artifex product implementation; unrelated dirty worktree; provider/pilot/hook/package-home/docs/fleet/Brain/release state
+```

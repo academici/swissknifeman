@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** —
-**Updated:** 2026-08-02
+**Active:** 2026.08.03-ARTIFEX-SUPERVISOR
+**Updated:** 2026-08-03

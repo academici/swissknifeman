@@ -227,3 +227,141 @@ $ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTI
 СКОУП: заменить copyable Meta Approval Owner equality на проверяемую ссылку на отдельный explicit repository-owner message/provenance carrier; сохранить exact gate/branch/scope/ambiguity/revocation checks; добавить permanent negatives для synthetic D999 и old D50 с правильно скопированным owner-source; повторить полный terminal predicate; создать новый scoped implementation commit и обновить только Producer evidence при State=waiting; затем вернуть отдельный cold frontier/xhigh reviewer launch
 НЕ ТРОГАТЬ: review artifact; State; Independent verification; P0.1–P6.4 statuses/deliverables; Artifex product implementation; unrelated dirty worktree; provider/pilot/hook/package-home/docs/fleet/Brain/release state
 ```
+
+## Attempt 3 — 6c19b201ba815e78e6c1f9d3d725f6990c7f9869
+
+**Verdict:** RED
+**Reviewer route:** gpt-5.6-sol/xhigh
+**Reviewed implementation commit:** 6c19b201ba815e78e6c1f9d3d725f6990c7f9869
+**Plan snapshot:** sha256:eac4255e88a76f4e94184ec6a86cc953ec859dddcb3ec335da3da1904a9c9009
+**Review date:** 2026-08-03
+
+The new Layer-0 owner-message reference is exact and closes the copied-`Approval Owner` variant,
+but the resolver still accepts a forged Decision Log identity when that forged row uses the new
+valid grammar. A synthetic `D999` and an old duplicate `D50`, each pointing to the same exact
+owner-message carrier as the positive `D67` case, both return `allow`. The full terminal predicate
+is therefore RED.
+
+### F3 · Blocker · Decision identity is parsed but never validated
+
+At the reviewed commit, `packages/task/lib/task/task_contract.py:219-249` validates only that a
+Decision Log ID has the shape `D<integer>` and that the separately referenced brief line exactly
+matches gate, branch, scope and the literal repository-owner provenance. Lines 281-306 then accept
+the one matching grant row regardless of whether its D# is duplicated, out of sequence or otherwise
+rejected by the plan schema. Although `build()` calls `parse_plan_md`, lines 493-494 explicitly
+discard its diagnostics. Consequently a valid owner-message reference turns both an injected
+`D999` and a second old `D50` into protected authority.
+
+The permanent negatives at `packages/task/tests/test_task_contract.py:353-382` do not cover this
+path: their `D999`/`D50` rows use the obsolete `owner-source=` field and are rejected by the new
+record regex before Decision identity is adjudicated. The owning repair must fail closed on an
+invalid Decision Log identity without adding another Artifex-specific numeric cutoff, and must
+test `D999` and old `D50` using the same syntactically valid `owner-message=` reference as the
+positive case.
+
+### Acceptance matrix
+
+| Case | Expected | Observed at reviewed commit + input plan snapshot | Result |
+|:--|:--|:--|:--|
+| Ordinary Artifex path | 32/32 build and both predicates allow; no foreign D50 | 32 unique items; routes `frontier/high=12`, `implementation/high=19`, `frontier/xhigh=1`; 32 `allow+allow`; 32 distinct item carriers; 0 foreign-D50 | GREEN |
+| Exact later owner grant | `allow` | exact `D67` plus exact Layer-0 owner-message record returned `allow` | GREEN |
+| Missing marker | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Forged/synthetic D# | `block:AUTHORITY_BOUNDARY` | synthetic `D999` and old duplicate `D50`, both with the valid exact owner-message reference, returned `allow` | RED |
+| Wrong gate | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Wrong branch | `block:AUTHORITY_BOUNDARY` | exact superstring case blocked | GREEN |
+| Wrong scope | `block:AUTHORITY_BOUNDARY` | exact superstring case blocked | GREEN |
+| Missing/wrong/duplicate owner-message carrier | `block:AUTHORITY_BOUNDARY` | missing file, wrong reference, wrong provenance and duplicate message ID all blocked | GREEN |
+| Exact marker revoked by later D# | `block:AUTHORITY_BOUNDARY` | blocked | GREEN |
+| Ambiguous duplicate grants, including one malformed duplicate | `block:AUTHORITY_BOUNDARY` | both variants blocked | GREEN |
+| Caller restores D50 through legacy kwargs | typed refusal or checked carrier wins | `authority_granted_by=` raised `TypeError` | GREEN |
+| Two `plan-exec` boundaries, reconciliation boundary and inherited `plan-run` | one checked compiler/resolver | `plan-exec` has 2 build calls; `plan-close` has 1; `plan-run` has one exact whole-command inheritance directive and 0 direct duplicate calls; manual-authority kwargs 0 | GREEN |
+
+### Exact verification evidence
+
+All implementation and package commands ran in detached worktree
+`/tmp/task-authority-review-6c19.MbvJ9N` at the reviewed implementation commit. The input Artifex
+snapshot above was copied in before evaluation; Task implementation and generated artifacts
+remained read-only.
+
+| Command | Exit/result |
+|:--|:--|
+| `git diff-tree --no-commit-id --name-status -r --no-renames 6c19b201ba815e78e6c1f9d3d725f6990c7f9869` | exit 0; only `CHANGELOG.md`, `packages/task/lib/task/task_contract.py`, `packages/task/tests/test_task_contract.py` |
+| `rg -n -F 'D50 (G-EXEC for self-host P0-P3)' packages/task/lib packages/task/commands` | exit 1; no live runtime/canonical-command match |
+| Independent Python 32-build evaluator over `phases/P*.md`, using every item's routed actual route | exit 0; 32 items/32 unique; 32 `allow+allow`; routes 12/19/1; 32 distinct carriers; 0 foreign-D50 |
+| Independent Python protected-transition matrix using P5.4 and the new exact owner-message grammar | harness exit 1 by design; 14 cases, 2 semantic failures: valid-owner-message `D999` and old `D50` returned `allow` |
+| Independent canonical-command boundary counter | exit 0; `plan-exec=2` build calls, `plan-close=1`, `plan-run` exact inheritance directive `=1`, direct duplicate calls `=0`, manual-authority kwargs `=0` |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p 'test_task_contract.py'` | exit 0; 79 tests; OK |
+| `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p 'test_canon_literals.py'` | exit 0; 15 tests; OK |
+| `python3 packages/task/scripts/render-provider-commands.py --check --root .` | exit 0; check OK/no-op |
+| `bash packages/task/scripts/validate.sh` | exit 0; 485 tests; `validate: OK`; archived-plan warnings remain pre-existing/non-fatal |
+| `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
+| `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
+| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `eac4255e88a76f4e94184ec6a86cc953ec859dddcb3ec335da3da1904a9c9009` |
+
+The protected request was `gate_id=G-OWNER-P5.4-SINGLE`,
+`branch=single-provider:codex`, `scope=P5.4:five-paired-waves`. Every granting case referenced
+`brief/99-owner-message.md#grant-p5-single`; the referenced line exactly restated the request and
+used `provenance=repository-owner`. Cases were exact D67, missing, valid-message synthetic D999,
+valid-message old D50, wrong gate, branch superstring, scope superstring, wrong message reference,
+missing message file, wrong provenance, duplicate message ID, later revocation, exact duplicate
+grants and malformed duplicate grant. Only the two Decision-identity attacks failed semantically.
+
+### Preflight and scope
+
+- `pwd`, `git status --short`, commit-object inspection and the detached worktree confirmed the
+  repository cwd, unrelated dirty baseline and exact three-file implementation-commit scope.
+- `codex doctor --json`: exit 0, overall `ok`, model `gpt-5.6-sol`, approval `Never`, unrestricted
+  filesystem. The assigned route is xhigh; runtime output does not export effort.
+- `packages/maind/bin/maind health --cwd`: exit 0; memory round-trip and both provider-trust rows
+  green.
+- `packages/harness/bin/harness doctor --provider-audit --json`: exit 0; diagnostics empty.
+- `python3 -m py_compile .codex/hooks/lifecycle.py`: exit 0. The trusted absolute-target Codex hook
+  dry-run exited 0 without changing either hook file, but remained non-green `warning`: lifecycle
+  hook and handler are both `stale-source -> update (source-changed)`. This pre-existing P4.4-owned
+  environment defect is neither waived nor reported green.
+- Producer evidence, carrier `State`, `Independent verification`, P0.1-P6.4 statuses/deliverables,
+  Task implementation/generated artifacts, Artifex product code, docs, release/fleet/Brain/provider/
+  pilot/hook state and unrelated dirty paths were not changed.
+
+### Terminalization decision
+
+Carrier `State` remains `waiting`. `Independent verification` remains pending, and P0.1 remains
+closed. Attempt 3 is durable RED evidence for reviewed commit
+`6c19b201ba815e78e6c1f9d3d725f6990c7f9869`; attempts 1 and 2 remain verbatim history.
+
+### Verification
+
+- **RAG:** not invoked; the verdict is entirely repo-grounded in the reviewed commit, current plan
+  carriers and executable Task Contract results.
+- **Unverified -> re-pass:** none.
+- **Workarounds/[POSSIBLE-DEFECT]:** none accepted; the two fail-open Decision-identity cases and
+  the separately known hook `stale-source` warning remain explicit defects.
+
+### Producer relaunch
+
+**Next:** manual: implementation/high
+
+| Parameter | Value |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-code-edit · task-contract-evaluate |
+| Context | cold-start — plan-step |
+| Summary | Fix F3 by validating Decision identity and permanently test valid-owner-message D999/D50 negatives |
+| Command | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Summary | Command |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman/packages/task` | `NEW SESSION — шаг-не-item` | Scoped Task producer fix-forward; Artifex execution and terminal review forbidden | — |
+
+```text
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+
+$ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/design/task-authority-carrier-01.md
+
+РЕЖИМ: отдельный implementation/high producer fix-forward после committed reviewer RED; НЕ Artifex item execution и НЕ terminal review
+ВХОД: carrier path выше; task-authority-carrier-01-review.md -> Attempt 3/F3; implementation commit 6c19b201ba815e78e6c1f9d3d725f6990c7f9869; plan.md D64-D66; roadmap.md Authority Gate Contract; AGENTS.md от repo root до packages/task
+СКОУП: fail-closed валидировать Decision Log identity/continuity без plan-specific D64 cutoff; сохранить exact owner-message/gate/branch/scope/ambiguity/revocation checks; добавить permanent negatives, где synthetic D999 и old duplicate D50 используют тот же валидный owner-message reference, что positive D67; повторить полный terminal predicate; создать новый scoped implementation commit и обновить только Producer evidence при State=waiting; затем вернуть отдельный cold frontier/xhigh reviewer launch
+НЕ ТРОГАТЬ: review artifact; State; Independent verification; P0.1-P6.4 statuses/deliverables; Artifex product implementation; unrelated dirty worktree; provider/pilot/hook/package-home/docs/fleet/Brain/release state
+```

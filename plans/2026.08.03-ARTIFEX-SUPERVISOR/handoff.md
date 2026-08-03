@@ -1,4 +1,4 @@
-# HANDOFF — 2026-08-03 — after P0.4
+# HANDOFF — 2026-08-03 — after P0.5
 
 **Next:** «ЗАПУСК ВРУЧНУЮ: frontier/high»
 
@@ -6,47 +6,48 @@
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
-| Capabilities | repository-plan-edit · task-contract-evaluate |
+| Capabilities | repository-plan-edit · contract-authoring · task-contract-evaluate |
 | Context | continue (/clear) — ручной item |
-| Суть | Исполнить неизменённый P0.5: заморозить candidate-independent reliability/security/economy rubric и P0→P1/P4/P5 crosswalk |
+| Суть | Заморозить `supervisor-run-v1`, machine cases, validator и Harness reuse/gap crosswalk по terminal P0 evidence |
 | Команда | — |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для отдельного frontier/high исполнения P0.5 | — |
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для frontier/high исполнения P1.1 | — |
 
-**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P0.4 закрыт `🟢 Done`. Item-коммит
-`2c4c2f2d` запечатал trust boundaries, protected assets, operating envelope,
-independent pre-mortem, machine-checkable threat bank и stdlib-валидатор. Все item
-Validation зелёные; Task Contract pre-mutation/pre-final разрешён.
+**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P0.5 закрыт `🟢 Done`; фаза P0
+терминальна. Item-коммит `6b574196` запечатал candidate-independent
+rubric, adversarial cases, independent stdlib evaluator и P0→P1/P4/P5 crosswalk.
+Task Contract pre-mutation/pre-final — `allow/allow`; все item Validation зелёные.
 
-**Remaining:** P0.5 завершает P0 evidence/policy freeze. P1–P6 не запускались.
-P0.5 потребляет terminal P0.1–P0.4 artifacts и создаёт только rubric/cases/crosswalk
-в путях item'а.
+**Remaining:** P1.1–P6.4 не запускались. P1.1 — первый legal item после
+terminal P0; roadmap задаёт `solo`, `manual`, `frontier/high`.
 
-**Sources of truth:** `phases/P0.md` P0.4 Completion Notes ·
-`research/08-threat-model-and-premortem.md` · `artifacts/P0/threat-cases-v1.json` ·
-`artifacts/P0/validate-threat-cases.py` · `roadmap.md`.
+**Sources of truth:** `phases/P0.md` P0.5 Completion Notes ·
+`artifacts/P0/acceptance-rubric-v1.md` · `artifacts/P0/acceptance-cases-v1.json` ·
+`artifacts/P0/validate-acceptance.py` · `research/09-p0-freeze-crosswalk.md` ·
+item-коммит `6b574196`.
 
-**Open risks:** Threat freeze задаёт требования, но не доказывает безопасность будущего
-runtime; executable proof остаётся за P4/P5. Claude Code least-privilege bounded probe
-остаётся degraded из-за authentication/access. Известный trusted Codex lifecycle
-`stale-source -> update (source-changed)` warning остаётся у P4.4. В широком worktree
-есть посторонний dirty diff; P0.4 его не трогал.
+**Open risks:** P0 замораживает условия, но не доказывает безопасность или
+экономику будущего runtime. Current baseline не имеет eligible non-synthetic
+battle wave и сохраняет unknown token/cost/intervention fields. Trusted Codex
+lifecycle `stale-source -> update (source-changed)` warning остаётся будущим
+P4.4 evidence blocker. В широком worktree есть посторонний dirty diff; P0.5 его
+не трогал.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none;
-- deferred: executable fault/security/recovery proof P4, measured pilots P5, P0.5 rubric, P1–P6 execution;
-- open_questions: none for P0.4.
+- deferred: P1 contract freeze, P4 executable assurance, P5 measured pilots/economics, P6 product-home decision;
+- open_questions: none for P0.5.
 
 ```text
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P0.5
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.1
 
-РЕЖИМ: отдельное frontier/high исполнение manual item; только P0.5
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P0.md → P0.5 и его Required Reads
-СКОУП: выполнить неизменённый 2026.08.03-ARTIFEX-SUPERVISOR P0.5 строго по Files/Validation, закрыть item и фазу P0 по plan-protocol
-НЕ ТРОГАТЬ: P1.1–P6.4; Artifex candidate; provider configuration/auth/session state; pilot/hook/package-home/docs/fleet/Brain/release state; unrelated dirty worktree
+РЕЖИМ: отдельное frontier/high исполнение manual item; только P1.1
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P1.md → P1.1 и его Required Reads
+СКОУП: заморозить supervisor-run-v1, Harness reuse/gap crosswalk, machine cases и independent validator строго по Files/Validation P1.1
+НЕ ТРОГАТЬ: P1.2–P6.4; Artifex runtime/provider implementation; package/core/provider/hook/fleet/Brain/release state; unrelated dirty worktree
 ```

@@ -92,7 +92,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, owner canons, and acceptance baseline | 1/5 | 🟡 In progress |
+| P0 | Evidence, owner canons, and acceptance baseline | 2/5 | 🟡 In progress |
 | P1 | Freeze supervisor contracts | 0/5 | ⬜ Not started |
 | P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
@@ -188,6 +188,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Repeat-audit F6 remediation: D65 assigns D64 to exact Task prerequisite carrier, P0.1 is structural `waiting:`, and roadmap/handoff return unchanged 0/32 items to a third audit-design; no Task or Artifex implementation executed. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Third-audit F7/F8 remediation: D66 splits the prerequisite into exact implementation/high producer and cold frontier/xhigh reviewer/terminalizer, unifies the two-conjunct P0.1 wait, and returns unchanged 0/32 items to a fourth audit-design; no carrier, Task or Artifex implementation executed. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.1 закрыт: baseline/reuse evidence запечатана с честным `baseline_pending`; детали см. phases/P0.md P0.1 Completion Notes. |
+| 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.2 закрыт: owner canons, narrowing-only mandate и authority cases запечатаны — детали см. phases/P0.md P0.2 Completion Notes. |
 
 ## 7. Contracts
 

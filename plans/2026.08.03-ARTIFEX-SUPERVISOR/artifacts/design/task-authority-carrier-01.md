@@ -118,11 +118,11 @@ $ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTI
 ## Producer evidence
 
 **Status:** ready-for-review
-**Implementation commit:** 6c19b201ba815e78e6c1f9d3d725f6990c7f9869
+**Implementation commit:** 635cbdb5717ce2438a17fa674338f7b8502cf0f7
 **Producer route:** `gpt-5.6-terra/high`
 **Commands/results:** Isolated detached worktree at implementation commit
-`6c19b201ba815e78e6c1f9d3d725f6990c7f9869` plus Artifex plan snapshot
-`sha256:9322736f035e0147d6a1fdb52b8bcdc13a105c6f2ff21da53c895f8b126a786f`:
+`635cbdb5717ce2438a17fa674338f7b8502cf0f7` plus Artifex plan snapshot
+`sha256:e052e6c840521aad1ec9397ad2210bea71793cb69b61102d56782599420c83f0`:
 `python3 packages/task/scripts/render-provider-commands.py --check --root .` — exit 0/no-op;
 `PYTHONPATH=packages/task/lib python3 -m unittest discover -s packages/task/tests -p
 'test_task_contract.py'` — exit 0, 79 tests (including 32/32 ordinary Artifex builds);
@@ -134,8 +134,9 @@ packages/task/scripts/plan-lint.py --conflicts` — exit 0 (0/0); `python3
 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` — exit 0 (2 checked/0
 findings). Independent 32-item evaluation — 32/32 `{pre_mutation=allow, pre_final=allow}` and
 zero foreign-D50 provenance. Protected-transition test matrix includes the exact allow plus
-missing, exact-owner synthetic `D999`, exact-owner old `D50`, wrong message reference, wrong gate,
-branch-superstring, scope-superstring and revocation `block:AUTHORITY_BOUNDARY` cases. `codex
+missing, valid-owner-message synthetic `D999`, valid-owner-message duplicate old `D50`, wrong
+message reference, wrong gate, branch-superstring, scope-superstring, ambiguous exact/malformed
+duplicates and revocation `block:AUTHORITY_BOUNDARY` cases. `codex
 doctor --json`, `packages/maind/bin/maind health --cwd --json` and `packages/harness/bin/harness
 doctor --provider-audit --json` — each exit 0; memory round-trip and both provider-trust rows are
 green. The dirty producer worktree's direct renderer check remains exit 1 only on pre-existing

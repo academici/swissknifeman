@@ -1,0 +1,118 @@
+{
+  "schema_version": "dispatch-task-set-v1",
+  "set_version": "1.0.0",
+  "tasks": [
+    {
+      "schema_version": "dispatch-task-manifest-v1",
+      "manifest_version": "1.0.0",
+      "task_id": "p3-smoke-codex-v1",
+      "task_hash": "e8712127a818303474b862b9ad57f1954bdeecb72f829c97d17aa1e612709ff1",
+      "purpose": "provider-readiness-smoke",
+      "provider": "codex",
+      "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+      "parent_item_id": "P3.4",
+      "parent_task_contract_hash": "72553d6ccab420191697a3d3b61ee5975c328efe30eba6811a14193710258bac",
+      "workspace": {
+        "kind": "temporary-empty-git",
+        "creation": "fresh-per-attempt",
+        "preimage": "empty-git-tree",
+        "postimage": "equals-preimage"
+      },
+      "permissions": {
+        "reads": [],
+        "writes": [],
+        "tools": []
+      },
+      "prompt": {
+        "id": "artifex-provider-readiness-smoke-v1",
+        "content_hash": "2868254fddba1e36e830631ae1e944ee18872a7ad3a3dfd2e8fc687b27f390fd"
+      },
+      "response_schema": {
+        "id": "artifex-readiness-result-v1",
+        "content_hash": "990901a4d25beb01bf84ae951e5ee5bb7431a5e8d8172f967cb2801c3f35fe5d"
+      },
+      "outputs": [
+        "provider_id",
+        "binary_version_hash",
+        "exit_class",
+        "reason_code",
+        "schema_valid",
+        "project_delta",
+        "duration_ms"
+      ],
+      "budgets": {
+        "max_slices": 1,
+        "timeout_ms": 180000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 8,
+        "max_turns": 1,
+        "max_output_bytes": 4096,
+        "token_limit": 2048,
+        "cost_limit_microunits": 1000000
+      },
+      "source_hashes": {
+        "plan": "ee3cc3deece53e3786cc1f9f2f793f084e71f42200b9864609c83dc5a6332a8e",
+        "p3_phase": "98a195076b347b3bc255c3ed3174c7142dd3b494653bacf0addfe7449049d265",
+        "provider_matrix": "3d4c2eb4cdcc0deb7bc76abd84220a3e365ae786233ec44f46ce3491d9905c76",
+        "worker_contract": "8492a73facaf0258e96003f1376da962e144acc1f57b87546f606cb77f4c4785",
+        "parity": "35e69e465394f324e7881084267f9048332ec074cdc582bf34beb1f83c648610"
+      }
+    },
+    {
+      "schema_version": "dispatch-task-manifest-v1",
+      "manifest_version": "1.0.0",
+      "task_id": "p3-smoke-claude-code-v1",
+      "task_hash": "894717db5c6b4d286198a2f8af3cbc63e1bf65b365a92f55e5244e67a794b55b",
+      "purpose": "provider-readiness-smoke",
+      "provider": "claude-code",
+      "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+      "parent_item_id": "P3.4",
+      "parent_task_contract_hash": "72553d6ccab420191697a3d3b61ee5975c328efe30eba6811a14193710258bac",
+      "workspace": {
+        "kind": "temporary-empty-git",
+        "creation": "fresh-per-attempt",
+        "preimage": "empty-git-tree",
+        "postimage": "equals-preimage"
+      },
+      "permissions": {
+        "reads": [],
+        "writes": [],
+        "tools": []
+      },
+      "prompt": {
+        "id": "artifex-provider-readiness-smoke-v1",
+        "content_hash": "2868254fddba1e36e830631ae1e944ee18872a7ad3a3dfd2e8fc687b27f390fd"
+      },
+      "response_schema": {
+        "id": "artifex-readiness-result-v1",
+        "content_hash": "990901a4d25beb01bf84ae951e5ee5bb7431a5e8d8172f967cb2801c3f35fe5d"
+      },
+      "outputs": [
+        "provider_id",
+        "binary_version_hash",
+        "exit_class",
+        "reason_code",
+        "schema_valid",
+        "project_delta",
+        "duration_ms"
+      ],
+      "budgets": {
+        "max_slices": 1,
+        "timeout_ms": 180000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 8,
+        "max_turns": 1,
+        "max_output_bytes": 4096,
+        "token_limit": 2048,
+        "cost_limit_microunits": 1000000
+      },
+      "source_hashes": {
+        "plan": "ee3cc3deece53e3786cc1f9f2f793f084e71f42200b9864609c83dc5a6332a8e",
+        "p3_phase": "98a195076b347b3bc255c3ed3174c7142dd3b494653bacf0addfe7449049d265",
+        "provider_matrix": "3d4c2eb4cdcc0deb7bc76abd84220a3e365ae786233ec44f46ce3491d9905c76",
+        "worker_contract": "8492a73facaf0258e96003f1376da962e144acc1f57b87546f606cb77f4c4785",
+        "parity": "35e69e465394f324e7881084267f9048332ec074cdc582bf34beb1f83c648610"
+      }
+    }
+  ]
+}

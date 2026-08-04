@@ -18,6 +18,7 @@ EXPECTED_IDS = {
     "authority-policy-v1",
     "worker-envelope-v1",
     "economy-evidence-v1",
+    "dispatch-admission-v1",
 }
 ENTRY_KEYS = {
     "id",
@@ -87,8 +88,8 @@ def main() -> int:
         if manifest["schema_version"] != "artifex-contract-manifest-v1" or manifest["manifest_version"] != "1.0.0":
             raise ManifestError("unsupported manifest schema/version")
         rows = manifest["contracts"]
-        if not isinstance(rows, list) or len(rows) != 5:
-            raise ManifestError("manifest must contain exactly five contracts")
+        if not isinstance(rows, list) or len(rows) != 6:
+            raise ManifestError("manifest must contain exactly six contracts")
         if any(not isinstance(row, dict) or set(row) != ENTRY_KEYS for row in rows):
             raise ManifestError("contract row has an open or incomplete shape")
         entries = {row["id"]: row for row in rows if isinstance(row.get("id"), str)}
@@ -145,6 +146,7 @@ def main() -> int:
             "authority-policy-v1": "P1.3",
             "worker-envelope-v1": "P1.4",
             "economy-evidence-v1": "P1.5",
+            "dispatch-admission-v1": "P1.6",
         }
         if {key: row["owner"] for key, row in entries.items()} != expected_owners:
             raise ManifestError("contract ownership does not match the P1 freeze items")

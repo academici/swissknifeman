@@ -6,10 +6,10 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.10.5 |
+| Version | 0.11.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations and P3.4 native-tool/successor-manifest remediations; runtime effort not exported) |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations and P3 audit reopen; runtime effort not exported) |
 | Last Updated | 2026-08-04 |
 | Repository | swissknifeman |
 | Related Packages | task · harness · core · analyst · maind (prototype plan-local; promotion home unset) |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations — D67–D81 repair execution/audit-discovered defects without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations + P3 audit reopen — D67–D84 repair execution/audit-discovered defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -76,6 +76,9 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P3.2 | implementation/high | manual | prescribed Claude mapper crosses current CLI, permission and structured-output boundaries; high effort/full review |
 | P3.3 | implementation/high | manual | provider parity/exit conformance implements the frozen P0/P1 matrix; high effort/full review |
 | P3.4 | implementation/high | manual | fresh-process, timeout/orphan, privacy and activity-port binding are correctness/security critical; high effort/full review |
+| P3.5 | implementation/high | manual | admitted provider activity binding crosses authority, process, privacy and durable-journal boundaries; prescribed forward fix, high effort/full review |
+| P3.6 | implementation/high | manual | real readiness evidence and cross-generation hash verification are correctness/provenance critical; high effort/full review |
+| P3.7 | implementation/high | manual | affected-package regression repair plus final phase verification require high+ final verification and full review |
 | P4.1 | implementation/high | manual | exact failure-bank freeze and executable crash harness are correctness-critical; high effort/full review |
 | P4.2 | implementation/high | manual | no-rerun recovery and idempotency repair cross durable side-effect boundaries; high effort/full review |
 | P4.3 | implementation/high | manual | linked-worktree ownership and serialized integration cross Git write/rollback boundaries; high effort/full review |
@@ -98,7 +101,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟠 Done with deviations |
+| P3 | Add provider adapters and fresh worker lifecycle | 3/7 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
 | P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
@@ -188,11 +191,16 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D79 | 2026-08-04 | D79 supersedes the roadmap's direct P4.3→P4.4 edge. New P4.6 is the sole owner of one worktree-local effective Codex hook `--repair`, the exact post-repair `--dry-run`, minimized evidence and an independent validator; execution order is P4.3→P4.6→P4.4. P4.4 still reruns the effective command and refuses `warning`, `stale-source` or `→ update`; doctor/syntax/exit 0 never substitute. **Consequences:** the plan grows from 34 to 35 items and performs one explicit trusted-state repair before security assurance; the current design session does not repair hooks, package sources remain outside P4.6 Files, and P4.4 cannot start unless P4.6 is terminal GREEN. RAG:— (repo-grounded: `findings/hooks-stale-source-precondition-2026-08-04.md`; latest Audit design F3; `research/23-post-d76-audit-remediation-reconcile.md`). | The known reproducible prerequisite warning now has a named producer/evidence carrier instead of becoming a predictable late P4 refusal or a false GREEN inferred from exit status. |
 | D80 | 2026-08-04 | P3.4 owns the forward-only admission→provider native-tool projection in the existing adapter modules and their tests; D74/D77 and terminal P1/P2/P3 histories remain unchanged. Claude `tools=[]` must render literal `--tools ""` with no `--allowedTools`; Codex has no proven global no-tool carrier and must return `CAPABILITY_UNSUPPORTED` before process. Installed provider-version drift likewise returns `MAPPING_UNKNOWN` without repinning P0/P3 parity. A minimized non-green readiness row is valid evidence but never provider success/maturity. RAG:✅ 2026-08-04 installed CLI + first-party verification in `findings/P3.4-native-no-tool-verification-2026-08-04.md`; RAG:— (repo-grounded: D34/D36/D74/D77, frozen admission bytes and `research/24-p3.4-native-tool-projection-design.md`). | Exact authority stays stricter than implementation convenience: the runner cannot widen tools or fake parity, while P3.4 can still finish its deterministic runner/evidence deliverables and hand honest provider readiness to P4. |
 | D81 | 2026-08-04 | P2's `prototype-manifest-v1.json` and validator remain byte-stable historical evidence for item commit `6c2c2ef3`; they are not regenerated and are no longer invoked as a current-tree equality gate after a declared P3 successor edits P2-owned files. P3.4's additive `adapter-manifest-v1.json` becomes the sole successor snapshot: it pins the P2 manifest path/SHA-256 `bbd19ef8dab464e33b58be07519173127103528dcd321449557a4c771db312a1`/commit, recomputes every P2 row from that Git snapshot, and separately pins/recomputes current P3 implementation, tests, admissions, parity and minimized readiness evidence. **Consequences:** P3.4 validation stops claiming the terminal P2 validator is green on evolved bytes; its P3 validator must prove both generations, and any missing Git anchor, changed P2 carrier or current P3 drift fails closed. RAG:— (repo-grounded: `findings/P3.4-successor-manifest-conflict-2026-08-04.md`; `research/25-p3.4-successor-manifest-design.md`; terminal P2.6 commit and current P3.4 Files). | A predecessor snapshot and a successor snapshot describe different generations; anchoring both preserves provenance and allows lawful additive evolution without rewriting history or accepting a known-red check. |
+| D82 | 2026-08-04 | Phase P3 is reopened after the first independent phase audit returned RED on F1–F6: explicit-provider dispatch is a no-op, readiness and manifest gates are synthetic/blind, execution provenance is incomplete, and the affected Task validation is red. P3 status returns to `🟡 In progress`; P1/P2 and P3.1–P3.4 histories stay terminal. RAG:— (repo-grounded: `phases/P3.md` → `## Audit P3 — 2026-08-04`; `findings/P3-audit-reopen-recon-2026-08-04.md`). | A terminal phase cannot gate P4 while its primary runtime/evidence acceptance is unimplemented; additive remediation preserves frozen predecessors and makes the next audit falsifiable. |
+| D83 | 2026-08-04 | P3 remediation is a sequential three-item chain: P3.5 binds indexed admission→exact adapter→bounded normalized worker activity; P3.6 replaces the synthetic writer with the same-path real preflight/probe and implements strict historical-P2/current-P3 hash validation; P3.7 repairs the Task invariant regression and reruns the closure fan-in. No workflow is created because each item consumes the previous item's deliverables. RAG:— (repo-grounded: `research/26-p3-audit-reopen-design.md`; current runtime/evidence code). | One runtime owner, one evidence owner and one final regression/gate owner prevent another mixed implementation/bookkeeping close and keep provider-free P2 seams intact. |
+| D84 | 2026-08-04 | Historical P3.4 prose/commit is not rewritten to pretend `d1362247` contained later design carriers. The P3.5–P3.7 specifications carry exhaustive Required Reads/Files and must be committed cleanly before P3.5 mutation; the append-only Update Log records the missing P3.1–P3.4 commit map. RAG:— (repo-grounded: audit F4/F6; `findings/P3-audit-reopen-recon-2026-08-04.md`; `research/26-p3-audit-reopen-design.md`). | Provenance is repaired forward with a checkable precondition while the historical defect remains visible instead of being erased by post-hoc specification edits. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | P3 audit reopen: D82–D84 add sequential P3.5–P3.7 runtime/evidence/regression remediation, set P3 to `🟡 In progress` and invalidate its old handoff; no frozen predecessor or product code changed. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | Append-only P3 item-commit map repair: P3.1→`1a87d960` · P3.2→`cbc20abf` · P3.3→`f708310e` · P3.4→`d1362247`; historical closure rows remain unchanged. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 successor-manifest remediation: D81 preserves the terminal P2 snapshot, assigns cross-generation proof to the additive P3 manifest/validator and returns P3.4 to executable `⬜ Not started`. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 native-tool remediation: D80 assigns exact adapter projection/refusal, preserves D74/D77 and returns P3.4 to `⬜ Not started`; roadmap/handoff now launch the manual implementation item. |
 | 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P2 закрыта: 6/6 items сверены по committed evidence; текущий 48-test supervisor fan-in, six-contract/admission/prototype validators зелёные — детали см. phases/P2.md Phase Handoff. |

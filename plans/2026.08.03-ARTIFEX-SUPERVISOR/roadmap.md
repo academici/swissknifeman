@@ -1,36 +1,37 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.10.5 · **Статус:** P1.6/P2.6 и
-фазы P1/P2 терминальны; P3 терминальна с deviations: D80 устранил no-tool conflict, а D81
-разделил immutable P2 snapshot и additive current P3 snapshot без изменения D74/D77.
-Следующий шаг — независимый audit P3; provider readiness остаётся non-green evidence с нулевой
-активностью и не ослабляет runner/evidence acceptance.
+**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.11.0 · **Статус:** P1/P2 и
+P3.1–P3.4 остаются terminal history; D82–D84 reopened P3 as `3/7`, added sequential
+P3.5–P3.7 runtime/evidence/regression fixes and kept P4 gated until reclosure plus GREEN audit.
 
-## Immediate P3 audit
+## Immediate P3 remediation
 
-**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
+**Next:** manual: implementation/high — P3.5 (§3 Routing: Exec = manual)
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | repository-plan-read · evidence-audit · provider-adapter review |
-| Context | cold-start — plan-step |
-| Суть | Независимо проверить P3 closure и честность provider/P1.6 deviations |
-| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-plan-write · subprocess-test |
+| Context | same-session — item |
+| Суть | Реализовать exact admission→adapter→bounded activity binding |
+| Команда | — |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
-$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
+РЕЖИМ: remediation item execution; committed-spec gate обязателен
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 + Audit P3 F1/F4
+СКОУП: exact indexed admission → adapter preflight → bounded normalized worker; CLI binding/tests
+НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history; P3.6/P3.7; P4–P6; unrelated dirty worktree
 ```
 
 ## Карта исполнения
 
-Все 35 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
+Все 38 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
-текущий путь исполнения начинается с независимого аудита P3.
+текущий путь исполнения начинается с P3.5.
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
@@ -54,7 +55,10 @@ contract/security/recovery/public-package классы требуют full revie
 | P3.1 | terminal | 🟢 Done | implementation/high | — | terminal pure Codex mapper |
 | P3.2 | terminal | 🟢 Done | implementation/high | — | terminal pure Claude Code mapper |
 | P3.3 | terminal | 🟢 Done | implementation/high | — | terminal two-provider parity freeze |
-| P3.4 | terminal | 🟠 Done with deviations | implementation/high | — | D80 native-tool projection/refusal + D81 historical-P2/current-P3 manifest proof; P1.6 provenance and provider readiness are explicit non-green follow-up evidence |
+| P3.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | audit F1–F6 disproved runtime/evidence closure; historical record remains visible and remediation is forward-only |
+| P3.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` | implementation/high | — | exact indexed admission→adapter preflight→bounded normalized activity; committed-spec gate |
+| P3.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` | implementation/high | — | consumes P3.5; real readiness probe and strict immutable-P2/current-P3 hash proof |
+| P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6; repair Task invariant regression and rerun closure fan-in |
 | P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
 | P4.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.2` | implementation/high | — | dispatch-aware no-rerun recovery; consumes P4.1 |
 | P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
@@ -72,27 +76,31 @@ contract/security/recovery/public-package классы требуют full revie
 
 ## Последовательность successor-contract remediation
 
-1. P1.6 and P2.6 are terminal; P1/P2 are closed.
-2. P3.4 and P3 are terminal; run `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` before P4.1.
-3. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5–P6 sequentially.
+1. P1.6/P2.6 and P1/P2 remain terminal; do not rewrite their carriers.
+2. Execute P3.5→P3.6→P3.7, then `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3`.
+3. Run cold `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3`; only GREEN unlocks P4.1.
+4. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5–P6 sequentially.
 
-### P3 — closed phase awaiting independent audit
+### P3 — reopened forward remediation
 
-**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
+**Next:** manual: implementation/high — P3.5 (§3 Routing: Exec = manual)
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | repository-plan-read · evidence-audit · provider-adapter review |
-| Context | cold-start — plan-step |
-| Суть | Проверить P3 evidence, deviations и closure перед P4 |
-| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-plan-write · subprocess-test |
+| Context | same-session — item |
+| Суть | Закрыть P3.5 runtime binding перед evidence/hash remediation |
+| Команда | — |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
-$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
+РЕЖИМ: remediation item execution; committed-spec gate обязателен
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 + Audit P3 F1/F4
+СКОУП: exact indexed admission → adapter preflight → bounded normalized worker; CLI binding/tests
+НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history; P3.6/P3.7; P4–P6; unrelated dirty worktree
 ```
 
 ## Authority Gate Contract

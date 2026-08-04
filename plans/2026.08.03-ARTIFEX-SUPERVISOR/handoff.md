@@ -1,55 +1,55 @@
-# HANDOFF — 2026-08-04 — after P1.4
+# HANDOFF — 2026-08-04 — after P1.5
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: frontier/high»
+**Next:** close: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P1
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — economy/privacy aggregate contract freeze |
-| Context | continue (/clear) — ручной item |
-| Суть | Заморозить `economy-evidence-v1` и aggregate five-contract validation |
-| Команда | — |
+| Model | implementation |
+| Thinking | low — terminal phase reconciliation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Сверить terminal P1 по git-фактам, закрыть phase handoff и lint |
+| Команда | `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P1` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для frontier/high исполнения P1.5 | — |
+| gpt-5.6-terra | low | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Plan-protocol terminalizer для P1 | `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P1` |
 
-**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P1.4 закрыт `🟢 Done`.
-Item-коммит `698e5d7d` запечатал frozen `worker-envelope-v1`, closed neutral
-request/event/result and exit/reason sets, exhaustive synthetic case bank и independent
-stdlib-validator. Task Contract pre-mutation/pre-final — `allow/allow`; вся item Validation
-зелёная. P0.3 `unknown`/`unsupported` и Claude degraded state сохранены без ложной parity.
+**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P1.5 закрыт `🟢 Done`; P1 имеет
+`5/5` terminal items. Item-коммит `26b71cac` заморозил `economy-evidence-v1`,
+candidate-independent D14 adjudicator, adversarial boundary bank и hash-pinned aggregate
+manifest/validator пяти P1 contracts. Task Contract pre-mutation/pre-final — `allow/allow`;
+полный P0/P1 validation fan-in зелёный.
 
-**Remaining:** P1.5–P6.4 не запускались. P1.5 — следующий legal solo item;
-roadmap задаёт `manual`, `frontier/high`, без batch/workflow.
+**Remaining:** Cold `plan-close` для P1; затем P2.1–P6.4. Roadmap задаёт solo manual
+items без batch/workflow; P2.1 маршрутизирован `implementation/high`.
 
-**Sources of truth:** `phases/P1.md` P1.4 Completion Notes ·
-`root/contracts/worker-envelope-v1.md` ·
-`artifacts/P1/worker-envelope-cases-v1.json` ·
-`artifacts/P1/validate-worker-envelope.py` · item-коммит `698e5d7d`.
+**Sources of truth:** `phases/P1.md` P1.5 Completion Notes ·
+`root/contracts/economy-evidence-v1.md` ·
+`artifacts/P1/economy-evidence-cases-v1.json` ·
+`artifacts/P1/validate-economy-evidence.py` ·
+`artifacts/P1/contract-manifest-v1.json` ·
+`artifacts/P1/validate-contract-set.py` · item-коммит `26b71cac`.
 
-**Open risks:** Effective Codex hook dry-run завершился `exit 0`, но `status: warning`:
-`harness.codex.lifecycle.hooks` и `.handler` остаются `stale-source → update`; это
-pre-existing baseline defect, P1.4 не заявляет hook floor green. Owning remediation:
-`packages/harness/bin/harness hooks --provider codex --target /home/vostrikov/projects/packages/swissknifeman --observer --trusted --repair`, затем тот же вызов с `--dry-run`
-до `status: clean`. В широком worktree сохраняется посторонний dirty diff; P1.4 его не трогал.
-P1.5 обязан потреблять frozen worker evidence без превращения unknown в ноль и завершить
-aggregate five-contract validation.
+**Open risks:** Effective Codex hooks остаются `status: warning` из-за
+`harness.codex.lifecycle.hooks/.handler stale-source → update`; owning repair-команда:
+`packages/harness/bin/harness hooks --provider codex --target /home/vostrikov/projects/packages/swissknifeman --observer --trusted --repair`, затем тот же `--dry-run` до
+`status: clean`. В широком worktree остаётся посторонний dirty diff, который P1.5 не
+трогал. P2 не должен начинаться до terminal `plan-close P1`.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none;
-- deferred: hook stale-source repair вне Artifex P1 scope; P1.5 aggregate contract freeze,
-  P2 runtime, P3 provider adapters, P4 assurance, P5 pilots/economics, P6 product-home decision;
-- open_questions: none for P1.4.
+- deferred: effective hook repair до non-waivable P4.4 integrity gate; P2 runtime, P3
+  provider adapters, P4 assurance, P5 pilots/economics, P6 product-home decision;
+- open_questions: none for P1.5.
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="low" -a never -s danger-full-access
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.5
+$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P1
 
-РЕЖИМ: отдельное frontier/high исполнение manual item; только P1.5
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P1.md → P1.5 и его Required Reads
-СКОУП: заморозить economy-evidence-v1, formulas/unknown/privacy verdicts, cross-contract manifest и aggregate validator строго по Files/Validation P1.5
-НЕ ТРОГАТЬ: P2.1–P6.4; package/core/provider/hook/fleet/Brain/release state; raw prompt/stdout/stderr/transcript/tool payload/secrets; unrelated dirty worktree
+РЕЖИМ: отдельный cold implementation/low phase terminalizer; P2.1 не исполнять
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P1.md и item/bookkeeping commits P1.1–P1.5
+СКОУП: сверить terminal statuses/commits/contracts/validation/lint P1; обновить только phase-close bookkeeping и следующий launch-block
+НЕ ТРОГАТЬ: P2.1–P6.4 deliverables/statuses; package/core/provider/hook/fleet/Brain/release state; unrelated dirty worktree
 ```

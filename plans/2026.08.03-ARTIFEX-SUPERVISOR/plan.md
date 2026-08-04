@@ -93,7 +93,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
-| P1 | Freeze supervisor contracts | 4/5 | 🟡 In progress |
+| P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
@@ -196,6 +196,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.2 закрыт: immutable slice/compiler contract, refusal bank и independent validator запечатаны — детали см. phases/P1.md P1.2 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.3 закрыт: authority-policy-v1, exhaustive decision bank и deterministic validator запечатаны — детали см. phases/P1.md P1.3 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.4 закрыт: provider-neutral worker envelope, closed exit taxonomy и independent validator запечатаны — детали см. phases/P1.md P1.4 Completion Notes. |
+| 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.5 закрыт: economy/privacy evidence и aggregate five-contract freeze запечатаны — детали см. phases/P1.md P1.5 Completion Notes. |
 
 ## 7. Contracts
 
@@ -207,7 +208,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | `root/contracts/slice-manifest-v1.md` | v1.0.0 | frozen P1.2 (`e6331a3d`) | P2–P6 | P1.3–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/authority-policy-v1.md` | v1.0.0 | frozen P1.3 (`8a1f1757`) | P2–P6 | P1.4–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/worker-envelope-v1.md` | v1.0.0 | frozen P1.4 (`698e5d7d`) | P2–P6 | P1.5 и P2–P6 через plan и handoff |
-| `root/contracts/economy-evidence-v1.md` | v1.0.0 | planned P1.5 | P2–P6 | — |
+| `root/contracts/economy-evidence-v1.md` | v1.0.0 | frozen P1.5 (`26b71cac`) | P2–P6 | P2–P6 через plan и handoff |
 
 ### Consumed
 

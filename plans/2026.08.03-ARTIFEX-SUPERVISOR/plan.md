@@ -6,13 +6,13 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.11.0 |
+| Version | 0.13.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations and P3 audit reopen; runtime effort not exported) |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen and P5→P6 finished-product reconciliation; runtime effort not exported) |
 | Last Updated | 2026-08-04 |
 | Repository | swissknifeman |
-| Related Packages | task · harness · core · analyst · maind (prototype plan-local; promotion home unset) |
+| Related Packages | artifex (new mandatory package) · task · harness · core · analyst · maind |
 | Execution Mode | contract-first, phase-first |
 | Target Operator Classes | implementation (execution) · economy (recon) · frontier (design/audit) |
 | Approval Owner | repository owner |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations + P3 audit reopen — D67–D84 repair execution/audit-discovered defects without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations + P3 audit reopen + finished-product/early-package reconciliation — D67–D88 repair execution/audit/owner-outcome defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -32,9 +32,11 @@
 
 Архивный FOREMAN сохранил имя Artifex и полезные run-folder/driver идеи, но был поглощён
 HARNESS-AGNOSTIC: живой Harness получил декларативную execution policy, а не runtime
-супервизор. Roadmap-критерий теперь сработал как owner-directed measured prototype: сначала
-проверяем надёжность и токеновую экономику на боевых волнах, затем решаем, заслуживает ли
-результат нового package/CLI home. До этого код живёт только в артефактах плана.
+супервизор. P0–P3 сначала построили и проверили runtime plan-local, но assurance и пилоты не
+должны идти против кода, который затем мигрирует в другой путь. Поэтому P3.8 переносит
+исправленный runtime в законченный standalone `packages/artifex/` до P4/P5; P4–P5 проверяют уже
+этот package SSOT, а P6 добавляет umbrella routing, установку, документацию и эксплуатационный
+handoff. План не считается успешно завершённым, пока весь package/public surface и cold audit не GREEN.
 
 ## 2. Execution Rules
 
@@ -49,6 +51,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 - Owner-гейты пакетируются; немедленно будят владельца только security, destructive или необратимая граница.
 - Никаких новых pip/npm runtime dependencies; внешние проекты используются только как дизайн-паттерны и переписываются на stdlib.
 - Неизмеренные token/cost/intervention поля не дают зелёный экономический вердикт.
+- `NO-GO`, неизвестная метрика или RED P5/P6 gate оставляют план открытым и назначают forward remediation; успешная terminal closure без `packages/artifex/` запрещена.
 - После закрытия item/фазы полностью перезаписать `handoff.md` и append-only обновить `journal.jsonl`.
 
 ## 3. Routing
@@ -79,6 +82,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P3.5 | implementation/high | manual | admitted provider activity binding crosses authority, process, privacy and durable-journal boundaries; prescribed forward fix, high effort/full review |
 | P3.6 | implementation/high | manual | real readiness evidence and cross-generation hash verification are correctness/provenance critical; high effort/full review |
 | P3.7 | implementation/high | manual | affected-package regression repair plus final phase verification require high+ final verification and full review |
+| P3.8 | implementation/high | manual | package promotion establishes the sole live runtime before assurance/pilots; package boundary and provenance require high effort/full review |
 | P4.1 | implementation/high | manual | exact failure-bank freeze and executable crash harness are correctness-critical; high effort/full review |
 | P4.2 | implementation/high | manual | no-rerun recovery and idempotency repair cross durable side-effect boundaries; high effort/full review |
 | P4.3 | implementation/high | manual | linked-worktree ownership and serialized integration cross Git write/rollback boundaries; high effort/full review |
@@ -88,10 +92,10 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P5.1 | frontier/high | manual | irreversible trial/baseline/order freeze and archive mapping retain open experiment-design decisions; full review |
 | P5.2 | implementation/high | manual | prescribed three-slice live pilot crosses provider/Git/acceptance boundaries; high effort/full review |
 | P5.3 | implementation/high | manual | prescribed composed crash/reconcile/provider-failure pilot is correctness/security critical; high effort/full review |
-| P5.4 | frontier/high | manual | five-wave comparability, provider-scope and economic GO/NO-GO are irreversible productization inputs; full review |
-| P6.1 | frontier/high | manual | package/CLI promotion can change the frozen five-package/root-router canon and is an Owner gate when expansion is proposed |
-| P6.2 | implementation/high | manual | branch-locked integration or roadmap return crosses package/generated ownership and must preserve one runtime SSOT; full review |
-| P6.3 | implementation/high | manual | opt-in compatibility, state migration, rollback and docs implement frozen P6.1/P6.2 decisions; high effort/full review |
+| P5.4 | frontier/high | manual | five-wave comparability, provider scope and release-readiness adjudication gate mandatory productization; full review |
+| P6.1 | frontier/high | manual | mandatory umbrella/operations scope freeze binds the existing package to exact D86/D87 owner grants |
+| P6.2 | implementation/high | manual | umbrella router/install/doctor integration crosses public/generated ownership while preserving the P3.8 runtime SSOT; full review |
+| P6.3 | implementation/high | manual | install/update/doctor, opt-in compatibility, state migration, rollback and docs complete the public product surface; high effort/full review |
 | P6.4 | frontier/xhigh | manual | cold independent release/rollback audit |
 
 ## 4. Phase Index & Status Board
@@ -101,10 +105,10 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 3/7 | 🟡 In progress |
+| P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 3/8 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
-| P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
-| P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
+| P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
+| P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
 
@@ -194,11 +198,18 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D82 | 2026-08-04 | Phase P3 is reopened after the first independent phase audit returned RED on F1–F6: explicit-provider dispatch is a no-op, readiness and manifest gates are synthetic/blind, execution provenance is incomplete, and the affected Task validation is red. P3 status returns to `🟡 In progress`; P1/P2 and P3.1–P3.4 histories stay terminal. RAG:— (repo-grounded: `phases/P3.md` → `## Audit P3 — 2026-08-04`; `findings/P3-audit-reopen-recon-2026-08-04.md`). | A terminal phase cannot gate P4 while its primary runtime/evidence acceptance is unimplemented; additive remediation preserves frozen predecessors and makes the next audit falsifiable. |
 | D83 | 2026-08-04 | P3 remediation is a sequential three-item chain: P3.5 binds indexed admission→exact adapter→bounded normalized worker activity; P3.6 replaces the synthetic writer with the same-path real preflight/probe and implements strict historical-P2/current-P3 hash validation; P3.7 repairs the Task invariant regression and reruns the closure fan-in. No workflow is created because each item consumes the previous item's deliverables. RAG:— (repo-grounded: `research/26-p3-audit-reopen-design.md`; current runtime/evidence code). | One runtime owner, one evidence owner and one final regression/gate owner prevent another mixed implementation/bookkeeping close and keep provider-free P2 seams intact. |
 | D84 | 2026-08-04 | Historical P3.4 prose/commit is not rewritten to pretend `d1362247` contained later design carriers. The P3.5–P3.7 specifications carry exhaustive Required Reads/Files and must be committed cleanly before P3.5 mutation; the append-only Update Log records the missing P3.1–P3.4 commit map. RAG:— (repo-grounded: audit F4/F6; `findings/P3-audit-reopen-recon-2026-08-04.md`; `research/26-p3-audit-reopen-design.md`). | Provenance is repaired forward with a checkable precondition while the historical defect remains visible instead of being erased by post-hoc specification edits. |
+| D85 | 2026-08-04 | D85 supersedes D19, D56–D61 and D64 only where they allowed `NO-GO → roadmap-only`, an alternate Task/Harness home or a zero-live-surface audit to count as successful completion. The sole successful terminal outcome is a GREEN, production-ready `packages/artifex/` runtime with standalone CLI, `swissknifeman artifex` routing, install/update/doctor surface, tests, compatibility/rollback, standalone+umbrella docs, `[Unreleased]` entry and cold independent audit. D14/D25/D49–D55 thresholds and frozen `GO|NO-GO` values remain binding readiness evidence: failed/unknown/single-provider/ineligible floors retain `NO-GO`, keep P5.4 and the plan non-terminal and require an exact forward fix plus fresh adjudication. Only a later explicit owner cancellation may stop without the package, and cancellation is not successful plan completion. **Consequences:** P5/P6 lose their terminal NO-GO branch, schedule is allowed to extend on failed evidence, the earlier finish/design audit no longer authorizes execution, and a new finish plus cold design audit is required; frozen P1/P2 carriers, P3 history, evidence schemas/thresholds, default-off rollout and release authority do not change. RAG:— (owner-grounded: `brief/14-owner-finished-product-guarantee.md`; repo-grounded: `research/27-finished-product-outcome-reconcile.md`). | The previous state machine optimized for experimental honesty but violated the owner's product-level meaning of “finish the plan”; evidence must constrain what ships, not silently replace the requested deliverable with an archive. |
+| D86 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P6.1-PACKAGE] branch=`artifex-package`; scope=`packages/artifex/** plus package-owned launcher/tests/docs/config/install projections enumerated by P6.1`; owner-message=`brief/14-owner-finished-product-guarantee.md#owner-finished-artifex-package-2026-08-04` | The owner explicitly requires actual Artifex package code at successful plan completion. This finite grant adds no fleet rollout, implicit enablement, dependency expansion, tag, push, publish or release. RAG:— (direct owner decision). |
+| D87 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P6.1-ROUTER] branch=`root-router-approved`; scope=`additive swissknifeman artifex dispatch plus exact root installer/doctor/generated/docs projections enumerated by P6.1`; owner-message=`brief/14-owner-finished-product-guarantee.md#owner-finished-artifex-router-2026-08-04` | A finished installed package needs one discoverable umbrella route. This separate finite grant adds no other root group, default enablement, fleet mutation, tag, push, publish or release. RAG:— (direct owner decision). |
+| D88 | 2026-08-04 | D85's mandatory package outcome is promoted earlier: after P3.5–P3.7 are GREEN, P3.8 consumes D86 and creates the standalone `packages/artifex/` runtime/CLI/tests as the sole live implementation. P4 and P5 must import and execute package paths only. P6 no longer migrates runtime code: P6.1 freezes the remaining D87/root/installer/doctor/docs/operations scope, P6.2 integrates those public surfaces, P6.3 completes operations/docs, and P6.4 audits the finished product. D2/D57 are superseded only for this timing/ownership transition; frozen P1/P2 carriers, P3.1–P3.3 history, P3.4 forward fixes, P5 evidence thresholds and D85–D87 authority remain unchanged. **Consequences:** P3 grows to 8 items, the plan grows to 39 items, P3 cannot close before package promotion, and no later assurance may certify plan-local runtime bytes as the shipping implementation. RAG:— (owner-grounded: `brief/14-owner-finished-product-guarantee.md`; repo-grounded: package/single-SSOT canons and `research/27-finished-product-outcome-reconcile.md`). | Testing a prototype and later shipping a migration would leave the user without a guarantee that the tested code is the delivered package; moving the boundary before P4/P5 makes assurance and pilots product-representative. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | Early-package correction: D88 adds P3.8, makes `packages/artifex` the runtime SSOT before P4/P5, and narrows P6 to umbrella/install/doctor/operations/docs plus cold audit; total 39 manual items. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | Owner-outcome correction: D85–D87 make finished `packages/artifex` plus CLI/router/install/docs/operations the only successful terminal result; P5 RED now keeps the plan open for remediation rather than selecting archive-only closure. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | P5→P6 contract reconciliation recorded in brief/14 and research/27; the previous finish/audit authority is invalidated and the current handoff returns to a new `finish` before P3.5 execution. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | P3 audit reopen: D82–D84 add sequential P3.5–P3.7 runtime/evidence/regression remediation, set P3 to `🟡 In progress` and invalidate its old handoff; no frozen predecessor or product code changed. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Append-only P3 item-commit map repair: P3.1→`1a87d960` · P3.2→`cbc20abf` · P3.3→`f708310e` · P3.4→`d1362247`; historical closure rows remain unchanged. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 successor-manifest remediation: D81 preserves the terminal P2 snapshot, assigns cross-generation proof to the additive P3 manifest/validator and returns P3.4 to executable `⬜ Not started`. |

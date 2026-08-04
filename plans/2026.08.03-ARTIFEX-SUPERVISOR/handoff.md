@@ -1,50 +1,50 @@
 # HANDOFF — 2026-08-04 — after P3
 
-**Next:** manual: implementation/high — P3.5 (§3 Routing: Exec = manual)
+**Next:** manual: frontier/high — cross-phase `finish` (шаг-не-item)
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high — authority/process/privacy boundary and final runtime correctness require high+ |
+| Model class | frontier |
+| Effort | high — P3.8 changes the runtime owner consumed by P4/P5 and narrows P6 |
 | Capabilities | repository-plan-write · subprocess-test |
-| Context | same-session — item |
-| Суть | Связать exact indexed admission с adapter preflight и bounded worker через реальный CLI activity port |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Пересогласовать P0→P6 после переноса `packages/artifex` перед assurance/pilots |
 | Команда | — |
 
 | Model | Thinking | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | NEW SESSION — item | Исполнить P3.5 по committed forward-fix spec | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
+| gpt-5.6-sol | high | NEW SESSION — шаг-не-item | Cross-phase finish, затем handoff на cold design audit | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish` |
 
 ```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
 
-РЕЖИМ: remediation item execution; не повторная детализация и не переписывание P3.4
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 + Audit P3 F1/F4; plans/2026.08.03-ARTIFEX-SUPERVISOR/research/26-p3-audit-reopen-design.md
-СКОУП: 1) проверить committed/clean spec 2) связать indexed admission → exact adapter preflight → bounded normalized worker activity 3) заменить CLI no-op и hard-coded process_count 4) закрыть adversarial runtime tests
-НЕ ТРОГАТЬ: frozen P1/P2 carriers; terminal P3.1–P3.4 semantics/history; P3.6/P3.7 implementation; P4–P6; unrelated dirty worktree
+РЕЖИМ: cross-phase finish после early-package correction; НЕ execution items
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md D85–D88; brief/14-owner-finished-product-guarantee.md; research/27-finished-product-outcome-reconcile.md; phases/P3.md P3.8; phases/P4.md; phases/P5.md; phases/P6.md
+СКОУП: 1) reconcile P3.8 package producer→P4/P5 consumers 2) verify exact standalone package/CLI→umbrella router/install/update/doctor/docs/ops terminal chain 3) prove P6 does not migrate runtime 4) rebuild roadmap/handoff and hand off to cold design audit
+НЕ ТРОГАТЬ: frozen P1/P2 carriers; terminal P3.1–P3.4 history; P3.5–P3.8/P4–P6 implementation; unrelated dirty worktree
 ```
 
-**Done:** P3 reopened по D82 with all four §3 steps: plan v0.11.0, Status Board `P3 3/7`
-and `🟡 In progress`, append-only D82–D84, stale Phase Handoff marker. P3.5–P3.7 are
-detailed to DoR; historical item commits are mapped as P3.1→`1a87d960`, P3.2→`cbc20abf`,
-P3.3→`f708310e`, P3.4→`d1362247`.
+**Done:** D85–D87 make a finished Artifex product the only successful outcome. D88 fixes the
+sequencing defect: P3.8 consumes the exact D86 grant and creates standalone `packages/artifex`,
+its CLI, tests and validation immediately after P3 remediation. P4 and P5 now target package paths
+only. P6 preserves that runtime SSOT and owns umbrella/install/doctor/operations/docs integration.
 
-**Remaining:** Commit the reopened plan carriers before P3.5 mutation, then execute
-P3.5→P3.6→P3.7 sequentially. After all three are terminal, run
-`task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3` to regenerate closure evidence, followed
-by a cold independent P3 audit. P4 stays gated until that audit is GREEN.
+**Remaining:** Run a new `finish` because P3–P6 producer/consumer paths changed after the earlier
+finish/audit, then a cold `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design`. Only literal
+GREEN restores the P3.5 execution handoff. The execution chain is P3.5→P3.6→P3.7→P3.8→P4→P5→P6;
+any required RED keeps its owning item and the plan open for bounded forward remediation.
 
-**Sources of truth:** `plan.md` D82–D84 · `phases/P3.md` P3.5–P3.7 and Audit P3 ·
-`brief/13-p3-audit-reopen.md` · `findings/P3-audit-reopen-recon-2026-08-04.md` ·
-`research/26-p3-audit-reopen-design.md`.
+**Sources of truth:** `plan.md` D85–D88 · `brief/14-owner-finished-product-guarantee.md` ·
+`research/27-finished-product-outcome-reconcile.md` · `phases/P3.md` P3.8 · `phases/P4.md` ·
+`phases/P5.md` · `phases/P6.md` · `roadmap.md`.
 
-**Open risks:** Frozen P1.6 still pins the historical P3.4 parent hash and remains an honest
-non-green limitation; it is not in the owner-authorized repair scope. Effective Codex lifecycle
-hooks remain `stale-source → update`, owned by P4.6/P4.4. The relative-target hook dry-run also
-raises an explicit-root error; only the absolute-target preflight was trustworthy.
+**Open risks:** The P3 audit fixes and known Task validation regression remain open exactly as
+assigned to P3.5–P3.7. Effective Codex lifecycle hooks remain `stale-source → update`, owned by
+P4.6/P4.4. P5 empirical floors may expose real defects; they extend the plan rather than cancel
+the product.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none accepted; synthetic readiness and blind hash validation must be replaced;
-- deferred: frozen P1.6 parent-hash reconciliation, provider repin, P4 hook repair, P5 pilots and P6 productization;
-- open_questions: none; D82–D84 fix topology is resolved and fully repo-grounded.
+- workarounds: none; assurance of plan-local runtime and archive-only closure are forbidden;
+- deferred: umbrella routing/install/doctor/operations/docs remain P6, but package code is P3.8;
+- open_questions: none about the terminal product; tag/push/publish/release remain outside authority.

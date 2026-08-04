@@ -9,7 +9,7 @@
 | `plan.md` | master plan, Routing, Status Board, decisions and contract crosswalk |
 | `phases/P0.md … phases/P6.md` | seven phases; P0–P6 detailed to authoring DoR |
 | `handoff.md` | rolling next-step pointer |
-| `roadmap.md` | execution map for all 35 manual items; D80/D81 make P3.4 the current executable item after terminal P1.6/P2.6 |
+| `roadmap.md` | execution map for all 39 manual items; D85–D88 require a new finish/design audit, create `packages/artifex` at P3.8 and make the finished product mandatory |
 | `journal.jsonl` | append-only plan-command provenance |
 | `brief/` | direct owner intent and non-goals |
 | `findings/` | repository recon, first-party verification, reference products, preflight, P1–P6 reconciliation and finish recheck |
@@ -31,6 +31,8 @@
 | `brief/10-post-d76-audit-remediation.md` | brief | finish remediation, design audit | exact smoke/business-admission/hook producer scope and protected terminal history |
 | `brief/11-p3.4-no-tool-projection-remediation.md` | brief | P3.4 | current no-tool projection design authority and frozen D74/D77 anti-scope |
 | `brief/12-p3.4-successor-manifest-remediation.md` | brief | P3.4 | current P2/P3 manifest ownership remediation authority and immutable-history anti-scope |
+| `brief/13-p3-audit-reopen.md` | brief | P3.5–P3.7 | four-step P3 audit reopen scope and frozen-history anti-scope |
+| `brief/14-owner-finished-product-guarantee.md` | brief | P3.8, P5.4, P6.1–P6.4, finish | owner requirement that successful plan completion yields a finished Artifex package and public operational surface |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -79,6 +81,8 @@
 | `research/23-post-d76-audit-remediation-reconcile.md` | research | finish remediation, design audit, P1.6–P5.4 | separate no-write smoke carriers, owner-bound per-trial business authority, P4.6 hook producer and repaired 35-item graph |
 | `research/24-p3.4-native-tool-projection-design.md` | research | P3.4, P4 | D80 forward adapter ownership, exact Claude projection, Codex/version pre-launch refusal and readiness-vs-item-status boundary |
 | `research/25-p3.4-successor-manifest-design.md` | research | P3.4, P4 | D81 immutable P2 baseline plus additive current P3 snapshot ownership and validation contract |
+| `research/26-p3-audit-reopen-design.md` | research | P3.5–P3.7, P4 | audit F1–F6 forward-remediation topology, evidence/provenance and Task regression closure |
+| `research/27-finished-product-outcome-reconcile.md` | research | P3.8, P4–P6, finish/audit | early package SSOT, mandatory finished-product topology and non-terminal NO-GO remediation semantics |
 
 ## Запланированные выходы P0
 
@@ -123,17 +127,18 @@
 | `artifacts/P3/provider-parity-*`, `validate-provider-parity.py` | P3.3 | P3.4, P4–P5 |
 | `artifacts/supervisor/artifex/worker.py` and provider-aware existing CLI binding | P3.4 | P4–P6 |
 | `artifacts/P3/provider-smoke/*`, `adapter-manifest-v1.json`, `validate-adapters.py` | P3.4 | additive current-P3 plus immutable-P2 terminal gate for P4/P5 |
+| `packages/artifex/**`, standalone CLI/tests/validation plus `artifacts/P3/package-promotion-manifest-v1.json`, `validate-package-promotion.py` | P3.8 | sole live runtime consumed by P4–P6; plan-local bytes remain provenance only |
 
 ## Запланированные выходы P4
 
 | Путь | Производитель | Потребители |
 |:--|:--|:--|
-| `artifacts/supervisor/artifex/faults.py`, `artifacts/P4/fault-*`, `validate-fault-matrix.py` | P4.1 | P4.2–P4.5 |
+| `packages/artifex/lib/artifex/faults.py`, `artifacts/P4/fault-*`, `validate-fault-matrix.py` | P4.1 | P4.2–P4.5 |
 | Existing candidate recovery owners + `artifacts/P4/recovery-results-v1.json`, `validate-recovery.py` | P4.2 | P4.3–P5 |
-| `artifacts/supervisor/artifex/worktree.py`, `artifacts/P4/worktree-*`, `validate-worktree.py` | P4.3 | P4.4–P5 |
+| `packages/artifex/lib/artifex/worktree.py`, `artifacts/P4/worktree-*`, `validate-worktree.py` | P4.3 | P4.4–P5 |
 | Harness-generated `.codex/hooks.json`/`.codex/hooks/lifecycle.py` plus `artifacts/P4/hook-integrity-results-v1.json`, `validate-hook-integrity.py` | P4.6 | P4.4–P5 |
-| `artifacts/supervisor/artifex/security.py`, `artifacts/P4/security-*`, `validate-security.py` | P4.4 | P4.5–P5 |
-| `artifacts/supervisor/artifex/telemetry.py`, `artifacts/P4/attention-cases-v1.json`, `assurance-manifest-v1.json`, `validate-assurance.py` | P4.5 | P5–P6 |
+| `packages/artifex/lib/artifex/security.py`, `artifacts/P4/security-*`, `validate-security.py` | P4.4 | P4.5–P5 |
+| `packages/artifex/lib/artifex/telemetry.py`, `artifacts/P4/attention-cases-v1.json`, `assurance-manifest-v1.json`, `validate-assurance.py` | P4.5 | P5–P6 |
 
 ## Запланированные выходы P5
 
@@ -149,7 +154,7 @@
 
 | Путь | Производитель | Потребители |
 |:--|:--|:--|
-| `artifacts/P6/product-home-*`, `integration-scope-v1.json`, `validate-product-home.py` | P6.1 | P6.2–P6.4 |
-| `artifacts/P6/integration-manifest-v1.json`, `validate-integration.py` or roadmap-only return | P6.2 | P6.3–P6.4 |
-| `artifacts/P6/compatibility-matrix-v1.json`, rollback/operations manifests and validator or D-backed skip | P6.3 | P6.4 |
+| `artifacts/P6/product-home-*`, remaining root/public `integration-scope-v1.json`, `validate-product-home.py` | P6.1 | P6.2–P6.4 |
+| exact `swissknifeman artifex` route and installer/doctor/generated/test projections plus `artifacts/P6/integration-manifest-v1.json`, `validate-integration.py` | P6.2 | P6.3–P6.4; preserves P3.8 runtime SSOT |
+| installer/update/doctor/config/docs/CHANGELOG scope plus `artifacts/P6/compatibility-matrix-v1.json`, rollback/operations manifests and validator | P6.3 | P6.4 |
 | `artifacts/P6/release-candidate-audit-v1.json`, `validate-release-candidate-audit.py` | P6.4 | phase close, final design audit and release decision |

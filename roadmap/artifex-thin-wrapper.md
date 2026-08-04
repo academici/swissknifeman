@@ -1,7 +1,7 @@
 # Artifex — тонкая обвязка исполнения планов (остаток супервизор-трека)
 
-**Статус:** ⬜ отложено, критерий не сработал
-**Дата:** 2026-07-30
+**Статус:** 🟡 активировано планом `2026.08.03-ARTIFEX-SUPERVISOR`; terminal outcome — finished `packages/artifex`
+**Дата:** 2026-07-30 · **Активировано:** 2026-08-04
 **Провенанс:** `plans/archive/2026.07.18-FOREMAN/` (план-донор, терминален `🟠` 2026-07-29:
 фаза P1 частично сдана кодом, фазы P2–P7 `⛔ Skipped by decision`) · вердикт пере-скоупа —
 `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/executor-layer-rescope-v1.md` (item P4.1, D38/D90).
@@ -105,6 +105,16 @@ continue/point-fix/escalate, rulebook правил прогресса, отде�
 
 Пока ни один не сработал (2026-07-30): машина решений — данные в архиве, ручной ритуал не
 замерен числом, экономика не сравнивалась.
+
+2026-08-04 owner decision в
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/brief/14-owner-finished-product-guarantee.md` активировал
+реализацию независимо от старого условного productization-гейта. План сохраняет измерения как
+quality/readiness gates: его P5 может закрыться только на frozen verdict `GO`, а `NO-GO` создаёт
+forward remediation и оставляет план открытым. Успешный terminal outcome требует
+`packages/artifex/`, standalone CLI, `swissknifeman artifex`, install/update/doctor, tests,
+compatibility/rollback, standalone+umbrella docs и cold GREEN audit (D85–D88). D88 переносит
+создание standalone package в P3.8: P4/P5 проверяют уже shipping runtime, а P6 добавляет только
+umbrella/install/doctor/operations/docs surface без повторной миграции исходников.
 
 ## Связи
 

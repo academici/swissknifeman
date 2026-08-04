@@ -1,53 +1,52 @@
-# HANDOFF — 2026-08-03 — after P1.2
+# HANDOFF — 2026-08-04 — after P1.3
 
 **Next:** «ЗАПУСК ВРУЧНУЮ: frontier/high»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | frontier |
-| Thinking | high — public authority contract freeze |
+| Thinking | high — provider-neutral public envelope freeze |
 | Context | continue (/clear) — ручной item |
-| Суть | Заморозить `authority-policy-v1`, total AUTO/AUTO-FIX/OWNER cases и deterministic validator |
+| Суть | Заморозить `worker-envelope-v1`, closed exit taxonomy и independent validator |
 | Команда | — |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для frontier/high исполнения P1.3 | — |
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Codex launch для frontier/high исполнения P1.4 | — |
 
-**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P1.2 закрыт `🟢 Done`.
-Item-коммит `e6331a3d` запечатал frozen
-`slice-manifest-v1`, data-first machine bank и independent stdlib-validator.
-Task Contract pre-mutation/pre-final — `allow/allow`; item Validation зелёная.
+**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P1.3 закрыт `🟢 Done`.
+Item-коммит `8a1f1757` запечатал frozen `authority-policy-v1`,
+exhaustive operation/class/predicate bank и independent stdlib-validator. Task Contract
+pre-mutation/pre-final — `allow/allow`; вся item Validation зелёная.
 
-**Remaining:** P1.3–P6.4 не запускались. P1.3 — следующий legal
+**Remaining:** P1.4–P6.4 не запускались. P1.4 — следующий legal
 solo item; roadmap задаёт `manual`, `frontier/high`, без batch/workflow.
 
-**Sources of truth:** `phases/P1.md` P1.2 Completion Notes ·
-`root/contracts/slice-manifest-v1.md` ·
-`artifacts/P1/slice-manifest-cases-v1.json` ·
-`artifacts/P1/validate-slice-manifest.py` · item-коммит `e6331a3d`.
+**Sources of truth:** `phases/P1.md` P1.3 Completion Notes ·
+`root/contracts/authority-policy-v1.md` ·
+`artifacts/P1/authority-policy-cases-v1.json` ·
+`artifacts/P1/validate-authority-policy.py` · item-коммит `8a1f1757`.
 
-**Open risks:** `codex doctor --json` экспортирует конфигурационную модель,
+**Open risks:** `codex doctor --json` экспортирует config default,
 но не runtime effort; `gpt-5.6-sol/high` зафиксирован `plan-run` как
-self-attested route. Current baseline не имеет eligible non-synthetic battle
-wave и сохраняет unknown token/cost/intervention fields. Trusted Codex lifecycle
-`stale-source -> update (source-changed)` warning остаётся будущим P4.4 evidence
-blocker. В широком worktree есть посторонний dirty diff; P1.2 его не трогал.
+self-attested route. В широком worktree сохраняется посторонний dirty
+diff; P1.3 его не трогал. P1.4 обязан сохранить все P0.3
+`unknown`/`unsupported` и не изобретать provider parity.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none;
-- deferred: P1.3–P1.5 contract freeze, P2 runtime, P3 provider adapters, P4 assurance,
+- deferred: P1.4–P1.5 contract freeze, P2 runtime, P3 provider adapters, P4 assurance,
   P5 pilots/economics, P6 product-home decision;
-- open_questions: none for P1.2.
+- open_questions: none for P1.3.
 
 ```text
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.3
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.4
 
-РЕЖИМ: отдельное frontier/high исполнение manual item; только P1.3
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P1.md → P1.3 и его Required Reads
-СКОУП: заморозить authority-policy-v1, exhaustive machine cases и independent validator строго по Files/Validation P1.3
-НЕ ТРОГАТЬ: P1.4–P6.4; supervisor/provider/package runtime; package/core/provider/hook/fleet/Brain/release state; unrelated dirty worktree
+РЕЖИМ: отдельное frontier/high исполнение manual item; только P1.4
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P1.md → P1.4 и его Required Reads
+СКОУП: заморозить worker-envelope-v1, closed provider-neutral exits, exhaustive machine cases и independent validator строго по Files/Validation P1.4
+НЕ ТРОГАТЬ: P1.5–P6.4; exact provider argv/parser runtime; package/core/provider/hook/fleet/Brain/release state; raw prompt/stdout/stderr/transcript/tool payload/secrets; unrelated dirty worktree
 ```

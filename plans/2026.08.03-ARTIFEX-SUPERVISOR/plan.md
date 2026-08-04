@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail and finish; runtime effort not exported) |
-| Last Updated | 2026-08-03 |
+| Last Updated | 2026-08-04 |
 | Repository | swissknifeman |
 | Related Packages | task · harness · core · analyst · maind (prototype plan-local; promotion home unset) |
 | Execution Mode | contract-first, phase-first |
@@ -93,7 +93,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
-| P1 | Freeze supervisor contracts | 2/5 | 🟡 In progress |
+| P1 | Freeze supervisor contracts | 3/5 | 🟡 In progress |
 | P2 | Build the plan-local deterministic prototype | 0/5 | ⬜ Not started |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
@@ -194,6 +194,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P0.5 закрыт: candidate-independent acceptance rubric и P0→P1/P4/P5 evidence crosswalk запечатаны — детали см. phases/P0.md P0.5 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.1 закрыт: durable run/WAL/recovery контракт и live-driver reuse/gap verdict запечатаны — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-08-03 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.2 закрыт: immutable slice/compiler contract, refusal bank и independent validator запечатаны — детали см. phases/P1.md P1.2 Completion Notes. |
+| 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.3 закрыт: authority-policy-v1, exhaustive decision bank и deterministic validator запечатаны — детали см. phases/P1.md P1.3 Completion Notes. |
 
 ## 7. Contracts
 
@@ -203,7 +204,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|:--|
 | `root/contracts/supervisor-run-v1.md` | v1.0.0 | frozen P1.1 (`a784cad7`) | P2–P6 | P1.2–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/slice-manifest-v1.md` | v1.0.0 | frozen P1.2 (`e6331a3d`) | P2–P6 | P1.3–P1.5 и P2–P6 через plan и handoff |
-| `root/contracts/authority-policy-v1.md` | v1.0.0 | planned P1.3 | P2–P6 | — |
+| `root/contracts/authority-policy-v1.md` | v1.0.0 | frozen P1.3 (`8a1f1757`) | P2–P6 | P1.4–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/worker-envelope-v1.md` | v1.0.0 | planned P1.4 | P2–P6 | — |
 | `root/contracts/economy-evidence-v1.md` | v1.0.0 | planned P1.5 | P2–P6 | — |
 

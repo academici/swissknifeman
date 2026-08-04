@@ -1,0 +1,97 @@
+{
+  "schema_version": "artifex-prototype-manifest-v1",
+  "manifest_version": "1.0.0",
+  "files": [
+    {
+      "path": "artifex/__init__.py",
+      "sha256": "4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8"
+    },
+    {
+      "path": "artifex/__main__.py",
+      "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+    },
+    {
+      "path": "artifex/compiler.py",
+      "sha256": "b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c"
+    },
+    {
+      "path": "artifex/store.py",
+      "sha256": "dde40059630c7c9932c8421d920159f0f473413992cc1506ef18529968280aba"
+    },
+    {
+      "path": "artifex/authority.py",
+      "sha256": "9dd484d73d5bae1b9ea86d5aedfbcf51f776f7edf127e807223233f893de4186"
+    },
+    {
+      "path": "artifex/scheduler.py",
+      "sha256": "7a24ef6e335d4e1b1402e986113595e98d042dea850d21726105960b0cd9373e"
+    },
+    {
+      "path": "artifex/cli.py",
+      "sha256": "00291c51f0d86ca36bb3f4e26fba5b58c8f388fc74b7a7693df0ae4e7d1440bd"
+    },
+    {
+      "path": "tests/__init__.py",
+      "sha256": "a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c"
+    },
+    {
+      "path": "tests/support.py",
+      "sha256": "c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d"
+    },
+    {
+      "path": "tests/test_compiler.py",
+      "sha256": "0d87ac3632287fcca9f376a116f7d979546c6c3d29b86fbe7b5e02ec986f337b"
+    },
+    {
+      "path": "tests/test_store.py",
+      "sha256": "1c7941e0f7f96f5db8d35bae4ff72e7a36c093b2bff5b6260f8aa2032409281e"
+    },
+    {
+      "path": "tests/test_authority.py",
+      "sha256": "c6cd0ae140249d2581b663ee145af0bc0fa24abd18ea700dec20899d50e43eda"
+    },
+    {
+      "path": "tests/test_scheduler.py",
+      "sha256": "f743c7fba31f878bb790cce2bd128af04d004aa5d10ddfe9fa5185938065d4b6"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "sha256": "5c3ee4d6db060d71adc976bb9088ded546bfaf2b346f5ccb167589ef06877811"
+    },
+    {
+      "path": "tests/test_integration.py",
+      "sha256": "5d94f7e6f5817e5c67d2a872a212d72fb46aa991e8a11a498fb578e507cda706"
+    },
+    {
+      "path": "README.md",
+      "sha256": "1bfcebb981cc1f5eb0e738eea3614086d1dac95784f1e041bc4dbb9016a0c937"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "supervisor-run-v1",
+      "sha256": "c9b7290dc0d30b7fc1c7c20782cec7b4f327ba6673300bed71cadf172ab88e2a",
+      "version": "1.0.0"
+    },
+    {
+      "id": "slice-manifest-v1",
+      "sha256": "42375f994ccb3a69745c93730c38f28379be9a6627b81bc8e5ed5b72502d9ea1",
+      "version": "1.0.0"
+    },
+    {
+      "id": "authority-policy-v1",
+      "sha256": "ba1ebc2a373f7cd26922e2b8362848cfc11b4d38c78b1d764883a6df3e245b10",
+      "version": "1.0.0"
+    },
+    {
+      "id": "worker-envelope-v1",
+      "sha256": "8492a73facaf0258e96003f1376da962e144acc1f57b87546f606cb77f4c4785",
+      "version": "1.0.0"
+    },
+    {
+      "id": "economy-evidence-v1",
+      "sha256": "e1d32e6e224ac07cfd60c0eeb4b607e243462f0b8b9548bb599b911bb2def559",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.9.6 |
+| Version | 0.9.7 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail and finish; runtime effort not exported) |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation — D67–D69 repair execution-discovered defects without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation — D67–D70 repair execution-discovered defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -94,7 +94,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
-| P2 | Build the plan-local deterministic prototype | 3/5 | 🟡 In progress |
+| P2 | Build the plan-local deterministic prototype | 4/5 | 🟡 In progress |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
@@ -173,6 +173,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D67 | 2026-08-04 | P2.1 supersedes D32's two-source acquisition wording with the existing three-source process contract: S1 `plan-lint --json` owns the complete parsed plan/item model and all 16 fields; S2 `task.task_contract build` owns route, acceptance, evidence and content hash; S3 Harness dry-run independently cross-checks order/status/route and supplies exact `Exec`. A manual route's `EXEC-NOT-PLAN-EXEC` is expected Harness evidence, never Artifex authority. Strict S1 `Files` projection and S1/S2 read/validation/deliverables equality close the missing scope bundle without package/API changes, Markdown parsing or P1 reopen. **Consequences:** P2.1 adds one bounded subprocess and three-way drift tests; any source-shape disagreement refuses before candidate writes, while downstream outputs/routes remain unchanged. RAG:— (repo-grounded: `findings/12-p2.1-process-projection-recon-2026-08-04.md`; `research/14-p2.1-source-reconciliation.md`; active `driver-plan-protocol-v2` §2/§4.5). | The original attempt omitted an already-owned source and misread a driver refusal as a compiler refusal; reusing the existing owner projection is narrower and safer than extending Task/Harness or weakening the frozen slice contract. |
 | D68 | 2026-08-04 | Terminal P0.2 keeps `brief/01-refinements.md` byte-frozen at the hash in `owner-mandate-input-v1.json`; every later owner refinement is appended in a new `brief/NN-*.md` carrier and is not retroactively inserted into the frozen authority source set. The P2.1 redesign directives move to `brief/02-p2.1-remediation.md`, while `brief/01-refinements.md` is restored exactly. RAG:— (repo-grounded: `artifacts/P0/owner-mandate-input-v1.json`; `artifacts/P0/validate-authority.py`; `brief/02-p2.1-remediation.md`). | This preserves both append-only layer-0 provenance and the terminal P0 validation boundary without mutating a frozen contract, losing owner input, or reopening P0/P1. |
 | D69 | 2026-08-04 | Reopen P2.1 only for terminal-stable test isolation: deterministic compiler tests use an item-owned literal pending P2.1 S3 fixture, while a separate live Harness boundary test requires closed P2.1 to be absent from runnable `items` and present in `excluded_terminal`. Borrowing any sibling item's live row, admitting terminal rows to production compilation, or changing Harness/Task is forbidden. P2.2 stays terminal and the uncommitted P2.3 scope is preserved. RAG:— (repo-grounded: `findings/13-p2.1-terminal-fixture-recon-2026-08-04.md`; `research/15-p2.1-terminal-fixture-remediation.md`). | The previous fixture merely shifted lifecycle dependence from P2.1 to P2.2 and failed when P2.2 closed; separating immutable conformance input from the live terminal-exclusion contract makes the predecessor test stable for all later phases without weakening production behavior. |
+| D70 | 2026-08-04 | P2.4 maps the frozen P2.3 OWNER reason `RETRY_BUDGET_EXHAUSTED` at `READY` to the existing frozen run transition `budget_exhausted → BUDGET_EXHAUSTED`; the journal row keeps the triggering slice/attempt/idempotency identity and the exact closed authority decision as minimized evidence, while no intent or activity is allowed. `BUDGET_EXHAUSTED` is the v1 global admission breaker: every slice stays stopped until explicit `owner_decision_continue` or `owner_decision_abort`. No P1 state/event/reason/version/hash changes are authorized. Rejected alternatives: a new breaker event/state, relabelling as source drift/incident, a derived-only flag, or continuing other slices under a per-slice-only stop; details in `research/16-p2.4-circuit-breaker-reconciliation.md`. RAG:— (repo-grounded: `findings/14-p2.4-circuit-breaker-recon-2026-08-04.md`; `research/16-p2.4-circuit-breaker-reconciliation.md`; frozen `authority-policy-v1` and `supervisor-run-v1` carriers). | Repeated-finding exhaustion is already a retry-budget boundary and the run contract already has its durable stop transition; composing those owners closes the gap without a major frozen-contract ripple or an implementation-local default. |
 
 ## 6. Update Log
 
@@ -208,6 +209,8 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 terminal-fixture remediation: D69 reopened only the unstable sibling-derived test fixture; P2.2 remains terminal and P2.3 scope is preserved. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: terminal-stable S3 fixture и live lifecycle boundary устранили successor-state regression — детали см. phases/P2.md P2.1 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.3 закрыт: frozen authority evaluator и conformance bank добавлены без provider/action surface — детали см. phases/P2.md P2.3 Completion Notes. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.4 transition reconciliation: D70 связал frozen `RETRY_BUDGET_EXHAUSTED` с существующим `READY → BUDGET_EXHAUSTED`, сохранил P1 bytes и вернул item в `⬜ Not started`. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.4 закрыт: deterministic scheduler фиксирует durable activity boundary и D70 budget transition без provider/P1 surface — детали см. phases/P2.md P2.4 Completion Notes. |
 
 ## 7. Contracts
 

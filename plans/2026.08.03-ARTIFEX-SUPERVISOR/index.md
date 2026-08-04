@@ -21,6 +21,7 @@
 |:--|:--|:--|:--|
 | `brief/00-brief.md` | brief | P0–P6 | owner canons, interaction model and token-economy objective |
 | `brief/02-p2.1-remediation.md` | brief | P2.1 | post-P0 owner directives and frozen-source remediation boundary |
+| `brief/03-p2.4-circuit-breaker-remediation.md` | brief | P2.4 | escalation scope, frozen-contract anti-scope and redesign authorization |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -35,6 +36,7 @@
 | `findings/11-finish-verification-2026-08-03.md` | findings | finish, design audit | same-day primary-source fact-class refresh, repository preflight and retained empirical boundaries |
 | `findings/12-p2.1-process-projection-recon-2026-08-04.md` | findings | P2.1 | live S1/S2/S3 process outputs, omitted plan-model carrier and no-package-change verdict |
 | `findings/13-p2.1-terminal-fixture-recon-2026-08-04.md` | findings | P2.1 | reproduced sibling-derived fixture failure and stable Harness terminal-exclusion boundary |
+| `findings/14-p2.4-circuit-breaker-recon-2026-08-04.md` | findings | P2.4 | frozen authority/run transition crosswalk and no-version-bump verdict |
 | `research/00-user-intent.md` | research | P0.2, P0.5, P1.3 | executable interpretation of owner intent |
 | `research/01-target-architecture.md` | research | P1–P4 | deterministic external supervisor boundary and components |
 | `research/02-authority-and-conflict-policy.md` | research | P0.2, P1.3, P2.3 | authority precedence and routine conflict resolution |
@@ -51,6 +53,7 @@
 | `research/13-finish-reconcile.md` | research | finish, design audit, P0–P6 | complete producer/consumer graph, repair coupling, exact Required Reads, routing and DoR verdict |
 | `research/14-p2.1-source-reconciliation.md` | research | P2.1 | exact S1/S2/S3 mapping, strict scope projection, source pins and adversarial test strategy |
 | `research/15-p2.1-terminal-fixture-remediation.md` | research | P2.1 | item-owned S3 fixture, separate live boundary smoke test and P2.3-preserving repair scope |
+| `research/16-p2.4-circuit-breaker-reconciliation.md` | research | P2.4 | exact retry-budget-to-run-state mapping, post-boundary sequence and deterministic proof obligations |
 
 ## Запланированные выходы P0
 

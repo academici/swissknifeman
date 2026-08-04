@@ -1,8 +1,8 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.9.6 · **Статус:** P0/P1/P2.1/P2.2 terminal;
-D69 repair is closed at `9ada73b5`; P2.3 is unblocked with its prepared scope preserved. Следующий запуск —
-`$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.3` в implementation/high session.
+**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.9.7 · **Статус:** P0/P1/P2.1–P2.4 terminal;
+D70's frozen breaker transition is implemented without changing P1 bytes. Следующий запуск —
+`$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.5` в implementation/high session.
 
 ## Карта исполнения
 
@@ -28,7 +28,7 @@ write-site, от которого зависят все 32 item, но не яв�
 | P2.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.1` | implementation/high | — | D69 test-only terminal-fixture repair; preserve production compiler and P2.3 scope |
 | P2.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.2` | implementation/high | — | durable store/lock/replay; consumes P2.1 |
 | P2.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.3` | implementation/high | — | authority evaluator/security boundary; consumes P2.1/P2.2 |
-| P2.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.4` | implementation/high | — | scheduler/reconcile/budget; consumes P2.1–P2.3 |
+| P2.4 | solo | terminal `a94e4877` | implementation/high | — | D70 scheduler/reconcile/budget mapping over frozen `budget_exhausted`; P1 bytes unchanged |
 | P2.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.5` | implementation/high | — | aggregate prototype CLI/manifest; consumes whole P2 chain |
 | P3.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.1` | implementation/high | — | provider readiness is evidence; current Codex mapper and empirical boundary |
 | P3.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.2` | implementation/high | — | provider readiness is evidence; current Claude mapper follows P3.1 seam |

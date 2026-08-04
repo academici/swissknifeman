@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.9.3 |
+| Version | 0.9.5 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail and finish; runtime effort not exported) |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations — F1–F8 repaired in plan carriers without item/carrier execution; fourth independent cold design audit is next |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation — D67/D68 repair both no-write escalations without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -94,7 +94,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
-| P2 | Build the plan-local deterministic prototype | 0/5 | 🔴 Blocked |
+| P2 | Build the plan-local deterministic prototype | 1/5 | 🟡 In progress |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
@@ -170,6 +170,8 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D64 | 2026-08-03 | Cold-audit F1–F5 remediation is plan-only and fail-closed: every Required Reads clause carries exactly one path (dynamic P6 input resolves through exact terminal manifests); all 32 compiled Task Contracts have public pre-final acceptance entries; NO-GO executes bounded P6.3 zero-surface evidence and still produces the P6.4 operations input; Context values use the closed enum. Genuine new owner grants are only the conditional P5.4 single-provider GO and P6.1 package/router transitions, each with an exact `[OWNER-GRANT:<gate-id>]` Decision Log carrier defined in `roadmap.md`; provider/hook/validator/audit conditions remain non-waivable evidence gates. `[POSSIBLE-DEFECT]` Task Contract/plan command owners must remove the unrelated default `D50 (G-EXEC for self-host P0-P3)` and derive authority fields from a verified carrier; all plan execution is prohibited until that external protocol defect is fixed and independently checked. RAG:— (repo-grounded: audit F1–F5, P0–P6 specs, `roadmap.md`, `packages/task/lib/task/task_contract.py`, `packages/task/commands/plan-exec.md`). This D# records design remediation only and is not an owner grant. | The plan no longer confuses owner decisions with evidence or silently incomplete cold-start/acceptance/NO-GO carriers; no synthetic D# or manual argument may waive the remaining protocol prerequisite. |
 | D65 | 2026-08-03 | F6 assigns the D64 Task defect to the exact executable prerequisite carrier `artifacts/design/task-authority-carrier-01.md`: its package owner, owned surface, producer launch, terminal predicate and independent reviewer are explicit. P0.1 is structurally `waiting:` until that carrier is `State: terminal` on committed positive/negative and ordinary 32-build evidence; current remediation and a design GREEN are not terminal evidence. This supersedes only D64's carrierless external-owner deferral; D64's F1–F5 decisions and the existing 32 item specs/statuses/deliverables remain unchanged. **Consequences:** Artifex execution pays one bounded Task remediation plus independent-review prerequisite before P0.1, while Task/product implementation remains outside this design session. RAG:— (repo-grounded: repeat `Audit design — 2026-08-03` F6; `artifacts/design/task-authority-carrier-01.md`; `roadmap.md`). | A real producer can now change the blocking state, and the roadmap can represent non-executability structurally without inventing a cross-plan gate or treating prose as authority. |
 | D66 | 2026-08-03 | F7/F8 remediation supersedes D65 only for the prerequisite launch chain and P0.1 waiting predicate: the producer is the exact Codex `gpt-5.6-terra/high` + `task:dev` implementation/high launch; a separately launched cold `gpt-5.6-sol/xhigh` reviewer alone writes committed `task-authority-carrier-01-review.md` GREEN/RED evidence and may terminalize the carrier, while producer self-certification and reviewer code repair are forbidden. P0.1 has one predicate in roadmap/handoff carriers: `latest Audit design verdict = GREEN AND TASK-AUTHORITY-CARRIER-01 State = terminal`; neither conjunct alone exposes a runnable launch. **Consequences:** the prerequisite costs two isolated sessions and a committed review artifact, and P0.1 remains closed through every RED even if the Task repair itself is complete; D64's F1–F5 decisions and all 32 item statuses/deliverables remain unchanged. RAG:— (repo-grounded: third `Audit design — 2026-08-03` F7/F8; `packages/task/configs/command-routing.json`; `artifacts/design/task-authority-carrier-01.md`; `roadmap.md`; `handoff.md`). | The exact provider routes now match the declared neutral classes/efforts, every independent terminal conjunct has a producer, and all executable maps share one fail-closed guard. |
+| D67 | 2026-08-04 | P2.1 supersedes D32's two-source acquisition wording with the existing three-source process contract: S1 `plan-lint --json` owns the complete parsed plan/item model and all 16 fields; S2 `task.task_contract build` owns route, acceptance, evidence and content hash; S3 Harness dry-run independently cross-checks order/status/route and supplies exact `Exec`. A manual route's `EXEC-NOT-PLAN-EXEC` is expected Harness evidence, never Artifex authority. Strict S1 `Files` projection and S1/S2 read/validation/deliverables equality close the missing scope bundle without package/API changes, Markdown parsing or P1 reopen. **Consequences:** P2.1 adds one bounded subprocess and three-way drift tests; any source-shape disagreement refuses before candidate writes, while downstream outputs/routes remain unchanged. RAG:— (repo-grounded: `findings/12-p2.1-process-projection-recon-2026-08-04.md`; `research/14-p2.1-source-reconciliation.md`; active `driver-plan-protocol-v2` §2/§4.5). | The original attempt omitted an already-owned source and misread a driver refusal as a compiler refusal; reusing the existing owner projection is narrower and safer than extending Task/Harness or weakening the frozen slice contract. |
+| D68 | 2026-08-04 | Terminal P0.2 keeps `brief/01-refinements.md` byte-frozen at the hash in `owner-mandate-input-v1.json`; every later owner refinement is appended in a new `brief/NN-*.md` carrier and is not retroactively inserted into the frozen authority source set. The P2.1 redesign directives move to `brief/02-p2.1-remediation.md`, while `brief/01-refinements.md` is restored exactly. RAG:— (repo-grounded: `artifacts/P0/owner-mandate-input-v1.json`; `artifacts/P0/validate-authority.py`; `brief/02-p2.1-remediation.md`). | This preserves both append-only layer-0 provenance and the terminal P0 validation boundary without mutating a frozen contract, losing owner input, or reopening P0/P1. |
 
 ## 6. Update Log
 
@@ -198,6 +200,9 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.4 закрыт: provider-neutral worker envelope, closed exit taxonomy и independent validator запечатаны — детали см. phases/P1.md P1.4 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.5 закрыт: economy/privacy evidence и aggregate five-contract freeze запечатаны — детали см. phases/P1.md P1.5 Completion Notes. |
 | 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P1 закрыта: 5/5 contracts/items сверены по commits и повторно зелёным P1 validation fan-in; P2.1 передан как последовательный manual producer. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 redesign: D67 добавил существующий S1 plan-model carrier, строгий S1/S2/S3 mapping и adversarial gates; no-write escalation снят, item возвращён в `⬜ Not started`. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 source-pin remediation: D68 восстановил P0-frozen brief carrier, сохранил новые refinements отдельно и вернул item в `⬜ Not started`. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: process-bound S1/S2/S3 compiler и adversarial test bank добавлены без package/provider surface — детали см. phases/P2.md P2.1 Completion Notes. |
 
 ## 7. Contracts
 

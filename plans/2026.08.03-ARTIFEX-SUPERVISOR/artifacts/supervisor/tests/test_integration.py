@@ -26,7 +26,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual("", result.stderr)
 
     def test_source_contains_no_provider_launcher_or_interactive_input(self):
-        source = (ARTIFEX / "artifex/cli.py").read_text(encoding="utf-8")
-        for forbidden in ("codex", "claude", "input(", "subprocess", "os.environ"):
-            self.assertNotIn(forbidden, source)
-
+        for name in ("dispatch.py", "authority.py", "scheduler.py", "cli.py"):
+            source = (ARTIFEX / "artifex" / name).read_text(encoding="utf-8")
+            for forbidden in ("providers.", "subprocess", "Popen", "codex", "claude", "input(", "os.environ"):
+                self.assertNotIn(forbidden, source, f"{name}: {forbidden}")

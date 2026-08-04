@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import compiler, scheduler, store
+from . import authority, compiler, dispatch, scheduler, store
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -189,6 +189,31 @@ def _report(args: argparse.Namespace, _repo: Path, plan: Path, runs: Path) -> di
             "replay": {"seq": replay["seq"], "tail_hash": replay["tail_hash"]}, "redacted": True}
 
 
+def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> dict:
+    """Consume exactly one indexed admission through the P2 no-provider port."""
+    admission_path = _file(_inside(repo, repo / args.admission))
+    admission = dispatch.load_indexed_admission(plan, admission_path)
+    identity = admission["dispatch"]
+    if args.run_id != identity["run_id"]:
+        raise CliRefusal("IDENTITY_MISMATCH", "run/admission")
+    rules, states, events = _rules(plan)
+    run = _open(runs, args.run_id, rules, states, events)
+    replay = run.replay()
+    if replay["state"] != "READY":
+        raise CliRefusal("ILLEGAL_TRANSITION", str(replay["state"]))
+    if any(row.get("event") == "append_intent" and row.get("idempotency_key") == identity["idempotency_key"]
+           for row in replay["records"]):
+        raise CliRefusal("USAGE_LIMIT_EXCEEDED")
+    admitted = authority.load_admitted_authority(plan, admission)
+    authority_input = dict(admitted.frozen.cases["base_input"])
+    authority_input.update({"operation": "dispatch_worker", "requested_class": "AUTO"})
+    projected = dispatch.scheduler_slice(admission, authority_input)
+    result = scheduler.Scheduler(run, admitted, now=_now).schedule([projected])
+    run.rebuild_snapshot()
+    return {"status": result["status"], "run_id": args.run_id, "task_id": admitted.task_id,
+            "admission_hash": admission["admission_hash"], "process_count": 0}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="artifex")
     parser.add_argument("--repo-root", required=True)
@@ -200,6 +225,9 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_parser(name).add_argument("--run-id", required=True)
     for name in ("resume", "reconcile"):
         command = sub.add_parser(name); command.add_argument("--run-id", required=True); command.add_argument("--observed", choices=("preimage", "postimage", "partial", "third"), required=name == "reconcile")
+    dispatch_command = sub.add_parser("dispatch")
+    dispatch_command.add_argument("--run-id", required=True)
+    dispatch_command.add_argument("--admission", required=True)
     return parser
 
 
@@ -207,9 +235,9 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         repo, plan, runs = _roots(args)
-        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report}[args.command](args, repo, plan, runs)
+        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "dispatch": _dispatch}[args.command](args, repo, plan, runs)
         code = EXIT_OK
-    except (CliRefusal, compiler.CompileRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
+    except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL
     payload = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(payload.encode()) > MAX_RESULT_BYTES:

@@ -66,7 +66,7 @@ def ready_set(slices: list[dict], accepted: set[str]) -> list[dict]:
 class Scheduler:
     """Explicit store appends around one injected activity and deterministic validation."""
 
-    def __init__(self, run_store: store.RunStore, frozen_authority: authority.FrozenAuthority, *,
+    def __init__(self, run_store: store.RunStore, frozen_authority: authority.FrozenAuthority | authority.AdmittedAuthority, *,
                  now: Callable[[], str], activity: Callable[[dict], dict] | None = None,
                  validate: Callable[[dict, dict], bool] | None = None) -> None:
         self.store = run_store
@@ -97,7 +97,7 @@ class Scheduler:
         return self.store.append_event(self._payload(replay, event, slice_value, evidence=evidence))
 
     @staticmethod
-    def _decision_input(slice_value: dict) -> dict:
+    def _decision_value(slice_value: dict) -> dict:
         value = copy.deepcopy(slice_value.get("authority_input", {}))
         if not isinstance(value, dict):
             raise SchedulerRefusal("SLICE_INPUT_MISSING", "authority_input")
@@ -105,12 +105,14 @@ class Scheduler:
         return value
 
     def _decision(self, slice_value: dict) -> dict:
-        return authority.evaluate(self._decision_input(slice_value), self.frozen, f"schedule:{slice_value['slice_id']}:{slice_value['attempt']}")
+        frozen = self.frozen.frozen if isinstance(self.frozen, authority.AdmittedAuthority) else self.frozen
+        return authority.evaluate(self._decision_value(slice_value), frozen, f"schedule:{slice_value['slice_id']}:{slice_value['attempt']}")
 
     def _budget_decision(self, slice_value: dict) -> dict:
-        value = self._decision_input(slice_value)
+        value = self._decision_value(slice_value)
         value["budget_available"] = False
-        return authority.evaluate(value, self.frozen, f"budget:{slice_value['slice_id']}:{slice_value['attempt']}")
+        frozen = self.frozen.frozen if isinstance(self.frozen, authority.AdmittedAuthority) else self.frozen
+        return authority.evaluate(value, frozen, f"budget:{slice_value['slice_id']}:{slice_value['attempt']}")
 
     @staticmethod
     def _budget_exceeded(slice_value: dict) -> bool:

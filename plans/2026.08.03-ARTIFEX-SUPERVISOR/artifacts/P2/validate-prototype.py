@@ -13,15 +13,40 @@ from pathlib import Path
 
 FILES = (
     "artifex/__init__.py", "artifex/__main__.py", "artifex/compiler.py", "artifex/store.py",
-    "artifex/authority.py", "artifex/scheduler.py", "artifex/cli.py", "tests/__init__.py",
+    "artifex/authority.py", "artifex/dispatch.py", "artifex/scheduler.py", "artifex/cli.py", "tests/__init__.py",
     "tests/support.py", "tests/test_compiler.py", "tests/test_store.py", "tests/test_authority.py",
-    "tests/test_scheduler.py", "tests/test_cli.py", "tests/test_integration.py", "README.md",
+    "tests/test_scheduler.py", "tests/test_cli.py", "tests/test_dispatch.py", "tests/test_integration.py", "README.md",
 )
 FORBIDDEN = ("codex", "claude", "api_key", "authorization")
 
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _admissions(root: Path) -> dict:
+    plan = root.parent.parent
+    index_path = plan / "artifacts/P2/p3-smoke-admission-index-v1.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    if set(index) != {"schema_version", "index_version", "admissions"} or index.get("schema_version") != "p3-smoke-admission-index-v1":
+        raise ValueError("admission index shape")
+    rows = index.get("admissions")
+    if not isinstance(rows, list) or len(rows) != 2:
+        raise ValueError("admission index cardinality")
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"task_id", "provider", "path", "sha256", "admission_hash"}:
+            raise ValueError("admission index row")
+        target = plan / row["path"]
+        if not target.is_file() or sha(target) != row["sha256"]:
+            raise ValueError("admission index hash")
+        value = json.loads(target.read_text(encoding="utf-8"))
+        if value.get("admission_hash") != row["admission_hash"] or value.get("task", {}).get("task_id") != row["task_id"] or value.get("task", {}).get("provider") != row["provider"]:
+            raise ValueError("admission index provenance")
+        seen.add((row["task_id"], row["provider"]))
+    if len(seen) != 2:
+        raise ValueError("admission index duplicate")
+    return {"path": str(index_path.relative_to(plan)), "sha256": sha(index_path), "rows": rows}
 
 
 def expected(root: Path, contracts: Path) -> dict:
@@ -31,7 +56,8 @@ def expected(root: Path, contracts: Path) -> dict:
     contract = json.loads(contracts.read_text(encoding="utf-8"))
     return {"schema_version": "artifex-prototype-manifest-v1", "manifest_version": "1.0.0",
             "files": [{"path": name, "sha256": sha(root / name)} for name in FILES],
-            "contracts": [{"id": row["id"], "sha256": row["sha256"], "version": row["version"]} for row in contract["contracts"]]}
+            "contracts": [{"id": row["id"], "sha256": row["sha256"], "version": row["version"]} for row in contract["contracts"]],
+            "admissions": _admissions(root)}
 
 
 def main(argv=None) -> int:

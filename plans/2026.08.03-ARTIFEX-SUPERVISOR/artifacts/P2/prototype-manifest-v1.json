@@ -20,15 +20,19 @@
     },
     {
       "path": "artifex/authority.py",
-      "sha256": "9dd484d73d5bae1b9ea86d5aedfbcf51f776f7edf127e807223233f893de4186"
+      "sha256": "5b10b2cd17606b6269d0956adabc803302aed5101474b12e8976a7f0780edf6d"
+    },
+    {
+      "path": "artifex/dispatch.py",
+      "sha256": "5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274"
     },
     {
       "path": "artifex/scheduler.py",
-      "sha256": "7a24ef6e335d4e1b1402e986113595e98d042dea850d21726105960b0cd9373e"
+      "sha256": "e282fcedfe499fdbc7cbdd27fc8a144a03cf3c66046fd6126ad57f074bfa0921"
     },
     {
       "path": "artifex/cli.py",
-      "sha256": "00291c51f0d86ca36bb3f4e26fba5b58c8f388fc74b7a7693df0ae4e7d1440bd"
+      "sha256": "1929097de8760beee0f15574cbbf35e2f97149e0a9f0921e73797b5313f6d085"
     },
     {
       "path": "tests/__init__.py",
@@ -56,15 +60,19 @@
     },
     {
       "path": "tests/test_cli.py",
-      "sha256": "5c3ee4d6db060d71adc976bb9088ded546bfaf2b346f5ccb167589ef06877811"
+      "sha256": "3421e6afd5d08d6a39ada450988768173e424da043fc06c7e9dcc0732bbb277c"
+    },
+    {
+      "path": "tests/test_dispatch.py",
+      "sha256": "8a96927bf9db264988ca0ce9c631570de2e6d79dc092429917257a0c1580bce6"
     },
     {
       "path": "tests/test_integration.py",
-      "sha256": "5d94f7e6f5817e5c67d2a872a212d72fb46aa991e8a11a498fb578e507cda706"
+      "sha256": "941bbdc5b6ea52d762ac75bdb21a61c896a50bef21b4f0c257848f982ac83815"
     },
     {
       "path": "README.md",
-      "sha256": "1bfcebb981cc1f5eb0e738eea3614086d1dac95784f1e041bc4dbb9016a0c937"
+      "sha256": "dabfea98dca1b3d7fdffddffaf28a12d2a1baf709d4ca196fe09246f09880d3f"
     }
   ],
   "contracts": [
@@ -92,6 +100,31 @@
       "id": "economy-evidence-v1",
       "sha256": "e1d32e6e224ac07cfd60c0eeb4b607e243462f0b8b9548bb599b911bb2def559",
       "version": "1.0.0"
+    },
+    {
+      "id": "dispatch-admission-v1",
+      "sha256": "6fd39ae5603f2e63df79453875de101ce78840716b9a937ab2ddeadefd64bc9d",
+      "version": "1.0.0"
     }
-  ]
+  ],
+  "admissions": {
+    "path": "artifacts/P2/p3-smoke-admission-index-v1.json",
+    "sha256": "c0b41618c4eaf16d2e8261bc86b1a892e5fd9de428f86cf0a0bc7a674177b55c",
+    "rows": [
+      {
+        "task_id": "p3-smoke-claude-code-v1",
+        "provider": "claude-code",
+        "path": "artifacts/P2/p3-smoke-admissions/claude-code.json",
+        "sha256": "12431b31dd31ef5ede998f1d7a2c29b22e7276ca625d9ef4763ddf9d31c4ee62",
+        "admission_hash": "1223fa723e356fe73c6994f99587b25934f4ce2d7d9fc0395a6fc82bffd604ae"
+      },
+      {
+        "task_id": "p3-smoke-codex-v1",
+        "provider": "codex",
+        "path": "artifacts/P2/p3-smoke-admissions/codex.json",
+        "sha256": "ecd8359e394dd654b9bffba0e10ae58d929686d0007d5c8448afce9e13caa709",
+        "admission_hash": "ba5cb23a1679518de18b8347a712d1b26a5be6d9ee1625c9f385891dc3bc32cc"
+      }
+    ]
+  }
 }

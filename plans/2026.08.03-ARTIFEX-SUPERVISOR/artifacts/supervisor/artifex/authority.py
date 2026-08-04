@@ -92,6 +92,17 @@ class FrozenAuthority:
     source_set_hash: str
 
 
+@dataclass(frozen=True)
+class AdmittedAuthority:
+    """Frozen evaluator plus the one verified D74 grant it may consume."""
+
+    frozen: FrozenAuthority
+    grant_id: str
+    grant_hash: str
+    task_id: str
+    task_hash: str
+
+
 def canonical_bytes(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -175,6 +186,17 @@ def load_frozen_authority(plan_dir: str | Path) -> FrozenAuthority:
         mandate_hash=digest(mandate),
         source_set_hash=digest(mandate["source_set"]),
     )
+
+
+def load_admitted_authority(plan_dir: str | Path, admission: dict) -> AdmittedAuthority:
+    """Bind authority loading to one verified admission rather than an unsigned input."""
+    from . import dispatch
+
+    verified = dispatch.verify_admission(admission)
+    frozen = load_frozen_authority(plan_dir)
+    grant, task = verified["grant"], verified["task"]
+    return AdmittedAuthority(frozen=frozen, grant_id=grant["grant_id"], grant_hash=grant["grant_hash"],
+                            task_id=task["task_id"], task_hash=task["task_hash"])
 
 
 def mutate(base: dict, mutations: list[dict]) -> dict:

@@ -12,7 +12,9 @@ python3 -m artifex --repo-root . --plan-dir plans/2026.08.03-ARTIFEX-SUPERVISOR 
 ```
 
 Commands emit one capped JSON result to stdout. `start` requires `--run-id`, `--phase`, `--item`,
-and `--mandate`; it compiles the frozen slice and creates a `READY` run only. `status` and
+and `--mandate`; it compiles the frozen slice and creates a `READY` run only. `dispatch` requires
+`--run-id` and one repository-relative indexed `--admission`; it verifies the frozen D74 carrier,
+records one durable intent, and returns the bounded no-provider result with no process. `status` and
 `report` replay the strict journal without writing. `resume` optionally takes `--observed`
 (`preimage`, `postimage`, `partial`, or `third`); `reconcile` requires it. `stop` records an
 explicit abort and is idempotent. Exit code `3` is a missing run; code `2` is a named refusal.

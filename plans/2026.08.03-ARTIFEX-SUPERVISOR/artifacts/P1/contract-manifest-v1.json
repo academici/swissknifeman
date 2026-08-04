@@ -1,0 +1,61 @@
+{
+  "schema_version": "artifex-contract-manifest-v1",
+  "manifest_version": "1.0.0",
+  "contracts": [
+    {
+      "id": "supervisor-run-v1",
+      "version": "1.0.0",
+      "path": "supervisor-run-v1.md",
+      "sha256": "c9b7290dc0d30b7fc1c7c20782cec7b4f327ba6673300bed71cadf172ab88e2a",
+      "owner": "P1.1",
+      "consumers": ["P2.1", "P2.2", "P2.4", "P2.5", "P3.4", "P4.1", "P4.2", "P4.5"],
+      "dependencies": [],
+      "references": [],
+      "logical_enums": ["run-state", "journal-event", "reconcile-outcome"]
+    },
+    {
+      "id": "slice-manifest-v1",
+      "version": "1.0.0",
+      "path": "slice-manifest-v1.md",
+      "sha256": "42375f994ccb3a69745c93730c38f28379be9a6627b81bc8e5ed5b72502d9ea1",
+      "owner": "P1.2",
+      "consumers": ["P2.1", "P2.4", "P3.1", "P3.2", "P4.3"],
+      "dependencies": ["supervisor-run-v1"],
+      "references": ["supervisor-run-v1"],
+      "logical_enums": ["slice-kind", "dependency-state", "compile-refusal"]
+    },
+    {
+      "id": "authority-policy-v1",
+      "version": "1.0.0",
+      "path": "authority-policy-v1.md",
+      "sha256": "ba1ebc2a373f7cd26922e2b8362848cfc11b4d38c78b1d764883a6df3e245b10",
+      "owner": "P1.3",
+      "consumers": ["P2.3", "P2.4", "P2.5", "P4.2", "P4.4", "P4.5"],
+      "dependencies": ["supervisor-run-v1", "slice-manifest-v1"],
+      "references": ["supervisor-run-v1", "slice-manifest-v1"],
+      "logical_enums": ["authority-class", "authority-reason", "protected-boundary"]
+    },
+    {
+      "id": "worker-envelope-v1",
+      "version": "1.0.0",
+      "path": "worker-envelope-v1.md",
+      "sha256": "8492a73facaf0258e96003f1376da962e144acc1f57b87546f606cb77f4c4785",
+      "owner": "P1.4",
+      "consumers": ["P3.1", "P3.2", "P3.3", "P3.4", "P4.1", "P4.4", "P4.5"],
+      "dependencies": ["supervisor-run-v1", "slice-manifest-v1", "authority-policy-v1"],
+      "references": ["supervisor-run-v1", "slice-manifest-v1", "authority-policy-v1"],
+      "logical_enums": ["worker-event", "worker-exit", "capability-evidence-state"]
+    },
+    {
+      "id": "economy-evidence-v1",
+      "version": "1.0.0",
+      "path": "economy-evidence-v1.md",
+      "sha256": "e1d32e6e224ac07cfd60c0eeb4b607e243462f0b8b9548bb599b911bb2def559",
+      "owner": "P1.5",
+      "consumers": ["P2.4", "P2.5", "P4.5", "P5.1", "P5.2", "P5.3", "P5.4", "P6.1"],
+      "dependencies": ["supervisor-run-v1", "slice-manifest-v1", "authority-policy-v1", "worker-envelope-v1"],
+      "references": ["supervisor-run-v1", "slice-manifest-v1", "authority-policy-v1", "worker-envelope-v1"],
+      "logical_enums": ["economy-verdict", "economy-reason", "privacy-class", "economy-lane"]
+    }
+  ]
+}

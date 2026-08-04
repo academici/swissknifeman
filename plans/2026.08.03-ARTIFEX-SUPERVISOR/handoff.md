@@ -1,4 +1,4 @@
-# HANDOFF — 2026-08-04 — after P2.2
+# HANDOFF — 2026-08-04 — after P2.1
 
 **Next:** manual: implementation/high
 
@@ -7,27 +7,28 @@
 | Model class | implementation |
 | Effort | high |
 | Capabilities | repository-code-edit · deterministic-test-execution · plan-self-close |
-| Context | continue (/clear) — ручной item |
-| Суть | Реализовать deterministic arbiter и authority evaluator из frozen P0/P1 cases для P2.3 |
+| Context | same-session — item |
+| Суть | Возобновить P2.3 с уже подготовленным authority scope и повторить полный validation fan-in |
 | Команда | — |
 
-**Done:** P2.2 item commit `2bc29dee` adds the strict local `supervisor-run-v1` hash-chain
-store: immutable identity, POSIX lock, fsync/reopen replay verification, refusal-based corruption
-handling and disposable atomic snapshots/owner queues. P2 unit discovery and frozen P1
-supervisor-run validation are green.
+**Done:** P2.1 item commit `9ada73b5` replaces the sibling-derived fixture with an item-owned
+pending S3 source and adds a live lifecycle boundary that passes before and after terminality.
+Production compiler and P2.2 artifacts are unchanged.
 
-**Remaining:** execute and self-close P2.3, then continue the sequential P2.4–P2.5 chain.
+**Remaining:** resume and self-close P2.3, then continue sequential P2.4–P2.5.
 
-**Sources of truth:** `phases/P2.md` P2.3 · frozen P0/P1 contracts and cases named in its Required
-Reads · `artifacts/supervisor/artifex/store.py` · `artifacts/supervisor/tests/test_store.py`.
+**Sources of truth:** `phases/P2.md` P2.3 · `artifacts/supervisor/artifex/authority.py` ·
+`artifacts/supervisor/tests/test_authority.py` · terminal P2.1 commit `9ada73b5` · P2.2
+commit `2bc29dee`.
 
-**Open risks:** The existing Codex hook `stale-source` warning remains separately deferred to P4.4;
-no package validation command applies because P2.2 changes only plan-local artifacts.
+**Open risks:** P2.3's prepared uncommitted files still require the full declared validation fan-in
+before their own item commit. The existing Codex hook `stale-source` warning remains separately
+deferred to P4.4.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —;
-- deferred: P2.4–P2.5 until their sequential inputs are terminal;
+- deferred: P2.4–P2.5 until their sequential predecessors are terminal;
 - open_questions: —.
 
 ```text

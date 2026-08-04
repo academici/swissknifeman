@@ -1,9 +1,8 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-03 · **Соответствует plan.md:** v0.9.3 · **Статус:** F7/F8-remediated;
-четвёртый независимый cold design-аудит является следующим шагом. После literal GREEN carrier
-выполняется двумя раздельными сессиями: implementation/high producer, затем cold frontier/xhigh
-reviewer/terminalizer. P0.1 закрыт единым двухчастным predicate ниже.
+**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.9.6 · **Статус:** P0/P1/P2.1/P2.2 terminal;
+D69 repair is closed at `9ada73b5`; P2.3 is unblocked with its prepared scope preserved. Следующий запуск —
+`$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.3` в implementation/high session.
 
 ## Карта исполнения
 
@@ -26,7 +25,7 @@ write-site, от которого зависят все 32 item, но не яв�
 | P1.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.3` | frontier/high | — | authority contract/security boundary; consumes P1.2 |
 | P1.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.4` | frontier/high | — | provider-neutral public envelope; consumes P1.2/P1.3 |
 | P1.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.5` | frontier/high | — | economy/privacy plus aggregate contract freeze |
-| P2.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.1` | implementation/high | — | Task/Harness public compiler integration; correctness-critical |
+| P2.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.1` | implementation/high | — | D69 test-only terminal-fixture repair; preserve production compiler and P2.3 scope |
 | P2.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.2` | implementation/high | — | durable store/lock/replay; consumes P2.1 |
 | P2.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.3` | implementation/high | — | authority evaluator/security boundary; consumes P2.1/P2.2 |
 | P2.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.4` | implementation/high | — | scheduler/reconcile/budget; consumes P2.1–P2.3 |

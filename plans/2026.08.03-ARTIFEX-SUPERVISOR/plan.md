@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.9.5 |
+| Version | 0.9.6 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail and finish; runtime effort not exported) |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation — D67/D68 repair both no-write escalations without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation — D67–D69 repair execution-discovered defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -172,6 +172,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D66 | 2026-08-03 | F7/F8 remediation supersedes D65 only for the prerequisite launch chain and P0.1 waiting predicate: the producer is the exact Codex `gpt-5.6-terra/high` + `task:dev` implementation/high launch; a separately launched cold `gpt-5.6-sol/xhigh` reviewer alone writes committed `task-authority-carrier-01-review.md` GREEN/RED evidence and may terminalize the carrier, while producer self-certification and reviewer code repair are forbidden. P0.1 has one predicate in roadmap/handoff carriers: `latest Audit design verdict = GREEN AND TASK-AUTHORITY-CARRIER-01 State = terminal`; neither conjunct alone exposes a runnable launch. **Consequences:** the prerequisite costs two isolated sessions and a committed review artifact, and P0.1 remains closed through every RED even if the Task repair itself is complete; D64's F1–F5 decisions and all 32 item statuses/deliverables remain unchanged. RAG:— (repo-grounded: third `Audit design — 2026-08-03` F7/F8; `packages/task/configs/command-routing.json`; `artifacts/design/task-authority-carrier-01.md`; `roadmap.md`; `handoff.md`). | The exact provider routes now match the declared neutral classes/efforts, every independent terminal conjunct has a producer, and all executable maps share one fail-closed guard. |
 | D67 | 2026-08-04 | P2.1 supersedes D32's two-source acquisition wording with the existing three-source process contract: S1 `plan-lint --json` owns the complete parsed plan/item model and all 16 fields; S2 `task.task_contract build` owns route, acceptance, evidence and content hash; S3 Harness dry-run independently cross-checks order/status/route and supplies exact `Exec`. A manual route's `EXEC-NOT-PLAN-EXEC` is expected Harness evidence, never Artifex authority. Strict S1 `Files` projection and S1/S2 read/validation/deliverables equality close the missing scope bundle without package/API changes, Markdown parsing or P1 reopen. **Consequences:** P2.1 adds one bounded subprocess and three-way drift tests; any source-shape disagreement refuses before candidate writes, while downstream outputs/routes remain unchanged. RAG:— (repo-grounded: `findings/12-p2.1-process-projection-recon-2026-08-04.md`; `research/14-p2.1-source-reconciliation.md`; active `driver-plan-protocol-v2` §2/§4.5). | The original attempt omitted an already-owned source and misread a driver refusal as a compiler refusal; reusing the existing owner projection is narrower and safer than extending Task/Harness or weakening the frozen slice contract. |
 | D68 | 2026-08-04 | Terminal P0.2 keeps `brief/01-refinements.md` byte-frozen at the hash in `owner-mandate-input-v1.json`; every later owner refinement is appended in a new `brief/NN-*.md` carrier and is not retroactively inserted into the frozen authority source set. The P2.1 redesign directives move to `brief/02-p2.1-remediation.md`, while `brief/01-refinements.md` is restored exactly. RAG:— (repo-grounded: `artifacts/P0/owner-mandate-input-v1.json`; `artifacts/P0/validate-authority.py`; `brief/02-p2.1-remediation.md`). | This preserves both append-only layer-0 provenance and the terminal P0 validation boundary without mutating a frozen contract, losing owner input, or reopening P0/P1. |
+| D69 | 2026-08-04 | Reopen P2.1 only for terminal-stable test isolation: deterministic compiler tests use an item-owned literal pending P2.1 S3 fixture, while a separate live Harness boundary test requires closed P2.1 to be absent from runnable `items` and present in `excluded_terminal`. Borrowing any sibling item's live row, admitting terminal rows to production compilation, or changing Harness/Task is forbidden. P2.2 stays terminal and the uncommitted P2.3 scope is preserved. RAG:— (repo-grounded: `findings/13-p2.1-terminal-fixture-recon-2026-08-04.md`; `research/15-p2.1-terminal-fixture-remediation.md`). | The previous fixture merely shifted lifecycle dependence from P2.1 to P2.2 and failed when P2.2 closed; separating immutable conformance input from the live terminal-exclusion contract makes the predecessor test stable for all later phases without weakening production behavior. |
 
 ## 6. Update Log
 
@@ -204,6 +205,8 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 source-pin remediation: D68 восстановил P0-frozen brief carrier, сохранил новые refinements отдельно и вернул item в `⬜ Not started`. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: process-bound S1/S2/S3 compiler и adversarial test bank добавлены без package/provider surface — детали см. phases/P2.md P2.1 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.2 закрыт: strict hash-chain store, lock, replay и derived snapshots добавлены с fault-oriented tests — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 terminal-fixture remediation: D69 reopened only the unstable sibling-derived test fixture; P2.2 remains terminal and P2.3 scope is preserved. |
+| 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: terminal-stable S3 fixture и live lifecycle boundary устранили successor-state regression — детали см. phases/P2.md P2.1 Completion Notes. |
 
 ## 7. Contracts
 

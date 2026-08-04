@@ -1,36 +1,35 @@
-# HANDOFF — 2026-08-04 — after P3.2
+# HANDOFF — 2026-08-04 — after P3.3
 
-**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
+**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | repository-code-edit · deterministic-test-execution · plan-self-close |
-| Context | continue (/clear) — ручной item |
-| Суть | Зафиксировать two-provider parity, approval, quota, timeout and exit mappings поверх обоих pure adapters. |
-| Команда | — |
-
-| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P3.3 provider parity bank and aggregate conformance validation | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.3` |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write |
+| Context | cold-start — plan-step |
+| Суть | Исправить closed Required Reads P3.3 без изменения frozen contract semantics. |
+| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3` |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.3
+РЕЖИМ: ремедиация
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/findings/P3.3-required-read-defect-2026-08-04.md → Observation/Required remediation; cold-start read
+СКОУП: 1) добавить канонические P1 carrier paths, нужные для exact parity coverage, в Required Reads P3.3; 2) сохранить exact read order и проверяемый acceptance; 3) зафиксировать решение в плане.
+НЕ ТРОГАТЬ: P0/P1 frozen contracts and evidence; P3.1/P3.2 sources; P3.3 scope and acceptance unless a new recorded decision is necessary.
 ```
 
-**Done:** Item commit `cbc20abf` completed P3.2: the plan-local Claude Code adapter now resolves the shared binary override, builds a non-persistent headless argv from frozen routing/budget/permission inputs, and maps one JSON result into the closed neutral result taxonomy without persisting raw output. Its targeted adversarial tests, full prototype suite and terminal P0/P1/P2 validators are green.
+**Done:** P3.3 started under the verified `gpt-5.6-terra/high` route; the Task Contract pre-mutation predicate returned `allow`. Execution stopped before an implementation write when the closed Required Reads set proved insufficient for the frozen P1 taxonomy.
 
-**Remaining:** Execute P3.3–P6.4 sequentially; P3.3 freezes parity before P3.4 owns the first process boundary.
+**Remaining:** Re-design P3.3, then execute it under its manual `implementation/high` route; P3.4–P6.4 remain sequentially pending.
 
-**Sources of truth:** `phases/P3.md` P3.2/P3.3 · `artifacts/supervisor/artifex/providers/{common,codex,claude_code}.py` · `artifacts/P0/{provider-matrix-v1.json,provider-probes/claude-code.json}` · frozen P1 contracts.
+**Sources of truth:** `phases/P3.md` P3.3 · `findings/P3.3-required-read-defect-2026-08-04.md` · `root/contracts/worker-envelope-v1.md` · `artifacts/P1/contract-manifest-v1.json`.
 
-**Open risks:** The roadmap header still identifies terminal P2.5 as the next launch even though its P3.3 routing row is current; rebuild that header through the owning plan workflow before relying on it as a cold-start pointer. The recorded Codex hook `stale-source` warning remains deferred to P4.4 and is not a green hook verdict.
+**Open risks:** P3.3 cannot claim exact provider parity while its required execution input excludes the canonical neutral field/exit taxonomy. The known Hook source-drift warning remains deferred to P4.4; today’s effective hook dry run only confirmed a configured `run-report: off` projection.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none;
-- deferred: provider process execution remains outside P3.2 and starts only at P3.4;
-- open_questions: —.
+- deferred: all P3.3 implementation and validation until the plan supplies the frozen contract carriers;
+- open_questions: whether P3.3 also requires the frozen worker-envelope case bank and validator as explicit Required Reads for independent case expectations.

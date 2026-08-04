@@ -94,7 +94,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
-| P2 | Build the plan-local deterministic prototype | 2/5 | 🟡 In progress |
+| P2 | Build the plan-local deterministic prototype | 3/5 | 🟡 In progress |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
@@ -207,6 +207,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.2 закрыт: strict hash-chain store, lock, replay и derived snapshots добавлены с fault-oriented tests — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 terminal-fixture remediation: D69 reopened only the unstable sibling-derived test fixture; P2.2 remains terminal and P2.3 scope is preserved. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: terminal-stable S3 fixture и live lifecycle boundary устранили successor-state regression — детали см. phases/P2.md P2.1 Completion Notes. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.3 закрыт: frozen authority evaluator и conformance bank добавлены без provider/action surface — детали см. phases/P2.md P2.3 Completion Notes. |
 
 ## 7. Contracts
 

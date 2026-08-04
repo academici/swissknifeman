@@ -6,10 +6,10 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.10.3 |
+| Version | 0.10.5 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74 and post-D76 audit remediations; runtime effort not exported) |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations and P3.4 native-tool/successor-manifest remediations; runtime effort not exported) |
 | Last Updated | 2026-08-04 |
 | Repository | swissknifeman |
 | Related Packages | task · harness · core · analyst · maind (prototype plan-local; promotion home unset) |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice remediation + post-D74 finish + post-D74/post-D76 audit remediations — D67–D79 repair execution/audit-discovered defects without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations — D67–D81 repair execution/audit-discovered defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -98,7 +98,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🔴 Blocked |
+| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
 | P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
@@ -186,11 +186,15 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | D77 | 2026-08-04 | D77 supersedes D76's use of the write-heavy P3.4 plan item as the no-write smoke manifest source, while preserving D74's live-provider objective and frozen `slice-manifest-v1`. P1.6 now freezes exact provider-specific `dispatch-task-manifest-v1` smoke task/grant carriers whose task hashes, empty write/tool allowlists and temporary-repo boundary are distinct from P3.4; P2.6 alone materializes per-provider manifest→grant→replay→admission instances and an immutable index; P3.4 only implements the parent activity seam and executes those admitted child tasks. **Consequences:** P1.6/P2.6/P3.4 gain explicit task-set/index files and two provider-specific instances, while the P3.4 Task Contract/item hash is forbidden as smoke authority and every grant-as-admission or plan-item-as-smoke substitution refuses before intent. RAG:— (repo-grounded: `brief/10-post-d76-audit-remediation.md`; latest Audit design F1; `research/23-post-d76-audit-remediation-reconcile.md`; frozen `root/contracts/slice-manifest-v1.md`). | One carrier can no longer mean both candidate implementation writes and a read-only readiness probe; separate child task identities keep no-write scope honest without rewriting a frozen plan-item compiler contract. |
 | D78 | 2026-08-04 | D78 supersedes D76's claim that admission-aware P5 inputs were complete. P5.1 becomes the sole no-provider producer of catalog-bound business grant requests, owner-approved grants, per-trial dispatch manifests/replay rows/admissions and an immutable index for every P5.2 repository slice, P5.3 recovery/provider-failure dispatch and P5.4 candidate battle wave. Materialization requires a later Decision Log carrier `[OWNER-GRANT:G-OWNER-P5-BUSINESS]` binding exact catalog/request hashes, providers, roots, dispatch count and caps; `G-OWNER-P5.4-SINGLE` remains verdict-only. **Consequences:** P5.1 may pause at a genuine owner gate after proposal hashing, P5.2–P5.4 gain exact indexed inputs and refusal tests, and all D74/P3 smoke grants/admissions become explicitly ineligible business inputs before intent/activity. RAG:— (repo-grounded: `brief/10-post-d76-audit-remediation.md`; latest Audit design F2; `research/23-post-d76-audit-remediation-reconcile.md`; current P5.1–P5.4 specs). | Provider dispatch needs independently approved business authority rather than a readiness-smoke ceiling or locally minted JSON; a terminal pre-dispatch producer makes the measured P5 path reachable and auditable. |
 | D79 | 2026-08-04 | D79 supersedes the roadmap's direct P4.3→P4.4 edge. New P4.6 is the sole owner of one worktree-local effective Codex hook `--repair`, the exact post-repair `--dry-run`, minimized evidence and an independent validator; execution order is P4.3→P4.6→P4.4. P4.4 still reruns the effective command and refuses `warning`, `stale-source` or `→ update`; doctor/syntax/exit 0 never substitute. **Consequences:** the plan grows from 34 to 35 items and performs one explicit trusted-state repair before security assurance; the current design session does not repair hooks, package sources remain outside P4.6 Files, and P4.4 cannot start unless P4.6 is terminal GREEN. RAG:— (repo-grounded: `findings/hooks-stale-source-precondition-2026-08-04.md`; latest Audit design F3; `research/23-post-d76-audit-remediation-reconcile.md`). | The known reproducible prerequisite warning now has a named producer/evidence carrier instead of becoming a predictable late P4 refusal or a false GREEN inferred from exit status. |
+| D80 | 2026-08-04 | P3.4 owns the forward-only admission→provider native-tool projection in the existing adapter modules and their tests; D74/D77 and terminal P1/P2/P3 histories remain unchanged. Claude `tools=[]` must render literal `--tools ""` with no `--allowedTools`; Codex has no proven global no-tool carrier and must return `CAPABILITY_UNSUPPORTED` before process. Installed provider-version drift likewise returns `MAPPING_UNKNOWN` without repinning P0/P3 parity. A minimized non-green readiness row is valid evidence but never provider success/maturity. RAG:✅ 2026-08-04 installed CLI + first-party verification in `findings/P3.4-native-no-tool-verification-2026-08-04.md`; RAG:— (repo-grounded: D34/D36/D74/D77, frozen admission bytes and `research/24-p3.4-native-tool-projection-design.md`). | Exact authority stays stricter than implementation convenience: the runner cannot widen tools or fake parity, while P3.4 can still finish its deterministic runner/evidence deliverables and hand honest provider readiness to P4. |
+| D81 | 2026-08-04 | P2's `prototype-manifest-v1.json` and validator remain byte-stable historical evidence for item commit `6c2c2ef3`; they are not regenerated and are no longer invoked as a current-tree equality gate after a declared P3 successor edits P2-owned files. P3.4's additive `adapter-manifest-v1.json` becomes the sole successor snapshot: it pins the P2 manifest path/SHA-256 `bbd19ef8dab464e33b58be07519173127103528dcd321449557a4c771db312a1`/commit, recomputes every P2 row from that Git snapshot, and separately pins/recomputes current P3 implementation, tests, admissions, parity and minimized readiness evidence. **Consequences:** P3.4 validation stops claiming the terminal P2 validator is green on evolved bytes; its P3 validator must prove both generations, and any missing Git anchor, changed P2 carrier or current P3 drift fails closed. RAG:— (repo-grounded: `findings/P3.4-successor-manifest-conflict-2026-08-04.md`; `research/25-p3.4-successor-manifest-design.md`; terminal P2.6 commit and current P3.4 Files). | A predecessor snapshot and a successor snapshot describe different generations; anchoring both preserves provenance and allows lawful additive evolution without rewriting history or accepting a known-red check. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 successor-manifest remediation: D81 preserves the terminal P2 snapshot, assigns cross-generation proof to the additive P3 manifest/validator and returns P3.4 to executable `⬜ Not started`. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 native-tool remediation: D80 assigns exact adapter projection/refusal, preserves D74/D77 and returns P3.4 to `⬜ Not started`; roadmap/handoff now launch the manual implementation item. |
 | 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P2 закрыта: 6/6 items сверены по committed evidence; текущий 48-test supervisor fan-in, six-contract/admission/prototype validators зелёные — детали см. phases/P2.md Phase Handoff. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | P2.6 закрыт: two indexed no-write dispatch admissions и provider-free dispatch seam материализованы без provider activity — детали см. phases/P2.md P2.6 Completion Notes. |
 | 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P1 закрыта: 6/6 контрактных items сверены по commits и повторно зелёному six-contract validation fan-in; P2.6 передан как последовательный manual producer. |
@@ -199,6 +203,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 execution-input remediation: D72 restored the frozen slice→authority/activity→worker owner chain, removed the no-write escalation and returned the unchanged item scope/acceptance to `⬜ Not started`. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 bridge-feasibility pass: D73 reinstated the escalation after reproducing the frozen P1/P2 authority/budget/CLI conflict; explicit owner choice is now required. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | P3.3 закрыт: data-only two-provider parity bank, exact registry и source-hash validator зафиксировали P1.4 field/capability/exit boundaries — детали см. phases/P3.md P3.3 Completion Notes. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | P3.4 закрыт с deviation: bounded provider runner, exact no-tool readiness и 52-test suite зелёные; frozen P1.6 parent-task hash требует отдельной reconciliation — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-08-03 | plan-design/gpt-5.6-terra (effort not exported by runtime) | Design pass 1/3: owner brief, FOREMAN/absorption/roadmap recon, current Harness/Task/runtime evidence, official external verification, Artifex target architecture and P0–P6 skeletons created; current provider plan paused without item/status/remediation edits. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 2/3: P0 detailed to DoR; live `harness run` added as baseline/reuse donor, five sequential evidence-freeze specs and exact validators pinned. P1–P6 and cross-phase finish were not reached; P1 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 3/8: P1 detailed to DoR with five item-granular manual contract freezes, terminal-P0 gate, donor reconciliation, aggregate validation and ecosystem-core pre-mortem. P2–P6 and finish were not reached; P2 is next. |
@@ -250,7 +255,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | `root/contracts/authority-policy-v1.md` | v1.0.0 | frozen P1.3 (`8a1f1757`) | P2–P6 | P1.4–P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/worker-envelope-v1.md` | v1.0.0 | frozen P1.4 (`698e5d7d`) | P2–P6 | P1.5 и P2–P6 через plan и handoff |
 | `root/contracts/economy-evidence-v1.md` | v1.0.0 | frozen P1.5 (`26b71cac`) | P2–P6 | P2–P6 через plan и handoff |
-| `root/contracts/dispatch-admission-v1.md` | v1.0.0 | planned P1.6 (D74) | P2.6, P3.4–P6 | owner choice recorded; consumers wait for P1.6 terminal hash |
+| `root/contracts/dispatch-admission-v1.md` | v1.0.0 | frozen P1.6 (`140a9b53`) | P2.6, P3.4–P6 | P2.6 materialized exact admissions; P3.4 consumes the terminal index |
 
 ### Consumed
 

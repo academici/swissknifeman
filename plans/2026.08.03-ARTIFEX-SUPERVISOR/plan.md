@@ -94,7 +94,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
-| P2 | Build the plan-local deterministic prototype | 1/5 | 🟡 In progress |
+| P2 | Build the plan-local deterministic prototype | 2/5 | 🟡 In progress |
 | P3 | Add provider adapters and fresh worker lifecycle | 0/4 | ⬜ Not started |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
@@ -203,6 +203,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 redesign: D67 добавил существующий S1 plan-model carrier, строгий S1/S2/S3 mapping и adversarial gates; no-write escalation снят, item возвращён в `⬜ Not started`. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 source-pin remediation: D68 восстановил P0-frozen brief carrier, сохранил новые refinements отдельно и вернул item в `⬜ Not started`. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.1 закрыт: process-bound S1/S2/S3 compiler и adversarial test bank добавлены без package/provider surface — детали см. phases/P2.md P2.1 Completion Notes. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | 2026.08.03-ARTIFEX-SUPERVISOR P2.2 закрыт: strict hash-chain store, lock, replay и derived snapshots добавлены с fault-oriented tests — детали см. phases/P2.md P2.2 Completion Notes. |
 
 ## 7. Contracts
 

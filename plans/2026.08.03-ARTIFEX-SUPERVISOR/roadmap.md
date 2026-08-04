@@ -1,27 +1,28 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.10.3 · **Статус:** post-D76
-audit remediation F1–F3 завершена по D77–D79. Последний design audit RED предшествует этим
-исправлениям и не разрешает исполнение; следующий шаг — новый cold design audit. После его literal
-GREEN первым producer остаётся P1.6.
+**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.10.5 · **Статус:** P1.6/P2.6 и
+фазы P1/P2 терминальны; P3 терминальна с deviations: D80 устранил no-tool conflict, а D81
+разделил immutable P2 snapshot и additive current P3 snapshot без изменения D74/D77.
+Следующий шаг — независимый audit P3; provider readiness остаётся non-green evidence с нулевой
+активностью и не ослабляет runner/evidence acceptance.
 
-## Immediate design-audit gate
+## Immediate P3 audit
 
-**Next:** audit-design: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design
+**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | xhigh |
-| Capabilities | plan-audit · adversarial-design-review |
+| Capabilities | repository-plan-read · evidence-audit · provider-adapter review |
 | Context | cold-start — plan-step |
-| Суть | Независимо проверить post-D79 35-item smoke/business-admission/hook topology, DoR и roadmap перед P1.6 |
-| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design` |
+| Суть | Независимо проверить P3 closure и честность provider/P1.6 deviations |
+| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` |
 
 ```text
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
 
-$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design
+$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 ```
 
 ## Карта исполнения
@@ -29,7 +30,7 @@ $ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design
 Все 35 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
-новый путь исполнения начинается только с P1.6 после design GREEN.
+текущий путь исполнения начинается с независимого аудита P3.
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
@@ -43,17 +44,17 @@ contract/security/recovery/public-package классы требуют full revie
 | P1.3 | terminal | 🟢 Done | frontier/high | — | frozen `authority-policy-v1` |
 | P1.4 | terminal | 🟢 Done | frontier/high | — | frozen `worker-envelope-v1` |
 | P1.5 | terminal | 🟢 Done | frontier/high | — | frozen `economy-evidence-v1` and original aggregate |
-| P1.6 | solo | `waiting: latest Audit design after D79 verdict = GREEN → manual: frontier/high` | frontier/high | D74 recorded | freeze separate no-write smoke task/grant carriers and additive admission contract; then close P1 |
+| P1.6 | terminal | 🟢 Done | frontier/high | D74 recorded | frozen additive admission contract and separate provider-specific no-write task/grant carriers |
 | P2.1 | terminal | 🟢 Done | implementation/high | — | terminal compiler/source reconciliation |
 | P2.2 | terminal | 🟢 Done | implementation/high | — | terminal durable store |
 | P2.3 | terminal | 🟢 Done | implementation/high | — | terminal authority evaluator |
 | P2.4 | terminal | 🟢 Done | implementation/high | — | terminal scheduler and D70 budget transition |
 | P2.5 | terminal | 🟢 Done | implementation/high | — | terminal provider-free CLI/aggregate |
-| P2.6 | solo | `waiting: P1.6 terminal AND P1 closed → manual: implementation/high` | implementation/high | — | materialize two provider-specific smoke manifest→grant→replay→admissions plus provider-free dispatch; then close P2 |
+| P2.6 | terminal | 🟢 Done | implementation/high | — | terminal two-provider smoke manifest→grant→replay→admissions and provider-free dispatch seam |
 | P3.1 | terminal | 🟢 Done | implementation/high | — | terminal pure Codex mapper |
 | P3.2 | terminal | 🟢 Done | implementation/high | — | terminal pure Claude Code mapper |
 | P3.3 | terminal | 🟢 Done | implementation/high | — | terminal two-provider parity freeze |
-| P3.4 | solo | `waiting: P2.6 terminal AND P2 closed → manual: implementation/high` | implementation/high | — | implement write-heavy runner, then consume only two indexed no-write smoke admissions; after completion close P3 |
+| P3.4 | terminal | 🟠 Done with deviations | implementation/high | — | D80 native-tool projection/refusal + D81 historical-P2/current-P3 manifest proof; P1.6 provenance and provider readiness are explicit non-green follow-up evidence |
 | P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
 | P4.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.2` | implementation/high | — | dispatch-aware no-rerun recovery; consumes P4.1 |
 | P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
@@ -71,28 +72,27 @@ contract/security/recovery/public-package классы требуют full revie
 
 ## Последовательность successor-contract remediation
 
-1. Fresh `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design` returns literal GREEN.
-2. Execute P1.6, then `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P1`.
-3. Execute P2.6, then `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P2`.
-4. Execute P3.4, then `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3`.
-5. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5–P6 sequentially.
+1. P1.6 and P2.6 are terminal; P1/P2 are closed.
+2. P3.4 and P3 are terminal; run `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` before P4.1.
+3. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5–P6 sequentially.
 
-### P1.6 — first producer after design GREEN
+### P3 — closed phase awaiting independent audit
 
-**Next:** waiting: latest Audit design after D79 verdict = GREEN → manual: frontier/high
+**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
-| Effort | high |
-| Capabilities | repository-plan-read · contract-freeze · evidence-recompute |
-| Context | same-session — item |
-| Суть | После fresh design GREEN заморозить additive admission contract и отдельные provider-specific no-write smoke task/grant carriers |
-| Команда | — |
+| Effort | xhigh |
+| Capabilities | repository-plan-read · evidence-audit · provider-adapter review |
+| Context | cold-start — plan-step |
+| Суть | Проверить P3 evidence, deviations и closure перед P4 |
+| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` |
 
 ```text
-# НЕ раньше: latest Audit design after D79 verdict = GREEN
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P1.6
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
+
+$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 ```
 
 ## Authority Gate Contract

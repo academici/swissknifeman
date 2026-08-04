@@ -9,7 +9,7 @@
 | `plan.md` | master plan, Routing, Status Board, decisions and contract crosswalk |
 | `phases/P0.md … phases/P6.md` | seven phases; P0–P6 detailed to authoring DoR |
 | `handoff.md` | rolling next-step pointer |
-| `roadmap.md` | execution map for all 35 manual items; post-audit D77–D79 remediation is complete and execution remains design-audit-gated |
+| `roadmap.md` | execution map for all 35 manual items; D80/D81 make P3.4 the current executable item after terminal P1.6/P2.6 |
 | `journal.jsonl` | append-only plan-command provenance |
 | `brief/` | direct owner intent and non-goals |
 | `findings/` | repository recon, first-party verification, reference products, preflight, P1–P6 reconciliation and finish recheck |
@@ -29,6 +29,8 @@
 | `brief/08-post-d74-finish.md` | brief | finish, design audit | explicit owner directive to reconcile D74 and rebuild the roadmap without implementation authority |
 | `brief/09-post-d74-audit-remediation.md` | brief | finish remediation, design audit | exact F1–F3 remediation scope, verification duties and anti-scope |
 | `brief/10-post-d76-audit-remediation.md` | brief | finish remediation, design audit | exact smoke/business-admission/hook producer scope and protected terminal history |
+| `brief/11-p3.4-no-tool-projection-remediation.md` | brief | P3.4 | current no-tool projection design authority and frozen D74/D77 anti-scope |
+| `brief/12-p3.4-successor-manifest-remediation.md` | brief | P3.4 | current P2/P3 manifest ownership remediation authority and immutable-history anti-scope |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -47,6 +49,9 @@
 | `findings/P3.3-required-read-defect-2026-08-04.md` | findings | P3.3 | reproduced omission of the normative worker-envelope taxonomy from finite execution inputs |
 | `findings/P3.4-required-read-defect-2026-08-04.md` | findings | P3.4 | reproduced omission of the slice/authority/activity/worker owner chain from finite execution inputs |
 | `findings/P3.4-bridge-contract-conflict-2026-08-04.md` | findings | P3.4 | reproduced the terminal P1/P2 authority, budget and CLI-dispatch conflict blocking a lawful bridge |
+| `findings/P3.4-no-tool-adapter-conflict-2026-08-04.md` | findings | P3.4 | execution-discovered Claude hard-coded tool widening before provider activity |
+| `findings/P3.4-native-no-tool-verification-2026-08-04.md` | findings | P3.4 | installed/first-party Claude empty-tool carrier, Codex no-global-no-tool boundary and version drift |
+| `findings/P3.4-successor-manifest-conflict-2026-08-04.md` | findings | P3.4 | reproduced evolved-root P2 hash failure and verified the immutable P2.6 Git snapshot |
 | `findings/hooks-stale-source-precondition-2026-08-04.md` | findings | P4.6, P4.4 | reproduced effective-hook warning, exact two stale-source actions and worktree-local repair/recheck owner surface |
 | `research/00-user-intent.md` | research | P0.2, P0.5, P1.3 | executable interpretation of owner intent |
 | `research/01-target-architecture.md` | research | P1–P4 | deterministic external supervisor boundary and components |
@@ -72,6 +77,8 @@
 | `research/21-post-d74-finish-reconcile.md` | research | finish, design audit, P0–P6 | post-D74 producer/consumer graph, coupling-hotspot and DoR reconcile over the current 34-item topology |
 | `research/22-post-d74-audit-remediation-reconcile.md` | research | finish remediation, design audit, P1.6–P5.1 | exact grant≠admission ownership, assurance propagation, current handoffs and repaired 34-item producer→consumer graph |
 | `research/23-post-d76-audit-remediation-reconcile.md` | research | finish remediation, design audit, P1.6–P5.4 | separate no-write smoke carriers, owner-bound per-trial business authority, P4.6 hook producer and repaired 35-item graph |
+| `research/24-p3.4-native-tool-projection-design.md` | research | P3.4, P4 | D80 forward adapter ownership, exact Claude projection, Codex/version pre-launch refusal and readiness-vs-item-status boundary |
+| `research/25-p3.4-successor-manifest-design.md` | research | P3.4, P4 | D81 immutable P2 baseline plus additive current P3 snapshot ownership and validation contract |
 
 ## Запланированные выходы P0
 
@@ -92,8 +99,8 @@
 | `root/contracts/authority-policy-v1.md` | AUTO/AUTO-FIX/OWNER authority contract | frozen P1.3 |
 | `root/contracts/worker-envelope-v1.md` | provider-neutral worker/result taxonomy | frozen P1.4 |
 | `root/contracts/economy-evidence-v1.md` | token/cost/intervention evidence and verdict | frozen P1.5 |
-| `root/contracts/dispatch-admission-v1.md` | manifest+grant+replay projection into authority, scheduler and worker request | planned P1.6 |
-| `artifacts/P1/p3-smoke-task-set-v1.json`, `p3-smoke-dispatch-grants-v1.json` | provider-specific no-write child task/authority ceilings, distinct from P3.4 | planned P1.6 |
+| `root/contracts/dispatch-admission-v1.md` | manifest+grant+replay projection into authority, scheduler and worker request | frozen P1.6 |
+| `artifacts/P1/p3-smoke-task-set-v1.json`, `p3-smoke-dispatch-grants-v1.json` | provider-specific no-write child task/authority ceilings, distinct from P3.4 | terminal P1.6 |
 
 ## Запланированные выходы P2
 
@@ -104,7 +111,7 @@
 | `artifacts/supervisor/artifex/authority.py` | P2.3 | P2.4–P2.5, P4–P5 |
 | `artifacts/supervisor/artifex/scheduler.py` | P2.4 | P2.5, P3–P5 |
 | `artifacts/supervisor/artifex/cli.py`, `__main__.py`, `README.md` | P2.5 | P3–P6 |
-| `artifacts/P2/prototype-manifest-v1.json`, `validate-prototype.py` | P2.5 | P3/P4 terminal gate |
+| `artifacts/P2/prototype-manifest-v1.json`, `validate-prototype.py` | P2.5/P2.6 | immutable P2.6 snapshot consumed by P3.4's successor validator and later provenance checks |
 | `artifacts/P2/p3-smoke-dispatch-manifest-index-v1.json`, replay, two admissions/index and `build-p3-smoke-admissions.py` | P2.6 | P3.4–P5 negative lineage |
 | `artifacts/supervisor/artifex/dispatch.py` and provider-free `dispatch --admission` CLI seam | P2.6 | P3.4–P5 |
 
@@ -112,10 +119,10 @@
 
 | Путь | Производитель | Потребители |
 |:--|:--|:--|
-| `artifacts/supervisor/artifex/providers/{common,codex,claude_code}.py` | P3.1–P3.2 | P3.3–P5 |
+| `artifacts/supervisor/artifex/providers/{common,codex,claude_code}.py` | P3.1–P3.2; narrow native-tool repair P3.4/D80 | P3.3–P5 |
 | `artifacts/P3/provider-parity-*`, `validate-provider-parity.py` | P3.3 | P3.4, P4–P5 |
 | `artifacts/supervisor/artifex/worker.py` and provider-aware existing CLI binding | P3.4 | P4–P6 |
-| `artifacts/P3/provider-smoke/*`, `adapter-manifest-v1.json`, `validate-adapters.py` | P3.4 | P4/P5 terminal gate |
+| `artifacts/P3/provider-smoke/*`, `adapter-manifest-v1.json`, `validate-adapters.py` | P3.4 | additive current-P3 plus immutable-P2 terminal gate for P4/P5 |
 
 ## Запланированные выходы P4
 

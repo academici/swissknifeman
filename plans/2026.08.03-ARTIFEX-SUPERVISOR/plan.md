@@ -98,7 +98,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟡 In progress |
+| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
 | P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
@@ -204,6 +204,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 bridge-feasibility pass: D73 reinstated the escalation after reproducing the frozen P1/P2 authority/budget/CLI conflict; explicit owner choice is now required. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | P3.3 закрыт: data-only two-provider parity bank, exact registry и source-hash validator зафиксировали P1.4 field/capability/exit boundaries — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-terra/high | P3.4 закрыт с deviation: bounded provider runner, exact no-tool readiness и 52-test suite зелёные; frozen P1.6 parent-task hash требует отдельной reconciliation — детали см. phases/P3.md P3.4 Completion Notes. |
+| 2026-08-04 | plan-close/implementation/low | P3 закрыта с deviations: P3.1–P3.3 зелёные, P3.4 сохраняет доказанный P1.6 provenance/provider-readiness долг; детали см. phases/P3.md Phase Handoff. |
 | 2026-08-03 | plan-design/gpt-5.6-terra (effort not exported by runtime) | Design pass 1/3: owner brief, FOREMAN/absorption/roadmap recon, current Harness/Task/runtime evidence, official external verification, Artifex target architecture and P0–P6 skeletons created; current provider plan paused without item/status/remediation edits. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 2/3: P0 detailed to DoR; live `harness run` added as baseline/reuse donor, five sequential evidence-freeze specs and exact validators pinned. P1–P6 and cross-phase finish were not reached; P1 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 3/8: P1 detailed to DoR with five item-granular manual contract freezes, terminal-P0 gate, donor reconciliation, aggregate validation and ecosystem-core pre-mortem. P2–P6 and finish were not reached; P2 is next. |

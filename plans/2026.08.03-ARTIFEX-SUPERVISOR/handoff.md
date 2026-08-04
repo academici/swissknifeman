@@ -1,36 +1,37 @@
-# HANDOFF — 2026-08-04 — after P3.4
+# HANDOFF — 2026-08-04 — after P3
 
-**Next:** plan-design: frontier/high
+**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
-| Effort | high |
-| Capabilities | repository-plan-read · contract-reconciliation · test-surface design |
-| Context | new-session — design repair |
-| Суть | Reconcile frozen P1.6 smoke-task parent-contract provenance before P3 phase closure |
-| Команда | /task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P1.6 |
+| Effort | xhigh |
+| Capabilities | repository-plan-read · evidence-audit · provider-adapter review |
+| Context | cold-start — plan-step |
+| Суть | Независимо проверить P3 closure, evidence и явные deviations перед P4 |
+| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3` |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
 
-$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P1.6
+$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P3
 ```
 
-**Done:** P3.4 item commit `d1362247` delivers bounded runner, native-tool refusal/projection,
-explicit CLI provider selection and two zero-activity non-green readiness records. Full supervisor
-discovery passed 52 tests; parity, probe and adapter validators passed.
+**Done:** Фаза P3 закрыта с deviations: P3.1–P3.3 зелёные; P3.4 (`d1362247`) delivers bounded
+runner, native-tool refusal/projection, explicit provider selection and two zero-activity
+non-green readiness records. Full supervisor discovery passed 52 tests; parity, probe and adapter validators passed.
 
-**Remaining:** P1.6 must reconcile its frozen smoke task's parent P3.4 Task Contract hash with the
-current successor spec. P3.4 does not alter P1/P2 tasks, grants, admissions or validators.
+**Remaining:** P4 begins only after an independent audit of P3. P1.6's frozen smoke-task parent
+hash and provider readiness remain explicit non-green evidence; P3.4 does not alter P1/P2 tasks,
+grants, admissions or validators.
 
 **Sources of truth:** `plan.md` D80–D81 · `phases/P3.md` P3.4 ·
 `research/24-p3.4-native-tool-projection-design.md` ·
 `research/25-p3.4-successor-manifest-design.md` ·
 `findings/P3.4-successor-manifest-conflict-2026-08-04.md`.
 
-**Open risks:** The terminal P1.6 admission validator currently refuses before activity because its
-task carrier pins `72553d…` while P3.4 compiles to `d5ef00…`. This remains red and must not be
+**Open risks:** The terminal P1.6 admission validator refuses before activity because its task
+carrier pins `72553d…` while P3.4 compiles to `d5ef00…`. This remains red and must not be
 reported green. Provider readiness is intentionally non-green with zero processes.
 
 **Workarounds/Deferred/Open questions:**

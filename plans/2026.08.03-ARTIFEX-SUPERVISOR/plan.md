@@ -191,6 +191,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P1 закрыта: 6/6 контрактных items сверены по commits и повторно зелёному six-contract validation fan-in; P2.6 передан как последовательный manual producer. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.6 закрыт: additive dispatch-admission contract и provider-specific no-write smoke authority запечатаны — детали см. phases/P1.md P1.6 Completion Notes. |
 | 2026-08-04 | plan-design/frontier/high (selector not externally verified) | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 successor-contract design: owner choice D74 added P1.6/P2.6, reopened P1/P2 forward-only and returned P3.4 to executable specification pending those producers. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 execution-input remediation: D72 restored the frozen slice→authority/activity→worker owner chain, removed the no-write escalation and returned the unchanged item scope/acceptance to `⬜ Not started`. |

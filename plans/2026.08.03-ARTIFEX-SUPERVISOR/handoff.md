@@ -1,35 +1,38 @@
 # HANDOFF — 2026-08-04 — after P3.3
 
-**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3
+**Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write |
-| Context | cold-start — plan-step |
-| Суть | Исправить closed Required Reads P3.3 без изменения frozen contract semantics. |
-| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3` |
+| Capabilities | — |
+| Context | continue (/clear) — ручной item |
+| Суть | Связать оба pure adapter с единым bounded fresh-process runner и P2 activity port. |
+| Команда | — |
 
 ```text
-$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.3
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
 
-РЕЖИМ: ремедиация
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/findings/P3.3-required-read-defect-2026-08-04.md → Observation/Required remediation; cold-start read
-СКОУП: 1) добавить канонические P1 carrier paths, нужные для exact parity coverage, в Required Reads P3.3; 2) сохранить exact read order и проверяемый acceptance; 3) зафиксировать решение в плане.
-НЕ ТРОГАТЬ: P0/P1 frozen contracts and evidence; P3.1/P3.2 sources; P3.3 scope and acceptance unless a new recorded decision is necessary.
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.4
 ```
 
-**Done:** P3.3 started under the verified `gpt-5.6-terra/high` route; the Task Contract pre-mutation predicate returned `allow`. Execution stopped before an implementation write when the closed Required Reads set proved insufficient for the frozen P1 taxonomy.
+**Done:** P3.3 item commit `f708310e` froze a source-hashed two-provider parity crosswalk for
+the P1.4 envelope, all five P0 capabilities and all ten exits; exact registry lookup and 43-test
+prototype discovery are green at that commit.
 
-**Remaining:** Re-design P3.3, then execute it under its manual `implementation/high` route; P3.4–P6.4 remain sequentially pending.
+**Remaining:** Execute P3.4, then P4–P6 sequentially.
 
-**Sources of truth:** `phases/P3.md` P3.3 · `findings/P3.3-required-read-defect-2026-08-04.md` · `root/contracts/worker-envelope-v1.md` · `artifacts/P1/contract-manifest-v1.json`.
+**Sources of truth:** `plan.md` §3 Routing · `phases/P3.md` P3.4 ·
+`artifacts/P3/provider-parity-v1.json` · `artifacts/P3/validate-provider-parity.py`.
 
-**Open risks:** P3.3 cannot claim exact provider parity while its required execution input excludes the canonical neutral field/exit taxonomy. The known Hook source-drift warning remains deferred to P4.4; today’s effective hook dry run only confirmed a configured `run-report: off` projection.
+**Open risks:** P3.3 retains timeout, quota and orphan as explicit unknowns until P3.4 bounded
+lifecycle evidence. Current documented harness-hook and maind-health preflight forms are rejected
+by their CLIs; the previously recorded hook source-drift repair remains P4.4-owned and no such
+check is green.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none;
-- deferred: all P3.3 implementation and validation until the plan supplies the frozen contract carriers;
-- open_questions: whether P3.3 also requires the frozen worker-envelope case bank and validator as explicit Required Reads for independent case expectations.
+- deferred: provider subprocess, live smoke and hook integrity repair remain P3.4/P4.4 scope;
+- open_questions: —.

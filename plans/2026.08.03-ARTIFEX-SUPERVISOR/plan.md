@@ -95,7 +95,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 5/5 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 5/5 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 1/4 | 🟡 In progress |
+| P3 | Add provider adapters and fresh worker lifecycle | 2/4 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/5 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
 | P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |
@@ -184,6 +184,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-03 | plan-design/gpt-5.6-sol/high | Design pass 3/8: P1 detailed to DoR with five item-granular manual contract freezes, terminal-P0 gate, donor reconciliation, aggregate validation and ecosystem-core pre-mortem. P2–P6 and finish were not reached; P2 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 4/8: P2 detailed to DoR as a five-item sequential plan-local compiler/store/authority/scheduler/CLI chain, with explicit Harness/Task reuse, no-provider boundary, strict replay and pre-mortem. P3–P6 and finish were not reached; P3 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 5/8: P3 detailed to DoR as pure Codex/Claude mappers, explicit parity evidence and one capped fresh-process activity binding; P4–P6 and finish were not reached; P4 is next. |
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | P3.2 закрыт: pure Claude Code mapper нормализует закрытые результаты и строит bounded headless argv — детали см. phases/P3.md P3.2 Completion Notes. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 6/8: P4 detailed to DoR as a five-item sequential assurance chain with independent fault/recovery/worktree/security/telemetry evidence; P5–P6 and finish were not reached; P5 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 7/8: P5 detailed to DoR as a four-item sequential shadow/pilot/recovery/paired-economics chain with independent adjudication; P6 and finish were not reached; P6 is next. |
 | 2026-08-03 | plan-design/gpt-5.6-sol/high routed (runtime effort not exported) | Design pass 8/8: P6 detailed to DoR as a four-item sequential product-home/integration/operations/cold-audit chain; pre-finish roadmap assembled after the last skeleton was removed; `finish` is next. |

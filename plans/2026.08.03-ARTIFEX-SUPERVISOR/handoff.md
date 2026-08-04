@@ -18,6 +18,8 @@
 Item-коммит `8a1f1757` запечатал frozen `authority-policy-v1`,
 exhaustive operation/class/predicate bank и independent stdlib-validator. Task Contract
 pre-mutation/pre-final — `allow/allow`; вся item Validation зелёная.
+Process deviation по позднему `release-discipline` audit записано в P1.3
+Known Deviations и исправлено вперёд; material scope и статус не изменились.
 
 **Remaining:** P1.4–P6.4 не запускались. P1.4 — следующий legal
 solo item; roadmap задаёт `manual`, `frontier/high`, без batch/workflow.

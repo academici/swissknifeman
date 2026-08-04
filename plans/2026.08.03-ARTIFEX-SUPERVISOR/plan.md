@@ -98,7 +98,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟡 In progress |
+| P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🔴 Blocked |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
 | P6 | Decide product home, integrate, and operationalize | 0/4 | ⬜ Not started |

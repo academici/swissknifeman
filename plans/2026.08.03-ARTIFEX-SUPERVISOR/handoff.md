@@ -1,39 +1,25 @@
-# HANDOFF — 2026-08-04 — after P2
+# HANDOFF — 2026-08-04 — after P3.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** plan-design
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
-| Thinking | high — provider activity boundary |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Выполнить P3.4: bounded provider activity только по двум indexed smoke admissions. |
-| Команда | — |
+| Model | frontier |
+| Thinking | high — reconcile frozen smoke boundary |
+| Context | NEW SESSION — plan-design cold-start |
+| Суть | Resolve the P3.2 Claude tool-list versus P3.4 no-tool smoke contradiction without weakening D74 authority. |
+| Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.4` |
 
-```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+**Done:** P3.4 was gated before any provider process. The two P2.6 indexed admissions are present, but the terminal Claude mapper's literal tool list conflicts with their empty tool authority.
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.4
-```
+**Remaining:** plan-design must assign a lawful owner and acceptance path for the adapter/smoke boundary. P3.4 remains blocked; P4–P6 do not start.
 
-**Done:** P2 закрыта: P2.1–P2.6 дают plan-local compiler/store/authority/scheduler/CLI и exact
-two-provider no-write admission/dispatch seam. На текущем дереве зелёны 48 supervisor tests,
-six-contract, dispatch-admission и prototype validators; provider activity не запускалась.
+**Sources of truth:** `phases/P3.md` P3.4 escalation · `artifacts/P1/p3-smoke-task-set-v1.json` · `artifacts/P2/p3-smoke-admissions/claude-code.json` · `artifacts/supervisor/artifex/providers/claude_code.py`.
 
-**Remaining:** P3.4 может исполнить bounded provider activity, но только через две indexed
-admissions. Later order remains P4.1 → P4.2 → P4.3 → P4.6 → P4.4 → P4.5, then P5 and P6.
-
-**Sources of truth:** `plan.md` D74–D79, §3 Routing and §4 board · `phases/P2.md` P2.6 Completion
-Notes · `root/contracts/dispatch-admission-v1.md` · `artifacts/P1/contract-manifest-v1.json` ·
-`artifacts/P2/p3-smoke-admission-index-v1.json` · `artifacts/P2/validate-prototype.py`.
-
-**Open risks:** Effective Codex hooks still report `stale-source`; P4.6 owns repair/recheck before
-P4.4. The worktree also has unrelated uncommitted files outside P2 scope; they were not included in
-the phase-close commit. Provider activity, recovery, business owner grants, pilots and product-home
-evidence remain unimplemented and must not be presented as GREEN.
+**Open risks:** Hook preflight is non-green: `packages/harness/bin/harness hooks --dry-run` requires a target, and `--target P` then requires an explicit hook-setting; P4.6/P4.4 remain the owning plan items. The worktree contains extensive unrelated uncommitted changes, which this execution did not alter.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: hook repair, recovery, business owner grant, pilots and product-home evidence remain in assigned items;
-- open_questions: —
+- workarounds: none accepted;
+- deferred: hook repair, provider lifecycle, recovery, business grants, pilots and product-home evidence;
+- open_questions: which forward-only contract/item should own a Claude no-tool adapter projection.

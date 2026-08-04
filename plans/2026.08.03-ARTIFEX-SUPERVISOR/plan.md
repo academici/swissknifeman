@@ -197,6 +197,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.3 закрыт: authority-policy-v1, exhaustive decision bank и deterministic validator запечатаны — детали см. phases/P1.md P1.3 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.4 закрыт: provider-neutral worker envelope, closed exit taxonomy и independent validator запечатаны — детали см. phases/P1.md P1.4 Completion Notes. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.5 закрыт: economy/privacy evidence и aggregate five-contract freeze запечатаны — детали см. phases/P1.md P1.5 Completion Notes. |
+| 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P1 закрыта: 5/5 contracts/items сверены по commits и повторно зелёным P1 validation fan-in; P2.1 передан как последовательный manual producer. |
 
 ## 7. Contracts
 

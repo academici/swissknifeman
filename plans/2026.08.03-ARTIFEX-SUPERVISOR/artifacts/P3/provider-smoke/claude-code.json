@@ -1,0 +1,14 @@
+{
+  "admission_hash": "1223fa723e356fe73c6994f99587b25934f4ce2d7d9fc0395a6fc82bffd604ae",
+  "duration_ms": 0,
+  "evidence_hash": "c7a39d76f424abc7befa7a136e4fab5c8fe858305926ff68e30d84add0415e28",
+  "exit_class": "provider_failure",
+  "process_count": 0,
+  "project_delta": [],
+  "provider_id": "claude-code",
+  "readiness": "non-green",
+  "reason_code": "MAPPING_UNKNOWN",
+  "schema_valid": false,
+  "schema_version": "p3-readiness-row-v1",
+  "task_id": "p3-smoke-claude-code-v1"
+}

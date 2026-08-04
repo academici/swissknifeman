@@ -22,20 +22,13 @@ def request():
 
 
 class CodexAdapterTests(unittest.TestCase):
-    def test_literal_argv_is_noninteractive_and_no_values_leak(self):
+    def test_empty_tools_refuse_before_binary_resolution(self):
         with tempfile.TemporaryDirectory() as directory:
             schema = Path(directory) / "schema.json"
             schema.write_text("{}", encoding="utf-8")
-            argv = codex.build_argv(request(), routing_path=ROUTING, schema_path=schema,
-                                    cwd=directory, binary="codex-test")
-        self.assertEqual(argv[:3], ["codex-test", "exec", "--json"])
-        self.assertIn("--ephemeral", argv)
-        self.assertIn("--strict-config", argv)
-        self.assertIn("--ignore-user-config", argv)
-        self.assertIn("approval_policy=never", argv)
-        self.assertIn("features.multi_agent=false", argv)
-        self.assertIn("gpt-5.6-terra", argv)
-        self.assertEqual(argv[-1], "-")
+            with self.assertRaisesRegex(AdapterRefusal, "CAPABILITY_UNSUPPORTED"):
+                codex.build_argv(request(), routing_path=ROUTING, schema_path=schema,
+                                 cwd=directory, native_tools=(), binary="missing-binary")
 
     def test_refuses_children_and_unknown_version(self):
         value = request()
@@ -43,7 +36,7 @@ class CodexAdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             schema = Path(directory) / "schema.json"; schema.write_text("{}")
             with self.assertRaisesRegex(AdapterRefusal, "CAPABILITY_UNSUPPORTED"):
-                codex.build_argv(value, routing_path=ROUTING, schema_path=schema, cwd=directory, binary="x")
+                codex.build_argv(value, routing_path=ROUTING, schema_path=schema, cwd=directory, native_tools=(), binary="x")
         value = request(); value["provider"]["cli_version"] = "other"
         self.assertEqual(codex.normalize_record("{}", value)["reason_code"], "MAPPING_UNKNOWN")
 

@@ -30,11 +30,13 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
             schema = Path(directory) / "schema.json"; schema.write_text('{"secret": "schema"}', encoding="utf-8")
             mcp = Path(directory) / "mcp.json"; mcp.write_text('{"token": "mcp"}', encoding="utf-8")
             argv = claude_code.build_argv(request(), routing_path=ROUTING, schema_path=schema,
-                                          mcp_config_path=mcp, cwd=directory, binary="claude-test")
+                                          mcp_config_path=mcp, cwd=directory, native_tools=(), binary="claude-test")
         self.assertEqual(argv[:2], ["claude-test", "-p"])
         self.assertIn("json", argv)
         self.assertIn("--no-session-persistence", argv)
         self.assertIn("dontAsk", argv)
+        self.assertEqual(argv[argv.index("--tools") + 1], "")
+        self.assertNotIn("--allowedTools", argv)
         self.assertIn("--strict-mcp-config", argv)
         self.assertIn("--max-turns", argv)
         self.assertIn("--max-budget-usd", argv)
@@ -51,7 +53,7 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
             mcp = Path(directory) / "mcp.json"; mcp.write_text("{}", encoding="utf-8")
             with self.assertRaisesRegex(AdapterRefusal, "CAPABILITY_UNSUPPORTED"):
                 claude_code.build_argv(value, routing_path=ROUTING, schema_path=schema,
-                                       mcp_config_path=mcp, cwd=directory, binary="x")
+                                       mcp_config_path=mcp, cwd=directory, native_tools=(), binary="x")
         value = request(); value["provider"]["cli_version"] = "other"
         self.assertEqual(claude_code.normalize_record("{}", value)["reason_code"], "MAPPING_UNKNOWN")
 

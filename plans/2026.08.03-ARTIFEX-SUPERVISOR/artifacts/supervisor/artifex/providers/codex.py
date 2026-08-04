@@ -31,8 +31,16 @@ def _routing(request: dict, routing_path: str | Path) -> tuple[str, str]:
 
 
 def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Path,
-               cwd: str | Path, binary: str | None = None) -> list[str]:
+               cwd: str | Path, native_tools: tuple[str, ...], binary: str | None = None) -> list[str]:
     require_request(request)
+    if not isinstance(native_tools, tuple):
+        raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
+    # The pinned Codex surface has no demonstrated global no-tool carrier.  Refuse
+    # before binary resolution so a sandbox/prompt cannot accidentally widen scope.
+    if not native_tools:
+        raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
+    raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
+    # A future owner-bound native mapping belongs below this point; P3.4 never guesses it.
     if request["provider"].get("cli_version") != PROBE_VERSION:
         raise AdapterRefusal("MAPPING_UNKNOWN")
     if request["permissions"].get("sandbox_mode") not in ("read_only", "workspace_write", "danger_full_access"):

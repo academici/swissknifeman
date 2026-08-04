@@ -204,11 +204,16 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
     if any(row.get("event") == "append_intent" and row.get("idempotency_key") == identity["idempotency_key"]
            for row in replay["records"]):
         raise CliRefusal("USAGE_LIMIT_EXCEEDED")
+    if args.provider is not None and args.provider != admission["task"]["provider"]:
+        raise CliRefusal("PROVIDER_MISMATCH")
     admitted = authority.load_admitted_authority(plan, admission)
     authority_input = dict(admitted.frozen.cases["base_input"])
     authority_input.update({"operation": "dispatch_worker", "requested_class": "AUTO"})
     projected = dispatch.scheduler_slice(admission, authority_input)
-    result = scheduler.Scheduler(run, admitted, now=_now).schedule([projected])
+    # Omission preserves the P2 provider-free refusal; an explicit provider is
+    # selected only after the indexed admission has bound task and provider.
+    activity = None if args.provider is None else scheduler.DefaultActivityPort()
+    result = scheduler.Scheduler(run, admitted, now=_now, activity=activity).schedule([projected])
     run.rebuild_snapshot()
     return {"status": result["status"], "run_id": args.run_id, "task_id": admitted.task_id,
             "admission_hash": admission["admission_hash"], "process_count": 0}
@@ -228,6 +233,7 @@ def build_parser() -> argparse.ArgumentParser:
     dispatch_command = sub.add_parser("dispatch")
     dispatch_command.add_argument("--run-id", required=True)
     dispatch_command.add_argument("--admission", required=True)
+    dispatch_command.add_argument("--provider", choices=("codex", "claude-code"))
     return parser
 
 

@@ -1,0 +1,14 @@
+{
+  "admission_hash": "ba5cb23a1679518de18b8347a712d1b26a5be6d9ee1625c9f385891dc3bc32cc",
+  "duration_ms": 0,
+  "evidence_hash": "dd4cea7e5fbb91aab63d9a93f711101684651f64c10f4ae5ffa3538157226cc4",
+  "exit_class": "capability_unsupported",
+  "process_count": 0,
+  "project_delta": [],
+  "provider_id": "codex",
+  "readiness": "non-green",
+  "reason_code": "CAPABILITY_UNSUPPORTED",
+  "schema_valid": false,
+  "schema_version": "p3-readiness-row-v1",
+  "task_id": "p3-smoke-codex-v1"
+}

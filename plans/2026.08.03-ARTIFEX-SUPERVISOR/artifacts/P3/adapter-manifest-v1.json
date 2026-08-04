@@ -1,0 +1,11 @@
+{
+  "schema_version": "artifex-adapter-manifest-v1",
+  "manifest_version": "1.0.0",
+  "readiness": "non-green-measured",
+  "providers": ["claude-code", "codex"],
+  "rows": {
+    "claude-code": "provider-smoke/claude-code.json",
+    "codex": "provider-smoke/codex.json"
+  },
+  "activity_rule": "preflight refusal produces zero provider activity processes"
+}

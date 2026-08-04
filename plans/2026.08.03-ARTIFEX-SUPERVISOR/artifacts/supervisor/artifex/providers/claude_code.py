@@ -18,7 +18,6 @@ _PRIVATE_KEYS = frozenset({
     "prompt", "thinking", "chain_of_thought", "api_key", "authorization", "cookie",
     "raw_" "stdout", "raw_" "stderr", "tool_payload", "environment",
 })
-_READ_ONLY_TOOLS = "Read,Glob,Grep"
 
 
 def resolve_binary(env: dict[str, str] | None = None) -> str:
@@ -64,9 +63,12 @@ def _usd_microunits(value: int) -> str:
 
 
 def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Path,
-               cwd: str | Path, mcp_config_path: str | Path, binary: str | None = None) -> list[str]:
+               cwd: str | Path, mcp_config_path: str | Path, native_tools: tuple[str, ...],
+               binary: str | None = None) -> list[str]:
     """Build the bounded headless argv; prompt content stays on stdin in P3.4."""
     _require_request(request)
+    if not isinstance(native_tools, tuple) or native_tools:
+        raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
     if request["provider"].get("cli_version") != PROBE_VERSION:
         raise AdapterRefusal("MAPPING_UNKNOWN")
     if request["permissions"].get("sandbox_mode") not in ("read_only", "workspace_write", "danger_full_access"):
@@ -77,8 +79,8 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
     return [
         binary or resolve_binary(), "-p", "--output-format", "json", "--json-schema", str(Path(schema_path)),
         "--no-session-persistence", "--model", model, "--effort", effort,
-        "--permission-mode", "dontAsk", "--tools", _READ_ONLY_TOOLS,
-        "--allowedTools", _READ_ONLY_TOOLS, "--setting-sources", "project,local",
+        "--permission-mode", "dontAsk", "--tools", "",
+        "--setting-sources", "project,local",
         "--strict-mcp-config", "--mcp-config", str(Path(mcp_config_path)),
         "--max-turns", str(request["budgets"]["max_turns"]),
         "--max-budget-usd", _usd_microunits(request["budgets"]["cost_limit_microunits"]),

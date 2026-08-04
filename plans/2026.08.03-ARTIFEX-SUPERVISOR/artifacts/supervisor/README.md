@@ -21,3 +21,10 @@ explicit abort and is idempotent. Exit code `3` is a missing run; code `2` is a 
 
 Run folders are contained below `--runs-root`, reject symlinks and foreign identities, and are
 never inferred from cwd or home. Reports expose only state, event counts, and journal hashes.
+# P3.4 provider readiness
+
+The P3.4 activity boundary accepts only an indexed, provider-specific admission. Native tool
+controls are required and have no ambient fallback: Claude maps the admitted empty set to
+`--tools ""`, while Codex refuses the currently unproven global no-tool request before process
+creation. `artifacts/P3/probe-adapters.py` writes two minimized non-green readiness rows when
+preflight refuses; a non-green row has `process_count: 0` and is not an acceptance verdict.

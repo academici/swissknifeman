@@ -25,8 +25,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual("RUN_NOT_FOUND", json.loads(result.stdout)["reason"])
         self.assertEqual("", result.stderr)
 
-    def test_source_contains_no_provider_launcher_or_interactive_input(self):
-        for name in ("dispatch.py", "authority.py", "scheduler.py", "cli.py"):
+    def test_p2_core_remains_provider_free_and_cli_only_exposes_selection(self):
+        # P3.4 may add an explicit provider selector to the existing CLI, but the
+        # frozen P2 authority/dispatch/scheduler core never imports or launches one.
+        for name in ("dispatch.py", "authority.py", "scheduler.py"):
             source = (ARTIFEX / "artifex" / name).read_text(encoding="utf-8")
             for forbidden in ("providers.", "subprocess", "Popen", "codex", "claude", "input(", "os.environ"):
                 self.assertNotIn(forbidden, source, f"{name}: {forbidden}")
+        parser = __import__("artifex.cli", fromlist=["build_parser"]).build_parser()
+        args = parser.parse_args(["--repo-root", ".", "--plan-dir", "plan", "--runs-root", "runs",
+                                  "dispatch", "--run-id", "r", "--admission", "a", "--provider", "codex"])
+        self.assertEqual("codex", args.provider)

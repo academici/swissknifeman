@@ -62,16 +62,16 @@ class ProviderParityTests(unittest.TestCase):
                 request["child_policy"] = {"mode": "bounded_read_only"}
                 with self.assertRaisesRegex(AdapterRefusal, "CAPABILITY_UNSUPPORTED"):
                     if build is codex.build_argv:
-                        build(request, routing_path=ROUTING, schema_path=schema, cwd=directory, binary="test")
+                        build(request, routing_path=ROUTING, schema_path=schema, cwd=directory, native_tools=(), binary="test")
                     else:
-                        build(request, routing_path=ROUTING, schema_path=schema, mcp_config_path=mcp, cwd=directory, binary="test")
+                        build(request, routing_path=ROUTING, schema_path=schema, mcp_config_path=mcp, cwd=directory, native_tools=(), binary="test")
                 request = codex_request() if build is codex.build_argv else claude_request()
                 request["permissions"]["approval_mode"] = "ask"
                 with self.assertRaisesRegex(AdapterRefusal, "PERMISSION_REFUSED"):
                     if build is codex.build_argv:
-                        build(request, routing_path=ROUTING, schema_path=schema, cwd=directory, binary="test")
+                        build(request, routing_path=ROUTING, schema_path=schema, cwd=directory, native_tools=(), binary="test")
                     else:
-                        build(request, routing_path=ROUTING, schema_path=schema, mcp_config_path=mcp, cwd=directory, binary="test")
+                        build(request, routing_path=ROUTING, schema_path=schema, mcp_config_path=mcp, cwd=directory, native_tools=(), binary="test")
 
     def test_one_field_mutations_do_not_create_default_success(self):
         codex_success = [json.dumps({"type": "thread.started", "thread_id": "t"}),

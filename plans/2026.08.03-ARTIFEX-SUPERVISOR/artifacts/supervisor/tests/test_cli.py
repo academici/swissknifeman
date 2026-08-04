@@ -78,6 +78,9 @@ class CliTests(unittest.TestCase):
         }, rules=rules, states=states, events=events)
         with run.acquire_writer():
             run.append_event(cli._payload(run, "freeze_run"))
+        code, result = self.call("dispatch", "--run-id", run_id, "--provider", "claude-code",
+                                 "--admission", "plan/artifacts/P2/p3-smoke-admissions/codex.json")
+        self.assertEqual((2, "PROVIDER_MISMATCH"), (code, result["reason"]))
         code, result = self.call("dispatch", "--run-id", run_id, "--admission", "plan/artifacts/P2/p3-smoke-admissions/codex.json")
         self.assertEqual((0, "provider_unavailable", 0), (code, result["status"], result["process_count"]))
         code, result = self.call("dispatch", "--run-id", run_id, "--admission", "plan/artifacts/P1/p3-smoke-dispatch-grants-v1.json")

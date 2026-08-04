@@ -12,3 +12,24 @@ def load_json(path):
 
 def clone(value):
     return copy.deepcopy(value)
+
+
+def p2_1_pending_s3_fixture():
+    """Independent expected Harness source for compiler conformance tests."""
+    return {
+        "degraded": False,
+        "items": [{
+            "item_id": "P2.1",
+            "status": "⬜ Not started",
+            "route": {"model_class": "implementation", "effort": "high"},
+            "route_error": None,
+            "exec": "manual",
+            "exec_error": None,
+            "drivable": False,
+            "refusal": "EXEC-NOT-PLAN-EXEC",
+            "refusal_detail": "fixture: manual item is intentionally not plan-exec drivable",
+            "argv": None,
+            "argv_error": None,
+        }],
+        "excluded_terminal": [],
+    }

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import json
 import subprocess
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from artifex import compiler
+from support import clone, p2_1_pending_s3_fixture
 
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -15,13 +14,26 @@ PLAN = ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR"
 
 class CompilerTests(unittest.TestCase):
     def _sources(self):
-        s1, s2, s3 = compiler.observe_sources(ROOT, PLAN, "P2.1")
-        s1, s3 = json.loads(json.dumps(s1)), json.loads(json.dumps(s3))
+        s1, s2, _ = compiler.observe_sources(ROOT, PLAN, "P2.1")
+        s1 = clone(s1)
         fields = s1["plans"][PLAN.name]["phases"]["P2"]["items"]["P2.1"]["fields"]
         fields["Status"] = "⬜ Not started"
-        p2_2 = next(row for row in s3["items"] if row["item_id"] == "P2.2")
-        p2_2["item_id"], p2_2["status"] = "P2.1", "⬜ Not started"
-        return s1, s2, s3
+        return s1, s2, p2_1_pending_s3_fixture()
+
+    def test_live_harness_projection_tracks_p2_1_lifecycle(self):
+        s1, _, s3 = compiler.observe_sources(ROOT, PLAN, "P2.1")
+        fields = s1["plans"][PLAN.name]["phases"]["P2"]["items"]["P2.1"]["fields"]
+        runnable = [row for row in s3["items"] if row["item_id"] == "P2.1"]
+        excluded = [row for row in s3["excluded_terminal"] if row["item_id"] == "P2.1"]
+        terminal = fields["Status"] in (
+            "🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision",
+        )
+        if terminal:
+            self.assertEqual([], runnable)
+            self.assertEqual(["ITEM-TERMINAL"], [row["refusal"] for row in excluded])
+        else:
+            self.assertEqual(1, len(runnable))
+            self.assertEqual([], excluded)
 
     def test_live_manual_projection_is_deterministic(self):
         sources = self._sources()

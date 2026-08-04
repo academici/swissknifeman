@@ -96,4 +96,3 @@ Semantic ownership is unique: P1.6 owns schemas and D74 smoke authority; P2.6 ow
 instances; P3.4 owns provider lifecycle/activity; P4.6 owns effective-hook repair evidence; P5.1
 owns business authority/instances; P5.2–P5.4 only consume them. No P3 carrier is a business grant,
 and no doctor/syntax result is hook integrity.
-

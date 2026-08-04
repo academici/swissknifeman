@@ -27,4 +27,3 @@ Protected history and anti-scope:
 - Do not change hook state during design.
 - Do not mutate package/root/fleet/Brain/docs/generated/release state or unrelated dirty worktree
   content.
-

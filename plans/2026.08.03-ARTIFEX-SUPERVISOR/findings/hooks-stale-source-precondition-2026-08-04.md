@@ -44,4 +44,3 @@ P4.4 cannot start directly after P4.3 while this prerequisite is known non-green
 plan item must own one exact repair, one exact recheck and a minimized evidence carrier before
 P4.4 consumes effective-hook GREEN. Syntax checks, doctor output or exit 0 with `warning` are not
 substitutes.
-

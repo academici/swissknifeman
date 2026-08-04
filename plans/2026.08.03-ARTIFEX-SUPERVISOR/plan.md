@@ -97,7 +97,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 |:--|:--|:--|:--|
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
-| P2 | Build the plan-local deterministic prototype | 5/6 | 🟡 In progress |
+| P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters and fresh worker lifecycle | 3/4 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and decide economics | 0/4 | ⬜ Not started |
@@ -191,6 +191,7 @@ HARNESS-AGNOSTIC: живой Harness получил декларативную e
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-04 | plan-run/gpt-5.6-terra/high | P2.6 закрыт: two indexed no-write dispatch admissions и provider-free dispatch seam материализованы без provider activity — детали см. phases/P2.md P2.6 Completion Notes. |
 | 2026-08-04 | plan-close/gpt-5.6-terra/low | Фаза P1 закрыта: 6/6 контрактных items сверены по commits и повторно зелёному six-contract validation fan-in; P2.6 передан как последовательный manual producer. |
 | 2026-08-04 | plan-run/gpt-5.6-sol/high | 2026.08.03-ARTIFEX-SUPERVISOR P1.6 закрыт: additive dispatch-admission contract и provider-specific no-write smoke authority запечатаны — детали см. phases/P1.md P1.6 Completion Notes. |
 | 2026-08-04 | plan-design/frontier/high (selector not externally verified) | 2026.08.03-ARTIFEX-SUPERVISOR P3.4 successor-contract design: owner choice D74 added P1.6/P2.6, reopened P1/P2 forward-only and returned P3.4 to executable specification pending those producers. |

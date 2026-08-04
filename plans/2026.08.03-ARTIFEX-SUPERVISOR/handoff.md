@@ -1,42 +1,40 @@
-# HANDOFF — 2026-08-04 — after P1
+# HANDOFF — 2026-08-04 — after P2.6
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** `/task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P2`
 
 | Параметр | Значение |
 |:--|:--|
 | Model | implementation |
-| Thinking | high — materialize bounded admissions |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Исполнить P2.6: materialize two no-write admissions and provider-free dispatch seam. |
-| Команда | — |
+| Thinking | low — verify phase closure evidence |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть P2 после проверки P2.6 commit, plan bookkeeping и aggregate validation. |
+| Команда | `/task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P2` |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="low" -a never -s danger-full-access
 
-Исполни 2026.08.03-ARTIFEX-SUPERVISOR P2.6 строго по committed `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md`, `phases/P2.md`, `roadmap.md` и `handoff.md`. До мутаций прочитай все Required Reads P2.6 и подтверди terminal P1.6 six-contract inputs. Соблюдай маршрут implementation/high, меняй только Files P2.6, materialize только two provider-specific no-write manifest→grant→replay→admission instances и provider-free dispatch seam; не запускай provider и не исполняй P3.4. Заверши штатное validation/self-close с двумя commit boundaries.
+/task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P2
 ```
 
-**Done:** P1 closed `🟢 Done`: commits `a784cad7`, `e6331a3d`, `8a1f1757`, `698e5d7d`,
-`26b71cac` and `140a9b53` freeze the six-contract set. Current validators are green: the six
-contract validators plus aggregate report `6 contracts; 19 logical enums; acyclic; hashes resolved`.
+**Done:** P2.6 item commit `6c2c2ef3` materialized the exact two D74 provider-specific no-write
+child-task admissions/indexes, admitted-authority projection and provider-free `dispatch --admission`.
+The builder, admission validator, six-contract aggregate, full supervisor tests and P2 aggregate
+validator passed; provider activity was not launched.
 
-**Remaining:** Execute P2.6 and close P2. P3.4 may start only after both producer phases are
-terminal and may consume only P2.6's provider-specific admission index. Later order remains P4.1
-→ P4.2 → P4.3 → P4.6 → P4.4 → P4.5, then P5 and P6.
+**Remaining:** Close P2. Only after both P1/P2 phase closures may P3.4 execute its bounded provider
+activity and consume the two indexed admissions. Later order remains P4.1 → P4.2 → P4.3 → P4.6 →
+P4.4 → P4.5, then P5 and P6.
 
-**Sources of truth:** `plan.md` D74–D79, §3 Routing and §4 board · `phases/P1.md` Phase Handoff
-and P1.6 Completion Notes · `phases/P2.md` P2.6 · `root/contracts/dispatch-admission-v1.md` ·
-`artifacts/P1/{p3-smoke-task-set-v1,p3-smoke-dispatch-grants-v1,dispatch-admission-cases-v1}.json`
-· `artifacts/P1/validate-dispatch-admission.py` · `artifacts/P1/contract-manifest-v1.json`.
+**Sources of truth:** `plan.md` D74–D79, §3 Routing and §4 board · `phases/P2.md` P2.6 Completion
+Notes · `root/contracts/dispatch-admission-v1.md` · `artifacts/P1/contract-manifest-v1.json` ·
+`artifacts/P2/p3-smoke-admission-index-v1.json` · `artifacts/P2/validate-prototype.py`.
 
 **Open risks:** Effective Codex hooks still report `stale-source`; P4.6 owns repair/recheck before
-P4.4. P1 freezes authority forms only: P2.6 concrete admissions, provider activity, recovery,
-business owner grants, pilots, and product-home evidence remain unimplemented and must not be
-presented as GREEN.
+P4.4. P2.6 is provider-free evidence only: provider activity, recovery, business owner grants,
+pilots and product-home evidence remain unimplemented and must not be presented as GREEN.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: hook repair, runtime admissions, provider smoke, recovery, owner business grant,
-  pilots and product-home evidence remain in their assigned items;
+- deferred: P3.4 provider activity, hook repair, recovery, business owner grant, pilots and product-home evidence remain in assigned items;
 - open_questions: —

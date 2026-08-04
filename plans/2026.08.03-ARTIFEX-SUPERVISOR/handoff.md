@@ -1,47 +1,48 @@
-# HANDOFF — 2026-08-04 — after P1
+# HANDOFF — 2026-08-04 — after P2.1
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P2.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
-| Thinking | high — compiler integration against frozen contracts |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Реализовать process-bound P2.1 slice compiler и его adversarial tests |
-| Команда | — |
+| Model | frontier |
+| Thinking | high — frozen contract/interface reconciliation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить процессные границы P2.1 без Markdown-парсера или второго status carrier. |
+| Команда | `task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P2.1` |
 
-**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P1 closed `🟢 Done`: five frozen provider-neutral
-contracts, independent case banks and validators. Final repeat validation is green, including
-the aggregate contract-set check: 5 contracts, 16 logical enums, resolved hashes and acyclic
-dependencies.
+**Done:** 2026.08.03-ARTIFEX-SUPERVISOR P2.1 is `🔴 Blocked` before candidate-artifact writes.
+The terminal P0/P1 validator fan-in and Task Contract pre-mutation gate are green, but the
+required process-bound source projections cannot materialize a conforming allow manifest.
 
-**Remaining:** P2.1–P6.4 sequential manual items. P2.1 is `implementation/high`; do not use
-`plan-exec`, batch, or workflow.
+**Remaining:** P2.1 needs a D#-backed design repair before P2.2–P6.4. Do not start successor
+items while P2.1 remains blocked.
 
-**Sources of truth:** `phases/P1.md` Phase Handoff; `root/contracts/*.md`;
-`artifacts/P1/contract-manifest-v1.json`; `artifacts/P1/validate-contract-set.py`;
-commits `a784cad7`, `e6331a3d`, `8a1f1757`, `698e5d7d`, `26b71cac`.
+**Sources of truth:** `phases/P2.md` P2.1 escalation; `root/contracts/slice-manifest-v1.md`;
+`artifacts/P1/slice-manifest-cases-v1.json`; `packages/harness/lib/harness/run/plan_reader.py`;
+`packages/task/lib/task/task_contract.py`; live `harness run ... P2 --dry-run --json` output.
 
-**Open risks:** P1.1 route evidence is self-attested because `codex doctor --json` does not
-expose the live session route. P1.2’s post-commit release-discipline timing deviation is recorded
-forward. Effective Codex hooks remain `status: warning` for
-`harness.codex.lifecycle.hooks/.handler stale-source → update`; repair is deferred to the
-non-waivable P4.4 integrity gate. The broad worktree contains unrelated dirty changes; preserve
-them.
+**Open risks:** (1) `slice-manifest-v1` requires non-empty ordered `scope.files`, but
+`task.task_contract build` exports neither files nor a structured validation list; copying or
+re-parsing them would violate P2.1. (2) the handoff's legacy `ЗАПУСК ВРУЧНУЮ` form causes Harness
+to return `NEXT-FORM-UNSUPPORTED`, so P2.1 cannot cross-check live item route/Exec. (3) source
+versions are absent from the Harness dry-run envelope. The existing Codex hook `stale-source`
+warning remains deferred to P4.4.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none;
-- deferred: hook repair before P4.4; P2 runtime, P3 provider adapters, P4 assurance, P5 pilots/economics, P6 product-home decision;
-- open_questions: none for P2.1.
+- workarounds: none — a fixture-only compiler would not satisfy the required live-process boundary;
+- deferred: plan-design must decide the owner and versioned public projections, then update frozen
+  contracts only through their declared D#/SemVer path;
+- open_questions: whether Task Contract gains an additive scope carrier, Harness gains a bounded
+  source projection, or P2.1's frozen consumer contract is revised.
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c model_reasoning_effort="high" -a never -s danger-full-access
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access
 
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P2.1
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P2.1
 
-РЕЖИМ: отдельный manual implementation/high producer; P2.2 не исполнять
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, handoff.md, phases/P2.md, terminal P0/P1 contracts and validators; AGENTS.md root→packages/task/harness as applicable
-СКОУП: выполнить ровно P2.1 Files/Validation; сохранить process-bound/no-provider границы и передать следующий cold handoff
-НЕ ТРОГАТЬ: P2.2–P6.4 statuses/deliverables; P1 frozen contracts; package/root CLI promotion; provider/hook/fleet/Brain/release state; unrelated dirty worktree
+РЕЖИМ: design remediation for blocked P2.1; do not implement P2.1/P2.2
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P2.md P2.1; handoff.md; frozen slice-manifest-v1 contract/cases; Task Contract and Harness public process boundaries
+СКОУП: add a D# and reconcile the minimal process-bound, versioned source projection needed for route/Exec and ordered scope/files/validation; preserve no-Markdown-parser/no-second-status-carrier and frozen-contract governance
+НЕ ТРОГАТЬ: P2.2–P6.4; candidate implementation; package/root CLI promotion; unrelated dirty worktree; hook repair
 ```

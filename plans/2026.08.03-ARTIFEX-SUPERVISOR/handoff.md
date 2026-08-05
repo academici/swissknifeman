@@ -4,7 +4,7 @@
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | frontier (target route) |
 | Effort | high |
 | Capabilities | frozen-contract reconciliation · provider-boundary design · plan evidence |
 | Context | NEW SESSION — шаг-не-item |
@@ -22,6 +22,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 **Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json` · `packages/artifex/lib/artifex/security.py` · `packages/artifex/lib/artifex/dispatch.py` · `packages/artifex/lib/artifex/providers/codex.py`.
 
 **Open risks:** D105 is bounded and non-reusable, but its `business-trial` schema is not consumable by terminal G2. Altering Artifex/P4 to make it consumable would violate P5.2's frozen-candidate constraint; bypassing native Codex capability refusal would violate the provider boundary.
+`codex doctor --json` reports a loaded `gpt-5.6-terra` configuration but does not attest the active model/effort; the prior `gpt-5.6-sol/high` journal label is append-forward-corrected as non-verifiable. `maind health --cwd` is green for `project:swissknifeman`.
 
 **Workarounds/Deferred/Open questions:**
 

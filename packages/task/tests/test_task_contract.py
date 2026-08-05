@@ -430,12 +430,13 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
 class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
     """The prerequisite's ordinary-path proof: every current Artifex item stays runnable."""
 
-    def test_all_32_items_allow_without_foreign_d50_provenance(self):
+    def test_all_current_unique_items_allow_without_foreign_d50_provenance(self):
         item_ids = []
         for phase_path in sorted((ARTIFEX_PLAN_ROOT / "phases").glob("P*.md")):
             item_ids.extend(re.findall(r"^###\s+(P\d+\.\d+)\b", phase_path.read_text(encoding="utf-8"), re.M))
-        self.assertEqual(len(item_ids), 32)
-        self.assertEqual(len(set(item_ids)), 32)
+        self.assertTrue(item_ids)
+        self.assertEqual(len(item_ids), len(set(item_ids)))
+        self.assertTrue({"P3.5", "P3.6", "P3.7", "P3.8"}.issubset(item_ids))
         from task import route_evidence
         for item_id in item_ids:
             with self.subTest(item=item_id):

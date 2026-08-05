@@ -120,6 +120,11 @@ DECISION_KEYS = {
     "rejected_alternatives",
     "intent_sequence",
     "side_effect_authorized",
+    "blast_radius",
+    "rollback",
+    "affected_slices",
+    "no_decision_consequence",
+    "blocking_dependencies",
 }
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -246,6 +251,11 @@ def decision(value, mandate, decision_id, reason, selected=None, rejected=None):
         "rejected_alternatives": list(rejected or []),
         "intent_sequence": value.get("intent_sequence"),
         "side_effect_authorized": allowed,
+        "blast_radius": value.get("blast_radius", f"operation:{value.get('operation', 'unknown')}"),
+        "rollback": value.get("rollback", "owner-directed" if not allowed else "not-required"),
+        "affected_slices": list(value.get("affected_slices", [])),
+        "no_decision_consequence": value.get("no_decision_consequence", "side-effect-refused" if not allowed else "none"),
+        "blocking_dependencies": list(value.get("blocking_dependencies", [])),
     }
 
 
@@ -386,6 +396,15 @@ def validate_decision(record):
         raise ValueError("decision side-effect flag differs from allowed")
     if record["resolved_class"] == "OWNER" and record["side_effect_authorized"]:
         raise ValueError("OWNER decision authorizes a side effect")
+    if (not isinstance(record["blast_radius"], str) or not record["blast_radius"]
+            or not isinstance(record["rollback"], str) or not record["rollback"]
+            or not isinstance(record["affected_slices"], list)
+            or any(not isinstance(item, str) or not item for item in record["affected_slices"])
+            or not isinstance(record["no_decision_consequence"], str)
+            or not record["no_decision_consequence"]
+            or not isinstance(record["blocking_dependencies"], list)
+            or any(not isinstance(item, str) or not item for item in record["blocking_dependencies"])):
+        raise ValueError("decision attention-packet fields are invalid")
 
 
 def compare(case_id, record, expected):

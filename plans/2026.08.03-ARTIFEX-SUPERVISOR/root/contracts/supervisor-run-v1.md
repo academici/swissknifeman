@@ -86,6 +86,7 @@ reconcile_postimage
 reconcile_partial
 reconcile_third_state
 source_drift
+authority_attention
 journal_invalid
 provider_unavailable
 budget_exhausted
@@ -146,6 +147,10 @@ ACCEPTED --finish_run--> COMPLETED
 restoration is verified; otherwise the evidence event is `reconcile_third_state` and
 the next state is `INCIDENT`. `owner_decision_continue` is a recorded authority input,
 not an inferred choice; P1.3 owns whether such a decision is legally available.
+An authority refusal before an intent is recorded as `authority_attention` from
+`READY` to `OWNER_ATTENTION`, carrying its closed authority packet. A later owner
+decision carries the exact packet `decision_id` and marks that finding resolved or
+withdrawn; a replay must reject an unknown or duplicate resolution.
 
 ## Canonical journal record and append protocol
 

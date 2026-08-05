@@ -50,7 +50,12 @@
     "prior_acceptance_hash": "accept-v1",
     "retry_count": 1,
     "alternatives": [],
-    "intent_sequence": 1
+    "intent_sequence": 1,
+    "blast_radius": "operation:compile_slice",
+    "rollback": "not-required",
+    "affected_slices": [],
+    "no_decision_consequence": "none",
+    "blocking_dependencies": []
   },
   "operation_class_cases": [
     {"id": "OP-001", "operation": "compile_slice", "requested_class": "AUTO", "expected": {"resolved_class": "AUTO", "allowed": true, "reason_code": "AUTO_LEGAL", "attention": "none"}},

@@ -31,6 +31,7 @@
       "reconcile_partial",
       "reconcile_third_state",
       "source_drift",
+      "authority_attention",
       "journal_invalid",
       "provider_unavailable",
       "budget_exhausted",
@@ -80,6 +81,7 @@
       "on": {
         "append_intent": "INTENT_DURABLE",
         "source_drift": "OWNER_ATTENTION",
+        "authority_attention": "OWNER_ATTENTION",
         "budget_exhausted": "BUDGET_EXHAUSTED",
         "owner_decision_abort": "ABORTED",
         "finish_run": "COMPLETED"

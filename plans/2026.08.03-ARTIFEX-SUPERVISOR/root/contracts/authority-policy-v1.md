@@ -261,6 +261,11 @@ selected_alternative
 rejected_alternatives
 intent_sequence
 side_effect_authorized
+blast_radius
+rollback
+affected_slices
+no_decision_consequence
+blocking_dependencies
 ```
 
 `side_effect_authorized` equals `allowed` and is always false for OWNER. Hashes are
@@ -276,7 +281,10 @@ supplies explicit-safe values for predicates absent from the legacy bank. It doe
 change any P0 input or expected outcome. The validator loads the adjacent P0 mandate,
 re-evaluates every P0 case, and compares the independent expected subset.
 
-P1.4 carries the decision and minimized attention fields; P2.3 implements the same
+`blast_radius`, `rollback`, `affected_slices`, `no_decision_consequence`, and
+`blocking_dependencies` are required
+bounded packet fields. They are populated from the admitted slice context; an absent value uses
+the closed safe default and never authorizes a side effect. P1.4 carries the decision and minimized attention fields; P2.3 implements the same
 ordered evaluator; P2.4 schedules only allowed operations; P2.5 exposes decisions;
 P3 adapters cannot reinterpret them; P4 proves authority and recovery failures; P5
 counts owner attention; P6 may promote without weakening this contract. Executable

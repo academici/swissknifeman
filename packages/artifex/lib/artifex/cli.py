@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import activity, authority, compiler, dispatch, scheduler, security, store, worktree
+from . import activity, authority, compiler, dispatch, scheduler, security, store, telemetry, worktree
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -226,6 +226,13 @@ def _worktree_inventory(args: argparse.Namespace, repo: Path, _plan: Path, _runs
     return {"status": "ok", "worktrees": manager.inventory()}
 
 
+def _telemetry(args: argparse.Namespace, _repo: Path, _plan: Path, runs: Path) -> dict:
+    """Render one bounded owner packet from a verified journal replay."""
+    rules, states, events = _rules(_plan)
+    run = _open(runs, args.run_id, rules, states, events)
+    return telemetry.project(run.replay()["records"])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="artifex")
     parser.add_argument("--repo-root", required=True)
@@ -233,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runs-root", required=True)
     sub = parser.add_subparsers(dest="command", required=True)
     start = sub.add_parser("start"); start.add_argument("--run-id", required=True); start.add_argument("--phase", required=True); start.add_argument("--item", required=True); start.add_argument("--mandate", required=True)
-    for name in ("status", "stop", "report"):
+    for name in ("status", "stop", "report", "telemetry"):
         sub.add_parser(name).add_argument("--run-id", required=True)
     for name in ("resume", "reconcile"):
         command = sub.add_parser(name); command.add_argument("--run-id", required=True); command.add_argument("--observed", choices=("preimage", "postimage", "partial", "third"), required=name == "reconcile")
@@ -249,7 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         repo, plan, runs = _roots(args)
-        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "dispatch": _dispatch,
+        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "telemetry": _telemetry, "dispatch": _dispatch,
                   "worktree-inventory": _worktree_inventory}[args.command](args, repo, plan, runs)
         code = EXIT_OK
     except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, security.SecurityRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:

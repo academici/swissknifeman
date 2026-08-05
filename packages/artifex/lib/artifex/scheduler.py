@@ -121,6 +121,11 @@ class Scheduler:
         if not isinstance(value, dict):
             raise SchedulerRefusal("SLICE_INPUT_MISSING", "authority_input")
         value["intent_sequence"] = slice_value["attempt"]
+        value.setdefault("blast_radius", f"slice:{slice_value['slice_id']}")
+        value.setdefault("rollback", "reconcile-or-owner")
+        value.setdefault("affected_slices", [slice_value["slice_id"]])
+        value.setdefault("no_decision_consequence", "dependent-writes-blocked")
+        value.setdefault("blocking_dependencies", list(slice_value.get("blocking_dependencies", [])))
         return value
 
     def _decision(self, slice_value: dict) -> dict:
@@ -177,7 +182,9 @@ class Scheduler:
                 record = self._trip_budget(slice_value, decision)
                 return {"status": "budget_exhausted", "record": record, "decision": decision}
             if not decision["allowed"]:
-                return {"status": "owner_attention", "decision": decision}
+                record = self._append("authority_attention", slice_value,
+                                      evidence={"authority_decision": decision})
+                return {"status": "owner_attention", "record": record, "decision": decision}
             self._append("append_intent", slice_value, evidence={"authority_decision": decision})
             observation = self.activity(copy.deepcopy(slice_value))
             if not isinstance(observation, dict):
@@ -218,5 +225,19 @@ class Scheduler:
         if decision not in {"continue", "abort"}:
             raise SchedulerRefusal("OWNER_DECISION_REQUIRED")
         with self.store.acquire_writer():
-            record = self._append(f"owner_decision_{decision}", slice_value, evidence={"owner": decision})
+            replay = self.store.replay()
+            matching = [row["evidence"]["authority_decision"]["decision_id"] for row in replay["records"]
+                        if isinstance(row.get("evidence"), dict)
+                        and isinstance(row["evidence"].get("authority_decision"), dict)
+                        and row["evidence"]["authority_decision"].get("resolved_class") == "OWNER"
+                        and row.get("slice_id") == slice_value.get("slice_id")]
+            evidence = {"owner": decision}
+            if len(matching) == 1:
+                evidence["attention_resolution"] = {
+                    "decision_id": matching[0],
+                    "outcome": "resolved" if decision == "continue" else "withdrawn",
+                }
+            elif len(matching) > 1:
+                raise SchedulerRefusal("OWNER_DECISION_AMBIGUOUS")
+            record = self._append(f"owner_decision_{decision}", slice_value, evidence=evidence)
             return {"status": record["state_after"], "record": record}

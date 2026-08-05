@@ -118,6 +118,21 @@ class AuthorityTests(unittest.TestCase):
         self.assertFalse(immediate["side_effect_authorized"])
         self.assertEqual(set(authority.DECISION_KEYS), set(immediate))
 
+    def test_attention_packet_fields_are_closed_and_slice_bound(self):
+        record = self.assert_case("packet", [
+            {"path": ["requested_class"], "value": "OWNER"},
+            {"path": ["blast_radius"], "value": "slice:alpha"},
+            {"path": ["rollback"], "value": "rollback:alpha"},
+            {"path": ["affected_slices"], "value": ["alpha"]},
+            {"path": ["no_decision_consequence"], "value": "block:alpha"},
+            {"path": ["blocking_dependencies"], "value": ["prepare"]},
+        ], "OWNER_REQUIRED_BY_MANDATE")
+        self.assertEqual("slice:alpha", record["blast_radius"])
+        self.assertEqual("rollback:alpha", record["rollback"])
+        self.assertEqual(["alpha"], record["affected_slices"])
+        self.assertEqual("block:alpha", record["no_decision_consequence"])
+        self.assertEqual(["prepare"], record["blocking_dependencies"])
+
 
 if __name__ == "__main__":
     unittest.main()

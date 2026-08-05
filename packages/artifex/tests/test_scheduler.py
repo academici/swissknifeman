@@ -145,7 +145,11 @@ class SchedulerTests(unittest.TestCase):
         result = self.make().schedule([drifting])
         self.assertEqual("owner_attention", result["status"])
         self.assertEqual("SOURCE_DRIFT", result["decision"]["reason_code"])
-        self.assertEqual(["freeze_run"], [row["event"] for row in self.store.replay()["records"]])
+        self.assertEqual(["freeze_run", "authority_attention"], [row["event"] for row in self.store.replay()["records"]])
+        self.assertEqual("OWNER_ATTENTION", self.store.replay()["state"])
+        resolved = self.make().owner_decision(drifting, "continue")
+        self.assertEqual("READY", resolved["status"])
+        self.assertEqual(result["decision"]["decision_id"], resolved["record"]["evidence"]["attention_resolution"]["decision_id"])
 
         for malformed in ("timeout", "quota", "schema"):
             self.temp.cleanup()

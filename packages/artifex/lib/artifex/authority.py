@@ -72,6 +72,7 @@ DECISION_KEYS = frozenset({
     "decision_id", "operation", "requested_class", "resolved_class", "allowed",
     "reason_code", "attention", "controlling_sources", "source_set_hash", "mandate_hash",
     "selected_alternative", "rejected_alternatives", "intent_sequence", "side_effect_authorized",
+    "blast_radius", "rollback", "affected_slices", "no_decision_consequence", "blocking_dependencies",
 })
 _DECLARED_SET_RE = re.compile(r"<!-- declared-set: (?P<name>[a-z_]+) -->\s*```text\n(?P<body>.*?)\n```", re.DOTALL)
 
@@ -260,6 +261,12 @@ def _decision(value: dict, frozen: FrozenAuthority, decision_id: str, reason: st
         "rejected_alternatives": list(rejected or []),
         "intent_sequence": value.get("intent_sequence"),
         "side_effect_authorized": allowed,
+        "blast_radius": value.get("blast_radius", f"operation:{value.get('operation', 'unknown')}"),
+        "rollback": value.get("rollback", "owner-directed" if not allowed else "not-required"),
+        "affected_slices": list(value.get("affected_slices", [])),
+        "no_decision_consequence": value.get(
+            "no_decision_consequence", "side-effect-refused" if not allowed else "none"),
+        "blocking_dependencies": list(value.get("blocking_dependencies", [])),
     }
     validate_record(record)
     return record
@@ -400,6 +407,15 @@ def validate_record(record: dict) -> None:
         raise AuthorityRefusal("AUTHORITY_DECISION_INVALID: owner side effect")
     if not isinstance(record["intent_sequence"], int) or record["intent_sequence"] < 1:
         raise AuthorityRefusal("AUTHORITY_DECISION_INVALID: intent sequence")
+    if (not isinstance(record["blast_radius"], str) or not record["blast_radius"]
+            or not isinstance(record["rollback"], str) or not record["rollback"]
+            or not isinstance(record["affected_slices"], list)
+            or any(not isinstance(item, str) or not item for item in record["affected_slices"])
+            or not isinstance(record["no_decision_consequence"], str)
+            or not record["no_decision_consequence"]
+            or not isinstance(record["blocking_dependencies"], list)
+            or any(not isinstance(item, str) or not item for item in record["blocking_dependencies"])):
+        raise AuthorityRefusal("AUTHORITY_DECISION_INVALID: attention packet")
     if not all(isinstance(record[key], str) and re.fullmatch(r"[0-9a-f]{64}", record[key])
                for key in ("source_set_hash", "mandate_hash")):
         raise AuthorityRefusal("AUTHORITY_DECISION_INVALID: hash")

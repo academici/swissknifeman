@@ -106,18 +106,25 @@ const implPrompt = s => [
   COMMON,
   s.brief,
   `Реализуй срез вместе с тестами. Прогони: ${s.tests} — доведи до зелёного в рамках среза. Тесты проверяют ПОВЕДЕНИЕ из ТЗ; подгонка assertion'ов под фактический выход кода запрещена.`,
-  `Коммит: ${s.commit} (только файлы среза, git status перед add).`,
+  `Не коммить до завершения tests-to-green, независимого review и межсрезовых гейтов.`,
 ].join('\n\n')
 
 const greenPrompt = (s, prev, iter) => [
   COMMON,
   `Тесты среза «${s.key}» не зелёные (итерация ${iter}/${MAX_GREEN_ITERATIONS}). Прогони ${s.tests}, разбери падения, почини КОД (тесты правь только если тест противоречит ТЗ — тогда фиксируй это в issues).`,
   `Отчёт предыдущей попытки: ${prev.validation}`,
-  `Дофиксируй коммитом fix(scope): тесты среза ${s.key} зелёные.`,
+  `Не коммить до независимого review и межсрезовых гейтов.`,
+].join('\n\n')
+
+const commitPrompt = s => [
+  COMMON,
+  `Все проверки, review и гейты среза «${s.key}» прошли. Перед commit выполни git status --short и git diff --name-only.`,
+  `Стадж только файлы, изменённые тобой в этом срезе; никогда не используй git add -A/-u. Несвязанные или чужие dirty-байты не трогай и укажи в issues.`,
+  `Создай один commit: ${s.commit}.`,
 ].join('\n\n')
 
 const reviewPrompt = s => [
-  `Read-only ревью среза «${s.key}» свежим контекстом (ты НЕ автор). Репозиторий: ${REPO}; ТЗ: ${SPEC} (раздел среза). Дифф среза: git log/show по коммитам с "${s.commit.slice(0, 30)}".`,
+  `Read-only ревью среза «${s.key}» свежим контекстом (ты НЕ автор). Репозиторий: ${REPO}; ТЗ: ${SPEC} (раздел среза). До commit проверь текущий scoped diff через git status --short и git diff; несвязанные/чужие dirty-байты не включай в вердикт.`,
   `Ищи: несоответствие ТЗ, correctness-дефекты с конкретным failure_scenario, подгонку тестов под код. Severity Blocker/Major/Minor/Nit. Verdict FIX_REQUIRED при любом Blocker/Major.`,
   `НИЧЕГО не правь и не коммить. Финальный текст = данные по схеме.`,
 ].join('\n\n')
@@ -138,20 +145,28 @@ async function safeAgent(prompt, opts) {
 const done = []
 for (const s of SLICES) {
   let res = await safeAgent(implPrompt(s), {
-    label: `impl:${s.key}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
+    label: `impl:${s.key}:${s.asOf || ''}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
   })
-  if (!res) { log(`СТОП: impl:${s.key} без результата`); break }
+  if (!res) {
+    log(`СТОП: impl:${s.key} без результата`)
+    done.push({ key: s.key, impl: null, review: null, stopped: 'impl-missing' })
+    break
+  }
 
   // tests-to-green loop — строго ограничен max-iteration (правило README).
   let iter = 0
   while (!res.tests_green && iter < MAX_GREEN_ITERATIONS) {
     iter++
     const fix = await safeAgent(greenPrompt(s, res, iter), {
-      label: `green:${s.key}#${iter}`, phase: 'Green', ...GREEN_MODEL, schema: REPORT,
+      label: `green:${s.key}:${s.asOf || ''}#${iter}`, phase: 'Green', ...GREEN_MODEL, schema: REPORT,
     })
-    if (!fix) break
+    if (!fix) {
+      done.push({ key: s.key, impl: res, review: null, stopped: 'green-missing' })
+      break
+    }
     res = { ...fix, commits: [...(res.commits || []), ...(fix.commits || [])] }
   }
+  if (done.find(d => d.key === s.key && d.stopped === 'green-missing')) break
   if (!res.tests_green) {
     log(`СТОП: срез ${s.key} не дошёл до зелёного за ${MAX_GREEN_ITERATIONS} итераций — эскалация в main loop`)
     done.push({ key: s.key, impl: res, review: null, stopped: 'tests-not-green' })
@@ -162,8 +177,13 @@ for (const s of SLICES) {
   let review = null
   if (riskOf(s) !== 'low') {
     review = await safeAgent(reviewPrompt(s), {
-      label: `review:${s.key}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
+      label: `review:${s.key}:${s.asOf || ''}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
     })
+    if (!review) {
+      log(`СТОП: review:${s.key} без результата`)
+      done.push({ key: s.key, impl: res, review: null, stopped: 'review-missing' })
+      break
+    }
     if (review && review.verdict === 'FIX_REQUIRED') {
       log(`СТОП: review среза ${s.key} = FIX_REQUIRED (${review.findings.length} наход.) — фиксы в main loop, review-фиксы отдельными коммитами`)
       done.push({ key: s.key, impl: res, review, stopped: 'review-fix-required' })
@@ -173,13 +193,29 @@ for (const s of SLICES) {
 
   // Гейты между срезами.
   const gate = GATES.length
-    ? await safeAgent(gatePrompt(s), { label: `gate:${s.key}`, phase: 'Impl', model: 'sonnet', effort: 'low', schema: REPORT })
+    ? await safeAgent(gatePrompt(s), { label: `gate:${s.key}:${s.asOf || ''}`, phase: 'Impl', model: 'sonnet', effort: 'low', schema: REPORT })
     : null
+  if (GATES.length && !gate) {
+    log(`СТОП: gate:${s.key} без результата`)
+    done.push({ key: s.key, impl: res, review, stopped: 'gate-missing' })
+    break
+  }
   if (gate && gate.issues && gate.issues.length) {
     log(`СТОП: гейт после ${s.key} красный: ${gate.issues.join('; ')}`)
     done.push({ key: s.key, impl: res, review, stopped: 'gate-red', gate })
     break
   }
+
+  const committed = await safeAgent(commitPrompt(s), {
+    label: `commit:${s.key}:${s.asOf || ''}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
+  })
+  if (!committed) {
+    log(`СТОП: commit:${s.key} без результата`)
+    done.push({ key: s.key, impl: res, review, stopped: 'commit-missing' })
+    break
+  }
+  res = { ...res, commits: [...(res.commits || []), ...(committed.commits || [])],
+          issues: [...(res.issues || []), ...(committed.issues || [])] }
 
   done.push({ key: s.key, impl: res, review, stopped: null })
 }

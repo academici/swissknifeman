@@ -110,7 +110,7 @@ handoff. План не считается успешно завершённым,
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
-| P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟡 In progress |
+| P4 | Prove recovery, isolation, security, and observability | 3/8 | 🟡 In progress |
 | P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
@@ -244,6 +244,7 @@ handoff. План не считается успешно завершённым,
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.6 закрыт: one Harness-generated Codex hook repair/recheck is green with minimized evidence and an independent validator — детали см. phases/P4.md P4.6 Completion Notes. |
 | 2026-08-05 | plan-design/gpt-5.6-terra/high | P4.4 direct owner correction: D101 aligns its copied hook-status literal with D100; runtime scope and all security predicates remain unchanged. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.5 D102 owner correction: versioned attention-packet fields are authorized as a narrow P1/P4 forward change in the current session; P5 remains gated on G2. |
+| 2026-08-05 | plan-run/gpt-5/high | P4.7 закрыт: `138b2424` restores deterministic committed-tree Harness validation and an independent P4.1–P4.6 provenance reconciliation — детали см. phases/P4.md P4.7 Completion Notes. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.5 закрыт: `23f71d34` adds versioned OWNER packets, durable attention/resolution telemetry and a closed G2 package snapshot; P5 remains gated pending the separate P4 phase close. |
 | 2026-08-05 | plan-close/implementation/low | Фаза P4 закрыта: 6/6 items terminal, G2 remains immutable, and the required cold P4 audit is the only next plan step before P5. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.4 закрыт: indexed-admission security boundary, redaction checks and independent evidence validator are green — детали см. phases/P4.md P4.4 Completion Notes. |

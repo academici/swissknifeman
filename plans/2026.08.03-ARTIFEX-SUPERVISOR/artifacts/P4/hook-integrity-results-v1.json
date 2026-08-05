@@ -1,0 +1,53 @@
+{
+  "schema_version": "p4-hook-integrity-v1",
+  "command": {
+    "argv": [
+      "packages/harness/bin/harness",
+      "hooks"
+    ],
+    "provider": "codex",
+    "target": "/home/vostrikov/projects/packages/swissknifeman",
+    "flags": [
+      "observer",
+      "trusted"
+    ]
+  },
+  "pre_repair": {
+    "exit_code": 0,
+    "plan_sha256": "sha256:461518864cde43c32e98f29607ca285f5b699b9462afdfab5d1ff1f18501b831",
+    "status": "warning",
+    "actions": [
+      {
+        "id": "harness.codex.lifecycle.hooks",
+        "observation": "stale-source",
+        "action": "update",
+        "reason": "source-changed"
+      },
+      {
+        "id": "harness.codex.lifecycle.handler",
+        "observation": "stale-source",
+        "action": "update",
+        "reason": "source-changed"
+      }
+    ]
+  },
+  "repair": {
+    "invocations": 1,
+    "exit_code": 0,
+    "planned_actions": [
+      "harness.codex.lifecycle.hooks",
+      "harness.codex.lifecycle.handler"
+    ]
+  },
+  "post_repair": {
+    "exit_code": 0,
+    "plan_sha256": "sha256:b134c0fe8c143d38bd2ac4fbe818f540bdffc582cad714286e5064421cffdb59",
+    "status": "green",
+    "actions": []
+  },
+  "generated_sha256": {
+    ".codex/hooks.json": "9bc8dfdf2142ca134aca46b164d96d39a7199fc43b249c936b7a1231d5316a3e",
+    ".codex/hooks/lifecycle.py": "c2fb672891c2f65b91ff89006d4c8e45b2df7b768e8a977a095ec5623b4331d6"
+  },
+  "packages_core_diff_sha256": "38fdb7c621d24f4f66fc7ec00115adc3e4e62a679a41d5bd1cec745e040c8bef"
+}

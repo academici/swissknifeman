@@ -1,14 +1,7 @@
 {
+  "description": "Managed provider-native lifecycle hooks.",
   "hooks": {
     "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
-          }
-        ]
-      },
       {
         "hooks": [
           {

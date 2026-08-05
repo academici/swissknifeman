@@ -107,7 +107,7 @@ handoff. План не считается успешно завершённым,
 | P0 | Evidence, owner canons, and acceptance baseline | 5/5 | 🟢 Done |
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
-| P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 4/8 | 🟡 In progress |
+| P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 5/8 | 🟡 In progress |
 | P4 | Prove recovery, isolation, security, and observability | 0/6 | ⬜ Not started |
 | P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
@@ -219,6 +219,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | plan-run/gpt-5.6-terra/high | P3.7 закрыт: Task regression now discovers all unique current items and the read-only P3 closure fan-in is green — details in phases/P3.md P3.7 Completion Notes. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P3.6 закрыт: real indexed readiness observations and strict immutable-P2/current-P3 validator are committed — details in phases/P3.md P3.6 Completion Notes. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P3.5 закрыт с deviation: indexed provider activity reaches bounded worker/preflight, but item commit includes foreign `scheduler.py`; details in phases/P3.md P3.5 Completion Notes. |
 | 2026-08-05 | plan-design/frontier/high | Owner audit-loop closure: D98 cancels audit 11, caps later checkpoints at two passes/two repeats and makes P3.5 the current committed-spec execution target; item statuses and implementation remain unchanged. |

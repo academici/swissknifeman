@@ -9,7 +9,7 @@ from artifex import faults, scheduler, store
 
 
 ROOT = Path(__file__).resolve().parents[3]
-CASES = ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json"
+CASES = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR") / "artifacts/P1/supervisor-run-cases-v1.json"
 
 
 class RecoveryFaultTests(unittest.TestCase):

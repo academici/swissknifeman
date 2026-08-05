@@ -9,20 +9,20 @@ consumers; D98 закрывает design-audit loop и открывает P3.5; 
 
 ## Current execution launch — D98 audit-loop closure
 
-**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test · git-commit |
 | Context | same-session — item |
-| Суть | Разрешить foreign `scheduler.py` deviation P3.5 до P3.6; design audit не повторять |
-| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
+| Суть | Исполнить P3.6 evidence/hash remediation; design audit не повторять |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | P3.5 scope-deviation remediation; D98 still forbids audit 11 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md P3.5, roadmap.md and handoff.md. D98 forbids task:plan-audit design. Resolve the recorded foreign scheduler.py deviation before P3.6; preserve frozen carriers and unrelated dirty worktree.'` |
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P3.6 evidence/hash remediation; D98 forbids audit 11 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6. Read plan.md, phases/P3.md P3.6, roadmap.md and handoff.md. D98 forbids task:plan-audit design. Preserve P3.5 deviation and unrelated dirty worktree.'` |
 
 ## Карта исполнения
 
@@ -82,24 +82,24 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 
 ### P3 — reopened forward remediation
 
-**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test |
 | Context | same-session — item |
-| Суть | Разрешить P3.5 scope-deviation перед evidence/hash remediation |
-| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
+| Суть | Выполнить P3.6 evidence/hash remediation |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` |
 
 ```text
-$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
 
-РЕЖИМ: точечный plan-design для foreign Files deviation, НЕ design audit
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 Completion Notes/Known Deviations
-СКОУП: решить ownership/remediation `artifacts/supervisor/artifex/scheduler.py` из `b7c7c1a0` до P3.6
-НЕ ТРОГАТЬ: D98 запрет audit 11; frozen P1/P2; terminal P3.1–P3.4 history; P3.6–P3.8; P4–P6; unrelated dirty worktree
+РЕЖИМ: remediation item execution; committed-spec gate обязателен
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.6 + P3.5 Completion Notes
+СКОУП: real readiness probe и immutable-P2/current-P3 hash proof
+НЕ ТРОГАТЬ: D98 запрет audit 11; frozen P1/P2; terminal P3.1–P3.5 history; P3.7–P3.8; P4–P6; unrelated dirty worktree
 ```
 
 ## Authority Gate Contract

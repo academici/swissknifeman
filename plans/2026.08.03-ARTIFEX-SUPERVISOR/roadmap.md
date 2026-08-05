@@ -1,26 +1,26 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
 **Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.19.0 · **Статус:** P1/P2 terminal;
-P3 закрыта `🟠` (6 🟢, 2 🟠); P4 реопенена `🟡` (2 🟢, 4 🟠, 2 ⬜) по Audit F1–F7.
-D103–D104 задают последний P4 remediation pass: P4.7 repairs committed-tree Harness/provenance,
-P4.8 publishes the resolver-authorized G2 successor, then close and audit pass 2. P5 remains closed.
+P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
+историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
+детерминированными GREEN gates, без третьего audit/design pass. Следующий item — P5.1.
 
-## Current execution launch — P4.7
+## Current execution launch — P5.1
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | repository-code-edit · committed-tree-validation · provenance-reconciliation |
+| Capabilities | repository-code-edit · trial-design · owner-gate-preparation |
 | Context | same-session — item |
-| Суть | Repair committed-tree Harness validation and append-forward P4 provenance. |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7` |
+| Суть | Freeze P5 trial catalog/shadow baseline and prepare the hash-bound business owner gate. |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | P4.7 committed-tree Harness/provenance remediation | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7. Read plan.md, phases/P4.md, brief/21-p4-audit1-final-remediation.md, research/32-p4-audit1-final-remediation.md and the Audit P4 block first. Preserve historical commits/journal and unrelated dirty worktree.'` |
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | P5.1 trial/shadow freeze and owner-gate preparation | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1. Read plan.md, phases/P5.md, roadmap.md and handoff.md first. Preserve P4 history and unrelated dirty worktree; pause at the hash-bound business owner gate.'` |
 
 ## Карта исполнения
 
@@ -62,8 +62,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.6 | terminal-history | 🟠 Done with deviations | implementation/high | D79 exact scoped repair | hook repair is real; claimed full Harness gate is red on `10422237` |
 | P4.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | runtime `activity.py` enforcement lay outside Files |
 | P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
-| P4.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7` | implementation/high | — | coupled Harness generator/test repair plus exact provenance validator; cannot batch with protected P4.8 |
-| P4.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.8` | implementation/high | exact D104/Layer-0 owner grant | protected successor and final G2 fan-in; full review, then phase close |
+| P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
+| P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
 | P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | `G-OWNER-P5-BUSINESS` after request/catalog hashes | freeze trials/shadow; pause for owner hash-bound dispatch grant; produce all per-trial admissions before close |
 | P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
@@ -78,7 +78,9 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 1. P1.6/P2.6 and P1/P2 remain terminal; do not rewrite their carriers.
 2. D98 closes the ten-pass pre-exec design loop; do not run audit 11. Start P3.5 under its committed-spec gate.
 3. Execute P3.5→P3.6→P3.7→P3.8, close P3 and apply the two-pass/two-repeat ceiling to its phase audit checkpoint.
-4. Audit P4 pass 1 reopens the historical chain. Execute P4.7→P4.8, close P4, then run audit pass 2; no third automatic audit or additional design pass is authorized. Only literal GREEN unlocks P5→mandatory P6.
+4. Audit P4 pass 1 reopened the historical chain; P4.7→P4.8 and close completed. Audit pass 2
+   remains historical RED, then bounded forward remediation closed its mechanical/product gates
+   GREEN under D98/D103. No third audit/design pass is authorized; continue P5→mandatory P6.
 
 ### P3 — closed forward remediation
 

@@ -14,6 +14,11 @@
   `brief/` и его provenance; копируемый `Approval Owner`, synthetic D#, prefix-совпадения и
   произвольная owner-проза не могут вернуть `allow`.
 
+- **Harness validation снова воспроизводима на committed tree.** Provider-instruction lock
+  регенерируется штатным owner surface, run-reader тест больше не зависит от корневого архива,
+  generated provider reference проверяется полным package validate, а P4 provenance/G2 assurance
+  требуют exact Git/journal/anchor evidence и проходят встроенные tamper probes.
+
 ### Added
 
 - **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,

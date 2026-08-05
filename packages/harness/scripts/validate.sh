@@ -94,21 +94,26 @@ from harness.common import Env
 sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrity"
 scripts/test.sh || err "тесты"
 
-echo "[8/10] реестр ролей ревью"
+echo "[8/11] generated provider instructions reference"
+PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" \
+  python3 scripts/generate-provider-instructions.py --check \
+  || err "generated provider instructions reference"
+
+echo "[9/11] реестр ролей ревью"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
   || err "реестр ролей ревью (role-bindings.json)"
 
 # гейт дрейфа инструкций (2026.07.29-HARNESS-AGNOSTIC P1.5): двенадцать управляемых
 # проекций CLAUDE.md/AGENTS.md обязаны оставаться `clean`. Красный шаг = незакрытая
 # работа канона (фрагменты/каталог), а не повод сузить проверку.
-echo "[9/10] дрейф инструкций (12 проекций)"
+echo "[10/11] дрейф инструкций (12 проекций)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
   || err "дрейф инструкций (harness instructions check)"
 
 # гейт политики исполнения (2026.07.29-HARNESS-AGNOSTIC P4.3, D48): валидатор читает
 # JSON через `core.safe_load_json` — в standalone-раскладке (нет монорепо-корня с
 # core/) шаг деградирует в пропуск с предупреждением, по образцу соседних секций.
-echo "[10/10] политика исполнения (execution-policy)"
+echo "[11/11] политика исполнения (execution-policy)"
 if [[ -n "$MONOREPO_ROOT" ]]; then
   PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 -m harness.execpolicy --check \
     || err "политика исполнения (execution-policy)"

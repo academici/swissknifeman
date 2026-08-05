@@ -159,13 +159,9 @@ class QueueSamplePlanTest(unittest.TestCase):
             self.assertEqual(item["route"], {"model_class": "implementation", "effort": "medium"})
         self.assertEqual(result["next_form"]["kind"], "exec-items")
 
-    def test_live_manual_run_matches_validation_command(self):
-        """Validation (4) P4.2: ручной прогон на живом плане — очередь и причины
-        отказов печатаются без деградации и без трейсбека (не проверяем конкретные
-        вердикты живой фазы — только то, что модуль не падает и различает
-        degraded от «нечего делать»)."""
-        result = plan_reader.queue(REPO_ROOT / "plans" / "archive" / "2026.07.31-SKM-LEAN", "P4",
-                                    monorepo_root=REPO_ROOT)
+    def test_committed_fixture_runs_without_degradation(self):
+        """Package-owned committed fixture stays independent from root plan history."""
+        result = plan_reader.queue(SAMPLE_PLAN, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertIsInstance(result["items"], list)
 

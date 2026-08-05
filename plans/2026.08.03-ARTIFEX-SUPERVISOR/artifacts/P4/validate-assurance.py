@@ -25,6 +25,16 @@ def load(path: Path) -> dict:
     return value
 
 
+def validate_provenance(root: Path, path: Path) -> None:
+    validator = path.with_name("validate-provenance-reconciliation.py")
+    run = subprocess.run([
+        sys.executable, str(validator), "--record", str(path),
+        "--plan-dir", str(root / "plans" / PLAN_ID), "--self-test",
+    ], cwd=root, text=True, capture_output=True)
+    if run.returncode:
+        raise ValueError(run.stderr.strip() or "P4 provenance validation failed")
+
+
 def package_files(root: Path) -> list[dict]:
     package = root / "packages/artifex"
     paths = [path for path in package.rglob("*") if path.is_file() and path.suffix in {".py", ".sh", ""}]
@@ -45,9 +55,9 @@ def expected(root: Path, args: argparse.Namespace) -> dict:
         raise ValueError("P4 evidence is incomplete")
     if len(load(named["contracts"]).get("contracts", [])) != 6 or len(load(named["admission_index"]).get("admissions", [])) != 2:
         raise ValueError("frozen contract/admission evidence")
-    if (load(named["provenance"]).get("schema_version") != "artifex-p4-provenance-reconciliation-v1"
-            or load(named["requalification"]).get("schema_version") != "artifex-p4-authority-requalification-v1"):
+    if load(named["requalification"]).get("schema_version") != "artifex-p4-authority-requalification-v1":
         raise ValueError("P4.7/P4.8 successor evidence")
+    validate_provenance(root, named["provenance"])
     if load(named["prototype"]).get("schema_version") != "artifex-prototype-manifest-v1" or load(named["adapters"]).get("schema_version") != "artifex-adapter-manifest-v1":
         raise ValueError("prototype/adapter evidence")
     g1 = root / "plans" / PLAN_ID / "artifacts/P3/package-promotion-manifest-v1.json"

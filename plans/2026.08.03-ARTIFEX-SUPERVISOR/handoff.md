@@ -1,24 +1,32 @@
 # HANDOFF — 2026-08-05 — after P4
 
-**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1
 
 | Model | Thinking | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|
-| frontier | xhigh | cold-start — plan-step | Независимо проверить закрытую P4 и её G2/provenance evidence до допуска P5. | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4` |
+| frontier | high | same-session — item | Зафиксировать trial/shadow inputs P5 и подготовить hash-bound owner gate без provider dispatch до grant. | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` |
 
-| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4` |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` |
 |:--|:--|
 
-**Done:** P4 закрыта с 8/8 terminal items: 4 `🟢 Done` и 4 `🟠 Done with deviations`; G2 successor опубликован P4.8 после P4.7 committed-tree Harness/provenance remediation.
+**Done:** P4 закрыта с 8/8 terminal items: 2 `🟢 Done` и 6 `🟠 Done with deviations`.
+Audit pass 2 сохранён как historical RED; bounded forward remediation исправила Harness
+committed-tree drift, root-plan fixture dependency, generator wiring и provenance/assurance
+validation. Все deterministic gates GREEN; третьего audit/design pass по D98/D103 нет.
 
-**Remaining:** Один разрешённый финальный cold audit P4; P5 остаётся заблокированной до его GREEN verdict.
+**Remaining:** P5.1 сначала материализует catalog/request hashes и затем останавливается на
+`G-OWNER-P5-BUSINESS`; P5.2–P5.4 не запускаются до точного owner grant.
 
-**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json`.
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json`.
 
-**Open risks:** Historical P4.1–P4.7 provenance/material deviations are preserved by design; the audit must assess them without treating append-forward evidence as a historical rewrite. Незакоммиченные чужие изменения рабочего дерева не были evidence и не входят в closure commit.
+**Open risks:** Historical P4 provenance/route/material deviations остаются видимыми и не
+переписаны задним числом. P5 business dispatch всё ещё требует отдельного hash-bound owner grant.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —.
-- deferred: P5/P6 execution remains outside P4 closure.
+- deferred: P5.2–P6 execution remains outside this handoff.
 - open_questions: —.

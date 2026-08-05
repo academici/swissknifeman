@@ -9,7 +9,7 @@
 | Version | 0.19.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail; historical plan provenance) · prescribed semantic route `gpt-5.6-sol/high` (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen, P5→P6 finished-product reconciliation, post-D88 cross-phase finish, audit-8 F1–F4 remediation, audit-9 authority/provenance remediation, audit-10 live-carrier/provenance remediation, D98 owner audit-loop closure, D99 P4.1 generation-aware terminal-validator reconciliation and final P4 audit-1 remediation; source — `task:plan-design` semantic pin). Actual selector/effort for these routed sessions are not independently attested: `codex doctor` reports loaded config, not the already-running session selector. |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail; historical plan provenance) · prescribed semantic route `gpt-5.6-sol/high` (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen, P5→P6 finished-product reconciliation, post-D88 cross-phase finish, audit-8 F1–F4 remediation, audit-9 authority/provenance remediation, audit-10 live-carrier/provenance remediation, D98 owner audit-loop closure, D99 P4.1 generation-aware terminal-validator reconciliation and final P4 audit-1 remediation; source — `task:plan-design` semantic pin) · gpt-5.6-sol/xhigh (P4 audit-2 bounded forward remediation; actual current session). Actual selector/effort for the earlier routed sessions are not independently attested: `codex doctor` reports loaded config, not the already-running session selector. |
 | Last Updated | 2026-08-05 |
 | Repository | swissknifeman |
 | Related Packages | artifex (new mandatory package) · task · harness · core · analyst · maind |
@@ -110,7 +110,7 @@ handoff. План не считается успешно завершённым,
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
-| P4 | Prove recovery, isolation, security, and observability | 4/8 | 🟠 Done with deviations |
+| P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
 | P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
@@ -227,6 +227,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | task-fix/gpt-5.6-sol/xhigh | Второй P4 RED закрыт bounded forward remediation по D98/D103 без третьего audit: Harness committed-tree gate, fixture/generator wiring и provenance/assurance checks исправлены; P4.7/P4.8 честно остаются terminal deviations, следующий item P5.1. |
 | 2026-08-05 | plan-close/implementation/low | Фаза P4 закрыта с deviations: 8/8 terminal, G2 successor и committed-tree Harness/provenance gates приняты; перед P5 обязателен финальный cold audit — детали см. phases/P4.md Phase Handoff. |
 | 2026-08-05 | plan-design/gpt-5.6-sol/high routed | P4 audit-1 final remediation: D103–D104 reopen P4, add P4.7/P4.8 and restore append-forward map P4.1→`abdd888a` · P4.2→`618adbea`+`bde07fb0` · P4.3→`e3c932aa` · P4.6→`10422237` · P4.4→`7607b0c0` · P4.5→`23f71d34`; this is the last P4 design pass. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.3 закрыт: `e3c932aa` adds identity-bound linked-worktree isolation and serialized clean-target integration — детали см. phases/P4.md P4.3 Completion Notes. |

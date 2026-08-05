@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import activity, authority, compiler, dispatch, scheduler, store
+from . import activity, authority, compiler, dispatch, scheduler, store, worktree
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -220,6 +220,12 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
             "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0)}
 
 
+def _worktree_inventory(args: argparse.Namespace, repo: Path, _plan: Path, _runs: Path) -> dict:
+    """Expose the parseable linked-worktree inventory without mutating repository state."""
+    manager = worktree.WorktreeManager(repo)
+    return {"status": "ok", "worktrees": manager.inventory()}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="artifex")
     parser.add_argument("--repo-root", required=True)
@@ -235,6 +241,7 @@ def build_parser() -> argparse.ArgumentParser:
     dispatch_command.add_argument("--run-id", required=True)
     dispatch_command.add_argument("--admission", required=True)
     dispatch_command.add_argument("--provider", choices=("codex", "claude-code"))
+    sub.add_parser("worktree-inventory")
     return parser
 
 
@@ -242,7 +249,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         repo, plan, runs = _roots(args)
-        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "dispatch": _dispatch}[args.command](args, repo, plan, runs)
+        result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "dispatch": _dispatch,
+                  "worktree-inventory": _worktree_inventory}[args.command](args, repo, plan, runs)
         code = EXIT_OK
     except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL

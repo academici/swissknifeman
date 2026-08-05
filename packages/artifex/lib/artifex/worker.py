@@ -11,6 +11,8 @@ import time
 from pathlib import Path
 from typing import Callable
 
+from .worktree import LinkedWorktree
+
 
 class WorkerRefusal(ValueError):
     def __init__(self, reason: str) -> None:
@@ -124,6 +126,15 @@ def run(argv: list[str], *, cwd: str | Path, env: dict[str, str], stdin: bytes,
                 "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
     return {"kind": "success", "process_count": 1, "exit_code": proc.returncode,
             "duration_ms": duration, "output_hash": _digest(out), "event_count": len(out.splitlines())}
+
+
+def run_in_worktree(attempt: LinkedWorktree, argv: list[str], *, env: dict[str, str], stdin: bytes,
+                    timeout_ms: int, max_output_bytes: int, max_event_count: int,
+                    kill_grace_seconds: float = 1.0) -> dict:
+    """Run a worker only in the explicitly created linked-worktree attempt."""
+    return run(argv, cwd=attempt.path, env=env, stdin=stdin, timeout_ms=timeout_ms,
+               max_output_bytes=max_output_bytes, max_event_count=max_event_count,
+               kill_grace_seconds=kill_grace_seconds)
 
 
 def transient_carrier(payload: bytes) -> tuple[int, Path]:

@@ -1,0 +1,13 @@
+{
+  "schema_version": "artifex-worktree-results-v1",
+  "cases_schema": "artifex-worktree-cases-v1",
+  "results": [
+    {"id": "W4-001", "outcome": "integrated", "serialized": true, "residue": false},
+    {"id": "W4-002", "outcome": "WORKTREE_SCOPE_VIOLATION", "serialized": false, "residue": false},
+    {"id": "W4-003", "outcome": "WORKTREE_SCOPE_VIOLATION", "serialized": false, "residue": false},
+    {"id": "W4-004", "outcome": "INTEGRATION_TARGET_DIRTY", "serialized": false, "residue": false},
+    {"id": "W4-005", "outcome": "WORKTREE_OWNERSHIP_MISMATCH", "serialized": false, "residue": false},
+    {"id": "W4-006", "outcome": "INTEGRATION_CONFLICT_ROLLED_BACK", "serialized": true, "residue": false},
+    {"id": "W4-007", "outcome": "WORKTREE_BASE_INVALID", "serialized": false, "residue": false}
+  ]
+}

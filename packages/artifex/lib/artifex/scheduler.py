@@ -5,7 +5,7 @@ import copy
 from dataclasses import dataclass
 from typing import Callable
 
-from . import authority, store
+from . import authority, store, worktree
 
 
 class SchedulerRefusal(ValueError):
@@ -23,6 +23,25 @@ class DefaultActivityPort:
 
     def __call__(self, _slice: dict) -> dict:
         return {"kind": "provider_unavailable", "reason": "PROVIDER_UNAVAILABLE"}
+
+
+@dataclass(frozen=True)
+class WorktreeIntegrationLane:
+    """Durable caller boundary: scheduler retains identities/hashes, manager owns Git argv."""
+
+    manager: worktree.WorktreeManager
+    target: str
+
+    def integrate(self, attempt: worktree.LinkedWorktree, attempt_commit: str) -> dict:
+        target_commit = self.manager.integrate(attempt, attempt_commit, target=self.target)
+        return {
+            "run_id": attempt.identity.run_id,
+            "slice_id": attempt.identity.slice_id,
+            "attempt": attempt.identity.attempt,
+            "base": attempt.base,
+            "attempt_commit": attempt_commit,
+            "target_commit": target_commit,
+        }
 
 
 def _identity(value: dict) -> tuple[str, int, str]:

@@ -1,39 +1,35 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-04 · **Соответствует plan.md:** v0.13.0 · **Статус:** P1/P2 и
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.17.0 · **Статус:** P1/P2 и
 P3.1–P3.4 остаются terminal history; D82–D84 держат P3 reopened, D88 добавил P3.8 и состояние
-`3/8`: standalone `packages/artifex` появляется до P4/P5, а D85–D87 сохраняют обязательный
-finished-product outcome и инвалидируют прежний finish.
+`3/8`; D89–D90 держат G1→G5 generation/generator topology, D93–D94 закрывают audit-8
+execution/validation gaps, а D95–D97 дают exact resolver-valid Harness source/test/lock grants до
+consumers; D98 закрывает design-audit loop и открывает P3.5; package/root projections идут только
+через plan→apply→check, P3.7 не мутирует P3.6.
 
-## Immediate cross-phase reconciliation
+## Current execution launch — D98 audit-loop closure
 
-**Next:** manual: frontier/high — finish (шаг-не-item)
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | repository-plan-write · subprocess-test |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Пересогласовать ранний P3.8 package boundary, P4/P5 consumers и суженный P6 со всем P0→P6 graph |
-| Команда | — |
+| Capabilities | repository-plan-write · subprocess-test · git-commit |
+| Context | same-session — item |
+| Суть | Исполнить P3.5 под committed-spec и exact route gates; design audit не повторять |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
 
-```text
-$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
-
-РЕЖИМ: cross-phase finish после owner-outcome correction; НЕ execution items
-ВХОД: plan.md D85–D88; brief/14-owner-finished-product-guarantee.md; research/27-finished-product-outcome-reconcile.md; phases/P3.md P3.8; phases/P4.md; phases/P5.md; phases/P6.md
-СКОУП: 1) reconcile P3.8 package producer→P4/P5 consumers 2) verify exact package/router/install/test/docs/ops terminal predicate 3) prove P6 performs no runtime migration 4) rebuild roadmap/handoff and hand off to cold design audit
-НЕ ТРОГАТЬ: frozen P1/P2 carriers; terminal P3.1–P3.4 history; P3.5–P3.8/P4–P6 implementation; unrelated dirty worktree
-```
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — item` | P3.5 execution; D98 forbids another pre-exec design audit | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md P3.5, roadmap.md and handoff.md. D98 closes the pre-exec design-audit loop; do not run task:plan-audit design. Enforce committed-spec and exact implementation/high route gates, change only P3.5 Files, preserve unrelated dirty worktree, run all P3.5 validation, self-close with the two-commit protocol, then continue autonomously to the next roadmap item unless a genuine safety/authority/frozen-contract/acceptance gate blocks.'` |
 
 ## Карта исполнения
 
 Все 39 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
-текущий product execution path снова откроется с P3.5 только после нового finish и literal GREEN
-cold design audit.
+D98 открыл текущий product execution path с P3.5 без audit 11.
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
@@ -60,33 +56,33 @@ cold design audit.
 | P3.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | audit F1–F6 disproved runtime/evidence closure; historical record remains visible and remediation is forward-only |
 | P3.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` | implementation/high | — | exact indexed admission→adapter preflight→bounded normalized activity; committed-spec gate |
 | P3.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` | implementation/high | — | consumes P3.5; real readiness probe and strict immutable-P2/current-P3 hash proof |
-| P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6; repair Task invariant regression and rerun closure fan-in |
-| P3.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8` | implementation/high | consumes exact D86 package grant | promote the GREEN runtime into standalone `packages/artifex`; P4/P5 consume only package paths |
+| P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6 read-only; temp-isolated fresh probe, before/after clean carrier check and Task invariant repair |
+| P3.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8` | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | exact Artifex plan→apply→check, atomic stage-1 commit, full gpt-5.6-terra/high package-cwd Codex continuation, then G1 runtime/baseline |
 | P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
 | P4.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.2` | implementation/high | — | dispatch-aware no-rerun recovery; consumes P4.1 |
 | P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
 | P4.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.6` | implementation/high | D79 exact scoped repair | one worktree-local hook repair plus exact GREEN recheck; no package-source edit |
 | P4.4 | solo | `waiting: P4.6 terminal GREEN → manual: implementation/high` | implementation/high | — | independently recheck hook GREEN, then task/admission/authority/privacy security evidence |
-| P4.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.5` | implementation/high | — | owner/telemetry and admission-aware assurance aggregate |
+| P4.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.5` | implementation/high | — | owner/telemetry and admission-aware G2 current-package assurance aggregate |
 | P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | `G-OWNER-P5-BUSINESS` after request/catalog hashes | freeze trials/shadow; pause for owner hash-bound dispatch grant; produce all per-trial admissions before close |
 | P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
-| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` | frontier/high | business admissions required; no single-provider terminal waiver | five paired waves; only literal frozen `GO` (release-ready) closes, `NO-GO` keeps P5 open for forward remediation |
-| P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86 package + consumes D87 router grant | freeze remaining root router/install/doctor/generated/docs/operations scope around the existing P3.8 package |
-| P6.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.2` | implementation/high | exact D87 scope; D86 package stays immutable except scoped launcher/config integration | add umbrella route and root integration without migrating or duplicating runtime code |
-| P6.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.3` | implementation/high | — | install/update/doctor, default-off operations, compatibility, rollback, docs and changelog |
-| P6.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.4` | frontier/xhigh | — | distinct cold finished-product audit; RED keeps plan open |
+| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` | frontier/high | business admissions required; no single-provider terminal waiver | five paired waves over unchanged G2; G3 pins exact measured digest; only literal frozen `GO` closes |
+| P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 package generation + consumes D87/D96 root grants | require current G2/G3 identity; freeze exact P6.2/P6.3 rows and D93 root authorization order |
+| P6.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.2` | implementation/high | exact D87 output + D96 resolver-valid Harness source/test/lock grant; protected G2 runtime immutable | produce G4 through exact root plan→apply `AGENTS.md,CLAUDE.md`→check without runtime migration |
+| P6.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.3` | implementation/high | — | produce G5: install/update/doctor, default-off operations, compatibility, rollback, docs and changelog |
+| P6.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.4` | frontier/xhigh | — | distinct cold G1→G5 finished-product/instruction audit; RED keeps plan open |
 
 ## Последовательность successor-contract remediation
 
 1. P1.6/P2.6 and P1/P2 remain terminal; do not rewrite their carriers.
-2. Run `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish`, then cold `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design`.
-3. Only literal design GREEN exposes P3.5. Execute P3.5→P3.6→P3.7→P3.8, close P3 and run its cold phase audit.
-4. Only literal P3 GREEN unlocks P4. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5→mandatory P6 sequentially.
+2. D98 closes the ten-pass pre-exec design loop; do not run audit 11. Start P3.5 under its committed-spec gate.
+3. Execute P3.5→P3.6→P3.7→P3.8, close P3 and apply the two-pass/two-repeat ceiling to its phase audit checkpoint.
+4. Literal P3 acceptance unlocks P4. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5→mandatory P6 sequentially; no audit checkpoint may schedule a third automatic pass.
 
 ### P3 — reopened forward remediation
 
-**Next:** waiting: new finish + cold design audit GREEN → manual: implementation/high — P3.5
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
 | Параметр | Значение |
 |:--|:--|
@@ -95,7 +91,7 @@ cold design audit.
 | Capabilities | repository-plan-write · subprocess-test |
 | Context | same-session — item |
 | Суть | Закрыть P3.5 runtime binding перед evidence/hash remediation |
-| Команда | — |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
 
 ```text
 $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
@@ -103,12 +99,12 @@ $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 РЕЖИМ: remediation item execution; committed-spec gate обязателен
 ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 + Audit P3 F1/F4
 СКОУП: exact indexed admission → adapter preflight → bounded normalized worker; CLI binding/tests
-НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history; P3.6/P3.7; P4–P6; unrelated dirty worktree
+НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history; P3.6–P3.8; P4–P6; unrelated dirty worktree
 ```
 
 ## Authority Gate Contract
 
-Только следующие три active markers являются owner grants этого плана. Проверяемый carrier —
+Только следующие пять active markers являются owner grants этого плана. Проверяемый carrier —
 более поздняя, чем D64, строка Decision Log в `plan.md`, которая дословно содержит указанный
 `[OWNER-GRANT:<gate-id>]`, называет разрешённую ветвь и scope, ссылается на явное сообщение
 repository owner и не отозвана более поздним D#. D74/D75 и команды `finish`/audit не являются
@@ -117,14 +113,32 @@ repository owner и не отозвана более поздним D#. D74/D75 
 | Gate ID | Защищённый переход | Exact predicate | Без carrier |
 |:--|:--|:--|:--|
 | `G-OWNER-P5-BUSINESS` | P5.1 материализует grants/admissions для P5.2–P5.4 | строка D# позже D78 содержит marker, SHA-256 `trial-catalog-v1.json` и `business-grant-request-v1.json`, exact providers/roots/max-dispatches/per-trial caps, explicit owner source; D78 itself is not a grant | P5.1 pauses after proposal hashes; no business admission/provider call |
-| `G-OWNER-P6.1-PACKAGE` | P3.8 materializes mandatory `artifex-package`; P6.1 revalidates it | D86 exact marker разрешает `packages/artifex/**` и finite package-owned projections | P3.8 remains non-terminal; P4/P5 cannot start |
-| `G-OWNER-P6.1-ROUTER` | P6.1 фиксирует `root_router=approved` | D87 exact marker разрешает additive `swissknifeman artifex` и exact installer/doctor/generated/docs projections | P6.1 remains non-terminal; no rootless terminal product |
+| `G-OWNER-P6.1-PACKAGE` | P3.8 materializes mandatory `artifex-package`; P6.1 revalidates it | D86 exact marker разрешает `packages/artifex/**` and finite package-owned outputs only | P3.8 remains non-terminal; P4/P5 cannot start |
+| `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2` | P3.8 stage 1 adds the Artifex instruction owner and shared-lock generation | D95 exact record + Layer-0 message matches every Harness source/test/lock path in P3.8 `Files`; consumer is P3.8 only | no Harness source/projection mutation; P3.8 remains open |
+| `G-OWNER-P6.1-ROUTER` | P6.1 фиксирует `root_router=approved`; P6.2 consumes outputs | D87 exact marker разрешает additive `swissknifeman artifex` and exact root installer/doctor/generated outputs | P6.1 remains non-terminal; no rootless terminal product |
+| `G-OWNER-P6.2-HARNESS-ROOT-INSTRUCTIONS-R2` | P6.1 freezes and P6.2 changes exact root instruction producers/shared lock | D96 exact record + Layer-0 message matches every Harness source/test/lock path in P6.2 `Files`; consumer is P6.1→P6.2 only | no root source/projection mutation; P6.1/P6.2 remains open |
 
-Provider readiness, terminal validators, security/hook integrity and literal GREEN независимого
-design audit остаются evidence gates: D# не заменяет отсутствующее или non-green доказательство.
+Provider readiness, terminal validators and security/hook integrity остаются evidence gates: D#
+не заменяет отсутствующее или non-green доказательство. D98 отменяет только повторный pre-exec
+design audit; later audit checkpoints obey the two-pass/two-repeat ceiling.
 `G-OWNER-P5.4-SINGLE` retired by D85: single-provider evidence may inform remediation/rollout scope,
 but cannot terminalize P5 or waive provider parity. Tag/push/publish/release не входят в roadmap и
 требуют отдельного позднего разрешения.
+
+## Generation chain
+
+| Generation | Producer | Current through | Successor rule |
+|:--|:--|:--|:--|
+| G1 | P3.8 D95 generation + package promotion | P3.8 close | pins stage-1 source/guides/lock commit and terminal item commit; historical Git/blob baseline after first P4 package edit |
+| G2 | P4.5 assurance | P5 and P6.1 pre-write | P5 is read-only; P6.2 protects runtime subset and produces G4 |
+| G3 | P5.4 `GO` | P6.1 pre-write | pins exact unchanged G2 bytes; evidence only |
+| G4 | P6.2 D96 root generation + integration | P6.3 start | pins exact D93 plan/apply/check/lock transition and structural router/installer successor; no runtime migration |
+| G5 | P6.3 operations | P6.4 audit | finished current product; cold audit validates G1→G5 |
+
+Historical carriers are never regenerated against evolved current bytes.
+`packages/artifex/{CLAUDE.md,AGENTS.md}` and root `CLAUDE.md`/`AGENTS.md` are generated/validated
+under their exact D95/D96 Harness instruction owner scopes via D93 plan→apply→check; direct
+projection edits are forbidden, and the shared lock is never an `--authorize` target.
 
 ## Завершённый package prerequisite
 

@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.13.0 |
+| Version | 0.17.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail) · gpt-5.6-sol/high routed (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen and P5→P6 finished-product reconciliation; runtime effort not exported) |
-| Last Updated | 2026-08-04 |
+| Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail; historical plan provenance) · prescribed semantic route `gpt-5.6-sol/high` (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen, P5→P6 finished-product reconciliation, post-D88 cross-phase finish, audit-8 F1–F4 remediation, audit-9 authority/provenance remediation, audit-10 live-carrier/provenance remediation and D98 owner audit-loop closure; source — `task:plan-design` semantic pin). Actual selector/effort for these routed sessions are not independently attested: `codex doctor` reports loaded config, not the already-running session selector. |
+| Last Updated | 2026-08-05 |
 | Repository | swissknifeman |
 | Related Packages | artifex (new mandatory package) · task · harness · core · analyst · maind |
 | Execution Mode | contract-first, phase-first |
@@ -20,7 +20,7 @@
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
 | Paused By | — |
-| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations + P3 audit reopen + finished-product/early-package reconciliation — D67–D88 repair execution/audit/owner-outcome defects without changing the completed budget denominator |
+| Design Passes | 8/8 + finish + three audit remediations + P2.1 redesign + source-pin remediation + terminal-fixture remediation + P2.4 transition reconciliation + P3.3/P3.4 required-read remediations + P3.4 bridge feasibility/owner-choice/native-tool/successor-manifest remediations + post-D74 finish + post-D74/post-D76 audit remediations + P3 audit reopen + finished-product/early-package reconciliation + post-D88 cross-phase finish + audit-8 F1–F4 remediation + audit-9 authority/provenance remediation + audit-10 live P3 carrier/Meta provenance remediation + owner audit-loop closure — D67–D98 repair execution/audit/owner-outcome defects without changing the completed budget denominator |
 
 ## 1. Context
 
@@ -53,6 +53,8 @@ handoff. План не считается успешно завершённым,
 - Неизмеренные token/cost/intervention поля не дают зелёный экономический вердикт.
 - `NO-GO`, неизвестная метрика или RED P5/P6 gate оставляют план открытым и назначают forward remediation; успешная terminal closure без `packages/artifex/` запрещена.
 - После закрытия item/фазы полностью перезаписать `handoff.md` и append-only обновить `journal.jsonl`.
+- D98 закрывает pre-exec design-audit loop после десяти исторических заходов: новый `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR design` запрещён без нового явного owner D#; текущий runnable Next — P3.5.
+- Любой оставшийся audit checkpoint ограничен `AUDIT_ROUNDS_MAX=2` и `SAME_FINDING_MAX=2`: после второго non-GREEN автоматического третьего аудита нет, дефект исправляется вперёд и закрывается детерминированной validation; owner interruption допустим только для реального safety/authority/frozen-contract/acceptance gate.
 
 ## 3. Routing
 
@@ -202,11 +204,26 @@ handoff. План не считается успешно завершённым,
 | D86 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P6.1-PACKAGE] branch=`artifex-package`; scope=`packages/artifex/** plus package-owned launcher/tests/docs/config/install projections enumerated by P6.1`; owner-message=`brief/14-owner-finished-product-guarantee.md#owner-finished-artifex-package-2026-08-04` | The owner explicitly requires actual Artifex package code at successful plan completion. This finite grant adds no fleet rollout, implicit enablement, dependency expansion, tag, push, publish or release. RAG:— (direct owner decision). |
 | D87 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P6.1-ROUTER] branch=`root-router-approved`; scope=`additive swissknifeman artifex dispatch plus exact root installer/doctor/generated/docs projections enumerated by P6.1`; owner-message=`brief/14-owner-finished-product-guarantee.md#owner-finished-artifex-router-2026-08-04` | A finished installed package needs one discoverable umbrella route. This separate finite grant adds no other root group, default enablement, fleet mutation, tag, push, publish or release. RAG:— (direct owner decision). |
 | D88 | 2026-08-04 | D85's mandatory package outcome is promoted earlier: after P3.5–P3.7 are GREEN, P3.8 consumes D86 and creates the standalone `packages/artifex/` runtime/CLI/tests as the sole live implementation. P4 and P5 must import and execute package paths only. P6 no longer migrates runtime code: P6.1 freezes the remaining D87/root/installer/doctor/docs/operations scope, P6.2 integrates those public surfaces, P6.3 completes operations/docs, and P6.4 audits the finished product. D2/D57 are superseded only for this timing/ownership transition; frozen P1/P2 carriers, P3.1–P3.3 history, P3.4 forward fixes, P5 evidence thresholds and D85–D87 authority remain unchanged. **Consequences:** P3 grows to 8 items, the plan grows to 39 items, P3 cannot close before package promotion, and no later assurance may certify plan-local runtime bytes as the shipping implementation. RAG:— (owner-grounded: `brief/14-owner-finished-product-guarantee.md`; repo-grounded: package/single-SSOT canons and `research/27-finished-product-outcome-reconcile.md`). | Testing a prototype and later shipping a migration would leave the user without a guarantee that the tested code is the delivered package; moving the boundary before P4/P5 makes assurance and pilots product-representative. |
+| D89 | 2026-08-04 | D89 supersedes D88 only where an unqualified P3.8 promotion validator could be treated as current-tree equality after P4 evolves the package. G1 `package-promotion-manifest-v1.json` is immutable P3.8 baseline evidence: it validates current bytes at P3.8 close and later recomputes those bytes from the terminal P3.8 item commit. P4.5 becomes the sole G2 current-package snapshot through P5 and the P6.1 pre-write gate; P6.2/G4 and P6.3/G5 are explicit successor manifests. P5 is observational and cannot mutate G2; P6.2 proves the protected runtime subset remains G2-identical while changing only allowlisted integration rows. **Consequences:** later phases must not regenerate or current-root replay historical G1/G2 carriers after an authorized successor begins; each successor pins its predecessor plus a closed current file set, and P6.4 validates the whole chain. RAG:— (repo-grounded: `findings/P3-P6-early-package-finish-recon-2026-08-04.md`; `research/28-early-package-cross-phase-finish.md`; D81 predecessor/current precedent). | P4 is required to modify the package that P3.8 created; without generation ownership the first lawful assurance fix would falsely invalidate its own predecessor gate. |
+| D90 | 2026-08-04 | P3.8's first substep extends the Harness instruction owner with one additive `artifex` scope and generates both package provider projections before a package-cwd restart; hand-editing `packages/artifex/AGENTS.md` is forbidden. P6.2 later updates the existing root instruction scope so repository layout/ecosystem identity/root routing describe six packages and `swissknifeman artifex`, then regenerates root `CLAUDE.md`/`AGENTS.md` and the shared provider-artifact lock. P6.1 must enumerate these canonical fragments/catalog/fixtures/generator/tests and split shared public files: P6.2 owns structural router/install/instruction wiring, P6.3 owns operational behavior, compatibility, docs and changelog. RAG:— (repo-grounded: root provider-parity/generated-artifact/package-scope canons; `packages/harness/lib/harness/instructions.py`; `research/28-early-package-cross-phase-finish.md`). | A sixth package with a hand-written Codex-only guide or a root canon still claiming five packages would be an unowned generated-artifact/provider-parity defect even if the CLI itself worked. |
+| D91 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P3.8-HARNESS-INSTRUCTIONS] branch=`p3.8-artifex-instruction-owner`; exact scope=`packages/harness/lib/harness/instructions.py` · `packages/harness/configs/common/instructions/catalog.json` · `packages/harness/configs/common/instructions/packages/artifex/common.md` · `packages/harness/configs/common/instructions/packages/artifex/claude-code.md` · `packages/harness/configs/common/instructions/packages/artifex/codex.md` · `packages/harness/tests/fixtures_data/instruction-compatibility-v1.json` · `packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json` · `packages/harness/tests/test_provider_instructions.py` · `packages/harness/tests/test_instruction_compatibility.py` · `packages/harness/tests/test_instruction_adoption.py` · `packages/harness/tests/test_instruction_size_gate.py` · `.swissknifeman/provider-artifacts.lock.json`; consumer=`P3.8 stage 1 only`; owner-message=`brief/16-audit8-owner-carriers-and-execution.md`. RAG:— (direct owner decision; repo-grounded exact source/test/lock reconciliation in `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md`). | D86 authorizes package outputs, not Harness-owned producer bytes. This additive finite carrier exists before P3.8 and authorizes only the sources/tests/lock needed to generate the two package guides; no other Harness or rollout scope is granted. |
+| D92 | 2026-08-04 | [OWNER-GRANT:G-OWNER-P6.2-HARNESS-ROOT-INSTRUCTIONS] branch=`p6.2-root-instruction-owner`; exact scope=`packages/harness/configs/common/instructions/catalog.json` · `packages/harness/configs/common/instructions/root/common.md` · `packages/harness/configs/common/instructions/root/claude-code.md` · `packages/harness/configs/common/instructions/root/codex.md` · `packages/harness/tests/fixtures_data/instruction-compatibility-v1.json` · `packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json` · `packages/harness/tests/test_provider_instructions.py` · `packages/harness/tests/test_instruction_compatibility.py` · `packages/harness/tests/test_instruction_literal_coverage.py` · `packages/harness/tests/test_instruction_size_gate.py` · `.swissknifeman/provider-artifacts.lock.json`; consumer=`P6.1 freeze then P6.2 only`; owner-message=`brief/16-audit8-owner-carriers-and-execution.md`. RAG:— (direct owner decision; repo-grounded exact source/test/lock reconciliation in `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md`). | D87 authorizes root outputs, not Harness-owned producer bytes. This separate finite carrier exists before P6.1/P6.2 and does not let P3.8 pre-consume the later root generation or widen root commands. |
+| D93 | 2026-08-04 | D90's generator boundary is executable only as `instructions plan` with exact action-set verification → `instructions apply --authorize <exact ordered generated targets>` → `instructions check`. P3.8 authorizes `packages/artifex/AGENTS.md,packages/artifex/CLAUDE.md`; P6.2 authorizes `AGENTS.md,CLAUDE.md`. The shared lock is an owner-scoped deterministic apply output, never an `--authorize` target. After P3.8 stage 1 is clean and committed, continuation uses the full byte-for-byte command stored in `phases/P3.md` P3.8 Implementation Rules; its fixed launch prefix is `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/artifex -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access`, followed by a literal single-quoted `NEW SESSION: Continue ... P3.8 at stage 2 only` prompt containing the absolute plan path, P3.8/generated-guide reads, stage-1 commit/check gate, exact remaining scope and close protocol. RAG:— (repo-grounded: Harness CLI/apply implementation, `core/provider/lock.py`, Codex launch/package-scope canon, exact phase carrier and `research/29-audit8-authority-generator-reconcile.md`). | Bare `harness instructions` is a false-green help path; an ambient `codex -C packages/artifex` loses route, safety flags and continuation scope. Exact action ordering and cold reads make both generations fail closed without hand-editing projections. |
+| D94 | 2026-08-04 | P3.7 remains owner only of `packages/task/tests/test_task_contract.py`. Its fresh P3.6 provider probe must write to a disposable `mktemp -d` output directory; the committed P3.6 provider-smoke/manifest/parity carriers are checked clean before and after and consumed read-only by their validators. No P3.6 output or terminal/history field is added to P3.7 `Files`. RAG:— (repo-grounded: `artifacts/P3/probe-adapters.py` output behavior, P3.6/P3.7 ownership and `research/29-audit8-authority-generator-reconcile.md`). | Phase-wide requalification stays executable without foreign-scope mutation or capture; a before/after diff in a P3.6 carrier keeps P3.7 open. |
+| D95 | 2026-08-05 | [OWNER-GRANT:G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2] branch=`p3.8-artifex-instruction-owner`; scope=`packages/harness/lib/harness/instructions.py · packages/harness/configs/common/instructions/catalog.json · packages/harness/configs/common/instructions/packages/artifex/common.md · packages/harness/configs/common/instructions/packages/artifex/claude-code.md · packages/harness/configs/common/instructions/packages/artifex/codex.md · packages/harness/tests/fixtures_data/instruction-compatibility-v1.json · packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json · packages/harness/tests/test_provider_instructions.py · packages/harness/tests/test_instruction_compatibility.py · packages/harness/tests/test_instruction_adoption.py · packages/harness/tests/test_instruction_size_gate.py · .swissknifeman/provider-artifacts.lock.json`; owner-message=`brief/17-audit9-resolver-valid-owner-carriers.md#owner-grant-p3-8-harness-instructions-r2-2026-08-05` | Resolver-valid successor carrier for D91: the repository owner repeats the same P3.8-only branch and finite Harness source/test/lock scope through one exact Layer-0 message. RAG:— (direct owner decision; repo-grounded: `brief/17-audit9-resolver-valid-owner-carriers.md`; `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md`). |
+| D96 | 2026-08-05 | [OWNER-GRANT:G-OWNER-P6.2-HARNESS-ROOT-INSTRUCTIONS-R2] branch=`p6.2-root-instruction-owner`; scope=`packages/harness/configs/common/instructions/catalog.json · packages/harness/configs/common/instructions/root/common.md · packages/harness/configs/common/instructions/root/claude-code.md · packages/harness/configs/common/instructions/root/codex.md · packages/harness/tests/fixtures_data/instruction-compatibility-v1.json · packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json · packages/harness/tests/test_provider_instructions.py · packages/harness/tests/test_instruction_compatibility.py · packages/harness/tests/test_instruction_literal_coverage.py · packages/harness/tests/test_instruction_size_gate.py · .swissknifeman/provider-artifacts.lock.json`; owner-message=`brief/17-audit9-resolver-valid-owner-carriers.md#owner-grant-p6-2-harness-root-instructions-r2-2026-08-05` | Resolver-valid successor carrier for D92: the repository owner repeats the same P6.1-freeze/P6.2 branch and finite Harness root source/test/lock scope through one exact Layer-0 message. RAG:— (direct owner decision; repo-grounded: `brief/17-audit9-resolver-valid-owner-carriers.md`; `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md`). |
+| D97 | 2026-08-05 | D97 supersedes D91 and D92 only as active machine-authority carriers: P3.8 requests D95's `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2`, while P6.1 and P6.2 request D96's `G-OWNER-P6.2-HARNESS-ROOT-INSTRUCTIONS-R2`; D91/D92 remain immutable evidence of the malformed audit-8 attempt. D86/D87, approved path sets, consumers, D93 generator ordering, D94 validation isolation, item statuses and G1→G5 topology do not change. **Consequences:** live phase/roadmap/audit carriers must use D95/D96, historical prose may continue to name D91/D92 as provenance, and any request using an old or widened gate/scope still fails closed. RAG:— (owner/repo-grounded: `brief/17-audit9-resolver-valid-owner-carriers.md`; `research/30-audit9-resolver-valid-authority-reconcile.md`; exact resolver grammar in `packages/task/lib/task/task_contract.py`). | A second row with either old gate marker would remain ambiguous by construction; fresh exact identities preserve append-only history while making each protected transition machine-consumable. |
+| D98 | 2026-08-05 | The repository owner closes the pre-exec design-audit loop after ten historical passes: audit-10 F1/F2 are remediated in current carriers, deterministic lint/conflict/citation/Task Contract/DoR/generation gates are the execution admission proof, no audit 11 is authorized, and the current Next is `2026.08.03-ARTIFEX-SUPERVISOR P3.5`. D98 supersedes D63/D75/D76/D85 only where their live successor wording requires another design audit before execution; all other decisions, historical audit blocks, frozen P1/P2, terminal P3.1–P3.4 history, item contracts/statuses, protected authority and G1→G5 topology remain binding. Every later audit checkpoint is capped at two total passes and two occurrences of the same finding, matching `packages/task/lib/task/review_policy.py`; after the second non-GREEN there is no automatic third audit, only bounded forward remediation plus deterministic validation, unless a genuine safety/authority/frozen-contract/acceptance gate requires the owner. **Consequences:** the owner accepts the absence of an additional independent post-remediation design attestation; D98 does not weaken item validation, security, protected grants, P6.4 finished-product acceptance or release authority, and it forbids audit-of-audit recursion without a new explicit owner decision. RAG:— (direct owner decision; repo-grounded: `brief/18-owner-close-design-audit-loop.md`; `packages/task/lib/task/review_policy.py`). | Ten passes demonstrated that an uncapped re-audit handoff can perpetually manufacture a new pre-exec gate; a finite owner-approved stop rule restores progress while retaining deterministic and protected execution gates. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | plan-design/frontier/high | Owner audit-loop closure: D98 cancels audit 11, caps later checkpoints at two passes/two repeats and makes P3.5 the current committed-spec execution target; item statuses and implementation remain unchanged. |
+| 2026-08-05 | plan-design/gpt-5.6-sol/high | Audit-9 remediation: D95–D97 add resolver-valid R2 owner carriers and exact Layer-0 messages, restore journal provenance append-forward and return unchanged 39-item/G1→G5 scope to a cold design audit. |
+| 2026-08-05 | plan-design/frontier/high | Audit-10 remediation: live P3 contract consumes exact D95 R2 authority, P3 DoR spans D97, and Meta separates the prescribed route from the unverified actual selector; 39 items/statuses remain unchanged and return to a cold design audit. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | Audit-8 F1–F4 remediation: D91–D94 add exact Harness source/test/lock owner carriers, executable plan→apply→check plus durable package-cwd restart, and temp-isolated P3.7 validation; 39 item statuses and frozen/terminal history are unchanged. |
+| 2026-08-04 | plan-design/gpt-5.6-sol/high | Post-D88 finish: D89–D90 reconcile immutable→current package generations and Harness-owned package/root instruction projections; 39-item roadmap now hands off to a cold design audit. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Early-package correction: D88 adds P3.8, makes `packages/artifex` the runtime SSOT before P4/P5, and narrows P6 to umbrella/install/doctor/operations/docs plus cold audit; total 39 manual items. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Owner-outcome correction: D85–D87 make finished `packages/artifex` plus CLI/router/install/docs/operations the only successful terminal result; P5 RED now keeps the plan open for remediation rather than selecting archive-only closure. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | P5→P6 contract reconciliation recorded in brief/14 and research/27; the previous finish/audit authority is invalidated and the current handoff returns to a new `finish` before P3.5 execution. |
@@ -1256,3 +1273,451 @@ exact routed routes: **35/35 `pre_mutation=allow` и `pre_final=allow`**. Для
 ```text
 Исполни 2026.08.03-ARTIFEX-SUPERVISOR P1.6 строго по committed `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md`, `phases/P1.md`, `roadmap.md` и `handoff.md`. До мутаций подтверди, что последний `## Audit design — 2026-08-04` имеет literal GREEN и все audit/plan carriers закоммичены; иначе остановись. Соблюдай маршрут frontier/high, меняй только `Files` P1.6, не исполняй P2.6/P3.4 и заверши штатное validation/self-close с двумя commit boundaries.
 ```
+
+## Audit design — 2026-08-04
+
+**Вердикт: RED** · заход **8-й** (блоков `## Audit design` до этого — 7) · режим
+`design` · аудитор `plan-audit` / `frontier/xhigh`. Аудит проверил только readiness
+текущего design: items не исполнялись; frozen P1/P2, terminal P3.1–P3.4 history,
+implementation и unrelated dirty worktree не изменялись.
+
+**Якорь входа:** working-tree snapshot до append этого отчёта —
+`sha256:9b81da710331e34a9dcdac2d8b06428a419bc577683a071fd47bff2203c4ec92` по
+`find … -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum`;
+repository `HEAD=9f0f23759f76669c66cd5491dc1ded14ab4fce09`. Plan carriers остаются
+незакоммиченными в dirty worktree и не выданы за committed tree.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**;
+`plan-lint.py --conflicts` — **0 расхождений / 0 предупреждений**;
+`verify-citations.py --strict` — **16 citations checked / 0 findings**;
+`git diff --check` — clean. Roadmap и Routing покрывают ровно **39/39** unique items.
+Все 39 item specs имеют **624/624** обязательных полей (16 на item), contiguous
+`Required Reads`, не пустые RAG-маркеры и executable/code validation literals;
+все **39/39** Task Contracts evaluated на exact routed route как
+`pre_mutation=allow` и `pre_final=allow`. Для будущих `Required Reads` найден более
+ранний producer; unresolved reads — **0**. Семь phase DoR содержат **56/56** checked
+boxes. Восемь design-pass carriers соответствуют Meta `8/8`.
+
+### Находки
+
+1. **Major · high confidence · authority contradiction ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P3.8` · `plan.md` D86/D90,
+   `phases/P3.md`:** exact `[OWNER-GRANT:G-OWNER-P6.1-PACKAGE]` разрешает
+   `packages/artifex/**` и package-owned projections, перечисленные будущим P6.1,
+   но P3.8 исполняется раньше P6.1 и требует менять Harness-owned catalog/targets/
+   fragments/fixtures и shared provider-artifacts lock. D90 — обычная design decision,
+   не owner marker; roadmap silently расширяет grant. **Failure scenario:** исполнитель
+   либо соблюдает exact grant и не может создать generated package guides, либо выполняет
+   P3.8 с мутациями вне authority. **`[PROMOTE-CANDIDATE]`:** обычный route Task Contract
+   39/39 не сопоставляет protected owner scope с item `Files`.
+2. **Major · high confidence · authority contradiction ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P6.1/P6.2` · `plan.md` D87/D90,
+   `phases/P6.md`:** exact `[OWNER-GRANT:G-OWNER-P6.1-ROUTER]` покрывает additive
+   root router/installer/doctor/generated/docs projections, перечисленные P6.1, но P6.2
+   должен менять Harness-owned root fragments/catalog/fixtures/tests. D90 снова не может
+   расширить exact owner carrier. **Failure scenario:** root CLAUDE/AGENTS остаются
+   непроизводимыми через owner Harness source либо P6.2 нарушает grant.
+3. **Major · high confidence · non-executable generator/continuation contract ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P3.8/P6.2` · `phases/P3.md`, `phases/P6.md`:**
+   оба items говорят запустить bare `packages/harness/bin/harness instructions`;
+   наблюдаемый command печатает help и завершается 0 без генерации. Реальный write path
+   требует explicit `instructions plan`, затем `instructions apply --authorize <exact
+   ordered targets>`. P3.8 дополнительно задаёт лишь `codex -C packages/artifex`, без
+   routed model/effort, `-a never`, `-s danger-full-access`, prompt и durable continuation.
+   **Failure scenario:** false-green exit 0 оставляет guides не созданными либо провоцирует
+   hand-edit generated projections; package-cwd restart теряет исполняемый контракт.
+4. **Major · high confidence · validation mutates foreign scope ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P3.7` · `phases/P3.md`:** P3.7 `Files` владеет только
+   Task test и прямо исключает P3 product artifacts, но Validation повторяет exact P3.6
+   provider probe в его real output directory. Probe пишет оба provider-smoke JSON.
+   **Failure scenario:** validation создаёт diff в P3.6-owned files вне P3.7 `Files`,
+   после чего исполнитель либо захватывает чужую мутацию, либо пропускает declared gate.
+
+### Покрытие брифа и lineage
+
+| Область | Проверенный carrier | Вердикт |
+|:--|:--|:--|
+| Finished product и отказ от прежних NO-GO веток | D85 + brief/findings/research layer | покрыто |
+| Owner-approved package и root integration | D86/D87 + exact owner markers | **RED: scope не покрывает Harness source consumers** |
+| Early package creation без переписывания terminal history | D88 + P3.8/P4/P5/P6 ordering | покрыто структурно |
+| Remediation gates G1–G5 | D89 + roadmap + P3.8/P4.5/P5.4/P6.2/P6.3 | topology покрыта; authority/execution gaps блокируют G1/G4 |
+| Harness ownership generated package/root instructions | D90 + Harness catalog/targets/plan/apply/check contract | **RED: source ownership верен, item commands и authority carriers недостаточны** |
+| Все item DoR | 39 specs × 16 fields + 7 phase DoR | syntax/route/readiness gates зелёные; F1–F4 — semantic DoR blockers |
+
+G1 (`P3.8`) → G2 (`P4.5`) → G3 (`P5.4` evidence) → G4 (`P6.2`) → G5
+(`P6.3`) имеет однозначный producer order и pinning. После устранения F1–F3 lineage
+не требует перестройки: defect находится в праве и точном способе произвести G1/G4,
+а не в последовательности G2/G3/G5. D85, D88 и D89 несут согласованный смысл и
+`Consequences`; D86/D87 exact scope конфликтует с D90 consumers.
+
+### Проверено без дополнительных находок
+
+- Root Harness projections сейчас generator-clean: `harness instructions check --target .
+  --scope root --provider claude-code,codex --json` зелёный. Artifex scope пока отсутствует
+  в Harness `TARGETS`/catalog, поэтому pre-P3.8 check закономерно возвращает
+  `INSTRUCTION_SCOPE_INVALID`, а не доказательство готовой генерации.
+- Все 39 Routes уникальны и совпадают с roadmap; live skeleton/clarification markers,
+  пустые обязательные поля, broken future-read producers и unchecked phase DoR отсутствуют.
+- `brief/`, `findings/`, `research/`, D85–D90, phases и roadmap индексируют одну post-P3.4
+  topology; frozen/terminal records не требовали и не получили rewrite.
+- `codex doctor --json`, `maind health --cwd --json`, registered observer hook и
+  `harness doctor --provider-audit` зелёные. Effective Harness hook dry-run остаётся
+  честным `status: warning` с двумя `stale-source → update`; это известный будущий
+  P4.6/P4.4 input, не скрытый GREEN и не предмет этого design-аудита.
+
+### Проверка (verification status)
+
+- **RAG:** 0 внешних запросов. Все verdict-bearing классы здесь — repository facts,
+  проверенные по plan carriers, Harness CLI/help/source, probe source и локальным gates;
+  внешних current claims, от которых зависит вердикт, нет.
+- **Непроверено → ПОВТОРНЫЙ ПРОХОД:** фактическая будущая генерация Artifex/root guides,
+  owner-approved расширение exact grants, runtime provider outcomes и P4–P6 empirical
+  deliverables. Они не объявлены исполненными или зелёными.
+- **Обходки/[POSSIBLE-DEFECT]:** workaround не принят. Hook warning раскрыт; F1–F4
+  требуют plan remediation и нового cold design audit. F1 помечен для повышения в
+  protocol-level owner-scope conformance check.
+
+### Что запускать
+
+**Next:** design-phase: `task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish`
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · authority-reconcile · generator-contract |
+| Context | cold-start — plan-step |
+| Суть | Точечно закрыть F1–F4, не исполняя items и не переписывая frozen/terminal history |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Scoped design remediation; item execution и generated writes запрещены | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access` |
+
+```text
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная cross-phase remediation RED design-аудита, НЕ execution items и НЕ reopen frozen/terminal history
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → последний блок `## Audit design — 2026-08-04` (заход 8); прочитать ПЕРВЫМ; текущий `handoff.md` всё ещё указывает на уже выполненный audit и протух для следующего шага
+СКОУП: 1) F1/F2 — получить/зафиксировать exact owner carrier для нужных Harness source+lock paths ДО consumers, без расширения authority агентом 2) F3 — задать executable `instructions plan → instructions apply --authorize <exact ordered targets>` и durable full Codex package-cwd continuation 3) F4 — сделать P3.7 validation read-only/temp-isolated либо согласовать `Files` ownership без изменения P3.6 history 4) повторить lint/conflicts/citations, 39 Task Contracts и generation lineage, затем вернуть cold design audit
+НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history/Completion Notes; item statuses/implementation; root/package/generated/hook state during design; unrelated dirty worktree; tag/push/publish/release
+```
+
+## Audit design — 2026-08-05
+
+**Вердикт: RED** · заход **9-й** (блоков `## Audit design` до этого — 8) · режим
+`design` · аудитор `plan-audit` / `frontier/xhigh`. Аудит проверил D91–D94,
+закрытие audit-8 F1–F4, lineage G1–G5 и readiness всех 39 items. Items не
+исполнялись; frozen/terminal history, implementation, generated outputs, hooks и
+unrelated dirty worktree не изменялись.
+
+**Якорь входа:** working-tree snapshot до append этого отчёта —
+`sha256:b30631127f874755e759436687a831dfbd86e79a357c22971b2c05b0083d7b86` по
+`find … -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum`;
+repository `HEAD=9f0f23759f76669c66cd5491dc1ded14ab4fce09`. Plan carriers остаются
+незакоммиченными в dirty worktree и не выданы за committed tree.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**;
+`plan-lint.py --conflicts` — **0 расхождений / 0 предупреждений**;
+`verify-citations.py --strict` — **18 citations checked / 0 findings**;
+`git diff --check` — clean. Roadmap и Routing покрывают ровно **39/39** unique
+items. Все 39 item specs имеют **624/624** обязательных полей (16 на item),
+contiguous `Required Reads`, непустые RAG-маркеры и executable/code validation
+literals; все **39/39** ordinary Task Contracts на exact routed routes дают
+`pre_mutation=allow` и `pre_final=allow`. Для будущих `Required Reads` каждый
+не существующий сейчас path имеет более ранний producer; unresolved reads — **0**.
+Семь phase DoR содержат **56/56** checked boxes. Восемь design-pass carriers
+согласованы с Meta `8/8`.
+
+### Находки
+
+1. **Major · high confidence · invalid protected-authority carrier ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P3.8` · `plan.md:207` D91,
+   `brief/16-audit8-owner-carriers-and-execution.md:27`,
+   `packages/task/lib/task/task_contract.py:102`:** owner intent и finite path set
+   существуют, но D91 не соответствует machine contract. Resolver принимает только
+   полный record `branch=…; scope=…; owner-message=brief/file.md#message-id`; D91
+   использует `exact scope=`, раздельные backtick values, дополнительный `consumer`,
+   RAG/prose и ссылку без anchor. Layer-0 brief не содержит единственной exact
+   `[REPOSITORY-OWNER-MESSAGE:…]` строки, требуемой `task_contract.py:111` и
+   `task_contract.py:246`. Exact protected evaluation для P3.8 даёт
+   `granted=false`, `pre_mutation=block:AUTHORITY_BOUNDARY`, `pre_final=n/a`, тогда
+   как control D86 проходит `allow/allow`. **Failure scenario:** P3.8 останавливается
+   до stage 1, поэтому G1 package-promotion generation юридически непроизводима.
+   **`[PROMOTE-CANDIDATE]`:** ordinary 39/39 build и текущий plan-lint не требуют
+   protected-transition kwargs и поэтому маскируют resolver-invalid grant.
+2. **Major · high confidence · invalid protected-authority carrier ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P6.1/P6.2` · `plan.md:208` D92,
+   `brief/16-audit8-owner-carriers-and-execution.md:41`,
+   `packages/task/lib/task/task_contract.py:314`:** D92 повторяет тот же format/
+   Layer-0 mismatch при семантически верном finite path set. Exact protected
+   evaluation для обоих consumers возвращает `granted=false`,
+   `pre_mutation=block:AUTHORITY_BOUNDARY`, `pre_final=n/a`; control D87 проходит
+   `allow/allow`. **Failure scenario:** P6.1 не может законно заморозить D92 scope,
+   P6.2 не может произвести G4 root-integration generation, и downstream G5/P6.4
+   недостижимы.
+3. **Minor · high confidence · incomplete authoring provenance · plan-level ·
+   `plan.md:12`, `plan.md:216`, `journal.jsonl:110`:** audit-8 remediation D91–D94
+   присутствует в Meta `Authoring Model` и Update Log, но journal заканчивается
+   событием audit pass 8 и не содержит события соответствующего `task:plan-design`
+   run. **Failure scenario:** cold reviewer не может восстановить порядок, actor и
+   command этого plan mutation по обязательному третьему carrier; root three-carrier
+   provenance obligation остаётся неполной. Исправление должно быть forward-only,
+   без переписывания существующих journal lines.
+
+### D91–D94 и audit-8 F1–F4
+
+| Audit-8 вход | Новый carrier | Результат |
+|:--|:--|:--|
+| F1 — Harness authority для P3.8 | D91 + brief/16 + P3.8 `Files` | **RED:** approved scope совпадает с consumer paths, но exact resolver carrier отсутствует |
+| F2 — Harness authority для P6.1/P6.2 | D92 + brief/16 + P6.1/P6.2 | **RED:** approved scope совпадает с consumer paths, но exact resolver carrier отсутствует |
+| F3 — executable generator и durable continuation | D93 + P3.8/P6.2 rules | закрыто: exact `plan → apply --authorize → check`, ordered targets и полный Codex package-cwd continuation присутствуют |
+| F4 — P3.7 foreign-scope mutation | D94 + P3.7 validation | закрыто: provider probe вынесен в `mktemp -d`, P3.6 carriers проверяются до/после и читаются validators без записи |
+
+D91 и D92 воспроизводят прямое решение owner и не расширяют его семантически;
+дефект — в непотребляемой resolver-ом форме, а не в отсутствии owner intent. D93
+соответствует фактическому Harness `instructions plan/apply/check` contract: apply
+имеет exact ordered authorization set, shared lock остаётся производным output. D94
+сохраняет ownership P3.7 только над Task test и не захватывает P3.6 outputs.
+
+### G1–G5 и 39 item DoR
+
+G1 (`P3.8`) → G2 (`P4.5`) → G3 (`P5.4`) → G4 (`P6.2`) → G5 (`P6.3`) имеет
+однозначный producer order, predecessor pinning и terminal P6.4 audit. G2/G3/G5
+не требуют перестройки; execution reachability блокируется в G1/D91 и G4/D92.
+P6.1 pre-write freeze закономерно стоит перед G4, но сам требует exact D92.
+
+Проверены все 39 DoR contracts: item identity/route, status, Intent, Why,
+Scope Included/Excluded, Inputs, Files, Required Reads, Implementation Rules,
+Code Guidance, Validation, Deliverables, Completion/Pending/Deviation/Escalation,
+phase DoR и roadmap membership. Duplicate/missing item, live skeleton,
+`[NEEDS CLARIFICATION]`, route drift, empty validation, missing producer и unchecked
+phase gate не найдены. Ordinary Task Contract GREEN не снимает два protected owner
+gates: authority resolver вызывается с protected transition только на защищённой
+ветке.
+
+### Покрытие брифа и design completeness
+
+| Область | Проверенный carrier | Вердикт |
+|:--|:--|:--|
+| Original supervisor intent, evidence и operating model | brief/00–13 → D1–D84 → P0–P6 | покрыто |
+| Finished-product guarantee и early package SSOT | brief/14–15 → D85–D90 → P3.8/P4/P5/P6 | покрыто |
+| Audit-8 owner paths и anti-scope | brief/16 → D91/D92 → exact item `Files` | intent/path coverage есть; machine authority **RED** |
+| Generator/continuation remediation | brief/16 → D93 → P3.8/P6.2 | покрыто |
+| Validation isolation remediation | brief/16 → D94 → P3.7 | покрыто |
+| Authoring provenance | Meta + Update Log + journal | **Minor:** третий carrier отсутствует для D91–D94 run |
+
+В D1–D94 нет разрыва нумерации; superseding decisions имеют `Consequences`,
+открытые discussion questions и unresolved brief thoughts отсутствуют. Roadmap
+оставляет 39 coupled manual/solo items; отдельный workflow plan не требуется.
+
+### Проверено без дополнительных находок
+
+- `codex doctor --json` подтвердил routed `gpt-5.6-sol` и unrestricted/never
+  environment; `maind health --cwd --json` дал connected memory round-trip и два
+  GREEN provider trust verdicts.
+- Root instruction plan/check остаётся текущим для root targets. Read-only Harness
+  hook dry-run честно вернул два `stale-source → update` warning; это будущий
+  P4.6/P4.4 input, не скрытый GREEN и не предмет mutation этого audit.
+- Frozen P1/P2, terminal P3.1–P3.4 carriers, implementation, generated outputs,
+  effective hooks и unrelated dirty paths не менялись.
+
+### Проверка (verification status)
+
+- **RAG:** 0 внешних запросов. Verdict-bearing факты относятся к текущему repository
+  contract и проверены по plan/brief/phase carriers, journal, worktree-local
+  `task_contract.py`, Harness CLI/help/source и локальным gates. Внешних current facts,
+  от которых зависит вердикт, нет.
+- **Непроверено → ПОВТОРНЫЙ ПРОХОД:** фактическое исполнение P3.8/P6.1/P6.2,
+  будущие G1–G5 artifacts и runtime/provider outcomes; они не объявлены исполненными.
+- **Обходки/[POSSIBLE-DEFECT]:** workaround не принят. F1/F2 требуют новых exact
+  resolver-valid successor carriers и повторной protected evaluation; missing journal
+  provenance исправляется только append-forward. F1 повышен как кандидат в
+  protocol/lint conformance gate.
+
+### Что запускать
+
+**Next:** design-phase: `task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish`
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · authority-reconcile · provenance-repair |
+| Context | cold-start — plan-step |
+| Суть | Создать resolver-valid successors для D91/D92 и forward-only provenance carrier; items не выполнять |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Scoped design remediation; item execution и generated writes запрещены | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="high" -a never -s danger-full-access` |
+
+```text
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная cross-phase remediation RED design-аудита, НЕ execution items и НЕ reopen frozen/terminal history
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → последний блок `## Audit design — 2026-08-05` (заход 9); прочитать ПЕРВЫМ; `handoff.md` указывает на уже выполненный audit и протух для следующего шага
+СКОУП: 1) F1 — append-forward создать exact resolver-valid successor для D91 и exact Layer-0 owner-message carrier из уже данного owner directive, не расширяя scope; доказать protected P3.8 `allow/allow` 2) F2 — отдельно создать exact resolver-valid successor для D92 и Layer-0 carrier; доказать protected P6.1 и P6.2 `allow/allow` 3) F3 — восстановить отсутствующий journal authoring-provenance carrier только новой append entry, не переписывая историю 4) повторить lint/conflicts/citations, ordinary 39/39 и все protected owner-gate evaluations, D91–D94 и G1–G5, затем вернуть новый cold design audit
+НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history/Completion Notes; item statuses/implementation; generated/root/package/hook state; существующие Decision Log и journal строки; unrelated dirty worktree; tag/push/publish/release
+```
+
+## Audit design — 2026-08-05
+
+**Вердикт: RED** · заход **10-й** (блоков `## Audit design` до этого — 9) · режим
+`design` · аудитор `plan-audit` / semantic pin `frontier/xhigh`. Аудит не исполнял
+items и не менял Decision Log, существующие journal rows, frozen/terminal
+history, implementation, generated outputs, hooks и unrelated dirty worktree.
+
+**Якорь входа:** working-tree snapshot до append этого отчёта —
+`sha256:dba2b93b0464680602e3d2706b426ca0656b3357efd0562536f21eb7bd10364a` по
+`find … -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum`; repository
+`HEAD=9f0f23759f76669c66cd5491dc1ded14ab4fce09`. Plan carriers незакоммичены;
+git-ref, который воспроизводит их текущие bytes, отсутствует.
+
+**Проверки до append:** `plan-lint.py` — **0 ERROR / 0 WARN**;
+`plan-lint.py --conflicts` — **0 расхождений / 0 предупреждений**;
+`verify-citations.py --strict` — **23 citations checked / 0 findings**; `git diff --check`
+— clean. Roadmap и Routing покрывают **39/39** unique items без route drift; все
+39 item specs имеют **624/624** обязательных полей, contiguous `Required Reads`,
+непустые RAG/executable-validation carriers и ноль unresolved reads без
+текущего или более раннего producer. Семь phase DoR дают **56/56** checked boxes.
+Все **39/39** ordinary Task Contracts на exact routed routes дают
+`pre_mutation=allow` и `pre_final=allow`.
+
+### Находки
+
+1. **Major · high confidence · issue · stale live phase authority contract ·
+   `2026.08.03-ARTIFEX-SUPERVISOR P3` · `phases/P3.md:29`, `plan.md:213` D97:**
+   D97 требует от live phase/roadmap/audit carriers использовать D95/D96, но live
+   contract-first блок P3 по-прежнему объявляет входом `D91 exact Harness
+   source/test/lock grant`. D91 сохранён только как malformed history и не
+   resolver-valid; P3 DoR на `phases/P3.md:35-36` также заканчивает active
+   reconciliation на D94. **Failure scenario:** cold P3 executor следует
+   self-contained phase contract, проверяет superseded D91 и либо ложно останавливает
+   P3.8, либо расходится с item-level D95 machine contract; phase contract и Decision
+   Log перестают быть одним executable планом.
+2. **Minor · high confidence · issue · overstated authoring provenance · plan-level ·
+   `plan.md:12`, `research/30-audit9-resolver-valid-authority-reconcile.md:56`:** Meta утверждает,
+   что runtime route подтверждён `codex doctor`, но recorded remediation evidence прямо
+   фиксирует обратное: doctor показывает config default `gpt-5.6-terra` и не
+   аттестует selector уже запущенной сессии. Journal line 112 честно несёт
+   prescribed semantic route, но Meta смешивает prescribed и observed provenance.
+   **Failure scenario:** cold reviewer считает model/effort независимо измеренными
+   и пропускает реальную environment-evidence boundary.
+
+### D85–D97, protected authority и provenance
+
+- D85–D97 непрерывны; D85/D89/D97 и все иные superseding records несут
+  `**Consequences:**`. D95 дословно сохраняет ordered 12-path D91 scope, D96 — ordered
+  11-path D92 scope; каждый равен своему Harness/shared-lock подмножеству item
+  `Files`.
+- Layer-0 `brief/17-audit9-resolver-valid-owner-carriers.md:21` и `:23` содержит
+  ровно по одной exact `[REPOSITORY-OWNER-MESSAGE:…]` строке; gate, branch, scope и
+  `provenance=repository-owner` совпадают с D95/D96.
+- Exact protected builds дают: P3.8 → D95 `granted=true`, `allow/allow`; P6.1 →
+  D96 `granted=true`, `allow/allow`; P6.2 → D96 `granted=true`, `allow/allow`.
+- `journal.jsonl` имел 112 строк до этого audit append; `git diff --unified=0` показал
+  только append lines 109–112 относительно HEAD. Line 112 называет как пропущенную
+  D91–D94 provenance, так и текущий D95–D97 finish; существующие lines не
+  переписаны.
+
+### D93/D94, G1–G5 и 39 item DoR
+
+- D93 в P3.8/P6.2 несёт executable `instructions plan → apply --authorize → check`;
+  worktree-local Harness source требует exact ordered writable set и сам выводит shared
+  lock из authorization targets. Root `instructions plan` и `check` в этом audit дали
+  `green=true`, 2 clean targets, 0 diagnostics; future `artifex` scope законно создаётся
+  только P3.8 stage 1. P3.8 содержит полный absolute package-cwd Codex restart с
+  model/effort, `-a never`, `-s danger-full-access`, cold reads, stage-1 commit/check gate,
+  exact remaining scope и close protocol.
+- D94/P3.7 ограничивает `Files` одним Task test; fresh probe пишет в отдельный
+  `mktemp -d`, а P3.6 provider-smoke/manifest/parity carriers проверяются clean до/после
+  и потребляются read-only. `probe-adapters.py` пишет только в explicit
+  `--output-dir`.
+- G1 P3.8 → G2 P4.5 → G3 P5.4 → G4 P6.2 → G5 P6.3 → cold P6.4 audit
+  согласованы в roadmap, Inputs/Implementation Rules/Validation/Deliverables и index;
+  P4.6 стоит перед P4.4 в execution order, поэтом future Required Reads имеют
+  earlier producers.
+- У всех 39 items проверены Status, Intent, Why, Scope Included/Excluded,
+  Inputs, Files, Required Reads, Implementation Rules, Code Guidance, Validation, Deliverables,
+  Completion Notes, Pending Work, Known Deviations и Escalation Needed. Missing/duplicate/empty
+  DoR field, route/roadmap gap, non-contiguous read, unresolved producer, live skeleton, empty
+  validation, unchecked phase gate и item-level stale D91/D92 marker не найдены.
+
+### Покрытие брифа и design completeness
+
+| Область | Носитель | Вердикт |
+|:--|:--|:--|
+| Original supervisor intent/evidence/non-goals | brief/00–01 → research/00 + D1–D84 + P0–P6 | покрыто; refinements явно ограничивают каждый design pass |
+| Mandatory finished package and early package SSOT | brief/14–15 → D85–D90 → P3.8/P4/P5/P6 | покрыто |
+| Audit-8 generator/authority/isolation | brief/16 → D91–D94 → P3.7/P3.8/P6.1/P6.2 | покрыто как history + active D93/D94 |
+| Audit-9 resolver/provenance remediation | brief/17 → findings/audit9 → research/30 → D95–D97/items/journal | protected paths GREEN; live P3 phase contract **RED** |
+
+Roadmap и Routing содержат одинаковые 39 manual items/routes; каждый solo имеет
+причину, а внутрифазовые Inputs→Deliverables делают семь цепочек последовательными,
+поэтом workflow не требуется. Design budget исполнен: Meta `8/8`, Update Log несёт
+восемь Design pass rows. D1–D97 непрерывны; unresolved discussion/open-questions
+отсутствуют. Last Updated и latest Update Log date совпадают: 2026-08-05.
+
+### Проверено без дополнительных находок
+
+- `codex doctor --json` зелёный по runtime/auth/git/MCP/network/state, approval policy
+  `Never` и unrestricted filesystem; он не использован как evidence фактического
+  session model/effort. `maind health --cwd --json` — connected, memory round-trip GREEN,
+  provider trust GREEN.
+- Effective Codex hook dry-run вернул exit 0, но честный `status: warning` с двумя
+  `stale-source → update`; это известный future P4.6 input, не GREEN и не предмет
+  repair этого audit.
+- Baseline hashes зафиксированы для P1/P2, P3–P6, handoff, roadmap и index; audit
+  не менял эти файлы. Существующие 1557 строк `plan.md` и 112 lines
+  `journal.jsonl` заякорены до разрешённых append operations.
+
+### Проверка (verification status)
+
+- **RAG:** 0 внешних запросов. Verdict-bearing факты repo/environment-grounded:
+  plan/brief/phase/research/journal carriers, worktree-local Task Contract/Harness source и read-only
+  gates. External current facts вердикт не несут.
+- **Непроверено → ПОВТОРНЫЙ ПРОХОД:** actual current-session selector/effort не
+  аттестуется `codex doctor`; фактическое P3.8/P6 execution, будущие G1–G5
+  artifacts и provider outcomes не объявлены исполненными.
+- **Обходки/[POSSIBLE-DEFECT]:** workaround не принят; live P3 contract и Meta provenance
+  требуют прямой design-remediation, а не обхода.
+
+### Что запускать
+
+**Next:** design-phase: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | repository-plan-edit · contract-reconcile · provenance-repair |
+| Context | cold-start — plan-step |
+| Суть | Выровнять live P3 contract с D95/D97 и исправить Meta provenance без item execution |
+| Команда | — |
+
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | Scoped design remediation; item execution и generated writes запрещены | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access` |
+
+```text
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR finish
+
+РЕЖИМ: точечная design-remediation RED design-аудита 10, НЕ execution items и НЕ reopen frozen/terminal history
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md → последний блок `## Audit design — 2026-08-05` (заход 10); прочитать ПЕРВЫМ; `handoff.md` всё ещё ведёт на уже выполненный audit и протух для следующего шага
+СКОУП: 1) заменить superseded D91 на exact D95/R2 в live P3 contract-first carrier и довести P3 DoR decision span до D97, не меняя D91/D95 2) в Meta Authoring Model разделить prescribed semantic route и неаттестованный actual selector, не переписывая journal 3) повторить lint/conflicts/citations, ordinary 39/39, protected P3.8/P6.1/P6.2 allow/allow, G1–G5 и cold design audit handoff
+НЕ ТРОГАТЬ: существующие Decision Log/journal rows; D85–D97 content; frozen P1/P2; terminal P3.1–P3.4 history/Completion Notes; item statuses/implementation; generated/root/package/hook state; unrelated dirty worktree; tag/push/publish/release
+```
+
+## Owner audit-loop closure — 2026-08-05
+
+D98 is the latest owner authority. The ten `Audit design` sections above remain immutable
+historical evidence; none is reopened or rewritten. Audit-10 F1/F2 are remediated in the live P3
+contract and Meta provenance carriers, and their deterministic rechecks are GREEN. There is no
+audit 11: `roadmap.md` and `handoff.md` expose `2026.08.03-ARTIFEX-SUPERVISOR P3.5` directly.
+
+Future audit checkpoints use the repository review-policy ceilings
+`AUDIT_ROUNDS_MAX=2` and `SAME_FINDING_MAX=2`. A second non-GREEN routes to one bounded
+forward-remediation path and deterministic validation, never to an automatic third audit. This
+closure changes no item status or implementation and does not waive protected authority,
+security, frozen-contract, acceptance, P6.4 finished-product or release gates.

@@ -1,7 +1,7 @@
 ---
 name: threading
 bucket: blender-modeling
-version: 0.1.0
+version: 0.1.1
 description: "Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by fit type."
 risk: write
 persona: oss-dev
@@ -45,12 +45,25 @@ thread_pts = [
 ]
 # SCREW modifier:
 scr.screw_offset = mm(pitch)   # rise per revolution
-scr.iterations   = turns       # number of turns
+scr.iterations   = max(turns - 1, 1)  # profile already spans one pitch
 ```
 
 - Triangular profile suffices for PG; turns self-center on tightening.
 - Per-pair thread params for current model → `models/{name}/ai/rules.md`.
 - Trapezoidal profile variant: use if triangle jams after print (add per measurement).
+
+## Geometry guardrails
+
+- Materialize an external thread with `UNION` into its structural sleeve. Cut an internal
+  thread with `DIFFERENCE` from a crest-radius bore: unioning a tooth inside an already-solid
+  wall is a geometric no-op that leaves a smooth bore.
+- When the source triangle already spans one pitch in Z, `N` turns require
+  `SCREW.iterations = N - 1`. For multistart threads, distinguish pitch from lead and assert
+  the evaluated tool's actual axial span.
+- Metadata, bbox, volume and manifold status do not prove that a thread exists. Evaluated tests
+  must sample radial modulation on both mating surfaces and a positive assembled radial gap.
+- After every later Boolean, re-check modulation, the structural sleeve/base/face and the
+  decoration keep-out. A mesh-joined feature can be erased by a downstream Boolean.
 
 ## External docs
 - [Blender SCREW modifier](https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html)
@@ -62,4 +75,4 @@ scr.iterations   = turns       # number of turns
 - `blender-modeling/build-loop` — overall build/check cycle with thread printing embedded.
 - `blender/version-gotchas` — SCREW modifier and `temp_override` gotchas in Blender 5.0.
 
-<!-- ru-source-sha256: cab1e3f06b6610d1a4e94b976cbc03a9014d7fa45a045021c149b75cc598caa9 -->
+<!-- ru-source-sha256: fa47f02b1859274af66dfb589556ef68294012ce4faa2c7f5d4d720965797ed3 -->

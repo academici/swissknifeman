@@ -9,20 +9,20 @@ consumers; D98 закрывает design-audit loop и открывает P3.5; 
 
 ## Current execution launch — D98 audit-loop closure
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test · git-commit |
 | Context | same-session — item |
-| Суть | Исполнить P3.5 под committed-spec и exact route gates; design audit не повторять |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
+| Суть | Разрешить foreign `scheduler.py` deviation P3.5 до P3.6; design audit не повторять |
+| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — item` | P3.5 execution; D98 forbids another pre-exec design audit | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md P3.5, roadmap.md and handoff.md. D98 closes the pre-exec design-audit loop; do not run task:plan-audit design. Enforce committed-spec and exact implementation/high route gates. Implementation writes are limited to P3.5 Files; bookkeeping writes are limited to canonical plan/journal/handoff closure carriers. Preserve unrelated dirty worktree, run all P3.5 validation, self-close with the two-commit protocol, then continue autonomously to the next roadmap item unless a genuine safety/authority/frozen-contract/acceptance gate blocks.'` |
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` | P3.5 scope-deviation remediation; D98 still forbids audit 11 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md P3.5, roadmap.md and handoff.md. D98 forbids task:plan-audit design. Resolve the recorded foreign scheduler.py deviation before P3.6; preserve frozen carriers and unrelated dirty worktree.'` |
 
 ## Карта исполнения
 
@@ -54,7 +54,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.2 | terminal | 🟢 Done | implementation/high | — | terminal pure Claude Code mapper |
 | P3.3 | terminal | 🟢 Done | implementation/high | — | terminal two-provider parity freeze |
 | P3.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | audit F1–F6 disproved runtime/evidence closure; historical record remains visible and remediation is forward-only |
-| P3.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` | implementation/high | — | exact indexed admission→adapter preflight→bounded normalized activity; committed-spec gate |
+| P3.5 | remediation | 🟠 Done with deviations | implementation/high | — | `b7c7c1a0` binds the runtime, but its foreign `scheduler.py` path requires plan-design before P3.6 |
 | P3.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` | implementation/high | — | consumes P3.5; real readiness probe and strict immutable-P2/current-P3 hash proof |
 | P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6 read-only; temp-isolated fresh probe, before/after clean carrier check and Task invariant repair |
 | P3.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8` | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | exact Artifex plan→apply→check, atomic stage-1 commit, full gpt-5.6-terra/high package-cwd Codex continuation, then G1 runtime/baseline |
@@ -82,24 +82,24 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 
 ### P3 — reopened forward remediation
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test |
 | Context | same-session — item |
-| Суть | Закрыть P3.5 runtime binding перед evidence/hash remediation |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
+| Суть | Разрешить P3.5 scope-deviation перед evidence/hash remediation |
+| Команда | `$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5` |
 
 ```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.5
+$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P3.5
 
-РЕЖИМ: remediation item execution; committed-spec gate обязателен
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 + Audit P3 F1/F4
-СКОУП: exact indexed admission → adapter preflight → bounded normalized worker; CLI binding/tests
-НЕ ТРОГАТЬ: frozen P1/P2; terminal P3.1–P3.4 history; P3.6–P3.8; P4–P6; unrelated dirty worktree
+РЕЖИМ: точечный plan-design для foreign Files deviation, НЕ design audit
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.5 Completion Notes/Known Deviations
+СКОУП: решить ownership/remediation `artifacts/supervisor/artifex/scheduler.py` из `b7c7c1a0` до P3.6
+НЕ ТРОГАТЬ: D98 запрет audit 11; frozen P1/P2; terminal P3.1–P3.4 history; P3.6–P3.8; P4–P6; unrelated dirty worktree
 ```
 
 ## Authority Gate Contract

@@ -219,6 +219,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | plan-run/gpt-5.6-terra/high | P3.5 закрыт с deviation: indexed provider activity reaches bounded worker/preflight, but item commit includes foreign `scheduler.py`; details in phases/P3.md P3.5 Completion Notes. |
 | 2026-08-05 | plan-design/frontier/high | Owner audit-loop closure: D98 cancels audit 11, caps later checkpoints at two passes/two repeats and makes P3.5 the current committed-spec execution target; item statuses and implementation remain unchanged. |
 | 2026-08-05 | plan-design/gpt-5.6-sol/high | Audit-9 remediation: D95–D97 add resolver-valid R2 owner carriers and exact Layer-0 messages, restore journal provenance append-forward and return unchanged 39-item/G1→G5 scope to a cold design audit. |
 | 2026-08-05 | plan-design/frontier/high | Audit-10 remediation: live P3 contract consumes exact D95 R2 authority, P3 DoR spans D97, and Meta separates the prescribed route from the unverified actual selector; 39 items/statuses remain unchanged and return to a cold design audit. |

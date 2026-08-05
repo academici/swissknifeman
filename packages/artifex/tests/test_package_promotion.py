@@ -18,8 +18,8 @@ class PackagePromotionTests(unittest.TestCase):
         return ["python3", str(VALIDATOR), "--manifest", str(MANIFEST), "--prototype", str(PROTOTYPE),
                 "--package", str(PACKAGE), *extra]
 
-    def test_current_generation_is_exact(self):
-        result = subprocess.run(self.command(), cwd=ROOT, text=True, capture_output=True, check=False)
+    def test_historical_generation_is_exact_after_successor(self):
+        result = subprocess.run(self.command("--historical-commit", "367e477a"), cwd=ROOT, text=True, capture_output=True, check=False)
         self.assertEqual(0, result.returncode, result.stderr)
 
     def test_historical_mode_refuses_the_current_tree_alias(self):

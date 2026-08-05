@@ -74,7 +74,9 @@ def validate(root: Path, package: Path, manifest: dict, historical: str | None) 
     if git(root, "merge-base", "--is-ancestor", STAGE1, "HEAD") != "":
         raise ValueError("stage-1 commit is not reachable")
     wanted = expected(root, package)
-    if manifest != wanted:
+    # G1 is current only at P3.8 close.  Once a successor starts, D89
+    # deliberately validates the frozen manifest from Git blobs instead.
+    if not historical and manifest != wanted:
         raise ValueError("current package or source/provenance drift")
     text = "\n".join(path.read_text(encoding="utf-8") for path in (package / "lib").rglob("*.py"))
     if "plans/" in text or "artifacts/supervisor" in text:

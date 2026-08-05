@@ -33,7 +33,7 @@ def package_files(root: Path) -> list[dict]:
 
 
 def expected(root: Path, args: argparse.Namespace) -> dict:
-    named = {name: Path(getattr(args, name)).resolve() for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention", "contracts", "admission_index", "prototype", "adapters")}
+    named = {name: Path(getattr(args, name)).resolve() for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention", "contracts", "admission_index", "prototype", "adapters", "provenance", "requalification")}
     faults, recovery, worktrees, hooks, security, attention = (load(named[name]) for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention"))
     if (faults.get("schema_version") != "artifex-fault-matrix-v1" or len(faults.get("rows", [])) != 16
             or recovery.get("schema_version") != "artifex-recovery-results-v1" or len(recovery.get("results", [])) != 16
@@ -45,6 +45,9 @@ def expected(root: Path, args: argparse.Namespace) -> dict:
         raise ValueError("P4 evidence is incomplete")
     if len(load(named["contracts"]).get("contracts", [])) != 6 or len(load(named["admission_index"]).get("admissions", [])) != 2:
         raise ValueError("frozen contract/admission evidence")
+    if (load(named["provenance"]).get("schema_version") != "artifex-p4-provenance-reconciliation-v1"
+            or load(named["requalification"]).get("schema_version") != "artifex-p4-authority-requalification-v1"):
+        raise ValueError("P4.7/P4.8 successor evidence")
     if load(named["prototype"]).get("schema_version") != "artifex-prototype-manifest-v1" or load(named["adapters"]).get("schema_version") != "artifex-adapter-manifest-v1":
         raise ValueError("prototype/adapter evidence")
     g1 = root / "plans" / PLAN_ID / "artifacts/P3/package-promotion-manifest-v1.json"
@@ -60,7 +63,7 @@ def expected(root: Path, args: argparse.Namespace) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
-    for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention", "contracts", "admission-index", "prototype", "adapters"):
+    for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention", "contracts", "admission-index", "prototype", "adapters", "provenance", "requalification"):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()

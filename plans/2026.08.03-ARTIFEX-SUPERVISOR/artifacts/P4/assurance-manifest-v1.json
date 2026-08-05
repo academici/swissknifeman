@@ -28,9 +28,17 @@
       "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P2/prototype-manifest-v1.json",
       "sha256": "bbd19ef8dab464e33b58be07519173127103528dcd321449557a4c771db312a1"
     },
+    "provenance": {
+      "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+      "sha256": "62c44eeca72d7e0dc7639eab055d55b158f24e276cfeb01ba5f34cb3b5d46660"
+    },
     "recovery": {
       "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/recovery-results-v1.json",
       "sha256": "9a998a631f6595cc166bf844a70ef26125c61db2e9bf0280e5339b8756e1da23"
+    },
+    "requalification": {
+      "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/authority-requalification-v1.json",
+      "sha256": "39a5b47123fdcde6414f5f37e78e4af935e9a76b51deff90c8458e192fb3d884"
     },
     "security": {
       "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",

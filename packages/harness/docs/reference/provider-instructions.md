@@ -10,6 +10,7 @@ Generated from the validated D86 catalog.
 | `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | 7 | 2 | 0 |
 | `analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` | 8 | 2 | 0 |
 | `task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` | 7 | 2 | 0 |
+| `artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` | 6 | 1 | 1 |
 
 The frozen inventory contains 56 common and 20 provider-extension IDs (76 total) across exactly 12 targets.
 

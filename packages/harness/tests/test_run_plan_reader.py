@@ -164,7 +164,7 @@ class QueueSamplePlanTest(unittest.TestCase):
         отказов печатаются без деградации и без трейсбека (не проверяем конкретные
         вердикты живой фазы — только то, что модуль не падает и различает
         degraded от «нечего делать»)."""
-        result = plan_reader.queue(REPO_ROOT / "plans" / "2026.07.31-SKM-LEAN", "P4",
+        result = plan_reader.queue(REPO_ROOT / "plans" / "archive" / "2026.07.31-SKM-LEAN", "P4",
                                     monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertIsInstance(result["items"], list)

@@ -59,6 +59,7 @@
 | `findings/P3.4-native-no-tool-verification-2026-08-04.md` | findings | P3.4 | installed/first-party Claude empty-tool carrier, Codex no-global-no-tool boundary and version drift |
 | `findings/P3.4-successor-manifest-conflict-2026-08-04.md` | findings | P3.4 | reproduced evolved-root P2 hash failure and verified the immutable P2.6 Git snapshot |
 | `findings/hooks-stale-source-precondition-2026-08-04.md` | findings | P4.6, P4.4 | reproduced effective-hook warning, exact two stale-source actions and worktree-local repair/recheck owner surface |
+| `findings/P4.4-hook-status-literal-conflict-2026-08-05.md` | findings | P4.4 | reproduced terminal/live `green` versus frozen P4.4 `ok` security-prerequisite conflict |
 | `findings/P3-P6-early-package-finish-recon-2026-08-04.md` | findings | P3.8, P4.5, P5, P6, finish/audit | reproduced promotion-manifest drift risk, stale five-package/root-router instruction canon and exact Harness generator ownership |
 | `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md` | findings | P3.7–P3.8, P6.1–P6.4, design audit | repo-grounded authorize ordering, lock side effect, durable Codex continuation and temp-isolated validation facts for audit-8 F1–F4 |
 | `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md` | findings | P3.8, P6.1–P6.4, finish/design audit | exact protected resolver grammar, same-gate ambiguity and missing journal provenance observation from audit 9 |

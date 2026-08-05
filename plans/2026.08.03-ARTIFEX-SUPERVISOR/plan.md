@@ -108,7 +108,7 @@ handoff. План не считается успешно завершённым,
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
-| P4 | Prove recovery, isolation, security, and observability | 4/6 | 🟡 In progress |
+| P4 | Prove recovery, isolation, security, and observability | 4/6 | 🔴 Blocked |
 | P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 

@@ -1,34 +1,34 @@
-# HANDOFF — 2026-08-05 — after P3.8
+# HANDOFF — 2026-08-05 — after P3
 
-**Next:** close-phase: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3
+**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | low |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Reconcile terminal P3 evidence and close the phase without an additional audit |
-| Команда | `/task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3` |
+| Model | implementation |
+| Thinking | high — recovery boundary implementation |
+| Context | continue (reset the session context) — ручной item |
+| Суть | Выполнить P4.1: exact failure matrix и fresh-process crash-injection harness для G1 Artifex. |
+| Команда | `—` |
 
-**Done:** `367e477a` makes `packages/artifex` the G1 runtime owner. Its standalone launcher, 60 package tests and source/provenance manifest are green; Harness validation, Task validation (486 tests), the 58-test plan-local suite, active plan lint and strict citations also passed.
+**Done:** P3 закрыта `🟠 Done with deviations`: 8/8 terminal; повторный Artifex 60-test,
+plan-local 58-test, Task 486-test, Harness и promotion fan-in зелёный.
 
-**Remaining:** Close P3. D98 forbids audit 11; reconcile the terminal evidence without changing frozen history.
+**Remaining:** P4.1 — первый последовательный producer P4; P4.2→P4.3→P4.6→P4.4→P4.5 зависят от
+его terminal evidence.
 
-**Sources of truth:** phases/P3.md P3.8 Completion Notes · plan.md D95/D98 · roadmap.md · `40781d37` · `367e477a`.
+**Sources of truth:** plan.md §2/§3/§4, phases/P3.md Phase Handoff, phases/P4.md P4.1,
+roadmap.md, `367e477a`.
 
-**Open risks:** P3.4/P3.5 historical deviations remain visible. P3 close must preserve them and must not schedule a third audit pass.
+**Open risks:** P3.4 stale P1.6 parent hash/non-green provider readiness и P3.5 foreign
+`scheduler.py` path остаются в истории; D98 forbids audit 11. Worktree остаётся грязным
+неплановыми изменениями в core/harness/skiller/task и другим планом — не включать их в P4.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: the package-cwd continuation was verified via package-cwd commands after explicit owner instruction; D98 forbids audit 11;
-- deferred: P4.6 owns hook repair;
+- workarounds: none accepted in the P3 runtime;
+- deferred: P4.6/P4.4 own hook repair and recheck;
 - open_questions: none.
 
 ```text
-$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3
-
-РЕЖИМ: terminal phase reconciliation; audit 11 forbidden by D98
-ВХОД: phases/P3.md P3.5–P3.8 Completion Notes · plan.md D95/D98 · 40781d37 · 367e477a
-СКОУП: close P3 from committed evidence, preserve historical deviations and publish the next phase handoff
-НЕ ТРОГАТЬ: frozen P1/P2, P4–P6 implementation, root router/installer, unrelated dirty worktree
+NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md Phase Handoff, phases/P4.md P4.1, roadmap.md and handoff.md. Preserve P3.4/P3.5 deviations, D98’s audit-11 prohibition, frozen P1/P2, P4.2–P6 and unrelated dirty worktree. Execute only P4.1 under its committed scope and validation.
 ```

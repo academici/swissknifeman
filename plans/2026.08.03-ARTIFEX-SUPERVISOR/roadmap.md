@@ -1,15 +1,13 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.17.0 · **Статус:** P1/P2 и
-P3.1–P3.4 остаются terminal history; D82–D84 держат P3 reopened, D88 добавил P3.8 и состояние
-`3/8`; D89–D90 держат G1→G5 generation/generator topology, D93–D94 закрывают audit-8
-execution/validation gaps, а D95–D97 дают exact resolver-valid Harness source/test/lock grants до
-consumers; D98 закрывает design-audit loop и открывает P3.5; package/root projections идут только
-через plan→apply→check, P3.7 не мутирует P3.6.
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.17.0 · **Статус:** P1/P2 и P3
+terminal history; P3 закрыта `🟠` (6 🟢, 2 🟠). D89–D90 держат G1→G5 generation/generator topology,
+D93–D97 — exact resolver-valid Harness source/test/lock grants; D98 запрещает audit 11.
+Package/root projections идут только через plan→apply→check; P4 начинает assurance G1.
 
-## Current execution launch — D98 audit-loop closure
+## Current execution launch — P4 assurance
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1
 
 | Параметр | Значение |
 |:--|:--|
@@ -17,12 +15,12 @@ consumers; D98 закрывает design-audit loop и открывает P3.5; 
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test · git-commit |
 | Context | same-session — item |
-| Суть | Исполнить P3.7 Task regression and closure fan-in; design audit не повторять |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` |
+| Суть | Исполнить P4.1 failure matrix и fresh-process crash-injection harness |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P3.6 evidence/hash remediation; D98 forbids audit 11 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6. Read plan.md, phases/P3.md P3.6, roadmap.md and handoff.md. D98 forbids task:plan-audit design. Preserve P3.5 deviation and unrelated dirty worktree.'` |
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P4.1 recovery boundary; preserve terminal P3 deviations | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1. Read plan.md, phases/P3.md Phase Handoff, phases/P4.md P4.1, roadmap.md and handoff.md. Preserve P3.4/P3.5 deviations, D98 audit-11 prohibition and unrelated dirty worktree.'` |
 
 ## Карта исполнения
 
@@ -56,8 +54,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | audit F1–F6 disproved runtime/evidence closure; historical record remains visible and remediation is forward-only |
 | P3.5 | remediation | 🟠 Done with deviations | implementation/high | — | `b7c7c1a0` binds the runtime, but its foreign `scheduler.py` path requires plan-design before P3.6 |
 | P3.6 | terminal | 🟢 Done | implementation/high | — | `ea141189` provides real indexed readiness and strict immutable-P2/current-P3 hash proof |
-| P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6 read-only; temp-isolated fresh probe, before/after clean carrier check and Task invariant repair |
-| P3.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8` | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | exact Artifex plan→apply→check, atomic stage-1 commit, full gpt-5.6-terra/high package-cwd Codex continuation, then G1 runtime/baseline |
+| P3.7 | terminal | 🟢 Done | implementation/high | — | Task invariant repair and read-only closure fan-in closed |
+| P3.8 | terminal | 🟢 Done | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | G1 Artifex package promotion closed |
 | P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
 | P4.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.2` | implementation/high | — | dispatch-aware no-rerun recovery; consumes P4.1 |
 | P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
@@ -80,27 +78,11 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 3. Execute P3.5→P3.6→P3.7→P3.8, close P3 and apply the two-pass/two-repeat ceiling to its phase audit checkpoint.
 4. Literal P3 acceptance unlocks P4. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5→mandatory P6 sequentially; no audit checkpoint may schedule a third automatic pass.
 
-### P3 — reopened forward remediation
+### P3 — closed forward remediation
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | high |
-| Capabilities | repository-plan-write · subprocess-test |
-| Context | same-session — item |
-| Суть | Выполнить P3.7 Task regression and closure fan-in |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` |
-
-```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
-
-РЕЖИМ: remediation item execution; committed-spec gate обязателен
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P3.md → P3.6 + P3.5 Completion Notes
-СКОУП: real readiness probe и immutable-P2/current-P3 hash proof
-НЕ ТРОГАТЬ: D98 запрет audit 11; frozen P1/P2; terminal P3.1–P3.5 history; P3.7–P3.8; P4–P6; unrelated dirty worktree
-```
+P3 закрыта `🟠 Done with deviations`: P3.4 сохраняет stale P1.6 parent hash/non-green readiness,
+P3.5 — foreign `scheduler.py` path; P3.6–P3.8 закрыли evidence, Task fan-in и G1 package
+promotion. D98 запрещает audit 11; следующий runnable producer — P4.1.
 
 ## Authority Gate Contract
 

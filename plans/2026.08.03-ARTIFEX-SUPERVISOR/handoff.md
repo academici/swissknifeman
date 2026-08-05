@@ -1,27 +1,27 @@
-# HANDOFF — 2026-08-05 — after P4.7
+# HANDOFF — 2026-08-05 — after P4.8
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.8
+**Next:** close-phase: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high |
-| Capabilities | repository-code-edit · authority-requalification · G2-assurance |
-| Context | same-session — item |
-| Суть | Requalify D104 protected authority and publish the G2 successor. |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.8` |
+| Effort | low |
+| Capabilities | plan-closure · evidence-reconciliation |
+| Context | cold-start — plan-step |
+| Суть | Сверить terminal P4.1–P4.8, закрыть фазу и передать final audit. |
+| Команда | `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5 | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | P4.8 prospective owner-gate and G2 successor | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.8'` |
+| gpt-5 | low | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | cold-start — plan-step | P4 terminal closure | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access 'Run $ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4'` |
 
-**Done:** P4.7 item commit `138b2424` repairs the stale generated provider reference and volatile plan-reader fixture, then proves the full Harness gate in a clean detached clone. Its reconciliation artifact records F3–F7 forward without rewriting historical commits or journal rows.
+**Done:** P4.7 `138b2424`/`d4f0fa26` repaired the committed-tree Harness and provenance gates; P4.8 `124df816` published a D104-authorized G2 successor consuming that P4.7 evidence. All eight P4 items are terminal.
 
-**Remaining:** execute and self-close owner-gated P4.8; then run `$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4` and the second permitted `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4`.
+**Remaining:** run phase closure, then the second and final permitted `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4`. P5 remains blocked until that audit is GREEN.
 
-**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-p4.8-authority-preflight.py`.
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/authority-requalification-v1.json`.
 
-**Open risks:** P4.8 must reject every semantic/path/authority mismatch before publishing G2; P5 remains blocked until P4 closes and its final audit is GREEN.
+**Open risks:** Closure must preserve P4.2/P4.4/P4.5/P4.6 deviations without rewriting historical evidence.
 
 **Workarounds/Deferred/Open questions:**
 

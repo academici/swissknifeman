@@ -53,6 +53,15 @@ def indexed_admission(plan_dir: Path, admission_path: Path) -> dict[str, Any]:
     return value
 
 
+def indexed_business_admission(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_digest: str) -> dict[str, Any]:
+    """Additive D108 boundary; smoke admissions stay owned by ``indexed_admission``."""
+    from . import business_dispatch
+    try:
+        return business_dispatch.load_indexed(plan_dir, admission_path, g2_digest=g2_digest, g2b_digest=g2b_digest)
+    except business_dispatch.BusinessRefusal as exc:
+        raise SecurityRefusal(exc.reason) from exc
+
+
 def request(admission: dict[str, Any], value: Any) -> dict[str, Any]:
     """Require an exact, bounded provider request derived from that admission."""
     if not isinstance(value, dict) or set(value) != {"provider", "route", "permissions", "budgets", "bundle", "child_policy"}:

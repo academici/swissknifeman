@@ -1,31 +1,30 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.20.0 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.22.3 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal под D105–D106;
-следующий item — P5.2, затем P5.3→P5.4 до одного анализа фазы.
+детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; D111 reopens only
+P5.5 for one schema path and the exact bounded R2 replacement pair, while D112 replaces only the
+Codex cap-enforcement semantics with a mechanically provable wrapper/usage contract. P5.2→P6 remain non-runnable
+until P5.5 terminality. Both finite R2 processes have now returned `PROVIDER_NONZERO`; P5.5 is
+blocked and no retry, fallback, R3 or pilot is authorized.
 
-## Current execution launch — P5.2
+## Current execution status — P5.5 R2 exhausted
 
-**Next:** manual: implementation/high
+**Next:** /task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
 | Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
-| Context | continue (/clear) — ручной item |
-| Суть | Run the exact reversible three-slice pilot from the terminal P5.1 admission index. |
-| Команда | — |
-
-| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Execute P5.2 exact reversible three-slice pilot | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Preserve P4 history and unrelated dirty worktree; consume only terminal P5.1 D105-bound admissions, execute the exact reversible three-slice pilot, close P5.2 and hand directly to P5.3 without design/audit.'` |
+| Context | same-session — item |
+| Суть | Green local preflight, then one closed nonzero R2 process per provider. A separate neutral controlled-check record preserves Codex `1/13539 ms/4/OK` and Claude Code `1/4380 ms/1/OK`; it does not alter the exhausted R2 grant. |
+| Команда | `codex -C /tmp/p5-g2b-prep.UGARHt/wt -a never -s danger-full-access '$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5'` |
 
 ## Карта исполнения
 
-Все 41 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
+Все 42 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
 D98 открыл текущий product execution path с P3.5 без audit 11.
@@ -66,13 +65,14 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
 | P5.1 | terminal | 🟢 Done | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` consumed | `88f9a132` materializes all per-trial admissions after D106 historical/current gate |
-| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
-| P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
-| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` | frontier/high | business admissions required; no single-provider terminal waiver | five paired waves over unchanged G2; G3 pins exact measured digest; only literal frozen `GO` closes |
-| P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 package generation + consumes D87/D96 root grants | require current G2/G3 identity; freeze exact P6.2/P6.3 rows and D93 root authorization order |
-| P6.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.2` | implementation/high | exact D87 output + D96 resolver-valid Harness source/test/lock grant; protected G2 runtime immutable | produce G4 through exact root plan→apply `AGENTS.md,CLAUDE.md`→check without runtime migration |
+| P5.5 | blocked | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5` | implementation/high | D111/D112 R2 grant exhausted | both final processes returned `PROVIDER_NONZERO`; no retry/R3/D105 use |
+| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal P5.5 | implementation/high | consumes D105 only through G2B | exact three-slice pilot; G2/P3/probe carriers refuse |
+| P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` after terminal P5.2 | implementation/high | consumes same G2B and indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
+| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.3 | frontier/high | same G2B/D105 provider parity; no single-provider waiver | five paired waves; G3 pins G2B and only literal `GO` closes |
+| P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 plus G2B/G3 and consumes D87/D96 | freeze exact P6.2/P6.3 rows and D93 root authorization order |
+| P6.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.2` | implementation/high | exact D87+D96; protected G2B runtime immutable | produce G4 through exact root plan→apply `AGENTS.md,CLAUDE.md`→check without runtime migration |
 | P6.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.3` | implementation/high | — | produce G5: install/update/doctor, default-off operations, compatibility, rollback, docs and changelog |
-| P6.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.4` | frontier/xhigh | — | distinct cold G1→G5 finished-product/instruction audit; RED keeps plan open |
+| P6.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.4` | frontier/xhigh | — | distinct cold G1→G2→G2B→G3→G4→G5 finished-product/instruction audit; RED keeps plan open |
 
 ## Последовательность successor-contract remediation
 
@@ -82,6 +82,9 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 4. Audit P4 pass 1 reopened the historical chain; P4.7→P4.8 and close completed. Audit pass 2
    remains historical RED, then bounded forward remediation closed its mechanical/product gates
    GREEN under D98/D103. No third audit/design pass is authorized; continue P5→mandatory P6.
+5. P5.2 proved terminal G2 cannot consume D105 and Codex cannot launch. D107 freezes that result;
+   D108–D109 add exact P5.5 G2B production before unchanged-ID P5.2→P5.3→P5.4. P4/G2/P5.1 stay
+   immutable, and P6 consumes the same G2B pin.
 
 ### P3 — closed forward remediation
 
@@ -92,7 +95,7 @@ terminal baseline; следующий runnable producer — P4.2.
 
 ## Authority Gate Contract
 
-Только следующие шесть active markers являются owner grants этого плана. Проверяемый carrier —
+Только следующие восемь active markers являются owner grants этого плана. Проверяемый carrier —
 более поздняя, чем D64, строка Decision Log в `plan.md`, которая дословно содержит указанный
 `[OWNER-GRANT:<gate-id>]`, называет разрешённую ветвь и scope, ссылается на явное сообщение
 repository owner и не отозвана более поздним D#. D74/D75 и команды `finish`/audit не являются
@@ -101,6 +104,8 @@ repository owner и не отозвана более поздним D#. D74/D75 
 | Gate ID | Защищённый переход | Exact predicate | Без carrier |
 |:--|:--|:--|:--|
 | `G-OWNER-P5-BUSINESS` | P5.1 материализует grants/admissions для P5.2–P5.4 | D105 содержит marker, exact catalog/request SHA-256, providers, 14 roots, max-dispatches, per-trial caps и `brief/22-p5-last-pass-fast-track.md`; D78 itself is not a grant | P5.1 pauses after proposal hashes; no business admission/provider call |
+| `G-OWNER-P5-G2B-SUCCESSOR` | P5.5 produces additive G2B contract/runtime/provider/assurance | D108 exact marker, branch, Files, two-link D105 G2-predecessor→current-G2B projection, provider versions, two probe roots/caps, unchanged expiry/budget, zero D105 usage and acceptance; consumer P5.5 only | no package/contract mutation or capability probe; P5.2–P6 remain gated |
+| `G-OWNER-P5-G2B-PROBE-R2` | P5.5 adds the missing worker-output schema and runs the final replacement canary pair | D111 exact marker, branch, consumer, one schema path, two R2 roots, provider versions, zero-process preflight, zero D105 use, no retry/fallback/pilot and full acceptance; D112 supersedes only Codex cap semantics with one fresh exec, Artifex `120000ms`/`<=8192`/`<=16`, conditional strict-config-proven `rollout_budget=2000`, no max-turn/money CLI claim and measured usage; `brief/26` + `brief/27` are the Layer-0 carriers | no schema path, R2 call or P5.5 resume; P5.2–P6 remain gated |
 | `G-OWNER-P6.1-PACKAGE` | P3.8 materializes mandatory `artifex-package`; P6.1 revalidates it | D86 exact marker разрешает `packages/artifex/**` and finite package-owned outputs only | P3.8 remains non-terminal; P4/P5 cannot start |
 | `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2` | P3.8 stage 1 adds the Artifex instruction owner and shared-lock generation | D95 exact record + Layer-0 message matches every Harness source/test/lock path in P3.8 `Files`; consumer is P3.8 only | no Harness source/projection mutation; P3.8 remains open |
 | `G-OWNER-P6.1-ROUTER` | P6.1 фиксирует `root_router=approved`; P6.2 consumes outputs | D87 exact marker разрешает additive `swissknifeman artifex` and exact root installer/doctor/generated outputs | P6.1 remains non-terminal; no rootless terminal product |
@@ -119,10 +124,11 @@ but cannot terminalize P5 or waive provider parity. Tag/push/publish/release н�
 | Generation | Producer | Current through | Successor rule |
 |:--|:--|:--|:--|
 | G1 | P3.8 D95 generation + package promotion | P3.8 close | pins stage-1 source/guides/lock commit and terminal item commit; historical Git/blob baseline after first P4 package edit |
-| G2 | P4.8 D104 requalification successor (historical predecessor: P4.5/`23f71d34`) | P5 and P6.1 pre-write | consumes terminal P4.7 and exact current Artifex bytes; P5 is read-only; P6.2 protects runtime subset and produces G4 |
-| G3 | P5.4 `GO` | P6.1 pre-write | pins exact unchanged G2 bytes; evidence only |
+| G2 | P4.8 D104 requalification successor (historical predecessor: P4.5/`23f71d34`) | immutable P3 readiness/smoke generation; P5 business use refused by D107 | consumes terminal P4.7 and exact current Artifex bytes; any business/native successor is a distinct forward generation under a new owner grant and never rewrites G2/P4 history |
+| G2B | P5.5 D108 additive business successor | P5.2–P5.4 and P6.1 pre-write | pins G2 predecessor, exact business contract/provider surface/current package digest; no D105 pilot use in production |
+| G3 | P5.4 `GO` | P6.1 pre-write | pins exact unchanged G2B bytes; evidence only |
 | G4 | P6.2 D96 root generation + integration | P6.3 start | pins exact D93 plan/apply/check/lock transition and structural router/installer successor; no runtime migration |
-| G5 | P6.3 operations | P6.4 audit | finished current product; cold audit validates G1→G5 |
+| G5 | P6.3 operations | P6.4 audit | finished current product; cold audit validates G1→G2→G2B→G3→G4→G5 |
 
 Historical carriers are never regenerated against evolved current bytes.
 `packages/artifex/{CLAUDE.md,AGENTS.md}` and root `CLAUDE.md`/`AGENTS.md` are generated/validated

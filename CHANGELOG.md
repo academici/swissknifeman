@@ -21,6 +21,10 @@
 
 ### Added
 
+- **Artifex business-provider projections now run against current Codex and Claude Code CLI surfaces.**
+  The bounded adapters use a shared Draft-07 output schema, retain only normalized observations,
+  and cover current Claude structured-result metadata without persisting provider text.
+
 - **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,
   нативный скоуп навыков, exec-волна, гигиена и раскладка `core/`
   (`plans/archive/2026.07.31-SKM-LEAN/`).** P1.1 добавил к `skiller budget --first-turn`

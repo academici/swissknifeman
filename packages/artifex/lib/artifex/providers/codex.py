@@ -10,6 +10,7 @@ from .common import AdapterRefusal, failed, load_json, require_request
 
 
 PROBE_VERSION = "codex-cli 0.146.0"
+BUSINESS_VERSION = "codex-cli 0.146.0"
 ALLOWED_EVENTS = frozenset({"thread.started", "turn.started", "item.completed", "turn.completed", "turn.failed", "error"})
 
 
@@ -55,6 +56,22 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
             "--ignore-user-config", "-C", str(Path(cwd)), "-m", model, "-s",
             request["permissions"]["sandbox_mode"].replace("_", "-"), *config,
             "--output-schema", str(Path(schema_path)), "-"]
+
+
+def build_business_argv(request: dict, *, schema_path: str | Path, cwd: str | Path, binary: str | None = None) -> list[str]:
+    """D112 R2 mapping, distinct from the intentionally refusing smoke mapper.
+
+    The native CLI has no enforceable turn or money cap.  The caller therefore
+    owns the hard process limits; this list deliberately contains neither.
+    """
+    require_request(request)
+    if (request["provider"].get("cli_version") != BUSINESS_VERSION
+            or request["permissions"].get("sandbox_mode") != "workspace_write"
+            or request["permissions"].get("network_mode") != "disabled"):
+        raise AdapterRefusal("MAPPING_UNKNOWN")
+    if request.get("child_policy", {}).get("mode") != "forbidden" or not Path(schema_path).is_file() or not Path(cwd).is_dir():
+        raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
+    return [binary or resolve_binary(), "exec", "--json", "--ephemeral", "--ignore-user-config", "--ignore-rules", "--strict-config", "--skip-git-repo-check", "-C", str(Path(cwd)), "-s", "workspace-write", "--disable", "multi_agent", "-c", "sandbox_workspace_write.network_access=false", "-c", "approval_policy=never", "--output-schema", str(Path(schema_path)), "-"]
 
 
 def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],

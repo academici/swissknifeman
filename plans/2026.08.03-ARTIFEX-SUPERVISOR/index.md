@@ -9,7 +9,8 @@
 | `plan.md` | master plan, Routing, Status Board, decisions and contract crosswalk |
 | `phases/P0.md … phases/P6.md` | seven phases; P0–P6 detailed to authoring DoR |
 | `handoff.md` | rolling next-step pointer |
-| `roadmap.md` | execution map for all 41 manual items; D85–D97 create resolver-valid owner-lawful G1 `packages/artifex` at P3.8 and carry the original G2→G5 topology; D103–D104 reopen P4 for final audit-1 remediation through P4.7–P4.8 |
+| `open-questions.md` | owner decision tracker; P5.5 replacement-probe gate resolved by D111 |
+| `roadmap.md` | execution map for all 42 manual items; D85–D97 create resolver-valid owner-lawful G1 `packages/artifex`; D103–D104 produce terminal G2; D108–D111 authorize the exact P5.5 G2B/R2 producer before P5.2 without rewriting P4/P5.1 history |
 | `journal.jsonl` | append-only plan-command provenance |
 | `brief/` | direct owner intent and non-goals |
 | `findings/` | repository recon, first-party verification, reference products, preflight, P1–P6 reconciliation and finish recheck |
@@ -40,6 +41,10 @@
 | `brief/19-p4.1-terminal-validator-reconciliation.md` | brief | P4.1 | exact terminal-validator regeneration boundary and immutable-history constraints |
 | `brief/20-p4.6-status-literal-reconciliation.md` | brief | P4.6 | exact hook-status literal repair authority and no-second-repair boundary |
 | `brief/21-p4-audit1-final-remediation.md` | brief | P4.7–P4.8, P4 close/audit | final P4 design pass, F1–F7 forward remediation and resolver-valid P4.8 owner grant |
+| `brief/23-p5.2-frozen-contract-reconciliation.md` | brief | P5.2 | owner directive to resolve the G2/business/native Codex conflict as a frozen-contract decision without pilot or P4-history mutation |
+| `brief/24-p5-phase-successor-authorization.md` | brief | P5.5, P5.2–P5.4, P6 | owner authorization for exact additive successor generation and whole-phase producer/consumer reconciliation without a pilot |
+| `brief/25-p5.5-probe-recovery-request.md` | brief | P5.5 | owner invocation of redesign after exhausted D108 attempts; explicitly not a replacement-probe grant |
+| `brief/26-p5.5-probe-r2-owner-grant.md` | brief | P5.5 | direct exact D111 authorization for one schema path and two bounded R2 replacement probes |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -64,6 +69,9 @@
 | `findings/hooks-stale-source-precondition-2026-08-04.md` | findings | P4.6, P4.4 | reproduced effective-hook warning, exact two stale-source actions and worktree-local repair/recheck owner surface |
 | `findings/P4.4-hook-status-literal-conflict-2026-08-05.md` | findings | P4.4 | reproduced terminal/live `green` versus frozen P4.4 `ok` security-prerequisite conflict |
 | `findings/P4.1-terminal-precondition-blocked-2026-08-05.md` | findings | P4.1 | reproduced terminal-validator generation precondition and the forward-only repair boundary |
+| `findings/P5.2-terminal-g2-native-capability-conflict-2026-08-05.md` | findings | P5.2 | exact G2 business-schema and Codex capability refusals, current official CLI surface and green preflight integrity |
+| `findings/P5-successor-provider-surface-2026-08-05.md` | findings | P5.5, P5.2–P6 | G2-only runtime seams, immutable D105 parent bindings, current Codex/Claude versions and trusted preflight rerun |
+| `findings/P5.5-probe-recovery-verification-2026-08-05.md` | findings | P5.5 | current partial-worktree state, pre-provider root cause and refreshed first-party provider controls |
 | `findings/P3-P6-early-package-finish-recon-2026-08-04.md` | findings | P3.8, P4.5, P5, P6, finish/audit | reproduced promotion-manifest drift risk, stale five-package/root-router instruction canon and exact Harness generator ownership |
 | `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md` | findings | P3.7–P3.8, P6.1–P6.4, design audit | repo-grounded authorize ordering, lock side effect, durable Codex continuation and temp-isolated validation facts for audit-8 F1–F4 |
 | `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md` | findings | P3.8, P6.1–P6.4, finish/design audit | exact protected resolver grammar, same-gate ambiguity and missing journal provenance observation from audit 9 |
@@ -100,6 +108,9 @@
 | `research/30-audit9-resolver-valid-authority-reconcile.md` | research | P3.8, P6.1–P6.4, finish/design audit | D95/D96 R2 carrier topology, D97 successor mapping, protected evaluation matrix and forward-only journal repair |
 | `research/31-p4.1-terminal-validator-generation-reconcile.md` | research | P4.1 | generated terminal-validator design, source ownership and clean-tree verification |
 | `research/32-p4-audit1-final-remediation.md` | research | P4.7–P4.8, P4 close/audit | F1–F7 synthesis, finite two-item repair chain, G2 successor and audit-pass-2 terminal path |
+| `research/34-p5.2-frozen-successor-decision.md` | research | P5.2 | D107 additive-successor choice, rejected bypasses, immutable G2/P4 boundary and explicit non-DoR successor gate |
+| `research/35-p5-phase-successor-topology.md` | research | P5.5, P5.2–P5.4, P6 | D108–D109 G2B producer topology, frozen-ID compatibility order and downstream generation reconcile |
+| `research/36-p5.5-probe-recovery-design.md` | research | P5.5 | rejected silent retry/synthetic assurance and exact owner-gated R2 proposal with zero-process preflight |
 
 ## Запланированные выходы P0
 
@@ -175,6 +186,6 @@
 | Путь | Производитель | Потребители |
 |:--|:--|:--|
 | `artifacts/P6/product-home-*`, P6.2/P6.3-owned root/public/instruction `integration-scope-v1.json`, `validate-product-home.py` | P6.1 | P6.2–P6.4 |
-| exact `swissknifeman artifex` route, package-installer delegation, D96 resolver-valid Harness root source/tests/shared lock, D93-generated root projections and G4 `integration-manifest-v1.json`/validator | P6.2 | P6.3–P6.4; preserves protected G2 runtime subset and exact generator lineage |
+| exact `swissknifeman artifex` route, package-installer delegation, D96 resolver-valid Harness root source/tests/shared lock, D93-generated root projections and G4 `integration-manifest-v1.json`/validator | P6.2 | P6.3–P6.4; preserves protected G2B runtime and immutable G2 predecessor plus exact generator lineage |
 | installer/update/doctor/config/docs/CHANGELOG scope plus compatibility/rollback and G5 operations manifest/validator | P6.3 | P6.4 |
-| `artifacts/P6/release-candidate-audit-v1.json`, `validate-release-candidate-audit.py` | P6.4 | cold G1→G5/product/instruction audit, phase close and release decision |
+| `artifacts/P6/release-candidate-audit-v1.json`, `validate-release-candidate-audit.py` | P6.4 | cold G1→G2→G2B→G3→G4→G5 product/instruction audit, phase close and release decision |

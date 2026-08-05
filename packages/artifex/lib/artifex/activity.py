@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-from . import dispatch, security, worker
+from . import business_dispatch, dispatch, security, worker
 from .providers import claude_code, codex, parity
 from .providers.common import AdapterRefusal
 
@@ -81,3 +81,20 @@ class ProviderActivityPort:
                 return security.observation(result)
         except (KeyError, TypeError, OSError, security.SecurityRefusal):
             return self._refusal("MAPPING_UNKNOWN")
+
+
+class BusinessProviderActivityPort:
+    """D108-only request projection.
+
+    It deliberately does not run a provider: P5.5 can prove the argv projection
+    without turning one of the fourteen D105 admissions into pilot evidence.
+    """
+
+    def __init__(self, plan_dir: Path, admission: dict[str, Any], *, g2_digest: str,
+                 g2b_digest: str) -> None:
+        self.plan_dir = plan_dir.resolve()
+        self.admission = admission
+        self.g2_digest, self.g2b_digest = g2_digest, g2b_digest
+
+    def request(self, *, provider_version: str, cwd: Path) -> dict[str, Any]:
+        return business_dispatch.request(self.admission, provider_version=provider_version, cwd=cwd)

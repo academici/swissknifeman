@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import activity, authority, compiler, dispatch, scheduler, security, store, telemetry, worktree
+from . import activity, authority, business_dispatch, compiler, dispatch, scheduler, security, store, telemetry, worktree
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -220,6 +220,15 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
             "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0)}
 
 
+def _dispatch_business(args: argparse.Namespace, repo: Path, plan: Path, _runs: Path) -> dict:
+    """Validate a D105 carrier through G2→G2B without issuing provider intent."""
+    admission_path = _file(_inside(repo, repo / args.admission))
+    admission = security.indexed_business_admission(plan, admission_path, g2_digest=args.g2_predecessor,
+                                                     g2b_digest=args.g2b_successor)
+    return {"status": "admitted", "trial_id": admission["trial_id"], "provider": admission["task"]["provider"],
+            "usage": 0, "intent_written": False}
+
+
 def _worktree_inventory(args: argparse.Namespace, repo: Path, _plan: Path, _runs: Path) -> dict:
     """Expose the parseable linked-worktree inventory without mutating repository state."""
     manager = worktree.WorktreeManager(repo)
@@ -248,6 +257,10 @@ def build_parser() -> argparse.ArgumentParser:
     dispatch_command.add_argument("--run-id", required=True)
     dispatch_command.add_argument("--admission", required=True)
     dispatch_command.add_argument("--provider", choices=("codex", "claude-code"))
+    business_command = sub.add_parser("dispatch-business")
+    business_command.add_argument("--admission", required=True)
+    business_command.add_argument("--g2-predecessor", required=True)
+    business_command.add_argument("--g2b-successor", required=True)
     sub.add_parser("worktree-inventory")
     return parser
 
@@ -257,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         repo, plan, runs = _roots(args)
         result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "telemetry": _telemetry, "dispatch": _dispatch,
-                  "worktree-inventory": _worktree_inventory}[args.command](args, repo, plan, runs)
+                  "worktree-inventory": _worktree_inventory, "dispatch-business": _dispatch_business}[args.command](args, repo, plan, runs)
         code = EXIT_OK
     except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, security.SecurityRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL

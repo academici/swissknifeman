@@ -1,31 +1,36 @@
-# HANDOFF — 2026-08-05 — after P5.2
+# HANDOFF — 2026-08-05 — after P5
 
-**Next:** /task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2
+**Next:** design-item: task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier (target route) |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | frozen-contract reconciliation · provider-boundary design · plan evidence |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Reconcile the frozen G2/P5 business-admission incompatibility before any P5.2 provider call. |
-| Команда | — |
+| Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
+| Context | cold-start — plan-step |
+| Суть | Both D111/D112 one-shot R2 provider processes returned `PROVIDER_NONZERO` after green zero-process preflight. No retry, fallback or R3 is authorized. |
+| Команда | `codex -C /tmp/p5-g2b-prep.UGARHt/wt -a never -s danger-full-access '$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5'` |
 
-```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Reconcile the terminal G2 dispatch/admission and native Codex capability conflict as a frozen-contract decision; do not execute a P5 pilot or mutate P4 history.'
-```
+**Done:** JSON Schema self-test, Codex strict-config and full fake-binary projections passed at
+`process_count=0`. The sole D111/D112 R2 process per provider then started under the fixed root
+and cap controls; both returned minimized `PROVIDER_NONZERO` observations. A separate neutral
+controlled-check record also preserves Codex `1/13539 ms/4/OK` and Claude Code `1/4380 ms/1/OK`
+(process count/duration/event count/result); it neither retries nor reclassifies the R2 pair.
 
-**Done:** P5.2 performed the required pre-intent D105/G2 checks. The exact first D105 business admission is rejected as `UNKNOWN_SCHEMA_VERSION` by terminal G2 `security.indexed_admission`; a well-formed native Codex request reaches the terminal adapter and is refused as `CAPABILITY_UNSUPPORTED`. No provider process, controlled worktree, admission usage, package or P4 evidence was mutated.
+**Remaining:** P5.5 is blocked. A plan-design/owner decision is required before any more work;
+P5.2–P5.4 and P6 remain gated. The exhausted R2 pair authorizes no retry, fallback or R3.
 
-**Remaining:** Do not execute P5.2/P5.3/P5.4 until a plan-design decision resolves the frozen candidate/business-admission boundary. P5.4's consolidated fan-in remains deferred.
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/brief/27-p5.5-codex-r2-cap-contract-owner-refinement.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/brief/26-p5.5-probe-r2-owner-grant.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/research/36-p5.5-probe-recovery-design.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/findings/P5.5-probe-recovery-verification-2026-08-05.md` ·
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` P5.5 · `plan.md` D108–D112.
 
-**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json` · `packages/artifex/lib/artifex/security.py` · `packages/artifex/lib/artifex/dispatch.py` · `packages/artifex/lib/artifex/providers/codex.py`.
-
-**Open risks:** D105 is bounded and non-reusable, but its `business-trial` schema is not consumable by terminal G2. Altering Artifex/P4 to make it consumable would violate P5.2's frozen-candidate constraint; bypassing native Codex capability refusal would violate the provider boundary.
-`codex doctor --json` reports a loaded `gpt-5.6-terra` configuration but does not attest the active model/effort; the prior `gpt-5.6-sol/high` journal label is append-forward-corrected as non-verifiable. `maind health --cwd` is green for `project:swissknifeman`.
+**Open risks:** Both final R2 observations were nonzero after process start. The partial package
+diff remains untrusted and G2B/P5/P6 non-terminal; D112 creates no further attempt.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: P5.2–P5.4 execution and P5 consolidated fan-in.
-- open_questions: Which forward, owner-authorized frozen-contract path can make the candidate consume D105 business authority without rewriting P4 history?
+- deferred: P5.2–P5.4 pilots and P6.
+- open_questions: OQ-P5.5-R2 resolved by D111 and refined by D112; no owner decision is pending.

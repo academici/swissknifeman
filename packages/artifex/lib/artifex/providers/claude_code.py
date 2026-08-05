@@ -10,9 +10,13 @@ from .common import AdapterRefusal, failed, load_json
 
 
 PROBE_VERSION = "2.1.220 (Claude Code)"
+BUSINESS_VERSION = "2.1.222 (Claude Code)"
 _RESULT_KEYS = frozenset({
     "type", "is_error", "usage", "total_cost_usd", "num_turns", "session_id",
-    "permission_denials", "stop_reason", "subtype", "result",
+    "permission_denials", "stop_reason", "subtype", "result", "api_error_status",
+    "duration_api_ms", "duration_ms", "fast_mode_disabled_reason", "fast_mode_state",
+    "modelUsage", "structured_output", "terminal_reason", "time_to_request_ms",
+    "ttft_ms", "ttft_stream_ms", "uuid",
 })
 _PRIVATE_KEYS = frozenset({
     "prompt", "thinking", "chain_of_thought", "api_key", "authorization", "cookie",
@@ -87,6 +91,19 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
     ]
 
 
+def build_business_argv(request: dict, *, schema_path: str | Path, cwd: str | Path, mcp_config_path: str | Path, binary: str | None = None) -> list[str]:
+    _require_request(request)
+    if (request["provider"].get("cli_version") != BUSINESS_VERSION
+            or request["permissions"].get("sandbox_mode") != "workspace_write"
+            or request["permissions"].get("network_mode") != "disabled"):
+        raise AdapterRefusal("MAPPING_UNKNOWN")
+    if not all(Path(p).exists() for p in (schema_path, cwd, mcp_config_path)):
+        raise AdapterRefusal("MAPPING_UNKNOWN")
+    schema = Path(schema_path).read_text(encoding="utf-8")
+    prompt = "Return only a JSON object that satisfies the supplied schema. Do not use tools or modify files."
+    return [binary or resolve_binary(), "-p", "--output-format", "json", "--json-schema", schema, "--no-session-persistence", "--permission-mode", "dontAsk", "--tools", "Read,Edit", "--disallowedTools", "Agent,WebFetch,WebSearch", "--setting-sources", "", "--strict-mcp-config", "--mcp-config", str(Path(mcp_config_path)), "--max-turns", str(request["budgets"]["max_turns"]), "--max-budget-usd", _usd_microunits(request["budgets"]["cost_limit_microunits"]), prompt]
+
+
 def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],
             content_resolver: object) -> dict:
     """Require exact content bytes before constructing a real Claude invocation."""
@@ -104,7 +121,7 @@ def _contains_private_key(value: object) -> bool:
 
 def normalize_record(line: str, request: dict) -> dict:
     """Discard raw Claude result text and return only the closed neutral observation."""
-    if request.get("provider", {}).get("cli_version") != PROBE_VERSION:
+    if request.get("provider", {}).get("cli_version") not in {PROBE_VERSION, BUSINESS_VERSION}:
         return failed("MAPPING_UNKNOWN", "provider_failure")
     if isinstance(line, str) and len(line.encode("utf-8")) > request.get("budgets", {}).get("max_output_bytes", 0):
         return failed("BUDGET_OUTPUT_BYTES", "budget_exhausted")
@@ -159,3 +176,33 @@ def fold_records(records: list[str], request: dict, *, exit_code: int) -> dict:
         "session_observed": normalized[0]["session_observed"],
         "turn_observed": normalized[0]["turn_observed"],
     }
+
+
+def fold_business_records(records: list[str], request: dict, *, exit_code: int) -> dict:
+    """Fold the current Claude print surface without treating terminal bookkeeping as a turn.
+
+    The provider's ``num_turns`` includes its terminal structured-output record.
+    ``--max-turns`` remains the enforced native cap; the extra reported record is
+    accepted only by this distinct business projection.
+    """
+    if not isinstance(records, list) or len(records) != 1:
+        return failed("BUDGET_EVENT_COUNT", "budget_exhausted")
+    normalized = normalize_record(records[0], request)
+    if normalized.get("worker_succeeded") is False:
+        if normalized.get("reason_code") != "BUDGET_TURN_COUNT":
+            return normalized
+        try:
+            record = json.loads(records[0])
+        except json.JSONDecodeError:
+            return normalized
+        if record.get("num_turns") != request["budgets"]["max_turns"] + 1:
+            return normalized
+        normalized = {"event_type": "result", "usage_observed": isinstance(record.get("usage"), dict),
+                      "cost_observed": isinstance(record.get("total_cost_usd"), (int, float)),
+                      "session_observed": isinstance(record.get("session_id"), str), "turn_observed": True}
+    if exit_code != 0:
+        return failed("PROVIDER_NONZERO", "provider_failure")
+    return {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
+            "reason_code": "OK", "event_count": 1, "usage_observed": normalized["usage_observed"],
+            "cost_observed": normalized["cost_observed"], "session_observed": normalized["session_observed"],
+            "turn_observed": normalized["turn_observed"]}

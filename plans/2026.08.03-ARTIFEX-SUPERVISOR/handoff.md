@@ -1,27 +1,27 @@
-# HANDOFF — 2026-08-05 — after P4.6
+# HANDOFF — 2026-08-05 — after P4.4
 
 **Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high — security-critical admission and privacy gate |
-| Capabilities | repository-plan-write · artifex-security · harness-observe · subprocess-test · git-commit |
+| Effort | high — aggregate assurance and telemetry gate |
+| Capabilities | repository-plan-write · artifex-telemetry · subprocess-test · git-commit |
 | Context | continue (/clear) — ручной item |
-| Суть | Execute P4.4 after D101's literal-only reconciliation, with no hook repair. |
+| Суть | Execute P4.5 from terminal P4.1–P4.4/P4.6 evidence and freeze G2 assurance. |
 | Команда | — |
 
 ```text
-Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.4. Read D101 and P4.6 Completion Notes first; rerun the exact dry-run read-only and require literal `Статус: green`, zero actions, and no warning/stale/update. Do not run --repair.
+Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.5. Read P4.4 Completion Notes and security-results-v1.json first; retain the exact P4.6 green hook predicate and use the current P4.4 security evidence as an input, never as self-certification.
 ```
 
-**Done:** D101 resolves the stale P4.4 copied `ok` literal to terminal/current Harness `green`, preserving every security predicate, exact same-target recheck and the no-repair boundary.
+**Done:** P4.4 is GREEN at `7607b0c0`: an indexed-admission security boundary now blocks provider, permission, child, content, environment and raw-observation widening; the Hook recheck is literal `green` with zero actions; package tests and the independent P4 validator passed.
 
-**Remaining:** P4.4 → P4.5, then P5.
+**Remaining:** P4.5, then P5.
 
-**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` D100/D101 · `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` P4.4/P4.6 · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/hook-integrity-results-v1.json`.
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` P4.4 · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-{cases,results}-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` D100/D101.
 
-**Open risks:** P4.4 must refuse any target/provider/flag drift, warning, stale/update action or non-`green` status; it must not run `--repair`.
+**Open risks:** P4.5 must independently consume all P4 rows, preserve unknowns and refuse non-green hook/security evidence; it must not infer an economic verdict.
 
 **Workarounds/Deferred/Open questions:**
 

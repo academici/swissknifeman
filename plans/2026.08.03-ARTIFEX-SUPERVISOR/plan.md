@@ -108,7 +108,7 @@ handoff. План не считается успешно завершённым,
 | P1 | Freeze supervisor contracts | 6/6 | 🟢 Done |
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
-| P4 | Prove recovery, isolation, security, and observability | 4/6 | 🟡 In progress |
+| P4 | Prove recovery, isolation, security, and observability | 5/6 | 🟡 In progress |
 | P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
@@ -237,6 +237,7 @@ handoff. План не считается успешно завершённым,
 | 2026-08-05 | plan-design/gpt-5.6-sol/high | P4.6 D100 reconciliation: literal post-repair acceptance now matches the worktree-local Harness `green` status; one-repair and all fail-closed checks remain unchanged. |
 | 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.6 закрыт: one Harness-generated Codex hook repair/recheck is green with minimized evidence and an independent validator — детали см. phases/P4.md P4.6 Completion Notes. |
 | 2026-08-05 | plan-design/gpt-5.6-terra/high | P4.4 direct owner correction: D101 aligns its copied hook-status literal with D100; runtime scope and all security predicates remain unchanged. |
+| 2026-08-05 | plan-run/gpt-5.6-terra/high | P4.4 закрыт: indexed-admission security boundary, redaction checks and independent evidence validator are green — детали см. phases/P4.md P4.4 Completion Notes. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Audit-8 F1–F4 remediation: D91–D94 add exact Harness source/test/lock owner carriers, executable plan→apply→check plus durable package-cwd restart, and temp-isolated P3.7 validation; 39 item statuses and frozen/terminal history are unchanged. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Post-D88 finish: D89–D90 reconcile immutable→current package generations and Harness-owned package/root instruction projections; 39-item roadmap now hands off to a cold design audit. |
 | 2026-08-04 | plan-design/gpt-5.6-sol/high | Early-package correction: D88 adds P3.8, makes `packages/artifex` the runtime SSOT before P4/P5, and narrows P6 to umbrella/install/doctor/operations/docs plus cold audit; total 39 manual items. |

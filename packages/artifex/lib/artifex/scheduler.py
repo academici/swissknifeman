@@ -188,6 +188,13 @@ class Scheduler:
                 record = self._append(event, slice_value, evidence={"validation": event})
             return {"status": record["state_after"], "record": record}
 
+    def reconcile_verified(self, slice_value: dict, inspection: dict) -> dict:
+        """Reconcile only an exact fresh inspection of the unresolved boundary."""
+        decision = store.recovery_decision(inspection)
+        result = self.reconcile(slice_value, decision["observed"])
+        result["recovery"] = decision
+        return result
+
     def owner_decision(self, slice_value: dict, decision: str) -> dict:
         if decision not in {"continue", "abort"}:
             raise SchedulerRefusal("OWNER_DECISION_REQUIRED")

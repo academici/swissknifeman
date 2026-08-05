@@ -26,6 +26,10 @@ RECORD_KEYS = frozenset((
     "slice_id", "attempt", "event", "state_before", "state_after",
     "idempotency_key", "input_hashes", "evidence", "redaction",
 ))
+RECOVERY_INSPECTION_KEYS = frozenset((
+    "preimage_hash", "postimage_hash", "observed_hash", "partial", "backup", "orphan_verified",
+    "external_call_count",
+))
 
 
 class StoreRefusal(ValueError):
@@ -39,6 +43,44 @@ class StoreRefusal(ValueError):
 
 class InjectedFailure(RuntimeError):
     """Deterministic crash-cut probe used only by the local fault tests."""
+
+
+def recovery_decision(inspection: dict) -> dict:
+    """Classify a freshly observed side-effect boundary without guessing a rerun.
+
+    The caller supplies hashes of the declared pre/postimages, an observed hash,
+    backup verification for a recognized partial state, a verified orphan-death
+    observation, and the external counter for this idempotency key.  Any absent,
+    widened, or contradictory value is deliberately the third-state path.
+    """
+    if not isinstance(inspection, dict) or set(inspection) != RECOVERY_INSPECTION_KEYS:
+        raise StoreRefusal("POSTIMAGE_THIRD_STATE", "inspection shape")
+    preimage, postimage, observed = (inspection["preimage_hash"], inspection["postimage_hash"],
+                                     inspection["observed_hash"])
+    if any(not isinstance(value, str) or len(value) != 64 for value in (preimage, postimage, observed)):
+        raise StoreRefusal("POSTIMAGE_THIRD_STATE", "image hash")
+    if not isinstance(inspection["partial"], bool) or not isinstance(inspection["orphan_verified"], bool):
+        raise StoreRefusal("POSTIMAGE_THIRD_STATE", "boolean evidence")
+    if not isinstance(inspection["external_call_count"], int) or inspection["external_call_count"] not in (0, 1):
+        raise StoreRefusal("POSTIMAGE_THIRD_STATE", "external counter")
+    if inspection["orphan_verified"] is not True:
+        return {"observed": "third", "reason": "ORPHAN_IDENTITY_AMBIGUOUS", "retry": False}
+    if inspection["partial"]:
+        backup = inspection["backup"]
+        if backup == "missing":
+            return {"observed": "third", "reason": "BACKUP_MISSING", "retry": False}
+        if backup == "hash_mismatch":
+            return {"observed": "third", "reason": "BACKUP_HASH_MISMATCH", "retry": False}
+        if backup == "verified" and inspection["external_call_count"] == 1:
+            return {"observed": "partial", "reason": "whole_slice_rollback", "retry": True}
+        return {"observed": "third", "reason": "PARTIAL_UNRECOGNIZED", "retry": False}
+    if inspection["backup"] is not None:
+        raise StoreRefusal("POSTIMAGE_THIRD_STATE", "backup outside partial")
+    if observed == preimage and inspection["external_call_count"] == 0:
+        return {"observed": "preimage", "reason": "exact_no_effect", "retry": True}
+    if observed == postimage and inspection["external_call_count"] == 1:
+        return {"observed": "postimage", "reason": "validate_without_rerun", "retry": False}
+    return {"observed": "third", "reason": "POSTIMAGE_THIRD_STATE", "retry": False}
 
 
 def canonical_bytes(value: object) -> bytes:

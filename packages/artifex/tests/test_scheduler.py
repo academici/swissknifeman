@@ -128,6 +128,17 @@ class SchedulerTests(unittest.TestCase):
             self.store.append_event(self.payload("boundary_started", value))
         self.assertEqual("ACCEPTED", self.make(validate=lambda *_: True).reconcile(value, "postimage")["status"])
 
+    def test_verified_reconcile_refuses_unknown_orphan_and_never_reruns(self):
+        value = self.slice()
+        with self.store.acquire_writer():
+            self.store.append_event(self.payload("append_intent", value))
+        hashes = {"preimage_hash": "a" * 64, "postimage_hash": "b" * 64,
+                  "observed_hash": "a" * 64, "partial": False, "backup": None,
+                  "orphan_verified": False, "external_call_count": 0}
+        result = self.make().reconcile_verified(value, hashes)
+        self.assertEqual(("INCIDENT", "ORPHAN_IDENTITY_AMBIGUOUS", False),
+                         (result["status"], result["recovery"]["reason"], result["recovery"]["retry"]))
+
     def test_source_drift_and_failed_envelopes_do_not_become_budget_events(self):
         drifting = self.slice()
         drifting["authority_input"]["source_set_current"] = False

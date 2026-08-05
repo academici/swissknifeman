@@ -1,47 +1,30 @@
-# HANDOFF — 2026-08-05 — after P5.1
+# HANDOFF — 2026-08-05 — after P5.2
 
-**Next:** manual: implementation/high
+**Next:** /task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
-| Context | continue (/clear) — ручной item |
-| Суть | Выполнить exact reversible three-slice pilot из terminal P5.1 admission index. |
+| Capabilities | frozen-contract reconciliation · provider-boundary design · plan evidence |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Reconcile the frozen G2/P5 business-admission incompatibility before any P5.2 provider call. |
 | Команда | — |
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Preserve P4 history and unrelated dirty worktree; consume only terminal P5.1 D105-bound admissions, execute the exact reversible three-slice pilot, close P5.2 and hand directly to P5.3 without design/audit.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Reconcile the terminal G2 dispatch/admission and native Codex capability conflict as a frozen-contract decision; do not execute a P5 pilot or mutate P4 history.'
 ```
 
-**Done:** P5.1 closed `🟢` at item commit `88f9a132`. Historical P4.8 leaf passed on owning
-snapshot `124df816`; current provenance/G2/hook/security/contracts stayed green. Checkpoint
-`17cf14cd` remained unchanged, and all 14 D105-bound business manifests, grants, replay identities
-and non-reusable admissions were deterministically materialized with zero provider dispatches.
+**Done:** P5.2 performed the required pre-intent D105/G2 checks. The exact first D105 business admission is rejected as `UNKNOWN_SCHEMA_VERSION` by terminal G2 `security.indexed_admission`; a well-formed native Codex request reaches the terminal adapter and is refused as `CAPABILITY_UNSUPPORTED`. No provider process, controlled worktree, admission usage, package or P4 evidence was mutated.
 
-**Remaining:** Execute P5.2→P5.3→P5.4 sequentially without an intermediate design/audit checkpoint.
-P5.4 owns the single consolidated generation-aware P0–P5 fan-in; only literal frozen `GO` permits
-phase close and the one cold P5 audit.
+**Remaining:** Do not execute P5.2/P5.3/P5.4 until a plan-design decision resolves the frozen candidate/business-admission boundary. P5.4's consolidated fan-in remains deferred.
 
-**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-dispatch-manifest-index-v1.json` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-replay-v1.jsonl` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/validate-trial-admissions.py`.
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json` · `packages/artifex/lib/artifex/security.py` · `packages/artifex/lib/artifex/dispatch.py` · `packages/artifex/lib/artifex/providers/codex.py`.
 
-**Open risks:** P5.2 performs real bounded provider calls in controlled disposable roots. Before
-each call it must recompute current G2 and the exact unused D105 admission; provider/root/task/cap,
-hash or usage drift refuses before intent. The main worktree still carries extensive unrelated
-changes and must not be staged, reverted or captured.
+**Open risks:** D105 is bounded and non-reusable, but its `business-trial` schema is not consumable by terminal G2. Altering Artifex/P4 to make it consumable would violate P5.2's frozen-candidate constraint; bypassing native Codex capability refusal would violate the provider boundary.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: historical P4.8 leaf remains owning-snapshot-only; P5 consumes current successor gates.
-- deferred: consolidated phase analysis remains deferred to P5.4 under D106.
-- open_questions: none.
-
-| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Launch |
-|:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | continue (/clear) — ручной item | Execute P5.2 exact reversible three-slice pilot | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Preserve P4 history and unrelated dirty worktree; consume only terminal P5.1 D105-bound admissions, execute the exact reversible three-slice pilot, close P5.2 and hand directly to P5.3 without design/audit.'` |
+- workarounds: —
+- deferred: P5.2–P5.4 execution and P5 consolidated fan-in.
+- open_questions: Which forward, owner-authorized frozen-contract path can make the candidate consume D105 business authority without rewriting P4 history?

@@ -112,7 +112,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Run measured pilots and prove product readiness | 0/4 | 🟡 In progress |
+| P5 | Run measured pilots and prove product readiness | 1/4 | 🟡 In progress |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -230,6 +230,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | plan-run/gpt-5.6-sol/xhigh | 2026.08.03-ARTIFEX-SUPERVISOR P5.1 закрыт: D105-bound business carriers материализованы после generation-aware gate — детали см. phases/P5.md P5.1 Completion Notes. |
 | 2026-08-05 | plan-design/frontier/high | P5 last-pass: D105 grants exact frozen 14-dispatch business request, D106 replaces stale P4 leaf replay with generation-aware gates and queues P5.1→P5.4 before one consolidated analysis. |
 | 2026-08-05 | plan-run/gpt-5.6-sol/high | P5.1 остановлен до owner grant: exact-green prerequisite конфликтует со stale P4.8 leaf validator; нужен bounded forward plan-design fix. |
 | 2026-08-05 | plan-run/gpt-5.6-sol/high | P5.1 pre-dispatch stage frozen: 14-call catalog, archive mapping/shadow evidence and hash-bound business request are validated with zero provider calls; item pauses 🟡 at `G-OWNER-P5-BUSINESS`. |

@@ -3,25 +3,25 @@
 **Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.20.0 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. D105–D106 снимают P5.1
-owner/stale-leaf blockers; следующий item — resume P5.1, затем P5.2→P5.4 до одного анализа фазы.
+детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal под D105–D106;
+следующий item — P5.2, затем P5.3→P5.4 до одного анализа фазы.
 
-## Current execution launch — P5.1
+## Current execution launch — P5.2
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1
+**Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | repository-code-edit · trial-admission-materialization · generation-aware-validation |
-| Context | same-session — item |
-| Суть | Resume frozen P5.1 checkpoint, verify historical/current generations and materialize all 14 D105-bound admissions. |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` |
+| Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
+| Context | continue (/clear) — ручной item |
+| Суть | Run the exact reversible three-slice pilot from the terminal P5.1 admission index. |
+| Команда | — |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | Resume P5.1 under D105–D106 and close all business admissions | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1. Read research/33-p5-last-pass-generation-gate.md, phases/P5.md, plan.md, roadmap.md and handoff.md first. Resume checkpoint 17cf14cd under D105-D106; preserve P4 history and unrelated dirty worktree; close P5.1 and hand directly to P5.2 without a design/audit checkpoint.'` |
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | Execute P5.2 exact reversible three-slice pilot | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2. Preserve P4 history and unrelated dirty worktree; consume only terminal P5.1 D105-bound admissions, execute the exact reversible three-slice pilot, close P5.2 and hand directly to P5.3 without design/audit.'` |
 
 ## Карта исполнения
 
@@ -65,8 +65,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
-| P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` active | resume `17cf14cd`, apply D106 historical/current gate and produce all per-trial admissions before close |
-| P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
+| P5.1 | terminal | 🟢 Done | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` consumed | `88f9a132` materializes all per-trial admissions after D106 historical/current gate |
+| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
 | P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` | frontier/high | business admissions required; no single-provider terminal waiver | five paired waves over unchanged G2; G3 pins exact measured digest; only literal frozen `GO` closes |
 | P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 package generation + consumes D87/D96 root grants | require current G2/G3 identity; freeze exact P6.2/P6.3 rows and D93 root authorization order |

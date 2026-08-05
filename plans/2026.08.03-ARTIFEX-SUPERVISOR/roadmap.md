@@ -1,27 +1,27 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.18.0 · **Статус:** P1/P2 и P3
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.18.2 · **Статус:** P1/P2 and P4 are
 terminal history; P3 закрыта `🟠` (6 🟢, 2 🟠). D89–D90 держат G1→G5 generation/generator topology,
 D93–D97 — exact resolver-valid Harness source/test/lock grants; D98 запрещает audit 11.
-Package/root projections идут только через plan→apply→check; D99 делает P4.1 terminal baseline
-generation-aware без переписывания P1/P2; P4 начинает assurance G1.
+P4 closed G2 against the current Artifex package; package/root projections остаются только через
+plan→apply→check, а P5 не начинается до cold P4 audit.
 
-## Current execution launch — P4 assurance
+## Current execution launch — P4 cold audit
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3
+**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high |
-| Capabilities | repository-plan-write · subprocess-test · git-commit |
-| Context | continue (/clear) — ручной item |
-| Суть | Prove linked-worktree isolation and serialized integration |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | repository-plan-read · adversarial-review |
+| Context | cold-start — plan-step |
+| Суть | Audit the terminal P4 assurance evidence before P5. |
+| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P4.3 worktree boundary; preserve terminal history and unrelated dirty worktree | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3. Read plan.md D89/D98, phases/P4.md P4.2 Completion Notes and P4.3, handoff.md and roadmap.md. Preserve frozen P1/P2, P3.4/P3.5 deviations, D98 audit-11 prohibition, D89 historical G1 validation mode and unrelated dirty worktree. Execute and self-close only P4.3.'` |
+| gpt-5.6-sol | xhigh | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `cold-start — plan-step` | P4 cold audit; preserve terminal evidence and G2 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'Run $ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4. Read plan.md, phases/P4.md, handoff.md, roadmap.md, G2 assurance and P4 findings. Audit only; do not start P5 or mutate G2.'` |
 
 ## Карта исполнения
 
@@ -59,10 +59,10 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.8 | terminal | 🟢 Done | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | G1 Artifex package promotion closed |
 | P4.1 | terminal | 🟢 Done | implementation/high | — | D99 baseline plus immutable six-contract fault matrix and injector freeze |
 | P4.2 | terminal | 🟢 Done | implementation/high | — | `618adbea` dispatch-aware no-rerun recovery; consumes P4.1 |
-| P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
-| P4.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.6` | implementation/high | D79 exact scoped repair | one worktree-local hook repair plus exact GREEN recheck; no package-source edit |
-| P4.4 | solo | `waiting: P4.6 terminal GREEN → manual: implementation/high` | implementation/high | — | independently recheck hook GREEN, then task/admission/authority/privacy security evidence |
-| P4.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.5` | implementation/high | — | owner/telemetry and admission-aware G2 current-package assurance aggregate |
+| P4.3 | terminal | 🟢 Done | implementation/high | — | linked-worktree integration; consumes recovery |
+| P4.6 | terminal | 🟢 Done | implementation/high | D79 exact scoped repair | one worktree-local hook repair plus exact GREEN recheck; no package-source edit |
+| P4.4 | terminal | 🟢 Done | implementation/high | — | indexed-admission security and privacy evidence |
+| P4.5 | terminal | 🟢 Done | implementation/high | D102 packet successor | owner/telemetry and G2 current-package assurance aggregate |
 | P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | `G-OWNER-P5-BUSINESS` after request/catalog hashes | freeze trials/shadow; pause for owner hash-bound dispatch grant; produce all per-trial admissions before close |
 | P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |

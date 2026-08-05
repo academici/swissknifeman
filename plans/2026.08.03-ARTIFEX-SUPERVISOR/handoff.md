@@ -1,34 +1,34 @@
-# HANDOFF — 2026-08-05 — after P3.7
+# HANDOFF — 2026-08-05 — after P3.8
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8
+**Next:** close-phase: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high |
-| Context | continue (/clear) — ручной item |
-| Суть | Promote the verified runtime into the Artifex package through the exact D95 generator transaction |
-| Команда | — |
+| Effort | low |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Reconcile terminal P3 evidence and close the phase without an additional audit |
+| Команда | `/task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3` |
 
-**Done:** `27bd2f0d` removes the stale Task-cardinality assumption. Task validation passed 486 tests, full supervisor discovery passed 58 tests, the temporary real probe produced two schema-valid rows, and adapter/parity, plan-lint and strict-citation gates passed; P3.6 carriers remained clean.
+**Done:** `367e477a` makes `packages/artifex` the G1 runtime owner. Its standalone launcher, 60 package tests and source/provenance manifest are green; Harness validation, Task validation (486 tests), the 58-test plan-local suite, active plan lint and strict citations also passed.
 
-**Remaining:** Execute P3.8, then close P3 under the two-pass audit cap.
+**Remaining:** Close P3. D98 forbids audit 11; reconcile the terminal evidence without changing frozen history.
 
-**Sources of truth:** phases/P3.md P3.7 Completion Notes · plan.md D95/D98 · roadmap.md · `27bd2f0d`.
+**Sources of truth:** phases/P3.md P3.8 Completion Notes · plan.md D95/D98 · roadmap.md · `40781d37` · `367e477a`.
 
-**Open risks:** P3.5's foreign `scheduler.py` path remains a material deviation; P3.8 must refuse any missing/revoked D86/D95 grant, generator action mismatch, or non-green stage gate.
+**Open risks:** P3.4/P3.5 historical deviations remain visible. P3 close must preserve them and must not schedule a third audit pass.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: P3.7 probe used repository-local `TMPDIR` because the probe correctly confines output beneath the explicit project root; D98 forbids audit 11;
+- workarounds: the package-cwd continuation was verified via package-cwd commands after explicit owner instruction; D98 forbids audit 11;
 - deferred: P4.6 owns hook repair;
 - open_questions: none.
 
 ```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8
+$ task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P3
 
-РЕЖИМ: manual implementation/high item; start at stage 1 only
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md · phases/P3.md P3.8 · handoff.md · D86/D95 exact grants
-СКОУП: exact Harness instructions plan→apply→check transaction, then mandatory package-cwd continuation
-НЕ ТРОГАТЬ: P3.6 carriers, root router/installer, unrelated dirty worktree, D98 audit prohibition
+РЕЖИМ: terminal phase reconciliation; audit 11 forbidden by D98
+ВХОД: phases/P3.md P3.5–P3.8 Completion Notes · plan.md D95/D98 · 40781d37 · 367e477a
+СКОУП: close P3 from committed evidence, preserve historical deviations and publish the next phase handoff
+НЕ ТРОГАТЬ: frozen P1/P2, P4–P6 implementation, root router/installer, unrelated dirty worktree
 ```

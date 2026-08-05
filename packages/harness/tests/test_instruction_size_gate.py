@@ -46,7 +46,7 @@ class CanonSizeLimitTests(unittest.TestCase):
     def test_limits_are_named_constants_per_artifact_class(self):
         self.assertEqual(canon_size_limits("root"),
                          (ROOT_CANON_LINE_LIMIT, ROOT_CANON_TOKEN_LIMIT))
-        for scope_id in ("skiller", "harness", "maind", "analyst", "task"):
+        for scope_id in ("skiller", "harness", "maind", "analyst", "task", "artifex"):
             self.assertEqual(canon_size_limits(scope_id),
                              (PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT))
 

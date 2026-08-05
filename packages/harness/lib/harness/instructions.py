@@ -29,9 +29,9 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.1.1"
+CATALOG_VERSION = "1.2.0"
 PROVIDERS = ("claude-code", "codex")
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task")
+SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
 TARGETS = {
     "root": {"claude-code": "CLAUDE.md", "codex": "AGENTS.md"},
     "skiller": {"claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md"},
@@ -39,6 +39,7 @@ TARGETS = {
     "maind": {"claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md"},
     "analyst": {"claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md"},
     "task": {"claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md"},
+    "artifex": {"claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md"},
 }
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
@@ -65,6 +66,9 @@ COMMON_IDS = {
     "task": ("task.identity", "task.command-catalog", "task.plan-protocol", "task.layout",
              "task.schema-ownership", "task.engineering-invariants",
              "task.validation-release"),
+    "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
+                 "artifex.provenance", "artifex.engineering-invariants",
+                 "artifex.validation-release"),
 }
 EXTENSION_IDS = {
     ("root", "claude-code"): ("root.claude-code.native-surfaces",
@@ -86,6 +90,8 @@ EXTENSION_IDS = {
                                  "analyst.claude-code.plugin"),
     ("task", "claude-code"): ("task.claude-code.slash-projection",
                               "task.claude-code.model-pins"),
+    ("artifex", "claude-code"): ("artifex.claude-code.package-scope",),
+    ("artifex", "codex"): ("artifex.codex.package-scope",),
 }
 for _scope in SCOPES:
     for _provider in PROVIDERS:

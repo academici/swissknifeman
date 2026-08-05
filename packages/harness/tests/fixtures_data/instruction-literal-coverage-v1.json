@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.1.2",
+  "fixture_version": "1.2.0",
   "provenance": {
     "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md",
     "source_section": "## 2. Матрица покрытия",

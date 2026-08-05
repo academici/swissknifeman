@@ -27,7 +27,7 @@ class InstructionCompatibilityTests(unittest.TestCase):
             "captured_before_renderer": True,
             "owner_decision": "D86",
         })
-        self.assertEqual(len(expected["records"]), 76)
+        self.assertEqual(len(expected["records"]), 84)
         self.assertTrue(all(item["assertions"] for item in expected["records"]))
 
     def test_every_record_anchor_exists_in_actual_installed_consumers(self):

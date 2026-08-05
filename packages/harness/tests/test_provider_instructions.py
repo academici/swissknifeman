@@ -65,20 +65,20 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_56_common_20_extension_76_total_and_twelve_targets(self):
+    def test_exact_62_common_22_extension_84_total_and_fourteen_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (56, 20, 76))
+        self.assertEqual((common, extensions, common + extensions), (62, 22, 84))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
             tuple((item.scope_id, item.provider_id, item.target_path) for item in result.targets),
             tuple((scope, provider, TARGETS[scope][provider])
                   for scope in SCOPES for provider in PROVIDERS))
-        self.assertEqual(len(result.targets), 12)
+        self.assertEqual(len(result.targets), 14)
 
     def test_positive_parity_and_allowed_provider_extension(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -428,7 +428,7 @@ class PublicOperationTests(unittest.TestCase):
             root = Path(temp).resolve()
             planned = plan_instructions(request("plan", root))
             lock = json.loads(serialize_lock(planned.artifact_plan.next_lock))
-        self.assertEqual(len(lock["records"]), 12)
+        self.assertEqual(len(lock["records"]), 14)
         expected_records = tuple(
             (provider, TARGETS[scope][provider])
             for _artifact_id, provider, scope in sorted(

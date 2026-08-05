@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.1.2",
+  "fixture_version": "1.2.0",
   "provenance": {
     "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-contract-review.md",
     "evidence_tree": "722d4825254b40cec52bdb6043403a242d116607",
@@ -983,6 +983,46 @@
         "do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
         "`plan-run`"
       ]
+    },
+    {
+      "id": "artifex.identity",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["`artifex` is the standalone deterministic supervisor package", "its package runtime is the sole live implementation after G1.", "`artifex`"]
+    },
+    {
+      "id": "artifex.layout",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.", "`bin/artifex`", "`lib/artifex/`", "`tests/`"]
+    },
+    {
+      "id": "artifex.runtime-boundaries",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["Keep provider adapters additive over one shared supervisor contract", "use bounded fresh processes and never make package runtime import `plans/**`.", "`plans/**`"]
+    },
+    {
+      "id": "artifex.provenance",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["Keep generation and source hashes explicit", "plan-local runtime remains immutable non-importable evidence rather than a package dependency."]
+    },
+    {
+      "id": "artifex.engineering-invariants",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.", "`lib/artifex/`"]
+    },
+    {
+      "id": "artifex.validation-release",
+      "provider_ids": ["claude-code", "codex"],
+      "assertions": ["Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.", "`bash scripts/test.sh`", "`bash scripts/validate.sh`"]
+    },
+    {
+      "id": "artifex.claude-code.package-scope",
+      "provider_ids": ["claude-code"],
+      "assertions": ["Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."]
+    },
+    {
+      "id": "artifex.codex.package-scope",
+      "provider_ids": ["codex"],
+      "assertions": ["Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.", "`codex -C packages/artifex`"]
     }
   ]
 }

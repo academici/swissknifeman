@@ -165,7 +165,7 @@ class Scheduler:
                 raise SchedulerRefusal("UNKNOWN_SCHEMA_VERSION", "activity result")
             if observation.get("kind") == "provider_unavailable":
                 record = self._append("provider_unavailable", slice_value, evidence={"observation": observation})
-                return {"status": "provider_unavailable", "record": record, "decision": decision}
+                return {"status": "provider_unavailable", "record": record, "decision": decision, "observation": observation}
             if observation.get("kind") != "success":
                 raise SchedulerRefusal("UNKNOWN_SCHEMA_VERSION", "activity kind")
             self._append("boundary_started", slice_value, evidence={"boundary": "activity"})
@@ -173,7 +173,7 @@ class Scheduler:
             event = "validation_green" if self.validate(slice_value, observation) else "validation_red"
             record = self._append(event, slice_value, evidence={"validation": event})
             return {"status": "accepted" if event == "validation_green" else "rolled_back", "record": record,
-                    "decision": decision}
+                    "decision": decision, "observation": observation}
 
     def reconcile(self, slice_value: dict, observed: str) -> dict:
         """Apply only the frozen reconciliation outcomes for an unresolved intent."""

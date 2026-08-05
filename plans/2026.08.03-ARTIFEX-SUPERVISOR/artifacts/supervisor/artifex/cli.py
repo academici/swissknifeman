@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import authority, compiler, dispatch, scheduler, store
+from . import activity, authority, compiler, dispatch, scheduler, store
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -212,11 +212,12 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
     projected = dispatch.scheduler_slice(admission, authority_input)
     # Omission preserves the P2 provider-free refusal; an explicit provider is
     # selected only after the indexed admission has bound task and provider.
-    activity = None if args.provider is None else scheduler.DefaultActivityPort()
-    result = scheduler.Scheduler(run, admitted, now=_now, activity=activity).schedule([projected])
+    selected_activity = None if args.provider is None else activity.ProviderActivityPort(plan, admission)
+    result = scheduler.Scheduler(run, admitted, now=_now, activity=selected_activity).schedule([projected])
     run.rebuild_snapshot()
+    observation = result.get("observation", {})
     return {"status": result["status"], "run_id": args.run_id, "task_id": admitted.task_id,
-            "admission_hash": admission["admission_hash"], "process_count": 0}
+            "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0)}
 
 
 def build_parser() -> argparse.ArgumentParser:

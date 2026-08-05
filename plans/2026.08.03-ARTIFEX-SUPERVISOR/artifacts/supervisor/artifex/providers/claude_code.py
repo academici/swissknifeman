@@ -87,6 +87,13 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
     ]
 
 
+def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],
+            content_resolver: object) -> dict:
+    """Require exact content bytes before constructing a real Claude invocation."""
+    _require_request(request)
+    raise AdapterRefusal("MAPPING_UNKNOWN")
+
+
 def _contains_private_key(value: object) -> bool:
     if isinstance(value, dict):
         return any(key in _PRIVATE_KEYS or _contains_private_key(child) for key, child in value.items())

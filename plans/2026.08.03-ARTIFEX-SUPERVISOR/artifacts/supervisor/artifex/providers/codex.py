@@ -57,6 +57,15 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
             "--output-schema", str(Path(schema_path)), "-"]
 
 
+def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],
+            content_resolver: object) -> dict:
+    """Preflight Codex before resolving content the mapper cannot lawfully run."""
+    schema = plan_dir / "artifacts/P3/unresolved-schema.json"
+    argv = build_argv(request, routing_path=plan_dir.parents[2] / "packages/task/configs/command-routing.json",
+                     schema_path=schema, cwd=plan_dir, native_tools=native_tools)
+    raise AdapterRefusal("MAPPING_UNKNOWN")
+
+
 def normalize_record(line: str, request: dict) -> dict:
     if request.get("provider", {}).get("cli_version") != PROBE_VERSION:
         return failed("MAPPING_UNKNOWN", "provider_failure")

@@ -47,7 +47,8 @@ def _terminate(proc: subprocess.Popen[bytes], *, grace_seconds: float,
 def run(argv: list[str], *, cwd: str | Path, env: dict[str, str], stdin: bytes,
         timeout_ms: int, max_output_bytes: int, max_event_count: int,
         kill_grace_seconds: float = 1.0, clock: Callable[[], float] = time.monotonic,
-        sleeper: Callable[[float], None] = time.sleep) -> dict:
+        sleeper: Callable[[float], None] = time.sleep,
+        normalizer: Callable[[list[str], int], dict] | None = None) -> dict:
     """Run one new process without retaining raw output or reusing a carrier/session."""
     if (not isinstance(argv, list) or not argv or any(not isinstance(v, str) for v in argv)
             or timeout_ms < 1 or max_output_bytes < 1 or max_event_count < 1):
@@ -109,6 +110,18 @@ def run(argv: list[str], *, cwd: str | Path, env: dict[str, str], stdin: bytes,
             proc.stdout.close()
     duration = int((clock() - started) * 1000)
     out = bytes(output)
+    if normalizer is not None:
+        try:
+            normalized = normalizer(out.decode("utf-8").splitlines(), proc.returncode)
+        except UnicodeDecodeError:
+            return {"kind": "provider_unavailable", "reason_code": "PROVIDER_PROTOCOL_UNKNOWN", "process_count": 1,
+                    "duration_ms": duration}
+        if not isinstance(normalized, dict):
+            return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 1,
+                    "duration_ms": duration}
+        return {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
+                "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"), "process_count": 1,
+                "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
     return {"kind": "success", "process_count": 1, "exit_code": proc.returncode,
             "duration_ms": duration, "output_hash": _digest(out), "event_count": len(out.splitlines())}
 

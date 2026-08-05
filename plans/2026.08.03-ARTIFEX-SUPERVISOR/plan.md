@@ -111,7 +111,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Run measured pilots and prove product readiness | 0/4 | ⬜ Not started |
+| P5 | Run measured pilots and prove product readiness | 0/4 | 🟡 In progress |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -227,6 +227,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-05 | plan-run/gpt-5.6-sol/high | P5.1 pre-dispatch stage frozen: 14-call catalog, archive mapping/shadow evidence and hash-bound business request are validated with zero provider calls; item pauses 🟡 at `G-OWNER-P5-BUSINESS`. |
 | 2026-08-05 | task-fix/gpt-5.6-sol/xhigh | Второй P4 RED закрыт bounded forward remediation по D98/D103 без третьего audit: Harness committed-tree gate, fixture/generator wiring и provenance/assurance checks исправлены; P4.7/P4.8 честно остаются terminal deviations, следующий item P5.1. |
 | 2026-08-05 | plan-close/implementation/low | Фаза P4 закрыта с deviations: 8/8 terminal, G2 successor и committed-tree Harness/provenance gates приняты; перед P5 обязателен финальный cold audit — детали см. phases/P4.md Phase Handoff. |
 | 2026-08-05 | plan-design/gpt-5.6-sol/high routed | P4 audit-1 final remediation: D103–D104 reopen P4, add P4.7/P4.8 and restore append-forward map P4.1→`abdd888a` · P4.2→`618adbea`+`bde07fb0` · P4.3→`e3c932aa` · P4.6→`10422237` · P4.4→`7607b0c0` · P4.5→`23f71d34`; this is the last P4 design pass. |

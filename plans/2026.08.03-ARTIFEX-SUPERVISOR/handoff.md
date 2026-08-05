@@ -1,6 +1,6 @@
 # HANDOFF — 2026-08-05 — after P4.8
 
-**Next:** close-phase: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4
+**Next:** close: task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P4
 
 | Параметр | Значение |
 |:--|:--|

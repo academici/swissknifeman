@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Standalone Artifex launcher: package-local runtime, no repository PYTHONPATH.
+set -euo pipefail
+
+artifex_dir="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+export PYTHONPATH="${artifex_dir}/lib${PYTHONPATH:+:${PYTHONPATH}}"
+exec python3 -m artifex "$@"

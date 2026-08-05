@@ -1,34 +1,34 @@
-# HANDOFF — 2026-08-05 — after P3
+# HANDOFF — 2026-08-05 — after P4.3
 
 **Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
-| Thinking | high — recovery boundary implementation |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Выполнить P4.1: exact failure matrix и fresh-process crash-injection harness для G1 Artifex. |
-| Команда | `—` |
+| Model class | implementation |
+| Effort | high — trusted hook repair boundary |
+| Capabilities | repository-plan-write · harness-repair · subprocess-test · git-commit |
+| Context | continue (/clear) — ручной item |
+| Суть | Execute P4.6’s one scoped Harness-owned Codex hook repair and exact recheck. |
+| Команда | — |
 
-**Done:** P3 закрыта `🟠 Done with deviations`: 8/8 terminal; повторный Artifex 60-test,
-plan-local 58-test, Task 486-test, Harness и promotion fan-in зелёный.
+| Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P4.6 only; repair the observed two stale Codex hook outputs through Harness | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access` |
 
-**Remaining:** P4.1 — первый последовательный producer P4; P4.2→P4.3→P4.6→P4.4→P4.5 зависят от
-его terminal evidence.
+```text
+Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.6. Read plan.md, handoff.md, phases/P4.md P4.3 Completion Notes and P4.6, then Required Reads in order. Preserve the existing dirty worktree, repair only through the worktree-local Harness CLI, require literal effective-hook GREEN, and self-close only P4.6.
+```
 
-**Sources of truth:** plan.md §2/§3/§4, phases/P3.md Phase Handoff, phases/P4.md P4.1,
-roadmap.md, `367e477a`.
+**Done:** P4.3 is GREEN at `e3c932aa`: controlled temporary repositories prove detached identity locks, full scope-delta validation, one clean serial integration lane, exact conflict rollback and residue-free removal. The package validation gate passed 70 tests.
 
-**Open risks:** P3.4 stale P1.6 parent hash/non-green provider readiness и P3.5 foreign
-`scheduler.py` path остаются в истории; D98 forbids audit 11. Worktree остаётся грязным
-неплановыми изменениями в core/harness/skiller/task и другим планом — не включать их в P4.
+**Remaining:** P4.6 → P4.4 → P4.5, then P5.
+
+**Sources of truth:** `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` D8/D44–D45/D89/D98 · `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P4.md` P4.3/P4.6 · `packages/artifex/lib/artifex/worktree.py` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json` · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py`.
+
+**Open risks:** Effective Codex hooks are still `stale-source` and are owned exclusively by P4.6/P4.4. The live P2 prototype validator rejects successor-byte drift; its frozen `6c2c2ef3` snapshot passed. P3.4 current-tree P1.6 drift/provider-readiness and P3.5 foreign `scheduler.py` deviations remain unchanged.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none accepted in the P3 runtime;
-- deferred: P4.6/P4.4 own hook repair and recheck;
-- open_questions: none.
-
-```text
-NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1. Read plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md, phases/P3.md Phase Handoff, phases/P4.md P4.1, roadmap.md and handoff.md. Preserve P3.4/P3.5 deviations, D98’s audit-11 prohibition, frozen P1/P2, P4.2–P6 and unrelated dirty worktree. Execute only P4.1 under its committed scope and validation.
-```
+- workarounds: —.
+- deferred: hook repair/recheck remains P4.6/P4.4.
+- open_questions: —.

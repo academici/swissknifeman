@@ -1,26 +1,27 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.17.0 · **Статус:** P1/P2 и P3
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.18.0 · **Статус:** P1/P2 и P3
 terminal history; P3 закрыта `🟠` (6 🟢, 2 🟠). D89–D90 держат G1→G5 generation/generator topology,
 D93–D97 — exact resolver-valid Harness source/test/lock grants; D98 запрещает audit 11.
-Package/root projections идут только через plan→apply→check; P4 начинает assurance G1.
+Package/root projections идут только через plan→apply→check; D99 делает P4.1 terminal baseline
+generation-aware без переписывания P1/P2; P4 начинает assurance G1.
 
 ## Current execution launch — P4 assurance
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test · git-commit |
-| Context | same-session — item |
-| Суть | Исполнить P4.1 failure matrix и fresh-process crash-injection harness |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` |
+| Context | continue (/clear) — ручной item |
+| Суть | Prove linked-worktree isolation and serialized integration |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P4.1 recovery boundary; preserve terminal P3 deviations | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1. Read plan.md, phases/P3.md Phase Handoff, phases/P4.md P4.1, roadmap.md and handoff.md. Preserve P3.4/P3.5 deviations, D98 audit-11 prohibition and unrelated dirty worktree.'` |
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` | P4.3 worktree boundary; preserve terminal history and unrelated dirty worktree | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3. Read plan.md D89/D98, phases/P4.md P4.2 Completion Notes and P4.3, handoff.md and roadmap.md. Preserve frozen P1/P2, P3.4/P3.5 deviations, D98 audit-11 prohibition, D89 historical G1 validation mode and unrelated dirty worktree. Execute and self-close only P4.3.'` |
 
 ## Карта исполнения
 
@@ -56,8 +57,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.6 | terminal | 🟢 Done | implementation/high | — | `ea141189` provides real indexed readiness and strict immutable-P2/current-P3 hash proof |
 | P3.7 | terminal | 🟢 Done | implementation/high | — | Task invariant repair and read-only closure fan-in closed |
 | P3.8 | terminal | 🟢 Done | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | G1 Artifex package promotion closed |
-| P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
-| P4.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.2` | implementation/high | — | dispatch-aware no-rerun recovery; consumes P4.1 |
+| P4.1 | terminal | 🟢 Done | implementation/high | — | D99 baseline plus immutable six-contract fault matrix and injector freeze |
+| P4.2 | terminal | 🟢 Done | implementation/high | — | `618adbea` dispatch-aware no-rerun recovery; consumes P4.1 |
 | P4.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.3` | implementation/high | — | linked-worktree integration; consumes recovery |
 | P4.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.6` | implementation/high | D79 exact scoped repair | one worktree-local hook repair plus exact GREEN recheck; no package-source edit |
 | P4.4 | solo | `waiting: P4.6 terminal GREEN → manual: implementation/high` | implementation/high | — | independently recheck hook GREEN, then task/admission/authority/privacy security evidence |
@@ -82,7 +83,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 
 P3 закрыта `🟠 Done with deviations`: P3.4 сохраняет stale P1.6 parent hash/non-green readiness,
 P3.5 — foreign `scheduler.py` path; P3.6–P3.8 закрыли evidence, Task fan-in и G1 package
-promotion. D98 запрещает audit 11; следующий runnable producer — P4.1.
+promotion. D98 запрещает audit 11; D99 сохраняет оба deviation и задаёт generation-aware
+terminal baseline; следующий runnable producer — P4.2.
 
 ## Authority Gate Contract
 

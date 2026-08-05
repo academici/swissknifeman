@@ -1,9 +1,10 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.19.0 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.20.0 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. Следующий item — P5.1.
+детерминированными GREEN gates, без третьего audit/design pass. D105–D106 снимают P5.1
+owner/stale-leaf blockers; следующий item — resume P5.1, затем P5.2→P5.4 до одного анализа фазы.
 
 ## Current execution launch — P5.1
 
@@ -13,14 +14,14 @@ P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 �
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
-| Capabilities | repository-code-edit · trial-design · owner-gate-preparation |
+| Capabilities | repository-code-edit · trial-admission-materialization · generation-aware-validation |
 | Context | same-session — item |
-| Суть | Freeze P5 trial catalog/shadow baseline and prepare the hash-bound business owner gate. |
+| Суть | Resume frozen P5.1 checkpoint, verify historical/current generations and materialize all 14 D105-bound admissions. |
 | Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | P5.1 trial/shadow freeze and owner-gate preparation | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1. Read plan.md, phases/P5.md, roadmap.md and handoff.md first. Preserve P4 history and unrelated dirty worktree; pause at the hash-bound business owner gate.'` |
+| gpt-5.6-sol | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | Resume P5.1 under D105–D106 and close all business admissions | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1. Read research/33-p5-last-pass-generation-gate.md, phases/P5.md, plan.md, roadmap.md and handoff.md first. Resume checkpoint 17cf14cd under D105-D106; preserve P4 history and unrelated dirty worktree; close P5.1 and hand directly to P5.2 without a design/audit checkpoint.'` |
 
 ## Карта исполнения
 
@@ -64,7 +65,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
-| P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | `G-OWNER-P5-BUSINESS` after request/catalog hashes | freeze trials/shadow; pause for owner hash-bound dispatch grant; produce all per-trial admissions before close |
+| P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` active | resume `17cf14cd`, apply D106 historical/current gate and produce all per-trial admissions before close |
 | P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
 | P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` | frontier/high | business admissions required; no single-provider terminal waiver | five paired waves over unchanged G2; G3 pins exact measured digest; only literal frozen `GO` closes |
@@ -99,7 +100,7 @@ repository owner и не отозвана более поздним D#. D74/D75 
 
 | Gate ID | Защищённый переход | Exact predicate | Без carrier |
 |:--|:--|:--|:--|
-| `G-OWNER-P5-BUSINESS` | P5.1 материализует grants/admissions для P5.2–P5.4 | строка D# позже D78 содержит marker, SHA-256 `trial-catalog-v1.json` и `business-grant-request-v1.json`, exact providers/roots/max-dispatches/per-trial caps, explicit owner source; D78 itself is not a grant | P5.1 pauses after proposal hashes; no business admission/provider call |
+| `G-OWNER-P5-BUSINESS` | P5.1 материализует grants/admissions для P5.2–P5.4 | D105 содержит marker, exact catalog/request SHA-256, providers, 14 roots, max-dispatches, per-trial caps и `brief/22-p5-last-pass-fast-track.md`; D78 itself is not a grant | P5.1 pauses after proposal hashes; no business admission/provider call |
 | `G-OWNER-P6.1-PACKAGE` | P3.8 materializes mandatory `artifex-package`; P6.1 revalidates it | D86 exact marker разрешает `packages/artifex/**` and finite package-owned outputs only | P3.8 remains non-terminal; P4/P5 cannot start |
 | `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2` | P3.8 stage 1 adds the Artifex instruction owner and shared-lock generation | D95 exact record + Layer-0 message matches every Harness source/test/lock path in P3.8 `Files`; consumer is P3.8 only | no Harness source/projection mutation; P3.8 remains open |
 | `G-OWNER-P6.1-ROUTER` | P6.1 фиксирует `root_router=approved`; P6.2 consumes outputs | D87 exact marker разрешает additive `swissknifeman artifex` and exact root installer/doctor/generated outputs | P6.1 remains non-terminal; no rootless terminal product |

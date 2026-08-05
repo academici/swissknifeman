@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import activity, authority, compiler, dispatch, scheduler, store, worktree
+from . import activity, authority, compiler, dispatch, scheduler, security, store, worktree
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -192,7 +192,7 @@ def _report(args: argparse.Namespace, _repo: Path, plan: Path, runs: Path) -> di
 def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> dict:
     """Consume exactly one indexed admission through the P2 no-provider port."""
     admission_path = _file(_inside(repo, repo / args.admission))
-    admission = dispatch.load_indexed_admission(plan, admission_path)
+    admission = security.indexed_admission(plan, admission_path)
     identity = admission["dispatch"]
     if args.run_id != identity["run_id"]:
         raise CliRefusal("IDENTITY_MISMATCH", "run/admission")
@@ -252,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "dispatch": _dispatch,
                   "worktree-inventory": _worktree_inventory}[args.command](args, repo, plan, runs)
         code = EXIT_OK
-    except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
+    except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, security.SecurityRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL
     payload = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(payload.encode()) > MAX_RESULT_BYTES:

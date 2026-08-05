@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-from . import dispatch, worker
+from . import dispatch, security, worker
 from .providers import claude_code, codex, parity
 from .providers.common import AdapterRefusal
 
@@ -21,6 +21,7 @@ class ProviderActivityPort:
                  content_resolver: Callable[[str], bytes | None] | None = None) -> None:
         self.plan_dir = plan_dir.resolve()
         self.admission = dispatch.verify_admission(admission)
+        security.indexed_admission(self.plan_dir, self.plan_dir / "artifacts/P2/p3-smoke-admissions" / f"{self.admission['task']['provider']}.json")
         self.registry = registry or {"codex": codex, "claude-code": claude_code}
         if set(self.registry) != {"codex", "claude-code"}:
             raise AdapterRefusal("MAPPING_UNKNOWN")
@@ -65,16 +66,18 @@ class ProviderActivityPort:
                 raise AdapterRefusal("MAPPING_UNKNOWN")
             adapter = self.registry[provider_id]
             request = self._request()
+            security.request(self.admission, request)
             prepared = adapter.prepare(request, plan_dir=self.plan_dir, native_tools=(),
                                        content_resolver=self.content_resolver)
         except (AdapterRefusal, KeyError) as exc:
             return self._refusal(getattr(exc, "reason", "MAPPING_UNKNOWN"))
         try:
             with tempfile.TemporaryDirectory(prefix="artifex-p3-") as cwd:
-                return self.runner(prepared["argv"], cwd=cwd, env={}, stdin=prepared["stdin"],
+                result = self.runner(prepared["argv"], cwd=cwd, env=security.environment({}), stdin=prepared["stdin"],
                                    timeout_ms=request["budgets"]["timeout_ms"],
                                    max_output_bytes=request["budgets"]["max_output_bytes"],
                                    max_event_count=request["budgets"]["max_event_count"],
                                    normalizer=lambda rows, exit_code: adapter.fold_records(rows, request, exit_code=exit_code))
-        except (KeyError, TypeError, OSError):
+                return security.observation(result)
+        except (KeyError, TypeError, OSError, security.SecurityRefusal):
             return self._refusal("MAPPING_UNKNOWN")

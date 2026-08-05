@@ -9,7 +9,7 @@
 | `plan.md` | master plan, Routing, Status Board, decisions and contract crosswalk |
 | `phases/P0.md … phases/P6.md` | seven phases; P0–P6 detailed to authoring DoR |
 | `handoff.md` | rolling next-step pointer |
-| `roadmap.md` | execution map for all 39 manual items; D85–D97 create resolver-valid owner-lawful G1 `packages/artifex` at P3.8 and carry G2→G5 successors; D98 closes the pre-exec audit loop and launches P3.5 |
+| `roadmap.md` | execution map for all 41 manual items; D85–D97 create resolver-valid owner-lawful G1 `packages/artifex` at P3.8 and carry the original G2→G5 topology; D103–D104 reopen P4 for final audit-1 remediation through P4.7–P4.8 |
 | `journal.jsonl` | append-only plan-command provenance |
 | `brief/` | direct owner intent and non-goals |
 | `findings/` | repository recon, first-party verification, reference products, preflight, P1–P6 reconciliation and finish recheck |
@@ -37,6 +37,9 @@
 | `brief/16-audit8-owner-carriers-and-execution.md` | brief | finish, P3.7–P3.8, P6.1–P6.4, design audit | explicit owner grants for exact Harness package/root source/test/lock sets, executable generation/restart and P3.7 isolation requirements |
 | `brief/17-audit9-resolver-valid-owner-carriers.md` | brief | finish, P3.8, P6.1–P6.4, design audit | append-forward owner directive plus exact Layer-0 R2 messages preserving the D91/D92 finite scopes |
 | `brief/18-owner-close-design-audit-loop.md` | brief | finish, P3.5, later audit checkpoints | explicit owner decision: no audit 11, P3.5 is current Next, later audit loops are capped at two passes/two repeated findings |
+| `brief/19-p4.1-terminal-validator-reconciliation.md` | brief | P4.1 | exact terminal-validator regeneration boundary and immutable-history constraints |
+| `brief/20-p4.6-status-literal-reconciliation.md` | brief | P4.6 | exact hook-status literal repair authority and no-second-repair boundary |
+| `brief/21-p4-audit1-final-remediation.md` | brief | P4.7–P4.8, P4 close/audit | final P4 design pass, F1–F7 forward remediation and resolver-valid P4.8 owner grant |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -60,6 +63,7 @@
 | `findings/P3.4-successor-manifest-conflict-2026-08-04.md` | findings | P3.4 | reproduced evolved-root P2 hash failure and verified the immutable P2.6 Git snapshot |
 | `findings/hooks-stale-source-precondition-2026-08-04.md` | findings | P4.6, P4.4 | reproduced effective-hook warning, exact two stale-source actions and worktree-local repair/recheck owner surface |
 | `findings/P4.4-hook-status-literal-conflict-2026-08-05.md` | findings | P4.4 | reproduced terminal/live `green` versus frozen P4.4 `ok` security-prerequisite conflict |
+| `findings/P4.1-terminal-precondition-blocked-2026-08-05.md` | findings | P4.1 | reproduced terminal-validator generation precondition and the forward-only repair boundary |
 | `findings/P3-P6-early-package-finish-recon-2026-08-04.md` | findings | P3.8, P4.5, P5, P6, finish/audit | reproduced promotion-manifest drift risk, stale five-package/root-router instruction canon and exact Harness generator ownership |
 | `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md` | findings | P3.7–P3.8, P6.1–P6.4, design audit | repo-grounded authorize ordering, lock side effect, durable Codex continuation and temp-isolated validation facts for audit-8 F1–F4 |
 | `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md` | findings | P3.8, P6.1–P6.4, finish/design audit | exact protected resolver grammar, same-gate ambiguity and missing journal provenance observation from audit 9 |
@@ -94,6 +98,8 @@
 | `research/28-early-package-cross-phase-finish.md` | research | P3.8, P4.5, P5, P6, design audit | G1→G5 generation chain, package/root instruction projection ownership, P6.2/P6.3 split and 39-item DoR verdict |
 | `research/29-audit8-authority-generator-reconcile.md` | research | P3.7–P3.8, P6.1–P6.4, finish/design audit | exact D91/D92 authority, D93 generator/restart sequence, D94 read-only/temp isolation and repaired producer→consumer graph |
 | `research/30-audit9-resolver-valid-authority-reconcile.md` | research | P3.8, P6.1–P6.4, finish/design audit | D95/D96 R2 carrier topology, D97 successor mapping, protected evaluation matrix and forward-only journal repair |
+| `research/31-p4.1-terminal-validator-generation-reconcile.md` | research | P4.1 | generated terminal-validator design, source ownership and clean-tree verification |
+| `research/32-p4-audit1-final-remediation.md` | research | P4.7–P4.8, P4 close/audit | F1–F7 synthesis, finite two-item repair chain, G2 successor and audit-pass-2 terminal path |
 
 ## Запланированные выходы P0
 
@@ -150,7 +156,9 @@
 | `packages/artifex/lib/artifex/worktree.py`, `artifacts/P4/worktree-*`, `validate-worktree.py` | P4.3 | P4.4–P5 |
 | Harness-generated `.codex/hooks.json`/`.codex/hooks/lifecycle.py` plus `artifacts/P4/hook-integrity-results-v1.json`, `validate-hook-integrity.py` | P4.6 | P4.4–P5 |
 | `packages/artifex/lib/artifex/security.py`, `artifacts/P4/security-*`, `validate-security.py` | P4.4 | P4.5–P5 |
-| `packages/artifex/lib/artifex/telemetry.py`, `artifacts/P4/attention-cases-v1.json`, G2 `assurance-manifest-v1.json`, `validate-assurance.py` | P4.5 | sole current package snapshot through P5 and P6.1 pre-write |
+| `packages/artifex/lib/artifex/telemetry.py`, `artifacts/P4/attention-cases-v1.json`, historical G2 `assurance-manifest-v1.json`, `validate-assurance.py` | P4.5 | historical predecessor requalified only by P4.8; not a terminal P5 gate |
+| Harness provider-instructions generator/reference, package-owned run-reader fixture, `provenance-reconciliation-v1.json`, `validate-provenance-reconciliation.py` | P4.7 | reproducible committed-tree Harness gate and append-forward F2–F7 provenance input for P4.8 |
+| `authority-requalification-v1.json`, `validate-authority-requalification.py`, separately committed G2 successor and refreshed `validate-assurance.py` evidence | P4.8 | sole current package snapshot for P5 and P6.1 pre-write; terminal input for P4 close |
 
 ## Запланированные выходы P5
 

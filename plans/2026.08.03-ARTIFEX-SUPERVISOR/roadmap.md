@@ -1,31 +1,30 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.18.2 · **Статус:** P1/P2 and P4 are
-terminal history; P3 закрыта `🟠` (6 🟢, 2 🟠). D89–D90 держат G1→G5 generation/generator topology,
-D93–D97 — exact resolver-valid Harness source/test/lock grants; D98 запрещает audit 11.
-P4 closed G2 against the current Artifex package; package/root projections остаются только через
-plan→apply→check, а P5 не начинается до cold P4 audit.
+**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.19.0 · **Статус:** P1/P2 terminal;
+P3 закрыта `🟠` (6 🟢, 2 🟠); P4 реопенена `🟡` (2 🟢, 4 🟠, 2 ⬜) по Audit F1–F7.
+D103–D104 задают последний P4 remediation pass: P4.7 repairs committed-tree Harness/provenance,
+P4.8 publishes the resolver-authorized G2 successor, then close and audit pass 2. P5 remains closed.
 
-## Current execution launch — P4 cold audit
+## Current execution launch — P4.7
 
-**Next:** audit-phase: task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | repository-plan-read · adversarial-review |
-| Context | cold-start — plan-step |
-| Суть | Audit the terminal P4 assurance evidence before P5. |
-| Команда | `$ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-code-edit · committed-tree-validation · provenance-reconciliation |
+| Context | same-session — item |
+| Суть | Repair committed-tree Harness validation and append-forward P4 provenance. |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | xhigh | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `cold-start — plan-step` | P4 cold audit; preserve terminal evidence and G2 | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'Run $ task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P4. Read plan.md, phases/P4.md, handoff.md, roadmap.md, G2 assurance and P4 findings. Audit only; do not start P5 or mutate G2.'` |
+| gpt-5.6-terra | high | never | danger-full-access | `/home/vostrikov/projects/packages/swissknifeman` | `same-session — item` | P4.7 committed-tree Harness/provenance remediation | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Run $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7. Read plan.md, phases/P4.md, brief/21-p4-audit1-final-remediation.md, research/32-p4-audit1-final-remediation.md and the Audit P4 block first. Preserve historical commits/journal and unrelated dirty worktree.'` |
 
 ## Карта исполнения
 
-Все 39 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
+Все 41 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
 D98 открыл текущий product execution path с P3.5 без audit 11.
@@ -58,11 +57,13 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.7 | terminal | 🟢 Done | implementation/high | — | Task invariant repair and read-only closure fan-in closed |
 | P3.8 | terminal | 🟢 Done | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | G1 Artifex package promotion closed |
 | P4.1 | terminal | 🟢 Done | implementation/high | — | D99 baseline plus immutable six-contract fault matrix and injector freeze |
-| P4.2 | terminal | 🟢 Done | implementation/high | — | `618adbea` dispatch-aware no-rerun recovery; consumes P4.1 |
+| P4.2 | terminal-history | 🟠 Done with deviations | implementation/high | — | foreign `test_scheduler.py` plus delayed/corrective closure provenance; P4.7 reconciles forward |
 | P4.3 | terminal | 🟢 Done | implementation/high | — | linked-worktree integration; consumes recovery |
-| P4.6 | terminal | 🟢 Done | implementation/high | D79 exact scoped repair | one worktree-local hook repair plus exact GREEN recheck; no package-source edit |
-| P4.4 | terminal | 🟢 Done | implementation/high | — | indexed-admission security and privacy evidence |
-| P4.5 | terminal | 🟢 Done | implementation/high | D102 packet successor | owner/telemetry and G2 current-package assurance aggregate |
+| P4.6 | terminal-history | 🟠 Done with deviations | implementation/high | D79 exact scoped repair | hook repair is real; claimed full Harness gate is red on `10422237` |
+| P4.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | runtime `activity.py` enforcement lay outside Files |
+| P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
+| P4.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.7` | implementation/high | — | coupled Harness generator/test repair plus exact provenance validator; cannot batch with protected P4.8 |
+| P4.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.8` | implementation/high | exact D104/Layer-0 owner grant | protected successor and final G2 fan-in; full review, then phase close |
 | P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` | frontier/high | `G-OWNER-P5-BUSINESS` after request/catalog hashes | freeze trials/shadow; pause for owner hash-bound dispatch grant; produce all per-trial admissions before close |
 | P5.2 | solo | `waiting: P5.1 terminal with business admission index → manual: implementation/high` | implementation/high | consumes `G-OWNER-P5-BUSINESS` only through P5.1 carriers | reversible live three-slice pilot; P3 smoke inputs refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` | implementation/high | consumes indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
@@ -77,7 +78,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 1. P1.6/P2.6 and P1/P2 remain terminal; do not rewrite their carriers.
 2. D98 closes the ten-pass pre-exec design loop; do not run audit 11. Start P3.5 under its committed-spec gate.
 3. Execute P3.5→P3.6→P3.7→P3.8, close P3 and apply the two-pass/two-repeat ceiling to its phase audit checkpoint.
-4. Literal P3 acceptance unlocks P4. Execute P4.1→P4.2→P4.3→P4.6→P4.4→P4.5, then P5→mandatory P6 sequentially; no audit checkpoint may schedule a third automatic pass.
+4. Audit P4 pass 1 reopens the historical chain. Execute P4.7→P4.8, close P4, then run audit pass 2; no third automatic audit or additional design pass is authorized. Only literal GREEN unlocks P5→mandatory P6.
 
 ### P3 — closed forward remediation
 
@@ -88,7 +89,7 @@ terminal baseline; следующий runnable producer — P4.2.
 
 ## Authority Gate Contract
 
-Только следующие пять active markers являются owner grants этого плана. Проверяемый carrier —
+Только следующие шесть active markers являются owner grants этого плана. Проверяемый carrier —
 более поздняя, чем D64, строка Decision Log в `plan.md`, которая дословно содержит указанный
 `[OWNER-GRANT:<gate-id>]`, называет разрешённую ветвь и scope, ссылается на явное сообщение
 repository owner и не отозвана более поздним D#. D74/D75 и команды `finish`/audit не являются
@@ -101,6 +102,7 @@ repository owner и не отозвана более поздним D#. D74/D75 
 | `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2` | P3.8 stage 1 adds the Artifex instruction owner and shared-lock generation | D95 exact record + Layer-0 message matches every Harness source/test/lock path in P3.8 `Files`; consumer is P3.8 only | no Harness source/projection mutation; P3.8 remains open |
 | `G-OWNER-P6.1-ROUTER` | P6.1 фиксирует `root_router=approved`; P6.2 consumes outputs | D87 exact marker разрешает additive `swissknifeman artifex` and exact root installer/doctor/generated outputs | P6.1 remains non-terminal; no rootless terminal product |
 | `G-OWNER-P6.2-HARNESS-ROOT-INSTRUCTIONS-R2` | P6.1 freezes and P6.2 changes exact root instruction producers/shared lock | D96 exact record + Layer-0 message matches every Harness source/test/lock path in P6.2 `Files`; consumer is P6.1→P6.2 only | no root source/projection mutation; P6.1/P6.2 remains open |
+| `G-OWNER-P4.8-G2-REQUALIFICATION` | P4.8 requalifies the historical P4.5 protected diff and publishes the G2 successor | D104 exact branch/scope plus `brief/21-p4-audit1-final-remediation.md` Layer-0 record; preflight must return owner-gate `allow/allow` | no protected mutation and no terminal G2; P4/P5 stay closed |
 
 Provider readiness, terminal validators and security/hook integrity остаются evidence gates: D#
 не заменяет отсутствующее или non-green доказательство. D98 отменяет только повторный pre-exec
@@ -114,7 +116,7 @@ but cannot terminalize P5 or waive provider parity. Tag/push/publish/release н�
 | Generation | Producer | Current through | Successor rule |
 |:--|:--|:--|:--|
 | G1 | P3.8 D95 generation + package promotion | P3.8 close | pins stage-1 source/guides/lock commit and terminal item commit; historical Git/blob baseline after first P4 package edit |
-| G2 | P4.5 assurance | P5 and P6.1 pre-write | P5 is read-only; P6.2 protects runtime subset and produces G4 |
+| G2 | P4.8 D104 requalification successor (historical predecessor: P4.5/`23f71d34`) | P5 and P6.1 pre-write | consumes terminal P4.7 and exact current Artifex bytes; P5 is read-only; P6.2 protects runtime subset and produces G4 |
 | G3 | P5.4 `GO` | P6.1 pre-write | pins exact unchanged G2 bytes; evidence only |
 | G4 | P6.2 D96 root generation + integration | P6.3 start | pins exact D93 plan/apply/check/lock transition and structural router/installer successor; no runtime migration |
 | G5 | P6.3 operations | P6.4 audit | finished current product; cold audit validates G1→G5 |

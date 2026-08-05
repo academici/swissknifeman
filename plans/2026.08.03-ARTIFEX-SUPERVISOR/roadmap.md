@@ -9,7 +9,7 @@ consumers; D98 закрывает design-audit loop и открывает P3.5; 
 
 ## Current execution launch — D98 audit-loop closure
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7
 
 | Параметр | Значение |
 |:--|:--|
@@ -17,8 +17,8 @@ consumers; D98 закрывает design-audit loop и открывает P3.5; 
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test · git-commit |
 | Context | same-session — item |
-| Суть | Исполнить P3.6 evidence/hash remediation; design audit не повторять |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` |
+| Суть | Исполнить P3.7 Task regression and closure fan-in; design audit не повторять |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` |
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|:--|:--|:--|
@@ -55,7 +55,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P3.3 | terminal | 🟢 Done | implementation/high | — | terminal two-provider parity freeze |
 | P3.4 | terminal-history | 🟠 Done with deviations | implementation/high | — | audit F1–F6 disproved runtime/evidence closure; historical record remains visible and remediation is forward-only |
 | P3.5 | remediation | 🟠 Done with deviations | implementation/high | — | `b7c7c1a0` binds the runtime, but its foreign `scheduler.py` path requires plan-design before P3.6 |
-| P3.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` | implementation/high | — | consumes P3.5; real readiness probe and strict immutable-P2/current-P3 hash proof |
+| P3.6 | terminal | 🟢 Done | implementation/high | — | `ea141189` provides real indexed readiness and strict immutable-P2/current-P3 hash proof |
 | P3.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` | implementation/high | — | consumes P3.6 read-only; temp-isolated fresh probe, before/after clean carrier check and Task invariant repair |
 | P3.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.8` | implementation/high | consumes exact D86 output + D95 resolver-valid Harness source/test/lock grant | exact Artifex plan→apply→check, atomic stage-1 commit, full gpt-5.6-terra/high package-cwd Codex continuation, then G1 runtime/baseline |
 | P4.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P4.1` | implementation/high | — | six-contract admission/dispatch fault matrix and injector freeze |
@@ -82,7 +82,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 
 ### P3 — reopened forward remediation
 
-**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6
+**Next:** run-items: task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7
 
 | Параметр | Значение |
 |:--|:--|
@@ -90,8 +90,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | Effort | high |
 | Capabilities | repository-plan-write · subprocess-test |
 | Context | same-session — item |
-| Суть | Выполнить P3.6 evidence/hash remediation |
-| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6` |
+| Суть | Выполнить P3.7 Task regression and closure fan-in |
+| Команда | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.7` |
 
 ```text
 $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P3.6

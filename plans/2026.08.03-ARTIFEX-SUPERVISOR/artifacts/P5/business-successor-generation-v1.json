@@ -1,5 +1,5 @@
 {
-  "generation_hash": "7c1187f0a3f8addda07a27ea36cda836ffd64f91281cf56ac95a7fcb04da7a30",
+  "generation_hash": "f13c30f25dc50075669dd97f7ab4c8ec2fd9e54260e5359adbfe34c33ef0fcc6",
   "generation_version": "1.0.0",
   "predecessor": {
     "commit": "124df816",
@@ -36,7 +36,7 @@
       },
       {
         "path": "packages/artifex/lib/artifex/activity.py",
-        "sha256": "5f50dad799e452cbb3842368e343588c562605d41fa7190be3db05b2a6c0598b"
+        "sha256": "34e790144583266e2f14a9a0713ae169ae124a9288d23b2946d2273b8c4e1517"
       },
       {
         "path": "packages/artifex/lib/artifex/authority.py",
@@ -48,7 +48,7 @@
       },
       {
         "path": "packages/artifex/lib/artifex/cli.py",
-        "sha256": "f984bfebb42a843cf3447772b69f09e6e3bf5f69dfefd547e954e41d0e176335"
+        "sha256": "d52a64b269a59a6fc28102cb8603cd7c9e3956ea24fce6e41f2ccec0860915e4"
       },
       {
         "path": "packages/artifex/lib/artifex/compiler.py",
@@ -136,7 +136,7 @@
       },
       {
         "path": "packages/artifex/tests/test_business_dispatch.py",
-        "sha256": "4ee95d074d906636568d0b51797fb04d17c9416d798a2017349fb69978b99761"
+        "sha256": "88a4e066ddcdd3575941bb92c2dfdeb1f7bb5084cbefe24589f05fffe5fc8a87"
       },
       {
         "path": "packages/artifex/tests/test_business_provider_projection.py",
@@ -144,7 +144,7 @@
       },
       {
         "path": "packages/artifex/tests/test_cli.py",
-        "sha256": "6aa3b1028230e674da3cec9fef0d1a7ff652befcf1cd9c9210c1d4f90f1e7686"
+        "sha256": "0dcce445d1d9f705edfb3d922a3698d7aae5791b98b939cd064606ed891fe2e7"
       },
       {
         "path": "packages/artifex/tests/test_compiler.py",

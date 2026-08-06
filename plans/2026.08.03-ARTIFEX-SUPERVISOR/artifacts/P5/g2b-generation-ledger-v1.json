@@ -31,6 +31,12 @@
       "commit": "6b9afc9ba004d25807df2ebade0a61f7a6f84322",
       "date": "2026-08-06",
       "reason": "fix(artifex): починить claude-code dontAsk allow-list и codex item.started (P5.5)"
+    },
+    {
+      "generation_hash": "f36d6f764a5c4b38b1d01dd4e3de075b7ab62b721ca2a692a67d72eb68ca4696",
+      "commit": "4e5b1e62",
+      "date": "2026-08-06",
+      "reason": "feat(artifex): измерить провайдерский economy-конверт под economy-evidence-v2 (P5.5)"
     }
   ]
 }

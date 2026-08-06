@@ -7,7 +7,7 @@
 | Model | opus |
 | Thinking | high — re-scoping a blocked item across two owning surfaces; open design decisions |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Раздать три подтверждённых дефекта их владельцам: P5.5 (четвёртый реопен) регистрирует D125-батч и его ветку в `business_dispatch`, новый P5.6-подобный item чинит `validate-recovery-pilot.py` (и бесхозный `validate-assurance.py`) по ledger-паттерну D130; P5.4 остаётся 🔴 до этого. |
+| Суть | Раздать три подтверждённых дефекта их владельцам: P5.5 (четвёртый реопен) регистрирует D125-батч и его ветку в `business_dispatch`, новый P5.6-подобный item чинит `validate-recovery-pilot.py` (и бесхозный `validate-assurance.py`) по ledger-паттерну D130; P5.4 остаётся 🔴 до этого. Заход обязан исполнить `brief/37` — прямую сверку (a)–(d) — и разрешить развилку «ещё одна строка в `GRANT_BATCHES` против data-driven таблицы батчей». |
 | Команда | `—` |
 
 ```
@@ -34,7 +34,11 @@ adjudicator written against inputs that cannot be produced would be unverifiable
 `task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P5` and one cold
 `task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P5`, then P6 (0/4, `⬜ Not started`).
 
-**Sources of truth:** `findings/P5.4-package-authority-gap-2026-08-06.md` (the gate sweep, the three
+**Sources of truth:** `brief/37-forward-conformance-owner-direction-2026-08-06.md` (owner direction
+2026-08-06: эскалацию агент обязан квалифицировать «новое vs повтор»; аудит/дизайн пункта обязаны
+смотреть вперёд на потребителей; RAG — по максимуму на ВНЕШНИХ фактах, репозиторные закрываются
+механической развёрткой (a)–(d), а не поиском) ·
+`findings/P5.4-package-authority-gap-2026-08-06.md` (the gate sweep, the three
 defects with their exact commands and outputs, the two-change proof, the ownership table and the
 ordering constraint) · `phases/P5.md` P5.4 (`🔴 Blocked`, the escalation blockquote and the full
 Pending Work) · `packages/artifex/lib/artifex/business_dispatch.py:31-38` and `:118` (the two lines
@@ -93,5 +97,11 @@ twin) · `artifacts/P5/g2b-generation-ledger-v1.json` (six entries; last `f36d6f
   the owner gates scope/authority/irreversible semantics» into the ecosystem SSOT (`plan-protocol`
   `SKILL.ru.md` → generated `SKILL.md` → `skiller registry`) — recorded in `brief/36-…` §5, a
   separate task outside this plan (carried, unchanged by this item).
+- deferred (new, same destination): the forward-conformance obligation of `brief/37` §3 — (a) новый
+  литерал власти → перечислить всех его потребителей; (b) переморозка поколения → `grep -rl
+  <старый-хеш>`, каждое попадание ledger-aware или перепинено тем же коммитом; (c) закрывающийся
+  продюсер прогоняет pre-intent/Validation СВОЕГО потребителя; (d) «сняты все N блокеров» — только
+  после (a)–(c). Плюс правило 1: агент квалифицирует эскалацию как «новое vs повтор» в самом отчёте.
+  До переноса в SSOT обязанность живёт в `brief/37` и адресована ближайшему `plan-design` по P5.4.
 - open_questions: OQ-P5.4-CODEX-SANDBOX (unchanged, `Decision pending` — D126 excludes the codex
   lane from P5.4 without resolving the sandbox/network trade-off).

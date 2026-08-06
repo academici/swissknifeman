@@ -245,6 +245,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после D119-реопена: адоптирован D118-seam (`c9e580ba`), оба G2B-манифеста перезаморожены из уже записанных R2-строк без единого provider-процесса — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-06 | plan-design/claude-opus-5/high | D119–D120 закрывают эскалацию P5.2 по прямому выбору владельца: P5.5 реопенится как единственный продюсер G2B и перезамораживает манифесты, P5.2 становится чистым потребителем; pin `2.1.222` соблюдается через `SKM_CLAUDE_BIN` без правки контракта — детали см. phases/P5.md P5.5/P5.2. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 остановлен 🔴 ESCALATION до intent: seam-код (`c9e580ba`) добавлен и зелёный, но P5.5-валидатор ловит G2B generation/assurance drift от правки package-файлов вне полномочий P5.2, плюс живой Claude Code `2.1.223` расходится с пином `2.1.222` — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-08-06 | plan-design/sonnet/high | D118 resolves OQ-P5.2-BRIDGE under owner delegation: package-owned business-execution seam in `cli.py`/`providers/*`, reusing existing business argv/fold/activity/worker primitives; details in phases/P5.md P5.2. |

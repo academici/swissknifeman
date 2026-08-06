@@ -113,7 +113,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Generate the business successor, run measured pilots, and prove product readiness | 1/5 | 🟡 In progress |
+| P5 | Generate the business successor, run measured pilots, and prove product readiness | 1/5 | 🔴 Blocked |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -243,6 +243,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.2 остановлен 🔴 ESCALATION до intent: seam-код (`c9e580ba`) добавлен и зелёный, но P5.5-валидатор ловит G2B generation/assurance drift от правки package-файлов вне полномочий P5.2, плюс живой Claude Code `2.1.223` расходится с пином `2.1.222` — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-08-06 | plan-design/sonnet/high | D118 resolves OQ-P5.2-BRIDGE under owner delegation: package-owned business-execution seam in `cli.py`/`providers/*`, reusing existing business argv/fold/activity/worker primitives; details in phases/P5.md P5.2. |
 | 2026-08-06 | plan-design/sonnet/high | D117 voids D114–D116 (no owner quote, executor self-authorization); P5.2 reverts to pre-D114 design state — details in phases/P5.md P5.2. |
 | 2026-08-05 | workflow/manual | P5.5 records separate minimized controlled checks; historical D108/D111/D112 failures, blocked status and no-new-action gate remain unchanged (see P5.5 Completion Notes). |

@@ -5,7 +5,7 @@
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | xhigh — owner-grant and comparator design, irreversible spend at stake |
+| Thinking | high — `task:plan-design` pins Opus/high; no manual switch needed |
 | Context | NEW SESSION — шаг-не-item |
 | Суть | Re-design P5.4 against the eight blockers found at its pre-intent gate: decide what a `live-paired` incumbent lane concretely is and who produces it (without it both D14 branches are ineligible before the first dispatch), mint a new owner grant for the wave budgets, resolve the codex sandbox/network decision, and repair the four generation-stale gates in their owning items. |
 | Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.4` |

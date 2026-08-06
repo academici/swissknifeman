@@ -1,90 +1,69 @@
-# HANDOFF — 2026-08-06 — after P5.5
+# HANDOFF — 2026-08-06 — after P5.2
 
-**Next:** manual: implementation/high
+**Next:** `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2`
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high |
-| Capabilities | repository-code-edit · generation-aware-validation · provider-worktree-lifecycle |
-| Context | same-session — item |
-| Суть | P5.2: execute the exact three predeclared repository slices through the re-frozen G2B seam as a pure evidence consumer, pinning Claude Code via `SKM_CLAUDE_BIN=2.1.222` per D120. |
-| Команда | — (`Exec = manual`: нет однокомандного эквивалента) |
+| Model | opus |
+| Thinking | high — open design decision (retry/accept/reopen), not mechanical |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Decide, against real 0/3-accepted pilot evidence, whether to request a fresh D105 grant batch and retry (longer claude-code wall-clock budget and/or a sharper business prompt), accept the mechanical safety/reversibility proof as P5.2's terminal result and proceed to P5.3 as-is, or reopen P5.5 to sharpen the seam's business prompt. |
+| Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2` |
 
-```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2
+**Done:** P5.2 closed `🟠 Done with deviations` (item commit `a508111e`). Three real, live, catalog-ordered
+D105 dispatches ran through the D118/P5.5 business-execution seam inside disposable, rolled-back git
+worktrees, with `SKM_CLAUDE_BIN` pinned to the frozen `2.1.222 (Claude Code)` build (D120, re-probed once
+before the first dispatch, literal confirmed, PATH `2.1.223` never invoked): `p5.2-slice-01-worktree-core`
+(codex, `OK`, zero-diff), `p5.2-slice-02-worktree-binding` (claude-code, `WALL_TIMEOUT`),
+`p5.2-slice-03-worktree-evidence` (codex, `OK`, zero-diff) — **0/3 `accepted`**. `packages/artifex` and both
+G2B manifests were confirmed byte-identical before/between/after all three dispatches (D119); `git diff
+--exit-code` empty, `validate-business-successor.py` re-run clean after the pilot (G2B `f13c30f2…`
+unchanged, 14/14 D105 rows still unused overall). Three named `run-pilot.py` defects (stale G2B hash
+literal, missing `SKM_CLAUDE_BIN` resolution, stale void results artifact) plus two discovered live (PATH
+scope for `which("codex")`, an absolute `--runs-root` tripping `cli.py`'s `_inside()` gate) were fixed on
+the harness side only — no `packages/artifex/**` byte or G2B manifest was ever touched. New independent
+`validate-repository-pilot.py` correctly reports `FAIL` (honest, not adjusted to force GREEN). Full
+narrative and evidence: `plans/2026.08.03-ARTIFEX-SUPERVISOR/findings/P5-repository-pilot.md`.
 
-ВХОД:  plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md → P5.2 (Scope Included/Excluded, Files,
-       Implementation Rules, Validation — already re-specified under D119 as a pure evidence
-       consumer, no `packages/artifex/**` paths in Files) · re-frozen
-       business-successor-generation-v1.json / business-successor-assurance-v1.json (item commit
-       `3d3fdad4`) · D118–D120.
-СКОУП: execute exactly the three predeclared P5.2 catalog slices in order through
-       `dispatch-business` + the package's D118 seam (consumed, never edited) against the
-       re-frozen G2B digest; before the first dispatch export
-       `SKM_CLAUDE_BIN=/home/vostrikov/.local/share/claude/versions/2.1.222` and re-probe the
-       exact literal `2.1.222 (Claude Code)`; prove `git status --porcelain packages/artifex`
-       and both G2B manifests unchanged before AND after the pilot.
-НЕ ТРОГАТЬ: `packages/artifex/lib/artifex/{activity,cli}.py` and both G2B manifests (P5.5-owned,
-       consume-only under D119 — a seam defect reopens P5.5, it is never patched in-pilot);
-       frozen `2.1.222 (Claude Code)`/`codex-cli 0.146.0` pins, `BUSINESS_VERSION`, contract
-       text, `provider-business-projection-v1.json` version rows (D120); D105 admissions beyond
-       the three P5.2 slices; P4/G2/P5.1 bytes; чужой незакоммиченный дифф в дереве
-       (`phases/P6.md` и широкий набор по другим пакетам, см. Open risks ниже).
-```
+**Remaining:** P5 `1/5` 🟡 (P5.2 closing `🟠` does not add to the green count, same convention as P5.5).
+The three P5.2 D105 grants are now one-shot spent — no retry is possible against these exact admissions;
+a fresh grant batch would be a new D# decision. P5.3, P5.4 remain `⬜`; P6 remains `⬜`.
 
-**Done:** D119 reopen remediation closed P5.5 `🟠 Done with deviations` (item commit `3d3fdad4`).
-The four already-committed D118 seam files (`packages/artifex/lib/artifex/{activity,cli}.py`,
-`packages/artifex/tests/{test_business_dispatch,test_cli}.py`, commit `c9e580ba`) were confirmed
-literal members of D108's exact scope and adopted as G2B producer surface; both G2B manifests were
-re-frozen via `validate-business-successor.py --write`, feeding back the two already-recorded R2
-rows (zero provider processes). Pre-write→post-write diff is exactly the four `package_files`
-hashes plus `generation_hash`/`g2b_generation_hash`/`assurance_hash`; `d105_rows`/`d105_used_rows`
-(14/0), `provider_versions`, `d108_pre_provider_observations` and both R2 rows are byte-identical.
-D119 acceptance (a)-(c) and the `test.sh`/`validate.sh` half of (d) are green (89 tests each). Two
-Validation-field checks stay red for reasons outside P5.5's `Files`, both predating this session —
-see Open risks and phases/P5.md P5.5 Completion Notes/Pending Work for full evidence.
-
-**Remaining:** P5 `1/5` 🟢 (only P5.1; P5.5 closing `🟠` does not add to the green count). Открыто:
-P5.2 (`⬬`, next — fully specced, ready), затем P5.3, P5.4; далее P6. Two forward fix-items are
-owed before P5.4's consolidated G3 fan-in re-runs `validate-trial-admissions.py`/the P4-evidence
-diff (see Open risks) — they do not block P5.2.
-
-**Sources of truth:** `plan.md` §5 D119/D120, §6 Update Log · `phases/P5.md` P5.5 Completion
-Notes/Pending Work/Known Deviations (full D119 remediation evidence) · `phases/P5.md` P5.2
-Scope/Files/Implementation Rules/Validation · `artifacts/P5/business-successor-generation-v1.json`
-/ `business-successor-assurance-v1.json` (item commit `3d3fdad4`) ·
-`artifacts/P5/validate-business-successor.py` · commit `c9e580ba` (seam, adopted not re-authored).
+**Sources of truth:** `plan.md` §5 D119/D120, §6 Update Log · `phases/P5.md` P5.2 Completion
+Notes/Pending Work/Known Deviations (full evidence) · `findings/P5-repository-pilot.md` (full pilot
+narrative) · `artifacts/P5/repository-pilot-results-v1.json` (item commit `a508111e`) ·
+`artifacts/P5/repository-pilot-results-v1-void-2026-08-06.json` (preserved historical void attempt) ·
+`artifacts/P5/validate-repository-pilot.py`.
 
 **Open risks:**
 
-- **Forwarded, not fixed (new this session):** `git diff --exit-code 124df816 -- phases/P4.md
-  artifacts/P4` is red — 3 files (`validate-assurance.py`, `validate-provenance-reconciliation.py`,
-  `phases/P4.md`) already committed at `3533234c`/`395cf560`, legitimate P4.7/phase-close history
-  landing after P4.8's owning commit `124df816`; not a dirty byte, not caused by this session. Needs
-  its anchor commit reconciled against P4's actual terminal state — a P4-owned `plan-design` fix.
-- **Forwarded, not fixed (new this session):** `validate-trial-admissions.py` fails `current G2
-  drift: packages/artifex/lib/artifex/activity.py` — D118's seam commit `c9e580ba` (already closed
-  P5.2 item, predates this session) changed `activity.py`/`cli.py`, which are also G2-era files in
-  P4's frozen `package_files` set; this is the structural, D118/D119-intended consequence of moving
-  the seam into the package. Needs the P5.1-owned validator's G2-equality check updated for a
-  package that now legitimately diverges from G2 — out of P5.5's `Files`, forward to P5.2 or a
-  fresh `plan-design` pass, before P5.4's G3 gate needs it green.
-- Закреплённая сборка `~/.local/share/claude/versions/2.1.222` может быть вычищена
-  автообновлением Claude Code; P5.2 обязана перепроверять литерал непосредственно перед dispatch.
-- D105 истекает `2026-08-12T23:59:59Z` при 14/14 неиспользованных строках.
-- В рабочем дереве лежит чужой незакоммиченный дифф — не наш субъект, этот заход его не трогал:
-  `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P6.md` плюс широкий набор по другим пакетам
-  (skiller/harness/task/core/docs, `.swissknife.json`, `core/provider/runtime.py`,
-  `packages/skiller/skills/dart/`, `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`). Второй, независимой
-  причиной заблокирует `run-pilot.py`-preflight `MAIN_TREE_DIRTY`, пока владелец его не
-  закоммитит/не уберёт.
-- `packages/artifex/scripts/validate.sh` содержит `rg`-guard, который в этом окружении молча
-  no-op'ит (`rg` не установлен) — унаследованный дефект окружения, не новый.
+- All three P5.2 trial admissions (`p5.2-slice-01-worktree-core`, `p5.2-slice-02-worktree-binding`,
+  `p5.2-slice-03-worktree-evidence`) are now one-shot spent with a negative (`accepted:false`) result;
+  no further live attempt is possible against these exact admissions. Continuing to P5.3 without resolving
+  whether P5.4's release-readiness adjudication needs a positive business-edit precedent from P5.2 is a
+  live risk — this is exactly what the queued `plan-design` pass must decide.
+- (Carried forward, unchanged, not this session's subject) `git diff --exit-code 124df816 -- phases/P4.md
+  artifacts/P4` red — P4-owned anchor-commit reconciliation, forward to a P4-owned `plan-design` fix.
+- (Carried forward, unchanged) `validate-trial-admissions.py` fails `current G2 drift:
+  packages/artifex/lib/artifex/activity.py` — P5.1-owned validator's G2-equality check needs updating for
+  a package that now legitimately diverges from G2 under D118/D119; needed green before P5.4's G3 gate.
+- D105 expires `2026-08-12T23:59:59Z`; all 3 P5.2 rows are now used, 11/14 remain unused overall (P5.5's
+  two R2 rows + P5.2's three), pending P5.3/P5.4 usage before expiry.
+- В рабочем дереве по-прежнему лежит чужой незакоммиченный дифф — не наш субъект, этот заход его не
+  трогал: широкий набор по другим пакетам (skiller/harness/task/core/docs, `.swissknife.json`,
+  `core/provider/runtime.py`, `packages/skiller/skills/dart/`, `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`)
+  плюс `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P6.md`. Второй, независимой причиной блокирует
+  `run-pilot.py`'s own `MAIN_TREE_DIRTY` guard scope (narrowed this session to the two D119 surfaces only —
+  see Known Deviations) until the owner commits/clears it.
+- `packages/artifex/scripts/validate.sh` содержит `rg`-guard, который в этом окружении молча no-op'ит
+  (`rg` не установлен) — унаследованный дефект окружения, не новый.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: нет.
-- deferred: P5.2 execution; the two forwarded validation fix-items (P4-evidence-diff anchor,
-  `validate-trial-admissions.py` G2-equality check); P5.3–P5.4; P6; чужой грязный рабочий дифф.
-- open_questions: — .
+- workarounds: — .
+- deferred: the retry/accept/reopen-P5.5 decision for P5.2's 0/3-accepted outcome; the two forwarded
+  validation fix-items (P4-evidence-diff anchor, `validate-trial-admissions.py` G2-equality check);
+  P5.3–P5.4; P6; чужой грязный рабочий дифф.
+- open_questions: does P5.4's release-readiness adjudication require a positive P5.2 business-edit
+  precedent, or is mechanical safety/reversibility sufficient given the item's own stated "Why"? — routed
+  to the queued `plan-design` pass above.

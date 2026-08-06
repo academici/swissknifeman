@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,9 @@ from typing import Any
 
 PLAN_ID = "2026.08.03-ARTIFEX-SUPERVISOR"
 SCHEMA = "artifex-p5-shadow-v1"
+GENERATION_SCHEMA = "artifex-business-successor-generation-v1"
+GENERATION_KEYS = {"schema_version", "generation_version", "predecessor", "successor", "generation_hash"}
+HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 ROUTE = {"model_class": "implementation", "effort": "high"}
 CAPABILITIES = {
     "codex": ["structured_output", "machine_events", "permission_boundary", "ephemeral_session"],
@@ -47,6 +51,16 @@ CURRENT_CONTRACTS = {
     "economy": "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/economy-evidence-v1.md",
     "admission": "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/dispatch-admission-v1.md",
 }
+BUSINESS_CARRIER_NAMES = (
+    "business-grants-v1.json", "trial-dispatch-manifest-index-v1.json",
+    "trial-replay-v1.jsonl", "trial-admission-index-v1.json",
+    "build-trial-admissions.py", "validate-trial-admissions.py",
+)
+BUSINESS_CARRIER_DIR = "trial-admissions"
+FROZEN_CARRIER_NAMES = (
+    "trial-catalog-v1.json", "archive-mapping-v1.json",
+    "shadow-results-v1.json", "business-grant-request-v1.json",
+)
 PILOT_COMMIT = "e3c932aa0f2d364aefc7c64a9dc6c052e3c3df95"
 PILOT_SLICES = [
     (
@@ -368,7 +382,75 @@ def build_request(root: Path, catalog: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def validate(root: Path, out: Path, package: Path, assurance_path: Path) -> None:
+def business_carriers_present(out: Path) -> bool:
+    return (any((out / name).exists() for name in BUSINESS_CARRIER_NAMES)
+            or (out / BUSINESS_CARRIER_DIR).exists())
+
+
+def shadow_freeze_commit(root: Path, out: Path) -> str:
+    """D128: the four frozen carriers share exactly one commit — the shadow-freeze
+    checkpoint. Resolved at run time, never hard-coded; if they ever disagree that
+    is a defect too serious to silently pick one, so it stops the item instead."""
+    commits: set[str] = set()
+    for name in FROZEN_CARRIER_NAMES:
+        rel = (out / name).relative_to(root).as_posix()
+        found = str(git(root, "log", "-1", "--format=%H", "--", rel)).strip()
+        if not found:
+            raise ShadowError(f"frozen carrier has no commit history: {name}")
+        commits.add(found)
+    if len(commits) != 1:
+        raise ShadowError(f"frozen carriers disagree on their freeze commit: {sorted(commits)}")
+    return commits.pop()
+
+
+def validate_shadow_freeze_history(root: Path, out: Path) -> None:
+    """D128 historical half: at the shadow-freeze commit, no business carrier and
+    no trial-admissions/ tree existed — a one-time historical fact, permanently
+    true and permanently checkable via `git ls-tree`, independent of the live
+    tree where P5.1 has since legitimately minted them under D105."""
+    commit = shadow_freeze_commit(root, out)
+    rel_dir = out.relative_to(root).as_posix()
+    entries = str(git(root, "ls-tree", "--name-only", commit, f"{rel_dir}/")).splitlines()
+    present = {Path(entry).name for entry in entries if entry}
+    if present & set(BUSINESS_CARRIER_NAMES):
+        raise ShadowError(f"business carriers existed at shadow-freeze commit {commit}")
+    if str(git(root, "ls-tree", commit, f"{rel_dir}/{BUSINESS_CARRIER_DIR}")).strip():
+        raise ShadowError(f"trial-admissions/ existed at shadow-freeze commit {commit}")
+
+
+def validate_package_generation(root: Path, generation_path: Path) -> str:
+    """D121/D122 rule (6), extended here (P5.6 F1): D118/D119 deliberately moved the
+    business-execution seam into the package, so the live tree is the G2B successor by
+    construction — assert it against the sole G2B digest in
+    `business-successor-generation-v1.json`, never against the immutable G2 predecessor
+    (that pin is checked separately, frozen-to-frozen, against the P4 assurance manifest
+    below). Returns the G2B generation_hash for the caller's own record."""
+    generation = load(generation_path)
+    if (set(generation) != GENERATION_KEYS
+            or generation.get("schema_version") != GENERATION_SCHEMA
+            or generation.get("generation_version") != "1.0.0"):
+        raise ShadowError("G2B generation closed schema")
+    if generation.get("generation_hash") != canonical_hash(generation, omit="generation_hash"):
+        raise ShadowError("G2B generation hash")
+    predecessor = generation.get("predecessor", {})
+    successor = generation.get("successor", {})
+    if predecessor.get("generation") != "G2" or successor.get("generation") != "G2B":
+        raise ShadowError("G2B generation lineage")
+    g2_digest = predecessor.get("digest")
+    if not isinstance(g2_digest, str) or not HEX64.fullmatch(g2_digest):
+        raise ShadowError("G2 predecessor digest")
+    rows = successor.get("package_files")
+    if not isinstance(rows, list) or not rows:
+        raise ShadowError("G2B package rows")
+    for row in rows:
+        path = root / row["path"]
+        if not path.is_file() or digest(path) != row["sha256"]:
+            raise ShadowError(f"current package differs from G2B: {row['path']}")
+    return generation["generation_hash"]
+
+
+def validate(root: Path, out: Path, package: Path, assurance_path: Path,
+             generation_path: Path | None = None) -> None:
     catalog = load(out / "trial-catalog-v1.json")
     mapping = load(out / "archive-mapping-v1.json")
     shadow = load(out / "shadow-results-v1.json")
@@ -377,12 +459,14 @@ def validate(root: Path, out: Path, package: Path, assurance_path: Path) -> None
     if assurance.get("schema_version") != "artifex-p4-assurance-manifest-v1" or assurance.get("readiness") != "green":
         raise ShadowError("terminal P4 assurance is not exact green")
     expected_rows = assurance.get("g2", {}).get("package_files")
-    actual_rows = []
-    for row in expected_rows:
-        path = root / row["path"]
-        actual_rows.append({"path": row["path"], "sha256": digest(path)})
-    if actual_rows != expected_rows or package_digest(actual_rows) != catalog["assurance"]["package_digest"]:
-        raise ShadowError("current package differs from G2")
+    if (not isinstance(expected_rows, list) or not expected_rows
+            or package_digest(expected_rows) != catalog["assurance"]["package_digest"]):
+        raise ShadowError("frozen G2 predecessor pin drift")
+    # The live package legitimately advanced past G2 (D118/D119): the current-tree
+    # check is asserted against the sole G2B generation instead, resolved from
+    # `business-successor-generation-v1.json`, while the frozen G2 pin above stays
+    # untouched and unchecked against the live tree (P5.6 F1).
+    validate_package_generation(root, generation_path or (out / "business-successor-generation-v1.json"))
     if package.resolve() != (root / "packages/artifex").resolve():
         raise ShadowError("package root mismatch")
     help_run = subprocess.run([str(package / "bin/artifex"), "--help"], cwd=root, text=True, capture_output=True)
@@ -396,6 +480,11 @@ def validate(root: Path, out: Path, package: Path, assurance_path: Path) -> None
         raise ShadowError("shadow result drift")
     if request != build_request(root, catalog):
         raise ShadowError("business request drift")
+    # D128 — the "no business carrier shaped the freeze" guard is a ONE-TIME
+    # HISTORICAL fact, proven against the shadow-freeze commit itself, never
+    # against the live tree (P5.1 has since legitimately minted them under
+    # D105). The live-tree refusal is a separate, pre-write-only check in main().
+    validate_shadow_freeze_history(root, out)
     trials = catalog["trials"]
     ids = [row["trial_id"] for row in trials]
     if len(ids) != len(set(ids)) or [row["order"] for row in trials] != list(range(1, len(trials) + 1)):
@@ -404,12 +493,6 @@ def validate(root: Path, out: Path, package: Path, assurance_path: Path) -> None
         raise ShadowError("trial count drift")
     if request["maximum_dispatch_count"] != len(trials) or set(request["providers"]) != set(CAPABILITIES):
         raise ShadowError("request scope/count drift")
-    if any((out / name).exists() for name in (
-        "business-grants-v1.json", "trial-dispatch-manifest-index-v1.json",
-        "trial-replay-v1.jsonl", "trial-admission-index-v1.json",
-        "build-trial-admissions.py", "validate-trial-admissions.py",
-    )) or (out / "trial-admissions").exists():
-        raise ShadowError("business carriers exist before exact owner grant")
     print(
         "P5 shadow validator: OK "
         f"({len(mapping['archive_inventory'])} archive files; "
@@ -429,6 +512,11 @@ def main() -> int:
     try:
         assurance = load(args.assurance)
         if args.write:
+            # D128 — the live-tree refusal: you may not re-cut the shadow freeze
+            # once business carriers exist. Raised BEFORE any byte is written,
+            # not after (the defect this repairs was checking post-write).
+            if business_carriers_present(out):
+                raise ShadowError("cannot re-cut shadow freeze: business carriers exist")
             catalog = build_catalog(root, assurance)
             mapping = build_mapping(root)
             write(out / "trial-catalog-v1.json", catalog)

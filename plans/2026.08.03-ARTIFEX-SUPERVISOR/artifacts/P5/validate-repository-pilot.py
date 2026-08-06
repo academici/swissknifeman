@@ -104,6 +104,7 @@ def main() -> int:
     parser.add_argument("--baseline-catalog", type=Path, default=here / "trial-catalog-v1.json")
     parser.add_argument("--generation", type=Path, default=here / "business-successor-generation-v1.json")
     parser.add_argument("--assurance", type=Path, default=here / "business-successor-assurance-v1.json")
+    parser.add_argument("--ledger", type=Path, default=here / "g2b-generation-ledger-v1.json")
     args = parser.parse_args()
 
     try:
@@ -136,8 +137,24 @@ def main() -> int:
             raise Invalid(f"D105 usage is nonzero: {assurance.get('d105_used_rows')!r}")
         if results.get("g2_predecessor") != live_g2:
             raise Invalid(f"results g2_predecessor stale: {results.get('g2_predecessor')!r} != live {live_g2!r}")
-        if results.get("g2b_generation_hash") != live_g2b:
-            raise Invalid(f"results g2b_generation_hash stale: {results.get('g2b_generation_hash')!r} != live {live_g2b!r}")
+
+        # D130/repair (3a): a recorded g2b_generation_hash is valid when it is a
+        # member of the append-only ledger AND the ledger's last entry equals the
+        # live generation — a pilot measured at an earlier legitimate freeze stays
+        # valid without its evidence being edited. A hash absent from the ledger
+        # is still the real regression case.
+        ledger = load(args.ledger)
+        if ledger.get("schema_version") != "artifex-g2b-generation-ledger-v1":
+            raise Invalid(f"unexpected ledger schema_version: {ledger.get('schema_version')!r}")
+        ledger_entries = ledger.get("entries")
+        if not isinstance(ledger_entries, list) or not ledger_entries:
+            raise Invalid("ledger has no entries")
+        ledger_hashes = [entry.get("generation_hash") for entry in ledger_entries]
+        if ledger_hashes[-1] != live_g2b:
+            raise Invalid(f"ledger last entry does not equal live generation_hash: {ledger_hashes[-1]!r} != {live_g2b!r}")
+        recorded_g2b = results.get("g2b_generation_hash")
+        if recorded_g2b not in ledger_hashes:
+            raise Invalid(f"results g2b_generation_hash not a ledger member: {recorded_g2b!r}")
 
         # The Claude Code pin: recorded once for the whole batch, never bumped past 2.1.222.
         probe = results.get("version_probe")
@@ -208,12 +225,19 @@ def main() -> int:
         if diff.returncode != 0:
             raise Invalid(f"unstaged diff on the guarded G2B/v1-evidence surface: {diff.stdout.decode('utf-8', 'replace')}")
 
+        # D130/repair (3b): the exit code distinguishes "evidence is structurally
+        # intact" from "evidence shows acceptance". Every failure class above
+        # (schema, admission binding, version pin, budget, staleness, mutated
+        # bytes, unclean tree) still returns 1. Evidence intact with an honest
+        # partial/zero-acceptance report returns 2, not 1: P5.2's `0/3` is
+        # immutable recorded evidence (its three D122 admissions are one-shot and
+        # spent), so this is this item's own permanent green for this gate.
         accepted_count = sum(1 for row in slices if row.get("accepted") is True)
         not_accepted = [row["trial_id"] for row in slices if row.get("accepted") is not True]
         if not_accepted:
             print(f"P5.2 D122 repository-pilot validator: FAIL: not accepted: {not_accepted} "
                   f"({accepted_count}/3 accepted) — honest report, not a validator defect", file=sys.stderr)
-            return 1
+            return 2
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         print(f"P5.2 repository-pilot validator: FAIL: {exc}", file=sys.stderr)
         return 1

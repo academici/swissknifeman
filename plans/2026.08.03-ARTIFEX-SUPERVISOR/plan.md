@@ -247,6 +247,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.3 закрыт 🟠: 6 реальных D105-допусков через crash/duplicate/timeout/schema/third-state pilot — детали см. findings/P5-recovery-pilot.md, phases/P5.md P5.3 Completion Notes. |
 | 2026-08-06 | plan-run/sonnet/high | Форвард-фикс (владелец вживую в чате): claude-code `dontAsk` реально блокировал Edit без `--allowedTools` — почин, живой edit прошёл; + два независимых бага парсинга (codex `item.started`, claude-code `errors`) — детали см. findings/P5-repository-pilot.md §8, commit `6b9afc9b`. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 закрыт 🟠 после D122 re-run: `load_indexed` научен GRANT_BATCHES (владелец снял ритуал реопена вживую в чате), G2B перезаморожен третий раз, все три D122-слайса реально задиспатчены — 0/3 accepted, все три `PROVIDER_PROTOCOL_UNKNOWN` — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 остановлен 🔴 ESCALATION до intent (снята следующей записью выше): `load_indexed` не видит v2-набор D122 (зашит на 14-строчный v1-индекс), 3/3 `ADMISSION_NOT_INDEXED` — детали см. phases/P5.md P5.2 Pending Work. |

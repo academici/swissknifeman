@@ -1,26 +1,25 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05 · **Соответствует plan.md:** v0.22.3 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.22.4 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; D111 reopens only
-P5.5 for one schema path and the exact bounded R2 replacement pair, while D112 replaces only the
-Codex cap-enforcement semantics with a mechanically provable wrapper/usage contract. P5.2→P6 remain non-runnable
-until P5.5 terminality. Both finite R2 processes have now returned `PROVIDER_NONZERO`; P5.5 is
-blocked and no retry, fallback, R3 or pilot is authorized.
+детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; P5.5 is terminal
+with D113's explicit acceptance deviation: its validated G2B manifests use the already completed
+minimized controlled checks, while historical R2 `PROVIDER_NONZERO` facts remain unchanged. P5.2
+is now the next workflow-gated item; no retry, fallback or R3 is authorized.
 
-## Current execution status — P5.5 R2 exhausted
+## Current execution status — P5.2 three-slice pilot
 
-**Next:** /task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5
+**Next:** `Workflow({ scriptPath: "plans/2026.08.03-ARTIFEX-SUPERVISOR/workflows/wf-artifex-supervisor-p52-pilot.js" })`
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
 | Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
-| Context | same-session — item |
-| Суть | Green local preflight, then one closed nonzero R2 process per provider. A separate neutral controlled-check record preserves Codex `1/13539 ms/4/OK` and Claude Code `1/4380 ms/1/OK`; it does not alter the exhausted R2 grant. |
-| Команда | `codex -C /tmp/p5-g2b-prep.UGARHt/wt -a never -s danger-full-access '$ task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5'` |
+| Context | NEW SESSION — Workflow-оркестрован |
+| Суть | Build and run only the exact three-slice reversible P5.2 pilot against terminal G2B; every mismatch stops before intent. |
+| Команда | `Workflow({ scriptPath: "plans/2026.08.03-ARTIFEX-SUPERVISOR/workflows/wf-artifex-supervisor-p52-pilot.js" })` |
 
 ## Карта исполнения
 
@@ -65,7 +64,7 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
 | P5.1 | terminal | 🟢 Done | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` consumed | `88f9a132` materializes all per-trial admissions after D106 historical/current gate |
-| P5.5 | blocked | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.5` | implementation/high | D111/D112 R2 grant exhausted | both final processes returned `PROVIDER_NONZERO`; no retry/R3/D105 use |
+| P5.5 | terminal | 🟠 Done with deviations | implementation/high | D113 terminal evidence direction | G2B manifests validated; historic R2 failures remain append-only facts |
 | P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal P5.5 | implementation/high | consumes D105 only through G2B | exact three-slice pilot; G2/P3/probe carriers refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` after terminal P5.2 | implementation/high | consumes same G2B and indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
 | P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.3 | frontier/high | same G2B/D105 provider parity; no single-provider waiver | five paired waves; G3 pins G2B and only literal `GO` closes |

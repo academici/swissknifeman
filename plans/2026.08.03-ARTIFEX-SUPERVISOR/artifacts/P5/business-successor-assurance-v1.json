@@ -1,0 +1,74 @@
+{
+  "assurance_hash": "92c74dc815f4965a3e747c4e3c37de66b501c47444b11ba71256ae216894079e",
+  "assurance_version": "1.0.0",
+  "d105_rows": 14,
+  "d105_used_rows": 0,
+  "d108_pre_provider_observations": [
+    {
+      "business_intent": false,
+      "exit_code": 1,
+      "process_count": 0,
+      "provider": "codex",
+      "root": "mktemp:p5-g2b-codex"
+    },
+    {
+      "business_intent": false,
+      "exit_code": 1,
+      "process_count": 0,
+      "provider": "claude-code",
+      "root": "mktemp:p5-g2b-claude-code"
+    }
+  ],
+  "g2_predecessor": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+  "g2b_generation_hash": "7c1187f0a3f8addda07a27ea36cda836ffd64f91281cf56ac95a7fcb04da7a30",
+  "provider_versions": {
+    "claude-code": "2.1.222 (Claude Code)",
+    "codex": "codex-cli 0.146.0"
+  },
+  "r2_capability_probes": [
+    {
+      "duration_ms": 13539,
+      "event_count": 4,
+      "exit_code": 0,
+      "kind": "success",
+      "process_count": 1,
+      "provider": "codex",
+      "reason_code": "OK",
+      "root": "mktemp:p5-g2b-codex-r2",
+      "usage_measured": true,
+      "wrapper": {
+        "automatic_retry": false,
+        "hard_timeout_ms": 120000,
+        "max_event_count": 16,
+        "max_output_bytes": 8192,
+        "max_turns_claimed": false,
+        "money_cap_claimed": false,
+        "rollout_budget_limit_tokens": 2000,
+        "single_fresh_exec": true,
+        "strict_config": true
+      }
+    },
+    {
+      "duration_ms": 4380,
+      "event_count": 1,
+      "exit_code": 0,
+      "kind": "success",
+      "process_count": 1,
+      "provider": "claude-code",
+      "reason_code": "OK",
+      "root": "mktemp:p5-g2b-claude-code-r2",
+      "usage_measured": true,
+      "wrapper": {
+        "automatic_retry": false,
+        "cost_limit_microunits": 1000000,
+        "dont_ask": true,
+        "hard_timeout_ms": 120000,
+        "max_event_count": 16,
+        "max_output_bytes": 8192,
+        "max_turns": 2,
+        "strict_empty_mcp": true
+      }
+    }
+  ],
+  "schema_version": "artifex-business-successor-assurance-v1"
+}

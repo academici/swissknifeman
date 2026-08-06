@@ -137,7 +137,7 @@ def _probes(args: argparse.Namespace, existing: dict | None) -> list[dict]:
     if not isinstance(rows, list) or len(rows) != 2:
         raise ValueError("R2 probe cardinality")
     # Revalidate saved, minimized records instead of trusting the manifest hash.
-    return [_observation(json.dumps(row, sort_keys=True), provider="codex", root="mktemp:p5-g2b-codex-r2"),
+    return [_observation(json.dumps(rows[0], sort_keys=True), provider="codex", root="mktemp:p5-g2b-codex-r2"),
             _observation(json.dumps(rows[1], sort_keys=True), provider="claude-code", root="mktemp:p5-g2b-claude-code-r2")]
 
 

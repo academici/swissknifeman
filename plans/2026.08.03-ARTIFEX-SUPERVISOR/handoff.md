@@ -66,8 +66,14 @@ convention), §6 Update Log · `root/contracts/economy-evidence-v2.md` and
   manifest drift` on the current tree — same class as the four gates
   `findings/P5-retry-carrier-set.md` §6 recorded, three of which P5.6 repaired and one of which
   P5.7 repaired. This fourth one was substituted out of the D127 remediation set (P5.6 took
-  `validate-repository-pilot.py` in its place), so today nobody owns it. It is a green-before-G3
-  obligation for P5.4. Proposed fix: a P5.6-style forward repair applying the same
+  `validate-repository-pilot.py` in its place), so today nobody owns it. Contrary to the prior
+  pass's expectation, it blocks nothing immediately: P5.4's re-scoped Validation does NOT name it
+  (verified this session — the eight validators P5.4 names are `validate-business-successor`,
+  `validate-contract-set`, `validate-economic-verdict`, `validate-economy-evidence`,
+  `validate-provenance-reconciliation`, `validate-recovery-pilot`, `validate-repository-pilot`,
+  `validate-trial-admissions`). So it is an unowned red gate that only P5.1's own Validation still
+  names, and the plan should assign or retire it deliberately rather than let it rot.
+  Proposed fix: a P5.6-style forward repair applying the same
   generation-aware pattern (assert the live tree against the current G2B generation while every
   frozen carrier keeps its G2/six-contract predecessor pin), plus a decision on whether its
   `--contracts` argument moves to `contract-manifest-v2.json`. Needs a design pass, not an

@@ -212,7 +212,7 @@ set** (P5.1's own Pending Work lists P5.6 as owning `validate-shadow.py`,
 `validate-package-promotion.py` and `validate-repository-pilot.py`, i.e. the third slot changed
 hands), so today it is owned by no item. It is red for reasons entirely outside this reopen's
 exhaustive Scope Included — this pass wrote no P4 byte, no package byte and no contract byte — and
-it is a green-before-G3 obligation for P5.4.
+Contrary to the prior pass's expectation it blocks nothing immediately: P5.4's re-scoped Validation does NOT name it (verified this session — P5.4 names `validate-business-successor`, `validate-contract-set`, `validate-economic-verdict`, `validate-economy-evidence`, `validate-provenance-reconciliation`, `validate-recovery-pilot`, `validate-repository-pilot` and `validate-trial-admissions`), so it is an unowned red gate that only P5.1's own Validation still names, and the plan should assign or retire it deliberately.
 
 Proposed remediation (a design decision, not an executor's): assign it to a P5.6-style forward
 repair that applies the same generation-aware pattern already proven three times — assert the live

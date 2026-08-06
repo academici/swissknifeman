@@ -247,6 +247,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после D121-реопена: business-порт резолвит `scenario`/`kind` из hash-запиненного P5.1-каталога с именованными отказами до intent, оба G2B-манифеста перезаморожены второй раз без единого provider-процесса — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-06 | plan-run/claude-opus-5[1m]/high | P5.1 закрыт с deviation: аддитивный v2-набор D122 отчеканен, v1 байт-заморожен, гейт «пакет == G2» починен на равенство G2B — детали см. phases/P5.md P5.1 Completion Notes. |
 | 2026-08-06 | plan-design/claude-opus-5/high | D121–D122: корень 0/3 — admission не несёт описания задачи (каталог несёт, генератор роняет); фикс producer-side через hash-verified резолв каталога, реопен P5.1/P5.5/P5.2 и грант на три заменяющие строки (claude-code 600000 ms) — детали см. phases/P5.md P5.1/P5.5/P5.2. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 закрыт 🟠: три реальных дизпатча через re-frozen G2B seam, `packages/artifex`/манифесты неизменны, но 0/3 accepted (2 zero-diff codex `success`, 1 claude-code `WALL_TIMEOUT`); все три D105-допуска one-shot спущены — детали см. phases/P5.md P5.2 Completion Notes/Pending Work. |

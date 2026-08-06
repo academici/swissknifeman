@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Deterministic conformance validator for economy-evidence-v1."""
+"""Deterministic conformance validator for economy-evidence-v1 and its additive
+successor economy-evidence-v2 (P5.7, D123).
+
+The v1 code path, its literals and its expectations are untouched: `--contract-version
+1.0.0` (the default, and the argument list P1.5 froze) runs exactly the former program.
+`--contract-version 2.0.0` adds the v2 path, which never re-implements adjudication —
+it gates the two v2 carriers (`inclusion_bases`, `zero_bases`) and then calls the v1
+`adjudicate` over the v1 view of the v2 input, so no threshold, formula, denominator or
+reason code can diverge between the versions by construction. The same path re-runs
+every frozen `economy-evidence-cases-v1` case under v2 and asserts each v1 verdict is
+unchanged; a v2 that moves a v1 verdict is a regression, not an upgrade.
+"""
 
 from __future__ import annotations
 
@@ -99,6 +110,18 @@ PRIVATE_KEYS = {
     "private_material",
 }
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
+
+# --- economy-evidence-v2 (P5.7, D123) -----------------------------------------
+# Additive: every name below is new. Nothing above this block changed.
+V2_ONLY_KEYS = {"inclusion_bases", "zero_bases"}
+TOP_KEYS_V2 = TOP_KEYS | V2_ONLY_KEYS
+INCLUSION_ENTRY_KEYS = {"provider", "contained_field", "containing_field", "evidence_ref"}
+ZERO_ENTRY_KEYS = {"component", "path", "statement"}
+# `declared-set: inclusion_basis_instantiations` — closed at exactly one row.
+INCLUSION_BASIS_INSTANTIATIONS = (("claude-code", "reasoning_tokens", "output_tokens"),)
+# `declared-set: zero_basis_components` — closed at exactly one component.
+ZERO_BASIS_COMPONENTS = ("coordinator",)
+COMPONENTS = ("worker", "coordinator")
 
 
 class InvalidEvidence(ValueError):
@@ -452,6 +475,274 @@ def validate_contract(contract: Path, rubric: Path, baseline: Path, providers: P
     return baseline_hash, provider_hash
 
 
+def v1_view(document: dict[str, Any]) -> dict[str, Any]:
+    """The v1 projection of a v2 input: the two v2-only carriers removed and the two
+    version strings restored. Every other byte is shared, so v1's `validate_shape` and
+    `adjudicate` see exactly the document they were frozen against."""
+    view = {key: value for key, value in document.items() if key not in V2_ONLY_KEYS}
+    view["schema_version"] = "economy-evidence-input-v1"
+    view["contract_version"] = "1.0.0"
+    return view
+
+
+def resolve_pointer(document: Any, pointer: str) -> Any:
+    parent, leaf = pointer_parent(document, pointer)
+    if isinstance(parent, list):
+        try:
+            return parent[int(leaf)]
+        except (ValueError, IndexError) as exc:
+            raise InvalidEvidence(f"unresolved pointer: {pointer}") from exc
+    if isinstance(parent, dict) and leaf in parent:
+        return parent[leaf]
+    raise InvalidEvidence(f"unresolved pointer: {pointer}")
+
+
+def is_measured_zero(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value == 0
+
+
+def envelope_parts(pointer: str, label: str) -> tuple[str, int, str]:
+    """`/lanes/<lane>/attempts/<index>/<component>` decoded, or a refusal naming the
+    exact pointer that failed."""
+    parts = decode_pointer(pointer)
+    if len(parts) != 5 or parts[0] != "lanes" or parts[2] != "attempts" or parts[4] not in COMPONENTS:
+        raise InvalidEvidence(f"{label}: {pointer} is not an attempt envelope pointer")
+    try:
+        index = int(parts[3])
+    except ValueError as exc:
+        raise InvalidEvidence(f"{label}: {pointer} carries a non-numeric attempt index") from exc
+    return parts[1], index, parts[4]
+
+
+def validate_zero_bases(document: dict[str, Any], tree_root: Path) -> None:
+    """Rule (2) — structural zero envelope, both directions."""
+    zero_bases = document["zero_bases"]
+    if not isinstance(zero_bases, dict) or any(not isinstance(key, str) for key in zero_bases):
+        raise InvalidEvidence("zero_bases must map envelope pointers to declared bases")
+    for pointer in sorted(zero_bases):
+        entry = require_exact_keys(zero_bases[pointer], ZERO_ENTRY_KEYS, f"zero_bases[{pointer}]")
+        _, _, component = envelope_parts(pointer, "zero_bases")
+        if entry["component"] != component:
+            raise InvalidEvidence(f"zero_bases[{pointer}]: component {entry['component']!r} does not name the pointed envelope")
+        if component not in ZERO_BASIS_COMPONENTS:
+            raise InvalidEvidence(f"zero_bases[{pointer}]: {component!r} can call a model and is never a structural zero")
+        envelope = resolve_pointer(document, pointer)
+        if not all(is_measured_zero(envelope[field]) for field in METRIC_FIELDS):
+            raise InvalidEvidence(f"zero_bases[{pointer}]: a structural zero requires every metric field to be the integer 0")
+        path = entry["path"]
+        if not isinstance(path, str) or not path.strip():
+            raise InvalidEvidence(f"zero_bases[{pointer}]: path must be a non-empty repository-relative path")
+        if path.startswith("/") or ".." in Path(path).parts:
+            raise InvalidEvidence(f"zero_bases[{pointer}]: path {path!r} must be repository-relative and must not escape the tree root")
+        if not (tree_root / path).exists():
+            raise InvalidEvidence(f"zero_bases[{pointer}]: path {path!r} does not resolve under {tree_root}")
+        if not isinstance(entry["statement"], str) or not entry["statement"].strip():
+            raise InvalidEvidence(f"zero_bases[{pointer}]: statement must be a non-empty basis for the zero")
+    for lane_name, lane in document["lanes"].items():
+        for index, attempt in enumerate(lane["attempts"]):
+            for component in ZERO_BASIS_COMPONENTS:
+                pointer = f"/lanes/{lane_name}/attempts/{index}/{component}"
+                if all(is_measured_zero(value) for value in attempt[component].values()) and pointer not in zero_bases:
+                    raise InvalidEvidence(f"{pointer}: an all-zero {component} envelope requires a zero_bases entry")
+
+
+def validate_inclusion_bases(document: dict[str, Any]) -> None:
+    """Rules (1) and (3) — provider-structural inclusion, both directions, and the
+    single-provider attribution boundary."""
+    inclusion_bases = document["inclusion_bases"]
+    if not isinstance(inclusion_bases, dict) or any(not isinstance(key, str) for key in inclusion_bases):
+        raise InvalidEvidence("inclusion_bases must map metric-field pointers to declared bases")
+    scope = document["provider_scope"]
+    for pointer in sorted(inclusion_bases):
+        entry = require_exact_keys(inclusion_bases[pointer], INCLUSION_ENTRY_KEYS, f"inclusion_bases[{pointer}]")
+        if scope["mode"] != "single-provider":
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: an inclusion basis is admissible only under a single-provider scope")
+        if entry["provider"] != scope["provider"]:
+            raise InvalidEvidence(
+                f"inclusion_bases[{pointer}]: attributes the measurement to provider {entry['provider']!r}, "
+                f"not to the declared {scope['provider']!r}"
+            )
+        triple = (entry["provider"], entry["contained_field"], entry["containing_field"])
+        if triple not in INCLUSION_BASIS_INSTANTIATIONS:
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: undeclared instantiation {':'.join(str(part) for part in triple)}")
+        parts = decode_pointer(pointer)
+        if len(parts) != 6 or parts[5] not in METRIC_FIELDS:
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: pointer does not name a metric field")
+        envelope_pointer = pointer.rsplit("/", 1)[0]
+        envelope_parts(envelope_pointer, "inclusion_bases")
+        if parts[5] != entry["contained_field"]:
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: contained_field {entry['contained_field']!r} does not name the pointed field")
+        if not is_measured_zero(resolve_pointer(document, pointer)):
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: an inclusion basis requires the measured integer 0")
+        containing = resolve_pointer(document, envelope_pointer)[entry["containing_field"]]
+        if containing is None or isinstance(containing, bool) or not isinstance(containing, int):
+            raise InvalidEvidence(
+                f"inclusion_bases[{pointer}]: containing field {entry['containing_field']!r} is not a measured integer"
+            )
+        if not isinstance(entry["evidence_ref"], str) or not entry["evidence_ref"].strip():
+            raise InvalidEvidence(f"inclusion_bases[{pointer}]: evidence_ref must be a non-empty reference")
+    if scope["mode"] != "single-provider":
+        return
+    contained_fields = sorted(
+        field for provider, field, _ in INCLUSION_BASIS_INSTANTIATIONS if provider == scope["provider"]
+    )
+    zero_bases = document["zero_bases"]
+    for lane_name, lane in document["lanes"].items():
+        for index, attempt in enumerate(lane["attempts"]):
+            for component in COMPONENTS:
+                envelope_pointer = f"/lanes/{lane_name}/attempts/{index}/{component}"
+                if envelope_pointer in zero_bases:
+                    continue
+                for field in contained_fields:
+                    pointer = f"{envelope_pointer}/{field}"
+                    if is_measured_zero(attempt[component][field]) and pointer not in inclusion_bases:
+                        raise InvalidEvidence(
+                            f"{pointer}: a bare 0 for a field that {scope['provider']!r} does not report "
+                            "separately requires an inclusion_bases entry"
+                        )
+
+
+def validate_shape_v2(document: Any, baseline_hash: str, provider_hash: str, tree_root: Path) -> None:
+    require_exact_keys(document, TOP_KEYS_V2, "input")
+    if document["schema_version"] != "economy-evidence-input-v2" or document["contract_version"] != "2.0.0":
+        raise InvalidEvidence("unsupported evidence schema/version")
+    validate_shape(v1_view(document), baseline_hash, provider_hash)
+    validate_zero_bases(document, tree_root)
+    validate_inclusion_bases(document)
+
+
+def adjudicate_v2(document: dict[str, Any], baseline_hash: str, provider_hash: str, tree_root: Path) -> dict[str, Any]:
+    """The v2 verdict IS the v1 verdict: the two v2 carriers are gated here, and the
+    terminal computation is v1's own `adjudicate` over the v1 view."""
+    if contains_private_key(document) or document.get("evidence", {}).get("privacy_status") != "clean":
+        return {"verdict": "NO-GO", "eligible_branches": [], "reason_codes": ["PRIVACY_REFUSED"], "metrics": {}}
+    try:
+        validate_shape_v2(document, baseline_hash, provider_hash, tree_root)
+    except InvalidEvidence:
+        return {"verdict": "NO-GO", "eligible_branches": [], "reason_codes": ["EVIDENCE_INVALID"], "metrics": {}}
+    return adjudicate(v1_view(document), baseline_hash, provider_hash)
+
+
+def validate_contract_v2(contract: Path, rubric: Path, baseline: Path, providers: Path) -> tuple[str, str]:
+    text = contract.read_text(encoding="utf-8")
+    required_fragments = (
+        "`economy-evidence-v2` is frozen at `2.0.0`",
+        "additive successor",
+        "owner_intervention_ratio",
+        "strictly below",
+        "Exactly 25% fails",
+        "Exactly 2x passes",
+        "not zero",
+        "candidate-independent",
+        "independent adjudicator",
+        "declared-set: inclusion_basis_instantiations",
+        "claude-code:reasoning_tokens:output_tokens",
+        "declared-set: zero_basis_components",
+        "inclusion_bases",
+        "zero_bases",
+        "never implies parity",
+        "never rendered as parity",
+    )
+    missing = [fragment for fragment in required_fragments if fragment not in text]
+    if missing:
+        raise InvalidEvidence(f"contract missing normative fragments: {missing}")
+    forbidden_fragments = ("`economy-evidence-v1` is frozen at `1.0.0`",)
+    present = [fragment for fragment in forbidden_fragments if fragment in text]
+    if present:
+        raise InvalidEvidence(f"v2 contract restates the v1 freeze line: {present}")
+    rubric_text = rubric.read_text(encoding="utf-8")
+    missing_floors = sorted(floor for floor in COMMON_FLOORS if floor not in rubric_text)
+    if missing_floors:
+        raise InvalidEvidence(f"rubric missing common floors: {missing_floors}")
+    baseline_hash = sha256(baseline)
+    provider_hash = sha256(providers)
+    if baseline_hash not in text or provider_hash not in text:
+        raise InvalidEvidence("contract does not pin supplied P0 source hashes")
+    return baseline_hash, provider_hash
+
+
+def lift_v1_base_input(base_input: dict[str, Any]) -> dict[str, Any]:
+    """The mechanical v1→v2 lift, asserted to be exactly four operations: the two
+    version strings and the two empty carriers. Nothing else may differ, or the
+    regression assertion below would be comparing two different inputs."""
+    lifted = copy.deepcopy(base_input)
+    lifted["schema_version"] = "economy-evidence-input-v2"
+    lifted["contract_version"] = "2.0.0"
+    lifted["inclusion_bases"] = {}
+    lifted["zero_bases"] = {}
+    if set(lifted) - set(base_input) != V2_ONLY_KEYS:
+        raise InvalidEvidence("the v1 lift added a key outside the two v2 carriers")
+    changed = sorted(key for key in base_input if lifted[key] != base_input[key])
+    if changed != ["contract_version", "schema_version"]:
+        raise InvalidEvidence(f"the v1 lift changed {changed}, not only the two version strings")
+    return lifted
+
+
+def check_cases(
+    base_input: dict[str, Any],
+    cases: Any,
+    baseline_hash: str,
+    provider_hash: str,
+    tree_root: Path,
+    label: str,
+) -> int:
+    if not isinstance(cases, list) or not cases:
+        raise InvalidEvidence(f"{label}: case bank must be non-empty")
+    case_ids: set[str] = set()
+    for case in cases:
+        require_exact_keys(case, {"id", "mutations", "expected"}, f"{label} case")
+        if not isinstance(case["id"], str) or not case["id"] or case["id"] in case_ids:
+            raise InvalidEvidence(f"{label}: case IDs must be unique non-empty strings")
+        case_ids.add(case["id"])
+        expected = require_exact_keys(
+            case["expected"], {"verdict", "eligible_branches", "reason_codes", "metrics"}, f"{label} case {case['id']} expected"
+        )
+        actual = adjudicate_v2(apply_mutations(base_input, case["mutations"]), baseline_hash, provider_hash, tree_root)
+        for key in ("verdict", "eligible_branches", "reason_codes"):
+            if actual[key] != expected[key]:
+                raise InvalidEvidence(f"{label} case {case['id']}: {key} expected {expected[key]!r}, got {actual[key]!r}")
+        if not isinstance(expected["metrics"], dict):
+            raise InvalidEvidence(f"{label} case {case['id']}: expected.metrics must be an object")
+        for key, value in expected["metrics"].items():
+            if actual["metrics"].get(key) != value:
+                raise InvalidEvidence(
+                    f"{label} case {case['id']}: metric {key} expected {value!r}, got {actual['metrics'].get(key)!r}"
+                )
+    return len(cases)
+
+
+def run_v2(args: argparse.Namespace) -> int:
+    try:
+        if args.v1_cases is None or args.tree_root is None:
+            raise InvalidEvidence("--contract-version 2.0.0 requires --v1-cases and --tree-root")
+        tree_root = args.tree_root
+        if not tree_root.is_dir():
+            raise InvalidEvidence(f"--tree-root {tree_root} is not a directory")
+        baseline_hash, provider_hash = validate_contract_v2(args.contract, args.rubric, args.baseline, args.providers)
+        case_bank = load_json(args.cases)
+        require_exact_keys(case_bank, {"schema_version", "contract_version", "base_input", "cases"}, "case bank")
+        if case_bank["schema_version"] != "economy-evidence-cases-v2" or case_bank["contract_version"] != "2.0.0":
+            raise InvalidEvidence("case bank version mismatch")
+        validate_shape_v2(case_bank["base_input"], baseline_hash, provider_hash, tree_root)
+        v2_count = check_cases(case_bank["base_input"], case_bank["cases"], baseline_hash, provider_hash, tree_root, "v2")
+
+        v1_bank = load_json(args.v1_cases)
+        require_exact_keys(v1_bank, {"schema_version", "contract_version", "base_input", "cases"}, "v1 case bank")
+        if v1_bank["schema_version"] != "economy-evidence-cases-v1" or v1_bank["contract_version"] != "1.0.0":
+            raise InvalidEvidence("v1 case bank version mismatch")
+        lifted = lift_v1_base_input(v1_bank["base_input"])
+        validate_shape_v2(lifted, baseline_hash, provider_hash, tree_root)
+        v1_count = check_cases(lifted, v1_bank["cases"], baseline_hash, provider_hash, tree_root, "v1-regression")
+    except (InvalidEvidence, OSError, json.JSONDecodeError) as exc:
+        print(f"economy-evidence: FAIL: {exc}", file=sys.stderr)
+        return 1
+    print(
+        f"economy-evidence: OK ({v2_count} v2 cases; rules 1/2/3 closed and both directions enforced; "
+        f"{v1_count} v1 cases re-run under v2 with unchanged verdicts)"
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--contract", required=True, type=Path)
@@ -459,7 +750,15 @@ def main() -> int:
     parser.add_argument("--rubric", required=True, type=Path)
     parser.add_argument("--baseline", required=True, type=Path)
     parser.add_argument("--providers", required=True, type=Path)
+    parser.add_argument("--contract-version", choices=("1.0.0", "2.0.0"), default="1.0.0")
+    parser.add_argument("--v1-cases", type=Path, default=None)
+    parser.add_argument("--tree-root", type=Path, default=None)
     args = parser.parse_args()
+    if args.contract_version == "2.0.0":
+        return run_v2(args)
+    if args.v1_cases is not None or args.tree_root is not None:
+        print("economy-evidence: FAIL: --v1-cases/--tree-root belong to --contract-version 2.0.0", file=sys.stderr)
+        return 1
     try:
         baseline_hash, provider_hash = validate_contract(args.contract, args.rubric, args.baseline, args.providers)
         case_bank = load_json(args.cases)

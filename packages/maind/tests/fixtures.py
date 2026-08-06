@@ -134,11 +134,14 @@ class _Handler(BaseHTTPRequestHandler):
                              "memory": {"id": mid, "content": payload.get("content", "")}})
         elif parsed.path == "/agentmemory/search":
             query = (payload.get("query") or "").lower()
+            limit = payload.get("limit")
             results = [{"observation": {"id": m["id"], "narrative": m["content"],
                                         "title": m["content"], "facts": [m["content"]]},
                         "score": 1.0}
                        for m in self.server.memories.get(ns, [])
                        if query in m["content"].lower()]
+            if isinstance(limit, int) and limit >= 0:
+                results = results[:limit]
             self._send(200, {"results": results})
         elif parsed.path == "/agentmemory/forget":
             # agentmemory ждёт memoryId; без него — 400 (как живой демон).

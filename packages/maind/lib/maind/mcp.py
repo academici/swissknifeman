@@ -198,16 +198,26 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=True, hea
     приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
     общую-по-тегу память. Явно запрошенный scope не расширяется: публичный MCP-ответ
     обязан содержать только записи этого scope. Сырой/непроектный scope → ровно он.
-    Дедуп по тексту."""
+    Дедуп по тексту.
+
+    Приоритет private vs shared (2026-08-06, roadmap/memory-recall-shared-namespace-priority):
+    при project:<id>-expansion приватный scope (recall_scopes()[0]) опрашивается без капа
+    (RECALL_LIMIT), а shared-scope'ы (ns:*/global) — с RECALL_SHARED_LIMIT ниже RECALL_LIMIT,
+    иначе крупный ns:<группа> (десятки записей) вытесняет малый приватный scope проекта
+    (измерено: 84-96% ответа из shared на 6 проектах). Явный scope (не project:) без
+    expansion — капа нет, как и раньше."""
     from .namespaces import find, recall_scopes
     scopes = [scope]
+    expanded = False
     if include_related_scopes and isinstance(scope, str) and scope.startswith("project:"):
         proj = find(config, scope.split(":", 1)[1])
         if proj:
             scopes = recall_scopes(proj)
+            expanded = True
     seen, out = set(), []
-    for sc in scopes:
-        for r in memory_mod.recall(url, sc, query, headers=headers):
+    for i, sc in enumerate(scopes):
+        limit = memory_mod.RECALL_SHARED_LIMIT if expanded and i > 0 else memory_mod.RECALL_LIMIT
+        for r in memory_mod.recall(url, sc, query, limit=limit, headers=headers):
             if r.get("text") in seen:
                 continue
             seen.add(r.get("text"))

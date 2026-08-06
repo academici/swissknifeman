@@ -120,6 +120,29 @@ class TestToolCalls(unittest.TestCase):
                 data = json.loads(r["result"]["content"][0]["text"])
                 self.assertEqual(data[0]["text"], "hello world")
 
+    def test_recall_union_private_survives_large_shared_namespace(self):
+        # roadmap/memory-recall-shared-namespace-priority: без капа крупный ns:<группа>
+        # вытеснял малый приватный scope проекта из выдачи (измерено 84-96% ответа из shared
+        # на 6 проектах). project:<id>-expansion теперь опрашивает private без капа
+        # (RECALL_LIMIT), shared — с RECALL_SHARED_LIMIT.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "fact", "priv workflow one")
+                memory_mod.store(url, "project:a", "fact", "priv workflow two")
+                for i in range(memory_mod.RECALL_SHARED_LIMIT + 10):
+                    memory_mod.store(url, "ns:x", "fact", f"shared workflow item {i}")
+                config = cfg(projects=[{"id": "a", "namespaces": ["x"]}], memory={"url": url})
+                r = call(env, config, "maind_memory_recall",
+                         {"scope": "project:a", "query": "workflow"})
+                data = json.loads(r["result"]["content"][0]["text"])
+                by_scope = {}
+                for row in data:
+                    by_scope.setdefault(row["scope"], 0)
+                    by_scope[row["scope"]] += 1
+                self.assertEqual(by_scope.get("project:a"), 2)  # приватный — без капа, весь
+                self.assertLessEqual(by_scope.get("ns:x", 0), memory_mod.RECALL_SHARED_LIMIT)
+
     def test_memory_down_is_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

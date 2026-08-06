@@ -4,16 +4,28 @@
 
 ### Fixed
 
+- **`maind_memory_recall` больше не тонет в общем namespace.** `_recall_union` (mid-session
+  recall) наследует принцип D10 из SessionStart-дайджеста: приватный scope проекта опрашивается
+  без капа (`RECALL_LIMIT=200`), а shared-scope'ы (`ns:*`/`global`) при `project:<id>`-expansion —
+  под новым `RECALL_SHARED_LIMIT=40`. Замер (roadmap/memory-recall-shared-namespace-priority):
+  на 6 проектах общий пул давал 84–96% ответа при малой приватной памяти проекта (напр. Agelto
+  2 записи vs ns:axioma 47).
 - **`task` больше не приписывает всем планам чужой D50 authority grant.** Task Contract
   выводит routine authority из проверенного item-carrier текущего плана; защищённый переход
   разрешается только exact, scope-matching и неотозванной записью `[OWNER-GRANT:<gate-id>]`
   в Decision Log, иначе остаётся `block:AUTHORITY_BOUNDARY`.
-
 - **`task` fail-closed разбирает protected owner grants.** Запись теперь обязана точно
   связывать gate, branch и finite scope с отдельным explicit repository-owner message в Layer-0
   `brief/` и его provenance; копируемый `Approval Owner`, synthetic D#, prefix-совпадения и
   произвольная owner-проза не могут вернуть `allow`.
-
+- **`task` и core-шаблоны больше не ищут Python runtime внутри подключаемого проекта.**
+  Плановые команды Codex резолвят единственный включённый `task@swissknifeman` через нативный
+  список плагинов и запускают его `lib/`; Claude Code использует `${CLAUDE_PLUGIN_ROOT}`.
+  Рендерер и provenance-lock допускают такой детерминированный upgrade только при смене версии
+  адаптера и точном совпадении прежнего управляемого вывода; ручной дрейф остаётся fail-closed.
+- **`harness doctor --settings` распознаёт актуальные настройки Claude Code 2.1.220** и не
+  требует executable-bit у скрипта, запускаемого через интерпретатор. `skiller update` удаляет
+  только распознанные устаревшие симлинки `packages/task` из уже подключённых проектов.
 - **Harness validation снова воспроизводима на committed tree.** Provider-instruction lock
   регенерируется штатным owner surface, run-reader тест больше не зависит от корневого архива,
   generated provider reference проверяется полным package validate, а P4 provenance/G2 assurance
@@ -25,6 +37,9 @@
   The bounded adapters use a shared Draft-07 output schema, retain only normalized observations,
   and cover current Claude structured-result metadata without persisting provider text.
 
+- **`dart`: подключаемый через `connect` набор для Dart-пакетов и SDK.** Новый
+  `dart-package-development` покрывает публичный API, null safety, async-совместимость,
+  conformance fixtures, проверки и релизную границу; Flutter-верстка остаётся в `mobile`.
 - **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,
   нативный скоуп навыков, exec-волна, гигиена и раскладка `core/`
   (`plans/archive/2026.07.31-SKM-LEAN/`).** P1.1 добавил к `skiller budget --first-turn`

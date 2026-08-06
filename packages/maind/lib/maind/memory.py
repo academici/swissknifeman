@@ -286,6 +286,13 @@ SCOPE_MARK_RE = re.compile(r"^\[\[s:(?P<scope>[^\]]+)\]\]\s?")
 # (17+), поэтому маленькое окно вытесняло релевантные факты нужного scope чужими (crowding).
 # Берём шире; при насыщении (демон вернул ровно лимит) предупреждаем — факты могли не влезть.
 RECALL_LIMIT = 200
+# Кап для shared-scope'ов (ns:*/global) при project:<id>-expansion в _recall_union (mcp.py):
+# без него один общий ns: (напр. ns:axioma, 47 записей) забивал ответ и вытеснял приватный
+# scope проекта (напр. 2 записи) — измерено на 6 проектах, 84-96% ответа из shared
+# (roadmap/memory-recall-shared-namespace-priority). Приватный scope остаётся без капа
+# (RECALL_LIMIT) — recall целенаправленный, не пассивный SessionStart-инжект (в отличие от
+# дайджеста, где shared_max=0 режет shared в ноль, см. DIGEST_SHARED_MAX/select_digest_items).
+RECALL_SHARED_LIMIT = 40
 
 
 def mark_scope(scope, value):

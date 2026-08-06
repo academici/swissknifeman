@@ -1,5 +1,5 @@
 {
-  "generation_hash": "f86a9f75f7ef759a9a279f9fb7977eb7ab75b0f89e54c757de969c064e5b2bab",
+  "generation_hash": "7a44f9bc2a4e72fb940f29a1b96bbfcc0da2f086448ef4170ab7473358ac5891",
   "generation_version": "1.0.0",
   "predecessor": {
     "commit": "124df816",
@@ -36,7 +36,7 @@
       },
       {
         "path": "packages/artifex/lib/artifex/activity.py",
-        "sha256": "9b055ed06ddfb3ecc0fb76e87d093929c0abd241846b79e382b4e485bdc0afd4"
+        "sha256": "c83a6bf4ac9a44c92d0e4bdde3c63fab0b33d39bf5fe9176da89567bedbe8e88"
       },
       {
         "path": "packages/artifex/lib/artifex/authority.py",
@@ -44,7 +44,7 @@
       },
       {
         "path": "packages/artifex/lib/artifex/business_dispatch.py",
-        "sha256": "38b0e0ece477655c4e3b692d4a7a412d44d093047ac02a8897db49737eb05635"
+        "sha256": "7143b9de064d951ca94379461e6beadcd8e71413def7cc379eb0a08529432444"
       },
       {
         "path": "packages/artifex/lib/artifex/cli.py",

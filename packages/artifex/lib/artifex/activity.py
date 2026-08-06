@@ -145,7 +145,10 @@ class BusinessProviderActivityPort:
             return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 0}
         try:
             request = self.request(provider_version=adapter.BUSINESS_VERSION, cwd=cwd)
-            catalog_path = self.plan_dir / "artifacts/P5/trial-catalog-v1.json"
+            batch = business_dispatch.GRANT_BATCHES.get(self.admission.get("grant", {}).get("owner_decision"))
+            if batch is None:
+                raise business_dispatch.BusinessRefusal("CATALOG_UNAVAILABLE")
+            catalog_path = self.plan_dir / batch["catalog_path"]
             row = business_dispatch.resolve_task_description(catalog_path, self.admission)
         except business_dispatch.BusinessRefusal as exc:
             return {"kind": "provider_unavailable", "reason_code": exc.reason, "process_count": 0}

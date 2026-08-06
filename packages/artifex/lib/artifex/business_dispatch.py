@@ -22,6 +22,21 @@ TASK_KEYS = frozenset(("schema_version", "manifest_version", "task_id", "task_ha
 GRANT_KEYS = frozenset(("schema_version", "grant_version", "grant_id", "grant_hash", "owner_decision", "owner_marker", "branch", "purpose", "task_id", "task_hash", "catalog_hash", "request_hash", "g2_package_digest", "provider", "controlled_root", "route", "capabilities", "budgets", "max_slices", "expiry", "revoked"))
 REPLAY_KEYS = frozenset(("schema_version", "trial_id", "task_id", "grant_id", "run_id", "slice_id", "attempt", "idempotency_key", "events", "used_slices", "replay_hash"))
 
+# D122 (owner-directed, 2026-08-06 chat instruction — repository owner, live session) — a second,
+# closed authorized grant batch alongside D105. Each admission names its own `grant.owner_decision`;
+# `load_indexed` selects the matching batch's index/catalog files and owner marker rather than
+# trusting a caller-supplied path, so an unrecognized `owner_decision` still refuses closed-set
+# (same fail-closed shape D105 always had, generalized from one hardcoded batch to a lookup over
+# an explicit, reviewable set of two).
+GRANT_BATCHES = {
+    "D105": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5-BUSINESS]",
+             "index_path": "artifacts/P5/trial-admission-index-v1.json",
+             "catalog_path": "artifacts/P5/trial-catalog-v1.json", "expected_count": 14},
+    "D122": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5.2-RETRY]",
+             "index_path": "artifacts/P5/trial-admission-index-v2-p5.2-retry.json",
+             "catalog_path": "artifacts/P5/trial-catalog-v2-p5.2-retry.json", "expected_count": 3},
+}
+
 
 class BusinessRefusal(ValueError):
     def __init__(self, reason: str) -> None:
@@ -62,16 +77,19 @@ def load_indexed(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_di
     relative = _same_path(root, admission_path)
     candidate = root / relative
     value = _load(candidate)
-    index = _load(root / "artifacts/P5/trial-admission-index-v1.json")
-    if (not isinstance(index, dict) or set(index) != INDEX_KEYS
-            or index.get("schema_version") != "artifex-business-dispatch-admission-index-v1"
-            or index.get("index_version") != "1.0.0" or not isinstance(index.get("admissions"), list)
-            or len(index["admissions"]) != 14):
-        raise BusinessRefusal("ADMISSION_NOT_INDEXED")
     if (not isinstance(value, dict) or set(value) != ADMISSION_KEYS
             or value.get("schema_version") != "artifex-business-dispatch-admission-v1"
             or value.get("admission_version") != "1.0.0" or value.get("admission_hash") != _hash(value, "admission_hash")):
         raise BusinessRefusal("UNKNOWN_SCHEMA_VERSION")
+    batch = GRANT_BATCHES.get(value.get("grant", {}).get("owner_decision") if isinstance(value.get("grant"), dict) else None)
+    if batch is None:
+        raise BusinessRefusal("ADMISSION_NOT_INDEXED")
+    index = _load(root / batch["index_path"])
+    if (not isinstance(index, dict) or set(index) != INDEX_KEYS
+            or index.get("schema_version") != "artifex-business-dispatch-admission-index-v1"
+            or index.get("index_version") != "1.0.0" or not isinstance(index.get("admissions"), list)
+            or len(index["admissions"]) != batch["expected_count"]):
+        raise BusinessRefusal("ADMISSION_NOT_INDEXED")
     rows = [r for r in index["admissions"] if isinstance(r, dict) and set(r) == INDEX_ROW_KEYS and r.get("path") == relative]
     if len(rows) != 1 or rows[0].get("sha256") != hashlib.sha256(candidate.read_bytes()).hexdigest():
         raise BusinessRefusal("ADMISSION_NOT_INDEXED")
@@ -96,7 +114,7 @@ def load_indexed(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_di
             or any(rows[0].get(key) != source.get(key) for key, source in (("task_hash", task), ("grant_hash", grant), ("replay_hash", replay)))
             or rows[0].get("admission_hash") != value.get("admission_hash")):
         raise BusinessRefusal("ADMISSION_INVALID")
-    if (grant.get("owner_decision") != "D105" or grant.get("owner_marker") != "[OWNER-GRANT:G-OWNER-P5-BUSINESS]"
+    if (grant.get("owner_decision") not in GRANT_BATCHES or grant.get("owner_marker") != GRANT_BATCHES[grant.get("owner_decision")]["owner_marker"]
             or grant.get("branch") != "p5-business-trials" or grant.get("revoked") is not False
             or grant.get("max_slices") != 1 or value.get("usage") != {"used_slices": 0, "max_slices": 1, "reusable": False}
             or replay.get("used_slices") != 0 or replay.get("events") != [] or replay.get("attempt") != 1):

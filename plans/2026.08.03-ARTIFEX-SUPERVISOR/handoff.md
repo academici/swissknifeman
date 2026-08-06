@@ -1,83 +1,78 @@
-# HANDOFF — 2026-08-06 — after P5.6
+# HANDOFF — 2026-08-06 — after P5.7
 
-**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
+**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — Routing prescribes frontier/high, open design decisions on the three unknown rules |
+| Model | sonnet |
+| Thinking | high — Routing prescribes implementation/high; prescribed extraction against a now-frozen contract, no open design decision |
 | Context | continue (/clear) — ручной item |
-| Суть | P5.7: заморозить `economy-evidence-v2` (D123 — три unknown-rule правки и ничего больше) и пересобрать агрегатный contract-manifest как additive `contract-manifest-v2.json`, перечисляющий все восемь контрактов. |
+| Суть | P5.5 (третий реопен): экспортировать ИЗМЕРЕННЫЙ economy-конверт из обоих provider-фолдов по семи `metric_fields` `economy-evidence-v2` (две санкционированные базы, честные `null` везде ещё), пробросить его в run-запись, третий раз перезаморозить оба G2B-манифеста и дописать одну строку в generation-ledger — 0 provider-процессов. |
 | Команда | `—` |
 
 ```
-# Exec = manual (frontier/high): нет single-command эквивалента — /task:plan-exec пинит
-# sonnet/medium и обязан отклонить frontier-item по своему же гейту п.2.
-Прочти packages/task/commands/plan-exec.md целиком и исполни его пункты 1–8 дословно для
-item P5.7 мастер-плана plans/2026.08.03-ARTIFEX-SUPERVISOR (Routing §3: frontier/high, manual,
-Review=full).
-
-Порядок чтения (п.1 plan-exec.md): plan.md (Context, Execution Rules, §3 Routing, Status Board) →
-handoff.md → phases/P5.md (Phase Context + P5.7 целиком) → все Required Reads P5.7 по
-перечисленному порядку (brief/35, findings/P5.4-metric-surface-gap-2026-08-06.md,
-research/39-p5.4-forward-topology.md, root/contracts/economy-evidence-v1.md,
-artifacts/P1/validate-economy-evidence.py, artifacts/P1/contract-manifest-v1.json,
-artifacts/P1/validate-contract-set.py, root/contracts/business-dispatch-admission-v1.md,
-artifacts/P0/acceptance-rubric-v1.md, artifacts/P0/baseline-catalog.json,
-research/04-token-economy-and-acceptance.md, plan.md §5 D14/D25/D123/D124/D126/D127).
-
-Действуй строго в Scope Included P5.7 (ровно три unknown-rule правки поверх `economy-evidence-v1`
-+ additive восьмиконтрактный manifest); Scope Excluded запрещает трогать v1 контракт-текст,
-пороги/формулы/reason-коды, `packages/artifex/**`, любой P0/P4/P5.1 carrier, любой provider-процесс.
-ЗАКРОЙ item по протоколу: Pre-mutation/Pre-final Task Contract gate (замени литералы
-`"implementation", "medium", model="sonnet"` на фактический маршрут ЭТОЙ ручной сессии —
-`"design", "high", model="opus"` или как задаст owner при явном /model), item-commit по Files,
-bookkeeping-commit, полная перезапись handoff.md, journal.jsonl append.
+/model sonnet
+/effort high
+/task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 ```
 
-**Done:** P5.6 closed `🟢`. Four generation-stale gates reconciled: (1) `validate-shadow.py` —
-(1a) adopted, (1b, D128) the stale live-tree guard moved to a historical assertion at the
-shadow-freeze commit (`git ls-tree`, resolved at run time) plus a pre-write refusal in `main()`.
-(2) `validate-package-promotion.py` (D129) — the frozen anchor `367e477a` resolves at run time
-from the manifest's own git history, no literal in the script; the live half (current package vs
-sole G2B digest) now runs unconditionally, closing the gap where `--historical-commit` used to
-skip it. (3) `validate-repository-pilot.py` (D130) — exit codes split 0/2/1, backed by a new
-append-only `artifacts/P5/g2b-generation-ledger-v1.json` (5 entries, re-derived from git history);
-exits **2** on the real tree (P5.2's immutable `0/3 accepted`), not 0 and not 1. (4) The P4 evidence
-anchor retargeted `124df816`→`3533234c` (D131) in the two live P5.5 Validation-field occurrences;
-`git diff --exit-code 3533234c -- phases/P4.md artifacts/P4` is empty. Every named negative/edge
-case proven (full table in `findings/P5.6-generation-gate-reconciliation.md`). Item commit
-`e1818241`. Zero provider processes, zero admissions, zero package bytes touched.
+**Done:** P5.7 closed `🟢`. `root/contracts/economy-evidence-v2.md` frozen at `2.0.0`, content
+SHA-256 `774184dc93edd10f7c271e14d95319e34c6015685ef168e7314a8c90d6efc07d` (recorded in `plan.md`
+§7 and independently recomputed). `diff -u` v1→v2 gives six hunks: three semantic — (1)
+provider-structural inclusion (`inclusion_bases`, declared set closed at the single row
+`claude-code:reasoning_tokens:output_tokens`), (2) structural zero envelope (`zero_bases`, declared
+set closed at `coordinator`, `path` must resolve in the tree), (3) single-provider economic scope
+(complete scope, never rendered as parity, `inclusion_bases` inadmissible under `parity`) — and
+three identity hunks (title/status, the normative-inputs manifest pin, the carriers section). Both
+new rules bind in BOTH directions: a bare `0` without a basis and an undeclared all-zero
+coordinator are `EVIDENCE_INVALID`. No threshold, formula, denominator, floor, verdict, reason
+code, metric field or privacy class differs from v1. `artifacts/P1/contract-manifest-v2.json`
+enumerates all eight contracts with disk-recomputed hashes, adds `status`/`supersedes`, marks
+`economy-evidence-v1` superseded (its four logical enums provably inherited by v2) and finally
+enumerates D108's `business-dispatch-admission-v1` — **F3 closed**. Both validators gained explicit
+version handling with their v1 paths untouched: `validate-contract-set.py` on a reconstructed
+v1-era tree still prints `contract-set: OK (6 contracts; 19 logical enums; acyclic; hashes
+resolved)`, and `validate-economy-evidence.py`'s v1 argument list still prints its exact former OK
+line. The v2 adjudication is not re-implemented — it calls the v1 `adjudicate` over the v1 view of
+a v2 input — and all 20 frozen v1 cases are re-run under v2 with unchanged verdicts through a lift
+asserted to touch only the two version strings. 20 new adversarial v2 cases (9 named negatives, 8
+manifest mutations, each refused by its own pointer-naming diagnostic). Item commit `60b06b47`.
+Zero provider processes, zero admissions, zero package bytes.
 
-**Remaining:** P5.7 → P5.5 (third reopen) → P5.1 (third reopen) → P5.4, then
-`task:plan-close ... P5` and one cold `task:plan-audit ... P5`, then P6 (0/4, `⬜ Not started`).
+**Remaining:** P5.5 (third reopen) → P5.1 (third reopen) → P5.4, then `task:plan-close ... P5` and
+one cold `task:plan-audit ... P5`, then P6 (0/4, `⬜ Not started`).
 
-**Sources of truth:** `phases/P5.md` P5.6 (all 16 fields, `🟢 Done`, Completion Notes carry every
-command/result) · `findings/P5.6-generation-gate-reconciliation.md` (every command with its exact
-before/after output, the full negative-case table) · `findings/P5.6-gate-staleness-verification-2026-08-06.md`
-and `research/40-p5.6-gate-reconciliation-design.md` (the D128–D131 design record, prior pass) ·
-`artifacts/P5/g2b-generation-ledger-v1.json` · `plan.md` §5 D128–D131, §6 Update Log, §4 Phase
-Index (P5 now 1/7 `🟢`).
+**Sources of truth:** `phases/P5.md` P5.7 (all 16 fields, `🟢 Done`, Completion Notes carry every
+command and its output) · `findings/P5.7-economy-evidence-v2.md` (the section-by-section v1→v2
+diff, the three rules as predicates, the full case/diagnostic table, the eight manifest-mutation
+refusals, and §9 the two defects found and not repaired) · `root/contracts/economy-evidence-v2.md`
+(the frozen contract itself) · `artifacts/P1/contract-manifest-v2.json` · `plan.md` §5 D123/D127,
+§6 Update Log, §7 Contracts Exported, §4 Phase Index (P5 now 2/7 `🟢`).
 
 **Open risks:**
 
-- **Commit-topology deviation (this item, process, not material — see P5.6 Known Deviations):**
-  this item's `phases/P5.md` content edits (anchor retarget, prose truthfulness) landed in the
-  bookkeeping commit rather than the item-commit, because the working tree entered this session
-  already carrying three prior design passes' uncommitted edits to the same file (D123–D131's own
-  work) that could not be cleanly split by path. All Scope Included work is complete and every
-  Validation command is green; only the commit boundary is imperfect.
+- **Latent crash in `validate-economy-evidence.py:lane_units`, inherited by the v2 path.**
+  `duration_ms` and `turns` are summed unconditionally while the token and cost fields are
+  `None`-guarded, so a contract-legal input declaring `duration_ms: null` with a proper
+  `unknown_reasons` entry raises an uncaught `TypeError` instead of returning `EVIDENCE_INVALID`.
+  No v1 or v2 case reaches it, and the v2 fixture deliberately keeps integer `duration_ms`/`turns`
+  so it does not depend on undefined behavior — but P5.4's live evidence may legitimately carry an
+  unknown duration. Out of P5.7's Scope (the v1 code path may not be edited there); recorded in
+  P5.7 Pending Work with a concrete fix, owner is whichever item next opens that validator.
+- **`plan.md` §7 `business-dispatch-admission-v1` row is stale** — it still reads "absent until item
+  commit" although the file has been tracked and committed since the P5.5 pass, which is exactly
+  why P5.7 could hash it. P5.5-owned row; P5.5's reopen is the natural place to correct it.
+- **`roadmap.md`'s "Current execution status" block still names P5.6 as the next step** (P5.6 closed
+  `🟢` in the previous session, P5.7 now too). The remaining-order line **P5.6 → P5.7 → P5.5 → P5.1
+  → P5.4** and the per-item table rows are correct; only the Next block is stale. Not in any item's
+  `Files`; correct it at the next plan-level pass.
 - (Carried) Five unused `p5.4-wave-*` D105 rows expire unspent `2026-08-12T23:59:59Z`; D125's ten
-  new rows are minted by P5.1's third reopen, which runs after P5.7/P5.5.
+  new rows are minted by P5.1's third reopen, which runs after P5.5.
 - (Carried) `packages/artifex/scripts/validate.sh` line 7 uses `rg`, absent here — silent no-op.
 - (Carried) The working tree still holds a large unrelated foreign diff across other packages
   (skiller/harness/task/core/docs/root marketplace/lock files, `.swissknife.json`,
   `core/provider/runtime.py`, `packages/skiller/skills/dart/`, `.p4-d99.0X38VL/`,
-  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — not touched by this pass.
-- (Carried) `plans/<ID>/**` continues to accumulate uncommitted design edits across passes
-  (`open-questions.md`, `roadmap.md`, several `brief/`/`findings/`/`research/` files from the
-  D123–D131 design pass remain uncommitted, untouched by this item's bookkeeping commit which
-  swept in only what this session actually changed under `plans/2026.08.03-ARTIFEX-SUPERVISOR/**`).
+  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — not touched by this pass, not committed by it.
 
 **Workarounds/Deferred/Open questions:**
 

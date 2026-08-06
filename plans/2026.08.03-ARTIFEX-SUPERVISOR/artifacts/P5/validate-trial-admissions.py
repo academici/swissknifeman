@@ -13,6 +13,34 @@ from typing import Any
 
 PLAN_ID = "2026.08.03-ARTIFEX-SUPERVISOR"
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+OWNER_MARKER = "[OWNER-GRANT:G-OWNER-P5-BUSINESS]"
+BRANCH = "p5-business-trials"
+
+# --- D122 replacement batch (P5.1 reopen under D121/D122) -------------------
+# A SECOND authority validated by the same closed-set rules, never a relaxation of
+# the D105 ones: the v1 argument list keeps every D105 literal below as its default.
+RETRY_OWNER_DECISION = "D122"
+RETRY_OWNER_MARKER = "[OWNER-GRANT:G-OWNER-P5.2-RETRY]"
+RETRY_EXPIRY = "2026-08-12T23:59:59Z"
+RETRY_RAISED_PROVIDER = "claude-code"
+RETRY_TIMEOUT_MS = 600000
+RETRY_BASE_TIMEOUT_MS = 180000
+RETRY_TRIAL_IDS = {
+    "p5.2r-slice-01-worktree-core": "p5.2-slice-01-worktree-core",
+    "p5.2r-slice-02-worktree-binding": "p5.2-slice-02-worktree-binding",
+    "p5.2r-slice-03-worktree-evidence": "p5.2-slice-03-worktree-evidence",
+}
+RETRY_IDENTITY_FIELDS = ("trial_id", "controlled_root", "order")
+RETRY_PLAN_LITERALS = (
+    RETRY_OWNER_MARKER,
+    "«Поднять до 600000 ms в новых строках (реком.)»",
+    "brief/34-p5.2-zero-accept-owner-decision-2026-08-06.md",
+    "exactly three replacement P5.2 repository-slice trials",
+    "`reusable:false`",
+    "`180000` to `600000`",
+    RETRY_EXPIRY,
+)
+GENERATION_KEYS = {"schema_version", "generation_version", "predecessor", "successor", "generation_hash"}
 FORBIDDEN_KEYS = {"prompt", "transcript", "thinking", "tool_payload", "environment", "credential", "secret"}
 GRANT_SET_KEYS = {"schema_version", "set_version", "owner_decision", "catalog_hash", "request_hash", "grants"}
 MANIFEST_INDEX_KEYS = {"schema_version", "index_version", "catalog_hash", "request_hash", "g2_package_digest", "manifests"}
@@ -96,6 +124,129 @@ def validate_d105(root: Path, catalog: dict[str, Any], request: dict[str, Any]) 
             raise ValidationError(f"D105 revoked by D{match.group(1)}")
 
 
+def validate_d122(root: Path, request: dict[str, Any]) -> None:
+    """The D122 replacement-batch grant. That Decision Log row states its bounds in
+    prose rather than in D105's `key=`value`` fields, so each authorized bound is
+    verified as an exact literal of the row and cross-checked against the request;
+    "every other cap unchanged" is verified against D105's own caps literal."""
+    text = (root / f"plans/{PLAN_ID}/plan.md").read_text(encoding="utf-8")
+    rows = [line for line in text.splitlines() if line.startswith(f"| {RETRY_OWNER_DECISION} |")]
+    if len(rows) != 1:
+        raise ValidationError("exact D122 carrier")
+    row = rows[0]
+    if any(literal not in row for literal in RETRY_PLAN_LITERALS) or OWNER_MARKER in row:
+        raise ValidationError("D122/owner literal mismatch")
+    frozen = [line for line in text.splitlines() if line.startswith("| D105 |")]
+    if len(frozen) != 1:
+        raise ValidationError("D105 caps literal")
+    caps = request.get("per_trial_caps")
+    frozen_caps = re.search(r"per_trial_caps=`([^`]*)`", frozen[0])
+    if not isinstance(caps, dict) or not frozen_caps:
+        raise ValidationError("request/D105 caps")
+    frozen_pairs = dict(pair.strip().split(":", 1) for pair in frozen_caps.group(1).split(","))
+    if set(caps) != set(frozen_pairs):
+        raise ValidationError("D122 cap key set")
+    for key, value in caps.items():
+        allowed = RETRY_TIMEOUT_MS if key == "timeout_ms" else int(frozen_pairs[key])
+        if value != allowed:
+            raise ValidationError(f"D122 cap outside the grant: {key}")
+    if int(frozen_pairs["timeout_ms"]) != RETRY_BASE_TIMEOUT_MS:
+        raise ValidationError("D122 timeout raise baseline")
+    if request.get("owner_marker") != RETRY_OWNER_MARKER:
+        raise ValidationError("request owner marker")
+    for later in text.splitlines():
+        match = re.match(r"\| D(\d+) \|", later)
+        if (match and int(match.group(1)) > int(RETRY_OWNER_DECISION[1:])
+                and request["request_hash"] in later and "revoked=`true`" in later):
+            raise ValidationError(f"D122 revoked by D{match.group(1)}")
+
+
+def validate_package_generation(root: Path, generation_path: Path) -> str:
+    """D121/D122 rule (6). The old assertion — `packages/artifex` equals the immutable
+    G2 digest — is structurally false since D118/D119 moved the business-execution seam
+    into the package: the live tree is the G2B successor by construction. What the
+    admission contract actually names is asserted instead, on both sides and without
+    widening: the current package equals the sole G2B digest in
+    `business-successor-generation-v1.json`, and that manifest's predecessor is still
+    the immutable G2 digest that every frozen carrier pins. Returns that G2 digest so
+    each admission is checked against it individually."""
+    generation = load(generation_path)
+    if (set(generation) != GENERATION_KEYS
+            or generation.get("schema_version") != "artifex-business-successor-generation-v1"
+            or generation.get("generation_version") != "1.0.0"):
+        raise ValidationError("G2B generation closed schema")
+    if generation.get("generation_hash") != canonical_hash(generation, omit="generation_hash"):
+        raise ValidationError("G2B generation hash")
+    predecessor = generation.get("predecessor", {})
+    successor = generation.get("successor", {})
+    if predecessor.get("generation") != "G2" or successor.get("generation") != "G2B":
+        raise ValidationError("G2B generation lineage")
+    g2_digest = predecessor.get("digest")
+    if not isinstance(g2_digest, str) or not HEX64.fullmatch(g2_digest):
+        raise ValidationError("G2 predecessor digest")
+    rows = successor.get("package_files")
+    if not isinstance(rows, list) or not rows:
+        raise ValidationError("G2B package rows")
+    for row in rows:
+        path = root / row["path"]
+        if not path.is_file() or digest(path) != row["sha256"]:
+            raise ValidationError(f"current package differs from G2B: {row['path']}")
+    return g2_digest
+
+
+def validate_retry_rows(trials: list[dict[str, Any]], baseline: dict[str, Any]) -> None:
+    """D122 rule (3), proven independently of the generator: three replacement rows,
+    each byte-equal to the v1 row it replaces apart from its own identity and the one
+    authorized `claude-code` wall-clock raise."""
+    if baseline.get("catalog_hash") != canonical_hash(baseline, omit="catalog_hash"):
+        raise ValidationError("baseline catalog hash")
+    sources = {row["trial_id"]: row for row in baseline.get("trials", [])}
+    if sorted(row["trial_id"] for row in trials) != sorted(RETRY_TRIAL_IDS):
+        raise ValidationError("replacement rows outside the D122 closed set")
+    for row in trials:
+        source = sources.get(RETRY_TRIAL_IDS[row["trial_id"]])
+        if source is None:
+            raise ValidationError(f"replaced v1 row unavailable: {row['trial_id']}")
+        if row.get("controlled_root") != f"mktemp:p5-p5-2-{row['trial_id']}":
+            raise ValidationError(f"controlled root convention: {row['trial_id']}")
+        for key in set(source) | set(row):
+            if key in RETRY_IDENTITY_FIELDS or key == "budgets":
+                continue
+            if row.get(key) != source.get(key):
+                raise ValidationError(f"replacement row diverges from v1: {row['trial_id']}:{key}")
+        budgets, frozen = row.get("budgets"), source["budgets"]
+        if not isinstance(budgets, dict) or set(budgets) != set(frozen):
+            raise ValidationError(f"budget key set: {row['trial_id']}")
+        for key, value in frozen.items():
+            raised = (key == "timeout_ms" and row.get("provider") == RETRY_RAISED_PROVIDER
+                      and value == RETRY_BASE_TIMEOUT_MS)
+            if budgets[key] != (RETRY_TIMEOUT_MS if raised else value):
+                raise ValidationError(f"budget outside the D122 grant: {row['trial_id']}:{key}")
+
+
+def manifest_index_from_admissions(admission_index: Path, index_doc: dict[str, Any]) -> dict[str, Any]:
+    """The D122 batch carries no dispatch-manifest index of its own (its Files list is
+    exhaustive), so the task side is read from the admissions themselves. Every task is
+    still proven against the catalog row, the grant, the replay identity and the
+    admission hash below — only the separate index document is absent."""
+    rows = []
+    for row in index_doc.get("admissions", []):
+        task = load(admission_index.parent.parent.parent / row["path"]).get("task")
+        if not isinstance(task, dict):
+            raise ValidationError(f"admission task object: {row.get('trial_id')}")
+        rows.append({
+            "trial_id": row["trial_id"], "task_hash": task.get("task_hash"),
+            "document_sha256": hashlib.sha256(
+                (json.dumps(task, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+            ).hexdigest(),
+            "task": task,
+        })
+    return {"schema_version": "artifex-business-dispatch-manifest-index-v1",
+            "index_version": "1.0.0", "catalog_hash": index_doc.get("catalog_hash"),
+            "request_hash": index_doc.get("request_hash"),
+            "g2_package_digest": index_doc.get("g2_package_digest"), "manifests": rows}
+
+
 def validate_smoke_refusal(tasks_path: Path, grants_path: Path, admissions_path: Path,
                            business_hashes: set[str]) -> None:
     tasks = load(tasks_path).get("tasks")
@@ -128,19 +279,32 @@ def main() -> int:
     parser.add_argument("--catalog", type=Path, required=True)
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--grants", type=Path, required=True)
-    parser.add_argument("--manifest-index", type=Path, required=True)
+    parser.add_argument("--manifest-index", type=Path)
     parser.add_argument("--admission-index", type=Path, required=True)
     parser.add_argument("--smoke-tasks", type=Path, required=True)
     parser.add_argument("--smoke-grants", type=Path, required=True)
     parser.add_argument("--smoke-admissions", type=Path, required=True)
+    # --- D122 replacement batch: explicit v2 inputs, v1 defaults unchanged ---
+    parser.add_argument("--owner-decision", choices=("D105", RETRY_OWNER_DECISION), default="D105")
+    parser.add_argument("--expected-count", type=int, default=14)
+    parser.add_argument("--replay", type=Path,
+                        help="defaults to the v1 replay beside the admission index")
+    parser.add_argument("--baseline-catalog", type=Path,
+                        help="v1 catalog the D122 replacement rows are proven against")
+    parser.add_argument("--generation", type=Path,
+                        help="G2B generation manifest; defaults to the frozen P5 one")
     args = parser.parse_args()
+    retry = args.owner_decision == RETRY_OWNER_DECISION
+    owner_marker = RETRY_OWNER_MARKER if retry else OWNER_MARKER
+    expected_count = args.expected_count
     try:
         root = Path(__file__).resolve().parents[4]
         catalog = load(args.catalog)
         request = load(args.request)
         grants_doc = load(args.grants)
-        manifests_doc = load(args.manifest_index)
         index_doc = load(args.admission_index)
+        manifests_doc = (load(args.manifest_index) if args.manifest_index is not None
+                         else manifest_index_from_admissions(args.admission_index, index_doc))
         if (set(grants_doc) != GRANT_SET_KEYS
                 or grants_doc.get("schema_version") != "artifex-business-dispatch-grant-set-v1"
                 or grants_doc.get("set_version") != "1.0.0"):
@@ -159,23 +323,33 @@ def main() -> int:
             raise ValidationError("request hash")
         if request.get("catalog_hash") != catalog["catalog_hash"]:
             raise ValidationError("request/catalog binding")
-        validate_d105(root, catalog, request)
+        if retry:
+            validate_d122(root, request)
+            if args.baseline_catalog is None:
+                raise ValidationError("D122 proof requires the v1 baseline catalog")
+            validate_retry_rows(catalog.get("trials") or [], load(args.baseline_catalog))
+        else:
+            validate_d105(root, catalog, request)
         trials = catalog.get("trials")
-        if not isinstance(trials, list) or len(trials) != 14:
-            raise ValidationError("14 trials required")
+        if not isinstance(trials, list) or len(trials) != expected_count:
+            raise ValidationError(f"{expected_count} trials required")
         trial_ids = [row.get("trial_id") for row in trials]
-        if len(set(trial_ids)) != 14 or [row.get("order") for row in trials] != list(range(1, 15)):
+        if (len(set(trial_ids)) != expected_count
+                or [row.get("order") for row in trials] != list(range(1, expected_count + 1))):
             raise ValidationError("trial identity/order")
-        if set(request.get("trial_ids", [])) != set(trial_ids) or request.get("maximum_dispatch_count") != 14:
+        if (set(request.get("trial_ids", [])) != set(trial_ids)
+                or request.get("maximum_dispatch_count") != expected_count):
             raise ValidationError("request trial set/count")
         if set(request.get("providers", [])) != {"codex", "claude-code"}:
             raise ValidationError("request provider set")
         assurance = load(root / f"plans/{PLAN_ID}/artifacts/P4/assurance-manifest-v1.json")
         if digest(root / f"plans/{PLAN_ID}/artifacts/P4/assurance-manifest-v1.json") != request.get("assurance_sha256"):
             raise ValidationError("assurance hash")
-        for row in assurance.get("g2", {}).get("package_files", []):
-            if digest(root / row["path"]) != row["sha256"]:
-                raise ValidationError(f"current G2 drift: {row['path']}")
+        generation_path = args.generation or (
+            root / f"plans/{PLAN_ID}/artifacts/P5/business-successor-generation-v1.json")
+        g2_predecessor = validate_package_generation(root, generation_path)
+        if request.get("g2_package_digest") != g2_predecessor:
+            raise ValidationError("request G2 predecessor drift")
 
         bindings = (catalog["catalog_hash"], request["request_hash"], request["g2_package_digest"])
         if any(doc.get("catalog_hash") != bindings[0] or doc.get("request_hash") != bindings[1]
@@ -186,10 +360,11 @@ def main() -> int:
         grants = grants_doc.get("grants")
         manifests = manifests_doc.get("manifests")
         indexes = index_doc.get("admissions")
-        replays = replay_rows(args.admission_index.with_name("trial-replay-v1.jsonl"))
-        if not all(isinstance(rows, list) and len(rows) == 14 for rows in (grants, manifests, indexes, replays)):
-            raise ValidationError("complete 14-row carrier sets required")
-        if grants_doc.get("owner_decision") != "D105":
+        replays = replay_rows(args.replay or args.admission_index.with_name("trial-replay-v1.jsonl"))
+        if not all(isinstance(rows, list) and len(rows) == expected_count
+                   for rows in (grants, manifests, indexes, replays)):
+            raise ValidationError(f"complete {expected_count}-row carrier sets required")
+        if grants_doc.get("owner_decision") != args.owner_decision:
             raise ValidationError("grant set owner")
         by_trial = {row["trial_id"]: row for row in trials}
         grant_by_id = {row.get("task_id"): row for row in grants}
@@ -244,9 +419,13 @@ def main() -> int:
                 raise ValidationError(f"grant closed schema: {trial_id}")
             if (grant.get("owner_decision"), grant.get("owner_marker"), grant.get("branch"),
                     grant.get("purpose"), grant.get("revoked"), grant.get("max_slices")) != (
-                    "D105", "[OWNER-GRANT:G-OWNER-P5-BUSINESS]", "p5-business-trials",
-                    "business-trial", False, 1):
+                    args.owner_decision, owner_marker, BRANCH, "business-trial", False, 1):
                 raise ValidationError(f"grant authority: {trial_id}")
+            if (task.get("g2_package_digest") != g2_predecessor
+                    or grant.get("g2_package_digest") != g2_predecessor):
+                raise ValidationError(f"frozen carrier G2 predecessor drift: {trial_id}")
+            if retry and grant.get("expiry") != RETRY_EXPIRY:
+                raise ValidationError(f"D122 grant expiry: {trial_id}")
             for key in ("task_id", "task_hash", "provider", "controlled_root", "route", "capabilities", "budgets"):
                 task_key = "task_id" if key == "task_id" else key
                 if grant.get(key) != task.get(task_key):
@@ -285,7 +464,8 @@ def main() -> int:
     except (ValidationError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         print(f"P5 trial admission validator: FAIL: {exc}", file=sys.stderr)
         return 1
-    print("P5 trial admission validator: OK (14 D105/G2-bound non-reusable admissions; P3 smoke refused pre-intent)")
+    print(f"P5 trial admission validator: OK ({expected_count} {args.owner_decision}/G2-bound "
+          "non-reusable admissions; P3 smoke refused pre-intent)")
     return 0
 
 

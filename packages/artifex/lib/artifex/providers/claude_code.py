@@ -16,7 +16,7 @@ _RESULT_KEYS = frozenset({
     "permission_denials", "stop_reason", "subtype", "result", "api_error_status",
     "duration_api_ms", "duration_ms", "fast_mode_disabled_reason", "fast_mode_state",
     "modelUsage", "structured_output", "terminal_reason", "time_to_request_ms",
-    "ttft_ms", "ttft_stream_ms", "uuid",
+    "ttft_ms", "ttft_stream_ms", "uuid", "errors",
 })
 _PRIVATE_KEYS = frozenset({
     "prompt", "thinking", "chain_of_thought", "api_key", "authorization", "cookie",
@@ -101,7 +101,12 @@ def build_business_argv(request: dict, *, schema_path: str | Path, cwd: str | Pa
         raise AdapterRefusal("MAPPING_UNKNOWN")
     schema = Path(schema_path).read_text(encoding="utf-8")
     prompt = "Return only a JSON object that satisfies the supplied schema. Do not use tools or modify files."
-    return [binary or resolve_binary(), "-p", "--output-format", "json", "--json-schema", schema, "--no-session-persistence", "--permission-mode", "dontAsk", "--tools", "Read,Edit", "--disallowedTools", "Agent,WebFetch,WebSearch", "--setting-sources", "", "--strict-mcp-config", "--mcp-config", str(Path(mcp_config_path)), "--max-turns", str(request["budgets"]["max_turns"]), "--max-budget-usd", _usd_microunits(request["budgets"]["cost_limit_microunits"]), prompt]
+    # `dontAsk` denies anything not on `--allowedTools` even when it's also named in
+    # `--tools` (`--tools` only declares the available palette, it is not an allow-list);
+    # verified live: without this flag every Edit call is silently denied, with it real
+    # file edits happen. Kept identical to `--tools` so nothing wider than what was
+    # already declared is ever auto-approved.
+    return [binary or resolve_binary(), "-p", "--output-format", "json", "--json-schema", schema, "--no-session-persistence", "--permission-mode", "dontAsk", "--tools", "Read,Edit", "--allowedTools", "Read,Edit", "--disallowedTools", "Agent,WebFetch,WebSearch", "--setting-sources", "", "--strict-mcp-config", "--mcp-config", str(Path(mcp_config_path)), "--max-turns", str(request["budgets"]["max_turns"]), "--max-budget-usd", _usd_microunits(request["budgets"]["cost_limit_microunits"]), prompt]
 
 
 def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],

@@ -51,6 +51,22 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(codex.fold_records(["{"], request(), exit_code=0)["reason_code"], "PROVIDER_PROTOCOL_UNKNOWN")
         self.assertEqual(codex.fold_records(["{}"] * 5, request(), exit_code=0)["reason_code"], "BUDGET_EVENT_COUNT")
 
+    def test_real_multi_item_work_with_item_started_still_folds_ok(self):
+        """`item.started` is a real event a genuine multi-step session emits (observed live
+        against real substantive work, not just the smoke-shaped single-item case); a stream
+        carrying it must still fold to OK once a terminal `turn.completed` arrives."""
+        req = request(); req["budgets"]["max_event_count"] = 8
+        records = [
+            json.dumps({"type": "thread.started", "thread_id": "t"}),
+            json.dumps({"type": "turn.started"}),
+            json.dumps({"type": "item.started", "item": {"id": "item_0", "type": "command_execution"}}),
+            json.dumps({"type": "item.completed", "item": {"id": "item_0", "type": "command_execution"}}),
+            json.dumps({"type": "item.started", "item": {"id": "item_1", "type": "agent_message"}}),
+            json.dumps({"type": "item.completed", "item": {"id": "item_1", "type": "agent_message"}}),
+            json.dumps({"type": "turn.completed", "usage": {}}),
+        ]
+        self.assertEqual(codex.fold_records(records, req, exit_code=0)["reason_code"], "OK")
+
 
 if __name__ == "__main__":
     unittest.main()

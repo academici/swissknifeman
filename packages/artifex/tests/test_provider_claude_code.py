@@ -46,6 +46,21 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertFalse(any("--bare" in value or "fallback-model" in value or "resume" in value
                              or "bypassPermissions" in value for value in argv))
 
+    def test_business_argv_allow_lists_the_same_tools_it_declares(self):
+        """`dontAsk` auto-denies anything not on `--allowedTools`, independent of `--tools`
+        (verified live: without `--allowedTools` every real Edit call was silently denied,
+        with it real file edits happened) — lock in that the two stay identical, never
+        wider than what `--tools`/`--disallowedTools` already declare."""
+        value = request(); value["provider"]["cli_version"] = claude_code.BUSINESS_VERSION
+        value["permissions"] = {"approval_mode": "never", "sandbox_mode": "workspace_write", "network_mode": "disabled"}
+        with tempfile.TemporaryDirectory() as directory:
+            schema = Path(directory) / "schema.json"; schema.write_text("{}", encoding="utf-8")
+            mcp = Path(directory) / "mcp.json"; mcp.write_text("{}", encoding="utf-8")
+            argv = claude_code.build_business_argv(value, schema_path=schema, cwd=directory,
+                                                    mcp_config_path=mcp, binary="claude-test")
+        self.assertIn("--allowedTools", argv)
+        self.assertEqual(argv[argv.index("--allowedTools") + 1], argv[argv.index("--tools") + 1])
+
     def test_refuses_children_and_unknown_version(self):
         value = request(); value["child_policy"] = {"mode": "bounded_read_only"}
         with tempfile.TemporaryDirectory() as directory:
@@ -73,6 +88,16 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertEqual(claude_code.fold_records([json.dumps({"type": "assistant", "is_error": False})], request(), exit_code=0)["reason_code"], "PROVIDER_PROTOCOL_UNKNOWN")
         private = json.dumps({"type": "result", "is_error": False, "prompt": "forbidden"})
         self.assertEqual(claude_code.fold_records([private], request(), exit_code=0)["reason_code"], "PRIVACY_REFUSED")
+
+    def test_business_fold_reports_real_max_turns_exhaustion_honestly(self):
+        """`errors` is a real key the CLI emits on `subtype: error_max_turns` (observed live
+        against a real multi-file business task, not the smoke path's always-succeeds shape);
+        must classify as the specific `PROVIDER_NONZERO`, not the generic protocol-unknown."""
+        record = json.dumps({"type": "result", "subtype": "error_max_turns", "is_error": True,
+                             "errors": ["Reached maximum number of turns (8)"], "num_turns": 1,
+                             "session_id": "s", "usage": {}, "total_cost_usd": 0.01})
+        self.assertEqual(claude_code.fold_business_records([record], request(), exit_code=0)["reason_code"],
+                         "PROVIDER_NONZERO")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
-  "generation_hash": "7a44f9bc2a4e72fb940f29a1b96bbfcc0da2f086448ef4170ab7473358ac5891",
+  "generation_hash": "61d9e34c2e0e51dbf69f0bbb328f6d81994bbbfb3e0a8e78ca2fee05403276d4",
   "generation_version": "1.0.0",
   "predecessor": {
     "commit": "124df816",
@@ -68,11 +68,11 @@
       },
       {
         "path": "packages/artifex/lib/artifex/providers/claude_code.py",
-        "sha256": "258037d03915b4e7f8fc42cfc6e80f56e4bdf2d9b68350ed5a1c3893374cebcd"
+        "sha256": "17ac4a7b9436b0b0920e6e428e5a1a2ee02ad0f08075dcf5e44e2e17a661da25"
       },
       {
         "path": "packages/artifex/lib/artifex/providers/codex.py",
-        "sha256": "76e61766ca0b55226fa617c1b7737c1cffe4b55fd227827c9bf5e08ca02f91be"
+        "sha256": "c8102c5c8e0c75a24de35467040fe93391b231dbf6d67adcc95b9d4f1cb848d4"
       },
       {
         "path": "packages/artifex/lib/artifex/providers/common.py",
@@ -172,11 +172,11 @@
       },
       {
         "path": "packages/artifex/tests/test_provider_claude_code.py",
-        "sha256": "615551359e5a476aa8562cfbe92c753780c1f2900a7d74139b2947b3f484cddc"
+        "sha256": "cfb3a6612aa441ccedd112ab6dd5661b70171d32a7055bc362e313a8ab3fded7"
       },
       {
         "path": "packages/artifex/tests/test_provider_codex.py",
-        "sha256": "2b18cc23d0b5618500eb0f483d2cd84468ac1fa8df001ccefa6d977d4cdf81c0"
+        "sha256": "976b772ba72a932200bc64532c5af3fefd112657e90837cc8121481bc99dc40f"
       },
       {
         "path": "packages/artifex/tests/test_provider_integration.py",

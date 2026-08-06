@@ -11,7 +11,8 @@ from .common import AdapterRefusal, failed, load_json, require_request
 
 PROBE_VERSION = "codex-cli 0.146.0"
 BUSINESS_VERSION = "codex-cli 0.146.0"
-ALLOWED_EVENTS = frozenset({"thread.started", "turn.started", "item.completed", "turn.completed", "turn.failed", "error"})
+ALLOWED_EVENTS = frozenset({"thread.started", "turn.started", "item.started", "item.completed",
+                            "turn.completed", "turn.failed", "error"})
 
 
 def resolve_binary(env: dict[str, str] | None = None) -> str:

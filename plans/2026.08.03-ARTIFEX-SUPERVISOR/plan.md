@@ -113,7 +113,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Generate the business successor, run measured pilots, and prove product readiness | 0/5 | 🟡 In progress |
+| P5 | Generate the business successor, run measured pilots, and prove product readiness | 0/5 | 🔴 Blocked |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -247,6 +247,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.2 остановлен 🔴 ESCALATION до intent: `load_indexed` не видит v2-набор D122 (зашит на 14-строчный v1-индекс), 3/3 `ADMISSION_NOT_INDEXED` — детали см. phases/P5.md P5.2 Pending Work. |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после D121-реопена: business-порт резолвит `scenario`/`kind` из hash-запиненного P5.1-каталога с именованными отказами до intent, оба G2B-манифеста перезаморожены второй раз без единого provider-процесса — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-06 | plan-run/claude-opus-5[1m]/high | P5.1 закрыт с deviation: аддитивный v2-набор D122 отчеканен, v1 байт-заморожен, гейт «пакет == G2» починен на равенство G2B — детали см. phases/P5.md P5.1 Completion Notes. |
 | 2026-08-06 | plan-design/claude-opus-5/high | D121–D122: корень 0/3 — admission не несёт описания задачи (каталог несёт, генератор роняет); фикс producer-side через hash-verified резолв каталога, реопен P5.1/P5.5/P5.2 и грант на три заменяющие строки (claude-code 600000 ms) — детали см. phases/P5.md P5.1/P5.5/P5.2. |

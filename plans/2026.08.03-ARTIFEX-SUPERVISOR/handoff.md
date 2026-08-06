@@ -1,97 +1,78 @@
-# HANDOFF — 2026-08-06 — after P5.5
+# HANDOFF — 2026-08-06 — after P5.2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: implementation/high»
+**Next:**
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet (implementation) — per §3 Routing, P5.2 is `implementation/high`, `Exec = manual` |
-| Thinking | high — three real provider dispatches through the re-frozen G2B seam, acceptance judged on real evidence |
-| Context | continue (/clear) — ручной item |
-| Суть | Re-run the three D122 replacement trials (`p5.2r-slice-01…03`) through P5.5's description-resolving seam; rebuild `workflows/wf-artifex-supervisor-p52-pilot.js` for the v2 identities/index first. |
-| Команда | — (Exec = manual: нет однокомандного эквивалента) |
+| Model | opus |
+| Thinking | high — design-class rule conflict (admission-index authority boundary), no open architecture beyond that |
+| Context | NEW SESSION — шаг-не-item (`plan-design` reads the plan from disk) |
+| Суть | Decide how the terminal P5.5 seam becomes able to admit the D122 v2 carrier set (parameterize `business_dispatch.load_indexed`'s admission-index path, or another producer-side fix) without touching D105's frozen v1 evidence, then re-open P5.2 with an updated Scope/Implementation Rules/Validation. |
+| Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2` |
 
-```text
-/model sonnet
-/effort high
-/task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2
-```
+**Done:** Both upstream preconditions were verified terminal, live, before any dispatch attempt:
+reopened P5.1's v2 validator (`validate-trial-admissions.py --owner-decision D122
+--expected-count 3 --baseline-catalog trial-catalog-v1.json --replay
+trial-replay-v2-p5.2-retry.jsonl`, exit 0) and its unchanged v1 argument set (exit 0); twice-
+reopened P5.5's `validate-business-successor.py --package packages/artifex` (exit 0, current tree
+byte-identical to the frozen `business-successor-generation-v1.json`). Pre-mutation Task Contract
+gate: `allow`. Journal start entry appended (`plan-run`, `sonnet/high`, attempt 2).
 
-**Done:** P5.5 closed `🟠 Done with deviations` after the D121 reopen (item commit `69febe36`).
-`business_dispatch.resolve_task_description(catalog_path, admission)` loads the P5.1 catalog from
-an explicit path, recomputes its `catalog_hash` with the exact canonical form the P5.1 generator
-uses (`ensure_ascii=False` — verified against the real `df5d7545…` hash before writing code, since
-the stored Cyrillic `scenario` text hashes differently otherwise; `business_dispatch._hash`'s
-`ensure_ascii` default is now fixed repo-wide, a byte-identical no-op for every other hash it also
-computes), and requires byte-equality with the admission's own pinned `task.catalog_hash`. It
-selects the row by `trial_id == task.task_id`, cross-checks `files`/`base_commit`/`provider`/
-`route`/`capabilities`/`acceptance_refs`/`validation` and every `budgets` key field-for-field
-against the admission, and refuses before any provider intent (`process_count: 0`) via named
-`BusinessRefusal`s (`CATALOG_UNAVAILABLE` / `CATALOG_HASH_MISMATCH` / `CATALOG_ROW_MISSING` /
-`CATALOG_ROW_DIVERGENT`) on any absent/malformed catalog, hash mismatch, missing/duplicate row or
-single-field divergence — no fallback to the old file-list-only prompt exists (`_prompt` now
-requires the resolved row as a parameter). The prompt states `scenario`/`kind`, keeps the existing
-file bound derived from `admission["task"]["files"]` alone, and notes a declared file may not exist
-yet at the base commit; it names no `historical_patch_sha256`, patch body or current-tree content
-(asserted directly in a dedicated test). 11 new tests (9 synthetic-fixture unit cases in
-`CatalogResolutionTests`, 2 integration cases against real fixtures in `BusinessActivityRunTests`):
-`bash packages/artifex/scripts/test.sh` passed 100 (up from 89). Both G2B manifests re-frozen a
-second time via `validate-business-successor.py --write`, feeding back the two already-recorded R2
-rows verbatim — 0 provider processes started. Pre-write→post-write diff contains ONLY the three
-changed `successor.package_files` hashes plus the three derived hashes; `d105_rows`/
-`d105_used_rows` (14/0), `provider_versions`, `d108_pre_provider_observations` and both
-`r2_capability_probes` rows byte-identical. Independent recomputation of `generation_hash`/
-`assurance_hash` outside the writer, and a fresh `sha256` of every current `packages/artifex` file
-from disk, both match. `validate-trial-admissions.py` (now P5.1-owned) still exits 0. Process
-deviation recorded: the Pre-mutation gate and journal start entry were run/appended after
-implementation began rather than before (both retroactively confirmed `allow`/`allow`, no material
-impact) — item still closes `🟠` because the pre-existing P4-owned `git diff --exit-code 124df816
--- phases/P4.md artifacts/P4` check stays red (forwarded, outside `Files`, unchanged since D119).
-Evidence: `phases/P5.md` P5.5 Completion Notes (D121 remediation paragraph).
+**Remaining:** P5.2 is `🔴 Blocked` again, on a THIRD and previously unnamed gap (distinct from
+the task-description gap D121/D122 already fixed): `business_dispatch.load_indexed`
+(`packages/artifex/lib/artifex/business_dispatch.py:65`) is hardcoded to
+`artifacts/P5/trial-admission-index-v1.json` and requires exactly 14 rows matched by admission
+path. P5.1's reopened v2 carrier set lives at `artifacts/P5/trial-admissions-v2/*.json` — paths
+that cannot appear in that immutable 14-row v1 index, so every D122 admission refuses
+`ADMISSION_NOT_INDEXED` before `activity.BusinessProviderActivityPort.run()` is ever reached,
+before any provider process starts. Live-probed for real against all three
+(`p5.2r-slice-01-worktree-core`, `-02-worktree-binding`, `-03-worktree-evidence`), one disposable
+worktree per slice at the frozen base, real D120 binaries — all three refuse identically. Zero
+`packages/artifex/**` or admission bytes moved; D105 stays 14/14 unused, D122 stays 0/3 unused.
+This item has no authority to parameterize the seam itself (Scope Excluded bans mutating
+`packages/artifex/**`, and bypassing `load_indexed` from `run-pilot.py` by constructing
+`BusinessProviderActivityPort` directly would skip the D105/D108 authority/expiry/hash/reuse gate
+that function is — exactly the "work around a seam refusal" this item's own rules forbid).
+`plan-design` must pick a producer-side fix (most likely: extend P5.5's seam to accept a second,
+explicitly-passed admission-index path/hash, proven against the immutable v1 index remaining
+untouched) and, once P5.5 re-freezes a third time, `run-pilot.py`/the workflow script still need
+their own v2-identity rebuild (unstarted — blocked on the seam fix landing first).
 
-**Remaining:** P5 `0/5` 🟢 (P5.1 `🟠`, P5.5 `🟠`, P5.2 `🟡`, P5.3/P5.4 `⬜`) — execution order
-**P5.2 → P5.3 → P5.4**, then P6. P5.2 re-runs the three D122 replacement identities through the
-now-fixed seam; the workflow script `workflows/wf-artifex-supervisor-p52-pilot.js` must be rebuilt
-for the v2 identities/index before P5.2 runs, and `SKM_CLAUDE_BIN=/home/vostrikov/.local/share/claude/versions/2.1.222`
-stays mandatory (D120). If P5.2's re-run again yields 0/3 **with** the scenario resolved and
-`600000` ms granted, that is a first-class provider/candidate fact to report, not a harness gap —
-do not retry (P5.2 rule (7)).
-
-**Sources of truth:** `phases/P5.md` P5.5 Completion Notes (D121 remediation paragraph, this pass) ·
-`plan.md` §5 D121/D122, §6 Update Log · `brief/34-p5.2-zero-accept-owner-decision-2026-08-06.md` ·
-`findings/P5.2-task-description-gap-2026-08-06.md` (F1–F8) ·
-`research/38-p5.2-zero-accept-root-cause-and-options.md` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/business-successor-generation-v1.json` +
-`business-successor-assurance-v1.json` (twice-re-frozen) · `packages/artifex/lib/artifex/
-business_dispatch.py`/`activity.py` (the D121 seam) · `packages/artifex/tests/
-test_business_dispatch.py` (`CatalogResolutionTests`).
+**Sources of truth:** `phases/P5.md` P5.2 (new blockquote + Pending Work carry the full
+escalation) · `findings/P5.2-v2-admission-not-indexed-2026-08-06.md` (F1–F4, live evidence) ·
+`packages/artifex/lib/artifex/business_dispatch.py` (`load_indexed`, the gate) ·
+`packages/artifex/lib/artifex/activity.py` (`BusinessProviderActivityPort.run`,
+`resolve_task_description` — unreached) · `packages/artifex/lib/artifex/cli.py`
+(`_dispatch_business_intent`) · `artifacts/P5/trial-admission-index-v1.json` (immutable, 14 rows,
+the hardcoded index) · `artifacts/P5/trial-admission-index-v2-p5.2-retry.json` +
+`artifacts/P5/trial-admissions-v2/*.json` (the unreachable D122 set) ·
+`artifacts/P5/business-successor-generation-v1.json`/`business-successor-assurance-v1.json`
+(current, confirmed live-matching).
 
 **Open risks:**
 
-- **Four frozen gates are red on the current tree, one shared cause** (D108's additive seventh
-  contract and D118/D119's deliberate package divergence from G2), all pre-existing and all outside
-  P5.5's exhaustive reopen scope: `validate-shadow.py`, `validate-assurance.py`,
-  `validate-package-promotion.py`, `validate-contract-set.py`. None blocks P5.5 or P5.2 — both
-  re-derive G2B live — but every one is a green-before-G3 obligation for P5.4. Fix proposal: one
-  bounded fix-item (carried from the P5.1 handoff, unchanged this pass).
-- (Carried forward, P4-owned) `git diff --exit-code 124df816 -- phases/P4.md artifacts/P4` red —
-  legitimate committed P4.7 history landing after P4.8's anchor; needs reconciliation before P5.4's
-  G3 gate. This is the sole reason P5.5 closes `🟠` on this pass too.
-- (Carried forward) `packages/artifex/scripts/validate.sh` line 7 uses `rg`, absent here, so its
-  plan-path guard silently no-ops while the script prints `OK`. Inherited environment defect.
-- D105 expires `2026-08-12T23:59:59Z`, all 14 rows unused; D122's three replacement rows are
-  separate and one-shot — two item cycles (P5.5, now closed; P5.2) have landed, P5.2's re-run is the
-  next and only remaining spend against the D122 grant before P5.3/P5.4 need the untouched 11.
-- В рабочем дереве по-прежнему лежит чужой незакоммиченный дифф по другим пакетам
-  (skiller/harness/task/core/docs/root marketplace/lock-файлы, `.swissknife.json`,
-  `core/provider/runtime.py`, `packages/skiller/skills/dart/`, `.p4-d99.0X38VL/`,
-  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — не субъект этого захода, не трогался; `CHANGELOG.md`
-  carries the same foreign diff and stayed untouched this pass despite being listed in P5.5's
-  `Files` (the platform denies file access on it while it carries someone else's uncommitted edit).
+- The repository working tree still carries the same substantial unrelated uncommitted/untracked
+  foreign diff across other packages (skiller/harness/task/core/docs/root marketplace/lock files,
+  `.swissknife.json`, `core/provider/runtime.py`, `packages/skiller/skills/dart/`,
+  `.p4-d99.0X38VL/`, `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — not touched by this item;
+  `packages/artifex` and `plans/2026.08.03-ARTIFEX-SUPERVISOR` themselves stay clean apart from
+  this pass's own edits.
+- Four frozen gates remain red on the current tree for the same pre-existing reason recorded by
+  P5.1/P5.5's prior handoffs (D108's additive seventh contract / D118/D119's deliberate package
+  divergence from G2): `validate-shadow.py`, `validate-assurance.py`,
+  `validate-package-promotion.py`, `validate-contract-set.py`. None blocks P5.2; all are a
+  green-before-G3 obligation for P5.4.
+- (Carried forward, P4-owned) `git diff --exit-code 124df816 -- phases/P4.md artifacts/P4`
+  anchor reconciliation, unchanged this pass.
+- D105 expires `2026-08-12T23:59:59Z`; all 14 rows still unused. D122's three replacement rows
+  are untouched (`used_slices: 0`) — this pass spent zero of them, since the refusal fires before
+  any admission is ever "used" by the seam's own accounting.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: — .
-- deferred: the four red frozen gates above; the P4-owned evidence-diff anchor reconciliation; the
-  `CHANGELOG.md` entry for the D121 seam fix (blocked by the foreign dirty state, not skipped by
-  choice); P5.3–P5.4; P6; чужой грязный рабочий дифф.
-- open_questions: — (all P5.2 OQs resolved via D121/D122; no new ones opened by this pass).
+- workarounds: none — the escalation is a genuine rule-conflict stop (item has no authority to
+  fix the producer's seam), not worked around.
+- deferred: P5.2 live pilot execution, `run-pilot.py`/workflow-script v2 rebuild, P5.3–P5.4, P6,
+  the four red frozen gates above, the P4-owned evidence-diff anchor reconciliation, and the
+  foreign dirty working tree (owner's, not this item's).
+- open_questions: — (raised as the escalation fact above; resolution is `plan-design`'s).

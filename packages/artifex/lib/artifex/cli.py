@@ -229,6 +229,26 @@ def _dispatch_business(args: argparse.Namespace, repo: Path, plan: Path, _runs: 
             "usage": 0, "intent_written": False}
 
 
+def _dispatch_business_intent(args: argparse.Namespace, repo: Path, plan: Path, _runs: Path) -> dict:
+    """Execute exactly one indexed D105 business admission through the D118 seam.
+
+    Sibling to ``dispatch-business``, which stays validate-only: this command is the
+    sole package entry point that turns an admitted D105 carrier into real provider
+    intent, via ``activity.BusinessProviderActivityPort.run``.
+    """
+    admission_path = _file(_inside(repo, repo / args.admission))
+    admission = security.indexed_business_admission(plan, admission_path, g2_digest=args.g2_predecessor,
+                                                     g2b_digest=args.g2b_successor)
+    cwd = _directory(Path(args.cwd))
+    port = activity.BusinessProviderActivityPort(plan, admission, g2_digest=args.g2_predecessor,
+                                                 g2b_digest=args.g2b_successor)
+    observation = port.run(cwd=cwd, binary=args.binary)
+    return {"status": "success" if observation.get("kind") == "success" else "refused",
+            "trial_id": admission["trial_id"], "provider": admission["task"]["provider"],
+            "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0),
+            "reason_code": observation.get("reason_code"), "intent_written": observation.get("kind") == "success"}
+
+
 def _worktree_inventory(args: argparse.Namespace, repo: Path, _plan: Path, _runs: Path) -> dict:
     """Expose the parseable linked-worktree inventory without mutating repository state."""
     manager = worktree.WorktreeManager(repo)
@@ -261,6 +281,12 @@ def build_parser() -> argparse.ArgumentParser:
     business_command.add_argument("--admission", required=True)
     business_command.add_argument("--g2-predecessor", required=True)
     business_command.add_argument("--g2b-successor", required=True)
+    business_intent_command = sub.add_parser("dispatch-business-intent")
+    business_intent_command.add_argument("--admission", required=True)
+    business_intent_command.add_argument("--g2-predecessor", required=True)
+    business_intent_command.add_argument("--g2b-successor", required=True)
+    business_intent_command.add_argument("--cwd", required=True)
+    business_intent_command.add_argument("--binary")
     sub.add_parser("worktree-inventory")
     return parser
 
@@ -270,7 +296,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         repo, plan, runs = _roots(args)
         result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "telemetry": _telemetry, "dispatch": _dispatch,
-                  "worktree-inventory": _worktree_inventory, "dispatch-business": _dispatch_business}[args.command](args, repo, plan, runs)
+                  "worktree-inventory": _worktree_inventory, "dispatch-business": _dispatch_business,
+                  "dispatch-business-intent": _dispatch_business_intent}[args.command](args, repo, plan, runs)
         code = EXIT_OK
     except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, security.SecurityRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL

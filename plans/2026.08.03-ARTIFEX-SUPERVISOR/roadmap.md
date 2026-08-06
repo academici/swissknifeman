@@ -1,15 +1,20 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.23.0 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.24.0 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; P5.5 РЕОПЕНЕН
-`🟡` по D119 (owner-selected): D118-seam — producer surface, поэтому P5.5 адоптирует четыре уже
-закоммиченных файла и перезамораживает G2B-манифесты без provider-процесса. P5.2 возвращён в
-`⬜` как чистый потребитель и ждёт терминального P5.5; Claude-pin `2.1.222` соблюдается через
-`SKM_CLAUDE_BIN` (D120). Retry, fallback и R3 по-прежнему не авторизованы.
+детерминированными GREEN gates, без третьего audit/design pass. **P5 = 0/5: терминальных items в
+фазе нет** — D121/D122 (owner-selected) реопенили P5.1 (закрыт `🟠`), P5.5 `🟡` (второй реопен) и P5.2 `🟡`.
+Причина: первый живой пилот P5.2 дал `0/3 accepted`, но это null-измерение — замороженный
+D105-admission не несёт описания задачи (каталог несёт, генератор роняет), поэтому шов физически не
+мог назвать задачу, а два из трёх слайсов целились в файлы, отсутствующие на базовом коммите.
+Починка producer-side и только по хешам: P5.1 чеканит аддитивный v2-набор под три заменяющие
+строки D122 (`claude-code` wall `600000` ms, отчеканен — P5.1 `🟠`) и чинит свой валидатор; P5.5 учит шов резолвить строку
+каталога по уже запиненному `catalog_hash` и перезамораживает G2B; P5.2 перезапускается. Ни один
+v1-байт, ни строка замороженного контракта, ни pin `2.1.222` (D120) не двигаются. Retry, fallback
+и R3 по-прежнему не авторизованы.
 
-## Current execution status — P5.5 D119 reopen remediation
+## Current execution status — P5.5 second reopen (hash-verified catalog resolution)
 
 **Next:** manual: implementation/high
 
@@ -17,18 +22,20 @@ P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 �
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Capabilities | repository-code-edit · generation-aware-validation |
-| Context | same-session — item |
-| Суть | Adopt the four committed D118 seam files into G2B and re-freeze both manifests from the two recorded R2 rows — zero provider processes. |
+| Capabilities | repository-code-edit · deterministic-manifest-freeze |
+| Context | NEW SESSION — item |
+| Суть | Teach the business activity port to resolve the catalog row whose file carries the `catalog_hash` the admission already pins (v1 `df5d7545…` and v2 `0b1a1b31…`), state the scenario in the prompt, and re-freeze both G2B manifests. Zero provider processes. |
 | Команда | — (Exec = manual: нет однокомандного эквивалента) |
 
 ```text
 $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 ```
 
-После терминального P5.5 следующим идёт P5.2 (три слайса) — его workflow-скрипт
-`workflows/wf-artifex-supervisor-p52-pilot.js` остаётся в силе, но запускается только по
-перезамороженным G2B-манифестам и с пином `SKM_CLAUDE_BIN=/home/vostrikov/.local/share/claude/versions/2.1.222`.
+Порядок фазы: **P5.1 → P5.5 → P5.2 → P5.3 → P5.4**. Workflow-скрипт
+`workflows/wf-artifex-supervisor-p52-pilot.js` требует пересборки под v2-идентичности
+(`p5.2r-slice-0{1,2,3}-*`), v2-индекс допусков и явную передачу v2-каталога шву; до этого он не
+запускается. Пин `SKM_CLAUDE_BIN=/home/vostrikov/.local/share/claude/versions/2.1.222` остаётся
+обязательным (D120).
 
 ## Карта исполнения
 
@@ -72,9 +79,9 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
-| P5.1 | terminal | 🟢 Done | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` consumed | `88f9a132` materializes all per-trial admissions after D106 historical/current gate |
-| P5.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5` (D119 reopen remediation) | implementation/high | D113 terminal evidence direction unchanged; D119 adds no grant | реопенен `🟡`: adopt 4 seam-файла, перезаморозить G2B-манифесты, 0 provider-процессов |
-| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal reopened P5.5 | implementation/high | consumes D105 only through re-frozen G2B; `SKM_CLAUDE_BIN` pinned to `2.1.222` (D120) | exact three-slice pilot; пакетных путей в Files нет (D119); G2/P3/probe carriers refuse |
+| P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` (D121/D122 v2 mint) | frontier/high | D122 `G-OWNER-P5.2-RETRY` — three replacement rows only; D105 untouched (14/14 unused) | реопенен `🟡`: аддитивный v2-набор носителей + починка G2-equality в `validate-trial-admissions.py`; v1 байт-заморожен |
+| P5.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5` after terminal P5.1 | implementation/high | D113 unchanged; D121 adds no grant | реопенен `🟡` второй раз: hash-verified резолв каталога в business activity port + второй re-freeze G2B, 0 provider-процессов |
+| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal P5.1 AND P5.5 | implementation/high | consumes D122's three replacement rows only; D105 usage stays 0/14; `SKM_CLAUDE_BIN` pinned to `2.1.222` (D120) | реопенен `🟡`: перезапуск трёх v2-идентичностей через описывающий задачу шов; zero-diff `OK` ≠ accepted |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` after terminal P5.2 | implementation/high | consumes same G2B and indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
 | P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.3 | frontier/high | same G2B/D105 provider parity; no single-provider waiver | five paired waves; G3 pins G2B and only literal `GO` closes |
 | P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 plus G2B/G3 and consumes D87/D96 | freeze exact P6.2/P6.3 rows and D93 root authorization order |
@@ -113,6 +120,7 @@ repository owner и не отозвана более поздним D#. D74/D75 
 |:--|:--|:--|:--|
 | `G-OWNER-P5-BUSINESS` | P5.1 материализует grants/admissions для P5.2–P5.4 | D105 содержит marker, exact catalog/request SHA-256, providers, 14 roots, max-dispatches, per-trial caps и `brief/22-p5-last-pass-fast-track.md`; D78 itself is not a grant | P5.1 pauses after proposal hashes; no business admission/provider call |
 | `G-OWNER-P5-G2B-SUCCESSOR` | P5.5 produces additive G2B contract/runtime/provider/assurance | D108 exact marker, branch, Files, two-link D105 G2-predecessor→current-G2B projection, provider versions, two probe roots/caps, unchanged expiry/budget, zero D105 usage and acceptance; consumer P5.5 only | no package/contract mutation or capability probe; P5.2–P6 remain gated |
+| `G-OWNER-P5.2-RETRY` | P5.2 re-runs the repository pilot after the carrier fix | D122 exact marker, three named replacement trial IDs, one slice each, `reusable:false`, `claude-code` `timeout_ms` `600000` and every other cap byte-equal to v1; minted by P5.1 into an additive v2 set; `brief/34-p5.2-zero-accept-owner-decision-2026-08-06.md` is the Layer-0 carrier | no fourth slice, no retry of a started attempt, no D105 consumption, no expiry extension |
 | `G-OWNER-P5-G2B-PROBE-R2` | P5.5 adds the missing worker-output schema and runs the final replacement canary pair | D111 exact marker, branch, consumer, one schema path, two R2 roots, provider versions, zero-process preflight, zero D105 use, no retry/fallback/pilot and full acceptance; D112 supersedes only Codex cap semantics with one fresh exec, Artifex `120000ms`/`<=8192`/`<=16`, conditional strict-config-proven `rollout_budget=2000`, no max-turn/money CLI claim and measured usage; `brief/26` + `brief/27` are the Layer-0 carriers | no schema path, R2 call or P5.5 resume; P5.2–P6 remain gated |
 | `G-OWNER-P6.1-PACKAGE` | P3.8 materializes mandatory `artifex-package`; P6.1 revalidates it | D86 exact marker разрешает `packages/artifex/**` and finite package-owned outputs only | P3.8 remains non-terminal; P4/P5 cannot start |
 | `G-OWNER-P3.8-HARNESS-INSTRUCTIONS-R2` | P3.8 stage 1 adds the Artifex instruction owner and shared-lock generation | D95 exact record + Layer-0 message matches every Harness source/test/lock path in P3.8 `Files`; consumer is P3.8 only | no Harness source/projection mutation; P3.8 remains open |

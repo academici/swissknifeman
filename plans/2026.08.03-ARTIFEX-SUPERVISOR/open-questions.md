@@ -41,3 +41,31 @@ the G2B generation by construction. The owner selected «Реопен P5.5» and
 producer, adopts the seam, re-freezes both manifests; P5.2 becomes a pure consumer) and **D120**
 (the frozen `2.1.222 (Claude Code)` pin is honored via `SKM_CLAUDE_BIN`, not bumped). No question
 remains open on this track.
+
+## OQ-P5.2-NULL — What the 0/3-accepted pilot proved
+
+**Статус:** Resolved → D121/D122
+
+The first live P5.2 pilot returned `0/3 accepted` with the mechanics fully sound. The closing
+handoff queued three options (fresh grant + retry / accept as terminal / reopen P5.5 to sharpen the
+prompt) and one open question: *does P5.4's release-readiness adjudication require a positive P5.2
+business-edit precedent, or is mechanical safety/reversibility sufficient?*
+
+Both are resolved by the 2026-08-06 design pass. The question was mis-framed: the frozen admission
+carries no task description at all, so the pilot measured the harness, not the candidate — a null
+measurement, not a negative one (`findings/P5.2-task-description-gap-2026-08-06.md` F1–F4; external
+corroboration in `findings/P5.2-external-harness-precedent-2026-08-06.md`). The owner selected
+«Реопен P5.5 + новый грант на 3 строки» and «Поднять до 600000 ms в новых строках»
+(`brief/34-p5.2-zero-accept-owner-decision-2026-08-06.md`) → **D121** (hash-verified catalog
+resolution in the seam; P5.1/P5.5/P5.2 reopen) and **D122**
+(`[OWNER-GRANT:G-OWNER-P5.2-RETRY]`, three replacement rows, `claude-code` wall `600000` ms).
+
+Answer to the carried sub-question: P5.4 **does** require a real P5.2 result, because P5.3 and P5.4
+consume the same carrier shape — without the fix their evidence would inherit the same gap. The
+answer is therefore "fix the carrier and re-measure", not "waive the precedent".
+
+Deferred, deliberately: the contract-level fix (adding `task.scenario` to
+`business-dispatch-admission-v1`) is semantically better but forces a 14-admission re-mint and a
+full P5.1 rewrite for no gain over hash-verified catalog resolution during the pilot — recorded as
+a **P6 product-surface follow-up**, see `research/38-p5.2-zero-accept-root-cause-and-options.md` §4
+Option 3.

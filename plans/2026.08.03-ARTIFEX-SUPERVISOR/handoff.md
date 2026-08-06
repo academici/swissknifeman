@@ -1,81 +1,89 @@
-# HANDOFF — 2026-08-06 — after P5.4
+# HANDOFF — 2026-08-06 — after P5.6
 
-**Next:**
+**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — `task:plan-design` pins Opus/high; no manual switch needed |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Re-design P5.4 against the eight blockers found at its pre-intent gate: decide what a `live-paired` incumbent lane concretely is and who produces it (without it both D14 branches are ineligible before the first dispatch), mint a new owner grant for the wave budgets, resolve the codex sandbox/network decision, and repair the four generation-stale gates in their owning items. |
-| Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.4` |
+| Thinking | high — Routing prescribes frontier/high, open design decisions on the three unknown rules |
+| Context | continue (/clear) — ручной item |
+| Суть | P5.7: заморозить `economy-evidence-v2` (D123 — три unknown-rule правки и ничего больше) и пересобрать агрегатный contract-manifest как additive `contract-manifest-v2.json`, перечисляющий все восемь контрактов. |
+| Команда | `—` |
 
-**Done:** P5.4 ran its full pre-intent gate and **stopped before the first dispatch** — status
-`🔴 Blocked`, `Escalation Needed: yes`. **Zero provider processes started, zero D105 rows spent:**
-all five `p5.4-wave-*` admissions remain `used_slices: 0`, `reusable: false`, expiry
-`2026-08-12T23:59:59Z` untouched. Green on the current tree: `validate-business-successor.py`
-(G2→G2B, exit 0), `validate-trial-admissions.py` v1 (14 rows) and v2 (3 rows), 
-`validate-recovery-pilot.py`, `validate-provenance-reconciliation.py --self-test`,
-`packages/artifex/scripts/test.sh` (103 tests). Red, and each in another item's `Files`:
-`validate-shadow.py` (P5.1), `validate-package-promotion.py` (P3.8), `validate-contract-set.py`
-(P1.5, frozen), `validate-repository-pilot.py` (P5.2). Full evidence with every command and its
-exact output: `findings/P5.4-preflight-blockers-2026-08-06.md` F1–F8.
+```
+# Exec = manual (frontier/high): нет single-command эквивалента — /task:plan-exec пинит
+# sonnet/medium и обязан отклонить frontier-item по своему же гейту п.2.
+Прочти packages/task/commands/plan-exec.md целиком и исполни его пункты 1–8 дословно для
+item P5.7 мастер-плана plans/2026.08.03-ARTIFEX-SUPERVISOR (Routing §3: frontier/high, manual,
+Review=full).
 
-**Remaining:** P5.4 re-design, then P5.4 execution, then `task:plan-close ... P5` and one cold
-`task:plan-audit ... P5`, then P6 (0/4, `⬜ Not started`).
+Порядок чтения (п.1 plan-exec.md): plan.md (Context, Execution Rules, §3 Routing, Status Board) →
+handoff.md → phases/P5.md (Phase Context + P5.7 целиком) → все Required Reads P5.7 по
+перечисленному порядку (brief/35, findings/P5.4-metric-surface-gap-2026-08-06.md,
+research/39-p5.4-forward-topology.md, root/contracts/economy-evidence-v1.md,
+artifacts/P1/validate-economy-evidence.py, artifacts/P1/contract-manifest-v1.json,
+artifacts/P1/validate-contract-set.py, root/contracts/business-dispatch-admission-v1.md,
+artifacts/P0/acceptance-rubric-v1.md, artifacts/P0/baseline-catalog.json,
+research/04-token-economy-and-acceptance.md, plan.md §5 D14/D25/D123/D124/D126/D127).
 
-**Sources of truth:** `findings/P5.4-preflight-blockers-2026-08-06.md` (gate sweep table, F1–F8,
-six-step remediation proposal) · `phases/P5.md` P5.4 escalation blockquote and Pending Work ·
-`artifacts/P0/baseline-catalog.json` (the comparator gap) ·
-`root/contracts/economy-evidence-v1.md` (the metric envelope a baseline lane must export) ·
-`artifacts/P5/trial-admissions/p5.4-wave-0{1..5}-*.json` (frozen budgets, unspent).
+Действуй строго в Scope Included P5.7 (ровно три unknown-rule правки поверх `economy-evidence-v1`
++ additive восьмиконтрактный manifest); Scope Excluded запрещает трогать v1 контракт-текст,
+пороги/формулы/reason-коды, `packages/artifex/**`, любой P0/P4/P5.1 carrier, любой provider-процесс.
+ЗАКРОЙ item по протоколу: Pre-mutation/Pre-final Task Contract gate (замени литералы
+`"implementation", "medium", model="sonnet"` на фактический маршрут ЭТОЙ ручной сессии —
+`"design", "high", model="opus"` или как задаст owner при явном /model), item-commit по Files,
+bookkeeping-commit, полная перезапись handoff.md, journal.jsonl append.
+```
+
+**Done:** P5.6 closed `🟢`. Four generation-stale gates reconciled: (1) `validate-shadow.py` —
+(1a) adopted, (1b, D128) the stale live-tree guard moved to a historical assertion at the
+shadow-freeze commit (`git ls-tree`, resolved at run time) plus a pre-write refusal in `main()`.
+(2) `validate-package-promotion.py` (D129) — the frozen anchor `367e477a` resolves at run time
+from the manifest's own git history, no literal in the script; the live half (current package vs
+sole G2B digest) now runs unconditionally, closing the gap where `--historical-commit` used to
+skip it. (3) `validate-repository-pilot.py` (D130) — exit codes split 0/2/1, backed by a new
+append-only `artifacts/P5/g2b-generation-ledger-v1.json` (5 entries, re-derived from git history);
+exits **2** on the real tree (P5.2's immutable `0/3 accepted`), not 0 and not 1. (4) The P4 evidence
+anchor retargeted `124df816`→`3533234c` (D131) in the two live P5.5 Validation-field occurrences;
+`git diff --exit-code 3533234c -- phases/P4.md artifacts/P4` is empty. Every named negative/edge
+case proven (full table in `findings/P5.6-generation-gate-reconciliation.md`). Item commit
+`e1818241`. Zero provider processes, zero admissions, zero package bytes touched.
+
+**Remaining:** P5.7 → P5.5 (third reopen) → P5.1 (third reopen) → P5.4, then
+`task:plan-close ... P5` and one cold `task:plan-audit ... P5`, then P6 (0/4, `⬜ Not started`).
+
+**Sources of truth:** `phases/P5.md` P5.6 (all 16 fields, `🟢 Done`, Completion Notes carry every
+command/result) · `findings/P5.6-generation-gate-reconciliation.md` (every command with its exact
+before/after output, the full negative-case table) · `findings/P5.6-gate-staleness-verification-2026-08-06.md`
+and `research/40-p5.6-gate-reconciliation-design.md` (the D128–D131 design record, prior pass) ·
+`artifacts/P5/g2b-generation-ledger-v1.json` · `plan.md` §5 D128–D131, §6 Update Log, §4 Phase
+Index (P5 now 1/7 `🟢`).
 
 **Open risks:**
 
-- **No eligible incumbent lane — the decisive blocker (F8).** Every P5.4 catalog row demands
-  `baseline_evidence_class: live-paired`; P0's `baseline-catalog.json` has
-  `eligible_for_battle_wave: false` on all four rows, its only `eligible_for_matching` row is
-  `classification: synthetic` with all four token fields `null`, and no producer, harness or
-  `Files` entry exists for a live manual/`harness run`/Workflow comparator carrying
-  `economy-evidence-v1`'s seven-field worker+coordinator envelope. Both D14 branches are therefore
-  ineligible **before** the first dispatch (`UNMATCHED_SCOPE`/`BRANCH1_UNKNOWN`,
-  `BRANCH2_UNKNOWN`) — exactly the consequence D25 froze. This one holds even if every other
-  blocker were repaired, and it is why the five grants were not spent on a foregone `NO-GO`.
-- **Wave budgets are proven insufficient and cannot be raised locally (F6).** All five admissions
-  carry frozen `max_turns: 8` / `timeout_ms: 180000` against 1/8/7/18/5 declared files;
-  `p5.2-slice-02-worktree-binding` (claude-code, three files, same wall) already returned a live
-  `WALL_TIMEOUT`. D122 raised the wall to `600000` ms for the P5.2 retry rows **only**. Needs a
-  new owner grant of the same shape plus re-minted P5.1 wave carriers.
-- **Codex lane gated on an owner security decision (F7).** Waves 01/04 are codex; P5.2
-  deliberately left the `bwrap` network-namespace blocker unfixed because the documented escape
-  hatch trades away `network-disabled`/`SEC-WORKTREE` on a network-connected host.
-- **Four generation-stale gates (F1–F4).** F1/F2 assert G2-equality of a package D118/D119
-  deliberately moved to G2B — the same defect D121/D122 rule (6) already repaired in
-  `validate-trial-admissions.py`, left unrepaired in its twin. F3: D108's own additive
-  `business-dispatch-admission-v1.md` reads as directory drift to the frozen six-contract
-  aggregate. F4: `repository-pilot-results-v2.json` pins the third G2B freeze `7a44f9bc…` against
-  the live fourth `61d9e34c…` from `6b9afc9b`, and its grants are one-shot spent, so no re-run can
-  clear it — a generation-aware relaxation in the owning validator is the only path. The P5.3
-  handoff asked whether P5.4's consolidated fan-in subsumes F4: **it does not** — the fan-in
-  consumes that gate.
-- **D105 expiry is now the binding clock:** `2026-08-12T23:59:59Z`, six days from this pass, for
-  all eleven unspent rows including the five P5.4 waves. Remediation that overruns it forfeits the
-  live business authority and needs a fresh owner carrier.
-- (Carried, P4-owned) `git diff --exit-code 124df816 -- phases/P4.md artifacts/P4` red, unchanged.
-- (Carried) `packages/artifex/scripts/validate.sh` line 7 uses `rg`, absent here — silent no-op,
-  inherited environment defect.
-- В рабочем дереве по-прежнему лежит чужой незакоммиченный дифф по другим пакетам
-  (skiller/harness/task/core/docs/root marketplace/lock-файлы, `.swissknife.json`,
+- **Commit-topology deviation (this item, process, not material — see P5.6 Known Deviations):**
+  this item's `phases/P5.md` content edits (anchor retarget, prose truthfulness) landed in the
+  bookkeeping commit rather than the item-commit, because the working tree entered this session
+  already carrying three prior design passes' uncommitted edits to the same file (D123–D131's own
+  work) that could not be cleanly split by path. All Scope Included work is complete and every
+  Validation command is green; only the commit boundary is imperfect.
+- (Carried) Five unused `p5.4-wave-*` D105 rows expire unspent `2026-08-12T23:59:59Z`; D125's ten
+  new rows are minted by P5.1's third reopen, which runs after P5.7/P5.5.
+- (Carried) `packages/artifex/scripts/validate.sh` line 7 uses `rg`, absent here — silent no-op.
+- (Carried) The working tree still holds a large unrelated foreign diff across other packages
+  (skiller/harness/task/core/docs/root marketplace/lock files, `.swissknife.json`,
   `core/provider/runtime.py`, `packages/skiller/skills/dart/`, `.p4-d99.0X38VL/`,
-  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — не субъект этого захода, не трогался.
+  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — not touched by this pass.
+- (Carried) `plans/<ID>/**` continues to accumulate uncommitted design edits across passes
+  (`open-questions.md`, `roadmap.md`, several `brief/`/`findings/`/`research/` files from the
+  D123–D131 design pass remain uncommitted, untouched by this item's bookkeeping commit which
+  swept in only what this session actually changed under `plans/2026.08.03-ARTIFEX-SUPERVISOR/**`).
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: — (none taken; the pass produced no code and no dispatch).
-- deferred: the whole of P5.4's execution, behind the six-step remediation in
-  `findings/P5.4-preflight-blockers-2026-08-06.md`; F1–F5 in their owning items; P6; чужой
-  грязный рабочий дифф.
-- open_questions: (1) what a `live-paired` incumbent lane concretely is and who produces its
-  metric envelope — or whether D14 branch 1 narrows to a comparator this repository can actually
-  measure; (2) whether the owner grants raised `max_turns`/`timeout_ms` for the five waves;
-  (3) the codex sandbox-vs-network trade-off. All three are owner decisions, not executor calls.
+- workarounds: —
+- deferred: pushing the owner's standing rule «purely constructive decisions belong to the
+  designer; the owner gates scope/authority/irreversible semantics» into the ecosystem SSOT
+  (`plan-protocol` `SKILL.ru.md` → generated `SKILL.md` → `skiller registry`) — recorded in
+  `brief/36-…` §5, a separate task outside this plan (carried, unchanged by this item).
+- open_questions: OQ-P5.4-CODEX-SANDBOX (unchanged, `Decision pending`).

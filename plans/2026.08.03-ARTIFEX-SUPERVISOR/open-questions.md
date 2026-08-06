@@ -11,7 +11,8 @@ D105 or pilot authority was granted.
 
 ## OQ-P5.2-BRIDGE — Business execution bridge architecture
 
-**Статус:** Decision pending
+**Статус:** Resolved → D118 (package-owned; owner delegated the technical pick, see
+`brief/32-p5.2-bridge-architecture-owner-delegation-2026-08-06.md`)
 
 D117 voided D114 (package-owned bridge in `packages/artifex/lib/artifex/`), D115 (Claude
 scoped-write prompt) and D116 (plan-local-only bridge in `run-pilot.py`) as executor

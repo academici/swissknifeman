@@ -113,7 +113,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Generate the business successor, run measured pilots, and prove product readiness | 0/5 | 🟡 In progress |
+| P5 | Generate the business successor, run measured pilots, and prove product readiness | 0/5 | 🔴 Blocked |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log

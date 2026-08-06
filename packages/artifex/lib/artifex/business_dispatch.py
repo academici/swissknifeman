@@ -30,8 +30,8 @@ class BusinessRefusal(ValueError):
 
 
 def _hash(value: Any, omitted: str) -> str:
-    return hashlib.sha256(json.dumps({k: v for k, v in value.items() if k != omitted}, sort_keys=True,
-                                     separators=(",", ":")).encode()).hexdigest()
+    return hashlib.sha256(json.dumps({k: v for k, v in value.items() if k != omitted}, ensure_ascii=False,
+                                     sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def _hex(value: Any) -> bool:
@@ -109,6 +109,47 @@ def load_indexed(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_di
     except (KeyError, TypeError, ValueError) as exc:
         raise BusinessRefusal("GRANT_EXPIRED") from exc
     return value
+
+
+_CATALOG_CROSS_CHECK_FIELDS = ("files", "base_commit", "provider", "route", "capabilities",
+                               "acceptance_refs", "validation")
+
+
+def resolve_task_description(catalog_path: Path, admission: dict[str, Any]) -> dict[str, Any]:
+    """D121 — hash-verified catalog row resolution.
+
+    The catalog is a SECOND source, never a substitute authority: the admission's own
+    ``task.catalog_hash``/``task.task_id`` are the only things that decide which row is
+    trusted, and every dispatch-governing field on that row must match the admission
+    field-for-field before its ``scenario``/``kind`` may enter a prompt. Any absent
+    catalog, hash mismatch, missing/duplicate row or cross-check divergence refuses
+    before intent rather than degrading to a file-list-only prompt.
+    """
+    task = admission["task"]
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise BusinessRefusal("CATALOG_UNAVAILABLE") from exc
+    if not isinstance(catalog, dict) or not isinstance(catalog.get("trials"), list):
+        raise BusinessRefusal("CATALOG_UNAVAILABLE")
+    if _hash(catalog, "catalog_hash") != task.get("catalog_hash"):
+        raise BusinessRefusal("CATALOG_HASH_MISMATCH")
+    matches = [row for row in catalog["trials"]
+               if isinstance(row, dict) and row.get("trial_id") == task.get("task_id")]
+    if len(matches) != 1:
+        raise BusinessRefusal("CATALOG_ROW_MISSING")
+    row = matches[0]
+    if (not isinstance(row.get("scenario"), str) or not row["scenario"]
+            or not isinstance(row.get("kind"), str) or not row["kind"]):
+        raise BusinessRefusal("CATALOG_ROW_DIVERGENT")
+    if any(row.get(key) != task.get(key) for key in _CATALOG_CROSS_CHECK_FIELDS):
+        raise BusinessRefusal("CATALOG_ROW_DIVERGENT")
+    row_budgets, task_budgets = row.get("budgets"), task.get("budgets")
+    if (not isinstance(row_budgets, dict) or not isinstance(task_budgets, dict)
+            or set(row_budgets) != set(task_budgets)
+            or any(row_budgets[key] != task_budgets[key] for key in row_budgets)):
+        raise BusinessRefusal("CATALOG_ROW_DIVERGENT")
+    return row
 
 
 def request(admission: dict[str, Any], *, provider_version: str, cwd: Path) -> dict[str, Any]:

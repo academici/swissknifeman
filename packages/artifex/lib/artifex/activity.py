@@ -117,11 +117,14 @@ class BusinessProviderActivityPort:
             return None
         return completed.stdout.decode("utf-8", "replace").strip() or None
 
-    def _prompt(self) -> str:
+    def _prompt(self, row: dict[str, Any]) -> str:
         files = ", ".join(self.admission["task"]["files"])
-        return ("Work only in these admission-declared files: " + files
-                + ". Implement the bounded repository slice, modify no other path, create no "
-                  "commit, then return only a JSON object satisfying the supplied schema.")
+        return (f"Scenario: {row['scenario']} (kind: {row['kind']}). "
+                "Work only in these admission-declared files: " + files
+                + ". A declared file may not exist yet at the base commit; if so, create it "
+                  "there. Implement the bounded repository slice, modify no other path, "
+                  "create no commit, then return only a JSON object satisfying the supplied "
+                  "schema.")
 
     def run(self, *, cwd: Path, binary: str | None = None) -> dict[str, Any]:
         """Execute exactly one D105 business admission through a fresh provider process.
@@ -142,6 +145,8 @@ class BusinessProviderActivityPort:
             return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 0}
         try:
             request = self.request(provider_version=adapter.BUSINESS_VERSION, cwd=cwd)
+            catalog_path = self.plan_dir / "artifacts/P5/trial-catalog-v1.json"
+            row = business_dispatch.resolve_task_description(catalog_path, self.admission)
         except business_dispatch.BusinessRefusal as exc:
             return {"kind": "provider_unavailable", "reason_code": exc.reason, "process_count": 0}
         schema = self.plan_dir / "artifacts/P5/business-worker-output-schema-v1.json"
@@ -149,7 +154,7 @@ class BusinessProviderActivityPort:
         try:
             if provider_id == "codex":
                 argv = adapter.build_business_argv(request, schema_path=schema, cwd=cwd, binary=resolved_binary)
-                stdin = self._prompt().encode("utf-8")
+                stdin = self._prompt(row).encode("utf-8")
                 fold: Callable[[list[str], int], dict[str, Any]] = (
                     lambda rows, exit_code: adapter.fold_records(rows, request, exit_code=exit_code))
             else:
@@ -159,7 +164,7 @@ class BusinessProviderActivityPort:
                 mcp_config.write_text('{"mcpServers":{}}', encoding="utf-8")
                 argv = adapter.build_business_argv(request, schema_path=schema, cwd=cwd,
                                                    mcp_config_path=mcp_config, binary=resolved_binary)
-                argv[-1] = self._prompt()
+                argv[-1] = self._prompt(row)
                 stdin = b""
                 fold = lambda rows, exit_code: adapter.fold_business_records(rows, request, exit_code=exit_code)
         except AdapterRefusal as exc:

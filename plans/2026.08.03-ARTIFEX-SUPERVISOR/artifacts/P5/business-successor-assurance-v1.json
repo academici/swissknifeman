@@ -1,5 +1,5 @@
 {
-  "assurance_hash": "a4cd01fa211d75d368e042b6f10a5ce3a2981ddce53289c1b952af1ef532d8ae",
+  "assurance_hash": "23fdc7328557cbacc76e2b28071b041def98fbbe7889a5b5f9aa87a9a857f68f",
   "assurance_version": "1.0.0",
   "d105_rows": 14,
   "d105_used_rows": 0,
@@ -20,7 +20,7 @@
     }
   ],
   "g2_predecessor": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
-  "g2b_generation_hash": "f13c30f25dc50075669dd97f7ab4c8ec2fd9e54260e5359adbfe34c33ef0fcc6",
+  "g2b_generation_hash": "f86a9f75f7ef759a9a279f9fb7977eb7ab75b0f89e54c757de969c064e5b2bab",
   "provider_versions": {
     "claude-code": "2.1.222 (Claude Code)",
     "codex": "codex-cli 0.146.0"

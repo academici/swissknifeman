@@ -29,6 +29,121 @@ class BusinessDispatchTests(unittest.TestCase):
                 business_dispatch.load_indexed(PLAN, foreign, g2_digest=G2, g2b_digest="1" * 64)
 
 
+def _budgets(**overrides):
+    value = {"cost_limit_microunits": 5000000, "max_envelope_bytes": 65536, "max_event_count": 64,
+             "max_output_bytes": 16384, "max_slices": 1, "max_turns": 8, "timeout_ms": 180000,
+             "token_limit": 8000}
+    value.update(overrides)
+    return value
+
+
+def _row(**overrides):
+    value = {"trial_id": "t1", "scenario": "reconstruct bounded subset", "kind": "repository-slice",
+             "files": ["a.py", "b.py"], "base_commit": "0" * 40, "provider": "codex",
+             "route": {"model_class": "implementation", "effort": "high"},
+             "capabilities": ["structured_output"], "acceptance_refs": ["REL-ACCEPTED-SCOPE"],
+             "validation": ["scoped-git-diff"], "budgets": _budgets()}
+    value.update(overrides)
+    return value
+
+
+def _catalog(rows):
+    body = {"trials": rows}
+    body["catalog_hash"] = business_dispatch._hash(body, "catalog_hash")
+    return body
+
+
+def _task_from_row(row, **overrides):
+    value = {"task_id": row["trial_id"], "catalog_hash": None, "files": row["files"],
+             "base_commit": row["base_commit"], "provider": row["provider"], "route": row["route"],
+             "capabilities": row["capabilities"], "acceptance_refs": row["acceptance_refs"],
+             "validation": row["validation"], "budgets": row["budgets"]}
+    value.update(overrides)
+    return value
+
+
+def _write_catalog(directory, catalog):
+    path = Path(directory) / "catalog.json"
+    path.write_text(json.dumps(catalog, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+class CatalogResolutionTests(unittest.TestCase):
+    """D121 — hash-verified catalog resolution: the catalog is a second source, never authority."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.row = _row()
+        self.catalog = _catalog([self.row])
+        self.catalog_path = _write_catalog(self.tmp.name, self.catalog)
+        self.task = _task_from_row(self.row, catalog_hash=self.catalog["catalog_hash"])
+
+    def test_matching_row_resolves(self):
+        row = business_dispatch.resolve_task_description(self.catalog_path, {"task": self.task})
+        self.assertEqual(("reconstruct bounded subset", "repository-slice"), (row["scenario"], row["kind"]))
+
+    def test_absent_catalog_file_refuses(self):
+        missing = Path(self.tmp.name) / "does-not-exist.json"
+        with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_UNAVAILABLE"):
+            business_dispatch.resolve_task_description(missing, {"task": self.task})
+
+    def test_malformed_catalog_refuses(self):
+        bad = Path(self.tmp.name) / "bad.json"
+        bad.write_text("not json", encoding="utf-8")
+        with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_UNAVAILABLE"):
+            business_dispatch.resolve_task_description(bad, {"task": self.task})
+
+    def test_tampered_catalog_content_refuses_on_hash_mismatch(self):
+        tampered = _catalog([dict(self.row, scenario="a different scenario entirely")])
+        path = _write_catalog(self.tmp.name, tampered)
+        with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_HASH_MISMATCH"):
+            business_dispatch.resolve_task_description(path, {"task": self.task})
+
+    def test_missing_row_refuses(self):
+        task = dict(self.task, task_id="no-such-trial")
+        with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_ROW_MISSING"):
+            business_dispatch.resolve_task_description(self.catalog_path, {"task": task})
+
+    def test_duplicate_row_refuses(self):
+        catalog = _catalog([self.row, dict(self.row)])
+        path = _write_catalog(self.tmp.name, catalog)
+        task = _task_from_row(self.row, catalog_hash=catalog["catalog_hash"])
+        with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_ROW_MISSING"):
+            business_dispatch.resolve_task_description(path, {"task": task})
+
+    def test_cross_check_field_divergence_refuses(self):
+        divergent_values = {
+            "files": ["c.py"], "base_commit": "1" * 40, "provider": "claude-code",
+            "route": {"model_class": "frontier", "effort": "high"}, "capabilities": ["machine_events"],
+            "acceptance_refs": ["SEC-AUTHORITY"], "validation": ["rollback-to-exact-base"],
+        }
+        for field, value in divergent_values.items():
+            with self.subTest(field=field):
+                task = _task_from_row(self.row, catalog_hash=self.catalog["catalog_hash"])
+                task[field] = value
+                with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_ROW_DIVERGENT"):
+                    business_dispatch.resolve_task_description(self.catalog_path, {"task": task})
+
+    def test_budget_key_divergence_refuses(self):
+        for key in self.row["budgets"]:
+            with self.subTest(key=key):
+                task = _task_from_row(self.row, catalog_hash=self.catalog["catalog_hash"])
+                task["budgets"] = dict(task["budgets"], **{key: task["budgets"][key] + 1})
+                with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_ROW_DIVERGENT"):
+                    business_dispatch.resolve_task_description(self.catalog_path, {"task": task})
+
+    def test_absent_scenario_or_kind_on_row_refuses(self):
+        for field in ("scenario", "kind"):
+            with self.subTest(field=field):
+                row = dict(self.row); row[field] = ""
+                catalog = _catalog([row])
+                path = _write_catalog(self.tmp.name, catalog)
+                task = _task_from_row(row, catalog_hash=catalog["catalog_hash"])
+                with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "CATALOG_ROW_DIVERGENT"):
+                    business_dispatch.resolve_task_description(path, {"task": task})
+
+
 class _FakeCodex:
     BUSINESS_VERSION = "fake-codex-version"
 
@@ -118,6 +233,34 @@ class BusinessActivityRunTests(unittest.TestCase):
             result = port.run(cwd=Path(cwd), binary="fake-codex")
         self.assertEqual([], fake_codex.calls)
         self.assertEqual(("provider_unavailable", "MAPPING_UNKNOWN", 0),
+                         (result["kind"], result["reason_code"], result["process_count"]))
+
+    def test_business_prompt_states_scenario_and_names_exact_files_only(self):
+        """D121 — the seam's prompt is a measurable variable, not a silent gap."""
+        catalog_path = PLAN / "artifacts/P5/trial-catalog-v1.json"
+        row = business_dispatch.resolve_task_description(catalog_path, self.codex_admission)
+        port = activity.BusinessProviderActivityPort(PLAN, self.codex_admission, g2_digest=G2, g2b_digest=G2B)
+        prompt = port._prompt(row)
+        self.assertIn(row["scenario"], prompt)
+        self.assertIn(row["kind"], prompt)
+        for file in self.codex_admission["task"]["files"]:
+            self.assertIn(file, prompt)
+        self.assertNotIn(row["historical_patch_sha256"], prompt)
+        self.assertNotIn("historical_patch_sha256", prompt)
+
+    def test_missing_catalog_refuses_before_any_provider_call(self):
+        with tempfile.TemporaryDirectory() as plan_dir:
+            (Path(plan_dir) / "artifacts/P5").mkdir(parents=True)
+            fake_codex = _FakeCodex()
+            port = activity.BusinessProviderActivityPort(
+                Path(plan_dir), self.codex_admission, g2_digest=G2, g2b_digest=G2B,
+                modules={"codex": fake_codex, "claude-code": _FakeClaude()},
+                runner=_fake_runner(fake_codex.calls),
+                version_probe=lambda binary, provider: fake_codex.BUSINESS_VERSION)
+            with tempfile.TemporaryDirectory() as cwd:
+                result = port.run(cwd=Path(cwd), binary="fake-codex")
+        self.assertEqual([], fake_codex.calls)
+        self.assertEqual(("provider_unavailable", "CATALOG_UNAVAILABLE", 0),
                          (result["kind"], result["reason_code"], result["process_count"]))
 
 

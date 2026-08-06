@@ -15,8 +15,13 @@ D119/D120 discipline (owner decision, 2026-08-06):
     ``SKM_CLAUDE_BIN`` override (the frozen ``2.1.222`` pin) — never through
     PATH. The live ``--version`` re-probe happens once, immediately before the
     first dispatch of the whole three-slice batch (not per slice); it is
-    recorded into ``repository-pilot-results-v1.json`` and reused, never
-    re-derived, by the later slice invocations of the same batch.
+    recorded into the results file and reused, never re-derived, by the later
+    slice invocations of the same batch.
+
+D121/D122 re-run (2026-08-06): repointed at the three replacement identities
+and the v2 admission index P5.1 minted under D122; ``repository-pilot-
+results-v1.json`` stays untouched, read-only historical evidence — this
+harness now writes only ``repository-pilot-results-v2.json``.
 """
 from __future__ import annotations
 
@@ -32,7 +37,8 @@ from pathlib import Path
 
 PLAN_ID = "2026.08.03-ARTIFEX-SUPERVISOR"
 G2 = "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09"
-ORDER = ("p5.2-slice-01-worktree-core", "p5.2-slice-02-worktree-binding", "p5.2-slice-03-worktree-evidence")
+ORDER = ("p5.2r-slice-01-worktree-core", "p5.2r-slice-02-worktree-binding", "p5.2r-slice-03-worktree-evidence")
+ADMISSION_INDEX = "artifacts/P5/trial-admission-index-v2-p5.2-retry.json"
 EXPECTED_VERSION = {"codex": "codex-cli 0.146.0", "claude-code": "2.1.222 (Claude Code)"}
 # D119: the only bytes this item may never move are packages/artifex/** and the
 # two G2B manifests P5.5 owns. Unrelated pre-existing repository drift outside
@@ -125,7 +131,7 @@ def g2b_hash(plan: Path) -> str:
 
 
 def admission_for(plan: Path, trial_id: str) -> tuple[Path, dict]:
-    index = load(plan / "artifacts/P5/trial-admission-index-v1.json")
+    index = load(plan / ADMISSION_INDEX)
     rows = [row for row in index.get("admissions", []) if isinstance(row, dict) and row.get("trial_id") == trial_id]
     if len(rows) != 1:
         raise PilotRefusal("ADMISSION_IDENTITY", trial_id)
@@ -133,7 +139,8 @@ def admission_for(plan: Path, trial_id: str) -> tuple[Path, dict]:
     admission = load(path)
     if (digest(path) != rows[0].get("sha256")
             or admission.get("usage") != {"used_slices": 0, "max_slices": 1, "reusable": False}
-            or admission.get("replay", {}).get("events") != [] or admission.get("task", {}).get("parent_item_id") != "P5.2"):
+            or admission.get("replay", {}).get("events") != [] or admission.get("task", {}).get("parent_item_id") != "P5.2"
+            or admission.get("grant", {}).get("owner_decision") != "D122"):
         raise PilotRefusal("ADMISSION_USAGE_OR_HASH", trial_id)
     return path, admission
 

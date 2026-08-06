@@ -245,3 +245,61 @@ admissions. Whether this constitutes a P5.5 seam-quality defect worth reopening 
 acceptable pilot outcome given the item's own stated "Why" (proving the mechanical path is safe
 and reversible, not that every business prompt yields an edit), or grounds for a new D105 grant
 batch is a plan-design decision outside this item's own authority to make.
+
+## 7. D121/D122 re-run (2026-08-06, second pass, session claude-sonnet-5/high)
+
+D121 fixed the root cause §6 left open — the frozen admission carried no task description, so
+`_prompt` physically could not state one (`findings/P5.2-task-description-gap-2026-08-06.md`
+F1–F4). P5.5 reopened a second time and taught the seam to resolve `scenario`/`kind` from the
+hash-pinned catalog. D122 minted three replacement admissions (`p5.2r-slice-01-worktree-core`,
+`-02-worktree-binding`, `-03-worktree-evidence`) with the `claude-code` wall-clock raised to
+`600000` ms. A live attempt to re-run those three through the newly-fixed seam found a **second,
+separate** defect first: `business_dispatch.load_indexed` was hardcoded to the 14-row v1 admission
+index and could not recognize any v2 admission at all — 3/3 live probes refused
+`ADMISSION_NOT_INDEXED` before intent, zero processes started
+(`findings/P5.2-v2-admission-not-indexed-2026-08-06.md` F1–F4). The repository owner, directly in
+the live session, authorized fixing this in place rather than escalating through another
+`plan-design` cycle: `business_dispatch.py`/`activity.py` gained a `GRANT_BATCHES` lookup keyed on
+`admission.grant.owner_decision` (`D105`→v1 index/catalog/14 rows, `D122`→v2 index/catalog/3 rows),
+preserving v1 behavior byte-for-byte (16 pre-existing unit tests unchanged, package suite 100/100
+green) while making the v2 batch reachable. G2B was re-frozen a third time
+(`validate-business-successor.py --write`, the same two stored R2 probe rows fed back verbatim, 0
+new provider processes): `generation_hash` `f86a9f75…` → `7a44f9bc2a4e72fb940f29a1b96bbfcc0da2f086448ef4170ab7473358ac5891`.
+
+**Process defect, disclosed:** immediately after the fix landed but *before* it was committed, a
+manual CLI probe intended only to confirm the seam no longer refused `ADMISSION_NOT_INDEXED`
+instead passed the (then-uncommitted) fix and dispatched a real codex process against
+`p5.2r-slice-01-worktree-core` — one of the three one-shot D122 admissions. The disposable
+worktree was removed before its `git diff` was inspected, so `changed_paths` for this one slice is
+unrecoverable; the worktree's deletion itself proves no residue exists anywhere (rollback holds),
+but not what, if anything, codex wrote before failing. Per the item's own rule this attempt is not
+retried — it is recorded honestly in `repository-pilot-results-v2.json` with `changed_paths: null`
+and an `evidence_gap` field naming the cause, `accepted: false`. The fix was committed
+(`6755be6b`) before the remaining two slices ran through the proper `run-pilot.py` flow (worktree
+preserved until `changed_paths`/rollback were computed, exactly as designed).
+
+**Execution — three real dispatches, D122 admissions, catalog order:**
+
+| Slice | Provider | `process_count` | `reason_code` | `changed_paths` | `accepted` | `rollback` |
+|:--|:--|--:|:--|:--|:--|:--|
+| p5.2r-slice-01-worktree-core | codex | 1 | `PROVIDER_PROTOCOL_UNKNOWN` | unrecoverable (evidence gap, harness error) | false | true |
+| p5.2r-slice-02-worktree-binding | claude-code | 1 | `PROVIDER_PROTOCOL_UNKNOWN` | `[]` | false | true |
+| p5.2r-slice-03-worktree-evidence | codex | 1 | `PROVIDER_PROTOCOL_UNKNOWN` | `[]` | false | true |
+
+**0/3 accepted again**, but this is a materially different result from §2–6's `0/3`: every slice
+now carries a real, non-empty `scenario`/`kind` in its prompt (D121 verified working), two of
+three target file sets exist at the frozen base for the first time (`v2` catalog rows reuse the
+same files as `v1`; slice-02's claude-code target existed at base in both rounds), and none hit
+`WALL_TIMEOUT` this time (claude-code finished inside the raised `600000` ms budget). All three
+independently hit `PROVIDER_PROTOCOL_UNKNOWN` — the fold layer (`fold_records` for codex,
+`fold_business_records` for claude-code) could not parse the provider's real output into the
+single expected `result` record once the model was given genuine work instead of a same-turn
+canned response. This plan's Code Guidance bans retaining raw provider output even for debugging,
+so the exact parse failure (extra streamed events vs. a malformed terminal record vs. something
+else) could not be inspected from this item; it reads as a candidate/seam-adapter finding for a
+future P5.5 pass, not something this item may patch mid-pilot (same hard ban as §6). D105 stays
+14/14 unused; the three D122 admissions are now one-shot spent (real dispatches occurred for all
+three); `packages/artifex` and both G2B manifests carry zero diff before/between/after (`git
+status`/`git diff` both empty, independently re-confirmed by `validate-repository-pilot.py`).
+`validate-repository-pilot.py` (re-pinned to the v2 index/results) reports the honest result:
+`FAIL: not accepted: [...] (0/3 accepted)`, exit 1 — not adjusted to force green.

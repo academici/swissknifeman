@@ -4,7 +4,12 @@
 Reads only already-written evidence; issues no provider process and mutates no
 byte. Kept deliberately separate from ``run-pilot.py`` — it must not import or
 trust that harness's own bookkeeping, only independently re-derive and recheck
-it against the live G2B manifests, the D105 admission index and Git.
+it against the live G2B manifests, the D122 admission index and Git.
+
+D121/D122 re-run (2026-08-06): re-pinned from the historical v1 three-slice
+batch (`repository-pilot-results-v1.json`, preserved read-only, never touched
+by this script again) to the three D122 replacement identities and P5.1's
+reopened v2 admission index/catalog.
 """
 from __future__ import annotations
 
@@ -17,10 +22,15 @@ from pathlib import Path
 
 
 PLAN_ID = "2026.08.03-ARTIFEX-SUPERVISOR"
-ORDER = ("p5.2-slice-01-worktree-core", "p5.2-slice-02-worktree-binding", "p5.2-slice-03-worktree-evidence")
+ORDER = ("p5.2r-slice-01-worktree-core", "p5.2r-slice-02-worktree-binding", "p5.2r-slice-03-worktree-evidence")
 EXPECTED_VERSION = {"codex": "codex-cli 0.146.0", "claude-code": "2.1.222 (Claude Code)"}
-EXPECTED_PROVIDER = {"p5.2-slice-01-worktree-core": "codex", "p5.2-slice-02-worktree-binding": "claude-code",
-                     "p5.2-slice-03-worktree-evidence": "codex"}
+EXPECTED_PROVIDER = {"p5.2r-slice-01-worktree-core": "codex", "p5.2r-slice-02-worktree-binding": "claude-code",
+                     "p5.2r-slice-03-worktree-evidence": "codex"}
+V1_TRIAL_FOR = {"p5.2r-slice-01-worktree-core": "p5.2-slice-01-worktree-core",
+               "p5.2r-slice-02-worktree-binding": "p5.2-slice-02-worktree-binding",
+               "p5.2r-slice-03-worktree-evidence": "p5.2-slice-03-worktree-evidence"}
+OWNER_MARKER = "[OWNER-GRANT:G-OWNER-P5.2-RETRY]"
+RAISED_PROVIDER, RAISED_TIMEOUT_MS, BASE_TIMEOUT_MS = "claude-code", 600000, 180000
 
 
 class Invalid(ValueError):
@@ -44,8 +54,9 @@ def git(repo: Path, *argv: str) -> subprocess.CompletedProcess[bytes]:
 
 
 def check_admission(index_row: dict, plan: Path) -> dict:
-    """Re-check the on-disk admission fixture is byte-identical to the catalog
-    and its usage/replay counters were never mutated by the seam it fed."""
+    """Re-check the on-disk v2 admission fixture is byte-identical to the index and its
+    usage/replay counters were never mutated by the seam it fed, and that its grant carries
+    the exact D122 owner binding (not a silently substituted D105 row)."""
     admission_path = plan / index_row["path"]
     admission = load(admission_path)
     trial_id = index_row.get("trial_id")
@@ -56,10 +67,29 @@ def check_admission(index_row: dict, plan: Path) -> dict:
     replay = admission.get("replay", {})
     if replay.get("events") != [] or replay.get("used_slices") != 0:
         raise Invalid(f"admission replay mutated: {trial_id}")
-    if (admission.get("task", {}).get("budgets", {}).get("max_slices") != 1
-            or admission.get("grant", {}).get("max_slices") != 1):
+    grant = admission.get("grant", {})
+    if (admission.get("task", {}).get("budgets", {}).get("max_slices") != 1 or grant.get("max_slices") != 1):
         raise Invalid(f"admission is not a one-slice grant: {trial_id}")
+    if grant.get("owner_decision") != "D122" or grant.get("owner_marker") != OWNER_MARKER:
+        raise Invalid(f"admission is not D122/{OWNER_MARKER}-bound: {trial_id}")
     return admission
+
+
+def check_budget_raise(trial_id: str, task: dict, baseline_catalog: dict) -> None:
+    """D122 rule: every replacement row's budgets equal its v1 counterpart field-for-field,
+    except the one authorized `claude-code` wall-clock raise 180000 -> 600000."""
+    v1_trial_id = V1_TRIAL_FOR[trial_id]
+    source = next((row for row in baseline_catalog.get("trials", []) if row.get("trial_id") == v1_trial_id), None)
+    if source is None:
+        raise Invalid(f"{trial_id}: v1 baseline row unavailable: {v1_trial_id}")
+    budgets, frozen = task.get("budgets"), source.get("budgets")
+    if not isinstance(budgets, dict) or not isinstance(frozen, dict) or set(budgets) != set(frozen):
+        raise Invalid(f"{trial_id}: budget key set diverges from v1")
+    for key, value in frozen.items():
+        raised = key == "timeout_ms" and task.get("provider") == RAISED_PROVIDER and value == BASE_TIMEOUT_MS
+        expected = RAISED_TIMEOUT_MS if raised else value
+        if budgets[key] != expected:
+            raise Invalid(f"{trial_id}: budget {key} outside the D122 grant: {budgets[key]} != {expected}")
 
 
 def main() -> int:
@@ -69,8 +99,9 @@ def main() -> int:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, default=repo_default)
-    parser.add_argument("--results", type=Path, default=here / "repository-pilot-results-v1.json")
-    parser.add_argument("--admission-index", type=Path, default=here / "trial-admission-index-v1.json")
+    parser.add_argument("--results", type=Path, default=here / "repository-pilot-results-v2.json")
+    parser.add_argument("--admission-index", type=Path, default=here / "trial-admission-index-v2-p5.2-retry.json")
+    parser.add_argument("--baseline-catalog", type=Path, default=here / "trial-catalog-v1.json")
     parser.add_argument("--generation", type=Path, default=here / "business-successor-generation-v1.json")
     parser.add_argument("--assurance", type=Path, default=here / "business-successor-assurance-v1.json")
     args = parser.parse_args()
@@ -90,7 +121,7 @@ def main() -> int:
             raise Invalid(f"expected exactly 3 slices, found {found}")
         trial_ids = tuple(row.get("trial_id") if isinstance(row, dict) else None for row in slices)
         if trial_ids != ORDER:
-            raise Invalid(f"slices are not the three catalog rows in catalog order: {trial_ids} != {ORDER}")
+            raise Invalid(f"slices are not the three D122 replacement rows in catalog order: {trial_ids} != {ORDER}")
 
         # G2/G2B must be re-derived live, never trusted from the results file alone.
         generation = load(args.generation)
@@ -125,27 +156,20 @@ def main() -> int:
 
         index = load(args.admission_index)
         index_rows = {row.get("trial_id"): row for row in index.get("admissions", []) if isinstance(row, dict)}
+        baseline_catalog = load(args.baseline_catalog)
 
         for trial_id, row in zip(ORDER, slices):
             if row.get("provider") != EXPECTED_PROVIDER[trial_id]:
                 raise Invalid(f"{trial_id}: provider mismatch, got {row.get('provider')!r}")
-            if row.get("accepted") is not True:
-                raise Invalid(f"{trial_id}: accepted is not true")
-            if row.get("rollback") is not True:
-                raise Invalid(f"{trial_id}: rollback is not true")
             if row.get("fresh_process") is not True:
                 raise Invalid(f"{trial_id}: fresh_process is not true")
             observation = row.get("observation", {})
             if observation.get("process_count") != 1:
                 raise Invalid(f"{trial_id}: process_count != 1 (got {observation.get('process_count')!r})")
-            if observation.get("kind") != "success":
-                raise Invalid(f"{trial_id}: observation kind != success (got {observation.get('kind')!r})")
-            if row.get("dispatch_business", {}).get("intent_written") is not True:
-                raise Invalid(f"{trial_id}: intent_written is not true")
 
             index_row = index_rows.get(trial_id)
             if index_row is None:
-                raise Invalid(f"{trial_id}: not present in the D105 admission index")
+                raise Invalid(f"{trial_id}: not present in the D122 admission index")
             admission = check_admission(index_row, plan)
             task = admission["task"]
             if task.get("parent_item_id") != "P5.2":
@@ -154,10 +178,22 @@ def main() -> int:
                 raise Invalid(f"{trial_id}: base_commit mismatch")
             if row.get("admission_hash") != admission.get("admission_hash"):
                 raise Invalid(f"{trial_id}: admission_hash mismatch")
+            check_budget_raise(trial_id, task, baseline_catalog)
+
             declared_files = sorted(task.get("files", []))
             changed = row.get("changed_paths")
-            if not isinstance(changed, list) or changed != declared_files:
-                raise Invalid(f"{trial_id}: changed_paths not scope-only: {changed} != {declared_files}")
+            gap = row.get("evidence_gap")
+            if changed is None:
+                if not isinstance(gap, str) or not gap:
+                    raise Invalid(f"{trial_id}: changed_paths is null without a recorded evidence_gap reason")
+                if row.get("accepted") is not False:
+                    raise Invalid(f"{trial_id}: an evidence-gap slice must not be recorded as accepted")
+            elif not isinstance(changed, list) or (row.get("accepted") is True and changed != declared_files):
+                raise Invalid(f"{trial_id}: accepted slice's changed_paths not scope-only: {changed} != {declared_files}")
+            if row.get("accepted") is True and row.get("rollback") is not True:
+                raise Invalid(f"{trial_id}: accepted without a proven rollback")
+            if row.get("accepted") is True and row.get("dispatch_business", {}).get("intent_written") is not True:
+                raise Invalid(f"{trial_id}: accepted without intent_written")
 
         # Independent re-derivation of "zero main_tree_delta": don't just trust the flag.
         status = git(repo, "status", "--porcelain=v1", "--", "packages/artifex")
@@ -167,14 +203,22 @@ def main() -> int:
             raise Invalid(f"packages/artifex is not clean in the main tree: {status.stdout.decode('utf-8', 'replace')!r}")
         gen_rel = f"plans/{PLAN_ID}/artifacts/P5/business-successor-generation-v1.json"
         assur_rel = f"plans/{PLAN_ID}/artifacts/P5/business-successor-assurance-v1.json"
-        diff = git(repo, "diff", "--exit-code", "--", "packages/artifex", gen_rel, assur_rel)
+        v1_results_rel = f"plans/{PLAN_ID}/artifacts/P5/repository-pilot-results-v1.json"
+        diff = git(repo, "diff", "--exit-code", "--", "packages/artifex", gen_rel, assur_rel, v1_results_rel)
         if diff.returncode != 0:
-            raise Invalid(f"unstaged diff on the guarded G2B surface: {diff.stdout.decode('utf-8', 'replace')}")
+            raise Invalid(f"unstaged diff on the guarded G2B/v1-evidence surface: {diff.stdout.decode('utf-8', 'replace')}")
+
+        accepted_count = sum(1 for row in slices if row.get("accepted") is True)
+        not_accepted = [row["trial_id"] for row in slices if row.get("accepted") is not True]
+        if not_accepted:
+            print(f"P5.2 D122 repository-pilot validator: FAIL: not accepted: {not_accepted} "
+                  f"({accepted_count}/3 accepted) — honest report, not a validator defect", file=sys.stderr)
+            return 1
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         print(f"P5.2 repository-pilot validator: FAIL: {exc}", file=sys.stderr)
         return 1
-    print("P5.2 repository-pilot validator: OK "
-          "(3/3 catalog-ordered slices; fresh, scope-only, accepted, rolled back; G2B live; main tree clean)")
+    print("P5.2 D122 repository-pilot validator: OK "
+          "(3/3 catalog-ordered D122 slices; fresh, scope-only, accepted, rolled back; G2B live; main tree clean)")
     return 0
 
 

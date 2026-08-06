@@ -1,6 +1,6 @@
 # Индекс плана — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-05
+**Обновлён:** 2026-08-06
 
 ## Карта директорий
 
@@ -121,6 +121,10 @@
 | `research/37-p5.2-seam-ownership-reconcile.md` | research | P5.5, P5.2 | seam is producer surface, not evidence: reopen-vs-refreeze-vs-revert options with the rejected alternatives and the resulting item topology |
 | `research/38-p5.2-zero-accept-root-cause-and-options.md` | research | P5.1, P5.5, P5.2, P5.4, P6 | `0/3` is a null measurement, not a negative one: four costed options (catalog resolution · +replacement grant · contract edit · accept-and-continue), why accept-and-continue is the expensive one, and the recommendation the owner selected |
 
+| `brief/37-forward-conformance-owner-direction-2026-08-06.md` | brief | P5.4, P5.5, P5.8, plan-audit | направление владельца: квалификация эскалации «новое vs повтор» и обязанность прямой сверки (a)–(d) |
+| `findings/P5.4-package-authority-gap-2026-08-06.md` | findings | P5.5 (D132), P5.8 | второй pre-intent-стоп: F12/F13/F14, доказательство двух правок, таблица владения |
+| `findings/P5.4-forward-conformance-sweep-2026-08-06.md` | findings | P5.5 (D132), P5.8, P5.4 | механическая развёртка (a)–(d): потребители идентичности батча, G2B-хеши, столкновение с P4-якорем |
+| `research/41-p5.4-package-authority-remediation.md` | research | P5.5 (D132), P5.8, P5.4 | D132–D135: отклонённая data-driven таблица батчей, seam-admission smoke, форма P4-якоря, вывод порядка |
 ## Запланированные выходы P0
 
 | Путь | Производитель | Потребители |
@@ -188,6 +192,7 @@
 | `artifacts/P5/business-grant-request-v1.json`, business grants, per-trial manifest/replay/admission indexes and validators | P5.1 after `G-OWNER-P5-BUSINESS` | P5.2–P5.4 |
 | `artifacts/P5/run-pilot.py`, repository pilot results and validator | P5.2 | P5.3–P5.4 |
 | `artifacts/P5/recovery-pilot-results-v1.json`, `validate-recovery-pilot.py` | P5.3 | P5.4/P6 |
+| `artifacts/P5/validate-recovery-pilot.py` (ledger-aware), `artifacts/P4/validate-assurance.py` (two-sided), `artifacts/P1/validate-economy-evidence.py` (unknown-propagating) и опубликованный полный прогон pre-intent-гейта P5.4 | P5.8 | P5.4 |
 | `artifacts/P5/battle-wave-results-v1.json`, `economic-verdict-v1.json`, G3 `pilot-manifest-v1.json`, `validate-economic-verdict.py` | P5.4 | P6; pins unchanged measured G2 package digest |
 
 ## Запланированные выходы P6

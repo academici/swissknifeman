@@ -1,25 +1,28 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.25.0 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.27.0 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. **P5 = 0/7: терминальных `🟢` в фазе
-нет.** P5.2 и P5.3 закрыты `🟠`; P5.4 остановился ДО первого диспатча на pre-intent-гейте (0
-provider-процессов, 0 потраченных D105-строк), и re-design 2026-08-06 нашёл ещё три блокера сверх
+детерминированными GREEN gates, без третьего audit/design pass. **P5 = 2/8 `🟢` (P5.6, P5.7); P5.1,
+P5.2, P5.3 закрыты `🟠`; P5.5 реопенен `🟡` четвёртый раз; P5.8 и P5.4 — `⬜`.** P5.4 дважды
+остановился ДО первого диспатча на pre-intent-гейте (оба раза 0 provider-процессов, 0 потраченных
+допусков). Второй стоп (D132–D135) не вскрыл ни одного дизайн-вопроса: пакет не знал уже выданного
+гранта D125 (`GRANT_BATCHES` + захардкоженная ветка) и два гейта остались без владельца — работа
+producer-side, отданная P5.5 и новому P5.8. Первый re-design (2026-08-06) нашёл три блокера сверх
 восьми: кандидатская полоса пишет usage булево, а не целыми (F9); ни один провайдер не отдаёт все
 семь полей `economy-evidence-v1`, поэтому в режиме `parity` `GO` недостижим по построению (F10); у
 codex-песочницы нет работающего компенсирующего контроля на этом ядре (F11). Владелец выбрал все
 четыре рекомендации (`brief/35-…`) → D123 (single-provider claude-code + аддитивный
 `economy-evidence-v2`), D124 (baseline = прямой headless-вызов того же слайса без супервизора),
 D125 (`G-OWNER-P5.4-PAIRED-WAVES`, десять строк, поднятые бюджеты), D126 (все пять волн на
-claude-code, codex исключён), D127 (топология из пяти items). Фаза выросла до семи items: новые
+claude-code, codex исключён), D127 (топология из пяти items). Фаза выросла до восьми items: новые
 P5.6 (починка четырёх generation-stale гейтов) и P5.7 (заморозка `economy-evidence-v2` +
 восьмиконтрактный аддитивный манифест), третьи реопены P5.5 (измеренный economy-конверт в фолдах) и
 P5.1 (v3-набор носителей). Ни один v1/v2-байт, ни строка замороженного контракта, ни pin `2.1.222`
 (D120) не двигаются; пять неиспользованных `p5.4-wave-*` D105-строк списаны явно и истекают
 `2026-08-12` неистраченными.
 
-## Current execution status — P5.4 re-design landed (D123–D127)
+## Current execution status — второй стоп P5.4 расэскалирован (D132–D135)
 
 **Next:** manual: implementation/high
 
@@ -29,14 +32,16 @@ P5.1 (v3-набор носителей). Ни один v1/v2-байт, ни ст
 | Effort | high |
 | Capabilities | repository-code-edit · deterministic-validator-repair |
 | Context | NEW SESSION — item |
-| Суть | P5.6: починить три frozen-валидатора и P4-якорь так, чтобы они сверяли живое дерево с ТЕКУЩЕЙ G2B-генерацией, а замороженные носители — со своим неизменным G2-предшественником; завести append-only реестр G2B-генераций. Ни байта записанного evidence, 0 provider-процессов. |
+| Суть | P5.5 (четвёртый реопен): зарегистрировать в `business_dispatch.GRANT_BATCHES` уже выданный грант D125 и перенести литерал ветки ВНУТРЬ строки батча, доказать живым validate-only швом на всех трёх наборах, перезаморозить G2B седьмой раз с записью реестра тем же коммитом. 0 provider-процессов, 0 потраченных допусков. |
 | Команда | — (Exec = manual: нет однокомандного эквивалента) |
 
 ```text
-$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.6
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 ```
 
-Порядок оставшейся работы: **P5.6 → P5.7 → P5.5 → P5.1 → P5.4**. Workflow-скрипт
+Порядок оставшейся работы: **P5.5 → P5.8 → P5.4** (D123–D127-цепочка P5.6 → P5.7 → P5.5 → P5.1
+исполнена; второй pre-intent-стоп P5.4 вскрыл три производственных дефекта, ни одного дизайнерского).
+Workflow-скрипт
 `workflows/wf-artifex-supervisor-p52-pilot.js` относится к уже закрытому P5.2 и в оставшейся
 цепочке не запускается; P5.4 несёт собственный раннер `artifacts/P5/run-battle-waves.py` (пять
 пар — кандидат через шов Artifex, baseline прямым headless-вызовом). Пин
@@ -45,7 +50,7 @@ $ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.6
 
 ## Карта исполнения
 
-Все 44 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
+Все 45 items имеют `Exec = manual`: effort `high`/`xhigh` выше жёсткого пина `plan-exec`, а
 contract/security/recovery/public-package классы требуют full review. Батчей и workflow-групп нет:
 каждая фаза — последовательная producer chain. Терминальные items ниже не имеют runnable launch;
 D98 открыл текущий product execution path с P3.5 без audit 11.
@@ -85,13 +90,14 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.5 | terminal-history | 🟠 Done with deviations | implementation/high | D102 is historical malformed provenance | protected change/G2 lacks pre-mutation resolver authority |
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
-| P5.6 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.6` | implementation/high | — (никакого гранта не требует) | `⬜` расэскалирован D128–D131, доведён до DoR: generation-aware починка `validate-shadow.py` (+переезд историчного гварда), `validate-package-promotion.py` (якорь `367e477a` из git, исправленный `--prototype`), `validate-repository-pilot.py` (+развод кодов выхода `0`/`2`/`1`), перенос P4-якоря на `3533234c` и реестр G2B-генераций. Приёмка (c) — exit `2`, не `0` |
-| P5.7 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.7` after terminal P5.6 | frontier/high | D123 размораживает P1-контрактный набор ровно на один аддитивный successor | `⬜` новый: заморозка `economy-evidence-v2@2.0.0` (три правила unknown-rule) + аддитивный восьмиконтрактный `contract-manifest-v2.json` |
-| P5.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5` after terminal P5.7 | implementation/high | D108 остаётся авторитетом; новый грант не нужен | реопенен `🟡` третий раз: измеренный economy-конверт в обоих фолдах + третий re-freeze G2B, 0 provider-процессов |
-| P5.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.1` after terminal P5.5 | frontier/high | D125 `G-OWNER-P5.4-PAIRED-WAVES` — десять строк, expiry `2026-09-30`; D105/D122 не трогаются | реопенен `🟡` третий раз: аддитивный v3-набор — пять `candidate` + пять `baseline` строк, все claude-code, поднятые бюджеты |
+| P5.6 | terminal | 🟢 Done | implementation/high | — (никакого гранта не требует) | `⬜` расэскалирован D128–D131, доведён до DoR: generation-aware починка `validate-shadow.py` (+переезд историчного гварда), `validate-package-promotion.py` (якорь `367e477a` из git, исправленный `--prototype`), `validate-repository-pilot.py` (+развод кодов выхода `0`/`2`/`1`), перенос P4-якоря на `3533234c` и реестр G2B-генераций. Приёмка (c) — exit `2`, не `0` |
+| P5.7 | terminal | 🟢 Done | frontier/high | D123 разморозил P1-контрактный набор ровно на один аддитивный successor | `economy-evidence-v2@2.0.0` заморожен + аддитивный восьмиконтрактный `contract-manifest-v2.json` |
+| P5.1 | terminal-history | 🟠 Done with deviations | frontier/high | D125 `G-OWNER-P5.4-PAIRED-WAVES` — десять строк, expiry `2026-09-30`; D105/D122 не тронуты | третий реопен закрыт: аддитивный v3-набор — пять `candidate` + пять `baseline` строк, все claude-code, поднятые бюджеты |
+| P5.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5` | implementation/high | D125 уже выдан владельцем; нового гранта не требуется — регистрация уже выданной власти | реопенен `🟡` ЧЕТВЁРТЫЙ раз (D132): строка `D125` в `GRANT_BATCHES` + `branch` внутрь каждой строки батча, seam-admission smoke на трёх наборах, седьмая переморозка G2B с записью реестра тем же коммитом |
+| P5.8 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.8` after terminal P5.5 | implementation/high | — (никакого гранта не требует; D134 авторизует одну правку P4-валидатора) | `⬜` новый (D133): три бесхозных гейта — `validate-recovery-pilot.py` на ledger-membership, `validate-assurance.py` two-sided, `None`-гвард в `lane_units`; затем публикует ПОЛНЫЙ прогон pre-intent-гейта P5.4 |
 | P5.2 | terminal-history | 🟠 Done with deviations | implementation/high | D122 три заменяющие строки истрачены | `0/3 accepted`, все три `PROVIDER_PROTOCOL_UNKNOWN`; три живые починки шва (`--allowedTools`, `item.started`, `errors`) закоммичены, но ни одним допущенным диспатчем не подтверждены |
 | P5.3 | terminal-history | 🟠 Done with deviations | implementation/high | 6 реальных D105-допусков истрачены | crash/resume/duplicate/timeout/schema/third-state evidence получено |
-| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.6, P5.7, P5.5 и P5.1 | frontier/high | D125 (десять диспатчей) + D123 (`single-provider` scope, `owner_grant_ref`) | `⬜` пере-скоупен: пять пар кандидат/baseline на claude-code, адъюдикация по `economy-evidence-v2`; G3 пиннит измеренный G2B, закрывает только литеральный `GO` |
+| P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.5 (4-й реопен) и P5.8 | frontier/high | D125 (десять диспатчей) + D123 (`single-provider` scope, `owner_grant_ref`) | `⬜` пере-скоупен: пять пар кандидат/baseline на claude-code, адъюдикация по `economy-evidence-v2`; G3 пиннит измеренный G2B, закрывает только литеральный `GO` |
 | P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 plus G2B/G3 and consumes D87/D96 | freeze exact P6.2/P6.3 rows and D93 root authorization order |
 | P6.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.2` | implementation/high | exact D87+D96; protected G2B runtime immutable | produce G4 through exact root plan→apply `AGENTS.md,CLAUDE.md`→check without runtime migration |
 | P6.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.3` | implementation/high | — | produce G5: install/update/doctor, default-off operations, compatibility, rollback, docs and changelog |

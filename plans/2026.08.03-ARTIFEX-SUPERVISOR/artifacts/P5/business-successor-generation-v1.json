@@ -1,5 +1,5 @@
 {
-  "generation_hash": "f36d6f764a5c4b38b1d01dd4e3de075b7ab62b721ca2a692a67d72eb68ca4696",
+  "generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
   "generation_version": "1.0.0",
   "predecessor": {
     "commit": "124df816",
@@ -44,7 +44,7 @@
       },
       {
         "path": "packages/artifex/lib/artifex/business_dispatch.py",
-        "sha256": "7143b9de064d951ca94379461e6beadcd8e71413def7cc379eb0a08529432444"
+        "sha256": "2406f64fe7e14dcdc4fe51a3b5998a7787f71f670b5b67e6b48a4af06167f347"
       },
       {
         "path": "packages/artifex/lib/artifex/cli.py",
@@ -136,7 +136,7 @@
       },
       {
         "path": "packages/artifex/tests/test_business_dispatch.py",
-        "sha256": "6efaaef6ec57d2b8c6e88cdb4e7c7a428323041bc3e8ffd3e9b69efbc2a70067"
+        "sha256": "9b4767808c3256dadaeadfb1eb743793fde847b9edde5b204eb3b7bc32f4b549"
       },
       {
         "path": "packages/artifex/tests/test_business_provider_projection.py",

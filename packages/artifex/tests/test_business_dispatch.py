@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -11,6 +12,12 @@ from artifex import activity, business_dispatch
 PLAN = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
 G2 = "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09"
 G2B = "1" * 64
+D105_ADMISSION_REL = "artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json"
+D105_INDEX_REL = "artifacts/P5/trial-admission-index-v1.json"
+D122_ADMISSION_REL = "artifacts/P5/trial-admissions-v2/p5.2r-slice-01-worktree-core.json"
+D122_INDEX_REL = "artifacts/P5/trial-admission-index-v2-p5.2-retry.json"
+D125_ADMISSION_REL = "artifacts/P5/trial-admissions-v3/p5.4w-wave-01-recovery-fixture.json"
+D125_INDEX_REL = "artifacts/P5/trial-admission-index-v3-p5.4-paired.json"
 
 
 class BusinessDispatchTests(unittest.TestCase):
@@ -27,6 +34,94 @@ class BusinessDispatchTests(unittest.TestCase):
             foreign = Path(directory) / "admission.json"; foreign.write_text(json.dumps({}), encoding="utf-8")
             with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "ADMISSION_PATH_EXTERNAL"):
                 business_dispatch.load_indexed(PLAN, foreign, g2_digest=G2, g2b_digest="1" * 64)
+
+
+def _mutate_admission(rel_path, **grant_overrides):
+    """A self-consistent admission with the given grant fields overridden and both
+    hashes recomputed exactly as the production canonical form requires."""
+    admission = json.loads((PLAN / rel_path).read_text(encoding="utf-8"))
+    grant = dict(admission["grant"], **grant_overrides)
+    grant["grant_hash"] = business_dispatch._hash(grant, "grant_hash")
+    admission = dict(admission, grant=grant)
+    admission["admission_hash"] = business_dispatch._hash(admission, "admission_hash")
+    return admission
+
+
+def _write_plan_fixture(tmp_dir, rel_path, admission, index_rel_path):
+    """Write a mutated admission plus its matching index-row bytes into an isolated
+    plan_dir; a row whose ``path`` does not match ``rel_path`` is left untouched, which
+    is exactly what the wrong-index cases need."""
+    admission_path = Path(tmp_dir) / rel_path
+    admission_path.parent.mkdir(parents=True, exist_ok=True)
+    admission_path.write_text(json.dumps(admission, ensure_ascii=False), encoding="utf-8")
+    index = json.loads((PLAN / index_rel_path).read_text(encoding="utf-8"))
+    for row in index["admissions"]:
+        if row["path"] == rel_path:
+            row["admission_hash"] = admission["admission_hash"]
+            row["grant_hash"] = admission["grant"]["grant_hash"]
+            row["sha256"] = hashlib.sha256(admission_path.read_bytes()).hexdigest()
+    index_path = Path(tmp_dir) / index_rel_path
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
+    return admission_path
+
+
+class GrantBatchAuthorityTests(unittest.TestCase):
+    """D132 — GRANT_BATCHES registers D125 and each batch row carries its own branch."""
+
+    def test_d105_d122_d125_admissions_are_all_indexed(self):
+        for rel in (D105_ADMISSION_REL, D122_ADMISSION_REL, D125_ADMISSION_REL):
+            with self.subTest(rel=rel):
+                value = business_dispatch.load_indexed(PLAN, PLAN / rel, g2_digest=G2, g2b_digest="1" * 64)
+                self.assertEqual(0, value["usage"]["used_slices"])
+
+    def test_batch_key_absent_from_table_refuses(self):
+        admission = _mutate_admission(D105_ADMISSION_REL, owner_decision="D999")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_plan_fixture(tmp, D105_ADMISSION_REL, admission, D105_INDEX_REL)
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "ADMISSION_NOT_INDEXED"):
+                business_dispatch.load_indexed(Path(tmp), path, g2_digest=G2, g2b_digest="1" * 64)
+
+    def test_v3_admission_with_d105_owner_marker_refuses(self):
+        admission = _mutate_admission(D125_ADMISSION_REL, owner_marker="[OWNER-GRANT:G-OWNER-P5-BUSINESS]")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_plan_fixture(tmp, D125_ADMISSION_REL, admission, D125_INDEX_REL)
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "USAGE_LIMIT_EXCEEDED"):
+                business_dispatch.load_indexed(Path(tmp), path, g2_digest=G2, g2b_digest="1" * 64)
+
+    def test_v3_admission_with_business_trials_branch_refuses(self):
+        admission = _mutate_admission(D125_ADMISSION_REL, branch="p5-business-trials")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_plan_fixture(tmp, D125_ADMISSION_REL, admission, D125_INDEX_REL)
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "USAGE_LIMIT_EXCEEDED"):
+                business_dispatch.load_indexed(Path(tmp), path, g2_digest=G2, g2b_digest="1" * 64)
+
+    def test_v1_admission_with_paired_battle_waves_branch_refuses(self):
+        admission = _mutate_admission(D105_ADMISSION_REL, branch="p5-paired-battle-waves")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_plan_fixture(tmp, D105_ADMISSION_REL, admission, D105_INDEX_REL)
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "USAGE_LIMIT_EXCEEDED"):
+                business_dispatch.load_indexed(Path(tmp), path, g2_digest=G2, g2b_digest="1" * 64)
+
+    def test_index_row_count_mismatch_refuses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            admission_path = Path(tmp) / D125_ADMISSION_REL
+            admission_path.parent.mkdir(parents=True, exist_ok=True)
+            admission_path.write_bytes((PLAN / D125_ADMISSION_REL).read_bytes())
+            index = json.loads((PLAN / D125_INDEX_REL).read_text(encoding="utf-8"))
+            index["admissions"] = [row for row in index["admissions"] if row["path"] != D125_ADMISSION_REL]
+            index_path = Path(tmp) / D125_INDEX_REL
+            index_path.parent.mkdir(parents=True, exist_ok=True)
+            index_path.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "ADMISSION_NOT_INDEXED"):
+                business_dispatch.load_indexed(Path(tmp), admission_path, g2_digest=G2, g2b_digest="1" * 64)
+
+    def test_v3_admission_presented_against_v1_index_path_refuses(self):
+        admission = _mutate_admission(D125_ADMISSION_REL, owner_decision="D105")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_plan_fixture(tmp, D125_ADMISSION_REL, admission, D105_INDEX_REL)
+            with self.assertRaisesRegex(business_dispatch.BusinessRefusal, "ADMISSION_NOT_INDEXED"):
+                business_dispatch.load_indexed(Path(tmp), path, g2_digest=G2, g2b_digest="1" * 64)
 
 
 def _budgets(**overrides):

@@ -37,6 +37,12 @@
       "commit": "4e5b1e62",
       "date": "2026-08-06",
       "reason": "feat(artifex): измерить провайдерский economy-конверт под economy-evidence-v2 (P5.5)"
+    },
+    {
+      "generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "commit": "191aabca",
+      "date": "2026-08-06",
+      "reason": "fix(artifex): зарегистрировать D125 и перенести branch внутрь строки батча (P5.5)"
     }
   ]
 }

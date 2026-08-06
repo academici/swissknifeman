@@ -27,14 +27,20 @@ REPLAY_KEYS = frozenset(("schema_version", "trial_id", "task_id", "grant_id", "r
 # `load_indexed` selects the matching batch's index/catalog files and owner marker rather than
 # trusting a caller-supplied path, so an unrecognized `owner_decision` still refuses closed-set
 # (same fail-closed shape D105 always had, generalized from one hardcoded batch to a lookup over
-# an explicit, reviewable set of two).
+# an explicit, reviewable set of two). D125 (D132 reopen, 2026-08-06) adds a third batch and moves
+# each batch's `branch` literal INSIDE its own row — `load_indexed` compares against the SELECTED
+# batch's own `branch` instead of one module-level literal, so a branch swapped between batches
+# (undetectable while every batch shared one hardcoded value) now refuses.
 GRANT_BATCHES = {
-    "D105": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5-BUSINESS]",
+    "D105": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5-BUSINESS]", "branch": "p5-business-trials",
              "index_path": "artifacts/P5/trial-admission-index-v1.json",
              "catalog_path": "artifacts/P5/trial-catalog-v1.json", "expected_count": 14},
-    "D122": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5.2-RETRY]",
+    "D122": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5.2-RETRY]", "branch": "p5-business-trials",
              "index_path": "artifacts/P5/trial-admission-index-v2-p5.2-retry.json",
              "catalog_path": "artifacts/P5/trial-catalog-v2-p5.2-retry.json", "expected_count": 3},
+    "D125": {"owner_marker": "[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]", "branch": "p5-paired-battle-waves",
+             "index_path": "artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
+             "catalog_path": "artifacts/P5/trial-catalog-v3-p5.4-paired.json", "expected_count": 10},
 }
 
 
@@ -115,7 +121,7 @@ def load_indexed(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_di
             or rows[0].get("admission_hash") != value.get("admission_hash")):
         raise BusinessRefusal("ADMISSION_INVALID")
     if (grant.get("owner_decision") not in GRANT_BATCHES or grant.get("owner_marker") != GRANT_BATCHES[grant.get("owner_decision")]["owner_marker"]
-            or grant.get("branch") != "p5-business-trials" or grant.get("revoked") is not False
+            or grant.get("branch") != batch["branch"] or grant.get("revoked") is not False
             or grant.get("max_slices") != 1 or value.get("usage") != {"used_slices": 0, "max_slices": 1, "reusable": False}
             or replay.get("used_slices") != 0 or replay.get("events") != [] or replay.get("attempt") != 1):
         raise BusinessRefusal("USAGE_LIMIT_EXCEEDED")

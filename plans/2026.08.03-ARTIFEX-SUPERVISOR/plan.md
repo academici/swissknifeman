@@ -247,6 +247,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | Форвард-фикс (владелец вживую в чате): claude-code `dontAsk` реально блокировал Edit без `--allowedTools` — почин, живой edit прошёл; + два независимых бага парсинга (codex `item.started`, claude-code `errors`) — детали см. findings/P5-repository-pilot.md §8, commit `6b9afc9b`. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 закрыт 🟠 после D122 re-run: `load_indexed` научен GRANT_BATCHES (владелец снял ритуал реопена вживую в чате), G2B перезаморожен третий раз, все три D122-слайса реально задиспатчены — 0/3 accepted, все три `PROVIDER_PROTOCOL_UNKNOWN` — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-08-06 | plan-run/sonnet/high | P5.2 остановлен 🔴 ESCALATION до intent (снята следующей записью выше): `load_indexed` не видит v2-набор D122 (зашит на 14-строчный v1-индекс), 3/3 `ADMISSION_NOT_INDEXED` — детали см. phases/P5.md P5.2 Pending Work. |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после D121-реопена: business-порт резолвит `scenario`/`kind` из hash-запиненного P5.1-каталога с именованными отказами до intent, оба G2B-манифеста перезаморожены второй раз без единого provider-процесса — детали см. phases/P5.md P5.5 Completion Notes. |

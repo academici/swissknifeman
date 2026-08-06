@@ -303,3 +303,67 @@ three); `packages/artifex` and both G2B manifests carry zero diff before/between
 status`/`git diff` both empty, independently re-confirmed by `validate-repository-pilot.py`).
 `validate-repository-pilot.py` (re-pinned to the v2 index/results) reports the honest result:
 `FAIL: not accepted: [...] (0/3 accepted)`, exit 1 — not adjusted to force green.
+
+## 8. Root-cause of `PROVIDER_PROTOCOL_UNKNOWN` (2026-08-06, owner-directed live investigation)
+
+The repository owner, directly in the live chat session, instructed a full root-cause
+investigation of §7's `PROVIDER_PROTOCOL_UNKNOWN` pattern — RAG via `perplexity-web` plus live
+diagnostic dispatches in disposable, scratch git worktrees, zero D105/D122 admissions touched (no
+grant spent; every diagnostic ran outside the admission/seam system entirely). Owner scoping: the
+claude-code path is this session's priority; the codex path is left for its own future
+self-testing pass rather than fully hardened here.
+
+**claude-code — the real, structural blocker (fixed).** `--permission-mode dontAsk` auto-denies
+any tool call not on a *separate* `--allowedTools` allow-list; `--tools` only declares the
+available palette (RAG:✅ 2026-08-06, `perplexity-web`, permission-mode semantics table).
+`build_business_argv` never passed `--allowedTools`, so every real Edit call was silently denied
+regardless of budget. Live proof before the fix: a full real dispatch against slice-02's exact
+scenario/files, correct credentials, returned `{"status":"refused","summary":"Blocked by tooling:
+Edit is denied in \"don't ask mode\"..."}`. After adding `--allowedTools Read,Edit` (identical to
+`--tools`, nothing widened): the same dispatch produced a real edit to `scheduler.py` (+37 lines).
+Residual: `max_turns: 8` (a frozen D105/D122 catalog value, unchanged by this fix) is still tight
+for a genuine 3-file edit — the fixed dispatch still exhausted it before returning final structured
+output. Raising it needs a new owner grant (the same class of authorization D122 used to raise
+`claude-code`'s `timeout_ms`), out of this fix's scope.
+
+**codex — an independent parsing gap (fixed).** `ALLOWED_EVENTS` recognized `item.completed` but
+not `item.started`, which real multi-step codex sessions legitimately emit per tool call (RAG:✅
+2026-08-06, `perplexity-web`, Codex `exec --json` ThreadEvent taxonomy). Live proof: a real,
+successful codex dispatch that wrote 369 lines across two new files emitted 13 `item.started`
+events — every one of which would have tripped `PROVIDER_PROTOCOL_UNKNOWN` under the old allowlist,
+independent of any sandbox/environment issue. Added `item.started` to `ALLOWED_EVENTS`.
+
+**claude-code — a second, independent parsing gap (fixed).** `_RESULT_KEYS` did not include
+`errors`, a real key the CLI emits on `subtype: error_max_turns`. Added.
+
+**codex — a real, deeper environmental limitation (found, deliberately NOT fixed here).**
+`activity.py` dispatches every provider subprocess with `env={}` (`subprocess.Popen`'s `env=`
+replaces, never merges the parent's environment). For codex specifically this breaks its own
+bubblewrap-based sandbox: live diagnostics show a real write attempt failing outright under
+`env={}`, and even after adding back the *already security-permitted* `PATH`/`LC_ALL`/`LANG`/`TZ`
+(`security.py`'s `_ENV_NAMES` already allows these four; `activity.py` simply never passes them),
+codex's sandbox still fails deeper — `bwrap: loopback: Failed RTM_NEWADDR: Operation not
+permitted` (RAG:✅ 2026-08-06: a documented AppArmor/unprivileged-userns restriction on nested
+bubblewrap sandboxes). The verified working escape hatch is codex's own official
+`--dangerously-bypass-approvals-and-sandbox` flag ("intended solely for environments that are
+externally sandboxed" — precisely this harness's situation): a live diagnostic with it set wrote
+the real 369-line change referenced above. **Not adopted**: this host was independently confirmed
+to have real outbound network access (`curl` to two external hosts both returned real HTTP
+responses, not connection failures), so bypassing codex's sandbox also removes the
+`network-disabled` guarantee that is an explicit capability and `SEC-WORKTREE` acceptance_ref on
+every catalog row — a genuine security-posture trade-off, not a mechanical bug, and left for a
+future owner decision (matches this session's owner-scoping: codex's own path is not this
+session's priority).
+
+**Evidence discipline.** No raw provider transcript, prompt or tool-call content was persisted to
+any committed file or to this document — every quoted fragment above is either a short structural
+JSON-key/event-type name or a schema-conforming `summary`/`errors` string already inside the
+provider's own structured-output contract, matching this plan's standing privacy rules. All
+diagnostics ran in `/tmp` scratch worktrees created and destroyed outside git; none touched
+`repository-pilot-results-v2.json`, any D105/D122 admission file, or spent any grant.
+
+3 new unit tests lock the two fixes in (`test_provider_codex.py`::real multi-item `item.started`
+fold; `test_provider_claude_code.py`::real max-turns-exhaustion fold with `errors`; ::business argv
+`--allowedTools`/`--tools` parity) — package suite 103/103 green, `validate.sh` green. G2B
+re-frozen a fourth time (`generation_hash` `7a44f9bc…` → `61d9e34c2e0e51dbf69f0bbb328f6d81994bbbfb3e0a8e78ca2fee05403276d4`,
+same two stored R2 rows fed back verbatim, 0 new provider processes). Item commit `6b9afc9b`.

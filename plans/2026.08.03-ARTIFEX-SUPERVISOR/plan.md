@@ -116,7 +116,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Generate the business successor, run measured pilots, and prove product readiness | 2/8 | 🟡 In progress |
+| P5 | Generate the business successor, run measured pilots, and prove product readiness | 3/8 | 🟡 In progress |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -263,6 +263,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟢 после четвёртого (D132) реопена: `GRANT_BATCHES` зарегистрировал D125, `branch` — внутрь строки батча, седьмая переморозка — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-06 | plan-design/claude-opus-5[1m]/high | P5.4 расэскалирован (второй стоп): D132–D135 — четвёртый реопен P5.5, новый item P5.8, P4-якорь, F15; сверка `brief/37` исполнена — детали см. research/41-p5.4-package-authority-remediation.md |
 | 2026-08-06 | plan-run/claude-opus-5[1m]/high | P5.1 закрыт 🟠 после третьего (D125/D127) реопена: отчеканен аддитивный v3-набор из десяти D125-носителей (пять candidate/пять baseline, все claude-code, поднятые бюджеты), v1/v2 байты не сдвинуты — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после третьего (D123/D127) реопена: измеренный `economy`-конверт под `economy-evidence-v2`, G2B перезаморожен третий раз — детали см. phases/P5.md P5.5 Completion Notes, findings/P5.5-measured-economy-envelope.md. |

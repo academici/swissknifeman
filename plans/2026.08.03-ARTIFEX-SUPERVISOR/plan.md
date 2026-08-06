@@ -258,6 +258,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после третьего (D123/D127) реопена: измеренный `economy`-конверт под `economy-evidence-v2`, G2B перезаморожен третий раз — детали см. phases/P5.md P5.5 Completion Notes, findings/P5.5-measured-economy-envelope.md. |
 | 2026-08-06 | plan-exec (manual)/claude-opus-5/high | P5.7 закрыт 🟢: `economy-evidence-v2@2.0.0` заморожен под D123 (три правки unknown-rule, sha256 `774184dc…`), агрегат пересобран как аддитивный восьмиконтрактный `contract-manifest-v2.json`, F3 закрыт — детали см. phases/P5.md P5.7 Completion Notes. |
 | 2026-08-06 | plan-run/sonnet/high | P5.6 закрыт 🟢: четыре generation-stale гейта реконсилированы (D128 shadow-guard, D129 promotion-anchor, D130 exit-коды + ledger, D131 P4-anchor→`3533234c`) — детали см. phases/P5.md P5.6 Completion Notes, findings/P5.6-generation-gate-reconciliation.md. |
 | 2026-08-06 | plan-design/claude-opus-5/high | P5.6 расэскалирован и доведён до DoR: D128–D131 — детали см. research/40-p5.6-gate-reconciliation-design.md |

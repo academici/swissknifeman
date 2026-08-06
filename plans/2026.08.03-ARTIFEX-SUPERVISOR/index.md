@@ -46,6 +46,7 @@
 | `brief/25-p5.5-probe-recovery-request.md` | brief | P5.5 | owner invocation of redesign after exhausted D108 attempts; explicitly not a replacement-probe grant |
 | `brief/26-p5.5-probe-r2-owner-grant.md` | brief | P5.5 | direct exact D111 authorization for one schema path and two bounded R2 replacement probes |
 | `brief/28-p5.5-terminalization-owner-direction-2026-08-06.md` | brief | P5.5 | direct D113 terminal evidence direction; historical R2 observations stay immutable |
+| `brief/29-p5.2-business-execution-bridge-owner-direction-2026-08-06.md` | brief | P5.2 | direct D114 authority for the sole bounded package execution bridge |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |

@@ -121,9 +121,12 @@ def run(argv: list[str], *, cwd: str | Path, env: dict[str, str], stdin: bytes,
         if not isinstance(normalized, dict):
             return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 1,
                     "duration_ms": duration}
-        return {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
-                "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"), "process_count": 1,
-                "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
+        outcome = {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
+                  "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"), "process_count": 1,
+                  "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
+        if "economy" in normalized:
+            outcome["economy"] = normalized["economy"]
+        return outcome
     return {"kind": "success", "process_count": 1, "exit_code": proc.returncode,
             "duration_ms": duration, "output_hash": _digest(out), "event_count": len(out.splitlines())}
 

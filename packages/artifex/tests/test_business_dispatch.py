@@ -157,10 +157,21 @@ class _FakeCodex:
         self.calls.append("build")
         return ["fake-codex", "exec"]
 
-    def fold_records(self, rows, request, *, exit_code):
+    def fold_records(self, rows, request, *, exit_code, include_economy=False, wall_duration_ms=None):
         self.calls.append("fold")
-        return {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
-                "reason_code": "OK", "event_count": 1}
+        result = {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
+                  "reason_code": "OK", "event_count": 1}
+        if include_economy:
+            result["economy"] = {"worker": {"input_tokens": 1, "cached_input_tokens": 0, "output_tokens": 2,
+                                            "reasoning_tokens": 3, "cost_microunits": None, "duration_ms": None,
+                                            "turns": 1},
+                                 "coordinator": {field: 0 for field in ("input_tokens", "cached_input_tokens",
+                                                                        "output_tokens", "reasoning_tokens",
+                                                                        "cost_microunits", "duration_ms", "turns")},
+                                 "unknown_reasons": {"worker/cost_microunits": "fake: no cost",
+                                                     "worker/duration_ms": "fake: no duration"},
+                                 "inclusion_bases": {}, "zero_bases": {}}
+        return result
 
 
 class _FakeClaude:
@@ -186,9 +197,12 @@ def _fake_runner(calls):
     def runner(argv, *, cwd, env, stdin, timeout_ms, max_output_bytes, max_event_count, normalizer):
         calls.append("run")
         normalized = normalizer([], 0)
-        return {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
-                "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"),
-                "process_count": 1, "duration_ms": 1, "event_count": normalized.get("event_count", 0)}
+        result = {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
+                 "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"),
+                 "process_count": 1, "duration_ms": 1, "event_count": normalized.get("event_count", 0)}
+        if "economy" in normalized:
+            result["economy"] = normalized["economy"]
+        return result
     return runner
 
 
@@ -211,6 +225,20 @@ class BusinessActivityRunTests(unittest.TestCase):
             result = port.run(cwd=Path(cwd), binary="fake-codex")
         self.assertEqual(["build", "run", "fold"], fake_codex.calls)
         self.assertEqual(("success", "OK"), (result["kind"], result["reason_code"]))
+
+    def test_codex_seam_fills_wrapper_measured_duration_into_the_economy_envelope(self):
+        """D123/D127 — codex reports no per-turn duration; the seam fills it from the
+        wrapper's own measured wall-clock ``duration_ms`` and clears the placeholder reason."""
+        fake_codex = _FakeCodex()
+        port = activity.BusinessProviderActivityPort(
+            PLAN, self.codex_admission, g2_digest=G2, g2b_digest=G2B,
+            modules={"codex": fake_codex, "claude-code": _FakeClaude()},
+            runner=_fake_runner(fake_codex.calls), version_probe=lambda binary, provider: fake_codex.BUSINESS_VERSION)
+        with tempfile.TemporaryDirectory() as cwd:
+            result = port.run(cwd=Path(cwd), binary="fake-codex")
+        self.assertEqual(result["duration_ms"], result["economy"]["worker"]["duration_ms"])
+        self.assertNotIn("worker/duration_ms", result["economy"]["unknown_reasons"])
+        self.assertIn("worker/cost_microunits", result["economy"]["unknown_reasons"])
 
     def test_claude_seam_calls_build_argv_run_and_business_fold_exactly_once(self):
         fake_claude = _FakeClaude()

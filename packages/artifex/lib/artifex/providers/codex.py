@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+from . import common
 from .common import AdapterRefusal, failed, load_json, require_request
 
 
@@ -104,7 +105,58 @@ def normalize_record(line: str, request: dict) -> dict:
             "session_observed": isinstance(record.get("thread_id"), str)}
 
 
-def fold_records(records: list[str], request: dict, *, exit_code: int) -> dict:
+def _economy_from_records(records: list[str], *, wall_duration_ms: int | None) -> dict:
+    """EXTRACTION only (D123/D127 rule 1). `duration_ms` is wrapper-measured — codex's own
+    protocol carries no timestamp field, so no in-band derivation exists; `turns` is
+    event-derived from the count of terminal `turn.completed` events."""
+    completed = []
+    for line in records:
+        try:
+            value = json.loads(line)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict) and value.get("type") == "turn.completed":
+            completed.append(value)
+    usage = completed[-1].get("usage") if completed and isinstance(completed[-1].get("usage"), dict) else None
+    input_tokens, input_r = common.extract_metric(
+        usage, "input_tokens",
+        reason="codex usage.input_tokens missing or not a non-negative integer on the terminal turn.completed event")
+    cached_tokens, cached_r = common.extract_metric(
+        usage, "cached_input_tokens",
+        reason="codex usage.cached_input_tokens missing or not a non-negative integer on the terminal turn.completed event")
+    output_tokens, output_r = common.extract_metric(
+        usage, "output_tokens",
+        reason="codex usage.output_tokens missing or not a non-negative integer on the terminal turn.completed event")
+    reasoning_tokens, reasoning_r = common.extract_metric(
+        usage, "reasoning_output_tokens",
+        reason="codex usage.reasoning_output_tokens missing or not a non-negative integer on the terminal turn.completed event")
+    cost_microunits = None
+    cost_r = "codex CLI reports no cost field on turn.completed usage; a price-table conversion is banned (D25)"
+    if isinstance(wall_duration_ms, int) and not isinstance(wall_duration_ms, bool) and wall_duration_ms >= 0:
+        duration_ms, duration_r = wall_duration_ms, None
+    else:
+        duration_ms, duration_r = None, (
+            "codex CLI reports no per-turn duration; wrapper wall-clock measurement was not supplied to the fold")
+    if completed:
+        turns, turns_r = len(completed), None
+    else:
+        turns, turns_r = None, "no turn.completed event observed; turn count could not be measured"
+
+    worker = {"input_tokens": input_tokens, "cached_input_tokens": cached_tokens,
+              "output_tokens": output_tokens, "reasoning_tokens": reasoning_tokens,
+              "cost_microunits": cost_microunits, "duration_ms": duration_ms, "turns": turns}
+    unknown_reasons = {f"worker/{field}": reason for field, reason in (
+        ("input_tokens", input_r), ("cached_input_tokens", cached_r), ("output_tokens", output_r),
+        ("reasoning_tokens", reasoning_r), ("cost_microunits", cost_r), ("duration_ms", duration_r),
+        ("turns", turns_r),
+    ) if reason is not None}
+    envelope = common.zero_coordinator_envelope()
+    return {"worker": worker, "coordinator": envelope["coordinator"], "unknown_reasons": unknown_reasons,
+            "inclusion_bases": {}, "zero_bases": envelope["zero_bases"]}
+
+
+def fold_records(records: list[str], request: dict, *, exit_code: int, include_economy: bool = False,
+                 wall_duration_ms: int | None = None) -> dict:
     if not isinstance(records, list) or len(records) > request["budgets"].get("max_event_count", 0):
         return failed("BUDGET_EVENT_COUNT", "budget_exhausted")
     normalized = [normalize_record(line, request) for line in records]
@@ -116,6 +168,9 @@ def fold_records(records: list[str], request: dict, *, exit_code: int) -> dict:
         return failed("PROVIDER_NONZERO", "provider_failure")
     if not terminal:
         return failed("PROVIDER_PROTOCOL_UNKNOWN", "provider_failure")
-    return {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
-            "reason_code": "OK", "event_count": len(normalized),
-            "usage_observed": any(row.get("usage_observed") for row in normalized)}
+    result = {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
+             "reason_code": "OK", "event_count": len(normalized),
+             "usage_observed": any(row.get("usage_observed") for row in normalized)}
+    if include_economy:
+        result["economy"] = _economy_from_records(records, wall_duration_ms=wall_duration_ms)
+    return result

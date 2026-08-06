@@ -159,7 +159,8 @@ class BusinessProviderActivityPort:
                 argv = adapter.build_business_argv(request, schema_path=schema, cwd=cwd, binary=resolved_binary)
                 stdin = self._prompt(row).encode("utf-8")
                 fold: Callable[[list[str], int], dict[str, Any]] = (
-                    lambda rows, exit_code: adapter.fold_records(rows, request, exit_code=exit_code))
+                    lambda rows, exit_code: adapter.fold_records(rows, request, exit_code=exit_code,
+                                                                  include_economy=True))
             else:
                 fd, mcp_name = tempfile.mkstemp(prefix="artifex-p5-mcp-", suffix=".json")
                 mcp_config = Path(mcp_name)
@@ -177,7 +178,23 @@ class BusinessProviderActivityPort:
                                 timeout_ms=request["budgets"]["timeout_ms"],
                                 max_output_bytes=request["budgets"]["max_output_bytes"],
                                 max_event_count=request["budgets"]["max_event_count"], normalizer=fold)
+            self._fill_wrapper_duration(provider_id, result)
             return security.observation(result)
         finally:
             if mcp_config is not None:
                 mcp_config.unlink(missing_ok=True)
+
+    @staticmethod
+    def _fill_wrapper_duration(provider_id: str, result: dict[str, Any]) -> None:
+        """codex reports no per-turn duration (D123/D127); the wrapper's own measured
+        wall-clock time (``result["duration_ms"]``, already the whole process duration)
+        is the only source, so it is applied here rather than threaded into the
+        provider-neutral ``worker.run`` normalizer contract."""
+        if provider_id != "codex":
+            return
+        economy = result.get("economy")
+        if not isinstance(economy, dict) or not isinstance(economy.get("worker"), dict):
+            return
+        if economy["worker"].get("duration_ms") is None:
+            economy["worker"]["duration_ms"] = result.get("duration_ms")
+            economy.get("unknown_reasons", {}).pop("worker/duration_ms", None)

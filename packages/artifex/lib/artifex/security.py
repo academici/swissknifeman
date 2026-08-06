@@ -95,16 +95,22 @@ def environment(value: dict[str, str]) -> dict[str, str]:
     return dict(value)
 
 
+_ECONOMY_KEYS = {"worker", "coordinator", "unknown_reasons", "inclusion_bases", "zero_bases"}
+
+
 def observation(value: Any) -> dict[str, Any]:
     """Accept only the normalized, non-content worker outcome."""
     if not isinstance(value, dict):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
-    allowed = {"kind", "reason_code", "process_count", "duration_ms", "event_count", "output_hash", "exit_code"}
+    allowed = {"kind", "reason_code", "process_count", "duration_ms", "event_count", "output_hash", "exit_code",
+              "economy"}
     if set(value) - allowed or not isinstance(value.get("kind"), str):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     if not isinstance(value.get("process_count", 0), int) or value["process_count"] < 0:
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     if "output_hash" in value and (not isinstance(value["output_hash"], str) or not _HEX.fullmatch(value["output_hash"])):
+        raise SecurityRefusal("OBSERVATION_SCHEMA")
+    if "economy" in value and (not isinstance(value["economy"], dict) or set(value["economy"]) != _ECONOMY_KEYS):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     _reject_sensitive(value)
     return value

@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+from . import common
 from .common import AdapterRefusal, failed, load_json
 
 
@@ -158,6 +159,46 @@ def normalize_record(line: str, request: dict) -> dict:
     }
 
 
+def _economy_from_result(record: dict) -> dict:
+    """EXTRACTION only (D123/D127 rule 1): every integer comes from a key the provider
+    itself reported; a missing/invalid key is `null` plus a named `unknown_reasons` entry,
+    never a guess. `reasoning_tokens` is the one sanctioned inclusion-basis `0`."""
+    usage = record.get("usage") if isinstance(record.get("usage"), dict) else None
+    input_tokens, input_r = common.extract_metric(
+        usage, "input_tokens", reason="claude-code usage.input_tokens missing or not a non-negative integer")
+    cached_tokens, cached_r = common.extract_metric(
+        usage, "cache_read_input_tokens",
+        reason="claude-code usage.cache_read_input_tokens missing or not a non-negative integer")
+    output_tokens, output_r = common.extract_metric(
+        usage, "output_tokens", reason="claude-code usage.output_tokens missing or not a non-negative integer")
+    if output_tokens is not None:
+        reasoning_tokens, reasoning_r = 0, None
+    else:
+        reasoning_tokens, reasoning_r = None, (
+            "output_tokens (the containing field for the reasoning_tokens inclusion basis) is "
+            "missing or invalid, so no basis is valid")
+    cost_microunits = common.usd_to_cost_microunits(record.get("total_cost_usd"))
+    cost_r = None if cost_microunits is not None else "total_cost_usd missing or not numeric"
+    duration_ms, duration_r = common.extract_metric(
+        record, "duration_ms", reason="duration_ms missing or not a non-negative integer")
+    turns, turns_r = common.extract_metric(
+        record, "num_turns", reason="num_turns missing or not a non-negative integer")
+
+    worker = {"input_tokens": input_tokens, "cached_input_tokens": cached_tokens,
+              "output_tokens": output_tokens, "reasoning_tokens": reasoning_tokens,
+              "cost_microunits": cost_microunits, "duration_ms": duration_ms, "turns": turns}
+    unknown_reasons = {f"worker/{field}": reason for field, reason in (
+        ("input_tokens", input_r), ("cached_input_tokens", cached_r), ("output_tokens", output_r),
+        ("reasoning_tokens", reasoning_r), ("cost_microunits", cost_r), ("duration_ms", duration_r),
+        ("turns", turns_r),
+    ) if reason is not None}
+    inclusion_bases = ({"worker/reasoning_tokens": dict(common.CLAUDE_REASONING_INCLUSION_BASIS)}
+                       if reasoning_tokens == 0 else {})
+    envelope = common.zero_coordinator_envelope()
+    return {"worker": worker, "coordinator": envelope["coordinator"], "unknown_reasons": unknown_reasons,
+            "inclusion_bases": inclusion_bases, "zero_bases": envelope["zero_bases"]}
+
+
 def fold_records(records: list[str], request: dict, *, exit_code: int) -> dict:
     """Fold the one JSON result while preserving unknown or contradictory evidence."""
     if not isinstance(records, list) or len(records) > request.get("budgets", {}).get("max_event_count", 0):
@@ -210,4 +251,4 @@ def fold_business_records(records: list[str], request: dict, *, exit_code: int) 
     return {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
             "reason_code": "OK", "event_count": 1, "usage_observed": normalized["usage_observed"],
             "cost_observed": normalized["cost_observed"], "session_observed": normalized["session_observed"],
-            "turn_observed": normalized["turn_observed"]}
+            "turn_observed": normalized["turn_observed"], "economy": _economy_from_result(json.loads(records[0]))}

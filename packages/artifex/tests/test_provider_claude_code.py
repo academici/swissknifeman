@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import importlib.util
 import json
 from pathlib import Path
 import tempfile
@@ -11,6 +13,25 @@ from artifex.providers.common import AdapterRefusal
 
 ROOT = Path(__file__).resolve().parents[3]
 ROUTING = ROOT / "packages/task/configs/command-routing.json"
+PLAN = ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR"
+_METRIC_FIELDS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_tokens",
+                  "cost_microunits", "duration_ms", "turns")
+
+
+def _load_validator():
+    spec = importlib.util.spec_from_file_location(
+        "validate_economy_evidence", PLAN / "artifacts/P1/validate-economy-evidence.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _business_record(**overrides):
+    record = {"type": "result", "is_error": False,
+              "usage": {"input_tokens": 100, "cache_read_input_tokens": 20, "output_tokens": 50},
+              "total_cost_usd": 0.0123, "num_turns": 3, "duration_ms": 4380, "session_id": "s"}
+    record.update(overrides)
+    return record
 
 
 def request():
@@ -98,6 +119,108 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
                              "session_id": "s", "usage": {}, "total_cost_usd": 0.01})
         self.assertEqual(claude_code.fold_business_records([record], request(), exit_code=0)["reason_code"],
                          "PROVIDER_NONZERO")
+
+    def test_business_fold_extracts_the_full_economy_envelope_by_key(self):
+        """(f) — every reported metric is extracted as a non-negative integer by key."""
+        record = _business_record()
+        economy = claude_code.fold_business_records([json.dumps(record)], request(), exit_code=0)["economy"]
+        self.assertEqual({"input_tokens": 100, "cached_input_tokens": 20, "output_tokens": 50,
+                          "reasoning_tokens": 0, "cost_microunits": 12300, "duration_ms": 4380, "turns": 3},
+                         economy["worker"])
+        self.assertEqual({}, economy["unknown_reasons"])
+        for field in economy["worker"].values():
+            self.assertIsInstance(field, int)
+            self.assertNotIsInstance(field, bool)
+
+    def test_business_fold_reasoning_tokens_carries_the_sole_inclusion_basis(self):
+        """(g) — reasoning_tokens is 0 WITH inclusion_basis for claude-code; no other field does."""
+        economy = claude_code.fold_business_records(
+            [json.dumps(_business_record())], request(), exit_code=0)["economy"]
+        self.assertEqual(["worker/reasoning_tokens"], list(economy["inclusion_bases"]))
+        entry = economy["inclusion_bases"]["worker/reasoning_tokens"]
+        self.assertEqual(("claude-code", "reasoning_tokens", "output_tokens"),
+                         (entry["provider"], entry["contained_field"], entry["containing_field"]))
+        self.assertTrue(entry["evidence_ref"])
+
+    def test_business_fold_coordinator_is_a_measured_zero_with_a_resolvable_zero_basis(self):
+        """(h) — the coordinator envelope is seven measured zeros with a resolvable zero_basis;
+        fails if that path stops existing."""
+        economy = claude_code.fold_business_records(
+            [json.dumps(_business_record())], request(), exit_code=0)["economy"]
+        self.assertEqual({field: 0 for field in _METRIC_FIELDS}, economy["coordinator"])
+        basis = economy["zero_bases"]["coordinator"]
+        self.assertEqual("coordinator", basis["component"])
+        self.assertTrue((ROOT / basis["path"]).is_file())
+        self.assertTrue(basis["statement"])
+
+    def test_business_fold_missing_usage_fields_are_null_with_reasons_never_zero(self):
+        cases = {
+            "no usage object": _business_record(usage=None),
+            "missing input_tokens": _business_record(usage={"cache_read_input_tokens": 20, "output_tokens": 50}),
+            "float output_tokens": _business_record(usage={"input_tokens": 1, "cache_read_input_tokens": 2,
+                                                            "output_tokens": 3.5}),
+            "string cached_input_tokens": _business_record(usage={"input_tokens": 1, "cache_read_input_tokens": "x",
+                                                                   "output_tokens": 3}),
+        }
+        for label, record in cases.items():
+            with self.subTest(label=label):
+                economy = claude_code.fold_business_records([json.dumps(record)], request(), exit_code=0)["economy"]
+                for field in ("input_tokens", "cached_input_tokens", "output_tokens"):
+                    if economy["worker"][field] is None:
+                        self.assertIn(f"worker/{field}", economy["unknown_reasons"])
+                        self.assertTrue(economy["unknown_reasons"][f"worker/{field}"])
+                    else:
+                        self.assertNotEqual(0, economy["worker"][field])
+
+    def test_business_fold_missing_output_tokens_voids_the_reasoning_inclusion_basis(self):
+        record = _business_record(usage={"input_tokens": 1, "cache_read_input_tokens": 2})
+        economy = claude_code.fold_business_records([json.dumps(record)], request(), exit_code=0)["economy"]
+        self.assertIsNone(economy["worker"]["reasoning_tokens"])
+        self.assertIn("worker/reasoning_tokens", economy["unknown_reasons"])
+        self.assertEqual({}, economy["inclusion_bases"])
+
+    def test_business_fold_missing_cost_duration_turns_are_null_with_reasons(self):
+        record = _business_record(total_cost_usd=None, duration_ms="not-an-int", num_turns=None)
+        economy = claude_code.fold_business_records([json.dumps(record)], request(), exit_code=0)["economy"]
+        for field in ("cost_microunits", "duration_ms", "turns"):
+            self.assertIsNone(economy["worker"][field])
+            self.assertIn(f"worker/{field}", economy["unknown_reasons"])
+
+    def test_business_fold_cost_conversion_boundary_values_use_decimal_never_float(self):
+        boundaries = {0: 0, 0.0000005: 1, 1.9999995: 2000000, 1.23456789: 1234568}
+        for usd, expected_microunits in boundaries.items():
+            with self.subTest(usd=usd):
+                record = _business_record(total_cost_usd=usd)
+                economy = claude_code.fold_business_records([json.dumps(record)], request(), exit_code=0)["economy"]
+                self.assertEqual(expected_microunits, economy["worker"]["cost_microunits"])
+                self.assertNotIsInstance(economy["worker"]["cost_microunits"], float)
+
+    def test_economy_envelope_conforms_to_economy_evidence_v2_and_bare_zero_is_refused(self):
+        """(i) — a fixture built from the emitted envelope shape is accepted by
+        validate-economy-evidence.py, and rejected once a bare 0 replaces a null+reason."""
+        validator = _load_validator()
+        cases = json.loads((PLAN / "artifacts/P1/economy-evidence-cases-v2.json").read_text(encoding="utf-8"))
+        base = copy.deepcopy(cases["base_input"])
+        economy = claude_code.fold_business_records(
+            [json.dumps(_business_record())], request(), exit_code=0)["economy"]
+        pointer = "/lanes/candidate/attempts/0"
+        base["lanes"]["candidate"]["attempts"][0]["worker"] = economy["worker"]
+        base["lanes"]["candidate"]["attempts"][0]["coordinator"] = economy["coordinator"]
+        base["inclusion_bases"] = {k: v for k, v in base["inclusion_bases"].items() if not k.startswith(pointer)}
+        base["zero_bases"] = {k: v for k, v in base["zero_bases"].items() if not k.startswith(pointer)}
+        for key, entry in economy["inclusion_bases"].items():
+            base["inclusion_bases"][f"{pointer}/{key}"] = entry
+        base["zero_bases"][f"{pointer}/coordinator"] = economy["zero_bases"]["coordinator"]
+
+        baseline_hash, provider_hash = validator.validate_contract_v2(
+            PLAN / "root/contracts/economy-evidence-v2.md", PLAN / "artifacts/P0/acceptance-rubric-v1.md",
+            PLAN / "artifacts/P0/baseline-catalog.json", PLAN / "artifacts/P0/provider-matrix-v1.json")
+        validator.validate_shape_v2(base, baseline_hash, provider_hash, ROOT)
+
+        broken = copy.deepcopy(base)
+        del broken["inclusion_bases"][f"{pointer}/worker/reasoning_tokens"]
+        with self.assertRaises(validator.InvalidEvidence):
+            validator.validate_shape_v2(broken, baseline_hash, provider_hash, ROOT)
 
 
 if __name__ == "__main__":

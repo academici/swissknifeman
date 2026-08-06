@@ -1,25 +1,34 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.22.4 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.23.0 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
-детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; P5.5 is terminal
-with D113's explicit acceptance deviation: its validated G2B manifests use the already completed
-minimized controlled checks, while historical R2 `PROVIDER_NONZERO` facts remain unchanged. P5.2
-is now the next workflow-gated item; no retry, fallback or R3 is authorized.
+детерминированными GREEN gates, без третьего audit/design pass. P5.1 terminal; P5.5 РЕОПЕНЕН
+`🟡` по D119 (owner-selected): D118-seam — producer surface, поэтому P5.5 адоптирует четыре уже
+закоммиченных файла и перезамораживает G2B-манифесты без provider-процесса. P5.2 возвращён в
+`⬜` как чистый потребитель и ждёт терминального P5.5; Claude-pin `2.1.222` соблюдается через
+`SKM_CLAUDE_BIN` (D120). Retry, fallback и R3 по-прежнему не авторизованы.
 
-## Current execution status — P5.2 three-slice pilot
+## Current execution status — P5.5 D119 reopen remediation
 
-**Next:** `Workflow({ scriptPath: "plans/2026.08.03-ARTIFEX-SUPERVISOR/workflows/wf-artifex-supervisor-p52-pilot.js" })`
+**Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Capabilities | repository-code-edit · provider-process · controlled-worktree · generation-aware-validation |
-| Context | NEW SESSION — Workflow-оркестрован |
-| Суть | Build and run only the exact three-slice reversible P5.2 pilot against terminal G2B; every mismatch stops before intent. |
-| Команда | `Workflow({ scriptPath: "plans/2026.08.03-ARTIFEX-SUPERVISOR/workflows/wf-artifex-supervisor-p52-pilot.js" })` |
+| Capabilities | repository-code-edit · generation-aware-validation |
+| Context | same-session — item |
+| Суть | Adopt the four committed D118 seam files into G2B and re-freeze both manifests from the two recorded R2 rows — zero provider processes. |
+| Команда | — (Exec = manual: нет однокомандного эквивалента) |
+
+```text
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5
+```
+
+После терминального P5.5 следующим идёт P5.2 (три слайса) — его workflow-скрипт
+`workflows/wf-artifex-supervisor-p52-pilot.js` остаётся в силе, но запускается только по
+перезамороженным G2B-манифестам и с пином `SKM_CLAUDE_BIN=/home/vostrikov/.local/share/claude/versions/2.1.222`.
 
 ## Карта исполнения
 
@@ -64,8 +73,8 @@ D98 открыл текущий product execution path с P3.5 без audit 11.
 | P4.7 | terminal-history | 🟠 Done with deviations | implementation/high | — | product remediation retained; audit-2 forward fix repairs committed-tree/fixture/generator/provenance gaps without rewriting item history |
 | P4.8 | terminal-history | 🟠 Done with deviations | implementation/high | exact D104/Layer-0 owner grant | G2 successor remains valid; unresolved historical route provenance is explicit and not reconstructed |
 | P5.1 | terminal | 🟢 Done | frontier/high | D105 exact `G-OWNER-P5-BUSINESS` consumed | `88f9a132` materializes all per-trial admissions after D106 historical/current gate |
-| P5.5 | terminal | 🟠 Done with deviations | implementation/high | D113 terminal evidence direction | G2B manifests validated; historic R2 failures remain append-only facts |
-| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal P5.5 | implementation/high | consumes D105 only through G2B | exact three-slice pilot; G2/P3/probe carriers refuse |
+| P5.5 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5` (D119 reopen remediation) | implementation/high | D113 terminal evidence direction unchanged; D119 adds no grant | реопенен `🟡`: adopt 4 seam-файла, перезаморозить G2B-манифесты, 0 provider-процессов |
+| P5.2 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.2` after terminal reopened P5.5 | implementation/high | consumes D105 only through re-frozen G2B; `SKM_CLAUDE_BIN` pinned to `2.1.222` (D120) | exact three-slice pilot; пакетных путей в Files нет (D119); G2/P3/probe carriers refuse |
 | P5.3 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.3` after terminal P5.2 | implementation/high | consumes same G2B and indexed business admissions | recovery/provider-failure pilot; no local mint/reset |
 | P5.4 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4` after terminal P5.3 | frontier/high | same G2B/D105 provider parity; no single-provider waiver | five paired waves; G3 pins G2B and only literal `GO` closes |
 | P6.1 | solo | `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P6.1` | frontier/high | revalidates D86/D95 plus G2B/G3 and consumes D87/D96 | freeze exact P6.2/P6.3 rows and D93 root authorization order |

@@ -47,6 +47,7 @@
 | `brief/26-p5.5-probe-r2-owner-grant.md` | brief | P5.5 | direct exact D111 authorization for one schema path and two bounded R2 replacement probes |
 | `brief/28-p5.5-terminalization-owner-direction-2026-08-06.md` | brief | P5.5 | direct D113 terminal evidence direction; historical R2 observations stay immutable |
 | `brief/29-p5.2-business-execution-bridge-owner-direction-2026-08-06.md` | brief | P5.2 | direct D114 authority for the sole bounded package execution bridge |
+| `brief/33-p5.2-seam-ownership-owner-decision-2026-08-06.md` | brief | P5.5, P5.2 | owner's literal two-option selection behind D119 (reopen P5.5, adopt the seam) and D120 (honor the `2.1.222` pin) |
 | `findings/00-repo-recon-2026-08-03.md` | findings | P0–P2, P6 | FOREMAN absorption, live carriers and missing runtime |
 | `findings/01-external-agent-runtime-2026-08-03.md` | findings | P0, P1, P3, P4 | current official subagent, long-horizon and durability facts |
 | `findings/02-reference-products-2026-08-03.md` | findings | P1–P5 | Maestro/Superset adopt-adapt-reject pattern review |
@@ -74,6 +75,7 @@
 | `findings/P5.2-terminal-g2-native-capability-conflict-2026-08-05.md` | findings | P5.2 | exact G2 business-schema and Codex capability refusals, current official CLI surface and green preflight integrity |
 | `findings/P5-successor-provider-surface-2026-08-05.md` | findings | P5.5, P5.2–P6 | G2-only runtime seams, immutable D105 parent bindings, current Codex/Claude versions and trusted preflight rerun |
 | `findings/P5.5-probe-recovery-verification-2026-08-05.md` | findings | P5.5 | current partial-worktree state, pre-provider root cause and refreshed first-party provider controls |
+| `findings/P5.2-seam-ownership-and-version-drift-2026-08-06.md` | findings | P5.5, P5.2 | reproduced G2B drift (exactly 4 changed files, both hashes), zero-process re-freeze path, on-disk `2.1.222` build and the existing `SKM_CLAUDE_BIN` override |
 | `findings/P3-P6-early-package-finish-recon-2026-08-04.md` | findings | P3.8, P4.5, P5, P6, finish/audit | reproduced promotion-manifest drift risk, stale five-package/root-router instruction canon and exact Harness generator ownership |
 | `findings/P3-P6-audit8-owner-generator-recon-2026-08-04.md` | findings | P3.7–P3.8, P6.1–P6.4, design audit | repo-grounded authorize ordering, lock side effect, durable Codex continuation and temp-isolated validation facts for audit-8 F1–F4 |
 | `findings/P3-P6-audit9-authority-resolver-recon-2026-08-05.md` | findings | P3.8, P6.1–P6.4, finish/design audit | exact protected resolver grammar, same-gate ambiguity and missing journal provenance observation from audit 9 |
@@ -113,6 +115,7 @@
 | `research/34-p5.2-frozen-successor-decision.md` | research | P5.2 | D107 additive-successor choice, rejected bypasses, immutable G2/P4 boundary and explicit non-DoR successor gate |
 | `research/35-p5-phase-successor-topology.md` | research | P5.5, P5.2–P5.4, P6 | D108–D109 G2B producer topology, frozen-ID compatibility order and downstream generation reconcile |
 | `research/36-p5.5-probe-recovery-design.md` | research | P5.5 | rejected silent retry/synthetic assurance and exact owner-gated R2 proposal with zero-process preflight |
+| `research/37-p5.2-seam-ownership-reconcile.md` | research | P5.5, P5.2 | seam is producer surface, not evidence: reopen-vs-refreeze-vs-revert options with the rejected alternatives and the resulting item topology |
 
 ## Запланированные выходы P0
 

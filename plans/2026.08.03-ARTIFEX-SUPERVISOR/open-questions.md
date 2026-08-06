@@ -34,3 +34,10 @@ provider `codex`, `accepted:false`, `changed_paths:[]`, recorded in
 data point: the provider process completed (`OK`) but produced no repository delta, which is
 consistent with the bridge/prompt construction being unresolved rather than a provider capability
 failure. It is not reused as evidence without a fresh owner decision on this question.
+
+**Follow-up, also resolved (2026-08-06):** implementing D118 exposed that the seam bytes belong to
+the G2B generation by construction. The owner selected «Реопен P5.5» and «Гонять 2.1.222»
+(`brief/33-p5.2-seam-ownership-owner-decision-2026-08-06.md`) → **D119** (P5.5 reopens as sole
+producer, adopts the seam, re-freezes both manifests; P5.2 becomes a pure consumer) and **D120**
+(the frozen `2.1.222 (Claude Code)` pin is honored via `SKM_CLAUDE_BIN`, not bumped). No question
+remains open on this track.

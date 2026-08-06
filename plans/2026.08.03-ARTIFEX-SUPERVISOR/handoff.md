@@ -1,71 +1,93 @@
 # HANDOFF — 2026-08-06 — after P5.2
 
-**Next:**
+**Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — design-class rule conflict + frozen-contract version bump |
-| Context | NEW SESSION — шаг-не-item (`plan-design` reads the plan from disk) |
-| Суть | Resolve the P5.2 rule conflict (successor-package mutation authority) and the Claude Code `2.1.222`→`2.1.223` pin drift, then re-open P5.2 with an updated Scope/Validation. |
-| Команда | `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.2` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-code-edit · generation-aware-validation |
+| Context | same-session — item |
+| Суть | P5.5 D119 reopen remediation: adopt the four committed D118 seam files into G2B and re-freeze both manifests from the two recorded R2 rows — zero provider processes. |
+| Команда | — (`Exec = manual`: нет однокомандного эквивалента) |
 
-**Done:** P5.5 G2B manifests are committed at `33bf5b0a`; D117 voided D114–D116; D118 delegated
-the bridge architecture (package-owned, reusing existing business argv/fold/activity/worker
-primitives) — see D117/D118 in `plan.md` §5. P5.2's D118 seam is now implemented and unit-tested
-at commit `c9e580ba`: `activity.BusinessProviderActivityPort.run()` composes
-`build_business_argv`/`worker.run`/`fold_records`|`fold_business_records` exactly once per
-admission; the new CLI subcommand `dispatch-business-intent` is the sole intent-issuing entry
-point; `dispatch-business` stays validate-only (`intent_written:False`). Package suite: 89/89
-tests green (`bash packages/artifex/scripts/test.sh`); `packages/artifex/scripts/validate.sh`
-green (its `rg`-based guard silently no-ops — `rg` is not installed here; manually reproduced
-with `grep`, 0 matches, package runtime does not import plan-local paths). `run-pilot.py` is
-rewritten as a thin caller (Git worktree lifecycle + whole-batch preflight only).
+```text
+$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5
 
-**Remaining:** P5.2 is `🔴 Blocked` with two documented facts, zero D105 admissions spent, zero
-provider intent issued:
-1. **Rule conflict (primary trigger).** Editing `packages/artifex/lib/artifex/{cli.py,activity.py}`
-   — required by P5.2's own Scope Included (D118 package-owned seam) — makes P5.5's own
-   `validate-business-successor.py` report `G2B generation/assurance drift`, because the frozen
-   `business-successor-generation-v1.json`/`business-successor-assurance-v1.json` package-file
-   hashes no longer match current bytes. But the P5 phase contract's Границы reserves "only P5.5
-   may mutate exact successor package/contract/assurance paths" — P5.2 has no authority to
-   refresh those P5.5-owned artifacts. `plan-design` must pick one: (a) grant P5.2 authority to
-   re-freeze P5.5's generation/assurance manifests as part of its own gate, or (b) reopen P5.5 to
-   own the seam bytes so P5.2 stays a pure consumer.
-2. **Provider version drift.** Installed `claude --version` → `2.1.223 (Claude Code)`; the frozen
-   `business-dispatch-admission-v1@1.0.0` contract, `provider-business-projection-v1.json` and
-   `providers/claude_code.BUSINESS_VERSION` all pin exactly `2.1.222 (Claude Code)` (Codex
-   `codex-cli 0.146.0` still matches). `plan-design` must either bump the pin under a new
-   owner-authorized D#, or arrange to run against `2.1.222`.
+РЕЖИМ: remediation реопененного item'а (P5.5 уже `🟡 In progress` по D119; НЕ повторный дизайн,
+       НЕ новый probe, НЕ retry)
+ВХОД:  plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md → P5.5 «D119 reopen rules» в
+       Implementation Rules и «D119 reopen acceptance» в Validation ·
+       brief/33-p5.2-seam-ownership-owner-decision-2026-08-06.md ·
+       findings/P5.2-seam-ownership-and-version-drift-2026-08-06.md ·
+       research/37-p5.2-seam-ownership-reconcile.md
+СКОУП: 1) сверить `git status --porcelain packages/artifex` (пусто) и
+          `git diff --stat c9e580ba -- packages/artifex` (ровно 4 файла);
+       2) убедиться, что все четыре пути — литеральные члены exact scope D108;
+       3) перезаморозить манифесты: вынуть обе строки `r2_capability_probes` из
+          business-successor-assurance-v1.json и подать их же в
+          `validate-business-successor.py --write --codex-r2 … --claude-r2 …`;
+       4) доказать, что pre/post-diff манифестов содержит ТОЛЬКО 4 хеша package_files и три
+          производных хеша (generation_hash, g2b_generation_hash, assurance_hash);
+       5) прогнать `bash packages/artifex/scripts/test.sh`, `bash packages/artifex/scripts/validate.sh`
+          и валидатор без `--write` (exit 0), закрыть item по §8.
+НЕ ТРОГАТЬ: ни одного provider-процесса (счётчик обязан быть 0); D105 usage 14/14 unused;
+       записанные R2-строки, `d108_pre_provider_observations`, `provider_versions`,
+       `predecessor`/`g2_predecessor`; frozen pins `2.1.222 (Claude Code)` / `codex-cli 0.146.0`,
+       `BUSINESS_VERSION`, текст контракта, provider-business-projection-v1.json;
+       исторические Completion Notes P5.5 и deviation D113; P4/G2/P5.1 байты;
+       P5.2-артефакты (`run-pilot.py`, `repository-pilot-results-v1.json`);
+       чужой незакоммиченный дифф в дереве (см. Open risks).
+```
 
-Once both are resolved, `run-pilot.py --slice <id> --results artifacts/P5/repository-pilot-
-results-v1.json` can execute the three P5.2 admissions in catalog order, and
-`validate-repository-pilot.py`/`findings/P5-repository-pilot.md` (not yet written — no live
-evidence exists) become producible.
+**Done:** Эскалация P5.2 (`🔴 Blocked`, trigger «конфликт правил») закрыта дизайном по прямому
+выбору владельца. Оба факта эскалации проверены первично и зафиксированы в
+`findings/P5.2-seam-ownership-and-version-drift-2026-08-06.md`: дрейф G2B — ровно 4 изменённых
+файла из 50 (`activity.py`, `cli.py`, `test_business_dispatch.py`, `test_cli.py`), все внутри
+exact scope D108; `generation_hash` `7c1187f0…` → перспективный `f13c30f2…`; перезаморозка
+возможна без единого provider-процесса, потому что writer принимает уже записанные R2-строки;
+бинарь `2.1.222` лежит на диске и печатает точный литерал, а `SKM_CLAUDE_BIN` читается раньше
+PATH. Опции разобраны в `research/37-p5.2-seam-ownership-reconcile.md`; владелец выбрал «Реопен
+P5.5» и «Гонять 2.1.222» (`brief/33-…`). Записаны **D119** (seam — producer surface; P5.5
+реопенен `🟠`→`🟡`, адоптирует четыре файла, перезамораживает оба манифеста; P5.2 теряет все
+`packages/artifex/**` пути) и **D120** (frozen pin соблюдается через `SKM_CLAUDE_BIN`, не
+поднимается). Обновлены `plan.md` (v0.23.0, Status Board P5 `🔴`→`🟡`, D119/D120, Update Log,
+Authoring Model, Design Passes), `phases/P5.md` (контракт фазы, Phase Status, P5.5 reopen-блок и
+правила/acceptance, P5.2 переспецифицирован в чистого потребителя, Phase Handoff),
+`roadmap.md`, `index.md`, `open-questions.md`, `journal.jsonl`.
 
-**Sources of truth:** `phases/P5.md` P5.2 (blockquote + Completion Notes/Pending Work carry the
-full escalation) · commit `c9e580ba` (seam code + tests) · `packages/artifex/lib/artifex/
-activity.py` (`BusinessProviderActivityPort.run`) · `packages/artifex/lib/artifex/cli.py`
-(`dispatch-business-intent`) · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/run-pilot.py` ·
-`plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/validate-business-successor.py` (rerun to
-reproduce the drift) · `plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/business-successor-
-generation-v1.json`/`business-successor-assurance-v1.json` (P5.5-frozen, now stale against
-current package bytes).
+**Remaining:** P5 `1/5` 🟢. Открыто: P5.5 (`🟡`, D119-remediation — следующий шаг), затем P5.2
+(`⬜`, три слайса по перезамороженному G2B и с пином `SKM_CLAUDE_BIN`), P5.3, P5.4; далее P6.
+Нового кода этот заход не писал: seam остаётся ровно тем, что закоммичено в `c9e580ba`.
 
-**Open risks:** The repository working tree carries substantial unrelated uncommitted/untracked
-changes across many other packages (skiller/harness/task/core/docs, plus untracked
-`.p4-d99.0X38VL/`, `.swissknife.json`, `core/provider/runtime.py`,
-`packages/skiller/skills/dart/`, `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`) — foreign diff,
-not touched by this item, but it also means `run-pilot.py`'s own `MAIN_TREE_DIRTY` preflight gate
-will refuse for a second, independent reason until that state is committed/cleared by its owner.
-Any future pilot attempt must re-verify main-tree cleanliness at that time, not assume today's
-state.
+**Sources of truth:** `plan.md` §5 D119/D120 и §4 Status Board · `phases/P5.md` (P5.5 «D119
+reopen rules»/«D119 reopen acceptance», P5.2 Scope/Files/Implementation Rules) ·
+`brief/33-p5.2-seam-ownership-owner-decision-2026-08-06.md` (слой 0) ·
+`findings/P5.2-seam-ownership-and-version-drift-2026-08-06.md` (слой 1) ·
+`research/37-p5.2-seam-ownership-reconcile.md` (слой 2) ·
+`artifacts/P5/validate-business-successor.py` (writer/валидатор) · коммит `c9e580ba` (seam).
+
+**Open risks:**
+
+- Закреплённая сборка `~/.local/share/claude/versions/2.1.222` может быть вычищена автообновлением
+  Claude Code. P5.2 обязана перепроверять литерал непосредственно перед dispatch и отказываться до
+  intent; если сборка исчезнет, единственный путь — owner-грант на bump до `2.1.223` (назван в
+  D120), а не молчаливый откат на PATH.
+- D105 истекает `2026-08-12T23:59:59Z` при 14/14 неиспользованных строках; реопен P5.5 тратит
+  календарное время до первого пилота.
+- В рабочем дереве лежит чужой незакоммиченный дифф: `plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/
+  P6.md` (правка предыдущей сессии, D109-реконсиляция P6) плюс широкий незакоммиченный/
+  неотслеживаемый набор по другим пакетам (skiller/harness/task/core/docs, `.swissknife.json`,
+  `core/provider/runtime.py`, `packages/skiller/skills/dart/`,
+  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`). Этот заход его не трогал. Он же второй,
+  независимой причиной заблокирует `run-pilot.py`-преflight `MAIN_TREE_DIRTY`, пока владелец его
+  не закоммитит/не уберёт.
+- `packages/artifex/scripts/validate.sh` содержит `rg`-guard, который в этом окружении молча
+  no-op'ит (`rg` не установлен) — дефект окружения, унаследованный от предыдущей сессии; проверку
+  приходится воспроизводить `grep`-ом вручную.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none — the escalation is a genuine authority-boundary/version-drift stop, not
-  worked around.
-- deferred: P5.2 live pilot execution, P5.3–P5.4, P6, and the pre-existing unrelated dirty-tree
-  state (owner's, not this item's).
-- open_questions: — (raised as the two escalation facts above; resolution is `plan-design`'s).
+- workarounds: нет — обе развилки закрыты решениями владельца, без обходных путей.
+- deferred: живое исполнение P5.2, P5.3–P5.4, P6; чужой грязный рабочий дифф (не наш субъект).
+- open_questions: — (OQ-P5.2-BRIDGE и его seam-ownership follow-up закрыты D118/D119/D120).

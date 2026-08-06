@@ -1,0 +1,793 @@
+{
+  "assurance": {
+    "package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+    "readiness": "green",
+    "sha256": "b9391dab8bc93c1a7fa3827a1c74a790b83a1a335fa0ef983d51cbb6945beb7f"
+  },
+  "catalog_hash": "91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858",
+  "catalog_version": "3.0.0",
+  "contract_sha256": {
+    "admission": "6fd39ae5603f2e63df79453875de101ce78840716b9a937ab2ddeadefd64bc9d",
+    "authority": "b023fa4ba77f071d3025266554a677f7853195ca83ebb12263522d9901cc8316",
+    "economy": "e1d32e6e224ac07cfd60c0eeb4b607e243462f0b8b9548bb599b911bb2def559",
+    "run": "b9a414bdd16b63bf162eb380d44b3e4abb4c6f0d62c8e8d0cfabe03ec9badf07",
+    "slice": "42375f994ccb3a69745c93730c38f28379be9a6627b81bc8e5ed5b72502d9ea1",
+    "worker": "8492a73facaf0258e96003f1376da962e144acc1f57b87546f606cb77f4c4785"
+  },
+  "counts": {
+    "candidate_dispatches": 10,
+    "p5_2_slices": 0,
+    "p5_3_calls": 0,
+    "p5_4_battle_waves": 10
+  },
+  "economic_claim": null,
+  "frozen_before_candidate_event": true,
+  "historical_commits": [
+    {
+      "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+      "commit": "138b2424a3e5dcce4afb66b4bc553dfef0ded0f3",
+      "files": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "patch_sha256": "93cfed67de6c7eca0f6a18e06e39e7594be4246135fd00e0ea84ad95fbe55f99",
+      "subject": "fix(harness): восстановить committed-tree gates (P4.7)"
+    },
+    {
+      "base_commit": "17a57adc31c996815fb457a34bfbf1467ca08f2f",
+      "commit": "23f71d344252280ece3117b810e8cb991de0d226",
+      "files": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_authority.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/authority-policy-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/contract-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/validate-authority-policy.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-hook-integrity.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/supervisor-run-v1.md"
+      ],
+      "patch_sha256": "216a7ce94656c94054d7fd55ba6c1e3b50c49cc702116a747bf806ee318db525",
+      "subject": "feat(artifex): добавить telemetry assurance P4.5"
+    },
+    {
+      "base_commit": "56c4c1bc64851a36097ca10d5b5ee46f2eb25d87",
+      "commit": "7607b0c09a8552ea4227feb93495944048d9f4c8",
+      "files": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "patch_sha256": "4576c15105f6711a46ef00c7f6a124227ad96b8029b92dc860a17450b25b61f9",
+      "subject": "feat(artifex): закрыть security boundary (P4.4)"
+    },
+    {
+      "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+      "commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "files": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "patch_sha256": "52f7c42eb0b154699ab96e6b26c116c6f3c02df9af7ee17c13b47372e66263fb",
+      "subject": "fix(artifex): не смешивать fixture с runtime guard (P4.2)"
+    },
+    {
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "commit": "e3c932aa0f2d364aefc7c64a9dc6c052e3c3df95",
+      "files": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "patch_sha256": "eae2807e27b3897b723d5b5d74d3e709674d5d18b5d262f5d7e1221afd916564",
+      "subject": "feat(artifex): изолировать worktree-интеграцию (P4.3)"
+    }
+  ],
+  "schema_version": "artifex-trial-catalog-v1",
+  "source_tree_ref": "3533234c3d234ea330dc02314ed1dc857ba06811",
+  "trials": [
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary",
+        "ephemeral_session"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4w-wave-01-recovery-fixture",
+      "files": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "historical_patch_sha256": "52f7c42eb0b154699ab96e6b26c116c6f3c02df9af7ee17c13b47372e66263fb",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "candidate",
+      "order": 1,
+      "pair_id": "wave-01-recovery-fixture",
+      "paired_trial_id": "p5.4b-wave-01-recovery-fixture",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "fix(artifex): не смешивать fixture с runtime guard (P4.2)",
+      "trial_id": "p5.4w-wave-01-recovery-fixture",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary",
+        "ephemeral_session"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-01-recovery-fixture",
+      "files": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "historical_patch_sha256": "52f7c42eb0b154699ab96e6b26c116c6f3c02df9af7ee17c13b47372e66263fb",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "baseline",
+      "order": 2,
+      "pair_id": "wave-01-recovery-fixture",
+      "paired_trial_id": "p5.4w-wave-01-recovery-fixture",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "fix(artifex): не смешивать fixture с runtime guard (P4.2)",
+      "trial_id": "p5.4b-wave-01-recovery-fixture",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4w-wave-02-worktree-isolation",
+      "files": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "historical_patch_sha256": "eae2807e27b3897b723d5b5d74d3e709674d5d18b5d262f5d7e1221afd916564",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "candidate",
+      "order": 3,
+      "pair_id": "wave-02-worktree-isolation",
+      "paired_trial_id": "p5.4b-wave-02-worktree-isolation",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): изолировать worktree-интеграцию (P4.3)",
+      "trial_id": "p5.4w-wave-02-worktree-isolation",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-02-worktree-isolation",
+      "files": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "historical_patch_sha256": "eae2807e27b3897b723d5b5d74d3e709674d5d18b5d262f5d7e1221afd916564",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "baseline",
+      "order": 4,
+      "pair_id": "wave-02-worktree-isolation",
+      "paired_trial_id": "p5.4w-wave-02-worktree-isolation",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): изолировать worktree-интеграцию (P4.3)",
+      "trial_id": "p5.4b-wave-02-worktree-isolation",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "56c4c1bc64851a36097ca10d5b5ee46f2eb25d87",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4w-wave-03-security-boundary",
+      "files": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "historical_patch_sha256": "4576c15105f6711a46ef00c7f6a124227ad96b8029b92dc860a17450b25b61f9",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "candidate",
+      "order": 5,
+      "pair_id": "wave-03-security-boundary",
+      "paired_trial_id": "p5.4b-wave-03-security-boundary",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): закрыть security boundary (P4.4)",
+      "trial_id": "p5.4w-wave-03-security-boundary",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "56c4c1bc64851a36097ca10d5b5ee46f2eb25d87",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-03-security-boundary",
+      "files": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "historical_patch_sha256": "4576c15105f6711a46ef00c7f6a124227ad96b8029b92dc860a17450b25b61f9",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "baseline",
+      "order": 6,
+      "pair_id": "wave-03-security-boundary",
+      "paired_trial_id": "p5.4w-wave-03-security-boundary",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): закрыть security boundary (P4.4)",
+      "trial_id": "p5.4b-wave-03-security-boundary",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "17a57adc31c996815fb457a34bfbf1467ca08f2f",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary",
+        "ephemeral_session"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4w-wave-04-telemetry-assurance",
+      "files": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_authority.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/authority-policy-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/contract-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/validate-authority-policy.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-hook-integrity.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/supervisor-run-v1.md"
+      ],
+      "historical_patch_sha256": "216a7ce94656c94054d7fd55ba6c1e3b50c49cc702116a747bf806ee318db525",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "candidate",
+      "order": 7,
+      "pair_id": "wave-04-telemetry-assurance",
+      "paired_trial_id": "p5.4b-wave-04-telemetry-assurance",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): добавить telemetry assurance P4.5",
+      "trial_id": "p5.4w-wave-04-telemetry-assurance",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "17a57adc31c996815fb457a34bfbf1467ca08f2f",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary",
+        "ephemeral_session"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-04-telemetry-assurance",
+      "files": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_authority.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/authority-policy-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/contract-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/validate-authority-policy.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-hook-integrity.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/supervisor-run-v1.md"
+      ],
+      "historical_patch_sha256": "216a7ce94656c94054d7fd55ba6c1e3b50c49cc702116a747bf806ee318db525",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "baseline",
+      "order": 8,
+      "pair_id": "wave-04-telemetry-assurance",
+      "paired_trial_id": "p5.4w-wave-04-telemetry-assurance",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "feat(artifex): добавить telemetry assurance P4.5",
+      "trial_id": "p5.4b-wave-04-telemetry-assurance",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4w-wave-05-committed-gates",
+      "files": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "historical_patch_sha256": "93cfed67de6c7eca0f6a18e06e39e7594be4246135fd00e0ea84ad95fbe55f99",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "candidate",
+      "order": 9,
+      "pair_id": "wave-05-committed-gates",
+      "paired_trial_id": "p5.4b-wave-05-committed-gates",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "fix(harness): восстановить committed-tree gates (P4.7)",
+      "trial_id": "p5.4w-wave-05-committed-gates",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    },
+    {
+      "acceptance_refs": [
+        "REL-ACCEPTED-SCOPE",
+        "REL-RECOVERY",
+        "REL-IDEMPOTENCY",
+        "REL-VALIDATION",
+        "REL-BUDGET",
+        "SEC-AUTHORITY",
+        "SEC-PRIVACY",
+        "SEC-WORKTREE",
+        "SEC-HOOK-INTEGRITY",
+        "EVD-SOURCE-HASHES",
+        "EVD-INDEPENDENT-ADJUDICATOR",
+        "EVD-UNKNOWN-PRESERVATION",
+        "PRV-PARITY-SCOPE"
+      ],
+      "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+      "baseline_evidence_class": "live-paired",
+      "baseline_lane": "live-direct-provider",
+      "budgets": {
+        "cost_limit_microunits": 5000000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 512,
+        "max_output_bytes": 65536,
+        "max_slices": 1,
+        "max_turns": 40,
+        "timeout_ms": 900000,
+        "token_limit": 200000
+      },
+      "candidate_dispatch": true,
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-05-committed-gates",
+      "files": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "historical_patch_sha256": "93cfed67de6c7eca0f6a18e06e39e7594be4246135fd00e0ea84ad95fbe55f99",
+      "item": "P5.4",
+      "kind": "battle-wave",
+      "lane": "baseline",
+      "order": 10,
+      "pair_id": "wave-05-committed-gates",
+      "paired_trial_id": "p5.4w-wave-05-committed-gates",
+      "provider": "claude-code",
+      "purpose": "business-trial",
+      "repository": "swissknifeman-controlled-disposable",
+      "route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "scenario": "fix(harness): восстановить committed-tree gates (P4.7)",
+      "trial_id": "p5.4b-wave-05-committed-gates",
+      "validation": [
+        "scoped-git-diff",
+        "frozen-acceptance",
+        "rollback-to-exact-base"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "admission_hash": "07c5b3b133db84811ce806fadcfd7f03a133850e4d1d231d9ee3c92bdd60ea3c",
+  "admission_version": "1.0.0",
+  "grant": {
+    "branch": "p5-paired-battle-waves",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 512,
+      "max_output_bytes": 65536,
+      "max_slices": 1,
+      "max_turns": 40,
+      "timeout_ms": 900000,
+      "token_limit": 200000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary",
+      "ephemeral_session"
+    ],
+    "catalog_hash": "91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858",
+    "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-01-recovery-fixture",
+    "expiry": "2026-09-30T23:59:59Z",
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "grant_hash": "2c640e5624e355eda201fa2c196b050478bfd61a4e0dfd35a159cac70d499642",
+    "grant_id": "D125:p5.4b-wave-01-recovery-fixture",
+    "grant_version": "1.0.0",
+    "max_slices": 1,
+    "owner_decision": "D125",
+    "owner_marker": "[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "request_hash": "47f0a7408efb19b073e27933e7e68f91ca604eeaf723821661543301fc6bd70d",
+    "revoked": false,
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-grant-v1",
+    "task_hash": "9b832ca818d08e64f29290e43ce58dba9e2f0fea9b1ac91dfe0a2895a2a33dfe",
+    "task_id": "p5.4b-wave-01-recovery-fixture"
+  },
+  "purpose": "business-trial",
+  "replay": {
+    "attempt": 1,
+    "events": [],
+    "grant_id": "D125:p5.4b-wave-01-recovery-fixture",
+    "idempotency_key": "9320392fb5f9bf3f1905173dcf6ca3d677f2e40ecff786849ba511cbe19a9917",
+    "replay_hash": "87dbbfa5361d909c74ea25d92b41068140517c8de675eee3fc5ba55c7099baec",
+    "run_id": "p5-business:p5.4b-wave-01-recovery-fixture",
+    "schema_version": "artifex-business-dispatch-replay-v1",
+    "slice_id": "p5.4b-wave-01-recovery-fixture:1",
+    "task_id": "p5.4b-wave-01-recovery-fixture",
+    "trial_id": "p5.4b-wave-01-recovery-fixture",
+    "used_slices": 0
+  },
+  "schema_version": "artifex-business-dispatch-admission-v1",
+  "task": {
+    "acceptance_refs": [
+      "REL-ACCEPTED-SCOPE",
+      "REL-RECOVERY",
+      "REL-IDEMPOTENCY",
+      "REL-VALIDATION",
+      "REL-BUDGET",
+      "SEC-AUTHORITY",
+      "SEC-PRIVACY",
+      "SEC-WORKTREE",
+      "SEC-HOOK-INTEGRITY",
+      "EVD-SOURCE-HASHES",
+      "EVD-INDEPENDENT-ADJUDICATOR",
+      "EVD-UNKNOWN-PRESERVATION",
+      "PRV-PARITY-SCOPE"
+    ],
+    "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 512,
+      "max_output_bytes": 65536,
+      "max_slices": 1,
+      "max_turns": 40,
+      "timeout_ms": 900000,
+      "token_limit": 200000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary",
+      "ephemeral_session"
+    ],
+    "catalog_hash": "91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858",
+    "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-01-recovery-fixture",
+    "files": [
+      "packages/artifex/tests/test_recovery_faults.py"
+    ],
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "manifest_version": "1.0.0",
+    "parent_item_id": "P5.4",
+    "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "repository": "swissknifeman-controlled-disposable",
+    "request_hash": "47f0a7408efb19b073e27933e7e68f91ca604eeaf723821661543301fc6bd70d",
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-task-v1",
+    "task_hash": "9b832ca818d08e64f29290e43ce58dba9e2f0fea9b1ac91dfe0a2895a2a33dfe",
+    "task_id": "p5.4b-wave-01-recovery-fixture",
+    "validation": [
+      "scoped-git-diff",
+      "frozen-acceptance",
+      "rollback-to-exact-base"
+    ]
+  },
+  "trial_id": "p5.4b-wave-01-recovery-fixture",
+  "usage": {
+    "max_slices": 1,
+    "reusable": false,
+    "used_slices": 0
+  }
+}

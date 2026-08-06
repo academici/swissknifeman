@@ -40,6 +40,67 @@ RETRY_PLAN_LITERALS = (
     "`180000` to `600000`",
     RETRY_EXPIRY,
 )
+
+# --- D125 paired-wave batch (P5.1 third reopen under D125/D127) -------------
+# A THIRD authority proven by the same closed-set rules, re-derived here rather than
+# imported from the generator: the two scripts stay independent implementations.
+PAIRED_OWNER_DECISION = "D125"
+PAIRED_OWNER_MARKER = "[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]"
+PAIRED_BRANCH = "p5-paired-battle-waves"
+PAIRED_EXPIRY = "2026-09-30T23:59:59Z"
+PAIRED_PROVIDER = "claude-code"
+PAIRED_ROOT_TEMPLATE = "mktemp:p5-p5-4-<trial_id>"
+PAIRED_OWNER_MESSAGE = "brief/35-p5.4-economic-adjudication-owner-decisions-2026-08-06.md"
+PAIRED_BASELINE_LANE = "live-direct-provider"
+PAIRED_BASELINE_EVIDENCE_CLASS = "live-paired"
+PAIRED_WAVE_SLUGS = (
+    "wave-01-recovery-fixture",
+    "wave-02-worktree-isolation",
+    "wave-03-security-boundary",
+    "wave-04-telemetry-assurance",
+    "wave-05-committed-gates",
+)
+PAIRED_LANE_PREFIX = {"candidate": "p5.4w", "baseline": "p5.4b"}
+PAIRED_TRIAL_IDS = {
+    f"{PAIRED_LANE_PREFIX[lane]}-{slug}": (f"p5.4-{slug}", lane, slug)
+    for slug in PAIRED_WAVE_SLUGS for lane in ("candidate", "baseline")
+}
+PAIRED_ROW_IDENTITY_FIELDS = ("trial_id", "controlled_root", "order", "provider",
+                              "baseline_lane", "lane", "pair_id", "paired_trial_id")
+PAIRED_TWIN_DIFF_FIELDS = ("trial_id", "controlled_root", "order", "lane", "paired_trial_id")
+PAIRED_CAPS = {
+    "max_slices": 1,
+    "timeout_ms": 900000,
+    "max_envelope_bytes": 65536,
+    "max_event_count": 512,
+    "max_turns": 40,
+    "max_output_bytes": 65536,
+    "token_limit": 200000,
+    "cost_limit_microunits": 5000000,
+}
+PAIRED_RAISED_BUDGETS = {
+    "max_turns": (8, 40),
+    "timeout_ms": (180000, 900000),
+    "token_limit": (8000, 200000),
+    "max_output_bytes": (16384, 65536),
+    "max_event_count": (64, 512),
+}
+PAIRED_PLAN_LITERALS = (
+    PAIRED_OWNER_MARKER,
+    "«Поднять до max_turns 40 / timeout 900000 ms / token_limit 200000 (реком.)»",
+    "`p5.4b-wave-0{1..5}-*`",
+    "`max_slices:1`, `reusable:false`",
+)
+PAIRED_PLAN_FIELDS = {
+    "branch": PAIRED_BRANCH,
+    "providers": PAIRED_PROVIDER,
+    "controlled_roots": PAIRED_ROOT_TEMPLATE,
+    "trial_ids": "p5.4w-wave-0{1..5}-*",
+    "maximum_dispatch_count": "10",
+    "expiry": PAIRED_EXPIRY,
+    "revoked": "false",
+    "owner-message": PAIRED_OWNER_MESSAGE,
+}
 GENERATION_KEYS = {"schema_version", "generation_version", "predecessor", "successor", "generation_hash"}
 FORBIDDEN_KEYS = {"prompt", "transcript", "thinking", "tool_payload", "environment", "credential", "secret"}
 GRANT_SET_KEYS = {"schema_version", "set_version", "owner_decision", "catalog_hash", "request_hash", "grants"}
@@ -159,6 +220,103 @@ def validate_d122(root: Path, request: dict[str, Any]) -> None:
         if (match and int(match.group(1)) > int(RETRY_OWNER_DECISION[1:])
                 and request["request_hash"] in later and "revoked=`true`" in later):
             raise ValidationError(f"D122 revoked by D{match.group(1)}")
+
+
+def validate_d125(root: Path, request: dict[str, Any]) -> None:
+    """The D125 paired-wave grant. Unlike D122, that row states machine-readable
+    `key=`value`` fields, so each is read on its own (the row interleaves prose
+    between fields, which D105's two-field anchor cannot cross) and compared to the
+    frozen literal; the prose bounds are verified as exact literals of the row."""
+    text = (root / f"plans/{PLAN_ID}/plan.md").read_text(encoding="utf-8")
+    rows = [line for line in text.splitlines() if line.startswith(f"| {PAIRED_OWNER_DECISION} |")]
+    if len(rows) != 1:
+        raise ValidationError("exact D125 carrier")
+    row = rows[0]
+    if any(literal not in row for literal in PAIRED_PLAN_LITERALS):
+        raise ValidationError("D125 owner literal mismatch")
+    if OWNER_MARKER in row or RETRY_OWNER_MARKER in row:
+        raise ValidationError("D125 carries a substituted owner marker")
+    for name, expected in PAIRED_PLAN_FIELDS.items():
+        match = re.search(rf"{re.escape(name)}=`([^`]*)`", row)
+        if not match or match.group(1) != expected:
+            raise ValidationError(f"D125 grant field: {name}")
+    caps_literal = re.search(r"per_trial_caps=`([^`]*)`", row)
+    if not caps_literal:
+        raise ValidationError("D125 caps literal")
+    granted = {key.strip(): int(value) for key, value in
+               (pair.split(":", 1) for pair in caps_literal.group(1).split(","))}
+    if granted != PAIRED_CAPS or request.get("per_trial_caps") != PAIRED_CAPS:
+        raise ValidationError("D125 caps outside the grant")
+    if request.get("owner_marker") != PAIRED_OWNER_MARKER:
+        raise ValidationError("request owner marker")
+    if request.get("providers") != [PAIRED_PROVIDER]:
+        raise ValidationError("D125 claude-code lane only")
+    if request.get("controlled_roots") != [
+            PAIRED_ROOT_TEMPLATE.replace("<trial_id>", trial_id)
+            for trial_id in request.get("trial_ids", [])]:
+        raise ValidationError("controlled roots outside the D125 template")
+    for later in text.splitlines():
+        match = re.match(r"\| D(\d+) \|", later)
+        if (match and int(match.group(1)) > int(PAIRED_OWNER_DECISION[1:])
+                and request["request_hash"] in later and "revoked=`true`" in later):
+            raise ValidationError(f"D125 revoked by D{match.group(1)}")
+
+
+def validate_paired_rows(trials: list[dict[str, Any]], baseline: dict[str, Any]) -> None:
+    """D125/D127 rules (4)/(5), proven independently of the generator: ten rows, each
+    byte-equal to its frozen v1 `p5.4-wave-0N-*` source apart from its own identity,
+    the D126 provider forcing, the D124 lane vocabulary and D125's five raised budget
+    keys — and each candidate/baseline pair differing in exactly the five identity
+    fields, with the pairing resolved from the rows themselves."""
+    if baseline.get("catalog_hash") != canonical_hash(baseline, omit="catalog_hash"):
+        raise ValidationError("baseline catalog hash")
+    sources = {row["trial_id"]: row for row in baseline.get("trials", [])}
+    if sorted(row["trial_id"] for row in trials) != sorted(PAIRED_TRIAL_IDS):
+        raise ValidationError("paired rows outside the D125 closed set")
+    by_id = {row["trial_id"]: row for row in trials}
+    claimed_twins: dict[str, str] = {}
+    for row in trials:
+        source_id, lane, slug = PAIRED_TRIAL_IDS[row["trial_id"]]
+        source = sources.get(source_id)
+        if source is None:
+            raise ValidationError(f"frozen v1 wave row unavailable: {row['trial_id']}")
+        if row.get("controlled_root") != PAIRED_ROOT_TEMPLATE.replace("<trial_id>", row["trial_id"]):
+            raise ValidationError(f"controlled root convention: {row['trial_id']}")
+        if row.get("lane") != lane or row.get("pair_id") != slug:
+            raise ValidationError(f"lane/pair identity: {row['trial_id']}")
+        if row.get("provider") != PAIRED_PROVIDER:
+            raise ValidationError(f"D125 claude-code lane only: {row['trial_id']}")
+        if (row.get("baseline_lane") != PAIRED_BASELINE_LANE
+                or row.get("baseline_evidence_class") != PAIRED_BASELINE_EVIDENCE_CLASS):
+            raise ValidationError(f"D124 lane vocabulary: {row['trial_id']}")
+        twin = by_id.get(row.get("paired_trial_id"))
+        if twin is None or twin.get("pair_id") != slug or twin.get("lane") == lane:
+            raise ValidationError(f"paired twin unresolved: {row['trial_id']}")
+        if claimed_twins.setdefault(twin["trial_id"], row["trial_id"]) != row["trial_id"]:
+            raise ValidationError(f"two rows claim the same twin: {twin['trial_id']}")
+        for key in set(source) | set(row):
+            if key in PAIRED_ROW_IDENTITY_FIELDS or key == "budgets":
+                continue
+            if row.get(key) != source.get(key):
+                raise ValidationError(f"paired row diverges from v1: {row['trial_id']}:{key}")
+        budgets, frozen = row.get("budgets"), source["budgets"]
+        if (not isinstance(budgets, dict) or set(budgets) != set(frozen)
+                or set(budgets) != set(PAIRED_CAPS)):
+            raise ValidationError(f"budget key set: {row['trial_id']}")
+        for key, value in frozen.items():
+            if key in PAIRED_RAISED_BUDGETS:
+                base, raised = PAIRED_RAISED_BUDGETS[key]
+                if value != base or budgets[key] != raised:
+                    raise ValidationError(f"budget raise outside the D125 grant: {row['trial_id']}:{key}")
+            elif budgets[key] != value or budgets[key] != PAIRED_CAPS[key]:
+                raise ValidationError(f"budget outside the D125 grant: {row['trial_id']}:{key}")
+    for slug in PAIRED_WAVE_SLUGS:
+        candidate = by_id[f"{PAIRED_LANE_PREFIX['candidate']}-{slug}"]
+        twin = by_id[f"{PAIRED_LANE_PREFIX['baseline']}-{slug}"]
+        differing = sorted(key for key in set(candidate) | set(twin)
+                           if candidate.get(key) != twin.get(key))
+        if differing != sorted(PAIRED_TWIN_DIFF_FIELDS):
+            raise ValidationError(f"pair diff outside the D125 identity fields: {slug}: {differing}")
 
 
 def validate_package_generation(root: Path, generation_path: Path) -> str:
@@ -284,18 +442,24 @@ def main() -> int:
     parser.add_argument("--smoke-tasks", type=Path, required=True)
     parser.add_argument("--smoke-grants", type=Path, required=True)
     parser.add_argument("--smoke-admissions", type=Path, required=True)
-    # --- D122 replacement batch: explicit v2 inputs, v1 defaults unchanged ---
-    parser.add_argument("--owner-decision", choices=("D105", RETRY_OWNER_DECISION), default="D105")
+    # --- D122/D125 additive batches: explicit v2/v3 inputs, v1 defaults unchanged ---
+    parser.add_argument("--owner-decision",
+                        choices=("D105", RETRY_OWNER_DECISION, PAIRED_OWNER_DECISION),
+                        default="D105")
     parser.add_argument("--expected-count", type=int, default=14)
     parser.add_argument("--replay", type=Path,
                         help="defaults to the v1 replay beside the admission index")
     parser.add_argument("--baseline-catalog", type=Path,
-                        help="v1 catalog the D122 replacement rows are proven against")
+                        help="v1 catalog the D122/D125 additive rows are proven against")
     parser.add_argument("--generation", type=Path,
                         help="G2B generation manifest; defaults to the frozen P5 one")
     args = parser.parse_args()
     retry = args.owner_decision == RETRY_OWNER_DECISION
-    owner_marker = RETRY_OWNER_MARKER if retry else OWNER_MARKER
+    paired = args.owner_decision == PAIRED_OWNER_DECISION
+    owner_marker = (PAIRED_OWNER_MARKER if paired
+                    else RETRY_OWNER_MARKER if retry else OWNER_MARKER)
+    expected_branch = PAIRED_BRANCH if paired else BRANCH
+    expected_providers = {PAIRED_PROVIDER} if paired else {"codex", "claude-code"}
     expected_count = args.expected_count
     try:
         root = Path(__file__).resolve().parents[4]
@@ -323,7 +487,12 @@ def main() -> int:
             raise ValidationError("request hash")
         if request.get("catalog_hash") != catalog["catalog_hash"]:
             raise ValidationError("request/catalog binding")
-        if retry:
+        if paired:
+            validate_d125(root, request)
+            if args.baseline_catalog is None:
+                raise ValidationError("D125 proof requires the v1 baseline catalog")
+            validate_paired_rows(catalog.get("trials") or [], load(args.baseline_catalog))
+        elif retry:
             validate_d122(root, request)
             if args.baseline_catalog is None:
                 raise ValidationError("D122 proof requires the v1 baseline catalog")
@@ -340,7 +509,7 @@ def main() -> int:
         if (set(request.get("trial_ids", [])) != set(trial_ids)
                 or request.get("maximum_dispatch_count") != expected_count):
             raise ValidationError("request trial set/count")
-        if set(request.get("providers", [])) != {"codex", "claude-code"}:
+        if set(request.get("providers", [])) != expected_providers:
             raise ValidationError("request provider set")
         assurance = load(root / f"plans/{PLAN_ID}/artifacts/P4/assurance-manifest-v1.json")
         if digest(root / f"plans/{PLAN_ID}/artifacts/P4/assurance-manifest-v1.json") != request.get("assurance_sha256"):
@@ -419,13 +588,15 @@ def main() -> int:
                 raise ValidationError(f"grant closed schema: {trial_id}")
             if (grant.get("owner_decision"), grant.get("owner_marker"), grant.get("branch"),
                     grant.get("purpose"), grant.get("revoked"), grant.get("max_slices")) != (
-                    args.owner_decision, owner_marker, BRANCH, "business-trial", False, 1):
+                    args.owner_decision, owner_marker, expected_branch, "business-trial", False, 1):
                 raise ValidationError(f"grant authority: {trial_id}")
             if (task.get("g2_package_digest") != g2_predecessor
                     or grant.get("g2_package_digest") != g2_predecessor):
                 raise ValidationError(f"frozen carrier G2 predecessor drift: {trial_id}")
             if retry and grant.get("expiry") != RETRY_EXPIRY:
                 raise ValidationError(f"D122 grant expiry: {trial_id}")
+            if paired and grant.get("expiry") != PAIRED_EXPIRY:
+                raise ValidationError(f"D125 grant expiry: {trial_id}")
             for key in ("task_id", "task_hash", "provider", "controlled_root", "route", "capabilities", "budgets"):
                 task_key = "task_id" if key == "task_id" else key
                 if grant.get(key) != task.get(task_key):

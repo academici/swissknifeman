@@ -52,6 +52,72 @@ RETRY_PLAN_LITERALS = (
     RETRY_EXPIRY,
 )
 
+# --- D125 paired-wave batch (P5.1 third reopen under D125/D127) -------------
+# Additive only, exactly as the D122 block above: a THIRD authority with its own
+# marker, branch, expiry, provider set and caps. The D105 and D122 code paths keep
+# their own literals and defaults byte-for-byte.
+PAIRED_OWNER_MARKER = "[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]"
+PAIRED_OWNER_DECISION = "D125"
+PAIRED_BRANCH = "p5-paired-battle-waves"
+PAIRED_EXPIRY = "2026-09-30T23:59:59Z"
+PAIRED_PROVIDER = "claude-code"
+PAIRED_ROOT_TEMPLATE = "mktemp:p5-p5-4-<trial_id>"
+PAIRED_OWNER_MESSAGE = "brief/35-p5.4-economic-adjudication-owner-decisions-2026-08-06.md"
+# The exhaustive closed pairing D125 authorizes: five candidate rows and five
+# baseline rows, each derived from the frozen v1 `p5.4-wave-0N-*` row of the same
+# wave slug. An eleventh row or a reused v1 identity has no authority.
+PAIRED_WAVE_SLUGS = (
+    "wave-01-recovery-fixture",
+    "wave-02-worktree-isolation",
+    "wave-03-security-boundary",
+    "wave-04-telemetry-assurance",
+    "wave-05-committed-gates",
+)
+PAIRED_LANES = ("candidate", "baseline")
+PAIRED_LANE_PREFIX = {"candidate": "p5.4w", "baseline": "p5.4b"}
+PAIRED_TRIAL_IDS = {
+    f"{PAIRED_LANE_PREFIX[lane]}-{slug}": (f"p5.4-{slug}", lane, slug)
+    for slug in PAIRED_WAVE_SLUGS for lane in PAIRED_LANES
+}
+# D124 lane vocabulary — the retired `live-manual`/`live-harness-run`/`live-workflow`
+# values of the v1 rows are replaced by the single live comparator lane.
+PAIRED_BASELINE_LANE = "live-direct-provider"
+PAIRED_BASELINE_EVIDENCE_CLASS = "live-paired"
+# Fields whose value legitimately differs from the v1 source row, plus the three
+# keys D124/D127 add; everything else must be byte-equal to the v1 counterpart.
+PAIRED_ROW_IDENTITY_FIELDS = ("trial_id", "controlled_root", "order", "provider",
+                              "baseline_lane", "lane", "pair_id", "paired_trial_id")
+# Fields in which a candidate row and its baseline twin may differ, and no others.
+PAIRED_TWIN_DIFF_FIELDS = ("trial_id", "controlled_root", "order", "lane", "paired_trial_id")
+# D125's eight per-trial caps, verbatim from the `| D125 |` row.
+PAIRED_CAPS = {
+    "max_slices": 1,
+    "timeout_ms": 900000,
+    "max_envelope_bytes": 65536,
+    "max_event_count": 512,
+    "max_turns": 40,
+    "max_output_bytes": 65536,
+    "token_limit": 200000,
+    "cost_limit_microunits": 5000000,
+}
+# The five raised keys, as `key: (frozen v1 value, D125 value)`. A row whose v1 base
+# is not the frozen value refuses: the raise is proven against its own baseline.
+PAIRED_RAISED_BUDGETS = {
+    "max_turns": (8, 40),
+    "timeout_ms": (180000, 900000),
+    "token_limit": (8000, 200000),
+    "max_output_bytes": (16384, 65536),
+    "max_event_count": (64, 512),
+}
+# Exact literals of the `| D125 |` Decision Log row that state the grant in prose
+# rather than in a `key=`value`` field.
+PAIRED_PLAN_LITERALS = (
+    PAIRED_OWNER_MARKER,
+    "«Поднять до max_turns 40 / timeout 900000 ms / token_limit 200000 (реком.)»",
+    "`p5.4b-wave-0{1..5}-*`",
+    "`max_slices:1`, `reusable:false`",
+)
+
 
 class BuildError(ValueError):
     """A fail-closed business-carrier generation error."""
@@ -232,6 +298,146 @@ def validate_retry_rows(catalog: dict[str, Any], baseline: dict[str, Any]) -> No
                 raise BuildError(f"budget outside the D122 grant: {row['trial_id']}:{key}")
 
 
+def capture_field(line: str, name: str, decision: str) -> str:
+    """A single `name=`value`` field of a Decision Log row. D105's `capture` above
+    requires the next field's name as an anchor because its row is a pure field list;
+    the D125 row interleaves prose between its fields, so each one is read on its own."""
+    match = re.search(rf"{re.escape(name)}=`([^`]*)`", line)
+    if not match:
+        raise BuildError(f"{decision} field unavailable: {name}")
+    return match.group(1)
+
+
+def owner_grant_paired(plan: Path, request: dict[str, Any]) -> dict[str, Any]:
+    """D125 `[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]` — the paired-wave authority.
+
+    Verified field-by-field against the `| D125 |` row (which, unlike D122, does state
+    machine-readable `key=`value`` fields) plus the prose literals of
+    `PAIRED_PLAN_LITERALS`. Nothing is defaulted locally: an absent literal, a
+    mismatching cap or a substituted marker refuses before any write.
+    """
+    text = plan.read_text(encoding="utf-8")
+    lines = [line for line in text.splitlines() if line.startswith(f"| {PAIRED_OWNER_DECISION} |")]
+    if len(lines) != 1:
+        raise BuildError("exact D125 owner grant row unavailable")
+    line = lines[0]
+    for literal in PAIRED_PLAN_LITERALS:
+        if literal not in line:
+            raise BuildError(f"D125 literal unavailable: {literal}")
+    if OWNER_MARKER in line or RETRY_OWNER_MARKER in line:
+        raise BuildError("D125 must not carry the D105 or D122 owner marker")
+    branch = capture_field(line, "branch", PAIRED_OWNER_DECISION)
+    providers = capture_field(line, "providers", PAIRED_OWNER_DECISION)
+    roots_template = capture_field(line, "controlled_roots", PAIRED_OWNER_DECISION)
+    count = capture_field(line, "maximum_dispatch_count", PAIRED_OWNER_DECISION)
+    caps = parse_caps(capture_field(line, "per_trial_caps", PAIRED_OWNER_DECISION))
+    expiry_literal = capture_field(line, "expiry", PAIRED_OWNER_DECISION)
+    if (branch != PAIRED_BRANCH or providers != PAIRED_PROVIDER
+            or roots_template != PAIRED_ROOT_TEMPLATE
+            or capture_field(line, "revoked", PAIRED_OWNER_DECISION) != "false"
+            or capture_field(line, "owner-message", PAIRED_OWNER_DECISION) != PAIRED_OWNER_MESSAGE
+            or capture_field(line, "trial_ids", PAIRED_OWNER_DECISION) != "p5.4w-wave-0{1..5}-*"):
+        raise BuildError("D125 grant fields outside the frozen literals")
+    if caps != PAIRED_CAPS or expiry_literal != PAIRED_EXPIRY:
+        raise BuildError("D125 caps or expiry outside the grant")
+    if int(count) != len(PAIRED_TRIAL_IDS):
+        raise BuildError("D125 authorizes exactly ten paired dispatches")
+    for later in text.splitlines():
+        match = re.match(r"\| D(\d+) \|", later)
+        if (match and int(match.group(1)) > int(PAIRED_OWNER_DECISION[1:])
+                and request["request_hash"] in later and "revoked=`true`" in later):
+            raise BuildError(f"D125 revoked by D{match.group(1)}")
+    if datetime.now(timezone.utc) > datetime.fromisoformat(PAIRED_EXPIRY.replace("Z", "+00:00")):
+        raise BuildError("D125 paired-wave grant expired")
+    if request.get("owner_marker") != PAIRED_OWNER_MARKER:
+        raise BuildError("request owner marker is not the D125 grant")
+    if request.get("providers") != [PAIRED_PROVIDER]:
+        raise BuildError("D125 authorizes the claude-code lane only")
+    if (request.get("maximum_dispatch_count") != len(PAIRED_TRIAL_IDS)
+            or sorted(request.get("trial_ids", [])) != sorted(PAIRED_TRIAL_IDS)):
+        raise BuildError("D125 authorizes exactly the ten paired trial ids")
+    if request.get("per_trial_caps") != PAIRED_CAPS:
+        raise BuildError("request caps differ from the D125 grant")
+    expected_roots = [PAIRED_ROOT_TEMPLATE.replace("<trial_id>", trial_id)
+                      for trial_id in request["trial_ids"]]
+    if request.get("controlled_roots") != expected_roots:
+        raise BuildError("controlled roots outside the D125 template")
+    return {
+        "owner_decision": PAIRED_OWNER_DECISION,
+        "owner_marker": PAIRED_OWNER_MARKER,
+        "branch": PAIRED_BRANCH,
+        "catalog_hash": request["catalog_hash"],
+        "request_hash": request["request_hash"],
+        "providers": request["providers"],
+        "controlled_roots": request["controlled_roots"],
+        "maximum_dispatch_count": request["maximum_dispatch_count"],
+        "per_trial_caps": request["per_trial_caps"],
+        "expiry": PAIRED_EXPIRY,
+        "revoked": False,
+    }
+
+
+def validate_paired_rows(catalog: dict[str, Any], baseline: dict[str, Any]) -> None:
+    """D125/D127 rules (4)/(5) — ten rows, each byte-equal to its frozen v1
+    `p5.4-wave-0N-*` source apart from its own identity, the D126 provider forcing,
+    the D124 lane vocabulary and D125's five raised budget keys; and each pair
+    differing from its twin in exactly the five identity fields and nothing else.
+    An eleventh row, a `codex` row, a changed scope/base or a budget outside D125
+    refuses BEFORE any write."""
+    if baseline.get("catalog_hash") != canonical_hash(baseline, omit="catalog_hash"):
+        raise BuildError("baseline catalog content hash mismatch")
+    v1_rows = {row["trial_id"]: row for row in baseline["trials"]}
+    rows = catalog["trials"]
+    if sorted(row["trial_id"] for row in rows) != sorted(PAIRED_TRIAL_IDS):
+        raise BuildError("paired rows outside the D125 closed set")
+    by_id = {row["trial_id"]: row for row in rows}
+    for row in rows:
+        source_id, lane, slug = PAIRED_TRIAL_IDS[row["trial_id"]]
+        source = v1_rows.get(source_id)
+        if source is None:
+            raise BuildError(f"frozen v1 wave row unavailable: {row['trial_id']}")
+        if row["controlled_root"] != PAIRED_ROOT_TEMPLATE.replace("<trial_id>", row["trial_id"]):
+            raise BuildError(f"controlled root outside the D125 template: {row['trial_id']}")
+        if row.get("lane") != lane or row.get("pair_id") != slug:
+            raise BuildError(f"lane/pair identity mismatch: {row['trial_id']}")
+        twin_lane = PAIRED_LANES[0] if lane == PAIRED_LANES[1] else PAIRED_LANES[1]
+        twin_id = f"{PAIRED_LANE_PREFIX[twin_lane]}-{slug}"
+        if row.get("paired_trial_id") != twin_id or twin_id not in by_id:
+            raise BuildError(f"paired twin unresolved: {row['trial_id']}")
+        if row.get("provider") != PAIRED_PROVIDER:
+            raise BuildError(f"D125 authorizes claude-code only: {row['trial_id']}")
+        if (row.get("baseline_lane") != PAIRED_BASELINE_LANE
+                or row.get("baseline_evidence_class") != PAIRED_BASELINE_EVIDENCE_CLASS):
+            raise BuildError(f"D124 lane vocabulary mismatch: {row['trial_id']}")
+        for key in set(source) | set(row):
+            if key in PAIRED_ROW_IDENTITY_FIELDS or key == "budgets":
+                continue
+            if row.get(key) != source.get(key):
+                raise BuildError(f"paired row diverges from v1: {row['trial_id']}:{key}")
+        budgets, frozen = row["budgets"], source["budgets"]
+        if set(budgets) != set(frozen) or set(budgets) != set(PAIRED_CAPS):
+            raise BuildError(f"budget key set changed: {row['trial_id']}")
+        for key, value in frozen.items():
+            if key in PAIRED_RAISED_BUDGETS:
+                base, raised = PAIRED_RAISED_BUDGETS[key]
+                if value != base or budgets[key] != raised:
+                    raise BuildError(f"budget raise outside the D125 grant: {row['trial_id']}:{key}")
+            elif budgets[key] != value or budgets[key] != PAIRED_CAPS[key]:
+                raise BuildError(f"budget outside the D125 grant: {row['trial_id']}:{key}")
+    seen_twins: dict[str, str] = {}
+    for slug in PAIRED_WAVE_SLUGS:
+        candidate = by_id[f"{PAIRED_LANE_PREFIX['candidate']}-{slug}"]
+        twin = by_id[f"{PAIRED_LANE_PREFIX['baseline']}-{slug}"]
+        for row in (candidate, twin):
+            claimed = row["paired_trial_id"]
+            if seen_twins.setdefault(claimed, row["trial_id"]) != row["trial_id"]:
+                raise BuildError(f"two rows claim the same twin: {claimed}")
+        differing = sorted(key for key in set(candidate) | set(twin)
+                           if candidate.get(key) != twin.get(key))
+        if differing != sorted(PAIRED_TWIN_DIFF_FIELDS):
+            raise BuildError(f"pair diff outside the D125 identity fields: {slug}: {differing}")
+
+
 def package_digest(rows: list[dict[str, str]]) -> str:
     return canonical_hash(sorted(rows, key=lambda row: row["path"]))
 
@@ -285,11 +491,16 @@ def validate_inputs(root: Path, catalog: dict[str, Any], request: dict[str, Any]
         raise BuildError("trial identity mismatch")
     if owner_decision == OWNER_DECISION:
         grant = owner_grant(plan, request["request_hash"])
-    else:
+    elif owner_decision == RETRY_OWNER_DECISION:
         if baseline is None:
             raise BuildError("D122 mint requires the v1 baseline catalog")
         validate_retry_rows(catalog, baseline)
         grant = owner_grant_retry(plan, request)
+    else:
+        if baseline is None:
+            raise BuildError("D125 mint requires the v1 baseline catalog")
+        validate_paired_rows(catalog, baseline)
+        grant = owner_grant_paired(plan, request)
     expected = {
         "catalog_hash": catalog["catalog_hash"],
         "request_hash": request["request_hash"],
@@ -482,12 +693,13 @@ def main() -> int:
     parser.add_argument("--manifest-index", type=Path)
     parser.add_argument("--admission-index", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    # --- D122 replacement batch: explicit v2 inputs/outputs, v1 defaults unchanged ---
-    parser.add_argument("--owner-decision", choices=(OWNER_DECISION, RETRY_OWNER_DECISION),
+    # --- D122/D125 additive batches: explicit v2/v3 inputs/outputs, v1 defaults unchanged ---
+    parser.add_argument("--owner-decision",
+                        choices=(OWNER_DECISION, RETRY_OWNER_DECISION, PAIRED_OWNER_DECISION),
                         default=OWNER_DECISION)
     parser.add_argument("--expected-trials", type=int, default=14)
     parser.add_argument("--baseline-catalog", type=Path,
-                        help="v1 catalog the D122 replacement rows are checked against")
+                        help="v1 catalog the D122/D125 additive rows are checked against")
     parser.add_argument("--admissions-relpath", default="artifacts/P5/trial-admissions")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]

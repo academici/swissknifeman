@@ -93,6 +93,7 @@ def main() -> int:
     parser.add_argument("--admission-index", type=Path, default=here / "trial-admission-index-v1.json")
     parser.add_argument("--generation", type=Path, default=here / "business-successor-generation-v1.json")
     parser.add_argument("--assurance", type=Path, default=here / "business-successor-assurance-v1.json")
+    parser.add_argument("--ledger", type=Path, default=here / "g2b-generation-ledger-v1.json")
     args = parser.parse_args()
 
     try:
@@ -121,8 +122,26 @@ def main() -> int:
             raise Invalid("live generation manifest missing predecessor digest or generation_hash")
         if assurance.get("g2_predecessor") != live_g2 or assurance.get("g2b_generation_hash") != live_g2b:
             raise Invalid("live generation/assurance manifests are internally inconsistent")
-        if results.get("g2_predecessor") != live_g2 or results.get("g2b_generation_hash") != live_g2b:
-            raise Invalid("results G2/G2B pins are stale against the live manifests")
+        if results.get("g2_predecessor") != live_g2:
+            raise Invalid(f"results g2_predecessor stale: {results.get('g2_predecessor')!r} != live {live_g2!r}")
+
+        # D130/D133 repair (1): a recorded g2b_generation_hash is valid when it is a
+        # member of the append-only ledger AND the ledger's last entry equals the
+        # live generation — a pilot measured at an earlier legitimate freeze stays
+        # valid without its evidence being edited. A hash absent from the ledger
+        # is still the real regression case.
+        ledger = load(args.ledger)
+        if ledger.get("schema_version") != "artifex-g2b-generation-ledger-v1":
+            raise Invalid(f"unexpected ledger schema_version: {ledger.get('schema_version')!r}")
+        ledger_entries = ledger.get("entries")
+        if not isinstance(ledger_entries, list) or not ledger_entries:
+            raise Invalid("ledger has no entries")
+        ledger_hashes = [entry.get("generation_hash") for entry in ledger_entries]
+        if ledger_hashes[-1] != live_g2b:
+            raise Invalid(f"ledger last entry does not equal live generation_hash: {ledger_hashes[-1]!r} != {live_g2b!r}")
+        recorded_g2b = results.get("g2b_generation_hash")
+        if recorded_g2b not in ledger_hashes:
+            raise Invalid(f"results g2b_generation_hash not a ledger member: {recorded_g2b!r}")
 
         probe = results.get("version_probe")
         if not isinstance(probe, dict) or set(probe) != {"codex", "claude-code"}:

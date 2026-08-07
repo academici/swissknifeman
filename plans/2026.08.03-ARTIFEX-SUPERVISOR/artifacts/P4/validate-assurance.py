@@ -35,6 +35,46 @@ def validate_provenance(root: Path, path: Path) -> None:
         raise ValueError(run.stderr.strip() or "P4 provenance validation failed")
 
 
+def git(root: Path, *argv: str) -> str:
+    result = subprocess.run(["git", *argv], cwd=root, text=True, capture_output=True, check=False)
+    if result.returncode:
+        raise ValueError(result.stderr.strip() or "git command failed")
+    return result.stdout.strip()
+
+
+def resolve_g2_anchor(root: Path, manifest_path: Path, historical_commit: str | None) -> str:
+    """D129/D133 repair (2): the frozen P4 snapshot is resolved at run time as the
+    newest commit that changed the manifest itself, never hard-coded."""
+    frozen_commit = historical_commit or git(root, "log", "-1", "--format=%H", "--", manifest_path.relative_to(root).as_posix())
+    if not frozen_commit:
+        raise ValueError("frozen P4 assurance anchor unresolved")
+    return frozen_commit
+
+
+def validate_g2_frozen(root: Path, frozen_commit: str, package_rows: list[dict]) -> None:
+    """The recorded g2.package_files must be byte-equal to the package AT the
+    P4-owning historical snapshot, proven through Git blobs, not through a live
+    re-scan of the current tree (the package legitimately advanced to G2B)."""
+    for row in package_rows:
+        blob = subprocess.run(["git", "show", f"{frozen_commit}:{row['path']}"], cwd=root, capture_output=True, check=False)
+        if blob.returncode or hashlib.sha256(blob.stdout).hexdigest() != row["sha256"]:
+            raise ValueError(f"historical G2 package blob mismatch: {row['path']}")
+
+
+def validate_g2b_live(root: Path, generation_path: Path) -> None:
+    """The live side: the current package equals the sole G2B digest of the
+    business successor generation manifest — same helper shape as
+    `validate-package-promotion.py`'s `validate_package_generation`."""
+    generation = load(generation_path)
+    live_rows = generation.get("successor", {}).get("package_files")
+    if not isinstance(live_rows, list) or not live_rows:
+        raise ValueError("G2B generation manifest missing package rows")
+    for row in live_rows:
+        path = root / row["path"]
+        if not path.is_file() or digest(path) != row["sha256"]:
+            raise ValueError(f"current package differs from G2B: {row['path']}")
+
+
 def package_files(root: Path) -> list[dict]:
     package = root / "packages/artifex"
     paths = [path for path in package.rglob("*") if path.is_file() and path.suffix in {".py", ".sh", ""}]
@@ -76,6 +116,8 @@ def main() -> int:
     for name in ("faults", "recovery", "worktrees", "hooks", "security", "attention", "contracts", "admission-index", "prototype", "adapters", "provenance", "requalification"):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--generation", type=Path, help="G2B generation manifest; defaults to the frozen P5 one")
+    parser.add_argument("--historical-commit")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
     args.admission_index = args.admission_index
@@ -83,10 +125,30 @@ def main() -> int:
     if args.write:
         args.manifest.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("P4 assurance manifest: written")
-    elif load(args.manifest) != value:
+        return 0
+
+    loaded = load(args.manifest)
+    non_g2_expected = {key: item for key, item in value.items() if key != "g2"}
+    non_g2_loaded = {key: item for key, item in loaded.items() if key != "g2"}
+    if non_g2_loaded != non_g2_expected:
         raise ValueError("G2 manifest drift")
-    else:
-        print("P4 assurance validator: OK")
+
+    # D133 repair (2), two-sided: the frozen g2.package_files is proven against the
+    # P4-owning historical snapshot through Git, never against the current tree
+    # (which legitimately advanced past G2 into G2B); the live side separately
+    # asserts the current package against the sole G2B digest.
+    g2 = loaded.get("g2", {})
+    package_rows = g2.get("package_files")
+    if not isinstance(package_rows, list) or not package_rows:
+        raise ValueError("G2 manifest drift")
+    frozen_commit = resolve_g2_anchor(root, args.manifest.resolve(), args.historical_commit)
+    head = git(root, "rev-parse", "HEAD")
+    if frozen_commit == "HEAD" or git(root, "rev-parse", frozen_commit) == head:
+        raise ValueError("historical G2 anchor cannot be the current tree")
+    validate_g2_frozen(root, frozen_commit, package_rows)
+    generation_path = args.generation or (root / "plans" / PLAN_ID / "artifacts" / "P5" / "business-successor-generation-v1.json")
+    validate_g2b_live(root, generation_path)
+    print("P4 assurance validator: OK")
     return 0
 
 

@@ -329,6 +329,8 @@ def lane_units(lane: dict[str, Any]) -> dict[str, Fraction | None]:
     turns_total = 0
     token_unknown = False
     cost_unknown = False
+    duration_unknown = False
+    turns_unknown = False
     for attempt in attempts:
         for component in ("worker", "coordinator"):
             for field in TOKEN_FIELDS:
@@ -342,13 +344,21 @@ def lane_units(lane: dict[str, Any]) -> dict[str, Fraction | None]:
                 cost_unknown = True
             else:
                 cost_total += value
-            duration_total += attempt[component]["duration_ms"]
-            turns_total += attempt[component]["turns"]
+            value = attempt[component]["duration_ms"]
+            if value is None:
+                duration_unknown = True
+            else:
+                duration_total += value
+            value = attempt[component]["turns"]
+            if value is None:
+                turns_unknown = True
+            else:
+                turns_total += value
     return {
         "tokens": None if token_unknown else Fraction(token_total, denominator),
         "cost": None if cost_unknown else Fraction(cost_total, denominator),
-        "duration": Fraction(duration_total, denominator),
-        "turns": Fraction(turns_total, denominator),
+        "duration": None if duration_unknown else Fraction(duration_total, denominator),
+        "turns": None if turns_unknown else Fraction(turns_total, denominator),
         "retries": Fraction(len(attempts) - len({attempt["slice_id"] for attempt in attempts}), 1),
         "rollbacks": Fraction(sum(attempt["rollback_event_ref"] is not None for attempt in attempts), 1),
     }
@@ -390,8 +400,6 @@ def adjudicate(document: dict[str, Any], baseline_hash: str, provider_hash: str)
     metrics: dict[str, str] = {
         "owner_intervention_ratio": fraction_text(intervention),
         "attention_events": f"{document['attention_events']}/1",
-        "candidate_total_duration_ms": fraction_text(candidate_units["duration"]),
-        "candidate_total_turns": fraction_text(candidate_units["turns"]),
         "candidate_retry_attempts": fraction_text(candidate_units["retries"]),
         "candidate_rollback_attempts": fraction_text(candidate_units["rollbacks"]),
     }
@@ -399,6 +407,10 @@ def adjudicate(document: dict[str, Any], baseline_hash: str, provider_hash: str)
         metrics["candidate_total_tokens"] = fraction_text(candidate_tokens)
     if candidate_cost is not None:
         metrics["candidate_total_cost"] = fraction_text(candidate_cost)
+    if candidate_units["duration"] is not None:
+        metrics["candidate_total_duration_ms"] = fraction_text(candidate_units["duration"])
+    if candidate_units["turns"] is not None:
+        metrics["candidate_total_turns"] = fraction_text(candidate_units["turns"])
     if candidate_tokens not in (None, 0) and workflow_tokens is not None:
         metrics["workflow_token_gain"] = fraction_text(workflow_tokens / candidate_tokens)
     if candidate_cost not in (None, 0) and workflow_cost is not None:

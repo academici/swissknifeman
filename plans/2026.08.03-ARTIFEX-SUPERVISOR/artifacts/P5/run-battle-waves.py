@@ -449,20 +449,33 @@ def workflow_lane(repository_hash: str) -> tuple[dict, dict]:
     return {"match": match, "attempts": [attempt]}, unknown
 
 
-def journal_owner_events(plan: Path) -> int:
-    """Journal-derived, never assumed: an owner decision event is a P5.4 journal row
-    whose result stopped the item for the owner (`escalated`/`blocked`)."""
+def journal_rows(plan: Path) -> list[dict]:
     path = plan / "journal.jsonl"
     if not path.exists():
         raise WaveRefusal("JOURNAL_UNAVAILABLE")
-    events = 0
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        if row.get("item_id") == "P5.4" and row.get("result") in {"escalated", "blocked"}:
-            events += 1
-    return events
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def journal_cutoff(plan: Path) -> str:
+    """The derivation anchor: this run's own start row (the LAST `in-progress` row for
+    this item). The journal is append-only and this item's own closing row lands AFTER
+    assembly, so a metric derived from the whole file could never be re-derived to the
+    same value later - it would count its own bookkeeping. The anchor is recorded in
+    the verdict so the check reproduces byte-identically on any later tree."""
+    starts = [row["ts"] for row in journal_rows(plan)
+              if row.get("item_id") == "P5.4" and row.get("result") == "in-progress"]
+    if not starts:
+        raise WaveRefusal("JOURNAL_START_ROW_MISSING")
+    return starts[-1]
+
+
+def journal_owner_events(plan: Path, cutoff: str) -> int:
+    """Journal-derived, never assumed: an owner decision event is a P5.4 journal row
+    whose result stopped the item for the owner (`escalated`/`blocked`), recorded
+    BEFORE this run started."""
+    return sum(1 for row in journal_rows(plan)
+               if row.get("item_id") == "P5.4" and row.get("result") in {"escalated", "blocked"}
+               and row["ts"] < cutoff)
 
 
 def build_document(repo: Path, plan: Path, results: dict, modules) -> dict:
@@ -531,7 +544,7 @@ def build_document(repo: Path, plan: Path, results: dict, modules) -> dict:
         "floor_results": floors,
         "waves": wave_rows,
         "lanes": lanes,
-        "owner_decision_events": journal_owner_events(plan),
+        "owner_decision_events": journal_owner_events(plan, journal_cutoff(plan)),
         "attention_events": sum(wave["observation"]["reason_code"] in ATTENTION_REASONS for wave in waves),
         "dispatched_non_synthetic_slices": len(waves),
         "unknown_reasons": unknown_reasons,
@@ -609,6 +622,7 @@ def assemble(repo: Path, plan: Path, args) -> int:
         "contract": {"name": "economy-evidence-v2", "version": "2.0.0",
                      "sha256": sha((plan / "root/contracts/economy-evidence-v2.md").read_bytes())},
         "accepted_slice_definition": ACCEPTED_SLICE_DEFINITION,
+        "journal_cutoff_ts": journal_cutoff(plan),
         "evidence_document": document,
         "result": verdict,
         "verdict": verdict["verdict"],

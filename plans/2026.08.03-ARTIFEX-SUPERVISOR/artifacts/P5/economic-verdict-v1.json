@@ -65,10 +65,10 @@
       "acceptance_hash": "1ed3b42f092c0ef11a544681ac78c778ba19cf3c795ff309a2351f42dbd48252",
       "baseline_catalog_hash": "b0fadc83a8537cb786b9775d7393de6fd973f6d9f20a8dde815366c30fe3cac1",
       "contract_set_hash": "33cc1ab3f5de2267435f57d6e0365262a934f0c17441284e564dd79bcaa4e47d",
-      "plan_hash": "ef1f334bb7b723b891e142ad26588a1fced82201a2a95492dda8c22be6d75219",
+      "plan_hash": "f5e05ff997b91491490d7e0ff714e0398ef2cd6956a4616b0a593350cb975998",
       "privacy_status": "clean",
       "provider_matrix_hash": "3d4c2eb4cdcc0deb7bc76abd84220a3e365ae786233ec44f46ce3491d9905c76",
-      "repository_hash": "57cb299a12e97a2dd0061eed6f280de5fd5e7c412ff54a39093d637472c293d6",
+      "repository_hash": "a2f65eba757624545da28b9f22a362fd217a09cd2863bd9876b0f8055e45d850",
       "run_id": "p5.4-paired-battle-waves",
       "scope_hash": "71a74fe9202a17df7a6760256baf98d1735efa980c4b35f3a8dfe9bd738ea3a4",
       "validation_hash": "31fe9e235183d6a9895bac989cb24a7064681904000032af741f0f4c41d4ede2"
@@ -250,7 +250,7 @@
           "effort_hash": "f6a1152332992237b3a2aca26360285ddba16b7a37cb04e1defc1afa0d41a116",
           "model_hash": "f5479112241b69cda5d13567815bf5ba54c5ddb1f4c91c54f749b4fa2eb50aad",
           "provider_hash": "af3cccac91625cc264a5385b2cb15f2e8e7c75d09682605921159abbb5a3087b",
-          "repository_hash": "57cb299a12e97a2dd0061eed6f280de5fd5e7c412ff54a39093d637472c293d6",
+          "repository_hash": "a2f65eba757624545da28b9f22a362fd217a09cd2863bd9876b0f8055e45d850",
           "scope_hash": "0a5db1538a4226f1930b8e21704780e62874e5508a88071aaf20a3bb16ffec18",
           "validation_hash": "2110e8835858dad76eac61709d38c576f69e9583be997f67eb351f371b8c3b4c"
         }
@@ -391,7 +391,7 @@
           "effort_hash": "f6a1152332992237b3a2aca26360285ddba16b7a37cb04e1defc1afa0d41a116",
           "model_hash": "f5479112241b69cda5d13567815bf5ba54c5ddb1f4c91c54f749b4fa2eb50aad",
           "provider_hash": "af3cccac91625cc264a5385b2cb15f2e8e7c75d09682605921159abbb5a3087b",
-          "repository_hash": "57cb299a12e97a2dd0061eed6f280de5fd5e7c412ff54a39093d637472c293d6",
+          "repository_hash": "a2f65eba757624545da28b9f22a362fd217a09cd2863bd9876b0f8055e45d850",
           "scope_hash": "0a5db1538a4226f1930b8e21704780e62874e5508a88071aaf20a3bb16ffec18",
           "validation_hash": "2110e8835858dad76eac61709d38c576f69e9583be997f67eb351f371b8c3b4c"
         }
@@ -607,6 +607,7 @@
     "measured_package_files": 50,
     "post_p5_5_package_delta": []
   },
+  "journal_cutoff_ts": "2026-08-07T03:43:15Z",
   "provider_processes_started": 10,
   "provider_scope_statement": "single-provider claude-code under owner grant D123 (D126 excludes codex from this item); this evidence carries no provider-parity claim and is never rendered as parity",
   "result": {

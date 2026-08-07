@@ -136,12 +136,15 @@ worker-vs-worker with a provable zero on both sides — the weaker, honest claim
 already committed to. On this evidence the owner's token-economy hypothesis is **not** supported;
 two pairs are far too few to conclude anything stronger, and this document claims nothing stronger.
 
-## 6. Two defects of THIS item's own harness, disclosed rather than patched after the fact
+## 6. Three defects of THIS item's own harness, disclosed rather than quietly patched
 
-Both derivations were authored and committed BEFORE the first dispatch (proof: the adjudicator's
-`--self-test` runs with no live result on disk, and both banks passed before any dispatch). Changing
-either after seeing results would be exactly the post-hoc threshold replacement this item's Scope
-Excluded forbids, so neither was changed; both are recorded and both have a forward fix in §7.
+All three derivations were authored and committed BEFORE the first dispatch (proof: the
+adjudicator's `--self-test` runs with no live result on disk, and both banks passed before any
+dispatch). Defects (1) and (3) change a recorded NUMBER, so patching them after seeing results would
+be exactly the post-hoc threshold replacement this item's Scope Excluded forbids — they are recorded
+as measured and carry a forward fix in §7 instead. Defect (2) changes NO number: it is a
+self-referential re-derivation bug that made the gate contradict itself across time, so it was fixed
+in place and the fix is stated here.
 
 1. **`rollback` reads `false` on eight of ten rows, and the tree is nevertheless provably clean.**
    The runner proves rollback with `git reset --hard <base>` plus an empty `git status`. Five of
@@ -155,7 +158,21 @@ Excluded forbids, so neither was changed; both are recorded and both have a forw
    plus both G2B manifests are empty before, between and after all ten dispatches. `REL-RECOVERY`
    and `SEC-WORKTREE` therefore read `fail` from a measurement artifact, not from an isolation
    failure. The verdict is `NO-GO` on `REL-BUDGET` independently of these two.
-2. **`owner_intervention_ratio` reads `3/10`, and no owner intervened during this run.** The
+2. **The intervention numerator had no derivation anchor, and its own closing row broke it
+   (found by the gate itself, fixed in place).** Re-running `validate-economic-verdict.py` on the
+   committed tree failed: `owner_decision_events 3 != journal-derived 4`. The journal is append-only
+   and this item's own closing bookkeeping row (`result: blocked`) lands AFTER assembly, so an
+   unanchored count over the whole file counts itself and can never be re-derived to the recorded
+   value on any later tree. Fixed in this item's own `Files` by anchoring the count at the run's
+   start row: the verdict now records `journal_cutoff_ts` (`2026-08-07T03:43:15Z`), the assembler
+   counts qualifying rows strictly before it, and the validator re-derives against that recorded
+   anchor and refuses if it is not a start row of this item. **No value and no verdict moved**:
+   `owner_decision_events` is `3` before and after, the verdict is `NO-GO` with the same three failed
+   floors. This is a fix to a self-referential re-derivation defect, not a change to a threshold,
+   formula or verdict rule — those stay exactly where the pre-dispatch authoring put them. Landed as
+   a commit OVER the two-commit topology (never an amend), so the defect and its repair are both
+   traceable.
+3. **`owner_intervention_ratio` reads `3/10`, and no owner intervened during this run.** The
    pre-declared numerator counts P5.4 journal rows whose result is `escalated`/`blocked`; it is not
    scoped to rows at or after this run's first dispatch, so it counts three historical rows
    (`2026-08-06T14:48:03Z` routing-blocked, `2026-08-06T15:00:48Z` and `2026-08-06T18:46:50Z` — the
@@ -179,10 +196,11 @@ no `GO`.
    from this item: retaining raw provider output is banned, and the fold layer is a package byte
    (P5.5-owned). A diagnostic pass with its own probe authority is needed — the same shape as
    `findings/P5-repository-pilot.md` §8's owner-directed investigation.
-3. **This item's two harness defects (§6).** Prove rollback by comparing the root against its base
-   tree object (or `git clean -fdx` after `reset --hard`) rather than by an empty status; scope the
-   intervention numerator to journal rows at or after the run's first dispatch. Both live in
-   `artifacts/P5/run-battle-waves.py`, this item's own `Files`.
+3. **This item's two value-changing harness defects (§6.1 and §6.3).** Prove rollback by comparing
+   the root against its base tree object (or `git clean -fdx` after `reset --hard`) rather than by an
+   empty status; scope the intervention numerator to journal rows at or after the run's first
+   dispatch (§6.2's anchor fix makes the count reproducible, but it deliberately did not change WHICH
+   rows qualify). Both live in `artifacts/P5/run-battle-waves.py`, this item's own `Files`.
 4. **`P1/dispatch-admission` (§2).** Owned by P1.6 but red for a cross-plan reason; either re-freeze
    `parent_task_contract_hash` against the current compiler generation under a new D#, or record an
    explicit exemption for a leaf whose pin depends on another plan's evolving code. Neither is

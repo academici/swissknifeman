@@ -250,18 +250,21 @@ def check_waves(document: dict, results: dict, pairs: list) -> None:
                 f"{pair_id}: a wave whose root did not roll back is not terminal")
 
 
-def check_intervention(document: dict, results: dict, plan: Path) -> None:
+def check_intervention(document: dict, results: dict, plan: Path, cutoff: str) -> None:
     """The intervention denominator is recomputed from the dispatched slices and the
-    numerator from the plan journal - never from a candidate-authored summary."""
+    numerator from the plan journal - never from a candidate-authored summary. The
+    numerator is anchored at the run's own start row (`cutoff`): the journal is
+    append-only, so an unanchored count would include this item's own closing row and
+    could never be re-derived to the recorded value on a later tree."""
     require(document["dispatched_non_synthetic_slices"] == len(results["waves"]),
             "the intervention denominator is not the number of dispatched non-synthetic slices")
-    events = 0
-    for line in (plan / "journal.jsonl").read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        if row.get("item_id") == "P5.4" and row.get("result") in {"escalated", "blocked"}:
-            events += 1
+    rows = [json.loads(line) for line in (plan / "journal.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()]
+    require(any(row.get("item_id") == "P5.4" and row.get("result") == "in-progress"
+                and row["ts"] == cutoff for row in rows),
+            f"the recorded journal anchor {cutoff!r} is not a start row of this item")
+    events = sum(1 for row in rows if row.get("item_id") == "P5.4"
+                 and row.get("result") in {"escalated", "blocked"} and row["ts"] < cutoff)
     require(document["owner_decision_events"] == events,
             f"owner_decision_events {document['owner_decision_events']} != journal-derived {events}")
     ratio = Fraction(document["owner_decision_events"], document["dispatched_non_synthetic_slices"])
@@ -647,7 +650,7 @@ def main() -> int:
                 "the accepted-slice definition the lanes pin is not the one the verdict states")
         check_document_against_results(document, results, catalog, definition)
         check_waves(document, results, pairs)
-        check_intervention(document, results, plan)
+        check_intervention(document, results, plan, verdict["journal_cutoff_ts"])
         check_scope_and_g3(verdict, document, results, generation, assurance, ledger)
         module = adjudicator(plan)
         baseline_hash, provider_hash = module.validate_contract_v2(

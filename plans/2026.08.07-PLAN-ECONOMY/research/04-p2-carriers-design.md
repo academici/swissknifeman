@@ -194,13 +194,28 @@ superseded_by: null       # id записи-преемника
 status view, и ровно то, что владелец назвал своей потребностью («статус, открытые развилки,
 накопленные гейты» — `research/01-…` §2).
 
-**Состав `plan.md` v2:** `## 0. Meta` (только идентичность: Plan ID, Title, Document Type, Authoring
-Model, Repository, Related Packages, Execution Mode, Target Operator Classes, Approval Owner, Home,
-Layout, Paused By, supersedes) · `## 1. Context` · `## 2. Execution Rules` · `## 3. Routing` ·
+**Состав `plan.md` v2:** `## 0. Meta` (идентичность и регистраторные поля: Plan ID, Title, Document
+Type, Authoring Model, Repository, Related Packages, Execution Mode, Target Operator Classes, Approval
+Owner, Home, Layout, **Design Passes**, Paused By, supersedes, **visibility**) · `## 1. Context` ·
+`## 2. Execution Rules` · `## 3. Routing` ·
 `## 5. Decision Log` (одна строка-указатель) · `## 7. Contracts` (slow, опциональна). Секции 4 и 6
 исчезают. Номер 7 сохраняется: линтер опознаёт `Contracts` по заголовку, а не по номеру
 (RAG:— repo-grounded: `plan_lint.CONTRACTS_HEADER_RE`), тогда как номера 4/6 закреплены за другими
 названиями и перенумерация дала бы флоту ложные предупреждения.
+
+**Почему `Design Passes` и `visibility` остаются в ядре, а не уезжают в вид (D96, дописано прогоном 4).**
+Первая редакция §6 их не назвала вовсе, и закрытый список стал бы конвертером, который их теряет.
+Обоснование включения: (1) `Design Passes: k/N` — регистраторное поле канона (`plan-protocol` §5
+«Design budget»), и на нём стоит пункт 5 самого `plan-audit design` («сверить счётчик с Update Log»);
+без поля этот пункт неисполним, то есть протокол, только что научившийся считать дизайн-бюджет,
+под v2 разучился бы. Класс волатильности — `slow`: значение меняется раз в прогон дизайна, а не при
+закрытии пункта, поэтому предикат порядка (§слот 1 целиком `stable|slow`) не нарушается. (2)
+`visibility` (`private`|`public`, дефолт `private`) — необязательное поле канона, определяющее, что
+вообще допустимо публиковать; его молчаливая потеря расширяет видимость плана, то есть отказ в
+опасную сторону. Оба — `slow`, оба в ядре, оба в инвентаре P2.8 поимённо: `plan_lint.REQUIRED_META_FIELDS`
+их не требует (там Plan ID/Title/Version/Status), значит их потеря дала бы ЗЕЛЁНЫЙ линт.
+RAG:— (repo-grounded: `packages/skiller/skills/general/plan-protocol/SKILL.md` §5 и §4 Meta;
+`packages/task/commands/plan-audit.md` пункт 5; `plan_lint.REQUIRED_META_FIELDS`).
 
 ---
 

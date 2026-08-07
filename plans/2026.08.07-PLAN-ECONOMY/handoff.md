@@ -1,73 +1,92 @@
 # HANDOFF — 2026-08-07 — after P0.2
 
-**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.2`
+**Next:** `/task:plan-run 2026.08.07-PLAN-ECONOMY P0.3` — Routing (`plan.md` §3) предписывает
+`implementation/high` / `Exec = manual` для P0.3, а `plan-exec` пинит sonnet/medium: гейт п. 2
+отклонит запуск через `plan-exec`.
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | — |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | P0.2 эскалирован (🔴 Blocked): зонд лимита одного чтения в ЭТОЙ среде даёт отказ Read-инструмента в БАЙТАХ/КБ («File content (313.6KB) exceeds maximum allowed size (256KB)»), а не в токенах, как специфицируют Inputs item'а (`research/02-…` §4, `findings/00-…` §7 — токенный формат «59596 tokens / 25000»). Owner-решение нужно о единице `read-limit` (байты/токены/обе) и о последствии для D2(б) и формы артефакта |
-| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.2` |
+| Capabilities | чтение/запись файлов, git, `python3` stdlib |
+| Context | continue (/clear) — ручной item |
+| Суть | Собрать stdlib-only инструмент `plan_weight.py`: воспроизвести обязательный путь чтения `plan-exec.md` §1, посчитать вес в оценочных токенах поверх калибровки P0.1, проверить каждый файл конъюнкцией обоих гейтов P0.2 (`limits.size_bytes`/`limits.tokens`), посчитать `dense_ascii_share`, классифицировать нерезолвленное закрытой таксономией пробелов |
+| Команда | — (форма ЗАПУСК ВРУЧНУЮ, см. ниже) |
 
-**Done:** Design (4/4 прогона, `plan-audit design` GREEN-путём, владелец принял старт exec) —
-см. предыдущий handoff в истории git. **P0.1 закрыт `🟠 Done with deviations`**
-(`task:plan-run`, sonnet/high, item-коммит `5d29d42e`): `token_estimate.py` + калибровочный
-харнесс + артефакт `token-estimate-calibration.json` (14/14 файлов приняты, `bound.violations=0`,
-p95=1.17) + probe-log + 15 unit-тестов + строка `CHANGELOG.md`. Известное отклонение: item-коммит
-несёт `CHANGELOG.md` вне `Files` (spec-gap Files↔Deliverables) → `🟠`.
+```
+/model opus
+/effort high
+/task:plan-run 2026.08.07-PLAN-ECONOMY P0.3
+```
 
-**P0.2 эскалирован `🔴 Blocked`** (`task:plan-exec`, sonnet/medium, без item-коммита — работа
-не производила deliverables): зонд выполнен дважды на реально превышающих файлах
-(`plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md` 321084 байт, `plans/2026.08.07-PLAN-ECONOMY/plan.md`
-299.6KB) — оба раза Read-инструмент отказал текстом
-`File content (<N>KB) exceeds maximum allowed size (256KB). Use offset and limit parameters…`.
-Формат байтовый (размер файла на диске), не токенный, как ожидали Inputs item'а. Code Guidance
-item'а прямо запрещает подгонять байтовое число под предписанное поле `limit_tokens` — зафиксировано
-дословно и эскалировано, артефакт `read-limit.json` не создан.
+**Done:** P0.2 закрыт `🟠 Done with deviations` (item-коммит `8392de6d`). Собственный зонд текущей
+exec-сессии (модель `claude-sonnet-5`, харнесс `claude-code` 2.1.224) независимо воспроизвёл оба
+гейта `research/12-…` §4: гейт A (`plan.md` этого плана, 316886 байт, целиком → `File content
+(309.5KB) exceeds maximum allowed size (256KB)…`, KiB-арифметика сошлась) и гейт B (детерминированный
+128001-байтовый однострочный hex-файл, `limit=1` → `File content (82901 tokens) exceeds maximum
+allowed tokens (25000)…`) — числа дословно совпали с независимым наблюдением `findings/15-…` O4/O5.
+Cross-check: `task.token_estimate.estimate_text` на том же файле дал `41095` против счёта среды
+`82901` (отношение `2.017`), воспроизведя границу оценщика на плотном ASCII, объявленную D109.
+Записаны `packages/task/configs/read-limit.json` (форма `research/12-…` §3 дословно) и
+`packages/task/docs/reference/read-limit-probe.md`.
 
-**Remaining:** P0.2 (design-решение о единице лимита), затем P0.3–P0.5 (P0.3 зависит от формы
-артефакта P0.2 — Inputs P0.3 читает `read-limit.json`), затем P1–P6 по `roadmap.md`.
+**Remaining:** P0.3 (инструмент замера) → P0.4 (машинный замер флота) → P0.5 (владельческая
+заморозка порога), затем P1–P6 по `roadmap.md`.
 
-**Sources of truth:** `plan.md` (Meta, Context, Execution Rules, `## 3. Routing`, Status Board —
-P0 0/5, D1–D106, `## 7. Contracts`, `## Обсуждение`) · `phases/P0.md`–`phases/P6.md` (P0.2 несёт
-эскалационный blockquote и Completion Notes с дословным текстом обоих отказов) · `roadmap.md` ·
-`research/00`–`research/11` (`research/02-…` §4 — предпосылка, разошедшаяся с наблюдением) ·
-`findings/00`–`03`, `05`, `08`–`11`, `13`, `14` (`findings/00-…` §7 — прежнее наблюдение, другой
-формат) · `journal.jsonl` (последняя запись — P0.2 `escalated`) ·
-`packages/task/configs/token-estimate-calibration.json` (SSOT ставок токен-оценщика, P0.1).
+**Sources of truth:** `plan.md` (Meta, Context, Execution Rules, `## 3. Routing`, Status Board — P0
+0/5 `🟡`, D1–D109, `## 7. Contracts`, `## Обсуждение`) · `phases/P0.md`–`phases/P6.md` ·
+`roadmap.md` · `research/12-…` (SSOT формы артефакта `read-limit.json` и процедуры зонда, теперь
+ЗАКРЫТ item'ом P0.2) · `research/00`–`research/11` (`research/02-…` §4 — замещён, помечен в файле) ·
+`findings/15-…` (сырьё зонда прошлой сессии, воспроизведено дословно этой) ·
+`findings/00`–`03`, `05`, `08`–`11`, `13`, `14` · `journal.jsonl` ·
+`packages/task/configs/token-estimate-calibration.json` (SSOT ставок токен-оценщика, P0.1) ·
+`packages/task/configs/read-limit.json` (SSOT обоих гейтов чтения, P0.2, НОВОЕ).
 
 **Open risks:**
-- **НОВОЕ (P0.2): формат отказа Read-инструмента в ЭТОЙ среде — байты/КБ размера файла, а не
-  токены модели.** `research/02-p0-measurement-design.md` §4 и `findings/00-plan-read-weight-2026-08-07.md`
-  §7 специфицировали и наблюдали токенный отказ (`59596 tokens / 25000`); зонд ЭТОЙ сессии дважды
-  воспроизвёл байтовый отказ (`313.6KB / 256KB` на `plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md`;
-  `299.6KB / 256KB` на собственном `plan.md`). Байтовый лимит файла на диске и токенный лимит модели
-  НЕ конвертируются фиксированным коэффициентом (UTF-8: кириллица/эмодзи — несколько байт на символ,
-  переменное число токенов на символ) — риск того, что калибровка P0.1 (токен-оценщик) отвечает не на
-  тот вопрос, который реально задаёт гейт чтения этой среды. Требует owner-решения (`plan-design
-  P0.2`): единица `read-limit` (байты / токены / обе отдельными полями) и последствие для D2(б).
-- **Ставка класса `other` (эмодзи/псевдографика/CJK) = 0.0 в замороженном артефакте калибровки P0.1** —
-  без изменений от предыдущего handoff (диагностировано, не подгонка; риск на файлах вне корпуса
-  с непропорционально высокой долей `other`).
+- **НОВОЕ (P0.2): `CHANGELOG.md` заблокирован permission-deny этой среды.**
+  `.claude/settings.local.json` несёт `Read(**/CHANGELOG.md)` в глобальном deny-списке, и хук
+  auto-approve распространяет отказ на ЛЮБОЙ инструмент, упомянувший этот путь (`Read`, `Bash wc`,
+  `Bash grep`, `Bash ls` — все отклонены в этой сессии). Файл `Files`/`Deliverables` item'а P0.2
+  включает строку `CHANGELOG.md [Unreleased]` — она НЕ добавлена по этой причине (запись в Pending
+  Work P0.2). Требует владельческого действия: сузить/снять deny-паттерн в
+  `.claude/settings.local.json` (`Read(**/CHANGELOG.md)`) ЛИБО дописать строку вручную в сессии с
+  иными permissions. Пока это не сделано, КАЖДЫЙ следующий item, чьи `Files` содержат
+  `CHANGELOG.md` (весь остаток плана, канон `root.development-validation`), столкнётся с тем же
+  блокером — это не разовая находка P0.2.
+- **НОВОЕ (D109, вход не меняется): граница оценщика P0.1 на плотном ASCII воспроизведена ВТОРОЙ
+  раз независимым зондом** (P0.2 cross_check: `82901`/`41095`≈2.017, совпадает с `findings/15-…`
+  §5 `1.972`/`2.017`) — подтверждает, что находка не артефакт одной сессии. Решение по-прежнему
+  отложено к P0.5 на `dense_ascii_share` P0.3/P0.4 (D109 без изменений).
+- **НОВОЕ (D108, наследуется без изменений): план не удовлетворяет собственному условию приёмки**
+  — `plan.md` (316886 байт, растёт) не проходит оба гейта, `phases/P*.md` не проходят гейт B. Работа
+  P2, гейт P3 на этом плане будет красным до её завершения.
+- **Счёт среды наблюдаем только в момент срабатывания капа** (`findings/15-…` O6; подтверждено O6
+  этой сессии тоже — ниже капа среда счёт не сообщает), режим `--exact` P0.3 остаётся на
+  дифференциальном харнессе P0.1.
+- **Ставка класса `other` = 0.0 в замороженном артефакте калибровки P0.1** — без изменений.
 - **Пре-существующий дефект среды:** `plans/.claude/` и `plans/__pycache__/` ошибочно распознаются
-  `plan_lint.py` как каталоги планов → 4 ERROR полного `validate.sh`; вне Scope P0.1/P0.2, чинится в
-  owning-источнике.
+  `plan_lint.py` как каталоги планов → 4 ERROR полного `validate.sh` (подтверждено прогоном P0.2);
+  вне Scope P0.1/P0.2, чинится в owning-источнике.
 - Прежние риски без изменений: список потребителей раскладки не исчерпан (P2.1); долг бампа
   `driver-plan-protocol-v2`; гейт веса канона `SKILL.md`; `review_policy.py` единственная поведенческая
-  правка P2.1; P2.1 — самый тяжёлый item; числа P0.3–P0.5 ещё не измерены (и теперь зависят от
-  design-решения P0.2); `phases/P6.md` — самый тяжёлый файл плана; приёмка P6.8 самохостящаяся;
-  P6.5 удаляет 230 RU-источников; пересечение с `2026.08.02-PROVIDER-CONTRACT-LOCALE`; enum `Next`
-  не покрывает `finish`/`roadmap` до P6.5; D43/D58/D71 честно ослабили доказательную опору; правки
-  последних заходов не проходили независимого design-ревью; дефект среды
-  `.swissknife/analyst/**/*.ndjson` вне `.gitignore`.
+  правка P2.1; P2.1 — самый тяжёлый item; числа P0.3–P0.5 ещё не измерены (P0.2 дал только лимиты, не
+  вес флота); `phases/P6.md` — самый тяжёлый файл плана; приёмка P6.8 самохостящаяся; P6.5 удаляет 230
+  RU-источников; пересечение с `2026.08.02-PROVIDER-CONTRACT-LOCALE`; enum `Next` не покрывает
+  `finish`/`roadmap` до P6.5; D43/D58/D71 честно ослабили доказательную опору; правки последних заходов
+  не проходили независимого design-ревью; дефект среды `.swissknife/analyst/**/*.ndjson` вне
+  `.gitignore`.
+- **Замечено, вне Scope этого item'а:** дерево несёт большой посторонний дифф в момент закрытия
+  P0.2 (десятки изменённых файлов вне `plans/2026.08.07-PLAN-ECONOMY/**` и вне `Files` P0.2 —
+  `.agents/plugins/marketplace.json`, `packages/skiller/**`, `packages/harness/**`,
+  `core/provider/**`, untracked `.p4-d99.0X38VL/`, `.swissknife.json`,
+  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/` и др.) — не тронут, не закоммичен, принадлежит
+  другой параллельной работе; item-коммит P0.2 (`8392de6d`) собран строго по явным путям `Files`.
 
 **Workarounds/Deferred/Open questions:**
 - Workarounds: нет.
-- Deferred: без изменений от предыдущего handoff (миграция флота D3, компактификация EN-канонов,
-  `artifex` compiler правка, бамп `driver-plan-protocol-v2`, реестр носителей раскладки, `count_tokens`
-  как альтернативный источник калибровки, запрет ссылки на соседний пункт, кластер «шов без субъекта»,
-  N-судейская свёртка, экономика прогона среза, прозаические сокращения путей).
-- Open questions: **новый** — единица измерения `read-limit` (байты vs токены) в этой среде, см.
-  Open risks выше; маршрутизируется в `plan-design P0.2`.
+- Deferred: без изменений (миграция флота D3, компактификация EN-канонов, `artifex` compiler правка,
+  бамп `driver-plan-protocol-v2`, реестр носителей раскладки, `count_tokens` как альтернативный
+  источник калибровки, запрет ссылки на соседний пункт, кластер «шов без субъекта», N-судейская
+  свёртка, экономика прогона среза, прозаические сокращения путей, реокалибровка оценщика пятым
+  классом — плотный ASCII, решение отложено к P0.5 на числа флота D109).
+- Open questions: открытых нет.

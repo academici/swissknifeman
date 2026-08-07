@@ -1,4 +1,4 @@
-# HANDOFF — 2026-08-07 — after P0.2 (escalated)
+# HANDOFF — 2026-08-07 — after P0.2
 
 **Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.2`
 

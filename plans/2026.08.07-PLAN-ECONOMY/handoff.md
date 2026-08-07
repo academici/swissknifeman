@@ -1,16 +1,19 @@
-# HANDOFF — 2026-08-07 — after P0.3
+# HANDOFF — 2026-08-07 — after P0.4 (ESCALATED)
 
-**Next:** `/task:plan-exec 2026.08.07-PLAN-ECONOMY P0.4` — Routing (`plan.md` §3) предписывает
-`implementation/medium` / `Exec = plan-exec`, что совпадает с пином команды; `roadmap.md` держит
-P0.4 как `solo`, батча нет.
+**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.4` — P0.4 заблокирован (🔴): Validation-команда
+item'а предполагает, что `plan-weight.py sweep` принимает JSON-манифест корней (`fleet-roots.json`)
+единым аргументом и печатает top-level `unreadable_roots`; реальный CLI (P0.3) берёт `roots` как
+`nargs="+"` список КАТАЛОГОВ и такого ключа не производит (эмпирически проверено — см.
+`phases/P0.md` P0.4 blockquote ESCALATION). Нужно design-решение: расширять `sweep` режимом
+ingestion манифеста или переопределять Validation/coverage-проверку под реальный envelope.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | medium — прогон готового инструмента, решений нет |
-| Context | continue (/clear) — ручной item |
-| Суть | Снять машинный замер веса обязательного чтения по всему живому флоту готовым `plan-weight.py`: манифест корней, дамп `--json`, отчёт-findings с разделением резолвленного и нерезолвленного по закрытой таксономии и разбором `oversized_file` ПО ГЕЙТАМ |
-| Команда | `/task:plan-exec 2026.08.07-PLAN-ECONOMY P0.4` |
+| Model | opus |
+| Thinking | high — открытое design-решение об интерфейсе `sweep` и форме Validation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить расхождение Validation-команды P0.4 с реальным CLI `plan-weight.py sweep`: выбрать между расширением инструмента (manifest-ingestion + `unreadable_roots`) и переопределением Validation/coverage-проверки под существующий envelope (`errors`), обновить ТЗ P0.4 |
+| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.4` |
 
 **Done:** P0.3 закрыт `🟠 Done with deviations` (item-коммит `96baa381`). Собран stdlib-only
 инструмент замера: `packages/task/lib/task/plan_weight.py` + лаунчер
@@ -24,8 +27,9 @@ P0.4 как `solo`, батча нет.
 `oversized_file` 1145 · `unresolved_entry` 406 · `unreadable_root` 0); вес P0.3 — 182551 токен,
 пол раскладки 134944.
 
-**Remaining:** P0.4 (машинный замер флота — теперь по готовому инструменту) → P0.5 (владельческая
-заморозка порога), затем P1–P6 по `roadmap.md`.
+**Remaining:** P0.4 заблокирован ESCALATION-ом (design-решение по интерфейсу `sweep` vs Validation) →
+после ре-дизайна возобновление P0.4 → P0.5 (владельческая заморозка порога), затем P1–P6 по
+`roadmap.md`.
 
 **Sources of truth:** `plan.md` (Meta, Context, Execution Rules, `## 3. Routing`, Status Board — P0
 0/5 `🟡`, D1–D109, `## 7. Contracts`, `## Обсуждение`) · `phases/P0.md`–`phases/P6.md` ·
@@ -39,6 +43,15 @@ P0.4 как `solo`, батча нет.
 эвристики резолвинга `Required Reads` — докстрока модуля, НОВОЕ).
 
 **Open risks:**
+- **НОВОЕ (P0.4, ESCALATION): Validation-команда P0.4 не выполнима против реального `sweep`.**
+  ТЗ P0.4 предполагает `plan-weight.py sweep <fleet-roots.json> --json`, читающий манифест и
+  печатающий `unreadable_roots`; реальный CLI P0.3 берёт `roots` как `nargs="+"` список каталогов
+  (`test_sweep_covers_every_plan_under_root`) и такого ключа не производит — эмпирически
+  проверено (манифест как единственный root уходит в `errors`, 0 планов, `sweep-ok`
+  ложно-зелёный; вторая Validation-команда падает `KeyError: 'unreadable_roots'`). Открытое
+  design-решение: расширять `sweep` (manifest-ingestion + `unreadable_roots`) или переопределять
+  Validation/coverage под существующий envelope (`errors`). Детали — `phases/P0.md` P0.4
+  blockquote.
 - **НОВОЕ (P0.3): эвристика резолвинга `Required Reads` — измерение СНИЗУ, и её граница названа
   числом.** 406 позиций флота (на `96baa381`) прозой к пути не приводятся и в вес не входят;
   1277 объявленных путей указывают на несуществующие файлы (типовая причина — план переехал в
@@ -91,4 +104,6 @@ P0.4 как `solo`, батча нет.
   источник калибровки, запрет ссылки на соседний пункт, кластер «шов без субъекта», N-судейская
   свёртка, экономика прогона среза, прозаические сокращения путей, реокалибровка оценщика пятым
   классом — плотный ASCII, решение отложено к P0.5 на числа флота D109).
-- Open questions: открытых нет.
+- Open questions: **НОВОЕ (P0.4)** — расширять `plan-weight.py sweep` манифест-режимом или
+  переопределять Validation/coverage-проверку P0.4 под существующий envelope `errors` (см. Open
+  risks выше); решает `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.4`.

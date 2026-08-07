@@ -572,20 +572,36 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
 
 def sweep(roots, measurer):
     """Замер по нескольким корням (`plans/` либо конкретные `plans/<ID>`) — вход P0.4.
-    План, который не удалось разобрать, попадает в `errors` и НЕ роняет прогон: сводка
-    обязана назвать и то, что не измерено."""
-    plans, errors = [], []
+    Корень — учётная единица верхнего уровня (`roots[]`, D110): каждый корень входа
+    получает закрытый статус `resolved`/`unreadable`/`missing`, недоступный корень НЕ
+    роняет прогон и не уносит остальные (`OSError` вокруг резолвинга перехватывается).
+    План, который не удалось разобрать, попадает в `errors` (носитель исхода ПЛАНА,
+    не корня) и НЕ роняет прогон: сводка обязана назвать и то, что не измерено."""
+    plans, errors, roots_out = [], [], []
     for root in roots:
-        discovered = plan_lint.discover_plan_dirs(Path(root))
-        if discovered is None:
-            errors.append({"root": str(root), "error": "корень не существует или не каталог"})
+        try:
+            discovered = plan_lint.discover_plan_dirs(Path(root))
+        except OSError as exc:
+            roots_out.append({"root": str(root), "status": "unreadable", "discovered": 0,
+                               "measured": 0, "failed": 0, "detail": str(exc)})
             continue
+        if discovered is None:
+            roots_out.append({"root": str(root), "status": "missing", "discovered": 0,
+                               "measured": 0, "failed": 0,
+                               "detail": "корень не существует или не каталог"})
+            continue
+        measured = failed = 0
         for plan_dir in discovered:
             try:
                 plans.append(measure_plan(plan_dir, measurer))
+                measured += 1
             except (PlanWeightError, OSError) as exc:
                 errors.append({"root": str(root), "plan_dir": str(plan_dir), "error": str(exc)})
+                failed += 1
+        roots_out.append({"root": str(root), "status": "resolved", "discovered": len(discovered),
+                           "measured": measured, "failed": failed, "detail": None})
     return {
+        "roots": roots_out,
         "plans": plans,
         "errors": errors,
         "totals": {
@@ -594,6 +610,12 @@ def sweep(roots, measurer):
             "gaps": sum(p["totals"]["gaps"] for p in plans),
             "gap_counts": {kind: sum(p["totals"]["gap_counts"][kind] for p in plans)
                            for kind in GAP_KINDS},
+            "roots": {
+                "total": len(roots_out),
+                "resolved": sum(1 for r in roots_out if r["status"] == "resolved"),
+                "unreadable": sum(1 for r in roots_out if r["status"] == "unreadable"),
+                "missing": sum(1 for r in roots_out if r["status"] == "missing"),
+            },
         },
     }
 
@@ -804,14 +826,22 @@ def main(argv=None):
                 print(json.dumps(envelope(measurer, payload), ensure_ascii=False,
                                  indent=2, sort_keys=True))
             else:
+                for root in payload["roots"]:
+                    if root["status"] in ("unreadable", "missing"):
+                        print(f"НЕ ИЗМЕРЕН: {root['root']}: {root['detail']}")
+                    elif root["status"] == "resolved" and root["discovered"] == 0:
+                        print(f"БЕЗ ПЛАНОВ: {root['root']}")
                 for plan in payload["plans"]:
                     _print_plan(plan, measurer.limits)
                 for err in payload["errors"]:
-                    print(f"НЕ ИЗМЕРЕН: {err.get('plan_dir', err['root'])}: {err['error']}")
+                    print(f"НЕ ИЗМЕРЕН: {err['plan_dir']}: {err['error']}")
                 counts = payload["totals"]["gap_counts"]
+                root_counts = payload["totals"]["roots"]
                 print(f"итого: планов {payload['totals']['plans']}, пунктов "
                       f"{payload['totals']['items']}, пробелов {payload['totals']['gaps']} ("
-                      + ", ".join(f"{k}={counts[k]}" for k in GAP_KINDS) + ")")
+                      + ", ".join(f"{k}={counts[k]}" for k in GAP_KINDS) + "), корней "
+                      f"{root_counts['total']} (resolved={root_counts['resolved']}, "
+                      f"unreadable={root_counts['unreadable']}, missing={root_counts['missing']})")
             return 0
 
         only = args.item_id if args.cmd == "item" else None

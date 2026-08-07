@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **`plan-weight.py sweep` больше не роняет весь замер флота одним недоступным корнём.**
+  (`2026.08.07-PLAN-ECONOMY` P0.4, D110–D112.) У `sweep` появилась учётная единица «корень
+  входа» — top-level `roots[]` с закрытым статусом `resolved`/`unreadable`/`missing` на
+  каждый переданный каталог; недоступный корень (`PermissionError`) перехватывается и не
+  уносит остальные, а читаемый корень без планов больше не исчезает из вывода бесследно.
+  `errors[]` теперь несёт только исход ПЛАНА (`plan_dir`), не корня.
 - **`maind_memory_recall` больше не тонет в общем namespace.** `_recall_union` (mid-session
   recall) наследует принцип D10 из SessionStart-дайджеста: приватный scope проекта опрашивается
   без капа (`RECALL_LIMIT=200`), а shared-scope'ы (`ns:*`/`global`) при `project:<id>`-expansion —

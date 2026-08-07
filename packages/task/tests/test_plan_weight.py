@@ -8,6 +8,7 @@ plan.md/phases/Pn.md/handoff.md), артефакты калибровки и л�
 import hashlib
 import io
 import json
+import os
 import re
 import tempfile
 import unittest
@@ -422,6 +423,63 @@ class TestJsonOutput(MeasurerTestCase):
         self.assertEqual(sorted(p["plan_id"] for p in data["plans"]), ["DEMO-1", "DEMO-2"])
         self.assertEqual(data["totals"]["plans"], 2)
         self.assertEqual(data["errors"], [])
+
+    def test_sweep_root_missing(self):
+        data = self.run_json("sweep", str(self.root / "nope"), "--json")
+        self.assertEqual([r["status"] for r in data["roots"]], ["missing"])
+        row = data["roots"][0]
+        self.assertEqual(row["root"], str(self.root / "nope"))
+        self.assertEqual((row["discovered"], row["measured"], row["failed"]), (0, 0, 0))
+        self.assertIsNotNone(row["detail"])
+        self.assertEqual(data["totals"]["roots"],
+                          {"total": 1, "resolved": 0, "unreadable": 0, "missing": 1})
+
+    def test_sweep_root_resolved_without_plans(self):
+        empty_root = self.root / "empty-root"
+        empty_root.mkdir()
+        data = self.run_json("sweep", str(empty_root), "--json")
+        row = data["roots"][0]
+        self.assertEqual(row["status"], "resolved")
+        self.assertEqual(row["discovered"], 0)
+        self.assertIsNone(row["detail"])
+        self.assertEqual(data["totals"]["roots"]["resolved"], 1)
+
+    def test_sweep_root_unreadable(self):
+        if os.geteuid() == 0:
+            self.skipTest("сессия от root — chmod 000 не даёт PermissionError")
+        blocked_root = self.root / "blocked-root"
+        blocked_root.mkdir()
+        os.chmod(blocked_root, 0o000)
+        try:
+            data = self.run_json("sweep", str(blocked_root), "--json")
+        finally:
+            os.chmod(blocked_root, 0o755)
+        row = data["roots"][0]
+        self.assertEqual(row["status"], "unreadable")
+        self.assertIsNotNone(row["detail"])
+        self.assertEqual((row["discovered"], row["measured"], row["failed"]), (0, 0, 0))
+        self.assertEqual(data["totals"]["roots"]["unreadable"], 1)
+
+    def test_sweep_unreadable_root_does_not_block_neighbor(self):
+        if os.geteuid() == 0:
+            self.skipTest("сессия от root — chmod 000 не даёт PermissionError")
+        blocked_root = self.root / "blocked-root"
+        blocked_root.mkdir()
+        os.chmod(blocked_root, 0o000)
+        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-1")
+        try:
+            data = self.run_json("sweep", str(blocked_root), str(self.root / "plans"), "--json")
+        finally:
+            os.chmod(blocked_root, 0o755)
+        self.assertEqual([r["status"] for r in data["roots"]], ["unreadable", "resolved"])
+        self.assertEqual(data["totals"]["plans"], 1)
+        self.assertEqual([p["plan_id"] for p in data["plans"]], ["DEMO-1"])
+
+    def test_sweep_measured_converges_with_totals_plans(self):
+        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-1")
+        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-2")
+        data = self.run_json("sweep", str(self.root / "plans"), "--json")
+        self.assertEqual(sum(r["measured"] for r in data["roots"]), data["totals"]["plans"])
 
 
 class TestExactMode(MeasurerTestCase):

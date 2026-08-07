@@ -1,0 +1,58 @@
+{
+  "_generated_by": "packages/task/docs/reference/read-limit-probe.md — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перезамерить и записать новую версию",
+  "version": "1.0.0",
+  "measured_at": "2026-08-07T17:46:49Z",
+  "environment": {
+    "platform": "linux",
+    "harness": "claude-code",
+    "harness_version": "2.1.224",
+    "model_id": "claude-sonnet-5"
+  },
+  "tool": "Read",
+  "limits": {
+    "size_bytes": {
+      "value": 262144,
+      "unit": "bytes",
+      "reported_as": "256KB",
+      "severity": "refusal",
+      "scope": "whole_file_read"
+    },
+    "tokens": {
+      "value": 25000,
+      "unit": "tokens",
+      "counter": "harness-read-counter",
+      "severity": ["refusal", "truncation"],
+      "scope": "rendered_read_output"
+    }
+  },
+  "binding_for_plan_prose": "tokens",
+  "probe": {
+    "size_gate": {
+      "path": "plans/2026.08.07-PLAN-ECONOMY/plan.md",
+      "bytes": 316886,
+      "call": "Read(plans/2026.08.07-PLAN-ECONOMY/plan.md)",
+      "refusal_message": "File content (309.5KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file."
+    },
+    "token_gate": {
+      "path": "<scratchpad>/read-limit-probe.txt",
+      "bytes": 128001,
+      "chars": 128001,
+      "lines": 1,
+      "call": "Read(<path>, limit=1)",
+      "tool_reported_tokens": 82901,
+      "refusal_message": "File content (82901 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file."
+    }
+  },
+  "cross_check": {
+    "note": "счётчик среды чтения ≠ токенизатор калибровки P0.1 (D15); только перекрёстная проверка",
+    "pairs": [
+      {
+        "chars": 128001,
+        "content_class": "dense_ascii_hex",
+        "tool_reported_tokens": 82901,
+        "token_estimate": 41095,
+        "true_over_estimate": 2.017
+      }
+    ]
+  }
+}

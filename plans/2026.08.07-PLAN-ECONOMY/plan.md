@@ -277,6 +277,7 @@
 | 2026-08-07 | plan-run/sonnet/high | P0.1 закрыт: `token_estimate.py` + дифференциальный харнесс + артефакт калибровки (14/14 файлов, violations=0, p95=1.17) — детали см. `phases/P0.md` P0.1 Completion Notes |
 | 2026-08-07 | plan-design/claude-opus-5[1m]/high | P0.2 разэскалирован: собственный зонд среды дал ДВА гейта (байты/токены) — D107–D109, ТЗ P0.2 переписано, P0.3–P0.5 приведены; заведены `findings/15`, `research/12` |
 | 2026-08-07 | plan-exec/sonnet/medium | P0.2 закрыт `🟠 Done with deviations`: собственный зонд подтвердил оба гейта, артефакт `read-limit.json` + справка записаны — детали см. `phases/P0.md` P0.2 Completion Notes |
+| 2026-08-07 | plan-run/opus/high | P0.3 закрыт `🟠 Done with deviations`: `plan_weight` + лаунчер + 45 тестов, замер снят по 19 планам флота — детали см. `phases/P0.md` P0.3 Completion Notes |
 
 ## 7. Contracts
 

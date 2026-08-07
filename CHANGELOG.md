@@ -33,6 +33,16 @@
 
 ### Added
 
+- **`task`: детерминированная оценка веса чтения плана СВЕРХУ, откалиброванная против
+  настоящего токенизатора (`2026.08.07-PLAN-ECONOMY` P0.1, D11/D14/D92).**
+  `task.token_estimate` (stdlib-only) считает токены по закрытому набору классов символов
+  (`ascii_word`/`ascii_other`/`cyrillic`/`other`) и замороженному артефакту калибровки —
+  без сети и ключей, никогда не занижая. Артефакт получен ДИФФЕРЕНЦИАЛЬНЫМ харнессом
+  (`calibrate-token-estimate.py`, D92: канал `POST /v1/messages/count_tokens` недостижим
+  без ключа Console) по трём прогонам `claude -p` на файл корпуса (пустая обёртка / файл /
+  контроль дрейфа), 14 реальных файлов планов флота, `bound.violations: 0`, рыхлость
+  p95 1.17 (гейт ≤1.6).
+
 - **Artifex business-provider projections now run against current Codex and Claude Code CLI surfaces.**
   The bounded adapters use a shared Draft-07 output schema, retain only normalized observations,
   and cover current Claude structured-result metadata without persisting provider text.

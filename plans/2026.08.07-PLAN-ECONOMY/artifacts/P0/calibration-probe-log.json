@@ -1,0 +1,318 @@
+{
+  "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+  "generated_at": "2026-08-07T16:19:23Z",
+  "measured": 14,
+  "min_corpus": 10,
+  "probes": [
+    {
+      "bytes": 3093,
+      "counts": {
+        "ascii_other": 511,
+        "ascii_word": 528,
+        "cyrillic": 1012,
+        "other": 11
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING/phases/P7.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "056587e0287b9945d11c3e38dfa15f526ffd5652d360b2f2ddfc67cf21df7894",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 5502,
+      "true_tokens": 986.0
+    },
+    {
+      "bytes": 5035,
+      "counts": {
+        "ascii_other": 1040,
+        "ascii_word": 3602,
+        "cyrillic": 155,
+        "other": 31
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/handoff.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "696ef4a283fd4b4f1ab7d31b290e32988ac372c5f509a48b1e56638fbb43e6ac",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 6604,
+      "true_tokens": 2088.0
+    },
+    {
+      "bytes": 3926,
+      "counts": {
+        "ascii_other": 813,
+        "ascii_word": 2012,
+        "cyrillic": 529,
+        "other": 16
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX/handoff.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "cd0cff2d978a4de5738f724ae449ee94148da89e408fb77f29e4f37f090b4b30",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 6171,
+      "true_tokens": 1655.0
+    },
+    {
+      "bytes": 10771,
+      "counts": {
+        "ascii_other": 1649,
+        "ascii_word": 1723,
+        "cyrillic": 3614,
+        "other": 63
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/handoff.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "fd1327d3eec62481ddcbaa4ccb23a82ff73499078084fb8f2a29ad9c5c16347c",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 7913,
+      "true_tokens": 3397.0
+    },
+    {
+      "bytes": 11836,
+      "counts": {
+        "ascii_other": 1854,
+        "ascii_word": 2285,
+        "cyrillic": 3733,
+        "other": 88
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ/handoff.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "7fef90c8c8fbb69fa2eb2297902e1fa139a59098fcbca5abbb73313e78325cad",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 8404,
+      "true_tokens": 3888.0
+    },
+    {
+      "bytes": 6738,
+      "counts": {
+        "ascii_other": 1040,
+        "ascii_word": 1059,
+        "cyrillic": 2263,
+        "other": 44
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/findings/03-token-counting-api-2026-08-07.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "c15fc99612c4829d3901eefac905f13e98a9f8767051b711d43506259f3aebe3",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 6559,
+      "true_tokens": 2043.0
+    },
+    {
+      "bytes": 12084,
+      "counts": {
+        "ascii_other": 1822,
+        "ascii_word": 2038,
+        "cyrillic": 4019,
+        "other": 73
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/findings/14-calibration-and-canon-budget-2026-08-07.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "ecb76f1859bc506130e9c206d5aaeddf1d0aa199e80852a678ac11fa50843aa0",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 8005,
+      "true_tokens": 3489.0
+    },
+    {
+      "bytes": 32351,
+      "counts": {
+        "ascii_other": 6392,
+        "ascii_word": 23590,
+        "cyrillic": 1013,
+        "other": 132
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P0.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "dc7b5bdb9af8ecd1fadc8bc46a4936b2f59751d6b532a1565090e1be2a717cf2",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 18740,
+      "true_tokens": 14224.0
+    },
+    {
+      "bytes": 32766,
+      "counts": {
+        "ascii_other": 6304,
+        "ascii_word": 24313,
+        "cyrillic": 944,
+        "other": 99
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "ed22b1b385e30ef701fb6af44580333f87d68bdbec589c9552c10c65db534458",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 17678,
+      "true_tokens": 13162.0
+    },
+    {
+      "bytes": 36549,
+      "counts": {
+        "ascii_other": 6866,
+        "ascii_word": 18950,
+        "cyrillic": 5016,
+        "other": 291
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING/phases/P6.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "21eb49dd8f07ccf983bd12289fa514570b0de97683a6ee6759654d8619ae4965",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 18270,
+      "true_tokens": 13754.0
+    },
+    {
+      "bytes": 54306,
+      "counts": {
+        "ascii_other": 10647,
+        "ascii_word": 38939,
+        "cyrillic": 2133,
+        "other": 169
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P1.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "7ae5ed70f01243e4146a7b39839a345b8757c89a505ff239cb9b3d33d51ff86b",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 28806,
+      "true_tokens": 24290.0
+    },
+    {
+      "bytes": 64213,
+      "counts": {
+        "ascii_other": 9881,
+        "ascii_word": 18747,
+        "cyrillic": 17069,
+        "other": 559
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ/phases/P1.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "30dde4e7f3aca45ac33aa959d152d61c5b7c3bcb70c0e2d2acd77abf460a7220",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 25932,
+      "true_tokens": 21416.0
+    },
+    {
+      "bytes": 52015,
+      "counts": {
+        "ascii_other": 7574,
+        "ascii_word": 10146,
+        "cyrillic": 16585,
+        "other": 452
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/agelto/agelto/plans/2026.08.06-CRAWL-HARDEN/phases/P8.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "de13fee8851109c4180f7ee05bce213fd9f5c1a02ac66697800893221ff11f51",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 21101,
+      "true_tokens": 16585.0
+    },
+    {
+      "bytes": 69197,
+      "counts": {
+        "ascii_other": 13378,
+        "ascii_word": 19290,
+        "cyrillic": 17556,
+        "other": 535
+      },
+      "drift": 0,
+      "model_consistent": true,
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "path": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX/phases/P1.md",
+      "reject_reason": null,
+      "rejected": false,
+      "sha256": "fcf8e0a9ea0ec0534052d72b22c03de8cddc1efd4910c5c3a1a1245d2a82ac4b",
+      "sum3_a": 4516,
+      "sum3_a2": 4516,
+      "sum3_b": 30071,
+      "true_tokens": 25555.0
+    }
+  ],
+  "protocol_version": "differential-usage-v1",
+  "rejected": []
+}

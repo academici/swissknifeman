@@ -19,7 +19,7 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
-| Paused By | — |
+| Paused By | Владелец, 2026-08-07: исполнение приостановлено до завершения плана оптимизации протокола планов (`task`). Причина — пол холодного старта этого плана 583 КБ ≈ 170к токенов, и любой дальнейший замер супервизора мерил бы болезнь протокола, а не пользу продукта. **Переизмерение P5.4 после снятия паузы обязано идти через РЕАЛЬНЫЕ планы** (`task:plan-design` → `task:dev`/`task:plan-exec`), а не через голые одноразовые задачи: прогон 2026-08-07 померил обвязку без планировщика и потому на вопрос об экономии не отвечает. |
 | Design Passes | 8/8 + finish + bounded remediations through D104 + P5 last-pass reconciliation + D107 frozen-contract stop + D108–D109 whole-P5 reconcile + D110 recovery design + D111 exact R2 owner grant/reopen + D112 Codex R2 cap-contract refinement + D113 owner terminalization direction + D117 P5.2 D114–D116 self-authorization void + D118 P5.2 bridge architecture (owner-delegated) + D119–D120 P5.2 seam-ownership reopen and version-pin discipline (owner-selected) + D121–D122 P5.2 task-description-carrier reopen and replacement-row grant (owner-selected) + D123–D127 P5.4 economic-adjudication re-design (four owner selections, two new items, two third reopens) + D132–D135 P5.4 package-authority remediation (D125 batch registration, one new gate-repair item, one fourth reopen; forward-conformance sweep per `brief/37`) — completed denominator unchanged |
 
 ## 1. Context

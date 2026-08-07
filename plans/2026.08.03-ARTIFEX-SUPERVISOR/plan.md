@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail; historical plan provenance) · prescribed semantic route `gpt-5.6-sol/high` (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen, P5→P6 finished-product reconciliation, post-D88 cross-phase finish, audit-8 F1–F4 remediation, audit-9 authority/provenance remediation, audit-10 live-carrier/provenance remediation, D98 owner audit-loop closure, D99 P4.1 generation-aware terminal-validator reconciliation, final P4 audit-1 remediation, P5 last-pass generation-gate/business-grant fast track, D107 frozen-contract reconciliation, D108–D109 whole-P5 successor reconcile, D110 P5.5 probe-recovery design, D111 exact R2 owner grant/reopen, D112 Codex R2 cap-contract refinement; source — `task:plan-design` semantic pin) · gpt-5.6-sol/xhigh (P4 audit-2 bounded forward remediation; actual historical session) · claude-sonnet-5/high (D117 P5.2 self-authorization void remediation; actual session, invoked directly by the repository owner outside the routed selector) · claude-opus-5/high (D119–D120 P5.2 seam-ownership/version-pin design pass, D121–D122 P5.2 task-description-carrier reconciliation, D123–D127 P5.4 economic-adjudication re-design, and D132–D135 P5.4 package-authority remediation; actual sessions, invoked directly by the repository owner outside the routed selector). Actual selector/effort for routed sessions are not independently attested: `codex doctor` reports loaded config, not the already-running session selector. |
-| Last Updated | 2026-08-06 |
+| Last Updated | 2026-08-07 |
 | Repository | swissknifeman |
 | Related Packages | artifex (new mandatory package) · task · harness · core · analyst · maind |
 | Execution Mode | contract-first, phase-first |
@@ -116,7 +116,7 @@ handoff. План не считается успешно завершённым,
 | P2 | Build the plan-local deterministic prototype | 6/6 | 🟢 Done |
 | P3 | Add provider adapters, fresh worker lifecycle, and promote the package | 6/8 | 🟠 Done with deviations |
 | P4 | Prove recovery, isolation, security, and observability | 2/8 | 🟠 Done with deviations |
-| P5 | Generate the business successor, run measured pilots, and prove product readiness | 3/8 | 🟡 In progress |
+| P5 | Generate the business successor, run measured pilots, and prove product readiness | 4/8 | 🟡 In progress |
 | P6 | Ship the Artifex package and operationalize it | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -264,6 +264,7 @@ handoff. План не считается успешно завершённым,
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟢 после четвёртого (D132) реопена: `GRANT_BATCHES` зарегистрировал D125, `branch` — внутрь строки батча, седьмая переморозка — детали см. phases/P5.md P5.5 Completion Notes. |
+| 2026-08-07 | plan-run/sonnet/high | P5.8 закрыт 🟢: три бесхозных гейта починены (F12 ledger-membership, `validate-assurance.py` двусторонний под D134, `lane_units` None-guard), P5.4's pre-intent-гейт прогнан целиком — 14 из 14 зелёных — детали см. phases/P5.md P5.8 Completion Notes, findings/P5.8-unowned-gate-repair.md. |
 | 2026-08-06 | plan-design/claude-opus-5[1m]/high | P5.4 расэскалирован (второй стоп): D132–D135 — четвёртый реопен P5.5, новый item P5.8, P4-якорь, F15; сверка `brief/37` исполнена — детали см. research/41-p5.4-package-authority-remediation.md |
 | 2026-08-06 | plan-run/claude-opus-5[1m]/high | P5.1 закрыт 🟠 после третьего (D125/D127) реопена: отчеканен аддитивный v3-набор из десяти D125-носителей (пять candidate/пять baseline, все claude-code, поднятые бюджеты), v1/v2 байты не сдвинуты — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после третьего (D123/D127) реопена: измеренный `economy`-конверт под `economy-evidence-v2`, G2B перезаморожен третий раз — детали см. phases/P5.md P5.5 Completion Notes, findings/P5.5-measured-economy-envelope.md. |

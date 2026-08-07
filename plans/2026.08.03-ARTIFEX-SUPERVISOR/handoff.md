@@ -1,96 +1,104 @@
-# HANDOFF — 2026-08-06 — after P5.5
+# HANDOFF — 2026-08-07 — after P5.8
 
-**Next:** manual: implementation/high
+**Next:** manual: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | repository-code-edit · deterministic-validator-repair |
+| Capabilities | repository-code-edit · provider-dispatch · deterministic-adjudication |
 | Context | cold-start — plan-step |
-| Суть | P5.8 (новый item): починить три бесхозных гейта (`validate-recovery-pilot.py` F12 — ledger-membership вместо `!=`; `validate-assurance.py` — исторический/живой раскол под D134-исключением P4-якоря; `validate-economy-evidence.py:lane_units` — latent `TypeError` на `None`), затем прогнать полный pre-intent-гейт P5.4 и опубликовать вывод. 0 provider-процессов. |
+| Суть | P5.4 (расэскалирован, теперь unblocked): dispatch exactly ten predeclared D125 admissions as five candidate/baseline `claude-code` wave pairs, independently adjudicate under `economy-evidence-v2`, emit `GO`/`NO-GO`. P5.4's own Implementation Rules require re-running its complete pre-intent gate itself before the first dispatch — `findings/P5.8-unowned-gate-repair.md`'s 14/14 green run is the read-first record, not a substitute for that re-run. |
 | Команда | — (Exec = manual: нет однокомандного эквивалента) |
 
 ```text
-/model sonnet
+/model opus
 /effort high
-/task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.8
+/task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.4
 
-РЕЖИМ: execution — первое исполнение нового item'а P5.8 (D133), НЕ ре-дизайн
-ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md → P5.8 целиком (Intent/Scope/Implementation
-      Rules/Code Guidance/Validation/Acceptance);
-      findings/P5.4-forward-conformance-sweep-2026-08-06.md §2–§3/§6 (F12 ledger-membership факт,
-      P4-якорь коллизия, lane_units дефект);
-      findings/P5.4-package-authority-gap-2026-08-06.md §1–§2 (двенадцатичек-гейт и точный вывод F12);
-      research/41-p5.4-package-authority-remediation.md §4–§6
-ПРЕДУСЛОВИЕ (Implementation Rule 1): ledger's last entry уже равен живому generation_hash
-      business-successor-generation-v1.json — ПРОВЕРЕНО терминальным P5.5 этой сессии
-      (findings/P5.5-d125-batch-registration.md §5); если это условие не выполняется — P5.5 не
-      терминален, стоп до мутации.
-СКОУП: (1) validate-recovery-pilot.py — заменить recorded!=live на D130-паттерн (ledger membership +
-      last-entry==live), добавить --ledger; (2) validate-assurance.py — исторический P4-якорь
-      3533234c против живого G2B-дайджеста вместо равенства с текущим пакетом; (3)
-      validate-economy-evidence.py:lane_units — None-guard для duration_ms/turns, unknown вместо
-      TypeError/0; (4) прогнать ПОЛНЫЙ pre-intent-гейт P5.4 и опубликовать в
-      findings/P5.8-unowned-gate-repair.md; (5) D134 anchor proof (два коммита).
-НЕ ТРОГАТЬ: packages/artifex/**, оба G2B-манифеста, ledger (P5.5 их владелец — этот item только
-      ЧИТАЕТ ledger); любую RECORDED evidence (recovery-pilot-results-v1.json,
-      repository-pilot-results-v{1,2}.json, assurance-manifest-v1.json, shadow-results-v1.json,
-      любой P4 JSON, любой admission/catalog байт, economy-evidence-cases-v2.json, любой
-      замороженный контракт); phases/P4.md или любой artifacts/P4 путь кроме validate-assurance.py;
-      якорь 3533234c (D134 держит); авторинг run-battle-waves.py/validate-economic-verdict.py или
-      вердикт P5.4
+РЕЖИМ: execution — первое исполнение P5.4 (D18 mode), НЕ ре-дизайн
+ВХОД: plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P5.md → P5.4 целиком (Intent/Scope/Implementation
+      Rules/Code Guidance/Validation/Acceptance) — Required Reads начинаются 0a)
+      findings/P5.8-unowned-gate-repair.md (READ FIRST — уже прогнанный gate-run, прочитать, затем
+      прогнать САМОМУ на этом дереве) 0b) findings/P5.5-d125-batch-registration.md (seam-admission
+      smoke) 0c) research/41-p5.4-package-authority-remediation.md §3/§5/§7 0d)
+      findings/P5.4-package-authority-gap-2026-08-06.md §5 (F15/D135); далее полный список Required
+      Reads item'а (28 позиций)
+ПРЕДУСЛОВИЕ: P5.5 терминален (четвёртый реопен, `eba22ece`/`cac65bc1`) и P5.8 терминален (`8a3974c1`) —
+      оба проверены этой и предыдущей сессией. P5.4's Implementation Rules сами требуют прогнать полный
+      pre-intent-гейт ПЕРЕД первым dispatch и остановиться, если что-то красное; findings/P5.8-…
+      даёт 14/14 зелёных на дереве `8a3974c1` — переисполнение гейта на СВОЁМ старте обязательно
+      (дерево могло сдвинуться), не предполагается по чужому прогону.
+СКОУП: авторить validate-economic-verdict.py и его кейсы ДО первого dispatch (near-boundary: 24.999%/25%,
+      1.999×/2×, N=4/N=5, missing owner mapping, unmatched hash, 0 без inclusion_basis/zero_basis, ...);
+      прогнать полный pre-intent gate; validate-only seam-admission smoke ОДНОЙ v3-строки (admitted,
+      intent_written:false, used_slices 0); построить run-battle-waves.py на форме run-pilot.py (P5.2) —
+      явный --runs-root, SKM_CLAUDE_BIN resolution, fresh process на dispatch, disposable worktree на
+      root, diff читается ДО удаления; candidate-лейн через import artifex.activity.BusinessProviderActivityPort
+      (D135, без байта пакета), baseline-лейн через claude_code.fold_business_records +
+      business_dispatch.request; десять D125-admissions как пять candidate/baseline пар на смежных
+      disposable roots, тот же base/task/acceptance/provider/model/effort/capabilities/budgets в паре,
+      фиксированный порядок каталога; оба coordinator-конверта — структурные нули с zero_basis (D123
+      rule 2, D124); пересчитать economy/intervention/retry totals из per-attempt строк под
+      economy-evidence-v2 (single-provider, owner_grant_ref=D123, без claim паритета — D126); floors
+      ДО economics; терминальный успех = каждый D14/D25/D49 floor GREEN + ≥1 eligible branch + литерал
+      GO; G3 пинит измеренный G2B-дайджест и доказывает отсутствие post-P5.5 package delta; NO-GO
+      сохраняет item открытым с точными failed floors, forward remediation, НЕ терминализуется как
+      успех.
+НЕ ТРОГАТЬ: task/provider/baseline/threshold после результатов; synthetic/baseline_pending/unmatched/
+      P0-catalog evidence; price lookup/imputation; 0 без inclusion_basis/zero_basis; candidate-authored
+      readiness; pooled provider masking; N<5 extrapolation; NO-GO как терминальное закрытие фазы/плана;
+      починку гейта, минт/ремінт carrier, поднятие бюджета, переморозку пакета/generation, правку
+      контракта, авторинг собственных inputs; D105/D122/одиннадцатую D125-строку; codex; owner/main/
+      archive/package/fleet/Brain/generated/docs/release mutation; package promotion.
 ```
 
-**Done:** P5.5 закрыт 🟢 после четвёртого (D132) реопена. `business_dispatch.GRANT_BATCHES` зарегистрировал
-`D125` (marker/index/catalog/count из `plan.md` §5 D125), `branch` перенесён внутрь каждой строки батча
-(`load_indexed:118` читает `batch["branch"]` вместо хардкод-литерала) — теперь идентичность батча несёт
-ровно один носитель (`research/41` §2, вариант A+; data-driven таблица отклонена). 7 новых тестов
-(`GrantBatchAuthorityTests`), три доказанно красные на до-правочном модуле, включая регрессионный кейс
-на половинчатую починку. 24/24 в файле, 128/128 пакетных тестов и `validate.sh`. `grep` подтверждает
-ровно два носителя литерала ветки, ни одного сравнения. Живой seam-admission smoke — все три набора
-(v1/v2/v3) `admitted`, `used_slices` 0/0/0 (14/3/10 строк). G2B перезаморожен седьмой раз (0
-provider-процессов), ledger-запись в том же коммите (`eba22ece`). Pre-intent-гейт P5.4 прогнан на
-итоговом дереве: **12 из 13 зелёных**; единственный красный (`validate-recovery-pilot.py`, F12) назван
-вместе с владеющим item'ом — **P5.8** — не проглочен молча. Детали:
-`findings/P5.5-d125-batch-registration.md`, `phases/P5.md` P5.5 Completion Notes.
+**Done:** P5.8 закрыт 🟢. Три бесхозных гейта починены под settled D121/D130-паттерном, каждый с
+failing-case, доказанным красным на pre-repair скрипте, и тремя названными кейсами, зелёными после:
+(1) `validate-recovery-pilot.py` — D130 ledger-membership (`recorded in ledger_hashes` + `ledger_hashes[-1]
+== live`), новый `--ledger`; (2) `validate-assurance.py` — под D134 двусторонний: замороженная
+`g2.package_files` доказана git-блобами на P4-снапшоте (`git log -1 --format=%H` резолвит
+`124df8166d6ea2fc8779bb402a2689010ba8425c` — независимо совпадает с известным G2-предшественником),
+живая сторона — против единственного G2B-дайджеста `business-successor-generation-v1.json`; (3)
+`validate-economy-evidence.py:lane_units` — `None`-guard для `duration_ms`/`turns` по образцу token/cost,
+двадцать v2-кейсов + двадцать v1-регрессий остались byte-identical по вердикту. Item-commit `8a3974c1`
+несёт ровно эти три файла, ничего сверх. P5.4's полный pre-intent gate прогнан целиком на этом дереве:
+**14 из 14 зелёных** (был 12/13 после P5.5, F12 и `validate-assurance.py` были красным/бесхозным) —
+D134 anchor proof обеими командами (вторая называет ровно один коммит, `8a3974c1`, свой собственный).
+Seam-admission smoke одной v3-строки: `admitted`, `intent_written:false`. **0 provider-процессов, 0
+admissions потрачено**, `packages/artifex` не тронут байтом. Детали: `findings/P5.8-unowned-gate-repair.md`,
+`phases/P5.md` P5.8 Completion Notes.
 
-**Remaining:** P5.8 (`⬜`, новый) → P5.4 (`⬜`, расэскалирован — второй стоп резолвится после терминального
-P5.8); затем `task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P5`, одна холодная
-`task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P5`, далее P6 (0/4, `⬜ Not started`).
-В фазе восемь items; терминальны семь из них (три `🟢` и четыре `🟠`), доска несёт `P5 3/8`
-(колонка считает только `🟢`).
+**Remaining:** P5.4 (`⬜`, расэскалирован дважды, оба стопа резолвены D123–D127/D132–D135 — теперь
+unblocked) → `task:plan-close 2026.08.03-ARTIFEX-SUPERVISOR P5`, одна холодная
+`task:plan-audit 2026.08.03-ARTIFEX-SUPERVISOR P5`, далее P6 (0/4, `⬜ Not started`). В фазе восемь
+items; терминальны все восемь, кроме P5.4 (четыре `🟢` — P5.6/P5.7/P5.5/P5.8, три `🟠` — P5.1/P5.2/P5.3);
+доска несёт `P5 4/8` (колонка считает только `🟢`).
 
-**Sources of truth:** `phases/P5.md` → P5.8 (новый item целиком, Intent/Scope/Validation/Acceptance),
-P5.4 (расэскалирован, обновлённый pre-intent-гейт), P5.5 (терминален, четыре реопена) · `plan.md` §5
-D132–D135 и §3 Routing (строка P5.8) ·
-`findings/P5.5-d125-batch-registration.md` (седьмая переморозка, seam-admission smoke, полный прогон
-pre-intent-гейта P5.4 с атрибуцией) ·
-`findings/P5.4-forward-conformance-sweep-2026-08-06.md` (развёртка (a)–(d) с командами и выводом) ·
+**Sources of truth:** `phases/P5.md` → P5.4 (расэскалирован дважды, unblocked теперь), P5.8 (терминален,
+14/14 gate) · `plan.md` §5 D130/D131/D133/D134 и §3 Routing (строка P5.4 — `frontier/high`, `manual`) ·
+`findings/P5.8-unowned-gate-repair.md` (все три починки, все команды/вывод, 14/14 pre-intent gate) ·
+`findings/P5.5-d125-batch-registration.md` (седьмая переморозка, seam-admission smoke) ·
+`findings/P5.4-forward-conformance-sweep-2026-08-06.md` (развёртка (a)–(d)) ·
 `research/41-p5.4-package-authority-remediation.md` (решения, отклонённые альтернативы, порядок) ·
-`findings/P5.4-package-authority-gap-2026-08-06.md` (второй стоп: улики и доказательство двух правок) ·
-`packages/artifex/lib/artifex/business_dispatch.py:31-42,84,117-118` ·
-`artifacts/P5/validate-recovery-pilot.py:124` против `artifacts/P5/validate-repository-pilot.py:141-157` ·
-`artifacts/P5/g2b-generation-ledger-v1.json` (семь записей; последняя `4773f67e…`) · `roadmap.md`.
+`artifacts/P5/g2b-generation-ledger-v1.json` (семь записей; последняя `4773f67e…`) ·
+`artifacts/P5/trial-catalog-v3-p5.4-paired.json` (десять D125-строк) · `roadmap.md`.
 
 **Open risks:**
 
-- **P5.8 Implementation Rule (1) — прекондишн проверен, но не самоочевиден для следующего исполнителя.**
-  Ledger's last entry (`4773f67e…`) равен живому `generation_hash` ТОЛЬКО потому, что этот заход положил
-  и переморозку, и ledger-запись в ОДНОМ коммите (`eba22ece`); если между закрытием P5.5 и стартом P5.8
-  ledger или манифест сдвинутся любым другим заходом — прекондишн P5.8 обязан переустановиться до первой
-  правки, не предполагаться.
-- **Ledger-запись несёт неточный `commit`-литерал (раскрытое, безвредное расхождение).** Поле `commit`
-  седьмой записи читает `191aabca` — хеш ЗА ОДИН amend до фактического `eba22ece`, потому что запись
-  ссылается сама на себя (хеш коммита — функция его же дерева, включающего эту самую строку). Ни один
-  валидатор не читает поле `commit` (проверено grep'ом по обоим потребителям ledger) — расхождение
-  чисто информационное, но следующему исполнителю, читающему историю ledger вручную, стоит знать про
-  этот структурный артефакт, а не принимать литерал за точный.
-- (Перенесено) агрегатный дайджест `bcd5443f…` без записанного вывода; `packages/artifex/scripts/validate.sh:7`
-  использует отсутствующий здесь `rg`, поэтому его plan-path-гвард молча ничего не проверяет; в рабочем
-  дереве лежит крупный посторонний диф по другим пакетам (skiller/harness/task/core/docs, `.swissknife.json`,
-  `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`, `CHANGELOG.md`) и устаревшие `git worktree` из чужих
-  сессий — этим заходом не тронуты и не закоммичены.
+- **P5.4's Implementation Rules re-require the full pre-intent gate on ITS OWN start**, not merely a
+  read of P5.8's finding: the tree may shift between P5.8's close and P5.4's start (a new commit could
+  land from a parallel session). The launch-block above states this explicitly; do not treat
+  `findings/P5.8-unowned-gate-repair.md`'s 14/14 as a standing fact past this session's tree.
+- **Ledger-запись несёт неточный `commit`-литерал (унаследовано, безвредное расхождение).** Поле
+  `commit` седьмой записи (`4773f67e…`) читает `191aabca`, хеш ЗА ОДИН amend до фактического `eba22ece`
+  — самоссылочная структура, не читается ни одним валидатором (проверено), но следующему исполнителю,
+  читающему ledger вручную, стоит знать про этот артефакт.
+- (Перенесено без изменений) агрегатный дайджест `bcd5443f…` без записанного вывода;
+  `packages/artifex/scripts/validate.sh:7` использует отсутствующий здесь `rg`, поэтому его
+  plan-path-гвард молча ничего не проверяет; в рабочем дереве лежит крупный посторонний диф по другим
+  пакетам (skiller/harness/task/core/docs, `.swissknife.json`, `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/`,
+  и др.) и устаревшие `git worktree` из чужих сессий — этим заходом не тронуты и не закоммичены.
 
 **Workarounds/Deferred/Open questions:**
 

@@ -263,6 +263,7 @@ handoff. План не считается успешно завершённым,
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-08-07 | plan-run/claude-opus-5[1m]/high | P5.4 прогнан впервые и остаётся 🟡 НЕтерминальным: десять D125-допусков задиспатчены пятью парами, 2/5 волн приняты, вердикт `NO-GO` (floors `REL-BUDGET`/`REL-RECOVERY`/`SEC-WORKTREE`) — детали см. phases/P5.md P5.4 Pending Work, findings/P5-economic-verdict.md. |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟢 после четвёртого (D132) реопена: `GRANT_BATCHES` зарегистрировал D125, `branch` — внутрь строки батча, седьмая переморозка — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-07 | plan-run/sonnet/high | P5.8 закрыт 🟢: три бесхозных гейта починены (F12 ledger-membership, `validate-assurance.py` двусторонний под D134, `lane_units` None-guard), P5.4's pre-intent-гейт прогнан целиком — 14 из 14 зелёных — детали см. phases/P5.md P5.8 Completion Notes, findings/P5.8-unowned-gate-repair.md. |
 | 2026-08-06 | plan-design/claude-opus-5[1m]/high | P5.4 расэскалирован (второй стоп): D132–D135 — четвёртый реопен P5.5, новый item P5.8, P4-якорь, F15; сверка `brief/37` исполнена — детали см. research/41-p5.4-package-authority-remediation.md |

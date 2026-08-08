@@ -1,0 +1,24 @@
+{
+  "schema_version": "p3-smoke-dispatch-manifest-index-v1",
+  "index_version": "1.0.0",
+  "manifests": [
+    {
+      "task_id": "p3-smoke-claude-code-v1",
+      "provider": "claude-code",
+      "run_id": "p3-smoke-run-claude-code-001",
+      "slice_id": "p3-smoke-claude-code-v1:1",
+      "manifest_hash": "e111f7cf499d88d78d65e250b5e252c18e0e4763e23c1fb71f1eb3932272886e",
+      "task_hash": "894717db5c6b4d286198a2f8af3cbc63e1bf65b365a92f55e5244e67a794b55b",
+      "grant_hash": "b30831c314e9c40540135745ff137bf58dbef261341bad540eea4f0a9e6adaeb"
+    },
+    {
+      "task_id": "p3-smoke-codex-v1",
+      "provider": "codex",
+      "run_id": "p3-smoke-run-codex-001",
+      "slice_id": "p3-smoke-codex-v1:1",
+      "manifest_hash": "1c4f36ce91961a5890cf10ae05b61aee69e6f78503dc01f44fd04cea264fb1ac",
+      "task_hash": "e8712127a818303474b862b9ad57f1954bdeecb72f829c97d17aa1e612709ff1",
+      "grant_hash": "c9ed389814063a9eaca7b199bced7aba9a28584b31b50505934cea1ccbc4af3a"
+    }
+  ]
+}

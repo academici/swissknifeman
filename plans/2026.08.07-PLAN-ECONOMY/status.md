@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: efdc8ed1681f5a3b311d07a55930130ee4a0f8503f5491173ede234c30aae5a1
+inputs_sha256: f43fd1345b6dc325f107ee761275418372d916dc3bf8c64243c1da4b9b515b33
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
-| P2 | Перестроить носители плана | 4/10 | ⬜ Not started |
+| P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 0/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
@@ -64,7 +64,7 @@ generated_by: task plan-views status
 | P2.7 | Убрать терминальные фазы с живого пути и собрать дайджест закрытия | 🟠 Done with deviations | 2026-08-08 |
 | P2.8 | Перевести этот план на раскладку v2 конвертером и подтвердить замером | 🟢 Done | 2026-08-08 |
 | P2.9 | Заморозить stage-aware admission и разрезать oversized task carriers | 🟢 Done | 2026-08-08 |
-| P2.10 | Пересобрать read graph и доказать self-host admission | ⬜ Not started | 2026-08-08 |
+| P2.10 | Пересобрать read graph и доказать self-host admission | 🟢 Done | 2026-08-08 |
 
 ## Phase P3
 
@@ -203,6 +203,10 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: implementation/high (gpt-5.6-terra); migration and 603-test validation verified; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; read-budget 1.1.0 stage-aware admission и bounded plan-lint carriers; bash packages/task/scripts/validate.sh: 612 tests (на 3f478fa7) green; self-host ready, D2(a)+D2(b) pass; DIAGNOSTIC-PARITY-OK; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · ARTIFEX dry-run: missing ## Обсуждение; resume /task:plan-design 2026.08.07-PLAN-ECONOMY P2.10 |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · Resumed after owner-authorized local converter compatibility repair; source plan remains read-only. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; P2.10 read graph, D74 and read-only ARTIFEX projection verified; task validate: 616 tests green on 06f60871; write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 

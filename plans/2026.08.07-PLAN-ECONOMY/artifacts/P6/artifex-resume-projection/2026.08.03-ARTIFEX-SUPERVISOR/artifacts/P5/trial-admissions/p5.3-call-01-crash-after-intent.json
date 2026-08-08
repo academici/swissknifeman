@@ -1,0 +1,131 @@
+{
+  "admission_hash": "ec6f215597654d32edeaf4bfa9e348481b03ecde5f34cfe0c2518d02568f7cbb",
+  "admission_version": "1.0.0",
+  "grant": {
+    "branch": "p5-business-trials",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 64,
+      "max_output_bytes": 16384,
+      "max_slices": 1,
+      "max_turns": 8,
+      "timeout_ms": 180000,
+      "token_limit": 8000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary",
+      "ephemeral_session"
+    ],
+    "catalog_hash": "df5d7545b3d87fa3e78c567eb708e8dfb5f3d0983b789d7ebb1838c3daf2745f",
+    "controlled_root": "mktemp:p5-p5-3-p5.3-call-01-crash-after-intent",
+    "expiry": "2026-08-12T23:59:59Z",
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "grant_hash": "cdeb1b8f4469c913ab547753c2518033b255cb680b59163f3c475356c2764067",
+    "grant_id": "D105:p5.3-call-01-crash-after-intent",
+    "grant_version": "1.0.0",
+    "max_slices": 1,
+    "owner_decision": "D105",
+    "owner_marker": "[OWNER-GRANT:G-OWNER-P5-BUSINESS]",
+    "provider": "codex",
+    "purpose": "business-trial",
+    "request_hash": "ec16d0c556abac6f106b285ff6bc84da1afb782f0466b7ed4a60feb70aeef52b",
+    "revoked": false,
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-grant-v1",
+    "task_hash": "2bbdf029f251dae689a57d34d4ff9cf148de7e161174e3338451697bcc664afa",
+    "task_id": "p5.3-call-01-crash-after-intent"
+  },
+  "purpose": "business-trial",
+  "replay": {
+    "attempt": 1,
+    "events": [],
+    "grant_id": "D105:p5.3-call-01-crash-after-intent",
+    "idempotency_key": "65f577f244458b015566d06cdfba197d623e8db909185f3102a4ebd9e4fbf29d",
+    "replay_hash": "a2333262a90a8555e53e852444093eb376d1d65576eefd6c68ec2c13c992ecfc",
+    "run_id": "p5-business:p5.3-call-01-crash-after-intent",
+    "schema_version": "artifex-business-dispatch-replay-v1",
+    "slice_id": "p5.3-call-01-crash-after-intent:1",
+    "task_id": "p5.3-call-01-crash-after-intent",
+    "trial_id": "p5.3-call-01-crash-after-intent",
+    "used_slices": 0
+  },
+  "schema_version": "artifex-business-dispatch-admission-v1",
+  "task": {
+    "acceptance_refs": [
+      "REL-ACCEPTED-SCOPE",
+      "REL-RECOVERY",
+      "REL-IDEMPOTENCY",
+      "REL-VALIDATION",
+      "REL-BUDGET",
+      "SEC-AUTHORITY",
+      "SEC-PRIVACY",
+      "SEC-WORKTREE",
+      "SEC-HOOK-INTEGRITY",
+      "EVD-SOURCE-HASHES",
+      "EVD-INDEPENDENT-ADJUDICATOR",
+      "EVD-UNKNOWN-PRESERVATION",
+      "PRV-PARITY-SCOPE"
+    ],
+    "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 64,
+      "max_output_bytes": 16384,
+      "max_slices": 1,
+      "max_turns": 8,
+      "timeout_ms": 180000,
+      "token_limit": 8000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary",
+      "ephemeral_session"
+    ],
+    "catalog_hash": "df5d7545b3d87fa3e78c567eb708e8dfb5f3d0983b789d7ebb1838c3daf2745f",
+    "controlled_root": "mktemp:p5-p5-3-p5.3-call-01-crash-after-intent",
+    "files": [
+      "packages/artifex/lib/artifex/cli.py",
+      "packages/artifex/lib/artifex/scheduler.py",
+      "packages/artifex/lib/artifex/worker.py",
+      "packages/artifex/lib/artifex/worktree.py",
+      "packages/artifex/tests/test_worktree_isolation.py",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+    ],
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "manifest_version": "1.0.0",
+    "parent_item_id": "P5.3",
+    "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+    "provider": "codex",
+    "purpose": "business-trial",
+    "repository": "swissknifeman-controlled-disposable",
+    "request_hash": "ec16d0c556abac6f106b285ff6bc84da1afb782f0466b7ed4a60feb70aeef52b",
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-task-v1",
+    "task_hash": "2bbdf029f251dae689a57d34d4ff9cf148de7e161174e3338451697bcc664afa",
+    "task_id": "p5.3-call-01-crash-after-intent",
+    "validation": [
+      "scoped-git-diff",
+      "frozen-acceptance",
+      "rollback-to-exact-base"
+    ]
+  },
+  "trial_id": "p5.3-call-01-crash-after-intent",
+  "usage": {
+    "max_slices": 1,
+    "reusable": false,
+    "used_slices": 0
+  }
+}

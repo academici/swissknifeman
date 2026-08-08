@@ -1,0 +1,7 @@
+{
+  "schema_version": "p4-security-results-v1",
+  "result": "green",
+  "cases_sha256": "0c33c7a372e9fbc87991ef880032403dff0487196bbb3665e665c2820ddabdc4",
+  "hook": {"provider": "codex", "status": "green", "actions": 0},
+  "persistence": {"raw_content": false, "environment_values": false, "canary_sha256_only": true}
+}

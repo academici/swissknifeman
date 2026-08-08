@@ -1,0 +1,445 @@
+{
+  "schema_version": "supervisor-run-cases-v1",
+  "contract_version": "1.0.0",
+  "declared": {
+    "states": [
+      "CREATED",
+      "READY",
+      "INTENT_DURABLE",
+      "BOUNDARY_ACTIVE",
+      "OBSERVED",
+      "VALIDATING",
+      "ACCEPTED",
+      "ROLLED_BACK",
+      "OWNER_ATTENTION",
+      "PROVIDER_UNAVAILABLE",
+      "BUDGET_EXHAUSTED",
+      "INCIDENT",
+      "COMPLETED",
+      "ABORTED"
+    ],
+    "events": [
+      "freeze_run",
+      "dispatch_ready",
+      "append_intent",
+      "boundary_started",
+      "append_observation",
+      "validation_green",
+      "validation_red",
+      "reconcile_preimage",
+      "reconcile_postimage",
+      "reconcile_partial",
+      "reconcile_third_state",
+      "source_drift",
+      "authority_attention",
+      "journal_invalid",
+      "provider_unavailable",
+      "budget_exhausted",
+      "owner_decision_continue",
+      "owner_decision_abort",
+      "finish_run"
+    ],
+    "refusal_reasons": [
+      "UNKNOWN_SCHEMA_VERSION",
+      "UNKNOWN_RECORD_KEY",
+      "UNKNOWN_STATE",
+      "UNKNOWN_EVENT",
+      "ILLEGAL_TRANSITION",
+      "RUN_IDENTITY_MISMATCH",
+      "INPUT_HASH_MISSING",
+      "SOURCE_DRIFT",
+      "LOCK_HELD",
+      "LOCK_IDENTITY_AMBIGUOUS",
+      "SEQUENCE_GAP",
+      "HASH_MISMATCH",
+      "CHAIN_MISMATCH",
+      "TRUNCATED_RECORD",
+      "REORDERED_RECORD",
+      "DUPLICATE_EVENT",
+      "IDEMPOTENCY_COLLISION",
+      "OBSERVATION_WITHOUT_INTENT",
+      "POSTIMAGE_THIRD_STATE",
+      "PARTIAL_UNRECOGNIZED",
+      "BACKUP_MISSING",
+      "BACKUP_HASH_MISMATCH",
+      "ORPHAN_IDENTITY_AMBIGUOUS",
+      "REDACTION_VIOLATION",
+      "BUDGET_LIMIT",
+      "OWNER_DECISION_REQUIRED"
+    ]
+  },
+  "state_rules": {
+    "CREATED": {
+      "on": {
+        "freeze_run": "READY",
+        "source_drift": "OWNER_ATTENTION",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "READY": {
+      "on": {
+        "append_intent": "INTENT_DURABLE",
+        "source_drift": "OWNER_ATTENTION",
+        "authority_attention": "OWNER_ATTENTION",
+        "budget_exhausted": "BUDGET_EXHAUSTED",
+        "owner_decision_abort": "ABORTED",
+        "finish_run": "COMPLETED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "INTENT_DURABLE": {
+      "on": {
+        "boundary_started": "BOUNDARY_ACTIVE",
+        "reconcile_preimage": "ROLLED_BACK",
+        "reconcile_postimage": "VALIDATING",
+        "reconcile_partial": "ROLLED_BACK",
+        "reconcile_third_state": "INCIDENT",
+        "source_drift": "INCIDENT",
+        "journal_invalid": "INCIDENT",
+        "provider_unavailable": "PROVIDER_UNAVAILABLE",
+        "budget_exhausted": "BUDGET_EXHAUSTED",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "BOUNDARY_ACTIVE": {
+      "on": {
+        "append_observation": "OBSERVED",
+        "reconcile_preimage": "ROLLED_BACK",
+        "reconcile_postimage": "VALIDATING",
+        "reconcile_partial": "ROLLED_BACK",
+        "reconcile_third_state": "INCIDENT",
+        "source_drift": "INCIDENT",
+        "journal_invalid": "INCIDENT",
+        "provider_unavailable": "PROVIDER_UNAVAILABLE",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "OBSERVED": {
+      "on": {
+        "validation_green": "ACCEPTED",
+        "validation_red": "ROLLED_BACK",
+        "reconcile_preimage": "ROLLED_BACK",
+        "reconcile_postimage": "VALIDATING",
+        "reconcile_partial": "ROLLED_BACK",
+        "reconcile_third_state": "INCIDENT",
+        "source_drift": "INCIDENT",
+        "journal_invalid": "INCIDENT",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "VALIDATING": {
+      "on": {
+        "validation_green": "ACCEPTED",
+        "validation_red": "ROLLED_BACK",
+        "source_drift": "INCIDENT",
+        "journal_invalid": "INCIDENT",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "ACCEPTED": {
+      "on": {
+        "dispatch_ready": "READY",
+        "source_drift": "INCIDENT",
+        "journal_invalid": "INCIDENT",
+        "finish_run": "COMPLETED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "ROLLED_BACK": {
+      "on": {
+        "dispatch_ready": "READY",
+        "budget_exhausted": "BUDGET_EXHAUSTED",
+        "journal_invalid": "INCIDENT",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "OWNER_ATTENTION": {
+      "on": {
+        "owner_decision_continue": "READY",
+        "owner_decision_abort": "ABORTED",
+        "journal_invalid": "INCIDENT"
+      },
+      "otherwise": "OWNER_DECISION_REQUIRED"
+    },
+    "PROVIDER_UNAVAILABLE": {
+      "on": {
+        "owner_decision_continue": "READY",
+        "owner_decision_abort": "ABORTED",
+        "budget_exhausted": "BUDGET_EXHAUSTED",
+        "journal_invalid": "INCIDENT"
+      },
+      "otherwise": "OWNER_DECISION_REQUIRED"
+    },
+    "BUDGET_EXHAUSTED": {
+      "on": {
+        "owner_decision_continue": "READY",
+        "owner_decision_abort": "ABORTED",
+        "journal_invalid": "INCIDENT"
+      },
+      "otherwise": "BUDGET_LIMIT"
+    },
+    "INCIDENT": {
+      "on": {
+        "owner_decision_continue": "READY",
+        "owner_decision_abort": "ABORTED"
+      },
+      "otherwise": "OWNER_DECISION_REQUIRED"
+    },
+    "COMPLETED": {
+      "on": {},
+      "otherwise": "ILLEGAL_TRANSITION"
+    },
+    "ABORTED": {
+      "on": {},
+      "otherwise": "ILLEGAL_TRANSITION"
+    }
+  },
+  "journal_fixture": {
+    "run_id": "run-fixture-001",
+    "slice_id": "P1.1",
+    "idempotency_key": "5f720e28a7c16e838a48b202a2cfcecfb9ca45f1e39fe9c84eb2167586be41a8",
+    "payloads": [
+      {
+        "ts": "2026-08-03T10:00:00Z",
+        "run_id": "run-fixture-001",
+        "slice_id": null,
+        "attempt": null,
+        "event": "freeze_run",
+        "state_before": "CREATED",
+        "state_after": "READY",
+        "idempotency_key": null,
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      },
+      {
+        "ts": "2026-08-03T10:00:01Z",
+        "run_id": "run-fixture-001",
+        "slice_id": "P1.1",
+        "attempt": 1,
+        "event": "append_intent",
+        "state_before": "READY",
+        "state_after": "INTENT_DURABLE",
+        "idempotency_key": "5f720e28a7c16e838a48b202a2cfcecfb9ca45f1e39fe9c84eb2167586be41a8",
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      },
+      {
+        "ts": "2026-08-03T10:00:02Z",
+        "run_id": "run-fixture-001",
+        "slice_id": "P1.1",
+        "attempt": 1,
+        "event": "boundary_started",
+        "state_before": "INTENT_DURABLE",
+        "state_after": "BOUNDARY_ACTIVE",
+        "idempotency_key": "5f720e28a7c16e838a48b202a2cfcecfb9ca45f1e39fe9c84eb2167586be41a8",
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      },
+      {
+        "ts": "2026-08-03T10:00:03Z",
+        "run_id": "run-fixture-001",
+        "slice_id": "P1.1",
+        "attempt": 1,
+        "event": "append_observation",
+        "state_before": "BOUNDARY_ACTIVE",
+        "state_after": "OBSERVED",
+        "idempotency_key": "5f720e28a7c16e838a48b202a2cfcecfb9ca45f1e39fe9c84eb2167586be41a8",
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      },
+      {
+        "ts": "2026-08-03T10:00:04Z",
+        "run_id": "run-fixture-001",
+        "slice_id": "P1.1",
+        "attempt": 1,
+        "event": "validation_green",
+        "state_before": "OBSERVED",
+        "state_after": "ACCEPTED",
+        "idempotency_key": "5f720e28a7c16e838a48b202a2cfcecfb9ca45f1e39fe9c84eb2167586be41a8",
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      },
+      {
+        "ts": "2026-08-03T10:00:05Z",
+        "run_id": "run-fixture-001",
+        "slice_id": null,
+        "attempt": null,
+        "event": "finish_run",
+        "state_before": "ACCEPTED",
+        "state_after": "COMPLETED",
+        "idempotency_key": null,
+        "input_hashes": {},
+        "evidence": {},
+        "redaction": {}
+      }
+    ]
+  },
+  "journal_mutations": [
+    {"id": "JRN-001", "mutation": "none", "expected": "allow"},
+    {"id": "JRN-002", "mutation": "bad_record_hash", "expected": "HASH_MISMATCH"},
+    {"id": "JRN-003", "mutation": "bad_prev_hash", "expected": "CHAIN_MISMATCH"},
+    {"id": "JRN-004", "mutation": "sequence_gap", "expected": "SEQUENCE_GAP"},
+    {"id": "JRN-005", "mutation": "reorder", "expected": "REORDERED_RECORD"},
+    {"id": "JRN-006", "mutation": "truncate", "expected": "TRUNCATED_RECORD"},
+    {"id": "JRN-007", "mutation": "duplicate", "expected": "DUPLICATE_EVENT"},
+    {"id": "JRN-008", "mutation": "unknown_key", "expected": "UNKNOWN_RECORD_KEY"},
+    {"id": "JRN-009", "mutation": "unknown_version", "expected": "UNKNOWN_SCHEMA_VERSION"},
+    {"id": "JRN-010", "mutation": "unknown_event", "expected": "UNKNOWN_EVENT"},
+    {"id": "JRN-011", "mutation": "unknown_state", "expected": "UNKNOWN_STATE"},
+    {"id": "JRN-012", "mutation": "illegal_transition", "expected": "ILLEGAL_TRANSITION"},
+    {"id": "JRN-013", "mutation": "observation_without_intent", "expected": "OBSERVATION_WITHOUT_INTENT"},
+    {"id": "JRN-014", "mutation": "idempotency_collision", "expected": "IDEMPOTENCY_COLLISION"}
+  ],
+  "reconcile_cases": [
+    {
+      "id": "REC-001",
+      "cut": "before_intent",
+      "observed": "exact_preimage",
+      "backup": "not_needed",
+      "expected_state": "READY",
+      "expected_reason": "no_boundary_authorized",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-002",
+      "cut": "after_intent_before_boundary",
+      "observed": "exact_preimage",
+      "backup": "not_needed",
+      "expected_state": "ROLLED_BACK",
+      "expected_reason": "exact_no_effect",
+      "retry": true,
+      "public_call": false
+    },
+    {
+      "id": "REC-003",
+      "cut": "during_boundary_before_observation",
+      "observed": "exact_postimage",
+      "backup": "not_needed",
+      "expected_state": "VALIDATING",
+      "expected_reason": "validate_without_rerun",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-004",
+      "cut": "during_boundary_before_observation",
+      "observed": "recognized_partial",
+      "backup": "valid",
+      "expected_state": "ROLLED_BACK",
+      "expected_reason": "whole_slice_rollback",
+      "retry": true,
+      "public_call": false
+    },
+    {
+      "id": "REC-005",
+      "cut": "during_boundary_before_observation",
+      "observed": "recognized_partial",
+      "backup": "missing",
+      "expected_state": "INCIDENT",
+      "expected_reason": "BACKUP_MISSING",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-006",
+      "cut": "during_boundary_before_observation",
+      "observed": "recognized_partial",
+      "backup": "hash_mismatch",
+      "expected_state": "INCIDENT",
+      "expected_reason": "BACKUP_HASH_MISMATCH",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-007",
+      "cut": "during_boundary_before_observation",
+      "observed": "unknown_partial",
+      "backup": "valid",
+      "expected_state": "INCIDENT",
+      "expected_reason": "PARTIAL_UNRECOGNIZED",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-008",
+      "cut": "during_boundary_before_observation",
+      "observed": "third_state",
+      "backup": "not_applicable",
+      "expected_state": "INCIDENT",
+      "expected_reason": "POSTIMAGE_THIRD_STATE",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-009",
+      "cut": "after_observation_before_validation",
+      "observed": "exact_postimage",
+      "backup": "not_needed",
+      "expected_state": "VALIDATING",
+      "expected_reason": "validate_recorded_postimage",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-010",
+      "cut": "after_validation_before_projection",
+      "observed": "accepted_postimage",
+      "backup": "not_needed",
+      "expected_state": "ACCEPTED",
+      "expected_reason": "idempotent_bookkeeping_only",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-011",
+      "cut": "orphan_reconcile",
+      "observed": "ambiguous_process_identity",
+      "backup": "not_applicable",
+      "expected_state": "OWNER_ATTENTION",
+      "expected_reason": "ORPHAN_IDENTITY_AMBIGUOUS",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-012",
+      "cut": "before_intent",
+      "observed": "source_drift",
+      "backup": "not_applicable",
+      "expected_state": "OWNER_ATTENTION",
+      "expected_reason": "SOURCE_DRIFT",
+      "retry": false,
+      "public_call": false
+    },
+    {
+      "id": "REC-013",
+      "cut": "after_intent_before_boundary",
+      "observed": "source_drift",
+      "backup": "not_applicable",
+      "expected_state": "INCIDENT",
+      "expected_reason": "SOURCE_DRIFT",
+      "retry": false,
+      "public_call": false
+    }
+  ],
+  "boundary_cases": [
+    {"id": "BND-001", "condition": "lock_held", "expected": "LOCK_HELD", "allows_effect": false},
+    {"id": "BND-002", "condition": "lock_identity_ambiguous", "expected": "LOCK_IDENTITY_AMBIGUOUS", "allows_effect": false},
+    {"id": "BND-003", "condition": "run_identity_mismatch", "expected": "RUN_IDENTITY_MISMATCH", "allows_effect": false},
+    {"id": "BND-004", "condition": "input_hash_missing", "expected": "INPUT_HASH_MISSING", "allows_effect": false},
+    {"id": "BND-005", "condition": "redaction_violation", "expected": "REDACTION_VIOLATION", "allows_effect": false},
+    {"id": "BND-006", "condition": "budget_limit", "expected": "BUDGET_LIMIT", "allows_effect": false},
+    {"id": "BND-007", "condition": "owner_decision_missing", "expected": "OWNER_DECISION_REQUIRED", "allows_effect": false}
+  ]
+}

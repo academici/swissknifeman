@@ -1,0 +1,847 @@
+{
+  "archive_code_imported": false,
+  "candidate_calls": 0,
+  "economic_evidence": false,
+  "outcomes": [
+    {
+      "case_id": "READY::dispatch",
+      "expected_hash": "67b8c421a514602bd7a535c6369094114e5b9262f97b13b8b864e0f73a02e947",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::pre-mutation-allow",
+      "expected_hash": "cd1cf30ddd945cdbb14b54bb2c5c7f8d313af47af9a23ada6e2837232856de52",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::pre-mutation-deny",
+      "expected_hash": "fc02b209a0d86be91b91e12e21968ba8b4d41f128f41dc5fc495ba1d9ad3a0f2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::mutation-complete",
+      "expected_hash": "7c86f1c96d76ab736d354376eb6fc78350c32e3020f9c13404bbacd538b11245",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::validation-green",
+      "expected_hash": "cbc359a0287155da4a157a1965f624929a6780fe59e39f7b35085b9ae8e69ca2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::validation-red",
+      "expected_hash": "0f25d0eff969248166dde5b189a9a0f716c5d2c9f1f0747a43a599250e1c4deb",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::typed-finding",
+      "expected_hash": "25936dcd6b51fb9dd0163dcd01ff6aad6fcd0cf71658fd456c5c3732f0974776",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::same-finding-third",
+      "expected_hash": "4b220ad41b17e3fe3b59ccd1f5f68b808ff90c6f093c141e51bbfdf6daf43eb4",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::pre-final-allow",
+      "expected_hash": "43d42abb623ee0b63d5a100805d08660da8575f173f9e9f128cd220f18ad30ca",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::pre-final-deny",
+      "expected_hash": "a748ff09380f7726c374573292f71a1cb3f1d1466997852bb6ff6c7de6aaf68a",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::close-committed",
+      "expected_hash": "349a0163a4cf55b6d3109a39335f867146cb3b878feb9d8e5d79a42f13bb567e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::audit-verdict",
+      "expected_hash": "fb29b33f701fa33004c2dd252fc82f852567db032e5c079dd058b6dd66e03cf7",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::owner-decision",
+      "expected_hash": "ab05a3c27cbf6e7cf27fb6b7304e81e09b509806f3ae65f4e23fba3d7f9dda2e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::escalation-trigger",
+      "expected_hash": "b0157054a57f3717861efdf9a209b1d7c4e37edabb94a1c885dac7af56044c1a",
+      "result": "mapped"
+    },
+    {
+      "case_id": "READY::skip-by-decision",
+      "expected_hash": "f7e50311edf806689bd93291361266660c87c62ee0bf480875017c8db711b746",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::dispatch",
+      "expected_hash": "fe776b279c5197580ac40ffd319d11c5a76900b0089640305e376b4f93a1c950",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::pre-mutation-allow",
+      "expected_hash": "dd55d683a06c8c38edb3452897ad4dad12b8fe34195ee7bb8367454eb7b2c59e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::pre-mutation-deny",
+      "expected_hash": "c273fea1a638aba894bfe8593c80afe2c7f3a3a4458b4e599cec26acdb9eb850",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::mutation-complete",
+      "expected_hash": "cf75895b6078e9daa559f2d276f0ed3ddcf1080488b33c323211e7eb842ed2bb",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::validation-green",
+      "expected_hash": "4def976a60e72092b7d4059b50326b19407bf38f4ed78c4b67b711e40d7f81b3",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::validation-red",
+      "expected_hash": "beb42f27aeba18def826d3cbf90249ec3ec9dbd82f408d39ffd57b6e3df8fed6",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::typed-finding",
+      "expected_hash": "23d647c8cdeac54cc40b34e462929b6bee1bfd0938e8e3c9082cd501b6b0faf1",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::same-finding-third",
+      "expected_hash": "b6192c3300a7d20f6205794a373c58388158343a92151ceed24a6a2d11ce1af2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::pre-final-allow",
+      "expected_hash": "2320051a0712dc31c078d8ad8a86ab893e0021ad9cc1d2648724f792086c3698",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::pre-final-deny",
+      "expected_hash": "630fc0553d35e9a81b93e9c6a8b5b81bf25704bc80ed5b148163b9501df6bc09",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::close-committed",
+      "expected_hash": "362592010f2311ecce919d7ab299a202281ad40ee7ce1908d413773d874f1824",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::audit-verdict",
+      "expected_hash": "f8f7bdc5bb9120cd421135241896b6183ca0dc99eff5a1af597d1a7bc56e44ae",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::owner-decision",
+      "expected_hash": "f28518eb87e4fa36b28e4e108b06d0e830eabbf3c007091c24223de9b4597b77",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::escalation-trigger",
+      "expected_hash": "b627eeaee86e937732c1331e317b893fc22dd009b5ca5c99d8d40469fe2a9211",
+      "result": "mapped"
+    },
+    {
+      "case_id": "EXECUTING::skip-by-decision",
+      "expected_hash": "94e9944c7e4743a9400f44da8d053685548e395d406bd14a3446cd268d75e4e5",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::dispatch",
+      "expected_hash": "ea787dc5ab94d15c8d7400e666598f19cd3a7b16095973fd6b0abc341db983f8",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::pre-mutation-allow",
+      "expected_hash": "9114486fcfcc3c258da9a4d423343bf5a1be773ca363ca208c37d57cc36d070e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::pre-mutation-deny",
+      "expected_hash": "e4d851c1557664b5b758f28f893bb625f9fd7a14fd01c9d6ca9193eea8e9d232",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::mutation-complete",
+      "expected_hash": "b11bc641c4e0ed6631472c813f894aa0791ec00cf84855295d54fc41bd1d935b",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::validation-green",
+      "expected_hash": "09057df65977885d14663d6ce72130dbac5b6ee6cfd682c497fc967130e31d16",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::validation-red",
+      "expected_hash": "f9f12cba7154f9f761fa10c17c75f352337d70cd7c1d506495d48179ff892162",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::typed-finding",
+      "expected_hash": "0e5cff48254486d8d2c0f53ba88b02e9dd762f951565e1848b2a72946606fd97",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::same-finding-third",
+      "expected_hash": "1a7b761fd526afe4d8c4073a8d387dfcc52fc3fcde4f8e9f0cf44299b7b242b4",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::pre-final-allow",
+      "expected_hash": "5831e4939599b82e4f6a940fb90c79ce6434cfb7322fec39e8487b68edcb0c66",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::pre-final-deny",
+      "expected_hash": "b79534ef61ae090d8f9f54f3bb40347824e983c22e83c4221aa2bfd33a77b5df",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::close-committed",
+      "expected_hash": "ef549d36854ce6a5dc786d6d8a8b82aca80ba4773a893911f7ae1894481fd3af",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::audit-verdict",
+      "expected_hash": "1f510a044b05dec883c12cd92b335c3d5afe8410e0c1a50d2fec59b4fb17bb29",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::owner-decision",
+      "expected_hash": "e43ede47634e14ebd6b978d6fe797a88910b4c80596dc537af84ca657280a513",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::escalation-trigger",
+      "expected_hash": "2c6377e25d1f55709d179e4460ec081e9d462f38cd868f86a91d918ade709807",
+      "result": "mapped"
+    },
+    {
+      "case_id": "VERIFYING::skip-by-decision",
+      "expected_hash": "54d6820534f5ad2cab3441b1e26d1f7d9e0bb8bfc7593b36161885ebe1d092e6",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::dispatch",
+      "expected_hash": "65949d42e8295aa478c59a727078850424a06ae72d52e6d99921af20b7327bab",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::pre-mutation-allow",
+      "expected_hash": "12956e94d885a08071e5a085c73a7b18e154b8e0d4c3da8cdf48f148155dcab5",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::pre-mutation-deny",
+      "expected_hash": "11c27f15f2d4f7eda26da484a08bc1f4c2833f37e3a8dbf34964fafd646e0196",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::mutation-complete",
+      "expected_hash": "a3c4593bf88ab51c82cb14ac0edd5f67f8d3bb5487dcf06b6b7b3518450548a0",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::validation-green",
+      "expected_hash": "43898aad8321fb8f6103ec063ae0c502dc0d843f07a9a66764ced17844d7cf91",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::validation-red",
+      "expected_hash": "53b8ecafc10714cff4d74870b019991b5aaa5a050467ceaad47df5d8aa77d470",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::typed-finding",
+      "expected_hash": "e0618622855406b5cdbc198e5af2bc15e0c7114f0dd2e9d732fcfb379946bc8d",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::same-finding-third",
+      "expected_hash": "fc71fbeff927bc46bfe4879b7622afb642a8a6abae8cc97e576cae8de583e251",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::pre-final-allow",
+      "expected_hash": "31040f1540fb4c2a0a5961db260aeba192e50e5b56242fc2bd17d6b15a864067",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::pre-final-deny",
+      "expected_hash": "6112c0693a52dfd9374c745cdc812883003e738633538982fb9ea71a7c69558d",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::close-committed",
+      "expected_hash": "3c370afec5c3ca545a88ca7cfa2bdc1b6681f97ac02b8cf34abc79ef0aff3306",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::audit-verdict",
+      "expected_hash": "a222b456b72f1212329ac8a534352ce69d2aa8dff86ad81b234ef3441f55fcbf",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::owner-decision",
+      "expected_hash": "adf081f87755cf8cabdcd86e8c02a4e8e5a8cf111844f9e53c456697975716c2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::escalation-trigger",
+      "expected_hash": "be9fad303f5a2698d8ff1c10ddd2c9c85ce31055bcd32d07d1e86ac1285daf07",
+      "result": "mapped"
+    },
+    {
+      "case_id": "FIXING::skip-by-decision",
+      "expected_hash": "d0eaa06fbb934f9d667b0a94c998e5685921ce48de3be2c48fb48bb1c179db9d",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::dispatch",
+      "expected_hash": "2dc713576de0e22ef44e53f65bcda96cc9ca09835ba7019c3b2476930eb81a71",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::pre-mutation-allow",
+      "expected_hash": "17711a2c3ce20c8a8af68d83fca1b9d8872778d2247980f84411d5fea6b81446",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::pre-mutation-deny",
+      "expected_hash": "04c20f2fdedd2edf76ddfef344a33c37a1d8f3ff97abfb27b04f8cdb7d11b623",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::mutation-complete",
+      "expected_hash": "43ffef735db317f1a9067a05052bec52289bbf76b345e2ab747f93794481f40c",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::validation-green",
+      "expected_hash": "c308bf71294ee26c2bdb0d8a1269078a243b3b21ae2711ec0141463c3f801be1",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::validation-red",
+      "expected_hash": "27ce42a1c2c917b6861b317f63ca2b0245ad9661803184037d24956e14e93299",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::typed-finding",
+      "expected_hash": "15544790977031ecee014d6a266330e672599e74359911c14cf854ac040d55cf",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::same-finding-third",
+      "expected_hash": "31d095ae166fa94743c86ba82a42284de409e158171a689f5182e3f6f400c96c",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::pre-final-allow",
+      "expected_hash": "9f326478cc45353fc91aff4bf408626579627a53cec018504f800b9545d60ca6",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::pre-final-deny",
+      "expected_hash": "2a8cd81369472597ab363d334607fce8993a82b7b42bf41cbc7ef1985ebcdebb",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::close-committed",
+      "expected_hash": "fc47c0fe22ca59f5275b4e74fe42c5e92ce6f55c7e728aa003ed30f71300d061",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::audit-verdict",
+      "expected_hash": "be49e6909b7a68b1c9e7cb0547de918a11cd5850c07d1b211d23d909a9bb7cd9",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::owner-decision",
+      "expected_hash": "05231871d901d004f8ddb4d56ea40da68f45b31f5c71f617ea214d9f3bd3b807",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::escalation-trigger",
+      "expected_hash": "f73f13ecfe0a8abaa49487451e54409fb27192c444fc56d51c780bb8a82c0b44",
+      "result": "mapped"
+    },
+    {
+      "case_id": "DONE::skip-by-decision",
+      "expected_hash": "7cad94c7c62e4fd613d06408b23ca6926aeeda006c6a57d7dd121a9d0f4b1c1f",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::dispatch",
+      "expected_hash": "48cdc9a5ca3dcafc06c7f04da799700752dcefe496694e0e93a1a2b7514e7ed4",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::pre-mutation-allow",
+      "expected_hash": "6425204bca07d5dfcb3bde62029ffb75f19fe9710e41a721c9542b4d3ddafc1e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::pre-mutation-deny",
+      "expected_hash": "549f11e4d40b8df9ea057b0a8324587bf27d3557fe379a80007a438e3061d861",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::mutation-complete",
+      "expected_hash": "de816619424407acdc8d7bd8f87e774802fafd303f4a904ddade82546eaca067",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::validation-green",
+      "expected_hash": "cde0cac1a55f9e732160cc5fcac346830d9f778cd247495021c68eaf18ba6fdd",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::validation-red",
+      "expected_hash": "482a34c49269dd69c5ff4bf6116cecb1169894a2d004f67b17d5135afab933d8",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::typed-finding",
+      "expected_hash": "62050440b1b9b3f474c244272859074636f47d4c411e932cd26f46c39b20ddd6",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::same-finding-third",
+      "expected_hash": "1417fee7f315ecb4a583fee65c1e403533dd8ab4cbe2caf19102fd1505bc361c",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::pre-final-allow",
+      "expected_hash": "c899231ea46269608ec7b09727a8f3bf3326df879569c51162e08110b02bd2a2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::pre-final-deny",
+      "expected_hash": "fb7e8fdb242f3ff8fa2184628f0eda03eeada3796eb85595dde892ed58de98fa",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::close-committed",
+      "expected_hash": "f76c953ed7626185a89d977863556090d3aaf3e6d2c0efac78eae8c8c1c7caa1",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::audit-verdict",
+      "expected_hash": "42ee5d80e0da4e2aa5d2ea1c33746fbfd713b2f31890b7e1f8a42834e6e90e92",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::owner-decision",
+      "expected_hash": "c43710cd130a85e84cf70817d31cf2aaa9ab32f3eedd2a65dd24a6edc6146548",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::escalation-trigger",
+      "expected_hash": "cad65d3408f855b1c0a90808e4e09ef411416fb513e41fec180dd022a5794ddb",
+      "result": "mapped"
+    },
+    {
+      "case_id": "INCIDENT::skip-by-decision",
+      "expected_hash": "b7a51d2dddbe8b2edbe62bc8efc293d2bb024077810533a2032791aaffd565b4",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::dispatch",
+      "expected_hash": "67cc2c964c9e50dc0ce31de6e040c914fcd7e0dd67b0a9f87692f173230f4913",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::pre-mutation-allow",
+      "expected_hash": "445e531142151a972e399173191d95a6b7952a62e70222728a14d6fdf02b55f6",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::pre-mutation-deny",
+      "expected_hash": "6b27834562605fb78ab2e868ef07a24bb49db30160af460e487f9b11568e5f2e",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::mutation-complete",
+      "expected_hash": "39597d94beeeefd41cae937535066782d6c4501f86b9514cf1466dd970bed08f",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::validation-green",
+      "expected_hash": "2ff5f10979a19e5e75d4b6b2924c8f9e3bf57bf93fe329baf1196784257c4faf",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::validation-red",
+      "expected_hash": "461dd1b7652658729d9bd906ee496cbfaa1e1e0a9590e3e84e12e805698d914d",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::typed-finding",
+      "expected_hash": "ee2745468cbfe0467954b32040328e2c539155a640c5da2ef040e46546fad700",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::same-finding-third",
+      "expected_hash": "28da3f5865d330da69a6f16b80b20090ab29258cc9d9d270c0ecbf99dd00872d",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::pre-final-allow",
+      "expected_hash": "2e3c54cf7e267c9cb5080ba376159eda25a054040dd5f018010a03d40eba942f",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::pre-final-deny",
+      "expected_hash": "ccd09a11f2cf2aff40b0ecd84a8deb52663dfa8bfa0e6468a2c2e0d918924f01",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::close-committed",
+      "expected_hash": "f50bfd2a7c8821324149c15ce810f9104b5243f7bba64d6e3260e9d36e75d12b",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::audit-verdict",
+      "expected_hash": "223f5d218818dcd98e6aa29bdd30e4b4c5a548e4ed84da81de52e9c1f3340fc9",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::owner-decision",
+      "expected_hash": "b9f29e158878c9f7868e79a806fb9d78e656b45bc799ff697debcbbfc1b20d65",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::escalation-trigger",
+      "expected_hash": "ceefbebd6a5847423ad9d13fe77885f746733197378f33a1a012a919aa1d5811",
+      "result": "mapped"
+    },
+    {
+      "case_id": "OWNER_BOUNDARY::skip-by-decision",
+      "expected_hash": "a4e8197293fb54e08217cc91530f6394f019d179837ea0a3c2fbc507aa984ecf",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::dispatch",
+      "expected_hash": "75cbe22d374c8e395b4e59b346362534baa7d873be429d28c5fb455d0dd8a4cd",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::pre-mutation-allow",
+      "expected_hash": "ec86a9d7c17edadfb8e29a548073596e8a9dee94c4b1f092a6ea79379a41e5dd",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::pre-mutation-deny",
+      "expected_hash": "8dbe74a7d63acc2c11ecec5f8c0218f1c3eda74609d0de06d09e2f7f715b78c3",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::mutation-complete",
+      "expected_hash": "c07b0ebf6813220f301879607b0f9f26a027f86fd6447177c1c72b824d5ce0fc",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::validation-green",
+      "expected_hash": "57b5ef95f1cc71427d8dcb32f2455ac5c41b3574a1e7e24be56e91a68ce4a0d0",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::validation-red",
+      "expected_hash": "cfd744865429e0266631c899c577a6a50baecd7324d5cc6f2c81481bbb04ccce",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::typed-finding",
+      "expected_hash": "6be4972faef2cb4fa11eca05ade4a646df99df846210ef631e6bbde3048e5b08",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::same-finding-third",
+      "expected_hash": "e7883b1d2507da3a00804973c16ea0048946044f5b1aa4da5c900cea53317bff",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::pre-final-allow",
+      "expected_hash": "2d5f1cb0df4c1c0d4645f53eff3f8c81b6f1f90fec6250c30be4072df4b865e5",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::pre-final-deny",
+      "expected_hash": "d3e62add322ab48ac7111976432e06d5122d1e96e93a09c3aeec00084fb2c963",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::close-committed",
+      "expected_hash": "3dadfb434cfcecad66932261f698824b9555a1ef36590e113e34bf676aef6967",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::audit-verdict",
+      "expected_hash": "67ea474f78b9f316258bd0f54b4a1894b7df2c24c749ced0166fb1b2165371c9",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::owner-decision",
+      "expected_hash": "95c876aaa359a02857d4a2c010f9e796031fd6fab0673488bc0aaf2441ec06c5",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::escalation-trigger",
+      "expected_hash": "0a855e70fd034e1f711748ad559d398b20b1c52e1ca8610cfec0c608655826f7",
+      "result": "mapped"
+    },
+    {
+      "case_id": "ESCALATED::skip-by-decision",
+      "expected_hash": "54aa2d49c871cdbdfccb45191737c10d9e0eb0652779d02617a058247a7ab6cd",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::dispatch",
+      "expected_hash": "62ac2929384651fdfdb971f3d5e08d6034e39381442aea5511c95d07857a8078",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::pre-mutation-allow",
+      "expected_hash": "a84a29bf35db21d2cf722a5660867154eed38c9a48d4be8b7c2e5ab9023503f8",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::pre-mutation-deny",
+      "expected_hash": "17271ebfe27520c1d5088d577453713becafc411015a42f40b27b52f6bf3712b",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::mutation-complete",
+      "expected_hash": "97ac779134c8c7e8546afdd7363ab77fe300fef1adbdda872c8c7a23a60781c2",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::validation-green",
+      "expected_hash": "e83af94d1c47557c2e66c8fb0fb799d407598eb5d4102ec96ca508c1113a2adc",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::validation-red",
+      "expected_hash": "566802f048fb58edecbd9e905c4746e8c781d880e805fd62ad0841e95bb48222",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::typed-finding",
+      "expected_hash": "81503e3a2ed4bfa42aae7bc028cd06550cfeaf4b6ab98daf1b1b5c8170817f32",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::same-finding-third",
+      "expected_hash": "565a01f654b54b88bf74439383b5087a12b28a17d25d0eefa86faa4562f44aaa",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::pre-final-allow",
+      "expected_hash": "11065a60739c0f5e15409016bccaaafee81e9eadc046cab9d23b3206cbe75f13",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::pre-final-deny",
+      "expected_hash": "3d8d352f10944b704bbccee92186e8d369d29d75645a4d31975c2691963237a7",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::close-committed",
+      "expected_hash": "5bb0768b2802f1b9527b20637fab5b84f4a6acae71beeb72ff4e5367719b7e23",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::audit-verdict",
+      "expected_hash": "854292c5ebd3d2fa6cad43cb86e905e8e16ef32c00c29ddafefda2d46a11f94b",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::owner-decision",
+      "expected_hash": "3384dd6ec9fe30abf4727001205b1bb4779f7283ff15a55dc8373dac4d0a6428",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::escalation-trigger",
+      "expected_hash": "51970d40f3a54456ec0e8d2befe114bc4662f09227ca1ee69cd0698cea7fe6cc",
+      "result": "mapped"
+    },
+    {
+      "case_id": "SKIPPED::skip-by-decision",
+      "expected_hash": "74b7642278e5b81a0ddedae65ee47b4b0603726a1419433bc3715bbc79303496",
+      "result": "mapped"
+    },
+    {
+      "case_id": "stale-requirement-dropped",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "redundant-approval-after-grant",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "premature-stop-after-clean-close",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "stale-cold-start-item",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "missed-consumer-cold-start",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "audit-reopens-bookkeeping-as-product",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "same-finding-third-event",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "five-audit-loop",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "wrong-provider-invocation",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "duplicate-identity-trigger",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "missing-launch-block-intra-session",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "route-undershoot-silent",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "false-self-attribution-route",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "hook-handler-missing",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "hook-target-unmanaged",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "hook-set-spans-sources",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "wrong-scope-return",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "portability-external-input",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "portability-privacy-rawbulk",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "portability-input-missing-highrisk",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "claude-only-carrier",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "capability-unknown-solo-fallback",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "publication-version-reuse",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "trace-record-missing",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "evidence-proof-class-overclaim",
+      "kind": "critical",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "honest-http-clean-control",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "control-simple-brief-acceptance",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "control-committed-bundle-highrisk",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "control-predecessor-produced-path",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "control-provider-neutral-rendering",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    },
+    {
+      "case_id": "control-routine-continuation",
+      "kind": "control",
+      "result": "expected-and-forbidden-preserved"
+    }
+  ],
+  "schema_version": "artifex-shadow-results-v1",
+  "shadow_version": "1.0.0",
+  "summary": {
+    "mapped": 166,
+    "positive_controls": 6,
+    "unknown": 1,
+    "unknown_reasons": [
+      "owner_question is unmappable in the historical carrier"
+    ]
+  }
+}

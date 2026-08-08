@@ -1,0 +1,242 @@
+{
+  "items": [
+    {
+      "after": 49667,
+      "before": 154204,
+      "item": "P0.1"
+    },
+    {
+      "after": 33805,
+      "before": 138342,
+      "item": "P0.2"
+    },
+    {
+      "after": 55978,
+      "before": 160515,
+      "item": "P0.3"
+    },
+    {
+      "after": 121940,
+      "before": 226477,
+      "item": "P0.4"
+    },
+    {
+      "after": 320806,
+      "before": 425343,
+      "item": "P0.5"
+    },
+    {
+      "after": 162921,
+      "before": 272801,
+      "item": "P1.1"
+    },
+    {
+      "after": 71982,
+      "before": 181862,
+      "item": "P1.2"
+    },
+    {
+      "after": 61987,
+      "before": 171867,
+      "item": "P1.3"
+    },
+    {
+      "after": 48824,
+      "before": 158704,
+      "item": "P1.4"
+    },
+    {
+      "after": 179873,
+      "before": 289753,
+      "item": "P1.5"
+    },
+    {
+      "after": 91471,
+      "before": 201351,
+      "item": "P1.6"
+    },
+    {
+      "after": 41944,
+      "before": 153346,
+      "item": "P2.1"
+    },
+    {
+      "after": 42659,
+      "before": 154061,
+      "item": "P2.2"
+    },
+    {
+      "after": 48831,
+      "before": 160233,
+      "item": "P2.3"
+    },
+    {
+      "after": 86498,
+      "before": 197900,
+      "item": "P2.4"
+    },
+    {
+      "after": 53063,
+      "before": 164465,
+      "item": "P2.5"
+    },
+    {
+      "after": 94623,
+      "before": 206025,
+      "item": "P2.6"
+    },
+    {
+      "after": 75170,
+      "before": 199424,
+      "item": "P3.1"
+    },
+    {
+      "after": 54996,
+      "before": 179250,
+      "item": "P3.2"
+    },
+    {
+      "after": 58263,
+      "before": 182517,
+      "item": "P3.3"
+    },
+    {
+      "after": 98193,
+      "before": 222447,
+      "item": "P3.4"
+    },
+    {
+      "after": 78290,
+      "before": 202544,
+      "item": "P3.5"
+    },
+    {
+      "after": 65419,
+      "before": 189673,
+      "item": "P3.6"
+    },
+    {
+      "after": 85648,
+      "before": 209902,
+      "item": "P3.7"
+    },
+    {
+      "after": 186475,
+      "before": 310729,
+      "item": "P3.8"
+    },
+    {
+      "after": 115319,
+      "before": 242667,
+      "item": "P4.1"
+    },
+    {
+      "after": 88123,
+      "before": 215471,
+      "item": "P4.2"
+    },
+    {
+      "after": 48401,
+      "before": 175749,
+      "item": "P4.3"
+    },
+    {
+      "after": 86932,
+      "before": 214280,
+      "item": "P4.4"
+    },
+    {
+      "after": 65010,
+      "before": 192358,
+      "item": "P4.5"
+    },
+    {
+      "after": 197325,
+      "before": 324673,
+      "item": "P4.6"
+    },
+    {
+      "after": 105828,
+      "before": 233176,
+      "item": "P4.7"
+    },
+    {
+      "after": 112311,
+      "before": 239659,
+      "item": "P4.8"
+    },
+    {
+      "after": 349271,
+      "before": 523424,
+      "item": "P5.1"
+    },
+    {
+      "after": 92550,
+      "before": 266703,
+      "item": "P5.2"
+    },
+    {
+      "after": 59739,
+      "before": 233892,
+      "item": "P5.3"
+    },
+    {
+      "after": 204762,
+      "before": 378915,
+      "item": "P5.4"
+    },
+    {
+      "after": 248233,
+      "before": 422386,
+      "item": "P5.5"
+    },
+    {
+      "after": 171837,
+      "before": 345990,
+      "item": "P5.6"
+    },
+    {
+      "after": 145845,
+      "before": 319998,
+      "item": "P5.7"
+    },
+    {
+      "after": 244863,
+      "before": 419016,
+      "item": "P5.8"
+    },
+    {
+      "after": 243098,
+      "before": 348906,
+      "item": "P6.1"
+    },
+    {
+      "after": 136843,
+      "before": 242651,
+      "item": "P6.2"
+    },
+    {
+      "after": 145844,
+      "before": 251652,
+      "item": "P6.3"
+    },
+    {
+      "after": 293189,
+      "before": 398997,
+      "item": "P6.4"
+    }
+  ],
+  "schema": "p2-weight-before-after-v1",
+  "summary": {
+    "aggregate_after": 5424649,
+    "aggregate_before": 11104298,
+    "median_after": 91471,
+    "median_before": 215471
+  },
+  "threshold": 100000,
+  "unit": {
+    "id": "token-estimate-calibration",
+    "model_id": null,
+    "version": "2.0.0"
+  }
+}

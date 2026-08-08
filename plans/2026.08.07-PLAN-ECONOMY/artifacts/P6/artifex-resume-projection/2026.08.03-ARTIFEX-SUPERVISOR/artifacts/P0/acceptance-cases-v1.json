@@ -1,0 +1,381 @@
+{
+  "schema_version": "acceptance-cases-v1",
+  "rubric_ids": [
+    "REL-ACCEPTED-SCOPE",
+    "REL-RECOVERY",
+    "REL-IDEMPOTENCY",
+    "REL-VALIDATION",
+    "REL-BUDGET",
+    "SEC-AUTHORITY",
+    "SEC-PRIVACY",
+    "SEC-WORKTREE",
+    "SEC-HOOK-INTEGRITY",
+    "EVD-SOURCE-HASHES",
+    "EVD-INDEPENDENT-ADJUDICATOR",
+    "EVD-UNKNOWN-PRESERVATION",
+    "PRV-PARITY-SCOPE",
+    "ECO-MATCHED-SCOPE",
+    "ECO-D14-BRANCH-1",
+    "ECO-D14-BRANCH-2"
+  ],
+  "base_input": {
+    "floor_results": {
+      "REL-ACCEPTED-SCOPE": "pass",
+      "REL-RECOVERY": "pass",
+      "REL-IDEMPOTENCY": "pass",
+      "REL-VALIDATION": "pass",
+      "REL-BUDGET": "pass",
+      "SEC-AUTHORITY": "pass",
+      "SEC-PRIVACY": "pass",
+      "SEC-WORKTREE": "pass",
+      "SEC-HOOK-INTEGRITY": "pass",
+      "EVD-SOURCE-HASHES": "pass",
+      "EVD-INDEPENDENT-ADJUDICATOR": "pass",
+      "EVD-UNKNOWN-PRESERVATION": "pass"
+    },
+    "matched_scope": true,
+    "provider_scope": {
+      "mode": "parity",
+      "provider": null,
+      "owner_grant": false
+    },
+    "waves": 5,
+    "owner_decision_events": 0,
+    "dispatched_non_synthetic_slices": 5,
+    "lanes": {
+      "candidate": {
+        "accepted_slices": 1,
+        "attempts": [
+          {"tokens": 800, "cost_microunits": 800}
+        ]
+      },
+      "baseline": {
+        "accepted_slices": 1,
+        "attempts": [
+          {"tokens": 800, "cost_microunits": 800}
+        ]
+      },
+      "workflow": {
+        "accepted_slices": 1,
+        "attempts": [
+          {"tokens": 1200, "cost_microunits": 1200}
+        ]
+      }
+    },
+    "unknown_reason": {}
+  },
+  "cases": [
+    {
+      "id": "branch1-intervention-just-under-25-percent",
+      "description": "24.999% remains strictly below the D14 branch-1 boundary.",
+      "overrides": {
+        "owner_decision_events": 24999,
+        "dispatched_non_synthetic_slices": 100000
+      },
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["GO_BRANCH_1"],
+        "metrics": {
+          "owner_intervention_ratio": "24999/100000"
+        }
+      }
+    },
+    {
+      "id": "branch1-intervention-equals-25-percent",
+      "description": "Exactly 25% is not strictly below the D14 branch-1 boundary.",
+      "overrides": {
+        "owner_decision_events": 1,
+        "dispatched_non_synthetic_slices": 4
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "BRANCH1_INTERVENTION_NOT_LT_25_PERCENT",
+          "BRANCH2_GAIN_LT_2X"
+        ],
+        "metrics": {
+          "owner_intervention_ratio": "1/4"
+        }
+      }
+    },
+    {
+      "id": "branch1-four-waves",
+      "description": "N=4 cannot satisfy the exact five-wave branch-1 sample.",
+      "overrides": {"waves": 4},
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["BRANCH1_WAVES_NOT_5", "BRANCH2_GAIN_LT_2X"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "branch1-five-waves",
+      "description": "N=5 with green floors and no-worse matched economy satisfies branch 1.",
+      "overrides": {},
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["GO_BRANCH_1"],
+        "metrics": {
+          "candidate_tokens_per_accepted_slice": "800/1",
+          "candidate_cost_per_accepted_slice": "800/1",
+          "baseline_tokens_per_accepted_slice": "800/1",
+          "baseline_cost_per_accepted_slice": "800/1"
+        }
+      }
+    },
+    {
+      "id": "branch2-gain-1-point-999x",
+      "description": "A 1.99875x measured gain does not satisfy the at-least-2x branch.",
+      "overrides": {
+        "waves": 4,
+        "lanes": {
+          "workflow": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 1599, "cost_microunits": 1599}
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["BRANCH1_WAVES_NOT_5", "BRANCH2_GAIN_LT_2X"],
+        "metrics": {
+          "workflow_token_gain": "1599/800",
+          "workflow_cost_gain": "1599/800"
+        }
+      }
+    },
+    {
+      "id": "branch2-gain-exactly-2x",
+      "description": "Exactly 2x satisfies the inclusive D14 branch-2 boundary.",
+      "overrides": {
+        "waves": 4,
+        "lanes": {
+          "workflow": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 1600, "cost_microunits": 1600}
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B2"],
+        "reason_codes": ["GO_BRANCH_2"],
+        "metrics": {
+          "workflow_token_gain": "2/1",
+          "workflow_cost_gain": "2/1"
+        }
+      }
+    },
+    {
+      "id": "cheaper-but-recovery-red",
+      "description": "Economy cannot override a failed reliability floor.",
+      "overrides": {
+        "floor_results": {"REL-RECOVERY": "fail"},
+        "lanes": {
+          "candidate": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 400, "cost_microunits": 400}
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": ["D14-B1", "D14-B2"],
+        "reason_codes": ["FLOOR_FAILED:REL-RECOVERY"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "reliable-but-worse-economy",
+      "description": "Green reliability with worse baseline economy and less than 2x Workflow gain is NO-GO.",
+      "overrides": {
+        "lanes": {
+          "candidate": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 1200, "cost_microunits": 1200}
+            ]
+          },
+          "baseline": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 1000, "cost_microunits": 1000}
+            ]
+          },
+          "workflow": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 2000, "cost_microunits": 2000}
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["BRANCH1_WORSE_THAN_BASELINE", "BRANCH2_GAIN_LT_2X"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "unknown-candidate-cost-disables-both-branches",
+      "description": "Unknown candidate cost is never imputed as zero.",
+      "overrides": {
+        "lanes": {
+          "candidate": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 800, "cost_microunits": null}
+            ]
+          }
+        },
+        "unknown_reason": {
+          "lanes.candidate.attempts[0].cost_microunits": "provider did not report cost and no pinned price evidence exists"
+        }
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["BRANCH1_UNKNOWN", "BRANCH2_UNKNOWN"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "unknown-baseline-disables-only-branch1",
+      "description": "Unknown baseline cost does not disable an otherwise complete Workflow branch.",
+      "overrides": {
+        "lanes": {
+          "baseline": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 800, "cost_microunits": null}
+            ]
+          },
+          "workflow": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 1600, "cost_microunits": 1600}
+            ]
+          }
+        },
+        "unknown_reason": {
+          "lanes.baseline.attempts[0].cost_microunits": "matched baseline has no cost evidence"
+        }
+      },
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B2"],
+        "reason_codes": ["GO_BRANCH_2"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "weakened-acceptance",
+      "description": "A weakened test or acceptance contract is a reliability-floor failure.",
+      "overrides": {
+        "floor_results": {"REL-ACCEPTED-SCOPE": "fail"}
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["FLOOR_FAILED:REL-ACCEPTED-SCOPE"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "unmatched-scope",
+      "description": "Different scope, validation, provider route, or hashes invalidate both economic branches.",
+      "overrides": {"matched_scope": false},
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["UNMATCHED_SCOPE"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "single-provider-without-owner-grant",
+      "description": "Single-provider evidence without the exact owner scope verdict cannot satisfy provider readiness.",
+      "overrides": {
+        "provider_scope": {
+          "mode": "single-provider",
+          "provider": "codex",
+          "owner_grant": false
+        }
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": ["PROVIDER_SCOPE_INELIGIBLE"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "single-provider-with-explicit-owner-grant",
+      "description": "An exact owner-scoped single-provider verdict is eligible without pretending parity.",
+      "overrides": {
+        "provider_scope": {
+          "mode": "single-provider",
+          "provider": "codex",
+          "owner_grant": true
+        }
+      },
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["GO_BRANCH_1"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "missing-source-hash",
+      "description": "Missing source, plan, scope, acceptance, or validation hash blocks adjudication.",
+      "overrides": {
+        "floor_results": {"EVD-SOURCE-HASHES": "unknown"}
+      },
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["FLOOR_UNKNOWN:EVD-SOURCE-HASHES"],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "all-attempts-counted",
+      "description": "Retries remain in the candidate numerator rather than being discarded after acceptance.",
+      "overrides": {
+        "lanes": {
+          "candidate": {
+            "accepted_slices": 1,
+            "attempts": [
+              {"tokens": 500, "cost_microunits": 500},
+              {"tokens": 300, "cost_microunits": 300}
+            ]
+          }
+        }
+      },
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": ["D14-B1"],
+        "reason_codes": ["GO_BRANCH_1"],
+        "metrics": {
+          "candidate_total_tokens": "800/1",
+          "candidate_total_cost": "800/1",
+          "candidate_tokens_per_accepted_slice": "800/1",
+          "candidate_cost_per_accepted_slice": "800/1"
+        }
+      }
+    }
+  ]
+}

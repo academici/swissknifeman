@@ -1,0 +1,274 @@
+{
+  "schema_version": "worker-envelope-cases-v1",
+  "contract_version": "1.0.0",
+  "base_envelope": {
+    "schema_version": "worker-envelope-v1",
+    "contract_version": "1.0.0",
+    "request": {
+      "schema_version": "worker-request-v1",
+      "request_id": "request-001",
+      "run_id": "run-001",
+      "slice_id": "slice-001",
+      "attempt": 1,
+      "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "trace_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "provider": {
+        "id": "codex",
+        "cli_version": "codex-cli 0.146.0",
+        "mapping_id": "synthetic-conformance-adapter",
+        "mapping_version": "1.0.0",
+        "mapping_state": "supported",
+        "degraded_route_grant_hash": null
+      },
+      "route": {
+        "model_class": "frontier",
+        "model": "synthetic-frontier-model",
+        "effort": "high",
+        "capabilities": [
+          {"id": "structured_output", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "machine_events", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "permission_boundary", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "ephemeral_session", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "child_agent_control", "state": "unknown", "required": false, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": "not-observed-by-bounded-probe"}
+        ]
+      },
+      "permissions": {
+        "authority_profile": "observe_only",
+        "approval_mode": "never",
+        "sandbox_mode": "read_only",
+        "network_mode": "unknown",
+        "filesystem_scope_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "source": "frozen-slice-route"
+      },
+      "bundle": {
+        "slice_manifest_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "task_contract_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "authority_policy_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "output_schema_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "validation_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "content_refs": [
+          {"ref": "slice/intent.md", "sha256": "3333333333333333333333333333333333333333333333333333333333333333"}
+        ]
+      },
+      "budgets": {
+        "timeout_ms": 60000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 8,
+        "max_turns": 2,
+        "max_output_bytes": 4096,
+        "token_limit": null,
+        "token_limit_unknown_reason": "not-frozen-by-input-route",
+        "cost_limit_microunits": null,
+        "cost_limit_unknown_reason": "not-frozen-by-input-route"
+      },
+      "child_policy": {
+        "mode": "forbidden",
+        "max_children": 0,
+        "allowed_capabilities": []
+      },
+      "redaction_policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "created_at": "2026-08-03T00:00:00Z"
+    },
+    "events": [
+      {
+        "schema_version": "worker-event-v1",
+        "sequence": 1,
+        "event_type": "worker_started",
+        "occurred_at": "2026-08-03T00:00:01Z",
+        "request_id": "request-001",
+        "run_id": "run-001",
+        "slice_id": "slice-001",
+        "attempt": 1,
+        "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trace_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "provider_id": "codex",
+        "provider_event_type": "turn.started",
+        "provider_event_type_unknown_reason": null,
+        "turn_index": 1,
+        "usage": null,
+        "usage_unknown_reason": "not-a-usage-observation",
+        "diagnostic_code": null,
+        "diagnostic_hash": null
+      },
+      {
+        "schema_version": "worker-event-v1",
+        "sequence": 2,
+        "event_type": "worker_finished",
+        "occurred_at": "2026-08-03T00:00:02Z",
+        "request_id": "request-001",
+        "run_id": "run-001",
+        "slice_id": "slice-001",
+        "attempt": 1,
+        "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trace_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "provider_id": "codex",
+        "provider_event_type": "turn.completed",
+        "provider_event_type_unknown_reason": null,
+        "turn_index": 1,
+        "usage": null,
+        "usage_unknown_reason": "value-not-retained-by-bounded-probe",
+        "diagnostic_code": null,
+        "diagnostic_hash": null
+      }
+    ],
+    "result": {
+      "schema_version": "worker-result-v1",
+      "request_id": "request-001",
+      "run_id": "run-001",
+      "slice_id": "slice-001",
+      "attempt": 1,
+      "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "trace_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "provider_id": "codex",
+      "worker_succeeded": true,
+      "acceptance_state": "not_evaluated",
+      "exit_class": "success",
+      "reason_code": "OK",
+      "output": {
+        "status": "valid",
+        "schema_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "content_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+        "bytes": 128,
+        "stored_ref": "slices/slice-001/result.json"
+      },
+      "usage": {
+        "input_tokens": {"value": null, "unit": "tokens", "source": "provider-probe:codex", "unknown_reason": "value-not-retained"},
+        "cached_input_tokens": {"value": null, "unit": "tokens", "source": "provider-probe:codex", "unknown_reason": "cache-not-observed"},
+        "output_tokens": {"value": null, "unit": "tokens", "source": "provider-probe:codex", "unknown_reason": "value-not-retained"},
+        "reasoning_tokens": {"value": null, "unit": "tokens", "source": "provider-probe:codex", "unknown_reason": "value-not-retained"},
+        "cost_microunits": {"value": null, "unit": "microunits", "source": "provider-probe:codex", "unknown_reason": "cost-not-observed"}
+      },
+      "event_count": 2,
+      "turn_count": 1,
+      "duration_ms": 1000,
+      "diagnostic_codes": [],
+      "redaction": {
+        "status": "clean",
+        "excluded_classes": ["raw_provider_stream", "request_content", "private_reasoning", "tool_input_output", "credential", "environment_value"],
+        "excluded_count": 0,
+        "refused_key_count": 0
+      }
+    }
+  },
+  "cases": [
+    {"id": "codex-success", "mutations": [], "expected": {"allowed": true, "reason": "OK"}},
+    {
+      "id": "claude-degraded-authorized-success",
+      "mutations": [
+        {"op": "set", "path": "/request/provider/id", "value": "claude-code"},
+        {"op": "set", "path": "/request/provider/cli_version", "value": "2.1.220 (Claude Code)"},
+        {"op": "set", "path": "/request/provider/mapping_state", "value": "degraded"},
+        {"op": "set", "path": "/request/provider/degraded_route_grant_hash", "value": "6666666666666666666666666666666666666666666666666666666666666666"},
+        {"op": "set", "path": "/request/route/capabilities", "value": [
+          {"id": "structured_output", "state": "degraded", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "machine_events", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "permission_boundary", "state": "supported", "required": true, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "ephemeral_session", "state": "unsupported", "required": false, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null},
+          {"id": "child_agent_control", "state": "supported", "required": false, "source": "provider-matrix-v1:2026-08-03", "unknown_reason": null}
+        ]},
+        {"op": "set", "path": "/events/0/provider_id", "value": "claude-code"},
+        {"op": "set", "path": "/events/1/provider_id", "value": "claude-code"},
+        {"op": "set", "path": "/result/provider_id", "value": "claude-code"}
+      ],
+      "expected": {"allowed": true, "reason": "OK"}
+    },
+    {"id": "schema-failure", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "schema_failure"},
+      {"op": "set", "path": "/result/reason_code", "value": "OUTPUT_SCHEMA_INVALID"},
+      {"op": "set", "path": "/result/output", "value": {"status": "invalid", "schema_hash": "1111111111111111111111111111111111111111111111111111111111111111", "content_hash": null, "bytes": 0, "stored_ref": null}}
+    ], "expected": {"allowed": true, "reason": "OUTPUT_SCHEMA_INVALID"}},
+    {"id": "permission-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "permission_denied"},
+      {"op": "set", "path": "/result/reason_code", "value": "PERMISSION_REFUSED"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "PERMISSION_REFUSED"}},
+    {"id": "timeout-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "timeout"},
+      {"op": "set", "path": "/result/reason_code", "value": "WALL_TIMEOUT"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "WALL_TIMEOUT"}},
+    {"id": "quota-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "quota_exhausted"},
+      {"op": "set", "path": "/result/reason_code", "value": "PROVIDER_QUOTA"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "PROVIDER_QUOTA"}},
+    {"id": "budget-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "budget_exhausted"},
+      {"op": "set", "path": "/result/reason_code", "value": "BUDGET_TIMEOUT"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "BUDGET_TIMEOUT"}},
+    {"id": "unknown-required-capability", "mutations": [
+      {"op": "set", "path": "/request/route/capabilities/4/required", "value": true},
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "capability_unsupported"},
+      {"op": "set", "path": "/result/reason_code", "value": "CAPABILITY_UNKNOWN"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "CAPABILITY_UNKNOWN"}},
+    {"id": "provider-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "provider_failure"},
+      {"op": "set", "path": "/result/reason_code", "value": "PROVIDER_NONZERO"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "PROVIDER_NONZERO"}},
+    {"id": "internal-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "internal_failure"},
+      {"op": "set", "path": "/result/reason_code", "value": "INTERNAL_VALIDATOR"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "INTERNAL_VALIDATOR"}},
+    {"id": "orphan-exit", "mutations": [
+      {"op": "set", "path": "/result/worker_succeeded", "value": false},
+      {"op": "set", "path": "/result/exit_class", "value": "orphaned"},
+      {"op": "set", "path": "/result/reason_code", "value": "ORPHAN_IDENTITY_UNKNOWN"},
+      {"op": "set", "path": "/result/output/status", "value": "absent"},
+      {"op": "set", "path": "/result/output/content_hash", "value": null},
+      {"op": "set", "path": "/result/output/bytes", "value": 0},
+      {"op": "set", "path": "/result/output/stored_ref", "value": null}
+    ], "expected": {"allowed": true, "reason": "ORPHAN_IDENTITY_UNKNOWN"}},
+    {"id": "privacy-key-refused", "mutations": [{"op": "set", "path": "/result/secret", "value": "synthetic-private-value"}], "expected": {"allowed": false, "reason": "PRIVACY_REFUSED"}},
+    {"id": "unknown-field-refused", "mutations": [{"op": "set", "path": "/result/extra", "value": "synthetic"}], "expected": {"allowed": false, "reason": "UNKNOWN_FIELD"}},
+    {"id": "unknown-version-refused", "mutations": [{"op": "set", "path": "/result/schema_version", "value": "worker-result-v2"}], "expected": {"allowed": false, "reason": "UNKNOWN_SCHEMA_VERSION"}},
+    {"id": "trace-link-refused", "mutations": [{"op": "set", "path": "/events/1/trace_id", "value": "7777777777777777777777777777777777777777777777777777777777777777"}], "expected": {"allowed": false, "reason": "LINKAGE_MISMATCH"}},
+    {"id": "unknown-coercion-refused", "mutations": [
+      {"op": "set", "path": "/request/route/capabilities/4/state", "value": "supported"},
+      {"op": "set", "path": "/request/route/capabilities/4/unknown_reason", "value": null}
+    ], "expected": {"allowed": false, "reason": "PROVIDER_EVIDENCE_MISMATCH"}},
+    {"id": "degraded-without-grant", "mutations": [
+      {"op": "set", "path": "/request/provider/mapping_state", "value": "degraded"},
+      {"op": "set", "path": "/request/provider/degraded_route_grant_hash", "value": null}
+    ], "expected": {"allowed": false, "reason": "DEGRADED_ROUTE_NOT_AUTHORIZED"}},
+    {"id": "output-cap-refused", "mutations": [{"op": "set", "path": "/request/budgets/max_output_bytes", "value": 64}], "expected": {"allowed": false, "reason": "BUDGET_OUTPUT_BYTES"}},
+    {"id": "event-cap-refused", "mutations": [{"op": "set", "path": "/request/budgets/max_event_count", "value": 1}], "expected": {"allowed": false, "reason": "BUDGET_EVENT_COUNT"}},
+    {"id": "turn-cap-refused", "mutations": [{"op": "set", "path": "/request/budgets/max_turns", "value": 1}, {"op": "set", "path": "/result/turn_count", "value": 2}], "expected": {"allowed": false, "reason": "BUDGET_TURN_COUNT"}},
+    {"id": "envelope-cap-refused", "mutations": [{"op": "set", "path": "/request/budgets/max_envelope_bytes", "value": 1}], "expected": {"allowed": false, "reason": "BUDGET_ENVELOPE_BYTES"}},
+    {"id": "schema-hash-refused", "mutations": [{"op": "set", "path": "/result/output/schema_hash", "value": "8888888888888888888888888888888888888888888888888888888888888888"}], "expected": {"allowed": false, "reason": "OUTPUT_SCHEMA_INVALID"}},
+    {"id": "unknown-exit-refused", "mutations": [{"op": "set", "path": "/result/exit_class", "value": "unmapped"}], "expected": {"allowed": false, "reason": "PROVIDER_PROTOCOL_UNKNOWN"}},
+    {"id": "reason-mapping-refused", "mutations": [{"op": "set", "path": "/result/reason_code", "value": "PROVIDER_NONZERO"}], "expected": {"allowed": false, "reason": "INTERNAL_VALIDATOR"}}
+  ]
+}

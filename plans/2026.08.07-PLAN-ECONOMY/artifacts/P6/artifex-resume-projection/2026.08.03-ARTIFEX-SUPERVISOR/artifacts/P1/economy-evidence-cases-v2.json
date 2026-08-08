@@ -1,0 +1,948 @@
+{
+  "schema_version": "economy-evidence-cases-v2",
+  "contract_version": "2.0.0",
+  "base_input": {
+    "schema_version": "economy-evidence-input-v2",
+    "contract_version": "2.0.0",
+    "evidence": {
+      "run_id": "p5.7-economy-evidence-v2-fixture",
+      "repository_hash": "e1c8b8b2cbc78c23c1e7720765c7231e1afbe65f39636fb3c13b41b7653aa015",
+      "plan_hash": "55849b19f6f1926e0e3262a77d0b62072a4166396a11386e6d47f2e8fa00bf35",
+      "scope_hash": "0ca9463ca6292d37f00d1c2cf099e011cba39a1492b06b117b6086a36a8b2620",
+      "acceptance_hash": "d5d05d73ae489764ee91510818f14ab6a04efbf236784f4b2126aa9ecd9c5d36",
+      "validation_hash": "50fabce2dd56f72e9c26649e667ba1bc5f166cef13e79b654bb676df6912d7a5",
+      "contract_set_hash": "ed5c1e8d523c7de78a8b8d15e89d19959e649a4c4e0eb2107b6b2d38d745b96f",
+      "provider_matrix_hash": "3d4c2eb4cdcc0deb7bc76abd84220a3e365ae786233ec44f46ce3491d9905c76",
+      "baseline_catalog_hash": "b0fadc83a8537cb786b9775d7393de6fd973f6d9f20a8dde815366c30fe3cac1",
+      "privacy_status": "clean"
+    },
+    "provider_scope": {
+      "mode": "single-provider",
+      "provider": "claude-code",
+      "owner_grant_ref": "D123"
+    },
+    "floor_results": {
+      "REL-ACCEPTED-SCOPE": "pass",
+      "REL-RECOVERY": "pass",
+      "REL-IDEMPOTENCY": "pass",
+      "REL-VALIDATION": "pass",
+      "REL-BUDGET": "pass",
+      "SEC-AUTHORITY": "pass",
+      "SEC-PRIVACY": "pass",
+      "SEC-WORKTREE": "pass",
+      "SEC-HOOK-INTEGRITY": "pass",
+      "EVD-SOURCE-HASHES": "pass",
+      "EVD-INDEPENDENT-ADJUDICATOR": "pass",
+      "EVD-UNKNOWN-PRESERVATION": "pass"
+    },
+    "waves": [
+      {
+        "wave_id": "p5.4w-wave-01",
+        "predeclared": true,
+        "synthetic": false,
+        "terminal": true,
+        "accepted": true
+      },
+      {
+        "wave_id": "p5.4w-wave-02",
+        "predeclared": true,
+        "synthetic": false,
+        "terminal": true,
+        "accepted": true
+      },
+      {
+        "wave_id": "p5.4w-wave-03",
+        "predeclared": true,
+        "synthetic": false,
+        "terminal": true,
+        "accepted": true
+      },
+      {
+        "wave_id": "p5.4w-wave-04",
+        "predeclared": true,
+        "synthetic": false,
+        "terminal": true,
+        "accepted": true
+      },
+      {
+        "wave_id": "p5.4w-wave-05",
+        "predeclared": true,
+        "synthetic": false,
+        "terminal": true,
+        "accepted": true
+      }
+    ],
+    "lanes": {
+      "candidate": {
+        "match": {
+          "repository_hash": "9fe4ddc3e15982ed3d5aff6c614b2ede0f713ed5887e972a7360757824ce33e5",
+          "base_hash": "4d1ea3c0b8cf8fb9b09efcb50ffc92c1d476cb79ccbc1e995848d43b6d7ae730",
+          "scope_hash": "46085c9cba4661ec190cb6f3fa7d07ce7ebb3f49b2941d42432e906c45c48b50",
+          "acceptance_hash": "52d5bbaa3bdfa68661e02428e27e9d40b6da1b6cd0002a894be1f8e643fe5943",
+          "validation_hash": "8d8138e99eafdcbc9eae6739b9c6f5091f0bf9e54b2425d9b2bfeb3f75eeab81",
+          "provider_hash": "51ba97c0eeedba6b97dd66e0fc3723838a636e37ab292e5f6b1c9cb876d18ce7",
+          "model_hash": "c67f25f33834312fe872f2086eec4bac5ee07b6d2b2198475e1772cb12292b1d",
+          "effort_hash": "49f446826b5ab17b460e86685c8ea7b7ceca8d551044cbcee9d6d402191f445b",
+          "capabilities_hash": "257d4d38d9e6abde73baf615527013691c9bd5f52df95fea31f99f576d52e109",
+          "accepted_slice_definition_hash": "bc564a67bb633aa912d35ccdeb78b3be1a284d8135bc8574acee89ecd05a1dac"
+        },
+        "attempts": [
+          {
+            "attempt_id": "candidate-1",
+            "slice_id": "p5.4-slice-01",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/candidate-1",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 12000,
+              "cached_input_tokens": 8000,
+              "output_tokens": 3000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 42000,
+              "duration_ms": 210000,
+              "turns": 9
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "candidate-2",
+            "slice_id": "p5.4-slice-02",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/candidate-2",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 12000,
+              "cached_input_tokens": 8000,
+              "output_tokens": 3000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 42000,
+              "duration_ms": 210000,
+              "turns": 9
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "candidate-3",
+            "slice_id": "p5.4-slice-03",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/candidate-3",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 12000,
+              "cached_input_tokens": 8000,
+              "output_tokens": 3000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 42000,
+              "duration_ms": 210000,
+              "turns": 9
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "candidate-4",
+            "slice_id": "p5.4-slice-04",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/candidate-4",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 12000,
+              "cached_input_tokens": 8000,
+              "output_tokens": 3000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 42000,
+              "duration_ms": 210000,
+              "turns": 9
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "candidate-5",
+            "slice_id": "p5.4-slice-05",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/candidate-5",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 12000,
+              "cached_input_tokens": 8000,
+              "output_tokens": 3000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 42000,
+              "duration_ms": 210000,
+              "turns": 9
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          }
+        ]
+      },
+      "baseline": {
+        "match": {
+          "repository_hash": "9fe4ddc3e15982ed3d5aff6c614b2ede0f713ed5887e972a7360757824ce33e5",
+          "base_hash": "4d1ea3c0b8cf8fb9b09efcb50ffc92c1d476cb79ccbc1e995848d43b6d7ae730",
+          "scope_hash": "46085c9cba4661ec190cb6f3fa7d07ce7ebb3f49b2941d42432e906c45c48b50",
+          "acceptance_hash": "52d5bbaa3bdfa68661e02428e27e9d40b6da1b6cd0002a894be1f8e643fe5943",
+          "validation_hash": "8d8138e99eafdcbc9eae6739b9c6f5091f0bf9e54b2425d9b2bfeb3f75eeab81",
+          "provider_hash": "51ba97c0eeedba6b97dd66e0fc3723838a636e37ab292e5f6b1c9cb876d18ce7",
+          "model_hash": "c67f25f33834312fe872f2086eec4bac5ee07b6d2b2198475e1772cb12292b1d",
+          "effort_hash": "49f446826b5ab17b460e86685c8ea7b7ceca8d551044cbcee9d6d402191f445b",
+          "capabilities_hash": "257d4d38d9e6abde73baf615527013691c9bd5f52df95fea31f99f576d52e109",
+          "accepted_slice_definition_hash": "bc564a67bb633aa912d35ccdeb78b3be1a284d8135bc8574acee89ecd05a1dac"
+        },
+        "attempts": [
+          {
+            "attempt_id": "baseline-1",
+            "slice_id": "p5.4-slice-01",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/baseline-1",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 15000,
+              "cached_input_tokens": 6000,
+              "output_tokens": 4000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 58000,
+              "duration_ms": 240000,
+              "turns": 1
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "baseline-2",
+            "slice_id": "p5.4-slice-02",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/baseline-2",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 15000,
+              "cached_input_tokens": 6000,
+              "output_tokens": 4000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 58000,
+              "duration_ms": 240000,
+              "turns": 1
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "baseline-3",
+            "slice_id": "p5.4-slice-03",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/baseline-3",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 15000,
+              "cached_input_tokens": 6000,
+              "output_tokens": 4000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 58000,
+              "duration_ms": 240000,
+              "turns": 1
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "baseline-4",
+            "slice_id": "p5.4-slice-04",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/baseline-4",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 15000,
+              "cached_input_tokens": 6000,
+              "output_tokens": 4000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 58000,
+              "duration_ms": 240000,
+              "turns": 1
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          },
+          {
+            "attempt_id": "baseline-5",
+            "slice_id": "p5.4-slice-05",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/baseline-5",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": 15000,
+              "cached_input_tokens": 6000,
+              "output_tokens": 4000,
+              "reasoning_tokens": 0,
+              "cost_microunits": 58000,
+              "duration_ms": 240000,
+              "turns": 1
+            },
+            "coordinator": {
+              "input_tokens": 0,
+              "cached_input_tokens": 0,
+              "output_tokens": 0,
+              "reasoning_tokens": 0,
+              "cost_microunits": 0,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          }
+        ]
+      },
+      "workflow": {
+        "match": {
+          "repository_hash": "9fe4ddc3e15982ed3d5aff6c614b2ede0f713ed5887e972a7360757824ce33e5",
+          "base_hash": "4d1ea3c0b8cf8fb9b09efcb50ffc92c1d476cb79ccbc1e995848d43b6d7ae730",
+          "scope_hash": "46085c9cba4661ec190cb6f3fa7d07ce7ebb3f49b2941d42432e906c45c48b50",
+          "acceptance_hash": "52d5bbaa3bdfa68661e02428e27e9d40b6da1b6cd0002a894be1f8e643fe5943",
+          "validation_hash": "8d8138e99eafdcbc9eae6739b9c6f5091f0bf9e54b2425d9b2bfeb3f75eeab81",
+          "provider_hash": "51ba97c0eeedba6b97dd66e0fc3723838a636e37ab292e5f6b1c9cb876d18ce7",
+          "model_hash": "c67f25f33834312fe872f2086eec4bac5ee07b6d2b2198475e1772cb12292b1d",
+          "effort_hash": "49f446826b5ab17b460e86685c8ea7b7ceca8d551044cbcee9d6d402191f445b",
+          "capabilities_hash": "b89f678cc6cec4608b017373000a05473cb1cfcc087073d90c651ea82c20047f",
+          "accepted_slice_definition_hash": "bc564a67bb633aa912d35ccdeb78b3be1a284d8135bc8574acee89ecd05a1dac"
+        },
+        "attempts": [
+          {
+            "attempt_id": "workflow-1",
+            "slice_id": "p5.4-slice-01",
+            "accepted": true,
+            "exit_class_ref": "worker-envelope-v1/exit/workflow-1",
+            "rollback_event_ref": null,
+            "worker": {
+              "input_tokens": null,
+              "cached_input_tokens": null,
+              "output_tokens": null,
+              "reasoning_tokens": null,
+              "cost_microunits": null,
+              "duration_ms": 0,
+              "turns": 0
+            },
+            "coordinator": {
+              "input_tokens": null,
+              "cached_input_tokens": null,
+              "output_tokens": null,
+              "reasoning_tokens": null,
+              "cost_microunits": null,
+              "duration_ms": 0,
+              "turns": 0
+            }
+          }
+        ]
+      }
+    },
+    "owner_decision_events": 1,
+    "attention_events": 2,
+    "dispatched_non_synthetic_slices": 5,
+    "unknown_reasons": {
+      "/lanes/workflow/attempts/0/worker/input_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/worker/cached_input_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/worker/output_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/worker/reasoning_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/worker/cost_microunits": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/coordinator/input_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/coordinator/cached_input_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/coordinator/output_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/coordinator/reasoning_tokens": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt",
+      "/lanes/workflow/attempts/0/coordinator/cost_microunits": "D124 does not pursue D14 branch 2: no matched Workflow lane was dispatched and no carrier exports a Workflow envelope per attempt"
+    },
+    "inclusion_bases": {
+      "/lanes/candidate/attempts/0/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/candidate/attempts/1/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/candidate/attempts/2/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/candidate/attempts/3/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/candidate/attempts/4/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/baseline/attempts/0/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/baseline/attempts/1/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/baseline/attempts/2/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/baseline/attempts/3/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      },
+      "/lanes/baseline/attempts/4/worker/reasoning_tokens": {
+        "provider": "claude-code",
+        "contained_field": "reasoning_tokens",
+        "containing_field": "output_tokens",
+        "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens"
+      }
+    },
+    "zero_bases": {
+      "/lanes/candidate/attempts/0/coordinator": {
+        "component": "coordinator",
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+      },
+      "/lanes/candidate/attempts/1/coordinator": {
+        "component": "coordinator",
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+      },
+      "/lanes/candidate/attempts/2/coordinator": {
+        "component": "coordinator",
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+      },
+      "/lanes/candidate/attempts/3/coordinator": {
+        "component": "coordinator",
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+      },
+      "/lanes/candidate/attempts/4/coordinator": {
+        "component": "coordinator",
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+      },
+      "/lanes/baseline/attempts/0/coordinator": {
+        "component": "coordinator",
+        "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md",
+        "statement": "the baseline lane is one headless single-shot provider invocation launched by a plan-local runner that itself performs no model call (D124); the runner coordinator envelope is a measured all-zero"
+      },
+      "/lanes/baseline/attempts/1/coordinator": {
+        "component": "coordinator",
+        "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md",
+        "statement": "the baseline lane is one headless single-shot provider invocation launched by a plan-local runner that itself performs no model call (D124); the runner coordinator envelope is a measured all-zero"
+      },
+      "/lanes/baseline/attempts/2/coordinator": {
+        "component": "coordinator",
+        "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md",
+        "statement": "the baseline lane is one headless single-shot provider invocation launched by a plan-local runner that itself performs no model call (D124); the runner coordinator envelope is a measured all-zero"
+      },
+      "/lanes/baseline/attempts/3/coordinator": {
+        "component": "coordinator",
+        "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md",
+        "statement": "the baseline lane is one headless single-shot provider invocation launched by a plan-local runner that itself performs no model call (D124); the runner coordinator envelope is a measured all-zero"
+      },
+      "/lanes/baseline/attempts/4/coordinator": {
+        "component": "coordinator",
+        "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/plan.md",
+        "statement": "the baseline lane is one headless single-shot provider invocation launched by a plan-local runner that itself performs no model call (D124); the runner coordinator envelope is a measured all-zero"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "claude-code-pair-with-both-bases",
+      "mutations": [],
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": [
+          "D14-B1"
+        ],
+        "reason_codes": [
+          "GO_BRANCH_1"
+        ],
+        "metrics": {
+          "owner_intervention_ratio": "1/5",
+          "attention_events": "2/1",
+          "candidate_total_tokens": "23000/1",
+          "candidate_total_cost": "42000/1",
+          "candidate_total_duration_ms": "210000/1",
+          "candidate_total_turns": "9/1",
+          "candidate_retry_attempts": "0/1",
+          "candidate_rollback_attempts": "0/1"
+        }
+      }
+    },
+    {
+      "id": "intervention-just-under-boundary",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/owner_decision_events",
+          "value": 4
+        },
+        {
+          "op": "set",
+          "path": "/dispatched_non_synthetic_slices",
+          "value": 17
+        }
+      ],
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": [
+          "D14-B1"
+        ],
+        "reason_codes": [
+          "GO_BRANCH_1"
+        ],
+        "metrics": {
+          "owner_intervention_ratio": "4/17"
+        }
+      }
+    },
+    {
+      "id": "intervention-exact-boundary",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/owner_decision_events",
+          "value": 4
+        },
+        {
+          "op": "set",
+          "path": "/dispatched_non_synthetic_slices",
+          "value": 16
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "BRANCH1_INTERVENTION_NOT_LT_25_PERCENT",
+          "UNMATCHED_SCOPE"
+        ],
+        "metrics": {
+          "owner_intervention_ratio": "1/4"
+        }
+      }
+    },
+    {
+      "id": "candidate-cost-exactly-equal-to-baseline",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/lanes/candidate/attempts/0/worker/cost_microunits",
+          "value": 122000
+        }
+      ],
+      "expected": {
+        "verdict": "GO",
+        "eligible_branches": [
+          "D14-B1"
+        ],
+        "reason_codes": [
+          "GO_BRANCH_1"
+        ],
+        "metrics": {
+          "candidate_total_cost": "58000/1"
+        }
+      }
+    },
+    {
+      "id": "candidate-worse-than-baseline",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/lanes/candidate/attempts/0/worker/cost_microunits",
+          "value": 200000
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "BRANCH1_WORSE_THAN_BASELINE",
+          "UNMATCHED_SCOPE"
+        ],
+        "metrics": {
+          "candidate_total_cost": "73600/1"
+        }
+      }
+    },
+    {
+      "id": "inclusion-basis-missing-on-bare-zero",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/inclusion_bases/~1lanes~1candidate~1attempts~10~1worker~1reasoning_tokens"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "inclusion-basis-on-unpermitted-field",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/inclusion_bases/~1lanes~1candidate~1attempts~10~1worker~1input_tokens",
+          "value": {
+            "provider": "claude-code",
+            "contained_field": "input_tokens",
+            "containing_field": "output_tokens",
+            "evidence_ref": "asserted without evidence"
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "cost-imputed-through-the-inclusion-rule",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/inclusion_bases/~1lanes~1candidate~1attempts~10~1worker~1cost_microunits",
+          "value": {
+            "provider": "claude-code",
+            "contained_field": "cost_microunits",
+            "containing_field": "output_tokens",
+            "evidence_ref": "output_tokens multiplied by a published per-token rate"
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "inclusion-basis-naming-a-null-containing-field",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/lanes/candidate/attempts/0/worker/output_tokens",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/unknown_reasons/~1lanes~1candidate~1attempts~10~1worker~1output_tokens",
+          "value": "provider record omitted the output token count"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "inclusion-basis-attributed-to-a-foreign-provider",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/inclusion_bases/~1lanes~1candidate~1attempts~10~1worker~1reasoning_tokens/provider",
+          "value": "codex"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "inclusion-basis-under-a-parity-scope",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/provider_scope/mode",
+          "value": "parity"
+        },
+        {
+          "op": "set",
+          "path": "/provider_scope/provider",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/provider_scope/owner_grant_ref",
+          "value": null
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "zero-basis-path-absent-from-the-tree",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/zero_bases/~1lanes~1candidate~1attempts~10~1coordinator/path",
+          "value": "packages/artifex/lib/artifex/no-such-coordinator.py"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "zero-basis-path-escapes-the-tree-root",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/zero_bases/~1lanes~1candidate~1attempts~10~1coordinator/path",
+          "value": "../../etc/hostname"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "zero-basis-on-a-worker-envelope",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/zero_bases/~1lanes~1candidate~1attempts~10~1worker",
+          "value": {
+            "component": "worker",
+            "path": "packages/artifex/lib/artifex/scheduler.py",
+            "statement": "the worker made no model call on this attempt"
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "zero-basis-on-a-non-zero-envelope",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/lanes/candidate/attempts/0/coordinator/turns",
+          "value": 3
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "structural-zero-without-a-basis",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/zero_bases/~1lanes~1candidate~1attempts~10~1coordinator"
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "single-provider-without-owner-grant",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/provider_scope/owner_grant_ref",
+          "value": null
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "PROVIDER_SCOPE_INELIGIBLE"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "single-provider-rendered-as-parity",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/provider_scope/provider",
+          "value": null
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "float-metric-rejected",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/lanes/candidate/attempts/0/worker/output_tokens",
+          "value": 3000.5
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    },
+    {
+      "id": "rounded-percentage-rejected",
+      "mutations": [
+        {
+          "op": "set",
+          "path": "/owner_decision_events",
+          "value": 0.25
+        }
+      ],
+      "expected": {
+        "verdict": "NO-GO",
+        "eligible_branches": [],
+        "reason_codes": [
+          "EVIDENCE_INVALID"
+        ],
+        "metrics": {}
+      }
+    }
+  ]
+}

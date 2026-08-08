@@ -1,52 +1,50 @@
-# HANDOFF — 2026-08-08 — after P2.9
+# HANDOFF — 2026-08-08 — after P2.10
 
-**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
+**Next:** `/task:plan-run 2026.08.07-PLAN-ECONOMY P3.1`
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
+| Model | gpt-5.6-sol |
 | Thinking | high |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | continue (/clear) — ручной item |
-| Суть | Пересобрать полный read graph и доказать final self-host admission P2.10. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.10'` |
+| Context | NEW SESSION — manual item |
+| Суть | Исполнить P3.1: заморозить форму bundle v1. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.1'` |
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
+| Model | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue (/clear) — ручной item |
-| Суть | Применить admission 1.1.0 ко всему read graph и закрыть D74 verdict. |
+| Context | NEW SESSION — manual item |
+| Суть | Исполнить P3.1: заморозить форму bundle v1. |
 | Команда | — |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.10
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.1
 ```
 
-**Done:** P2.9 froze read-budget 1.1.0 stage-aware admission, added fail-closed producer edges,
-and split plan-lint implementation/tests into bounded carriers with v1/v2 diagnostic parity.
-Self-host P2.9 is `ready` with both D2 predicates passing. Item commit: `3f478fa7`.
+**Done:** P2.10 closed: 9 ready items pass D2(a)+D2(b), 21 future inputs are valid
+pending-producer edges, D74 aggregate falls 2263520 → 1678553, and the read-only
+ARTIFEX dry run materializes 45 items / 1124 inventory elements with unchanged source SHA.
+See `findings/22-p2-final-admission.md`.
 
-**Remaining:** P2.10 applies the new semantics across every nonterminal item, replaces remaining
-oversized/aggregate reads with verified bounded carriers, and owns the final D74 self-host verdict.
-P3 remains gated on terminal P2.
+**Remaining:** P3.1 and the remaining P3–P6 executable items.
 
-**Sources of truth:** `root/contracts/read-budget-v1.md` 1.1.0 · `phases/P2/P2.9.md` ·
-`phases/P2/P2.10.md` · `packages/task/docs/reference/plan-read-admission.md` · item commit
-`3f478fa7`.
+**Sources of truth:** `phases/P2/P2.10.md` · `findings/22-p2-final-admission.md` ·
+`artifacts/p2-admission-after.json` · `artifacts/P2/read-input-slices/manifest.json`.
 
-**Open risks:** P2.9 proves only the current ready-item boundary. Intrinsic failures, future
-producer edges, aggregate comparison and anti-displacement across the full read graph remain P2.10
-acceptance and must not be inferred green from this handoff.
+**Open risks:** The bounded ARTIFEX projection carries two inherited non-error lint
+warnings (stale historical P1 handoff and no `HEAD` baseline for untracked output); its
+source remains read-only at SHA `f25dd39c280c17198d5bf124cd17bd5210f3f2c2a7e0a8b30cea5dfb48800c8a`.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: —.
-- Deferred: full read-graph rebuild and final D74 verdict — P2.10.
-- Open questions: —.
+- Workarounds: none; manual ARTIFEX projection remains forbidden.
+- Deferred: P3.1 bundle-v1 contract design.
+- Open questions: —

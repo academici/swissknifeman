@@ -877,7 +877,6 @@ def cmd_agent_packs(env, argv):
         return
 
     if sub == "doctor":
-        from pathlib import Path
         target = Path(opts["target"]).resolve() if opts.get("target") else None
         if opts.get("drift"):
             if target is None:
@@ -888,7 +887,6 @@ def cmd_agent_packs(env, argv):
     if sub in ("render", "install", "upgrade", "remove"):
         if not opts.get("pack") or not opts.get("target"):
             die(f"нужны --pack P и --target DIR для {sub}")
-        from pathlib import Path
         target = Path(os.path.expanduser(opts["target"])).resolve()
         if not target.is_dir():
             die(f"target не каталог: {target}")

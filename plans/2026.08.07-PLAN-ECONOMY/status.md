@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 201ee11e5d03ea0be5db0e7b2c87e98ab6d54d074bc8bf76cc458d5117126752
+inputs_sha256: 84d19c21d17a0c305618a0d07d01c77f8fbb8acc6b351f921b75764a33f0b477
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 1/6 | ⬜ Not started |
+| P4 | Ограничитель кружения design↔exec | 2/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -83,7 +83,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Заморозить форму отпечатка причины возврата | 🟢 Done | 2026-08-08 |
-| P4.2 | Построить вычислитель отпечатка и durable-счётчик | ⬜ Not started | 2026-08-08 |
+| P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟢 Done | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | ⬜ Not started | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | ⬜ Not started | 2026-08-08 |
 | P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | ⬜ Not started | 2026-08-08 |
@@ -234,6 +234,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D137 заменил ложную часть D52: seam объявляется additive metadata без изменения frozen history minimum |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · D136/D137 приняты; исполнение return-fingerprint v1 продолжено в той же root-сессии |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; return-fingerprint v1 and schema committed 00569181; item Validation plus Draft 2020-12/example/digest/namespace checks green; process deviation: same-session D136/D137 repairs. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; return reducer committed f3b21406; 3 focused and 647 package tests plus validation green; 10/1109/87 historic baseline reproduced. write-site: pre_mutation: allow · pre_final: allow; deviation: frontier/high session over implementation/high. |
 
 ## Owner Gates
 
@@ -252,3 +254,4 @@ generated_by: task plan-views status
 - P3.6: known deviation
 - P3.7: known deviation
 - P4.1: known deviation
+- P4.2: known deviation

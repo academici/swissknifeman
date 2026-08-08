@@ -13,7 +13,7 @@ import re
 import shutil
 from pathlib import Path
 
-from task import plan_decisions, plan_item_state, plan_layout, plan_status, plan_weight
+from task import journal, plan_decisions, plan_item_state, plan_layout, plan_status, plan_weight
 
 
 SELF_HOST_PLAN_ID = "2026.08.07-PLAN-ECONOMY"
@@ -172,8 +172,40 @@ def _render_core(text: str, meta: list[tuple[str, str]]) -> str:
     return "\n".join(sections).rstrip() + "\n"
 
 
-def _render_spec(item: dict) -> str:
+def _blocked_journal_items(plan_dir: Path) -> set[str]:
+    """Return items whose last durable event projects to a blocked state.
+
+    Legacy phase tables can be stale while the journal is the authoritative
+    outcome carrier.  The v2 projection therefore materializes the required
+    escalation marker from the last journal event without changing the source.
+    """
+    path = plan_dir / journal.FILENAME
+    if not path.is_file():
+        return set()
+    last = {}
+    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        try:
+            event = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise MigrationError(f"journal.jsonl:{number}: невалидный JSON") from exc
+        item_id = event.get("item_id")
+        result = event.get("result")
+        if isinstance(item_id, str) and result in plan_item_state.RESULT_STATUS:
+            last[item_id] = result
+    return {item_id for item_id, result in last.items()
+            if plan_item_state.RESULT_STATUS[result] == "🔴 Blocked"}
+
+
+def _render_spec(item: dict, *, blocked_by_journal: bool = False) -> str:
     lines = [f"### {item['id']} — {item['title']}", ""]
+    if item["fields"]["Status"] == "🔴 Blocked" or blocked_by_journal:
+        lines.extend((
+            f"> 🔴 ESCALATION {item['id']}: migrated legacy blocked state; source outcome remains in "
+            "the append-only journal and migration inventory | trigger: legacy-state | нужен: plan-design",
+            "",
+        ))
     lines.extend(f"**{field}:** {item['fields'][field]}" for field in _SPEC_FIELDS)
     return "\n".join(lines).rstrip() + "\n"
 
@@ -202,7 +234,11 @@ def _inventory_source(meta, phases, decisions, updates, discussion) -> dict:
         for name in ("decision", "why"):
             values.append({"kind": "decision", "id": decision["id"], "name": name, "value": decision[name]})
     values.extend({"kind": "update-log", "value": value} for value in updates)
-    values.append({"kind": "discussion", "value": discussion})
+    # Legacy plans created before the discussion carrier was standardized have
+    # no such section. Preserve that absence as data instead of refusing an
+    # otherwise complete read-only migration or inventing a discussion file.
+    values.append({"kind": "discussion", "present": discussion is not None,
+                   "value": discussion or ""})
     return {"schema": "plan-migration-inventory-v1", "item_ids": [item["id"] for phase in phases for item in phase["items"]],
             "meta_fields": [name for name, _value in meta], "elements": values}
 
@@ -265,13 +301,17 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
             raise MigrationError("v2-план не проходит инвентарь или замер миграции")
         return {"inventory": inventory, "weights": weights}
     meta, decisions = _meta(source), _decision_rows(source)
-    discussion = _section(source, "Обсуждение")
+    try:
+        discussion = _section(source, "Обсуждение")
+    except MigrationError:
+        discussion = None
     updates = _update_rows(source)
     phase_paths = sorted((plan_dir / "phases").glob("P*.md"))
     phases = [_phase_source(path) for path in phase_paths]
     if not phases:
         raise MigrationError("нет legacy фаз для миграции")
     inventory = _inventory_source(meta, phases, decisions, updates, discussion)
+    blocked_items = _blocked_journal_items(plan_dir)
     before = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
 
     (plan_dir / "plan.md").write_text(_render_core(source, meta), encoding="utf-8")
@@ -281,14 +321,17 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
         directory.mkdir(parents=True)
         (directory / f"{phase['id']}.md").write_text(_render_phase(phase), encoding="utf-8")
         for item in phase["items"]:
-            (directory / f"{item['id']}.md").write_text(_render_spec(item), encoding="utf-8")
+            (directory / f"{item['id']}.md").write_text(
+                _render_spec(item, blocked_by_journal=item["id"] in blocked_items), encoding="utf-8")
     decisions_dir = plan_dir / "decisions"
     if decisions_dir.exists():
         shutil.rmtree(decisions_dir)
     decisions_dir.mkdir()
     for row in decisions:
         (decisions_dir / f"{row['id']}-legacy.md").write_text(_render_decision(row), encoding="utf-8")
-    (decisions_dir / "legacy-discussion.md").write_text("# Legacy discussion\n\n" + discussion + "\n", encoding="utf-8")
+    if discussion is not None:
+        (decisions_dir / "legacy-discussion.md").write_text(
+            "# Legacy discussion\n\n" + discussion + "\n", encoding="utf-8")
 
     plan_item_state.build_states(plan_dir)
     plan_decisions.build_views(plan_dir)

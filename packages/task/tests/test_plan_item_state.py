@@ -23,3 +23,12 @@ class PlanItemStateTests(unittest.TestCase):
         self.assertEqual(plan_item_state.build_states(self.plan, check=True), targets)
         targets[0].write_text(text + "drift\n", encoding="utf-8")
         with self.assertRaises(plan_item_state.ItemStateError): plan_item_state.build_states(self.plan, check=True)
+
+    def test_blocked_event_projects_required_escalation(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="blocked",
+        ))
+        text = plan_item_state.render_state(self.plan, "P1.1")
+        self.assertIn("**Status:** 🔴 Blocked", text)
+        self.assertIn("**Escalation Needed:** yes", text)

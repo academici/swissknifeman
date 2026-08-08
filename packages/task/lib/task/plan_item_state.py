@@ -96,7 +96,11 @@ def render_state(plan_dir, item_id):
     fields = (("Status", state["position"]["status"]),
               ("Completion Notes", note if result and result.startswith("closed-") else "—"),
               ("Pending Work", "—"), ("Known Deviations", note if "deviation" in friction else "—"),
-              ("Escalation Needed", "yes" if result == "escalated" or "escalation" in friction else "no"))
+              # A blocked position has the same mandatory escalation triple as an
+              # explicit ``escalated`` event.  The event enum retains ``blocked``
+              # for historical/procedural provenance, but the generated carrier
+              # must never emit a status that its own plan linter rejects.
+              ("Escalation Needed", "yes" if state["position"]["status"] == "🔴 Blocked" else "no"))
     return plan_projection.rendered_file(metadata=block, title=f"Состояние {item_id}", body="\n".join(f"**{k}:** {v}" for k, v in fields))
 
 def build_states(plan_dir, *, item_id=None, check=False):

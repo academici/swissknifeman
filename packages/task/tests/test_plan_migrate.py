@@ -9,6 +9,7 @@ except ImportError:
     from fixtures import write_valid_plan
 
 from task import plan_migrate, plan_status
+from task import journal
 
 
 class PlanMigrateTests(unittest.TestCase):
@@ -67,3 +68,26 @@ class PlanMigrateTests(unittest.TestCase):
         inventory = json.loads((output / "artifacts" / "p2-migration-inventory.json").read_text(encoding="utf-8"))
         self.assertEqual(inventory["item_ids"], ["P1.1"])
         self.assertEqual(inventory["missing"], [])
+
+    def test_dry_run_preserves_absent_legacy_discussion(self):
+        plan_path = self.source / "plan.md"
+        plan_path.write_text(plan_path.read_text(encoding="utf-8").replace(
+            "\n## Обсуждение\n\nОбсуждение.\n", "\n"), encoding="utf-8")
+        output = self.root / "without-discussion"
+        result = plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
+        discussion = [row for row in result["inventory"]["elements"]
+                      if row["kind"] == "discussion"]
+        self.assertEqual(discussion, [{"kind": "discussion", "present": False, "value": ""}])
+        self.assertFalse((output / "decisions" / "legacy-discussion.md").exists())
+
+    def test_dry_run_materializes_legacy_blocked_journal_state(self):
+        journal.append(self.source, journal.new_entry(
+            plan_id=plan_migrate.SELF_HOST_PLAN_ID, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="blocked",
+        ))
+        output = self.root / "blocked-output"
+        plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
+        spec = (output / "phases" / "P1" / "P1.1.md").read_text(encoding="utf-8")
+        state = (output / "phases" / "P1" / "P1.1.state.md").read_text(encoding="utf-8")
+        self.assertIn("> 🔴 ESCALATION P1.1: migrated legacy blocked state", spec)
+        self.assertIn("**Escalation Needed:** yes", state)

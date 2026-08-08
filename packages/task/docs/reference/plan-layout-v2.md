@@ -61,8 +61,12 @@ python3 packages/task/scripts/plan-migrate.py plans/<SOURCE> --dry-run --output 
 ```
 
 The converter writes a generated migration inventory and before/after read-weight
-evidence. Re-running it on an already migrated plan must not change bytes; use
-the normal `plan-views ... --check` commands to verify generated carriers.
+evidence. A legacy source without `## Обсуждение` is valid: the inventory records
+that the optional carrier was absent and no replacement discussion file is
+invented. When the final journal position is blocked, the projection materializes
+the required v2 escalation marker from that journal state. Re-running it on an
+already migrated plan must not change bytes; use the normal `plan-views ...
+--check` commands to verify generated carriers.
 
 ## Item-state projection
 

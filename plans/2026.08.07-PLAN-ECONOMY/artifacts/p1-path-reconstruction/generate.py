@@ -266,9 +266,14 @@ def required_inputs(plan_dir: Path, plan_id: str, item_id: str, required: str) -
     return inputs
 
 
-def legacy_floor_bytes(plan_dir: Path) -> int:
-    base = (plan_dir / "plan.md").stat().st_size + (plan_dir / "handoff.md").stat().st_size
-    return max((base + path.stat().st_size for path in (plan_dir / "phases").glob("P*.md")), default=base)
+def legacy_floor_bytes(plan_record: dict) -> int:
+    return max(
+        (
+            sum(file["bytes"] for file in item["files"] if file["role"] != "required_read")
+            for item in plan_record["items"]
+        ),
+        default=0,
+    )
 
 
 def measured_file(path: Path, slot: str, artifact: dict, limits: dict) -> dict:
@@ -287,6 +292,9 @@ def measured_file(path: Path, slot: str, artifact: dict, limits: dict) -> dict:
 def main() -> None:
     artifact = token_estimate.load_artifact()
     limits = plan_weight.load_read_limit()
+    fleet_path = PLAN_ROOT / "artifacts/fleet-weight.json"
+    fleet = json.loads(fleet_path.read_text(encoding="utf-8"))
+    legacy_plans = {plan["plan_id"]: plan for plan in fleet["plans"]}
     generator_hash = sha256(Path(__file__).read_bytes())
     threshold = 100000
     result = {
@@ -314,17 +322,19 @@ def main() -> None:
         diag = plan_lint.Diagnostics()
         meta, _ = plan_lint.parse_plan_md(plan_dir / "plan.md", diag)
         plan_id = meta["Plan ID"][0]
+        legacy_plan = legacy_plans[plan_id]
+        legacy = {item["item_id"]: item for item in legacy_plan["items"]}
         core = plan_core(plan_dir)
         plan_out = {
             "plan_id": plan_id,
             "source": str(plan_dir.relative_to(REPO)),
             "weight_class": sample["class"],
-            "legacy_floor_bytes": legacy_floor_bytes(plan_dir),
+            "legacy_floor_bytes": legacy_floor_bytes(legacy_plan),
+            "legacy_baseline": {
+                "source": str(fleet_path.relative_to(REPO)),
+                "source_sha256": sha256(fleet_path.read_bytes()),
+            },
             "items": [],
-        }
-        legacy = {
-            item["item_id"]: item
-            for item in plan_weight.measure_plan(plan_dir, plan_weight.Measurer())["items"]
         }
         for item_id in sample["items"]:
             phase_id = item_id.split(".")[0]

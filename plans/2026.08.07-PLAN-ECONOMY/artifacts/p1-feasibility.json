@@ -1,7 +1,7 @@
 {
   "schema": "p1-feasibility-v1",
   "generated_by": "artifacts/p1-path-reconstruction/generate.py",
-  "generator_sha256": "4bde5088d4396aff148f74b4d60681fc5122cf7b0fc2e31ce62b4b1a273dc2e9",
+  "generator_sha256": "8c2b3b5c8dbb8837c916da179ff15c612bbe76a16e2a24317ad1c505441e191d",
   "unit": {
     "calibration_id": "token-estimate-calibration@2.0.0",
     "provider": "codex",
@@ -21,12 +21,16 @@
       "plan_id": "2026.08.07-PLAN-ECONOMY",
       "source": "plans/2026.08.07-PLAN-ECONOMY",
       "weight_class": "large",
-      "legacy_floor_bytes": 545424,
+      "legacy_floor_bytes": 510633,
+      "legacy_baseline": {
+        "source": "plans/2026.08.07-PLAN-ECONOMY/artifacts/fleet-weight.json",
+        "source_sha256": "afd323a5f658ccbe4a260644e075aac485913bfa9aa2fae32df97b119531f4b6"
+      },
       "items": [
         {
           "item": "P2.1",
           "selected_as": "heaviest Required Reads",
-          "legacy_v1_tokens_lower_bound": 263349,
+          "legacy_v1_tokens_lower_bound": 384081,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/01-plan-core.md",
@@ -185,7 +189,7 @@
         {
           "item": "P0.4",
           "selected_as": "representative",
-          "legacy_v1_tokens_lower_bound": 137039,
+          "legacy_v1_tokens_lower_bound": 188136,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/01-plan-core.md",
@@ -274,7 +278,7 @@
         {
           "item": "P0.5",
           "selected_as": "representative",
-          "legacy_v1_tokens_lower_bound": 130782,
+          "legacy_v1_tokens_lower_bound": 154992,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/01-plan-core.md",
@@ -381,11 +385,15 @@
       "source": "plans/archive/2026.07.15-TOKEN-ECON-P6",
       "weight_class": "healthy",
       "legacy_floor_bytes": 33310,
+      "legacy_baseline": {
+        "source": "plans/2026.08.07-PLAN-ECONOMY/artifacts/fleet-weight.json",
+        "source_sha256": "afd323a5f658ccbe4a260644e075aac485913bfa9aa2fae32df97b119531f4b6"
+      },
       "items": [
         {
           "item": "P6.1",
           "selected_as": "heaviest Required Reads",
-          "legacy_v1_tokens_lower_bound": 20007,
+          "legacy_v1_tokens_lower_bound": 23215,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/01-plan-core.md",
@@ -474,7 +482,7 @@
         {
           "item": "P7.1",
           "selected_as": "representative",
-          "legacy_v1_tokens_lower_bound": 6715,
+          "legacy_v1_tokens_lower_bound": 6419,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/01-plan-core.md",
@@ -527,7 +535,7 @@
         {
           "item": "P7.2",
           "selected_as": "representative",
-          "legacy_v1_tokens_lower_bound": 6715,
+          "legacy_v1_tokens_lower_bound": 6419,
           "files": [
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/01-plan-core.md",
@@ -581,7 +589,7 @@
     }
   ],
   "sample_aggregate": {
-    "legacy_v1_tokens_lower_bound": 564607,
+    "legacy_v1_tokens_lower_bound": 763262,
     "reconstructed_v2_tokens": 137369,
     "scope_escape_answer": "No mandatory declared input was excluded; explicit slices remain in the measured bundle. This sample does not prove the whole-plan closed-graph aggregate."
   }

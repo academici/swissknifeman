@@ -42,12 +42,12 @@ Bundle хранит SHA-256 исходного файла и выбранных 
 
 | План / класс | Пункт | legacy v1 lower bound | reconstruction v2 | Максимальный файл | Вердикт |
 |:--|:--|--:|--:|--:|:--|
-| `2026.08.07-PLAN-ECONOMY` / large, legacy floor `545424` bytes | P2.1 | 263349 | 59840 | 10978 | pass |
-| тот же | P0.4 | 137039 | 22333 | 5212 | pass |
-| тот же | P0.5 | 130782 | 25661 | 5419 | pass |
-| `2026.07.15-TOKEN-ECON-P6` / healthy, legacy floor `33310` bytes | P6.1 | 20007 | 21995 | 5217 | pass |
-| тот же | P7.1 | 6715 | 3781 | 1849 | pass |
-| тот же | P7.2 | 6715 | 3759 | 1849 | pass |
+| `2026.08.07-PLAN-ECONOMY` / large, legacy floor `510633` bytes | P2.1 | 384081 | 59840 | 10978 | pass |
+| тот же | P0.4 | 188136 | 22333 | 5212 | pass |
+| тот же | P0.5 | 154992 | 25661 | 5419 | pass |
+| `2026.07.15-TOKEN-ECON-P6` / healthy, legacy floor `33310` bytes | P6.1 | 23215 | 21995 | 5217 | pass |
+| тот же | P7.1 | 6419 | 3781 | 1849 | pass |
+| тот же | P7.2 | 6419 | 3759 | 1849 | pass |
 
 Все числа в таблице воспроизводятся из `p1-feasibility.json` одной командой:
 
@@ -60,9 +60,11 @@ python3 -c "import json; d=json.load(open('plans/2026.08.07-PLAN-ECONOMY/artifac
 Сумма каждого пункта включает отдельный overhead `318.793666412498` для каждого
 материализованного файла: core, phase context, item spec, bundle manifest, каждого input unit и
 item-state. Двойной прогон дал один byte digest набора реконструкции:
-`b2c584d22a872b18bfbe82e7c2e91fa4d5317b4c79675ad32f702880b9f3af57`.
+`c90dd4cae2698a351f0232ba2af807619d45f3ee9bb3b6d97638ba86568ef28e`.
 
-Sample aggregate: legacy-v1 lower bound `564607`, reconstructed-v2 `137369`. Это не выдаётся за
+Legacy-v1 значения и floor берутся из замороженного generated baseline
+`artifacts/fleet-weight.json`, а не из mutable plan bookkeeping. Sample aggregate: legacy-v1 lower
+bound `763262`, reconstructed-v2 `137369`. Это не выдаётся за
 whole-plan closed-graph aggregate: выборка проверяет выполнимость пути и тяжёлые Required Reads,
 но не заменяет двурукую приёмку P6.8. Обязательные входы не исключены: явно объявленные slices
 остаются внутри измеряемого bundle и привязаны к source/selected SHA-256.

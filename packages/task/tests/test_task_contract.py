@@ -653,6 +653,7 @@ class BuildFixtureTests(unittest.TestCase):
             contract = task_contract.build(plan, "P1.1")
             self.assertEqual(contract["route"]["required"],
                              {"model_class": "implementation", "effort": "medium"})
+            self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
 
     def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
         phase_path = self.plan_dir / "phases" / "P1.md"

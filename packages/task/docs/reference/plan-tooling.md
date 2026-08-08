@@ -52,6 +52,13 @@ Claude adapter — отдельная additive provider projection.
 получает ни opt-in, ни warning-ветви. Детали диагностик и владельцы вычислений —
 [`plan-read-budget-gate.md`](plan-read-budget-gate.md).
 
+## Downstream gate producer→consumer
+
+`plan-downstream.py` механически выводит потребителей из объявленных путей, прогоняет применимое
+подмножество их `Validation` и сохраняет трёхзначный результат с ключом версии ТЗ и item-коммита
+продюсера. Проверка наличия записи выключена до P6. CLI, exit-коды и форма finding описаны в
+[`plan-downstream-gate.md`](plan-downstream-gate.md).
+
 ## `plans/verify-citations.py`
 
 Проверяет ссылки-доказательства вида `` `path:line` ``/`` `path::symbol` `` во ВСЕЙ прозе живого

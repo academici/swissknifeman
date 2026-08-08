@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from task import (plan_bundle, plan_decisions, plan_item_state, plan_layout,
+from task import (plan_bundle, plan_decisions, plan_downstream, plan_item_state, plan_layout,
                   plan_projection, plan_status, plan_weight)
 
 
@@ -246,6 +246,7 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
                         _path_error(diag, plan_dir / "plan.md",
                                     f"пункт {item['item_id']}, {field}: {candidate} адресует файл "
                                     "терминальной фазы; допустим только её closure digest")
+    plan_downstream.lint_records(plan_dir, layout, diag)
 
 
 __all__ = ("BUNDLE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "lint_bundle_freshness",

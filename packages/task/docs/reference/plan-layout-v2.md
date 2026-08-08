@@ -25,6 +25,27 @@ Unsupported layout values and a declaration that disagrees with the physical
 tree fail closed. Consumers must ask the resolver for carrier paths instead of
 recreating `phases/`, `plan.md`, or `handoff.md` literals.
 
+## Stable core and owner status view
+
+In v2 `plan.md` contains only `## 0. Meta` identity and registrar fields,
+`## 1. Context`, `## 2. Execution Rules`, `## 3. Routing`, the `## 5. Decision
+Log` pointer, and optional `## 7. Contracts`. `Version`, `Status`, and `Last
+Updated`, together with the phase board and update log, are absent from the
+core. `Design Passes` and `visibility` remain in the Meta table: both are slow
+registrar fields, not item-closure state.
+
+`status.md` is the generated owner view. Build or verify it with:
+
+```bash
+python3 packages/task/scripts/plan-views.py status --plan-dir <plan-dir> [--check]
+```
+
+The projector derives item and phase status from v2 state carriers and its
+Update Log from `journal.jsonl`; `--check` regenerates in memory and rejects
+byte drift. Until the v1→v2 migrator lands in P2.8, a new v2 fixture has no
+source for the legacy plan-version value, so the view explicitly renders `—`
+instead of inventing a version.
+
 ## Decisions and generated views
 
 Decision truth lives in immutable `decisions/D<NNN>-<slug>.md` records. Their

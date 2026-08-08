@@ -43,6 +43,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
 from task import plan_layout
+from task import plan_status
 # task.task_contract — единственный владелец строкового теста «внешности» execution
 # input'а (task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2); tiered-portability lint (2026.07.24-AGENT-RELIABILITY P2.2)
 # зовёт его, а не пересказывает список префиксов вторым списком (Implementation Rules P2.2).
@@ -71,6 +72,8 @@ EMPTY_PLACEHOLDER = "—"  # пустое поле помечается ровн
 # Meta — таблица `Поле|Значение`; обязательны только 4 identity-поля (остальные 8 из
 # шаблона — Document Type/Authoring Model/…/Approval Owner — информационные, не гейтятся).
 REQUIRED_META_FIELDS = ("Plan ID", "Title", "Version", "Status")
+V2_CORE_META_FIELDS = ("Plan ID", "Title")
+V2_STATUS_META_FIELDS = ("Version", "Status", "Last Updated")
 META_TABLE_COLUMNS = ("Поле", "Значение")
 # Полный канон item-полей — SKILL.ru.md §4 / snippets/phase-template.md, строго в этом
 # порядке (порядок здесь не гейтится, только присутствие — см. lint_plan).
@@ -1600,6 +1603,13 @@ def parse_plan_md(path, diag):
 
     _lint_plan_md_20(lines, path, diag)
 
+    try:
+        layout = plan_layout.layout_version(Path(path).parent)
+    except plan_layout.PlanLayoutError:
+        # layout_version is reported by lint_plan below; retain v1 parsing here so
+        # its legacy diagnostics remain byte-for-byte stable.
+        layout = "v1"
+
     meta = {}
     _, meta_body, meta_start = _find_section(lines, META_HEADER_RE)
     if meta_body is None:
@@ -1614,9 +1624,33 @@ def parse_plan_md(path, diag):
         else:
             for row, lineno in rows:
                 meta[row.get("Поле", "")] = (row.get("Значение", ""), lineno)
-        for field in REQUIRED_META_FIELDS:
+        required_fields = V2_CORE_META_FIELDS if layout == "v2" else REQUIRED_META_FIELDS
+        for field in required_fields:
             if field not in meta:
                 diag.error(path, meta_start, f"Meta: нет обязательного поля «{field}»")
+
+    if layout == "v2":
+        numbered = {int(match.group(1)): match.group(2)
+                    for line in lines if (match := PLAN_SECTION_NUM_RE.match(line))}
+        allowed = {0, 1, 2, 3, 5, 7}
+        for number in sorted(set(numbered) - allowed):
+            diag.error(path, None,
+                       f"Layout v2: секция «## {number}. {numbered[number]}» не входит в закрытый состав ядра")
+        for field in V2_STATUS_META_FIELDS:
+            if field in meta:
+                diag.error(path, meta[field][1],
+                           f"Layout v2: поле Meta «{field}» живёт только в status.md")
+        try:
+            status_meta, status_board = plan_status.parse_status_view(Path(path).parent)
+        except plan_status.StatusError as exc:
+            diag.error(Path(path).parent / "status.md", None, str(exc))
+            return meta, []
+        meta.update(status_meta)
+        core_row = plan_layout.registry().get("plan-core", {})
+        if core_row.get("volatility") not in ("stable", "slow"):
+            diag.error(path, None,
+                       "Layout v2: plan-core не объявлен stable/slow в реестре носителей")
+        return meta, status_board
 
     status_board = []
     _, board_body, board_start = _find_section(lines, STATUS_BOARD_HEADER_RE)

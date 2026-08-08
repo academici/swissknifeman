@@ -1,0 +1,45 @@
+"""Tests for the deterministic layout-v2 owner status projection."""
+import tempfile
+import unittest
+from pathlib import Path
+
+try:
+    from .fixtures import write_valid_plan
+except ImportError:  # direct discovery from packages/task remains supported
+    from fixtures import write_valid_plan
+from task import plan_status
+from task.plan_lint import Diagnostics, lint_plan
+
+
+class PlanStatusTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.plan_dir = write_valid_plan(Path(self._tmp.name), "DEMO-V2", layout="v2")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_generates_fresh_owner_view_without_volatile_plan_core_fields(self):
+        target = plan_status.build_status(self.plan_dir)
+        self.assertEqual(target, self.plan_dir / "status.md")
+        self.assertEqual(plan_status.build_status(self.plan_dir, check=True), target)
+        core = (self.plan_dir / "plan.md").read_text(encoding="utf-8")
+        view = target.read_text(encoding="utf-8")
+        self.assertNotIn("## 4.", core)
+        self.assertNotIn("## 6.", core)
+        self.assertNotIn("| Version |", core)
+        self.assertIn("| Version | — |", view)
+        self.assertIn("| Status | 🟢 Done |", view)
+
+    def test_check_rejects_manual_status_view_drift(self):
+        target = self.plan_dir / "status.md"
+        target.write_text(target.read_text(encoding="utf-8") + "\nmanual drift\n", encoding="utf-8")
+        with self.assertRaises(plan_status.StatusError):
+            plan_status.build_status(self.plan_dir, check=True)
+
+    def test_linter_reads_v2_meta_and_board_from_owner_view(self):
+        diagnostics = Diagnostics()
+        model = lint_plan(self.plan_dir, diagnostics)
+        self.assertEqual(diagnostics.errors, [])
+        self.assertEqual(model["meta"]["Status"], "🟢 Done")
+        self.assertEqual(model["status_board"][0]["Phase"], "P1")

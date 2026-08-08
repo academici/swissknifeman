@@ -9,18 +9,21 @@ from pathlib import Path
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PKG_ROOT / "lib"))
 
-from task import plan_decisions  # noqa: E402
+from task import plan_decisions, plan_status  # noqa: E402
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Собрать или проверить виды исполняемого плана")
-    parser.add_argument("view", choices=("decisions",), help="вид для генерации")
+    parser.add_argument("view", choices=("decisions", "status"), help="вид для генерации")
     parser.add_argument("--plan-dir", required=True, type=Path, help="каталог плана")
     parser.add_argument("--check", action="store_true", help="только проверить свежесть")
     args = parser.parse_args(argv)
     try:
-        outputs = plan_decisions.build_views(args.plan_dir, check=args.check)
-    except (plan_decisions.DecisionError, ValueError) as exc:
+        if args.view == "decisions":
+            outputs = plan_decisions.build_views(args.plan_dir, check=args.check)
+        else:
+            outputs = (plan_status.build_status(args.plan_dir, check=args.check),)
+    except (plan_decisions.DecisionError, plan_status.StatusError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     action = "проверены" if args.check else "собраны"

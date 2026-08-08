@@ -508,8 +508,14 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     plan_dir = Path(plan_dir)
     phase_token = item_id.split(".")[0]
     diag = plan_lint.Diagnostics()
-    plan_lint.parse_plan_md(plan_layout.plan_core_path(plan_dir), diag)  # populates diag only; not consulted here
     layout = plan_layout.layout_version(plan_dir)
+    plan_meta, _ = plan_lint.parse_plan_md(plan_layout.plan_core_path(plan_dir), diag)
+    # `parse_plan_md` resolves v2 Version/Status/Last Updated from the owner
+    # projection. Keep this compiler on that single path rather than reopening
+    # plan.md and accidentally restoring the legacy monolith as a source.
+    for field in ("Version", "Status", "Last Updated"):
+        if not plan_meta or field not in plan_meta:
+            raise TaskContractBuildError(item_id, "Meta", f"нет поля {field!r} в владельческом виде")
     phase_path = plan_layout.phase_path(plan_dir, phase_token)
     phase = plan_lint.parse_phase_md(phase_path, phase_token, diag, layout=layout)
     occurrences = phase["items"].get(item_id) if phase else None

@@ -28,6 +28,41 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
                     "`python3 packages/task/scripts/plan-views.py decisions`."
                     if layout == "v2" else
                     "| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n" + decision_log_rows)
+    if layout == "v2":
+        return f"""# {plan_id} — Демо-план
+
+## 0. Meta
+
+| Поле | Значение |
+|:--|:--|
+| Plan ID | {plan_id} |
+| Title | Демо-план |
+| Layout | v2 |
+| Document Type | Executable Master Plan |
+| Authoring Model | opus |
+| Repository | swissknifeman |
+| Related Packages | task |
+| Execution Mode | phase-first |
+| Target Operator Models | sonnet (exec) · haiku (LOW) · opus (design/audit) |
+| Approval Owner | dv |
+| Home | repo:swissknifeman |
+| Design Passes | 1/1 |
+| visibility | private |
+
+## 1. Context
+
+Демо для unittest plan_lint.
+
+## 2. Execution Rules
+
+- Один item за раз.
+
+## 3. Routing
+
+## 5. Decision Log
+
+{decision_log}
+"""
     return f"""# {plan_id} — Демо-план
 
 ## 0. Meta
@@ -318,4 +353,7 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
     (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")
     (plan_dir / "journal.jsonl").write_text(journal_jsonl(plan_id), encoding="utf-8")
     (plan_dir / "index.md").write_text(index_md(plan_id), encoding="utf-8")
+    if layout == "v2":
+        from task import plan_status
+        plan_status.build_status(plan_dir)
     return plan_dir

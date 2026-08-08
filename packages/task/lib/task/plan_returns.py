@@ -300,7 +300,13 @@ def _fingerprint(subject: str, trigger_row: dict, event_row: dict, seams: list[d
 
 
 def _history_row(trigger_row: dict, event_row: dict, seams: list[dict], subject: str) -> dict:
-    """Keep the owner packet tied to durable journal and seam carriers."""
+    """Keep the owner packet tied to durable journal and seam carriers.
+
+    ``return_event_id`` is deliberately plan-local: it is the immutable physical
+    address of the return row, not another fingerprint component.  Judgement
+    carriers use it to address one concrete event without changing the frozen
+    grouping tuple, digest, or namespace.
+    """
     trigger, event = trigger_row["entry"], event_row["entry"]
     notes = " ".join(value for value in (trigger.get("note"), event.get("note"))
                      if isinstance(value, str))
@@ -308,6 +314,7 @@ def _history_row(trigger_row: dict, event_row: dict, seams: list[dict], subject:
     findings = sorted(row["identity"] for row in seams
                       if row["item"] == subject and trigger_day <= row["date"] <= event_day)
     return {
+        "return_event_id": f"journal.jsonl:{event_row['ordinal']}",
         "ts": event.get("ts"),
         "attempt": trigger.get("attempt"),
         "actor": trigger.get("actor"),

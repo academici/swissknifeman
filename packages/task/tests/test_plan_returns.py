@@ -66,6 +66,32 @@ class PlanReturnsTests(unittest.TestCase):
                                      root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
                                      shallow=False))
 
+    def test_committed_fixture_emits_physical_return_event_ids_outside_fingerprint(self):
+        fixture = Path(__file__).parent / "data" / "plan-v2"
+        result = plan_returns.returns(fixture)
+        history = [event for events in result["history"].values() for event in events]
+        ids = [event["return_event_id"] for event in history]
+        self.assertEqual(ids, ["journal.jsonl:3", "journal.jsonl:5", "journal.jsonl:7"])
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertTrue(all(event_id.startswith("journal.jsonl:") for event_id in ids))
+        self.assertEqual(result["counts"], {
+            "5f474410de10cf4b31d3c72a432203bc8fb311f544c1be5dbb5183d4c23cfc5c": 3,
+        })
+        self.assertTrue(all("return_event_id" not in record["tuple"]
+                            for record in result["fingerprints"]))
+
+    def test_committed_fixture_has_multiple_event_scoped_judgement_carriers(self):
+        fixture = Path(__file__).parent / "data" / "plan-v2" / "findings"
+        carriers = sorted(fixture.glob("*judgement*.md"))
+        self.assertGreaterEqual(len(carriers), 2)
+        ids = []
+        for carrier in carriers:
+            fields = plan_returns._frontmatter(carrier)
+            record = json.loads(fields["return_judgement"])
+            plan_returns.validate_judgement(record)
+            ids.append(record["return_event_id"])
+        self.assertEqual(ids, ["journal.jsonl:5", "journal.jsonl:7"])
+
     def test_return_loop_owner_packet_uses_lifted_cap_and_durable_history(self):
         rows = []
         for index in range(3):

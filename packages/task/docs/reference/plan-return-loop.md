@@ -8,6 +8,10 @@ The reducer reads the lifted `return-fingerprint-v1.schema.json`, preserves inva
 `ungroupable`, and never turns an absent journal into a zero count: `durable_count()` returns
 `"unknown"`. Seam metadata is additive frontmatter on item-scoped decisions/findings.
 
+Each history event also exposes a plan-local `return_event_id` in the exact form
+`journal.jsonl:<physical-line>`. It addresses one immutable return event for its judgement
+carrier and is deliberately excluded from the frozen fingerprint tuple, digest input, and namespace.
+
 ## Return-loop v1
 
 `plan-views.py returns --plan-dir <plan> --gate --json` applies the lifted

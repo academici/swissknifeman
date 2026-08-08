@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: history событий возврата теперь содержит plan-local `return_event_id`.** Он равен
+  физическому адресу `journal.jsonl:<line>` и связывает judgement carrier с конкретным return event,
+  не меняя frozen fingerprint tuple, digest, namespace или `same_return_max`
+  (`2026.08.07-PLAN-ECONOMY` P4.2, D142).
+
 - **`task`: return-judgement v1 теперь детерминированно потребляется return-loop.** Редьюсер
   принимает только первую schema-valid независимую запись с полным provenance, сохраняет
   монотонность всех пяти вердиктов и воспроизводит `classified` owner-gate на fixture

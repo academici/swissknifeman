@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 7ceffeb00b973d56dc0ba95f1515795556da9eaf97067f8b1b53e17d4ba74e9f
+inputs_sha256: 02dcc29dfcc131147ef746e2328d2b9fc08d222013709fc512524db397cfd5bf
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 3/6 | ⬜ Not started |
+| P4 | Ограничитель кружения design↔exec | 3/6 | 🔴 Blocked |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -86,7 +86,7 @@ generated_by: task plan-views status
 | P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟢 Done | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | 🟢 Done | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟠 Done with deviations | 2026-08-08 |
-| P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | ⬜ Not started | 2026-08-08 |
+| P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | 🔴 Blocked | 2026-08-08 |
 | P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | ⬜ Not started | 2026-08-08 |
 
 ## Phase P5
@@ -243,6 +243,9 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D138 extends exact lint-disposition discovery to task.plan_gates. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D139 defines evidence carrier; D140 aligns required owner-gate fixture and generated projections. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · Session gpt-5.6-terra/high; code 8f2cacd2; 12 focused/653 package tests and validate green; owner packet 3/2; write-site: pre_mutation: allow · pre_final: allow; deviation: D138-D140 design used terra/high, bare discovery needed repository core. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; item commit 39bd5e2a; return-judgement v1 contract/schema frozen; item Validation, schema-example check and umbrella docs build passed; R12 source provenance repaired; write-site: pre_mutation: allow · pre_final: allow; deviation: docs/reference.md added outside Files per root provenance canon; hook-integrity dry-run remains provenance-invalid (finding 23). |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · P4.5 closure lint K=1: final note exceeds 300 chars; append-only forbids rewrite and no forward correction exists. Need plan-design; item commit 39bd5e2a preserved. |
 
 ## Owner Gates
 
@@ -264,3 +267,4 @@ generated_by: task plan-views status
 - P4.2: known deviation
 - P4.3: known deviation
 - P4.4: known deviation
+- P4.5: escalation

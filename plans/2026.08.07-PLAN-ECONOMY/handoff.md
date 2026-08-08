@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-08 — after P2.1
+# HANDOFF — 2026-08-08 — after P2.2
 
-**Next:** manual: implementation/high — `2026.08.07-PLAN-ECONOMY P2.2`
+**Next:** manual: implementation/high — `2026.08.07-PLAN-ECONOMY P2.3`
 
 **Native Codex launch-block**
 
@@ -11,8 +11,8 @@
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | continue current root; item-by-item |
-| Суть | Реализовать immutable decisions и общий каркас проекций P2.2 поверх закрытого resolver P2.1 |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.2'` |
+| Суть | Разбить фазу на тонкий v2-индекс и item-files, используя общий каркас проекций P2.2 |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.3'` |
 
 **Provider-neutral plan-protocol launch-block**
 
@@ -22,31 +22,32 @@
 | Effort | high |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | P2.2: immutable decisions, четыре вида и общий fail-closed projection framework |
+| Суть | P2.3: thin phase index, item specification files и generated state carrier |
 | Команда | — |
 
 ```text
 select session model class implementation
 select session effort high
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.2
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.3
 ```
 
-**Done:** `2026.08.07-PLAN-ECONOMY P2.1` закрыл единый v1/v2 resolver, адресацию live-потребителей
-и v2 fixture. Frozen-контракты совпадают побайтно; v1 diagnostics parity, 572 task tests и harness
-tests зелёные. D128 устраняет ложное отличие глобального summary в parity check; D129 фиксирует
-нужный PYTHONPATH для legacy точечных тестов.
+**Done:** `2026.08.07-PLAN-ECONOMY P2.2` сдал immutable v2 decision records, общий
+детерминированный projection framework, четыре generated navigation views и pointer-only lint.
+Item-коммит: `feae254c` (`feat(task): добавить проекции решений (P2.2)`).
 
-**Remaining:** P2.2–P6 по roadmap.
+**Remaining:** P2.3–P6; отдельная редактура literal full-unittest в Validation P2.2 по D129.
 
-**Sources of truth:** `phases/P2.md` P2.1/P2.2 · `plan.md` D127–D129 ·
-`packages/task/lib/task/plan_layout.py` · `packages/task/configs/reader-contract-v1.registry.json`.
+**Sources of truth:** `phases/P2.md` P2.2/P2.3 · `packages/task/lib/task/plan_decisions.py` ·
+`packages/task/lib/task/plan_projection.py` · `packages/task/scripts/plan-views.py`.
 
-**Open risks:** fixture `packages/task/tests/data/plan-v2` пока проверяет только адресацию P2.1;
-реальные v2 carrier forms и projectors принадлежат P2.2–P2.8. Точечный unittest из package cwd
-требует объявленного в D129 PYTHONPATH; итоговые package launchers зелёные.
+**Open risks:** Literal `cd packages/task && python3 -m unittest discover -s tests` из Validation
+P2.2 не имеет нужного корня в `PYTHONPATH`; доказательный package validator зелёный, но ТЗ требует
+reconcile по D129. Активный план всё ещё несёт предсуществующие DoR warnings, validation не даёт
+новых ERROR.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: —.
-- Deferred: v2 content/forms, views и migration — P2.2–P2.8.
+- Workarounds: для полного unittest использовать `PYTHONPATH=packages/task/lib:.` или
+  `bash packages/task/scripts/validate.sh`.
+- Deferred: reconcile Validation P2.2 через `task:plan-design`.
 - Open questions: —.

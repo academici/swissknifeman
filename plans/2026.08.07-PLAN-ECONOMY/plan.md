@@ -337,6 +337,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | Owning-root remediation D126: session-canary включён в machine contract/acceptance, DoR и roadmap реконсилированы; пятый аудит не назначен, следующий шаг — P1.5; детали `research/18-…` |
 | 2026-08-08 | владелец | P1.5: после cross-check и оценки выполнимости утверждена заморозка четырёх reader-контрактов v1; решение D127, доказательства `findings/06-p1-path-feasibility.md` |
 | 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.5 закрыт: reader-contract v1 заморожен D127 после воспроизводимой оценки и scoped-review — детали см. `phases/P1.md` P1.5 Completion Notes |
+| 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.2 закрыт `🟠 Done with deviations`: immutable decisions, четыре generated views и v2 pointer lint; details см. `phases/P2.md` P2.2 Completion Notes |
 
 ## 7. Contracts
 

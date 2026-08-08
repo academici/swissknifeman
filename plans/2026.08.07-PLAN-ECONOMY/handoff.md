@@ -6,13 +6,13 @@
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6 |
+| Model | gpt-5.6-terra |
 | Thinking | high |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | continue (/clear) — ручной item |
 | Суть | P2.7: убрать терминальные фазы с живого пути и собрать closure digest |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.7'` |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.7'` |
 
 **Provider-neutral plan-protocol launch-block**
 

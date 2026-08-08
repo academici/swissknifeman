@@ -16,6 +16,11 @@
 
 ### Fixed
 
+- **Codex plan handoff теперь пинует полный маршрут запуска.** Generated runtime проекций
+  `task:plan-*` требует отдельный native launch-block с `-C`, `-m`,
+  `model_reasoning_effort`, `-a never` и `-s danger-full-access`; `$ task:…` остаётся
+  только внутрисессионным invocation. Для `plan-run` маршрут выводится из Routing
+  следующего item'а, а не наследуется от прошлой сессии.
 - **`plan-weight.py sweep` больше не роняет весь замер флота одним недоступным корнём.**
   (`2026.08.07-PLAN-ECONOMY` P0.4, D110–D112.) У `sweep` появилась учётная единица «корень
   входа» — top-level `roots[]` с закрытым статусом `resolved`/`unreadable`/`missing` на

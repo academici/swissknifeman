@@ -1,8 +1,23 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
 Canonical SHA-256: sha256:7d7d987630ab91b064f5979ed8fc8493cb6a20730ec8e098687748b3746d2afa
-Adapter: task.codex-command/1.0.4
+Adapter: task.codex-command/1.0.5
 -->
+## Native Codex launch-block — mandatory for every handoff
+
+`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
+pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
+```
+
+Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
+do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
+low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
+`$ task:…` or an unpinned `codex` command.
+
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 

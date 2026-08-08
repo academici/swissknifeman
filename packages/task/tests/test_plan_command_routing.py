@@ -6,7 +6,8 @@ import unittest
 
 from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
-                                 parse_next_carrier, plan_provider_invocation)
+                                 parse_next_carrier, plan_provider_invocation,
+                                 render_codex_launch)
 from task.route_evidence import required_route
 
 
@@ -85,6 +86,29 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             self.assertTrue(plan.ok, plan.diagnostics)
             self.assertEqual(plan.invocation, invocation)
             self.assertIs(plan.carrier, carrier)
+
+    def test_codex_launch_pins_the_mapped_route_and_process_safety_flags(self):
+        carrier = PlanNextCarrier(
+            "run-items", "task:plan-run", "PLAN", ("PLAN", "P2.7"),
+            context_kind="cold-start")
+        mapping = mapping_from_catalog(self.catalog, "codex")
+        plan = plan_provider_invocation(
+            self.catalog, carrier, mapping, dict(mapping.capability_bindings),
+            observed_class="implementation", observed_effort="high",
+            inherited_minimum=("implementation", "high"))
+        self.assertTrue(plan.ok, plan.diagnostics)
+        expected = (
+            "codex -C /workspace/repo -m gpt-5.6-terra "
+            "-c 'model_reasoning_effort=\"high\"' -a never -s danger-full-access "
+            "'$ task:plan-run PLAN P2.7'"
+        )
+        self.assertEqual(plan.codex_launch("/workspace/repo"), expected)
+        self.assertEqual(
+            render_codex_launch(plan.invocation or "", plan.model_selector or "",
+                                plan.effort_selector or "", "/workspace/repo"),
+            expected)
+        with self.assertRaisesRegex(ValueError, "CMD_INVOCATION_INVALID"):
+            render_codex_launch("task:plan-run PLAN P2.7", "gpt-5.6-terra", "high", "/repo")
 
     def test_exact_overshoot_undershoot_and_unknown_routes_are_fail_closed(self):
         mapping = mapping_from_catalog(self.catalog, "codex")

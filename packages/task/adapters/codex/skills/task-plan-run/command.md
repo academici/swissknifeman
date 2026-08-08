@@ -1,8 +1,23 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
 Canonical SHA-256: sha256:835d6e3abe3d784d05b236a53c0d1c7bdf50676403d98ea7dff7b4cc0f06668f
-Adapter: task.codex-command/1.0.4
+Adapter: task.codex-command/1.0.5
 -->
+## Native Codex launch-block — mandatory for every handoff
+
+`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
+pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
+```
+
+Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
+do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
+low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
+`$ task:…` or an unpinned `codex` command.
+
 Это ИСПОЛНЕНИЕ item'а мастер-плана под моделью сессии (D18) — третий режим `plan-exec`,
 БЕЗ пина `model`/`effort`: они наследуются из настроек текущей сессии владельца.
 Ввод пользователя: «$ARGUMENTS».

@@ -1,5 +1,19 @@
 # Plan tooling: сверочные гейты `plans/`
 
+## Codex launch-block для handoff
+
+`$ task:…` запускает команду только внутри уже открытой сессии Codex. Поэтому handoff на новый
+plan step обязан дополнительно дать нативную команду с явными cwd, моделью, effort, approval и
+sandbox. Для `plan-run` модель и effort берутся из Routing следующего item'а, а не из предыдущей
+сессии:
+
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:plan-run <PLAN-ID> <Pn.m>'
+```
+
+Провайдер-нейтральный launch-block остаётся рядом с этой командой: он несёт семантический
+маршрут, а native-блок делает запуск воспроизводимым.
+
 Два stdlib-скрипта в `plans/` (не в `packages/task/lib/`, не встроены в `plan_lint.py` —
 у каждого свой предмет): `cross-plan-files.py` (межплановые пересечения `Files`) и
 `verify-citations.py` (ссылки-доказательства резолвятся до факта). Оба — CLI одной формы:

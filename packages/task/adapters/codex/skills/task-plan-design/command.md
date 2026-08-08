@@ -1,8 +1,23 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
 Canonical SHA-256: sha256:bf844e475b3cf55ec4ac4ce715a15692ac53b21f315c585ff9696f30aa3cddf2
-Adapter: task.codex-command/1.0.4
+Adapter: task.codex-command/1.0.5
 -->
+## Native Codex launch-block — mandatory for every handoff
+
+`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
+pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
+```
+
+Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
+do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
+low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
+`$ task:…` or an unpinned `codex` command.
+
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/high) — не переключай вручную. SSOT протокола — скилл
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
@@ -271,7 +286,7 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 
 ## Финал
 
-Прогони линтер: `python3 "$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/scripts/plan-lint.py" plans/<ID>`
+Прогони линтер: `python3 "$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/scripts/plan-lint.py" plans/<ID>`
 (переменная не задана или скрипта нет — предупреди и пропусти, не блокер).
 Красное линтера почини в созданных файлах.
 

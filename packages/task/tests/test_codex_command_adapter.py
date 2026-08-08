@@ -74,6 +74,16 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 
+    def test_plan_runtime_requires_a_full_native_codex_launch_block(self):
+        codex_runtime = next(
+            artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
+            if artifact.path.endswith("/task-plan-run/command.md"))
+        self.assertIn("Native Codex launch-block — mandatory for every handoff", codex_runtime)
+        self.assertIn("codex -C <repo-cwd> -m <model-selector>", codex_runtime)
+        self.assertIn("model_reasoning_effort=\"<effort-selector>\"", codex_runtime)
+        self.assertIn("-a never -s danger-full-access", codex_runtime)
+        self.assertIn("do not reuse the preceding session's route", codex_runtime)
+
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (
             b"\nmodel/effort <model/effort> path/effort\n"

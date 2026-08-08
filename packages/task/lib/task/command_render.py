@@ -22,7 +22,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.4"
+ADAPTER_VERSION = "1.0.5"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -159,6 +159,13 @@ class PlanProviderInvocation:
     def ok(self) -> bool:
         return not any(item.severity == "error" for item in self.diagnostics)
 
+    def codex_launch(self, cwd: str | Path) -> str:
+        """Render a complete fresh-process Codex launch for this validated carrier."""
+        if not self.ok or not self.invocation or not self.model_selector or not self.effort_selector:
+            raise ValueError("CMD_INVOCATION_INVALID")
+        return render_codex_launch(
+            self.invocation, self.model_selector, self.effort_selector, cwd)
+
 
 @dataclass(frozen=True)
 class RenderedCommandArtifact:
@@ -242,6 +249,28 @@ def render_invocation(record: CommandRecord, arguments: str,
     if not invocation.startswith("$ ") or invocation.startswith("$task:"):
         raise ValueError("CMD_INVOCATION_INVALID")
     return invocation
+
+
+def render_codex_launch(invocation: str, model_selector: str, effort_selector: str,
+                        cwd: str | Path) -> str:
+    """Render a shell-safe, fully routed native Codex launch command.
+
+    A `$ task:…` invocation addresses a command inside an existing Codex session.  A
+    handoff must instead start a new process with the mapped selector and reasoning
+    effort explicitly pinned, so the route cannot be silently inherited from the
+    previous session.
+    """
+    if (not isinstance(invocation, str) or not invocation.startswith("$ task:")
+            or not isinstance(model_selector, str) or not model_selector
+            or not isinstance(effort_selector, str) or not effort_selector
+            or not isinstance(cwd, (str, Path)) or not str(cwd)):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    reasoning_config = f'model_reasoning_effort="{effort_selector}"'
+    return (
+        f"codex -C {shlex.quote(str(cwd))} -m {shlex.quote(model_selector)} "
+        f"-c {shlex.quote(reasoning_config)} -a never -s danger-full-access "
+        f"{shlex.quote(invocation)}"
+    )
 
 
 def render_claude_invocation(record: CommandRecord, arguments: str,
@@ -474,7 +503,7 @@ def plan_codex_command_render(
     for record in catalog.records:
         content = catalog.content_for(record.command_id)
         try:
-            runtime = _codex_runtime_bytes(record, content)
+            runtime = _codex_runtime_bytes(record, content, mapping)
             description = _project_codex_runtime_tokens(_frontmatter_description(content))
         except (UnicodeDecodeError, ValueError) as error:
             diagnostics.append(_diag(
@@ -956,7 +985,8 @@ Preserve the semantic command ID, gates, status literals, scope, and validation 
     return text.encode("utf-8")
 
 
-def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
+def _codex_runtime_bytes(record: CommandRecord, content: bytes,
+                         mapping: ProviderCommandMapping) -> bytes:
     """Project one canonical Claude command into a finite, provider-safe Codex runtime."""
     text = content.decode("utf-8")
     lines = text.splitlines(keepends=True)
@@ -971,6 +1001,8 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
         raise ValueError("canonical frontmatter closing fence is missing")
     body = "".join(lines[closing + 1:])
     projected = _project_codex_runtime_tokens(body)
+    if record.kind == "plan-protocol":
+        projected = _codex_native_launch_rule(mapping) + projected
     provenance = (
         "<!-- Generated Codex runtime projection; do not edit as source.\n"
         f"Canonical source: {record.source.path}\n"
@@ -979,6 +1011,32 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
         "-->\n"
     )
     return (provenance + projected).encode("utf-8")
+
+
+def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
+    """Return the mandatory native launch contract for generated plan runtimes."""
+    classes = dict(mapping.class_selectors)
+    efforts = dict(mapping.effort_selectors)
+    class_routes = ", ".join(
+        f"{name}={classes[name][0]}" for name in MODEL_CLASSES)
+    effort_routes = ", ".join(
+        f"{name}={efforts[name][0]}" for name in EFFORTS)
+    return f'''## Native Codex launch-block — mandatory for every handoff
+
+`$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
+pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+```bash
+codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
+```
+
+Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
+do not reuse the preceding session's route. Current Codex mapping: {class_routes};
+{effort_routes}. Keep the provider-neutral launch-block too, but never hand off only
+`$ task:…` or an unpinned `codex` command.
+
+'''
 
 
 def _project_codex_runtime_tokens(text: str) -> str:

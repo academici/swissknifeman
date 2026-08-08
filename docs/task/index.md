@@ -23,6 +23,7 @@
 | `/task:review` | Opus / xhigh | read-only adversarial-ревью |
 | `/task:plan-design` | Opus / high | создать/детализировать мастер-план `plans/<ID>/` |
 | `/task:plan-exec` | Sonnet / medium | исполнить item плана по ТЗ |
+| `/task:plan-run` | маршрут текущей сессии | исполнить manual item без повторного выбора модели/effort |
 | `/task:plan-close` | Sonnet / low | закрыть item/фазу по git-фактам |
 | `/task:plan-audit` | Opus / xhigh | adversarial-аудит закрытой фазы |
 
@@ -32,6 +33,18 @@
 `general/plan-protocol`. Процесс день за днём — [Разработка](/develop).
 
 Валидатор планов: `python3 packages/task/scripts/plan-lint.py plans/<PLAN-ID>`.
+
+## История пункта layout v2
+
+История — это не файл, который ведут вручную, а on-demand вид для аудитора над тремя
+источниками: журналом, неизменяемыми решениями и item-scoped findings. По умолчанию команда
+печатает её в stdout; постоянную копию создаёт только явный `--output` и она игнорируется Git:
+
+```bash
+python3 packages/task/scripts/plan-views.py history --plan-dir plans/<ID> --item Pn.m
+python3 packages/task/scripts/plan-views.py history --plan-dir plans/<ID> --item Pn.m \
+  --output .plan-cache/history/Pn.m.md --check
+```
 
 ## Методология plan-protocol 2.0
 

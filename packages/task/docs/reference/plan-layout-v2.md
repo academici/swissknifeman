@@ -58,6 +58,21 @@ The reducer derives the five outcome fields from the append-only journal and
 validates its closed model against `configs/item-state-projection-v1.schema.json`.
 It rejects unknown results and never emits routing data; `--check` rejects byte drift.
 
+## Item history projection
+
+The auditor can assemble an item’s on-demand history from exactly the sealed journal,
+immutable decision records, and item-scoped findings:
+
+```bash
+python3 packages/task/scripts/plan-views.py history --plan-dir <plan-dir> --item Pn.m
+```
+
+The default prints deterministic Markdown to stdout. To preserve audit evidence, pass an
+explicit `--output`; `--check` is available only with that output and rejects byte drift.
+The default cache address `.plan-cache/history/` is ignored by Git. The view is not an
+authority: it has projection metadata and links facts chronologically, including superseded
+decisions, without judging them.
+
 ## Decisions and generated views
 
 Decision truth lives in immutable `decisions/D<NNN>-<slug>.md` records. Their

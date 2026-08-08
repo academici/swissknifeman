@@ -72,3 +72,6 @@ docs/analyst/
 
 
 /.p*
+
+# Исторические проекции пунктов materialize только по явной команде аудитора.
+.plan-cache/history/

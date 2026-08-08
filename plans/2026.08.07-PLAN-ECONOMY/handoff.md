@@ -1,47 +1,49 @@
-# HANDOFF — 2026-08-08 — after P2.5
+# HANDOFF — 2026-08-08 — after P2.6
 
-**Next:** `/task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6`
+**Next:** `/task:plan-run 2026.08.07-PLAN-ECONOMY P2.7`
 
 **Native Codex launch-block**
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
+| Model | gpt-5.6 |
 | Thinking | high |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | continue (/clear) — ручной item |
-| Суть | Собрать генератор исторического вида пункта v2 |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access '$ task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6'` |
+| Суть | P2.7: убрать терминальные фазы с живого пути и собрать closure digest |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.7'` |
 
 **Provider-neutral plan-protocol launch-block**
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | medium |
+| Effort | high |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | P2.6: generated item history view |
-| Команда | `/task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6` |
+| Суть | P2.7: generated phase closure + terminal-phase path boundary |
+| Команда | `/task:plan-run 2026.08.07-PLAN-ECONOMY P2.7` |
 
 ```text
-$ task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.7
 ```
 
-**Done:** `2026.08.07-PLAN-ECONOMY P2.5` добавил базовый генератор item-state и `--check`;
-item-коммит: `4a572568`.
+**Done:** `2026.08.07-PLAN-ECONOMY P2.6` добавил on-demand history view: ровно journal,
+decision records и item-scoped findings; stdout по умолчанию, explicit materialization и
+deterministic `--check`. Item закрыт 🟠; кодовый diff не коммитился в этой сессии.
 
-**Remaining:** P2.6–P6; P2.5 требует follow-up для полного наполнения world/active_context.
+**Remaining:** P2.7–P6; follow-up P2.6 — выровнять literal full-unittest Validation с
+штатным окружением `validate.sh` через `task:plan-design`.
 
-**Sources of truth:** `phases/P2.md` P2.5/P2.6 · `packages/task/lib/task/plan_item_state.py` ·
+**Sources of truth:** `phases/P2.md` P2.6/P2.7 · `packages/task/lib/task/plan_history.py` ·
 `packages/task/lib/task/plan_projection.py` · `packages/task/docs/reference/plan-layout-v2.md`.
 
-**Open risks:** P2.5 закрыт 🟠: `world` и `active_context` пока не редуцируют `Files`/`Deliverables`,
-findings и decisions. `bash packages/task/scripts/validate.sh` зелёный.
+**Open risks:** P2.6 closure is 🟠 because `cd packages/task && python3 -m unittest discover -s tests`
+does not expose repository `core`; `bash packages/task/scripts/validate.sh` is green (591 tests).
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: полный unittest запускать через `bash packages/task/scripts/validate.sh`.
-- Deferred: reconcile literal Validation P2.2/P2.3 через `task:plan-design`.
+- Workarounds: run full package coverage through `bash packages/task/scripts/validate.sh`.
+- Deferred: reconcile P2.6 Validation literal through `task:plan-design`.
 - Open questions: —.

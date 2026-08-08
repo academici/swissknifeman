@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- feat(task): добавить детерминированный on-demand исторический вид пункта layout v2.
+
 - feat(task): добавить детерминированные generated state-проекции пунктов layout v2.
 
 - feat(task): добавить generated owner status view для plan layout v2.

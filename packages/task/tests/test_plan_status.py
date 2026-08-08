@@ -1,4 +1,5 @@
 """Tests for the deterministic layout-v2 owner status projection."""
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -56,3 +57,16 @@ class PlanStatusTests(unittest.TestCase):
         self.assertEqual(diagnostics.errors, [])
         self.assertEqual(model["meta"]["Status"], "🟢 Done")
         self.assertEqual(model["status_board"][0]["Phase"], "P1")
+
+    def test_overlong_historical_note_projects_to_exact_line_pointer(self):
+        journal = self.plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["note"] = "x" * 301
+        raw = json.dumps(entry, ensure_ascii=False) + "\n"
+        journal.write_text(raw, encoding="utf-8")
+
+        plan_status.build_status(self.plan_dir)
+        view = (self.plan_dir / "status.md").read_text(encoding="utf-8")
+        self.assertIn("полный текст: journal.jsonl:1", view)
+        self.assertNotIn("x" * 301, view)
+        self.assertEqual(journal.read_text(encoding="utf-8"), raw)

@@ -1,6 +1,7 @@
 """Parsers and carrier-local structural checks for executable plans."""
 from .common import *
 from .policy import *
+from task import journal as plan_journal
 from task import plan_decisions
 
 
@@ -42,10 +43,12 @@ def _lint_plan_md_20(lines, path, diag):
                 entry = json.loads(raw)
             except json.JSONDecodeError:
                 continue  # `_lint_plan_journal_20` owns malformed-record reporting.
-            note = entry.get("note") if isinstance(entry, dict) else None
-            if isinstance(note, str) and len(note) > UPDATE_LOG_MAX_CHARS:
+            if not isinstance(entry, dict):
+                continue
+            what = plan_journal.project_update_log_what(entry, lineno)
+            if len(what) > UPDATE_LOG_MAX_CHARS:
                 diag.warning(journal_path, lineno,
-                             f"Update Log: запись «Что» {len(note)} символов > "
+                             f"Update Log: запись «Что» {len(what)} символов > "
                              f"{UPDATE_LOG_MAX_CHARS} — канон: ≤2 строк + ссылка на "
                              "Completion Notes, не пересказ")
         try:

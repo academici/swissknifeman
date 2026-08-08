@@ -159,6 +159,8 @@ status-rule ниже. Точная команда, лестница маршру
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
+   `--note` обязана быть не длиннее 300 символов; детали остаются в Completion Notes/findings,
+   writer отказывает до записи, а historical long note сохраняется по D141.
 
 ## Режим `Pn` — закрытие фазы
 

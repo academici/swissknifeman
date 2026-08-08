@@ -44,6 +44,10 @@ The projector derives item and phase status from v2 state carriers and its
 Update Log from `journal.jsonl`; `--check` regenerates in memory and rejects
 byte drift. A migrated plan carries its legacy version in a converter
 provenance marker, so `status.md` can render that value without inventing it.
+New journal appends reject `note` values longer than 300 characters before
+writing. Existing journal bytes remain immutable and schema-valid; when an
+owner-facing `Что` cell would exceed 300 characters, the projector renders a
+deterministic `journal.jsonl:<line>` pointer to the full source row instead.
 
 ## Migrating a plan
 
@@ -119,7 +123,9 @@ every module-local `_lint_*` check. The accompanying test derives that set by
 introspection, so a newly added check without a disposition fails validation.
 Checks whose old carrier disappeared retain their meaning by reading v2
 decision records and `journal.jsonl`: decision RAG markers, replacement
-`Consequences`, and the Update Log length limit do not silently disappear.
+`Consequences`, and the Update Log length limit do not silently disappear. For
+v2, the length diagnostic evaluates the same bounded projection rendered into
+`status.md`, not the immutable raw note.
 
 ## Bundle input manifest
 

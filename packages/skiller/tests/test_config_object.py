@@ -19,11 +19,12 @@ from pathlib import Path
 from skiller.common import CONFIG_KEYS, Env
 from skiller.config import ProjectConfig, load_config, provider_config_layer
 
-# Снимок литерала CONFIG_KEYS из common.py:43–61 ДО правки (git show d9bf22d9).
-# Ожидание теста — ИМЕНА, ТИПЫ и ПОРЯДОК: `skiller doctor` и test_schema.py сверяют
-# со схемой имена и типы, а кортеж `memory_brain` трактуют как мульти-тип (oneOf).
-LITERAL_CONFIG_KEYS_BEFORE_P6_2 = {
-    "project_type": str, "buckets": list, "exclude": list, "presets": list,
+# Public snapshot of CONFIG_KEYS. The additive `plugins` key is part of the current
+# schema; names, types and order remain guarded because `skiller doctor` and
+# test_schema.py consume them, including the memory_brain oneOf tuple.
+EXPECTED_CONFIG_KEYS = {
+    "project_type": str, "buckets": list, "plugins": list,
+    "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
     "providers": dict,
     "memory_brain": (str, dict), "coordinator_ignore": list,
@@ -36,6 +37,7 @@ FULL_CONFIG = {
     "_comment": "DX-ключ: не валидируется, но обязан пережить загрузку",
     "project_type": "fixture",
     "buckets": ["general"],
+    "plugins": ["task"],
     "exclude": ["system/shared-memory"],
     "presets": [],
     "skills_path": ".claude/skills",
@@ -73,11 +75,11 @@ def fixture(contents=None, profile="fixture"):
 
 
 class TestConfigKeysSingleCarrier(unittest.TestCase):
-    def test_config_keys_equal_the_literal_that_lived_in_common(self):
-        self.assertEqual(CONFIG_KEYS, LITERAL_CONFIG_KEYS_BEFORE_P6_2)
+    def test_config_keys_match_the_public_snapshot(self):
+        self.assertEqual(CONFIG_KEYS, EXPECTED_CONFIG_KEYS)
 
     def test_key_order_is_preserved(self):
-        self.assertEqual(list(CONFIG_KEYS), list(LITERAL_CONFIG_KEYS_BEFORE_P6_2))
+        self.assertEqual(list(CONFIG_KEYS), list(EXPECTED_CONFIG_KEYS))
 
     def test_multitype_member_is_a_tuple_not_a_flattened_type(self):
         # Гейт схемы разворачивает кортеж в oneOf; расплющив его в str, мы бы молча

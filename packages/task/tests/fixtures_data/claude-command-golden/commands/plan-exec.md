@@ -194,6 +194,9 @@ effort: medium
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
       "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
+      `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
+      живёт в Completion Notes/findings. Historical long note не переписывается, а owner status
+      проецирует её коротким указателем `journal.jsonl:<line>` (D141).
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

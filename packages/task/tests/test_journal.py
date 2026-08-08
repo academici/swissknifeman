@@ -145,6 +145,14 @@ class TestAppend(TmpDirTestCase):
             append(self.plan_dir, entry)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
 
+    def test_overlong_note_is_schema_valid_but_writer_rejects_before_io(self):
+        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+                          actor="sonnet/high", result="closed-green", note="x" * 301)
+        validate_entry(entry)  # sealed v1 schema still accepts historical rows
+        with self.assertRaisesRegex(JournalValidationError, "301 символов > 300"):
+            append(self.plan_dir, entry)
+        self.assertFalse((self.plan_dir / "journal.jsonl").exists())
+
     def test_foreign_plan_id_not_written(self):
         entry = new_entry(
             plan_id="FOREIGN", item_id="P1.3", command="plan-exec",

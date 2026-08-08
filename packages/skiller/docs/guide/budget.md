@@ -55,7 +55,7 @@ flowchart LR
     model_verification["model-verification<br/>⊕90 ↻1531"]:::warm
     parametric_config["parametric-config<br/>⊕111 ↻2303"]:::hot
     scene_conventions["scene-conventions<br/>⊕95 ↻1162"]:::warm
-    threading["threading<br/>⊕33 ↻660"]:::cool
+    threading["threading<br/>⊕33 ↻913"]:::cool
   end
   subgraph botkit["botkit"]
     botkit["botkit<br/>⊕35 ↻234"]:::cool
@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3215"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
-    plan_protocol["plan-protocol<br/>⊕31 ↻25854"]:::cool
+    plan_protocol["plan-protocol<br/>⊕31 ↻25937"]:::cool
     project_map["project-map<br/>⊕83 ↻645"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻618"]:::cool
     shell["shell<br/>⊕73 ↻2024"]:::mild
@@ -446,13 +446,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 231 скиллов · ⊕ always **16154** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 360247 ток · ⌥ on-demand 832576 ток (сниппеты + references).
+**Итого:** 231 скиллов · ⊕ always **16154** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 360583 ток · ⌥ on-demand 832576 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1366 | 56287 | 21589 |
+| `general` | 22 | 1366 | 56370 | 21589 |
 | `repository-bootstrap` | 13 | 1120 | 28903 | 0 |
 | `php` | 17 | 1065 | 19298 | 54837 |
 | `architect` | 15 | 1005 | 23520 | 33458 |
@@ -462,7 +462,7 @@ flowchart LR
 | `oss-dev` | 10 | 642 | 14491 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `laravel-architecture` | 6 | 596 | 9730 | 7994 |
-| `blender-modeling` | 7 | 582 | 11510 | 14235 |
+| `blender-modeling` | 7 | 582 | 11763 | 14235 |
 | `devops` | 11 | 553 | 9181 | 16993 |
 | `pm` | 10 | 462 | 11072 | 23524 |
 | `founder` | 10 | 430 | 15277 | 578 |
@@ -525,7 +525,7 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `plan-protocol` | general | 25854 |
+| `plan-protocol` | general | 25937 |
 | `vueuse-functions` | frontend-vue | 10838 |
 | `project-tooling-runbook` | repository-bootstrap | 7001 |
 | `query-craft` | research | 4221 |

@@ -63,6 +63,13 @@
 
 ### Fixed
 
+- **`task`: journal-backed Update Log больше не создаёт незакрываемый lint-конфликт.**
+  Новые `note` длиннее 300 символов отклоняются до записи, а layout-v2 status детерминированно
+  проецирует historical long note коротким указателем на исходную строку без изменения
+  append-only journal (`2026.08.07-PLAN-ECONOMY` P4.5, D141).
+- **`skiller`: validation snapshots согласованы с текущими additive carriers.** Public config
+  snapshot включает `plugins`, а publication guards фиксируют фактический Codex marketplace
+  locator и полный набор Claude artifacts.
 - **`task`: dry-run миграция legacy-планов больше не отвергает отсутствие
   необязательного `## Обсуждение`.** Инвентарь фиксирует отсутствие носителя без
   выдуманного файла, а blocked journal-state проецируется в обязательную v2-тройку

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:3b622ab0cf236d2606037ec63b170c20e3d54a0fcede9a442e03e80f6611ee5a
+Canonical SHA-256: sha256:d0cfac3ae35083579c5a19536c8e8eeec287f4381b1f9bac2483112fc404c1bf
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -208,6 +208,9 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
       "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
+      `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
+      живёт в Completion Notes/findings. Historical long note не переписывается, а owner status
+      проецирует её коротким указателем `journal.jsonl:<line>` (D141).
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

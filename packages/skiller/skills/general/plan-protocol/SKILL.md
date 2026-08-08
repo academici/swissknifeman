@@ -221,6 +221,9 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
   "What" ≤ 2 lines, canonical format:
   `<item> закрыт: <1 line of substance> — детали см. phases/Pn.md <item> Completion Notes`.
   Retelling Completion Notes in the Update Log is FORBIDDEN (EDUFY incident: 54KB plan.md).
+  For journal-backed layout v2, every new `note` must be ≤300 characters: the writer rejects
+  it BEFORE writing, while details stay in Completion Notes/findings. Historical long notes
+  are never rewritten; generated status replaces one with a deterministic `journal.jsonl:<line>`.
 - **`## 7. Contracts`** — **OPTIONAL** (only for plans that export OR consume frozen
   contracts; a missing section is not a defect). Number 7 is the canon for NEW plans, but
   `plan-lint` recognizes the section BY ITS HEADING, not by number: a plan that already
@@ -1357,4 +1360,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: ef2fbd50f71126b5c1ccb3494e4fc5160d84c93bf02f33bfbc8009cb439f60bd -->
+<!-- ru-source-sha256: 28c0c0cf05deaae44cf1097bb22d6f4f1d3b81c22ed4515b31c3036fbd92b54b -->

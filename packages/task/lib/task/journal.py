@@ -34,6 +34,8 @@ except ImportError:  # pragma: no cover - standalone-фолбэк
 
 FILENAME = "journal.jsonl"
 EXCEPTIONS_FILENAME = "journal-exceptions.jsonl"
+NOTE_MAX_CHARS = 300
+UPDATE_LOG_WHAT_MAX_CHARS = 300
 
 # --- канон схемы 2026.07.18-FOREMAN P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
 COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
@@ -125,6 +127,34 @@ def validate_entry(entry):
     errors = entry_validation_errors(entry)
     if errors:
         raise JournalValidationError("; ".join(message for _, message in errors))
+
+
+def validate_append_policy(entry):
+    """Validate forward-only writer policy outside the sealed event schema.
+
+    Historical rows with longer notes remain schema-valid and readable.  Only a
+    new append is rejected, before any bytes are written.
+    """
+    note = entry.get("note") if isinstance(entry, dict) else None
+    if isinstance(note, str) and len(note) > NOTE_MAX_CHARS:
+        raise JournalValidationError(
+            f"note: {len(note)} символов > {NOTE_MAX_CHARS}; "
+            "детали вынесите в Completion Notes/findings")
+
+
+def project_update_log_what(entry, line_number):
+    """Return the bounded owner-facing ``Что`` cell for one journal row.
+
+    The immutable journal remains the full source.  A projection that would
+    exceed the owner-view limit is replaced by a deterministic line pointer.
+    """
+    note = str(entry.get("note") or "—")
+    command = str(entry.get("command") or "—")
+    result = str(entry.get("result") or "—")
+    what = " · ".join((command, result, note))
+    if len(what) <= UPDATE_LOG_WHAT_MAX_CHARS:
+        return what
+    return f"{command} · {result} · note сокращена; полный текст: {FILENAME}:{line_number}"
 
 
 def validate_exception(exception):
@@ -304,6 +334,7 @@ def append(plan_dir, entry):
     (§2) — битая запись не попадает в durable-историю плана (§1). Возвращает путь
     файла. Файла нет — создаётся (append-режим сам создаёт)."""
     validate_entry(entry)
+    validate_append_policy(entry)
     plan_dir = Path(plan_dir)
     canonical_plan_id = plan_dir.name
     if entry["plan_id"] != canonical_plan_id:

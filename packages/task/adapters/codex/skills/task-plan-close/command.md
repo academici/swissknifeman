@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:e60cc7ed7fdb63918464ac1e4f3905922e24f9d9f17ac719cc4aa8a21605f419
+Canonical SHA-256: sha256:7697b4063eac02cef54529eab5e0022e02d61e4241658cdf9f0d5b74b3228236
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -173,6 +173,8 @@ status-rule ниже. Точная команда, лестница маршру
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
+   `--note` обязана быть не длиннее 300 символов; детали остаются в Completion Notes/findings,
+   writer отказывает до записи, а historical long note сохраняется по D141.
 
 ## Режим `Pn` — закрытие фазы
 

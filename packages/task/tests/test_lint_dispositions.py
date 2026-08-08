@@ -44,7 +44,7 @@ class TestLintCheckDispositions(unittest.TestCase):
             if record["disposition"] == "n/a-with-reason":
                 self.assertTrue(record.get("reason", "").strip(), name)
 
-    def test_v2_decision_rag_and_journal_note_keep_v1_diagnostics(self):
+    def test_v2_decision_rag_and_bounded_journal_projection_keep_diagnostics(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = write_valid_plan(Path(tmp), "2026.08.08-DEMO", layout="v2")
             decisions = plan_dir / "decisions"
@@ -64,8 +64,8 @@ class TestLintCheckDispositions(unittest.TestCase):
             plan_lint.lint_plan(plan_dir, diag)
             self.assertTrue(any("Decision Log: 3 решений" in warning for warning in diag.warnings),
                             diag.warnings)
-            self.assertTrue(any("Update Log: запись «Что» 301 символов" in warning
-                                for warning in diag.warnings), diag.warnings)
+            self.assertFalse(any("Update Log: запись «Что»" in warning
+                                 for warning in diag.warnings), diag.warnings)
 
     def test_v2_consequences_uses_record_frontmatter_and_body(self):
         with tempfile.TemporaryDirectory() as tmp:

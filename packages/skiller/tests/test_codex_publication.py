@@ -146,7 +146,9 @@ class TestCodexPublication(unittest.TestCase):
         self.assertIn(b"${CLAUDE_PLUGIN_ROOT}/packages/task/lib", canonical)
         self.assertNotIn(b"${CLAUDE_PLUGIN_ROOT}", projected)
         self.assertNotIn(b"PYTHONPATH=packages/task/lib", projected)
-        self.assertIn(b'task@swissknifeman', projected)
+        self.assertIn(b"codex plugin marketplace list --json", projected)
+        self.assertIn(b'item.get("name")=="swissknifeman"', projected)
+        self.assertNotIn(b'task@swissknifeman', projected)
 
     def test_repository_core_cache_matches_current_catalog(self):
         core_root, core = self._core_artifacts()

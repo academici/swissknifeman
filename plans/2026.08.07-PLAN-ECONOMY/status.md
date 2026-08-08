@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 02dcc29dfcc131147ef746e2328d2b9fc08d222013709fc512524db397cfd5bf
+inputs_sha256: f6e1db99028337ba0c8008c967b2ac7ad784f2b871f60e7f3738a18785591648
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 3/6 | 🔴 Blocked |
+| P4 | Ограничитель кружения design↔exec | 3/6 | 🟡 In progress |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -86,7 +86,7 @@ generated_by: task plan-views status
 | P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟢 Done | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | 🟢 Done | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟠 Done with deviations | 2026-08-08 |
-| P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | 🔴 Blocked | 2026-08-08 |
+| P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | 🟡 In progress | 2026-08-08 |
 | P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | ⬜ Not started | 2026-08-08 |
 
 ## Phase P5
@@ -202,17 +202,17 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Lossless v1→v2 migration and honest D2 baseline verified; final admission deferred to P2.9/P2.10. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: implementation/high (gpt-5.6-terra); migration and 603-test validation verified; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
-| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; read-budget 1.1.0 stage-aware admission и bounded plan-lint carriers; bash packages/task/scripts/validate.sh: 612 tests (на 3f478fa7) green; self-host ready, D2(a)+D2(b) pass; DIAGNOSTIC-PARITY-OK; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:86 |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · ARTIFEX dry-run: missing ## Обсуждение; resume /task:plan-design 2026.08.07-PLAN-ECONOMY P2.10 |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · Resumed after owner-authorized local converter compatibility repair; source plan remains read-only. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; P2.10 read graph, D74 and read-only ARTIFEX projection verified; task validate: 616 tests green on 06f60871; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
-| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; bundle v1 contract + five-code taxonomy + one example committed at 31cf532b; item Validation and task validate green at 31cf532b; write-site: pre_mutation: allow · pre_final: allow; deviation: P3 phase-start exposes two pre-existing DoR false-positive WARN. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:92 |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · Frozen bundle v1 schema cannot carry required unresolvable_entry class while schema-valid; plan-design required. Session: gpt-5.6-terra/high. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-approved same-session local reconciliation: D132 preserves Bundle v1 schema and derives unresolvable_entry in P3.4. Session: gpt-5.6-terra/high. |
-| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; deterministic Bundle v1 builder, lifted byte-identical schema, CLI bundle modes and atomic unresolvable refusal committed at 6cfb9d6a; task validate: 619 tests green on 6cfb9d6a; write-site: pre_mutation: allow · pre_final: allow; deviation: owner-authorized D132 same-session reconciliation. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:96 |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; D2 read-budget hard-gate for ready layout-v2 items committed at 2381ac2d; task validate: 625 tests green on 2381ac2d; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
@@ -225,7 +225,7 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · Session: gpt-5.6-terra/high; P3.6 registry and v2 continuity committed at 0a1597c7; 3 focused tests and detailed v1 diagnostic parity green; deviations: literal unittest/core path and 4 pre-existing plan-lint errors; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-terra/medium | plan-run · blocked · предписано frontier/high (gpt-5.6-sol/high), сессия implementation/medium (gpt-5.6-terra/medium) |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · коррекция: config.load.model ошибочно принят за selector активной сессии; фактический Session gpt-5.6-sol/high |
-| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; downstream-gate v1 at 5632a221; 10 focused/644 full + validate green via repo PYTHONPATH. Deviations: literal unittest imports; false route-block journal; ARTIFEX/read-budget + mktemp and docs index scope — findings/19. write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:109 |
 | 2026-08-08 | implementation/low | plan-close · closed-deviations · фаза P3 закрыта: сверены 7 терминальных items и known deviations |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · Required Read D50 проверяется перед заморозкой return-fingerprint v1 |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · Required Read D50 обрывается; immutable decision нельзя восстанавливать внутри P4.1, нужен plan-design |
@@ -244,8 +244,9 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D139 defines evidence carrier; D140 aligns required owner-gate fixture and generated projections. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · Session gpt-5.6-terra/high; code 8f2cacd2; 12 focused/653 package tests and validate green; owner packet 3/2; write-site: pre_mutation: allow · pre_final: allow; deviation: D138-D140 design used terra/high, bare discovery needed repository core. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
-| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; item commit 39bd5e2a; return-judgement v1 contract/schema frozen; item Validation, schema-example check and umbrella docs build passed; R12 source provenance repaired; write-site: pre_mutation: allow · pre_final: allow; deviation: docs/reference.md added outside Files per root provenance canon; hook-integrity dry-run remains provenance-invalid (finding 23). |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:128 |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · P4.5 closure lint K=1: final note exceeds 300 chars; append-only forbids rewrite and no forward correction exists. Need plan-design; item commit 39bd5e2a preserved. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D141: forward-only note projection and writer policy; P4.5 resumed. |
 
 ## Owner Gates
 
@@ -267,4 +268,3 @@ generated_by: task plan-views status
 - P4.2: known deviation
 - P4.3: known deviation
 - P4.4: known deviation
-- P4.5: escalation

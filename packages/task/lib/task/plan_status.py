@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import Path
 
+from task import journal as plan_journal
 from task import plan_layout, plan_projection
 
 
@@ -110,9 +111,7 @@ def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str]:
         if not ts:
             raise StatusError(f"{path}:{number}: у записи нет ts")
         last_updated = max(last_updated, ts[:10]) if last_updated != "—" else ts[:10]
-        note = str(entry.get("note") or "—")
-        what = " · ".join(part for part in (str(entry.get("command") or "—"),
-                                              str(entry.get("result") or "—"), note) if part)
+        what = plan_journal.project_update_log_what(entry, number)
         rows.append((ts[:10], str(entry.get("actor") or "—"), what))
     return rows, last_updated
 

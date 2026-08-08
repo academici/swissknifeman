@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 51a13f795b719b72896597d5bbc048b5f1e8762a3493e8b42fcf396de57ac985
+inputs_sha256: e91dcf17804e6ed2e6d07ebde478c4cac48c2ab39b0de62336e1b1f142079666
 generated_by: task plan-views status
 -->
 
@@ -241,6 +241,7 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · P4.4 requires plan_gates checks while frozen P3.6 registry excludes that module; plan-design required. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D138 extends exact lint-disposition discovery to task.plan_gates. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D139 defines evidence carrier; D140 aligns required owner-gate fixture and generated projections. |
 
 ## Owner Gates
 

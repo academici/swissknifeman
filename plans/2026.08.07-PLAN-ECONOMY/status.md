@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: f724715bdab98fee580e1bf1628ae6ba6331773feec5c6e7e1429a708f6f2512
+inputs_sha256: fa6c3b3cec0d960c6f0ef7b5b5a74467218aa6ad0bf2b12df56b2305dd79b720
 generated_by: task plan-views status
 -->
 
@@ -251,6 +251,7 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; hook/prose deviations recorded. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:135 |
 
 ## Owner Gates
 

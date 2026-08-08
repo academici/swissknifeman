@@ -1,310 +1,289 @@
 #!/usr/bin/env python3
-"""calibrate-token-estimate — ДИФФЕРЕНЦИАЛЬНЫЙ калибровочный харнесс (D92,
-`research/09-finish-round3-design-2026-08-07.md` §3) для `token_estimate.py` (D11/D14).
-
-Ручной инструмент, вне CI, без сети со стороны САМОГО ИНСТРУМЕНТА (сеть открывает
-вызываемый `claude -p`, не он): якорь истины — не `count_tokens` (ключа Console не
-будет, D92), а фактический `usage` ответа Claude Code по подписке.
-
-Протокол на файл корпуса — ТРИ неинтерактивных прогона байтово одинаковой обёртки:
-  A  — обёртка с ПУСТОЙ полезной нагрузкой;
-  B  — та же обёртка с содержимым файла;
-  A' — повтор A (контроль дрейфа обвязки).
-Истина: true(f) = sum3(B) − (sum3(A) + sum3(A'))/2, где
-  sum3 = input_tokens + cache_creation_input_tokens + cache_read_input_tokens
-(правило суммы — `findings/03-…` §... / справочник claude-api, «Verifying cache hits»:
-границы кэша перераспределяют токены между полями, сравнимо только sum3).
-
-`|sum3(A) − sum3(A')| > DELTA_TOKENS` отбраковывает файл (обвязка нестабильна для него) —
-тихое усреднение расходящегося контроля запрещено (P0.1 Code Guidance).
-
-Ставки классов + `overhead_per_file` — intercept линейной регрессии (non-negative least
-squares, projected gradient descent, детерминирован фиксированным числом итераций/шагом)
-`true(f) ≈ Σ_c count_c(f)·r_c + overhead` по корпусу; неотрицательность r_c/overhead —
-инвариант монотонности оценщика (`token_estimate.py`).
-
-Проверка границы (research/02 §3 п.4): `safety_multiplier = max(1.0, наблюдённый
-максимум требуемого множителя по корпусу) · FIXED_MARGIN` — подобран так, чтобы
-`ceil(raw(f)·safety_multiplier) + overhead ≥ true(f)` для КАЖДОГО файла корпуса
-(`bound.violations` обязано быть 0 иначе артефакт не пишется — запрет в самом
-`token_estimate.load_artifact`). Гейт на рыхлость: p95(estimate/true) ≤ 1.6, иначе —
-эскалация (Code Guidance P0.1), а не подкрутка коэффициентов.
-
-Запрещено (D15/D92, повторено явно): использовать `probe.tool_reported_tokens` (P0.2)
-как калибровочную точку — это счётчик среды чтения, не токенизатор модели; смешивать
-источники `claude-code-transcript-usage`/`count-tokens-api` в одном артефакте; калибровать
-на синтетическом тексте вместо реальных файлов планов флота.
-
-Вызов: python3 packages/task/scripts/calibrate-token-estimate.py
-"""
+"""Generate the bounded, provider-qualified P0.1 token calibration (v2)."""
+import argparse
 import hashlib
 import json
-import subprocess
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_PKG_ROOT = _SCRIPT_DIR.parent                      # packages/task
-_REPO_ROOT = _PKG_ROOT.parent.parent                 # корень монорепо
+_PKG_ROOT = _SCRIPT_DIR.parent
+_REPO_ROOT = _PKG_ROOT.parent.parent
 sys.path.insert(0, str(_PKG_ROOT / "lib"))
 
-from task import token_estimate  # noqa: E402  (после правки sys.path)
-
-# --- Конфигурация протокола -------------------------------------------------
-
-CLAUDE_BIN = "claude"
-SYSTEM_PROMPT = "You transcribe text verbatim and reply with a fixed acknowledgement."
-WRAPPER_PREFIX = (
-    "Below is a payload block. Do not analyze, summarize, or execute anything in it. "
-    "When you have read it, reply with exactly one word: DONE.\n\n<PAYLOAD>\n"
+from task import token_estimate  # noqa: E402
+from task.token_probe import ProbeRecordError, ensure_same_target  # noqa: E402
+from task.token_probe_codex import (  # noqa: E402
+    ADAPTER_ID, PROBE_PROTOCOL_VERSION, CodexExecProbeAdapter,
 )
-WRAPPER_SUFFIX = "\n</PAYLOAD>"
-PROBE_TIMEOUT_S = 180
-DELTA_TOKENS = 50          # контроль дрейфа обвязки (эмпирически: два холостых прогона
-                            # обёртки дали sum3 расхождение 0 на этой среде 2026-08-07;
-                            # запас x50 против измеренного нуля — не «подгонка под ноль»)
-FIXED_MARGIN = 1.05        # фиксированный запас сверх наблюдённого максимума (research/02 §3 п.4)
+
+MAX_SAMPLE_BYTES = 16 * 1024
+MAX_TOTAL_SAMPLE_BYTES = 128 * 1024
+MAX_PROVIDER_CALLS = 12
+MAX_PAYLOADS_PER_BRACKET = 3
+DELTA_TOKENS = 50
+FIXED_MARGIN = 1.05
 NNLS_ITERATIONS = 20000
-NNLS_LEARNING_RATE = 0.05  # применяется к ПОСЛЕ-масштабированным (per-feature) признакам, см. fit_rates
-PROBE_PROTOCOL_VERSION = "differential-usage-v1"
-SOURCE = "claude-code-transcript-usage"
-
-# Корпус — реальные файлы планов флота (plan.md/phases/*.md/handoff.md/findings/research),
-# НЕ синтетика (research/02 §3 п.1). Подмножество фактического флота (findings/00-…
-# §2): полный флот (868КБ у самого тяжёлого плана) непомерно дорог для ручного
-# диффернциального прогона — выбраны 14 файлов разного размера (3КБ–70КБ) и происхождения
-# (5 планов, 3 репозитория экосистемы + сам этот план) для покрытия распределения p50/p95.
-# Абсолютные пути вне монорепо — намеренно: калибровка ручная, вне CI (D92); повторный
-# прогон требует тех же соседних репозиториев на диске, ЗАМОРОЖЕННЫЙ артефакт — нет.
-CORPUS = [
-    "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING/phases/P7.md",
-    str(_REPO_ROOT / "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/handoff.md"),
-    "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX/handoff.md",
-    str(_REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/handoff.md"),
-    "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ/handoff.md",
-    str(_REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/findings/03-token-counting-api-2026-08-07.md"),
-    str(_REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/findings/14-calibration-and-canon-budget-2026-08-07.md"),
-    str(_REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P0.md"),
-    str(_REPO_ROOT / "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0.md"),
-    "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING/phases/P6.md",
-    str(_REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/phases/P1.md"),
-    "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ/phases/P1.md",
-    "/home/vostrikov/projects/agelto/agelto/plans/2026.08.06-CRAWL-HARDEN/phases/P8.md",
-    "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX/phases/P1.md",
-]
-
-MIN_CORPUS = 10  # минимум ПОСЛЕ отбраковки контролем дрейфа (Validation P0.1)
-
+NNLS_LEARNING_RATE = 0.05
 ARTIFACT_PATH = _PKG_ROOT / "configs" / "token-estimate-calibration.json"
-PROBE_LOG_PATH = _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log.json"
+V1_SNAPSHOT_PATH = _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/token-estimate-calibration-v1.json"
+PROBE_LOG_PATH = _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log-v2.json"
+
+# Exactly eight distinct real sources.  The first three are the measured dense-ASCII artefacts.
+CORPUS = (
+    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json",
+    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P3/package-promotion-manifest-v1.json",
+    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
+    _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/research/15-p0.1-provider-neutral-calibration-2026-08-08.md",
+    _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/findings/18-codex-token-usage-2026-08-08.md",
+    _REPO_ROOT / "packages/task/lib/task/token_estimate.py",
+    _REPO_ROOT / "packages/task/lib/task/token_probe.py",
+    _REPO_ROOT / "packages/task/tests/test_token_estimate.py",
+)
+
+
+class CalibrationError(RuntimeError):
+    """A bounded calibration cannot truthfully produce a v2 artifact."""
 
 
 def _now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def run_probe(payload_text):
-    """Один неинтерактивный прогон обёртки; возвращает (sum3, model_id, usage-dict)."""
-    prompt = WRAPPER_PREFIX + payload_text + WRAPPER_SUFFIX
-    result = subprocess.run(
-        [CLAUDE_BIN, "-p", "--output-format", "json",
-         "--system-prompt", SYSTEM_PROMPT, "--disallowedTools", "*"],
-        input=prompt, capture_output=True, text=True, timeout=PROBE_TIMEOUT_S,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"claude -p завершился с кодом {result.returncode}: {result.stderr[:500]}")
-    data = json.loads(result.stdout)
-    usage = data["usage"]
-    sum3 = usage["input_tokens"] + usage["cache_creation_input_tokens"] + usage["cache_read_input_tokens"]
-    model_ids = list(data.get("modelUsage", {}).keys())
-    model_id = model_ids[0] if len(model_ids) == 1 else None
-    return sum3, model_id, usage
+def _sha256(data):
+    return hashlib.sha256(data).hexdigest()
 
 
-def probe_file(path):
-    """Прогоняет A/B/A' для одного файла корпуса; возвращает запись пробы (dict)."""
-    text = Path(path).read_text(encoding="utf-8")
-    sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-    sum3_a, model_a, usage_a = run_probe("")
-    sum3_b, model_b, usage_b = run_probe(text)
-    sum3_a2, model_a2, usage_a2 = run_probe("")
-
-    drift = abs(sum3_a - sum3_a2)
-    models = {model_a, model_b, model_a2}
-    model_consistent = len(models) == 1 and None not in models
-
-    record = {
-        "path": path,
-        "sha256": sha256,
-        "bytes": len(text.encode("utf-8")),
-        "sum3_a": sum3_a, "sum3_b": sum3_b, "sum3_a2": sum3_a2,
-        "drift": drift,
-        "model_ids": sorted(models),
-        "model_consistent": model_consistent,
-        "true_tokens": sum3_b - (sum3_a + sum3_a2) / 2,
-        "counts": token_estimate.count_classes(text),
-        "rejected": False,
-        "reject_reason": None,
+def _read_sample(path):
+    raw = path.read_bytes()
+    if len(raw) <= MAX_SAMPLE_BYTES:
+        sample = raw
+        whole_file = True
+    else:
+        sample = raw[:MAX_SAMPLE_BYTES]
+        while sample:
+            try:
+                sample.decode("utf-8")
+                break
+            except UnicodeDecodeError as exc:
+                sample = sample[:exc.start]
+        if not sample:
+            raise CalibrationError(f"sample не удаётся обрезать по UTF-8: {path}")
+        whole_file = False
+    text = sample.decode("utf-8")
+    return {
+        "source_path": str(path),
+        "full_source_sha256": _sha256(raw),
+        "byte_range": {"start": 0, "end_exclusive": len(sample)},
+        "sample_sha256": _sha256(sample),
+        "sample_bytes": len(sample),
+        "whole_file": whole_file,
+        "payload": text,
+        "full_text": raw.decode("utf-8", errors="replace"),
     }
-    if not model_consistent:
-        record["rejected"] = True
-        record["reject_reason"] = f"model не совпал между прогонами: {sorted(models)}"
-    elif drift > DELTA_TOKENS:
-        record["rejected"] = True
-        record["reject_reason"] = f"дрейф обвязки {drift} > DELTA_TOKENS={DELTA_TOKENS}"
-    return record
 
 
-# --- Non-negative least squares (projected gradient descent, детерминирован) ------
+def collect_samples():
+    samples = [_read_sample(path) for path in CORPUS]
+    paths = {sample["source_path"] for sample in samples}
+    if len(samples) != 8 or len(paths) != 8:
+        raise CalibrationError("corpus обязан содержать ровно 8 разных real sources")
+    total_bytes = sum(sample["sample_bytes"] for sample in samples)
+    if total_bytes > MAX_TOTAL_SAMPLE_BYTES:
+        raise CalibrationError(f"corpus sample_bytes={total_bytes} > {MAX_TOTAL_SAMPLE_BYTES}")
+    if sum(sample["whole_file"] for sample in samples) < 2:
+        raise CalibrationError("corpus обязан нести минимум 2 whole-file samples")
+    return samples
+
+
+def run_brackets(adapter, samples):
+    """Run control/payload/control brackets; the core knows no provider JSON fields."""
+    accepted, rejected, calls = [], [], []
+    left = adapter.probe("")
+    calls.append(left)
+    for start in range(0, len(samples), MAX_PAYLOADS_PER_BRACKET):
+        batch = samples[start:start + MAX_PAYLOADS_PER_BRACKET]
+        payload_records = [adapter.probe(sample["payload"]) for sample in batch]
+        right = adapter.probe("")
+        calls.extend([*payload_records, right])
+        try:
+            ensure_same_target([left, *payload_records, right])
+        except ProbeRecordError as exc:
+            raise CalibrationError(str(exc)) from exc
+        drift = abs(left.input_tokens_total - right.input_tokens_total)
+        for sample, record in zip(batch, payload_records):
+            row = dict(sample)
+            row.pop("payload")
+            row["probe"] = record.as_dict()
+            row["left_control_input_tokens"] = left.input_tokens_total
+            row["right_control_input_tokens"] = right.input_tokens_total
+            row["control_drift"] = drift
+            row["true_tokens"] = record.input_tokens_total - (
+                left.input_tokens_total + right.input_tokens_total) / 2
+            row["counts"] = token_estimate.count_classes(sample["payload"])
+            if drift > DELTA_TOKENS:
+                row["rejected"] = True
+                row["reject_reason"] = f"control drift {drift} > {DELTA_TOKENS}"
+                rejected.append(row)
+            elif row["true_tokens"] < 0:
+                row["rejected"] = True
+                row["reject_reason"] = "payload input total меньше среднего controls"
+                rejected.append(row)
+            else:
+                row["rejected"] = False
+                row["reject_reason"] = None
+                accepted.append(row)
+        left = right
+    if len(calls) > MAX_PROVIDER_CALLS:
+        raise CalibrationError(f"provider calls={len(calls)} > {MAX_PROVIDER_CALLS}")
+    return accepted, rejected, calls
+
 
 def fit_rates(accepted):
-    """Возвращает (rates-dict по CLASSES, overhead) — минимизирует Σ(true−Σcounts·r−overhead)²
-    при r_c ≥ 0, overhead ≥ 0 (инвариант монотонности token_estimate). Порядок неизвестных:
-    [ascii_word, ascii_other, cyrillic, other, overhead] — overhead как 5-й «класс»
-    с постоянным «счётчиком» 1 на файл (стандартный intercept-трюк линейной регрессии).
-
-    Признаки масштабируются per-class (делением на наблюдённый максимум счётчика класса
-    по корпусу) ДО спуска и обратно расшкалируются после: диапазоны классов различаются
-    на порядки (ASCII — десятки тысяч символов на файл, `other` — единицы/десятки), без
-    этого шага общий learning rate либо расходится на плотных классах, либо не сдвигает
-    редкие — проверено эмпирически на синтетике перед запуском на живом корпусе."""
-    scales = [max(1.0, max(rec["counts"][c] for rec in accepted)) for c in token_estimate.CLASSES] + [1.0]
-    rows = [[rec["counts"][c] / scales[i] for i, c in enumerate(token_estimate.CLASSES)] + [1.0]
-            for rec in accepted]
-    truths = [rec["true_tokens"] for rec in accepted]
-
-    n = len(scales)
-    weights = [0.0] * n
+    scales = [max(1.0, max(row["counts"][name] for row in accepted))
+              for name in token_estimate.CLASSES] + [1.0]
+    rows = [[row["counts"][name] / scales[index]
+             for index, name in enumerate(token_estimate.CLASSES)] + [1.0]
+            for row in accepted]
+    truths = [row["true_tokens"] for row in accepted]
+    weights = [0.0] * len(scales)
     for _ in range(NNLS_ITERATIONS):
-        grad = [0.0] * n
-        for row, y in zip(rows, truths):
-            pred = sum(w * x for w, x in zip(weights, row))
-            err = pred - y
-            for j in range(n):
-                grad[j] += 2 * err * row[j]
-        for j in range(n):
-            weights[j] -= NNLS_LEARNING_RATE * grad[j] / len(rows)
-            if weights[j] < 0:
-                weights[j] = 0.0
-
-    rates = {c: weights[i] / scales[i] for i, c in enumerate(token_estimate.CLASSES)}
-    overhead = weights[-1]
-    return rates, overhead
+        grad = [0.0] * len(scales)
+        for row, truth in zip(rows, truths):
+            error = sum(weight * value for weight, value in zip(weights, row)) - truth
+            for index in range(len(weights)):
+                grad[index] += 2 * error * row[index]
+        for index in range(len(weights)):
+            weights[index] = max(0.0, weights[index] - NNLS_LEARNING_RATE * grad[index] / len(rows))
+    return ({name: weights[index] / scales[index]
+             for index, name in enumerate(token_estimate.CLASSES)}, weights[-1])
 
 
 def bound_and_tighten(accepted, rates, overhead):
-    """Подбирает `safety_multiplier` так, чтобы `ceil(raw·multiplier)+overhead ≥ true`
-    для каждого принятого файла (research/02 §3 п.4), затем считает рыхлость (п.5)."""
     required = []
-    for rec in accepted:
-        raw = sum(rec["counts"][c] * rates[c] for c in token_estimate.CLASSES)
-        true = rec["true_tokens"]
-        if raw <= 0:
-            required.append(0.0)
-            continue
-        required.append(max(0.0, (true - overhead) / raw))
-    observed_max = max(required) if required else 0.0
-    safety_multiplier = max(1.0, observed_max) * FIXED_MARGIN
-
-    ratios = []
-    violations = 0
-    for rec in accepted:
-        raw = sum(rec["counts"][c] * rates[c] for c in token_estimate.CLASSES)
-        estimate = __import__("math").ceil(raw * safety_multiplier + overhead)
-        true = rec["true_tokens"]
-        if estimate < true:
+    for row in accepted:
+        raw = sum(row["counts"][name] * rates[name] for name in token_estimate.CLASSES)
+        required.append(0.0 if raw <= 0 else max(0.0, (row["true_tokens"] - overhead) / raw))
+    observed_max = max(required)
+    multiplier = max(1.0, observed_max) * FIXED_MARGIN
+    ratios, violations = [], 0
+    for row in accepted:
+        raw = sum(row["counts"][name] * rates[name] for name in token_estimate.CLASSES)
+        estimate = math.ceil(raw * multiplier + overhead)
+        if estimate < row["true_tokens"]:
             violations += 1
-        ratios.append(estimate / true if true > 0 else 1.0)
-
+        ratios.append(estimate / row["true_tokens"] if row["true_tokens"] else 1.0)
     ratios.sort()
-    n = len(ratios)
-    p50 = ratios[n // 2]
-    p95 = ratios[min(n - 1, int(round(0.95 * (n - 1))))]
-    pmax = ratios[-1]
-    return safety_multiplier, observed_max, violations, {"p50": p50, "p95": p95, "max": pmax}
+    return multiplier, observed_max, violations, {
+        "p50": ratios[len(ratios) // 2],
+        "p95": ratios[min(len(ratios) - 1, int(round(.95 * (len(ratios) - 1))))],
+        "max": ratios[-1],
+    }
 
 
-def main():
-    print(f"calibrate-token-estimate: корпус {len(CORPUS)} файлов, протокол {PROBE_PROTOCOL_VERSION}")
-    records = []
-    for i, path in enumerate(CORPUS, 1):
-        print(f"  [{i}/{len(CORPUS)}] {path}")
-        try:
-            rec = probe_file(path)
-        except (OSError, RuntimeError, json.JSONDecodeError, KeyError) as exc:
-            rec = {"path": path, "rejected": True, "reject_reason": f"ошибка прогона: {exc}"}
-        records.append(rec)
-        if rec["rejected"]:
-            print(f"      ОТБРАКОВАН: {rec['reject_reason']}")
+def preserve_v1_snapshot():
+    active = ARTIFACT_PATH.read_bytes()
+    if V1_SNAPSHOT_PATH.exists():
+        if V1_SNAPSHOT_PATH.read_bytes() != active:
+            raise CalibrationError("existing token-estimate-calibration-v1 snapshot отличается от active v1")
+        return
+    V1_SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    V1_SNAPSHOT_PATH.write_bytes(active)
 
-    accepted = [r for r in records if not r["rejected"]]
-    rejected = [r for r in records if r["rejected"]]
-    print(f"принято: {len(accepted)}; отбраковано: {len(rejected)}")
 
-    if len(accepted) < MIN_CORPUS:
-        print(f"ERROR: корпус после отбраковки {len(accepted)} < min_corpus {MIN_CORPUS}", file=sys.stderr)
-        return 1
-
+def generate(provider, model, *, smoke_probe=False):
+    if provider != "codex":
+        raise CalibrationError(f"provider {provider!r} не поддержан; скрытый fallback запрещён")
+    adapter = CodexExecProbeAdapter(model)
+    if smoke_probe:
+        print(json.dumps(adapter.probe("").as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    preserve_v1_snapshot()
+    samples = collect_samples()
+    accepted, rejected, calls = run_brackets(adapter, samples)
+    if len(accepted) != 8:
+        raise CalibrationError(f"accepted samples={len(accepted)}, ожидается ровно 8")
+    if sum(row["counts"]["dense_ascii"] > 0 for row in accepted) < 3:
+        raise CalibrationError("accepted_dense_samples < 3")
+    if any(not any(row["counts"][name] for row in accepted) for name in token_estimate.CLASSES):
+        raise CalibrationError("corpus не покрывает все пять classifier classes")
+    records = [row["probe"] for row in accepted]
+    ensure_same_target([adapter_record(row) for row in records])
     rates, overhead = fit_rates(accepted)
-    safety_multiplier, observed_max, violations, tightness = bound_and_tighten(accepted, rates, overhead)
-
-    if violations != 0:
-        print(f"ERROR: bound.violations={violations} != 0 после подбора safety_multiplier — "
-              f"дефект регрессии, артефакт не пишется", file=sys.stderr)
-        return 1
-    if tightness["p95"] > 1.6:
-        print(f"ESCALATION: p95 рыхлости {tightness['p95']:.3f} > 1.6 даже с 4 классами — "
-              f"владельческая эскалация (research/02 §3 п.6, Code Guidance P0.1), артефакт не пишется",
-              file=sys.stderr)
-        return 2
-
-    model_ids = sorted({m for rec in accepted for m in rec["model_ids"]})
-    model_id = model_ids[0]
-    corpus_index = sorted(f"{rec['path']}+{rec['sha256']}" for rec in accepted)
-    corpus_sha256 = hashlib.sha256("\n".join(corpus_index).encode("utf-8")).hexdigest()
-
+    multiplier, observed_max, violations, tightness = bound_and_tighten(accepted, rates, overhead)
+    if rates["dense_ascii"] <= 0:
+        raise CalibrationError("dense_ascii rate обязан быть положительным")
+    if violations != 0 or tightness["p95"] > 1.6:
+        raise CalibrationError(f"acceptance не пройден: violations={violations}, p95={tightness['p95']:.3f}")
+    target = records[0]
     artifact = {
-        "version": "1.0.0",
-        "calibrated_at": _now_iso(),
-        "tokenizer": {"model_id": model_id, "family": model_id.rsplit("-", 1)[0] if "-" in model_id else model_id},
-        "corpus": {
-            "files": len(accepted),
-            "total_bytes": sum(r["bytes"] for r in accepted),
-            "sha256": corpus_sha256,
+        "version": "2.0.0", "calibrated_at": _now_iso(),
+        "calibration_target": {
+            "provider": target["provider"]["id"], "adapter": target["provider"]["adapter"],
+            "requested_model_id": target["model"]["requested_id"],
+            "probe_protocol_version": target["protocol_version"],
+            "usage_semantics": "provider-reported-input-total-v1",
         },
-        "classes": rates,
-        "per_file_overhead_tokens": overhead,
-        "safety_multiplier": safety_multiplier,
+        "classifier": token_estimate.CLASSIFIER, "classes": rates,
+        "per_file_overhead_tokens": overhead, "safety_multiplier": multiplier,
+        "corpus": {"accepted_samples": len(accepted), "distinct_sources": len({r['source_path'] for r in accepted}),
+                   "sample_bytes": sum(r["sample_bytes"] for r in accepted),
+                   "whole_file_samples": sum(r["whole_file"] for r in accepted)},
         "bound": {"violations": violations, "max_true_over_estimate": observed_max},
         "tightness": tightness,
-        "source": SOURCE,
-        "probe_protocol_version": PROBE_PROTOCOL_VERSION,
-        "control_drift_observed": {"delta_tokens_gate": DELTA_TOKENS,
-                                     "max_drift_accepted": max((r["drift"] for r in accepted), default=0)},
-        "rejected_files": len(rejected),
+        "fingerprints": {"wrapper_sha256": target["wrapper_sha256"],
+                         "command_sha256": target["environment"]["command_sha256"]},
         "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
     }
-    ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    canary = []
+    for row, sample in zip(accepted, samples):
+        estimate = token_estimate.estimate_text(sample["full_text"], artifact=artifact)
+        canary.append({"source_path": sample["source_path"], "est_tokens": estimate,
+                       "passed": estimate >= row["true_tokens"]})
+    if not all(row["passed"] for row in canary):
+        raise CalibrationError("full-source offline canary обнаружил занижение")
+    artifact["corpus"]["full_source_offline_canary"] = canary
+    log = {
+        "schema_version": "calibration-probe-log-v2", "generated_at": _now_iso(),
+        "probe_protocol_version": PROBE_PROTOCOL_VERSION, "provider_calls": len(calls),
+        "delta_tokens": DELTA_TOKENS, "accepted_samples": accepted, "rejected_samples": rejected,
+        "controls": [calls[0].as_dict(), calls[4].as_dict(), calls[8].as_dict(), calls[11].as_dict()],
+        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+    }
     ARTIFACT_PATH.write_text(json.dumps(artifact, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"артефакт калибровки записан: {ARTIFACT_PATH}")
-
-    probe_log = {
-        "protocol_version": PROBE_PROTOCOL_VERSION,
-        "generated_at": _now_iso(),
-        "measured": len(accepted),
-        "min_corpus": MIN_CORPUS,
-        "rejected": [{"path": r["path"], "reason": r["reject_reason"]} for r in rejected],
-        "probes": records,
-        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
-    }
-    PROBE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PROBE_LOG_PATH.write_text(json.dumps(probe_log, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"probe-log записан: {PROBE_LOG_PATH}")
-    print(f"OK: violations=0, p95={tightness['p95']:.3f}, safety_multiplier={safety_multiplier:.4f}, "
-          f"model={model_id}")
+    PROBE_LOG_PATH.write_text(json.dumps(log, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"OK: accepted_samples=8, sample_bytes={artifact['corpus']['sample_bytes']}, "
+          f"provider_calls={len(calls)}, violations=0, p95={tightness['p95']:.3f}")
     return 0
+
+
+def adapter_record(data):
+    """Rehydrate only at the script boundary; fitting itself consumes neutral fields."""
+    from task.token_probe import ProbeRecord
+    return ProbeRecord(
+        schema_version=data["schema_version"], provider_id=data["provider"]["id"],
+        provider_adapter=data["provider"]["adapter"], requested_model_id=data["model"]["requested_id"],
+        effective_model_id=data["model"]["effective_id"], protocol_version=data["protocol_version"],
+        input_tokens_total=data["input_tokens_total"], usage_breakdown=data["usage_breakdown"],
+        wrapper_sha256=data["wrapper_sha256"], environment_cli=data["environment"]["cli"],
+        environment_version=data["environment"]["version"],
+        command_sha256=data["environment"]["command_sha256"],
+    )
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--provider", required=True, choices=("codex",))
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--smoke-probe", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        return generate(args.provider, args.model, smoke_probe=args.smoke_probe)
+    except (CalibrationError, OSError, ProbeRecordError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ except ImportError:  # прямой discovery из packages/task
     from fixtures import phase_md, write_valid_plan
 
 import task.plan_weight as plan_weight  # noqa: E402
+from task.token_estimate import CLASSIFIER  # noqa: E402
 from task.plan_weight import (  # noqa: E402
     GAP_KINDS, GAP_MISSING_FILE, GAP_OVERSIZED_FILE, GAP_UNREADABLE_ROOT,
     GAP_UNRESOLVED_ENTRY, GATE_BOTH, GATE_SIZE_BYTES, GATE_TOKENS,
@@ -30,17 +31,20 @@ from task.plan_weight import (  # noqa: E402
 )
 
 CALIBRATION = {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "calibrated_at": "2026-08-07T00:00:00Z",
-    "tokenizer": {"model_id": "claude-sonnet-5", "family": "claude-sonnet"},
+    "calibration_target": {"provider": "codex", "adapter": "codex-exec-jsonl-v1",
+                           "requested_model_id": "gpt-5.6-terra",
+                           "probe_protocol_version": "differential-input-total-v2",
+                           "usage_semantics": "provider-reported-input-total-v1"},
+    "classifier": CLASSIFIER,
     "corpus": {"files": 3, "total_bytes": 100, "sha256": "0" * 64},
-    "classes": {"ascii_word": 0.3, "ascii_other": 0.4, "cyrillic": 0.6, "other": 2.0},
+    "classes": {"dense_ascii": 0.9, "ascii_word": 0.3, "ascii_other": 0.4,
+                "cyrillic": 0.6, "other": 2.0},
     "per_file_overhead_tokens": 0,
     "safety_multiplier": 1.0,
     "bound": {"violations": 0, "max_true_over_estimate": 0.97},
     "tightness": {"p50": 1.05, "p95": 1.2, "max": 1.35},
-    "source": "claude-code-transcript-usage",
-    "probe_protocol_version": "differential-usage-v1",
 }
 
 # Оба гейта заведомо недостижимы — «зелёная» рамка, в которой ни один файл не оверсайз.
@@ -81,7 +85,7 @@ class MeasurerTestCase(unittest.TestCase):
 
     def measurer(self):
         return Measurer(calibration_path=self.calibration_path, read_limit_path=self.limit_path,
-                        model_id="claude-sonnet-5")
+                        model_id="gpt-5.6-terra", provider_id="codex")
 
     def plan_with_reads(self, required_reads, plan_id="DEMO-1"):
         """Валидный план, у единственного item'а которого подменено `Required Reads`."""

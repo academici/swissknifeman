@@ -7,6 +7,28 @@
 В `plan_lint.py` самом (`packages/task/lib/task/plan_lint.py` + лаунчер
 `packages/task/scripts/plan-lint.py`) — режим `--conflicts`, задокументирован ниже.
 
+## Калибровка верхней оценки токенов v2
+
+`packages/task/scripts/calibrate-token-estimate.py` вручную замораживает активный
+`configs/token-estimate-calibration.json` только после bounded Codex-прогона. Команда требует
+явно назвать provider и model; сеть и provider CLI используются только здесь, никогда не в
+offline `task.token_estimate` или CI:
+
+```bash
+python3 packages/task/scripts/calibrate-token-estimate.py \
+  --provider codex --model gpt-5.6-terra --smoke-probe
+python3 packages/task/scripts/calibrate-token-estimate.py \
+  --provider codex --model gpt-5.6-terra
+```
+
+Адаптер запускает `codex exec --json` в пустом временном cwd и нормализует только
+`turn.completed.usage.input_tokens`; cache-поля остаются диагностикой и не прибавляются к
+total. Полный прогон принимает ровно 8 разных real-source samples (≤16 KiB каждый, ≤128 KiB
+всего) через bracket-controls (не более 3 payload между controls, ≤12 provider calls). Артефакт
+несёт provider/model/protocol/classifier provenance и fail-closed отвергает v1 или несовпадение
+classifier. Исторические Claude v1 artifact и probe-log остаются plan-owned snapshots; будущий
+Claude adapter — отдельная additive provider projection.
+
 ## `plans/verify-citations.py`
 
 Проверяет ссылки-доказательства вида `` `path:line` ``/`` `path::symbol` `` во ВСЕЙ прозе живого

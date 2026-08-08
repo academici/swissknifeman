@@ -20,15 +20,23 @@ per_file_overhead_tokens`` — множитель безопасности ма�
 (P0.1 Implementation Rules)."""
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
-CLASSES = ("ascii_word", "ascii_other", "cyrillic", "other")
+CLASSES = ("dense_ascii", "ascii_word", "ascii_other", "cyrillic", "other")
+DENSE_ASCII_MIN_RUN = 32
+DENSE_ASCII_ALPHABET = "0-9A-Za-z+/="
+DENSE_ASCII_RUN_RE = re.compile(r"[0-9A-Za-z+/=]{%d,}" % DENSE_ASCII_MIN_RUN)
+CLASSIFIER = {
+    "version": "dense-ascii-v1",
+    "dense_ascii_alphabet": DENSE_ASCII_ALPHABET,
+    "dense_ascii_min_run": DENSE_ASCII_MIN_RUN,
+}
 
 _ARTIFACT_REQUIRED_FIELDS = (
-    "version", "calibrated_at", "tokenizer", "corpus", "classes",
+    "version", "calibrated_at", "calibration_target", "classifier", "corpus", "classes",
     "per_file_overhead_tokens", "safety_multiplier", "bound", "tightness",
-    "source", "probe_protocol_version",
 )
 
 DEFAULT_ARTIFACT_PATH = (
@@ -53,9 +61,22 @@ def classify_char(ch):
 def count_classes(text):
     """Вектор посимвольных счётчиков по `CLASSES` — вход формулы D14 и калибровочной регрессии."""
     counts = {c: 0 for c in CLASSES}
-    for ch in text:
+    dense_indexes = set()
+    for match in DENSE_ASCII_RUN_RE.finditer(text):
+        dense_indexes.update(range(match.start(), match.end()))
+    for index, ch in enumerate(text):
+        if index in dense_indexes:
+            counts["dense_ascii"] += 1
+            continue
         counts[classify_char(ch)] += 1
     return counts
+
+
+def dense_ascii_share(text):
+    """Share of characters captured by the one canonical dense-ASCII classifier."""
+    if not text:
+        return 0.0
+    return count_classes(text)["dense_ascii"] / len(text)
 
 
 def load_artifact(path=None):
@@ -76,37 +97,53 @@ def load_artifact(path=None):
     if missing:
         raise TokenEstimateArtifactError(
             f"артефакт калибровки: нет обязательных полей {missing}: {path}")
+    if data["version"] != "2.0.0":
+        raise TokenEstimateArtifactError(
+            f"артефакт калибровки: ожидается active version '2.0.0', получено {data['version']!r}: {path}")
+    target = data["calibration_target"]
+    target_fields = ("provider", "adapter", "requested_model_id", "probe_protocol_version", "usage_semantics")
+    if not isinstance(target, dict) or any(not isinstance(target.get(field), str) or not target[field]
+                                           for field in target_fields):
+        raise TokenEstimateArtifactError(f"артефакт калибровки: невалидный calibration_target: {path}")
+    if data["classifier"] != CLASSIFIER:
+        raise TokenEstimateArtifactError(
+            f"артефакт калибровки: classifier не совпадает с canonical dense classifier: {path}")
     missing_classes = [c for c in CLASSES if c not in data.get("classes", {})]
     if missing_classes:
         raise TokenEstimateArtifactError(
             f"артефакт калибровки: нет ставок для классов {missing_classes}: {path}")
-    if data["bound"]["violations"] != 0:
+    if not isinstance(data.get("bound"), dict) or data["bound"].get("violations") != 0:
         raise TokenEstimateArtifactError(
             f"артефакт калибровки: bound.violations={data['bound']['violations']} != 0 — "
             f"артефакт с нарушениями границы использовать запрещено: {path}")
     for c in CLASSES:
-        if data["classes"][c] < 0:
+        if (not isinstance(data["classes"][c], (int, float)) or isinstance(data["classes"][c], bool)
+                or data["classes"][c] < 0):
             raise TokenEstimateArtifactError(
                 f"артефакт калибровки: ставка класса «{c}» отрицательна — нарушает "
                 f"монотонность оценки: {path}")
-    if data["per_file_overhead_tokens"] < 0 or data["safety_multiplier"] < 0:
+    if (not isinstance(data["per_file_overhead_tokens"], (int, float))
+            or not isinstance(data["safety_multiplier"], (int, float))
+            or data["per_file_overhead_tokens"] < 0 or data["safety_multiplier"] < 0):
         raise TokenEstimateArtifactError(
             f"артефакт калибровки: overhead/safety_multiplier обязаны быть ≥ 0: {path}")
     return data
 
 
-def estimate_text(text, artifact=None, artifact_path=None, session_model_id=None):
+def estimate_text(text, artifact=None, artifact_path=None, session_provider=None, session_model_id=None):
     """Оценка токенов текста СВЕРХУ по формуле D14. `artifact` — предзагруженный dict
     (иначе читается `artifact_path`/дефолт через :func:`load_artifact`). `session_model_id`
     опционален: не совпадает с `tokenizer.model_id` артефакта — печатает WARNING в stderr
     и продолжает (Code Guidance P0.1: токенизатор менялся между поколениями до ~1.35×,
     но это не повод блокировать оценку)."""
     data = artifact if artifact is not None else load_artifact(artifact_path)
-    if session_model_id is not None and session_model_id != data["tokenizer"]["model_id"]:
+    target = data["calibration_target"]
+    if ((session_provider is not None and session_provider != target["provider"])
+            or (session_model_id is not None and session_model_id != target["requested_model_id"])):
         print(
             f"WARNING: token_estimate: артефакт калиброван под "
-            f"«{data['tokenizer']['model_id']}», сессия — «{session_model_id}»; "
-            f"оценка может быть неточной (токенизатор меняется между поколениями)",
+            f"«{target['provider']}/{target['requested_model_id']}», сессия — "
+            f"«{session_provider}/{session_model_id}»; оценка может быть неточной",
             file=sys.stderr,
         )
     counts = count_classes(text)

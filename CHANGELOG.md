@@ -39,6 +39,15 @@
 
 ### Added
 
+- **`task`: provider-qualified калибровка оценки токенов v2
+  (`2026.08.07-PLAN-ECONOMY` P0.1, D114/D118–D122).** Появились stdlib-only
+  neutral contract `task.token_probe` и изолированный адаптер `codex exec --json`;
+  активный артефакт теперь пинует provider/model/protocol, fail-closed отвергает v1 и
+  несовпавший classifier, а `dense_ascii` стал пятым классом с единственным SSOT.
+  Ограниченный прогон использует 8 provenance-qualified real samples (≤128 KiB) и
+  bracket-controls (≤12 provider calls); исторические Claude v1 artifact/probe-log
+  сохранены отдельно.
+
 - **`task`: машинный замер веса обязательного чтения пункта плана
   (`2026.08.07-PLAN-ECONOMY` P0.3, D16/D107–D109).** `task.plan_weight` + лаунчер
   `scripts/plan-weight.py` (подкоманды `item`/`plan`/`sweep`, `--json`) воспроизводят

@@ -5,24 +5,30 @@ import math
 import tempfile
 import unittest
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from task.token_estimate import (  # noqa: E402
-    CLASSES, TokenEstimateArtifactError, classify_char, count_classes,
+    CLASSIFIER, CLASSES, TokenEstimateArtifactError, classify_char, count_classes,
     estimate_text, load_artifact,
 )
 
 FIXTURE_ARTIFACT = {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "calibrated_at": "2026-08-07T00:00:00Z",
-    "tokenizer": {"model_id": "claude-sonnet-5", "family": "claude-sonnet"},
+    "calibration_target": {"provider": "codex", "adapter": "codex-exec-jsonl-v1",
+                           "requested_model_id": "gpt-5.6-terra",
+                           "probe_protocol_version": "differential-input-total-v2",
+                           "usage_semantics": "provider-reported-input-total-v1"},
+    "classifier": CLASSIFIER,
     "corpus": {"files": 3, "total_bytes": 100, "sha256": "0" * 64},
-    "classes": {"ascii_word": 0.3, "ascii_other": 0.4, "cyrillic": 0.6, "other": 2.0},
+    "classes": {"dense_ascii": 0.9, "ascii_word": 0.3, "ascii_other": 0.4,
+                "cyrillic": 0.6, "other": 2.0},
     "per_file_overhead_tokens": 12,
     "safety_multiplier": 1.1,
     "bound": {"violations": 0, "max_true_over_estimate": 0.97},
     "tightness": {"p50": 1.05, "p95": 1.2, "max": 1.35},
-    "source": "claude-code-transcript-usage",
-    "probe_protocol_version": "differential-usage-v1",
 }
 
 
@@ -53,6 +59,7 @@ class TestClassifyAndCount(unittest.TestCase):
     def test_count_classes_known_vector(self):
         counts = count_classes("aA1_ .,б🟢")
         self.assertEqual(counts, {
+            "dense_ascii": 0,
             "ascii_word": 4,   # a A 1 _
             "ascii_other": 3,  # space . ,
             "cyrillic": 1,     # б
@@ -97,7 +104,21 @@ class TestLoadArtifact(TmpArtifactTestCase):
     def test_valid_artifact_loads(self):
         self.write_artifact(FIXTURE_ARTIFACT)
         data = load_artifact(self.artifact_path)
-        self.assertEqual(data["tokenizer"]["model_id"], "claude-sonnet-5")
+        self.assertEqual(data["calibration_target"]["requested_model_id"], "gpt-5.6-terra")
+
+    def test_v1_is_rejected(self):
+        data = json.loads(json.dumps(FIXTURE_ARTIFACT))
+        data["version"] = "1.0.0"
+        self.write_artifact(data)
+        with self.assertRaises(TokenEstimateArtifactError):
+            load_artifact(self.artifact_path)
+
+    def test_classifier_mismatch_is_rejected(self):
+        data = json.loads(json.dumps(FIXTURE_ARTIFACT))
+        data["classifier"]["dense_ascii_min_run"] = 33
+        self.write_artifact(data)
+        with self.assertRaises(TokenEstimateArtifactError):
+            load_artifact(self.artifact_path)
 
 
 class TestEstimateText(unittest.TestCase):
@@ -133,8 +154,15 @@ class TestEstimateText(unittest.TestCase):
         self.assertEqual(estimate_text("anything at all", artifact=data), 0)
 
     def test_model_mismatch_warns_but_does_not_raise(self):
-        result = estimate_text("hi", artifact=FIXTURE_ARTIFACT, session_model_id="claude-opus-5")
+        result = estimate_text("hi", artifact=FIXTURE_ARTIFACT,
+                               session_provider="codex", session_model_id="other")
         self.assertIsInstance(result, int)
+
+    def test_dense_ascii_boundary_and_partition(self):
+        self.assertEqual(count_classes("a" * 31)["dense_ascii"], 0)
+        counts = count_classes("a" * 32 + "!")
+        self.assertEqual(counts["dense_ascii"], 32)
+        self.assertEqual(sum(counts.values()), 33)
 
 
 if __name__ == "__main__":

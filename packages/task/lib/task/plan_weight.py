@@ -135,8 +135,9 @@ GATES = (GATE_SIZE_BYTES, GATE_TOKENS, GATE_BOTH)
 
 # --- dense_ascii_share (D109) ------------------------------------------------------
 
-DENSE_ASCII_MIN_RUN = 32
-DENSE_ASCII_RUN_RE = re.compile(r"[0-9A-Za-z+/=]{%d,}" % DENSE_ASCII_MIN_RUN)
+# The classifier belongs to token_estimate; retaining this public alias avoids a second owner.
+DENSE_ASCII_MIN_RUN = token_estimate.DENSE_ASCII_MIN_RUN
+dense_ascii_share = token_estimate.dense_ascii_share
 
 # --- резолвинг Required Reads ------------------------------------------------------
 
@@ -160,7 +161,7 @@ DEFAULT_READ_LIMIT_PATH = (
 # `--exact` (тот же путь, что пишет `calibrate-token-estimate.py`); корень берётся от
 # раскладки самого модуля, а не от cwd.
 DEFAULT_PROBE_LOG_RELPATH = Path(
-    "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log.json")
+    "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log-v2.json")
 _MONOREPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PROBE_LOG_PATH = _MONOREPO_ROOT / DEFAULT_PROBE_LOG_RELPATH
 
@@ -170,6 +171,7 @@ SCHEMA = "plan-weight-v1"
 # расхождении с `tokenizer.model_id` калибровки (митигация pre-mortem #1). Ни одна не
 # выставлена — предупреждения нет: отсутствие свидетельства не домысливается.
 SESSION_MODEL_ENV = ("ANTHROPIC_MODEL", "CLAUDE_MODEL", "CLAUDE_CODE_MODEL")
+SESSION_PROVIDER_ENV = ("TOKEN_ESTIMATE_PROVIDER",)
 
 
 class PlanWeightError(Exception):
@@ -225,16 +227,17 @@ def session_model_id(explicit=None):
     return None
 
 
+def session_provider_id(explicit=None):
+    if explicit:
+        return explicit
+    for name in SESSION_PROVIDER_ENV:
+        value = os.environ.get(name)
+        if value:
+            return value
+    return None
+
+
 # --- измерение файла ---------------------------------------------------------------
-
-def dense_ascii_share(text):
-    """Доля символов текста внутри непрерывных прогонов ≥ `DENSE_ASCII_MIN_RUN` символов
-    из `[0-9A-Za-z+/=]` (D109). ЗАМЕР, не гейт: порога по величине здесь нет."""
-    if not text:
-        return 0.0
-    dense = sum(len(m.group(0)) for m in DENSE_ASCII_RUN_RE.finditer(text))
-    return dense / len(text)
-
 
 def measure_file(path, *, role, artifact, limits, model_id=None):
     """Одна запись файла обязательного пути: байты, оценка токенов СВЕРХУ, доля плотного
@@ -377,21 +380,24 @@ class Measurer:
     """Общий контекст замера: артефакты, кэш измеренных файлов (plan.md меряется один раз
     на весь план, а не на каждый пункт), модель окружения."""
 
-    def __init__(self, *, calibration_path=None, read_limit_path=None, model_id=None):
+    def __init__(self, *, calibration_path=None, read_limit_path=None, model_id=None, provider_id=None):
         try:
             self.artifact = token_estimate.load_artifact(calibration_path)
         except token_estimate.TokenEstimateArtifactError as exc:
             raise PlanWeightError(str(exc)) from exc
         self.limits = load_read_limit(read_limit_path)
         self.model_id = session_model_id(model_id)
+        self.provider_id = session_provider_id(provider_id)
         self._cache = {}
         self.warned_model = False
-        if self.model_id and self.model_id != self.artifact["tokenizer"]["model_id"]:
+        target = self.artifact["calibration_target"]
+        if ((self.model_id and self.model_id != target["requested_model_id"])
+                or (self.provider_id and self.provider_id != target["provider"])):
             # WARNING, не блокер (митигация pre-mortem #1): оценка остаётся годной,
             # но её якорь снят под другой моделью — потребитель обязан это видеть.
             print(f"WARNING: plan_weight: калибровка снята под "
-                  f"«{self.artifact['tokenizer']['model_id']}», окружение — "
-                  f"«{self.model_id}»: оценка может быть неточной", file=sys.stderr)
+                  f"«{target['provider']}/{target['requested_model_id']}», окружение — "
+                  f"«{self.provider_id}/{self.model_id}»: оценка может быть неточной", file=sys.stderr)
             self.warned_model = True
 
     def file(self, path, role):
@@ -627,14 +633,14 @@ def envelope(measurer, payload):
         "schema": SCHEMA,
         "calibration": {
             "version": art["version"],
-            "tokenizer_model_id": art["tokenizer"]["model_id"],
-            "source": art["source"],
+            "target": art["calibration_target"],
             "safety_multiplier": art["safety_multiplier"],
         },
         "limits": {GATE_SIZE_BYTES: measurer.limits["size_bytes"],
                    GATE_TOKENS: measurer.limits["tokens"],
                    "path": measurer.limits["path"]},
         "session_model_id": measurer.model_id,
+        "session_provider_id": measurer.provider_id,
         "dense_ascii_min_run": DENSE_ASCII_MIN_RUN,
     }
     out.update(payload)
@@ -656,7 +662,7 @@ def load_probe_log(path):
         raise PlanWeightError(f"артефакт прогона харнесса не читается: {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise PlanWeightError(f"артефакт прогона харнесса — невалидный JSON: {path}: {exc}") from exc
-    probes = data.get("probes")
+    probes = data.get("accepted_samples", data.get("probes"))
     if not isinstance(probes, list):
         raise PlanWeightError(f"артефакт прогона харнесса: нет списка «probes»: {path}")
     return data
@@ -670,13 +676,15 @@ def exact_compare(paths, measurer, probe_log_path):
 
     log = load_probe_log(probe_log_path)
     by_sha, by_path = {}, {}
-    for rec in log["probes"]:
+    for rec in log.get("accepted_samples", log["probes"]):
         if rec.get("rejected") or rec.get("true_tokens") is None:
             continue
-        if rec.get("sha256"):
-            by_sha[rec["sha256"]] = rec
-        if rec.get("path"):
-            by_path[str(Path(rec["path"]).resolve())] = rec
+        sha = rec.get("sample_sha256", rec.get("sha256"))
+        if sha:
+            by_sha[sha] = rec
+        source_path = rec.get("source_path", rec.get("path"))
+        if source_path:
+            by_path[str(Path(source_path).resolve())] = rec
 
     rows = []
     for path in paths:

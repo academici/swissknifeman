@@ -1,0 +1,513 @@
+{
+  "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+  "accepted_samples": [
+    {
+      "byte_range": {
+        "end_exclusive": 8996,
+        "start": 0
+      },
+      "control_drift": 4,
+      "counts": {
+        "ascii_other": 2027,
+        "ascii_word": 2297,
+        "cyrillic": 0,
+        "dense_ascii": 4672,
+        "other": 0
+      },
+      "full_source_sha256": "b9995a60410a3a4148c21f9588ccd7996ab743cb543fb5625bafa7273ba00f30",
+      "full_text": "{\n  \"admissions\": [\n    {\n      \"admission_hash\": \"bb7b0150ad80622ec59063bbc7a7338823b9a8125951f61f0e6836e13ae3c7e6\",\n      \"grant_hash\": \"99b97bd11c7389b192031aad46990ff9ed0388679faae2a9f4976a172bf70424\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"c15bda77e3bc13495edda5815f9b03522858311c516d00366a293b6290096b10\",\n      \"sha256\": \"56c1062855ab78da83a9646389e757102082f94d55c90a95ba6e99f49c362da6\",\n      \"task_hash\": \"b91d1fd9dca3ce2227e1193d25e441e6973db5a430f9b3dcc79f48c17f9a4e56\",\n      \"trial_id\": \"p5.2-slice-01-worktree-core\"\n    },\n    {\n      \"admission_hash\": \"9bdb14b6cebae3ff1777e902f734a6fde776a2d5a93f4fbf937fdba40a52735a\",\n      \"grant_hash\": \"036a08e9a32911886c4541c0f8d9319407ff4bb0fd79ccaeedb5cc4d26ea0214\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.2-slice-02-worktree-binding.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"833eb5784db24c095158b80f628f27af62f7000c38c04eec32947c91df7ef150\",\n      \"sha256\": \"d89e871be9d1e9b8cb57fa12e6634fdd8c74470d24f87da07f30165868074f8f\",\n      \"task_hash\": \"54b7c327b06f0cbfab45a98da3ce0149dfbdd3e78748a3a82f84f401828fb9cc\",\n      \"trial_id\": \"p5.2-slice-02-worktree-binding\"\n    },\n    {\n      \"admission_hash\": \"00046880439652fd3d24a2ed09c894233be0a72717e880ebd3df1342e1198cd3\",\n      \"grant_hash\": \"848172de86ed36c737c2cc78dfd4370a0eacb567c1261e3dcc75d8a879ab5fcd\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.2-slice-03-worktree-evidence.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"f32a92dc99c56335334777d446a8fc7aa8f48e2814a110d7c06c84d6a1d84760\",\n      \"sha256\": \"da0d97f6b64ba98a50778bca0d66cc74b4a7cbf05f3086b466825a4f29593a4e\",\n      \"task_hash\": \"8696a23e71600ddf3f13988736e761d42234518e0f6a2d8374e9a68223962907\",\n      \"trial_id\": \"p5.2-slice-03-worktree-evidence\"\n    },\n    {\n      \"admission_hash\": \"ec6f215597654d32edeaf4bfa9e348481b03ecde5f34cfe0c2518d02568f7cbb\",\n      \"grant_hash\": \"cdeb1b8f4469c913ab547753c2518033b255cb680b59163f3c475356c2764067\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-01-crash-after-intent.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"a2333262a90a8555e53e852444093eb376d1d65576eefd6c68ec2c13c992ecfc\",\n      \"sha256\": \"ca8e08c8e4de9ff6f4b2e819703deee33d69ad88f8fa360bb68ca91bdde6640b\",\n      \"task_hash\": \"2bbdf029f251dae689a57d34d4ff9cf148de7e161174e3338451697bcc664afa\",\n      \"trial_id\": \"p5.3-call-01-crash-after-intent\"\n    },\n    {\n      \"admission_hash\": \"5c356eae64ecf13aced5ac2a45218b201c8c7f864e69fbf76db99372fab586b0\",\n      \"grant_hash\": \"d74117123abd0809df56080824b8e0ed67b85a6e25af202fa4cbfd41eb3258a2\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-02-crash-after-observation.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"547a6f0f5393140985c21069e3ea7651e46e7e09f208b13ab70f70045caad01b\",\n      \"sha256\": \"88132c8be2fee9caf9eb329b05e69c4d0ea46b662f7ce76adfecae2883cdc643\",\n      \"task_hash\": \"046de7e60baff6b128d8f75d0ec74f3b41919a4b64ab68d9fbdd70a37a35140c\",\n      \"trial_id\": \"p5.3-call-02-crash-after-observation\"\n    },\n    {\n      \"admission_hash\": \"24960575a0905e1ec4666a7640dc27de1b9365e3ed3bacd12b3ee3c06741da7d\",\n      \"grant_hash\": \"fb468e70ec0720b7774ebf8855f0b67f6a63f1430ab2037cd1c745c9628098f8\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-03-duplicate-dispatch.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"149fd605fb2766781cb3550f2367841891295b48fb2fdeee37dd7cad6124aeaa\",\n      \"sha256\": \"cdd90f67fa4bed61ec6da16db6ce7a0c411d48668eeae4de81c9a1a25be0b957\",\n      \"task_hash\": \"5071ae7ce0903934e2e0f617329288e678b94a6306278378754f75497e50fdb1\",\n      \"trial_id\": \"p5.3-call-03-duplicate-dispatch\"\n    },\n    {\n      \"admission_hash\": \"5ba7b87f6d760eb4007d0e6bc282c8be637cfc1588949f7a3f7b2f4386796847\",\n      \"grant_hash\": \"50dc7df140fec0c4358b62152f56f611a4a4b3aff9e747f2b62fb2db2e1d929f\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-04-timeout.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"e5519f3889f5854f72c615060cde88861a2911378e81e2143ca49ed85310412f\",\n      \"sha256\": \"9ef03710d90770af23f11bb3e83d911c9bb2830d38743363b0e9121f39fca85e\",\n      \"task_hash\": \"bf0c7e3891c1e7f89fa3fc57585a9c04dd9f09fd69025cfae373469b8a2b786e\",\n      \"trial_id\": \"p5.3-call-04-timeout\"\n    },\n    {\n      \"admission_hash\": \"87fae45c948cb6c8ad665d0f2342daba12f8eeb83ed664949e2e33381fa7a512\",\n      \"grant_hash\": \"1daec706491c2e3f5d9a68d9ab9f84f18a0f76605fac581959768e23dce621f5\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-05-schema-refusal.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"04e6f215828ab870075b96f23361dfdecbdfe79dc971b13cf6ec5d53e79f9da0\",\n      \"sha256\": \"e2a0cb48911c579ff131907843518dc545c3e759d76fb2cbd233bd2034ec8e08\",\n      \"task_hash\": \"166afd722cdb2d5b563967e63bd7cb6a970d858e7fd66140a79fa00bd60b2b2f\",\n      \"trial_id\": \"p5.3-call-05-schema-refusal\"\n    },\n    {\n      \"admission_hash\": \"c997a5f0debdf028291b5c5b1b8c6189e894fac80a483334847b870680716737\",\n      \"grant_hash\": \"296a0a2a51ee05870787fd1553137ec649fd5501e092e68369fedc93521630d4\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.3-call-06-third-state.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"fbcc8b130de50540ef21f1aa7264c6a19690edbfab98e757cbd9ae11f6012311\",\n      \"sha256\": \"8dfecbcb5e266b815a0ddf7bf500003c364e69e4ce98963209d5687a4d394717\",\n      \"task_hash\": \"b7d572a40e5079557eb4bd5d9399489db43e32ff5a62f106452f0b8e78756d14\",\n      \"trial_id\": \"p5.3-call-06-third-state\"\n    },\n    {\n      \"admission_hash\": \"1b0e60eadfa1e13e60df2eb4b6291ceffd76bdb44c02de408b76d1031d62764a\",\n      \"grant_hash\": \"220e9cb7c35c8399cf38abbe74400c3abcb7e7720bfb78cde39a197a086f2c24\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.4-wave-01-recovery-fixture.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"50d9f3c9034a0230bd4562eaf942fe7d5030ccf46ad245be1ed6593a2314c68c\",\n      \"sha256\": \"41b54a5b42e5ed065a1bae37b5115e495f77f041d4afba8829a1129c8df646ff\",\n      \"task_hash\": \"792af546fd5362c6c1e0c7ef88ab39af84e08e01bde7962a07a1ba26b976b276\",\n      \"trial_id\": \"p5.4-wave-01-recovery-fixture\"\n    },\n    {\n      \"admission_hash\": \"b99ab5700d0e03fbbd8f42bef1a8c647c82ca9d659fdccd62966717bea81ab09\",\n      \"grant_hash\": \"1eca1253d35b291d950b0a6df92ca9f0a03c38fba6e117d907673160235f3a0d\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.4-wave-02-worktree-isolation.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"b5f44d89bf88ac131d695be475bbe98a72b06040a1a691fa35f5d0befe60d119\",\n      \"sha256\": \"3bcc8cd0e0d89b155205423823e0c9f00097e494978d76c90a5bd483982880f7\",\n      \"task_hash\": \"b7113bca9540be11beb3914b3c97387681312fd8d1237b1cc26abb670bad352c\",\n      \"trial_id\": \"p5.4-wave-02-worktree-isolation\"\n    },\n    {\n      \"admission_hash\": \"284a61abe987a9a9b5aeb2c5608f887818a0d736360eb9cbccdc8d02383990b4\",\n      \"grant_hash\": \"06745f673be3d58608c244fae75b6e9c9ab24ffd9b07a2312ac8eea93643f3b1\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.4-wave-03-security-boundary.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"4e0cb7c0859edbc1c40f4f864af0018f2880d8de3def890c2ae333c09628c1c8\",\n      \"sha256\": \"9dd2979fcd5b8e1103e146dcbc04339fa3a62399f28fee5c04f821850edaaad1\",\n      \"task_hash\": \"96d7f0561d350bf75ce8cca2faef8fe628df1689d247b132dd4816dcd02e9e8b\",\n      \"trial_id\": \"p5.4-wave-03-security-boundary\"\n    },\n    {\n      \"admission_hash\": \"aaf64f0a1fef0a2d48cd5efc5b1c39f66112f19567f6fcc85618449c92656eeb\",\n      \"grant_hash\": \"1540185feea7e0e821d7f72b9343f257bbf0f02b2768a3e27ef9af3ff8ac4ebe\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.4-wave-04-telemetry-assurance.json\",\n      \"provider\": \"codex\",\n      \"replay_hash\": \"b0ab30c1b9d18e223d45d3d37b5e7261f43ca6a61148b0c7249b629a7430f158\",\n      \"sha256\": \"669230c4b072a4df4694d1525f93cd830c95bd73f16b97b2577950a73eced0e1\",\n      \"task_hash\": \"1493b8aee2a94be1148b751b27bb52a97bca4a7d7bfe35f030401db9c335c20f\",\n      \"trial_id\": \"p5.4-wave-04-telemetry-assurance\"\n    },\n    {\n      \"admission_hash\": \"81395d8121fe122ed19060e5a7aeef6640c208f0f123bcc1be5f8e26954420c0\",\n      \"grant_hash\": \"7b286f81a667b571f10c7e9af8fd5a2d31fc450945faf9652b8a6af535278685\",\n      \"path\": \"artifacts/P5/trial-admissions/p5.4-wave-05-committed-gates.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"5c3014f79339662c6a447ec5798de0d14a4c261a110dfeb01fb543714db43038\",\n      \"sha256\": \"d2e62c35fc0ea6c69135f3e8db3dbff2f7095f097128280c6c304ba0ca9fd0d9\",\n      \"task_hash\": \"b790b7005c7f5f8d5b9edbc8be3d514bee7d881bd44fcf69b1d18d45a128f352\",\n      \"trial_id\": \"p5.4-wave-05-committed-gates\"\n    }\n  ],\n  \"catalog_hash\": \"df5d7545b3d87fa3e78c567eb708e8dfb5f3d0983b789d7ebb1838c3daf2745f\",\n  \"g2_package_digest\": \"ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09\",\n  \"index_version\": \"1.0.0\",\n  \"request_hash\": \"ec16d0c556abac6f106b285ff6bc84da1afb782f0466b7ed4a60feb70aeef52b\",\n  \"schema_version\": \"artifex-business-dispatch-admission-index-v1\"\n}\n",
+      "left_control_input_tokens": 13425,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 17498,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 13056,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 8996,
+      "sample_sha256": "b9995a60410a3a4148c21f9588ccd7996ab743cb543fb5625bafa7273ba00f30",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json",
+      "true_tokens": 4071.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 16384,
+        "start": 0
+      },
+      "control_drift": 4,
+      "counts": {
+        "ascii_other": 3879,
+        "ascii_word": 4002,
+        "cyrillic": 0,
+        "dense_ascii": 8503,
+        "other": 0
+      },
+      "full_source_sha256": "60b8301160dc1d32fedbc90fd2cbb1a0db5013df9c7a4fd6859e78a13fb1fffb",
+      "full_text": "{\n  \"closed_package_files\": [\n    {\n      \"path\": \"packages/artifex/README.md\",\n      \"sha256\": \"619f1fed5e88262bf0a17e15b9e5e31262fab7f5102433909c35507ee2d66b07\"\n    },\n    {\n      \"path\": \"packages/artifex/bin/artifex\",\n      \"sha256\": \"39d8faf5f37c78521788c30196411f5e303d4645d1da087840368a453f078684\"\n    },\n    {\n      \"path\": \"packages/artifex/scripts/test.sh\",\n      \"sha256\": \"578f9f9529b33f3bf5b603041dcef46e2bc15a52d3adb2f889260258fbe844ef\"\n    },\n    {\n      \"path\": \"packages/artifex/scripts/validate.sh\",\n      \"sha256\": \"2dd31a860843a2859fdb40439aa7c60706ffeaecaf24163866b3508eaa59ea23\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/__init__.py\",\n      \"sha256\": \"4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/__main__.py\",\n      \"sha256\": \"935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/activity.py\",\n      \"sha256\": \"2a1f460f04c18e77fdc9b571515d6780d94af4ab19d836a325efc5c16a00481c\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/authority.py\",\n      \"sha256\": \"5b10b2cd17606b6269d0956adabc803302aed5101474b12e8976a7f0780edf6d\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/cli.py\",\n      \"sha256\": \"1fd5261fd59f934860c5071700c7421e614da67f2c45074e0cc2d2d58fe5efaf\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/compiler.py\",\n      \"sha256\": \"b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/dispatch.py\",\n      \"sha256\": \"5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/providers/__init__.py\",\n      \"sha256\": \"3d6fd66f73adf6dfde76cd49c9bb8219cae9ca7bec5d3f6eb2634d0e42700316\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/providers/claude_code.py\",\n      \"sha256\": \"e6ef9e89ea0daa8c9325b4a8f735a7f3b4a615e3ff4911aa945c4447dbcaa52c\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/providers/codex.py\",\n      \"sha256\": \"225b63f281a70564b8d3ab70af6f62e34f30cedc0292107a21cfe274f7dc80de\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/providers/common.py\",\n      \"sha256\": \"cd2d5aab7be56be54202153934c464b8cac4171fedc348bc2f0aaafa44af9932\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/providers/parity.py\",\n      \"sha256\": \"b66e7540975d0dbdfde37cb5c7362b3cc09e49908e9952de9953066e301a4610\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/scheduler.py\",\n      \"sha256\": \"14f423ee20e3258f99e5d9ad9dc7331e2d46cdb526adec81779e7ead76a033a6\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/store.py\",\n      \"sha256\": \"dde40059630c7c9932c8421d920159f0f473413992cc1506ef18529968280aba\"\n    },\n    {\n      \"path\": \"packages/artifex/lib/artifex/worker.py\",\n      \"sha256\": \"b0f53037e550ac6418e16eeba1da21305e129d7ce6254b792d269661926d0dd2\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/__init__.py\",\n      \"sha256\": \"a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/support.py\",\n      \"sha256\": \"c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_adapter_evidence.py\",\n      \"sha256\": \"b30ae7743c5d31fec0018e908d56c0545499c904fc3c6a7ec3a64b356ebdae45\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_authority.py\",\n      \"sha256\": \"cab23b88b817fbb6515848c251d7ea3a66c2fb073d28a31fa294b74707a82105\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_cli.py\",\n      \"sha256\": \"6aa3b1028230e674da3cec9fef0d1a7ff652befcf1cd9c9210c1d4f90f1e7686\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_compiler.py\",\n      \"sha256\": \"67e68be15b2c6b401c9f1ceb99cd7b8a7fe31a0512f8c4786821a934574efa04\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_dispatch.py\",\n      \"sha256\": \"1f874ff9639a6f841aa50de9a4086855521cfcbf5a3b4dedf527db40a477ad5b\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_integration.py\",\n      \"sha256\": \"07fc5bcc6da634a6875d8477000fc4fa48ac355c175ab3f939c17b32022f133b\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_package_promotion.py\",\n      \"sha256\": \"9fc717aeecc6ac5f4bbe43f9caa8bbfeea0c49fbfbdee9e4ed0571bfffc0481a\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_provider_activity.py\",\n      \"sha256\": \"84c1701762356b9c191332b07b9dda8fde373ca16cbe591fd1c51a14af5c9357\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_provider_claude_code.py\",\n      \"sha256\": \"615551359e5a476aa8562cfbe92c753780c1f2900a7d74139b2947b3f484cddc\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_provider_codex.py\",\n      \"sha256\": \"2b18cc23d0b5618500eb0f483d2cd84468ac1fa8df001ccefa6d977d4cdf81c0\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_provider_integration.py\",\n      \"sha256\": \"c58ff91408e1887f5f232f64d99ae433c5b24b77cccf4e6536588f64a733650e\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_provider_parity.py\",\n      \"sha256\": \"0001aff64687a867877eaa3929aeb29c869a95fe6c71a82e04db70876ea2f651\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_scheduler.py\",\n      \"sha256\": \"b42a8b456c0e58fd648729ebda4bc09f6c4e815f5f15358d943a68edd5d13e59\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_store.py\",\n      \"sha256\": \"07f4196a735cbaf753c9565978fbdc055827d28df14c633cf6889f6c92ac0650\"\n    },\n    {\n      \"path\": \"packages/artifex/tests/test_worker_lifecycle.py\",\n      \"sha256\": \"db6d9d80764236224bd5cba16b53a0514f57bf67e6a2bb4a26fabb8476596286\"\n    }\n  ],\n  \"generation\": {\n    \"guides\": {\n      \"packages/artifex/AGENTS.md\": \"155090d4559697b7a03fd9a078bdc468db39c0cd382342349e751749f2191b8a\",\n      \"packages/artifex/CLAUDE.md\": \"0842818d6424c4da4b59e51922c3977a835f878103943db5297d8cefa7816872\"\n    },\n    \"lock\": \".swissknifeman/provider-artifacts.lock.json\",\n    \"lock_sha256\": \"cf7ff858f49da37a40ce6735b91ed5c29addaa49b79a4ece06d908f1bb792ffa\",\n    \"stage1_commit\": \"40781d376a1ee489d61e8ff3ce93fbdb751b2f9f\"\n  },\n  \"schema_version\": \"artifex-package-promotion-v1\",\n  \"source_map\": [\n    {\n      \"package\": \"packages/artifex/lib/artifex/__init__.py\",\n      \"package_sha256\": \"4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/__init__.py\",\n      \"source_sha256\": \"4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/__main__.py\",\n      \"package_sha256\": \"935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/__main__.py\",\n      \"source_sha256\": \"935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/activity.py\",\n      \"package_sha256\": \"2a1f460f04c18e77fdc9b571515d6780d94af4ab19d836a325efc5c16a00481c\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/activity.py\",\n      \"source_sha256\": \"2a1f460f04c18e77fdc9b571515d6780d94af4ab19d836a325efc5c16a00481c\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/authority.py\",\n      \"package_sha256\": \"5b10b2cd17606b6269d0956adabc803302aed5101474b12e8976a7f0780edf6d\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/authority.py\",\n      \"source_sha256\": \"5b10b2cd17606b6269d0956adabc803302aed5101474b12e8976a7f0780edf6d\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/cli.py\",\n      \"package_sha256\": \"1fd5261fd59f934860c5071700c7421e614da67f2c45074e0cc2d2d58fe5efaf\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/cli.py\",\n      \"source_sha256\": \"1fd5261fd59f934860c5071700c7421e614da67f2c45074e0cc2d2d58fe5efaf\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/compiler.py\",\n      \"package_sha256\": \"b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/compiler.py\",\n      \"source_sha256\": \"b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/dispatch.py\",\n      \"package_sha256\": \"5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/dispatch.py\",\n      \"source_sha256\": \"5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/providers/__init__.py\",\n      \"package_sha256\": \"3d6fd66f73adf6dfde76cd49c9bb8219cae9ca7bec5d3f6eb2634d0e42700316\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/providers/__init__.py\",\n      \"source_sha256\": \"3d6fd66f73adf6dfde76cd49c9bb8219cae9ca7bec5d3f6eb2634d0e42700316\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/providers/claude_code.py\",\n      \"package_sha256\": \"e6ef9e89ea0daa8c9325b4a8f735a7f3b4a615e3ff4911aa945c4447dbcaa52c\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/providers/claude_code.py\",\n      \"source_sha256\": \"e6ef9e89ea0daa8c9325b4a8f735a7f3b4a615e3ff4911aa945c4447dbcaa52c\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/providers/codex.py\",\n      \"package_sha256\": \"225b63f281a70564b8d3ab70af6f62e34f30cedc0292107a21cfe274f7dc80de\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/providers/codex.py\",\n      \"source_sha256\": \"225b63f281a70564b8d3ab70af6f62e34f30cedc0292107a21cfe274f7dc80de\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/providers/common.py\",\n      \"package_sha256\": \"cd2d5aab7be56be54202153934c464b8cac4171fedc348bc2f0aaafa44af9932\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/providers/common.py\",\n      \"source_sha256\": \"cd2d5aab7be56be54202153934c464b8cac4171fedc348bc2f0aaafa44af9932\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/providers/parity.py\",\n      \"package_sha256\": \"b66e7540975d0dbdfde37cb5c7362b3cc09e49908e9952de9953066e301a4610\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/providers/parity.py\",\n      \"source_sha256\": \"b66e7540975d0dbdfde37cb5c7362b3cc09e49908e9952de9953066e301a4610\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/scheduler.py\",\n      \"package_sha256\": \"14f423ee20e3258f99e5d9ad9dc7331e2d46cdb526adec81779e7ead76a033a6\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/scheduler.py\",\n      \"source_sha256\": \"14f423ee20e3258f99e5d9ad9dc7331e2d46cdb526adec81779e7ead76a033a6\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/store.py\",\n      \"package_sha256\": \"dde40059630c7c9932c8421d920159f0f473413992cc1506ef18529968280aba\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/store.py\",\n      \"source_sha256\": \"dde40059630c7c9932c8421d920159f0f473413992cc1506ef18529968280aba\"\n    },\n    {\n      \"package\": \"packages/artifex/lib/artifex/worker.py\",\n      \"package_sha256\": \"b0f53037e550ac6418e16eeba1da21305e129d7ce6254b792d269661926d0dd2\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/artifex/worker.py\",\n      \"source_sha256\": \"b0f53037e550ac6418e16eeba1da21305e129d7ce6254b792d269661926d0dd2\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/__init__.py\",\n      \"package_sha256\": \"a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/__init__.py\",\n      \"source_sha256\": \"a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/support.py\",\n      \"package_sha256\": \"c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/support.py\",\n      \"source_sha256\": \"c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_adapter_evidence.py\",\n      \"package_sha256\": \"b30ae7743c5d31fec0018e908d56c0545499c904fc3c6a7ec3a64b356ebdae45\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_adapter_evidence.py\",\n      \"source_sha256\": \"bf1eb6604fbb2804de2831372609e4c9f857b28bedf026a878e330f3c5c829df\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_authority.py\",\n      \"package_sha256\": \"cab23b88b817fbb6515848c251d7ea3a66c2fb073d28a31fa294b74707a82105\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_authority.py\",\n      \"source_sha256\": \"c6cd0ae140249d2581b663ee145af0bc0fa24abd18ea700dec20899d50e43eda\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_cli.py\",\n      \"package_sha256\": \"6aa3b1028230e674da3cec9fef0d1a7ff652befcf1cd9c9210c1d4f90f1e7686\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_cli.py\",\n      \"source_sha256\": \"247f6a794c8d40485920d8f2748ae3bd4d740c09cff76040654958723341cb7d\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_compiler.py\",\n      \"package_sha256\": \"67e68be15b2c6b401c9f1ceb99cd7b8a7fe31a0512f8c4786821a934574efa04\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_compiler.py\",\n      \"source_sha256\": \"0d87ac3632287fcca9f376a116f7d979546c6c3d29b86fbe7b5e02ec986f337b\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_dispatch.py\",\n      \"package_sha256\": \"1f874ff9639a6f841aa50de9a4086855521cfcbf5a3b4dedf527db40a477ad5b\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_dispatch.py\",\n      \"source_sha256\": \"8a96927bf9db264988ca0ce9c631570de2e6d79dc092429917257a0c1580bce6\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_integration.py\",\n      \"package_sha256\": \"07fc5bcc6da634a6875d8477000fc4fa48ac355c175ab3f939c17b32022f133b\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_integration.py\",\n      \"source_sha256\": \"fc39e9a35bb382d8fd0f1e934aa033502de4cf01692532169df3aa0549809851\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_provider_activity.py\",\n      \"package_sha256\": \"84c1701762356b9c191332b07b9dda8fde373ca16cbe591fd1c51a14af5c9357\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_provider_activity.py\",\n      \"source_sha256\": \"10b2f91ac4f98429505da0cc3b3a707782447f56d69a799d0720cf463384bfa0\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_provider_claude_code.py\",\n      \"package_sha256\": \"615551359e5a476aa8562cfbe92c753780c1f2900a7d74139b2947b3f484cddc\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_provider_claude_code.py\",\n      \"source_sha256\": \"5d1e3823d2f651e524c59db9dea26850958e04abfeb7d3efefe5414220d1f90a\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_provider_codex.py\",\n      \"package_sha256\": \"2b18cc23d0b5618500eb0f483d2cd84468ac1fa8df001ccefa6d977d4cdf81c0\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_provider_codex.py\",\n      \"source_sha256\": \"bb806a16d93fda602bfff052ac1b316dffa742ca8cfe44b79978b4308733fce5\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_provider_integration.py\",\n      \"package_sha256\": \"c58ff91408e1887f5f232f64d99ae433c5b24b77cccf4e6536588f64a733650e\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_provider_integration.py\",\n      \"source_sha256\": \"c58ff91408e1887f5f232f64d99ae433c5b24b77cccf4e6536588f64a733650e\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_provider_parity.py\",\n      \"package_sha256\": \"0001aff64687a867877eaa3929aeb29c869a95fe6c71a82e04db70876ea2f651\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_provider_parity.py\",\n      \"source_sha256\": \"46f3292db28395657825811ec2b0cf17e32fbb672054ec1c792d5a01a6ed854f\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_scheduler.py\",\n      \"package_sha256\": \"b42a8b456c0e58fd648729ebda4bc09f6c4e815f5f15358d943a68edd5d13e59\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_scheduler.py\",\n      \"source_sha256\": \"f743c7fba31f878bb790cce2bd128af04d004aa5d10ddfe9fa5185938065d4b6\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_store.py\",\n      \"package_sha256\": \"07f4196a735cbaf753c9565978fbdc055827d28df14c633cf6889f6c92ac0650\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_store.py\",\n      \"source_sha256\": \"1c7941e0f7f96f5db8d35bae4ff72e7a36c093b2bff5b6260f8aa2032409281e\"\n    },\n    {\n      \"package\": \"packages/artifex/tests/test_worker_lifecycle.py\",\n      \"package_sha256\": \"db6d9d80764236224bd5cba16b53a0514f57bf67e6a2bb4a26fabb8476596286\",\n      \"source\": \"plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests/test_worker_lifecycle.py\",\n      \"source_sha256\": \"db6d9d80764236224bd5cba16b53a0514f57bf67e6a2bb4a26fabb8476596286\"\n    }\n  ]\n}\n",
+      "left_control_input_tokens": 13425,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 20019,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 16384,
+      "sample_sha256": "736554e2c67a4ec0be94112816e6f6890c6b87463bc377def2a7f0b5c2fde0fc",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P3/package-promotion-manifest-v1.json",
+      "true_tokens": 6592.0,
+      "whole_file": false
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 6634,
+        "start": 0
+      },
+      "control_drift": 4,
+      "counts": {
+        "ascii_other": 1482,
+        "ascii_word": 1760,
+        "cyrillic": 0,
+        "dense_ascii": 3392,
+        "other": 0
+      },
+      "full_source_sha256": "c8f7f6c7908de3416dcb9661e17d67a3c10833bd76a74e38f5ff461c2fa193f2",
+      "full_text": "{\n  \"admissions\": [\n    {\n      \"admission_hash\": \"98748df8ec07bae205a0e7ca37109c8c87634ffc5d156a9f8abffcf52f1d9a88\",\n      \"grant_hash\": \"2fd0e421e51ac5bd70185906a7ebd5447cbb04a295cdee821dc0e85c1ca41b64\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4w-wave-01-recovery-fixture.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"c895880e41cc8d96e10448c828da5cf7e0b27b12cf949cd4e1663cc37ad43f8d\",\n      \"sha256\": \"904feb9606b84145d62b357c88a2f8d40bd14c09eb2cddffd5ce3a818b79c593\",\n      \"task_hash\": \"3bc984fe7b920d77b86298d0a952d425d85e1b899cfee600f3344474262c878b\",\n      \"trial_id\": \"p5.4w-wave-01-recovery-fixture\"\n    },\n    {\n      \"admission_hash\": \"07c5b3b133db84811ce806fadcfd7f03a133850e4d1d231d9ee3c92bdd60ea3c\",\n      \"grant_hash\": \"2c640e5624e355eda201fa2c196b050478bfd61a4e0dfd35a159cac70d499642\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4b-wave-01-recovery-fixture.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"87dbbfa5361d909c74ea25d92b41068140517c8de675eee3fc5ba55c7099baec\",\n      \"sha256\": \"e7aa93c7720031176c4f7680280ff3174b00e7c59dc653bc6d2cf8e1c32482d4\",\n      \"task_hash\": \"9b832ca818d08e64f29290e43ce58dba9e2f0fea9b1ac91dfe0a2895a2a33dfe\",\n      \"trial_id\": \"p5.4b-wave-01-recovery-fixture\"\n    },\n    {\n      \"admission_hash\": \"edebba313950f77bb256d8c904a7aa2ad2dd147ff9c7ae8cf8b658ff45248b81\",\n      \"grant_hash\": \"8cc609461a15d41c9f6a947b401c0741162c9b1ff3962ea43b42abac0d557d70\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4w-wave-02-worktree-isolation.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"0c0e6ace584567239477df89ad23aaaf5b2596e045aee562f9d601b97879e4ba\",\n      \"sha256\": \"0060aa5f3c295d09187a69b1ef2aee98e5db2c205f61425d0b91aa6499a1ddf4\",\n      \"task_hash\": \"ecbbd4e7365fe3cf1497630f83b76ec0ad45ece06057eeb0d65a8c3c41b71c13\",\n      \"trial_id\": \"p5.4w-wave-02-worktree-isolation\"\n    },\n    {\n      \"admission_hash\": \"253da36749e85612cca252e9c6064c3a0048ec5afb7c9d5fbf6a7d6c5da3f70a\",\n      \"grant_hash\": \"c01b49031896ce131a30f98f1857a2e80a57448a1cf5a67fa0b8e958296d46d7\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4b-wave-02-worktree-isolation.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"ed0ea96c2533410fe60e4baf41e27a883a207c9f227d02c6d361bcd9bd7d93f9\",\n      \"sha256\": \"1ab05d44922ff0adabfb0ec773bcb699dc30f56c9b189cc8c8a29aadbc7f2d1e\",\n      \"task_hash\": \"a9a76685a2db94ef76cca52639904d24d6acccfc0d388454c5b4b750eb405a55\",\n      \"trial_id\": \"p5.4b-wave-02-worktree-isolation\"\n    },\n    {\n      \"admission_hash\": \"c6a2cd07b6cda55d65bd57d7a8a4d98a673cea33ff586d71519943f8404d8fdc\",\n      \"grant_hash\": \"74287401e5488b4a33dc11aef2e459a59ccfc858308de4f0ae784fdd38f221fa\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4w-wave-03-security-boundary.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"6ded4fa79db58e78193f334cf3008d3cc4406ba9a8ebae6cd55e6efb8463de37\",\n      \"sha256\": \"f8a3f9f9d7b37b5cff330378fed5defdfe24b0b712aea1abebda246d7b7c1ce6\",\n      \"task_hash\": \"2baa6e65462c445248fa6c55cb8d46c83c510026e80437822a847379a13a937a\",\n      \"trial_id\": \"p5.4w-wave-03-security-boundary\"\n    },\n    {\n      \"admission_hash\": \"07709b27d7297398ac2d2a19c4464652f064ced0ca5a5489a857ec18913716f0\",\n      \"grant_hash\": \"7da5de405f1609e92e043512b47eae0933d14ebd5d18adef1ed5042ade8e6551\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4b-wave-03-security-boundary.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"88e3e3e5b466f382814dab56554c70fb5a6b914948f48a1e597013b17966e46f\",\n      \"sha256\": \"7ee0819c57b40d01c4c942e2820a384f811b6e6bf6909ba8d2e69459c2fbb0e0\",\n      \"task_hash\": \"12440b20bcb5a0cba895199064f1869b83ff2791f8140d81955e1e8ba36b2f90\",\n      \"trial_id\": \"p5.4b-wave-03-security-boundary\"\n    },\n    {\n      \"admission_hash\": \"5177eb8b1a15242bf7020c8f757a4fd424971c70011a0f1d869bcef9b2ed7409\",\n      \"grant_hash\": \"cc9772aa5ad8996b762b34fb9803086f36b111272d283e5d3a828348244ee1eb\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4w-wave-04-telemetry-assurance.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"46d9a0f067b66a7a5d55b87327c37ca8f8bb94b86d999775c2ed04c266744611\",\n      \"sha256\": \"b296fb53526b35a4a106c8747ffd44aadb7b38343653cf3a50105e2c2da074a4\",\n      \"task_hash\": \"81c54f8e418dcb550b825d55bc905338824ef8e698c23f5b89d122acf79582fa\",\n      \"trial_id\": \"p5.4w-wave-04-telemetry-assurance\"\n    },\n    {\n      \"admission_hash\": \"1c0ba11a9b33e287c0909811264d93c1cb09ab441cb515cbac09adbe82a6d4a6\",\n      \"grant_hash\": \"b0ac31c4541e3f97a3cfbae262eb41348921e5ab80ce78645b0059f47544369c\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4b-wave-04-telemetry-assurance.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"b04b74ee338740ec05f036c3b305d973209e97e3640ba4f430342a15a218aa8d\",\n      \"sha256\": \"0818c8c70bca6138f2553bf44a2cee8fe90c5c8e80e6fc31ab1e819c6f472cd5\",\n      \"task_hash\": \"655a8047710aa684644ae4f60377cbe05a9a471261bf3a26b10cabe2eb397563\",\n      \"trial_id\": \"p5.4b-wave-04-telemetry-assurance\"\n    },\n    {\n      \"admission_hash\": \"81453915338062b75055c7b1fd937cd7a04c517755d531a3413cb9b2b0f6245e\",\n      \"grant_hash\": \"4ea706651f43bcded90457204a55f50767147753f56de06458d14d5c4170f607\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4w-wave-05-committed-gates.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"c101116ae259ab26807b47614c4d95b418120efc0cb17ab53c0523c134b90a3b\",\n      \"sha256\": \"d117112e2dd1ad0a87e31a91ece009cc9a0701972a6b661ac8c005dd5865108c\",\n      \"task_hash\": \"242cacbe029367ecea449f22c299363bfaad165abce5cc027765ef27615497a2\",\n      \"trial_id\": \"p5.4w-wave-05-committed-gates\"\n    },\n    {\n      \"admission_hash\": \"acb96a3e7c894a53a6c91ab1e141fbed6cf48bee7d0a2b6e9fa89c611d38031f\",\n      \"grant_hash\": \"4239bbb302668ccc7deece7be8c8fc2a7cce5830f4bda255300102bd9ee0813f\",\n      \"path\": \"artifacts/P5/trial-admissions-v3/p5.4b-wave-05-committed-gates.json\",\n      \"provider\": \"claude-code\",\n      \"replay_hash\": \"a0e3419042cc18daec15bb833cf462a1c04c3e811719dc1fa18c75001540c72d\",\n      \"sha256\": \"4642c738bd1205d3313f62d8a47f4ccc1f24e2f20b905beaac21c6a816b2e3ed\",\n      \"task_hash\": \"dd431fd91438582a5d64cbf6f3f3013cb0a278abb437a413985524bb0ec718c3\",\n      \"trial_id\": \"p5.4b-wave-05-committed-gates\"\n    }\n  ],\n  \"catalog_hash\": \"91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858\",\n  \"g2_package_digest\": \"ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09\",\n  \"index_version\": \"1.0.0\",\n  \"request_hash\": \"47f0a7408efb19b073e27933e7e68f91ca604eeaf723821661543301fc6bd70d\",\n  \"schema_version\": \"artifex-business-dispatch-admission-index-v1\"\n}\n",
+      "left_control_input_tokens": 13425,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 16429,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 6634,
+      "sample_sha256": "c8f7f6c7908de3416dcb9661e17d67a3c10833bd76a74e38f5ff461c2fa193f2",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
+      "true_tokens": 3002.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 9114,
+        "start": 0
+      },
+      "control_drift": 0,
+      "counts": {
+        "ascii_other": 1441,
+        "ascii_word": 2804,
+        "cyrillic": 2409,
+        "dense_ascii": 0,
+        "other": 18
+      },
+      "full_source_sha256": "e293e251cf7ed366a95f0914e0f06bc4ee4ab3946926e2904de4e870be85fa40",
+      "full_text": "# P0.1 — Codex-first калибровка с мультипровайдерным швом\n\n**Дата:** 2026-08-08  \n**Статус:** авторский синтез для `2026.08.07-PLAN-ECONOMY P0.1`  \n**Основание:** уточнение владельца о Codex-first исполнении и обязательной мультипровайдерности;\nD114–D117; `findings/18-codex-token-usage-2026-08-08.md`.\n\n## 1. Архитектурная граница\n\nКалибровка делится на три слоя:\n\n| Слой | Знает | Не знает |\n|:--|:--|:--|\n| provider adapter | команду провайдера, raw event/usage, перевод в canonical record | классификатор, регрессию, порог бюджета |\n| neutral calibration core | bracket-controls по `input_tokens_total`, контроль wrapper fingerprint, fitter, гейты bound/tightness | JSONL Codex, поля Claude, auth конкретного провайдера |\n| artifact consumer | rates/classifier и qualified provenance `provider + model + protocol` | как запускался провайдер и как выглядел raw event |\n\nАктивный адаптер — `codex-exec-jsonl`. Будущий `claude-code-json` добавляется рядом и реализует тот\nже контракт; он не заменяет общий слой и не меняет потребителей. Это прямое применение инварианта\nprovider parity: provider-specific файлы — additive adapters над общей семантикой.\n\n## 2. Нормализованная запись пробы\n\nМинимальный provider-neutral record:\n\n```json\n{\n  \"schema_version\": \"token-probe-record-v1\",\n  \"provider\": {\"id\": \"codex\", \"adapter\": \"codex-exec-jsonl-v1\"},\n  \"model\": {\"requested_id\": \"gpt-5.6-terra\", \"effective_id\": null},\n  \"protocol_version\": \"differential-input-total-v2\",\n  \"input_tokens_total\": 13388,\n  \"usage_breakdown\": {\"cached_input_tokens\": 9984, \"cache_write_input_tokens\": 0},\n  \"wrapper_sha256\": \"<sha256>\",\n  \"environment\": {\"cli\": \"codex-cli\", \"cli_version\": \"0.147.0\", \"command_sha256\": \"<sha256>\"}\n}\n```\n\nОбязательные инварианты: `input_tokens_total` — неотрицательное целое; provider/model/protocol и\nоба fingerprint непусты; неизвестные breakdown-поля допустимы, но не влияют на total; raw output\nдоступен только в plan-owned probe-log и не течёт в fitter. `effective_id: null` допустим, когда\nпровайдер не сообщает модель в terminal event; requested id тогда обязан быть явно пинован в\nкоманде.\n\n## 3. Активный Codex adapter\n\nБазовая команда строится программно и пинуется в probe-log:\n\n```text\ncodex -C <isolated-empty-dir> -m <requested-model> -c model_reasoning_effort=\"low\"\n  -a never -s read-only exec --ephemeral --ignore-user-config --ignore-rules\n  --skip-git-repo-check --json -\n```\n\nPrompt поступает через stdin. Обёртка требует фиксированный короткий ответ и запрещает tools;\nвременный cwd пуст, поэтому содержимое репозитория и его AGENTS/skills не попадает в controls/payload.\nАдаптер проверяет exit 0 и ровно один `turn.completed`, затем маппит\n`usage.input_tokens → input_tokens_total`. Cache breakdown сохраняется, но не суммируется.\nКоманда не читает project rules/config, не сохраняет rollout и не требует Claude OAuth.\n\n## 4. Differential semantics с bounded bracket-controls\n\nNeutral core вызывает один adapter по короткому расписанию: пустой control, не больше трёх payload\nprobes, следующий пустой control. Для payload между соседними controls:\n\n`true(f) = payload.input_tokens_total − mean(left_control, right_control)`.\n\nDrift controls выше δ отбраковывает весь bracket. Provider, adapter version, requested model,\nprotocol, CLI version, wrapper hash и command contract hash совпадают; различается только payload,\nthread id исключён из identity. Восемь provenance-qualified real samples (≤16 KiB каждый,\n≤128 KiB суммарно) требуют максимум 12 calls при зелёных controls (D120–D121), а не три вызова на\nкаждый полный файл. Core запрещает смешивать qualified targets.\n\n## 5. Артефакт и совместимость\n\nАктивный `token-estimate-calibration` v2 получает обязательный блок:\n\n```json\n{\n  \"calibration_target\": {\n    \"provider\": \"codex\",\n    \"adapter\": \"codex-exec-jsonl-v1\",\n    \"requested_model_id\": \"gpt-5.6-terra\",\n    \"probe_protocol_version\": \"differential-input-total-v2\",\n    \"usage_semantics\": \"provider-reported-input-total-v1\"\n  }\n}\n```\n\nFlat-поля v1 `source`/`tokenizer` сохраняются только в историческом snapshot. Новый загрузчик\nfail-closed требует `calibration_target`, classifier v2 и полный набор пяти ставок. P0.5 и P3\nиспользуют коэффициенты, но при диагностике обязаны показывать qualified target; warning о\nнесовпадении сравнивает переданный session provider/model с обоими полями, не только model id.\n\nБудущий Claude-артефакт не перезаписывает Codex evidence молча: он либо получает новый qualified\nartifact id/version, либо заменяет active artifact отдельным D-решением и повторным прогоном всех\nгейтов. Численное равенство между провайдерами не является критерием P0.1.\n\n## 6. Поверхность реализации и доказательства\n\n- Новый `task.token_probe` владеет immutable record validation и adapter protocol; отдельный\n  `task.token_probe_codex` владеет `CodexExecProbeAdapter`. Калибратор зависит только от neutral\n  interface и не импортирует raw Codex schema.\n- `calibrate-token-estimate.py` владеет bounded corpus, bracket-controls, fitter и записью generated artifacts;\n  provider выбирается явным CLI-аргументом, default для этого item — `codex`.\n- `task.token_estimate` остаётся offline/stdlib-only и знает только qualified provenance артефакта.\n- Юнит-тесты парсера: missing/duplicate terminal event, bad exit, missing/negative/non-int total,\n  cache не удваивает total, стабильная сборка команды и fake adapter для доказательства\n  независимости fitter от Codex.\n- Интеграционный smoke-probe запускает один Codex turn в пустом cwd; bounded corpus из восьми\n  samples восьми реальных файлов остаётся ручным acceptance шагом item'а, не CI. Log пинует\n  source hash/range/sample hash; полный source затем проверяется offline без provider calls.\n\nСохранность D117 неизменна: v1 snapshot и исходный Claude probe-log не правятся; Codex пишет новый\n`calibration-probe-log-v2.json`, где каждый record несёт qualified target и fingerprints.\n\n## 7. DoR-вердикт\n\n- Владелец не нужен: действующий провайдер и граница будущего Claude adapter заданы.\n- Общий контракт отделён от Codex raw schema, а downstream не связан с provider CLI.\n- Активный канал подтверждён официальной документацией и локальным probe; Claude-форма не\n  load-bearing и честно отложена.\n- Scope конечен: один neutral module, один active adapter, существующий fitter/оценщик и тесты.\n\n## Проверка (verification status)\n\n- RAG: официальный OpenAI Codex non-interactive contract ×1 + локальный Codex CLI/probe ×1 — OK;\n  repo-архитектура подтверждена чтением текущих `token_estimate.py`, калибратора и артефакта.\n- Непроверено → ПОВТОРНЫЙ ПРОХОД: raw usage и auth будущего Claude adapter — deferred, не\n  load-bearing для P0.1.\n- Обходки/[POSSIBLE-DEFECT]: —.\n",
+      "left_control_input_tokens": 13429,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 15236,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 13056,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 9114,
+      "sample_sha256": "e293e251cf7ed366a95f0914e0f06bc4ee4ab3946926e2904de4e870be85fa40",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/research/15-p0.1-provider-neutral-calibration-2026-08-08.md",
+      "true_tokens": 1807.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 4330,
+        "start": 0
+      },
+      "control_drift": 0,
+      "counts": {
+        "ascii_other": 673,
+        "ascii_word": 1142,
+        "cyrillic": 1246,
+        "dense_ascii": 0,
+        "other": 9
+      },
+      "full_source_sha256": "cad5ce41a68e7e10f8dcbc379b4ec719c755e690b2980a6602f6820a3c8de4ec",
+      "full_text": "# P0.1 — наблюдаемая форма token usage Codex exec\n\n**Дата проверки:** 2026-08-08  \n**Класс:** внешний current API/CLI contract + локальная проверка среды  \n**Потребитель:** `2026.08.07-PLAN-ECONOMY P0.1`\n\n## Внешний контракт\n\nОфициальная документация OpenAI для non-interactive Codex фиксирует:\n\n- `codex exec --json` пишет поток JSONL-событий;\n- terminal-событие имеет тип `turn.completed` и блок `usage`;\n- в документированном примере `usage` отдельно содержит `input_tokens`,\n  `cached_input_tokens`, `output_tokens` и `reasoning_output_tokens`;\n- `--ephemeral` не сохраняет rollout, `--ignore-user-config` и `--ignore-rules` исключают\n  пользовательскую конфигурацию и execpolicy, `--skip-git-repo-check` разрешает изолированный\n  временный cwd.\n\nИсточник: OpenAI, «Codex non-interactive mode», проверено 2026-08-08:\nhttps://learn.chatgpt.com/docs/non-interactive-mode. Confidence: **high** (официальная документация).\n\n## Локальная проверка\n\nВ пустом каталоге выполнен read-only probe локальным `codex-cli 0.147.0`:\n\n```text\nprintf '%s\\n' 'Return exactly OK. Do not use tools.' |\ncodex -C <empty-tmp-dir> -m gpt-5.6-terra -c 'model_reasoning_effort=\"low\"' \\\n  -a never -s read-only exec --ephemeral --ignore-user-config --ignore-rules \\\n  --skip-git-repo-check --json -\n```\n\nКоманда завершилась exit 0 и выдала ровно одно terminal-событие:\n\n```json\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":13388,\"cached_input_tokens\":9984,\"cache_write_input_tokens\":0,\"output_tokens\":5,\"reasoning_output_tokens\":0}}\n```\n\nНаблюдение подтверждает форму события и наличие cache breakdown. Оно не доказывает стабильность\nчисла между прогонами и не раскрывает effective model id в событии: адаптер обязан пиновать\nrequested model в команде и сохранять CLI/version/fingerprint как провенанс.\n\n## Вердикт для архитектуры\n\nОбщий fitter не должен читать JSONL Codex или знать имена его usage-полей. Провайдерский адаптер\nвозвращает нормализованную запись с `input_tokens_total`; Codex-адаптер маппит это поле только из\n`turn.completed.usage.input_tokens`. `cached_input_tokens` и `cache_write_input_tokens` сохраняются\nкак диагностические breakdown-поля и **никогда не прибавляются** к `input_tokens_total`: канонический\ntotal выбирает адаптер провайдера, а ядро не реконструирует его из частей. Парсер принимает ровно\nодно terminal-событие и падает на пропуске, дубликате, отрицательном/нецелом usage или ненулевом\nexit.\n\nClaude Code в этом решении не объявляется несовместимым и не удаляется: его будущий адаптер должен\nмаппить собственную семантику usage в ту же нормализованную запись. Числа разных\n`provider + model + protocol` не смешиваются в одном артефакте и не считаются взаимозаменяемыми.\n\n## Проверка (verification status)\n\n- RAG: официальная документация OpenAI ×1 + локальные `codex exec --help`, `codex --version` и\n  read-only probe ×1 — OK; confidence high.\n- Непроверено → ПОВТОРНЫЙ ПРОХОД: форма terminal usage будущего Claude-адаптера — отложена и не\n  является load-bearing фактом для Codex-first `2026.08.07-PLAN-ECONOMY P0.1`.\n- Обходки/[POSSIBLE-DEFECT]: —.\n",
+      "left_control_input_tokens": 13429,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 14302,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 4330,
+      "sample_sha256": "cad5ce41a68e7e10f8dcbc379b4ec719c755e690b2980a6602f6820a3c8de4ec",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/findings/18-codex-token-usage-2026-08-08.md",
+      "true_tokens": 873.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 9306,
+        "start": 0
+      },
+      "control_drift": 0,
+      "counts": {
+        "ascii_other": 2283,
+        "ascii_word": 3671,
+        "cyrillic": 1630,
+        "dense_ascii": 0,
+        "other": 35
+      },
+      "full_source_sha256": "40c3ac7f28647071947f4bc45b73060e89152cd4099edee6167594808ff54a20",
+      "full_text": "\"\"\"token_estimate — stdlib-only, детерминированная оценка числа токенов текста СВЕРХУ\n(2026.08.07-PLAN-ECONOMY D11/D14, канал калибровки — D92).\n\nФормула (D14): ``estimate(T) = ceil(Σ_c count_c(T)·r_c · safety_multiplier) +\nper_file_overhead_tokens`` — множитель безопасности масштабирует только посимвольную\nсумму (безопасная сторона растёт с текстом), `overhead` — фиксированная добавка за\nфайл (получена как intercept калибровочной регрессии, см. `calibrate-token-estimate.py`),\nпоэтому пустой текст даёт ровно `overhead` без искажения множителем.\n\nКлассы символов — закрытый набор из `research/02-p0-measurement-design.md` §2:\n`ascii_word` (буквы/цифры/`_` до U+0080) толще всего берёт словообразующий ASCII,\n`ascii_other` — прочий ASCII (пунктуация/пробелы/разметка), `cyrillic` — U+0400–U+04FF,\n`other` — всё остальное (эмодзи статусов протокола, CJK, псевдографика); `other` не\nсхлопывается в `ascii_other`, потому что эмодзи стоят в каждом item'е флота и их\nзанижение по ASCII-ставке было бы систематической ошибкой в самом частом месте.\n\nСтавки/overhead/множитель читаются ТОЛЬКО из замороженного артефакта калибровки\n(`configs/token-estimate-calibration.json` по умолчанию) — артефакт отсутствует,\nповреждён или несёт `bound.violations != 0` → исключение, молчаливый дефолт запрещён\n(P0.1 Implementation Rules).\"\"\"\nimport json\nimport math\nimport re\nimport sys\nfrom pathlib import Path\n\nCLASSES = (\"dense_ascii\", \"ascii_word\", \"ascii_other\", \"cyrillic\", \"other\")\nDENSE_ASCII_MIN_RUN = 32\nDENSE_ASCII_ALPHABET = \"0-9A-Za-z+/=\"\nDENSE_ASCII_RUN_RE = re.compile(r\"[0-9A-Za-z+/=]{%d,}\" % DENSE_ASCII_MIN_RUN)\nCLASSIFIER = {\n    \"version\": \"dense-ascii-v1\",\n    \"dense_ascii_alphabet\": DENSE_ASCII_ALPHABET,\n    \"dense_ascii_min_run\": DENSE_ASCII_MIN_RUN,\n}\n\n_ARTIFACT_REQUIRED_FIELDS = (\n    \"version\", \"calibrated_at\", \"calibration_target\", \"classifier\", \"corpus\", \"classes\",\n    \"per_file_overhead_tokens\", \"safety_multiplier\", \"bound\", \"tightness\",\n)\n\nDEFAULT_ARTIFACT_PATH = (\n    Path(__file__).resolve().parent.parent.parent / \"configs\" / \"token-estimate-calibration.json\"\n)\n\n\nclass TokenEstimateArtifactError(ValueError):\n    \"\"\"Артефакт калибровки недоступен/невалиден — `estimate_text` обязана падать, не молчать.\"\"\"\n\n\ndef classify_char(ch):\n    \"\"\"Закрытый набор классов `CLASSES` — единственная точка классификации символа.\"\"\"\n    cp = ord(ch)\n    if cp < 0x80:\n        return \"ascii_word\" if (ch.isalnum() or ch == \"_\") else \"ascii_other\"\n    if 0x0400 <= cp <= 0x04FF:\n        return \"cyrillic\"\n    return \"other\"\n\n\ndef count_classes(text):\n    \"\"\"Вектор посимвольных счётчиков по `CLASSES` — вход формулы D14 и калибровочной регрессии.\"\"\"\n    counts = {c: 0 for c in CLASSES}\n    dense_indexes = set()\n    for match in DENSE_ASCII_RUN_RE.finditer(text):\n        dense_indexes.update(range(match.start(), match.end()))\n    for index, ch in enumerate(text):\n        if index in dense_indexes:\n            counts[\"dense_ascii\"] += 1\n            continue\n        counts[classify_char(ch)] += 1\n    return counts\n\n\ndef dense_ascii_share(text):\n    \"\"\"Share of characters captured by the one canonical dense-ASCII classifier.\"\"\"\n    if not text:\n        return 0.0\n    return count_classes(text)[\"dense_ascii\"] / len(text)\n\n\ndef load_artifact(path=None):\n    \"\"\"Читает и валидирует артефакт калибровки; `TokenEstimateArtifactError` fail-closed.\"\"\"\n    path = Path(path) if path is not None else DEFAULT_ARTIFACT_PATH\n    try:\n        raw = path.read_text(encoding=\"utf-8\")\n    except OSError as exc:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки не читается: {path}: {exc}\") from exc\n    try:\n        data = json.loads(raw)\n    except json.JSONDecodeError as exc:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки — невалидный JSON: {path}: {exc}\") from exc\n\n    missing = [f for f in _ARTIFACT_REQUIRED_FIELDS if f not in data]\n    if missing:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: нет обязательных полей {missing}: {path}\")\n    if data[\"version\"] != \"2.0.0\":\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: ожидается active version '2.0.0', получено {data['version']!r}: {path}\")\n    target = data[\"calibration_target\"]\n    target_fields = (\"provider\", \"adapter\", \"requested_model_id\", \"probe_protocol_version\", \"usage_semantics\")\n    if not isinstance(target, dict) or any(not isinstance(target.get(field), str) or not target[field]\n                                           for field in target_fields):\n        raise TokenEstimateArtifactError(f\"артефакт калибровки: невалидный calibration_target: {path}\")\n    if data[\"classifier\"] != CLASSIFIER:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: classifier не совпадает с canonical dense classifier: {path}\")\n    missing_classes = [c for c in CLASSES if c not in data.get(\"classes\", {})]\n    if missing_classes:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: нет ставок для классов {missing_classes}: {path}\")\n    if not isinstance(data.get(\"bound\"), dict) or data[\"bound\"].get(\"violations\") != 0:\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: bound.violations={data['bound']['violations']} != 0 — \"\n            f\"артефакт с нарушениями границы использовать запрещено: {path}\")\n    for c in CLASSES:\n        if (not isinstance(data[\"classes\"][c], (int, float)) or isinstance(data[\"classes\"][c], bool)\n                or data[\"classes\"][c] < 0):\n            raise TokenEstimateArtifactError(\n                f\"артефакт калибровки: ставка класса «{c}» отрицательна — нарушает \"\n                f\"монотонность оценки: {path}\")\n    if (not isinstance(data[\"per_file_overhead_tokens\"], (int, float))\n            or not isinstance(data[\"safety_multiplier\"], (int, float))\n            or data[\"per_file_overhead_tokens\"] < 0 or data[\"safety_multiplier\"] < 0):\n        raise TokenEstimateArtifactError(\n            f\"артефакт калибровки: overhead/safety_multiplier обязаны быть ≥ 0: {path}\")\n    return data\n\n\ndef estimate_text(text, artifact=None, artifact_path=None, session_provider=None, session_model_id=None):\n    \"\"\"Оценка токенов текста СВЕРХУ по формуле D14. `artifact` — предзагруженный dict\n    (иначе читается `artifact_path`/дефолт через :func:`load_artifact`). `session_model_id`\n    опционален: не совпадает с `tokenizer.model_id` артефакта — печатает WARNING в stderr\n    и продолжает (Code Guidance P0.1: токенизатор менялся между поколениями до ~1.35×,\n    но это не повод блокировать оценку).\"\"\"\n    data = artifact if artifact is not None else load_artifact(artifact_path)\n    target = data[\"calibration_target\"]\n    if ((session_provider is not None and session_provider != target[\"provider\"])\n            or (session_model_id is not None and session_model_id != target[\"requested_model_id\"])):\n        print(\n            f\"WARNING: token_estimate: артефакт калиброван под \"\n            f\"«{target['provider']}/{target['requested_model_id']}», сессия — \"\n            f\"«{session_provider}/{session_model_id}»; оценка может быть неточной\",\n            file=sys.stderr,\n        )\n    counts = count_classes(text)\n    rates = data[\"classes\"]\n    raw = sum(counts[c] * rates[c] for c in CLASSES)\n    scaled = raw * data[\"safety_multiplier\"]\n    # Один ceil() на всю сумму (не только на `scaled`): overhead из калибровки — тоже\n    # float (intercept регрессии), обрезание его дробной части вниз нарушило бы\n    # «никогда не занижает»; итог всегда int, а не float.\n    return math.ceil(scaled + data[\"per_file_overhead_tokens\"])\n",
+      "left_control_input_tokens": 13429,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 15543,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13429,
+      "sample_bytes": 9306,
+      "sample_sha256": "40c3ac7f28647071947f4bc45b73060e89152cd4099edee6167594808ff54a20",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/token_estimate.py",
+      "true_tokens": 2114.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 4118,
+        "start": 0
+      },
+      "control_drift": 2,
+      "counts": {
+        "ascii_other": 1274,
+        "ascii_word": 2552,
+        "cyrillic": 109,
+        "dense_ascii": 74,
+        "other": 0
+      },
+      "full_source_sha256": "2b9856c54ebb4171a89e2b48d6ab5d1d48f99d3bc910d218eb261ac751fbfdcc",
+      "full_text": "\"\"\"Provider-neutral records and interface for token-calibration probes (P0.1).\"\"\"\nfrom dataclasses import dataclass\nfrom typing import Any, Mapping, Protocol\n\n\nRECORD_SCHEMA_VERSION = \"token-probe-record-v1\"\n\n\nclass ProbeRecordError(ValueError):\n    \"\"\"A provider returned a record that cannot enter the calibration core.\"\"\"\n\n\n@dataclass(frozen=True)\nclass ProbeRecord:\n    schema_version: str\n    provider_id: str\n    provider_adapter: str\n    requested_model_id: str\n    effective_model_id: str | None\n    protocol_version: str\n    input_tokens_total: int\n    usage_breakdown: Mapping[str, Any]\n    wrapper_sha256: str\n    environment_cli: str\n    environment_version: str\n    command_sha256: str\n\n    def __post_init__(self):\n        strings = {\n            \"schema_version\": self.schema_version,\n            \"provider.id\": self.provider_id,\n            \"provider.adapter\": self.provider_adapter,\n            \"model.requested_id\": self.requested_model_id,\n            \"protocol_version\": self.protocol_version,\n            \"wrapper_sha256\": self.wrapper_sha256,\n            \"environment.cli\": self.environment_cli,\n            \"environment.version\": self.environment_version,\n            \"environment.command_sha256\": self.command_sha256,\n        }\n        bad = [name for name, value in strings.items() if not isinstance(value, str) or not value]\n        if bad:\n            raise ProbeRecordError(f\"token probe: пустые/невалидные поля {bad}\")\n        if self.schema_version != RECORD_SCHEMA_VERSION:\n            raise ProbeRecordError(\n                f\"token probe: schema_version={self.schema_version!r}, ожидается {RECORD_SCHEMA_VERSION!r}\")\n        if (not isinstance(self.input_tokens_total, int) or isinstance(self.input_tokens_total, bool)\n                or self.input_tokens_total < 0):\n            raise ProbeRecordError(\"token probe: input_tokens_total обязан быть целым числом >= 0\")\n        if self.effective_model_id is not None and not isinstance(self.effective_model_id, str):\n            raise ProbeRecordError(\"token probe: model.effective_id обязан быть строкой или null\")\n        if not isinstance(self.usage_breakdown, Mapping):\n            raise ProbeRecordError(\"token probe: usage_breakdown обязан быть объектом\")\n\n    @property\n    def target_identity(self):\n        \"\"\"The fields that must never be mixed inside one calibration artifact.\"\"\"\n        return (\n            self.provider_id, self.provider_adapter, self.requested_model_id,\n            self.protocol_version, self.environment_cli, self.environment_version,\n            self.wrapper_sha256, self.command_sha256,\n        )\n\n    def as_dict(self):\n        return {\n            \"schema_version\": self.schema_version,\n            \"provider\": {\"id\": self.provider_id, \"adapter\": self.provider_adapter},\n            \"model\": {\"requested_id\": self.requested_model_id,\n                      \"effective_id\": self.effective_model_id},\n            \"protocol_version\": self.protocol_version,\n            \"input_tokens_total\": self.input_tokens_total,\n            \"usage_breakdown\": dict(self.usage_breakdown),\n            \"wrapper_sha256\": self.wrapper_sha256,\n            \"environment\": {\"cli\": self.environment_cli, \"version\": self.environment_version,\n                            \"command_sha256\": self.command_sha256},\n        }\n\n\nclass ProbeAdapter(Protocol):\n    \"\"\"A provider edge; the calibration core deliberately sees only this interface.\"\"\"\n\n    def probe(self, payload: str) -> ProbeRecord:\n        \"\"\"Return one validated provider-neutral record for ``payload``.\"\"\"\n\n\ndef ensure_same_target(records):\n    \"\"\"Reject records from different providers/models/protocols/fingerprints.\"\"\"\n    if not records:\n        raise ProbeRecordError(\"token probe: нет records для проверки target\")\n    identity = records[0].target_identity\n    if any(record.target_identity != identity for record in records[1:]):\n        raise ProbeRecordError(\"token probe: смешаны provider/model/protocol/fingerprint targets\")\n    return identity\n",
+      "left_control_input_tokens": 13429,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 14247,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13427,
+      "sample_bytes": 4118,
+      "sample_sha256": "2b9856c54ebb4171a89e2b48d6ab5d1d48f99d3bc910d218eb261ac751fbfdcc",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/token_probe.py",
+      "true_tokens": 819.0,
+      "whole_file": true
+    },
+    {
+      "byte_range": {
+        "end_exclusive": 7114,
+        "start": 0
+      },
+      "control_drift": 2,
+      "counts": {
+        "ascii_other": 2351,
+        "ascii_word": 4625,
+        "cyrillic": 52,
+        "dense_ascii": 0,
+        "other": 9
+      },
+      "full_source_sha256": "430294d4b4b5a1f73747e65d7a02006ca9223072ad727f6ab5f391a4a0b9ccfb",
+      "full_text": "\"\"\"unittest для task.token_estimate — оценщик токенов СВЕРХУ (P0.1, D11/D14).\nЗапуск: cd packages/task && python3 -m unittest tests.test_token_estimate -v\"\"\"\nimport json\nimport math\nimport tempfile\nimport unittest\nfrom pathlib import Path\nimport sys\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1] / \"lib\"))\n\nfrom task.token_estimate import (  # noqa: E402\n    CLASSIFIER, CLASSES, TokenEstimateArtifactError, classify_char, count_classes,\n    estimate_text, load_artifact,\n)\n\nFIXTURE_ARTIFACT = {\n    \"version\": \"2.0.0\",\n    \"calibrated_at\": \"2026-08-07T00:00:00Z\",\n    \"calibration_target\": {\"provider\": \"codex\", \"adapter\": \"codex-exec-jsonl-v1\",\n                           \"requested_model_id\": \"gpt-5.6-terra\",\n                           \"probe_protocol_version\": \"differential-input-total-v2\",\n                           \"usage_semantics\": \"provider-reported-input-total-v1\"},\n    \"classifier\": CLASSIFIER,\n    \"corpus\": {\"files\": 3, \"total_bytes\": 100, \"sha256\": \"0\" * 64},\n    \"classes\": {\"dense_ascii\": 0.9, \"ascii_word\": 0.3, \"ascii_other\": 0.4,\n                \"cyrillic\": 0.6, \"other\": 2.0},\n    \"per_file_overhead_tokens\": 12,\n    \"safety_multiplier\": 1.1,\n    \"bound\": {\"violations\": 0, \"max_true_over_estimate\": 0.97},\n    \"tightness\": {\"p50\": 1.05, \"p95\": 1.2, \"max\": 1.35},\n}\n\n\nclass TmpArtifactTestCase(unittest.TestCase):\n    def setUp(self):\n        self._tmp = tempfile.TemporaryDirectory()\n        self.artifact_path = Path(self._tmp.name) / \"calibration.json\"\n\n    def tearDown(self):\n        self._tmp.cleanup()\n\n    def write_artifact(self, data):\n        self.artifact_path.write_text(json.dumps(data), encoding=\"utf-8\")\n\n\nclass TestClassifyAndCount(unittest.TestCase):\n    def test_classify_char_covers_all_classes(self):\n        self.assertEqual(classify_char(\"a\"), \"ascii_word\")\n        self.assertEqual(classify_char(\"9\"), \"ascii_word\")\n        self.assertEqual(classify_char(\"_\"), \"ascii_word\")\n        self.assertEqual(classify_char(\" \"), \"ascii_other\")\n        self.assertEqual(classify_char(\".\"), \"ascii_other\")\n        self.assertEqual(classify_char(\"б\"), \"cyrillic\")\n        self.assertEqual(classify_char(\"Я\"), \"cyrillic\")\n        self.assertEqual(classify_char(\"🟢\"), \"other\")\n        self.assertEqual(classify_char(\"中\"), \"other\")\n\n    def test_count_classes_known_vector(self):\n        counts = count_classes(\"aA1_ .,б🟢\")\n        self.assertEqual(counts, {\n            \"dense_ascii\": 0,\n            \"ascii_word\": 4,   # a A 1 _\n            \"ascii_other\": 3,  # space . ,\n            \"cyrillic\": 1,     # б\n            \"other\": 1,        # 🟢\n        })\n\n    def test_count_classes_closed_set(self):\n        self.assertEqual(set(count_classes(\"\")), set(CLASSES))\n\n\nclass TestLoadArtifact(TmpArtifactTestCase):\n    def test_missing_file_raises(self):\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_malformed_json_raises(self):\n        self.artifact_path.write_text(\"{not valid json\", encoding=\"utf-8\")\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_missing_required_field_raises(self):\n        data = dict(FIXTURE_ARTIFACT)\n        del data[\"safety_multiplier\"]\n        self.write_artifact(data)\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_violations_nonzero_raises(self):\n        data = json.loads(json.dumps(FIXTURE_ARTIFACT))\n        data[\"bound\"] = {\"violations\": 1, \"max_true_over_estimate\": 1.4}\n        self.write_artifact(data)\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_negative_rate_raises(self):\n        data = json.loads(json.dumps(FIXTURE_ARTIFACT))\n        data[\"classes\"][\"other\"] = -0.1\n        self.write_artifact(data)\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_valid_artifact_loads(self):\n        self.write_artifact(FIXTURE_ARTIFACT)\n        data = load_artifact(self.artifact_path)\n        self.assertEqual(data[\"calibration_target\"][\"requested_model_id\"], \"gpt-5.6-terra\")\n\n    def test_v1_is_rejected(self):\n        data = json.loads(json.dumps(FIXTURE_ARTIFACT))\n        data[\"version\"] = \"1.0.0\"\n        self.write_artifact(data)\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n    def test_classifier_mismatch_is_rejected(self):\n        data = json.loads(json.dumps(FIXTURE_ARTIFACT))\n        data[\"classifier\"][\"dense_ascii_min_run\"] = 33\n        self.write_artifact(data)\n        with self.assertRaises(TokenEstimateArtifactError):\n            load_artifact(self.artifact_path)\n\n\nclass TestEstimateText(unittest.TestCase):\n    def test_missing_artifact_is_exception_not_default(self):\n        with self.assertRaises(TokenEstimateArtifactError):\n            estimate_text(\"hello\", artifact_path=Path(\"/nonexistent/path/artifact.json\"))\n\n    def test_empty_input_gives_overhead_exactly(self):\n        self.assertEqual(estimate_text(\"\", artifact=FIXTURE_ARTIFACT),\n                          FIXTURE_ARTIFACT[\"per_file_overhead_tokens\"])\n\n    def test_known_short_vector_gives_expected_number(self):\n        text = \"aA1_ .,б🟢\"  # ascii_word=4, ascii_other=3, cyrillic=1, other=1\n        rates = FIXTURE_ARTIFACT[\"classes\"]\n        raw = 4 * rates[\"ascii_word\"] + 3 * rates[\"ascii_other\"] + 1 * rates[\"cyrillic\"] + 1 * rates[\"other\"]\n        expected = math.ceil(raw * FIXTURE_ARTIFACT[\"safety_multiplier\"]) + FIXTURE_ARTIFACT[\"per_file_overhead_tokens\"]\n        self.assertEqual(estimate_text(text, artifact=FIXTURE_ARTIFACT), expected)\n\n    def test_monotonic_on_text_growth(self):\n        base = \"\"\n        prev = estimate_text(base, artifact=FIXTURE_ARTIFACT)\n        for ch in \"The план 🟢 continues по шагам with 123 и эмодзи 🔴🟡.\":\n            base += ch\n            cur = estimate_text(base, artifact=FIXTURE_ARTIFACT)\n            self.assertGreaterEqual(cur, prev, f\"estimate decreased adding {ch!r}\")\n            prev = cur\n\n    def test_never_underestimates_zero_rate_edge(self):\n        data = json.loads(json.dumps(FIXTURE_ARTIFACT))\n        data[\"classes\"] = {c: 0.0 for c in CLASSES}\n        data[\"per_file_overhead_tokens\"] = 0\n        data[\"safety_multiplier\"] = 1.0\n        self.assertEqual(estimate_text(\"anything at all\", artifact=data), 0)\n\n    def test_model_mismatch_warns_but_does_not_raise(self):\n        result = estimate_text(\"hi\", artifact=FIXTURE_ARTIFACT,\n                               session_provider=\"codex\", session_model_id=\"other\")\n        self.assertIsInstance(result, int)\n\n    def test_dense_ascii_boundary_and_partition(self):\n        self.assertEqual(count_classes(\"a\" * 31)[\"dense_ascii\"], 0)\n        counts = count_classes(\"a\" * 32 + \"!\")\n        self.assertEqual(counts[\"dense_ascii\"], 32)\n        self.assertEqual(sum(counts.values()), 33)\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+      "left_control_input_tokens": 13429,
+      "probe": {
+        "environment": {
+          "cli": "codex-cli",
+          "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+          "version": "codex-cli 0.147.0"
+        },
+        "input_tokens_total": 15212,
+        "model": {
+          "effective_id": null,
+          "requested_id": "gpt-5.6-terra"
+        },
+        "protocol_version": "differential-input-total-v2",
+        "provider": {
+          "adapter": "codex-exec-jsonl-v1",
+          "id": "codex"
+        },
+        "schema_version": "token-probe-record-v1",
+        "usage_breakdown": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 13056,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+      },
+      "reject_reason": null,
+      "rejected": false,
+      "right_control_input_tokens": 13427,
+      "sample_bytes": 7114,
+      "sample_sha256": "430294d4b4b5a1f73747e65d7a02006ca9223072ad727f6ab5f391a4a0b9ccfb",
+      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/tests/test_token_estimate.py",
+      "true_tokens": 1784.0,
+      "whole_file": true
+    }
+  ],
+  "controls": [
+    {
+      "environment": {
+        "cli": "codex-cli",
+        "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+        "version": "codex-cli 0.147.0"
+      },
+      "input_tokens_total": 13425,
+      "model": {
+        "effective_id": null,
+        "requested_id": "gpt-5.6-terra"
+      },
+      "protocol_version": "differential-input-total-v2",
+      "provider": {
+        "adapter": "codex-exec-jsonl-v1",
+        "id": "codex"
+      },
+      "schema_version": "token-probe-record-v1",
+      "usage_breakdown": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 13056,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0
+      },
+      "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+    },
+    {
+      "environment": {
+        "cli": "codex-cli",
+        "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+        "version": "codex-cli 0.147.0"
+      },
+      "input_tokens_total": 13429,
+      "model": {
+        "effective_id": null,
+        "requested_id": "gpt-5.6-terra"
+      },
+      "protocol_version": "differential-input-total-v2",
+      "provider": {
+        "adapter": "codex-exec-jsonl-v1",
+        "id": "codex"
+      },
+      "schema_version": "token-probe-record-v1",
+      "usage_breakdown": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 12032,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0
+      },
+      "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+    },
+    {
+      "environment": {
+        "cli": "codex-cli",
+        "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+        "version": "codex-cli 0.147.0"
+      },
+      "input_tokens_total": 13429,
+      "model": {
+        "effective_id": null,
+        "requested_id": "gpt-5.6-terra"
+      },
+      "protocol_version": "differential-input-total-v2",
+      "provider": {
+        "adapter": "codex-exec-jsonl-v1",
+        "id": "codex"
+      },
+      "schema_version": "token-probe-record-v1",
+      "usage_breakdown": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 9984,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0
+      },
+      "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+    },
+    {
+      "environment": {
+        "cli": "codex-cli",
+        "command_sha256": "6111621f82d3c9d9a9b9ca6ce4049b618af57e95c26689cb8044532a24d2858a",
+        "version": "codex-cli 0.147.0"
+      },
+      "input_tokens_total": 13427,
+      "model": {
+        "effective_id": null,
+        "requested_id": "gpt-5.6-terra"
+      },
+      "protocol_version": "differential-input-total-v2",
+      "provider": {
+        "adapter": "codex-exec-jsonl-v1",
+        "id": "codex"
+      },
+      "schema_version": "token-probe-record-v1",
+      "usage_breakdown": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 12032,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0
+      },
+      "wrapper_sha256": "ea3629141b0b0efd3e1b143e76aaa01a54ae9db44c9d7613e9311dad71d0a9d0"
+    }
+  ],
+  "delta_tokens": 50,
+  "generated_at": "2026-08-08T05:23:05Z",
+  "probe_protocol_version": "differential-input-total-v2",
+  "provider_calls": 12,
+  "rejected_samples": [],
+  "schema_version": "calibration-probe-log-v2"
+}

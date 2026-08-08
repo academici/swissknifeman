@@ -38,7 +38,7 @@ conflict: one exact-discovery includes `task.plan_gates`; no second registry is 
 
 **Remaining:** implement P4.4, then P4.5–P6.
 
-**Sources of truth:** `phases/P4/P4.4.md` · `decisions/D138-lint-disposition-discovery.md` ·
+**Sources of truth:** `phases/P4/P4.4.md` · `decisions/D138-lint-disposition-discovery.md` · `decisions/D139-return-loop-evidence-carrier.md` ·
 `root/contracts/return-loop-v1.spec.json` · `packages/task/configs/lint-check-dispositions.json`.
 
 **Open risks:** runtime не публикует effort; session route is self-attested. D138 requires

@@ -252,3 +252,7 @@ Task Contract та же root-сессия продолжает P4.1; новая 
 это снимает нужду в отдельном owner gate по спору ownership, но не разрешает ослабить fail-closed
 реестр P3.6: D138 расширяет единственный exact-discovery на `task.plan_gates`, а не добавляет
 второй ручной список и не переносит проверки за объявленную границу item'а.
+
+Тот же разбор обнаружил, что sealed `journal.jsonl` не выражает qualification и owner
+authorization для будущих P6 command records. D139 использует уже разрешённую additive
+item-scoped finding, поэтому история журнала и его схема остаются неизменными.

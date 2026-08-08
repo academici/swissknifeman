@@ -26,6 +26,11 @@ class PlanReturnsTests(unittest.TestCase):
         self.plan = Path(self.tmp.name) / "plan-v2"
         source = Path(__file__).parent / "data" / "plan-v2"
         shutil.copytree(source, self.plan)
+        # P4.6 promotes the shared fixture to the classified acceptance path.
+        # These reducer-unit cases retain their own provisional baseline.
+        (self.plan / "findings/P1.1-fixture.md").write_text(
+            "---\nitem: P1.1\ndate: 2026-07-02\n---\n\n# Fixture finding\n",
+            encoding="utf-8")
         rows = [entry("2026-07-02T00:00:00Z", "plan-run", "escalated", friction=("escalation",)),
                 entry("2026-07-02T00:01:00Z", "plan-design", "in-progress", note="rewritten", attempt=2),
                 entry("2026-07-02T00:02:00Z", "plan-run", "closed-green"),

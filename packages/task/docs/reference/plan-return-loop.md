@@ -24,3 +24,15 @@ return-loop-v1`, `qualification: new|repeat|unqualifiable`, and (for grouped
 returns) `fingerprint_digest` plus `occurrences`. An over-cap return additionally
 needs `owner_authorization: D#` naming an existing decision. The evidence carrier
 is validated but P4.4 does not turn the new check on for ordinary plans.
+
+## Return-judgement v1
+
+An item-scoped finding may add `return_judgement:` with one compact JSON object conforming to
+`configs/return-judgement-v1.schema.json`. The reducer scans findings in canonical path order,
+uses the first schema-valid record matching both subject and fingerprint digest, and ignores a
+record missing required provenance. A matching self-judgement is rejected and does not permit a
+later record to become a tie-break or retry.
+
+The reducer never calls a model. `JUSTIFIED` and `INSUFFICIENT_EVIDENCE` only preserve evidence;
+`AVOIDABLE`, `OUT_OF_SCOPE`, and `MALFORMED` can require an earlier stop. The durable counter,
+fingerprint namespace, and existing owner gate are monotone and cannot be weakened by any verdict.

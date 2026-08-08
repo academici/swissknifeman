@@ -20,9 +20,12 @@ _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-au
 _NEGATIVE_RESULTS = frozenset(("blocked", "escalated", "audit-red"))
 _SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-fingerprint-v1.schema.json"
 _LOOP_SPEC = Path(__file__).resolve().parents[2] / "configs" / "return-loop-v1.spec.json"
+_JUDGEMENT_SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-judgement-v1.schema.json"
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
 _DECISION = re.compile(r"\bD[1-9][0-9]*\b")
 RETURN_LOOP_GATE = "return-loop-v1"
+_JUDGEMENT_FIELD = "return_judgement"
+_STRICTER_VERDICTS = frozenset(("AVOIDABLE", "OUT_OF_SCOPE", "MALFORMED"))
 
 
 def canonical_json(value) -> str:
@@ -46,6 +49,13 @@ def _loop_spec() -> dict:
         return value
     except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
         raise ReturnError(f"спецификация return-loop v1 не читается: {_LOOP_SPEC}") from exc
+
+
+def _judgement_schema() -> dict:
+    try:
+        return json.loads(_JUDGEMENT_SCHEMA.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ReturnError(f"схема return-judgement v1 не читается: {_JUDGEMENT_SCHEMA}") from exc
 
 
 def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
@@ -136,6 +146,66 @@ def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
 def validate(record: dict) -> None:
     schema = _schema()
     _validate(record, schema, schema)
+
+
+def validate_judgement(record: dict) -> None:
+    """Validate a stored judgement with the lifted frozen schema."""
+    schema = _judgement_schema()
+    _validate(record, schema, schema)
+
+
+def decide(*, verdict=None, occurrences=1, cap=None, namespace="provisional",
+           fingerprint_digest=None) -> dict:
+    """Apply the closed monotone judgement policy without invoking a model.
+
+    The judgement is evidence only.  A strict verdict may stop work sooner, but
+    it cannot mutate identity, reset the durable counter, or remove an owner
+    gate that the return-loop ladder already required.
+    """
+    spec = _loop_spec()
+    cap = spec["cap"]["default"] if cap is None else cap
+    if not isinstance(occurrences, int) or isinstance(occurrences, bool) or occurrences < 0:
+        raise ReturnError("occurrences должен быть неотрицательным int")
+    if not isinstance(cap, int) or isinstance(cap, bool) or cap < 1:
+        raise ReturnError("cap должен быть положительным int")
+    if namespace not in ("classified", "provisional", "ungroupable"):
+        raise ReturnError("namespace judgement policy неизвестен")
+    enum = _judgement_schema()["properties"]["verdict"]["enum"]
+    if verdict is not None and verdict not in enum:
+        raise ReturnError("verdict вне закрытого enum return-judgement v1")
+    over_cap = occurrences > cap
+    strict_stop = verdict in _STRICTER_VERDICTS
+    return {
+        "occurrences": occurrences,
+        "cap": cap,
+        "namespace": namespace,
+        "fingerprint_digest": fingerprint_digest,
+        "continue_allowed": not (over_cap or strict_stop),
+        "stop_required": over_cap or strict_stop,
+        "owner_gate_required": over_cap,
+    }
+
+
+def at_least_as_strict(candidate: dict, baseline: dict) -> bool:
+    """Return whether a verdict outcome preserves every frozen monotonic axis."""
+    required = ("occurrences", "cap", "namespace", "fingerprint_digest",
+                "continue_allowed", "stop_required", "owner_gate_required")
+    if not all(key in candidate and key in baseline for key in required):
+        return False
+    if candidate["occurrences"] < baseline["occurrences"]:
+        return False
+    if candidate["cap"] != baseline["cap"]:
+        return False
+    if (candidate["namespace"], candidate["fingerprint_digest"]) != (
+            baseline["namespace"], baseline["fingerprint_digest"]):
+        return False
+    if not baseline["continue_allowed"] and candidate["continue_allowed"]:
+        return False
+    if baseline["stop_required"] and not candidate["stop_required"]:
+        return False
+    if baseline["owner_gate_required"] and not candidate["owner_gate_required"]:
+        return False
+    return True
 
 
 def _timestamp(entry: dict, ordinal: int) -> tuple:
@@ -260,6 +330,34 @@ def _evidence_fields(plan_dir: Path) -> list[dict]:
     return result
 
 
+def _first_judgement(plan_dir: Path, subject_id: str, fingerprint_digest: str) -> dict | None:
+    """Read the first schema-valid matching record from item-scoped findings.
+
+    Findings are existing immutable history carriers.  Their additive compact
+    JSON field is data, never executable text.  A self-judgement is the first
+    matching record but is rejected rather than skipped for a later retry.
+    """
+    findings = plan_dir / "findings"
+    if not findings.is_dir():
+        return None
+    for path in sorted(findings.rglob("*.md")):
+        fields = _frontmatter(path)
+        raw = fields.get(_JUDGEMENT_FIELD)
+        if not isinstance(raw, str):
+            continue
+        try:
+            record = json.loads(raw)
+            validate_judgement(record)
+        except (json.JSONDecodeError, ReturnError):
+            continue
+        if record["subject_id"] != subject_id or record["fingerprint_digest"] != fingerprint_digest:
+            continue
+        if record["reviewer_actor"] == record["executor_actor"]:
+            return None
+        return record
+    return None
+
+
 def return_loop_evidence(plan_dir) -> list[dict]:
     """Expose D139 evidence records for the opt-in lint checks and tests."""
     return _evidence_fields(Path(plan_dir))
@@ -287,14 +385,15 @@ def evidence_errors(fields: dict) -> list[str]:
     return [] if occurrences >= 1 else ["new/repeat требует положительное occurrences"]
 
 
-def _owner_packet(record: dict, occurrences: int, cap: int, history: list[dict]) -> dict:
+def _owner_packet(record: dict, occurrences: int, cap: int, history: list[dict],
+                  judgement: dict | None = None) -> dict:
     return {
         "fingerprint_tuple": record["tuple"],
         "fingerprint_digest": record["digest"],
         "occurrences": occurrences,
         "cap": cap,
         "history": history,
-        "judgements": [],
+        "judgements": [judgement] if judgement is not None else [],
         "resolutions_tried": [],
     }
 
@@ -329,8 +428,19 @@ def return_loop_gates(plan_dir) -> list[dict]:
                 "action": action, "blocks": blocks_gate,
                 "review_required": action in ("isolated-review", "owner-gate"),
                 "reason_code": reason}
+        judgement = _first_judgement(plan_dir, record["tuple"]["subject"], digest)
+        policy = decide(verdict=judgement["verdict"] if judgement else None,
+                        occurrences=occurrences, cap=cap, namespace=record["namespace"],
+                        fingerprint_digest=digest)
+        gate.update(policy)
+        if judgement is not None:
+            gate["judgement"] = judgement
+            if policy["stop_required"] and not gate["blocks"]:
+                gate.update({"action": "judgement-stop", "blocks": True,
+                             "review_required": True,
+                             "reason_code": "RETURN_JUDGEMENT_STOP_REQUIRED"})
         if action == "owner-gate":
-            gate["owner_packet"] = _owner_packet(record, occurrences, cap, history)
+            gate["owner_packet"] = _owner_packet(record, occurrences, cap, history, judgement)
         gates.append(gate)
     for record in projected["fingerprints"]:
         if record["namespace"] == "ungroupable":
@@ -441,14 +551,18 @@ def measure_repository(repo_root, *, through: str = "2026-08-07T09:38:14Z") -> d
         all_rows.append((rows, fingerprints))
     fingerprints = [record for _rows, values in all_rows for record in values]
     total = len(fingerprints)
-    metrics = {"provisional_share": sum(record["namespace"] == "provisional" for record in fingerprints) / total if total else 0,
-               "ungroupable_share": sum(record["namespace"] == "ungroupable" for record in fingerprints) / total if total else 0,
-               "schema_invalid_rows": sum(sum(bool(row["errors"]) for row in rows) for rows, _ in all_rows),
-               "non_item_subjects": sum(sum(not _ITEM.fullmatch(row["entry"].get("item_id", "")) for row in rows) for rows, _ in all_rows)}
+    record_metrics = {"provisional_share": sum(record["namespace"] == "provisional" for record in fingerprints) / total if total else 0,
+                      "ungroupable_share": sum(record["namespace"] == "ungroupable" for record in fingerprints) / total if total else 0,
+                      "schema_invalid_rows": sum(sum(bool(row["errors"]) for row in rows) for rows, _ in all_rows),
+                      "non_item_subjects": sum(sum(not _ITEM.fullmatch(row["entry"].get("item_id", "")) for row in rows) for rows, _ in all_rows)}
+    metrics = {"classified_share": sum(record["namespace"] == "classified" for record in fingerprints) / total if total else 0,
+               **record_metrics}
     for record in fingerprints:
-        record["metrics"] = metrics
+        record["metrics"] = record_metrics
         validate(record)
     counts = Counter(record["digest"] for record in fingerprints if record["namespace"] != "ungroupable")
     return {"journals": len(journals), "entries": sum(len(rows) for rows, _ in all_rows),
             "return_events": total, "metrics": metrics, "fingerprints": fingerprints,
-            "counts": dict(sorted(counts.items())), "over_cap_subjects": []}
+            "counts": dict(sorted(counts.items())),
+            "over_cap_subjects": sorted(digest for digest, count in counts.items()
+                                        if count > _loop_spec()["cap"]["default"])}

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: return-judgement v1 теперь детерминированно потребляется return-loop.** Редьюсер
+  принимает только первую schema-valid независимую запись с полным provenance, сохраняет
+  монотонность всех пяти вердиктов и воспроизводит `classified` owner-gate на fixture
+  (`2026.08.07-PLAN-ECONOMY` P4.6).
+
 - **`task`: добавлен return-loop v1 для возвратов plan-protocol.** `returns --gate`
   применяет lifted лимит, печатает hard-stop owner packet над durable history и даёт
   выключенные по умолчанию opt-in lint-проверки квалификации/owner authorization

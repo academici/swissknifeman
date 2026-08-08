@@ -55,8 +55,8 @@
       "order": 7,
       "source": "plans/2026.08.07-PLAN-ECONOMY/plan.md",
       "selector": "sections:2,5:selected-decisions,7",
-      "source_sha256": "344dad109078c565801fa201767545e036d119d064eceda4401afddc25adb13c",
-      "selected_sha256": "64fe3304ca8aec0fd5d58e5dd6b2145dce00c9caa66ad5813f5cb19a8650563e",
+      "source_sha256": "e2f4e04456ee880181d23f5958050fb0bc1c690e3731289038486bd7b36c0bbc",
+      "selected_sha256": "d695bacc5c9c3372556c35d526c5c3be65ff6d97f9549801e933099df9585b9e",
       "fragment": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-07.md"
     }
   ]

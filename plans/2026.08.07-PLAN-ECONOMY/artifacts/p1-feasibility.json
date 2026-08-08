@@ -1,7 +1,8 @@
 {
   "schema": "p1-feasibility-v1",
   "generated_by": "artifacts/p1-path-reconstruction/generate.py",
-  "generator_sha256": "8c2b3b5c8dbb8837c916da179ff15c612bbe76a16e2a24317ad1c505441e191d",
+  "generator_sha256": "2b7280bb6c7ff80049dbcac9456328ca924f8b1ada9ceae5480af8f87ae793b4",
+  "source_tree": "b82aa8ee",
   "unit": {
     "calibration_id": "token-estimate-calibration@2.0.0",
     "provider": "codex",
@@ -353,8 +354,8 @@
             {
               "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-07.md",
               "slot": "item-input",
-              "bytes": 22716,
-              "tokens": 5419,
+              "bytes": 22508,
+              "tokens": 5399,
               "passes_single_read": true
             },
             {
@@ -366,14 +367,14 @@
             }
           ],
           "slots": {
-            "item-input": 14059,
+            "item-input": 14039,
             "item-inputs-manifest": 1377,
             "item-spec": 4437,
             "item-state": 518,
             "phase-context": 1170,
             "plan-core": 4100
           },
-          "total": 25661,
+          "total": 25641,
           "threshold": 100000,
           "passes": true,
           "unresolved_inputs": []
@@ -590,7 +591,7 @@
   ],
   "sample_aggregate": {
     "legacy_v1_tokens_lower_bound": 763262,
-    "reconstructed_v2_tokens": 137369,
+    "reconstructed_v2_tokens": 137349,
     "scope_escape_answer": "No mandatory declared input was excluded; explicit slices remain in the measured bundle. This sample does not prove the whole-plan closed-graph aggregate."
   }
 }

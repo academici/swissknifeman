@@ -12,6 +12,7 @@ import ast
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from task import plan_lint, plan_weight, token_estimate  # noqa: E402
 
 PLAN_ROOT = REPO / "plans/2026.08.07-PLAN-ECONOMY"
 OUT = Path(__file__).resolve().parent
+SOURCE_TREE = "b82aa8ee"
 SAMPLES = (
     {
         "class": "large",
@@ -55,8 +57,24 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def source_bytes(path: Path) -> bytes:
+    relpath = path.resolve().relative_to(REPO).as_posix()
+    completed = subprocess.run(
+        ["git", "show", f"{SOURCE_TREE}:{relpath}"],
+        cwd=REPO,
+        check=False,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        raise ValueError(
+            f"source path is absent from pinned tree {SOURCE_TREE}: {relpath}: "
+            f"{completed.stderr.decode('utf-8', errors='replace').strip()}"
+        )
+    return completed.stdout
+
+
 def read(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
+    return source_bytes(path).decode("utf-8", errors="replace")
 
 
 def write(path: Path, text: str) -> None:
@@ -301,6 +319,7 @@ def main() -> None:
         "schema": "p1-feasibility-v1",
         "generated_by": "artifacts/p1-path-reconstruction/generate.py",
         "generator_sha256": generator_hash,
+        "source_tree": SOURCE_TREE,
         "unit": {
             "calibration_id": f"token-estimate-calibration@{artifact['version']}",
             "provider": artifact["calibration_target"]["provider"],
@@ -354,7 +373,7 @@ def main() -> None:
                 suffix = input_["path"].suffix or ".txt"
                 fragment = item_out / f"04-input-{order:02d}{suffix}"
                 write(fragment, input_["text"])
-                source_raw = input_["path"].read_bytes()
+                source_raw = source_bytes(input_["path"])
                 selected_raw = fragment.read_bytes()
                 bundle_inputs.append({
                     "order": order,

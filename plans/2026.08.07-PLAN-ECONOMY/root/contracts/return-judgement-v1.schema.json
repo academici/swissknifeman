@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swissknifeman.local/schemas/return-judgement-v1.schema.json",
+  "title": "Return Judgement Record v1",
+  "description": "Immutable evidence record emitted by one isolated return-judgement review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "judgement_id",
+    "return_event_id",
+    "ts",
+    "subject_id",
+    "fingerprint_digest",
+    "model_id",
+    "model_version",
+    "model_effort",
+    "rubric_sha256",
+    "input_digest",
+    "capsule_digest",
+    "evidence_ids",
+    "verdict",
+    "parser_version",
+    "policy_version",
+    "root_session_id",
+    "root_run_id",
+    "executor_actor",
+    "reviewer_actor",
+    "review_route",
+    "return_control_to"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "return-judgement.v1"
+    },
+    "judgement_id": {
+      "type": "string",
+      "pattern": "^RJ-[A-Za-z0-9._-]+$"
+    },
+    "return_event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject_id": {
+      "type": "string",
+      "pattern": "^P[0-9]+\\.[0-9]+$"
+    },
+    "fingerprint_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_effort": {
+      "enum": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "rubric_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "input_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "capsule_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "verdict": {
+      "enum": [
+        "JUSTIFIED",
+        "AVOIDABLE",
+        "INSUFFICIENT_EVIDENCE",
+        "OUT_OF_SCOPE",
+        "MALFORMED"
+      ]
+    },
+    "parser_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root_session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executor_actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewer_actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_class", "effort", "model"],
+      "properties": {
+        "model_class": {
+          "enum": ["economy", "implementation", "frontier"]
+        },
+        "effort": {
+          "enum": ["low", "medium", "high", "xhigh", "max"]
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "return_control_to": {
+      "const": "root"
+    },
+    "confidence_band": {
+      "description": "Non-authoritative evidence; policy must ignore this value.",
+      "enum": ["LOW", "MEDIUM", "HIGH"]
+    },
+    "seam_candidate": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["carrier_type", "carrier_id", "declaration_schema_version"],
+          "properties": {
+            "carrier_type": {
+              "enum": ["decision", "finding"]
+            },
+            "carrier_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "declaration_schema_version": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "notes": {
+      "description": "Optional non-authoritative prose.",
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "examples": [
+    {
+      "schema_version": "return-judgement.v1",
+      "judgement_id": "RJ-P4.5-0001",
+      "return_event_id": "RET-P4.5-0002",
+      "ts": "2026-08-08T12:00:00Z",
+      "subject_id": "P4.5",
+      "fingerprint_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "model_id": "gpt-5.6-sol",
+      "model_version": "2026-08-08",
+      "model_effort": "high",
+      "rubric_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "input_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+      "capsule_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+      "evidence_ids": ["validation:P4.5:1", "finding:R12"],
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "parser_version": "return-judgement-parser.v1",
+      "policy_version": "return-loop.v1",
+      "root_session_id": "session-root-001",
+      "root_run_id": "run-root-001",
+      "executor_actor": "executor:gpt-5.6-terra",
+      "reviewer_actor": "reviewer:gpt-5.6-sol",
+      "review_route": {
+        "model_class": "frontier",
+        "effort": "high",
+        "model": "gpt-5.6-sol"
+      },
+      "return_control_to": "root",
+      "confidence_band": "LOW",
+      "seam_candidate": null,
+      "notes": "Marked example: abstention is a successful classification."
+    }
+  ]
+}

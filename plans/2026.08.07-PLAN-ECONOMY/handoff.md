@@ -1,38 +1,58 @@
-# HANDOFF — 2026-08-08 — after P1.4
+# HANDOFF — 2026-08-08 — after P1.5
 
-**Next:** audit-design: task:plan-audit 2026.08.07-PLAN-ECONOMY design
+**Next:** manual: implementation/high — `2026.08.07-PLAN-ECONOMY P2.1`
+
+**Native Codex launch-block**
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | adversarial plan audit · RAG verification |
-| Context | cold-start — plan-step |
-| Суть | Выполнить ровно один разрешённый D123 независимый аудит дизайна после сквозного pass 5/5: проверить D124–D125, распределение P1/P4/P5/P6 и отсутствие автоматического audit/cold-start на первом локальном сбое. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.07-PLAN-ECONOMY design'` |
+| Model | gpt-5.6-terra |
+| Thinking | high |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Approval/Sandbox | `-a never -s danger-full-access` |
+| Context | continue current root; item-by-item |
+| Суть | Построить резолвер раскладки v2 по замороженному reader-contract v1 с legacy parity |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.1'` |
 
-**Done:** P0 терминальна; в P1 закрыты `P1.1–P1.4`. Дизайн-прогон 5/5 зафиксировал
-adaptive ladder `local-fix → isolated-review → owner-gate`, развёл root continuity, reviewer
-freshness и model route, добавил знания `findings/19`/`research/17` и распределил реализацию по
-`P1.5`, `P4.3–P4.6`, `P5.4`, `P6.1–P6.3`, `P6.5`, `P6.7–P6.8`.
+**Provider-neutral plan-protocol launch-block**
 
-**Remaining:** один whole-plan audit по исключению D123. При GREEN следующий исполняемый item —
-`run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.5`; P1.5 сначала уточняет два профиля
-существующего auditor и только затем замораживает четыре reader-контракта владельческим гейтом.
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | P2.1: резолвер layout v2, дословная legacy-совместимость и замер фактического read path |
+| Команда | — |
 
-**Sources of truth:** `plan.md` D123–D125 · `brief/01-refinements.md` блок «непрерывность
-root-сессии» · `findings/19-session-continuity-and-adaptive-review-2026-08-08.md` ·
-`research/17-session-continuity-adaptive-review-2026-08-08.md` · `phases/P1.md` P1.5 ·
-`phases/P4.md` P4.3–P4.6 · `phases/P5.md` P5.4 · `phases/P6.md` P6.1–P6.8 · `roadmap.md`.
+```text
+select session model class implementation
+select session effort high
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.1
+```
 
-**Open risks:** D104 audit-cap был исчерпан; D123 разрешает ровно один дополнительный design audit
-из-за изменения fleet-канона и не создаёт общего права на повторные аудиты. Чужая исходная правка
-`Authoring Model` в `plan.md` сохранена. Полный task validator ранее выявил discovery-дефект
-`plans/.claude`/`plans/__pycache__`; scoped plan-lint остаётся доверенным, owning remediation — P3.6.
+**Done:** P0 и P1 терминальны. `2026.08.07-PLAN-ECONOMY P1.5` свёл четыре контракта, закрепил
+два review-профиля за существующим `auditor`, сохранил `return-to-root` и заморозил reader-contract
+v1 решением D127. Воспроизводимая реконструкция покрыла крупный и здоровый реальные планы по трём
+items, включая самые тяжёлые Required Reads; превышений порога `100000` нет. Результат остаётся
+оценкой раскладки, а не доказательством её реализации.
+
+**Remaining:** P2–P6 по roadmap. Ближайший пункт — `2026.08.07-PLAN-ECONOMY P2.1`; он обязан
+повторить измерение уже на фактическом резолвере, не принимать P1-реконструкцию за реализацию.
+
+**Sources of truth:** `plan.md` D127 и `## 7. Contracts` · `phases/P1.md` P1.5 и Phase Handoff ·
+`root/contracts/reader-contract-v1.md` · `root/contracts/read-path-v1.md` + `.spec.json` ·
+`findings/06-p1-path-feasibility.md` · generated `artifacts/p1-feasibility.json` ·
+`phases/P2.md` P2.1.
+
+**Open risks:** P1.4 передал discovery-дефект `plans/.claude`/`plans/__pycache__` в owning item
+P3.6. Предыдущий handoff фиксировал lifecycle hook `provenance-invalid`; текущие `codex doctor` и
+`maind health --strict` зелёные, но отдельного доказательства ремонта источника регистрации этот
+item не создавал. Claude/provider certification остаётся `pending-provider` по D119–D122.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: до реализации P6.1–P6.5 текущий `Context` использует действующий enum
-  `cold-start — plan-step`; новый v2 enum замораживает P6.5.
-- Deferred: provider runtime adapters и canary — owning items P6.1–P6.8.
+- Workarounds: —.
+- Deferred: реальные layout-v2 носители и резолвер — P2; bundle/freshness gates — P3;
+  capsule/verdict review — P4.5/P6.3.
 - Open questions: —.

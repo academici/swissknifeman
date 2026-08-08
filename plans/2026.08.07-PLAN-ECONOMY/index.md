@@ -6,15 +6,15 @@
 
 | Файл | Роль |
 |:--|:--|
-| `plan.md` | Meta, Context, Execution Rules, Routing, Status Board, Decision Log D1–D125, Contracts, Update Log, Обсуждение |
+| `plan.md` | Meta, Context, Execution Rules, Routing, Status Board, Decision Log D1–D126, Contracts, Update Log, Обсуждение |
 | `handoff.md` | Где мы; вход холодного старта; launch-block следующего шага |
 | `phases/P0.md` … `phases/P6.md` | Детализированы до DoR (5 + 5 + 8 + 7 + 6 + 5 + 9 items) |
 | `roadmap.md` | Исполнительская карта 45 items: батчи B1/B2, 42 `manual`-item, три `plan-exec`; shared-first маршрут D119–D122, adaptive review D123–D125, bounded P0.1 и field-canary P2.8/P3.7/P6.7–P6.8 |
 | `journal.jsonl` | Append-only лог исполнения |
-| `open-questions.md` | Открытых нет; закрыты OQ-1/OQ-2/OQ-3 (D11–D13) |
+| `open-questions.md` | Открытых нет; закрыты OQ-1–OQ-6 |
 | `root/contracts/` | Замороженные контракты плана; судьба — docs проекта |
 | `artifacts/` | Рабочие артефакты фаз (дампы замеров, реконструкции); судьба — архив |
-| `findings/13-design-audit-2026-08-07.md` | Отчёт `plan-audit design`, ТРИ захода: заход 1 — RED, 12 находок F1–F12 (закрыты D84–D95); заход 2 — RED, 11 находок N1–N11 (закрыты D96–D104); заход 3 — ATTENTION, находки A1/A2 (закрыты D105–D106), AUDIT-CAP исчерпан |
+| `findings/13-design-audit-2026-08-07.md` | ЧЕТЫРЕ захода `plan-audit design`: 1 RED F1–F12 → D84–D95; 2 RED N1–N11 → D96–D104; 3 ATTENTION A1/A2 → D105–D106; 4 RED F4.1–F4.4 → owning-root remediation D126, новый audit не назначен |
 
 Всего items: 45 (P0 5 · P1 5 · P2 8 · P3 7 · P4 6 · P5 5 · P6 9).
 
@@ -23,13 +23,13 @@
 | Файл | Слой | Что несёт | Потребляют фазы |
 |:--|:--|:--|:--|
 | `brief/00-brief.md` | 0 | Бриф владельца 2026-08-07 без потери мыслей; три исполненных распоряжения | все |
-| `brief/01-refinements.md` | 0 | Уточнения владельца: EN-only/RU removal; решения лимита; сохранить исходную работу Claude; Codex-first multiprovider; root-session continuity и аудит только по risk/repeat | P0, P1, P4, P5, P6 |
+| `brief/01-refinements.md` | 0 | Уточнения владельца: EN-only/RU removal; решения лимита; сохранить исходную работу Claude; Codex-first multiprovider; root-session continuity; RED-долг не принимать, техническое закрытие делегировано агенту | P0, P1, P4, P5, P6 |
 | `findings/00-plan-read-weight-2026-08-07.md` | 1 | Машинный замер 24 планов флота: пол 12к–254к токенов, разбор `plan.md` по секциям, 153 КБ фазовый файл, слепой линтер, дефект корректности при лимите ~25к | P0, P1, P3 |
 | `findings/01-rag-context-engineering-2026-08-07.md` | 1 | Шесть внешних запросов: R1 JIT-раскрытие и context rot · R2 раскладки spec-kit/Kiro/Tessl/AGENTS.md · R3 ADR «файл на решение + генерируемые виды» · R4 проекции и снапшоты event sourcing · R5 отрицательный результат по детекции повторной причины · R6 безлюдные решения | P1, P2, P3, P4, P5 |
 | `findings/02-prompt-caching-economics-2026-08-07.md` | 1 | Множители кэша, правило точного префикса, минимальный кэшируемый префикс, 20-блочное окно; пересмотр обоснования | P1, P3 (правило порядка), D8 |
 | `findings/03-token-counting-api-2026-08-07.md` | 1 | Как честно считать токены Claude: привязка счёта к семейству модели, `tiktoken` занижает на ~15–20%, локального токенизатора Claude не существует, смена поколения даёт до ~1.35×. **Вывод «только `count_tokens`» ОТМЕНЁН D92** — якорь калибровки перенесён на дифференциальный замер по `usage` транскриптов Claude Code; действующее основание канала — `findings/14-…` R21–R23 | P0 |
 | `findings/05-generated-regions-2026-08-07.md` | 1 | R7: managed-регионы внутри рукописных файлов — контракт маркеров, fail-closed политика, именованные прецеденты; дефолт «сначала отдельные генерируемые файлы»; свежесть проверяется регенерацией, не хешем | P1, P2 |
-| `research/00-user-intent.md` | 2 | Трассировка 17 мыслей владельца → фазы/D# (строка 17 — уточнение EN-only от 2026-08-07); и мысли, которые вынуждены появиться | DoR всех фаз |
+| `research/00-user-intent.md` | 2 | Трассировка 19 мыслей владельца → фазы/D#; и мысли, которые вынуждены появиться | DoR всех фаз |
 | `research/01-target-architecture.md` | 2 | Три читателя, источник истины против производных, целевая раскладка, бюджет как гейт, ограничитель кружения, протокол решений, вывод порядка фаз | все |
 | `research/02-p0-measurement-design.md` | 2 | Форма оценки сверху и протокол калибровки, процедура зонда лимита, определение веса и таксономия пробелов, дисциплина выбора порога, pre-mortem P0 | P0 |
 | `research/03-p1-reader-contract-design.md` | 2 | Четыре читателя и их права, реестр носителей и классы, форма слепка, входное объявление истории, слоты пути и предикат порядка, дисциплина заморозки, pre-mortem P1 из 8 причин | P1, вход P2/P3 |
@@ -49,6 +49,7 @@
 | `research/15-p0.1-provider-neutral-calibration-2026-08-08.md` | 2 | Трёхслойная архитектура adapter → neutral bracket-control core → qualified artifact consumer; active Codex adapter, deferred Claude adapter, schema/invariants/tests | P0.1, вход P0.5/P3 |
 | `research/16-multiprovider-field-loop-2026-08-08.md` | 2 | Сквозная модель shared contract + independent provider certification; закрытая минимальная provider-surface; bounded calibration и ранний field loop | все фазы, особенно P0.1/P2.8/P3.7/P6 |
 | `research/17-session-continuity-adaptive-review-2026-08-08.md` | 2 | Лестница local-fix → isolated-review → owner-gate, три независимые оси context/model/control, scoped-review capsule, распределение по P1/P4/P5/P6 и canary-инварианты | P1, P4, P5, P6 |
+| `research/18-audit-red-remediation-2026-08-08.md` | 2 | Закрытие F4.1–F4.4: machine `session_canary`, exact P6.8 comparator, DoR/roadmap reconcile, продолжение P1.5 без пятого аудита | P1, P4, P5, P6 |
 | `research/07-p5-decision-protocol-design.md` | 2 | Реконсиль контракт-блока P5 (четыре расхождения), два вида решения и механизм закрытия обхода, рамка как программа и машинная форма D13-а с агрегацией, определение «ветки» через субъект и фазовый join, форма запроса и ответа поле за полем, что сознательно не переносится, носители очереди и расширение реестра, запреты содержимого записи, вывод пяти items, pre-mortem P5 из 10 причин | P5, вход P6 |
 | `research/04-p2-carriers-design.md` | 2 | Две раскладки и их адресация, таблица носителей v2, форма записи решения и четыре вида, расщепление 16 полей пункта, ядро против владельческого вида, каркас проекций, терминальная фаза, self-hosting с инвентарём и приёмочным замером, pre-mortem P2 из 8 причин | P2, вход P3/P6 |
 
@@ -61,7 +62,7 @@
 Артефакты P4: `artifacts/P4/measure_returns.py` + `returns-baseline.json` (Deliverables P4.2) ·
 `artifacts/P4/historical-detect.json` + `acceptance-report.md` (Deliverables P4.6).
 Артефакты P5: `artifacts/P5/acceptance-report.md` (Deliverable P5.5).
-Артефакты P6: `artifacts/P6/{provider-certification.md,would-fail-*.txt,judge-calibration-bank.jsonl,judge-calibration-report.md,canon-weight-before-after.json,rollout-dry-run.txt,fleet-adoption-inventory.{json,md},acceptance-arm-a-migrated.json,acceptance-arm-b-fresh.json}` · `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8) · контракт `root/contracts/acceptance-protocol-v1.{md,manifest.json}` (Deliverable P6.7).
+Артефакты P6: `artifacts/P6/{provider-certification.md,would-fail-*.txt,judge-calibration-bank.jsonl,judge-calibration-report.md,canon-weight-before-after.json,rollout-dry-run.txt,fleet-adoption-inventory.{json,md},acceptance-arm-a-migrated.json,acceptance-arm-b-fresh.json,session-canary-results.json}` · `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8) · контракт `root/contracts/acceptance-protocol-v1.{md,manifest.json}` с machine `session_canary` (Deliverable P6.7).
 
 ## Внешние зависимости плана
 

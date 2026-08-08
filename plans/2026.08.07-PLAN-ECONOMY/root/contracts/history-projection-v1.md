@@ -1,6 +1,6 @@
 # History Projection v1
 
-Status: proposed; freeze is reserved for `P1.5` and the owner's gate.
+Status: frozen by D127 after the `P1.5` owner gate on 2026-08-08.
 
 Machine-readable input declaration:
 [`history-projection-v1.spec.json`](history-projection-v1.spec.json). The JSON is the sole source of

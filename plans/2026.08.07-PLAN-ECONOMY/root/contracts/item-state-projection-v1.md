@@ -1,6 +1,6 @@
 # Item State Projection v1
 
-Status: proposed; freeze is reserved for `P1.5` and the owner's gate.
+Status: frozen by D127 after the `P1.5` owner gate on 2026-08-08.
 
 Machine-readable shape and its single illustrative instance:
 [`item-state-projection-v1.schema.json`](item-state-projection-v1.schema.json). The schema is the

@@ -842,3 +842,186 @@ D98 предписывает: «Перечень пересобирается С
 Если владелец выбирает ВАРИАНТ Б — старт исполнения командой
 `task:plan-run 2026.08.07-PLAN-ECONOMY P0.1` (первый item, `Exec = manual`, implementation/high),
 а A1/A2 уходят в Pending Work item'а P2.1 как названный долг.
+
+---
+
+## Audit design (заход 4) — 2026-08-08
+
+**Вердикт: RED**
+
+**Заход: 4-й** (блоков `## Audit design` в носителе аудита было 3).
+**Исполнитель:** gpt-5.6-sol/xhigh (`task:plan-audit design`, пин команды).
+
+**AUDIT-CAP: design — 4-й заход, решение за владельцем.** D123 ровно один раз разрешил этот аудит
+после исчерпанного D104 потолка. Это разрешение не открывает новый автоматический цикл
+`audit → plan-design → audit`: результат возвращается владельцу/owning root по D123–D125, команду
+ремедиации аудит не назначает.
+
+**Якорь дерева.** Проверяемый план взят на
+`0f75c40b7a43267a12792b7b51b3214ae89ff95f`; до разрешённых append-записей аудита рабочее дерево
+было чистым (`main...origin/main [ahead 17]`).
+
+- `python3 packages/task/scripts/plan-lint.py plans/2026.08.07-PLAN-ECONOMY` →
+  `plan-lint: OK (1 план(ов), 0 ошибок, 0 предупреждений)` — **0 ERROR / 0 WARN (на 0f75c40b)**.
+- `python3 packages/task/scripts/plan-lint.py --conflicts` →
+  `OK (0 расхождений, 0 предупреждений)`.
+- `python3 plans/verify-citations.py plans/2026.08.07-PLAN-ECONOMY --strict` →
+  `79 цитат, 0 находок`.
+
+RED, а не ATTENTION: F4.1 оставляет новый продукт прогона 5 — измеримую непрерывность root-сессии —
+только в prose-обязанности. P6.7 и P6.8 могут закрыться всеми объявленными машинными Validation при
+отсутствующем или неполном session-canary. Это ложнозелёный путь по головному требованию владельца,
+а не дефект бухгалтерии.
+
+---
+
+## Находки захода 4
+
+### F4.1 · Major · confidence high · issue · `phases/P6.md:220–238`, `phases/P6.md:244–268`
+
+**Session-canary объявлен обязательным, но отсутствует в машинном контракте и гейтах P6.7/P6.8.**
+
+P6.7 Implementation Rules (`:226–227`) требуют четыре ветви с точными `root_restarts`,
+`reviewer_calls`, root identity и repeated-read weight. Однако Scope/Files/Deliverables (`:220`,
+`:223`, `:238`) заводят только общий D2 `acceptance-protocol-v1` и его manifest. Validation (`:237`)
+проверяет восемь ключей `{measurement, scope_manifest, thresholds, arms, anti_displacement,
+failure_definition, roles, confounds}` и не требует ни `session_canary`, ни схемы четырёх ветвей,
+ни ожидаемых значений.
+
+P6.8 повторяет точный GREEN-критерий в прозе (`:255`), но его Files/Deliverables (`:252`, `:268`)
+несут только две D2-руки и общий findings-отчёт, а Validation (`:267`) проверяет руки, D2-гейты,
+статусы свежего плана и неизменность протокола. Отдельного canary-артефакта, обязательных ключей и
+машинного сравнения `expected ↔ observed` нет.
+
+**failure_scenario.** Исполнитель P6.7 создаёт manifest без session-секции и проходит всю Validation;
+исполнитель P6.8 прогоняет только две бюджетные руки, получает зелёный lint и закрывает item. План
+объявляет непрерывность принятой, хотя первый локальный сбой всё ещё может создавать root restart,
+а повтор — ноль или два reviewer calls. Головное уточнение строки 18 трассировки остаётся
+неизмеренным при полностью зелёной приёмке.
+
+### F4.2 · Major · confidence high · issue · `roadmap.md:86`, `roadmap.md:100` · PROMOTE-CANDIDATE
+
+**Оба готовых batch launch-block'а используют несуществующее значение `Context` и противоречат
+новой семантике continuity.**
+
+Roadmap пишет `cold-start — item` для B1 и B2. Закрытый provider-neutral enum канона содержит только
+`same-session — item`, `cold-start — orchestration`, `cold-start — plan-step`
+(`packages/skiller/skills/general/plan-protocol/SKILL.md:890–902`; тот же tuple в
+`packages/task/lib/task/plan_lint.py:186–189`). Значение не является ни текущим каноном, ни будущим
+enum D125/P6.5. При этом audit-чеклист требует готовые исполнимые launch-block'и, а сам roadmap
+объявляет, что не переопределяет Routing (`roadmap.md:22–25`).
+
+**failure_scenario.** Холодный исполнитель копирует готовый B2-блок для ещё не начатых P3.4–P3.5.
+Provider вынужден гадать, трактовать ли неизвестное значение как новый root или продолжение;
+первый вариант платит запрещённый D125 лишний cold start, второй не воспроизводит объявленную
+семантику. `plan-lint` при этом остаётся зелёным, потому что `--conflicts` сверяет константу канона,
+но не валидирует все launch-block'и roadmap — повторяемая дыра гейта.
+
+### F4.3 · Minor · confidence high · issue · `phases/P1.md:17–20`, `phases/P4.md:23–26`,
+`phases/P5.md:23–26`, `phases/P6.md:18–21`
+
+**DoR четырёх затронутых фаз не реконсилирован с решениями и RAG пятого прогона.**
+
+Чекбоксы отмечены `[x]`, но перечни несущих решений заканчиваются старыми диапазонами и не называют
+D123–D125. P6 отдельно утверждает, что перечислил внешние факт-классы, однако не включает R23–R25 из
+`findings/19-session-continuity-and-adaptive-review-2026-08-08.md`; P1/P4/P5 продолжают утверждать
+старые наборы источников, хотя их items получили manager/specialist, selective-review и continuation
+обязанности. Сами слои знаний существуют и Required Reads затронутых items ведут к ним, поэтому это
+бухгалтерия DoR, а не потеря знания.
+
+**failure_scenario.** Следующий design/DoR-аудитор доверяет закрытым чекбоксам фаз и делает вывод,
+что новые внешние опоры и альтернативы не входят в несущий срез; изменение reader/triage/resume
+проходит без повторной проверки актуальности R23–R25. Ошибка обнаруживается только при ручном чтении
+D123–D125, вопреки назначению DoR как краткого доказательства готовности.
+
+### F4.4 · Minor · confidence high · issue · `roadmap.md:8`, `plan.md:9`, `plan.md:330`
+
+**Roadmap после пятого прогона всё ещё объявляет соответствие `plan.md` v0.22.0.**
+
+Фактический план — v0.23.0, а Update Log уже несёт прогон 5/5. Шапка roadmap также заканчивает
+описание обновлений D118–D122 и не называет D123–D125, хотя карта P1/P4/P5/P6 ниже уже содержит часть
+новой семантики.
+
+**failure_scenario.** Холодный исполнитель использует шапку как freshness-якорь и принимает карту за
+срез до continuity-pass либо, наоборот, считает содержимое v0.23.0 подтверждённым старым якорем.
+Дефект не меняет Routing и потому красит бухгалтерию, не продукт.
+
+---
+
+## Проверено без находок (заход 4)
+
+- **Покрытие брифа полное.** `research/00-user-intent.md:1–26` добавил строку 18 и адресовал новое
+  требование в D123–D125, P1.5, P4.3–P4.6, P5.1/P5.4 и P6.1–P6.8. Непокрытых мыслей владельца не
+  найдено; миграция чужих планов и ARTIFEX остаются явно ограничены D3/D4/P6.9.
+- **Слои знаний связны.** `brief/01-refinements.md:140–161` → verified findings/19 → synthesis
+  research/17 → D123–D125 → item obligations. `verify-citations --strict` разрешил все 79
+  repo-citations. Внешний тезис manager-as-tools/return-to-root подтверждён официальными OpenAI
+  Agents SDK multi-agent/HITL материалами; выборочная цена subagent — официальными материалами
+  Anthropic. Численный `same_return_max = 2` честно помечен repo-grounded, а не выведен из внешнего
+  источника.
+- **Граница Codex capability честна.** Публичная документация подтверждает multi-agent/tool topology,
+  но не публичный контракт имени `CODEX_THREAD_ID`; текущий runtime 0.147.0 локально предъявил имя
+  переменной и включённый multi-agent flag. P6.2 оставляет это thin adapter-local observation,
+  требует fail-closed exactly-one resolver и повторный canary — внешнего стабильного API из него не
+  делает.
+- **Контракты фаз согласованы.** Allocation research/17 (`:40–52`) совпадает с item Inputs/Files:
+  profile freeze P1.5 → fingerprint/triage/capsule P4.3–P4.6 → continuation P5.1/P5.4 → command,
+  context и canary P6.1–P6.8. Новых циклических зависимостей между фазами не найдено.
+- **Учёт items трёхсторонний.** 45 заголовков `### Pn.m` в `phases/`, 45 строк Routing и 45 строк
+  карты roadmap; доска 5+5+8+7+6+5+9 = 45.
+- **D-лог целостен.** 125 записей D1–D125, дублей нет. Все 20 строк с буквальным `supersedes D#`
+  несут inline `**Consequences:**`; D24/D77/D85, найденные широким поиском слов замещения, ничего не
+  отменяют и потому не являются нарушениями.
+- **Дизайн-бюджет исполнен.** Meta несёт 5/5 и Authoring Model; Update Log имеет явные носители
+  прогонов 1–5, последний — `plan-design/gpt-5.6-sol/high`; journal pass 5 несёт ненулевой
+  `session_id`. D123 поимённо авторизует этот один дополнительный аудит.
+- **Структурные гейты зелёные.** `Last Updated` совпадает с последней датой Update Log;
+  `open-questions.md` объявляет ноль открытых; в семи фазах нет живых `[NEEDS CLARIFICATION]`;
+  три просмотренных `.claude/runs/*.json` несут `devloop: null`, скрытых workarounds/deferred/
+  open_questions не найдено.
+- **Предыдущий долг закрыт.** A1/A2 захода 3 адресованы D105–D106; повторного пробоя
+  `plan_reader.py`/сокращённых `Files` не обнаружено.
+
+## Ограничение доверия к окружению
+
+Preflight `codex doctor --json`, `packages/maind/bin/maind health --cwd` и plan lint зелёные. Но
+канонический dry-run hook integrity завершился exit 1:
+`harness.codex.lifecycle.hooks: provenance-invalid → refuse (record-provenance-mismatch)` и
+`Codex lifecycle deploy refused; resolve ownership/drift or use --repair`. Это дефект регистрации
+окружения, способный ослабить доверие к lifecycle hooks; он раскрыт, не назван зелёным и не окрашивает
+design-вердикт. Ремонт не выполнялся: режим аудита разрешает только append evidence/journal, а
+`--repair` является отдельной мутацией harness-состояния.
+
+## Проверка внешних фактов
+
+- RAG: Context7 — OpenAI Agents SDK v0.7.0 multi-agent topology, OK; Perplexity Web — official
+  OpenAI/Anthropic sources, OK; official OpenAI developer docs — current Codex/multi-agent surface,
+  OK.
+- Непроверено как публичная гарантия и оставлено на повторный runtime-canary P6.2:
+  `CODEX_THREAD_ID` (локально наблюдено, в official docs не найдено).
+- Workarounds: отсутствуют; environment hook defect раскрыт отдельно выше.
+
+---
+
+### Что запускать
+
+**AUDIT-CAP исчерпан — аудит команду не назначает.** Владельцу переданы два допустимых исхода:
+вернуть F4.1–F4.4 в owning root/design item с сохранением D124–D125 continuity либо принять план
+`🟠` с названным долгом. Автоматический пятый аудит запрещён.
+
+**Native Codex launch-block**
+
+| Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|
+| frontier (решение владельца) | high | `NEW SESSION — шаг-не-item` | Решить судьбу RED-долга F4.1–F4.4; новый audit не назначать | — |
+
+**Provider-neutral plan-protocol launch-block**
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | — |
+| Context | `cold-start — plan-step` |
+| Суть | Решить судьбу RED-долга F4.1–F4.4; новый audit не назначать |
+| Команда | — |

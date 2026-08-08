@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-08 (D118–D122: shared Python/skills first, thin provider edges only; P0.1 payload ≤128 KiB/≤12 calls; Claude `pending-provider`; field canary P2.8/P3.7) · **Соответствует plan.md:** v0.22.0
+**Обновлён:** 2026-08-08 (D118–D126: shared-first multiprovider; adaptive review; machine-gated session canary; P0 и P1.1–P1.4 закрыты) · **Соответствует plan.md:** v0.24.0
 
 ## Как читать
 
@@ -28,15 +28,15 @@
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | solo | plan-run (manual) | implementation/high | — | neutral core + thin Codex usage adapter; 8 real samples, payload ≤128 KiB total, ≤12 calls; Claude deferred; v1 evidence сохраняется |
-| P0.2 | solo | plan-exec | implementation/medium | — | эмпирический зонд среды: короткий, но его результат — вход P0.3 |
-| P0.3 | solo | plan-run (manual) | implementation/high | — | инструмент замера против замороженной калибровки; корректность резолвинга — вход всех последующих гейтов |
-| P0.4 | solo | plan-run (manual) | implementation/high | — | учёт корней в `sweep` с тестами (D110–D111) + прогон по корням флота и отчёт по закрытой таксономии; правка живого инструмента флота, объединять нельзя |
-| P0.5 | solo | plan-run (manual) | frontier/high | ✅ решения получены D113–D115 | после фактической калибровки v2 записать read-budget: 100 000, только новые layout-v2, без legacy |
-| P1.1 | B1 | plan-run серия | frontier/high | — | реестр носителей — адресное пространство всех гейтов |
-| P1.2 | B1 | ↑ | frontier/high | — | форма слепка поверх реестра B1 |
-| P1.3 | B1 | ↑ | frontier/high | — | исторический вид поверх запечатанной схемы журнала |
-| P1.4 | B1 | ↑ | frontier/high | — | путь чтения поверх реестра и двух форм B1 |
+| P0.1 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — neutral core + thin Codex usage adapter; 8 real samples, ≤128 KiB/≤12 calls; Claude deferred; v1 evidence сохранён |
+| P0.2 | solo | plan-exec | implementation/medium | — | ✅ terminal — эмпирический зонд среды |
+| P0.3 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — инструмент замера против замороженной калибровки |
+| P0.4 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — учёт корней `sweep` и замер флота |
+| P0.5 | solo | plan-run (manual) | frontier/high | ✅ решения получены D113–D115 | ✅ terminal — read-budget 100 000, только новые layout-v2, без legacy |
+| P1.1 | B1 | plan-run серия | frontier/high | — | ✅ terminal — реестр носителей |
+| P1.2 | B1 | ↑ | frontier/high | — | ✅ terminal — форма слепка |
+| P1.3 | B1 | ↑ | frontier/high | — | ✅ terminal — исторический вид |
+| P1.4 | B1 | ↑ | frontier/high | — | ✅ terminal — read path; discovery deviation передан отдельно |
 | P1.5 | solo | plan-run (manual) | frontier/high | ✅ заморозка контракта ЧИТАТЕЛЕЙ v1 | до freeze: два профиля одного auditor (`scoped-review`/`full-audit`) и `return-to-root`; затем сквозная сверка и оценка выполнимости |
 | P2.1 | solo | plan-run (manual) | implementation/high | — | резолвер раскладки — адресация всего последующего; правит и два репозиторных инструмента `plans/` (D74) |
 | P2.2 | solo | plan-run (manual) | implementation/high | — | каркас проекций + журнал решений: неизменяемость и свежесть задаются здесь один раз для всех видов |
@@ -70,20 +70,20 @@
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
 | P6.5 | solo | plan-run (manual) | frontier/high | — | канон enum `continue-root|isolated-child-return|cold-start-root` + hard-boundary reasons |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
-| P6.7 | solo | plan-run (manual) | frontier/high | — | предобъявить session-canary: root restarts/reviewer calls/re-read weight по четырём ветвям |
-| P6.8 | solo | plan-run (manual) | frontier/high | — | две руки + dogfood adaptive ladder; local field defect чинится без автоматического audit |
+| P6.7 | solo | plan-run (manual) | frontier/high | — | предобъявить machine `session_canary`: exact four branches/expected + command/result keys (D126) |
+| P6.8 | solo | plan-run (manual) | frontier/high | — | две D2-руки + отдельный exact session-canary comparator; local field defect без automatic audit |
 | P6.9 | solo | plan-exec | implementation/medium | — | бухгалтерия снятия паузы в чужом плане; предусловие — ВЕРДИКТ P6.8 |
 
 ## Готовые launch-block'и групп
 
-### B1 — четыре контракта читателей одной сессией (P1.1–P1.4)
+### B1 — четыре контракта читателей одной сессией (P1.1–P1.4, завершён)
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high — открытые design-решения о числе читателей, классах носителей и слотах пути |
 | Capabilities | — |
-| Context | cold-start — item |
+| Context | same-session — item |
 | Суть | Заморозить `reader-contract` v1, `item-state-projection` v1, `history-projection` v1 и `read-path` v1 одной сессией: реестр — адресное пространство трёх остальных, поэтому разрыв сессии между ними стоит перечитывания того же контекста. Владельческий гейт стоит ПОСЛЕ батча (P1.5), внутрь не попадает |
 
 ```
@@ -97,7 +97,7 @@ run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.1-P1.4
 | Model class | implementation |
 | Effort | high — предикаты по объявлению поверх замороженных форм; тихое ослабление проверки выглядит как успех |
 | Capabilities | — |
-| Context | cold-start — item |
+| Context | same-session — item |
 | Суть | Обе семьи живут в `packages/task/lib/task/plan_gates.py` и обе доказываются одним и тем же приёмом (кейс на код таксономии + BACKCOMPAT-diff по планам v1); один и тот же маршрут и одна глубина ревью |
 
 ```

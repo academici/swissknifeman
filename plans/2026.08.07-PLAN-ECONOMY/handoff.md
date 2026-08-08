@@ -1,52 +1,52 @@
-# HANDOFF — 2026-08-08 — after P4.3
+# HANDOFF — 2026-08-08 — after P4.4
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
+**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | high — хирургия по живому линтеру и fail-closed triage |
+| Model | gpt-5.6-sol |
+| Thinking | high — конфликт ownership lint-реестра |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | continue (/clear) — ручной item |
-| Суть | Реализовать deterministic triage, owner-packet и две выключенные opt-in-проверки P4.4. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'` |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить конфликт P4.4 и P3.6 о владельце lint-disposition discovery. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4'` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4'
 ```
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue (/clear) — ручной item |
-| Суть | Реализовать ограничитель по замороженному `return-loop` v1 и оставить проверки выключенными до P6. |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4` |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Согласовать ownership и интроспекцию двух P4.4 opt-in проверок. |
+| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P4.4` |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
+$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4
 ```
 
-**Done:** P4.3 закрыт 🟢. Item-коммит `bddb16e4` заморозил `return-loop` v1: параметрический
-потолок, adaptive ladder, явную блокирующую силу, OWNER/batched пакет и трёхсостоянийную
-квалификацию. Контракт-блок P5 реконсилирован: пакет приходит готовым из P4, P5 владеет формой
-запроса.
+**Done:** P4.4 pre-mutation contract returned `allow`; implementation discovery found a frozen
+ownership conflict before package-code mutation. Evidence:
+`findings/P4.4-lint-disposition-ownership-conflict.md`.
 
-**Remaining:** P4.4–P6.
+**Remaining:** resolve P4.4, then implement P4.4–P6.
 
-**Sources of truth:** `root/contracts/return-loop-v1.md` ·
-`root/contracts/return-loop-v1.spec.json` · `phases/P4/P4.4.md` ·
-`phases/P4/P4.3.state.md` · `journal.jsonl`.
+**Sources of truth:** `phases/P4/P4.4.md` ·
+`findings/P4.4-lint-disposition-ownership-conflict.md` ·
+`packages/task/configs/lint-check-dispositions.json` ·
+`packages/task/tests/test_lint_dispositions.py`.
 
-**Open risks:** runtime не публикует effort; P4.3 записан с self-attested
-`gpt-5.6-sol/high`. Pre-final P4.3 был выполнен после item-коммита, а не до начала двухкоммитной
-топологии; оба предиката вернули `allow`, артефакты после гейта не менялись.
+**Open risks:** runtime не публикует effort. P4.4 cannot both add the required `plan_gates`
+checks and preserve P3.6 exact registry coverage without a design decision.
 
-**Workarounds/Deferred/Open questions:** workaround — отсутствует; deferred — cross-item clustering;
-open_questions — —.
+**Workarounds/Deferred/Open questions:** workaround — none; do not add an unregistered check or
+weaken registry coverage. Deferred — implementation after plan-design. Open questions — select the
+canonical lint-check ownership boundary.

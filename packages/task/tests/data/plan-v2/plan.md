@@ -40,9 +40,7 @@
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
-|:--|:--|:--|:--|
-| D1 | 2026-07-02 | тест | тест |
+Каталог решений: `decisions/`; собрать: `python3 packages/task/scripts/plan-views.py decisions`.
 
 ## 6. Update Log
 

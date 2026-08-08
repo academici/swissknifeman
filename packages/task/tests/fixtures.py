@@ -24,6 +24,10 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
     # `Решение`/`Дата`; None = прежняя единственная строка (byte-compat с до-P8.2 фикстурой).
     if decision_log_rows is None:
         decision_log_rows = "| D1 | 2026-07-02 | тест | тест |"
+    decision_log = ("Каталог решений: `decisions/`; собрать: "
+                    "`python3 packages/task/scripts/plan-views.py decisions`."
+                    if layout == "v2" else
+                    "| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n" + decision_log_rows)
     return f"""# {plan_id} — Демо-план
 
 ## 0. Meta
@@ -61,9 +65,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
-|:--|:--|:--|:--|
-{decision_log_rows}
+{decision_log}
 
 ## 6. Update Log
 
@@ -264,6 +266,7 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
     if layout == "v2":
         phase_path = plan_dir / "phases" / "P1" / "P1.md"
         phase_path.parent.mkdir()
+        (plan_dir / "decisions").mkdir()
     phase_path.write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")

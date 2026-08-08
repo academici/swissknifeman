@@ -64,6 +64,21 @@ class PlanLayoutTest(unittest.TestCase):
             self.assertIn("P1", model["phases"])
             self.assertIn("P1.1", model["phases"]["P1"]["items"])
 
+    def test_linter_requires_v2_decision_pointer_and_no_discussion_section(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = write_valid_plan(Path(tmp), layout="v2")
+            plan_md = plan / "plan.md"
+            text = plan_md.read_text(encoding="utf-8").replace(
+                "Каталог решений: `decisions/`; собрать: "
+                "`python3 packages/task/scripts/plan-views.py decisions`.",
+                "| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n| D1 | 2026-01-01 | old | old |")
+            plan_md.write_text(text + "\n## Обсуждение\n\nСтарый носитель.\n", encoding="utf-8")
+            diag = plan_lint.Diagnostics()
+            plan_lint.lint_plan(plan, diag)
+            joined = "\n".join(str(entry) for entry in diag.errors)
+            self.assertIn("Decision Log должен быть строкой-указателем", joined)
+            self.assertIn("«## Обсуждение» запрещён", joined)
+
     def test_task_contract_resolves_v2_phase_address(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = write_valid_plan(Path(tmp), layout="v2")

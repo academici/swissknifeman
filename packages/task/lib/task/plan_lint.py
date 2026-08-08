@@ -910,7 +910,7 @@ CONFLICTS_ANCHOR_LAUNCH_TABLE = "| Параметр | Значение |"
 # читателя ⇒ присутствие в EN не требуется (i18n-keep не нужен).
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
                       + PHASE_HANDOFF_NEGATION_LITERALS
-                      + ("не раньше", "делать нечего", "тайм-гейт")
+                      + ("не раньше", "делать нечего", "тайм-гейт", "Обсуждение")
                       + (CONFLICTS_ANCHOR_STATUSES, CONFLICTS_ANCHOR_ITEM_FIELDS,
                          CONFLICTS_ANCHOR_NEXT_FORMS, CONFLICTS_ANCHOR_CONTEXT,
                          CONFLICTS_ANCHOR_LAUNCH_TABLE)
@@ -1250,6 +1250,32 @@ def _lint_plan_md_20(lines, path, diag):
                          f"Decision Log: {len(rows)} решений и ни одного маркера "
                          f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — несущие "
                          f"факты не промаркированы (SKILL §7)")
+
+
+def _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag):
+    """v2 keeps decision truth in ``decisions/``, not an inline table.
+
+    Link integrity belongs to the P2 projector, not the plan linter until P3.
+    This intentionally checks only the v2 carrier shape and leaves every v1
+    diagnostic untouched.
+    """
+    try:
+        if plan_layout.layout_version(plan_dir) != "v2":
+            return
+    except plan_layout.PlanLayoutError:
+        return
+    _, body, start = _find_section(plan_lines, DECISION_LOG_HEADER_RE)
+    if body is None:
+        diag.error(plan_md, None, "Layout v2: нет секции «## 5. Decision Log»")
+    else:
+        text = "\n".join(body).strip()
+        if "|" in text or "decisions/" not in text or "plan-views.py decisions" not in text:
+            diag.error(plan_md, start,
+                       "Layout v2: Decision Log должен быть строкой-указателем на decisions/ и plan-views.py decisions")
+    if any(re.match(r"^##\s+(?:\d+\.\s+)?Обсуждение\s*$", line) for line in plan_lines):
+        diag.error(plan_md, None, "Layout v2: «## Обсуждение» запрещён; используйте open-questions.md")
+    if not (Path(plan_dir) / "decisions").is_dir():
+        diag.error(plan_md, None, "Layout v2: отсутствует каталог decisions/")
 
 
 # --- m7/D10: парсер секции `## 7. Contracts` -----------------------------------
@@ -1845,6 +1871,8 @@ def lint_plan(plan_dir, diag):
 
     # m7/D10: опциональная секция `## 7. Contracts` (нет секции — пустая модель, молча).
     plan_lines = _read_lines(plan_md)
+    if plan_lines is not None:
+        _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag)
     contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
                  else {"exported": [], "consumed": []})
 

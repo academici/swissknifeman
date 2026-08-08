@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: bc9dc66ffcb44e54cba3840b9488f1a57c216bb5b3f05b6d94c2eb388ab6e269
+inputs_sha256: 201ee11e5d03ea0be5db0e7b2c87e98ab6d54d074bc8bf76cc458d5117126752
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | 🟡 In progress |
+| Status | ⬜ Not started |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 0/6 | 🟡 In progress |
+| P4 | Ограничитель кружения design↔exec | 1/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -82,7 +82,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Заморозить форму отпечатка причины возврата | 🟡 In progress | 2026-08-08 |
+| P4.1 | Заморозить форму отпечатка причины возврата | 🟢 Done | 2026-08-08 |
 | P4.2 | Построить вычислитель отпечатка и durable-счётчик | ⬜ Not started | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | ⬜ Not started | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | ⬜ Not started | 2026-08-08 |
@@ -232,6 +232,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D136 восстановил exact pre-migration D50 как двусторонний replacement; P4.1 возвращён к исполнению в текущей сессии |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · D136 принят; начата заморозка return-fingerprint v1 |
 | 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D137 заменил ложную часть D52: seam объявляется additive metadata без изменения frozen history minimum |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · D136/D137 приняты; исполнение return-fingerprint v1 продолжено в той же root-сессии |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; return-fingerprint v1 and schema committed 00569181; item Validation plus Draft 2020-12/example/digest/namespace checks green; process deviation: same-session D136/D137 repairs. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -249,3 +251,4 @@ generated_by: task plan-views status
 - P3.4: known deviation
 - P3.6: known deviation
 - P3.7: known deviation
+- P4.1: known deviation

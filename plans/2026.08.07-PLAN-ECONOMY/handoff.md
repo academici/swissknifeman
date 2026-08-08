@@ -1,42 +1,52 @@
-# HANDOFF — 2026-08-08 — after P4.2
+# HANDOFF — 2026-08-08 — after P4.3
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P4.3
+**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high — заморозка потолка и owner-gate |
+| Model | gpt-5.6-terra |
+| Thinking | high — хирургия по живому линтеру и fail-closed triage |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | continue (/clear) — ручной item |
-| Суть | Заморозить потолок возвратов, блокирующую силу и owner-gate P4.3. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.3'` |
+| Суть | Реализовать deterministic triage, owner-packet и две выключенные opt-in-проверки P4.4. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'
+```
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | — |
 | Context | continue (/clear) — ручной item |
-| Суть | Зафиксировать ceiling, блокировку и пакет гейта возвратов. |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.3` |
+| Суть | Реализовать ограничитель по замороженному `return-loop` v1 и оставить проверки выключенными до P6. |
+| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4` |
 
-**Done:** P4.2 закрыт 🟢. В `f3b21406` добавлены return reducer, `returns` view, lifted schema,
-fixtures/tests, read-only historical measurement and reference. Baseline воспроизводит 10 журналов,
-1109 записей и 87 return events.
+```text
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
+```
 
-**Remaining:** P4.3–P6.
+**Done:** P4.3 закрыт 🟢. Item-коммит `bddb16e4` заморозил `return-loop` v1: параметрический
+потолок, adaptive ladder, явную блокирующую силу, OWNER/batched пакет и трёхсостоянийную
+квалификацию. Контракт-блок P5 реконсилирован: пакет приходит готовым из P4, P5 владеет формой
+запроса.
 
-**Sources of truth:** `packages/task/lib/task/plan_returns.py` ·
-`root/contracts/return-fingerprint-v1.schema.json` · `artifacts/P4/returns-baseline.json` ·
-`phases/P4/P4.2.state.md` · `journal.jsonl`.
+**Remaining:** P4.4–P6.
 
-**Open risks:** runtime не публикует effort; P4.2 записан с self-attested `gpt-5.6-sol/high`,
-который превышает Routing `implementation/high`.
+**Sources of truth:** `root/contracts/return-loop-v1.md` ·
+`root/contracts/return-loop-v1.spec.json` · `phases/P4/P4.4.md` ·
+`phases/P4/P4.3.state.md` · `journal.jsonl`.
+
+**Open risks:** runtime не публикует effort; P4.3 записан с self-attested
+`gpt-5.6-sol/high`. Pre-final P4.3 был выполнен после item-коммита, а не до начала двухкоммитной
+топологии; оба предиката вернули `allow`, артефакты после гейта не менялись.
 
 **Workarounds/Deferred/Open questions:** workaround — отсутствует; deferred — cross-item clustering;
 open_questions — —.

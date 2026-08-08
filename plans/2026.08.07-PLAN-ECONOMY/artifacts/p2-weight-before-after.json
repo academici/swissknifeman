@@ -1,0 +1,242 @@
+{
+  "items": [
+    {
+      "after": 44007,
+      "before": 149112,
+      "item": "P0.1"
+    },
+    {
+      "after": 18301,
+      "before": 123406,
+      "item": "P0.2"
+    },
+    {
+      "after": 45950,
+      "before": 151055,
+      "item": "P0.3"
+    },
+    {
+      "after": 33003,
+      "before": 138108,
+      "item": "P0.4"
+    },
+    {
+      "after": 26721,
+      "before": 131826,
+      "item": "P0.5"
+    },
+    {
+      "after": 28173,
+      "before": 125565,
+      "item": "P1.1"
+    },
+    {
+      "after": 26517,
+      "before": 123909,
+      "item": "P1.2"
+    },
+    {
+      "after": 29664,
+      "before": 127056,
+      "item": "P1.3"
+    },
+    {
+      "after": 31031,
+      "before": 128423,
+      "item": "P1.4"
+    },
+    {
+      "after": 21834,
+      "before": 148992,
+      "item": "P1.5"
+    },
+    {
+      "after": 153894,
+      "before": 270488,
+      "item": "P2.1"
+    },
+    {
+      "after": 29880,
+      "before": 146474,
+      "item": "P2.2"
+    },
+    {
+      "after": 81322,
+      "before": 197916,
+      "item": "P2.3"
+    },
+    {
+      "after": 74577,
+      "before": 191171,
+      "item": "P2.4"
+    },
+    {
+      "after": 25494,
+      "before": 142088,
+      "item": "P2.5"
+    },
+    {
+      "after": 26689,
+      "before": 143283,
+      "item": "P2.6"
+    },
+    {
+      "after": 28413,
+      "before": 145007,
+      "item": "P2.7"
+    },
+    {
+      "after": 30636,
+      "before": 147230,
+      "item": "P2.8"
+    },
+    {
+      "after": 63801,
+      "before": 137179,
+      "item": "P3.1"
+    },
+    {
+      "after": 33640,
+      "before": 140423,
+      "item": "P3.2"
+    },
+    {
+      "after": 92063,
+      "before": 198846,
+      "item": "P3.3"
+    },
+    {
+      "after": 27203,
+      "before": 133986,
+      "item": "P3.4"
+    },
+    {
+      "after": 26659,
+      "before": 133442,
+      "item": "P3.5"
+    },
+    {
+      "after": 151564,
+      "before": 224942,
+      "item": "P3.6"
+    },
+    {
+      "after": 32669,
+      "before": 139452,
+      "item": "P3.7"
+    },
+    {
+      "after": 66731,
+      "before": 140855,
+      "item": "P4.1"
+    },
+    {
+      "after": 30358,
+      "before": 137887,
+      "item": "P4.2"
+    },
+    {
+      "after": 56171,
+      "before": 130295,
+      "item": "P4.3"
+    },
+    {
+      "after": 17986,
+      "before": 125515,
+      "item": "P4.4"
+    },
+    {
+      "after": 26843,
+      "before": 134372,
+      "item": "P4.5"
+    },
+    {
+      "after": 22664,
+      "before": 130193,
+      "item": "P4.6"
+    },
+    {
+      "after": 66127,
+      "before": 136315,
+      "item": "P5.1"
+    },
+    {
+      "after": 62013,
+      "before": 132201,
+      "item": "P5.2"
+    },
+    {
+      "after": 27902,
+      "before": 131495,
+      "item": "P5.3"
+    },
+    {
+      "after": 31591,
+      "before": 135184,
+      "item": "P5.4"
+    },
+    {
+      "after": 18574,
+      "before": 122167,
+      "item": "P5.5"
+    },
+    {
+      "after": 47065,
+      "before": 173842,
+      "item": "P6.1"
+    },
+    {
+      "after": 55633,
+      "before": 182410,
+      "item": "P6.2"
+    },
+    {
+      "after": 42972,
+      "before": 169749,
+      "item": "P6.3"
+    },
+    {
+      "after": 90194,
+      "before": 216971,
+      "item": "P6.4"
+    },
+    {
+      "after": 134777,
+      "before": 261554,
+      "item": "P6.5"
+    },
+    {
+      "after": 40726,
+      "before": 167503,
+      "item": "P6.6"
+    },
+    {
+      "after": 71574,
+      "before": 198351,
+      "item": "P6.7"
+    },
+    {
+      "after": 39218,
+      "before": 165995,
+      "item": "P6.8"
+    },
+    {
+      "after": 130696,
+      "before": 257473,
+      "item": "P6.9"
+    }
+  ],
+  "schema": "p2-weight-before-after-v1",
+  "summary": {
+    "aggregate_after": 2263520,
+    "aggregate_before": 7089706,
+    "median_after": 33003,
+    "median_before": 140855
+  },
+  "threshold": 100000,
+  "unit": {
+    "id": "token-estimate-calibration",
+    "model_id": null,
+    "version": "2.0.0"
+  }
+}

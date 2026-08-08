@@ -85,6 +85,13 @@
 
 ### Added
 
+- **`task`: детерминированный конвертер executable plan v1→v2 и self-host migration
+  (`2026.08.07-PLAN-ECONOMY` P2.8).** Новый `plan-migrate.py` переводит только
+  разрешённый self-host plan inplace либо любой plan в безопасную read-only dry-run
+  проекцию с явным output; migration inventory и before/after read-weight сохраняют
+  lossless evidence. Owner status теперь корректно считает фазы с terminal
+  deviations завершёнными.
+
 - **`task`: детерминированная оценка веса чтения плана СВЕРХУ, откалиброванная против
   настоящего токенизатора (`2026.08.07-PLAN-ECONOMY` P0.1, D11/D14/D92).**
   `task.token_estimate` (stdlib-only) считает токены по закрытому набору классов символов

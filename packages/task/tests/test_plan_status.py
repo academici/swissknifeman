@@ -37,6 +37,19 @@ class PlanStatusTests(unittest.TestCase):
         with self.assertRaises(plan_status.StatusError):
             plan_status.build_status(self.plan_dir, check=True)
 
+    def test_preserves_converter_version_marker(self):
+        core = self.plan_dir / "plan.md"
+        core.write_text(core.read_text(encoding="utf-8") + "\n<!-- migration-version: 7.2.1 -->\n", encoding="utf-8")
+        plan_status.build_status(self.plan_dir)
+        self.assertIn("| Version | 7.2.1 |", (self.plan_dir / "status.md").read_text(encoding="utf-8"))
+
+    def test_phase_with_only_terminal_deviations_is_terminal(self):
+        state = self.plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟢 Done", "**Status:** 🟠 Done with deviations"), encoding="utf-8")
+        self.assertEqual(plan_status.status_model(self.plan_dir)["phases"][0]["status"],
+                         "🟠 Done with deviations")
+
     def test_linter_reads_v2_meta_and_board_from_owner_view(self):
         diagnostics = Diagnostics()
         model = lint_plan(self.plan_dir, diagnostics)

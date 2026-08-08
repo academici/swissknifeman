@@ -16,6 +16,7 @@ _META_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$")
 _ITEM_HEADER = re.compile(r"^###\s+(P\d+\.\d+)\s+—\s+(.+?)\s*$")
 _FIELD = re.compile(r"^\*\*([^*]+):\*\*\s*(.*)$")
 _PHASE_HEADER = re.compile(r"^##\s+Phase\s+(P\d+)\s*$")
+_MIGRATION_VERSION = re.compile(r"^<!--\s*migration-version:\s*(.+?)\s*-->$")
 
 STATUS_DONE = "🟢 Done"
 STATUS_DEVIATIONS = "🟠 Done with deviations"
@@ -55,6 +56,14 @@ def _core_meta(plan_dir: Path) -> dict[str, str]:
     return result
 
 
+def _migrated_version(plan_dir: Path) -> str:
+    """Read the converter's non-schema provenance marker, never invent a version."""
+    for line in _read(plan_dir / "plan.md").splitlines():
+        if match := _MIGRATION_VERSION.match(line):
+            return match.group(1)
+    return "—"
+
+
 def _item(path: Path) -> tuple[str, str, dict[str, str]]:
     lines = _read(path).splitlines()
     header = next((match for line in lines if (match := _ITEM_HEADER.match(line))), None)
@@ -75,7 +84,12 @@ def _phase_status(statuses: list[str]) -> str:
         return STATUS_BLOCKED
     if statuses and all(status == STATUS_DONE for status in statuses):
         return STATUS_DONE
-    if any(status in (STATUS_PROGRESS, STATUS_DEVIATIONS) for status in statuses):
+    # A phase is terminal when every item is terminal.  ``Done with deviations``
+    # is not work in progress; treating it as such falsely blocks the next
+    # phase after a layout-v2 migration.
+    if statuses and all(status in (STATUS_DONE, STATUS_DEVIATIONS) for status in statuses):
+        return STATUS_DEVIATIONS
+    if any(status == STATUS_PROGRESS for status in statuses):
         return STATUS_PROGRESS
     return STATUS_NOT_STARTED
 
@@ -132,7 +146,7 @@ def status_model(plan_dir) -> dict:
             item["updated"] = last_updated
     plan_status = _phase_status([phase["status"] for phase in phases])
     return {"core": core, "phases": phases, "journal_rows": journal_rows,
-            "meta": {"Version": "—", "Status": plan_status, "Last Updated": last_updated},
+            "meta": {"Version": _migrated_version(plan_dir), "Status": plan_status, "Last Updated": last_updated},
             "input_paths": input_paths}
 
 

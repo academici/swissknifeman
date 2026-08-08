@@ -5,11 +5,11 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-08 (D118–D130: shared-first multiprovider; adaptive review; priority `repair-now`; P0 и P1.1–P1.4 закрыты; Claude follow-up поставлен после P2.7) · **Соответствует plan.md:** v0.26.0
+**Обновлён:** 2026-08-08 (D118–D131: shared-first multiprovider; adaptive review; priority `repair-now`; stage-aware read admission; P0/P1 и P2.1–P2.7 терминальны) · **Соответствует plan.md:** v0.27.0
 
 ## Как читать
 
-Из 45 items **42 несут `Exec = manual`** (§3 Routing): их не исполняет `task:plan-exec` —
+Из 47 items **44 несут `Exec = manual`** (§3 Routing): их не исполняет `task:plan-exec` —
 носитель либо голый промпт item'а, либо `task:plan-run <ID> Pn.m` под ПРОВЕРЕННЫМ маршрутом
 сессии. Три item'а (`P0.2`, `P2.6`, `P6.9`) — `plan-exec` (`P0.4` ушёл в `manual` по D110).
 
@@ -44,8 +44,10 @@
 | P2.4 | solo | plan-run (manual) | implementation/high | — | ядро `plan.md` и владельческий вид; меняет канон Meta и доски |
 | P2.5 | solo | plan-run (manual) | implementation/high | — | слепок — единственное, что осталось исполнителю от состояния мира после ухода handoff с пути |
 | P2.6 | solo | plan-exec | implementation/medium | — | вид не коммитится и не стоит на живом пути — цена ошибки локальна |
-| P2.7 | solo | plan-run (manual) | implementation/high | — | в работе: D130 синхронизирует closure-path без cold start; после зелёного Codex-результата P6.2 переносит правило в canonical commands и регенерирует Claude-проекцию |
-| P2.8 | solo | plan-run (manual) | implementation/high | — | self-host текущего реального плана — первая вертикальная field-проверка shared carriers; provider-specific семантика запрещена |
+| P2.7 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — closure projection/status-aware resolution; P6.2 позже переносит `repair-now` в canonical commands |
+| P2.8 | solo | plan-run (manual) | implementation/high | ✅ D131 принят | lossless migration + честный baseline D2(a)/D2(b); не выдаёт future forecast за admission |
+| P2.9 | solo | plan-run (manual) | frontier/high | ✅ D131 принят | minor public-contract revision: stage-aware hard admission + bounded task carriers |
+| P2.10 | solo | plan-run (manual) | implementation/high | — | применить P2.9 ко всему read graph и вынести независимый self-host D74 verdict; без него P2 не закрывается |
 | P3.1 | solo | plan-run (manual) | frontier/high | — | форма манифеста входов — публичный контракт для всех новых планов флота |
 | P3.2 | solo | plan-run (manual) | implementation/high | — | детерминизм сборщика несёт гейт свежести; недетерминированный делает проверку вечно красной |
 | P3.3 | solo | plan-run (manual) | implementation/high | — | ГОЛОВНОЙ гейт плана (D2) против замороженного порога |
@@ -106,7 +108,7 @@ run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P3.4-P3.5
 
 ### Одиночные items — общая форма запуска
 
-`Exec = manual` (42 items): `task:plan-exec` их НЕ исполняет — он обязан отвергнуть undershoot.
+`Exec = manual` (44 items): `task:plan-exec` их НЕ исполняет — он обязан отвергнуть undershoot.
 Носитель — `task:plan-run <ID> Pn.m` под маршрутом, ПРЕДПИСАННЫМ §3 Routing, либо голый промпт
 item'а; исполнитель обязан напечатать фактическую пару класс/effort в отчёте и в Update Log.
 

@@ -542,8 +542,9 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
         raise PlanWeightError(str(exc)) from exc
+    layout = plan_layout.layout_version(plan_dir)
     for phase_id, phase_path in phase_files.items():
-        parsed = plan_lint.parse_phase_md(phase_path, phase_id, diag)
+        parsed = plan_lint.parse_phase_md(phase_path, phase_id, diag, layout=layout)
         if parsed is None:
             continue
         for item_id, occurrences in parsed["items"].items():

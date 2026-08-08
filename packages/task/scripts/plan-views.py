@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PKG_ROOT / "lib"))
 
-from task import plan_bundle, plan_closure, plan_decisions, plan_history, plan_item_state, plan_status  # noqa: E402
+from task import plan_bundle, plan_closure, plan_decisions, plan_history, plan_item_state, plan_returns, plan_status  # noqa: E402
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Собрать или проверить виды исполняемого плана")
-    parser.add_argument("view", choices=("bundle", "closure", "decisions", "history", "status", "state"), help="вид для генерации")
+    parser.add_argument("view", choices=("bundle", "closure", "decisions", "history", "returns", "status", "state"), help="вид для генерации")
     parser.add_argument("--plan-dir", required=True, type=Path, help="каталог плана")
     parser.add_argument("--check", action="store_true", help="только проверить свежесть")
     parser.add_argument("--all", action="store_true", help="все item (state или bundle)")
@@ -22,6 +23,8 @@ def main(argv=None):
     parser.add_argument("--stdout", action="store_true", help="напечатать bundle вместо записи")
     parser.add_argument("--phase", help="одна фаза Pn (closure)")
     parser.add_argument("--output", type=Path, help="явно материализовать history view по этому пути")
+    parser.add_argument("--json", action="store_true", help="напечатать детерминированный JSON (returns)")
+    parser.add_argument("--fingerprint", action="store_true", help="показать fingerprints (returns)")
     args = parser.parse_args(argv)
     try:
         if args.view == "bundle":
@@ -51,13 +54,21 @@ def main(argv=None):
             else:
                 print(plan_history.render_history(args.plan_dir, args.item), end="")
                 return 0
+        elif args.view == "returns":
+            if args.all or args.item or args.phase or args.output or args.check or args.stdout:
+                raise ValueError("returns принимает только --plan-dir, --json и --fingerprint")
+            result = plan_returns.returns(args.plan_dir)
+            if not args.fingerprint:
+                result = {key: value for key, value in result.items() if key != "fingerprints"}
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+            return 0
         elif args.view == "status":
             outputs = (plan_status.build_status(args.plan_dir, check=args.check),)
         else:
             if args.all == bool(args.item) or args.stdout:
                 raise ValueError("state требует ровно один из --all / --item")
             outputs = plan_item_state.build_states(args.plan_dir, item_id=args.item, check=args.check)
-    except (plan_bundle.BundleError, plan_closure.ClosureError, plan_decisions.DecisionError, plan_history.HistoryError,
+    except (plan_bundle.BundleError, plan_closure.ClosureError, plan_decisions.DecisionError, plan_history.HistoryError, plan_returns.ReturnError,
             plan_item_state.ItemStateError, plan_status.StatusError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

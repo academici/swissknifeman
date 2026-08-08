@@ -53,14 +53,14 @@ Any observed underestimate is a contract failure, not tolerance. It requires a n
 calibration artifact, a decision record, and revalidation before the new unit can replace §1.
 Changing provider, model, probe protocol, classifier, or usage semantics triggers the same review.
 
-## 5. Anti-displacement rule — D74
+## 5. Anti-displacement rule — агрегат и дробление (D74)
 
-The aggregate is the total mandatory-read weight over the plan's closed read graph: all mandatory
+The aggregate (`агрегат`) is the total mandatory-read weight over the plan's closed read graph: all mandatory
 carriers, including generated carriers, plus per-file overhead. Every acceptance report must print
 this aggregate beside the per-item result and compare it with the aggregate from before the
 restructuring.
 
-Splitting an item below the per-item ceiling or moving mandatory content outside the measured graph
+Splitting (`дробление`) an item below the per-item ceiling or moving mandatory content outside the measured graph
 is not by itself an improvement. The report must distinguish, by the aggregate values, between:
 
 - splitting that reduced total mandatory work; and

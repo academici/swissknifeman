@@ -1,5 +1,6 @@
 """Independent policy gates and canon registries used by plan-lint."""
 from .common import *
+from task import plan_decisions
 
 
 def _portability_execution_paths(fields):
@@ -386,6 +387,36 @@ def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
     declared, _ = (meta or {}).get(CLOSURE_META_FIELD, (None, None))
     if declared is None or declared.strip() != CLOSURE_PROTOCOL_V1:
         return
+
+    try:
+        is_v2 = plan_layout.layout_version(plan_dir) == "v2"
+    except plan_layout.PlanLayoutError:
+        is_v2 = False
+    if is_v2:
+        try:
+            pattern = plan_layout.carrier_glob(plan_dir, "decision-record")
+        except plan_layout.PlanLayoutError:
+            return
+        for decision_path in sorted(pattern.parent.glob(pattern.name)):
+            if not decision_path.is_file():
+                continue
+            try:
+                fields, body = plan_decisions.parse_frontmatter(
+                    decision_path.read_text(encoding="utf-8"), path=decision_path)
+            except (OSError, plan_decisions.DecisionError):
+                continue  # parse_decision/projector own malformed-record diagnostics.
+            decision_id = fields.get("id", decision_path.stem.split("-", 1)[0])
+            date = fields.get("date", "")
+            if (not isinstance(date, str) or date < CONSEQUENCES_CANON_DATE
+                    or not CONSEQUENCES_STEMS_RE.search(body)):
+                continue
+            if not re.search(r"^##\s+Consequences\s*$", body, re.MULTILINE):
+                diag.error(decision_path, 1,
+                           f"Decision Log {decision_id}: маркер отмены/замены решения "
+                           f"без `{CONSEQUENCES_LITERAL}` (канон plan-protocol §6, forward-only "
+                           f"с {CONSEQUENCES_CANON_DATE}, D103)")
+        return
+
     _, dl_body, dl_start = _find_section(plan_lines, DECISION_LOG_HEADER_RE)
     if dl_body is None:
         return

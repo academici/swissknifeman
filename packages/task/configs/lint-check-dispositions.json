@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "convention": "module-local functions named _lint_* in task.plan_lint_checks",
+  "checks": {
+    "task.plan_lint_checks.common._lint_audit_scope_payload": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_contracts_cross_plan": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_journal_exceptions_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_plan_brief_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_plan_identity_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_plan_index_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_plan_journal_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_plan_md_20": {"disposition": "migrated"},
+    "task.plan_lint_checks.parsing._lint_plan_roadmap_20": {"disposition": "unchanged"},
+    "task.plan_lint_checks.parsing._lint_v2_decision_pointer": {"disposition": "migrated"},
+    "task.plan_lint_checks.policy._lint_checkpointed_83": {"disposition": "unchanged"},
+    "task.plan_lint_checks.policy._lint_closure_reports_81": {"disposition": "unchanged"},
+    "task.plan_lint_checks.policy._lint_consequences_82": {"disposition": "migrated"},
+    "task.plan_lint_checks.policy._lint_handoff_board_113": {"disposition": "unchanged"},
+    "task.plan_lint_checks.policy._lint_tiered_portability_22": {"disposition": "unchanged"},
+    "task.plan_lint_checks.policy._lint_write_site_codes_44": {"disposition": "unchanged"}
+  }
+}

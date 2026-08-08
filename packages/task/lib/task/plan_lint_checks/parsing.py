@@ -1,6 +1,7 @@
 """Parsers and carrier-local structural checks for executable plans."""
 from .common import *
 from .policy import *
+from task import plan_decisions
 
 
 def _lint_plan_md_20(lines, path, diag):
@@ -24,6 +25,40 @@ def _lint_plan_md_20(lines, path, diag):
         if expected and title != expected:
             diag.warning(path, lineno,
                          f"секция «## {n}. {title}» ≠ канонической «## {n}. {expected}»")
+
+    try:
+        layout = plan_layout.layout_version(Path(path).parent)
+    except plan_layout.PlanLayoutError:
+        layout = "v1"
+
+    if layout == "v2":
+        # The v2 core deliberately has neither an inline Update Log nor an inline
+        # decision table.  Keep the existing warnings, but obtain their facts from
+        # the authoritative append-only carriers rather than silently skipping
+        # them with the removed sections.
+        journal_path = Path(path).parent / "journal.jsonl"
+        for lineno, raw in enumerate(_read_lines(journal_path) or (), 1):
+            try:
+                entry = json.loads(raw)
+            except json.JSONDecodeError:
+                continue  # `_lint_plan_journal_20` owns malformed-record reporting.
+            note = entry.get("note") if isinstance(entry, dict) else None
+            if isinstance(note, str) and len(note) > UPDATE_LOG_MAX_CHARS:
+                diag.warning(journal_path, lineno,
+                             f"Update Log: запись «Что» {len(note)} символов > "
+                             f"{UPDATE_LOG_MAX_CHARS} — канон: ≤2 строк + ссылка на "
+                             "Completion Notes, не пересказ")
+        try:
+            decisions = plan_decisions.load_decisions(Path(path).parent)
+        except plan_decisions.DecisionError:
+            return  # the decision parser/projector reports the carrier defect.
+        if len(decisions) >= 3 and not any(RAG_MARKER_RE.search(decision.body)
+                                           for decision in decisions):
+            diag.warning(Path(path).parent / "decisions", 0,
+                         f"Decision Log: {len(decisions)} решений и ни одного маркера "
+                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — несущие "
+                         "факты не промаркированы (SKILL §7)")
+        return
 
     # (б) Update Log — лимит «Что»
     _, ul_body, ul_start = _find_section(lines, UPDATE_LOG_HEADER_RE)

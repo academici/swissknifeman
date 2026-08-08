@@ -112,6 +112,15 @@ Use `--check` in automation; it regenerates in memory and rejects any byte
 drift. A v2 `## 5. Decision Log` is only a pointer to that catalog and command;
 `## Обсуждение` is replaced by the proposed-decision view.
 
+## Linter continuity
+
+`configs/lint-check-dispositions.json` records the layout-v2 disposition of
+every module-local `_lint_*` check. The accompanying test derives that set by
+introspection, so a newly added check without a disposition fails validation.
+Checks whose old carrier disappeared retain their meaning by reading v2
+decision records and `journal.jsonl`: decision RAG markers, replacement
+`Consequences`, and the Update Log length limit do not silently disappear.
+
 ## Bundle input manifest
 
 Build the deterministic, committed manifest for every item with

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: сохранена непрерывность `plan-lint` при layout v2.** Реестр
+  диспозиций с интроспекционной проверкой покрывает все `_lint_*`-проверки;
+  RAG/Consequences решений и лимит Update Log читают v2-носители `decisions/`
+  и `journal.jsonl`, сохраняя ветку v1.
+
 - **`task`: `plan-lint` теперь проверяет frozen read-path v1.** Проверяются порядок
   volatility, исключение history из executor path и запрет active item’у читать item-spec
   терминальной фазы; проверки опираются на registry/spec/resolver (`2026.08.07-PLAN-ECONOMY` P3.5).

@@ -31,7 +31,7 @@ $ task:plan-run 2026.08.07-PLAN-ECONOMY P2.8
 
 **Done:** P2.7 поставил status-aware phase resolver и generated `phase-closure`; закрытые фазы
 исключены из живых путей, аудитор сохраняет адресацию. D130 синхронизировал четыре
-registry/spec copies на `.closed.md`. Item-коммит: `f03d0eb9`.
+registry/spec copies на `.closed.md`. Item-коммит: `f03d0eb9`; post-review fix: `e4674284`.
 
 **Remaining:** P2.8–P6. Follow-up P2.6: литеральный full unittest без корневого `PYTHONPATH`
 не воспроизводит штатный package launcher.

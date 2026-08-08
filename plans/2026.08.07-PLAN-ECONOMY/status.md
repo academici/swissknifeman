@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 5767801b436f67e7da655ab133d4120b18fb21b4a11708c4b2d251454204a2d4
+inputs_sha256: 48138503299df0600e88d1258d6d544fe10b50f110f4b0129f8fd5af5e9380a2
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
-| P3 | Собирать bundle и включить машинный гейт | 3/7 | ⬜ Not started |
+| P3 | Собирать bundle и включить машинный гейт | 4/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
@@ -73,7 +73,7 @@ generated_by: task plan-views status
 | P3.1 | Заморозить форму манифеста входов пункта | 🟢 Done | 2026-08-08 |
 | P3.2 | Построить детерминированный сборщик bundle | 🟢 Done | 2026-08-08 |
 | P3.3 | Включить гейт бюджета чтения и читаемости файлов | 🟢 Done | 2026-08-08 |
-| P3.4 | Включить гейт разрешимости bundle и свежести производных | ⬜ Not started | 2026-08-08 |
+| P3.4 | Включить гейт разрешимости bundle и свежести производных | 🟢 Done | 2026-08-08 |
 | P3.5 | Включить гейт предиката порядка и границ обязательного чтения | ⬜ Not started | 2026-08-08 |
 | P3.6 | Перевести осиротевшие проверки линтера на носители v2 | ⬜ Not started | 2026-08-08 |
 | P3.7 | Заморозить и построить гейт потребителя (D13-б1) | ⬜ Not started | 2026-08-08 |
@@ -215,6 +215,10 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; deterministic Bundle v1 builder, lifted byte-identical schema, CLI bundle modes and atomic unresolvable refusal committed at 6cfb9d6a; task validate: 619 tests green on 6cfb9d6a; write-site: pre_mutation: allow · pre_final: allow; deviation: owner-authorized D132 same-session reconciliation. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; D2 read-budget hard-gate for ready layout-v2 items committed at 2381ac2d; task validate: 625 tests green on 2381ac2d; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · Validation calls unsupported plan-views.py all; plan-design must reconcile the closed generator surface |
+| 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-approved same-session repair: make P3.4 validation use existing explicit plan-views modes and materialize committed bundles |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; bundle freshness gate and committed active-phase artifacts committed at 08af02ac; task validate: 629 tests green; write-site: pre_mutation: allow · pre_final: allow; deviation: owner-authorized D133–D135 same-session reconciliation. |
 
 ## Owner Gates
 
@@ -229,3 +233,4 @@ generated_by: task plan-views status
 - P2.7: known deviation
 - P3.1: known deviation
 - P3.2: known deviation
+- P3.4: known deviation

@@ -1,50 +1,54 @@
-# HANDOFF — 2026-08-08 — after P2.10
+# HANDOFF — 2026-08-08 — after P3.1
 
-**Next:** `/task:plan-run 2026.08.07-PLAN-ECONOMY P3.1`
+**Next:** «ЗАПУСК ВРУЧНУЮ: implementation/high»
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high |
+| Model | gpt-5.6-terra |
+| Thinking | high — детерминизм сборщика несёт гейт |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | NEW SESSION — manual item |
-| Суть | Исполнить P3.1: заморозить форму bundle v1. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.1'` |
+| Суть | Исполнить P3.2: построить детерминированный сборщик bundle. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.2'` |
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
+| Model | implementation |
 | Effort | high |
 | Capabilities | — |
-| Context | NEW SESSION — manual item |
-| Суть | Исполнить P3.1: заморозить форму bundle v1. |
+| Context | continue (/clear) — ручной item |
+| Суть | Исполнить P3.2: построить детерминированный сборщик bundle. |
 | Команда | — |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.1
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.2
 ```
 
-**Done:** P2.10 closed: 9 ready items pass D2(a)+D2(b), 21 future inputs are valid
-pending-producer edges, D74 aggregate falls 2263520 → 1678553, and the read-only
-ARTIFEX dry run materializes 45 items / 1124 inventory elements with unchanged source SHA.
-See `findings/22-p2-final-admission.md`.
+**Done:** P3.1 closed green. Contract `bundle` v1 is frozen in a semantic document and Draft
+2020-12 JSON Schema with one illustrative example; the closed five-code failure taxonomy,
+raw-byte and selected-byte integrity, declaration freshness, canonical digests, provenance,
+commit policy, and rejected alternatives are explicit. Item commit: `31cf532b`.
 
-**Remaining:** P3.1 and the remaining P3–P6 executable items.
+**Remaining:** P3.2 and the remaining P3–P6 executable items.
 
-**Sources of truth:** `phases/P2/P2.10.md` · `findings/22-p2-final-admission.md` ·
-`artifacts/p2-admission-after.json` · `artifacts/P2/read-input-slices/manifest.json`.
+**Sources of truth:** `root/contracts/bundle-v1.md` · `root/contracts/bundle-v1.schema.json` ·
+`phases/P3/P3.1.state.md` · item commit `31cf532b`.
 
-**Open risks:** The bounded ARTIFEX projection carries two inherited non-error lint
-warnings (stale historical P1 handoff and no `HEAD` baseline for untracked output); its
-source remains read-only at SHA `f25dd39c280c17198d5bf124cd17bd5210f3f2c2a7e0a8b30cea5dfb48800c8a`.
+**Open risks:** Final `plan-lint --baseline HEAD` reports 0 errors and 4 inherited ARTIFEX
+workflow-placement/name warnings, with 0 new findings. During the in-progress event the accepted P3
+DoR text transiently exposed two false-positive warnings; closing P3.1 removed them. A separate
+mixed-state projection defect remains: `status.md` reports P3 as `⬜ Not started` while its counter is
+`1/7`, because `plan_status._phase_status` has no branch for terminal-plus-not-started items.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: none; manual ARTIFEX projection remains forbidden.
-- Deferred: P3.1 bundle-v1 contract design.
+- Workarounds: none; generated state/status were rebuilt through `plan-views.py`.
+- Deferred: add the mixed terminal/not-started → `🟡 In progress` branch in
+  `packages/task/lib/task/plan_status.py::_phase_status` plus a regression test in the owning task
+  package; keep it outside P3.1's plan-only Files.
 - Open questions: —

@@ -10,19 +10,17 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import io
 import json
 import re
 import subprocess
 import sys
+import tarfile
+import tempfile
 from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(REPO / "packages/task/lib"))
-
-from task import plan_lint, plan_weight, token_estimate  # noqa: E402
-
-
 PLAN_ROOT = REPO / "plans/2026.08.07-PLAN-ECONOMY"
 OUT = Path(__file__).resolve().parent
 SOURCE_TREE = "b82aa8ee"
@@ -58,7 +56,10 @@ def sha256(data: bytes) -> str:
 
 
 def source_bytes(path: Path) -> bytes:
-    relpath = path.resolve().relative_to(REPO).as_posix()
+    try:
+        relpath = path.resolve().relative_to(REPO).as_posix()
+    except ValueError as exc:
+        raise ValueError(f"source path is outside repository: {path}") from exc
     completed = subprocess.run(
         ["git", "show", f"{SOURCE_TREE}:{relpath}"],
         cwd=REPO,
@@ -73,8 +74,56 @@ def source_bytes(path: Path) -> bytes:
     return completed.stdout
 
 
+def pinned_runtime() -> tuple[tempfile.TemporaryDirectory, bytes]:
+    """Materialize the estimator/resolver from SOURCE_TREE, never from the worktree."""
+    completed = subprocess.run(
+        ["git", "archive", "--format=tar", SOURCE_TREE, "packages/task/lib", "packages/task/configs", "core"],
+        cwd=REPO,
+        check=False,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"cannot materialize pinned runtime {SOURCE_TREE}: "
+            f"{completed.stderr.decode('utf-8', errors='replace').strip()}"
+        )
+    runtime = tempfile.TemporaryDirectory(prefix="p1-path-runtime-")
+    with tarfile.open(fileobj=io.BytesIO(completed.stdout), mode="r:") as archive:
+        archive.extractall(runtime.name, filter="data")
+    sys.path.insert(0, str(Path(runtime.name) / "packages/task/lib"))
+    sys.path.insert(0, runtime.name)
+    return runtime, completed.stdout
+
+
+_PINNED_RUNTIME, _PINNED_RUNTIME_ARCHIVE = pinned_runtime()
+
+from task import plan_weight, token_estimate  # noqa: E402
+
+
 def read(path: Path) -> str:
     return source_bytes(path).decode("utf-8", errors="replace")
+
+
+def resolve_candidate_pinned(token: str, roots: list[Path]) -> Path | None:
+    candidate = Path(token).expanduser()
+    candidates = [candidate] if candidate.is_absolute() else [root / candidate for root in roots]
+    for path in candidates:
+        try:
+            source_bytes(path)
+        except ValueError:
+            continue
+        return path.resolve()
+    return None
+
+
+def plan_id_from_text(text: str) -> str:
+    for line in text.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) >= 2 and cells[0] == "Plan ID":
+            return cells[1]
+    raise ValueError("Plan ID is absent from pinned plan.md")
 
 
 def write(path: Path, text: str) -> None:
@@ -251,14 +300,13 @@ def select_text(path: Path, entry: str, explicit: str | None = None) -> tuple[st
 
 
 def required_inputs(plan_dir: Path, plan_id: str, item_id: str, required: str) -> list[dict]:
-    repo_root = plan_weight.repo_root_for(plan_dir)
-    roots = [plan_dir, repo_root]
+    roots = [plan_dir, REPO]
     inputs: list[dict] = []
     seen: set[Path] = set()
     for entry in plan_weight.split_entries(required):
         hits = 0
         for token, _declared in plan_weight.path_candidates(entry):
-            path = plan_weight.resolve_candidate(token, roots)
+            path = resolve_candidate_pinned(token, roots)
             if path is None or path in seen:
                 continue
             seen.add(path)
@@ -311,7 +359,8 @@ def main() -> None:
     artifact = token_estimate.load_artifact()
     limits = plan_weight.load_read_limit()
     fleet_path = PLAN_ROOT / "artifacts/fleet-weight.json"
-    fleet = json.loads(fleet_path.read_text(encoding="utf-8"))
+    fleet_raw = source_bytes(fleet_path)
+    fleet = json.loads(fleet_raw)
     legacy_plans = {plan["plan_id"]: plan for plan in fleet["plans"]}
     generator_hash = sha256(Path(__file__).read_bytes())
     threshold = 100000
@@ -320,6 +369,7 @@ def main() -> None:
         "generated_by": "artifacts/p1-path-reconstruction/generate.py",
         "generator_sha256": generator_hash,
         "source_tree": SOURCE_TREE,
+        "runtime_archive_sha256": sha256(_PINNED_RUNTIME_ARCHIVE),
         "unit": {
             "calibration_id": f"token-estimate-calibration@{artifact['version']}",
             "provider": artifact["calibration_target"]["provider"],
@@ -338,9 +388,7 @@ def main() -> None:
     }
     for sample in SAMPLES:
         plan_dir: Path = sample["plan_dir"]
-        diag = plan_lint.Diagnostics()
-        meta, _ = plan_lint.parse_plan_md(plan_dir / "plan.md", diag)
-        plan_id = meta["Plan ID"][0]
+        plan_id = plan_id_from_text(read(plan_dir / "plan.md"))
         legacy_plan = legacy_plans[plan_id]
         legacy = {item["item_id"]: item for item in legacy_plan["items"]}
         core = plan_core(plan_dir)
@@ -351,7 +399,7 @@ def main() -> None:
             "legacy_floor_bytes": legacy_floor_bytes(legacy_plan),
             "legacy_baseline": {
                 "source": str(fleet_path.relative_to(REPO)),
-                "source_sha256": sha256(fleet_path.read_bytes()),
+                "source_sha256": sha256(fleet_raw),
             },
             "items": [],
         }

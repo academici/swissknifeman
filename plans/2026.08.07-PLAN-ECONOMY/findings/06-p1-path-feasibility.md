@@ -63,9 +63,10 @@ item-state. Двойной прогон дал один byte digest набора
 `8adaa14a7d09e2be1b673cc50bbb2f361df16a16a947bf560004e27128029255`.
 
 Legacy-v1 значения и floor берутся из замороженного generated baseline
-`artifacts/fleet-weight.json`, а исходные байты v2 — из дерева item-коммита `b82aa8ee`, не из
-mutable plan bookkeeping или рабочего дерева. Sample aggregate: legacy-v1 lower bound `763262`,
-reconstructed-v2 `137349`. Это не выдаётся за
+`artifacts/fleet-weight.json`, а исходные байты v2, калибровка, read-limit и runtime
+оценщика/резолвера — из дерева item-коммита `b82aa8ee`, не из mutable plan bookkeeping или
+рабочего дерева. SHA-256 materialized runtime archive записан в `p1-feasibility.json`. Sample
+aggregate: legacy-v1 lower bound `763262`, reconstructed-v2 `137349`. Это не выдаётся за
 whole-plan closed-graph aggregate: выборка проверяет выполнимость пути и тяжёлые Required Reads,
 но не заменяет двурукую приёмку P6.8. Обязательные входы не исключены: явно объявленные slices
 остаются внутри измеряемого bundle и привязаны к source/selected SHA-256.

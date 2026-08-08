@@ -1,8 +1,9 @@
 {
   "schema": "p1-feasibility-v1",
   "generated_by": "artifacts/p1-path-reconstruction/generate.py",
-  "generator_sha256": "2b7280bb6c7ff80049dbcac9456328ca924f8b1ada9ceae5480af8f87ae793b4",
+  "generator_sha256": "031148ac714e5264df44c55df177d6d6db46b3974815169f3d448200bf366f1e",
   "source_tree": "b82aa8ee",
+  "runtime_archive_sha256": "25e2d8469dd69996db06bce7563f5fb7bca797950f50ec1dadadb325c519e4c8",
   "unit": {
     "calibration_id": "token-estimate-calibration@2.0.0",
     "provider": "codex",

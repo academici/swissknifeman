@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: b3d8e704bc2f9c3e1428edb64deaad53108a6ab0e008d4c4752eb226b5e90fe3
+inputs_sha256: f724715bdab98fee580e1bf1628ae6ba6331773feec5c6e7e1429a708f6f2512
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 3/6 | ⬜ Not started |
+| P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -87,7 +87,7 @@ generated_by: task plan-views status
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | 🟢 Done | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟠 Done with deviations | 2026-08-08 |
 | P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | 🟠 Done with deviations | 2026-08-08 |
-| P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | ⬜ Not started | 2026-08-08 |
+| P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | 🟠 Done with deviations | 2026-08-08 |
 
 ## Phase P5
 
@@ -248,6 +248,9 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · P4.5 closure lint K=1: final note exceeds 300 chars; append-only forbids rewrite and no forward correction exists. Need plan-design; item commit 39bd5e2a preserved. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D141: forward-only note projection and writer policy; P4.5 resumed. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; item 39bd5e2a; D141 repair 567efe66; task 655/skiller 631 tests, validates and docs build passed; write-site: pre_mutation: allow · pre_final: allow; deviation: owner widened scope; root validate absent; hook finding 23 remains. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; hook/prose deviations recorded. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 
@@ -270,3 +273,4 @@ generated_by: task plan-views status
 - P4.3: known deviation
 - P4.4: known deviation
 - P4.5: known deviation
+- P4.6: known deviation

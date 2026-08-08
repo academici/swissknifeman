@@ -6,7 +6,7 @@ immutable plan it produced.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 import json
 import os
@@ -994,7 +994,16 @@ def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProven
                         target.as_posix(), provenance.artifact_id, target.as_posix()))
         return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
     if not _matching_identity(record, provenance):
-        return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, _managed_hash(target, result, codec), "record-identity-mismatch"
+        # A renderer upgrade is allowed to refresh an artifact only when every
+        # non-renderer provenance field still agrees and disk exactly matches the
+        # locked old output.  Any other identity mismatch remains fail-closed.
+        renderer_upgrade = (
+            record.adapter_version != provenance.adapter_version
+            and replace(record, adapter_version=provenance.adapter_version,
+                        rendered_hash=provenance.rendered_hash) == provenance)
+        if not renderer_upgrade:
+            return (DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE,
+                    _managed_hash(target, result, codec), "record-identity-mismatch")
     if not target.exists():
         return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
     observed_hash = _managed_hash(target, result, codec)
@@ -1005,8 +1014,19 @@ def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProven
             return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REPAIR, observed_hash, "explicit-repair"
         return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REFUSE, observed_hash, "repair-required"
     if record != provenance:
+        if (record.adapter_version != provenance.adapter_version
+                and replace(record, adapter_version=provenance.adapter_version,
+                            rendered_hash=provenance.rendered_hash) == provenance):
+            # The bytes on disk still exactly match the locked renderer output.  A
+            # deterministic renderer may legitimately change its projection while
+            # the canonical source is unchanged; refresh that managed artifact and
+            # its lock.  A user edit was already rejected above because its hash
+            # would differ from ``record.rendered_hash``.
+            return (DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE,
+                    observed_hash, "renderer-upgraded")
         if record.source_hash == provenance.source_hash:
-            return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, observed_hash, "record-provenance-mismatch"
+            return (DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE,
+                    observed_hash, "record-provenance-mismatch")
         return DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE, observed_hash, "source-changed"
     return DriftObservation.CLEAN, ArtifactActionKind.NOOP, observed_hash, "clean"
 

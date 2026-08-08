@@ -17,11 +17,12 @@ from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderReque
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
                                     plan_artifact_render)
 from core.provider.lock import (ArtifactPlan, apply_plan, plan_artifact_lock)
+from core.provider.runtime import codex_task_plugin_root_expression
 from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_CLASSES,
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.3"
+ADAPTER_VERSION = "1.0.4"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -69,6 +70,8 @@ _CODEX_RUNTIME_FORBIDDEN = (
     ("claude-session-control",
      re.compile(r"(?<![\w/])/(?:model|effort|clear)(?![\w/-])")),
     ("claude-workflow-carrier", re.compile(r"Workflow\(")),
+    ("claude-plugin-root", re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}")),
+    ("project-relative-task-runtime", re.compile(r"PYTHONPATH=packages/task/lib")),
 )
 
 
@@ -980,6 +983,11 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
 
 def _project_codex_runtime_tokens(text: str) -> str:
     """Project the finite standalone Claude token set without touching slash notation."""
+    task_root = codex_task_plugin_root_expression()
+    text = text.replace('PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib"',
+                        f'PYTHONPATH="{task_root}/lib"')
+    text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py"',
+                        f'python3 "{task_root}/scripts/plan-lint.py"')
     def replacement(match: re.Match[str]) -> str:
         if match.group("workflow_path") or match.group("workflow"):
             return _CODEX_WORKFLOW_CARRIER

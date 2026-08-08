@@ -1,0 +1,11 @@
+{
+  "skill": "dart-package-development",
+  "should_trigger": [
+    "Нужно выпустить Dart SDK и проверить обратную совместимость публичного API.",
+    "Меняю exports и JSON-модель в Dart package, как не сломать потребителей?"
+  ],
+  "should_not": [
+    "Сверстай Flutter-экран из макета Figma.",
+    "Как написать миграцию Laravel?"
+  ]
+}

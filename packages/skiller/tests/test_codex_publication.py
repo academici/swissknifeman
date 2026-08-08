@@ -131,6 +131,23 @@ class TestCodexPublication(unittest.TestCase):
             self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
             self.assertFalse((cached / excluded_path).exists())
 
+    def test_core_bundle_projects_task_runtime_without_consumer_copy(self):
+        core_root, core = self._core_artifacts()
+        runtime_path = Path(
+            "skills/general/plan-protocol/snippets/journal-template.md")
+        canonical = (
+            self.package_root / "skills/general/plan-protocol/snippets/journal-template.md"
+        ).read_bytes()
+        artifacts = {
+            item.target.relative_to(core_root): item.managed_bytes
+            for item in core
+        }
+        projected = artifacts[runtime_path]
+        self.assertIn(b"${CLAUDE_PLUGIN_ROOT}/packages/task/lib", canonical)
+        self.assertNotIn(b"${CLAUDE_PLUGIN_ROOT}", projected)
+        self.assertNotIn(b"PYTHONPATH=packages/task/lib", projected)
+        self.assertIn(b'task@swissknifeman', projected)
+
     def test_repository_core_cache_matches_current_catalog(self):
         core_root, core = self._core_artifacts()
         self._assert_core_cache_matches_catalog(core_root, core_root, core)

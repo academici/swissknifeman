@@ -64,7 +64,7 @@ effort: medium
    способом:
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
@@ -97,7 +97,7 @@ effort: medium
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
-   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
    команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned Sonnet/medium у `plan-exec`, фактическая сессии у `plan-run`).
@@ -145,7 +145,7 @@ effort: medium
    оба предиката, `evaluate()` считает их за один вызов:
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(

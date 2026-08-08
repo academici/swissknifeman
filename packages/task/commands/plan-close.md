@@ -82,7 +82,7 @@ status-rule ниже. Точная команда, лестница маршру
    маршрут сессии» И ЕСТЬ маршрут исполнителя, лестница схлопывается в п.1 тривиально.
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
@@ -155,7 +155,7 @@ status-rule ниже. Точная команда, лестница маршру
    ДО коммита реконсиляции; N − K > 0 (остаточные находки вне Scope item'а) — строка в
    Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
-   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).

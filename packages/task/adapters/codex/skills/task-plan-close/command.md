@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:c26baa1ce25fc8ea0afecc74495b48e9c6269cc71b4a38fb5b0c104ad35cff7b
-Adapter: task.codex-command/1.0.3
+Canonical SHA-256: sha256:e60cc7ed7fdb63918464ac1e4f3905922e24f9d9f17ac719cc4aa8a21605f419
+Adapter: task.codex-command/1.0.4
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
@@ -81,7 +81,7 @@ status-rule ниже. Точная команда, лестница маршру
    маршрут сессии» И ЕСТЬ маршрут исполнителя, лестница схлопывается в п.1 тривиально.
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
@@ -154,7 +154,7 @@ status-rule ниже. Точная команда, лестница маршру
    ДО коммита реконсиляции; N − K > 0 (остаточные находки вне Scope item'а) — строка в
    Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
-   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   `PYTHONPATH="$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
@@ -219,7 +219,7 @@ status-rule ниже. Точная команда, лестница маршру
    Закрывается ОДНА фаза, другие ещё нетерминальны — `plans/ACTIVE.md` НЕ трогай.
    `Last Updated` в `## 0. Meta` плана = дата закрытия фазы (машинного гейта нет, сверяет
    `plan-audit`).
-7. `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID> --baseline HEAD`
+7. `python3 "$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/scripts/plan-lint.py" plans/<PLAN-ID> --baseline HEAD`
    — **ПОСЛЕ шага 5** (прогон ДО перезаписи handoff ЗАПРЕЩЁН: счёт «до» не описывает
    финальное дерево; нет переменной/скрипта — предупреждение и пропуск). Счёт с
    АТРИБУЦИЕЙ: `N ERROR / M WARN — новых от закрытия: K` (`--baseline HEAD`). K > 0 —

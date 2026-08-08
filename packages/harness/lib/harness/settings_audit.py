@@ -699,7 +699,7 @@ _INTERPRETERS = {"bash", "sh", "zsh", "dash", "python", "python3", "node", "perl
 
 
 def _resolve_hook_command_path(command, target, home):
-    """Токен command-строки → путь к проверяемому файлу. Плейсхолдеры (`$VAR`/`${VAR}`)
+    """Токен command-строки → ``(путь, нужен_X_OK)``. Плейсхолдеры (`$VAR`/`${VAR}`)
     НЕ резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`.
 
     Два класса, которые наивный «первый токен» ломал ложным `error`:
@@ -718,8 +718,11 @@ def _resolve_hook_command_path(command, target, home):
     if "$" in first:
         return None
 
-    # `bash script.sh` / `python3 hook.py` → цель проверки — скрипт (второй токен).
+    requires_exec = True
+    # `bash script.sh` / `python3 hook.py` → цель проверки — скрипт (второй токен),
+    # но X_OK нужен интерпретатору, а не самому переданному ему файлу.
     if Path(first).name in _INTERPRETERS:
+        requires_exec = False
         args = [t for t in tokens[1:] if not t.startswith("-")]
         if not args:
             return None  # интерпретатор без скрипта (`bash -c …`) — не проверяем
@@ -735,7 +738,7 @@ def _resolve_hook_command_path(command, target, home):
         path = Path(first)
     if not path.is_absolute():
         path = Path(target) / path
-    return path
+    return path, requires_exec
 
 
 def check_5_hooks(ctx):
@@ -760,8 +763,8 @@ def check_5_hooks(ctx):
             command = entry.get("command") if isinstance(entry, dict) else None
             if not command:
                 continue
-            path = _resolve_hook_command_path(command, ctx.target, ctx.env.home)
-            if path is None:
+            resolved = _resolve_hook_command_path(command, ctx.target, ctx.env.home)
+            if resolved is None:
                 findings.append(Finding(
                     id=5, level="info",
                     title=f"Хук {event}: команда с плейсхолдером не проверена",
@@ -770,12 +773,14 @@ def check_5_hooks(ctx):
                          "т.п.) — doctor его не резолвит.",
                 ))
                 continue
-            if not path.exists() or not os.access(path, os.X_OK):
+            path, requires_exec = resolved
+            if not path.exists() or (requires_exec and not os.access(path, os.X_OK)):
                 findings.append(Finding(
                     id=5, level="error",
                     title=f"Хук {event}: команда недоступна или неисполняема",
                     detail=f"{command} → {path}",
-                    hint="Проверь путь и права на исполнение (chmod +x).",
+                    hint=("Проверь путь." if not requires_exec
+                          else "Проверь путь и права на исполнение (chmod +x)."),
                 ))
     return findings
 
@@ -952,20 +957,20 @@ def check_8_additional_directories_missing(ctx):
 # --- Проверка №10 — bypassPermissions без skipDangerousModePermissionPrompt (info) --
 
 def check_10_bypass_without_skip_dialog(ctx):
-    """**Ровно `info`, никогда `warn`/`error`** (D3): ключ `skipDangerousModePermissionPrompt`
-    НЕ задокументирован — doctor не имеет права краснеть на недокументированном ключе,
-    хотя он наблюдался в поле (field-case). Не улучшай уровень."""
+    """**Ровно `info`, никогда `warn`/`error`**: documented permission key controls
+    the confirmation dialog, but its absence remains an operator choice."""
     perms = ctx.values.get("permissions") or {}
     if perms.get("defaultMode") != "bypassPermissions":
         return []
-    if ctx.values.get("skipDangerousModePermissionPrompt"):
+    if perms.get("skipDangerousModePermissionPrompt"):
         return []
     return [Finding(
         id=10, level="info",
         title="bypassPermissions без skipDangerousModePermissionPrompt",
-        detail="Ключ не задокументирован (сверка 2026-07-10), наблюдался в поле; "
-               "отсутствие может быть безвредно.",
-        hint="Информационно — doctor не гейтит недокументированный ключ (D3).",
+        detail="Подтверждение входа в bypassPermissions не отключено. Это может быть "
+               "осознанным выбором оператора.",
+        hint="Информационно: при необходимости задай permissions.skipDangerousModePermissionPrompt=true "
+             "в user/local settings, не в project settings.",
     )]
 
 

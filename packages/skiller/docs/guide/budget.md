@@ -49,12 +49,12 @@ flowchart LR
     version_gotchas["version-gotchas<br/>⊕28 ↻784"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕103 ↻2165"]:::warm
+    build_loop["build-loop<br/>⊕103 ↻2874"]:::warm
     config_conventions["config-conventions<br/>⊕114 ↻2219"]:::hot
     model_rules["model-rules<br/>⊕36 ↻761"]:::cool
     model_verification["model-verification<br/>⊕90 ↻1531"]:::warm
-    parametric_config["parametric-config<br/>⊕111 ↻2196"]:::hot
-    scene_conventions["scene-conventions<br/>⊕95 ↻914"]:::warm
+    parametric_config["parametric-config<br/>⊕111 ↻2303"]:::hot
+    scene_conventions["scene-conventions<br/>⊕95 ↻1162"]:::warm
     threading["threading<br/>⊕33 ↻660"]:::cool
   end
   subgraph botkit["botkit"]
@@ -62,6 +62,9 @@ flowchart LR
   end
   subgraph creative["creative"]
     content_creative_super_skill["content-creative-super-skill<br/>⊕111 ↻687"]:::hot
+  end
+  subgraph dart["dart"]
+    dart_package_development["dart-package-development<br/>⊕56 ↻828"]:::mild
   end
   subgraph devops["devops"]
     ci_cd["ci-cd<br/>⊕55 ↻1150"]:::mild
@@ -443,13 +446,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 230 скиллов · ⊕ always **16098** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 358355 ток · ⌥ on-demand 832540 ток (сниппеты + references).
+**Итого:** 231 скиллов · ⊕ always **16154** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 360247 ток · ⌥ on-demand 832576 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1366 | 56287 | 21553 |
+| `general` | 22 | 1366 | 56287 | 21589 |
 | `repository-bootstrap` | 13 | 1120 | 28903 | 0 |
 | `php` | 17 | 1065 | 19298 | 54837 |
 | `architect` | 15 | 1005 | 23520 | 33458 |
@@ -459,7 +462,7 @@ flowchart LR
 | `oss-dev` | 10 | 642 | 14491 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `laravel-architecture` | 6 | 596 | 9730 | 7994 |
-| `blender-modeling` | 7 | 582 | 10446 | 14235 |
+| `blender-modeling` | 7 | 582 | 11510 | 14235 |
 | `devops` | 11 | 553 | 9181 | 16993 |
 | `pm` | 10 | 462 | 11072 | 23524 |
 | `founder` | 10 | 430 | 15277 | 578 |
@@ -493,6 +496,7 @@ flowchart LR
 | `legal` | 1 | 93 | 615 | 29248 |
 | `laravel-filament` | 1 | 63 | 2374 | 3182 |
 | `python` | 2 | 63 | 1163 | 0 |
+| `dart` | 1 | 56 | 828 | 0 |
 | `frontend-animations` | 1 | 55 | 920 | 5285 |
 | `frontend-wayfinder` | 1 | 48 | 994 | 1765 |
 | `azguard` | 1 | 37 | 1679 | 7293 |

@@ -2,7 +2,9 @@
 import json
 import shutil
 
-from core import apply_plan, atomic_write_text, find_repo_root, safe_load_json
+from core import (apply_plan, atomic_write_text, find_repo_root, parse_lock,
+                  safe_load_json, serialize_lock)
+from core.provider.lock import ArtifactLock, LOCK_RELATIVE_PATH
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags, warn)
@@ -11,7 +13,50 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
-from .publication import build_connect_distribution_plan
+from .publication import build_connect_distribution_plan, selected_distribution_providers
+
+
+def _prune_codex_connect_artifacts(target, *, dry_run):
+    """Remove only the prior Codex Connect bundle owned by its artifact lock.
+
+    A new explicit plugin selection is a replacement, not an accumulation.  The
+    provider lock may also track Claude/other artifacts, so retain every record
+    outside `.agents/plugins` owned by Codex Connect.
+    """
+    lock_path = target / LOCK_RELATIVE_PATH
+    if not lock_path.is_file():
+        return
+    try:
+        lock = parse_lock(lock_path.read_bytes())
+    except (OSError, ValueError) as exc:
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, invalid artifact lock {lock_path}: {exc}")
+    prefix = ".agents/plugins/"
+    stale = tuple(record for record in lock.records
+                  if record.provider_id.value == "codex" and record.target_path.startswith(prefix))
+    if not stale:
+        return
+    if dry_run:
+        print(f"--- dry-run: prune {len(stale)} prior Codex Connect artifact(s) ---")
+        return
+    for record in stale:
+        path = target / record.target_path
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.exists():
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, expected file artifact is a directory: {path}")
+    retained = tuple(record for record in lock.records if record not in stale)
+    atomic_write_text(lock_path, serialize_lock(ArtifactLock(lock.schema_version, retained)).decode("utf-8"))
+    bundles = target / ".agents/plugins/bundles"
+    if bundles.is_dir():
+        for directory in sorted((item for item in bundles.rglob("*") if item.is_dir()), reverse=True):
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+        try:
+            bundles.rmdir()
+        except OSError:
+            pass
 
 
 def _prepare_connect_selection(env, target, opts, config):
@@ -321,6 +366,8 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
     prepared = _prepare_connect_selection(env, target, opts, config)
+    if "codex" in selected_distribution_providers(config, project_id=target.name):
+        _prune_codex_connect_artifacts(target, dry_run=opts.get("dry_run", False))
     plans = build_connect_distribution_plan(config, target, project_id=target.name,
                                             repo_root=repo_root,
                                             plugins=prepared["plugins"])

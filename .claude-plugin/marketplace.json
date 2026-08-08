@@ -143,6 +143,19 @@
       "package": "skiller"
     },
     {
+      "name": "dart",
+      "source": "./packages/skiller/skills/dart",
+      "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+      "category": "engineering",
+      "tags": [
+        "dart",
+        "pub",
+        "package",
+        "sdk"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "devops",
       "source": "./packages/skiller/skills/devops",
       "description": "Docker environments, CI/CD pipelines, GitOps",

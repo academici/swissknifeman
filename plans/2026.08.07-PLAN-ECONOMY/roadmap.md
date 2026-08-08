@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-07 (точечная правка после разэскалации P0.4: строка P0.4 и счёт `plan-exec`-item'ов приведены к D110; полной пересборки карты заход не делал) · **Соответствует plan.md:** v0.15.0
+**Обновлён:** 2026-08-08 (D118–D122: shared Python/skills first, thin provider edges only; P0.1 payload ≤128 KiB/≤12 calls; Claude `pending-provider`; field canary P2.8/P3.7) · **Соответствует plan.md:** v0.22.0
 
 ## Как читать
 
@@ -28,11 +28,11 @@
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | solo | plan-run (manual) | implementation/high | — | калибровка — вход всех гейтов; инвариант «оценка никогда не занижает» несёт весь план, объединять нельзя |
+| P0.1 | solo | plan-run (manual) | implementation/high | — | neutral core + thin Codex usage adapter; 8 real samples, payload ≤128 KiB total, ≤12 calls; Claude deferred; v1 evidence сохраняется |
 | P0.2 | solo | plan-exec | implementation/medium | — | эмпирический зонд среды: короткий, но его результат — вход P0.3 |
 | P0.3 | solo | plan-run (manual) | implementation/high | — | инструмент замера против замороженной калибровки; корректность резолвинга — вход всех последующих гейтов |
 | P0.4 | solo | plan-run (manual) | implementation/high | — | учёт корней в `sweep` с тестами (D110–D111) + прогон по корням флота и отчёт по закрытой таксономии; правка живого инструмента флота, объединять нельзя |
-| P0.5 | solo | plan-run (manual) | frontier/high | ✅ заморозка ПОРОГА и единицы | публичный контракт протокола для флота; владельческое решение посреди — слияние невозможно по построению |
+| P0.5 | solo | plan-run (manual) | frontier/high | ✅ решения получены D113–D115 | после фактической калибровки v2 записать read-budget: 100 000, только новые layout-v2, без legacy |
 | P1.1 | B1 | plan-run серия | frontier/high | — | реестр носителей — адресное пространство всех гейтов |
 | P1.2 | B1 | ↑ | frontier/high | — | форма слепка поверх реестра B1 |
 | P1.3 | B1 | ↑ | frontier/high | — | исторический вид поверх запечатанной схемы журнала |
@@ -45,14 +45,14 @@
 | P2.5 | solo | plan-run (manual) | implementation/high | — | слепок — единственное, что осталось исполнителю от состояния мира после ухода handoff с пути |
 | P2.6 | solo | plan-exec | implementation/medium | — | вид не коммитится и не стоит на живом пути — цена ошибки локальна |
 | P2.7 | solo | plan-run (manual) | implementation/high | — | правило живого пути, которое потом меряет гейт P3 |
-| P2.8 | solo | plan-run (manual) | implementation/high | — | НЕОБРАТИМАЯ перестройка живого плана + первый настоящий замер: объединять с чем-либо запрещено |
+| P2.8 | solo | plan-run (manual) | implementation/high | — | self-host текущего реального плана — первая вертикальная field-проверка shared carriers; provider-specific семантика запрещена |
 | P3.1 | solo | plan-run (manual) | frontier/high | — | форма манифеста входов — публичный контракт для всех новых планов флота |
 | P3.2 | solo | plan-run (manual) | implementation/high | — | детерминизм сборщика несёт гейт свежести; недетерминированный делает проверку вечно красной |
 | P3.3 | solo | plan-run (manual) | implementation/high | — | ГОЛОВНОЙ гейт плана (D2) против замороженного порога |
 | P3.4 | B2 | plan-run серия | implementation/high | — | семья проверок в `plan_gates.py`; scope сцеплен файлом, маршрут и глубина ревью совпадают с P3.5 |
 | P3.5 | B2 | ↑ | implementation/high | — | вторая семья проверок в том же файле |
 | P3.6 | solo | plan-run (manual) | implementation/high | — | реестр диспозиций: доказательство «ничего не пропало» интроспекцией; отдельный вердикт |
-| P3.7 | solo | plan-run (manual) | frontier/high | — | новая семантика протокола для флота: третий исход и ключ записи результата |
+| P3.7 | solo | plan-run (manual) | frontier/high | — | контракт + ранний read-only canary: текущий layout-v2 план и временная dry-run проекция одного реального fleet-плана, без записи наружу |
 | P4.1 | solo | plan-run (manual) | frontier/high | — | форма отпечатка — адресное пространство счётчика, потолка и гейта |
 | P4.2 | solo | plan-run (manual) | implementation/high | — | редьюсер и durable-счётчик: корректность идентичности несёт весь механизм |
 | P4.3 | solo | plan-run (manual) | frontier/high | — | потолок и блокирующая сила — новая семантика протокола, необратимая после раскатки |
@@ -64,11 +64,11 @@
 | P5.3 | solo | plan-run (manual) | implementation/high | — | резолвер политики: одна ветка «разрешить по умолчанию» обесценивает всю фазу |
 | P5.4 | solo | plan-run (manual) | implementation/high | — | носители очереди + расширение ЗАМОРОЖЕННОГО реестра + выключенная проверка join'а |
 | P5.5 | solo | plan-run (manual) | implementation/high | — | замыкающий адаптер + двусоставная приёмка на живых прогонах |
-| P6.1 | solo | plan-run (manual) | implementation/high | — | путь чтения в пяти командах флота; дословность v1-ветви проверяется байтовым сравнением |
-| P6.2 | solo | plan-run (manual) | implementation/high | — | протокол ЗАКРЫТИЯ + репетиционный прогон; здесь же умирает переходное правило P2.8 |
-| P6.3 | solo | plan-run (manual) | frontier/high | — | рубрика судьи и производство `DecisionRequest`: открытая формулировка, исполняемая всем флотом |
+| P6.1 | solo | plan-run (manual) | implementation/high | — | shared команды + generated Codex projections; Codex verified, Claude pending-provider |
+| P6.2 | solo | plan-run (manual) | implementation/high | — | shared протокол закрытия и session-context resolver + thin Codex adapter; репетиционный прогон |
+| P6.3 | solo | plan-run (manual) | frontier/high | — | shared rubric/reducer + qualified Codex judge row; Claude calibration pending-provider |
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
-| P6.5 | solo | plan-run (manual) | frontier/high | — | EN-only переход (удаление 230 RU + перепривязка трёх гейтов) и канон v2: два коммита строгого порядка |
+| P6.5 | solo | plan-run (manual) | frontier/high | — | один EN canon v2 + generated Codex skill projection; Claude runtime replay позже |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
 | P6.7 | solo | plan-run (manual) | frontier/high | — | протокол приёмки замораживается ДО экземпляра; слияние с прогоном уничтожает предобъявление |
 | P6.8 | solo | plan-run (manual) | frontier/high | — | внутри item'а АВТОРИТСЯ реальный план (рука B) и выносится вердикт по головному обещанию |
@@ -106,7 +106,7 @@ run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P3.4-P3.5
 
 ### Одиночные items — общая форма запуска
 
-`Exec = manual` (41 item): `task:plan-exec` их НЕ исполняет — он обязан отвергнуть undershoot.
+`Exec = manual` (42 items): `task:plan-exec` их НЕ исполняет — он обязан отвергнуть undershoot.
 Носитель — `task:plan-run <ID> Pn.m` под маршрутом, ПРЕДПИСАННЫМ §3 Routing, либо голый промпт
 item'а; исполнитель обязан напечатать фактическую пару класс/effort в отчёте и в Update Log.
 

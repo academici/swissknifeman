@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:49e64ee7f847e5248bb026a935b7c8a255d98526ac1b487578768bb6bda07608
-Adapter: task.codex-command/1.0.3
+Canonical SHA-256: sha256:3b622ab0cf236d2606037ec63b170c20e3d54a0fcede9a442e03e80f6611ee5a
+Adapter: task.codex-command/1.0.4
 -->
 Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (implementation/medium) — не переключай вручную. Команда самодостаточна:
@@ -63,7 +63,7 @@ Adapter: task.codex-command/1.0.3
    способом:
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
@@ -96,7 +96,7 @@ Adapter: task.codex-command/1.0.3
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
-   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   `PYTHONPATH="$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
    команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
@@ -144,7 +144,7 @@ Adapter: task.codex-command/1.0.3
    оба предиката, `evaluate()` считает их за один вызов:
 
    ```
-   PYTHONPATH=packages/task/lib python3 - <<'PY'
+   PYTHONPATH="$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/lib" python3 - <<'PY'
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
@@ -204,7 +204,7 @@ Adapter: task.codex-command/1.0.3
    3) **Перезапись `handoff.md` целиком** (схема ниже). Хеш item-коммита handoff берёт ИЗ ШАГА 1 —
       коммит уже в истории (`git rev-parse --short HEAD`), поэтому хеш РЕАЛЬНЫЙ. Плейсхолдер
       вместо хеша (`<Pn.m>`, «TBD», пустая ячейка) — дефект, а не форма.
-   4) **`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID> --baseline HEAD`** —
+   4) **`python3 "$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/scripts/plan-lint.py" plans/<PLAN-ID> --baseline HEAD`** —
       ПОСЛЕ шага 3, на итоговом дереве. Прогон ДО перезаписи handoff ЗАПРЕЩЁН: закрывающий item сам
       меняет handoff, и счёт «до» не описывает состояние коммита. (Нет переменной/скрипта — предупреди.)
    5) **Счёт публикуется С АТРИБУЦИЕЙ:** `N ERROR / M WARN — новых от диффа item'а: K`

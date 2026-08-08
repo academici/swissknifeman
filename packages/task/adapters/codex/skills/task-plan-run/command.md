@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
 Canonical SHA-256: sha256:835d6e3abe3d784d05b236a53c0d1c7bdf50676403d98ea7dff7b4cc0f06668f
-Adapter: task.codex-command/1.0.3
+Adapter: task.codex-command/1.0.4
 -->
 Это ИСПОЛНЕНИЕ item'а мастер-плана под моделью сессии (D18) — третий режим `plan-exec`,
 БЕЗ пина `model`/`effort`: они наследуются из настроек текущей сессии владельца.

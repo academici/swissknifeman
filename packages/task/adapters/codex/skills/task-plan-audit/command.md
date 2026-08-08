@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
 Canonical SHA-256: sha256:7d7d987630ab91b064f5979ed8fc8493cb6a20730ec8e098687748b3746d2afa
-Adapter: task.codex-command/1.0.3
+Adapter: task.codex-command/1.0.4
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.

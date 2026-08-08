@@ -8,6 +8,12 @@
 `research/05-…` §8 (перенос гейта потребителя), `research/06-…` §6 (суждение), `research/07-…` §9.
 Читается ПЕРВЫМ при исполнении любого item'а P6.
 
+> **Актуализация 2026-08-08:** детали provider projection ниже читаются вместе с
+> `research/16-multiprovider-field-loop-2026-08-08.md` и D119–D122. Canonical commands, skills,
+> schemas и reducers — shared SSOT; provider-specific остаются только generated projections,
+> raw runtime adapters и qualified model calibration rows. Исторические Claude-названия файлов
+> описывают происхождение/удаление старых носителей, а не общий runtime contract.
+
 ---
 
 ## 1. Реконсиль контракт-блока P6 против фактически произведённого P0–P5

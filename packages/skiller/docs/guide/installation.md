@@ -196,6 +196,10 @@ skiller vendor --buckets php,quality --exclude botkit
 skiller connect --plugins php,quality
 ```
 
+Для Dart-библиотеки или SDK подключайте `dart` явно: `skiller connect --plugins dart`.
+Это пакетный набор (публичный API, null safety, тесты и совместимость); Flutter-верстка по
+Figma остаётся отдельным `mobile`-бакетом.
+
 Приоритет источников конфигурации: **флаги CLI → `.swissknife.json` → автодетект**.
 Явный выбор (`--profile`, `--buckets`, `--plugins`) запоминается в
 `projects.json` и воспроизводится при `update`; автодетект пере-резолвится

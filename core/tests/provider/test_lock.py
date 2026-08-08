@@ -122,6 +122,8 @@ class ProviderLockTests(unittest.TestCase):
         cases = (
             ("clean", self.expected, lock, None, DriftObservation.CLEAN, ArtifactActionKind.NOOP),
             ("stale-source", changed, lock, None, DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE),
+            ("renderer-change", result(body=b"new renderer output\n", adapter_version="1.0.1"), lock, None,
+             DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE),
             ("managed-drift", self.expected, lock, b"manual edit\n", DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REFUSE),
         )
         for name, expected, lock_bytes, disk, observation, action in cases:

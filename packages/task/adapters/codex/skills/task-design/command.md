@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
 Canonical SHA-256: sha256:2375c5d8d953aa704f9b96aac97bcc3800e6c97f198a0ec86c67fda61b3318ac
-Adapter: task.codex-command/1.0.3
+Adapter: task.codex-command/1.0.4
 -->
 Это задача ПРОЕКТИРОВАНИЯ — выход артефакты, НЕ код. Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/high) — не переключай вручную.

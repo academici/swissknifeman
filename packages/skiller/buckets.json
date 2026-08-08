@@ -182,6 +182,11 @@
       "figma"
     ]
   },
+  "dart": {
+    "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+    "category": "engineering",
+    "tags": ["dart", "pub", "package", "sdk"]
+  },
   "operator": {
     "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
     "category": "operations",

@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
 Canonical SHA-256: sha256:bf844e475b3cf55ec4ac4ce715a15692ac53b21f315c585ff9696f30aa3cddf2
-Adapter: task.codex-command/1.0.3
+Adapter: task.codex-command/1.0.4
 -->
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/high) — не переключай вручную. SSOT протокола — скилл
@@ -271,7 +271,7 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 
 ## Финал
 
-Прогони линтер: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<ID>`
+Прогони линтер: `python3 "$(codex plugin list --json | python3 -c 'import json,sys; data=json.load(sys.stdin); roots=[item["source"]["path"] for item in data.get("installed", []) if item.get("pluginId")=="task@swissknifeman" and item.get("enabled")]; len(roots)==1 or sys.exit("task runtime unavailable: expected one enabled task@swissknifeman plugin"); print(roots[0])')/scripts/plan-lint.py" plans/<ID>`
 (переменная не задана или скрипта нет — предупреди и пропусти, не блокер).
 Красное линтера почини в созданных файлах.
 

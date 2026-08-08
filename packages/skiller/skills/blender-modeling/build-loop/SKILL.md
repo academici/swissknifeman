@@ -86,6 +86,18 @@ Screenshot:
 
 Before sending to Blender, validate params in plain Python (no bpy): heights > 0, adjacent-segment radii match, nonzero wall thickness, clearance greater than thread profile depth. `check.py` architecture and two-level tests — `blender-modeling/parametric-config`.
 
+## Step 3.5. Whole-model or release verification
+
+Apply this reusable baseline when the scope includes all printable parts, export, STL/3MF, or a release. It does not replace model-local acceptance: the local rules own the inventory, interfaces, visual defects, printer profile, and thresholds. Never copy another model's object names or count.
+
+1. Derive expected assembled/print inventory from a documented model SSOT, such as `print_object_specs()`, `assembled_names()`, or a model-local inventory table. If no SSOT exists, create one before making a release claim; a hand-written list in a capture script is not evidence.
+2. Prove import and scene provenance. Reset model modules, put the active project root before alternate checkouts in `sys.path`, and record loaded module paths. After the normal entry point rebuilds the scene, compare final objects with the SSOT and detect foreign generated meshes and leftover temporary tools. A mixed scene is diagnostic-only, never release evidence. Do not delete foreign objects unless the active model explicitly owns that cleanup.
+3. Run mesh health for every final printable object on evaluated post-boolean geometry: non-empty/non-degenerate mesh, documented manifold or boundary exceptions only, sane volume, transforms, world-space dimensions, and relevant `test_mesh()` checks. A mirror or sibling passing never validates an unchecked object.
+4. Check real interfaces before images. Measure fit/intersection/clearance against the mating object and config-owned threshold; bbox proximity and an attractive assembled render are insufficient.
+5. Capture evidence transactionally. Record source/config/profile hashes; save visibility, selection and viewport state; isolate only target/context; restore in `finally`. Source/profile/scale/mode changes make dependent evidence stale. A dirty-tree candidate is not a committed release.
+6. Capture readable, non-edge-on views: a primary silhouette and an oblique/interface view for every part, plus xray/section context where a fit cannot otherwise be seen. Only after mesh and interface checks may screenshots support a GREEN conclusion.
+7. Keep claim boundaries explicit. Correct counts, manifold meshes, reproducible files and slicer import do not prove appearance, fit, load capacity or physical print performance. Preserve the model's `[UNVERIFIED_PHYSICAL]` boundary until an appropriate physical test exists.
+
 ## Step 4. Send model to Blender (incremental)
 
 If task touches one part — rebuild **only it**, not the whole model (faster, leaves neighbors). Full build — when verifying joints of several parts. Send pattern, module-cache reset (`del sys.modules`), and `execute_blender_code` — `blender/mcp-blender`.

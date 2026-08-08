@@ -69,3 +69,6 @@ docs/analyst/
 /audits/
 *.bak
 *.last
+
+
+/.p*

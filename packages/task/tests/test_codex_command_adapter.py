@@ -62,6 +62,18 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertIn(record.source.path.encode(), runtime)
             self.assertIn(record.source.content_hash.encode(), runtime)
 
+    def test_task_runtime_paths_are_provider_specific_and_never_project_relative(self):
+        canonical = self.catalog.content_for("task:plan-exec").decode("utf-8")
+        self.assertIn('PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib"', canonical)
+        self.assertNotIn("PYTHONPATH=packages/task/lib", canonical)
+        codex_runtime = next(
+            artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
+            if artifact.path.endswith("/task-plan-exec/command.md"))
+        self.assertIn("codex plugin marketplace list --json", codex_runtime)
+        self.assertIn("packages/task/lib/task", codex_runtime)
+        self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
+        self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
+
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (
             b"\nmodel/effort <model/effort> path/effort\n"

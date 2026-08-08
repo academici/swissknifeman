@@ -58,7 +58,7 @@ Boundary: everything computed WITHOUT bpy is separated from everything requiring
 4. **Dependent dims — in `derive_all()`.** Dims derived from others (segment height = `model.height − bottom − top`; last-knot-to-height match; joint PCD) computed once in `derive_all(...)`, called right after config instances created. Do not duplicate a formula in several places — compute in `derive_all`, read the result.
 5. **Build geometry from profile.** Revolve: assemble closed `bmesh` profile in XZ plane, apply `SCREW` modifier on Z axis (`steps = segments`, `use_merge_vertices`), apply. Extrude: build 2D section, apply `SOLIDIFY`/`Screw` with zero angle or `bmesh.ops.extrude_*`. Feed each bmesh point through `mm(...)`.
 6. **Validate invariants without Blender.** All geometric correctness conditions in `check.py`, run via plain Python (`python models/<part>/check.py`), no bpy, no render. Check: positive heights; adjacent-segment radius matching (`|r_a − r_b| ≤ tol`); nonzero wall thickness (`r_outer > r_inner`); clearance greater than thread profile depth (`thread_depth > thread_clearance`); geometry in valid range (angles 0..360 etc).
-7. **Two-level part tests.** `parts/<part>.test.py` has `test_config()` (math only, imported from `check.py`) and `test_mesh(obj)` (manifold, volume, bounding box — inside Blender). Level 1 runs in CI without Blender; level 2 on real rebuild.
+7. **Two-level part tests.** `parts/<part>.test.py` has `test_config()` (math only, imported from `check.py`) and `test_mesh(obj)` (manifold, volume, bounding box — inside Blender). Level 1 runs in CI without Blender; level 2 on real rebuild. Mesh assertions compare world-space geometry: use `obj.matrix_world @ vertex.co` when rotation/parenting matters. For rotationally replicated parts, assert radial distance `hypot(x, y)`, never a fixed-world-axis bound such as `x_max`.
 8. **Printing (FDM/SLA) — budget tolerances.** Fit + thread clearances = separate params (`*_clearance`), not "tight". Min printable wall thickness = invariant in `check.py` (typically `≥ 0.8–1.5 мм`). Thread params + clearances come from `blender-modeling/threading`.
 
 ## Param conventions
@@ -90,6 +90,7 @@ Boundary: everything computed WITHOUT bpy is separated from everything requiring
 - [ ] Min wall thickness for FDM/SLA = invariant in `check.py`
 - [ ] Profile given by knots `(z, r)`, intermediate points interpolated, not hardcoded
 - [ ] Part test two-level: `test_config()` (no bpy) + `test_mesh()` (in Blender)
+- [ ] Mesh tests keep the `config.py`/`profile_r()` unit contract and use world-space coordinates for rotated or parented objects
 
 ## Links
 

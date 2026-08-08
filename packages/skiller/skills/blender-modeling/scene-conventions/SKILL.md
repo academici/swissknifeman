@@ -27,6 +27,19 @@ sha256: ""
 
 - Collection: constant `COLLECTION_NAME` in `config.py` (e.g. `"Model"`).
 
+## Scene scope and final inventory
+
+`setup_scene()` owns only the active model's generated objects and collection. It must remove
+its own previous generated outputs before a rebuild, including temporary boolean tools. Do not
+silently delete another model merely because its objects share the `MESH_` prefix.
+
+For a whole-model check or release, the model must expose or document its expected final
+inventory (assembled and, where applicable, print layout). Immediately after the standard entry
+point, compare actual names with that SSOT and report foreign generated meshes or leftover tools
+as a mixed scene. Clean foreign outputs only under an explicit active-model cleanup contract,
+then rebuild and verify the inventory again. Mixed scenes make screenshots and mesh facts
+non-authoritative; they do not justify broadening deletion policy.
+
 ## Parenting hierarchy
 
 Composite part → **Variant A**: main shell = parent, subparts = children.

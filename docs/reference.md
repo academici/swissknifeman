@@ -336,6 +336,35 @@ docs-impact гейт, матрица возможностей, CI-гигиена
 данные, preflight делегирования, провенанс-записи, реестр контрактов, coverage по живым
 контрактам, инвариант устаревания графа) — в `roadmap.md` того же плана, тянутся по факту.
 
+### Artifex supervisor references — reference/adapt, no runtime dependency
+
+План `2026.08.03-ARTIFEX-SUPERVISOR` использует только дизайн-паттерны и проверяет их
+собственным stdlib-прототипом. First-party источники, перепроверенные 2026-08-03:
+
+- OpenAI Codex: <https://learn.chatgpt.com/docs/agent-configuration/subagents> и
+  <https://developers.openai.com/blog/run-long-horizon-tasks-with-codex> — отдельные worker
+  contexts, цена multi-agent в общих токенах и long-horizon loop/status discipline.
+- Anthropic Claude Code: <https://code.claude.com/docs/en/sub-agents> и
+  <https://code.claude.com/docs/en/cli-reference> — isolated subagent context, bounded headless
+  output/schema/turn/budget/permission controls. Exact installed envelope не выводится из docs:
+  его измеряет P0.3.
+- Temporal: <https://docs.temporal.io/workflow-definition> и
+  <https://docs.temporal.io/activities> — deterministic workflow/activity boundary и
+  idempotent retry patterns; код/движок не подключается.
+- SQLite: <https://sqlite.org/wal.html> — durability/checkpoint principles; SQLite не становится
+  SSOT или новой runtime dependency прототипа.
+- RunMaestro/Maestro: <https://github.com/RunMaestro/Maestro> — fresh sessions, filesystem
+  playbooks, headless JSONL, attention/backpressure and cost visibility; AGPL-код не переносится.
+- Superset: <https://github.com/superset-sh/superset>,
+  <https://docs.superset.sh/workspaces>, <https://docs.superset.sh/agent-integration> и
+  <https://docs.superset.sh/automations> — worktree ownership, persistent identity, attention and
+  at-least-once dispatch; ELv2-код/стек не переносится.
+
+Вердикты и границы доказательства лежат в
+`plans/2026.08.03-ARTIFEX-SUPERVISOR/findings/01-external-agent-runtime-2026-08-03.md`,
+`findings/02-reference-products-2026-08-03.md` и
+`findings/04-p0-design-verification-2026-08-03.md`.
+
 ## Как это легло в архитектуру
 
 - Канон субагентов (спек, Volt, vijay) → **agent-packs** с каноническими `description`+`<example>`.

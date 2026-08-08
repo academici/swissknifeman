@@ -39,7 +39,7 @@ AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
 # skillset.sync копируют через него (раньше дублировали и skillset терял
 # SKILL.*.md/evals → утечка RU-источника).
 SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
-                "__pycache__", "*.pyc")
+                "__pycache__", "*.pyc", "*.provider-artifact.bak")
 # CONFIG_KEYS живёт ЗДЕСЬ по имени (его берут оба гейта синхрона со схемой —
 # doctor.py и tests/test_schema.py — и документация), но значение с 2026-08-02
 # (P6.2) ВЫВОДИТСЯ из полей skiller.config.ProjectConfig: перечень ключей

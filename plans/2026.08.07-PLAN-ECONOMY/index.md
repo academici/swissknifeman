@@ -6,10 +6,10 @@
 
 | Файл | Роль |
 |:--|:--|
-| `plan.md` | Meta, Context, Execution Rules, Routing, Status Board, Decision Log D1–D106, Contracts, Update Log, Обсуждение (30 развилок) |
+| `plan.md` | Meta, Context, Execution Rules, Routing, Status Board, Decision Log D1–D122, Contracts, Update Log, Обсуждение |
 | `handoff.md` | Где мы; вход холодного старта; launch-block следующего шага |
 | `phases/P0.md` … `phases/P6.md` | Детализированы до DoR (5 + 5 + 8 + 7 + 6 + 5 + 9 items) |
-| `roadmap.md` | Исполнительская карта 45 items: батчи B1/B2 (носитель — колонка `Batch` в `## 3. Routing`), 41 `manual`-item, четыре владельческих гейта, порядок и предусловия |
+| `roadmap.md` | Исполнительская карта 45 items: батчи B1/B2, 42 `manual`-item, три `plan-exec`; shared-first маршрут D119–D122, bounded P0.1 и ранние field-canary P2.8/P3.7 |
 | `journal.jsonl` | Append-only лог исполнения |
 | `open-questions.md` | Открытых нет; закрыты OQ-1/OQ-2/OQ-3 (D11–D13) |
 | `root/contracts/` | Замороженные контракты плана; судьба — docs проекта |
@@ -23,7 +23,7 @@
 | Файл | Слой | Что несёт | Потребляют фазы |
 |:--|:--|:--|:--|
 | `brief/00-brief.md` | 0 | Бриф владельца 2026-08-07 без потери мыслей; три исполненных распоряжения | все |
-| `brief/01-refinements.md` | 0 | Уточнение владельца 2026-08-07: авторинг EN-only, RU-источники удалить; названная цена (три гейта анкерятся на RU — уточнение счёта дописано реконсилем прогона 2) и кросс-плановая граница с LOCALE | P6 |
+| `brief/01-refinements.md` | 0 | Уточнения владельца: EN-only/RU removal; решения лимита; сохранить исходную работу Claude; P0.1 сейчас Codex-first, архитектурно мультипровайдерный | P0, P6 |
 | `findings/00-plan-read-weight-2026-08-07.md` | 1 | Машинный замер 24 планов флота: пол 12к–254к токенов, разбор `plan.md` по секциям, 153 КБ фазовый файл, слепой линтер, дефект корректности при лимите ~25к | P0, P1, P3 |
 | `findings/01-rag-context-engineering-2026-08-07.md` | 1 | Шесть внешних запросов: R1 JIT-раскрытие и context rot · R2 раскладки spec-kit/Kiro/Tessl/AGENTS.md · R3 ADR «файл на решение + генерируемые виды» · R4 проекции и снапшоты event sourcing · R5 отрицательный результат по детекции повторной причины · R6 безлюдные решения | P1, P2, P3, P4, P5 |
 | `findings/02-prompt-caching-economics-2026-08-07.md` | 1 | Множители кэша, правило точного префикса, минимальный кэшируемый префикс, 20-блочное окно; пересмотр обоснования | P1, P3 (правило порядка), D8 |
@@ -39,9 +39,14 @@
 | `research/06-p4-loop-limiter-design.md` | 2 | Реконсиль контракт-блока P4, ИЗМЕРЕНИЕ корпуса журналов (10 планов, 1109 записей, 87 возвратов, 8 субъектов выше потолка), предикат возврата и форма отпечатка, три пространства имён и метрики, потолок и владельческий гейт с ортогональностью существующим счётчикам, монотонность вердикта и запреты, двусоставная приёмка с честной границей, pre-mortem P4 из 9 причин | P4, вход P5/P6 |
 | `findings/10-decision-policy-and-authority-2026-08-07.md` | 1 | R13 детерминированный движок политики: закрытый мир и default-deny, deny-overrides, воспроизводимая запись с пинованными дайджестами политики и данных, утечка семантики «нет совпадения → allow» в адаптере, shadow-режим · R14 рамка делегирования как deny-by-default программа классов решений: остаточное владельцу, агрегация против дробления, монотонное сужение, «что одобрено — то и исполняется», инвалидация при перепланировании, lease/claim · R15 допустимость дефолта по таймауту по классам решений · R16 уточнение против апрува: закрытый allowlist автоответов, провенанс системы-записи, ПЕРЕКЛАССИФИКАЦИЯ после ответа, аудит автоответа, Lies-in-the-Loop | P5 |
 | `findings/14-calibration-and-canon-budget-2026-08-07.md` | 1 | R21 `count_tokens`: бесплатен, собственные RPM-лимиты, но требует учётных данных Console · R22 подписка Pro/Max доступа к Console/API не даёт, её OAuth-токен делает только запросы модели · R23 настоящий токенизатор доступен без ключа через `usage` транскриптов Claude Code (сумма трёх входных полей), с четырьмя названными ограничениями · R24 бюджет документа-инструкции агента: вендорские 500 строк `SKILL.md`, двухпороговый CI-гейт, датированное исключение, вред правила «no growth ever» | P0, P6 |
+| `findings/17-p0.1-claude-auth-blocker-2026-08-08.md` | 1 | Историческое evidence остановленного Claude-прогона; blocker superseded D118 и больше не стоит на critical path | История P0.1 |
+| `findings/18-codex-token-usage-2026-08-08.md` | 1 | Официальный JSONL contract Codex + локальный probe 0.147.0: exactly-one `turn.completed`, canonical `usage.input_tokens`, cache breakdown не суммируется повторно, isolation flags | P0.1, вход P0.5/P3 |
 | `research/09-finish-round3-design-2026-08-07.md` | 2 | Синтез закрытия находок аудита F1–F12: три шва перевода компилятора контракта и таблица потребителей раскладки, машинный пересчёт поверхности связности с процедурой, протокол дифференциальной калибровки без ключа, форма двухпорогового гейта веса канона, бухгалтерия прогонов и источник `session_id` | P0, P1, P2, P6 |
 | `research/10-finish-round4-design-2026-08-07.md` | 2 | Синтез закрытия находок аудита захода 2 (N1–N11): четыре носителя раскладки в двух модулях и разбор владельца правки `journal.py`, пересчёт поверхности связности с условием на полноту входа `Files`, что означает `--exact` после D92, машинный критерий `unresolvable_entry` и 25 раскрытых позиций, бухгалтерия прогона 4 и что заход НЕ доказывает | P0, P2, P3, P4, P5, P6 |
 | `research/11-finish-round5-design-2026-08-07.md` | 2 | Синтез узкого закрытия находок захода 3 (A1/A2): три точки опоры `plan_reader` на раскладку и назначение источника формы `Next` под v2, сверка якорей §8 контракта драйвера, машинный пересчёт поверхности связности после нормализации поля `Files` | P2.1 |
+| `research/14-p0.1-dense-ascii-reopen-2026-08-08.md` | 2 | Dense-класс, реальный корпус и сохранность v1; Claude-specific active channel superseded D118/research 15 | P0, вход P3 |
+| `research/15-p0.1-provider-neutral-calibration-2026-08-08.md` | 2 | Трёхслойная архитектура adapter → neutral bracket-control core → qualified artifact consumer; active Codex adapter, deferred Claude adapter, schema/invariants/tests | P0.1, вход P0.5/P3 |
+| `research/16-multiprovider-field-loop-2026-08-08.md` | 2 | Сквозная модель shared contract + independent provider certification; закрытая минимальная provider-surface; bounded calibration и ранний field loop | все фазы, особенно P0.1/P2.8/P3.7/P6 |
 | `research/07-p5-decision-protocol-design.md` | 2 | Реконсиль контракт-блока P5 (четыре расхождения), два вида решения и механизм закрытия обхода, рамка как программа и машинная форма D13-а с агрегацией, определение «ветки» через субъект и фазовый join, форма запроса и ответа поле за полем, что сознательно не переносится, носители очереди и расширение реестра, запреты содержимого записи, вывод пяти items, pre-mortem P5 из 10 причин | P5, вход P6 |
 | `research/04-p2-carriers-design.md` | 2 | Две раскладки и их адресация, таблица носителей v2, форма записи решения и четыре вида, расщепление 16 полей пункта, ядро против владельческого вида, каркас проекций, терминальная фаза, self-hosting с инвентарём и приёмочным замером, pre-mortem P2 из 8 причин | P2, вход P3/P6 |
 
@@ -54,7 +59,7 @@
 Артефакты P4: `artifacts/P4/measure_returns.py` + `returns-baseline.json` (Deliverables P4.2) ·
 `artifacts/P4/historical-detect.json` + `acceptance-report.md` (Deliverables P4.6).
 Артефакты P5: `artifacts/P5/acceptance-report.md` (Deliverable P5.5).
-Артефакты P6: `artifacts/P6/{would-fail-*.txt, judge-calibration-bank.jsonl, judge-calibration-report.md, canon-weight-before-after.json, rollout-dry-run.txt, fleet-adoption-inventory.{json,md}, acceptance-arm-a-migrated.json, acceptance-arm-b-fresh.json}` · `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8) · контракт `root/contracts/acceptance-protocol-v1.{md,manifest.json}` (Deliverable P6.7).
+Артефакты P6: `artifacts/P6/{provider-certification.md,would-fail-*.txt,judge-calibration-bank.jsonl,judge-calibration-report.md,canon-weight-before-after.json,rollout-dry-run.txt,fleet-adoption-inventory.{json,md},acceptance-arm-a-migrated.json,acceptance-arm-b-fresh.json}` · `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8) · контракт `root/contracts/acceptance-protocol-v1.{md,manifest.json}` (Deliverable P6.7).
 
 ## Внешние зависимости плана
 

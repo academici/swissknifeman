@@ -9,6 +9,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -18,7 +19,7 @@ from skiller.connect import do_connect
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
-from skiller.update import cmd_update, replay_opts
+from skiller.update import cmd_update, replay_opts, update_one
 import tests.fixtures as fx
 
 
@@ -72,6 +73,68 @@ class UpdateCase(unittest.TestCase):
         a = {k for k, v in json.loads(after)["enabledPlugins"].items() if v}
         self.assertEqual(a, b)
         self.assertEqual(a, {f"php@{MARKETPLACE}", f"quality@{MARKETPLACE}"})
+
+    def test_update_prunes_only_recognised_legacy_task_runtime_link(self):
+        proj = fx.make_laravel_project(self.tmp)
+        silently(do_connect, self.env, proj, {"profile": "laravel-project"})
+        task_source = self.root / "packages" / "task"
+        task_source.mkdir(parents=True)
+        legacy = proj / "packages" / "task"
+        legacy.parent.mkdir(parents=True)
+        legacy.symlink_to(task_source)
+
+        silently(cmd_update, self.env, ["--target", str(proj)])
+
+        self.assertFalse(legacy.exists())
+        self.assertFalse(legacy.is_symlink())
+
+    def test_update_adopt_codex_persists_dual_contract_and_bundle(self):
+        proj = fx.make_laravel_project(self.tmp)
+        materialize = self.root / ".agents" / "plugins" / "marketplace.json"
+        materialize.parent.mkdir(parents=True, exist_ok=True)
+        materialize.write_text(json.dumps({"name": MARKETPLACE, "plugins": [
+            {"name": name, "source": f"./skills/{name}"}
+            for name in ("core", "task", "php", "quality")
+        ]}), encoding="utf-8")
+        for name in ("core", "task", "php", "quality"):
+            plugin = self.root / "skills" / name
+            plugin.mkdir(parents=True, exist_ok=True)
+            (plugin / ".codex-plugin").mkdir(exist_ok=True)
+            (plugin / ".codex-plugin" / "plugin.json").write_text(
+                json.dumps({"name": name, "version": "0.1.0", "skills": ["./"]}),
+                encoding="utf-8")
+            (plugin / "SKILL.md").write_text("---\nname: test\ndescription: test\n---\n", encoding="utf-8")
+        silently(do_connect, self.env, proj, {"profile": "laravel-project"})
+
+        silently(cmd_update, self.env, ["--target", str(proj), "--adopt-codex"])
+
+        config = json.loads((proj / ".swissknife.json").read_text())
+        self.assertTrue(config["providers"]["selection"]["claude-code"]["enabled"])
+        self.assertTrue(config["providers"]["selection"]["codex"]["enabled"])
+        self.assertIn("plugins", config)
+
+    def test_first_dual_connect_excludes_codex_from_following_vendor_sync(self):
+        proj = fx.make_laravel_project(self.tmp)
+        (proj / ".claude").mkdir(exist_ok=True)
+        (proj / ".claude" / "settings.local.json").write_text(json.dumps({
+            "extraKnownMarketplaces": {MARKETPLACE: {"source": {}}},
+        }), encoding="utf-8")
+        _write_sync_config(proj, {"mode": "vendor", "include": ["code-style"]})
+        (proj / ".swissknife.json").write_text(json.dumps({"providers": {
+            "contract_version": "1.0.0",
+            "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
+        }}), encoding="utf-8")
+
+        def connect_then_create_marker(*_args, **_kwargs):
+            marker = proj / ".agents/plugins/marketplace.json"
+            marker.parent.mkdir(parents=True)
+            marker.write_text("{}", encoding="utf-8")
+
+        with mock.patch("skiller.update.do_connect", side_effect=connect_then_create_marker), \
+                mock.patch("skiller.update.do_sync") as sync:
+            update_one(self.env, proj)
+
+        self.assertEqual(sync.call_args.args[2]["provider_ids"], ("claude-code",))
 
     def test_update_vendor_replays_buckets(self):
         proj = fx.make_laravel_project(self.tmp)

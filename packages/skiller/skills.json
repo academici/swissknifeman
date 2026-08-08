@@ -44,6 +44,11 @@
       "count": 1,
       "status": "active"
     },
+    "dart": {
+      "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+      "count": 1,
+      "status": "active"
+    },
     "devops": {
       "description": "Docker environments, CI/CD pipelines, GitOps",
       "count": 11,
@@ -783,8 +788,8 @@
       "path": "skills/blender-modeling/build-loop/SKILL.md",
       "version": "0.1.0",
       "description": "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot → propose rule fixes. Part docstring template, error-diagnosis table included. Activate on any part build/edit task in Blender.",
-      "sha256": "cd11cc9bb844ff756e64b309e1cbc75fce2788b030729b1870c8ca8f38859084",
-      "content_sha256": "4a72d0b3c0e4f5fbccf0791b741e50adc65aa4bffac3b26bd707c8e155823832",
+      "sha256": "ee69c467d31f8777fbd79c883892a93a425a64e4c0ffab73caff2c0a3048b776",
+      "content_sha256": "f5d745ead3858ddb385ec562af9f5940d6a3d43c1e08fdd738ab704a43eddefb",
       "tags": [
         "blender",
         "cad",
@@ -886,8 +891,8 @@
       "path": "skills/blender-modeling/parametric-config/SKILL.md",
       "version": "0.1.0",
       "description": "Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/tolerances/material/units mm), profile + revolve/extrude, invariant validation without launching Blender. Activate when editing models/*/config.py, profile.py, parts/*, check.py; adding a part param; questions about tolerances/units/radius matching for FDM/SLA printing.",
-      "sha256": "51a9c20e9d6f6d19b8c99ea0d315e0026aef3c0a078d9c41b2cb8d3b30ccad09",
-      "content_sha256": "95ae0cc3b444c322c2a3fdcc6c04dd7d36d9fe31ea3b03f5769655bdad6c8c9a",
+      "sha256": "f8a0d89dd5154e570b117da066149a422e8a47cc968101fa175288a7a6181e61",
+      "content_sha256": "f003854559cfa3013615e982ab0013e511d982d7872615c61054bd9b2149679c",
       "tags": [
         "blender",
         "bpy",
@@ -917,8 +922,8 @@
       "path": "skills/blender-modeling/scene-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hierarchy by physical belonging, collections, material assignment from config color field. Activate when creating scene objects/materials, setting parenting of subparts, questions about object names and grey material.",
-      "sha256": "20ba6d1c66f57e270a50031d0f2b3679c6354693ea37d1c07e4683a2678f436b",
-      "content_sha256": "acbdd14c0d64cb1da08fbe193c4e0f36afd625414cfd157f087c388d91157c57",
+      "sha256": "9c2e6fe4d460acea82243dc2570bbc31d5d6e885e488079f377a6cbb821ab699",
+      "content_sha256": "84196eaced90b2a2796f87ae285daeca5da33e00d3fd6e3ffebefe1b739e0a9a",
       "tags": [
         "blender",
         "cad",
@@ -987,6 +992,26 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
+    },
+    {
+      "name": "dart-package-development",
+      "bucket": "dart",
+      "path": "skills/dart/dart-package-development/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when developing, maintaining, or releasing a Dart package/SDK: pubspec, public API, null safety, tests, and compatibility. Not for Figma-based Flutter screens.",
+      "sha256": "3ddd2c59bfff9eec41c97495e08db7c21f4048daeb2c1651a51b7623fff2f3c2",
+      "content_sha256": "69f74c052ee6251383bf64b8ea261e488fa2c91269a88498e14b6f12aa9cce1b",
+      "tags": [
+        "dart",
+        "pub",
+        "package",
+        "sdk",
+        "api",
+        "null-safety",
+        "testing",
+        "compatibility"
+      ],
+      "source": "local"
     },
     {
       "name": "ci-cd",
@@ -2285,7 +2310,7 @@
       "version": "2.23.0",
       "description": "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, routing, semantic Next, handoff.",
       "sha256": "666beaac70fefff90af56c6386acc216cfaa9d9cbeb8b2313c5a36928c1e9740",
-      "content_sha256": "6cdf1ed9a0daa4c06fc0e6e8bab4084331908f63a8845b0ad8b4412285fe3219",
+      "content_sha256": "ae98bda7874f71e4b354d37719e5af362c051faad4da887ebb281e1814a4ad47",
       "tags": [
         "workflow",
         "planning",

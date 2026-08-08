@@ -45,7 +45,7 @@ plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
 ## Команда верификации
 
 ```bash
-PYTHONPATH=packages/task/lib python3 -c '
+PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -c '
 from task.task_contract import bundle_lint
 code = bundle_lint(
     "plans/<PLAN-ID>/artifacts/<Pn.m>/evidence",

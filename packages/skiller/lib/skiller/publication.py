@@ -23,6 +23,7 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
                   provider_config_catalog)
 from core.provider.lock import LOCK_RELATIVE_PATH
+from core.provider.runtime import codex_task_plugin_root_expression
 
 
 _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
@@ -32,7 +33,7 @@ _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
 )
 
 _CODEX_ADAPTER = ArtifactAdapterIdentity(
-    "skiller.codex-publication", "1.0.0", ProviderId.CODEX, "1.0.0",
+    "skiller.codex-publication", "1.0.1", ProviderId.CODEX, "1.0.0",
     (CapabilityRequirement(CapabilityId("skills.repository"),
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
@@ -434,11 +435,25 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
         for source in _codex_skill_runtime_files(
                 canonical_root, source_root=canonical_root, plugin=unit.plugin_id):
             target = root / "skills" / member.semantic_id / source.relative_to(canonical_root)
+            runtime_bytes = _project_codex_skill_runtime(source.read_bytes())
             artifacts.append(_render_codex_artifact(
-                target, unit, source.read_bytes(), (member,), repo_root,
+                target, unit, runtime_bytes, (member,), repo_root,
                 catalog.package_version, content_version=unit.content_version))
     artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
     return tuple(artifacts)
+
+
+def _project_codex_skill_runtime(source_bytes: bytes) -> bytes:
+    """Replace Claude's plugin-root task runtime with the installed Codex plugin.
+
+    Canonical core skill files are consumed directly by Claude Code, where the
+    marketplace root contains ``packages/task``.  Codex receives a generated
+    cache bundle, so its projection must locate task through Codex itself.
+    """
+    text = source_bytes.decode("utf-8")
+    claude_runtime = 'PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/packages/task/lib"'
+    codex_runtime = f'PYTHONPATH="{codex_task_plugin_root_expression()}/lib"'
+    return text.replace(claude_runtime, codex_runtime).encode("utf-8")
 
 
 def _render_codex_skm_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,

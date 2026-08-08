@@ -1,7 +1,7 @@
 {
-  "source": "https://code.claude.com/docs/en/settings.md, https://code.claude.com/docs/en/permissions.md, https://code.claude.com/docs/en/hooks.md — сверка RAG-лестницей (claude-code-guide), выжимка не полная копия апстрим-схемы (см. https://json.schemastore.org/claude-code-settings.json)",
-  "verified": "2026-07-10",
-  "cli_version": "2.1.206",
+  "source": "https://code.claude.com/docs/en/settings, https://code.claude.com/docs/en/permissions, https://code.claude.com/docs/en/hooks-guide — сверка по актуальной официальной документации, выжимка не полная копия апстрим-схемы (см. https://json.schemastore.org/claude-code-settings.json)",
+  "verified": "2026-08-02",
+  "cli_version": "2.1.220",
   "top_level": [
     "$schema",
     "permissions",
@@ -9,6 +9,7 @@
     "hooks",
     "model",
     "apiKeyHelper",
+    "autoMemoryEnabled",
     "cleanupPeriodDays",
     "includeCoAuthoredBy",
     "outputStyle",
@@ -16,10 +17,15 @@
     "statusLine",
     "forceLoginMethod",
     "enableAllProjectMcpServers",
+    "enabledPlugins",
     "enabledMcpjsonServers",
+    "effortLevel",
+    "extraKnownMarketplaces",
     "disabledMcpjsonServers",
     "awsAuthRefresh",
-    "awsCredentialExport"
+    "awsCredentialExport",
+    "pluginConfigs",
+    "switchModelsOnFlag"
   ],
   "permissions": [
     "allow",
@@ -28,7 +34,8 @@
     "defaultMode",
     "additionalDirectories",
     "disableBypassPermissionsMode",
-    "disableAutoMode"
+    "disableAutoMode",
+    "skipDangerousModePermissionPrompt"
   ],
   "hook_events": [
     "PreToolUse",

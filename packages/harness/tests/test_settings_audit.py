@@ -220,6 +220,16 @@ class SettingsAuditChecksCase(unittest.TestCase):
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
         self.assertEqual(errs, [], "`bash <script>` — проверяется скрипт, не интерпретатор")
 
+    def test_check5_interpreter_prefix_does_not_require_script_executable(self):
+        script = self.target / "hook.py"
+        script.write_text("print('ok')\n", encoding="utf-8")
+        _write(self.target / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash",
+             "hooks": [{"type": "command", "command": f"python3 {script}"}]}]}})
+        findings = self._run()
+        errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
+        self.assertEqual(errs, [], "`python3 <script>` не требует X_OK у скрипта")
+
     # №5 — хук с событием TotallyUnknownEvent → info id=5 (снапшот неполный, [UNVERIFIED])
     def test_check5_unknown_hook_event_is_info_not_warn(self):
         script = self.target / "hook.sh"
@@ -513,11 +523,13 @@ class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0].level, "info")
 
-    # №10 — bypassPermissions + skipDangerousModePermissionPrompt: true → без находок
+    # №10 — documented permissions.skipDangerousModePermissionPrompt: true → без находок
     def test_check10_bypass_with_skip_dialog_no_finding(self):
         _write(self.target / ".claude" / "settings.json", {
-            "permissions": {"defaultMode": "bypassPermissions"},
-            "skipDangerousModePermissionPrompt": True,
+            "permissions": {
+                "defaultMode": "bypassPermissions",
+                "skipDangerousModePermissionPrompt": True,
+            },
         })
         self.assertEqual(_findings_by_id(self._run(), 10), [])
 

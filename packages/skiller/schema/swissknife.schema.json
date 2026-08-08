@@ -18,6 +18,11 @@
       "items": { "type": "string" },
       "description": "Бакеты скиллов для раздачи."
     },
+    "plugins": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Точный project-local набор marketplace-плагинов для connect; null/отсутствует — выбирать по buckets/profile/autodetect."
+    },
     "exclude": {
       "type": "array",
       "items": { "type": "string" },

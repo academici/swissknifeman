@@ -5,12 +5,12 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:c6fdd83233fdfa946aba7d9d5a2a9420df81a46600906439d3c947a1beeddd8e",
+      "source_hash": "sha256:bed8cea1f2902aad15f8759aa45c4581d72fb53de169f2e89f16ffb79033cad3",
       "rendered_hash": "sha256:d48691a11404c16acd0dc53a72e68c03fd1561c4ee528f2f826f4cf5a9f4ffa5"
     },
     {
       "path": "skills/skm/SKILL.md",
-      "source_hash": "sha256:c6fdd83233fdfa946aba7d9d5a2a9420df81a46600906439d3c947a1beeddd8e",
+      "source_hash": "sha256:bed8cea1f2902aad15f8759aa45c4581d72fb53de169f2e89f16ffb79033cad3",
       "rendered_hash": "sha256:45ec03166fa2b9ed74c63ad398e3c86f4d428c855ee68ccd82ef8ff189704383"
     }
   ]

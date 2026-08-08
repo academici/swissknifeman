@@ -45,7 +45,7 @@ plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
 ## Команда верификации
 
 ```bash
-PYTHONPATH=packages/task/lib python3 -c '
+PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/packages/task/lib" python3 -c '
 from task.task_contract import bundle_lint
 code = bundle_lint(
     "plans/<PLAN-ID>/artifacts/<Pn.m>/evidence",

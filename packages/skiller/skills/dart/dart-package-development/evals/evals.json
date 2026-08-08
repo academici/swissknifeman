@@ -1,0 +1,14 @@
+{
+  "skill": "dart-package-development",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "В Dart SDK хочу заменить публичный метод parse на async и сделать возвращаемый идентификатор nullable. Что проверить перед правкой?",
+      "assertions": [
+        {"type": "regex", "value": "sync|async|асинхрон"},
+        {"type": "regex", "value": "null|nullable|совместим"},
+        {"type": "regex", "value": "тест|test|потребител"}
+      ]
+    }
+  ]
+}

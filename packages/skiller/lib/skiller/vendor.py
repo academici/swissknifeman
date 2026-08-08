@@ -123,8 +123,9 @@ def do_vendor(env, target, opts, register=True):
 
     known = all_buckets(env)
     for b in buckets:
-        if b not in known:
+        if b not in known and b not in {"core", "task"}:
             die(f"unknown bucket: {b}")
+    buckets = [b for b in buckets if b in known]
 
     # exclude = union of flag and config (safety-oriented, not precedence-based)
     exclude = set(flag_exclude) | set(config.exclude)

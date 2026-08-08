@@ -392,7 +392,7 @@ flowchart LR
 
 **В графе:** 131 скиллов, 98 рёбер requires, 89 рёбер produces_for.
 
-## Изолированные скиллы (99)
+## Изолированные скиллы (100)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -403,6 +403,7 @@ flowchart LR
 | axioma | `axioma-doctrine`, `ecosystem-map` |
 | azguard | `azguard` |
 | creative | `content-creative-super-skill` |
+| dart | `dart-package-development` |
 | devops | `docker` |
 | finance | `finance-super-skill` |
 | frontend | `document-writer`, `filepond-upload`, `web-design-guidelines` |

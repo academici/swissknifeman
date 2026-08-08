@@ -135,8 +135,9 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
         resolve_selection(env, target, config, profile, flag_buckets)
     known = all_buckets(env)
     for b in buckets:
-        if b not in known:
+        if b not in known and b not in {"core", "task"}:
             die(f"unknown bucket: {b}")
+    buckets = [b for b in buckets if b in known]
     exclude = set(flag_exclude) | set(config.exclude)
     if not no_core:
         exclude |= set(DEFAULT_EXCLUDE)

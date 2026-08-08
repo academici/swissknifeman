@@ -1,6 +1,9 @@
 """update — обновить подключение/вендоринг проекта (диск — источник истины)."""
 import json
+import shutil
 from pathlib import Path
+
+from core import atomic_write_text
 
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, warn
 from .config import ProjectConfig, load_config, resolve_target
@@ -29,6 +32,98 @@ def detect_codex_marketplace(target):
     """The repository-local native Codex marketplace marker (no global state)."""
     marker = target / ".agents" / "plugins" / "marketplace.json"
     return marker if marker.is_file() else None
+
+
+def detect_codex_skill_links(target):
+    """Marker for the CLI-effective Codex project projection."""
+    marker = target / ".agents" / ".swissknifeman-codex-links.json"
+    return marker if marker.is_file() else None
+
+
+def adopt_codex_provider_config(target, dry_run=False, plugins=None):
+    """Opt an existing SKM project into the explicit dual-provider contract.
+
+    Legacy projects resolve to Claude Code only by compatibility default.  Codex
+    therefore never receives its generated, project-contained marketplace bundle
+    until the project declares it.  This migration is intentionally explicit at
+    the CLI boundary and preserves every unrelated project setting.
+    """
+    target = Path(target)
+    config_path = target / ".swissknife.json"
+    data = {}
+    if config_path.is_file():
+        try:
+            data = json.loads(config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            die(f"{config_path}: invalid JSON: {exc}")
+    if not isinstance(data, dict):
+        die(f"{config_path}: корень должен быть JSON-object")
+    providers = data.get("providers")
+    if providers is None:
+        providers = {}
+        data["providers"] = providers
+    if not isinstance(providers, dict):
+        die(f"{config_path}: providers должен быть JSON-object")
+    selection = providers.setdefault("selection", {})
+    if not isinstance(selection, dict):
+        die(f"{config_path}: providers.selection должен быть JSON-object")
+    changed = False
+    if providers.get("contract_version") != "1.0.0":
+        providers["contract_version"] = "1.0.0"
+        changed = True
+    for provider in ("claude-code", "codex"):
+        value = selection.get(provider)
+        if value is None:
+            selection[provider] = {"enabled": True}
+            changed = True
+        elif not isinstance(value, dict):
+            die(f"{config_path}: providers.selection.{provider} должен быть JSON-object")
+    if (plugins is not None and "plugins" not in data and not data.get("buckets")
+            and not data.get("project_type")):
+        data["plugins"] = list(plugins)
+        changed = True
+    if not changed:
+        return False
+    if dry_run:
+        print(f"[dry-run] adopt dual-provider contract {config_path}")
+        return True
+    if config_path.exists():
+        shutil.copy2(config_path, f"{config_path}.bak")
+    atomic_write_text(config_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    print(f"adopt dual-provider contract {config_path}")
+    return True
+
+
+def prune_legacy_task_runtime_link(env, target, dry_run=False):
+    """Remove only the former per-project task runtime link.
+
+    ``task`` is a plugin runtime.  Older bootstrap attempts created
+    ``packages/task`` links in consumer repositories; that bypasses both provider
+    adapters and makes a project accidentally depend on the hub checkout/cache.
+    Recognise only the three historical SKM destinations, never a project-owned
+    link with the same path.
+    """
+    legacy = Path(target) / "packages" / "task"
+    if not legacy.is_symlink():
+        return False
+    try:
+        destination = legacy.resolve(strict=True)
+    except OSError:
+        return False
+    managed_roots = (
+        env.root / "packages" / "task",
+        env.home / ".claude" / "plugins" / "cache" / MARKETPLACE / "task",
+        env.home / ".codex" / "plugins" / "cache" / MARKETPLACE / "task",
+    )
+    if not any(destination == root or root in destination.parents
+               for root in managed_roots):
+        return False
+    if dry_run:
+        print(f"[dry-run] remove legacy task runtime link {legacy}")
+    else:
+        legacy.unlink()
+        print(f"remove legacy task runtime link {legacy}")
+    return True
 
 
 def detect_vendor_path(target, config):
@@ -71,18 +166,28 @@ def replay_opts(record):
     return opts
 
 
-def update_one(env, target, dry_run=False):
+def update_one(env, target, dry_run=False, adopt_codex=False):
+    records = {}
+    for record in db_records(env, target):
+        current = records.get(record["channel"])
+        # Marketplace semantics (profile/plugins) live on the Claude record;
+        # the Codex projection record intentionally carries only its target.
+        if current is None or (record.get("plugins") and not current.get("plugins")):
+            records[record["channel"]] = record
+    if adopt_codex:
+        record_plugins = records.get("marketplace", {}).get("plugins")
+        adopt_codex_provider_config(target, dry_run=dry_run, plugins=record_plugins)
     config = load_config(env, target)
     mk_file = detect_marketplace_file(target)
     codex_marketplace = detect_codex_marketplace(target)
+    codex_links = detect_codex_skill_links(target)
     # sync-канал (.swissknifeman/config.json) владеет тем же .swissknifeman-manifest.json,
     # что и legacy vendor — поэтому при наличии sync-конфига обновляем sync'ом (он
     # уважает skill-granular include/exclude), а detect_vendor_path не трогаем.
     sync_cfg = load_skillset_config(target)
     vendor_path = None if sync_cfg else detect_vendor_path(target, config)
-    records = {r["channel"]: r for r in db_records(env, target)}
 
-    if not mk_file and not codex_marketplace and not sync_cfg and not vendor_path:
+    if not mk_file and not codex_marketplace and not codex_links and not sync_cfg and not vendor_path:
         if records:
             warn(f"{target}: записан в projects.json, но маркеры подключения "
                  f"не найдены — забыть: skiller list --prune")
@@ -91,8 +196,13 @@ def update_one(env, target, dry_run=False):
                 f"(Claude Code) или 'skiller vendor' (другие агенты)")
         return False
 
+    # Migration only after a genuine SKM marker proved ownership of the project.
+    # Do not use a consumer-local task copy as a compatibility fallback: both
+    # Claude and Codex resolve this runtime from their installed plugin.
+    prune_legacy_task_runtime_link(env, target, dry_run=dry_run)
+
     ok = True
-    if mk_file or codex_marketplace:
+    if mk_file or codex_marketplace or codex_links:
         rec = records.get("marketplace", {})
         if not rec:
             print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
@@ -109,6 +219,12 @@ def update_one(env, target, dry_run=False):
                     load_bucket_aliases(env), enabled_marketplace_plugins(target, mk_file)):
                 print(f"Подсказка: {hint}")
         do_connect(env, target, opts, fix_path_drift=True)
+        # A first dual-provider connect just created the contained Codex
+        # marketplace. Re-detect it before the sync branch below: otherwise the
+        # same update incorrectly tries to deploy Codex once more through the
+        # legacy vendor path and raises a false ownership conflict.
+        codex_marketplace = detect_codex_marketplace(target)
+        codex_links = detect_codex_skill_links(target)
         print_registry_state(env)
     if sync_cfg:
         # канонический Claude-канал: пере-sync из .swissknifeman/config.json (skill-granular)
@@ -120,10 +236,9 @@ def update_one(env, target, dry_run=False):
             "dry_run": dry_run,
             "hub": bool(rec.get("hub")) or hub_artifacts_exist(target),
         }
-        if codex_marketplace:
-            # Contained marketplace bundles are the canonical Codex connect
-            # carrier.  Keep the independent Claude vendor channel, but do not
-            # duplicate the same Codex skills under .agents/skills.
+        if codex_marketplace or codex_links:
+            # A Codex connect projection owns `.agents/skills`; keep the
+            # independent Claude vendor channel out of that target.
             sync_opts["provider_ids"] = ("claude-code",)
         do_sync(env, target, sync_opts)
     elif vendor_path:
@@ -166,9 +281,9 @@ def update_one(env, target, dry_run=False):
 
 def cmd_update(env, argv):
     opts = parse_flags(argv, {"--target": "str", "--all": "bool",
-                              "--dry-run": "bool"})
+                              "--dry-run": "bool", "--adopt-codex": "bool"})
     if opts["help"]:
-        print("skiller update [--all] [--dry-run]")
+        print("skiller update [--all] [--dry-run] [--adopt-codex]")
         return
     if opts["all"]:
         db = load_db(env)
@@ -187,7 +302,8 @@ def cmd_update(env, argv):
             if target.resolve() == env.root.resolve():
                 continue
             try:
-                update_one(env, target, dry_run=opts["dry_run"])
+                update_one(env, target, dry_run=opts["dry_run"],
+                           adopt_codex=opts["adopt_codex"])
                 results.append((path, "ok"))
             except SystemExit:
                 results.append((path, "failed"))
@@ -199,4 +315,5 @@ def cmd_update(env, argv):
             sys.exit(1)
         return
     target, _ = resolve_target(env, opts)
-    update_one(env, target, dry_run=opts["dry_run"])
+    update_one(env, target, dry_run=opts["dry_run"],
+               adopt_codex=opts["adopt_codex"])

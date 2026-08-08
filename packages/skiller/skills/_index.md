@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 230 скиллов в 48 бакетах.
+Всего: 231 скиллов в 49 бакетах.
 
 ## Скиллы по бакетам
 
@@ -81,6 +81,12 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `content-creative-super-skill` | Creative studio: video production, speech synthesis, image generation, website building, … |  |
+
+### dart — Dart package and SDK development: public API, pubspec, null safety, testing and compatibility (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `dart-package-development` | Use when developing, maintaining, or releasing a Dart package/SDK: pubspec, public API, n… | `dart`, `pub`, `package`, `sdk`, `api`, `null-safety`, `testing`, `compatibility` |
 
 ### devops — Docker environments, CI/CD pipelines, GitOps (11)
 
@@ -499,7 +505,7 @@
 | `ai-context` | `skills-ssot` |
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
-| `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
+| `api` | `api-design`, `dart-package-development`, `dx-design`, `laravel-data`, `version-gotchas` |
 | `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `package-architecture`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `async` | `transactional-outbox-relay` |
 | `attribute` | `attribute-authorization` |
@@ -541,6 +547,7 @@
 | `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `comments` | `writing-style` |
 | `commits` | `writing-style` |
+| `compatibility` | `dart-package-development` |
 | `compliance` | `dependency-audit`, `legal-compliance`, `oss-governance`, `risk-assessment`, `security-design` |
 | `components` | `naive-ui-theming`, `reka-ui-cva` |
 | `composable` | `dark-mode`, `vue-composition-api` |
@@ -566,7 +573,7 @@
 | `cursor` | `cursor-pagination-design` |
 | `cva` | `figma-to-vue`, `reka-ui-cva` |
 | `dark-mode` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `tailwind-conventions` |
-| `dart` | `figma-to-flutter` |
+| `dart` | `dart-package-development`, `figma-to-flutter` |
 | `data` | `data-schema`, `ml-project-structure` |
 | `data-transfer-object` | `laravel-data` |
 | `database` | `cursor-pagination-design`, `database`, `test-isolation-guard` |
@@ -706,6 +713,7 @@
 | `navigation` | `brain-locator`, `ecosystem-map`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
+| `null-safety` | `dart-package-development` |
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
@@ -717,7 +725,7 @@
 | `ousterhout` | `codebase-design` |
 | `outbox` | `transactional-outbox-relay` |
 | `owasp` | `security-design` |
-| `package` | `package-contribution-protocol` |
+| `package` | `dart-package-development`, `package-contribution-protocol` |
 | `package-dev` | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | `pagination` | `cursor-pagination-design` |
 | `parametric` | `build-loop`, `config-conventions`, `parametric-config`, `scene-conventions` |
@@ -744,6 +752,7 @@
 | `privacy` | `legal-compliance`, `security-design` |
 | `production` | `production-readiness-checklist` |
 | `prompt-engineering` | `ai-agents` |
+| `pub` | `dart-package-development` |
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `artifact-review`, `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
@@ -789,6 +798,7 @@
 | `scene` | `scene-conventions` |
 | `schema` | `data-schema` |
 | `screenshot` | `mcp-blender` |
+| `sdk` | `dart-package-development` |
 | `seam` | `codebase-design` |
 | `search` | `query-craft` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
@@ -830,7 +840,7 @@
 | `templates` | `agent-packs`, `workflow-craft` |
 | `term-index` | `axioma-glossary` |
 | `testability` | `codebase-design` |
-| `testing` | `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
+| `testing` | `dart-package-development`, `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |
 | `theme` | `dark-mode` |
 | `theming` | `figma-to-flutter`, `naive-ui-theming` |

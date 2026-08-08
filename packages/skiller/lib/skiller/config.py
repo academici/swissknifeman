@@ -134,6 +134,9 @@ class ProjectConfig(Mapping):
 
     project_type: str = field(default="", metadata={"json_type": str})
     buckets: list = field(default_factory=list, metadata={"json_type": list})
+    # Exact marketplace plugin set; `core`/`task` can be declared explicitly
+    # for projects that intentionally need no profile buckets.
+    plugins: list = field(default_factory=list, metadata={"json_type": list})
     exclude: list = field(default_factory=list, metadata={"json_type": list})
     presets: list = field(default_factory=list, metadata={"json_type": list})
     skills_path: str = field(default="", metadata={"json_type": str})
@@ -349,6 +352,8 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         prof = load_profile(env, flag_profile)
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
+    if config.plugins:
+        return list(config.plugins), None, "config", ".swissknife.json plugins", False
     preset_buckets = _expand_presets_buckets(env, config)
     if config.buckets or preset_buckets:
         # (presets ∪ buckets) − exclude. exclude в bucket-granular каналах skill-level

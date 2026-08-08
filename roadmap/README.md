@@ -16,6 +16,7 @@
 | Файл | Что | Статус | Критерий / связь с планами |
 |:--|:--|:--|:--|
 | [`provider-docs-snapshot-daemon-noise.md`](provider-docs-snapshot-daemon-noise.md) | `test_committed_outputs_are_exact_and_check_is_no_write` снимает хеши ВСЕГО дерева, ловит чужой mAInd-демон (`packages/maind/data/state_store.db/mem%3Ahealth.bin`), не дрейф манифеста | ⬜ к внедрению | **Пере-открывается ПЕРВЫМ item'ом, правящим `scripts/test-provider-docs.py`** (проверяемое событие: `git log --diff-filter=M --oneline 90afaff1..HEAD -- scripts/test-provider-docs.py` даёт непустой вывод). Измерено `2026.07.31-SKM-LEAN` P6.3, D70 — три изолированных прогона, все `FAILED` на одном пути. Живого потребителя у записи нет: названный ею владелец адреса P5.2 терминален ещё до её появления — критерий пере-открытия назначен `2026.07.31-SKM-LEAN` P7.3 (D113) |
+| [`memory-recall-shared-namespace-priority.md`](memory-recall-shared-namespace-priority.md) | `_recall_union` (mid-session `maind_memory_recall`) не наследует D10 «shared по умолчанию не тянется» — тянет `ns:axioma` наравне с приватным scope, `RECALL_LIMIT=200` на каждый | ⬜ к внедрению | Измерено 2026-08-06 на Agelto: приватная память 2 записи vs `ns:axioma` 47; live-запрос «workflow» — 6/7 результатов и ~9,3 КБ ответа из axioma. Масштаб выгоды не подтверждён (частота вызовов `maind_memory_recall`/сессию не измерена) — см. §3 файла |
 
 ## Частично реализовано — остаток здесь
 

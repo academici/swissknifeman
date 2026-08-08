@@ -1,53 +1,42 @@
-# HANDOFF — 2026-08-08 — after P0.5
+# HANDOFF — 2026-08-08 — after P0.1
 
-**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.1` — синхронизировать ТЗ реопена с D114:
-добавить пятый класс плотного ASCII, процедуру повторной заморозки артефакта и влияние новой версии
-на единицу порога P0.5. После исполнения P0.1 вернуться к `/task:plan-run
-2026.08.07-PLAN-ECONOMY P0.5`.
+**Next:** manual: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — реопен замороженной калибровки |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Спроектировать узкий реопен P0.1 по владельческому решению D114 |
-| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P0.1` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | Реализовать shared token-probe contract, thin Codex usage adapter и bounded v2 calibration: 8 real samples, ≤128 KiB payload, ≤12 provider calls |
+| Команда | — |
 
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P0.1'
 ```
-/task:plan-design 2026.08.07-PLAN-ECONOMY P0.1
-```
 
-**Done:** P0.5 запущен на `gpt-5.6-sol/high` (`frontier/high`), pre-mutation contract дал
-`allow`. Из `artifacts/fleet-weight.json` рассчитаны три кандидата; владелец утвердил порог
-100 000, реопен P0.1 для пятого класса плотного ASCII и область только новых layout-v2 планов без
-legacy. Решения записаны D113–D115 и строкой Update Log. Обнаружено арифметическое расхождение
-prose `findings/04`: композиционные пробелы — 6196/10540 = 58.8%, не 56%; источником чисел остаётся
-машинный дамп.
+**Done:** `2026.08.07-PLAN-ECONOMY P0.1` доведён до DoR под текущий Codex без ожидания
+Claude OAuth. D118–D122 закрепили provider-neutral core, минимальные provider edges и независимую
+сертификацию: Codex проверяет собственный adapter/projection, Claude позже переводит только свои
+строки из `pending-provider` в `verified`. Сквозной пересмотр добавил ранние real-project canary
+P2.8/P3.7 и убрал exhaustive cross-provider/full-corpus preflight с critical path.
 
-**Remaining:** P0.1 — спроектировать и исполнить реопен, повторно заморозить
-`packages/task/configs/token-estimate-calibration.json`. Затем P0.5 — создать
-`root/contracts/read-budget-v1.md` на фактической версии артефакта, заполнить `## 7. Contracts`,
-прогнать Validation и закрыть фазу P0. P1–P6 не начинались.
+**Remaining:** Исполнить только `2026.08.07-PLAN-ECONOMY P0.1`: neutral `ProbeRecord`/protocol,
+Codex JSONL adapter, dense classifier SSOT, bracket-controls и generated qualified calibration v2.
+После зелёного bounded acceptance перейти к P0.2; Claude-specific код сейчас не писать.
 
-**Sources of truth:** `plan.md` v0.16.0 (D113–D115, Routing, Update Log, Contracts) ·
-`phases/P0.md` P0.1/P0.5 · `artifacts/fleet-weight.json` ·
-`findings/04-fleet-read-weight-machine.md` · `packages/task/configs/token-estimate-calibration.json`
-· `packages/task/configs/read-limit.json` · `journal.jsonl`.
+**Sources of truth:** `phases/P0.md` P0.1 ·
+`research/15-p0.1-provider-neutral-calibration-2026-08-08.md` ·
+`research/16-multiprovider-field-loop-2026-08-08.md` ·
+`findings/18-codex-token-usage-2026-08-08.md` · D118–D122 · `journal.jsonl`.
 
-**Open risks:**
-
-- P0.5 нельзя закрывать на старой калибровке: D114 требует новую фактическую версию артефакта;
-  плейсхолдер или ссылка на ещё не выпущенную версию запрещены.
-- D115 supersedes D18: legacy-ветвь и opt-in удалены из области будущего гейта. ТЗ P0.5/P3 при
-  ближайшем plan-design обязаны быть синхронизированы с этим решением, а не сохранять старую прозу.
-- `findings/04` содержит ошибочное производное «56%» при правильных исходных counts; контракт и
-  последующие проверки должны считать из JSON: 6196/10540 = 58.8%.
-- Worktree несёт большой посторонний незакоммиченный дифф; он не трогался и не должен попасть в
-  коммиты плана.
+**Open risks:** Восемь samples — bounded engineering pilot, не статистическое доказательство всего
+флота; расширять его следует по field findings. Claude row честно `pending-provider`, а не green.
+Полный `packages/task/scripts/validate.sh` несёт известный внескоупный discovery-дефект
+`plans/.claude`/`plans/__pycache__`; пропущенную или упавшую проверку зелёной не считать.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —.
-- Deferred: миграция и поддержка старых планов отсутствуют по D115, а не отложены.
-- Open questions: открытых владельческих вопросов P0.5 нет; остаётся технический дизайн реопена
-  P0.1.
+- Deferred: Claude token/session adapters и Claude runtime certification — до входа Claude Code.
+- Open questions: —.

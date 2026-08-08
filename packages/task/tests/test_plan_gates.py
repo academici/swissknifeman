@@ -1,4 +1,5 @@
-"""D2 read-budget gate tests: v2 refuses, v1 remains silent."""
+"""D2/P3 gate tests: v2 refuses, v1 remains silent."""
+import copy
 import shutil
 import tempfile
 import unittest
@@ -112,6 +113,30 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
         self.assertTrue(any("D1" in row and "D2" in row for row in rows), rows)
+
+    def test_path_order_and_history_boundary_use_declared_registry(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        spec = copy.deepcopy(plan_gates.plan_layout.read_path_spec())
+        registry = copy.deepcopy(plan_gates.plan_layout.registry())
+        executor = spec["paths"]["executor"]["slots"]
+        executor[0]["carrier_id"] = "item-state"
+        executor[-1]["carrier_id"] = "plan-core"
+        executor[2]["carrier_id"] = "history-view"
+        with unittest.mock.patch.object(plan_gates.plan_layout, "read_path_spec", return_value=spec), \
+                unittest.mock.patch.object(plan_gates.plan_layout, "registry", return_value=registry):
+            diag = lint(plan_dir)
+        rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
+        self.assertTrue(any("монотонный предикат порядка" in row for row in rows), rows)
+        self.assertTrue(any("history" in row and "executor" in row for row in rows), rows)
+
+    def test_terminal_item_input_is_rejected_but_sibling_is_not_a_rule(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(spec.read_text(encoding="utf-8").replace(
+            "`brief/00-brief.md`", "`phases/P0/P0.1.md`", 1), encoding="utf-8")
+        diag = lint(plan_dir)
+        rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
+        self.assertTrue(any("терминальной фазы" in row and "P1.1" in row for row in rows), rows)
 
 
 if __name__ == "__main__":

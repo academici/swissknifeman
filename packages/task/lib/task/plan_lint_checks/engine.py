@@ -247,6 +247,7 @@ def lint_plan(plan_dir, diag):
     # respective shared owners and contributes diagnostics at this one boundary.
     plan_gates.lint_read_budget(plan_dir, layout, diag)
     plan_gates.lint_bundle_freshness(plan_dir, layout, diag)
+    plan_gates.lint_read_path_boundaries(plan_dir, layout, diag)
 
     # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
     numbered = sorted(

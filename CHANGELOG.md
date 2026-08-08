@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: `plan-lint` теперь проверяет frozen read-path v1.** Проверяются порядок
+  volatility, исключение history из executor path и запрет active item’у читать item-spec
+  терминальной фазы; проверки опираются на registry/spec/resolver (`2026.08.07-PLAN-ECONOMY` P3.5).
+
 - **`task`: layout-v2 Bundle v1 теперь fail-closed проверяется для ready item'ов.**
   `plan-lint` различает declaration drift, missing/extraneous entries, changed input
   bytes и unresolved declaration, не пересобирает artifact и byte-checks decision,

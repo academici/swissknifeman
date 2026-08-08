@@ -16,6 +16,7 @@ from task import (plan_bundle, plan_decisions, plan_item_state, plan_layout,
 
 GATE_ID = "read-budget-v1"
 BUNDLE_GATE_ID = "bundle-v1"
+PATH_GATE_ID = "read-path-v1"
 
 
 def _calibration_label(measurer) -> str:
@@ -31,6 +32,10 @@ def _error(diag, path, message: str) -> None:
 
 def _bundle_error(diag, path, message: str) -> None:
     diag.error(Path(path), None, f"{BUNDLE_GATE_ID}: {message}")
+
+
+def _path_error(diag, path, message: str) -> None:
+    diag.error(Path(path), None, f"{PATH_GATE_ID}: {message}")
 
 
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
@@ -159,4 +164,89 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
             _bundle_error(diag, plan_dir, f"generated view stale: {exc}")
 
 
-__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "lint_bundle_freshness", "lint_read_budget")
+def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
+    """Check frozen carrier declarations and item inputs without inspecting prose."""
+    if layout != "v2":
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        spec = plan_layout.read_path_spec()
+        registry = plan_layout.registry()
+        ranks = spec["volatility_rank"]
+    except (KeyError, plan_layout.PlanLayoutError) as exc:
+        _path_error(diag, plan_dir / "plan.md", f"контракт пути не читается: {exc}")
+        return
+
+    for reader, path in spec.get("paths", {}).items():
+        prior_rank = -1
+        for slot in sorted(path.get("slots", ()), key=lambda row: row.get("order", 0)):
+            carrier_id = slot.get("carrier_id")
+            carrier = registry.get(carrier_id)
+            if carrier is None:
+                _path_error(diag, plan_dir / "plan.md",
+                            f"путь {reader}, слот {slot.get('id')}: неизвестный носитель {carrier_id!r}")
+                continue
+            rank = ranks.get(carrier.get("volatility"))
+            if rank is None:
+                _path_error(diag, plan_dir / "plan.md",
+                            f"путь {reader}, слот {slot.get('id')}, носитель {carrier_id}: неизвестная волатильность")
+                continue
+            if rank < prior_rank:
+                _path_error(diag, plan_dir / "plan.md",
+                            f"путь {reader}, слот {slot.get('id')}, носитель {carrier_id}: "
+                            "волатильность нарушает монотонный предикат порядка")
+            prior_rank = max(prior_rank, rank)
+            if reader == "executor" and carrier.get("class") == "history":
+                _path_error(diag, plan_dir / "plan.md",
+                            f"путь executor, слот {slot.get('id')}, носитель {carrier_id} класса history "
+                            "стоит на обязательном пути")
+
+    for carrier_id, sections in spec.get("section_order", {}).items():
+        prior_rank = -1
+        for section in sorted(sections, key=lambda row: row.get("order", 0)):
+            rank = ranks.get(section.get("volatility"))
+            if rank is None:
+                _path_error(diag, plan_dir / "plan.md",
+                            f"носитель {carrier_id}, секция {section.get('section')}: неизвестная волатильность")
+                continue
+            if rank < prior_rank:
+                _path_error(diag, plan_dir / "plan.md",
+                            f"носитель {carrier_id}, секция {section.get('section')}: "
+                            "волатильность нарушает монотонный предикат порядка")
+            prior_rank = max(prior_rank, rank)
+            if carrier_id == "plan-core" and rank == ranks.get("volatile"):
+                _path_error(diag, plan_dir / "plan.md",
+                            f"носитель plan-core, секция {section.get('section')}: volatile запрещён")
+
+    try:
+        terminal_specs = {path.resolve() for phase_id in plan_layout.phase_paths(plan_dir)
+                          if plan_layout.is_terminal_phase(plan_dir, phase_id)
+                          for path in plan_layout.item_spec_paths(plan_dir, phase_id)}
+        active_phases = {phase_id for phase_id, status in plan_layout.phase_statuses(plan_dir).items()
+                         if status == plan_status.STATUS_PROGRESS}
+        measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
+    except (plan_layout.PlanLayoutError, plan_weight.PlanWeightError) as exc:
+        _path_error(diag, plan_dir / "plan.md", f"не удалось разрешить терминальную фазу: {exc}")
+        return
+    repo_root = plan_weight.repo_root_for(plan_dir)
+    for item in measured["items"]:
+        if item["phase_id"] not in active_phases:
+            continue
+        try:
+            fields = plan_bundle._fields(plan_dir, item["item_id"])
+        except plan_bundle.BundleError:
+            continue
+        for field in ("Inputs", "Required Reads"):
+            for raw in plan_bundle._raw_entries(fields.get(field, ""), field):
+                for candidate, declared in plan_weight.path_candidates(raw):
+                    if not declared:
+                        continue
+                    resolved = plan_weight.resolve_candidate(candidate, (plan_dir, repo_root))
+                    if resolved is not None and resolved.resolve() in terminal_specs:
+                        _path_error(diag, plan_dir / "plan.md",
+                                    f"пункт {item['item_id']}, {field}: {candidate} адресует файл "
+                                    "терминальной фазы; допустим только её closure digest")
+
+
+__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "lint_bundle_freshness",
+           "lint_read_budget", "lint_read_path_boundaries")

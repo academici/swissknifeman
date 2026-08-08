@@ -21,3 +21,11 @@ projection; use `plan-views.py bundle --item <Pn.m>` to materialize one delibera
 
 The same gate invokes the owners of decision, status, and item-state projections in
 their check-only mode. A broken decision supersession names both decision identifiers.
+
+## Read-path declarations
+
+For v2 plans, `plan-lint` reads the frozen carrier registry and read-path specification.
+It rejects decreasing volatility across slots or declared carrier sections, a `history`
+carrier on the executor path, and an active-phase item that names an item specification
+from a terminal phase. These checks use carrier ids, classes, declared slots, and the
+resolver’s phase status—not filename heuristics. References to a sibling item remain valid.

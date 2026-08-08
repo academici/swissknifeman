@@ -2046,6 +2046,13 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
         (self.root / "plans").mkdir()
         self.assertEqual(discover_plan_dirs(self.root / "plans"), [])
 
+    def test_discover_ignores_tooling_directories(self):
+        plans = self.root / "plans"
+        plans.mkdir()
+        (plans / ".claude").mkdir()
+        (plans / "__pycache__").mkdir()
+        self.assertEqual(discover_plan_dirs(plans), [])
+
     def test_main_exit_code_ok(self):
         write_valid_plan(self.root, "DEMO-1")
         out, err = io.StringIO(), io.StringIO()

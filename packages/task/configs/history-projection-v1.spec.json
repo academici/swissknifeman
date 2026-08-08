@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contract": "history-projection",
+  "version": "1.0.0",
+  "subject": "item",
+  "sources": {
+    "journal": {
+      "path": "journal.jsonl",
+      "selector": "item_id == subject.item",
+      "required_fields": [
+        "ts",
+        "plan_id",
+        "item_id",
+        "command",
+        "session_id",
+        "run_id",
+        "attempt",
+        "actor",
+        "friction",
+        "result",
+        "cost_usd",
+        "num_turns",
+        "duration_ms",
+        "note"
+      ],
+      "friction_values": [
+        "escalation",
+        "routing-blocked",
+        "red-audit",
+        "deviation",
+        "retry",
+        "no-op"
+      ],
+      "result_values": [
+        "in-progress",
+        "closed-green",
+        "closed-deviations",
+        "blocked",
+        "escalated",
+        "no-op",
+        "audit-green",
+        "audit-red"
+      ],
+      "time_field": "ts",
+      "stable_identity": "journal line number and line SHA-256"
+    },
+    "decisions": {
+      "path": "decisions/<D-id>.md",
+      "selector": "frontmatter.item == subject.item",
+      "required_frontmatter": [
+        "item",
+        "date",
+        "status",
+        "supersedes",
+        "superseded_by"
+      ],
+      "time_field": "date",
+      "stable_identity": "decision id",
+      "replacement_links": {
+        "old_to_new": "superseded_by",
+        "new_to_old": "supersedes",
+        "bidirectional": true
+      }
+    },
+    "findings": {
+      "path": "findings/**/*.md",
+      "selector": "frontmatter.item == subject.item",
+      "required_frontmatter": [
+        "item",
+        "date"
+      ],
+      "time_field": "date",
+      "stable_identity": "repository-relative path"
+    }
+  },
+  "ordering": {
+    "primary": "normalized event time ascending",
+    "date_normalization": "date-only values become 00:00:00Z",
+    "source_rank": [
+      "journal",
+      "decisions",
+      "findings"
+    ],
+    "tie_breaker": "source rank ascending, then stable identity ascending"
+  },
+  "projection_meta_required": [
+    "projection",
+    "projection_version",
+    "source_scope",
+    "through",
+    "inputs_sha256",
+    "generated_by"
+  ],
+  "materialization": "on-demand",
+  "committed": false,
+  "executor_exclusion": {
+    "registry_class": "history",
+    "path_contract": "read-path-v1.spec.json",
+    "predicate": "no registry carrier with class history occurs in paths.executor.slots"
+  }
+}

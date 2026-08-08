@@ -52,6 +52,8 @@ has_escalation` (`plan_lint.py:1866–1870`) как ERROR схемы — рас�
 from __future__ import annotations
 
 import json
+import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -62,12 +64,6 @@ ATTENTION = "ATTENTION"
 RED = "RED"
 _RANK = {RED: 0, ATTENTION: 1, GREEN: 2}
 
-# Плановая бухгалтерия (`plan.md` §2, D75) — ТОЛЬКО bookkeeping-коммит, даже если
-# названа в `Files`. Всё остальное внутри `plans/<ID>/**` (артефакты) и всё вне
-# `plans/<ID>/**` — «Scope»-класс для целей детекта бандла (D104), Files не читается.
-_BOOKKEEPING_LEAVES = ("plan.md", "handoff.md", "index.md", "open-questions.md",
-                       "journal.jsonl", "roadmap.md")
-_BOOKKEEPING_DIRS = ("phases/", "closure/")
 _BOOKKEEPING_ROOT_FILE = "plans/ACTIVE.md"
 
 
@@ -132,23 +128,71 @@ def _changed_paths(commit_hash, git_root, *, timeout=30):
     return [ln for ln in proc.stdout.splitlines() if ln.strip()]
 
 
-def _is_bookkeeping(rel_path, plan_rel):
+def _path_pattern(template):
+    """Registry path template → full-match regex, without a second layout table."""
+    parts = re.split(r"(<[^>]+>|\{[^}]+\}|\*\*)", template)
+    escaped = "".join(
+        r"[^/]+" if part.startswith(("<", "{")) else r".*" if part == "**"
+        else re.escape(part).replace(r"\*", r"[^/]*")
+        for part in parts
+    )
+    return re.compile(r"^" + escaped + r"$")
+
+
+def _is_bookkeeping(rel_path, plan_rel, layout_data):
+    """Classify a commit path from the resolver-projected carrier registry.
+
+    The gate deliberately does not own a v2 path list: task's layout boundary
+    returns patterns for volatile/index/history carriers, and the gate merely
+    matches the path it was handed by git.
+    """
     if rel_path == _BOOKKEEPING_ROOT_FILE:
         return True
     prefix = plan_rel + "/"
     if not rel_path.startswith(prefix):
         return False
     sub = rel_path[len(prefix):]
-    return sub in _BOOKKEEPING_LEAVES or sub.startswith(_BOOKKEEPING_DIRS)
+    return any(_path_pattern(template).match(sub)
+               for template in layout_data["bookkeeping_patterns"])
 
 
-def _read_closure(before, phase_id, *, timeout=30):
+def _call_plan_layout(plan_dir, phase_id, monorepo_root, *, timeout=30):
+    """Read resolver addresses and bookkeeping patterns across the package boundary."""
+    task_lib = str(Path(monorepo_root) / "packages" / "task" / "lib")
+    env = dict(os.environ)
+    existing = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = task_lib if not existing else task_lib + os.pathsep + existing
+    code = (
+        "import importlib,json,sys; m=importlib.import_module('task.plan_layout'); "
+        "d,p=sys.argv[1:3]; v=m.layout_version(d); rows=m.registry().values(); "
+        "patterns=[r['path'] for r in rows if v in r.get('layout_versions',[]) "
+        "and (r.get('class') not in ('spec','evidence','research') or r.get('mutability')=='managed-block')]; "
+        "x={'layout':v,'core':str(m.plan_core_path(d)),'phase':str(m.phase_path(d,p)),"
+        "'handoff':str(m.carrier_path(d,'handoff')),'journal':str(m.carrier_path(d,'journal')),"
+        "'bookkeeping_patterns':patterns}; print(json.dumps(x))"
+    )
+    try:
+        proc = subprocess.run(["python3", "-c", code, str(plan_dir), phase_id],
+                              capture_output=True, text=True, timeout=timeout,
+                              check=False, env=env)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise GateUnavailable(f"резолвер раскладки не выполнился: {exc}") from exc
+    if proc.returncode:
+        raise GateUnavailable(f"резолвер раскладки отказал: {proc.stderr.strip()[-400:]}")
+    try:
+        return json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        raise GateUnavailable(f"резолвер раскладки вернул не JSON: {exc}") from exc
+
+
+def _read_closure(before, phase_id, monorepo_root, *, timeout=30):
     """Git-проверка закрытия (§5 контракта): подпись (все три файла — `plan.md`,
     `phases/P<n>.md` фазы item'а, `handoff.md` — закоммичены где-то в диапазоне),
     состав (бандл — бухгалтерия и Scope в одном коммите, D104: число/порядок коммитов
     НЕ проверяются), чистота каталога плана относительно снимка «до» (D106)."""
     git_root = Path(before["git_root"])
     plan_rel = before["plan_rel"]
+    layout = _call_plan_layout(git_root / plan_rel, phase_id, monorepo_root, timeout=timeout)
 
     log = _git(["log", "--format=%H", f"{before['sha']}..HEAD"], cwd=git_root, timeout=timeout)
     if log.returncode != 0:
@@ -160,13 +204,17 @@ def _read_closure(before, phase_id, *, timeout=30):
     for commit in commits:
         paths = _changed_paths(commit, git_root, timeout=timeout)
         union_paths.update(paths)
-        has_bookkeeping = any(_is_bookkeeping(p, plan_rel) for p in paths)
-        has_scope = any(not _is_bookkeeping(p, plan_rel) for p in paths)
+        has_bookkeeping = any(_is_bookkeeping(p, plan_rel, layout) for p in paths)
+        has_scope = any(not _is_bookkeeping(p, plan_rel, layout) for p in paths)
         if has_bookkeeping and has_scope:
             bundle = True
 
-    required = {f"{plan_rel}/plan.md", f"{plan_rel}/phases/{phase_id}.md",
-                f"{plan_rel}/handoff.md"}
+    phase_path = Path(layout["phase"]).relative_to(git_root).as_posix()
+    core_path = Path(layout["core"]).relative_to(git_root).as_posix()
+    handoff_path = Path(layout["handoff"]).relative_to(git_root).as_posix()
+    journal_path = Path(layout["journal"]).relative_to(git_root).as_posix()
+    required = ({core_path, phase_path, journal_path}
+                if layout["layout"] == "v2" else {core_path, phase_path, handoff_path})
     missing = sorted(required - union_paths)
 
     return {
@@ -351,7 +399,7 @@ def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, monorepo_r
                 f"монорепо-корень не найден от {plan_dir} — пакет `task` недоступен")
 
     lint = _read_lint_signals(plan_dir, monorepo_root, before["sha"], timeout=timeout)
-    closure = _read_closure(before, phase_id, timeout=timeout)
+    closure = _read_closure(before, phase_id, monorepo_root, timeout=timeout)
     item_after = _read_item_fields_after(plan_dir, phase_id, item_id, monorepo_root,
                                         timeout=timeout)
 

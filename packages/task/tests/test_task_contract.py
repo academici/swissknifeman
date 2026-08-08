@@ -644,6 +644,16 @@ class BuildFixtureTests(unittest.TestCase):
         self.assertEqual(contract["route"]["required"],
                          {"model_class": "implementation", "effort": "medium"})
 
+    def test_v2_phase_carrier_builds_through_layout_resolver(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = fixtures.write_valid_plan(Path(tmp), "DEMO-V2", layout="v2")
+            text = (plan / "plan.md").read_text(encoding="utf-8").replace(
+                "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
+            (plan / "plan.md").write_text(text, encoding="utf-8")
+            contract = task_contract.build(plan, "P1.1")
+            self.assertEqual(contract["route"]["required"],
+                             {"model_class": "implementation", "effort": "medium"})
+
     def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
         phase_path = self.plan_dir / "phases" / "P1.md"
         phase_path.write_text(

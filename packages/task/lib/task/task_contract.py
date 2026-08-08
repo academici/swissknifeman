@@ -500,6 +500,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     its sibling config); a caller MAY override it, but never supplies cwd/env instead.
     """
     from task import plan_lint  # lazy — avoids a plan_lint↔task_contract circular import
+    from task import plan_layout
     from task import route_evidence  # lazy — same reasoning, route assembly only
     from task import review_policy  # lazy — reuse of loop_budget constants only
     from task import command_catalog  # lazy — same reasoning, class_selectors carrier only
@@ -507,8 +508,8 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     plan_dir = Path(plan_dir)
     phase_token = item_id.split(".")[0]
     diag = plan_lint.Diagnostics()
-    plan_lint.parse_plan_md(plan_dir / "plan.md", diag)  # populates diag only; not consulted here
-    phase_path = plan_dir / "phases" / f"{phase_token}.md"
+    plan_lint.parse_plan_md(plan_layout.plan_core_path(plan_dir), diag)  # populates diag only; not consulted here
+    phase_path = plan_layout.phase_path(plan_dir, phase_token)
     phase = plan_lint.parse_phase_md(phase_path, phase_token, diag)
     occurrences = phase["items"].get(item_id) if phase else None
     if not occurrences:

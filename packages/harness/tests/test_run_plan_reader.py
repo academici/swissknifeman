@@ -36,12 +36,13 @@ _ITEM_TEMPLATE = """### {item_id} — Тестовый item
 """
 
 
-def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line):
+def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v1"):
     """Минимальный синтетический план `<tmp>/<plan_id>/` — один phase `P1`, все
     item'ы `🟡 In progress` (терминальный кейс уже покрыт `sample-plan`). `routing_rows`
     — готовые строки таблицы `## 3. Routing` (без заголовка/разделителя)."""
     plan_dir = Path(tmp) / plan_id
-    (plan_dir / "phases").mkdir(parents=True)
+    phase_dir = plan_dir / "phases" / "P1" if layout == "v2" else plan_dir / "phases"
+    phase_dir.mkdir(parents=True)
 
     total = len(item_ids)
     status_rows = "\n".join(
@@ -60,6 +61,7 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line):
 | Title | Синтетический план теста |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
+| Layout | {layout} |
 
 ## 1. Context
 
@@ -94,7 +96,7 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line):
 | 2026-08-01 | package-implementer/sonnet | план создан |
 """, encoding="utf-8")
 
-    (plan_dir / "phases" / "P1.md").write_text(f"""# P1 — Фаза раз
+    (phase_dir / "P1.md").write_text(f"""# P1 — Фаза раз
 
 ## Phase Context
 
@@ -111,6 +113,10 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line):
 
 Синтетика теста.
 """, encoding="utf-8")
+    if layout == "v2":
+        for item_id in item_ids:
+            (phase_dir / f"{item_id}.state.md").write_text(
+                f"**Next:** {next_line}\n", encoding="utf-8")
 
     (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after {item_ids[0]}
 
@@ -167,6 +173,15 @@ class QueueSamplePlanTest(unittest.TestCase):
 
 
 class ExecCellTest(unittest.TestCase):
+    def test_v2_reads_next_from_item_state_not_handoff(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = _write_fixture(
+                tmp, plan_id="V2-STATE", item_ids=["P1.1"],
+                routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
+                next_line="exec-items: task:plan-exec V2-STATE P1.1", layout="v2")
+            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+        self.assertFalse(result["degraded"], result["degraded_reasons"])
+        self.assertEqual(result["items"][0]["next_form"]["kind"], "exec-items")
     def test_exec_manual_refuses(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(

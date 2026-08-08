@@ -234,6 +234,32 @@ def _call_task_contract_build(plan_dir, item_id, monorepo_root, *, timeout=60):
     return {"model_class": model_class, "effort": effort}, None
 
 
+def _call_plan_layout(plan_dir, monorepo_root, *, item_id=None, timeout=60):
+    """S3: task's resolver stays across the subprocess boundary (D29)."""
+    task_lib = str(Path(monorepo_root) / "packages" / "task" / "lib")
+    env = dict(os.environ)
+    env["PYTHONPATH"] = task_lib + os.pathsep + str(monorepo_root)
+    code = (
+        "import importlib,json,sys; m=importlib.import_module('task.plan_layout'); "
+        "d=sys.argv[1]; i=sys.argv[2] if len(sys.argv)>2 else None; "
+        "x={'core':str(m.plan_core_path(d)), 'layout':m.layout_version(d)}; "
+        "x.update({'state':str(m.carrier_path(d,'item-state',item_id=i))} if i and x['layout']=='v2' else {}); "
+        "print(json.dumps(x))"
+    )
+    try:
+        args = ["python3", "-c", code, str(plan_dir)] + ([item_id] if item_id else [])
+        proc = subprocess.run(args, capture_output=True,
+                              text=True, timeout=timeout, check=False, env=env)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, f"резолвер раскладки не запустился: {exc}"
+    if proc.returncode:
+        return None, f"резолвер раскладки отказал: {proc.stderr.strip()[-400:]}"
+    try:
+        return json.loads(proc.stdout), None
+    except json.JSONDecodeError as exc:
+        return None, f"резолвер раскладки вернул не JSON: {exc}"
+
+
 def _classify_drivability(exec_value, exec_error, route, route_error):
     """Право вождения — §7 таблицы «событие → класс» + §9 канона, РОВНО в порядке:
     Exec дословно «plan-exec» (D31, деривация никогда не ДАЁТ права) → маршрут
@@ -284,6 +310,10 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
                 "(standalone-раскладка): драйвер отказывает в вождении, а не молчит"))
     monorepo_root = Path(monorepo_root)
 
+    layout, layout_error = _call_plan_layout(plan_dir, monorepo_root)
+    if layout is None:
+        return _degraded(plan_dir, phase_id, layout_error)
+
     data, reason = _call_plan_lint(plan_dir, monorepo_root)
     if data is None:
         return _degraded(plan_dir, phase_id, reason)
@@ -301,9 +331,10 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
     handoff = plan_model.get("handoff") or {}
     next_raw = (handoff.get("fields") or {}).get("Next", "") or ""
     next_kind, next_declaring_line = _resolve_next_form(next_raw)
-    next_form = {"kind": next_kind, "declaring_line": next_declaring_line}
+    next_form = ({"kind": next_kind, "declaring_line": next_declaring_line}
+                 if layout["layout"] == "v1" else {"kind": "item-state", "declaring_line": None})
 
-    plan_lines = _read_plan_lines(plan_dir / "plan.md") if next_kind is not None else None
+    plan_lines = _read_plan_lines(layout["core"]) if next_kind is not None else None
 
     status_rows = phase_model.get("status_table") or []
     items_fields = phase_model.get("items") or {}
@@ -323,7 +354,7 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
             })
             continue
 
-        if next_kind is None:
+        if layout["layout"] == "v1" and next_kind is None:
             result_items.append({
                 "item_id": item_id, "status": status,
                 "route": None, "route_error": None,
@@ -335,6 +366,24 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
             })
             continue
 
+        item_next_kind, item_next_line = next_kind, next_declaring_line
+        if layout["layout"] == "v2":
+            item_layout, item_layout_error = _call_plan_layout(
+                plan_dir, monorepo_root, item_id=item_id)
+            if item_layout is None:
+                item_next_kind, item_next_line = None, item_layout_error
+            else:
+                item_state = _read_plan_lines(item_layout["state"])
+                raw = "\n".join(item_state or [])
+                state_next = re.search(r"^\*\*Next:\*\*\s*(.*)$", raw, re.MULTILINE)
+                raw = state_next.group(1) if state_next else raw
+                item_next_kind, item_next_line = _resolve_next_form(raw)
+        if item_next_kind is None:
+            result_items.append({"item_id": item_id, "status": status, "route": None,
+                                 "route_error": None, "exec": None, "exec_error": None,
+                                 "drivable": False, "refusal": NEXT_FORM_UNSUPPORTED,
+                                 "refusal_detail": f"форма Next недоступна: {item_next_line}"})
+            continue
         if plan_lines is None:
             exec_value, exec_error = None, "`plan.md` недоступен для чтения §3 Routing"
         else:
@@ -349,6 +398,7 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
             "route": route, "route_error": route_error,
             "exec": exec_value, "exec_error": exec_error,
             "drivable": drivable, "refusal": refusal, "refusal_detail": refusal_detail,
+            "next_form": {"kind": item_next_kind, "declaring_line": item_next_line},
         })
 
     return {

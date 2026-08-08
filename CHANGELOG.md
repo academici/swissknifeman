@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- feat(task): add the versioned executable-plan layout resolver and frozen carrier contracts.
+
 ### Fixed
 
 - **`plan-weight.py sweep` больше не роняет весь замер флота одним недоступным корнём.**

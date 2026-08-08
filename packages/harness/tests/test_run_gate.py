@@ -250,6 +250,29 @@ class _Repo:
         return gate.snapshot_before(self.plan_dir)
 
 
+class LayoutBookkeepingTest(unittest.TestCase):
+    def test_v2_status_and_decisions_are_bookkeeping(self):
+        root = "plans/V2"
+        layout = {"bookkeeping_patterns": ["status.md", "decisions/<D-id>.md"]}
+        self.assertTrue(gate._is_bookkeeping(f"{root}/status.md", root, layout))
+        self.assertTrue(gate._is_bookkeeping(f"{root}/decisions/D001-test.md", root, layout))
+        self.assertFalse(gate._is_bookkeeping(f"{root}/notes.md", root, layout))
+
+    def test_v2_uses_task_resolver_for_real_carrier_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "V2"
+            phase = plan / "phases" / "P1"
+            phase.mkdir(parents=True)
+            (plan / "plan.md").write_text(
+                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n")
+            (phase / "P1.md").write_text("# P1\n")
+            resolved = gate._call_plan_layout(plan, "P1", REPO_ROOT)
+            self.assertEqual(resolved["layout"], "v2")
+            self.assertEqual(Path(resolved["phase"]), phase / "P1.md")
+            self.assertTrue(gate._is_bookkeeping(
+                f"plans/V2/{Path(resolved['journal']).name}", "plans/V2", resolved))
+
+
 class GateVerdictTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

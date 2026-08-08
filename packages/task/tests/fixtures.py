@@ -14,10 +14,11 @@ if str(_LIB) not in sys.path:
 
 
 def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",
-            closure_protocol=None, decision_log_rows=None):
+            closure_protocol=None, decision_log_rows=None, layout=None):
     # `closure_protocol` (P8.1/D42) — opt-in Meta-поле `Closure Protocol`; None = строки нет
     # вовсе (аддитивность: план без поля обязан линтоваться байт-в-байт как до P8.1).
     closure_row = f"\n| Closure Protocol | {closure_protocol} |" if closure_protocol else ""
+    layout_row = f"\n| Layout | {layout} |" if layout else ""
     # `decision_log_rows` (P8.2/D103-D105, research/23 §4): D-лог параметризован, а не
     # зашит одной строкой — гейт `Consequences` гоняет тесты на РАЗНОМ содержимом ячейки
     # `Решение`/`Дата`; None = прежняя единственная строка (byte-compat с до-P8.2 фикстурой).
@@ -32,7 +33,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 | Plan ID | {plan_id} |
 | Title | Демо-план |
 | Version | 0.1.0 |
-| Status | {phase_status} |{closure_row}
+| Status | {phase_status} |{closure_row}{layout_row}
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
 | Last Updated | 2026-07-02 |
@@ -252,14 +253,18 @@ def index_md(plan_id):
 """
 
 
-def write_valid_plan(root, plan_id="DEMO-1"):
+def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""
     plan_dir = Path(root) / "plans" / plan_id
     (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
     (plan_dir / "brief").mkdir(parents=True, exist_ok=True)
-    (plan_dir / "plan.md").write_text(plan_md(plan_id), encoding="utf-8")
-    (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
+    (plan_dir / "plan.md").write_text(plan_md(plan_id, layout=layout), encoding="utf-8")
+    phase_path = plan_dir / "phases" / "P1.md"
+    if layout == "v2":
+        phase_path = plan_dir / "phases" / "P1" / "P1.md"
+        phase_path.parent.mkdir()
+    phase_path.write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
     (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")

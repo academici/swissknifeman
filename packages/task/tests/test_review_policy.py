@@ -385,6 +385,14 @@ class LoopBudgetFromCommittedTests(unittest.TestCase):
         self.assertEqual(count, "unknown")
         self.assertIsInstance(budget, LoopBudget)
 
+    def test_v2_missing_phase_carrier_refuses_instead_of_unknown(self):
+        (self.plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+        with self.assertRaises(ReviewPolicyError) as ctx:
+            LoopBudget.from_committed(self.plan_dir, "P9", self._finding())
+        self.assertEqual(ctx.exception.code, "CARRIER_UNRESOLVED")
+
     def test_no_matching_audit_block_is_a_real_verified_zero(self):
         (self.plan_dir / "phases" / "P2.md").write_text(
             "## Phase Status\n\n## Audit P2 — 2026-01-01\n\nno findings here\n",

@@ -185,11 +185,23 @@ class LoopBudget:
                 f"rule_or_contract_locus must be a non-empty str, got {locus!r}")
         budget = cls(same_finding_max=same_finding_max)
         plan_dir = Path(plan_dir)
-        phase_path = plan_dir / "phases" / f"{phase_id}.md"
+        from task import plan_layout
+        if not (plan_dir / "plan.md").is_file():
+            # Historical unit fixtures predate layout declarations; preserve their
+            # legacy observational semantics without granting a real v2 plan a
+            # silent fallback.
+            phase_path = plan_dir / "phases" / f"{phase_id}.md"
+        else:
+            try:
+                phase_path = plan_layout.phase_path(plan_dir, phase_id)
+            except plan_layout.PlanLayoutError as exc:
+                raise ReviewPolicyError("CARRIER_UNRESOLVED", f"носитель фазы не резолвится: {exc}") from exc
         try:
             phase_lines = phase_path.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            return budget, "unknown"
+        except OSError as exc:
+            if not (plan_dir / "plan.md").is_file():
+                return budget, "unknown"
+            raise ReviewPolicyError("CARRIER_UNREADABLE", f"носитель фазы не читается: {exc}") from exc
 
         phase_count = 0
         for start, end in _audit_blocks(phase_lines, phase_id):

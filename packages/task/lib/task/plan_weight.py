@@ -104,7 +104,7 @@ import re
 import sys
 from pathlib import Path
 
-from task import plan_lint, token_estimate
+from task import plan_lint, plan_layout, token_estimate
 
 # --- обязательный путь чтения (`plan-exec.md` §1) ----------------------------------
 
@@ -538,10 +538,11 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
     plan_id = (meta or {}).get("Plan ID", (plan_dir.name, None))[0] or plan_dir.name
 
     items = []
-    phases_dir = plan_dir / "phases"
-    phase_files = sorted(phases_dir.glob("P*.md")) if phases_dir.is_dir() else []
-    for phase_path in phase_files:
-        phase_id = phase_path.stem
+    try:
+        phase_files = plan_layout.phase_paths(plan_dir)
+    except plan_layout.PlanLayoutError as exc:
+        raise PlanWeightError(str(exc)) from exc
+    for phase_id, phase_path in phase_files.items():
         parsed = plan_lint.parse_phase_md(phase_path, phase_id, diag)
         if parsed is None:
             continue

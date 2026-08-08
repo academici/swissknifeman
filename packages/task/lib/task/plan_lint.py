@@ -42,6 +42,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # журнала реюзает её вместо дубля правил (Code Guidance 2026.07.18-FOREMAN P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
+from task import plan_layout
 # task.task_contract — единственный владелец строкового теста «внешности» execution
 # input'а (task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2); tiered-portability lint (2026.07.24-AGENT-RELIABILITY P2.2)
 # зовёт его, а не пересказывает список префиксов вторым списком (Implementation Rules P2.2).
@@ -1851,15 +1852,11 @@ def lint_plan(plan_dir, diag):
     if plan_lines is not None:
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
-    phases_dir = plan_dir / "phases"
     phase_files = {}  # phase_id -> Path
-    if phases_dir.is_dir():
-        for f in sorted(phases_dir.glob("*.md")):
-            m = PHASE_FILENAME_RE.match(f.name)
-            if m:
-                phase_files[m.group(1)] = f
-            else:
-                diag.error(f, None, "имя файла фазы не соответствует шаблону Pn.md")
+    try:
+        phase_files = plan_layout.phase_paths(plan_dir)
+    except plan_layout.PlanLayoutError as exc:
+        diag.error(plan_md, None, str(exc))
     board_phase_ids = set()
     if status_board:
         board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}
@@ -2348,8 +2345,15 @@ def discover_plan_dirs(root):
     for p in sorted(root.iterdir()):
         if not p.is_dir():
             continue
+        # Tooling caches/configuration are not executable-plan directories.  They
+        # can be created by the validation run itself, so treating them as plans
+        # makes the gate non-idempotent.
+        if p.name.startswith(".") or p.name == "__pycache__":
+            continue
         if p.name == ARCHIVE_DIR_NAME:
-            dirs.extend(sorted(a for a in p.iterdir() if a.is_dir()))
+            dirs.extend(sorted(a for a in p.iterdir()
+                               if a.is_dir() and not a.name.startswith(".")
+                               and a.name != "__pycache__"))
             continue
         dirs.append(p)
     return dirs

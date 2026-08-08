@@ -59,6 +59,7 @@ item'а P11.1, анти-подгонка): машина по-прежнему н
 from __future__ import annotations
 
 import glob
+import importlib
 import json
 import os
 import re
@@ -115,11 +116,22 @@ _SOURCE_PATTERNS = (
     "plan.md",
     "handoff.md",
     "roadmap.md",
-    os.path.join("phases", "*.md"),
     os.path.join("findings", "**", "*.md"),
     os.path.join("research", "**", "*.md"),
     os.path.join("brief", "**", "*.md"),
 )
+
+
+def _phase_source_files(plan_dir: str) -> list[str]:
+    """Ask task's resolver for phase carriers; this script owns no layout glob."""
+    task_lib = os.path.join(REPO_ROOT, "packages", "task", "lib")
+    if task_lib not in sys.path:
+        sys.path.insert(0, task_lib)
+    try:
+        resolver = importlib.import_module("task.plan_layout")
+        return [str(path) for path in resolver.phase_paths(plan_dir).values()]
+    except (ImportError, ValueError, OSError):
+        return []
 
 
 def plan_source_files(plan_dir: str) -> list[str]:
@@ -128,6 +140,7 @@ def plan_source_files(plan_dir: str) -> list[str]:
         for f in glob.glob(os.path.join(plan_dir, pattern), recursive=True):
             if os.path.isfile(f):
                 files.add(f)
+    files.update(f for f in _phase_source_files(plan_dir) if os.path.isfile(f))
     return sorted(files)
 
 

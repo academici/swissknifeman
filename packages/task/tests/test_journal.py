@@ -7,7 +7,7 @@ from pathlib import Path
 
 from task.journal import (  # noqa: E402
     JournalValidationError, append, append_exception, line_sha256, main,
-    new_entry, new_exception, validate_entry, validate_exception,
+    new_entry, new_exception, validate_entry, validate_exception, validate_exception_target,
 )
 
 
@@ -317,6 +317,28 @@ class TestCli(TmpDirTestCase):
         ])
         self.assertEqual(rc, 0)
         self.assertTrue((self.plan_dir / "journal-exceptions.jsonl").is_file())
+
+
+class TestV2DecisionCarrier(TmpDirTestCase):
+    def test_exception_owner_decision_resolves_from_v2_decisions_carrier(self):
+        (self.plan_dir / "phases" / "P1").mkdir(parents=True)
+        (self.plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+        (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
+        decisions = self.plan_dir / "decisions"
+        decisions.mkdir()
+        (decisions / "D42-owner-gate.md").write_text("# D42\n", encoding="utf-8")
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
+                          actor="implementation/high", result="in-progress")
+        del entry["friction"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        exception = new_exception(
+            plan_id="P", target_line=1, target_sha256=line_sha256(raw),
+            invalid_fields=["friction"], owner_decision="D42", actor="owner",
+            reason="v2 carrier fixture")
+        validate_exception_target(self.plan_dir, exception)
 
 
 if __name__ == "__main__":

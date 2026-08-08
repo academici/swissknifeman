@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swissknifeman.local/contracts/item-state-projection-v1.schema.json",
+  "title": "Item State Projection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["projection_meta", "state"],
+  "properties": {
+    "projection_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projection",
+        "projection_version",
+        "source_scope",
+        "through",
+        "inputs_sha256",
+        "generated_by"
+      ],
+      "properties": {
+        "projection": {
+          "const": "item-state"
+        },
+        "projection_version": {
+          "const": "1.0.0"
+        },
+        "source_scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["item", "event_types", "subjects", "ordering"],
+          "properties": {
+            "item": {
+              "type": "string",
+              "pattern": "^P[0-9]+\\.[0-9]+$"
+            },
+            "event_types": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "subjects": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "ordering": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "through": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["journal_line", "ts"],
+          "properties": {
+            "journal_line": {"type": "integer", "minimum": 0},
+            "ts": {"type": "string", "format": "date-time"}
+          }
+        },
+        "inputs_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generated_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "version": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world", "position", "next_step", "active_context", "history_pointer"],
+      "properties": {
+        "world": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["paths", "commits"],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "sha256"],
+                "properties": {
+                  "path": {"type": "string", "minLength": 1},
+                  "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+                }
+              },
+              "uniqueItems": true
+            },
+            "commits": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+              "uniqueItems": true
+            }
+          }
+        },
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "attempt", "last_result"],
+          "properties": {
+            "status": {"type": "string", "minLength": 1},
+            "attempt": {"type": "integer", "minimum": 0},
+            "last_result": {"type": ["string", "null"]}
+          }
+        },
+        "next_step": {
+          "type": "string",
+          "minLength": 1
+        },
+        "active_context": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["risks", "workarounds", "decisions"],
+          "properties": {
+            "risks": {"type": "array", "items": {"type": "string"}},
+            "workarounds": {"type": "array", "items": {"type": "string"}},
+            "decisions": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^D[0-9]+$"},
+              "uniqueItems": true
+            }
+          }
+        },
+        "history_pointer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["view", "command"],
+          "properties": {
+            "view": {"type": "string", "minLength": 1},
+            "command": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "projection_meta": {
+        "projection": "item-state",
+        "projection_version": "1.0.0",
+        "source_scope": {
+          "item": "P1.2",
+          "event_types": ["attempt"],
+          "subjects": ["P1.2"],
+          "ordering": "journal line ascending"
+        },
+        "through": {
+          "journal_line": 42,
+          "ts": "2026-08-08T00:00:00Z"
+        },
+        "inputs_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "generated_by": {
+          "name": "task.plan-views",
+          "version": "1.0.0"
+        }
+      },
+      "state": {
+        "world": {
+          "paths": [
+            {
+              "path": "root/contracts/reader-contract-v1.registry.json",
+              "sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+            }
+          ],
+          "commits": ["5852fbb5"]
+        },
+        "position": {
+          "status": "in-progress",
+          "attempt": 1,
+          "last_result": "in-progress"
+        },
+        "next_step": "Generate and validate the item-state contract.",
+        "active_context": {
+          "risks": [],
+          "workarounds": [],
+          "decisions": ["D22"]
+        },
+        "history_pointer": {
+          "view": ".plan-cache/history/P1.2.md",
+          "command": "task plan-view history P1.2"
+        }
+      }
+    }
+  ]
+}

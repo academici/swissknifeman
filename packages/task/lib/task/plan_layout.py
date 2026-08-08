@@ -1,0 +1,122 @@
+"""Versioned carrier-address resolver for executable-plan layouts.
+
+The frozen P1 contracts are installed next to this module as data.  A missing
+``Layout`` Meta field intentionally means legacy v1; every other value must be
+explicitly supported and must agree with the physical phase tree.
+"""
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+
+
+class PlanLayoutError(ValueError):
+    """The declared layout cannot deterministically resolve a carrier."""
+
+
+_META_ROW = re.compile(r"^\|\s*Layout\s*\|\s*([^|]+)\|")
+_ITEM = re.compile(r"^(P\d+)\.(\d+)$")
+_PHASE_FILE = re.compile(r"^(P\d+)\.md$")
+_CONFIG = Path(__file__).resolve().parents[2] / "configs"
+
+
+def _meta_layout(plan_dir: Path) -> str:
+    try:
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+    except OSError as exc:
+        raise PlanLayoutError(f"plan.md не читается: {exc}") from exc
+    for line in text.splitlines():
+        match = _META_ROW.match(line)
+        if match:
+            return match.group(1).strip()
+    return "v1"
+
+
+def layout_version(plan_dir) -> str:
+    """Return ``v1`` or ``v2`` and reject a declaration/tree disagreement."""
+    plan_dir = Path(plan_dir)
+    version = _meta_layout(plan_dir)
+    if version not in ("v1", "v2"):
+        raise PlanLayoutError(f"Layout: неизвестная раскладка {version!r}; допустимы v1, v2")
+    phase_dir = plan_dir / "phases"
+    has_v1 = any(_PHASE_FILE.match(p.name) for p in phase_dir.glob("*.md")) if phase_dir.is_dir() else False
+    has_v2 = any(p.is_dir() and _PHASE_FILE.match(p.name + ".md") for p in phase_dir.iterdir()) if phase_dir.is_dir() else False
+    if version == "v1" and has_v2:
+        raise PlanLayoutError("Layout v1 объявлен, но дерево содержит phases/Pn/")
+    if version == "v2" and (has_v1 or not has_v2):
+        raise PlanLayoutError("Layout v2 объявлен, но дерево не состоит из phases/Pn/Pn.md")
+    return version
+
+
+def registry() -> dict:
+    path = _CONFIG / "reader-contract-v1.registry.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PlanLayoutError(f"контракт носителей не читается: {exc}") from exc
+    return {row["id"]: row for row in data.get("carriers", [])}
+
+
+def carrier_path(plan_dir, carrier_id, *, item_id=None, phase_id=None) -> Path:
+    """Resolve one declared carrier.  Wildcard/index carriers are not files."""
+    plan_dir = Path(plan_dir)
+    version = layout_version(plan_dir)
+    carriers = registry()
+    row = carriers.get(carrier_id)
+    if row is None or version not in row.get("layout_versions", []):
+        raise PlanLayoutError(f"носитель {carrier_id!r} не объявлен для Layout {version}")
+    template = row["path"]
+    if "<Pn.m>" in template:
+        if not item_id or not _ITEM.match(item_id):
+            raise PlanLayoutError(f"{carrier_id}: нужен точный item Pn.m")
+        template = template.replace("<Pn.m>", item_id)
+        phase_id = item_id.split(".")[0]
+    if "<Pn>" in template:
+        if not phase_id:
+            raise PlanLayoutError(f"{carrier_id}: нужен phase Pn")
+        template = template.replace("<Pn>", phase_id)
+    if any(token in template for token in ("*", "{", "<")):
+        raise PlanLayoutError(f"{carrier_id}: не является одиночным файловым носителем")
+    return plan_dir / template
+
+
+def carrier_glob(plan_dir, carrier_id) -> Path:
+    """Resolve a declared multi-file carrier to a deterministic glob pattern."""
+    plan_dir = Path(plan_dir)
+    version = layout_version(plan_dir)
+    row = registry().get(carrier_id)
+    if row is None or version not in row.get("layout_versions", []):
+        raise PlanLayoutError(f"носитель {carrier_id!r} не объявлен для Layout {version}")
+    template = re.sub(r"<[^>]+>|\{[^}]+\}", "*", row["path"])
+    if "*" not in template:
+        raise PlanLayoutError(f"{carrier_id}: не является множественным носителем")
+    return plan_dir / template
+
+
+def phase_paths(plan_dir) -> dict:
+    plan_dir = Path(plan_dir)
+    version = layout_version(plan_dir)
+    phases = plan_dir / "phases"
+    if version == "v1":
+        return {m.group(1): p for p in sorted(phases.glob("*.md")) if (m := _PHASE_FILE.match(p.name))}
+    result = {}
+    for directory in sorted(phases.iterdir() if phases.is_dir() else ()):
+        if not directory.is_dir() or not re.match(r"^P\d+$", directory.name):
+            continue
+        path = directory / f"{directory.name}.md"
+        if path.is_file():
+            result[directory.name] = path
+    return result
+
+
+def phase_path(plan_dir, phase_id) -> Path:
+    paths = phase_paths(plan_dir)
+    try:
+        return paths[phase_id]
+    except KeyError as exc:
+        raise PlanLayoutError(f"фаза {phase_id} не найдена в Layout {layout_version(plan_dir)}") from exc
+
+
+def plan_core_path(plan_dir) -> Path:
+    return carrier_path(plan_dir, "legacy-plan-monolith" if layout_version(plan_dir) == "v1" else "plan-core")

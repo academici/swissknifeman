@@ -197,7 +197,11 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
         raise JournalValidationError(
             f"exception: plan_id «{exception['plan_id']}» ≠ canonical plan directory "
             f"«{canonical_plan_id}»")
-    journal_path = plan_dir / FILENAME
+    from task import plan_layout
+    try:
+        journal_path = plan_layout.carrier_path(plan_dir, "journal")
+    except plan_layout.PlanLayoutError as exc:
+        raise JournalValidationError(f"journal: носитель не резолвится: {exc}") from exc
     try:
         lines = journal_path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
@@ -229,12 +233,18 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
             f"invalid_fields: ожидалось точное множество {sorted(target_fields)}")
 
     try:
-        plan_text = (plan_dir / "plan.md").read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        raise JournalValidationError(f"plan.md не читается: {exc}") from exc
-    decision = re.escape(exception["owner_decision"])
-    if not re.search(rf"^\|\s*{decision}\s*\|", plan_text, re.MULTILINE):
-        raise JournalValidationError("owner_decision: D# отсутствует в plan.md")
+        if plan_layout.layout_version(plan_dir) == "v1":
+            plan_text = plan_layout.plan_core_path(plan_dir).read_text(encoding="utf-8")
+            decision = re.escape(exception["owner_decision"])
+            exists = bool(re.search(rf"^\|\s*{decision}\s*\|", plan_text, re.MULTILINE))
+        else:
+            decision_glob = plan_layout.carrier_glob(plan_dir, "decision-record")
+            exists = any(p.name.startswith(exception["owner_decision"] + "-")
+                         for p in decision_glob.parent.glob(decision_glob.name))
+    except (OSError, UnicodeDecodeError, plan_layout.PlanLayoutError) as exc:
+        raise JournalValidationError(f"owner_decision: носитель решений не читается: {exc}") from exc
+    if not exists:
+        raise JournalValidationError("owner_decision: D# отсутствует в объявленном носителе решений")
 
     if check_duplicate:
         exceptions_path = plan_dir / EXCEPTIONS_FILENAME

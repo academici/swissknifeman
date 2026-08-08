@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import collections
 import glob
+import importlib
 import json
 import os
 import re
@@ -44,6 +45,19 @@ KNOWN_INTERSECTIONS_FILE = os.path.join(PLANS_DIR, "cross-plan-known-intersectio
 # \u043a\u043e\u0440\u043d\u0435\u0432\u044b\u0435 \u043d\u043e\u0441\u0438\u0442\u0435\u043b\u0438 \u0431\u0435\u0437 "/" \u0432 \u043f\u0443\u0442\u0438 (\u04185) \u2014 \u043c\u0430\u0448\u0438\u043d\u043d\u043e\u043c\u0443 \u0433\u0435\u0439\u0442\u0443 \u0438\u043d\u0430\u0447\u0435 \u043d\u0435\u0432\u0438\u0434\u0438\u043c\u044b, \u0441\u043c. plans/README.md
 # \u00a7 \u00ab\u0414\u0438\u0441\u0446\u0438\u043f\u043b\u0438\u043d\u0430 \u0441\u043e\u043f\u0440\u043e\u0432\u043e\u0436\u0434\u0435\u043d\u0438\u044f\u00bb / \u00a7 \u00ab\u0410\u0443\u0434\u0438\u0442 \u044d\u0442\u0430\u043f\u0430 C\u00bb \u04247.
 ROOT_VISIBLE_FILES = {"CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "config.json"}
+
+
+def phase_files(plan_id: str) -> list[str]:
+    """Resolve phase carriers through task instead of maintaining two glob layouts."""
+    task_lib = os.path.join(os.path.dirname(PLANS_DIR), "packages", "task", "lib")
+    if task_lib not in sys.path:
+        sys.path.insert(0, task_lib)
+    plan_dir = os.path.join(PLANS_DIR, plan_id)
+    try:
+        resolver = importlib.import_module("task.plan_layout")
+        return [str(path) for path in resolver.phase_paths(plan_dir).values()]
+    except (ImportError, ValueError, OSError):
+        return []
 
 
 def live_plans() -> list[str]:
@@ -85,7 +99,7 @@ def collect(plan_id: str):
     """→ (owners: path -> {item}, skeleton_items: int, sized_items: int)"""
     owners: dict[str, set[str]] = collections.defaultdict(set)
     skeleton = sized = 0
-    for phase in sorted(glob.glob(os.path.join(PLANS_DIR, plan_id, "phases", "*.md"))):
+    for phase in sorted(phase_files(plan_id)):
         text = open(phase, encoding="utf-8").read()
         is_skeleton = SKELETON in text
         blocks = ITEM_RE.split(text)
@@ -130,6 +144,20 @@ def main() -> int:
     blind = 0
     statuses = {p: plan_status(p) for p in plans}
     live = {p for p, st in statuses.items() if st not in TERMINAL}
+    json_mode = "--json" in sys.argv
+    if json_mode:
+        for plan_id in plans:
+            owners, skeleton, _sized = collect(plan_id)
+            blind += skeleton
+            for path, items in owners.items():
+                all_owners[path] |= items
+        shared = {}
+        for path, items in all_owners.items():
+            open_plans = {i.split(":")[0] for i in items if "[закрыт]" not in i}
+            if len(open_plans & live) > 1:
+                shared[path] = sorted(items)
+        print(json.dumps({"plans": plans, "shared": shared, "blind_items": blind}, ensure_ascii=False))
+        return 0
     print(f"Сверка Files по {len(plans)} планам\n")
     for plan_id in plans:
         owners, skeleton, sized = collect(plan_id)

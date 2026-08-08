@@ -1,54 +1,49 @@
-# HANDOFF — 2026-08-08 — after P3.1
+# HANDOFF — 2026-08-08 — after P3.2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: implementation/high»
+**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P3.2`
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | high — детерминизм сборщика несёт гейт |
+| Model | gpt-5.6-sol |
+| Thinking | high — frozen-contract conflict |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | NEW SESSION — manual item |
-| Суть | Исполнить P3.2: построить детерминированный сборщик bundle. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.2'` |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить conflict frozen bundle schema и требования `unresolvable_entry`. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P3.2'` |
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | implementation |
+| Model | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue (/clear) — ручной item |
-| Суть | Исполнить P3.2: построить детерминированный сборщик bundle. |
-| Команда | — |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить conflict frozen bundle schema и требования `unresolvable_entry`. |
+| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P3.2` |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P3.2
+$ task:plan-design 2026.08.07-PLAN-ECONOMY P3.2
 ```
 
-**Done:** P3.1 closed green. Contract `bundle` v1 is frozen in a semantic document and Draft
-2020-12 JSON Schema with one illustrative example; the closed five-code failure taxonomy,
-raw-byte and selected-byte integrity, declaration freshness, canonical digests, provenance,
-commit policy, and rejected alternatives are explicit. Item commit: `31cf532b`.
+**Done:** P3.2 pre-mutation contract allowed execution; implementation discovery found a frozen
+contract conflict before package-code mutation. Evidence: `findings/24-p3.2-bundle-schema-conflict-2026-08-08.md`.
 
-**Remaining:** P3.2 and the remaining P3–P6 executable items.
+**Remaining:** Resolve P3.2 contract/schema carrier, then implement P3.2 and the remaining P3–P6 items.
 
 **Sources of truth:** `root/contracts/bundle-v1.md` · `root/contracts/bundle-v1.schema.json` ·
-`phases/P3/P3.1.state.md` · item commit `31cf532b`.
+`findings/24-p3.2-bundle-schema-conflict-2026-08-08.md`.
 
-**Open risks:** Final `plan-lint --baseline HEAD` reports 0 errors and 4 inherited ARTIFEX
-workflow-placement/name warnings, with 0 new findings. During the in-progress event the accepted P3
-DoR text transiently exposed two false-positive warnings; closing P3.1 removed them. A separate
-mixed-state projection defect remains: `status.md` reports P3 as `⬜ Not started` while its counter is
-`1/7`, because `plan_status._phase_status` has no branch for terminal-plus-not-started items.
+**Open risks:** Bundle P3.1 is frozen, so an ad-hoc representation of `unresolvable_entry` would
+break schema conformance or fail-closed visibility. Codex hook lifecycle preflight additionally
+reports `record-provenance-mismatch`; see `findings/23-p3.2-hook-integrity-preflight-2026-08-08.md`.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: none; generated state/status were rebuilt through `plan-views.py`.
-- Deferred: add the mixed terminal/not-started → `🟡 In progress` branch in
-  `packages/task/lib/task/plan_status.py::_phase_status` plus a regression test in the owning task
-  package; keep it outside P3.1's plan-only Files.
+- Workarounds: none; do not emit an untyped or schema-invalid bundle entry.
+- Deferred: repair Codex lifecycle provenance in the owning `harness` package; repeat its dry-run
+  integrity check before treating it as green.
 - Open questions: —

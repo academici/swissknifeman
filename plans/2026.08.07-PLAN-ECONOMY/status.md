@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 29fc8df57e8d56ed8512e7ec989d4f18820a353ace0c037f54f91a1dca0ccfa9
+inputs_sha256: 79e7d47a2a780ac9cd90c0e1338aa40ccfa2ba09ac6b76d6f31819a467a0b482
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
-| P3 | Собирать bundle и включить машинный гейт | 1/7 | ⬜ Not started |
+| P3 | Собирать bundle и включить машинный гейт | 1/7 | 🔴 Blocked |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
@@ -71,7 +71,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Заморозить форму манифеста входов пункта | 🟢 Done | 2026-08-08 |
-| P3.2 | Построить детерминированный сборщик bundle | ⬜ Not started | 2026-08-08 |
+| P3.2 | Построить детерминированный сборщик bundle | 🔴 Blocked | 2026-08-08 |
 | P3.3 | Включить гейт бюджета чтения и читаемости файлов | ⬜ Not started | 2026-08-08 |
 | P3.4 | Включить гейт разрешимости bundle и свежести производных | ⬜ Not started | 2026-08-08 |
 | P3.5 | Включить гейт предиката порядка и границ обязательного чтения | ⬜ Not started | 2026-08-08 |
@@ -209,6 +209,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; P2.10 read graph, D74 and read-only ARTIFEX projection verified; task validate: 616 tests green on 06f60871; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; bundle v1 contract + five-code taxonomy + one example committed at 31cf532b; item Validation and task validate green at 31cf532b; write-site: pre_mutation: allow · pre_final: allow; deviation: P3 phase-start exposes two pre-existing DoR false-positive WARN. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · Frozen bundle v1 schema cannot carry required unresolvable_entry class while schema-valid; plan-design required. Session: gpt-5.6-terra/high. |
 
 ## Owner Gates
 
@@ -222,3 +224,4 @@ generated_by: task plan-views status
 - P2.6: known deviation
 - P2.7: known deviation
 - P3.1: known deviation
+- P3.2: escalation

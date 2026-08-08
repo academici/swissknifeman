@@ -19,6 +19,10 @@ _ITEM = re.compile(r"^P\d+(?:\.\d+)?$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
 _NEGATIVE_RESULTS = frozenset(("blocked", "escalated", "audit-red"))
 _SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-fingerprint-v1.schema.json"
+_LOOP_SPEC = Path(__file__).resolve().parents[2] / "configs" / "return-loop-v1.spec.json"
+_DIGEST = re.compile(r"^[0-9a-f]{64}$")
+_DECISION = re.compile(r"\bD[1-9][0-9]*\b")
+RETURN_LOOP_GATE = "return-loop-v1"
 
 
 def canonical_json(value) -> str:
@@ -30,6 +34,18 @@ def _schema() -> dict:
         return json.loads(_SCHEMA.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ReturnError(f"схема return-fingerprint v1 не читается: {_SCHEMA}") from exc
+
+
+def _loop_spec() -> dict:
+    """Load the lifted policy instead of repeating its cap or ladder in code."""
+    try:
+        value = json.loads(_LOOP_SPEC.read_text(encoding="utf-8"))
+        cap = value["cap"]["default"]
+        if not isinstance(cap, int) or isinstance(cap, bool) or cap < 1:
+            raise ValueError("cap.default должен быть положительным int")
+        return value
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        raise ReturnError(f"спецификация return-loop v1 не читается: {_LOOP_SPEC}") from exc
 
 
 def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
@@ -213,6 +229,119 @@ def _fingerprint(subject: str, trigger_row: dict, event_row: dict, seams: list[d
             "digest": digest, "metrics": {}}
 
 
+def _history_row(trigger_row: dict, event_row: dict, seams: list[dict], subject: str) -> dict:
+    """Keep the owner packet tied to durable journal and seam carriers."""
+    trigger, event = trigger_row["entry"], event_row["entry"]
+    notes = " ".join(value for value in (trigger.get("note"), event.get("note"))
+                     if isinstance(value, str))
+    trigger_day, event_day = trigger.get("ts", "")[:10], event.get("ts", "")[:10]
+    findings = sorted(row["identity"] for row in seams
+                      if row["item"] == subject and trigger_day <= row["date"] <= event_day)
+    return {
+        "ts": event.get("ts"),
+        "attempt": trigger.get("attempt"),
+        "actor": trigger.get("actor"),
+        "command": trigger.get("command"),
+        "decision_refs": sorted(set(_DECISION.findall(notes))),
+        "finding_refs": findings,
+    }
+
+
+def _evidence_fields(plan_dir: Path) -> list[dict]:
+    """Read D139's additive finding-frontmatter carrier without a new registry."""
+    findings = plan_dir / "findings"
+    if not findings.is_dir():
+        return []
+    result = []
+    for path in sorted(findings.rglob("*.md")):
+        fields = _frontmatter(path)
+        if fields.get("gate") == RETURN_LOOP_GATE:
+            result.append({"path": path, "fields": fields})
+    return result
+
+
+def return_loop_evidence(plan_dir) -> list[dict]:
+    """Expose D139 evidence records for the opt-in lint checks and tests."""
+    return _evidence_fields(Path(plan_dir))
+
+
+def evidence_errors(fields: dict) -> list[str]:
+    if not isinstance(fields.get("item"), str) or not _ITEM.fullmatch(fields["item"]):
+        return ["evidence требует item формы Pn.m"]
+    qualification = fields.get("qualification")
+    if qualification not in ("new", "repeat", "unqualifiable"):
+        return ["qualification обязан быть new/repeat/unqualifiable"]
+    if qualification == "unqualifiable":
+        if not isinstance(fields.get("missing_carrier_reason"), str) or not fields["missing_carrier_reason"].strip():
+            return ["unqualifiable требует missing_carrier_reason"]
+        if "fingerprint_digest" in fields or "occurrences" in fields:
+            return ["unqualifiable не принимает fingerprint_digest/occurrences"]
+        return []
+    digest = fields.get("fingerprint_digest")
+    if not isinstance(digest, str) or not _DIGEST.fullmatch(digest):
+        return ["new/repeat требует lowercase fingerprint_digest"]
+    try:
+        occurrences = int(fields.get("occurrences"))
+    except (TypeError, ValueError):
+        return ["new/repeat требует положительное occurrences"]
+    return [] if occurrences >= 1 else ["new/repeat требует положительное occurrences"]
+
+
+def _owner_packet(record: dict, occurrences: int, cap: int, history: list[dict]) -> dict:
+    return {
+        "fingerprint_tuple": record["tuple"],
+        "fingerprint_digest": record["digest"],
+        "occurrences": occurrences,
+        "cap": cap,
+        "history": history,
+        "judgements": [],
+        "resolutions_tried": [],
+    }
+
+
+def return_loop_gates(plan_dir) -> list[dict]:
+    """Apply the frozen v1 ladder to durable return fingerprints.
+
+    The reducer never treats the words ``blocked`` or ``escalated`` as a risk
+    trigger. Only a classified seam's observed defect class named by the lifted
+    policy can change a first occurrence from local-fix to isolated review.
+    """
+    projected = returns(plan_dir)
+    spec = _loop_spec()
+    cap = spec["cap"]["default"]
+    risk_triggers = frozenset(spec["eligibility"]["risk_triggers"])
+    gates = []
+    by_digest = {record["digest"]: record for record in projected["fingerprints"]
+                 if record["namespace"] != "ungroupable"}
+    for digest, occurrences in projected["counts"].items():
+        record = by_digest[digest]
+        history = projected["history"].get(digest, [])
+        seam = record["tuple"].get("seam") or {}
+        observed = {seam.get("defect_class")} if isinstance(seam.get("defect_class"), str) else set()
+        if occurrences > cap:
+            action, blocks_gate, reason = "owner-gate", True, "RETURN_LOOP_OWNER_GATE_REQUIRED"
+        elif occurrences == 2 or observed & risk_triggers:
+            action, blocks_gate, reason = "isolated-review", True, "RETURN_LOOP_ISOLATED_REVIEW_REQUIRED"
+        else:
+            action, blocks_gate, reason = "local-fix", False, None
+        gate = {"fingerprint_digest": digest, "occurrences": occurrences, "cap": cap,
+                "qualification": "new" if occurrences == 1 else "repeat",
+                "action": action, "blocks": blocks_gate,
+                "review_required": action in ("isolated-review", "owner-gate"),
+                "reason_code": reason}
+        if action == "owner-gate":
+            gate["owner_packet"] = _owner_packet(record, occurrences, cap, history)
+        gates.append(gate)
+    for record in projected["fingerprints"]:
+        if record["namespace"] == "ungroupable":
+            gates.append({"fingerprint_digest": record["digest"], "occurrences": 0, "cap": cap,
+                          "qualification": "unqualifiable",
+                          "missing_carrier_reason": "return fingerprint is ungroupable",
+                          "action": "record-only", "blocks": False, "review_required": False,
+                          "reason_code": "RETURN_LOOP_QUALIFICATION_REQUIRED"})
+    return gates
+
+
 def returns(plan_dir) -> dict:
     plan_dir = Path(plan_dir)
     try:
@@ -221,7 +350,7 @@ def returns(plan_dir) -> dict:
         raise ReturnError(str(exc)) from exc
     entries = _journal_entries(journal_path)
     seams = _seams(plan_dir)
-    fingerprints, executions = [], []
+    fingerprints, executions, history = [], [], {}
     non_item_subjects = 0
     schema_invalid_rows = sum(bool(row["errors"]) for row in entries)
     for row in entries:
@@ -240,7 +369,11 @@ def returns(plan_dir) -> dict:
                       if (candidate["entry"].get("item_id") == subject
                           or candidate["entry"].get("item_id", "").split(".")[0] == phase)]
         if candidates:
-            fingerprints.append(_fingerprint(subject, candidates[-1], row, seams))
+            fingerprint = _fingerprint(subject, candidates[-1], row, seams)
+            fingerprints.append(fingerprint)
+            if fingerprint["namespace"] != "ungroupable":
+                history.setdefault(fingerprint["digest"], []).append(
+                    _history_row(candidates[-1], row, seams, subject))
     total = len(fingerprints)
     metrics = {"provisional_share": (sum(r["namespace"] == "provisional" for r in fingerprints) / total) if total else 0,
                "ungroupable_share": (sum(r["namespace"] == "ungroupable" for r in fingerprints) / total) if total else 0,
@@ -249,9 +382,11 @@ def returns(plan_dir) -> dict:
         record["metrics"] = metrics
         validate(record)
     counts = Counter(record["digest"] for record in fingerprints if record["namespace"] != "ungroupable")
+    cap = _loop_spec()["cap"]["default"]
     return {"journals": 1, "entries": len(entries), "return_events": total, "metrics": metrics,
             "fingerprints": fingerprints, "counts": dict(sorted(counts.items())),
-            "over_cap_subjects": []}
+            "history": {digest: history[digest] for digest in sorted(history)},
+            "over_cap_subjects": sorted(digest for digest, count in counts.items() if count > cap)}
 
 
 def durable_count(plan_dir, digest: str):

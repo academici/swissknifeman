@@ -8,15 +8,18 @@ ready D2 result into actionable plan-lint diagnostics.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_item_state, plan_layout,
-                  plan_projection, plan_status, plan_weight)
+                  plan_projection, plan_returns, plan_status, plan_weight)
 
 
 GATE_ID = "read-budget-v1"
 BUNDLE_GATE_ID = "bundle-v1"
 PATH_GATE_ID = "read-path-v1"
+RETURN_LOOP_GATE_ID = "return-loop-v1"
+_META_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$")
 
 
 def _calibration_label(measurer) -> str:
@@ -36,6 +39,94 @@ def _bundle_error(diag, path, message: str) -> None:
 
 def _path_error(diag, path, message: str) -> None:
     diag.error(Path(path), None, f"{PATH_GATE_ID}: {message}")
+
+
+def _return_error(diag, path, message: str) -> None:
+    diag.error(Path(path), None, f"{RETURN_LOOP_GATE_ID}: {message}")
+
+
+def _return_loop_enabled(plan_dir: Path) -> bool:
+    """The v1 limiter is inert until a plan deliberately opts in via Meta."""
+    try:
+        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return False
+    for line in lines:
+        match = _META_ROW.match(line)
+        if match and match.group(1).strip() == "Return Loop Gate":
+            return match.group(2).strip() == "v1"
+    return False
+
+
+def _return_evidence(plan_dir: Path) -> tuple[dict[str, dict], list[tuple[Path, str]]]:
+    by_digest, malformed = {}, []
+    for row in plan_returns.return_loop_evidence(plan_dir):
+        fields, path = row["fields"], row["path"]
+        errors = plan_returns.evidence_errors(fields)
+        if errors:
+            malformed.append((path, "; ".join(errors)))
+            continue
+        digest = fields.get("fingerprint_digest")
+        if digest:
+            by_digest.setdefault(digest, {"path": path, "fields": fields})
+    return by_digest, malformed
+
+
+def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
+    if layout != "v2" or not _return_loop_enabled(Path(plan_dir)):
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        projection = plan_returns.returns(plan_dir)
+        evidence, malformed = _return_evidence(plan_dir)
+    except plan_returns.ReturnError as exc:
+        _return_error(diag, plan_dir / "findings", f"RETURN_LOOP_QUALIFICATION_REQUIRED: {exc}")
+        return
+    for path, message in malformed:
+        _return_error(diag, path, f"RETURN_LOOP_QUALIFICATION_REQUIRED: {message}")
+    for digest, occurrences in projection["counts"].items():
+        row = evidence.get(digest)
+        if row is None:
+            _return_error(diag, plan_dir / "findings",
+                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: evidence отсутствует")
+            continue
+        fields = row["fields"]
+        expected = "new" if occurrences == 1 else "repeat"
+        subject = next(record["tuple"]["subject"] for record in projection["fingerprints"]
+                       if record["digest"] == digest)
+        if (fields.get("qualification") != expected or int(fields["occurrences"]) != occurrences
+                or fields.get("item") != subject):
+            _return_error(diag, row["path"],
+                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: ожидается "
+                          f"item={subject}, qualification={expected}, occurrences={occurrences}")
+
+
+def _lint_return_owner_authorization(plan_dir, layout: str, diag) -> None:
+    if layout != "v2" or not _return_loop_enabled(Path(plan_dir)):
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        gates = plan_returns.return_loop_gates(plan_dir)
+        evidence, _malformed = _return_evidence(plan_dir)
+        decision_ids = {record.identifier for record in plan_decisions.load_decisions(plan_dir)}
+    except (plan_returns.ReturnError, plan_decisions.DecisionError) as exc:
+        _return_error(diag, plan_dir / "findings", f"RETURN_LOOP_OWNER_GATE_REQUIRED: {exc}")
+        return
+    for gate in gates:
+        if not gate["blocks"] or gate["action"] != "owner-gate":
+            continue
+        digest, row = gate["fingerprint_digest"], evidence.get(gate["fingerprint_digest"])
+        authorization = row["fields"].get("owner_authorization") if row else None
+        if not isinstance(authorization, str) or authorization not in decision_ids:
+            _return_error(diag, row["path"] if row else plan_dir / "findings",
+                          f"RETURN_LOOP_OWNER_GATE_REQUIRED: {digest}: требуется существующий D# "
+                          "в owner_authorization")
+
+
+def lint_return_loop(plan_dir, layout: str, diag) -> None:
+    """Run the two separately registered, opt-in D139 checks."""
+    _lint_return_escalation_qualification(plan_dir, layout, diag)
+    _lint_return_owner_authorization(plan_dir, layout, diag)
 
 
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
@@ -249,5 +340,6 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
     plan_downstream.lint_records(plan_dir, layout, diag)
 
 
-__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "lint_bundle_freshness",
-           "lint_read_budget", "lint_read_path_boundaries")
+__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "RETURN_LOOP_GATE_ID",
+           "lint_bundle_freshness", "lint_read_budget", "lint_read_path_boundaries",
+           "lint_return_loop")

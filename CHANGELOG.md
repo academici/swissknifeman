@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: добавлен return-loop v1 для возвратов plan-protocol.** `returns --gate`
+  применяет lifted лимит, печатает hard-stop owner packet над durable history и даёт
+  выключенные по умолчанию opt-in lint-проверки квалификации/owner authorization
+  через существующий item-scoped finding (`2026.08.07-PLAN-ECONOMY` P4.4, D138–D139).
+
 - Добавлен детерминированный вычислитель отпечатков возврата и durable-счётчик для планов.
 
 ## [Unreleased]

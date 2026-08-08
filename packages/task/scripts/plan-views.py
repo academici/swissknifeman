@@ -25,6 +25,7 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, help="явно материализовать history view по этому пути")
     parser.add_argument("--json", action="store_true", help="напечатать детерминированный JSON (returns)")
     parser.add_argument("--fingerprint", action="store_true", help="показать fingerprints (returns)")
+    parser.add_argument("--gate", action="store_true", help="применить return-loop v1 (returns)")
     args = parser.parse_args(argv)
     try:
         if args.view == "bundle":
@@ -56,10 +57,13 @@ def main(argv=None):
                 return 0
         elif args.view == "returns":
             if args.all or args.item or args.phase or args.output or args.check or args.stdout:
-                raise ValueError("returns принимает только --plan-dir, --json и --fingerprint")
+                raise ValueError("returns принимает только --plan-dir, --json, --fingerprint и --gate")
             result = plan_returns.returns(args.plan_dir)
+            if args.gate:
+                result["gates"] = plan_returns.return_loop_gates(args.plan_dir)
             if not args.fingerprint:
-                result = {key: value for key, value in result.items() if key != "fingerprints"}
+                result = {key: value for key, value in result.items()
+                          if key not in ("fingerprints", "history")}
             print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
             return 0
         elif args.view == "status":

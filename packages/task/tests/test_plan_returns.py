@@ -60,3 +60,59 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-fingerprint-v1.schema.json",
                                      root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
                                      shallow=False))
+
+    def test_return_loop_owner_packet_uses_lifted_cap_and_durable_history(self):
+        rows = []
+        for index in range(3):
+            minute = index * 2
+            rows.extend((
+                entry(f"2026-07-02T00:{minute:02d}:00Z", "plan-run", "closed-green",
+                      friction=("retry",), attempt=index + 1),
+                entry(f"2026-07-02T00:{minute + 1:02d}:00Z", "plan-design", "in-progress",
+                      attempt=index + 1),
+            ))
+        (self.plan / "journal.jsonl").write_text(
+            "\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+        gates = plan_returns.return_loop_gates(self.plan)
+        owner = next(gate for gate in gates if gate["action"] == "owner-gate")
+        self.assertEqual(owner["cap"], 2)
+        self.assertEqual(owner["reason_code"], "RETURN_LOOP_OWNER_GATE_REQUIRED")
+        self.assertEqual(owner["qualification"], "repeat")
+        self.assertEqual(owner["owner_packet"]["fingerprint_tuple"]["friction_class"]["result"], "closed-green")
+        self.assertIsNone(owner["owner_packet"]["fingerprint_tuple"]["seam"])
+        self.assertEqual(owner["owner_packet"]["occurrences"], 3)
+        self.assertEqual(len(owner["owner_packet"]["history"]), 3)
+        self.assertEqual(set(owner["owner_packet"]), {
+            "fingerprint_tuple", "fingerprint_digest", "occurrences", "cap", "history",
+            "judgements", "resolutions_tried"})
+
+    def test_triage_keeps_blocked_word_out_of_review_and_emits_unqualifiable(self):
+        rows = [entry("2026-07-02T00:00:00Z", "plan-run", "blocked"),
+                entry("2026-07-02T00:01:00Z", "plan-design", "in-progress")]
+        (self.plan / "journal.jsonl").write_text(
+            "\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+        gate = plan_returns.return_loop_gates(self.plan)[0]
+        self.assertEqual(gate["action"], "local-fix")
+        self.assertFalse(gate["review_required"])
+        self.assertEqual(gate["qualification"], "new")
+        rows[0]["result"] = "closed-green"
+        (self.plan / "journal.jsonl").write_text(
+            "\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+        unqualifiable = plan_returns.return_loop_gates(self.plan)[0]
+        self.assertEqual(unqualifiable["qualification"], "unqualifiable")
+        self.assertIn("missing_carrier_reason", unqualifiable)
+
+    def test_observed_risk_trigger_requires_isolated_review_on_first_occurrence(self):
+        (self.plan / "findings/P1.1-fixture.md").write_text(
+            "---\nitem: P1.1\ndate: 2026-07-02\nfile: a.py\n"
+            "rule_or_contract_locus: x\ndefect_class: security\n---\n", encoding="utf-8")
+        gate = plan_returns.return_loop_gates(self.plan)[0]
+        self.assertEqual(gate["action"], "isolated-review")
+        self.assertTrue(gate["blocks"])
+        self.assertTrue(gate["review_required"])
+
+    def test_lifted_return_loop_spec_is_byte_identical(self):
+        root = Path(__file__).resolve().parents[3]
+        self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-loop-v1.spec.json",
+                                     root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/return-loop-v1.spec.json",
+                                     shallow=False))

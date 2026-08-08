@@ -1,7 +1,9 @@
 {
   "schema_version": 1,
-  "convention": "module-local functions named _lint_* in task.plan_lint_checks",
+  "convention": "module-local functions named _lint_* in task.plan_lint_checks and task.plan_gates",
   "checks": {
+    "task.plan_gates._lint_return_escalation_qualification": {"disposition": "unchanged"},
+    "task.plan_gates._lint_return_owner_authorization": {"disposition": "unchanged"},
     "task.plan_lint_checks.common._lint_audit_scope_payload": {"disposition": "unchanged"},
     "task.plan_lint_checks.parsing._lint_contracts_cross_plan": {"disposition": "unchanged"},
     "task.plan_lint_checks.parsing._lint_journal_exceptions_20": {"disposition": "unchanged"},

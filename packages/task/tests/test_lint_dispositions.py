@@ -10,7 +10,7 @@ _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task import plan_lint  # noqa: E402
+from task import plan_gates, plan_lint  # noqa: E402
 from task.plan_lint_checks import common, engine, parsing, policy  # noqa: E402
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "configs" / "lint-check-dispositions.json"
 VALUES = {"unchanged", "migrated", "n/a-with-reason"}
-MODULES = (common, policy, parsing, engine)
+MODULES = (common, policy, parsing, engine, plan_gates)
 
 
 def _checks():

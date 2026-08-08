@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-07-03
-inputs_sha256: 8e90fdd8ae48c103c83e7d87533f08c10590e8a8f962110bb23a9ec6358f4fd5
+through: 2026-07-02
+inputs_sha256: 3135518cea820ebebd00c61532b52c26eab9cad89d76a0c277548c9fc067d6c8
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
-| Last Updated | 2026-07-03 |
+| Last Updated | 2026-07-02 |
 
 ## 4. Phase Index & Status Board
 
@@ -30,20 +30,25 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Собрать fixture closure | 🟢 Done | 2026-07-03 |
+| P0.1 | Собрать fixture closure | 🟢 Done | 2026-07-02 |
 
 ## Phase P1
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Валидация конфига | 🟡 In progress | 2026-07-03 |
+| P1.1 | Валидация конфига | 🟡 In progress | 2026-07-02 |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-02 | sonnet/medium | plan-exec · closed-green · closure fixture |
-| 2026-07-03 | sonnet/medium | plan-exec · in-progress · fixture remains live |
+| 2026-07-02 | sonnet/medium | plan-run · closed-green · return fixture |
+| 2026-07-02 | sonnet/medium | plan-design · in-progress · return redesign |
+| 2026-07-02 | sonnet/medium | plan-run · closed-green · return fixture |
+| 2026-07-02 | sonnet/medium | plan-design · in-progress · return redesign |
+| 2026-07-02 | sonnet/medium | plan-run · closed-green · return fixture |
+| 2026-07-02 | sonnet/medium | plan-design · in-progress · return redesign |
 
 ## Owner Gates
 

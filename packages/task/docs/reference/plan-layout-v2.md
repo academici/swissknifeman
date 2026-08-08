@@ -46,6 +46,18 @@ byte drift. Until the v1→v2 migrator lands in P2.8, a new v2 fixture has no
 source for the legacy plan-version value, so the view explicitly renders `—`
 instead of inventing a version.
 
+## Item-state projection
+
+Build or verify every adjacent generated state carrier with:
+
+```bash
+python3 packages/task/scripts/plan-views.py state --plan-dir <plan-dir> --all [--check]
+```
+
+The reducer derives the five outcome fields from the append-only journal and
+validates its closed model against `configs/item-state-projection-v1.schema.json`.
+It rejects unknown results and never emits routing data; `--check` rejects byte drift.
+
 ## Decisions and generated views
 
 Decision truth lives in immutable `decisions/D<NNN>-<slug>.md` records. Their

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- feat(task): добавить детерминированные generated state-проекции пунктов layout v2.
+
 - feat(task): добавить generated owner status view для plan layout v2.
 
 - feat(task): добавить разбор тонких фазовых индексов v2 и раздельных файлов ТЗ/состояния пунктов.

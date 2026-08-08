@@ -311,6 +311,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | По уточнению владельца P0.1 перепроектирован Codex-first и provider-neutral: D118 supersedes Claude-specific active channel D92, добавлены verified `findings/18`, `research/15`, neutral probe record/adapter boundary; Claude OAuth снят с critical path, D114–D117 и исторический v1 сохранены |
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | D119–D121: independent provider certification, P0.1 ≤8 real samples/128 KiB/12 calls, ранние canary P2.8/P3.7; детали `research/16-…` |
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | D122 закрепил реальную границу мультипровайдерности `task`: Python core/schemas/canonical skills общие, provider-specific остаются только thin raw-runtime adapters и generated projections; item без provider seam не получает отдельную матрицу/прогон |
+| 2026-08-08 | plan-run/gpt-5.6-terra/high | P0.1 закрыт `🟠 Done with deviations`: provider-neutral Codex calibration v2, 8 samples / 12 calls и dense SSOT; детали см. `phases/P0.md` P0.1 Completion Notes |
 
 ## 7. Contracts
 

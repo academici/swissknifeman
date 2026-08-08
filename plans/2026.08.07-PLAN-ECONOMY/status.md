@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 8f7dc25d7aa96dcaee6ac444546c319f74fc6820361ee8f54e6359ad9097ed80
+inputs_sha256: 51a13f795b719b72896597d5bbc048b5f1e8762a3493e8b42fcf396de57ac985
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 3/6 | 🔴 Blocked |
+| P4 | Ограничитель кружения design↔exec | 3/6 | 🟡 In progress |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -85,7 +85,7 @@ generated_by: task plan-views status
 | P4.1 | Заморозить форму отпечатка причины возврата | 🟢 Done | 2026-08-08 |
 | P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟢 Done | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | 🟢 Done | 2026-08-08 |
-| P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🔴 Blocked | 2026-08-08 |
+| P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟡 In progress | 2026-08-08 |
 | P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | ⬜ Not started | 2026-08-08 |
 | P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | ⬜ Not started | 2026-08-08 |
 
@@ -240,6 +240,7 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; return-loop v1 frozen at bddb16e4; item Validation 4/4 and task validate 647 tests green (on bddb16e4); P5 boundary reconciled; write-site: pre_mutation: allow · pre_final: allow; deviation: pre-final followed item commit. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · P4.4 requires plan_gates checks while frozen P3.6 registry excludes that module; plan-design required. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-authorized local remediation: D138 extends exact lint-disposition discovery to task.plan_gates. |
 
 ## Owner Gates
 
@@ -260,4 +261,3 @@ generated_by: task plan-views status
 - P4.1: known deviation
 - P4.2: known deviation
 - P4.3: known deviation
-- P4.4: escalation

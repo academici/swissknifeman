@@ -3,7 +3,7 @@ projection: decision-archive
 projection_version: v1
 source_scope: decisions/
 through: 2026-08-07/D99
-inputs_sha256: 0e89ae95c6e114d79aefdf07920ba6c10b334d1e1445b02bbc3e4d0e2fc54894
+inputs_sha256: 168a1bd18f7379710a480ea1c0318531d29673caa61f3d0b02d19c05c0219184
 generated_by: task plan-views decisions
 -->
 

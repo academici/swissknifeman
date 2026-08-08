@@ -1,52 +1,48 @@
 # HANDOFF — 2026-08-08 — after P4.4
 
-**Next:** `/task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`
+**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high — конфликт ownership lint-реестра |
+| Model | gpt-5.6-terra |
+| Thinking | high — реализация return-loop limiter |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Разрешить конфликт P4.4 и P3.6 о владельце lint-disposition discovery. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4'` |
+| Context | continue (/clear) — ручной item |
+| Суть | Реализовать limiter, owner packet и две выключенные opt-in проверки P4.4. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4'
 ```
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | — |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Согласовать ownership и интроспекцию двух P4.4 opt-in проверок. |
-| Команда | `/task:plan-design 2026.08.07-PLAN-ECONOMY P4.4` |
+| Context | continue (/clear) — ручной item |
+| Суть | Реализовать P4.4 по return-loop v1 и D138 exact-discovery. |
+| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4` |
 
 ```text
-$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.4
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
 ```
 
-**Done:** P4.4 pre-mutation contract returned `allow`; implementation discovery found a frozen
-ownership conflict before package-code mutation. Evidence:
-`findings/P4.4-lint-disposition-ownership-conflict.md`.
+**Done:** Owner-authorized local design remediation D138 resolves the P4.4/P3.6 ownership
+conflict: one exact-discovery includes `task.plan_gates`; no second registry is introduced.
 
-**Remaining:** resolve P4.4, then implement P4.4–P6.
+**Remaining:** implement P4.4, then P4.5–P6.
 
-**Sources of truth:** `phases/P4/P4.4.md` ·
-`findings/P4.4-lint-disposition-ownership-conflict.md` ·
-`packages/task/configs/lint-check-dispositions.json` ·
-`packages/task/tests/test_lint_dispositions.py`.
+**Sources of truth:** `phases/P4/P4.4.md` · `decisions/D138-lint-disposition-discovery.md` ·
+`root/contracts/return-loop-v1.spec.json` · `packages/task/configs/lint-check-dispositions.json`.
 
-**Open risks:** runtime не публикует effort. P4.4 cannot both add the required `plan_gates`
-checks and preserve P3.6 exact registry coverage without a design decision.
+**Open risks:** runtime не публикует effort; session route is self-attested. D138 requires
+exact coverage to remain fail-closed when `plan_gates` checks are added.
 
-**Workarounds/Deferred/Open questions:** workaround — none; do not add an unregistered check or
-weaken registry coverage. Deferred — implementation after plan-design. Open questions — select the
-canonical lint-check ownership boundary.
+**Workarounds/Deferred/Open questions:** workaround — none; deferred — P6 activates the checks;
+open_questions — —.

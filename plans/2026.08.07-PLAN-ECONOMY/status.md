@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 0079e042e76f6ae47b48205832efac07a1d51d8e36a9d8e984800bf68e88fed2
+inputs_sha256: 5767801b436f67e7da655ab133d4120b18fb21b4a11708c4b2d251454204a2d4
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
-| P3 | Собирать bundle и включить машинный гейт | 2/7 | ⬜ Not started |
+| P3 | Собирать bundle и включить машинный гейт | 3/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
@@ -72,7 +72,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Заморозить форму манифеста входов пункта | 🟢 Done | 2026-08-08 |
 | P3.2 | Построить детерминированный сборщик bundle | 🟢 Done | 2026-08-08 |
-| P3.3 | Включить гейт бюджета чтения и читаемости файлов | ⬜ Not started | 2026-08-08 |
+| P3.3 | Включить гейт бюджета чтения и читаемости файлов | 🟢 Done | 2026-08-08 |
 | P3.4 | Включить гейт разрешимости bundle и свежести производных | ⬜ Not started | 2026-08-08 |
 | P3.5 | Включить гейт предиката порядка и границ обязательного чтения | ⬜ Not started | 2026-08-08 |
 | P3.6 | Перевести осиротевшие проверки линтера на носители v2 | ⬜ Not started | 2026-08-08 |
@@ -213,6 +213,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · Frozen bundle v1 schema cannot carry required unresolvable_entry class while schema-valid; plan-design required. Session: gpt-5.6-terra/high. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-approved same-session local reconciliation: D132 preserves Bundle v1 schema and derives unresolvable_entry in P3.4. Session: gpt-5.6-terra/high. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; deterministic Bundle v1 builder, lifted byte-identical schema, CLI bundle modes and atomic unresolvable refusal committed at 6cfb9d6a; task validate: 619 tests green on 6cfb9d6a; write-site: pre_mutation: allow · pre_final: allow; deviation: owner-authorized D132 same-session reconciliation. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; D2 read-budget hard-gate for ready layout-v2 items committed at 2381ac2d; task validate: 625 tests green on 2381ac2d; write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 

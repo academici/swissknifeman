@@ -140,7 +140,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 |:--|:--|:--|:--|
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟢 Done |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟢 Done |
-| P2 | Перестроить носители плана | 1/8 | 🟡 In progress |
+| P2 | Перестроить носители плана | 2/8 | 🟡 In progress |
 | P3 | Собирать bundle и включить машинный гейт | 0/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
@@ -339,6 +339,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.5 закрыт: reader-contract v1 заморожен D127 после воспроизводимой оценки и scoped-review — детали см. `phases/P1.md` P1.5 Completion Notes |
 | 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.2 закрыт `🟠 Done with deviations`: immutable decisions, четыре generated views и v2 pointer lint; details см. `phases/P2.md` P2.2 Completion Notes |
 | 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.3 закрыт `🟠 Done with deviations`: v2 index/spec/state parser, strict split и v1 parity; детали см. `phases/P2.md` P2.3 Completion Notes |
+| 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.4 закрыт: stable v2 core, generated owner status view и v1 parity; детали см. `phases/P2.md` P2.4 Completion Notes |
 
 ## 7. Contracts
 

@@ -1,0 +1,47 @@
+{
+  "schema": "p1-reconstruction-bundle-v1",
+  "plan_id": "2026.07.15-TOKEN-ECON-P6",
+  "item_id": "P6.1",
+  "inputs": [
+    {
+      "order": 1,
+      "source": "plans/archive/2026.07.15-TOKEN-ECON-P6/findings/P6-tool-search-precheck.md",
+      "selector": "whole-file",
+      "source_sha256": "656a4509956b170575dff6de7a4458a2fccc49e2e8e4ca8f9a909c841b3742a4",
+      "selected_sha256": "656a4509956b170575dff6de7a4458a2fccc49e2e8e4ca8f9a909c841b3742a4",
+      "fragment": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-01.md"
+    },
+    {
+      "order": 2,
+      "source": "packages/skiller/skills/general/mcp-advisor/SKILL.ru.md",
+      "selector": "whole-file",
+      "source_sha256": "9cc73ee4c23181feddec38e205b1f90eaa17d27ad58497a0faba92d00edeacdf",
+      "selected_sha256": "9cc73ee4c23181feddec38e205b1f90eaa17d27ad58497a0faba92d00edeacdf",
+      "fragment": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-02.md"
+    },
+    {
+      "order": 3,
+      "source": "packages/skiller/CLAUDE.md",
+      "selector": "whole-file",
+      "source_sha256": "d1004711322e298a359a6ed7de5ea5b694a2ece0ff80498dd16dd627156fe1f1",
+      "selected_sha256": "d1004711322e298a359a6ed7de5ea5b694a2ece0ff80498dd16dd627156fe1f1",
+      "fragment": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-03.md"
+    },
+    {
+      "order": 4,
+      "source": "packages/skiller/lib/skiller/budget.py",
+      "selector": "lines:337-354",
+      "source_sha256": "a6caa9054976776036182b32dfd550b9a0b39d330b562f24781bee5602209ccc",
+      "selected_sha256": "d3cb968e376d93541832823b4395bc616692c9f52f6fd49f1f49b335907f9ac3",
+      "fragment": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-04.py"
+    },
+    {
+      "order": 5,
+      "source": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+      "selector": "whole-file",
+      "source_sha256": "7759416d7b69c1dd7ccce343ea746c787bfaf52049983c3a8cade73d9e1984d0",
+      "selected_sha256": "7759416d7b69c1dd7ccce343ea746c787bfaf52049983c3a8cade73d9e1984d0",
+      "fragment": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-05.md"
+    }
+  ]
+}

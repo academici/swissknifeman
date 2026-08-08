@@ -1,6 +1,6 @@
 # Read Path Contract v1
 
-Status: proposed; freeze is reserved for `P1.5` and the owner's gate.
+Status: frozen by D127 after the `P1.5` owner gate (2026-08-08).
 
 Machine-readable paths, slot resolvers, section order, and predicates:
 [`read-path-v1.spec.json`](read-path-v1.spec.json). The JSON is the sole source of slot rows; this
@@ -27,8 +27,11 @@ the item, or authorize execution.
 The target executor path contains exactly five slots: stable plan core, current phase context,
 selected item specification, declared input bundle, and volatile item-state projection. The item id
 from the command deterministically supplies `<Pn.m>` and its phase `<Pn>`; carrier templates then
-resolve exact paths. Bundle order supplies exact input files. Missing, ambiguous, stale, or
-schema-invalid resolution fails closed.
+resolve exact paths. Bundle order supplies exact digest-qualified input units. A unit is either a
+whole file or a section/symbol slice that the item declaration names explicitly; inferred slices,
+unanchored ranges, or content moved outside the measured bundle are forbidden. The bundle schema is
+owned by P3, but it must bind both the source bytes and the selected bytes. Missing, ambiguous,
+stale, or schema-invalid resolution fails closed.
 
 The plan-core slot contains identity, Context, Execution Rules, and `## 3. Routing`. Routing stays in
 this first slot under D22, so the gate runs before phase detail, inputs, or state. The specification
@@ -60,6 +63,16 @@ only then volatile status, state, and handoff. Each slot has one resolver in the
 uses a carrier id from the reader registry.
 
 The paths express reader rights from `reader-contract-v1`; they do not grant write ownership.
+
+The machine specification also declares two profiles of the existing `auditor`. `scoped-review`
+resolves only caller-linked carrier instances and has `control: return-to-root`; it deliberately
+does not define the evidence capsule owned by P4.5/P6.3. `full-audit` references the complete
+auditor path. Both profiles return a bounded verdict to the existing root run and never create a
+fifth reader or transfer ownership of that run.
+
+Every registry carrier is addressable from at least one reader path or explicitly superseded.
+`index` and `artifacts` are optional slow inputs on the designer/auditor/owner paths; they remain
+absent from the executor path unless an exact artifact is declared through that item's bundle.
 
 ## Monotonic volatility predicate
 

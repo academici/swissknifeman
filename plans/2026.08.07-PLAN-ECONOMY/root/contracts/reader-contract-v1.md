@@ -1,6 +1,6 @@
 # Reader Contract v1
 
-Status: proposed; freeze is reserved for `P1.5` and the owner's gate.
+Status: frozen by D127 after the `P1.5` owner gate (2026-08-08).
 
 Machine-readable registry: [`reader-contract-v1.registry.json`](reader-contract-v1.registry.json).
 The registry is the sole source of carrier rows; this document defines their meaning and does not
@@ -17,7 +17,9 @@ The contract has exactly four readers:
   specification and declared inputs, and a current state projection. It must not consume decision
   history, other item specifications, prior attempts, status boards, or the handoff by default.
 - `auditor` reconstructs decisions, attempts, deviations, escalations, and evidence. Compactness is
-  not an entitlement and no current-state view may replace primary records.
+  not an entitlement and no current-state view may replace primary records. `scoped-review` and
+  `full-audit` are two profiles of this reader, never additional readers; both return their verdict
+  to the existing root run.
 - `owner` decides gates and next actions from status, open risks, approval queues, and the cold-start
   handoff. Implementation detail is available by reference, not on the default owner path.
 
@@ -81,6 +83,15 @@ The registry version describes the layout contract, not an implementation releas
 declared target ids and may copy the machine contract into runtime configuration only byte-for-byte
 with an equality test, per D29. Expanding the minimum carrier set or the reader enum requires a new
 D-record and contract version; adding a concrete instance under an existing path template does not.
+
+## Auditor profiles and root continuity
+
+The adjacent read-path specification owns the two profile rows. `scoped-review` may resolve only
+the carrier instances explicitly linked by its caller and returns control to the existing root run;
+it does not define the future capsule body. `full-audit` references the complete `auditor` path and
+also returns its verdict to the root. Neither profile expands the closed reader set, transfers root
+ownership, or changes the executor path. The exact evidence capsule and verdict schema remain owned
+by P4.5/P6.3.
 
 ## Boundaries
 

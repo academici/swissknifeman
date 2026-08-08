@@ -1,0 +1,46 @@
+{
+  "projection_meta": {
+    "projection": "item-state",
+    "projection_version": "1.0.0",
+    "source_scope": {
+      "item": "P0.5",
+      "event_types": [
+        "attempt"
+      ],
+      "subjects": [
+        "P0.5"
+      ],
+      "ordering": "journal line ascending"
+    },
+    "through": {
+      "journal_line": 0,
+      "ts": "2026-08-08T00:00:00Z"
+    },
+    "inputs_sha256": "6d399e2fc4242c2c7c18825d51e317058a00c9dcd51881038a680746b8cbd6e3",
+    "generated_by": {
+      "name": "p1-path-reconstruction",
+      "version": "1.0.0"
+    }
+  },
+  "state": {
+    "world": {
+      "paths": [],
+      "commits": []
+    },
+    "position": {
+      "status": "🟢 Done",
+      "attempt": 0,
+      "last_result": null
+    },
+    "next_step": "Execute P0.5 according to its stable specification.",
+    "active_context": {
+      "risks": [],
+      "workarounds": [],
+      "decisions": []
+    },
+    "history_pointer": {
+      "view": ".plan-cache/history/P0.5.md",
+      "command": "task plan-view history P0.5"
+    }
+  }
+}

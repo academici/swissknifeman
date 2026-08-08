@@ -1,0 +1,588 @@
+{
+  "schema": "p1-feasibility-v1",
+  "generated_by": "artifacts/p1-path-reconstruction/generate.py",
+  "generator_sha256": "4bde5088d4396aff148f74b4d60681fc5122cf7b0fc2e31ce62b4b1a273dc2e9",
+  "unit": {
+    "calibration_id": "token-estimate-calibration@2.0.0",
+    "provider": "codex",
+    "model_id": "gpt-5.6-terra",
+    "adapter": "codex-exec-jsonl-v1",
+    "probe_protocol": "differential-input-total-v2",
+    "per_file_overhead_tokens": 318.793666412498
+  },
+  "threshold": 100000,
+  "single_read_limits": {
+    "size_bytes": 262144,
+    "tokens": 25000
+  },
+  "measurement_kind": "reconstruction estimate, not implemented-layout proof",
+  "plans": [
+    {
+      "plan_id": "2026.08.07-PLAN-ECONOMY",
+      "source": "plans/2026.08.07-PLAN-ECONOMY",
+      "weight_class": "large",
+      "legacy_floor_bytes": 545424,
+      "items": [
+        {
+          "item": "P2.1",
+          "selected_as": "heaviest Required Reads",
+          "legacy_v1_tokens_lower_bound": 263349,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 24513,
+              "tokens": 4100,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 6188,
+              "tokens": 1525,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 38536,
+              "tokens": 10978,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 6641,
+              "tokens": 2566,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-01.md",
+              "slot": "item-input",
+              "bytes": 8225,
+              "tokens": 1736,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-02.md",
+              "slot": "item-input",
+              "bytes": 6329,
+              "tokens": 1888,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-03.json",
+              "slot": "item-input",
+              "bytes": 11214,
+              "tokens": 2431,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-04.md",
+              "slot": "item-input",
+              "bytes": 5916,
+              "tokens": 1714,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-05.py",
+              "slot": "item-input",
+              "bytes": 32929,
+              "tokens": 9512,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-06.py",
+              "slot": "item-input",
+              "bytes": 11148,
+              "tokens": 2981,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-07.md",
+              "slot": "item-input",
+              "bytes": 15022,
+              "tokens": 3819,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-08.py",
+              "slot": "item-input",
+              "bytes": 484,
+              "tokens": 417,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-09.py",
+              "slot": "item-input",
+              "bytes": 302,
+              "tokens": 372,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-10.py",
+              "slot": "item-input",
+              "bytes": 1712,
+              "tokens": 714,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-11.py",
+              "slot": "item-input",
+              "bytes": 2902,
+              "tokens": 1052,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-12.md",
+              "slot": "item-input",
+              "bytes": 5025,
+              "tokens": 1639,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-13.py",
+              "slot": "item-input",
+              "bytes": 3243,
+              "tokens": 1231,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-14.md",
+              "slot": "item-input",
+              "bytes": 11921,
+              "tokens": 4795,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/04-input-15.md",
+              "slot": "item-input",
+              "bytes": 19499,
+              "tokens": 5851,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P2.1/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1029,
+              "tokens": 519,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-input": 40152,
+            "item-inputs-manifest": 2566,
+            "item-spec": 10978,
+            "item-state": 519,
+            "phase-context": 1525,
+            "plan-core": 4100
+          },
+          "total": 59840,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        },
+        {
+          "item": "P0.4",
+          "selected_as": "representative",
+          "legacy_v1_tokens_lower_bound": 137039,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 24513,
+              "tokens": 4100,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 4372,
+              "tokens": 1170,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 21364,
+              "tokens": 5212,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 2330,
+              "tokens": 1077,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-input-01.md",
+              "slot": "item-input",
+              "bytes": 14027,
+              "tokens": 3167,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-input-02.md",
+              "slot": "item-input",
+              "bytes": 8302,
+              "tokens": 2344,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-input-03.md",
+              "slot": "item-input",
+              "bytes": 4806,
+              "tokens": 1431,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-input-04.md",
+              "slot": "item-input",
+              "bytes": 221,
+              "tokens": 359,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/04-input-05.py",
+              "slot": "item-input",
+              "bytes": 12296,
+              "tokens": 2955,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.4/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1023,
+              "tokens": 518,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-input": 10256,
+            "item-inputs-manifest": 1077,
+            "item-spec": 5212,
+            "item-state": 518,
+            "phase-context": 1170,
+            "plan-core": 4100
+          },
+          "total": 22333,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        },
+        {
+          "item": "P0.5",
+          "selected_as": "representative",
+          "legacy_v1_tokens_lower_bound": 130782,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 24513,
+              "tokens": 4100,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 4372,
+              "tokens": 1170,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 15552,
+              "tokens": 4437,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 3232,
+              "tokens": 1377,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-01.md",
+              "slot": "item-input",
+              "bytes": 3135,
+              "tokens": 756,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-02.md",
+              "slot": "item-input",
+              "bytes": 758,
+              "tokens": 413,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-03.json",
+              "slot": "item-input",
+              "bytes": 3142,
+              "tokens": 1220,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-04.md",
+              "slot": "item-input",
+              "bytes": 4755,
+              "tokens": 1537,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-05.md",
+              "slot": "item-input",
+              "bytes": 14352,
+              "tokens": 3917,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-06.md",
+              "slot": "item-input",
+              "bytes": 2842,
+              "tokens": 797,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/04-input-07.md",
+              "slot": "item-input",
+              "bytes": 22716,
+              "tokens": 5419,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.08.07-PLAN-ECONOMY/P0.5/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1023,
+              "tokens": 518,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-input": 14059,
+            "item-inputs-manifest": 1377,
+            "item-spec": 4437,
+            "item-state": 518,
+            "phase-context": 1170,
+            "plan-core": 4100
+          },
+          "total": 25661,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        }
+      ]
+    },
+    {
+      "plan_id": "2026.07.15-TOKEN-ECON-P6",
+      "source": "plans/archive/2026.07.15-TOKEN-ECON-P6",
+      "weight_class": "healthy",
+      "legacy_floor_bytes": 33310,
+      "items": [
+        {
+          "item": "P6.1",
+          "selected_as": "heaviest Required Reads",
+          "legacy_v1_tokens_lower_bound": 20007,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 5770,
+              "tokens": 1849,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 1932,
+              "tokens": 929,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 8026,
+              "tokens": 2902,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 2256,
+              "tokens": 1110,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-01.md",
+              "slot": "item-input",
+              "bytes": 5638,
+              "tokens": 2061,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-02.md",
+              "slot": "item-input",
+              "bytes": 17959,
+              "tokens": 5005,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-03.md",
+              "slot": "item-input",
+              "bytes": 4084,
+              "tokens": 1317,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-04.py",
+              "slot": "item-input",
+              "bytes": 1788,
+              "tokens": 1087,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/04-input-05.md",
+              "slot": "item-input",
+              "bytes": 14157,
+              "tokens": 5217,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P6.1/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1023,
+              "tokens": 518,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-input": 14687,
+            "item-inputs-manifest": 1110,
+            "item-spec": 2902,
+            "item-state": 518,
+            "phase-context": 929,
+            "plan-core": 1849
+          },
+          "total": 21995,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        },
+        {
+          "item": "P7.1",
+          "selected_as": "representative",
+          "legacy_v1_tokens_lower_bound": 6715,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 5770,
+              "tokens": 1849,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 219,
+              "tokens": 415,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 344,
+              "tokens": 656,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 124,
+              "tokens": 340,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.1/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1037,
+              "tokens": 521,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-inputs-manifest": 340,
+            "item-spec": 656,
+            "item-state": 521,
+            "phase-context": 415,
+            "plan-core": 1849
+          },
+          "total": 3781,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        },
+        {
+          "item": "P7.2",
+          "selected_as": "representative",
+          "legacy_v1_tokens_lower_bound": 6715,
+          "files": [
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/01-plan-core.md",
+              "slot": "plan-core",
+              "bytes": 5770,
+              "tokens": 1849,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/02-phase-context.md",
+              "slot": "phase-context",
+              "bytes": 219,
+              "tokens": 415,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/03-item-spec.md",
+              "slot": "item-spec",
+              "bytes": 346,
+              "tokens": 634,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/04-bundle.json",
+              "slot": "item-inputs-manifest",
+              "bytes": 124,
+              "tokens": 340,
+              "passes_single_read": true
+            },
+            {
+              "path": "artifacts/p1-path-reconstruction/samples/2026.07.15-TOKEN-ECON-P6/P7.2/05-item-state.json",
+              "slot": "item-state",
+              "bytes": 1037,
+              "tokens": 521,
+              "passes_single_read": true
+            }
+          ],
+          "slots": {
+            "item-inputs-manifest": 340,
+            "item-spec": 634,
+            "item-state": 521,
+            "phase-context": 415,
+            "plan-core": 1849
+          },
+          "total": 3759,
+          "threshold": 100000,
+          "passes": true,
+          "unresolved_inputs": []
+        }
+      ]
+    }
+  ],
+  "sample_aggregate": {
+    "legacy_v1_tokens_lower_bound": 564607,
+    "reconstructed_v2_tokens": 137369,
+    "scope_escape_answer": "No mandatory declared input was excluded; explicit slices remain in the measured bundle. This sample does not prove the whole-plan closed-graph aggregate."
+  }
+}

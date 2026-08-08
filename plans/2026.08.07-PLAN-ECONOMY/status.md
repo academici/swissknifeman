@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 011f96a948222734fba7e57b18dd0594d063ec617e1de1f571cbbcf95d11f7b4
+inputs_sha256: 872c87337b2880ab07b8fb8831e7a307987e978621eac0e3241e4fa2f1759375
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
-| P2 | Перестроить носители плана | 3/10 | ⬜ Not started |
+| P2 | Перестроить носители плана | 4/10 | ⬜ Not started |
 | P3 | Собирать bundle и включить машинный гейт | 0/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
@@ -63,7 +63,7 @@ generated_by: task plan-views status
 | P2.6 | Реализовать генератор исторического вида пункта | 🟠 Done with deviations | 2026-08-08 |
 | P2.7 | Убрать терминальные фазы с живого пути и собрать дайджест закрытия | 🟠 Done with deviations | 2026-08-08 |
 | P2.8 | Перевести этот план на раскладку v2 конвертером и подтвердить замером | 🟢 Done | 2026-08-08 |
-| P2.9 | Заморозить stage-aware admission и разрезать oversized task carriers | ⬜ Not started | 2026-08-08 |
+| P2.9 | Заморозить stage-aware admission и разрезать oversized task carriers | 🟢 Done | 2026-08-08 |
 | P2.10 | Пересобрать read graph и доказать self-host admission | ⬜ Not started | 2026-08-08 |
 
 ## Phase P3
@@ -201,6 +201,8 @@ generated_by: task plan-views status
 | 2026-08-08 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Lossless v1→v2 migration and honest D2 baseline verified; final admission deferred to P2.9/P2.10. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: implementation/high (gpt-5.6-terra); migration and 603-test validation verified; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-green · Session: gpt-5.6-sol/high; read-budget 1.1.0 stage-aware admission и bounded plan-lint carriers; bash packages/task/scripts/validate.sh: 612 tests (на 3f478fa7) green; self-host ready, D2(a)+D2(b) pass; DIAGNOSTIC-PARITY-OK; write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 

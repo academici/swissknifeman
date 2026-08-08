@@ -413,10 +413,10 @@ class TestJsonOutput(MeasurerTestCase):
     def test_v2_item_json_includes_stage_admission(self):
         plan_dir = write_valid_plan(self.root, plan_id="DEMO-V2", layout="v2")
         required = plan_dir / "lib" / "pkg" / "config.py"
-        required.parent.mkdir(parents=True)
+        required.parent.mkdir(parents=True, exist_ok=True)
         required.write_text("VALUE = 1\n", encoding="utf-8")
         contract = plan_dir / "root" / "contracts" / "read-budget-v1.md"
-        contract.parent.mkdir(parents=True)
+        contract.parent.mkdir(parents=True, exist_ok=True)
         contract.write_text(
             "**Version:** `1.1.0`\n"
             "pass_item(i) = resolved(i) AND estimated_required_read_tokens(i) <= 100000\n",

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: layout-v2 планы теперь hard-fail проверяются по бюджету обязательного чтения D2.**
+  Новый shared `plan_gates` использует единственные владельцы веса и admission, называет пункт,
+  численный порог, qualified calibration и отдельный нечитаемый файл; v1-планы молчат
+  без opt-in (`2026.08.07-PLAN-ECONOMY` P3.3).
+
 - **`task`: детерминированный schema-valid Bundle v1 для входов item’а
   (`2026.08.07-PLAN-ECONOMY` P3.2, D132).** Единый `plan-views.py bundle`
   строит и byte-checks committed manifests, хеширует сырые/выбранные байты и

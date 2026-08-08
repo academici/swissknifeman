@@ -337,12 +337,21 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
     plan_dir = Path(root) / "plans" / plan_id
     (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
     (plan_dir / "brief").mkdir(parents=True, exist_ok=True)
+    config = plan_dir / "lib" / "pkg" / "config.py"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text("VALUE = 'fixture'\n", encoding="utf-8")
     (plan_dir / "plan.md").write_text(plan_md(plan_id, layout=layout), encoding="utf-8")
     phase_path = plan_dir / "phases" / "P1.md"
     if layout == "v2":
         phase_path = plan_dir / "phases" / "P1" / "P1.md"
         phase_path.parent.mkdir()
         (plan_dir / "decisions").mkdir()
+        contract = plan_dir / "root" / "contracts" / "read-budget-v1.md"
+        contract.parent.mkdir(parents=True, exist_ok=True)
+        contract.write_text(
+            "# read-budget fixture\n\n**Version:** `1.1.0`\n\n"
+            "```text\npass_item(i) = estimated_required_read_tokens(i) <= 100000\n```\n",
+            encoding="utf-8")
         phase_path.write_text(phase_index_md(), encoding="utf-8")
         (phase_path.parent / "P1.1.md").write_text(item_spec_md(), encoding="utf-8")
         (phase_path.parent / "P1.1.state.md").write_text(item_state_md(), encoding="utf-8")

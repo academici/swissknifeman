@@ -2,6 +2,7 @@
 from .common import *
 from .policy import *
 from .parsing import *
+from task import plan_gates
 
 
 def lint_plan(plan_dir, diag):
@@ -240,6 +241,11 @@ def lint_plan(plan_dir, diag):
 
     # --- 2026.07.25-ECO-OPT P8.1/D42: отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
     _lint_closure_reports_81(plan_dir, plan_id, _meta_raw, phases, board_by_phase, diag)
+
+    # D2 is a layout-v2 hard gate.  Its implementation stays outside this
+    # coordinator; the gate delegates graph/weight/admission semantics to their
+    # respective shared owners and contributes diagnostics at this one boundary.
+    plan_gates.lint_read_budget(plan_dir, layout, diag)
 
     # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
     numbered = sorted(

@@ -43,6 +43,15 @@ total. Полный прогон принимает ровно 8 разных re
 classifier. Исторические Claude v1 artifact и probe-log остаются plan-owned snapshots; будущий
 Claude adapter — отдельная additive provider projection.
 
+## Hard-gate бюджета чтения для layout v2
+
+Обычный `plan-lint.py plans/<ID>` применяет frozen `read-budget` v1 только к плану с
+`Layout | v2`. Для каждого `ready` item он отказывает при превышении D2(a), нечитаемом или
+нерезолвленном обязательном входе и файле, превышающем любой из двух лимитов чтения. Отсутствие
+калибровки, `read-limit` или plan-owned threshold contract также является ERROR; layout v1 не
+получает ни opt-in, ни warning-ветви. Детали диагностик и владельцы вычислений —
+[`plan-read-budget-gate.md`](plan-read-budget-gate.md).
+
 ## `plans/verify-citations.py`
 
 Проверяет ссылки-доказательства вида `` `path:line` ``/`` `path::symbol` `` во ВСЕЙ прозе живого

@@ -1,39 +1,40 @@
-# HANDOFF — 2026-08-08 — after P1.2
+# HANDOFF — 2026-08-08 — after P1.3
 
 **Next:** ЗАПУСК ВРУЧНУЮ: `frontier/high`
 
 | Параметр | Значение |
 |:--|:--|
 | Model | frontier |
-| Thinking | high — завершение зависимого batch B1 |
+| Thinking | high — финальный контракт batch B1 |
 | Context | continue (/clear) — ручной item |
-| Суть | Завершить batch B1: заморозить исторический вид и обязательный путь чтения P1.3–P1.4. |
+| Суть | Завершить batch B1 контрактом обязательного пути чтения P1.4. |
 | Команда | `—` |
 
 ```text
-run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.3-P1.4
+run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.4
 ```
 
 Provider-neutral:
 
 ```text
-task:plan-run 2026.08.07-PLAN-ECONOMY P1.3-P1.4
+task:plan-run 2026.08.07-PLAN-ECONOMY P1.4
 ```
 
 Native Codex launch:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P1.3-P1.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P1.4'
 ```
 
-**Done:** `P1.1` и `P1.2` закрыты `🟢 Done`; реестр читателей и форма item-state projection
-зафиксированы item-коммитами `5852fbb5` и `d74130ed`.
+**Done:** `P1.1–P1.3` закрыты `🟢 Done`; реестр, item-state projection и history projection
+зафиксированы отдельными item-коммитами.
 
-**Remaining:** `P1.3–P1.4` завершают B1; `P1.5` затем сверяет четыре контракта, измеряет
-выполнимость и проходит владельческую заморозку.
+**Remaining:** `P1.4` завершает B1; `P1.5` затем сверяет четыре контракта, измеряет выполнимость
+и проходит владельческую заморозку.
 
-**Sources of truth:** `phases/P1.md` P1.3–P1.4 · `roadmap.md` B1 ·
-`root/contracts/reader-contract-v1.*` · `root/contracts/item-state-projection-v1.*`.
+**Sources of truth:** `phases/P1.md` P1.4 · `roadmap.md` B1 ·
+`root/contracts/reader-contract-v1.*` · `root/contracts/item-state-projection-v1.*` ·
+`root/contracts/history-projection-v1.*`.
 
 **Open risks:** Чужая незакоммиченная правка `Authoring Model` в `plan.md` сохраняется вне наших
 коммитов. P0 material deviations остаются вне scope B1.

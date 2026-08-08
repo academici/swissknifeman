@@ -133,7 +133,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟢 Done |
-| P1 | Заморозить контракт читателей плана | 2/5 | 🟡 In progress |
+| P1 | Заморозить контракт читателей плана | 3/5 | 🟡 In progress |
 | P2 | Перестроить носители плана | 0/8 | ⬜ Not started |
 | P3 | Собирать bundle и включить машинный гейт | 0/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
@@ -316,6 +316,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | plan-close/gpt-5.6-terra/low | Фаза P0 закрыта: сверены пять терминальных items, три budget-входа и их known deviations — детали см. `phases/P0.md` Phase Handoff |
 | 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.1 закрыт: записаны роли читателей и реестр носителей — детали см. `phases/P1.md` P1.1 Completion Notes |
 | 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.2 закрыт: записана форма проекции состояния пункта — детали см. `phases/P1.md` P1.2 Completion Notes |
+| 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.3 закрыт: записан исторический вид и граница executor path — детали см. `phases/P1.md` P1.3 Completion Notes |
 
 ## 7. Contracts
 

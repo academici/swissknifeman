@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **`task`: stage-aware admission бюджета чтения и bounded `plan-lint` carriers
+  (`2026.08.07-PLAN-ECONOMY` P2.9, D131).** `plan-weight` различает
+  `historical-pre-v2`/`pending-producer`/`ready`, валидирует fail-closed producer edges и
+  применяет неизменные D2(a)+D2(b) только к `ready`. Монолитные lint implementation/tests
+  механически разделены на bounded modules с сохранёнными public imports и byte-parity
+  диагностик v1/v2 флота.
+
 - feat(task): добавить детерминированный on-demand исторический вид пункта layout v2.
 
 - feat(task): добавить детерминированные generated state-проекции пунктов layout v2.

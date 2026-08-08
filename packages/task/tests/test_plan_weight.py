@@ -410,6 +410,24 @@ class TestJsonOutput(MeasurerTestCase):
         data = self.run_json("item", str(plan_dir), "P1.1", "--json")
         self.assertEqual([i["item_id"] for i in data["items"]], ["P1.1"])
 
+    def test_v2_item_json_includes_stage_admission(self):
+        plan_dir = write_valid_plan(self.root, plan_id="DEMO-V2", layout="v2")
+        required = plan_dir / "lib" / "pkg" / "config.py"
+        required.parent.mkdir(parents=True)
+        required.write_text("VALUE = 1\n", encoding="utf-8")
+        contract = plan_dir / "root" / "contracts" / "read-budget-v1.md"
+        contract.parent.mkdir(parents=True)
+        contract.write_text(
+            "**Version:** `1.1.0`\n"
+            "pass_item(i) = resolved(i) AND estimated_required_read_tokens(i) <= 100000\n",
+            encoding="utf-8")
+        data = self.run_json("item", str(plan_dir), "P1.1", "--json")
+        item = data["items"][0]
+        self.assertEqual(item["admission_state"], "ready")
+        self.assertTrue(item["admission_pass"])
+        self.assertEqual(data["totals"]["admission"]["counts"],
+                         {"historical-pre-v2": 0, "pending-producer": 0, "ready": 1})
+
     def test_unknown_item_is_error(self):
         plan_dir = self.plan_with_reads("1) `phases/P1.md`")
         stderr = io.StringIO()

@@ -104,7 +104,7 @@ import re
 import sys
 from pathlib import Path
 
-from task import plan_lint, plan_layout, token_estimate
+from task import plan_admission, plan_lint, plan_layout, token_estimate
 
 # --- обязательный путь чтения (`plan-exec.md` §1) ----------------------------------
 
@@ -538,6 +538,7 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
     plan_id = (meta or {}).get("Plan ID", (plan_dir.name, None))[0] or plan_dir.name
 
     items = []
+    specs = {}
     try:
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
@@ -548,8 +549,6 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
         if parsed is None:
             continue
         for item_id, occurrences in parsed["items"].items():
-            if only_item is not None and item_id != only_item:
-                continue
             occurrence = occurrences[0]
             fields = {k: v for k, v in occurrence["fields"].items()}
             record = measure_item(plan_dir, item_id, fields, measurer,
@@ -557,23 +556,48 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
             record["phase_id"] = phase_id
             record["title"] = occurrence["title"]
             items.append(record)
+            specs[item_id] = {
+                "required_read_entries": split_entries(_field(fields, "Required Reads")),
+                "deliverables": _field(fields, "Deliverables"),
+            }
 
-    if only_item is not None and not items:
+    if only_item is not None and not any(item["item_id"] == only_item for item in items):
         raise PlanWeightError(f"пункт {only_item} не найден в {plan_dir}")
 
-    gaps_total = sum(len(i["gaps"]) for i in items)
+    admission = None
+    if layout == "v2":
+        admission = plan_admission.classify(plan_dir, items, specs)
+    selected_items = ([item for item in items if item["item_id"] == only_item]
+                      if only_item is not None else items)
+    if admission is not None and only_item is not None:
+        admission = dict(admission)
+        admission["counts"] = {
+            state: sum(item["admission_state"] == state for item in selected_items)
+            for state in plan_admission.STATES
+        }
+        admission["gap_counts"] = {}
+        for item in selected_items:
+            for gap in item["admission_gaps"]:
+                code = gap["code"]
+                admission["gap_counts"][code] = admission["gap_counts"].get(code, 0) + 1
+        admission["ready_failed"] = sum(
+            item["admission_state"] == plan_admission.STATE_READY
+            and item["admission_pass"] is False for item in selected_items)
+    gaps_total = sum(len(i["gaps"]) for i in selected_items)
     return {
         "plan_id": plan_id,
         "plan_dir": _rel(plan_dir, repo_root),
         "repo_root": str(repo_root),
-        "items": items,
+        "items": selected_items,
         "totals": {
-            "items": len(items),
+            "items": len(selected_items),
             "gaps": gaps_total,
-            "gap_counts": {kind: sum(i["gap_counts"][kind] for i in items) for kind in GAP_KINDS},
-            "max_item_weight_tokens": max((i["weight_tokens"] for i in items), default=0),
-            "min_item_weight_tokens": min((i["weight_tokens"] for i in items), default=0),
-            "max_floor_tokens": max((i["floor_tokens"] for i in items), default=0),
+            "gap_counts": {kind: sum(i["gap_counts"][kind] for i in selected_items)
+                           for kind in GAP_KINDS},
+            "max_item_weight_tokens": max((i["weight_tokens"] for i in selected_items), default=0),
+            "min_item_weight_tokens": min((i["weight_tokens"] for i in selected_items), default=0),
+            "max_floor_tokens": max((i["floor_tokens"] for i in selected_items), default=0),
+            "admission": admission,
         },
     }
 
@@ -738,6 +762,15 @@ def _fmt_item(record, limits):
             lines.append(f"      [{gap['kind']}{gate}] {target}")
     else:
         lines.append("    пробелы: нет")
+    if "admission_state" in record:
+        verdict = ("pass" if record["admission_pass"] is True else
+                   "fail" if record["admission_pass"] is False else "deferred")
+        producer = (f"; producer={record['producer_item']}"
+                    if record.get("producer_item") else "")
+        lines.append(f"    admission: {record['admission_state']} — {verdict}{producer}")
+        for gap in record.get("admission_gaps", []):
+            target = gap.get("path") or gap.get("entry") or gap.get("detail") or ""
+            lines.append(f"      [{gap['code']}] {target}")
     return lines
 
 

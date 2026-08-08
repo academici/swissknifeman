@@ -1,18 +1,22 @@
-# HANDOFF — 2026-08-08 — after P3
+# HANDOFF — 2026-08-08 — after P4.1
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `frontier/high`
+**Next:** /task:plan-design 2026.08.07-PLAN-ECONOMY P4.1
 
 ## Native Codex launch-block
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | high — заморозка публичной формы |
+| Thinking | high — ремонт immutable provenance контракта |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Заморозить форму отпечатка причины возврата для ограничителя P4. |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.1'` |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Разрешить повреждённый Required Read D50 replacement-решением и вернуть P4.1 в исполнимое состояние. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.1'` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.1'
+```
 
 ## Provider-neutral plan-protocol launch-block
 
@@ -21,27 +25,33 @@
 | Model | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Заморозить форму отпечатка причины возврата для ограничителя P4. |
-| Команда | `—` |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Исправить спецификацию P4.1 без переписывания immutable D50. |
+| Команда | `$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.1` |
 
+```text
+$ task:plan-design 2026.08.07-PLAN-ECONOMY P4.1
 ```
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.1
-```
 
-**Done:** P3 терминальна 🟠 (5 `🟢`, 2 `🟠`): bundle v1 и его deterministic builder,
-read-budget/readability/freshness/read-path gates, layout-v2 continuity registry и
-downstream-gate v1. `P3.closed.md` собран штатным генератором.
+**Done:** Routing и pre-mutation Task Contract P4.1 прошли на Session `gpt-5.6-sol/high`;
+Required Reads остановлены на повреждённой immutable-записи D50, наблюдение записано в finding и
+journal, v2 state/status проекции регенерированы.
 
-**Remaining:** P4–P6.
+**Remaining:** P4.1 после plan-design; затем P4.2–P6.
 
-**Sources of truth:** `phases/P3/P3.md` · `phases/P3/P3.closed.md` · `status.md` ·
+**Sources of truth:** `findings/P4.1-d50-required-read-corruption.md` ·
+`decisions/D50-legacy.md` · `phases/P4/P4.1.md` · `phases/P4/P4.1.state.md` · `status.md` ·
 `journal.jsonl`.
 
 **Open risks:**
 
-- Literal package-cwd unittest imports still require repository `PYTHONPATH`; package validation is green.
-- ARTIFEX dry-run remains fail-closed on missing read-budget materialization; P6.6 owns its rollout.
-- Downstream gate is intentionally default-off until P6 supplies producer evidence and activation.
+- D50 обрывается внутри формулировки решения и не содержит полного обоснования.
+- Восстановление D50 по соседним пересказам нарушило бы immutable provenance; нужен новый
+  replacement-decision либо явная смена Required Read через `plan-design`.
+- Preflight `codex doctor --json` показывает default config model `gpt-5.6-terra`; это не selector
+  активной сессии. Фактический маршрут исполнения self-attested как `gpt-5.6-sol/high`.
+- Итоговый plan-lint: `0 ERROR / 9 WARN`, новых от рабочего дерева: `2`; оба новых WARN возникают
+  из статуса P4=`🔴 Blocked` (DoR marker и отсутствие workflow), а не из контрактной реализации.
 
-**Docs:** обновлено в package docs коммитами P3.2–P3.7; дополнительная правка не требуется.
+**Workarounds/Deferred/Open questions:** workaround — отсутствует; deferred — контракты и код P4;
+open_questions — какую replacement-запись и связь замещения назначит `plan-design`.

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: ea5553910ec5a930f02a90b96e9a2b0ddaf180b8e7f386c22f9f38ffca084a9a
+inputs_sha256: 0267f7a5361d1f114a1c16b01b84345d39b2b25b2e595b10e112bd74aaf52311
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.27.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
+| P4 | Ограничитель кружения design↔exec | 0/6 | 🔴 Blocked |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -82,7 +82,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Заморозить форму отпечатка причины возврата | ⬜ Not started | 2026-08-08 |
+| P4.1 | Заморозить форму отпечатка причины возврата | 🔴 Blocked | 2026-08-08 |
 | P4.2 | Построить вычислитель отпечатка и durable-счётчик | ⬜ Not started | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | ⬜ Not started | 2026-08-08 |
 | P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | ⬜ Not started | 2026-08-08 |
@@ -227,6 +227,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · коррекция: config.load.model ошибочно принят за selector активной сессии; фактический Session gpt-5.6-sol/high |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; downstream-gate v1 at 5632a221; 10 focused/644 full + validate green via repo PYTHONPATH. Deviations: literal unittest imports; false route-block journal; ARTIFEX/read-budget + mktemp and docs index scope — findings/19. write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | implementation/low | plan-close · closed-deviations · фаза P3 закрыта: сверены 7 терминальных items и known deviations |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · Required Read D50 проверяется перед заморозкой return-fingerprint v1 |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · Required Read D50 обрывается; immutable decision нельзя восстанавливать внутри P4.1, нужен plan-design |
 
 ## Owner Gates
 
@@ -244,3 +246,4 @@ generated_by: task plan-views status
 - P3.4: known deviation
 - P3.6: known deviation
 - P3.7: known deviation
+- P4.1: escalation

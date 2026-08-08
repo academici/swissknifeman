@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:task:downstream-gate:v1",
+  "advisory_mode": false,
+  "applicability": {
+    "empty_subset_outcome": "unknown",
+    "predicate": "all-addressed-paths-exist-at-producer-commit",
+    "source_field": "Validation"
+  },
+  "consumer_discovery": {
+    "consumer_fields": [
+      "Inputs",
+      "Required Reads"
+    ],
+    "direction": "strictly-later-item",
+    "match": "normalized-repository-relative-path",
+    "producer_fields": [
+      "Files",
+      "Deliverables"
+    ]
+  },
+  "finding": {
+    "carrier": "findings",
+    "frontmatter_required": [
+      "item",
+      "date",
+      "gate",
+      "producer_commit",
+      "consumer_item",
+      "consumer_spec_sha256",
+      "outcome"
+    ]
+  },
+  "lint_opt_in": {
+    "default": "disabled",
+    "meta_field": "Downstream Gate",
+    "value": "v1"
+  },
+  "outcomes": {
+    "green": {
+      "blocks": false,
+      "recorded": true
+    },
+    "red": {
+      "blocks": true,
+      "recorded": true
+    },
+    "unknown": {
+      "blocks": false,
+      "recorded": true
+    }
+  },
+  "result_key": [
+    "consumer_spec_sha256",
+    "producer_commit"
+  ],
+  "result_selection": "newest-producer-commit-in-head-ancestry",
+  "version": "1.0.0"
+}

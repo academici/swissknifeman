@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 052c68168a5f7a970923220dcb68a9f9380049fddac0e33e592b532b87b8c42e
+inputs_sha256: 2b6e54caa7b740be574da05665bf2609448aeec978c3868b1d44040383b2d766
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
-| P3 | Собирать bundle и включить машинный гейт | 5/7 | ⬜ Not started |
+| P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
@@ -76,7 +76,7 @@ generated_by: task plan-views status
 | P3.4 | Включить гейт разрешимости bundle и свежести производных | 🟢 Done | 2026-08-08 |
 | P3.5 | Включить гейт предиката порядка и границ обязательного чтения | 🟢 Done | 2026-08-08 |
 | P3.6 | Перевести осиротевшие проверки линтера на носители v2 | 🟠 Done with deviations | 2026-08-08 |
-| P3.7 | Заморозить и построить гейт потребителя (D13-б1) | ⬜ Not started | 2026-08-08 |
+| P3.7 | Заморозить и построить гейт потребителя (D13-б1) | 🟠 Done with deviations | 2026-08-08 |
 
 ## Phase P4
 
@@ -223,6 +223,9 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; read-path declaration gate committed at eeec7463; task validate: 631 tests green; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · Session: gpt-5.6-terra/high; P3.6 registry and v2 continuity committed at 0a1597c7; 3 focused tests and detailed v1 diagnostic parity green; deviations: literal unittest/core path and 4 pre-existing plan-lint errors; write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | gpt-5.6-terra/medium | plan-run · blocked · предписано frontier/high (gpt-5.6-sol/high), сессия implementation/medium (gpt-5.6-terra/medium) |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · коррекция: config.load.model ошибочно принят за selector активной сессии; фактический Session gpt-5.6-sol/high |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; downstream-gate v1 at 5632a221; 10 focused/644 full + validate green via repo PYTHONPATH. Deviations: literal unittest imports; false route-block journal; ARTIFEX/read-budget + mktemp and docs index scope — findings/19. write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 
@@ -239,3 +242,4 @@ generated_by: task plan-views status
 - P3.2: known deviation
 - P3.4: known deviation
 - P3.6: known deviation
+- P3.7: known deviation

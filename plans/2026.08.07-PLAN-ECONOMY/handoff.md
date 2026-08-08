@@ -1,50 +1,38 @@
 # HANDOFF — 2026-08-08 — after P1.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `frontier/high`
+**Next:** audit-design: task:plan-audit 2026.08.07-PLAN-ECONOMY design
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — сквозная сверка и owner gate |
-| Context | continue (/clear) — ручной item |
-| Суть | Выполнить P1.5: сверить четыре контракта, измерить выполнимость и применить утверждённую заморозку. |
-| Команда | `—` |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | adversarial plan audit · RAG verification |
+| Context | cold-start — plan-step |
+| Суть | Выполнить ровно один разрешённый D123 независимый аудит дизайна после сквозного pass 5/5: проверить D124–D125, распределение P1/P4/P5/P6 и отсутствие автоматического audit/cold-start на первом локальном сбое. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.07-PLAN-ECONOMY design'` |
 
-```text
-run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.5
-```
+**Done:** P0 терминальна; в P1 закрыты `P1.1–P1.4`. Дизайн-прогон 5/5 зафиксировал
+adaptive ladder `local-fix → isolated-review → owner-gate`, развёл root continuity, reviewer
+freshness и model route, добавил знания `findings/19`/`research/17` и распределил реализацию по
+`P1.5`, `P4.3–P4.6`, `P5.4`, `P6.1–P6.3`, `P6.5`, `P6.7–P6.8`.
 
-Provider-neutral:
+**Remaining:** один whole-plan audit по исключению D123. При GREEN следующий исполняемый item —
+`run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P1.5`; P1.5 сначала уточняет два профиля
+существующего auditor и только затем замораживает четыре reader-контракта владельческим гейтом.
 
-```text
-task:plan-run 2026.08.07-PLAN-ECONOMY P1.5
-```
+**Sources of truth:** `plan.md` D123–D125 · `brief/01-refinements.md` блок «непрерывность
+root-сессии» · `findings/19-session-continuity-and-adaptive-review-2026-08-08.md` ·
+`research/17-session-continuity-adaptive-review-2026-08-08.md` · `phases/P1.md` P1.5 ·
+`phases/P4.md` P4.3–P4.6 · `phases/P5.md` P5.4 · `phases/P6.md` P6.1–P6.8 · `roadmap.md`.
 
-Native Codex launch:
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P1.5'
-```
-
-**Done:** batch B1 терминален: `P1.1–P1.3` закрыты `🟢 Done`, `P1.4` —
-`🟠 Done with deviations`; четыре контракта записаны item-коммитами, review fix `990c83bc`
-устранил локальное расхождение волатильности `phase-index`.
-
-**Remaining:** `P1.5` выполняет сквозную сверку, реконструкцию и измерение двух планов, затем
-фиксирует уже отмеченное в roadmap владельческое решение о freeze reader-contract v1.
-
-**Sources of truth:** `phases/P1.md` P1.5 · `roadmap.md` P1.5 ·
-`root/contracts/reader-contract-v1.*` · `root/contracts/item-state-projection-v1.*` ·
-`root/contracts/history-projection-v1.*` · `root/contracts/read-path-v1.*`.
-
-**Open risks:** Чужая незакоммиченная правка `Authoring Model` в `plan.md` сохраняется вне наших
-коммитов. Полный task package validator красный из-за discovery `plans/.claude` и
-`plans/__pycache__`; scoped lint выбранного плана зелёный, evidence и remediation записаны в
-`findings/P1.4-task-validation-discovery-2026-08-08.md`. P1.5 должен доказать выполнимость, а не
-считать B1 freeze фактом до собственного гейта.
+**Open risks:** D104 audit-cap был исчерпан; D123 разрешает ровно один дополнительный design audit
+из-за изменения fleet-канона и не создаёт общего права на повторные аудиты. Чужая исходная правка
+`Authoring Model` в `plan.md` сохранена. Полный task validator ранее выявил discovery-дефект
+`plans/.claude`/`plans/__pycache__`; scoped plan-lint остаётся доверенным, owning remediation — P3.6.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: —.
-- Deferred: реализация носителей и гейтов остаётся P2/P3; discovery fix адресован P3.6.
+- Workarounds: до реализации P6.1–P6.5 текущий `Context` использует действующий enum
+  `cold-start — plan-step`; новый v2 enum замораживает P6.5.
+- Deferred: provider runtime adapters и canary — owning items P6.1–P6.8.
 - Open questions: —.

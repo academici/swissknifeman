@@ -37,7 +37,7 @@
 | P1.2 | B1 | ↑ | frontier/high | — | форма слепка поверх реестра B1 |
 | P1.3 | B1 | ↑ | frontier/high | — | исторический вид поверх запечатанной схемы журнала |
 | P1.4 | B1 | ↑ | frontier/high | — | путь чтения поверх реестра и двух форм B1 |
-| P1.5 | solo | plan-run (manual) | frontier/high | ✅ заморозка контракта ЧИТАТЕЛЕЙ v1 | сквозная сверка четырёх контрактов + оценка выполнимости на реальных планах; вердикт владельца внутри |
+| P1.5 | solo | plan-run (manual) | frontier/high | ✅ заморозка контракта ЧИТАТЕЛЕЙ v1 | до freeze: два профиля одного auditor (`scoped-review`/`full-audit`) и `return-to-root`; затем сквозная сверка и оценка выполнимости |
 | P2.1 | solo | plan-run (manual) | implementation/high | — | резолвер раскладки — адресация всего последующего; правит и два репозиторных инструмента `plans/` (D74) |
 | P2.2 | solo | plan-run (manual) | implementation/high | — | каркас проекций + журнал решений: неизменяемость и свежесть задаются здесь один раз для всех видов |
 | P2.3 | solo | plan-run (manual) | implementation/high | — | хирургия по живому парсеру фазы + расщепление 16 полей: ошибка ломает разбор любого плана флота |
@@ -55,23 +55,23 @@
 | P3.7 | solo | plan-run (manual) | frontier/high | — | контракт + ранний read-only canary: текущий layout-v2 план и временная dry-run проекция одного реального fleet-плана, без записи наружу |
 | P4.1 | solo | plan-run (manual) | frontier/high | — | форма отпечатка — адресное пространство счётчика, потолка и гейта |
 | P4.2 | solo | plan-run (manual) | implementation/high | — | редьюсер и durable-счётчик: корректность идентичности несёт весь механизм |
-| P4.3 | solo | plan-run (manual) | frontier/high | — | потолок и блокирующая сила — новая семантика протокола, необратимая после раскатки |
-| P4.4 | solo | plan-run (manual) | implementation/high | — | ограничитель + ДВЕ выключенные проверки; хирургия по живому линтеру флота |
-| P4.5 | solo | plan-run (manual) | frontier/high | — | как недетерминированное суждение входит в детерминированную петлю (монотонность) |
-| P4.6 | solo | plan-run (manual) | implementation/high | — | приёмка фазы на историческом корпусе: главный риск — красивое число вместо доказательства |
-| P5.1 | solo | plan-run (manual) | frontier/high | — | форма запроса решения — публичный контракт для всех новых планов |
+| P4.3 | solo | plan-run (manual) | frontier/high | — | freeze лестницы: первый local-fix → повтор/risk isolated-review → cap owner-gate |
+| P4.4 | solo | plan-run (manual) | implementation/high | — | deterministic triage; первый локальный сбой даёт zero audit, occurrence сохраняется |
+| P4.5 | solo | plan-run (manual) | frontier/high | — | scoped-review capsule, независимые actor/route, `return-to-root`, монотонность |
+| P4.6 | solo | plan-run (manual) | implementation/high | — | e2e четырёх ветвей: 0/1 reviewer call, 0 лишних root restart, fallback fail-closed |
+| P5.1 | solo | plan-run (manual) | frontier/high | — | freeze DecisionRequest + provider-neutral continuation identity для resume-root |
 | P5.2 | solo | plan-run (manual) | frontier/high | ✅ утверждение ДЕЙСТВУЮЩЕГО инстанса рамки | изменение рамки само является `authority_change` (D65) |
 | P5.3 | solo | plan-run (manual) | implementation/high | — | резолвер политики: одна ветка «разрешить по умолчанию» обесценивает всю фазу |
-| P5.4 | solo | plan-run (manual) | implementation/high | — | носители очереди + расширение ЗАМОРОЖЕННОГО реестра + выключенная проверка join'а |
+| P5.4 | solo | plan-run (manual) | implementation/high | — | очередь + адресная пауза + durable resume того же logical root run; explicit cold-start fallback |
 | P5.5 | solo | plan-run (manual) | implementation/high | — | замыкающий адаптер + двусоставная приёмка на живых прогонах |
-| P6.1 | solo | plan-run (manual) | implementation/high | — | shared команды + generated Codex projections; Codex verified, Claude pending-provider |
-| P6.2 | solo | plan-run (manual) | implementation/high | — | shared протокол закрытия и session-context resolver + thin Codex adapter; репетиционный прогон |
-| P6.3 | solo | plan-run (manual) | frontier/high | — | shared rubric/reducer + qualified Codex judge row; Claude calibration pending-provider |
+| P6.1 | solo | plan-run (manual) | implementation/high | — | команды различают auditor profile и context mode; fresh review не равен root handoff |
+| P6.2 | solo | plan-run (manual) | implementation/high | — | root/specialist session provenance, triage production и session-context resolver |
+| P6.3 | solo | plan-run (manual) | frontier/high | — | isolated child judgement по capsule; stronger route отдельно, затем resume root |
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
-| P6.5 | solo | plan-run (manual) | frontier/high | — | один EN canon v2 + generated Codex skill projection; Claude runtime replay позже |
+| P6.5 | solo | plan-run (manual) | frontier/high | — | канон enum `continue-root|isolated-child-return|cold-start-root` + hard-boundary reasons |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
-| P6.7 | solo | plan-run (manual) | frontier/high | — | протокол приёмки замораживается ДО экземпляра; слияние с прогоном уничтожает предобъявление |
-| P6.8 | solo | plan-run (manual) | frontier/high | — | внутри item'а АВТОРИТСЯ реальный план (рука B) и выносится вердикт по головному обещанию |
+| P6.7 | solo | plan-run (manual) | frontier/high | — | предобъявить session-canary: root restarts/reviewer calls/re-read weight по четырём ветвям |
+| P6.8 | solo | plan-run (manual) | frontier/high | — | две руки + dogfood adaptive ladder; local field defect чинится без автоматического audit |
 | P6.9 | solo | plan-exec | implementation/medium | — | бухгалтерия снятия паузы в чужом плане; предусловие — ВЕРДИКТ P6.8 |
 
 ## Готовые launch-block'и групп

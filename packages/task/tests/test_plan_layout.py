@@ -57,6 +57,24 @@ class PlanLayoutTest(unittest.TestCase):
             with self.assertRaises(plan_layout.PlanLayoutError):
                 plan_layout.layout_version(plan)
 
+    def test_v1_terminality_uses_declared_status_column(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan(tmp)
+            (plan / "phases" / "P1.md").write_text("# P1", encoding="utf-8")
+            plan_md = plan / "plan.md"
+            plan_md.write_text(plan_md.read_text(encoding="utf-8") + """
+## 4. Phase Index & Status Board
+
+| Phase | Title | Items 🟢/всего | Status |
+|:--|:--|:--|:--|
+| P1 | Finished phase | 1/1 | 🟢 Done |
+""", encoding="utf-8")
+            self.assertTrue(plan_layout.is_terminal_phase(plan, "P1"))
+            with self.assertRaises(plan_layout.PlanLayoutError):
+                plan_layout.phase_context_path(plan, "P1", reader="executor")
+            self.assertEqual(plan_layout.phase_context_path(plan, "P1", reader="auditor"),
+                             plan / "phases" / "P1.md")
+
     def test_linter_keeps_the_same_phase_model_for_v2(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = write_valid_plan(Path(tmp), layout="v2")

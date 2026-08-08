@@ -22,7 +22,6 @@ _PHASE_FILE = re.compile(r"^(P\d+)\.md$")
 _ITEM_SPEC_FILE = re.compile(r"^(P\d+)\.(\d+)\.md$")
 _CONFIG = Path(__file__).resolve().parents[2] / "configs"
 _TERMINAL_STATUSES = frozenset(("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"))
-_PHASE_TABLE_ROW = re.compile(r"^\|\s*(P\d+)\s*\|.*?\|\s*([^|]+?)\s*\|\s*$")
 
 
 @dataclass(frozen=True)
@@ -148,16 +147,23 @@ def _v1_phase_statuses(plan_dir: Path) -> dict[str, str]:
     except OSError as exc:
         raise PlanLayoutError(f"plan.md не читается: {exc}") from exc
     in_board = False
+    headers = None
     statuses = {}
     for line in text.splitlines():
         if line.startswith("## "):
             in_board = line == "## 4. Phase Index & Status Board"
+            headers = None
             continue
-        if not in_board:
+        if not in_board or not line.startswith("|"):
             continue
-        match = _PHASE_TABLE_ROW.match(line)
-        if match:
-            statuses[match.group(1)] = match.group(2).strip()
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if all(cell.startswith(":") or cell.startswith("-") for cell in cells):
+            continue
+        if headers is None:
+            headers = cells
+            continue
+        if headers == ["Phase", "Title", "Items 🟢/всего", "Status"] and len(cells) == 4:
+            statuses[cells[0]] = cells[3]
     return statuses
 
 
@@ -195,7 +201,8 @@ def phase_context_path(plan_dir, phase_id, *, reader: str) -> Path:
         raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
     if reader != "auditor" and is_terminal_phase(plan_dir, phase_id):
         raise PlanLayoutError(f"{reader}: терминальная фаза {phase_id} не входит в живой путь")
-    return carrier_path(plan_dir, "phase-index", phase_id=phase_id)
+    carrier_id = "phase-index" if layout_version(plan_dir) == "v2" else "legacy-phase-monolith"
+    return carrier_path(plan_dir, carrier_id, phase_id=phase_id)
 
 
 def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
@@ -216,7 +223,7 @@ def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
             for phase_id in phase_paths(plan_dir):
                 if reader == "auditor" or not is_terminal_phase(plan_dir, phase_id):
                     result.append(ResolvedSlot(reader, slot["id"], carrier_id,
-                                               carrier_path(plan_dir, carrier_id, phase_id=phase_id)))
+                                               phase_context_path(plan_dir, phase_id, reader=reader)))
             continue
         if carrier_id in {"item-spec", "item-state", "bundle", "history-view", "phase-closure"}:
             continue

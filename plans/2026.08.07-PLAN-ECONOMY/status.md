@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 48138503299df0600e88d1258d6d544fe10b50f110f4b0129f8fd5af5e9380a2
+inputs_sha256: 674ec2c783daa1320c56598889191c966feb0722806e9a4ea6a27cece4de1d83
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
-| P3 | Собирать bundle и включить машинный гейт | 4/7 | ⬜ Not started |
+| P3 | Собирать bundle и включить машинный гейт | 5/7 | ⬜ Not started |
 | P4 | Ограничитель кружения design↔exec | 0/6 | ⬜ Not started |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
@@ -74,7 +74,7 @@ generated_by: task plan-views status
 | P3.2 | Построить детерминированный сборщик bundle | 🟢 Done | 2026-08-08 |
 | P3.3 | Включить гейт бюджета чтения и читаемости файлов | 🟢 Done | 2026-08-08 |
 | P3.4 | Включить гейт разрешимости bundle и свежести производных | 🟢 Done | 2026-08-08 |
-| P3.5 | Включить гейт предиката порядка и границ обязательного чтения | ⬜ Not started | 2026-08-08 |
+| P3.5 | Включить гейт предиката порядка и границ обязательного чтения | 🟢 Done | 2026-08-08 |
 | P3.6 | Перевести осиротевшие проверки линтера на носители v2 | ⬜ Not started | 2026-08-08 |
 | P3.7 | Заморозить и построить гейт потребителя (D13-б1) | ⬜ Not started | 2026-08-08 |
 
@@ -219,6 +219,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · escalated · Validation calls unsupported plan-views.py all; plan-design must reconcile the closed generator surface |
 | 2026-08-08 | gpt-5.6-terra/high | plan-design · in-progress · Owner-approved same-session repair: make P3.4 validation use existing explicit plan-views modes and materialize committed bundles |
 | 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; bundle freshness gate and committed active-phase artifacts committed at 08af02ac; task validate: 629 tests green; write-site: pre_mutation: allow · pre_final: allow; deviation: owner-authorized D133–D135 same-session reconciliation. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-green · Session: gpt-5.6-terra/high; read-path declaration gate committed at eeec7463; task validate: 631 tests green; write-site: pre_mutation: allow · pre_final: allow. |
 
 ## Owner Gates
 

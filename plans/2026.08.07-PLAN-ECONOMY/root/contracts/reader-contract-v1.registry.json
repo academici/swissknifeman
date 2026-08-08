@@ -66,12 +66,11 @@
       "path": "phases/<Pn>/<Pn>.md",
       "owner_reader": "designer",
       "also_read_by": ["executor", "auditor", "owner"],
-      "mutability": "managed-block",
-      "volatility": "slow",
-      "volatility_basis": "plan-design writes stable phase context at design boundaries while the status projector updates only the delimited index region on item transitions",
+      "mutability": "handwritten",
+      "volatility": "stable",
+      "volatility_basis": "plan-design seals Phase Context and stable item addresses before execution; item status is projected separately into status-view",
       "on_path_of": ["designer", "executor", "auditor", "owner"],
       "class": "index",
-      "managed_block_justification": "phase context and its compact generated item index must remain one addressable phase carrier for cold resolution while preserving separate writer ownership",
       "layout_versions": ["v2"]
     },
     {

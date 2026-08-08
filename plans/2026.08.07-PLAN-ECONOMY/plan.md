@@ -338,6 +338,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | владелец | P1.5: после cross-check и оценки выполнимости утверждена заморозка четырёх reader-контрактов v1; решение D127, доказательства `findings/06-p1-path-feasibility.md` |
 | 2026-08-08 | plan-run/gpt-5.6-sol/high | P1.5 закрыт: reader-contract v1 заморожен D127 после воспроизводимой оценки и scoped-review — детали см. `phases/P1.md` P1.5 Completion Notes |
 | 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.2 закрыт `🟠 Done with deviations`: immutable decisions, четыре generated views и v2 pointer lint; details см. `phases/P2.md` P2.2 Completion Notes |
+| 2026-08-08 | plan-run/gpt-5.6-terra/high | P2.3 закрыт `🟠 Done with deviations`: v2 index/spec/state parser, strict split и v1 parity; детали см. `phases/P2.md` P2.3 Completion Notes |
 
 ## 7. Contracts
 

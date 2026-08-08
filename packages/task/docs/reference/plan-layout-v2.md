@@ -42,9 +42,27 @@ python3 packages/task/scripts/plan-views.py status --plan-dir <plan-dir> [--chec
 
 The projector derives item and phase status from v2 state carriers and its
 Update Log from `journal.jsonl`; `--check` regenerates in memory and rejects
-byte drift. Until the v1→v2 migrator lands in P2.8, a new v2 fixture has no
-source for the legacy plan-version value, so the view explicitly renders `—`
-instead of inventing a version.
+byte drift. A migrated plan carries its legacy version in a converter
+provenance marker, so `status.md` can render that value without inventing it.
+
+## Migrating a plan
+
+`plan-migrate.py` deterministically converts a legacy v1 plan to v2. In-place
+migration is deliberately restricted to the approved self-host plan; every
+other source may only be read through an explicit dry run and a new output
+directory. Git remains the rollback mechanism.
+
+```bash
+# approved self-host plan only
+python3 packages/task/scripts/plan-migrate.py plans/<SELF-HOST-PLAN>
+
+# any other plan: source stays byte-identical
+python3 packages/task/scripts/plan-migrate.py plans/<SOURCE> --dry-run --output /tmp/<projection>
+```
+
+The converter writes a generated migration inventory and before/after read-weight
+evidence. Re-running it on an already migrated plan must not change bytes; use
+the normal `plan-views ... --check` commands to verify generated carriers.
 
 ## Item-state projection
 

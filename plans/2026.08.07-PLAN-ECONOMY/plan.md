@@ -132,7 +132,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Измерить вес чтения и заморозить метрику | 1/5 | 🟡 In progress |
+| P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟢 Done |
 | P1 | Заморозить контракт читателей плана | 0/5 | ⬜ Not started |
 | P2 | Перестроить носители плана | 0/8 | ⬜ Not started |
 | P3 | Собирать bundle и включить машинный гейт | 0/7 | ⬜ Not started |
@@ -312,6 +312,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | D119–D121: independent provider certification, P0.1 ≤8 real samples/128 KiB/12 calls, ранние canary P2.8/P3.7; детали `research/16-…` |
 | 2026-08-08 | plan-design/gpt-5.6-sol/high | D122 закрепил реальную границу мультипровайдерности `task`: Python core/schemas/canonical skills общие, provider-specific остаются только thin raw-runtime adapters и generated projections; item без provider seam не получает отдельную матрицу/прогон |
 | 2026-08-08 | plan-run/gpt-5.6-terra/high | P0.1 закрыт `🟠 Done with deviations`: provider-neutral Codex calibration v2, 8 samples / 12 calls и dense SSOT; детали см. `phases/P0.md` P0.1 Completion Notes |
+| 2026-08-08 | plan-run/gpt-5.6-sol/high | P0.5 закрыт: заморожен qualified `read-budget` v1 для новых layout-v2 планов — детали см. `phases/P0.md` P0.5 Completion Notes |
 
 ## 7. Contracts
 
@@ -357,7 +358,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 |:--|:--|:--|:--|:--|
 | `token-estimate-calibration` | v2 (`provider + model + protocol`) | 🟡 In progress | P0.3, P0.4, P0.5 (qualified единица порога), P1.5 (оценка выполнимости), P3 (гейт) | — (внутри плана; active Codex adapter D118; Claude adapter deferred; v1 Claude evidence сохранён по D117) |
 | `read-limit` | v1 | ⬜ Not started | P0.3, P0.5 (условие D2б), P3 (гейт) | — (внутри плана) |
-| `read-budget` | v1 | ⬜ Not started | P1.5 (оценка выполнимости пути), P3 (реализация гейта), P6 (раскатка и проверка критерия) | — (внутри плана) |
+| `read-budget` | v1 | 🟢 Done | P1.5 (оценка выполнимости пути), P3 (реализация гейта), P6 (раскатка и проверка критерия) | 2026-08-08 — потребители внутри плана уведомлены закрытием P0.5 |
 | `reader-contract` | v1 | ⬜ Not started | P1.2–P1.4 (id и классы носителей), P2.1 (резолвер адресации), P3 (адресация гейтов), P5.4 (расширение реестра двумя носителями очереди, D64), P6.5 (канон под v2) | — (внутри плана) |
 | `item-state-projection` | v1 | ⬜ Not started | P1.4 (слот состояния), P2.3 (расщепление 16 полей на 11 ТЗ + 5 исхода), P2.5 (генератор слепка), P3.4 (проверка свежести), P4.1 (вход отпечатка) | — (внутри плана) |
 | `history-projection` | v1 | ⬜ Not started | P1.4 (граница пути), P2.2 (frontmatter записей решений), P2.6 (генератор исторического вида), P3.5 (граница «исполнителю не видно»), P4.1/P4.2 (объявление шва и журнальные факты) | — (внутри плана) |

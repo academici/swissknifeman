@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`task`: детерминированный schema-valid Bundle v1 для входов item’а
+  (`2026.08.07-PLAN-ECONOMY` P3.2, D132).** Единый `plan-views.py bundle`
+  строит и byte-checks committed manifests, хеширует сырые/выбранные байты и
+  оценивает вес по frozen calibration; неразрешимая декларация атомарно отказывает
+  до записи, а P3.4 выводит её отдельным `unresolvable_entry`.
+
 - **`task`: stage-aware admission бюджета чтения и bounded `plan-lint` carriers
   (`2026.08.07-PLAN-ECONOMY` P2.9, D131).** `plan-weight` различает
   `historical-pre-v2`/`pending-producer`/`ready`, валидирует fail-closed producer edges и

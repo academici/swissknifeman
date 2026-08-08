@@ -111,3 +111,13 @@ root-level `open-questions.md` — are generated through
 Use `--check` in automation; it regenerates in memory and rejects any byte
 drift. A v2 `## 5. Decision Log` is only a pointer to that catalog and command;
 `## Обсуждение` is replaced by the proposed-decision view.
+
+## Bundle input manifest
+
+Build the deterministic, committed manifest for every item with
+`python3 packages/task/scripts/plan-views.py bundle --plan-dir <plan> --all`.
+Use `--item Pn.m --stdout` to inspect one manifest and `--check` to reject byte
+drift. The producer reuses the declared-input resolver, validates the result
+against the lifted Bundle v1 schema, and refuses atomically when a declaration
+cannot resolve; the P3.4 gate later reports that condition as
+`unresolvable_entry`.

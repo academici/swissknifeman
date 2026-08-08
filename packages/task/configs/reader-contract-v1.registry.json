@@ -99,7 +99,7 @@
     },
     {
       "id": "phase-closure",
-      "path": "phases/<Pn>/<Pn>.closure.md",
+      "path": "phases/<Pn>/<Pn>.closed.md",
       "owner_reader": "owner",
       "also_read_by": ["designer", "auditor"],
       "mutability": "generated-file",

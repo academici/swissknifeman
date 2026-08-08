@@ -16,6 +16,10 @@
 
 ### Fixed
 
+- **`task`: исправлена единственная рассинхронизация имени v2 phase-closure carrier.** Реестр и
+  read-path specification теперь одинаково адресуют `phases/<Pn>/<Pn>.closed.md`, как D34/D77 и
+  проектные потребители (`2026.08.07-PLAN-ECONOMY` D130); до реализации генератора не существовало
+  runtime consumer устаревшего `.closure.md`.
 - **Codex plan handoff теперь пинует полный маршрут запуска.** Generated runtime проекций
   `task:plan-*` требует отдельный native launch-block с `-C`, `-m`,
   `model_reasoning_effort`, `-a never` и `-s danger-full-access`; `$ task:…` остаётся

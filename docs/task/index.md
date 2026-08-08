@@ -46,6 +46,17 @@ python3 packages/task/scripts/plan-views.py history --plan-dir plans/<ID> --item
   --output .plan-cache/history/Pn.m.md --check
 ```
 
+## Дайджест закрытой фазы layout v2
+
+Закрытая фаза сохраняет исходный адрес `phases/Pn/Pn.md`, но получает детерминированный
+дайджест `phases/Pn/Pn.closed.md` для дизайнера. Генератор работает только для терминальной
+фазы и отказывает для живой; `--check` проверяет байтовую свежесть:
+
+```bash
+python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phase Pn
+python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phase Pn --check
+```
+
 ## Методология plan-protocol 2.0
 
 | Страница | Что там |

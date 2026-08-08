@@ -73,6 +73,13 @@ The default cache address `.plan-cache/history/` is ignored by Git. The view is 
 authority: it has projection metadata and links facts chronologically, including superseded
 decisions, without judging them.
 
+## Terminal phase closure
+
+A terminal phase remains at `phases/Pn/Pn.md`; it is never moved to an archive directory. Its
+generated design-facing digest is `phases/Pn/Pn.closed.md`. The resolver excludes terminal phases
+from executor, designer, and owner live paths, while the auditor can still address their original
+carriers. A closure build for a live phase must refuse rather than emit a provisional file.
+
 ## Decisions and generated views
 
 Decision truth lives in immutable `decisions/D<NNN>-<slug>.md` records. Their

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -20,6 +21,18 @@ _ITEM = re.compile(r"^(P\d+)\.(\d+)$")
 _PHASE_FILE = re.compile(r"^(P\d+)\.md$")
 _ITEM_SPEC_FILE = re.compile(r"^(P\d+)\.(\d+)\.md$")
 _CONFIG = Path(__file__).resolve().parents[2] / "configs"
+_TERMINAL_STATUSES = frozenset(("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"))
+_PHASE_TABLE_ROW = re.compile(r"^\|\s*(P\d+)\s*\|.*?\|\s*([^|]+?)\s*\|\s*$")
+
+
+@dataclass(frozen=True)
+class ResolvedSlot:
+    """One concrete carrier returned by the declared reader path."""
+
+    role: str
+    slot_id: str
+    carrier_id: str
+    path: Path
 
 
 def _meta_layout(plan_dir: Path) -> str:
@@ -57,6 +70,15 @@ def registry() -> dict:
     except (OSError, json.JSONDecodeError) as exc:
         raise PlanLayoutError(f"контракт носителей не читается: {exc}") from exc
     return {row["id"]: row for row in data.get("carriers", [])}
+
+
+def read_path_spec() -> dict:
+    """Load the frozen reader-path declaration once for resolver consumers."""
+    path = _CONFIG / "read-path-v1.spec.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PlanLayoutError(f"спецификация пути чтения не читается: {exc}") from exc
 
 
 def carrier_path(plan_dir, carrier_id, *, item_id=None, phase_id=None) -> Path:
@@ -117,6 +139,94 @@ def phase_path(plan_dir, phase_id) -> Path:
         return paths[phase_id]
     except KeyError as exc:
         raise PlanLayoutError(f"фаза {phase_id} не найдена в Layout {layout_version(plan_dir)}") from exc
+
+
+def _v1_phase_statuses(plan_dir: Path) -> dict[str, str]:
+    """Read declared phase statuses from the legacy owner board, not item heuristics."""
+    try:
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+    except OSError as exc:
+        raise PlanLayoutError(f"plan.md не читается: {exc}") from exc
+    in_board = False
+    statuses = {}
+    for line in text.splitlines():
+        if line.startswith("## "):
+            in_board = line == "## 4. Phase Index & Status Board"
+            continue
+        if not in_board:
+            continue
+        match = _PHASE_TABLE_ROW.match(line)
+        if match:
+            statuses[match.group(1)] = match.group(2).strip()
+    return statuses
+
+
+def phase_statuses(plan_dir) -> dict[str, str]:
+    """Return the authoritative declared status for every phase in a plan."""
+    plan_dir = Path(plan_dir)
+    if layout_version(plan_dir) == "v1":
+        statuses = _v1_phase_statuses(plan_dir)
+    else:
+        # Deferred import avoids the plan_layout ↔ plan_status module cycle.
+        from task import plan_status
+        try:
+            _meta, board = plan_status.parse_status_view(plan_dir)
+        except plan_status.StatusError as exc:
+            raise PlanLayoutError(f"владельческий вид статуса не читается: {exc}") from exc
+        statuses = {row["Phase"]: row["Status"] for row, _lineno in board}
+    missing = sorted(set(phase_paths(plan_dir)) - set(statuses))
+    if missing:
+        raise PlanLayoutError(f"нет объявленного статуса фаз: {', '.join(missing)}")
+    return statuses
+
+
+def is_terminal_phase(plan_dir, phase_id) -> bool:
+    """Terminality is declared by the phase status, never inferred from its items."""
+    statuses = phase_statuses(plan_dir)
+    try:
+        return statuses[phase_id] in _TERMINAL_STATUSES
+    except KeyError as exc:
+        raise PlanLayoutError(f"фаза {phase_id} не имеет объявленного статуса") from exc
+
+
+def phase_context_path(plan_dir, phase_id, *, reader: str) -> Path:
+    """Resolve a phase carrier while keeping terminal phases off live reader paths."""
+    if reader not in read_path_spec().get("paths", {}):
+        raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
+    if reader != "auditor" and is_terminal_phase(plan_dir, phase_id):
+        raise PlanLayoutError(f"{reader}: терминальная фаза {phase_id} не входит в живой путь")
+    return carrier_path(plan_dir, "phase-index", phase_id=phase_id)
+
+
+def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
+    """Resolve declared static and phase-context slots for a reader.
+
+    Dynamic item, bundle, and optional closure slots need an explicit target and
+    are intentionally not guessed here.  The function is consequently useful
+    for the declaration-level predicate that proves terminal phase carriers do
+    not leak into any live path.
+    """
+    paths = read_path_spec().get("paths", {})
+    if reader not in paths:
+        raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
+    result = []
+    for slot in paths[reader].get("slots", []):
+        carrier_id = slot["carrier_id"]
+        if carrier_id == "phase-index":
+            for phase_id in phase_paths(plan_dir):
+                if reader == "auditor" or not is_terminal_phase(plan_dir, phase_id):
+                    result.append(ResolvedSlot(reader, slot["id"], carrier_id,
+                                               carrier_path(plan_dir, carrier_id, phase_id=phase_id)))
+            continue
+        if carrier_id in {"item-spec", "item-state", "bundle", "history-view", "phase-closure"}:
+            continue
+        try:
+            path = carrier_path(plan_dir, carrier_id)
+        except PlanLayoutError:
+            # Multi-file and target-dependent carriers are not concrete slots.
+            continue
+        result.append(ResolvedSlot(reader, slot["id"], carrier_id, path))
+    return tuple(result)
 
 
 def item_spec_paths(plan_dir, phase_id) -> list[Path]:

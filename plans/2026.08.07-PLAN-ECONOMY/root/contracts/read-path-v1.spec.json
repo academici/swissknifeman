@@ -60,7 +60,7 @@
         {"order": 4, "id": "roadmap", "carrier_id": "roadmap", "required": true, "resolver": "resolve roadmap.md in the selected plan root"},
         {"order": 5, "id": "index", "carrier_id": "index", "required": false, "resolver": "resolve index.md for plan-wide navigation"},
         {"order": 6, "id": "decisions-current", "carrier_id": "decision-view", "required": true, "resolver": "resolve decisions/current.md for the selected plan"},
-        {"order": 7, "id": "phase-closure", "carrier_id": "phase-closure", "required": false, "resolver": "resolve the most recent terminal phases/<Pn>/<Pn>.closure.md, if present"},
+        {"order": 7, "id": "phase-closure", "carrier_id": "phase-closure", "required": false, "resolver": "resolve the most recent terminal phases/<Pn>/<Pn>.closed.md, if present"},
         {"order": 8, "id": "findings", "carrier_id": "findings", "required": false, "resolver": "resolve findings explicitly linked from current gates, in link order"},
         {"order": 9, "id": "artifacts", "carrier_id": "artifacts", "required": false, "resolver": "resolve only artifacts explicitly linked from current gates, in link order"},
         {"order": 10, "id": "status", "carrier_id": "status-view", "required": true, "resolver": "resolve status.md for the selected plan"},

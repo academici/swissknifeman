@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-08 (D118–D126: shared-first multiprovider; adaptive review; machine-gated session canary; P0 и P1.1–P1.4 закрыты) · **Соответствует plan.md:** v0.24.0
+**Обновлён:** 2026-08-08 (D118–D130: shared-first multiprovider; adaptive review; priority `repair-now`; P0 и P1.1–P1.4 закрыты; Claude follow-up поставлен после P2.7) · **Соответствует plan.md:** v0.26.0
 
 ## Как читать
 
@@ -44,7 +44,7 @@
 | P2.4 | solo | plan-run (manual) | implementation/high | — | ядро `plan.md` и владельческий вид; меняет канон Meta и доски |
 | P2.5 | solo | plan-run (manual) | implementation/high | — | слепок — единственное, что осталось исполнителю от состояния мира после ухода handoff с пути |
 | P2.6 | solo | plan-exec | implementation/medium | — | вид не коммитится и не стоит на живом пути — цена ошибки локальна |
-| P2.7 | solo | plan-run (manual) | implementation/high | — | правило живого пути, которое потом меряет гейт P3 |
+| P2.7 | solo | plan-run (manual) | implementation/high | — | в работе: D130 синхронизирует closure-path без cold start; после зелёного Codex-результата P6.2 переносит правило в canonical commands и регенерирует Claude-проекцию |
 | P2.8 | solo | plan-run (manual) | implementation/high | — | self-host текущего реального плана — первая вертикальная field-проверка shared carriers; provider-specific семантика запрещена |
 | P3.1 | solo | plan-run (manual) | frontier/high | — | форма манифеста входов — публичный контракт для всех новых планов флота |
 | P3.2 | solo | plan-run (manual) | implementation/high | — | детерминизм сборщика несёт гейт свежести; недетерминированный делает проверку вечно красной |
@@ -132,6 +132,10 @@ exec-items: task:plan-exec 2026.08.07-PLAN-ECONOMY <Pn.m>
 ## Порядок и предусловия, которые карта не переопределяет
 
 - Фаза-first: фаза N+1 не исполняется, пока фаза N не терминальна (`## 2. Execution Rules`).
+- P6.2 следует после зелёного P2.7 Codex-прогона: переносит `repair-now` из текущего плана в
+  provider-neutral canonical commands и регенерирует обе проекции. Codex проверяется в своей строке;
+  Claude получает ту же семантику, но остаётся `pending-provider` до Claude-owned replay, а не
+  объявляется зелёным по Codex-проверке (D119–D122).
 - P6.4 исполняется ТОЛЬКО после P6.2 и P6.3 (включение гейта требует существующих производителей).
 - P6.9 исполняется ТОЛЬКО при положительном вердикте P6.8; иначе остаётся 🔴 с `Возобновление:`.
 - P6.5 внутри себя несёт жёсткий порядок двух коммитов: EN-only и перепривязка гейтов → канон v2.

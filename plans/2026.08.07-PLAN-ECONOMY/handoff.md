@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-08 — after P2.4
+# HANDOFF — 2026-08-08 — after P2.5
 
-**Next:** manual: implementation/high — `2026.08.07-PLAN-ECONOMY P2.5`
+**Next:** `/task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6`
 
 **Native Codex launch-block**
 
@@ -11,37 +11,34 @@
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Approval/Sandbox | `-a never -s danger-full-access` |
 | Context | continue (/clear) — ручной item |
-| Суть | Собрать генератор слепка состояния пункта v2 |
-| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.5'` |
+| Суть | Собрать генератор исторического вида пункта v2 |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -a never -s danger-full-access '$ task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6'` |
 
 **Provider-neutral plan-protocol launch-block**
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high |
+| Effort | medium |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | P2.5: generated item-state projection |
-| Команда | — |
+| Суть | P2.6: generated item history view |
+| Команда | `/task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6` |
 
 ```text
-select session model class implementation
-select session effort high
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.5
+$ task:plan-exec 2026.08.07-PLAN-ECONOMY P2.6
 ```
 
-**Done:** `2026.08.07-PLAN-ECONOMY P2.4` вынес volatile Meta, Phase Status и Update Log
-из fixture v2 core в детерминированный `status.md`; item-коммит: `6f8633ad`.
+**Done:** `2026.08.07-PLAN-ECONOMY P2.5` добавил базовый генератор item-state и `--check`;
+item-коммит: `4a572568`.
 
-**Remaining:** P2.5–P6; literal full-unittest P2.2/P2.3 требует reconcile по D129.
+**Remaining:** P2.6–P6; P2.5 требует follow-up для полного наполнения world/active_context.
 
-**Sources of truth:** `phases/P2.md` P2.4/P2.5 · `packages/task/lib/task/plan_status.py` ·
-`packages/task/lib/task/plan_lint.py` · `packages/task/docs/reference/plan-layout-v2.md`.
+**Sources of truth:** `phases/P2.md` P2.5/P2.6 · `packages/task/lib/task/plan_item_state.py` ·
+`packages/task/lib/task/plan_projection.py` · `packages/task/docs/reference/plan-layout-v2.md`.
 
-**Open risks:** Literal `cd packages/task && python3 -m unittest discover -s tests` не получает
-корень `core/` в `PYTHONPATH`; `bash packages/task/scripts/validate.sh` зелёный. Активный план
-несёт предсуществующие DoR warnings, новых ERROR после P2.4 нет.
+**Open risks:** P2.5 закрыт 🟠: `world` и `active_context` пока не редуцируют `Files`/`Deliverables`,
+findings и decisions. `bash packages/task/scripts/validate.sh` зелёный.
 
 **Workarounds/Deferred/Open questions:**
 

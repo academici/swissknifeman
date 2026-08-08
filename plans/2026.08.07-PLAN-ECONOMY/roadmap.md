@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-08 (D118–D131: shared-first multiprovider; adaptive review; priority `repair-now`; stage-aware read admission; P0/P1 и P2.1–P2.7 терминальны) · **Соответствует plan.md:** v0.27.0
+**Обновлён:** 2026-08-08 (P0–P3 терминальны; P3 дал bundle/read-path/downstream gates, P4 ещё не начата) · **Соответствует plan.md:** v0.27.0
 
 ## Как читать
 
@@ -48,13 +48,13 @@
 | P2.8 | solo | plan-run (manual) | implementation/high | ✅ D131 принят | lossless migration + честный baseline D2(a)/D2(b); не выдаёт future forecast за admission |
 | P2.9 | solo | plan-run (manual) | frontier/high | ✅ D131 принят | minor public-contract revision: stage-aware hard admission + bounded task carriers |
 | P2.10 | solo | plan-run (manual) | implementation/high | — | применить P2.9 ко всему read graph и вынести независимый self-host D74 verdict; без него P2 не закрывается |
-| P3.1 | solo | plan-run (manual) | frontier/high | — | форма манифеста входов — публичный контракт для всех новых планов флота |
-| P3.2 | solo | plan-run (manual) | implementation/high | — | детерминизм сборщика несёт гейт свежести; недетерминированный делает проверку вечно красной |
-| P3.3 | solo | plan-run (manual) | implementation/high | — | ГОЛОВНОЙ гейт плана (D2) против замороженного порога |
-| P3.4 | B2 | plan-run серия | implementation/high | — | семья проверок в `plan_gates.py`; scope сцеплен файлом, маршрут и глубина ревью совпадают с P3.5 |
-| P3.5 | B2 | ↑ | implementation/high | — | вторая семья проверок в том же файле |
-| P3.6 | solo | plan-run (manual) | implementation/high | — | реестр диспозиций: доказательство «ничего не пропало» интроспекцией; отдельный вердикт |
-| P3.7 | solo | plan-run (manual) | frontier/high | — | контракт + ранний read-only canary: текущий layout-v2 план и временная dry-run проекция одного реального fleet-плана, без записи наружу |
+| P3.1 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — форма манифеста входов |
+| P3.2 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — детерминированный сборщик bundle |
+| P3.3 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — D2 read-budget/readability gate |
+| P3.4 | B2 | plan-run серия | implementation/high | — | ✅ terminal — bundle freshness/resolvability gates |
+| P3.5 | B2 | ↑ | implementation/high | — | ✅ terminal — read-path order/boundary gate |
+| P3.6 | solo | plan-run (manual) | implementation/high | — | ✅ terminal with deviations — layout-v2 continuity registry |
+| P3.7 | solo | plan-run (manual) | frontier/high | — | ✅ terminal with deviations — downstream-gate contract and read-only canary |
 | P4.1 | solo | plan-run (manual) | frontier/high | — | форма отпечатка — адресное пространство счётчика, потолка и гейта |
 | P4.2 | solo | plan-run (manual) | implementation/high | — | редьюсер и durable-счётчик: корректность идентичности несёт весь механизм |
 | P4.3 | solo | plan-run (manual) | frontier/high | — | freeze лестницы: первый local-fix → повтор/risk isolated-review → cap owner-gate |

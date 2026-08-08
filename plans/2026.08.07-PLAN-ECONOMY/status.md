@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 2b6e54caa7b740be574da05665bf2609448aeec978c3868b1d44040383b2d766
+inputs_sha256: ea5553910ec5a930f02a90b96e9a2b0ddaf180b8e7f386c22f9f38ffca084a9a
 generated_by: task plan-views status
 -->
 
@@ -226,6 +226,7 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-terra/medium | plan-run · blocked · предписано frontier/high (gpt-5.6-sol/high), сессия implementation/medium (gpt-5.6-terra/medium) |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · коррекция: config.load.model ошибочно принят за selector активной сессии; фактический Session gpt-5.6-sol/high |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session: gpt-5.6-sol/high; downstream-gate v1 at 5632a221; 10 focused/644 full + validate green via repo PYTHONPATH. Deviations: literal unittest imports; false route-block journal; ARTIFEX/read-budget + mktemp and docs index scope — findings/19. write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-08 | implementation/low | plan-close · closed-deviations · фаза P3 закрыта: сверены 7 терминальных items и known deviations |
 
 ## Owner Gates
 

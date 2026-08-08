@@ -7,7 +7,7 @@
 | Plan ID | 2026.08.07-PLAN-ECONOMY |
 | Title | Экономный протокол планов для больших многофазных проектов |
 | Document Type | Executable Master Plan |
-| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131, 2026-08-08) |
+| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance repair D136, 2026-08-08) |
 | Repository | swissknifeman |
 | Related Packages | task (владелец протокола и команд) · skiller (раздача скилла `plan-protocol` по флоту) · core · harness (несёт потребителя раскладки на живом пути гейта прогона — `lib/harness/run/gate.py`, D85) |
 | Execution Mode | contract-first, phase-first |

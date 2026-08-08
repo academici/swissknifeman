@@ -25,14 +25,15 @@
 | Суть | Заморозить return-fingerprint v1 без повторного design round-trip. |
 | Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.1` |
 
-**Done:** D136 дословно восстановил исходную D50 из pre-migration git carrier и оформил
-двусторонний replacement; finding закрыт; P4.1/P4.2 переведены на D136; state/status и decision
-views регенерированы; Task Contract pre-mutation=`allow`.
+**Done:** D136 дословно восстановил исходную D50 из pre-migration git carrier; D137 заменил
+ложную часть D52 и объявил seam как additive decision/finding metadata без изменения frozen
+history minimum; оба findings закрыты; state/status и decision views регенерированы.
 
 **Remaining:** P4.1–P6.
 
 **Sources of truth:** `decisions/D136-restore-return-fingerprint-tuple.md` ·
-`findings/P4.1-d50-required-read-corruption.md` · `phases/P4/P4.1.md` ·
+`decisions/D137-seam-frontmatter-extension.md` · `findings/P4.1-d50-required-read-corruption.md` ·
+`findings/P4.1-history-seam-metadata-gap.md` · `phases/P4/P4.1.md` ·
 `phases/P4/P4.1.state.md` · `status.md` · `journal.jsonl`.
 
 **Open risks:** pre-existing warnings вне P4.1 остаются в P3/P6 projection artifacts; новых

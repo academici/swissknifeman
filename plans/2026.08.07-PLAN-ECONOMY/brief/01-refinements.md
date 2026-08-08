@@ -239,3 +239,9 @@ P3.4 реконструирует её и выдаёт замороженный 
 исходная строка извлекается из pre-migration git carrier, старый файл не переписывается по смыслу,
 а D136 оформляет двусторонний immutable replacement. После зелёных decision views, plan-lint и
 Task Contract та же root-сессия продолжает P4.1; новая сессия и отдельный аудит не требуются.
+
+Машинная сверка следующего Required Read обнаружила, что D52 приписывает frozen history minimum
+три seam-поля, которых в `history-projection-v1.spec.json` нет. D137 разрешает конфликт без
+изменения P1.3: эти поля становятся additive metadata исходных decisions/findings, а отсутствие
+полного шва fail-closed не допускает `classified`. Владелец не прерывается; та же сессия продолжает
+контракт P4.1 после регенерации decision/state/status views и повторного Task Contract.

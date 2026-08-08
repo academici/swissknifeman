@@ -3,7 +3,7 @@ projection: decision-archive
 projection_version: v1
 source_scope: decisions/
 through: 2026-08-07/D99
-inputs_sha256: 04c317ba9368325235137091d0a5bc55f09c97a65bc57d052a2df5255aeb720a
+inputs_sha256: 0e89ae95c6e114d79aefdf07920ba6c10b334d1e1445b02bbc3e4d0e2fc54894
 generated_by: task plan-views decisions
 -->
 
@@ -14,3 +14,4 @@ generated_by: task plan-views decisions
 | ID | Date | Status | Items | Решение |
 |:--|:--|:--|:--|:--|
 | D50 | 2026-08-07 | superseded | — | **Отпечаток причины — версионированный КАНОНИЧЕСКИЙ КОРТЕЖ (`fingerprint_version` \ |
+| D52 | 2026-08-07 | superseded | — | **Шов дефекта ОБЪЯВЛЯЕТСЯ со стороны `decisions/`/`findings/`, а не новым полем журнала, и его вокабуляр (`file` × `rule_or_contract_locus` × `defect_class`) переиспользуется дословно.** Схема `journal.jsonl` этим планом не меняется; входное объявление отпечатка обязано быть удовлетворимо полями уже замороженного `history-projection` v1. Отвергнуто расширение схемы журнала. |

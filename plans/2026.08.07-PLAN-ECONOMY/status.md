@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: 8be41cb8f5823f2f227c1936fa2916c3f5ce80d44081727b0f540dae68b91d46
+inputs_sha256: bc9dc66ffcb44e54cba3840b9488f1a57c216bb5b3f05b6d94c2eb388ab6e269
 generated_by: task plan-views status
 -->
 
@@ -230,6 +230,8 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · Required Read D50 проверяется перед заморозкой return-fingerprint v1 |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · escalated · Required Read D50 обрывается; immutable decision нельзя восстанавливать внутри P4.1, нужен plan-design |
 | 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D136 восстановил exact pre-migration D50 как двусторонний replacement; P4.1 возвращён к исполнению в текущей сессии |
+| 2026-08-08 | gpt-5.6-sol/high | plan-run · in-progress · D136 принят; начата заморозка return-fingerprint v1 |
+| 2026-08-08 | gpt-5.6-sol/high | plan-design · in-progress · D137 заменил ложную часть D52: seam объявляется additive metadata без изменения frozen history minimum |
 
 ## Owner Gates
 

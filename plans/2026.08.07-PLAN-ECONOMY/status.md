@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-08
-inputs_sha256: fa6c3b3cec0d960c6f0ef7b5b5a74467218aa6ad0bf2b12df56b2305dd79b720
+inputs_sha256: c3bf445cc5037b3e1f5d6fabfbc055887a9bcfb337210c814d439215468b88e2
 generated_by: task plan-views status
 -->
 
@@ -15,8 +15,8 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 0.27.0 |
-| Status | ⬜ Not started |
+| Version | 0.28.0 |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-08 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
-| P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
+| P4 | Ограничитель кружения design↔exec | 2/6 | 🟡 In progress |
 | P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
@@ -83,11 +83,11 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Заморозить форму отпечатка причины возврата | 🟢 Done | 2026-08-08 |
-| P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟢 Done | 2026-08-08 |
+| P4.2 | Построить вычислитель отпечатка и durable-счётчик | 🟠 Done with deviations | 2026-08-08 |
 | P4.3 | Заморозить потолок, блокирующую силу и пакет владельческого гейта | 🟢 Done | 2026-08-08 |
-| P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟠 Done with deviations | 2026-08-08 |
+| P4.4 | Включить ограничитель и квалификацию эскалации выключенными проверками | 🟡 In progress | 2026-08-08 |
 | P4.5 | Заморозить контракт среза-суждения и монотонность его влияния | 🟠 Done with deviations | 2026-08-08 |
-| P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | 🟠 Done with deviations | 2026-08-08 |
+| P4.6 | Исполнить вердикт детерминированно и воспроизвести детект на историческом корпусе | 🟡 In progress | 2026-08-08 |
 
 ## Phase P5
 
@@ -252,6 +252,14 @@ generated_by: task plan-views status
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; hook/prose deviations recorded. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · Session gpt-5.6-sol/high; df6d098b; 662 tests and validate passed; history 10/1109/87 byte-replay, 7 over-cap; classified owner-gate AVOIDABLE; write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-08 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:135 |
+| 2026-08-08 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-08 | frontier/high | plan-design · in-progress · фаза реоткрыта D142; remediation P4.2→P4.4→P4.6 доведена до DoR |
+| 2026-08-08 | frontier/high | plan-design · in-progress · D142 reopen: committed return-event identity/fixture remediation specified |
+| 2026-08-08 | frontier/high | plan-design · in-progress · D142 reopen: engine.py write-site/call-test reconciliation specified |
+| 2026-08-08 | frontier/high | plan-design · in-progress · D142 reopen: event-scoped judgements and item-tree acceptance specified |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · in-progress · D142 remediation: plan-local return_event_id и durable fixture P4.2 |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · D142: return_event_id и fixture добавлены; первый close не имел fixture diff. Item commit 48e87961; baseline 0 vs 7 over-cap не менялся. |
+| 2026-08-08 | gpt-5.6-terra/high | plan-run · closed-deviations · D142: return_event_id и fixture добавлены; первый close не имел fixture diff. Item commit 48e87961; baseline 0 vs 7 over-cap не менялся. |
 
 ## Owner Gates
 
@@ -272,6 +280,4 @@ generated_by: task plan-views status
 - P4.1: known deviation
 - P4.2: known deviation
 - P4.3: known deviation
-- P4.4: known deviation
 - P4.5: known deviation
-- P4.6: known deviation

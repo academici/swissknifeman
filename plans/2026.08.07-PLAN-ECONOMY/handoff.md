@@ -1,47 +1,60 @@
-# HANDOFF — 2026-08-08 — after P4
+# HANDOFF — 2026-08-08 — after P4.2
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P5.1
-
-## Native Codex launch-block
-
-| Параметр | Значение |
-|:--|:--|
-| Model | `gpt-5.6-sol` |
-| Thinking | `high` — заморозка контракта решения |
-| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
-| Approval/Sandbox | `-a never -s danger-full-access` |
-| Context | `continue (/clear) — ручной item` |
-| Суть | Заморозить `decision-request` v1 поверх P4 owner packet |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.1'
-```
+**Next:** manual: implementation/high
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high |
-| Context | `continue (/clear) — ручной item` |
-| Суть | Заморозить `decision-request` v1 поверх P4 owner packet |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.1` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | — |
+| Context | continue (/clear) — manual item |
+| Суть | Исполнить D142 remediation P4.4: закрепить declared `engine.py` write-site и дифференцирующий test одного вызова |
+| Команда | `—` |
 
-**Done:** P4 закрыта 🟠. P4.6 коммитом `df6d098b` добавил детерминированное потребление первой
-schema-valid независимой judgement record, полную проверку монотонности enum и `classified`
-owner-gate fixture; history replay совпал до байта на 10/1109/87. `task` validate и 662 tests
-прошли с repo `PYTHONPATH`.
+```text
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
+РЕЖИМ: remediation по D142, не redesign контракта
+ВХОД: phases/P4/P4.md → Audit P4 — 2026-08-08 finding 5; затем phases/P4/P4.4.md и research/21-p4-audit-reopen-2026-08-08.md §1, §4
+СКОУП: declared `packages/task/lib/task/plan_lint_checks/engine.py` write-site и дифференцирующий test ровно одного `lint_return_loop()`; без no-op product edit
+НЕ ТРОГАТЬ: frozen return-loop/fingerprint contracts, same_return_max=2, journal schema/исторические строки, включение gate, P5/P6, packages/artifex, baseline/corpus ради подгонки 8 != 7
+```
 
-**Remaining:** P5.1 — frozen `decision-request` v1: форма запроса/ответа, action digest,
-continuation identity и timeout policy. P4 packet/cap/contracts не пересматривать.
+## Native Codex launch-block
 
-**Sources of truth:** `phases/P5/P5.1.md` · `research/07-p5-decision-protocol-design.md` ·
-`root/contracts/return-loop-v1.md` · `root/contracts/return-judgement-v1.md` ·
-`phases/P4/P4.closed.md` · `artifacts/P4/acceptance-report.md`.
+| Параметр | Значение |
+|:--|:--|
+| Model | `gpt-5.6-terra` |
+| Thinking | `high` |
+| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
+| Approval/Sandbox | `-a never -s danger-full-access` |
+| Context | `continue (/clear) — manual item` |
+| Суть | Исполнить D142 remediation P4.4 после committed P4.2 fixture |
 
-**Open risks:** Codex hook dry-run остаётся `provenance-invalid (record-provenance-mismatch)`;
-literal `cd packages/task && unittest discover` не видит shared `core`; P4 prose claims 8 over-cap
-subjects, while baseline and replay prove 7. All are recorded evidence, not green checks.
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P4.4
+РЕЖИМ: remediation по D142, не redesign контракта
+ВХОД: phases/P4/P4.md → Audit P4 — 2026-08-08 finding 5; затем phases/P4/P4.4.md и research/21-p4-audit-reopen-2026-08-08.md §1, §4
+СКОУП: declared `packages/task/lib/task/plan_lint_checks/engine.py` write-site и дифференцирующий test ровно одного `lint_return_loop()`; без no-op product edit
+НЕ ТРОГАТЬ: frozen return-loop/fingerprint contracts, same_return_max=2, journal schema/исторические строки, включение gate, P5/P6, packages/artifex, baseline/corpus ради подгонки 8 != 7'
+```
 
-**Workarounds/Deferred/Open questions:** Use `PYTHONPATH="$PWD:$PWD/packages/task/lib"` for the
-full task suite until the package invocation is repaired. No P4 contract change is authorised.
+**Done:** P4.2 D142 remediation committed in `48e87961`: history events now expose
+plan-local `journal.jsonl:<physical-line>` IDs outside the frozen fingerprint, and the P4.2 item
+tree contains durable event-scoped judgement carriers. Focused tests, the 664-test package suite,
+and `validate.sh` passed.
+
+**Remaining:** последовательно исполнить P4.4 → P4.6, затем штатно закрыть P4 и повторить audit.
+P5/P6 остаются вне remediation scope.
+
+**Sources of truth:** `phases/P4/P4.md` → `Audit P4 — 2026-08-08` ·
+`research/21-p4-audit-reopen-2026-08-08.md` · `decisions/D142-p4-audit-reopen.md` ·
+`phases/P4/P4.2.md` · `phases/P4/P4.4.md` · `phases/P4/P4.6.md` ·
+`root/contracts/return-fingerprint-v1.md` · `root/contracts/return-loop-v1.md` ·
+`root/contracts/return-judgement-v1.md`.
+
+**Open risks:** historical baseline intentionally differs from current measurement (baseline has no
+`classified_share` and 0 vs 7 over-cap subjects); P4.2 did not change baseline/corpus. Six existing
+live-plan lint WARN remain outside D142; `P4.closed.md` is a stale generated historical snapshot and
+must be regenerated only by `plan-close` after repeat terminality.

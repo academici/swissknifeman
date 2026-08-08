@@ -39,6 +39,8 @@ class PlanLayoutTest(unittest.TestCase):
             (nested / "P1.md").write_text("# P1", encoding="utf-8")
             self.assertEqual(plan_layout.phase_path(plan, "P1"), nested / "P1.md")
             self.assertEqual(plan_layout.carrier_path(plan, "item-spec", item_id="P1.1"), nested / "P1.1.md")
+            (nested / "P1.1.md").write_text("### P1.1 — item\n", encoding="utf-8")
+            self.assertEqual(plan_layout.item_spec_paths(plan, "P1"), [nested / "P1.1.md"])
 
     def test_unknown_or_mismatched_layout_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:

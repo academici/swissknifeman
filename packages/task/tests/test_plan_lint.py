@@ -945,6 +945,47 @@ class TestConsequencesGate82(TmpPlanTestCase):
                          (diag.errors, diag.warnings))
 
 
+class TestV2ItemSplit(TmpPlanTestCase):
+    def _v2_plan(self):
+        return write_valid_plan(self.root, layout="v2")
+
+    def test_v2_item_spec_and_state_assemble_the_canonical_model(self):
+        plan_dir = self._v2_plan()
+        model, diag = _lint(plan_dir)
+        self.assertFalse(diag.errors, diag.errors)
+        fields = model["phases"]["P1"]["items"]["P1.1"]["fields"]
+        self.assertEqual(list(fields), list(REQUIRED_ITEM_FIELDS))
+        self.assertEqual(fields["Status"], "🟢 Done")
+
+    def test_v2_rejects_outcome_field_in_item_spec(self):
+        plan_dir = self._v2_plan()
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(spec.read_text(encoding="utf-8") + "**Status:** 🟢 Done\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "поле исхода «Status» запрещено"), diag.errors)
+
+    def test_v2_rejects_spec_field_in_item_state(self):
+        plan_dir = self._v2_plan()
+        state = plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(state.read_text(encoding="utf-8") + "**Intent:** лишний источник\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "поле ТЗ «Intent» запрещено"), diag.errors)
+
+    def test_v2_requires_a_state_carrier_for_every_item(self):
+        plan_dir = self._v2_plan()
+        (plan_dir / "phases" / "P1" / "P1.1.state.md").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "обязательный слепок состояния"), diag.errors)
+
+    def test_v2_rejects_an_item_file_with_another_phase_prefix(self):
+        plan_dir = self._v2_plan()
+        foreign = plan_dir / "phases" / "P1" / "P2.1.md"
+        foreign.write_text((plan_dir / "phases" / "P1" / "P1.1.md").read_text(encoding="utf-8"),
+                           encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "имеет префикс P2"), diag.errors)
+
+
 class TestValidPlan(TmpPlanTestCase):
     def test_valid_plan_ok(self):
         plan_dir = write_valid_plan(self.root)

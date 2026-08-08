@@ -116,6 +116,47 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 """
 
 
+def phase_index_md(phase_id="P1", *, handoff_text="Фаза сдана: всё зелёное."):
+    """Тонкий индекс фазы v2: без статусов и без item-блоков."""
+    return f"""# {phase_id} — Фаза раз
+
+## Phase Context
+
+Демо-фаза.
+
+## Phase Handoff
+
+{handoff_text}
+"""
+
+
+def item_spec_md(item_id="P1.1"):
+    return f"""### {item_id} — Валидация конфига
+
+**Intent:** Добавить проверку.
+**Why:** Диагностика дорогая.
+**Scope Included:** load_config().
+**Scope Excluded:** формат конфига.
+**Inputs:** список ключей.
+**Files:** lib/pkg/config.py
+**Required Reads:** 1) lib/pkg/config.py
+**Implementation Rules:** stdlib-only.
+**Code Guidance:** ручная проверка dict-ключей.
+**Validation:** bash scripts/test.sh — зелёный.
+**Deliverables:** валидация + тест.
+"""
+
+
+def item_state_md(*, item_status="🟢 Done", completion_notes="сделано, тест зелёный",
+                  known_deviations="—", escalation_needed="—"):
+    return f"""**Status:** {item_status}
+**Completion Notes:** {completion_notes}
+**Pending Work:** —
+**Known Deviations:** {known_deviations}
+**Escalation Needed:** {escalation_needed}
+"""
+
+
 def handoff_md(plan_id, *, item_id="P1.1"):
     # Next несёт launch-block (таблица `| Model |` + code-block) — канон 2.0;
     # без него green-path ловил бы warning «Next без launch-block».
@@ -267,7 +308,11 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
         phase_path = plan_dir / "phases" / "P1" / "P1.md"
         phase_path.parent.mkdir()
         (plan_dir / "decisions").mkdir()
-    phase_path.write_text(phase_md(), encoding="utf-8")
+        phase_path.write_text(phase_index_md(), encoding="utf-8")
+        (phase_path.parent / "P1.1.md").write_text(item_spec_md(), encoding="utf-8")
+        (phase_path.parent / "P1.1.state.md").write_text(item_state_md(), encoding="utf-8")
+    else:
+        phase_path.write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
     (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")

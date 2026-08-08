@@ -80,6 +80,15 @@ REQUIRED_ITEM_FIELDS = (
     "Deliverables", "Completion Notes", "Pending Work", "Known Deviations",
     "Escalation Needed",
 )
+ITEM_SPEC_FIELDS = (
+    "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
+    "Required Reads", "Implementation Rules", "Code Guidance", "Validation",
+    "Deliverables",
+)
+ITEM_STATE_FIELDS = (
+    "Status", "Completion Notes", "Pending Work", "Known Deviations",
+    "Escalation Needed",
+)
 STATUS_BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/всего", "Status")
 STATUS_BOARD_ITEMS_COL = "Items 🟢/всего"
 PHASE_STATUS_COLUMNS = ("ID", "Title", "Status", "Updated")
@@ -1633,8 +1642,135 @@ def parse_plan_md(path, diag):
     return meta, status_board
 
 
-def parse_phase_md(path, phase_id, diag):
+def _parse_v2_item_file(path, item_id, diag):
+    """Read one handwritten item spec plus its generated state carrier."""
+    lines = _read_lines(path)
+    if lines is None:
+        diag.error(path, None, "файл ТЗ item отсутствует или не читается")
+        return None
+    item_blocks = [item for item in _find_items(lines) if item[0] == item_id]
+    if len(item_blocks) != 1:
+        diag.error(path, None,
+                   f"item {item_id}: ожидается ровно один заголовок «### {item_id} — …»")
+        return None
+    actual_id, title, header_lineno, body_lines, body_start = item_blocks[0]
+    fields, duplicates = _parse_fields(body_lines, body_start, FIELD_RE)
+    for field in ITEM_SPEC_FIELDS:
+        if field not in fields:
+            diag.error(path, header_lineno, f"item {item_id}: нет поля ТЗ «{field}»")
+    for field in ITEM_STATE_FIELDS:
+        if field in fields:
+            diag.error(path, fields[field][1],
+                       f"item {item_id}: поле исхода «{field}» запрещено в файле ТЗ")
+    for field, (_value, lineno) in fields.items():
+        if field not in ITEM_SPEC_FIELDS and field not in ITEM_STATE_FIELDS:
+            diag.error(path, lineno,
+                       f"item {item_id}: поле «{field}» не входит в закрытый список файла ТЗ")
+    for name, first_ln, first_val, dup_ln, dup_val in duplicates:
+        if name in ITEM_SPEC_FIELDS:
+            diag.error(path, dup_ln,
+                       f"item {item_id}: поле ТЗ «{name}» встречается повторно "
+                       f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
+                       f"повтор {path.name}:{dup_ln} → «{_preview(dup_val)}»)")
+
+    state_path = path.with_name(path.stem + ".state.md")
+    state_lines = _read_lines(state_path)
+    if state_lines is None:
+        diag.error(state_path, None, f"item {item_id}: обязательный слепок состояния отсутствует или не читается")
+        return None
+    state_fields, state_duplicates = _parse_fields(state_lines, 1, FIELD_RE)
+    for field in ITEM_STATE_FIELDS:
+        if field not in state_fields:
+            diag.error(state_path, None, f"item {item_id}: в слепке нет поля исхода «{field}»")
+    for field in ITEM_SPEC_FIELDS:
+        if field in state_fields:
+            diag.error(state_path, state_fields[field][1],
+                       f"item {item_id}: поле ТЗ «{field}» запрещено в слепке состояния")
+    for field, (_value, lineno) in state_fields.items():
+        if field not in ITEM_STATE_FIELDS and field not in ITEM_SPEC_FIELDS:
+            diag.error(state_path, lineno,
+                       f"item {item_id}: поле «{field}» не входит в закрытый список слепка состояния")
+    for name, first_ln, first_val, dup_ln, dup_val in state_duplicates:
+        if name in ITEM_STATE_FIELDS:
+            diag.error(state_path, dup_ln,
+                       f"item {item_id}: поле исхода «{name}» встречается повторно "
+                       f"(первое {state_path.name}:{first_ln} → «{_preview(first_val)}», "
+                       f"повтор {state_path.name}:{dup_ln} → «{_preview(dup_val)}»)")
+
+    merged = {}
+    for field in REQUIRED_ITEM_FIELDS:
+        if field in fields:
+            merged[field] = fields[field]
+        elif field in state_fields:
+            merged[field] = state_fields[field]
+    return {"title": title, "header_lineno": header_lineno, "fields": merged,
+            "has_escalation": any(ESCALATION_RE.match(line)
+                                    and ESCALATION_RE.match(line).group(1) == actual_id
+                                    for line in lines),
+            "spec_lines": lines, "state_lines": state_lines}
+
+
+def _parse_phase_v2(path, phase_id, diag):
+    """Assemble a v2 phase model from its thin index, item specs, and states."""
+    lines = _read_lines(path)
+    if lines is None:
+        diag.error(path, None, "индекс фазы отсутствует или не читается")
+        return None
+    if _find_section(lines, PHASE_STATUS_HEADER_RE)[1] is not None:
+        diag.error(path, None, "Layout v2: «## Phase Status» запрещён в тонком индексе фазы")
+    if _find_items(lines):
+        diag.error(path, None, "Layout v2: item-блоки живут только в отдельных файлах ТЗ")
+
+    _, ctx_body, _ = _find_section(lines, PHASE_CONTEXT_HEADER_RE)
+    if ctx_body is None:
+        diag.error(path, None, "нет секции «## Phase Context»")
+    is_skeleton = bool(ctx_body and any(SKELETON_MARKER_RE.match(line) for line in ctx_body))
+    _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
+    if handoff_body is None:
+        diag.error(path, None, "нет секции «## Phase Handoff»")
+        handoff_text = None
+        handoff_lineno = None
+        handoff_first_line = ""
+    else:
+        handoff_text = "\n".join(handoff_body).strip()
+        handoff_lineno = handoff_start - 1
+        handoff_first_line = next((line for line in handoff_body if line.strip()), "").strip()
+
+    items = {}
+    status_table = []
+    combined_lines = list(lines)
+    try:
+        spec_paths = plan_layout.item_spec_paths(path.parents[2], phase_id)
+    except plan_layout.PlanLayoutError as exc:
+        diag.error(path, None, str(exc))
+        spec_paths = []
+    for spec_path in spec_paths:
+        item_id = spec_path.stem
+        item = _parse_v2_item_file(spec_path, item_id, diag)
+        if item is None:
+            continue
+        items.setdefault(item_id, []).append(item)
+        status, status_lineno = item["fields"].get("Status", ("", item["header_lineno"]))
+        status_table.append(({"ID": item_id, "Title": item["title"], "Status": status,
+                              "Updated": ""}, status_lineno))
+        combined_lines.extend(item["spec_lines"])
+        combined_lines.extend(item["state_lines"])
+
+    gate_lines = _lines_before_audit(combined_lines)
+    return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
+            "phase_handoff_stale": bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line)),
+            "phase_handoff_lineno": handoff_lineno, "phase_handoff_first_line": handoff_first_line,
+            "is_skeleton": is_skeleton,
+            "needs_clarification": [i + 1 for i, line in enumerate(gate_lines)
+                                    if NEEDS_CLARIFICATION_RE.search(line)],
+            "declares_orchestration": any(ORCHESTRATION_MARKER_RE.search(line)
+                                           for line in gate_lines)}
+
+
+def parse_phase_md(path, phase_id, diag, *, layout="v1"):
     """phases/Pn.md → dict со status_table/items/handoff (см. lint_plan)."""
+    if layout == "v2":
+        return _parse_phase_v2(path, phase_id, diag)
     lines = _read_lines(path)
     if lines is None:
         diag.error(path, None, "файл фазы отсутствует или не читается")
@@ -1881,7 +2017,9 @@ def lint_plan(plan_dir, diag):
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
     phase_files = {}  # phase_id -> Path
+    layout = "v1"
     try:
+        layout = plan_layout.layout_version(plan_dir)
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
         diag.error(plan_md, None, str(exc))
@@ -1904,7 +2042,7 @@ def lint_plan(plan_dir, diag):
     phases = {}
     all_items = {}  # item_id -> {"phase": pid, "title":..., "status":..., "fields":...}
     for pid, path in phase_files.items():
-        parsed = parse_phase_md(path, pid, diag)
+        parsed = parse_phase_md(path, pid, diag, layout=layout)
         phases[pid] = {"path": str(path), **(parsed or {})}
         if not parsed:
             continue

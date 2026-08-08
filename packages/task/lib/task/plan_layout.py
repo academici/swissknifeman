@@ -18,6 +18,7 @@ class PlanLayoutError(ValueError):
 _META_ROW = re.compile(r"^\|\s*Layout\s*\|\s*([^|]+)\|")
 _ITEM = re.compile(r"^(P\d+)\.(\d+)$")
 _PHASE_FILE = re.compile(r"^(P\d+)\.md$")
+_ITEM_SPEC_FILE = re.compile(r"^(P\d+)\.(\d+)\.md$")
 _CONFIG = Path(__file__).resolve().parents[2] / "configs"
 
 
@@ -116,6 +117,28 @@ def phase_path(plan_dir, phase_id) -> Path:
         return paths[phase_id]
     except KeyError as exc:
         raise PlanLayoutError(f"фаза {phase_id} не найдена в Layout {layout_version(plan_dir)}") from exc
+
+
+def item_spec_paths(plan_dir, phase_id) -> list[Path]:
+    """Return v2 item-spec files for one phase in numeric item order.
+
+    The helper owns directory enumeration so consumers do not recreate the
+    ``phases/Pn/Pn.m.md`` convention beside the carrier registry.
+    """
+    plan_dir = Path(plan_dir)
+    if layout_version(plan_dir) != "v2":
+        raise PlanLayoutError("item-spec files существуют только в Layout v2")
+    directory = phase_path(plan_dir, phase_id).parent
+    result = []
+    for path in directory.glob("*.md"):
+        match = _ITEM_SPEC_FILE.match(path.name)
+        if not match:
+            continue
+        if match.group(1) != phase_id:
+            raise PlanLayoutError(
+                f"файл ТЗ {path.name} имеет префикс {match.group(1)}, а каталог фазы — {phase_id}")
+        result.append((int(match.group(2)), path))
+    return [path for _number, path in sorted(result)]
 
 
 def plan_core_path(plan_dir) -> Path:

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- feat(task): добавить разбор тонких фазовых индексов v2 и раздельных файлов ТЗ/состояния пунктов.
+
 - feat(task): add immutable v2 decision records and deterministic generated views.
 
 - feat(task): add the versioned executable-plan layout resolver and frozen carrier contracts.

@@ -509,8 +509,9 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     phase_token = item_id.split(".")[0]
     diag = plan_lint.Diagnostics()
     plan_lint.parse_plan_md(plan_layout.plan_core_path(plan_dir), diag)  # populates diag only; not consulted here
+    layout = plan_layout.layout_version(plan_dir)
     phase_path = plan_layout.phase_path(plan_dir, phase_token)
-    phase = plan_lint.parse_phase_md(phase_path, phase_token, diag)
+    phase = plan_lint.parse_phase_md(phase_path, phase_token, diag, layout=layout)
     occurrences = phase["items"].get(item_id) if phase else None
     if not occurrences:
         raise TaskContractBuildError(item_id, "item", f"no item block found in {phase_path}")

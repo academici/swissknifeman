@@ -7,12 +7,15 @@ ready D2 result into actionable plan-lint diagnostics.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-from task import plan_weight
+from task import (plan_bundle, plan_decisions, plan_item_state, plan_layout,
+                  plan_projection, plan_status, plan_weight)
 
 
 GATE_ID = "read-budget-v1"
+BUNDLE_GATE_ID = "bundle-v1"
 
 
 def _calibration_label(measurer) -> str:
@@ -24,6 +27,10 @@ def _calibration_label(measurer) -> str:
 
 def _error(diag, path, message: str) -> None:
     diag.error(Path(path), None, f"{GATE_ID}: {message}")
+
+
+def _bundle_error(diag, path, message: str) -> None:
+    diag.error(Path(path), None, f"{BUNDLE_GATE_ID}: {message}")
 
 
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
@@ -82,8 +89,74 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
 
         for gap in item.get("admission_gaps", []):
             if gap.get("code") == "read_budget_contract_invalid":
-                _error(diag, plan_dir / "root" / "contracts" / "read-budget-v1.md",
+               _error(diag, plan_dir / "root" / "contracts" / "read-budget-v1.md",
                        f"пункт {item_id}: {gap.get('detail')}")
 
 
-__all__ = ("GATE_ID", "lint_read_budget")
+def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
+    """Verify ready v2 bundles and committed deterministic projections without rebuilding."""
+    if layout != "v2":
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
+        active_phases = {phase_id for phase_id, status in plan_layout.phase_statuses(plan_dir).items()
+                         if status == plan_status.STATUS_PROGRESS}
+    except plan_weight.PlanWeightError as exc:
+        _bundle_error(diag, plan_dir / "plan.md", f"не удалось загрузить ready-область: {exc}")
+        return
+    except plan_layout.PlanLayoutError as exc:
+        _bundle_error(diag, plan_dir / "status.md", f"не удалось определить активную фазу: {exc}")
+        return
+    active_items = [item for item in measured["items"]
+                    if item.get("admission_state") == "ready"
+                    and item["item_id"].split(".", 1)[0] in active_phases]
+    # Bundle v1 became a committed carrier in P3. A v2 plan that has not entered
+    # that producer surface must remain compatible with the pre-P3 reader path.
+    if not any(plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"]).is_file()
+               for item in active_items):
+        return
+    for item in active_items:
+        if item.get("admission_state") != "ready":
+            continue
+        item_id = item["item_id"]
+        target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
+        try:
+            expected = plan_bundle.render(plan_dir, item_id).encode("utf-8")
+            actual = target.read_bytes()
+        except plan_bundle.BundleError as exc:
+            _bundle_error(diag, target, f"пункт {item_id}: {exc}")
+            continue
+        except OSError:
+            _bundle_error(diag, target, f"пункт {item_id}: missing_entry: bundle отсутствует")
+            continue
+        if actual == expected:
+            continue
+        try:
+            current = json.loads(actual)
+            expected_model = json.loads(expected)
+            current_entries = {(e["declaration_ref"]["field"], e["declaration_ref"]["ordinal"],
+                                e["path"], str(e["selector"])) for e in current.get("entries", [])}
+            expected_entries = {(e["declaration_ref"]["field"], e["declaration_ref"]["ordinal"],
+                                 e["path"], str(e["selector"])) for e in expected_model["entries"]}
+            if current.get("declaration") != expected_model["declaration"]:
+                code = "stale_vs_spec"
+            elif expected_entries - current_entries:
+                code = "missing_entry"
+            elif current_entries - expected_entries:
+                diag.warning(target, None, f"{BUNDLE_GATE_ID}: пункт {item_id}: extraneous_entry")
+                continue
+            else:
+                code = "hash_mismatch"
+        except Exception:
+            code = "hash_mismatch"
+        _bundle_error(diag, target, f"пункт {item_id}: {code}")
+    for builder in (plan_decisions.build_views, plan_status.build_status, plan_item_state.build_states):
+        try:
+            builder(plan_dir, check=True)
+        except (plan_decisions.DecisionError, plan_status.StatusError,
+                plan_item_state.ItemStateError, plan_projection.ProjectionError) as exc:
+            _bundle_error(diag, plan_dir, f"generated view stale: {exc}")
+
+
+__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "lint_bundle_freshness", "lint_read_budget")

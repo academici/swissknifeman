@@ -8,3 +8,16 @@ The gate rejects a weight above the plan-owned D2(a) threshold, every unreadable
 mandatory input, and every file over either measured `read-limit` boundary.  Missing or invalid
 calibration, read-limit, and threshold-contract inputs are errors.  Layout v1 remains completely
 outside the gate; it has no opt-in, warning mode, or baseline.
+
+## Bundle freshness
+
+For `Layout | v2` that already carries at least one Bundle v1 in its active phase,
+`plan-lint` checks every `ready` item in that phase. It rebuilds the expected manifest
+in memory and reports declaration
+drift as `stale_vs_spec`, absent records as `missing_entry`, changed source bytes as
+`hash_mismatch`, and an unresolvable declared entry as `unresolvable_entry`. An extra
+manifest entry is `extraneous_entry` and remains a warning. The lint never writes a
+projection; use `plan-views.py bundle --item <Pn.m>` to materialize one deliberately.
+
+The same gate invokes the owners of decision, status, and item-state projections in
+their check-only mode. A broken decision supersession names both decision identifiers.

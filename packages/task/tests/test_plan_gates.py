@@ -75,6 +75,44 @@ class TestReadBudgetGate(unittest.TestCase):
                 diag = lint(plan_dir)
             self.assertTrue(any(message in row for row in diag.errors), diag.errors)
 
+    def test_clean_v2_bundle_and_views_are_fresh(self):
+        diag = lint(self.copied_fixture("plan-v2"))
+        self.assertFalse(any(plan_gates.BUNDLE_GATE_ID in row for row in diag.errors), diag.errors)
+
+    def test_future_phase_is_outside_bundle_materialization_scope(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        (plan_dir / "bundles" / "P1.1.json").unlink()
+        status = plan_dir / "status.md"
+        status.write_text(status.read_text(encoding="utf-8").replace(
+            "| P1 | Фаза раз | 0/1 | 🟡 In progress |",
+            "| P1 | Фаза раз | 0/1 | ⬜ Not started |"), encoding="utf-8")
+        diag = lint(plan_dir)
+        self.assertFalse(any("P1.1: missing_entry" in row for row in diag.errors), diag.errors)
+
+    def test_stale_fixture_reports_every_frozen_bundle_code(self):
+        diag = lint(self.copied_fixture("plan-v2-stale"))
+        messages = "\n".join((*diag.errors, *diag.warnings))
+        for code in ("missing_entry", "stale_vs_spec", "hash_mismatch",
+                     "unresolvable_entry", "extraneous_entry"):
+            with self.subTest(code=code):
+                self.assertIn(code, messages)
+        self.assertTrue(any("extraneous_entry" in row for row in diag.warnings), diag.warnings)
+        self.assertFalse(any("extraneous_entry" in row for row in diag.errors), diag.errors)
+
+    def test_unilateral_decision_link_names_both_records(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        old = plan_dir / "decisions" / "D1-fixture.md"
+        old.write_text(old.read_text(encoding="utf-8").replace(
+            "status: accepted\n", "status: superseded\n").replace(
+            "superseded_by: null\n", "superseded_by: D2\n"), encoding="utf-8")
+        (plan_dir / "decisions" / "D2-fixture.md").write_text(
+            "---\nid: D2\ndate: 2026-07-03\nstatus: accepted\nitem: P1.1\n"
+            "items: [P1.1]\nsupersedes: []\nsuperseded_by: null\n---\n"
+            "## Решение\n\nFixture.\n\n## Почему\n\nFixture.\n", encoding="utf-8")
+        diag = lint(plan_dir)
+        rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
+        self.assertTrue(any("D1" in row and "D2" in row for row in rows), rows)
+
 
 if __name__ == "__main__":
     unittest.main()

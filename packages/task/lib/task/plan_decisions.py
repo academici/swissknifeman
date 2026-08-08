@@ -141,7 +141,8 @@ def load_decisions(plan_dir) -> tuple[Decision, ...]:
         if decision.superseded_by:
             successor = by_id.get(decision.superseded_by)
             if successor is None or decision.identifier not in successor.supersedes:
-                raise DecisionError(f"{decision.identifier}: superseded_by ссылается невзаимно")
+                raise DecisionError(f"{decision.identifier} и {decision.superseded_by}: "
+                                    "связь superseded_by задана невзаимно")
     return decisions
 
 

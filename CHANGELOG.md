@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: layout-v2 Bundle v1 теперь fail-closed проверяется для ready item'ов.**
+  `plan-lint` различает declaration drift, missing/extraneous entries, changed input
+  bytes и unresolved declaration, не пересобирает artifact и byte-checks decision,
+  status и item-state projections (`2026.08.07-PLAN-ECONOMY` P3.4, D133–D135).
+
 - **`task`: layout-v2 планы теперь hard-fail проверяются по бюджету обязательного чтения D2.**
   Новый shared `plan_gates` использует единственные владельцы веса и admission, называет пункт,
   численный порог, qualified calibration и отдельный нечитаемый файл; v1-планы молчат

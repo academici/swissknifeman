@@ -17,6 +17,7 @@ BUNDLE_VERSION = "1.0.0"
 GENERATOR_VERSION = "1.0.0"
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _SECTION = re.compile(r"§\s*(\d+(?:\.\d+)*)")
+_DECISION = re.compile(r"\bD(\d+)(?:[–-]D?(\d+))?\b")
 _SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "bundle-v1.schema.json"
 
 
@@ -135,6 +136,26 @@ def _selectors(raw: str) -> list[dict]:
             or [{"kind": "whole_file"}])
 
 
+def _decision_sources(raw: str, plan_dir: Path) -> list[Path]:
+    """Resolve explicitly named D-records, including compact D1–D3 ranges."""
+    try:
+        directory = plan_layout.carrier_glob(plan_dir, "decision-record").parent
+    except plan_layout.PlanLayoutError as exc:
+        raise BundleError(str(exc)) from exc
+    sources = []
+    for match in _DECISION.finditer(raw):
+        start = int(match.group(1))
+        end = int(match.group(2) or start)
+        if end < start:
+            raise BundleError(f"unresolvable_entry: {raw}")
+        for number in range(start, end + 1):
+            matches = sorted(directory.glob(f"D{number}-*.md"))
+            if len(matches) != 1:
+                raise BundleError(f"unresolvable_entry: {raw}")
+            sources.append(matches[0])
+    return sources
+
+
 def _selected_bytes(raw: bytes, selector: dict, path: Path) -> bytes:
     if selector["kind"] == "whole_file":
         return raw
@@ -166,15 +187,20 @@ def model(plan_dir, item_id: str) -> dict:
     declarations, entries = {"inputs": [], "required_reads": []}, []
     for field, key in (("Inputs", "inputs"), ("Required Reads", "required_reads")):
         for ordinal, raw in enumerate(_raw_entries(fields.get(field, ""), field), 1):
-            candidates = plan_weight.path_candidates(raw)
-            if not candidates:
-                raise BundleError(f"unresolvable_entry: {raw}")
-            for token, _declared in candidates:
+            sources = []
+            for token, _declared in (candidate for candidate in plan_weight.path_candidates(raw)
+                                     if candidate[1]):
                 source = plan_weight.resolve_candidate(token, (plan_dir, repo_root))
                 if source is None:
                     raise BundleError(f"unresolvable_entry: {raw}")
+                sources.append((source, _selectors(raw)))
+            sources.extend((source, [{"kind": "whole_file"}])
+                           for source in _decision_sources(raw, plan_dir))
+            if not sources:
+                raise BundleError(f"unresolvable_entry: {raw}")
+            for source, selectors in sources:
                 source_raw = source.read_bytes()
-                for selector in _selectors(raw):
+                for selector in selectors:
                     selected = _selected_bytes(source_raw, selector, source)
                     unit = {"ordinal": ordinal, "raw": raw, "path": _relative(source, plan_dir, repo_root),
                             "selector": selector}

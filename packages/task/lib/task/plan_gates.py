@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from pathlib import Path
 
-from task import (plan_bundle, plan_decisions, plan_downstream, plan_item_state, plan_layout,
+from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
                   plan_projection, plan_requests, plan_returns, plan_status, plan_weight)
 
 
@@ -20,7 +21,6 @@ BUNDLE_GATE_ID = "bundle-v1"
 PATH_GATE_ID = "read-path-v1"
 RETURN_LOOP_GATE_ID = "return-loop-v1"
 DECISION_QUEUE_GATE_ID = "decision-queue-v1"
-_META_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$")
 
 
 def _calibration_label(measurer) -> str:
@@ -46,29 +46,12 @@ def _return_error(diag, path, message: str) -> None:
     diag.error(Path(path), None, f"{RETURN_LOOP_GATE_ID}: {message}")
 
 
-def _return_loop_enabled(plan_dir: Path) -> bool:
-    """The v1 limiter is inert until a plan deliberately opts in via Meta."""
+def _active_items(plan_dir: Path, check: str, diag, gate: str) -> set[str]:
     try:
-        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return False
-    for line in lines:
-        match = _META_ROW.match(line)
-        if match and match.group(1).strip() == "Return Loop Gate":
-            return match.group(2).strip() == "v1"
-    return False
-
-
-def _decision_queue_enabled(plan_dir: Path) -> bool:
-    try:
-        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return False
-    for line in lines:
-        match = _META_ROW.match(line)
-        if match and match.group(1).strip() == "Decision Queue Gate":
-            return match.group(2).strip() == "v1"
-    return False
+        return plan_gate_activation.active_items(plan_dir, check)
+    except plan_gate_activation.ActivationError as exc:
+        diag.error(plan_dir / "plan.md", None, f"{gate}: {exc}")
+        return set()
 
 
 def _return_evidence(plan_dir: Path) -> tuple[dict[str, dict], list[tuple[Path, str]]]:
@@ -86,9 +69,12 @@ def _return_evidence(plan_dir: Path) -> tuple[dict[str, dict], list[tuple[Path, 
 
 
 def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
-    if layout != "v2" or not _return_loop_enabled(Path(plan_dir)):
+    if layout != "v2":
         return
     plan_dir = Path(plan_dir)
+    active = _active_items(plan_dir, "task.plan_gates._lint_return_escalation_qualification", diag, RETURN_LOOP_GATE_ID)
+    if not active:
+        return
     try:
         projection = plan_returns.returns(plan_dir)
         evidence, malformed = _return_evidence(plan_dir)
@@ -97,7 +83,10 @@ def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
         return
     for path, message in malformed:
         _return_error(diag, path, f"RETURN_LOOP_QUALIFICATION_REQUIRED: {message}")
-    for digest, occurrences in projection["counts"].items():
+    fingerprints = [record for record in projection["fingerprints"]
+                    if record["tuple"]["subject"] in active]
+    counts = Counter(record["digest"] for record in fingerprints)
+    for digest, occurrences in counts.items():
         row = evidence.get(digest)
         if row is None:
             _return_error(diag, plan_dir / "findings",
@@ -105,7 +94,7 @@ def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
             continue
         fields = row["fields"]
         expected = "new" if occurrences == 1 else "repeat"
-        subject = next(record["tuple"]["subject"] for record in projection["fingerprints"]
+        subject = next(record["tuple"]["subject"] for record in fingerprints
                        if record["digest"] == digest)
         if (fields.get("qualification") != expected or int(fields["occurrences"]) != occurrences
                 or fields.get("item") != subject):

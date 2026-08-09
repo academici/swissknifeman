@@ -1,28 +1,34 @@
-# HANDOFF — 2026-08-09 — after P6.4
+# HANDOFF — 2026-08-09 — after P6.5
 
-**Next:** manual: task:plan-run 2026.08.07-PLAN-ECONOMY P6.5
+**Next:** design-item: task:plan-design 2026.08.07-PLAN-ECONOMY P6.5
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | fresh (`/clear`) |
-| Суть | Продолжить следующий manual item фазы P6. |
-| Команда | `task:plan-run 2026.08.07-PLAN-ECONOMY P6.5` |
+| Context | cold-start-root — capability-missing |
+| Суть | Исправить Scope/Files и Required Reads P6.5 после модульного split `plan_lint`. |
+| Команда | `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.5` |
+
+Provider-neutral plan-protocol launch-block:
 
 ```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.5'
+task:plan-design 2026.08.07-PLAN-ECONOMY P6.5
 ```
 
-**Done:** P6.4 снял временные Meta activation fields: реестр задаёт дату и journal boundary,
-а owner status выдаёт per-item Updated.
+Native Codex launch-block:
 
-**Remaining:** P6.5–P6.9.
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.5'
+```
 
-**Sources of truth:** `packages/task/lib/task/plan_gate_activation.py` ·
-`packages/task/configs/lint-check-dispositions.json` · `phases/P6/P6.4.md`.
+**Done:** P6.5 прошёл routing и Task Contract pre-mutation, но остановлен до implementation; terminal escalation и return-evidence записаны, v2 state/status/decisions/bundle регенерированы.
 
-**Open risks:** четыре would-fail/e2e fixture P6.4 остаются не материализованы; item закрыт с отклонением.
+**Remaining:** В `P6.5` заменить устаревший implementation site `packages/task/lib/task/plan_lint.py` на фактический owning module `packages/task/lib/task/plan_lint_checks/conflicts.py`, синхронизировать `Files`/Required Reads/anchors и вернуть item в исполнимое состояние.
 
-**Workarounds/Deferred/Open questions:** workaround отсутствует · deferred: negative fixture corpus P6.4 · open_questions: —.
+**Sources of truth:** `plan.md` §3 Routing · `phases/P6/P6.5.md` · `phases/P6/P6.5.state.md` · `findings/P6.5-return-evidence-2026-08-09.md` · `journal.jsonl`.
+
+**Open risks:** Документированный writer `packages/task/scripts/plan-returns.py` отсутствует; return-evidence квалифицирован как `unqualifiable`. Генератор closure не применим, пока P6 нетерминальна.
+
+**Workarounds/Deferred/Open questions:** workarounds — нет · deferred — реализация P6.5 до ремонта item-spec · open_questions — должен ли owning-source repair также обновить plan-run/plan-exec текст, всё ещё называющий отсутствующий writer.

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: c7dc6add0f1a5473c899198c8987c70158209c3586c8093da6357f81a36b8a0c
+inputs_sha256: 6cb5027bc2d8a86c580f9bb79e34d2db7554f211d4ee7dd57fe256690f3c280c
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.30.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 2/9 | ⬜ Not started |
+| P6 | Раскатать протокол и проверить критерий | 2/9 | 🔴 Blocked |
 
 ## Phase P0
 
@@ -107,7 +107,7 @@ generated_by: task plan-views status
 | P6.2 | Научить закрывающие команды производить записи и снять переходное правило | 🟢 Done | 2026-08-09 |
 | P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | 🟠 Done with deviations | 2026-08-09 |
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🟠 Done with deviations | 2026-08-09 |
-| P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | ⬜ Not started | — |
+| P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🔴 Blocked | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | ⬜ Not started | — |
 | P6.7 | Предобъявить протокол приёмки | ⬜ Not started | — |
 | P6.8 | Исполнить приёмку двумя руками и вынести вердикт | ⬜ Not started | — |
@@ -326,6 +326,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · escalated · P6.4 blocked: global status Updated prevents specified forward-only activation; plan-design required. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Владелец поручил локально исправить carrier даты без plan-design. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · Включены четыре gate; fixture e2e deferred. |
+| 2026-08-09 | gpt-5.6-sol/xhigh | plan-run · escalated · Required Read/Files still name plan_lint.py, but --conflicts is owned by undeclared plan_lint_checks/conflicts.py; plan-design must repair P6.5 scope. |
 
 ## Owner Gates
 
@@ -356,3 +357,4 @@ generated_by: task plan-views status
 - P6.2: known deviation
 - P6.3: known deviation
 - P6.4: known deviation
+- P6.5: escalation

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`task`: пять protocol commands теперь выбирают declared read path по `Layout`.** Планы без
+  поля сохраняют literal v1-ветвь; `Layout: v2` читает ровно plan core, phase context, item spec,
+  digest-qualified bundle и fresh item state, без обязательного `handoff.md`. Codex-проекция
+  регенерирована и проверена; Claude остаётся `pending-provider` с явным replay
+  (`2026.08.07-PLAN-ECONOMY` P6.1).
+
 - **`task`: очередь решений P5.4 теперь принуждает frozen contract fail-closed.** Semantic outcome
   единообразно удерживает authorization auto-answer в owner/join pending, frozen bounds считают
   substantive options отдельно от mandatory, а exact retry восстанавливает journal и все views без

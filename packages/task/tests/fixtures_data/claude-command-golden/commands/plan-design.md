@@ -10,6 +10,23 @@ effort: high
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
 
+## Путь чтения существующего плана
+
+Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`; по
+дереву файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution
+Rules, §3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный
+item) → Required Reads в объявленном порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+
+1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
+2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
+3. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
+4. `plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs;
+5. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state.
+
+В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
+fresh item state. Повторное чтение запрещено; режим `new` не имеет существующего plan input и
+начинается с брифа владельца.
+
 ## Режимы (по $ARGUMENTS)
 
 1. **`new <название>`** — новый план: после анализа брифа оцени объём и объяви дизайн-бюджет

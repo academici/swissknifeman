@@ -7,6 +7,22 @@ effort: xhigh
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (Opus/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 
+## Путь чтения по объявленной раскладке
+
+Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву файлов раскладка НЕ выводится.
+`Layout` отсутствует → v1: `plan.md` (Context, Execution Rules, §3 Routing и Status Board) →
+`handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) → Required Reads в объявленном
+порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+
+1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
+2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
+3. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
+4. `plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs;
+5. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state.
+
+В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
+fresh item state. Повторное чтение запрещено.
+
 **Compiler (P2.7/P2.11).** `task:plan-exec`'s Pre-mutation (шаг 2) И Pre-final (шаг 7, штатный
 путь самозакрытия) — а для item'ов, закрытых реконсиляцией, `task:plan-close`'s Pre-final (шаг
 4) — ИСПОЛНЯЕМЫЕ write-site (не проза): каждый закрытый item обязан нести в Completion Notes

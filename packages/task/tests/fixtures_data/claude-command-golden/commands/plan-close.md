@@ -9,6 +9,22 @@ effort: low
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
 
+## Путь чтения по объявленной раскладке
+
+Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву файлов раскладка НЕ выводится.
+`Layout` отсутствует → v1: `plan.md` (Context, Execution Rules, §3 Routing и Status Board) →
+`handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) → Required Reads в объявленном
+порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+
+1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
+2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
+3. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
+4. `plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs;
+5. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state.
+
+В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
+fresh item state. Повторное чтение запрещено.
+
 **Правила handoff.Next (любой режим, записывающий handoff):**
 - **Заголовок — ДВЕ формы** (иная = ERROR `plan-lint`, D30): `# HANDOFF — <ISO-дата> —
   after Pn.m` — закрыт item; `# HANDOFF — <ISO-дата> — after Pn` — закрыта/проаудирована/

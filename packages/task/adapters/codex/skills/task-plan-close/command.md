@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:7697b4063eac02cef54529eab5e0022e02d61e4241658cdf9f0d5b74b3228236
+Canonical SHA-256: sha256:ff551c80881645f56a3a5b883257fd1ff8d6df79d5f8f192bdaf7c1fa223adb5
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -22,6 +22,22 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 Модель/effort запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
+
+## Путь чтения по объявленной раскладке
+
+Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву файлов раскладка НЕ выводится.
+`Layout` отсутствует → v1: `plan.md` (Context, Execution Rules, §3 Routing и Status Board) →
+`handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) → Required Reads в объявленном
+порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+
+1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
+2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
+3. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
+4. `plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs;
+5. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state.
+
+В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
+fresh item state. Повторное чтение запрещено.
 
 **Правила handoff.Next (любой режим, записывающий handoff):**
 - **Заголовок — ДВЕ формы** (иная = ERROR `plan-lint`, D30): `# HANDOFF — <ISO-дата> —

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:bf844e475b3cf55ec4ac4ce715a15692ac53b21f315c585ff9696f30aa3cddf2
+Canonical SHA-256: sha256:1a31e981d98ef95cb46765c4c511baa2aaec835e9b8d324491bf25e61fb78cb3
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -23,6 +23,23 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
+
+## Путь чтения существующего плана
+
+Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`; по
+дереву файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution
+Rules, §3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный
+item) → Required Reads в объявленном порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+
+1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
+2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
+3. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
+4. `plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs;
+5. `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state.
+
+В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
+fresh item state. Повторное чтение запрещено; режим `new` не имеет существующего plan input и
+начинается с брифа владельца.
 
 ## Режимы (по $ARGUMENTS)
 

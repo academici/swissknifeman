@@ -29,6 +29,7 @@ item'ом и покрыты кейсами `TestT1CollectorVectors`, но пол
 Запуск: cd packages/task && python3 -m unittest discover -s tests
 """
 import ast
+import json
 import re
 import unittest
 from pathlib import Path
@@ -407,6 +408,48 @@ class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
         bodies."""
         self.assertIn("spec's FORM", self.skill_en)
         self.assertIn("ФОРМЫ спеки", self.skill_ru)
+
+
+class TestCommandReadPathProjection(unittest.TestCase):
+    """P6.1/D36: five command bodies must project both declared layouts.
+
+    The test intentionally requires the v2 branch that did not exist in the
+    pre-P6.1 command bodies.  It therefore went RED against the old text before
+    the prose and provider projections were changed.
+    """
+
+    COMMANDS = ("plan-design.md", "plan-exec.md", "plan-run.md", "plan-close.md", "plan-audit.md")
+    V2_SLOTS = (
+        "`plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing",
+        "`plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context",
+        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item",
+        "`plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs",
+        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state",
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+        cls.spec = json.loads((cls.repo_root / "packages/task/configs/read-path-v1.spec.json")
+                              .read_text(encoding="utf-8"))
+
+    def test_spec_keeps_both_declared_layouts(self):
+        self.assertEqual(set(self.spec["layout_versions"]), {"v1", "v2"})
+        self.assertEqual(len(self.spec["paths"]["executor"]["slots"]), 5)
+        self.assertEqual(
+            self.spec["predicates"]["executor_handoff_exclusion"],
+            "no executor slot carrier id is handoff",
+        )
+
+    def test_every_command_has_literal_layout_branch(self):
+        for command in self.COMMANDS:
+            with self.subTest(command=command):
+                text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
+                self.assertIn("`Layout` отсутствует → v1", text)
+                self.assertIn("`Layout: v2` →", text)
+                self.assertIn("`handoff.md` НЕ входит в обязательный путь", text)
+                for slot in self.V2_SLOTS:
+                    self.assertIn(slot, text)
 
 
 if __name__ == "__main__":

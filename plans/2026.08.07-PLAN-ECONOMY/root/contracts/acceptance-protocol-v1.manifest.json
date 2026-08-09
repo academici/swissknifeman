@@ -1,13 +1,20 @@
 {
   "$schema": "urn:swissknifeman:task:acceptance-protocol:v1",
   "contract_id": "acceptance-protocol",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "status": "frozen",
   "frozen_by": "2026.08.07-PLAN-ECONOMY P6.7",
   "measurement": {
     "command": "python3 packages/task/scripts/plan-weight.py plan \"$ACCEPTANCE_PLAN_DIR\" --json",
     "tool": "packages/task/scripts/plan-weight.py",
     "tool_schema": "plan-weight-v1",
+    "implementation": {
+      "commit": "c0ee730c",
+      "module": "packages/task/lib/task/plan_weight.py",
+      "module_sha256": "0a119876ac69a2e3e73a459f5b02741ef085d1b4af1f81fecb0d5ff51e8c1c07",
+      "launcher_sha256": "c678c28268759b55d455e7422f360f02bc9fcd1983a4216dd4447895c2428ce1",
+      "decision": "D153"
+    },
     "artifact_keys": [
       "schema",
       "calibration",
@@ -145,6 +152,14 @@
       "markdown_sha256": "a3faa776d1fd659f1751a0d1c132bffcaec9add230cb087fa54417a50949d8c0",
       "manifest_sha256": "9ec184b15e6319c0f2af299a649f77f2a59c249a87206d590e866ed5c2cf530b",
       "commit": "48522653"
+    },
+    {
+      "version": "1.1.0",
+      "verdict": "NOT-RUN",
+      "report": "findings/P6.8-retry-preflight-2026-08-09.md",
+      "markdown_sha256": "89ad3e23e7050534c1c2a9eb86b7f6d27ea178e48c84b6be95d70f702b571d9d",
+      "manifest_sha256": "ff4926e7e98a7dbf979791fa44d55531326439e32b3a984881374c58b22fb476",
+      "commit": "536a1b3e"
     }
   ],
   "thresholds": {

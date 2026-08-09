@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: acceptance protocol получил repair-pinned v1.1.1 identity.**
+  Successor сохраняет threshold/scope/reducer/arms/canary v1.1.0, пинует exact five-slot
+  implementation `c0ee730c` и хранит v1.0.0 RED вместе с v1.1.0 NOT-RUN
+  (`2026.08.07-PLAN-ECONOMY` P6.7, D153).
+
 - **`task`: `plan-weight` измеряет объявленный executor path для обеих раскладок.**
   Layout v1 сохраняет legacy `plan → handoff → phase → Required Reads`; layout v2
   fail-closed проверяет свежие bundle/state, считает digest-qualified selections и

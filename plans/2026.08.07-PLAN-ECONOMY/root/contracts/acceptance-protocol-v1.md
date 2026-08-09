@@ -1,24 +1,31 @@
-# Acceptance Protocol v1.1
+# Acceptance Protocol v1.1.1
 
 **Contract ID:** `acceptance-protocol`
-**Version:** `1.1.0`
+**Version:** `1.1.1`
 **Status:** frozen
 **Frozen by:** `2026.08.07-PLAN-ECONOMY P6.7`
 **Machine source of truth:**
 [`acceptance-protocol-v1.manifest.json`](acceptance-protocol-v1.manifest.json)
 
-Version 1.1.0 is frozen before the repeated acceptance arms or session canary are run. It preserves
-the thresholds, qualified unit, scope traversal, arms, anti-displacement controls, roles,
-confounds, and exact canary branches from v1.0.0. Only deterministic stage-aware adjudication and
-its provenance are added after owner decision D150.
+Version 1.1.1 is frozen before the repeated acceptance arms or session canary are run. It preserves
+the thresholds, qualified unit, scope traversal, admission reducer, arms, anti-displacement
+controls, roles, confounds, and exact canary branches from v1.1.0. The only patch is measurement
+implementation provenance after the owner-approved D152 repair, recorded by D153.
 
-## Prior result
+## Prior results
 
 Version v1.0.0 remains immutable and **RED**. Its report is
 `findings/12-p6-acceptance-measurement.md`; the frozen Markdown SHA-256 is
 `a3faa776d1fd659f1751a0d1c132bffcaec9add230cb087fa54417a50949d8c0` and the manifest SHA-256 is
 `9ec184b15e6319c0f2af299a649f77f2a59c249a87206d590e866ed5c2cf530b` at commit `48522653`.
 This version neither renames that result nor recomputes it under the new reducer.
+
+Version v1.1.0 remains immutable and **NOT-RUN** as an acceptance attempt. Its preflight proved
+that the pinned production implementation measured the legacy path rather than the declared five
+layout-v2 slots, so arm A was prohibited before evidence capture. Its report is
+`findings/P6.8-retry-preflight-2026-08-09.md`; the frozen Markdown SHA-256 is
+`89ad3e23e7050534c1c2a9eb86b7f6d27ea178e48c84b6be95d70f702b571d9d` and the manifest SHA-256 is
+`ff4926e7e98a7dbf979791fa44d55531326439e32b3a984881374c58b22fb476` at commit `536a1b3e`.
 
 ## Measurement
 
@@ -29,6 +36,11 @@ protocol. The independent whole-file byte and rendered-read token limits come fr
 Their artifact paths, content hashes, and the read-path specification hash are frozen in the
 manifest; a different provider, model, calibration, path specification, or command is a different
 protocol version.
+
+Version 1.1.1 additionally pins production module commit `c0ee730c`, module SHA-256
+`0a119876ac69a2e3e73a459f5b02741ef085d1b4af1f81fecb0d5ff51e8c1c07`, and launcher SHA-256
+`c678c28268759b55d455e7422f360f02bc9fcd1983a4216dd4447895c2428ce1`. This identifies the
+implementation without changing the command, formulas, scope, or adjudication.
 
 The caller supplies only `ACCEPTANCE_PLAN_DIR`. Raw command output is retained with each arm.
 Derived acceptance fields use the formulas in `measurement.derived_metrics`; they are not selected

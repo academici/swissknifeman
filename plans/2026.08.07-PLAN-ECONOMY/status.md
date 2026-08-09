@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 0126ea11720a53fd7639da273a3069eb5a2ae030ef965299fcba6fa1cb274e00
+inputs_sha256: ff64cfa5b6b651ceec781a6cd2ae817a0711ffc4f46e47f282e69ee0c995ed81
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 0.32.0 |
+| Version | 0.33.0 |
 | Status | 🟡 In progress |
 | Last Updated | 2026-08-09 |
 
@@ -109,7 +109,7 @@ generated_by: task plan-views status
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🟠 Done with deviations | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
-| P6.7 | Перезаморозить stage-aware протокол приёмки v1.1.0 | 🟠 Done with deviations | 2026-08-09 |
+| P6.7 | Заморозить acceptance-protocol v1.1.1 с repair pin | 🟡 In progress | 2026-08-09 |
 | P6.8 | Исполнить приёмку двумя руками и вынести вердикт | 🟡 In progress | 2026-08-09 |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
 
@@ -349,6 +349,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · Owner выбрал repair-and-refreeze; D152 forward-only открывает exact five-slot layout-v2 measurement repair. Deviation: frontier/high исполняет implementation/high item в текущей owner-directed сессии. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (7ea35255). D152 repair start. Deviation: frontier/high overshoots implementation/high because owner directed continuation in the current session. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P2.10 c0ee730c: v1/v2 tests 59 OK; full unittest 739 OK; exact five-slot field run exposed 24 ready failures, so repo plan-lint remains RED. Task Contract pre_mutation/pre_final allow; frontier/high>implementation/high. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · D153 redetails P6.7 for acceptance v1.1.1 identity-only repair pin; predicates and prior results remain immutable. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (178ef877). Freeze acceptance v1.1.1 identity-only successor per D153. |
 
 ## Owner Gates
 
@@ -382,4 +384,3 @@ generated_by: task plan-views status
 - P6.4: known deviation
 - P6.5: known deviation
 - P6.6: known deviation
-- P6.7: known deviation

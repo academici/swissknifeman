@@ -7,7 +7,7 @@
 | Plan ID | 2026.08.07-PLAN-ECONOMY |
 | Title | Экономный протокол планов для больших многофазных проектов |
 | Document Type | Executable Master Plan |
-| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137; `task:plan-design 2026.08.07-PLAN-ECONOMY P4`, RED-audit reopen D142, 2026-08-08; `task:plan-design 2026.08.07-PLAN-ECONOMY P5`, RED-audit reopen D144 и повторный RED-аудит reopen D146, 2026-08-09) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
+| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137; `task:plan-design 2026.08.07-PLAN-ECONOMY P4`, RED-audit reopen D142, 2026-08-08; `task:plan-design 2026.08.07-PLAN-ECONOMY P5`, RED-audit reopen D144 и повторный RED-аудит reopen D146, 2026-08-09; `task:plan-design 2026.08.07-PLAN-ECONOMY P6.2`, DoR-refinement и provenance/state repairs D147–D148, 2026-08-09) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
 | Repository | swissknifeman |
 | Related Packages | task (владелец протокола и команд) · skiller (раздача скилла `plan-protocol` по флоту) · core · harness (несёт потребителя раскладки на живом пути гейта прогона — `lib/harness/run/gate.py`, D85) |
 | Execution Mode | contract-first, phase-first |
@@ -85,7 +85,6 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 - Новая root-сессия допустима только на измеренном контекстном/провайдерском hard boundary,
   неразрешённой владельческой паузе без resume или целостном независимом аудите плана.
 - После закрытия item/фазы полностью перезаписать `handoff.md` и append-only обновить `journal.jsonl`.
-- **Переходное правило Layout v2 (до P6):** закрытие пункта фиксируется записью в `journal.jsonl`, находкой или решением при необходимости и регенерацией видов; поля исхода в файле ТЗ запрещены и ловятся линтером.
 
 ## 3. Routing
 

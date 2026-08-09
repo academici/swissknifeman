@@ -273,3 +273,15 @@ item-scoped finding, поэтому история журнала и его сх
 или исторические строки; не трогать P5/P6, `packages/artifex`, historical baseline/corpus и не
 подгонять их под расхождение prose `8 != 7`. Техническая декомпозиция закреплена D142 и
 `research/21-p4-audit-reopen-2026-08-08.md`.
+
+## 2026-08-09 — детализация P6.2 до DoR
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.2`.
+
+Режим — refinement одного item без изменения его frozen contracts и implementation scope.
+Обязательный v2 bundle должен материализоваться из конечных digest-qualified inputs; повреждённый
+layout-v2 carrier D91 восстанавливается forward-only через D147 по уже принятому прецеденту D136.
+Обнаруженное смешение `plan-design` provenance с execution-state исправляется в scope P6.2 по
+D148 без расфриза journal/item-state schemas; текущий run возвращает execution-state append-only
+terminal correction, а не переписыванием журнала или generated view.
+Новых owner decisions, provider-parity claims и разрешения на исполнение P6.2 этот вход не даёт.

@@ -9,6 +9,12 @@ mandatory input, and every file over either measured `read-limit` boundary.  Mis
 calibration, read-limit, and threshold-contract inputs are errors.  Layout v1 remains completely
 outside the gate; it has no opt-in, warning mode, or baseline.
 
+For Layout v2, the measured executor path is exactly `plan-core`, `phase-context`, `item-spec`,
+`item-input-bundle`, and `item-state`, followed by the digest-qualified selections declared by the
+bundle. `handoff.md` is not an executor carrier in v2. Bundle and state projections must be
+byte-fresh before measurement; a stale projection, a source/selection digest mismatch, or an
+unresolvable selection fails closed.
+
 ## Bundle freshness
 
 For `Layout | v2` that already carries at least one Bundle v1 in its active phase,

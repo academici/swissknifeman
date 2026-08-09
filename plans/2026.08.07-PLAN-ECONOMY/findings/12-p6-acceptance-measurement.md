@@ -92,3 +92,68 @@ count, and per-item maximum together.
 The acceptance protocol requires escalation. `2026.08.07-PLAN-ECONOMY P6.9` must not execute and
 the ARTIFEX pause must remain. A later continuation needs a separately authorized instance repair
 or a new acceptance-contract version; retrofitting the frozen threshold or exclusions is invalid.
+
+## Attempt v1.1.1 — exact five-slot repair-pinned measurement
+
+This is an internal self-hosted `n=1` result. It establishes neither external validity nor
+population reliability. Frozen v1.1.1 was checked before execution: Markdown SHA-256
+`2491a99f9b52d807f1e2871e7e6a2cdd5f7497a3c725a78947b7247d4a859748`, manifest SHA-256
+`42b834d84c95178cb971aa26c09588ac97639b9d831111b3a8bd74a5b0ef4b01`, implementation commit
+`c0ee730c`. The existing report prefix was preserved byte-for-byte (4,866 bytes, SHA-256
+`6bfc5a14c492f6ead87435c7c34dfa3d39b2c5ff1a9a492b4eb16c441f123ff0`).
+
+### Command and raw evidence
+
+The manifest command was executed with only `ACCEPTANCE_PLAN_DIR` supplied:
+
+```bash
+export ACCEPTANCE_PLAN_DIR='plans/2026.08.07-PLAN-ECONOMY'
+python3 packages/task/scripts/plan-weight.py plan "$ACCEPTANCE_PLAN_DIR" --json
+```
+
+Raw output is `artifacts/P6/acceptance-arm-a-migrated-v1.1.1.json`: 214,722 bytes,
+SHA-256 `48c00b9a0dca8e238627d5d7193527379957831935c33fae6e9c2185ecb7ade8`, schema
+`plan-weight-v1`. Observed roles are `plan-core`, `phase-context`, `item-spec`,
+`item-input-bundle`, `bundle-input`, and `item-state`; `handoff` is absent.
+
+### Arm A — migrated plan
+
+| Metric | Observed | Frozen condition | Result |
+|:--|--:|:--|:--|
+| admission coverage | historical 17 · pending 0 · ready 30 | report separately | PASS |
+| ready failures | 30/30 | 0 | **FAIL** |
+| maximum item weight | 142,562 (`P6.5`) | ≤100,000 | **FAIL** |
+| aggregate | 1,349,223 | current < 7,089,706 baseline | PASS |
+| aggregate reduction | 5,740,483 (80.969267%) | real reduction | PASS |
+| gaps | 88: missing 30 · unresolved 56 · oversized 2 | ready gaps 0 | **FAIL** |
+| pending producers | 0 | 0 for final pass | PASS |
+
+Failed ready ids: `P2.8`, `P2.9`, `P2.10`, `P3.1`–`P3.7`, `P4.1`–`P4.6`,
+`P5.1`–`P5.5`, `P6.1`–`P6.9`. Exact traversal exposed absent historical/post-migration
+bundles, stale generated bundle/state carriers, two oversized selected inputs, and D2(a)
+violations. In particular the execution-start journal event made generated item states stale;
+freshness is a frozen hard predicate, so this observation is retained as failure rather than
+silently regenerated after seeing the raw result.
+
+Reducer result: at least one ready failure exists, therefore arm A = **`fail`**. Precedence stops
+before the pending branch or all-ready-green branch.
+
+### Arm B and session canary
+
+Not run. Frozen `on_failure=escalate` and D154 prohibit creating a fresh plan, arm-B artifact, or
+`session-canary-results.json` after arm-A fail. Their absence is the required fail-fast outcome,
+not a green or skipped measurement.
+
+### Anti-displacement answer
+
+> Could this have passed exclusively by splitting, moving, caching, deferring, or excluding work?
+
+**No pass occurred.** The complete five-slot traversal retains aggregate, maximum, per-file and
+freshness failures together. Aggregate reduction cannot compensate for 30 ready failures, so no
+split/move/cache/exclusion interpretation can turn this attempt into pass.
+
+### Final verdict and downstream gate
+
+`2026.08.07-PLAN-ECONOMY P6.8` attempt v1.1.1 verdict is **`fail`**. P6.9 must remain
+unexecuted, the ARTIFEX pause remains, and no arm-B/canary claim exists. Threshold, unit, scope,
+admission states, arms and expected branches were not changed after observation.

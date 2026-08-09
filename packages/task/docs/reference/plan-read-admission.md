@@ -26,6 +26,20 @@ allowlist или baseline-exception нет.
 
 ## Вывод и API
 
+### Обязательный путь по раскладке
+
+`plan-weight item` выбирает путь только по объявленному `Layout`:
+
+- v1 сохраняет legacy-порядок `plan → handoff → phase → Required Reads`;
+- v2 измеряет ровно пять carrier-ролей `plan-core → phase-context → item-spec →
+  item-input-bundle → item-state`. `handoff.md` в executor path v2 не входит.
+
+Для v2 инструмент сначала проверяет byte-freshness generated bundle и state. Затем он читает
+только перечисленные bundle selections, сверяет digest исходника и выбранного фрагмента и считает
+их как `bundle-input`. Повтор одного источника с тем же selector не удваивает вес; разные selectors
+одного источника остаются разными единицами чтения. Stale carrier, digest mismatch или
+неразрешимый selection дают fail-closed gap, а не нулевой вес.
+
 ```bash
 python3 packages/task/scripts/plan-weight.py item plans/<PLAN-ID> Pn.m --json
 ```

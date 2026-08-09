@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: exact five-slot acceptance v1.1.1 завершилась arm-A fail.**
+  Repair-pinned measurement сохранил raw evidence, обнаружил 30/30 ready failures и по
+  frozen reducer остановил arm B/session canary; P6.9 и снятие паузы ARTIFEX запрещены
+  (`2026.08.07-PLAN-ECONOMY` P6.8, D154).
+
 - **`task`: acceptance protocol получил repair-pinned v1.1.1 identity.**
   Successor сохраняет threshold/scope/reducer/arms/canary v1.1.0, пинует exact five-slot
   implementation `c0ee730c` и хранит v1.0.0 RED вместе с v1.1.0 NOT-RUN

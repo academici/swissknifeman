@@ -95,11 +95,12 @@ def _phase_status(statuses: list[str]) -> str:
     return STATUS_NOT_STARTED
 
 
-def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str]:
+def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str, dict[str, str]]:
     if not path.is_file():
-        return [], "—"
+        return [], "—", {}
     rows = []
     last_updated = "—"
+    item_updated: dict[str, str] = {}
     for number, raw in enumerate(_read(path).splitlines(), start=1):
         if not raw.strip():
             continue
@@ -110,10 +111,14 @@ def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str]:
         ts = str(entry.get("ts") or "")
         if not ts:
             raise StatusError(f"{path}:{number}: у записи нет ts")
-        last_updated = max(last_updated, ts[:10]) if last_updated != "—" else ts[:10]
+        day = ts[:10]
+        last_updated = max(last_updated, day) if last_updated != "—" else day
+        item_id = entry.get("item_id")
+        if isinstance(item_id, str) and item_id:
+            item_updated[item_id] = max(item_updated.get(item_id, day), day)
         what = plan_journal.project_update_log_what(entry, number)
         rows.append((ts[:10], str(entry.get("actor") or "—"), what))
-    return rows, last_updated
+    return rows, last_updated, item_updated
 
 
 def status_model(plan_dir) -> dict:
@@ -137,12 +142,12 @@ def status_model(plan_dir) -> dict:
                        .split(" — ", 1)[-1], "items": items,
                        "status": _phase_status([item["status"] for item in items])})
     journal = plan_dir / "journal.jsonl"
-    journal_rows, last_updated = _journal_rows(journal)
+    journal_rows, last_updated, item_updated = _journal_rows(journal)
     if journal.is_file():
         input_paths.append(journal)
     for phase in phases:
         for item in phase["items"]:
-            item["updated"] = last_updated
+            item["updated"] = item_updated.get(item["id"], "—")
     plan_status = _phase_status([phase["status"] for phase in phases])
     return {"core": core, "phases": phases, "journal_rows": journal_rows,
             "meta": {"Version": _migrated_version(plan_dir), "Status": plan_status, "Last Updated": last_updated},

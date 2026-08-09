@@ -25,8 +25,11 @@ the API returns it only after all four carriers have been regenerated and byte-c
 
 The producer acceptance at
 `plans/2026.08.07-PLAN-ECONOMY/artifacts/P5/validate_acceptance.py` uses fresh fixture copies to
-exercise the policy auto-answer and P4→P5 owner `continue`/`park`/`reject` paths. Its generated
-results deliberately omit volatile timestamps and temporary paths; `--check` recomputes all four
+exercise policy apply and authorization reclassification, P4→P5 owner `continue`/`park`/`reject`,
+the 2- and 5-substantive-option boundaries, mandatory-only rejection, and one-shot request/resolve
+projection failures followed by an exact retry. Its generated results deliberately omit volatile
+timestamps and temporary paths while recording queue cardinality, latest journal result, pending and
+join verdicts, view freshness, retry count, and continuation mode; `--check` recomputes all ten
 scenarios and compares the committed results and report byte-for-byte.
 
 `Decision Queue Gate | v1` in plan Meta enables the opt-in join check: terminal phases cannot carry

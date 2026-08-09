@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-09 (P4 повторно закрыта после D142; P5 закрыта после remediation D146, перед P6.1 обязателен независимый аудит P5) · **Соответствует plan.md:** v0.30.0
+**Обновлён:** 2026-08-09 (P6.5 закрыт с EN-only каноном v2; следующий P6.6 с владельческим гейтом перед внешней записью) · **Соответствует plan.md:** v0.30.0
 
 ## Как читать
 
@@ -70,7 +70,7 @@
 | P6.2 | solo | plan-run (manual) | implementation/high | — | root/specialist session provenance, triage production и session-context resolver |
 | P6.3 | solo | plan-run (manual) | frontier/high | — | isolated child judgement по capsule; stronger route отдельно, затем resume root |
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
-| P6.5 | solo | plan-run (manual) | frontier/high | — | канон enum `continue-root|isolated-child-return|cold-start-root` + hard-boundary reasons |
+| P6.5 | solo | plan-run (manual) | frontier/high | — | 🟠 terminal with deviations — EN-only canon v2, hard-boundary enum, weight/fail-closed gates; scope expansion записан |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
 | P6.7 | solo | plan-run (manual) | frontier/high | — | предобъявить machine `session_canary`: exact four branches/expected + command/result keys (D126) |
 | P6.8 | solo | plan-run (manual) | frontier/high | — | две D2-руки + отдельный exact session-canary comparator; local field defect без automatic audit |

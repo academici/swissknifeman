@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import unittest
 
+import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
 from task.command_catalog import build_command_catalog
 from task.command_render import (apply_claude_command_plan, mapping_from_catalog,
                                  plan_claude_command_render,

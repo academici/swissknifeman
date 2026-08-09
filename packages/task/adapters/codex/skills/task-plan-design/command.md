@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:2d9594dd6db6d85aca8365df8783013063900711a7e4044f632d06ac8c23adc5
+Canonical SHA-256: sha256:578601a6b011aa7da1fcda0fdc6ad37528902d2d01d97bf8fd4ed317642c4bb2
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -23,6 +23,30 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
+
+## DecisionRequest и isolated-child-return (P6.3)
+
+Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует
+недостающего факта либо права действия, команда строит transient action по
+`decision-request` v1, передаёт его единственному резолверу `task.plan_authority.authorize()` и
+исполняет закрытый исход: `delegated` — продолжить только exact canonical action;
+`approval_required` — материализовать `DecisionRequest` через `plan-decisions.py request` и
+припарковать subject; `denied` — записать отказ и остановиться. Durable request всегда несёт
+continuation identity, timeout из authority frame и объявленные варианты `escalate`/`reject`.
+Уточнение авторазрешимо только закрытым allowlist систем-записей с provenance; после ответа intent
+канонизируется и классифицируется заново. Модельная память, чат и свободный текст не дают approval.
+
+Модельное суждение выполняется только как provider-neutral `isolated-child-return`: после risk
+trigger либо повторного durable fingerprint root строит закрытый capsule `return-judgement` v1,
+проверяет capability, независимо выбирает свежего reviewer с actor/context, отличными от executor,
+и делает ровно один вызов. Full parent transcript, unrelated history, self-review и второй sample
+запрещены. Capability absence даёт `cold-start-root: capability-missing`. Reviewer применяет
+неизменяемый ассет `return-judgement@1.0.0`
+(`packages/task/prompts/return-judgement-rubric-v1.md`,
+SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); root валидирует schema,
+передаёт запись детерминированному reducer и продолжает исходный run. Неоткалиброванная пара
+`model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
+Raw provider flags допустимы только в additive adapter/projection.
 
 ## Путь чтения существующего плана
 

@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import unittest
 
+import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
 from core.provider.lock import ArtifactActionKind
 from task.command_catalog import build_command_catalog
 from task.command_render import (PROVIDER_LOCK_PATH, apply_codex_command_plan,

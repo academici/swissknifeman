@@ -15,10 +15,15 @@ from task import plan_returns
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA = ROOT / "packages/task/configs/return-judgement-v1.schema.json"
+CALIBRATION = ROOT / "packages/task/configs/return-judgement-calibration.json"
+BANK = ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P6/judge-calibration-bank.jsonl"
+RUBRIC = ROOT / "packages/task/prompts/return-judgement-rubric-v1.md"
 
 
 def judgement(*, verdict="AVOIDABLE", reviewer="reviewer:gpt-5.6-sol", executor="sonnet/medium",
-              event_id="RET-test-001", digest="5f474410de10cf4b31d3c72a432203bc8fb311f544c1be5dbb5183d4c23cfc5c"):
+              event_id="RET-test-001", digest="5f474410de10cf4b31d3c72a432203bc8fb311f544c1be5dbb5183d4c23cfc5c",
+              model_id=None, rubric_sha256=None):
+    calibrated = json.loads(CALIBRATION.read_text(encoding="utf-8"))["calibrated"][0]
     return {
         "schema_version": "return-judgement.v1",
         "judgement_id": "RJ-test-001",
@@ -26,10 +31,10 @@ def judgement(*, verdict="AVOIDABLE", reviewer="reviewer:gpt-5.6-sol", executor=
         "ts": "2026-07-02T00:05:30Z",
         "subject_id": "P1.1",
         "fingerprint_digest": digest,
-        "model_id": "gpt-5.6-sol",
+        "model_id": model_id or calibrated["model_id"],
         "model_version": "test",
         "model_effort": "high",
-        "rubric_sha256": "1" * 64,
+        "rubric_sha256": rubric_sha256 or calibrated["rubric_sha256"],
         "input_digest": "2" * 64,
         "capsule_digest": "3" * 64,
         "evidence_ids": ["test:return-loop"],
@@ -68,6 +73,24 @@ class ReturnJudgementTests(unittest.TestCase):
             shallow=False,
         ))
 
+    def test_calibration_registry_pins_rubric_and_discovery_bank(self):
+        import hashlib
+
+        registry = json.loads(CALIBRATION.read_text(encoding="utf-8"))
+        digest = hashlib.sha256(RUBRIC.read_bytes()).hexdigest()
+        self.assertEqual(registry["rubric"]["rubric_sha256"], digest)
+        self.assertTrue(any(
+            row["model_id"].startswith("openai:")
+            and row["rubric_sha256"] == digest
+            and row["mode"] == "rubric-discovery"
+            for row in registry["calibrated"]
+        ))
+        cases = [json.loads(line) for line in BANK.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(cases), 30)
+        swaps = [row for row in cases if row["swap_applied"]]
+        self.assertGreaterEqual(len(swaps), 3)
+        self.assertTrue(all(row["judge_verdict"] == "INSUFFICIENT_EVIDENCE" for row in swaps))
+
     def test_every_enum_value_is_monotone(self):
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
         baseline = plan_returns.decide(verdict=None)
@@ -76,6 +99,18 @@ class ReturnJudgementTests(unittest.TestCase):
             with self.subTest(verdict=verdict):
                 self.assertTrue(plan_returns.at_least_as_strict(
                     plan_returns.decide(verdict=verdict), baseline))
+
+    def test_three_order_sensitive_swaps_abstain(self):
+        for forward, reverse in (
+            ("JUSTIFIED", "AVOIDABLE"),
+            ("AVOIDABLE", "JUSTIFIED"),
+            ("OUT_OF_SCOPE", "INSUFFICIENT_EVIDENCE"),
+        ):
+            with self.subTest(forward=forward, reverse=reverse):
+                self.assertEqual(
+                    plan_returns.conservative_swap_verdict(forward, reverse),
+                    "INSUFFICIENT_EVIDENCE",
+                )
 
     def test_monotonicity_rejects_an_artificially_weakened_branch(self):
         baseline = plan_returns.decide(occurrences=3)
@@ -95,6 +130,18 @@ class ReturnJudgementTests(unittest.TestCase):
         gate = plan_returns.return_loop_gates(self.plan)[0]
         self.assertEqual(gate["judgement"]["verdict"], "JUSTIFIED")
         self.assertEqual(gate["action"], "owner-gate")
+
+    def test_uncalibrated_pair_is_interpreted_as_abstention(self):
+        findings = self.plan / "findings"
+        digest = plan_returns.returns(self.plan)["fingerprints"][0]["digest"]
+        for path in findings.glob("*judgement*.md"):
+            path.unlink()
+        (findings / "A-uncalibrated.md").write_text(carrier(judgement(
+            verdict="AVOIDABLE", event_id="journal.jsonl:7", digest=digest,
+            model_id="anthropic:claude-pending", rubric_sha256="f" * 64,
+        )), encoding="utf-8")
+        gate = plan_returns.return_loop_gates(self.plan)[0]
+        self.assertEqual(gate["judgement"]["verdict"], "INSUFFICIENT_EVIDENCE")
 
     def test_missing_provenance_is_ignored(self):
         bad = judgement()

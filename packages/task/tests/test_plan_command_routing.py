@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import unittest
 
+import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
 from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
                                  parse_next_carrier, plan_provider_invocation,

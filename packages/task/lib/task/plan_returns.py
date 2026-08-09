@@ -21,6 +21,7 @@ _NEGATIVE_RESULTS = frozenset(("blocked", "escalated", "audit-red"))
 _SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-fingerprint-v1.schema.json"
 _LOOP_SPEC = Path(__file__).resolve().parents[2] / "configs" / "return-loop-v1.spec.json"
 _JUDGEMENT_SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-judgement-v1.schema.json"
+_JUDGEMENT_CALIBRATION = Path(__file__).resolve().parents[2] / "configs" / "return-judgement-calibration.json"
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
 _DECISION = re.compile(r"\bD[1-9][0-9]*\b")
 RETURN_LOOP_GATE = "return-loop-v1"
@@ -56,6 +57,44 @@ def _judgement_schema() -> dict:
         return json.loads(_JUDGEMENT_SCHEMA.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ReturnError(f"схема return-judgement v1 не читается: {_JUDGEMENT_SCHEMA}") from exc
+
+
+def _judgement_calibration() -> dict:
+    """Load the provider/model-qualified rubric registry fail-closed."""
+    try:
+        value = json.loads(_JUDGEMENT_CALIBRATION.read_text(encoding="utf-8"))
+        if value.get("schema_version") != "return-judgement-calibration.v1":
+            raise ValueError("неподдерживаемая версия")
+        calibrated = value.get("calibrated")
+        if not isinstance(calibrated, list):
+            raise ValueError("calibrated должен быть списком")
+        for entry in calibrated:
+            if (not isinstance(entry, dict)
+                    or not isinstance(entry.get("model_id"), str)
+                    or not _DIGEST.fullmatch(str(entry.get("rubric_sha256", "")))
+                    or entry.get("status") != "verified"):
+                raise ValueError("некорректная verified-запись")
+        return value
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise ReturnError(
+            f"реестр калибровки return-judgement не читается: {_JUDGEMENT_CALIBRATION}") from exc
+
+
+def _calibrated_judgement(record: dict) -> dict:
+    """Interpret an unknown model × rubric pair as the frozen abstention verdict."""
+    pairs = {(entry["model_id"], entry["rubric_sha256"])
+             for entry in _judgement_calibration()["calibrated"]}
+    if (record["model_id"], record["rubric_sha256"]) in pairs:
+        return record
+    return {**record, "verdict": "INSUFFICIENT_EVIDENCE"}
+
+
+def conservative_swap_verdict(forward: str, reverse: str) -> str:
+    """Collapse position-sensitive classifications to abstention, never to a winner."""
+    enum = set(_judgement_schema()["properties"]["verdict"]["enum"])
+    if forward not in enum or reverse not in enum:
+        raise ReturnError("swap verdict вне закрытого enum return-judgement v1")
+    return forward if forward == reverse else "INSUFFICIENT_EVIDENCE"
 
 
 def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
@@ -399,7 +438,7 @@ def _judgements_by_event(plan_dir: Path, subject_id: str, fingerprint_digest: st
         if record["reviewer_actor"] == record["executor_actor"]:
             selected[event_id] = None
             continue
-        selected[event_id] = record
+        selected[event_id] = _calibrated_judgement(record)
     return selected
 
 

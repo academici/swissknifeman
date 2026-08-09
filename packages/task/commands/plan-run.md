@@ -6,6 +6,30 @@ argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 БЕЗ пина `model`/`effort`: они наследуются из настроек текущей сессии владельца.
 Ввод пользователя: «$ARGUMENTS».
 
+## DecisionRequest и isolated-child-return (P6.3)
+
+Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует
+недостающего факта либо права действия, команда строит transient action по
+`decision-request` v1, передаёт его единственному резолверу `task.plan_authority.authorize()` и
+исполняет закрытый исход: `delegated` — продолжить только exact canonical action;
+`approval_required` — материализовать `DecisionRequest` через `plan-decisions.py request` и
+припарковать subject; `denied` — записать отказ и остановиться. Durable request всегда несёт
+continuation identity, timeout из authority frame и объявленные варианты `escalate`/`reject`.
+Уточнение авторазрешимо только закрытым allowlist систем-записей с provenance; после ответа intent
+канонизируется и классифицируется заново. Модельная память, чат и свободный текст не дают approval.
+
+Модельное суждение выполняется только как provider-neutral `isolated-child-return`: после risk
+trigger либо повторного durable fingerprint root строит закрытый capsule `return-judgement` v1,
+проверяет capability, независимо выбирает свежего reviewer с actor/context, отличными от executor,
+и делает ровно один вызов. Full parent transcript, unrelated history, self-review и второй sample
+запрещены. Capability absence даёт `cold-start-root: capability-missing`. Reviewer применяет
+неизменяемый ассет `return-judgement@1.0.0`
+(`packages/task/prompts/return-judgement-rubric-v1.md`,
+SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); root валидирует schema,
+передаёт запись детерминированному reducer и продолжает исходный run. Неоткалиброванная пара
+`model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
+Raw provider flags допустимы только в additive adapter/projection.
+
 **Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву
 файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution Rules,
 §3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) →

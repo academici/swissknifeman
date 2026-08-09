@@ -11,6 +11,9 @@ from pathlib import Path
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if (_REPO_ROOT / "core").is_dir() and str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 
 def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",

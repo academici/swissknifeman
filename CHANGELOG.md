@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`task`: model judgement и уточнения получили fail-closed command seams.** Пять plan-команд
+  создают `DecisionRequest` вместо свободной прозы и исполняют закрытые исходы authority resolver;
+  отдельная рубрика `return-judgement@1.0.0`, provider-qualified calibration registry и reducer
+  превращают неизвестную пару либо order-sensitive swap в воздержание. Codex подтверждён на
+  discovery-bank, Claude остаётся `pending-provider` (`2026.08.07-PLAN-ECONOMY` P6.3).
+
 - **`task`: закрывающие команды plan-protocol теперь производят v2-следы.** Они записывают
   session provenance, регенерируют projections, фиксируют downstream-gate record и сохраняют
   fail-closed квалификацию эскалаций; Codex подтверждён, Claude ожидает provider-owned replay

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:4150f83804840b7f65b76b930b89aaa5a7fa613d9f4f5b59e1d7cd9157caee77
+Canonical SHA-256: sha256:d6f4d7db2f307d77623ae90141eef85d80f4d8a4cd7c5fcec5b16fd07a61e65b
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -21,6 +21,30 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 Это ИСПОЛНЕНИЕ item'а мастер-плана под моделью сессии (D18) — третий режим `plan-exec`,
 БЕЗ пина `model`/`effort`: они наследуются из настроек текущей сессии владельца.
 Ввод пользователя: «$ARGUMENTS».
+
+## DecisionRequest и isolated-child-return (P6.3)
+
+Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует
+недостающего факта либо права действия, команда строит transient action по
+`decision-request` v1, передаёт его единственному резолверу `task.plan_authority.authorize()` и
+исполняет закрытый исход: `delegated` — продолжить только exact canonical action;
+`approval_required` — материализовать `DecisionRequest` через `plan-decisions.py request` и
+припарковать subject; `denied` — записать отказ и остановиться. Durable request всегда несёт
+continuation identity, timeout из authority frame и объявленные варианты `escalate`/`reject`.
+Уточнение авторазрешимо только закрытым allowlist систем-записей с provenance; после ответа intent
+канонизируется и классифицируется заново. Модельная память, чат и свободный текст не дают approval.
+
+Модельное суждение выполняется только как provider-neutral `isolated-child-return`: после risk
+trigger либо повторного durable fingerprint root строит закрытый capsule `return-judgement` v1,
+проверяет capability, независимо выбирает свежего reviewer с actor/context, отличными от executor,
+и делает ровно один вызов. Full parent transcript, unrelated history, self-review и второй sample
+запрещены. Capability absence даёт `cold-start-root: capability-missing`. Reviewer применяет
+неизменяемый ассет `return-judgement@1.0.0`
+(`packages/task/prompts/return-judgement-rubric-v1.md`,
+SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); root валидирует schema,
+передаёт запись детерминированному reducer и продолжает исходный run. Неоткалиброванная пара
+`model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
+Raw provider flags допустимы только в additive adapter/projection.
 
 **Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву
 файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution Rules,

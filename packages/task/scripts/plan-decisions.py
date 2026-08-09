@@ -39,6 +39,8 @@ def main(argv=None) -> int:
     claim.add_argument("--actor", default="owner")
     listing = sub.add_parser("list")
     listing.add_argument("--plan-dir", required=True)
+    listing.add_argument("--json", action="store_true",
+                         help="явно подтвердить машинный JSON-вывод")
     rendering = sub.add_parser("render")
     rendering.add_argument("--plan-dir", required=True)
     rendering.add_argument("--out")
@@ -57,9 +59,13 @@ def main(argv=None) -> int:
                                            resume_available=args.cold_start_reason is None,
                                            fallback_reason=args.cold_start_reason, actor=args.actor)
         elif args.command == "list":
-            result = {key: {"resolved": value["response"] is not None,
-                            "subject": value["request"]["subject"]}
-                      for key, value in plan_requests.states(args.plan_dir).items()}
+            states = plan_requests.states(args.plan_dir)
+            if args.json:
+                result = [value["request"] for _key, value in sorted(states.items())]
+            else:
+                result = {key: {"resolved": value["response"] is not None,
+                                "subject": value["request"]["subject"]}
+                          for key, value in states.items()}
         else:
             print(plan_requests.render(args.plan_dir, out=args.out, check=args.check))
             return 0

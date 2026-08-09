@@ -1,50 +1,46 @@
-# HANDOFF — 2026-08-09 — after P5.3
+# HANDOFF — 2026-08-09 — after P5.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** /task:plan-design 2026.08.07-PLAN-ECONOMY P5.4
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue (/clear) — ручной item |
-| Суть | Реализовать durable очередь решений, адресную паузу субъекта и owner-gate view |
-| Команда | — |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Сверить схему реестра диспозиций P3.6 с обязательной Validation P5.4 и исправить ТЗ по D-записи |
+| Команда | `task:plan-design 2026.08.07-PLAN-ECONOMY P5.4` |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.4
+$ task:plan-design 2026.08.07-PLAN-ECONOMY P5.4
 ```
 
 ## Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P5.4'
 ```
 
-**Done:** P5.3 закрыта 🟠 item-коммитом `98a23ea0`: создан stdlib-only
-fail-closed `plan_authority`, закрытые структурированные verdict'ы и единственный
-adapter `authorize()`, item-scoped aggregation, provenance-only auto-answer с
-обязательной переклассификацией, проверка digest/single-use и `--shadow`. Таргетные
-20 тестов, полный набор из 684 тестов с корневым `PYTHONPATH` и `validate.sh` зелёные;
-pre-mutation/pre-final Task Contract дали `allow/allow`.
+**Done:** P5.4 прошёл routing и pre-mutation Task Contract (`allow`) в сессии
+`gpt-5.6-terra/high`; в `journal.jsonl` дописаны start и escalation события, а state/status
+проекции регенерированы. Реализация не начиналась.
 
-**Remaining:** P5.4 — durable очередь/адресная пауза/join gate; затем P5.5 — адаптер
-над пакетом P4 и приёмка фазы.
+**Remaining:** `task:plan-design` должен устранить конфликт схемы реестра диспозиций и
+Validation P5.4; после этого повторить P5.4. Затем P5.5 — адаптер над пакетом P4 и
+приёмка фазы.
 
-**Sources of truth:** `phases/P5/P5.4.md` · `root/contracts/decision-request-v1.md` ·
-`root/contracts/authority-frame-v1.md` · `packages/task/configs/authority-frame.json` ·
-`research/07-p5-decision-protocol-design.md` §4/§7/§8 ·
-`findings/01-rag-context-engineering-2026-08-07.md` R6.
+**Sources of truth:** `phases/P5/P5.4.md` (особенно Validation) ·
+`packages/task/configs/lint-check-dispositions.json` (P3.6 schema) ·
+`findings/P5.4-lint-disposition-schema-conflict-2026-08-09.md`.
 
-**Open risks:** Literal `cd packages/task && python3 -m unittest discover -s tests`
-остаётся красным: шесть старых тестовых модулей импортируют shared `core`, которого нет
-в `sys.path`; с корневым `PYTHONPATH` 684 теста зелёные, как и `validate.sh`. Это material
-deviation P5.3; исправление test bootstrap вне scope item'а. Baseline plan-lint несёт
-6 предсуществующих WARN вне P5.3. В worktree остаётся чужой `brief/index/roadmap` diff,
-который не должен быть перезаписан P5.4.
+**Open risks:** P5.4's literal Validation expects `checks` to be a list of rows with
+`id/default_enabled`, but the P3.6 registry is a keyed function map with `disposition` only.
+Changing either side without a D-record risks breaking live lint consumers. Baseline plan-lint
+still has 6 pre-existing WARN. The worktree carries unrelated `brief/index/roadmap` changes
+that P5.4 did not overwrite.
 
-**Workarounds/Deferred/Open questions:** workaround — для полного unittest запускать
-из корня с `PYTHONPATH="$PWD"`; deferred — владелец старого test bootstrap, отдельный
-fix-item или plan-design при следующей ревизии Validation-команд; открытых вопросов P5.4 нет.
+**Workarounds/Deferred/Open questions:** workaround — none; deferred — P5.3's historical
+test-bootstrap issue remains outside this item's scope; open question — whether P5.4 must use
+the P3.6 mapping schema or P3.6 needs an explicitly migrated row schema.

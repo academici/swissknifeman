@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: d31d5edbfc0a7859547f066e1eeb87d317803032eeb72dd8896f246d523ee3f3
+inputs_sha256: 6c1d2f06227cfbe7871d752c038bc4a16d9d7f5499cd36d323862c03c37728d2
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.28.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
-| P5 | Безлюдный протокол решений и рамка полномочий | 2/5 | ⬜ Not started |
+| P5 | Безлюдный протокол решений и рамка полномочий | 2/5 | 🔴 Blocked |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
 ## Phase P0
@@ -96,7 +96,7 @@ generated_by: task plan-views status
 | P5.1 | Заморозить контракт запроса и ответа решения | 🟢 Done | 2026-08-09 |
 | P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | 🟢 Done | 2026-08-09 |
 | P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | 🟠 Done with deviations | 2026-08-09 |
-| P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | ⬜ Not started | 2026-08-09 |
+| P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | 🔴 Blocked | 2026-08-09 |
 | P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | ⬜ Not started | 2026-08-09 |
 
 ## Phase P6
@@ -276,6 +276,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 focused tests, 684 с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 (на 98a23ea0) targeted, 686 (на dcaae917) с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 (на 98a23ea0) targeted, 686 (на dcaae917) с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · escalated · P5.4 Validation expects checks list; P3.6 registry is keyed map, so the required literal check cannot run without changing the live lint registry contract. |
 
 ## Owner Gates
 
@@ -301,3 +303,4 @@ generated_by: task plan-views status
 - P4.6: known deviation
 - P5.2: known deviation
 - P5.3: known deviation
+- P5.4: escalation

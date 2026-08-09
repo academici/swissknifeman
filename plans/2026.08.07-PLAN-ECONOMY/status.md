@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 78645d706ca1c5ac3477b3958db4b03ce4765127a36724db72c332b1cb87a436
+inputs_sha256: 0126ea11720a53fd7639da273a3069eb5a2ae030ef965299fcba6fa1cb274e00
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Измерить вес чтения и заморозить метрику | 2/5 | 🟠 Done with deviations |
 | P1 | Заморозить контракт читателей плана | 4/5 | 🟠 Done with deviations |
-| P2 | Перестроить носители плана | 4/10 | 🟡 In progress |
+| P2 | Перестроить носители плана | 4/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
@@ -64,7 +64,7 @@ generated_by: task plan-views status
 | P2.7 | Убрать терминальные фазы с живого пути и собрать дайджест закрытия | 🟠 Done with deviations | 2026-08-08 |
 | P2.8 | Перевести этот план на раскладку v2 конвертером и подтвердить замером | 🟢 Done | 2026-08-08 |
 | P2.9 | Заморозить stage-aware admission и разрезать oversized task carriers | 🟢 Done | 2026-08-08 |
-| P2.10 | Исправить layout-v2 measurement и доказать совместимость v1 | 🟡 In progress | 2026-08-09 |
+| P2.10 | Исправить layout-v2 measurement и доказать совместимость v1 | 🟠 Done with deviations | 2026-08-09 |
 
 ## Phase P3
 
@@ -348,6 +348,7 @@ generated_by: task plan-views status
 | 2026-08-09 | owner | plan-run · in-progress · decision queue: P6.8-measurement-scope-repair-2026-08-09 |
 | 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · Owner выбрал repair-and-refreeze; D152 forward-only открывает exact five-slot layout-v2 measurement repair. Deviation: frontier/high исполняет implementation/high item в текущей owner-directed сессии. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (7ea35255). D152 repair start. Deviation: frontier/high overshoots implementation/high because owner directed continuation in the current session. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P2.10 c0ee730c: v1/v2 tests 59 OK; full unittest 739 OK; exact five-slot field run exposed 24 ready failures, so repo plan-lint remains RED. Task Contract pre_mutation/pre_final allow; frontier/high>implementation/high. |
 
 ## Owner Gates
 

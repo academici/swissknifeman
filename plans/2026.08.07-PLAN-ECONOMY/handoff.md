@@ -1,41 +1,40 @@
-# HANDOFF — 2026-08-09 — after P6.8
+# HANDOFF — 2026-08-09 — after P2.10
 
-**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
+**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | Исправить exact five-slot layout-v2 measurement по D152 и доказать совместимость v1 |
+| Суть | Заморозить acceptance successor patch с pinned five-slot repair и immutable prior results |
 | Команда | — |
 
 ```text
 /model gpt-5.6-sol
 /effort high
-/task:plan-run 2026.08.07-PLAN-ECONOMY P2.10
+/task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
 ```
 
-**Done:** Owner response materialized and resolved as `repair-and-refreeze`; D152 accepted;
-P2.10/P2 forward-only reopened and redetailed to DoR. P6.8 remains stopped before arm A.
+**Done:** P2.10 closed-deviations at `c0ee730c`: v1/v2 tests green; exact five-slot
+field run exposed 24 ready failures; full unittest 739 OK and repo plan-lint RED preserved.
 
-**Remaining:** Execute and close P2.10; reopen/freeze successor acceptance in P6.7; redetail and
-run P6.8; execute P6.9 only after exact positive acceptance verdict; close P6 and the plan.
+**Remaining:** Freeze successor acceptance identity in P6.7; run P6.8 arm A exactly; stop on
+its deterministic fail/deferred, otherwise continue arm B/canary; P6.9 only after exact pass.
 
 **Sources of truth:** `decisions/D152-p2.10-five-slot-measurement-repair.md` ·
-`findings/P6.8-retry-preflight-2026-08-09.md` §5 ·
-`research/26-p6.8-retry-design-2026-08-09.md` §5 · `phases/P2/P2.10.md`.
+`findings/P2.10-five-slot-measurement-repair-2026-08-09.md` · commit `c0ee730c` ·
+`root/contracts/acceptance-protocol-v1.manifest.json`.
 
-**Open risks:** common production path may still produce an honest acceptance fail/deferred;
-that result is terminal evidence, not permission to change the frozen threshold or scope.
+**Open risks:** exact arm A currently forecasts `fail` (24 ready failures); frozen reducer must
+decide from a newly retained raw artifact, not from this forecast.
 
-**Workarounds/Deferred/Open questions:** installed Codex skill projection 2.23.0 lags worktree
-SSOT 2.24.0; hook dry-run is RED `record-provenance-mismatch`. Worktree canonical skill and
-package scripts are the execution source. No open owner question remains.
+**Workarounds/Deferred/Open questions:** No owner question remains. Installed skill 2.23.0 vs
+worktree 2.24.0 and hook `record-provenance-mismatch` remain disclosed environment defects.
 
 ## Codex launch
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.10'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7'
 ```

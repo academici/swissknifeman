@@ -1,5 +1,5 @@
 {
-  "artifact_version": "p5.5-acceptance-v3",
+  "artifact_version": "p5.5-acceptance-v4",
   "fixture": "packages/task/tests/data/plan-v2-p5",
   "frozen_input_digests": {
     "packages/task/configs/authority-frame.json": "37df9c289931ee198c92039fd6a0337340b2dc4a2878c9ae6e86446b927b299f",
@@ -10,6 +10,8 @@
   "scenario_ids": [
     "policy-auto-answer-apply",
     "policy-authorization-pending",
+    "policy-terminal-auto-answer-single-use",
+    "policy-authorization-owner-flow",
     "owner-continue",
     "owner-park",
     "owner-reject",
@@ -74,6 +76,61 @@
       "unresolved_for_phase": [
         "policy-authorization-pending"
       ],
+      "verified_provenance": true
+    },
+    {
+      "continuation_mode": "none",
+      "denied_owner_operations": 2,
+      "gate_fresh": true,
+      "id": "policy-terminal-auto-answer-single-use",
+      "latest_journal_result": "in-progress",
+      "mandatory_ids": [
+        "escalate",
+        "reject"
+      ],
+      "observed_outcome": "apply",
+      "pending_decision_ids": [],
+      "phase_join_blocks": false,
+      "queue_event_counts": {
+        "auto_answer": 1,
+        "request": 1
+      },
+      "reclassified_to": "clarification",
+      "retry_count": 0,
+      "subject_statuses": {
+        "P1.1": "🔴 Blocked",
+        "P1.2": "🟡 In progress"
+      },
+      "substantive_count": 2,
+      "unresolved_for_phase": [],
+      "verified_provenance": true
+    },
+    {
+      "continuation_mode": "resume-root",
+      "gate_fresh": true,
+      "id": "policy-authorization-owner-flow",
+      "latest_journal_result": "in-progress",
+      "mandatory_ids": [
+        "escalate",
+        "reject"
+      ],
+      "observed_outcome": "apply",
+      "pending_decision_ids": [],
+      "phase_join_blocks": false,
+      "queue_event_counts": {
+        "auto_answer": 1,
+        "claim": 1,
+        "request": 1,
+        "response": 1
+      },
+      "reclassified_to": "authorization",
+      "retry_count": 0,
+      "subject_statuses": {
+        "P1.1": "🔴 Blocked",
+        "P1.2": "🟡 In progress"
+      },
+      "substantive_count": 2,
+      "unresolved_for_phase": [],
       "verified_provenance": true
     },
     {

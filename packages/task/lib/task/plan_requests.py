@@ -260,10 +260,14 @@ def states(plan_dir) -> dict[str, dict]:
         elif decision_id not in result:
             raise RequestError(f"event before request for {decision_id}")
         elif event["type"] == "claim":
+            if semantic_outcome(result[decision_id]) not in ("pending", "pending-authorization"):
+                raise RequestError(f"decision is already resolved: {decision_id}")
             result[decision_id]["claims"].append(event)
         elif event["type"] == "response":
             if result[decision_id]["response"] is not None:
                 raise RequestError(f"duplicate response for {decision_id}")
+            if semantic_outcome(result[decision_id]) not in ("pending", "pending-authorization"):
+                raise RequestError(f"decision is already resolved: {decision_id}")
             errors = _response_errors(event.get("response"), result[decision_id]["request"])
             if errors:
                 raise RequestError("; ".join(errors))
@@ -512,7 +516,7 @@ def _active_claim(state: dict, now: str) -> dict | None:
 
 def claim(plan_dir, decision_id: str, *, resolver_id: str, lease_expires_at: str, actor: str = "owner") -> dict:
     state = states(plan_dir).get(decision_id)
-    if state is None or state["response"] is not None:
+    if state is None or semantic_outcome(state) not in ("pending", "pending-authorization"):
         raise RequestError("decision is absent or already resolved")
     if _active_claim(state, _now()) is not None:
         raise RequestError("decision already has an active resolver lease")
@@ -559,6 +563,8 @@ def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,
         return {**existing, "continuation": _continuation(
             request_value, current=current_continuation, resume_available=resume_available,
             fallback_reason=fallback_reason)}
+    if semantic_outcome(state) not in ("pending", "pending-authorization"):
+        raise RequestError("decision is absent or already resolved")
     lease = _active_claim(state, _now())
     if lease is None or lease.get("resolver_id") != resolver_id:
         raise RequestError("resolver has no active lease")
@@ -591,6 +597,8 @@ def append_auto_answer(plan_dir, event: dict, *, response: dict | None = None,
     if response is None:
         raise RequestError("auto answer requires response and provenance pair")
     state = states(plan_dir)[decision_id]
+    if state["response"] is not None or state["auto_answer"] is not None:
+        raise RequestError("decision is absent or already resolved")
     errors = _auto_answer_errors(event, response, state["request"])
     if errors:
         raise RequestError("; ".join(errors))

@@ -8,6 +8,8 @@ The committed fixture queue is regression input only. Every scenario starts from
 |:--|:--|:--|:--|:--|:--|--:|:--|
 | policy-auto-answer-apply | apply | auto_answer:1, request:1 | in-progress | — | clear | 0 | none |
 | policy-authorization-pending | pending-authorization | auto_answer:1, request:1 | blocked | policy-authorization-pending | blocks | 0 | none |
+| policy-terminal-auto-answer-single-use | apply | auto_answer:1, request:1 | in-progress | — | clear | 0 | none |
+| policy-authorization-owner-flow | apply | auto_answer:1, claim:1, request:1, response:1 | in-progress | — | clear | 0 | resume-root |
 | owner-continue | apply | claim:1, request:1, response:1 | in-progress | — | clear | 0 | resume-root |
 | owner-park | park | claim:1, request:1, response:1 | blocked | — | clear | 0 | none |
 | owner-reject | reject | claim:1, request:1, response:1 | blocked | — | clear | 0 | none |

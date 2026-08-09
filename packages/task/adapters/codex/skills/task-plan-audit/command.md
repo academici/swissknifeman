@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:7b1c37bae402773293e46851eaa5565c51760b13aff1d74f606dbcd6635c7d47
+Canonical SHA-256: sha256:26d1e3b7fbe49c3020839e9b6a6df66b4b6360f80ab6d23e5b245e3fbd98bc8e
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -36,6 +36,13 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 
 В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
 fresh item state. Повторное чтение запрещено.
+
+**Layout v2 — production after audit (P6.2).** Journal append несёт session identity, затем
+команда регенерирует применимые `plan-views.py state|status|decisions|closure|bundle` и подтверждает
+их `--check`; в item-spec outcome-поля не дописываются. Если audit фиксирует terminal escalation,
+она оставляет return-evidence с одним из `new`/`repeat`/`unqualifiable`; `unqualifiable` никогда не
+маскируется как `new`. Для producer-closing evidence downstream outcome (`green`/`red`/`unknown`)
+записывается отдельным closing command, а audit только проверяет его item-scoped carrier.
 
 **Compiler (P2.7/P2.11).** `task:plan-exec`'s Pre-mutation (шаг 2) И Pre-final (шаг 7, штатный
 путь самозакрытия) — а для item'ов, закрытых реконсиляцией, `task:plan-close`'s Pre-final (шаг
@@ -192,6 +199,7 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    **Журнал (D21, P1.1):** append ОДНУ запись (не правка markdown — не нарушает «единственная
    запись» выше) — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
    --item <Pn — режим фазы|design — режим design> --command plan-audit --actor frontier/xhigh
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
    --result <audit-green|audit-red — GREEN даёт audit-green, ATTENTION/RED дают audit-red>
    --note "заход <N>, вердикт <вердикт>"`.
 

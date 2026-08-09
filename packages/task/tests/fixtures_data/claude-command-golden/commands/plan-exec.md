@@ -107,7 +107,9 @@ effort: medium
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
    `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
-   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
+   команда> --actor <model>/<effort>
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result in-progress`
+   (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned Sonnet/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
    (не блокер, как `plan-lint`).
@@ -131,7 +133,8 @@ effort: medium
      <что именно ждём>)`, выдумывать команду запрещено;
    - обнови `handoff.md` (Next: /task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
-   - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
+   - **Журнал (D21, P1.1):** append финал-запись тем же вызовом, включая
+     `--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`: `--result escalated --friction escalation
      --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
      что старт-запись п. 3).
 
@@ -196,15 +199,26 @@ effort: medium
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·
       **`Last Updated`** в `## 0. Meta` = дата закрытия item'а · **Журнал (D21, P1.1)**: append
-      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor`, что старт-запись п. 3)
+      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor/--session-id`, что старт-запись п. 3)
       `--result <closed-green|closed-deviations — по статусу выше> --attempt <N — 1-based счётчик
       попыток ЭТОГО item'а> --friction <из закрытого списка §2.1: deviation при непустых Known
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
       "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
-      `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
+   `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
       живёт в Completion Notes/findings. Historical long note не переписывается, а owner status
       проецирует её коротким указателем `journal.jsonl:<line>` (D141).
+
+      **Layout v2 — производство закрытия (P6.2).** После каждого terminal journal event, но до
+      lint'а, команда НЕ дописывает пять полей исхода или доску в item-spec: она запускает
+      `plan-views.py state|status|decisions|closure|bundle`, затем `--check` каждого применимого
+      генератора. Для закрывающегося producer запускается `plan-downstream.py --record` с хешем
+      уже созданного item-коммита: `green`, `red` и `unknown` ВСЕГДА материализуются item-scoped
+      finding'ом с парой `consumer_spec_sha256 × producer_commit`; `red` не закрывается. Перед
+      terminal escalation записывается return-evidence с `new`/`repeat`/`unqualifiable`, причём
+      `unqualifiable` не читается как `new`. `closure/<Pn>.json` пишется только при `Closure
+      Protocol | v1`; генерируемый `<Pn>.closed.md` регенерируется всегда — это два разных
+      носителя. При `Layout: v1` сохраняется прежний порядок этого шага дословно.
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

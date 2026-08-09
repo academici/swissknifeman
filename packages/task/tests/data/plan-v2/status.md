@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-07-02
-inputs_sha256: 3135518cea820ebebd00c61532b52c26eab9cad89d76a0c277548c9fc067d6c8
+inputs_sha256: 8cfa70e10aa9d7d391f762c4c8ef75aab6e57e19ec8ea9737d286218eccc6f48
 generated_by: task plan-views status
 -->
 
@@ -49,6 +49,7 @@ generated_by: task plan-views status
 | 2026-07-02 | sonnet/medium | plan-design · in-progress · return redesign |
 | 2026-07-02 | sonnet/medium | plan-run · closed-green · return fixture |
 | 2026-07-02 | sonnet/medium | plan-design · in-progress · return redesign |
+| 2026-07-02 | sonnet/medium | plan-run · in-progress · live consumer fixture |
 
 ## Owner Gates
 

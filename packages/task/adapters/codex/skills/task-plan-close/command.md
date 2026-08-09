@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:ff551c80881645f56a3a5b883257fd1ff8d6df79d5f8f192bdaf7c1fa223adb5
+Canonical SHA-256: sha256:10b2691da210a7acf59feeeca3c92b60e2112c91f3035790536c7b4c31b3da25
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -38,6 +38,16 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 
 В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
 fresh item state. Повторное чтение запрещено.
+
+**Layout v2 — производство закрытия (P6.2).** После journal append закрывающая команда
+регенерирует `state`, `status`, `decisions`, `closure` и `bundle` через `plan-views.py`, а затем
+проверяет каждый применимый вид с `--check`; она не дописывает output-поля в стабильный item-spec.
+Для terminal producer она запускает `plan-downstream.py --record` на item-коммите: исходы
+`green`/`red`/`unknown` все оставляют item-scoped record, связанный парой consumer-spec SHA-256 и
+producer commit; `red` блокирует закрытие. Terminal escalation получает return-evidence с одним из
+`new`/`repeat`/`unqualifiable`, без схлопывания последнего в `new`. `closure/<Pn>.json` существует
+только при `Closure Protocol | v1`, а `<Pn>.closed.md` всегда генерируется как отдельный read-model.
+Ветка `Layout: v1` остаётся прежней дословно.
 
 **Правила handoff.Next (любой режим, записывающий handoff):**
 - **Заголовок — ДВЕ формы** (иная = ERROR `plan-lint`, D30): `# HANDOFF — <ISO-дата> —
@@ -186,7 +196,8 @@ status-rule ниже. Точная команда, лестница маршру
    Pending Work item'а + Open risks handoff'а, не молчаливое ослабление.
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
-   --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result
+   --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
    `--note` обязана быть не длиннее 300 символов; детали остаются в Completion Notes/findings,
@@ -265,7 +276,8 @@ status-rule ниже. Точная команда, лестница маршру
    этой фазы) — строка в Open risks `handoff.md`.
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
-   --command plan-close --actor implementation/low --result <closed-green — все items 🟢 |
+   --command plan-close --actor implementation/low
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result <closed-green — все items 🟢 |
    closed-deviations — хоть один 🟠> --note "фаза Pn закрыта"` — ДО коммита закрытия (шаг 9,
    `journal.jsonl` входит в `git add plans/<PLAN-ID>` того же коммита).
 9. **Коммит закрытия фазы — ОДИН** (только плановые пути + docs/, если правился шагом 3;

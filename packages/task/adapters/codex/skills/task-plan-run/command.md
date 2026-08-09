@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:5f66b9c19c8329710dce68200024345598603c467cd9b7d5fb613a98bd052442
+Canonical SHA-256: sha256:4150f83804840b7f65b76b930b89aaa5a7fa613d9f4f5b59e1d7cd9157caee77
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -59,7 +59,8 @@ fresh item state. Повторное чтение запрещено.
   `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
   **Журнал (D21, P1.1):** при `ROUTING-BLOCKED`/`ROUTING-INCONSISTENT` append ОДНУ запись
   `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m>
-  --command plan-run --actor <фактические model>/<фактический effort> --result blocked
+  --command plan-run --actor <фактические model>/<фактический effort>
+  --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result blocked
   --friction routing-blocked --note "<предписано vs фактическое>"` — работа не начиналась,
   старт-запись плана-exec.md (п. 3) не пишется.
 
@@ -73,3 +74,8 @@ B2 аудита REGHUB). Фактическая модель/effort ОБЯЗАН
 Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется
 (правило двух SSOT).
+
+Каждая journal-запись, которую `plan-run` наследует из `plan-exec.md`, передаёт тот же
+`--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`; resolver обязан
+найти ровно один provider adapter, иначе append не выполняется. Это provider-neutral правило:
+raw runtime identity принадлежит только adapter'у, а не canonical command.

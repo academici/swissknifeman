@@ -12,6 +12,7 @@ class PlanItemStateTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.plan = write_valid_plan(Path(self.tmp.name), "DEMO-V2", layout="v2")
+        (self.plan / "journal.jsonl").write_text("", encoding="utf-8")
     def tearDown(self): self.tmp.cleanup()
     def test_result_mapping_covers_sealed_enum(self):
         self.assertEqual(set(plan_item_state.RESULT_STATUS), set(journal.RESULT_VALUES))
@@ -32,3 +33,31 @@ class PlanItemStateTests(unittest.TestCase):
         text = plan_item_state.render_state(self.plan, "P1.1")
         self.assertIn("**Status:** 🔴 Blocked", text)
         self.assertIn("**Escalation Needed:** yes", text)
+
+    def test_design_event_is_history_but_not_execution_position(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-design",
+            actor="frontier/high", result="in-progress",
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "⬜ Not started", "attempt": 0, "last_result": None,
+        })
+
+    def test_audit_and_execution_events_keep_their_execution_semantics(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-design",
+            actor="frontier/high", result="in-progress",
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-audit",
+            actor="frontier/xhigh", result="audit-red",
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="in-progress",
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "🟡 In progress", "attempt": 2, "last_result": "in-progress",
+        })

@@ -80,6 +80,12 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertTrue(all("return_event_id" not in record["tuple"]
                             for record in result["fingerprints"]))
 
+    def test_downstream_record_is_not_a_return_seam(self):
+        fixture = Path(__file__).parent / "data" / "plan-v2"
+        record = next((fixture / "findings").glob("*downstream*.md"))
+        self.assertFalse(plan_returns._is_seam_candidate(record.read_text(encoding="utf-8")))
+        self.assertTrue(plan_returns.returns(fixture)["fingerprints"])
+
     def test_committed_fixture_has_multiple_event_scoped_judgement_carriers(self):
         fixture = Path(__file__).parent / "data" / "plan-v2" / "findings"
         carriers = sorted(fixture.glob("*judgement*.md"))

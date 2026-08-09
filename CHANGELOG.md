@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: закрывающие команды plan-protocol теперь производят v2-следы.** Они записывают
+  session provenance, регенерируют projections, фиксируют downstream-gate record и сохраняют
+  fail-closed квалификацию эскалаций; Codex подтверждён, Claude ожидает provider-owned replay
+  (`2026.08.07-PLAN-ECONOMY` P6.2, D147–D149).
+
 ## [0.10.0] - 2026-08-09
 
 - **`task`: пять protocol commands теперь выбирают declared read path по `Layout`.** Планы без

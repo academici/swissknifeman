@@ -34,8 +34,11 @@ import re
 import unittest
 from pathlib import Path
 
-import fixtures  # noqa: F401,E402  — ПЕРВЫМ: его импорт кладёт lib/ в sys.path (голый
-                 # `python3 -m unittest discover -s tests`, без PYTHONPATH, иначе не найдёт task)
+try:
+    from . import fixtures  # noqa: F401
+except ImportError:
+    import fixtures  # noqa: F401,E402
+# Первым: fixture кладёт lib/ в sys.path; package- и discover-запуски оба поддержаны.
 import task.plan_lint as plan_lint  # noqa: E402
 from task.plan_lint import (  # noqa: E402
     CANON_LITERALS, HEURISTIC_LITERALS, I18N_KEEP_RE, SKILL_RU_RELPATH, _find_skill_ru,
@@ -450,6 +453,23 @@ class TestCommandReadPathProjection(unittest.TestCase):
                 self.assertIn("`handoff.md` НЕ входит в обязательный путь", text)
                 for slot in self.V2_SLOTS:
                     self.assertIn(slot, text)
+
+    def test_closing_commands_require_neutral_session_identity(self):
+        required = '--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"'
+        for command in self.COMMANDS:
+            with self.subTest(command=command):
+                text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
+                self.assertIn(required, text)
+                self.assertNotIn("CODEX_THREAD_ID", text)
+
+    def test_v2_closure_production_is_explicit_and_v1_is_preserved(self):
+        for command in ("plan-exec.md", "plan-close.md"):
+            with self.subTest(command=command):
+                text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
+                self.assertIn("Layout v2", text)
+                self.assertIn("plan-downstream.py", text)
+                self.assertIn("unqualifiable", text)
+                self.assertIn("Layout: v1", text)
 
 
 if __name__ == "__main__":

@@ -216,6 +216,21 @@ def _timestamp(entry: dict, ordinal: int) -> tuple:
         return (1, datetime.max, ordinal)
 
 
+_SEAM_FIELDS = ("file", "rule_or_contract_locus", "defect_class")
+
+
+def _is_seam_candidate(text: str) -> bool:
+    """Avoid parsing unrelated finding carriers as return-seam records."""
+    if not text.startswith("---\n"):
+        return False
+    try:
+        frontmatter = text.split("\n---\n", 1)[0].splitlines()[1:]
+    except IndexError:
+        return False
+    keys = {line.split(":", 1)[0].strip() for line in frontmatter if ":" in line}
+    return all(key in keys for key in _SEAM_FIELDS)
+
+
 def _frontmatter(path: Path) -> dict:
     try:
         text = path.read_text(encoding="utf-8")
@@ -240,8 +255,13 @@ def _seams(plan_dir: Path) -> list[dict]:
         carriers.extend(sorted(findings.rglob("*.md")))
     result = []
     for path in carriers:
+        try:
+            if not _is_seam_candidate(path.read_text(encoding="utf-8")):
+                continue
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ReturnError(f"seam carrier не читается: {path}") from exc
         fields = _frontmatter(path)
-        seam = {key: fields.get(key) for key in ("file", "rule_or_contract_locus", "defect_class")}
+        seam = {key: fields.get(key) for key in _SEAM_FIELDS}
         if (isinstance(fields.get("item"), str) and isinstance(fields.get("date"), str)
                 and all(isinstance(value, str) and value for value in seam.values())):
             result.append({"item": fields["item"], "date": fields["date"], "seam": seam,
@@ -331,6 +351,12 @@ def _evidence_fields(plan_dir: Path) -> list[dict]:
         return []
     result = []
     for path in sorted(findings.rglob("*.md")):
+        try:
+            raw = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ReturnError(f"evidence carrier не читается: {path}") from exc
+        if f"gate: {RETURN_LOOP_GATE}" not in raw:
+            continue
         fields = _frontmatter(path)
         if fields.get("gate") == RETURN_LOOP_GATE:
             result.append({"path": path, "fields": fields})
@@ -350,12 +376,18 @@ def _judgements_by_event(plan_dir: Path, subject_id: str, fingerprint_digest: st
         return {}
     selected: dict[str, dict | None] = {}
     for path in sorted(findings.rglob("*.md")):
+        try:
+            raw = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ReturnError(f"judgement carrier не читается: {path}") from exc
+        if "return_judgement:" not in raw:
+            continue
         fields = _frontmatter(path)
-        raw = fields.get(_JUDGEMENT_FIELD)
-        if not isinstance(raw, str):
+        encoded = fields.get(_JUDGEMENT_FIELD)
+        if not isinstance(encoded, str):
             continue
         try:
-            record = json.loads(raw)
+            record = json.loads(encoded)
             validate_judgement(record)
         except (json.JSONDecodeError, ReturnError):
             continue

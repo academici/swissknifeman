@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:1a31e981d98ef95cb46765c4c511baa2aaec835e9b8d324491bf25e61fb78cb3
+Canonical SHA-256: sha256:2d9594dd6db6d85aca8365df8783013063900711a7e4044f632d06ac8c23adc5
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -98,7 +98,8 @@ fresh item state. Повторное чтение запрещено; режим
    **Журнал (D21, P1.1):** append ОДНУ запись (item_id = `Pn` — фаза, не item; design-сессия
    не закрывает item'ы, `result` честно отражает это) — `python3 -m task.journal append
    --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn --command plan-design --actor
-   frontier/high --result in-progress --note "фаза детализирована до DoR"`.
+   frontier/high --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
+   --result in-progress --note "фаза детализирована до DoR"`.
    **Reconcile контракт-блока (contract-first, скилл `plan-protocol` §5):** если фаза несёт
    контракт-блок `> **Контракт фазы (contract-first).**`, при детализации сверь его `Потребляет`
    с `Производит` уже закрытых фаз; расхождение → обнови блок + D# (`supersedes D#` при отмене
@@ -113,6 +114,7 @@ fresh item state. Повторное чтение запрещено; режим
    до уровня «implementation исполнит без вопросов». Финал режима — refine-цикл + DoR-чеклист (ниже).
    **Журнал (D21, P1.1):** append ОДНУ запись — `python3 -m task.journal append --plan-dir
    plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> --command plan-design --actor frontier/high
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
    --result in-progress --note "ТЗ item'а доведено до DoR"`.
    **Историческое исключение (D51):** schema-invalid существующую journal-строку нельзя
    переписывать или компенсировать event'ом. Только explicit Owner D# может дописать

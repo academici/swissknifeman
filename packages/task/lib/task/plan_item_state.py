@@ -18,6 +18,7 @@ RESULT_STATUS = {
     "audit-green": "⬜ Not started", "audit-red": "🔴 Blocked",
 }
 _ITEM = re.compile(r"^P\d+\.\d+$")
+_EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
 
 def _read(path):
     try:
@@ -68,7 +69,8 @@ def state_model(plan_dir, item_id):
     journal_path = plan_layout.carrier_path(plan_dir, "journal")
     spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     events = _events(plan_dir, item_id)
-    last = events[-1] if events else {}
+    execution_events = [event for event in events if event.get("command") in _EXECUTION_COMMANDS]
+    last = execution_events[-1] if execution_events else {}
     result = last.get("result")
     note = last.get("note") or "—"
     friction = last.get("friction") or []
@@ -80,7 +82,7 @@ def state_model(plan_dir, item_id):
         "generated_by": {"name": "task.plan-views", "version": "1.0.0"},
     }, "state": {
         "world": {"paths": [], "commits": []},
-        "position": {"status": RESULT_STATUS[result] if result else "⬜ Not started", "attempt": len(events), "last_result": result},
+        "position": {"status": RESULT_STATUS[result] if result else "⬜ Not started", "attempt": len(execution_events), "last_result": result},
         "next_step": "Continue item execution." if result in (None, "in-progress") else "Proceed according to the plan.",
         "active_context": {"risks": [], "workarounds": [], "decisions": []},
         "history_pointer": {"view": f".plan-cache/history/{item_id}.md", "command": f"python3 packages/task/scripts/plan-views.py history --item {item_id}"},

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:fffdbe9ab44525492cc35435ef2ca0ebd425c467129bccd1ed8b20674197b037
+Canonical SHA-256: sha256:1ccad4c9b9a329f2768ab5d349ef7388b467f3e8d64916691fa558db147f45ec
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -121,7 +121,9 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
    `PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
-   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
+   команда> --actor <model>/<effort>
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result in-progress`
+   (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
    (не блокер, как `plan-lint`).
@@ -145,7 +147,8 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
      <что именно ждём>)`, выдумывать команду запрещено;
    - обнови `handoff.md` (Next: $ task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
-   - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
+   - **Журнал (D21, P1.1):** append финал-запись тем же вызовом, включая
+     `--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`: `--result escalated --friction escalation
      --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
      что старт-запись п. 3).
 
@@ -210,15 +213,26 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·
       **`Last Updated`** в `## 0. Meta` = дата закрытия item'а · **Журнал (D21, P1.1)**: append
-      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor`, что старт-запись п. 3)
+      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor/--session-id`, что старт-запись п. 3)
       `--result <closed-green|closed-deviations — по статусу выше> --attempt <N — 1-based счётчик
       попыток ЭТОГО item'а> --friction <из закрытого списка §2.1: deviation при непустых Known
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
       "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
-      `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
+   `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
       живёт в Completion Notes/findings. Historical long note не переписывается, а owner status
       проецирует её коротким указателем `journal.jsonl:<line>` (D141).
+
+      **Layout v2 — производство закрытия (P6.2).** После каждого terminal journal event, но до
+      lint'а, команда НЕ дописывает пять полей исхода или доску в item-spec: она запускает
+      `plan-views.py state|status|decisions|closure|bundle`, затем `--check` каждого применимого
+      генератора. Для закрывающегося producer запускается `plan-downstream.py --record` с хешем
+      уже созданного item-коммита: `green`, `red` и `unknown` ВСЕГДА материализуются item-scoped
+      finding'ом с парой `consumer_spec_sha256 × producer_commit`; `red` не закрывается. Перед
+      terminal escalation записывается return-evidence с `new`/`repeat`/`unqualifiable`, причём
+      `unqualifiable` не читается как `new`. `closure/<Pn>.json` пишется только при `Closure
+      Protocol | v1`; генерируемый `<Pn>.closed.md` регенерируется всегда — это два разных
+      носителя. При `Layout: v1` сохраняется прежний порядок этого шага дословно.
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

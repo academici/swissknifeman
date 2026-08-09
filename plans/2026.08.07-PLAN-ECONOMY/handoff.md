@@ -1,46 +1,43 @@
 # HANDOFF — 2026-08-09 — after P5.4
 
-**Next:** /task:plan-design 2026.08.07-PLAN-ECONOMY P5.4
+**Next:** /task:plan-run 2026.08.07-PLAN-ECONOMY P5.5
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | — |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Сверить схему реестра диспозиций P3.6 с обязательной Validation P5.4 и исправить ТЗ по D-записи |
-| Команда | `task:plan-design 2026.08.07-PLAN-ECONOMY P5.4` |
+| Context | continue (`/clear`) — ручной item |
+| Суть | P5.5: адаптер над пакетом P4 и приёмка фазы P5 |
+| Команда | `task:plan-run 2026.08.07-PLAN-ECONOMY P5.5` |
 
 ```text
-$ task:plan-design 2026.08.07-PLAN-ECONOMY P5.4
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.5
 ```
 
 ## Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P5.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.5'
 ```
 
-**Done:** P5.4 прошёл routing и pre-mutation Task Contract (`allow`) в сессии
-`gpt-5.6-terra/high`; в `journal.jsonl` дописаны start и escalation события, а state/status
-проекции регенерированы. Реализация не начиналась.
+**Done:** P5.4 реализован в `f48421c8`: durable append-only очередь решений,
+lease/claim, адресная пауза субъекта, continuation и owner-gate projection; D64
+исполнено. Исправлена локальная ошибка Validation: P3.6 keyed-map сохранён, новая
+диспозиция явно выключена. Targeted 5 tests, полный набор 691 tests и
+`packages/task/scripts/validate.sh` — зелёные; pre-final Task Contract: `allow`.
 
-**Remaining:** `task:plan-design` должен устранить конфликт схемы реестра диспозиций и
-Validation P5.4; после этого повторить P5.4. Затем P5.5 — адаптер над пакетом P4 и
-приёмка фазы.
+**Remaining:** P5.5 — адаптер над пакетом P4 и приёмка фазы.
 
-**Sources of truth:** `phases/P5/P5.4.md` (особенно Validation) ·
-`packages/task/configs/lint-check-dispositions.json` (P3.6 schema) ·
-`findings/P5.4-lint-disposition-schema-conflict-2026-08-09.md`.
+**Sources of truth:** `phases/P5/P5.5.md` · `phases/P5/P5.4.md` ·
+`packages/task/lib/task/plan_requests.py` · `packages/task/docs/reference/plan-decision-queue.md`.
 
-**Open risks:** P5.4's literal Validation expects `checks` to be a list of rows with
-`id/default_enabled`, but the P3.6 registry is a keyed function map with `disposition` only.
-Changing either side without a D-record risks breaking live lint consumers. Baseline plan-lint
-still has 6 pre-existing WARN. The worktree carries unrelated `brief/index/roadmap` changes
-that P5.4 did not overwrite.
+**Open risks:** Hook dry-run is still unverifiable without `HARNESS_TRUST_REQUIRED` approval.
+Baseline plan-lint has historical WARN; P5.3's bare-discover bootstrap issue remains outside
+this item. The worktree carries unrelated `brief/index/roadmap` changes not owned by P5.4.
 
-**Workarounds/Deferred/Open questions:** workaround — none; deferred — P5.3's historical
-test-bootstrap issue remains outside this item's scope; open question — whether P5.4 must use
-the P3.6 mapping schema or P3.6 needs an explicitly migrated row schema.
+**Workarounds/Deferred/Open questions:** no P5.4 workaround remains. Defer the hook trust
+gate to an owner-authorised harness session; P5.3's historical test-bootstrap issue remains
+outside this item's scope.

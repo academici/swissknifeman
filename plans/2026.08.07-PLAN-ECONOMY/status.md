@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: d6dd6dd4ad5e527d2e2d4e409a0ffb990b33fd3804b3ca2921d5b9b0c4ae3c22
+inputs_sha256: 9d5d5634ea7deca1b9865626be025f099b37221c830f9b08268cbd6307213991
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
-| P5 | Безлюдный протокол решений и рамка полномочий | 1/5 | ⬜ Not started |
+| P5 | Безлюдный протокол решений и рамка полномочий | 2/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
 ## Phase P0
@@ -94,7 +94,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P5.1 | Заморозить контракт запроса и ответа решения | 🟢 Done | 2026-08-09 |
-| P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | ⬜ Not started | 2026-08-09 |
+| P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | 🟢 Done | 2026-08-09 |
 | P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | ⬜ Not started | 2026-08-09 |
 | P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | ⬜ Not started | 2026-08-09 |
 | P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | ⬜ Not started | 2026-08-09 |
@@ -268,6 +268,10 @@ generated_by: task plan-views status
 | 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P4 закрыта: D142 remediation и P4 evidence сверены |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · decision-request-v1.{md,schema.json} и строка Contracts созданы; Validation passed на item-коммите 7ba23f96; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Подготовка authority-frame v1 и владельческого инстанса до явного owner gate |
+| 2026-08-09 | gpt-5.6-terra/medium | plan-run · blocked · предписано frontier/high, фактическая сессия implementation/medium (gpt-5.6-terra) |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · authority-frame v1 и owner instance заморожены D143; item tree 7624eed5; Validation P5.2 passed; process deviation: ошибочная blocked-запись journal.jsonl:153; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -291,3 +295,4 @@ generated_by: task plan-views status
 - P4.4: known deviation
 - P4.5: known deviation
 - P4.6: known deviation
+- P5.2: known deviation

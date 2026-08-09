@@ -11,7 +11,7 @@ _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task import plan_lint, plan_returns  # noqa: E402
+from task import plan_gates, plan_lint, plan_returns  # noqa: E402
 from task.plan_lint_checks import engine  # noqa: E402
 
 
@@ -61,7 +61,8 @@ class ReturnLoopLintTests(unittest.TestCase):
                                "rule_or_contract_locus: x\ndefect_class: y\n---\n", encoding="utf-8")
             digest = plan_returns.returns(plan_dir)["fingerprints"][0]["digest"]
             diag = plan_lint.Diagnostics()
-            plan_lint.lint_plan(plan_dir, diag)
+            with mock.patch.object(plan_gates, "_active_items", return_value={"P1.1"}):
+                plan_lint.lint_plan(plan_dir, diag)
             self.assertTrue(any("RETURN_LOOP_OWNER_GATE_REQUIRED" in error for error in diag.errors),
                             diag.errors)
             finding.write_text("---\nitem: P1.1\ndate: 2026-07-02\nfile: a.py\n"
@@ -70,7 +71,8 @@ class ReturnLoopLintTests(unittest.TestCase):
                                f"fingerprint_digest: {digest}\noccurrences: 3\n"
                                "qualification: repeat\nowner_authorization: D1\n---\n", encoding="utf-8")
             diag = plan_lint.Diagnostics()
-            plan_lint.lint_plan(plan_dir, diag)
+            with mock.patch.object(plan_gates, "_active_items", return_value={"P1.1"}):
+                plan_lint.lint_plan(plan_dir, diag)
             self.assertFalse(any("return-loop-v1" in error for error in diag.errors), diag.errors)
 
 

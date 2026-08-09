@@ -289,7 +289,8 @@ class PlanRequestsTests(unittest.TestCase):
             "| visibility | private |", "| visibility | private |\n| Decision Queue Gate | v1 |"),
             encoding="utf-8")
         diag = plan_lint.Diagnostics()
-        with mock.patch("task.plan_layout.is_terminal_phase", return_value=True):
+        with mock.patch("task.plan_layout.is_terminal_phase", return_value=True), \
+                mock.patch("task.plan_gate_activation.active_phases", return_value={"P0"}):
             plan_gates.lint_return_loop(self.plan, "v2", diag)
         self.assertTrue(any(value["decision_id"] in line for line in diag.errors), diag.errors)
 

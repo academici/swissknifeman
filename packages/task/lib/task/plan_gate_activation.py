@@ -73,5 +73,7 @@ def active_items(plan_dir, check: str) -> set[str]:
 
 def active_phases(plan_dir, check: str) -> set[str]:
     active = active_items(plan_dir, check)
+    if not active:
+        return set()
     model = plan_status.status_model(plan_dir)
     return {phase["id"] for phase in model["phases"] if any(item["id"] in active for item in phase["items"])}

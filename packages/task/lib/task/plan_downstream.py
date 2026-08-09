@@ -364,6 +364,8 @@ def lint_records(plan_dir, layout: str, diag) -> None:
     except plan_gate_activation.ActivationError as exc:
         diag.error(plan_dir / "plan.md", None, f"{GATE_ID}: {exc}")
         return
+    if not active:
+        return
     repo_root = plan_weight.repo_root_for(plan_dir)
     try:
         head = _git(repo_root, "rev-parse", "--verify", "HEAD^{commit}")

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 876732829f02214042e857a88b17fcb439aebf3eb23805c37edd02fa1ea8cd2f
+inputs_sha256: d6dd6dd4ad5e527d2e2d4e409a0ffb990b33fd3804b3ca2921d5b9b0c4ae3c22
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
-| P5 | Безлюдный протокол решений и рамка полномочий | 0/5 | ⬜ Not started |
+| P5 | Безлюдный протокол решений и рамка полномочий | 1/5 | ⬜ Not started |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
 ## Phase P0
@@ -93,7 +93,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P5.1 | Заморозить контракт запроса и ответа решения | ⬜ Not started | 2026-08-09 |
+| P5.1 | Заморозить контракт запроса и ответа решения | 🟢 Done | 2026-08-09 |
 | P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | ⬜ Not started | 2026-08-09 |
 | P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | ⬜ Not started | 2026-08-09 |
 | P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | ⬜ Not started | 2026-08-09 |
@@ -266,6 +266,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · D142: e534dbfb; event-scoped reducer/packet and detached acceptance passed; 17 focused + 666 task tests; history 10/1109/87, 7 over-cap; hook provenance-invalid. |
 | 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P4 закрыта: D142 remediation и P4 evidence сверены |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · decision-request-v1.{md,schema.json} и строка Contracts созданы; Validation passed на item-коммите 7ba23f96; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -175,7 +175,7 @@ def item_spec_md(item_id="P1.1"):
 **Why:** Диагностика дорогая.
 **Scope Included:** load_config().
 **Scope Excluded:** формат конфига.
-**Inputs:** список ключей.
+**Inputs:** `lib/pkg/config.py`.
 **Files:** lib/pkg/config.py
 **Required Reads:** 1) lib/pkg/config.py
 **Implementation Rules:** stdlib-only.
@@ -357,7 +357,6 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
             encoding="utf-8")
         phase_path.write_text(phase_index_md(), encoding="utf-8")
         (phase_path.parent / "P1.1.md").write_text(item_spec_md(), encoding="utf-8")
-        (phase_path.parent / "P1.1.state.md").write_text(item_state_md(), encoding="utf-8")
     else:
         phase_path.write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
@@ -366,6 +365,8 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
     (plan_dir / "journal.jsonl").write_text(journal_jsonl(plan_id), encoding="utf-8")
     (plan_dir / "index.md").write_text(index_md(plan_id), encoding="utf-8")
     if layout == "v2":
-        from task import plan_status
+        from task import plan_bundle, plan_item_state, plan_status
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_bundle.build(plan_dir, "P1.1")
         plan_status.build_status(plan_dir)
     return plan_dir

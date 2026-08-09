@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: `plan-weight` измеряет объявленный executor path для обеих раскладок.**
+  Layout v1 сохраняет legacy `plan → handoff → phase → Required Reads`; layout v2
+  fail-closed проверяет свежие bundle/state, считает digest-qualified selections и
+  измеряет пять carrier slots без `handoff.md` (`2026.08.07-PLAN-ECONOMY` P2.10, D152).
+
 - **`task`: downstream consumer validation защищена от рекурсивного self-poisoning.**
   Вложенный `plan-lint` больше не перечитывает append-only downstream RED во время проверки,
   которая должна его supersede; прямой lint сохраняет fail-closed поведение.

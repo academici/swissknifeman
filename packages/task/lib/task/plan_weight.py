@@ -6,13 +6,25 @@
 `configs/token-estimate-calibration.json`), проверяя каждый обязательный файл против
 ИЗМЕРЕННОГО лимита одного чтения P0.2 (`configs/read-limit.json`).
 
-Обязательный путь (`plan-exec.md` §1, дословно — литералы в `MANDATORY_PATH_LITERALS`,
-тест сверяет их с актуальным текстом команды):
+Обязательный путь зависит только от объявленной раскладки. Для layout v1 он остаётся
+legacy-путём (`MANDATORY_PATH_LITERALS`):
 
     1) plans/<PLAN-ID>/plan.md      → роль `plan`
     2) plans/<PLAN-ID>/handoff.md   → роль `handoff`
     3) plans/<PLAN-ID>/phases/Pn.md → роль `phase`
     4) файлы из **Required Reads** пункта, в указанном порядке → роль `required_read`
+
+Для layout v2 (`V2_MANDATORY_PATH_LITERALS`) production path совпадает с пятью executor
+slots замороженного `read-path` v1:
+
+    1) plan.md                         → `plan-core`
+    2) phases/<Pn>/<Pn>.md             → `phase-context`
+    3) phases/<Pn>/<Pn.m>.md           → `item-spec`
+    4) bundles/<Pn.m>.json + selections → `item-input-bundle` + `bundle-input`
+    5) phases/<Pn>/<Pn.m>.state.md     → `item-state`
+
+Generated bundle/state проходят owning freshness check до использования. `handoff.md`
+в layout-v2 executor path не входит.
 
 Две измерительные асимметрии фазы P0 (`research/02-p0-measurement-design.md` §5)
 воспроизводятся здесь буквально:
@@ -98,6 +110,7 @@ stdlib-only; `core` (через `task.plan_lint`) достаётся тем же
 тому же парсеру, которым план читает линтер: второй парсер означал бы второе
 определение схемы.
 """
+import hashlib
 import json
 import os
 import re
@@ -105,7 +118,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from task import plan_admission, plan_lint, plan_layout, token_estimate
+from task import (plan_admission, plan_bundle, plan_item_state, plan_lint, plan_layout,
+                  token_estimate)
 
 # --- обязательный путь чтения (`plan-exec.md` §1) ----------------------------------
 
@@ -117,9 +131,21 @@ MANDATORY_PATH_LITERALS = (
     "plans/<PLAN-ID>/phases/Pn.md",
     "**Required Reads**",
 )
+V2_MANDATORY_PATH_LITERALS = (
+    "plans/<PLAN-ID>/plan.md",
+    "plans/<PLAN-ID>/phases/<Pn>/<Pn>.md",
+    "plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md",
+    "plans/<PLAN-ID>/bundles/<Pn.m>.json",
+    "plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md",
+)
 PLAN_EXEC_RELPATH = Path("packages/task/commands/plan-exec.md")
 
-ROLES = ("plan", "handoff", "phase", "required_read")
+V1_ROLES = ("plan", "handoff", "phase", "required_read")
+V2_CARRIER_ROLES = (
+    "plan-core", "phase-context", "item-spec", "item-input-bundle", "item-state")
+V2_INPUT_ROLE = "bundle-input"
+# Backward-compatible public alias used by existing consumers/tests.
+ROLES = V1_ROLES
 
 # --- таксономия пробелов (закрытая, research/02 §5) --------------------------------
 
@@ -252,6 +278,24 @@ def measure_file(path, *, role, artifact, limits, model_id=None):
     дать число, а не исключение — вес всё равно считается по декодированному тексту."""
     path = Path(path)
     raw = path.read_bytes()
+    text = raw.decode("utf-8", errors="replace")
+    est = token_estimate.estimate_text(text, artifact=artifact, session_model_id=model_id)
+    size_ok = len(raw) <= limits["size_bytes"]
+    tokens_ok = est <= limits["tokens"]
+    return {
+        "path": str(path),
+        "role": role,
+        "bytes": len(raw),
+        "chars": len(text),
+        "est_tokens": est,
+        "dense_ascii_share": dense_ascii_share(text),
+        "gates": {GATE_SIZE_BYTES: size_ok, GATE_TOKENS: tokens_ok},
+        "passes": size_ok and tokens_ok,
+    }
+
+
+def measure_bytes(raw, *, path, role, artifact, limits, model_id=None):
+    """Measure one digest-qualified selection without pretending it is a whole file."""
     text = raw.decode("utf-8", errors="replace")
     est = token_estimate.estimate_text(text, artifact=artifact, session_model_id=model_id)
     size_ok = len(raw) <= limits["size_bytes"]
@@ -512,10 +556,14 @@ class Measurer:
         record["role"] = role
         return record
 
+    def selected(self, raw, *, path, role):
+        return measure_bytes(raw, path=path, role=role, artifact=self.artifact,
+                             limits=self.limits, model_id=None)
+
 
 def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_root=None,
                  rel_to=None):
-    """Вес обязательного пути ОДНОГО пункта: три файла раскладки плана + `Required Reads`.
+    """Вес обязательного пути ОДНОГО пункта, dispatched by declared plan layout.
 
     Возвращает запись с `files` (разрешённое, с весами) и `gaps` (закрытая таксономия).
     Сумма `weight_tokens` считается по разрешённому подмножеству — перечень пробелов
@@ -530,18 +578,21 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                      "detail": "корень репозитория плана недоступен на чтение — "
                                "позиции Required Reads от корня не резолвятся"})
 
-    def add(path, role, entry=None):
-        key = str(Path(path).resolve())
+    def add(path, role, entry=None, *, raw=None, selector=None, display_suffix=""):
+        resolved_path = Path(path).resolve()
+        selector_key = json.dumps(selector or {"kind": "whole_file"}, sort_keys=True)
+        key = (str(resolved_path), selector_key)
         if key in seen:
-            return
+            return False
         seen.add(key)
         try:
-            record = measurer.file(path, role)
+            record = (measurer.file(path, role) if raw is None else
+                      measurer.selected(raw, path=path, role=role))
         except OSError as exc:
             gaps.append({"kind": GAP_MISSING_FILE, "path": _rel(path, rel_to), "role": role,
                          "entry": entry, "detail": f"файл не читается: {exc}"})
-            return
-        record["path"] = _rel(record["path"], rel_to)
+            return False
+        record["path"] = f"{_rel(record['path'], rel_to)}{display_suffix}"
         files.append(record)
         gate = violated_gate(record)
         if gate is not None:
@@ -549,13 +600,11 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                          "entry": entry, "gate": gate,
                          "bytes": record["bytes"], "est_tokens": record["est_tokens"],
                          "detail": f"файл не проходит гейт «{gate}» лимита одного чтения "
-                                   f"(D2б: читаться ЦЕЛИКОМ ОДНИМ вызовом)"})
+                                   f"(D2б: обязательная единица должна читаться ОДНИМ вызовом)"})
+        return True
 
-    # 1)–3) — раскладка плана; порядок ровно как в `plan-exec.md` §1.
-    layout = [(plan_dir / "plan.md", "plan"), (plan_dir / "handoff.md", "handoff")]
-    if phase_file is not None:
-        layout.append((Path(phase_file), "phase"))
-    for path, role in layout:
+    def add_carrier(path, role):
+        path = Path(path)
         if path.is_file():
             add(path, role)
         else:
@@ -563,31 +612,113 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                          "entry": None,
                          "detail": "обязательный файл раскладки плана отсутствует"})
 
-    # 4) — Required Reads пункта, в указанном порядке.
     roots = [plan_dir] + ([repo_root] if root_readable else [])
-    entries = split_entries(_field(fields, "Required Reads"))
-    for entry in entries:
-        hits = 0
-        declared_misses = 0
-        for token, declared in path_candidates(entry):
-            resolved = resolve_candidate(token, roots)
-            if resolved is not None:
-                hits += 1
-                add(resolved, "required_read", entry=_preview(entry))
-                continue
-            if declared:
-                declared_misses += 1
-                gaps.append({"kind": GAP_MISSING_FILE, "path": token, "role": "required_read",
-                             "entry": _preview(entry),
-                             "detail": "путь назван, но файла нет ни под каталогом плана, "
-                                       "ни под корнем репозитория"})
-        if hits == 0 and declared_misses == 0:
-            gaps.append({"kind": GAP_UNRESOLVED_ENTRY, "entry": _preview(entry),
-                         "detail": "позиция не приводится к существующему пути — "
-                                   "прозой названный вход резолверу недоступен"})
+    layout_version = plan_layout.layout_version(plan_dir)
+    if layout_version == "v1":
+        # Legacy branch is intentionally unchanged: plan → handoff → phase → Required Reads.
+        layout = [(plan_dir / "plan.md", "plan"), (plan_dir / "handoff.md", "handoff")]
+        if phase_file is not None:
+            layout.append((Path(phase_file), "phase"))
+        for path, role in layout:
+            add_carrier(path, role)
+
+        entries = split_entries(_field(fields, "Required Reads"))
+        for entry in entries:
+            hits = 0
+            declared_misses = 0
+            for token, declared in path_candidates(entry):
+                resolved = resolve_candidate(token, roots)
+                if resolved is not None:
+                    hits += 1
+                    add(resolved, "required_read", entry=_preview(entry))
+                    continue
+                if declared:
+                    declared_misses += 1
+                    gaps.append({"kind": GAP_MISSING_FILE, "path": token,
+                                 "role": "required_read", "entry": _preview(entry),
+                                 "detail": "путь назван, но файла нет ни под каталогом плана, "
+                                           "ни под корнем репозитория"})
+            if hits == 0 and declared_misses == 0:
+                gaps.append({"kind": GAP_UNRESOLVED_ENTRY, "entry": _preview(entry),
+                             "detail": "позиция не приводится к существующему пути — "
+                                       "прозой названный вход резолверу недоступен"})
+    else:
+        try:
+            plan_core = plan_layout.plan_core_path(plan_dir)
+            item_spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
+            bundle_path = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
+            state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+        except plan_layout.PlanLayoutError as exc:
+            raise PlanWeightError(str(exc)) from exc
+
+        add_carrier(plan_core, "plan-core")
+        add_carrier(Path(phase_file) if phase_file is not None else
+                    plan_layout.phase_path(plan_dir, item_id.split(".")[0]), "phase-context")
+        add_carrier(item_spec, "item-spec")
+        add_carrier(bundle_path, "item-input-bundle")
+
+        bundle_fresh = bundle_path.is_file()
+        if bundle_fresh:
+            try:
+                plan_bundle.build(plan_dir, item_id, check=True)
+            except plan_bundle.BundleError as exc:
+                bundle_fresh = False
+                gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                             "path": _rel(bundle_path, rel_to),
+                             "role": "item-input-bundle", "entry": None,
+                             "detail": f"generated bundle не byte-fresh: {exc}"})
+        if bundle_fresh:
+            try:
+                bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                bundle = None
+                gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                             "path": _rel(bundle_path, rel_to),
+                             "role": "item-input-bundle", "entry": None,
+                             "detail": f"generated bundle не читается: {exc}"})
+            for unit in bundle.get("entries", ()) if bundle else ():
+                source = resolve_candidate(unit["path"], roots)
+                if source is None:
+                    gaps.append({"kind": GAP_MISSING_FILE, "path": unit["path"],
+                                 "role": V2_INPUT_ROLE, "entry": unit.get("declaration_ref"),
+                                 "detail": "digest-qualified bundle input отсутствует"})
+                    continue
+                try:
+                    source_raw = source.read_bytes()
+                    selected = plan_bundle._selected_bytes(source_raw, unit["selector"], source)
+                except (OSError, plan_bundle.BundleError) as exc:
+                    gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                                 "path": _rel(source, rel_to), "role": V2_INPUT_ROLE,
+                                 "entry": unit.get("declaration_ref"),
+                                 "detail": f"bundle selection не читается: {exc}"})
+                    continue
+                if (hashlib.sha256(source_raw).hexdigest() != unit["sha256"]
+                        or hashlib.sha256(selected).hexdigest() != unit["selected_sha256"]):
+                    gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                                 "path": _rel(source, rel_to), "role": V2_INPUT_ROLE,
+                                 "entry": unit.get("declaration_ref"),
+                                 "detail": "bundle source/selection digest mismatch"})
+                    continue
+                selector = unit["selector"]
+                suffix = ("" if selector["kind"] == "whole_file" else
+                          f"#section:{selector['anchor']}")
+                add(source, V2_INPUT_ROLE, entry=unit.get("declaration_ref"), raw=selected,
+                    selector=selector, display_suffix=suffix)
+
+        state_fresh = state_path.is_file()
+        if state_fresh:
+            try:
+                plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
+            except plan_item_state.ItemStateError as exc:
+                gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                             "path": _rel(state_path, rel_to), "role": "item-state",
+                             "entry": None,
+                             "detail": f"generated item state не byte-fresh: {exc}"})
+        add_carrier(state_path, "item-state")
 
     weight = sum(f["est_tokens"] for f in files)
-    floor = sum(f["est_tokens"] for f in files if f["role"] != "required_read")
+    input_roles = {"required_read", V2_INPUT_ROLE}
+    floor = sum(f["est_tokens"] for f in files if f["role"] not in input_roles)
     return {
         "item_id": item_id,
         "status": _field(fields, "Status"),

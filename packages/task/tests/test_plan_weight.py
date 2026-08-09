@@ -21,11 +21,13 @@ except ImportError:  # прямой discovery из packages/task
     from fixtures import phase_md, write_valid_plan
 
 import task.plan_weight as plan_weight  # noqa: E402
+from task import plan_bundle, plan_item_state  # noqa: E402
 from task.token_estimate import CLASSIFIER  # noqa: E402
 from task.plan_weight import (  # noqa: E402
     GAP_KINDS, GAP_MISSING_FILE, GAP_OVERSIZED_FILE, GAP_UNREADABLE_ROOT,
     GAP_UNRESOLVED_ENTRY, GATE_BOTH, GATE_SIZE_BYTES, GATE_TOKENS,
-    MANDATORY_PATH_LITERALS, PLAN_EXEC_RELPATH, Measurer, PlanWeightError,
+    MANDATORY_PATH_LITERALS, V2_MANDATORY_PATH_LITERALS, PLAN_EXEC_RELPATH,
+    Measurer, PlanWeightError,
     dense_ascii_share, evaluate_canon_budget, expand_braces, load_canon_budget,
     load_read_limit, main, measure_document, measure_item, measure_plan, path_candidates,
     split_entries,
@@ -104,6 +106,18 @@ class MeasurerTestCase(unittest.TestCase):
     def gaps_of(self, record, kind):
         return [g for g in record["gaps"] if g["kind"] == kind]
 
+    def prepare_v2_carriers(self, plan_dir):
+        """Make the shared v2 fixture bundle-resolvable and regenerate both owned carriers."""
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(
+            spec.read_text(encoding="utf-8").replace(
+                "**Inputs:** список ключей.",
+                "**Inputs:** `lib/pkg/config.py`."),
+            encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_bundle.build(plan_dir, "P1.1")
+        return plan_dir
+
 
 class TestMandatoryPath(unittest.TestCase):
     """Обязательный путь воспроизводится ИЗ текста команды, а не по памяти: правка
@@ -133,6 +147,51 @@ class TestMandatoryPath(unittest.TestCase):
         section = text[start:end if end != -1 else len(text)]
         for literal in MANDATORY_PATH_LITERALS:
             self.assertIn(literal, section, f"литерал «{literal}» вне §1 — путь описан не там")
+
+    def test_v2_literals_present_in_order(self):
+        text = self.plan_exec_text()
+        positions = []
+        for literal in V2_MANDATORY_PATH_LITERALS:
+            idx = text.find(literal)
+            self.assertNotEqual(idx, -1, f"литерал v2 §1 «{literal}» исчез из plan-exec.md")
+            positions.append(idx)
+        self.assertEqual(positions, sorted(positions),
+                         "порядок обязательного пути v2 в plan-exec.md §1 изменился")
+
+
+class TestLayoutAwareMeasurement(MeasurerTestCase):
+    def test_v1_path_remains_legacy_and_includes_handoff(self):
+        record = self.item("1) `lib/pkg/config.py`")
+        roles = [entry["role"] for entry in record["files"]]
+        self.assertEqual(roles[:3], ["plan", "handoff", "phase"])
+        self.assertIn("required_read", roles)
+
+    def test_v2_path_uses_exact_five_carriers_and_bundle_selections(self):
+        plan_dir = self.prepare_v2_carriers(
+            write_valid_plan(self.root, plan_id="DEMO-V2-SLOTS", layout="v2"))
+        record = measure_plan(plan_dir, self.measurer(), only_item="P1.1")["items"][0]
+        roles = [entry["role"] for entry in record["files"]]
+        carrier_roles = [role for role in roles if role != "bundle-input"]
+        self.assertEqual(carrier_roles, [
+            "plan-core", "phase-context", "item-spec",
+            "item-input-bundle", "item-state",
+        ])
+        self.assertNotIn("handoff", roles)
+        self.assertEqual(roles.count("bundle-input"), 1,
+                         "same path+selector from Inputs/Required Reads must be read once")
+        self.assertEqual(record["required_reads_tokens"], sum(
+            entry["est_tokens"] for entry in record["files"]
+            if entry["role"] == "bundle-input"))
+
+    def test_v2_stale_bundle_fails_closed(self):
+        plan_dir = self.prepare_v2_carriers(
+            write_valid_plan(self.root, plan_id="DEMO-V2-STALE", layout="v2"))
+        source = plan_dir / "lib" / "pkg" / "config.py"
+        source.write_text("VALUE = 'changed after bundle'\n", encoding="utf-8")
+        record = measure_plan(plan_dir, self.measurer(), only_item="P1.1")["items"][0]
+        gaps = self.gaps_of(record, GAP_UNRESOLVED_ENTRY)
+        self.assertTrue(any(gap.get("role") == "item-input-bundle" for gap in gaps), gaps)
+        self.assertNotIn("bundle-input", [entry["role"] for entry in record["files"]])
 
 
 class TestArtifactsAreMandatory(MeasurerTestCase):
@@ -422,6 +481,7 @@ class TestJsonOutput(MeasurerTestCase):
             "**Version:** `1.1.0`\n"
             "pass_item(i) = resolved(i) AND estimated_required_read_tokens(i) <= 100000\n",
             encoding="utf-8")
+        self.prepare_v2_carriers(plan_dir)
         data = self.run_json("item", str(plan_dir), "P1.1", "--json")
         item = data["items"][0]
         self.assertEqual(item["admission_state"], "ready")
@@ -644,12 +704,13 @@ class TestRealFleetPlan(unittest.TestCase):
         if not (plan_dir / "plan.md").is_file():
             self.skipTest("живой план недоступен — standalone-раскладка")
         measurer = Measurer()
-        plan = measure_plan(plan_dir, measurer, only_item="P0.3")
+        plan = measure_plan(plan_dir, measurer, only_item="P2.10")
         record = plan["items"][0]
-        self.assertEqual(record["item_id"], "P0.3")
+        self.assertEqual(record["item_id"], "P2.10")
         self.assertGreater(record["weight_tokens"], 0)
-        self.assertEqual({f["role"] for f in record["files"]} >= {"plan", "handoff", "phase"},
-                         True)
+        roles = {entry["role"] for entry in record["files"]}
+        self.assertTrue(set(plan_weight.V2_CARRIER_ROLES) <= roles)
+        self.assertNotIn("handoff", roles)
         self.assertTrue(all(g["kind"] in GAP_KINDS for g in record["gaps"]))
         self.assertTrue(all(g.get("gate") in (None, GATE_SIZE_BYTES, GATE_TOKENS, GATE_BOTH)
                             for g in record["gaps"]))

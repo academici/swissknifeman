@@ -11,7 +11,7 @@ try:
 except ImportError:
     from fixtures import write_valid_plan
 
-from task import plan_gates, plan_lint, plan_weight
+from task import plan_bundle, plan_gates, plan_lint, plan_weight
 
 
 DATA = Path(__file__).resolve().parent / "data"
@@ -45,10 +45,15 @@ class TestReadBudgetGate(unittest.TestCase):
                             and "gpt-5.6-terra" in row for row in rows), rows)
 
     def test_rebuilt_item_passes_with_frozen_production_threshold(self):
-        plan_dir = self.copied_fixture("plan-v2-overweight")
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        plan_dir = write_valid_plan(Path(tmp.name), layout="v2")
         contract = plan_dir / "root" / "contracts" / "read-budget-v1.md"
-        contract.write_text(contract.read_text(encoding="utf-8").replace("<= 100", "<= 100000"),
-                            encoding="utf-8")
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "<= 100000", "<= 100"), encoding="utf-8")
+        self.assertTrue(any(plan_gates.GATE_ID in row for row in lint(plan_dir).errors))
+        contract.write_text(contract.read_text(encoding="utf-8").replace(
+            "<= 100", "<= 100000"), encoding="utf-8")
         diag = lint(plan_dir)
         self.assertFalse(any(plan_gates.GATE_ID in row for row in diag.errors), diag.errors)
 
@@ -56,6 +61,7 @@ class TestReadBudgetGate(unittest.TestCase):
         plan_dir = self.copied_fixture("plan-v2")
         large = plan_dir / "brief" / "00-brief.md"
         large.write_text("x" * 300000, encoding="utf-8")
+        plan_bundle.build(plan_dir, "P1.1")
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]
         self.assertTrue(any("brief/00-brief.md" in row and "262144 байт" in row

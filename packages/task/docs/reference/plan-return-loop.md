@@ -21,6 +21,14 @@ an occurrence above the configured cap hard-stops with an owner packet. The pack
 contains the frozen fingerprint tuple/digest, occurrence count, cap, and durable
 journal history; the words `blocked` and `escalated` alone are not risk triggers.
 
+For a Layout-v2 caller that has an exact continuation identity,
+`plan_returns.dispatch_owner_gates()` passes an over-cap packet to
+`plan_requests.request_return_loop_gate()`. The resulting authorization request keeps only
+digest-addressed `journal.jsonl` references: it never copies or rebuilds the frozen P4 packet.
+The affected subject remains blocked with `on_timeout=park`; independent subjects remain
+executable. Command integration stays a later rollout concern, so this adapter does not enable a
+new protocol-command path by itself.
+
 `plan-lint` stays silent unless the plan Meta table explicitly says
 `Return Loop Gate | v1`. Once later phases enable that opt-in, D139 uses additive
 frontmatter on an existing item-scoped `findings/*.md` carrier: `gate:

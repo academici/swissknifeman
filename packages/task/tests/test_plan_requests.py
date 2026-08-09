@@ -178,12 +178,14 @@ class PlanRequestsTests(unittest.TestCase):
         with self.assertRaisesRegex(plan_requests.RequestError, "requires response"):
             plan_requests.append_auto_answer(self.plan, {"decision_id": "Q-auto"})
         response = self._response(value)
-        response.update({"resolver": "policy", "resolver_id": "policy:fixture", "reclassified_to": "authorization"})
+        after = "d" * 64
+        response.update({"resolver": "policy", "resolver_id": "policy:fixture", "reclassified_to": "authorization",
+                         "action_digest": after})
         event = {"decision_id": "Q-auto", "question_class": "plan", "resolver_id": "policy:fixture",
                  "source_system": "git", "source_record_id": "r1", "source_record_version": "1",
-                 "before_digest": value["action_digest"], "after_digest": value["action_digest"],
+                 "before_digest": value["action_digest"], "after_digest": after,
                  "provenance_verified": True, "policy_digest": value["policy_digest"],
-                 "reclassified_action_digest": value["action_digest"], "reclassified_to": "authorization"}
+                 "reclassified_action_digest": after, "reclassified_to": "authorization"}
         plan_requests.append_auto_answer(self.plan, event, response=response)
         self.assertIn("**Status:** 🔴 Blocked", (self.plan / "phases/P0/P0.1.state.md").read_text())
 

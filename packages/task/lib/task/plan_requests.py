@@ -305,16 +305,26 @@ def _auto_answer_errors(event: dict, response: dict, request: dict) -> list[str]
         return ["auto answer identity mismatch"]
     if event.get("provenance_verified") is not True:
         return ["auto answer provenance is not verified"]
-    errors = _response_errors(response, request)
+    if not isinstance(response, dict):
+        return ["response must be an object"]
+    errors = _shape_errors(response, schema["response"], schema, "response")
     if errors:
         return errors
     if request["kind"] != "clarification":
         return ["auto answer is only valid for clarification"]
+    if response["decision_id"] != request["decision_id"] or response["action_version"] != request["action_version"]:
+        return ["auto answer response identity mismatch"]
+    if response["policy_digest"] != request["policy_digest"]:
+        return ["auto answer policy digest mismatch"]
+    if response["selected_option"] not in {row["id"] for row in request["options"]}:
+        return ["P5_DECISION_UNKNOWN_OPTION"]
+    if "reclassified_to" not in response:
+        return ["auto answer misses reclassified_to"]
     if response["resolver"] != "policy" or response["reclassified_to"] != event["reclassified_to"]:
         return ["auto answer lacks policy reclassification"]
     if response["provenance"]["source_system"] != event["source_system"] or response["provenance"]["record_id"] != event["source_record_id"] or response["provenance"]["record_version"] != event["source_record_version"]:
         return ["auto answer provenance mismatch"]
-    if response["action_digest"] != event["after_digest"] or event["reclassified_action_digest"] != event["after_digest"]:
+    if event["before_digest"] != request["action_digest"] or response["action_digest"] != event["after_digest"] or event["reclassified_action_digest"] != event["after_digest"]:
         return ["auto answer digest mismatch"]
     return []
 

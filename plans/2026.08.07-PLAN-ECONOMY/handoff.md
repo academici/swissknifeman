@@ -34,8 +34,8 @@ provenance. Synthetic acceptance: policy 1/2 requests, parked 1 subject, executa
 
 **Open risks:** Hook dry-run remains unverifiable without `HARNESS_TRUST_REQUIRED` approval.
 Baseline plan-lint has historical WARN; P5.3's bare-discover bootstrap issue remains outside this
-item. Runtime model/effort metadata are not machine-verifiable. The worktree carries unrelated
-`brief/index/roadmap` changes not owned by P5.5.
+item. `codex doctor` verifies model `gpt-5.6-terra`; effort remains self-attested. The worktree
+carries unrelated `brief/index/roadmap` changes not owned by P5.5.
 
 **Workarounds/Deferred/Open questions:** user-authorised local repair replaced stale P5.5
 Validation assumptions with existing stable carriers; no runtime workaround remains. Defer the

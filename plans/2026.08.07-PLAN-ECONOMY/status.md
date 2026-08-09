@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: e857b3c7ccbe5e7808e9a73941e3de67163359d295ef90ae0a2fc003f088eabb
+inputs_sha256: 754f062147b81313ba2d65c450be7c1d90cf5764b0475077992f19537ed791e9
 generated_by: task plan-views status
 -->
 
@@ -284,6 +284,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · escalated · Validation imports missing task.plan_layout.load_plan; plan-design must revise API and P5.5 Scope/Files/Validation. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · Owner authorized local P5.5 Validation repair: use existing status projection and queue-record API; continuing without plan-design. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5: a346dea7; owner-authorized Validation repair; return-loop DecisionRequest and subject-local parking; 26 (на a346dea7) targeted, 692 (на a346dea7) validate; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 закрыта: сверены 5 терминальных items и known deviations |
 
 ## Owner Gates
 

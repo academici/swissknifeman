@@ -244,6 +244,122 @@ class PlanRequestsTests(unittest.TestCase):
         events = [json.loads(line) for line in (self.plan / "journal.jsonl").read_text().splitlines()]
         self.assertEqual(events[-1]["result"], "blocked")
 
+    def test_auto_answer_semantic_outcome_is_consistent_across_consumers(self):
+        value = request_value(decision_id="Q-auto-semantic", kind="clarification")
+        plan_requests.request(self.plan, value)
+        response = self._response(value)
+        after = "d" * 64
+        response.update({"resolver": "policy", "resolver_id": "policy:fixture",
+                         "reclassified_to": "authorization", "action_digest": after})
+        event = {"decision_id": value["decision_id"], "question_class": "plan",
+                 "resolver_id": "policy:fixture", "source_system": "git",
+                 "source_record_id": "r1", "source_record_version": "1",
+                 "before_digest": value["action_digest"], "after_digest": after,
+                 "provenance_verified": True, "policy_digest": value["policy_digest"],
+                 "reclassified_action_digest": after, "reclassified_to": "authorization"}
+        plan_requests.append_auto_answer(self.plan, event, response=response)
+
+        state = plan_requests.states(self.plan)[value["decision_id"]]
+        self.assertEqual("pending-authorization", plan_requests.semantic_outcome(state))
+        self.assertIn("**Status:** 🔴 Blocked",
+                      (self.plan / "phases/P0/P0.1.state.md").read_text())
+        self.assertIn(value["decision_id"], {
+            row["decision_id"] for records in plan_requests.pending_groups(self.plan).values()
+            for row in records
+        })
+        self.assertEqual([value["decision_id"]], plan_requests.unresolved_for_phase(self.plan, "P0"))
+        plan_requests.render(self.plan)
+        plan_requests.render(self.plan, check=True)
+        plan_md = self.plan / "plan.md"
+        plan_md.write_text(plan_md.read_text(encoding="utf-8").replace(
+            "| visibility | private |", "| visibility | private |\n| Decision Queue Gate | v1 |"),
+            encoding="utf-8")
+        diag = plan_lint.Diagnostics()
+        plan_gates.lint_return_loop(self.plan, "v2", diag)
+        self.assertTrue(any(value["decision_id"] in line for line in diag.errors), diag.errors)
+
+    def test_request_accepts_two_substantive_plus_mandatory(self):
+        value = request_value(decision_id="Q-two-substantive")
+        plan_requests.request(self.plan, value)
+        self.assertIn(value["decision_id"], plan_requests.states(self.plan))
+
+    def test_request_accepts_five_substantive_plus_mandatory(self):
+        value = request_value(decision_id="Q-five-substantive")
+        for option_id in ("option-3", "option-4", "option-5"):
+            value["options"].append({"id": option_id, "outcome": "park", "action_ref": None,
+                                     "evidence_refs": []})
+        for field in ("contract_version", "action_digest", "canonical_action", "material_fields",
+                      "policy_digest"):
+            value.pop(field)
+        plan_requests.request(self.plan, value)
+        self.assertIn(value["decision_id"], plan_requests.states(self.plan))
+
+    def test_request_rejects_mandatory_only(self):
+        value = request_value(decision_id="Q-mandatory-only")
+        value["options"] = [row for row in value["options"]
+                            if row["id"] in {"escalate", "reject"}]
+        for field in ("contract_version", "action_digest", "canonical_action", "material_fields",
+                      "policy_digest"):
+            value.pop(field)
+        with self.assertRaisesRegex(plan_requests.RequestError, "frozen bounds"):
+            plan_requests.request(self.plan, value)
+
+    def test_request_projection_failure_is_exactly_retryable(self):
+        value = request_value(decision_id="Q-request-retry")
+        original = plan_item_state.build_states
+        calls = 0
+
+        def fail_once(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise RuntimeError("injected request projection failure")
+            return original(*args, **kwargs)
+
+        with mock.patch("task.plan_item_state.build_states", side_effect=fail_once):
+            with self.assertRaisesRegex(plan_requests.RequestError, "projection failed"):
+                plan_requests.request(self.plan, value)
+        retried = plan_requests.request(self.plan, value)
+        events = [json.loads(line) for line in (self.plan / "decisions" / "queue.jsonl").read_text().splitlines()]
+        self.assertEqual(1, sum(row["type"] == "request" for row in events))
+        self.assertEqual(value["decision_id"], retried["decision_id"])
+        plan_item_state.build_states(self.plan, item_id="P0.1", check=True)
+        plan_status.build_status(self.plan, check=True)
+        plan_requests.render(self.plan, check=True)
+
+    def test_resolve_projection_failure_is_exactly_retryable(self):
+        value = request_value(decision_id="Q-resolve-retry")
+        plan_requests.request(self.plan, value)
+        plan_requests.claim(self.plan, value["decision_id"], resolver_id="owner:1",
+                            lease_expires_at="2099-01-01T00:00:00Z")
+        original = plan_item_state.build_states
+        calls = 0
+
+        def fail_once(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise RuntimeError("injected resolve projection failure")
+            return original(*args, **kwargs)
+
+        response = self._response(value)
+        with mock.patch("task.plan_item_state.build_states", side_effect=fail_once):
+            with self.assertRaisesRegex(plan_requests.RequestError, "projection failed"):
+                plan_requests.resolve(self.plan, value["decision_id"], response, resolver_id="owner:1",
+                                      current_continuation=value["continuation"])
+        events = [json.loads(line) for line in (self.plan / "decisions" / "queue.jsonl").read_text().splitlines()]
+        responses = [row for row in events if row["type"] == "response"]
+        self.assertEqual(1, len(responses))
+        self.assertNotIn("continuation", responses[0])
+        retried = plan_requests.resolve(self.plan, value["decision_id"], response, resolver_id="owner:1",
+                                        current_continuation=value["continuation"])
+        self.assertEqual("resume-root", retried["continuation"]["mode"])
+        events = [json.loads(line) for line in (self.plan / "decisions" / "queue.jsonl").read_text().splitlines()]
+        self.assertEqual(1, sum(row["type"] == "response" for row in events))
+        plan_item_state.build_states(self.plan, item_id="P0.1", check=True)
+        plan_status.build_status(self.plan, check=True)
+        plan_requests.render(self.plan, check=True)
+
 
 if __name__ == "__main__":
     unittest.main()

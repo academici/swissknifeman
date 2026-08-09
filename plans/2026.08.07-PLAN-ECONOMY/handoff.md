@@ -40,8 +40,9 @@ D143 · `research/07-p5-decision-protocol-design.md` §2/§3/§5 ·
 `routing-blocked` после неверного чтения default-конфигурации как route активной сессии; закрытие
 P5.2 записано попыткой 2 с friction `deviation,retry`. Baseline plan-lint несёт 6 предсуществующих
 WARN вне P5.2. Codex hook dry-run остаётся недоказанным отдельной CLI-командой, но `codex doctor`
-и `maind health` зелёные. В worktree остаётся чужой незакоммиченный P4/P6/projection diff; он не
-входит в item-коммит P5.2 и не должен быть перезаписан P5.3.
+и `maind health` зелёные. Generated state/status projections синхронизированы отдельным fix-коммитом
+после чистой проверки committed tree; в worktree остаётся чужой `brief/index/roadmap` diff, который
+не входит в P5.2 и не должен быть перезаписан P5.3.
 
 **Workarounds/Deferred/Open questions:** workaround — append-only ошибочная строка не удаляется,
 а квалифицирована последующей successful attempt и Known Deviations. Owner gate P5.2 закрыт D143;

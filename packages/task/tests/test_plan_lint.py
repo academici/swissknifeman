@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 import json
+from unittest import mock
 from pathlib import Path
 
 _LIB = Path(__file__).resolve().parents[1] / "lib"
@@ -11,9 +12,22 @@ if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
 from task import plan_lint, plan_returns  # noqa: E402
+from task.plan_lint_checks import engine  # noqa: E402
 
 
 class ReturnLoopLintTests(unittest.TestCase):
+    def test_engine_calls_return_loop_gate_once_with_current_plan_context(self):
+        source = Path(__file__).parent / "data" / "plan-v2"
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = Path(tmp) / "plan-v2"
+            shutil.copytree(source, plan_dir)
+            diag = plan_lint.Diagnostics()
+
+            with mock.patch.object(engine.plan_gates, "lint_return_loop") as lint_return_loop:
+                engine.lint_plan(plan_dir, diag)
+
+            lint_return_loop.assert_called_once_with(plan_dir, "v2", diag)
+
     def test_return_loop_checks_are_silent_until_meta_opt_in(self):
         source = Path(__file__).parent / "data" / "plan-v2"
         with tempfile.TemporaryDirectory() as tmp:

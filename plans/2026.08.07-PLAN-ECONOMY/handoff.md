@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-09 — after P6.6
+# HANDOFF — 2026-08-09 — after P6.7
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
+**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P6.8
 
 | Параметр | Значение |
 |:--|:--|
@@ -8,27 +8,27 @@
 | Effort | high |
 | Capabilities | — |
 | Context | continue-root |
-| Суть | Заморозить acceptance-protocol v1 и машинный session canary до любого прогона приёмки. |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7` |
+| Суть | Исполнить замороженный acceptance-protocol v1: две раздельные ветки измерения, реальный свежий план и session canary. |
+| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.8` |
 
-**Done:** P6.6 закрыт как 🟠: владелец разрешил ремонт ownership/path conflicts; Claude-пути в `vintera/vintera` и `dterema/app` разведены с Codex. Полные dry-run и `skiller update --all` завершили 23/23 доступных целей; инвентарь даёт 52 `ok` из 57 деклараций. Runbook v1→v2 опубликован в `a73653c9`.
+**Done:** P6.7 закрыт как 🟠: `acceptance-protocol-v1.md` и машинный manifest заморожены коммитом `48522653` до первого измерения. Manifest, session-canary ветвление, 733 теста `task`, plan-lint и downstream P6.8 зелёные.
 
-**Remaining:** Пять устаревших деклараций остаются `unknown` без маскирующего удаления. Затем P6.7–P6.9 и phase/plan closure.
+**Remaining:** P6.8 обязан исполнить протокол дословно без правки порогов: arm A и arm B считаются отдельно, свежий план создаётся production-командой, session canary сохраняет raw evidence. Затем P6.9 и закрытие фазы/плана.
 
-**Sources of truth:** `phases/P6/P6.6.state.md` · `artifacts/P6/fleet-adoption-inventory.json` · `artifacts/P6/rollout-dry-run.txt` · `findings/P6.6-rollout-blockers-2026-08-09.md` · `decisions/queue.jsonl` · `journal.jsonl`.
+**Sources of truth:** `root/contracts/acceptance-protocol-v1.md` · `root/contracts/acceptance-protocol-v1.manifest.json` · `phases/P6/P6.8.md` · `bundles/P6.8.json` · `findings/P6.7-downstream-P6.8-c4fdd7f4aa32-485226533359.md`.
 
-**Open risks:** `agelto`, `diabox`, `flexcrm`, `azguard` и `sova` не доказывают актуальность каждой зарегистрированной декларации; это остаток реестра, а не сбой 23-целевой раскатки.
+**Open risks:** Любая ветка может честно дать красный вердикт; это не разрешает менять замороженный протокол или объединять migrated/fresh результаты.
 
-**Workarounds/Deferred/Open questions:** workarounds — none · deferred — точечная регистровая чистка пяти declarations · open_questions — none.
+**Workarounds/Deferred/Open questions:** workarounds — none · deferred — none · open_questions — none.
 
 Provider-neutral plan-protocol launch-block:
 
 ```text
-task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
+task:plan-run 2026.08.07-PLAN-ECONOMY P6.8
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.8'
 ```

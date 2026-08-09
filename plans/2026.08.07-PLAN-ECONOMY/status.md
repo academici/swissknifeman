@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: a11f8be4f94e404d30cd52c28dd10b2a7533ac2cea3df701fd2c818d5a83570c
+inputs_sha256: b7316623d4dfd6be235003eeeb8d30dd62909309f5f37444bc2775a86cd0877e
 generated_by: task plan-views status
 -->
 
@@ -109,7 +109,7 @@ generated_by: task plan-views status
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🟠 Done with deviations | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
-| P6.7 | Предобъявить протокол приёмки | ⬜ Not started | — |
+| P6.7 | Предобъявить протокол приёмки | 🟠 Done with deviations | 2026-08-09 |
 | P6.8 | Исполнить приёмку двумя руками и вынести вердикт | ⬜ Not started | — |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
 
@@ -336,6 +336,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:217 |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Forward repair: downstream P6.8 record must be produced before terminal closure; prior red result preserved/superseded by the next keyed record. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:219 |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Session gpt-5.6-sol/high; pre-mutation allow. Process deviation: executor slots were reread after an earlier truncated preview; no acceptance measurement or arm-A values opened. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.7 48522653: acceptance-protocol v1 frozen before measurement; manifest/session canary validated; task 733 tests and downstream P6.8 green. Deviations: brief §2.3 source repair and truncated-preview reread. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -368,3 +370,4 @@ generated_by: task plan-views status
 - P6.4: known deviation
 - P6.5: known deviation
 - P6.6: known deviation
+- P6.7: known deviation

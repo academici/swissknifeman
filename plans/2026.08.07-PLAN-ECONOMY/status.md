@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 2cb185a1e09390fd8e8104ec208dbeaaae1373d9af06acb9e01c07bc7ace43b2
+inputs_sha256: c903445d424b30ef7f41260ae8b14c035041d9ee998cc1b336603483cca098c7
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
+| P6 | Раскатать протокол и проверить критерий | 1/9 | ⬜ Not started |
 
 ## Phase P0
 
@@ -103,7 +103,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P6.1 | Перевести пять команд на путь чтения v2 при сохранённом v1 | ⬜ Not started | 2026-08-09 |
+| P6.1 | Перевести пять команд на путь чтения v2 при сохранённом v1 | 🟢 Done | 2026-08-09 |
 | P6.2 | Научить закрывающие команды производить записи и снять переходное правило | ⬜ Not started | 2026-08-09 |
 | P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | ⬜ Not started | 2026-08-09 |
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | ⬜ Not started | 2026-08-09 |
@@ -311,6 +311,8 @@ generated_by: task plan-views status
 | 2026-08-09 | frontier/xhigh | plan-audit · audit-red · заход 3, вердикт RED; AUDIT-CAP |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · P5.5: RED deca34a2 → fix d2e9dbf8; 12 acceptance, 21 queue/707 full/validate green; owner-authorized audit-cap remediation; write-site: pre_mutation: block:LOOP_BUDGET_EXCEEDED · pre_final: n/a |
 | 2026-08-09 | gpt-5.6-sol/high | plan-close · closed-deviations · фаза P5 закрыта: owner-authorized single-use remediation; P6.1 не запускалась |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · P6.1: f9370228; 709 tests, validate and Codex projection green; Claude pending-provider |
 
 ## Owner Gates
 
@@ -337,3 +339,4 @@ generated_by: task plan-views status
 - P5.2: known deviation
 - P5.3: known deviation
 - P5.5: known deviation
+- P6.1: known deviation

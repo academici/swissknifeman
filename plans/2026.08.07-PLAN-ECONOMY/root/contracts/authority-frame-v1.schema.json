@@ -1,0 +1,87 @@
+{
+  "contract": "authority-frame",
+  "version": "1.0.0",
+  "default": "reserved",
+  "authority_is_monotonic": true,
+  "reserved_predicates": [
+    "scope_change",
+    "authority_change",
+    "irreversible_semantics"
+  ],
+  "delegated_classes": {
+    "constructive": {
+      "requires_all": [
+        "within_declared_scope",
+        "no_frozen_contract_change",
+        "no_closed_set_extension",
+        "reversible",
+        "decision_recorded"
+      ]
+    }
+  },
+  "decision_class_shape": {
+    "required": [
+      "semantics",
+      "material_fields",
+      "aggregation_rule",
+      "delegated_limits",
+      "owner",
+      "escalation_route",
+      "verdict",
+      "action_class",
+      "attention",
+      "on_timeout"
+    ],
+    "verdicts": [
+      "delegated",
+      "reserved"
+    ],
+    "on_timeout": [
+      "park",
+      "apply_default"
+    ]
+  },
+  "aggregation": {
+    "key": [
+      "plan_id",
+      "item_id",
+      "decision_class"
+    ],
+    "window": "item_lifetime",
+    "surface_field": "affected_surfaces",
+    "rule": "union_crosses_reserved_predicate=>reserved"
+  },
+  "borrowed_sets": {
+    "source": "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+    "action_classes": [
+      "AUTO",
+      "AUTO-FIX",
+      "OWNER"
+    ],
+    "attention_classes": [
+      "none",
+      "batched",
+      "immediate"
+    ],
+    "extension": "forbidden",
+    "immediate_assignment": "forbidden"
+  },
+  "timeout_policy": {
+    "reserved": "park",
+    "apply_default_requires": [
+      "delegated",
+      "reversible",
+      "preauthorized_envelope"
+    ]
+  },
+  "instance": {
+    "path": "packages/task/configs/authority-frame.json",
+    "required": [
+      "version",
+      "frozen_at",
+      "description",
+      "decision_classes"
+    ],
+    "missing_or_invalid": "error"
+  }
+}

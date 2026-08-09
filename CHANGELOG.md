@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: заморожена deny-by-default рамка полномочий `authority-frame` v1.**
+  Машинный контракт и действующий владельческий инстанс задают единственный делегированный класс
+  `constructive`, три зарезервированные границы, монотонное сужение и item-scoped агрегацию против
+  дробления решений (`2026.08.07-PLAN-ECONOMY` P5.2, D60–D61, D143).
+
 - **`task`: history событий возврата теперь содержит plan-local `return_event_id`.** Он равен
   физическому адресу `journal.jsonl:<line>` и связывает judgement carrier с конкретным return event,
   не меняя frozen fingerprint tuple, digest, namespace или `same_return_max`

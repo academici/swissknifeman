@@ -11,7 +11,7 @@
 | `handoff.md` | Где мы; вход холодного старта; launch-block следующего шага |
 | `phases/Pn/Pn.md` + `Pn.m.md`/`Pn.m.state.md` | Thin phase indices, handwritten specifications and generated item state (Layout v2) |
 | `decisions/` | Immutable D-records and generated navigation views |
-| `roadmap.md` | Исполнительская карта 47 items: батчи B1/B2, 44 `manual`-item, три `plan-exec`; shared-first маршрут D119–D122, adaptive review D123–D125, stage-aware admission D131 и field-canary P2.8–P2.10/P3.7/P6.7–P6.8 |
+| `roadmap.md` | Исполнительская карта 47 items: батчи B1/B2, 44 `manual`-item, три `plan-exec`; P4 реоткрыта D142 по существующим владельцам P4.2/P4.4/P4.6 без нового item |
 | `journal.jsonl` | Append-only лог исполнения |
 | `open-questions.md` | Открытых нет; закрыты OQ-1–OQ-6 |
 | `root/contracts/` | Замороженные контракты плана; судьба — docs проекта |
@@ -29,7 +29,8 @@
 | Файл | Слой | Что несёт | Потребляют фазы |
 |:--|:--|:--|:--|
 | `brief/00-brief.md` | 0 | Бриф владельца 2026-08-07 без потери мыслей; три исполненных распоряжения | все |
-| `brief/01-refinements.md` | 0 | Уточнения владельца: EN-only/RU removal; решения лимита; сохранить исходную работу Claude; Codex-first multiprovider; root-session continuity; RED-долг не принимать, техническое закрытие делегировано агенту; owner gate P2.8 | P0, P1, P2, P4, P5, P6 |
+| `brief/01-refinements.md` | 0 | Уточнения владельца, включая узкий реопен P4 по §3: event-scoped judgement, полный owner packet, воспроизводимая item-tree acceptance и reconciliation границ P4.2/P4.4 при сохранении frozen contracts | P0, P1, P2, P4, P5, P6 |
+| `brief/02-p5-audit-reopen-2026-08-09.md` | 0 | Вызов владельца на четырёхшаговый реопен P5 после RED-аудита: fail-closed ingress/outcomes/views и producer-based item-tree acceptance при неизменных frozen contracts | P5.4, P5.5 |
 | `findings/00-plan-read-weight-2026-08-07.md` | 1 | Машинный замер 24 планов флота: пол 12к–254к токенов, разбор `plan.md` по секциям, 153 КБ фазовый файл, слепой линтер, дефект корректности при лимите ~25к | P0, P1, P3 |
 | `findings/01-rag-context-engineering-2026-08-07.md` | 1 | Шесть внешних запросов: R1 JIT-раскрытие и context rot · R2 раскладки spec-kit/Kiro/Tessl/AGENTS.md · R3 ADR «файл на решение + генерируемые виды» · R4 проекции и снапшоты event sourcing · R5 отрицательный результат по детекции повторной причины · R6 безлюдные решения | P1, P2, P3, P4, P5 |
 | `findings/02-prompt-caching-economics-2026-08-07.md` | 1 | Множители кэша, правило точного префикса, минимальный кэшируемый префикс, 20-блочное окно; пересмотр обоснования | P1, P3 (правило порядка), D8 |
@@ -60,6 +61,8 @@
 | `research/04-p2-carriers-design.md` | 2 | Две раскладки и их адресация, таблица носителей v2, форма записи решения и четыре вида, расщепление 16 полей пункта, ядро против владельческого вида, каркас проекций, терминальная фаза, self-hosting с инвентарём и приёмочным замером, pre-mortem P2 из 8 причин | P2, вход P3/P6 |
 | `findings/21-p2.8-read-admission-diagnosis-2026-08-08.md` | 1 | Field correction: четыре D2(a) недостаточны, есть oversized/unresolved/future producer classes D2(b) | P2.8–P2.10, вход P3.3 |
 | `research/20-p2.8-stage-aware-admission-redesign.md` | 2 | Три admission states, декомпозиция migration→machine semantics→self-host proof, alternatives и pre-mortem | P2.8–P2.10, вход P3.3 |
+| `research/21-p4-audit-reopen-2026-08-08.md` | 2 | Repo-grounded синтез Audit P4: plan-local `return_event_id`, event-scoped reducer и полный packet, непротиворечивая gate matrix, item-tree acceptance, reconciliation P4.2 fixture/P4.4 `engine.py`; D142, без нового P4.7 | P4.2, P4.4, P4.6 |
+| `research/22-p5-audit-reopen-2026-08-09.md` | 2 | Repo-grounded синтез Audit P5: contract-driven request/response/auto-answer ingress, outcome→state/continuation matrix, единая regeneration boundary и producer-based detached-tree acceptance; D144, без расфриза P5.1/P5.2 | P5.4, P5.5 |
 
 | `findings/11-rollout-and-acceptance-2026-08-07.md` | 1 | R17 включение построенной выключенной проверки (порядок, негативный e2e, флаг-долг, курица-яйцо) · R18 рубрика судьи (форма, смещения, версионирование промпта как провенанс, калибровка) · R19 раскатка версионированного канона по флоту (semantic split-brain, анти-дрейф прозы и спеки, вывод старой прозы, маленький вход) · R20 честная приёмка на своём экземпляре (векторы Гудхарта, пред-регистрация, границы dogfooding, две руки) | P6 |
 | `research/08-p6-rollout-design.md` | 2 | Пятый реконсиль контракт-блока P6, разрешение конфликта D43 с «режимом оценки», три класса правки команд, носитель и калибровка рубрики, EN-only переход и три гейта канона, наблюдаемость раскатки, предобъявленная двурукая приёмка с антисмещением, снятие паузы ARTIFEX, вывод девяти items, pre-mortem P6 из 13 причин | P6 |
@@ -68,8 +71,9 @@
 `findings/06-p1-path-feasibility.md` (Deliverable P1.5) · `findings/07-p2-selfhosting-measurement.md` (Deliverable P2.8) ·
 `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8 — отчёт двурукой приёмки; он же `Inputs`/`Required Reads` последнего item'а плана P6.9).
 Артефакты P4: `artifacts/P4/measure_returns.py` + `returns-baseline.json` (Deliverables P4.2) ·
-`artifacts/P4/historical-detect.json` + `acceptance-report.md` (Deliverables P4.6).
-Артефакты P5: `artifacts/P5/acceptance-report.md` (Deliverable P5.5).
+`artifacts/P4/historical-detect.json` + `acceptance-report.md` + `validate_acceptance.py` (Deliverables P4.6; обязаны входить в item tree P4.6).
+Артефакты P5: `artifacts/P5/validate_acceptance.py` + `acceptance-results-v2.json` +
+`acceptance-report.md` (D144 Deliverables P5.5; validator/results/report обязаны входить в item tree).
 Артефакты P6: `artifacts/P6/{provider-certification.md,would-fail-*.txt,judge-calibration-bank.jsonl,judge-calibration-report.md,canon-weight-before-after.json,rollout-dry-run.txt,fleet-adoption-inventory.{json,md},acceptance-arm-a-migrated.json,acceptance-arm-b-fresh.json,session-canary-results.json}` · `findings/12-p6-acceptance-measurement.md` (Deliverable P6.8) · контракт `root/contracts/acceptance-protocol-v1.{md,manifest.json}` с machine `session_canary` (Deliverable P6.7).
 
 ## Внешние зависимости плана

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 0a132c84766193218f180d0655cc2e353bcb28ff3c5fb3b3e6deba38619b4e5c
+inputs_sha256: 2a5fac7fe62c6952c5da5696c7c0c0e21bf334a8f8731492d7cbc5389b34b917
 generated_by: task plan-views status
 -->
 
@@ -297,6 +297,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4 ae56e9cd+b1152c41; bookkeeping uncommitted shared plan diff; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5 2c6f8d4b: 4 producer scenarios, 13 targeted/699 full tests, detached replay; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 повторно закрыта после D144; сверены 5 terminal items и Known Deviations |
 
 ## Owner Gates
 

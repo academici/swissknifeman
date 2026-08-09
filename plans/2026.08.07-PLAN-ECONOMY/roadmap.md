@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-08 (P0–P3 терминальны; P3 дал bundle/read-path/downstream gates, P4 ещё не начата) · **Соответствует plan.md:** v0.27.0
+**Обновлён:** 2026-08-09 (P4 повторно закрыта после D142; P5 закрыта после remediation D144, перед P6.1 обязателен независимый аудит P5) · **Соответствует plan.md:** v0.29.0
 
 ## Как читать
 
@@ -55,17 +55,17 @@
 | P3.5 | B2 | ↑ | implementation/high | — | ✅ terminal — read-path order/boundary gate |
 | P3.6 | solo | plan-run (manual) | implementation/high | — | ✅ terminal with deviations — layout-v2 continuity registry |
 | P3.7 | solo | plan-run (manual) | frontier/high | — | ✅ terminal with deviations — downstream-gate contract and read-only canary |
-| P4.1 | solo | plan-run (manual) | frontier/high | — | форма отпечатка — адресное пространство счётчика, потолка и гейта |
-| P4.2 | solo | plan-run (manual) | implementation/high | — | редьюсер и durable-счётчик: корректность идентичности несёт весь механизм |
-| P4.3 | solo | plan-run (manual) | frontier/high | — | freeze лестницы: первый local-fix → повтор/risk isolated-review → cap owner-gate |
-| P4.4 | solo | plan-run (manual) | implementation/high | — | deterministic triage; первый локальный сбой даёт zero audit, occurrence сохраняется |
-| P4.5 | solo | plan-run (manual) | frontier/high | — | scoped-review capsule, независимые actor/route, `return-to-root`, монотонность |
-| P4.6 | solo | plan-run (manual) | implementation/high | — | e2e четырёх ветвей: 0/1 reviewer call, 0 лишних root restart, fallback fail-closed |
-| P5.1 | solo | plan-run (manual) | frontier/high | — | freeze DecisionRequest + provider-neutral continuation identity для resume-root |
-| P5.2 | solo | plan-run (manual) | frontier/high | ✅ утверждение ДЕЙСТВУЮЩЕГО инстанса рамки | изменение рамки само является `authority_change` (D65) |
-| P5.3 | solo | plan-run (manual) | implementation/high | — | резолвер политики: одна ветка «разрешить по умолчанию» обесценивает всю фазу |
-| P5.4 | solo | plan-run (manual) | implementation/high | — | очередь + адресная пауза + durable resume того же logical root run; explicit cold-start fallback |
-| P5.5 | solo | plan-run (manual) | implementation/high | — | замыкающий адаптер + двусоставная приёмка на живых прогонах |
+| P4.1 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — frozen fingerprint tuple/namespace; D142 не меняет контракт |
+| P4.2 | solo | plan-run (manual) | implementation/high | — | 🟠 terminal after D142 — event identity вне fingerprint + committed fixture в item tree P4.2 |
+| P4.3 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — frozen ladder и `same_return_max=2`; D142 не меняет контракт |
+| P4.4 | solo | plan-run (manual) | implementation/high | — | 🟠 terminal after D142 — `engine.py` write-site и ровно один вызов lint seam доказаны |
+| P4.5 | solo | plan-run (manual) | frontier/high | — | 🟠 terminal with deviations — judgement contract остаётся frozen; remediation у consumer P4.6 |
+| P4.6 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D142 — event-scoped judgements, полный packet и acceptance из item tree |
+| P5.1 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — frozen DecisionRequest + provider-neutral continuation identity |
+| P5.2 | solo | plan-run (manual) | frontier/high | ✅ утверждение ДЕЙСТВУЮЩЕГО инстанса рамки | ✅ terminal — owner instance frozen D143 |
+| P5.3 | solo | plan-run (manual) | implementation/high | — | 🟠 terminal with deviations — deterministic authority resolver остаётся неизменным входом D144 |
+| P5.4 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D144 — contract-driven ingress, outcome semantics, state/status regeneration |
+| P5.5 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D144 — producer-based policy/owner scenarios и detached item-tree acceptance |
 | P6.1 | solo | plan-run (manual) | implementation/high | — | команды различают auditor profile и context mode; fresh review не равен root handoff |
 | P6.2 | solo | plan-run (manual) | implementation/high | — | root/specialist session provenance, triage production и session-context resolver |
 | P6.3 | solo | plan-run (manual) | frontier/high | — | isolated child judgement по capsule; stronger route отдельно, затем resume root |

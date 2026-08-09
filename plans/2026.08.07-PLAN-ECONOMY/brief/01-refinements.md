@@ -256,3 +256,20 @@ Task Contract та же root-сессия продолжает P4.1; новая 
 Тот же разбор обнаружил, что sealed `journal.jsonl` не выражает qualification и owner
 authorization для будущих P6 command records. D139 использует уже разрешённую additive
 item-scoped finding, поэтому история журнала и его схема остаются неизменными.
+
+## 2026-08-08 — RED-аудит P4: реопен по §3, не детализация
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P4`; режим — обязательный
+четырёхшаговый реопен уже терминальной фазы. Первым входом назначен блок
+`phases/P4/P4.md` → `## Audit P4 — 2026-08-08`.
+
+**Обязательный scope:** (1) завершённый isolated review не оставляет противоречия
+`blocks`/`continue_allowed`; (2) judgement связывается с `return_event_id`, а owner packet получает
+все event-scoped judgements; (3) P4.6 acceptance воспроизводится на названном item tree; (4)
+отсутствующий committed fixture P4.2 реконсилируется; (5) незаявленный write-site
+`plan_lint_checks/engine.py` P4.4 реконсилируется.
+
+**Анти-scope:** не менять frozen fingerprint tuple/namespace, `same_return_max=2`, journal schema
+или исторические строки; не трогать P5/P6, `packages/artifex`, historical baseline/corpus и не
+подгонять их под расхождение prose `8 != 7`. Техническая декомпозиция закреплена D142 и
+`research/21-p4-audit-reopen-2026-08-08.md`.

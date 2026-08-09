@@ -110,5 +110,3 @@ Not a standalone file — the answer is embedded into the dialogue
   data (canon, live file in the Brain vault).
 - `axioma/axioma-stack` — analogous "mechanism in SKM, content in Brain"
   binding for the reuse registry (layout precedent).
-
-<!-- ru-source-sha256: fab17c1a1874fc27336e8043508d70f8e2eb363b1d3eae105b730673b3aff2fe -->

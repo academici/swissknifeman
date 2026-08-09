@@ -77,4 +77,3 @@ Two independent metadata layers coexist on one enum: domain custom attributes on
 - https://github.com/spatie/laravel-typescript-transformer
 - `snippets/enum-typescript.php` — enum with #[TypeScript]+#[Label] stack, Label attribute + concern, config fragment
 - Related: `frontend-backend/backend-type-sync` (consuming App.Enums.* on front), `laravel-filament/filament`, `laravel-auth/attribute-authorization` (same reflection+attribute trick for enum action perms), `laravel-data-layer/laravel-data` (enum cases as DTO props), `php/laravel-structure` (placing Enums/Concerns/Attributes/Support in the tree)
-<!-- ru-source-sha256: bdde3b53759af6658bf5ae54fa71f97c80bfcd40aedca6fdd0c2aa0520bb913c -->

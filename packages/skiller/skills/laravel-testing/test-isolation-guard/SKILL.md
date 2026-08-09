@@ -68,5 +68,3 @@ Triggers: setting up test env for new project/package; protecting CI (runner mus
 - https://laravel.com/docs/database-testing#resetting-the-database-after-each-test
 - https://github.com/laravel/framework/blob/master/src/Illuminate/Foundation/Testing/RefreshDatabase.php
 - Related skills: `laravel-testing/laravel-testing` (base, requires), `laravel-extras/medialibrary` (test media disk), `laravel-testing/laravel-dusk` (browser-test isolation — separate scheme without `RefreshDatabase`), `devops/db-test-preflight` (container/DB preflight before run)
-
-<!-- ru-source-sha256: 62fa8640b4775e87da13d24fd0bdd64c21ead4e670dabf14ee1d369d80f49308 -->

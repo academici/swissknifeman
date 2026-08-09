@@ -73,5 +73,3 @@ metadata (use `laravel-architecture/enum-attributes`).
 - https://laravel.com/docs/eloquent-mutators#attribute-casting
 - `snippets/accessor.php` — references: getter, getter+setter, multi-line, legacy migration, placement
 - Related skills: `laravel-architecture/enum-attributes` (enum case metadata via PHP attributes), `php/laravel` (model structure: casts/relations/scopes/accessors), `laravel-data-layer/laravel-data` (computed fields in DTOs), `php/code-style-spatie` (style: strict_types/typing/naming)
-
-<!-- ru-source-sha256: 5600185ac8ff662ec21a360da5dc7928ed2dec201b192412958ce7416871e179 -->

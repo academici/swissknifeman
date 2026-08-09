@@ -5,21 +5,23 @@ from .parsing import *
 from .engine import *
 
 
-SKILL_RU_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.ru.md")
+SKILL_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
 
 
-def _find_skill_ru():
-    """Канон-SSOT (`SKILL.ru.md`), от расположения ЭТОГО модуля вверх до корня монорепо —
-    тот же приём, что `test_canon_literals.py::_find_skill_ru` (не дублируется: тест этого
-    item'а импортирует функцию отсюда, см. Implementation Rules). Standalone-раскладка
-    (пакет `task` вне монорепо) — `None`, не исключение: `run_conflicts_check` предупреждает
-    и выходит зелёным (тот же класс деградации, что `core.term.warn`-фолбэк вверху модуля)."""
+def _find_skill():
+    """Найти EN-only canon SSOT (`SKILL.md`) от этого модуля вверх до корня монорепо."""
     here = Path(__file__).resolve()
     for parent in here.parents:
-        candidate = parent / SKILL_RU_RELPATH
+        candidate = parent / SKILL_RELPATH
         if candidate.is_file():
             return candidate
     return None
+
+
+# Compatibility aliases for consumers of the former helper names. The resolved carrier is
+# still the EN-only SKILL.md; new code uses `_find_skill`/`SKILL_RELPATH`.
+SKILL_RU_RELPATH = SKILL_RELPATH
+_find_skill_ru = _find_skill
 
 
 def _own_const_lineno(name):
@@ -62,12 +64,12 @@ CONTEXT_BULLET_RE = re.compile(r"^-\s+\*\*`([^`]+)`\*\*")
 
 
 def _conflicts_statuses(skill_lines, skill_path, diag):
-    """Класс 1/6: шесть канонических статусов (STATUSES) — SKILL.ru.md §6."""
+    """Класс 1/6: шесть канонических статусов (STATUSES) — SKILL.md §6."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_STATUSES)
     if header_idx is None:
         diag.error(skill_path, None,
                    f"--conflicts статусы: не найден якорь «{CONFLICTS_ANCHOR_STATUSES}» "
-                   "(SKILL.ru.md §6) — сверка невозможна")
+                   "(SKILL.md §6) — сверка невозможна")
         return
     fence_idx = _find_line(skill_lines, "```text", header_idx)
     if fence_idx is None:
@@ -85,12 +87,12 @@ def _conflicts_statuses(skill_lines, skill_path, diag):
 
 
 def _conflicts_item_fields(skill_lines, skill_path, diag):
-    """Класс 2/6: 16 полей item'а и их порядок (REQUIRED_ITEM_FIELDS) — SKILL.ru.md §5."""
+    """Класс 2/6: 16 полей item'а и их порядок (REQUIRED_ITEM_FIELDS) — SKILL.md §5."""
     anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_ITEM_FIELDS)
     if anchor_idx is None:
         diag.error(skill_path, None,
                    f"--conflicts 16-полей: не найден якорь «{CONFLICTS_ANCHOR_ITEM_FIELDS}» "
-                   "(SKILL.ru.md §5)")
+                   "(SKILL.md §5)")
         return
     joined = " ".join(skill_lines[anchor_idx + 1:anchor_idx + 4])
     m = re.search(r"`([^`]+)`", joined)
@@ -109,7 +111,7 @@ def _conflicts_item_fields(skill_lines, skill_path, diag):
 
 
 def _conflicts_next_forms(skill_lines, skill_path, diag):
-    """Класс 3/6: закрытый enum форм `Next` — SKILL.ru.md §8 «Допустимые формы Next» ↔
+    """Класс 3/6: закрытый enum форм `Next` — SKILL.md §8 ↔
     альтернация `SEMANTIC_NEXT_RE` (читается у неё самой — не переиздаётся вторым списком)."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_NEXT_FORMS)
     if header_idx is None:
@@ -138,14 +140,14 @@ def _conflicts_next_forms(skill_lines, skill_path, diag):
 
 
 def _conflicts_context_values(skill_lines, skill_path, diag):
-    """Класс 4/6: три значения `Context` (CONTEXT_VALUES) — SKILL.ru.md §8 «Session-restart
+    """Класс 4/6: три значения `Context` (CONTEXT_VALUES) — SKILL.md §8 «Session-restart
     discipline». Единственный класс, где реализация ДО этого item'а не существовала вовсе
     (см. комментарий у `CONTEXT_VALUES`) — сверка новая, не переиздание старой."""
     anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_CONTEXT)
     if anchor_idx is None:
         diag.error(skill_path, None,
                    f"--conflicts Context: не найден якорь «{CONFLICTS_ANCHOR_CONTEXT}» "
-                   "(SKILL.ru.md §8)")
+                   "(SKILL.md §8)")
         return
     canon_values = []
     canon_lineno = None
@@ -167,7 +169,7 @@ def _conflicts_context_values(skill_lines, skill_path, diag):
 
 def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
     """Класс 5/6: литералы `i18n-keep` — CANON_LITERALS ⊆ директивы, объявленные в
-    SKILL.ru.md (T2 `test_canon_literals.py` уже проверяет то же самое; здесь — тот же
+    EN-only SKILL.md (T2 `test_canon_literals.py` проверяет то же самое; здесь — тот же
     предикат, доступный из CLI без запуска unittest, Required Reads п. 4 «расширяется, не
     дублируется»: обе стороны читают один и тот же `CANON_LITERALS`/`I18N_KEEP_RE`)."""
     declared = set(I18N_KEEP_RE.findall(skill_text))
@@ -189,7 +191,7 @@ def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
 
 def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
     """Класс 6/6: регекс-носители формы launch-block'а (LAUNCH_TABLE_ROW_RE/
-    LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.ru.md §8."""
+    LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.md §8."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
     if header_idx is None:
         diag.error(skill_path, None,
@@ -215,17 +217,15 @@ def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
 
 
 def run_conflicts_check(diag):
-    """`--conflicts`: сверка канон↔реализация по шести классам (см. блок-докстринг выше),
-    без плана на входе. Standalone-раскладка (SKILL.ru.md недоступен) — предупреждает и
-    оставляет `diag` зелёным (та же деградация, что `test_canon_literals.py::skipTest`)."""
-    skill_path = _find_skill_ru()
+    """`--conflicts`: сверка канон↔реализация по шести классам.
+
+    Отсутствие canon SSOT — ошибка: зелёная сверка без источника была бы vacuous pass.
+    """
+    skill_path = _find_skill()
     if skill_path is None:
-        # `print` напрямую, не `_core_warn` (T1 `test_canon_literals.py` иначе требует
-        # регистрации этой прозы как грепаемого литерала — она им не является, это вывод
-        # диагностики; `print` — задокументированное исключение T1, см. его же
-        # `test_print_argument_is_not_a_grep_site`).
-        print("WARN: --conflicts: standalone-раскладка — SKILL.ru.md (канон plan-protocol) "
-             "не найден от расположения plan_lint.py вверх — сверка пропущена", file=sys.stderr)
+        diag.error(SKILL_RELPATH, None,
+                   "--conflicts: SKILL.md (canon plan-protocol) не найден от "
+                   "plan_lint.py вверх — сверка невозможна")
         return
     skill_lines = _read_lines(skill_path)
     skill_text = skill_path.read_text(encoding="utf-8")

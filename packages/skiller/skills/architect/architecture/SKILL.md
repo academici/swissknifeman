@@ -146,5 +146,3 @@ FORBIDDEN:
 - `architect/agent-design` — Agent Design section for products with agents.
 - `architect/legal-compliance` — regulatory checklist based on architecture (where data is stored).
 - `php/laravel-structure`, `laravel-architecture/modular-architecture` — implementing architecture in concrete Laravel code.
-
-<!-- ru-source-sha256: 3e913512e35f20478ce9e8874b00b1b59836555bb1c0a612e09ddacdbea4ff63 -->

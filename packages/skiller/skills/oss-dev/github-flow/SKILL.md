@@ -167,5 +167,3 @@ NEVER:
 - Bump package version inside a feature/fix PR — only in the release commit.
 - Duplicate the package SemVer contract — it lives in RELEASING.md (`release-engineering`).
 - Force-push to a branch with open review without warning reviewers.
-
-<!-- ru-source-sha256: 97225a443af13ff09dbd40ddabdfaab56ea62774a8b5ae15705066405b7d0731 -->

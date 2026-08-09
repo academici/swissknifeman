@@ -157,5 +157,3 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 - `general/grill-with-docs` — a heavy special case: grilling REQUIREMENTS against code + external specs (API/RFC/bank) with glossary+ADR.
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
-
-<!-- ru-source-sha256: 75be6d87a6e88b468541355fc3f6bec6f5c45fa30874afd2083dad79c512fd57 -->

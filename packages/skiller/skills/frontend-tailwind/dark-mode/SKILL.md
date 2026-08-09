@@ -112,5 +112,3 @@ This skill owns only the `.dark` class and state. How `.dark` affects colors →
 - https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia
 - https://vuejs.org/guide/reusability/composables
 - Related skills: `frontend-tailwind/tailwind-conventions` (how `.dark` affects colors/tokens), `frontend-backend/inertia-vue` (where the composable lives in layers), `frontend-vue/vue-composition-api` (composable pattern), `frontend-naive-ui/naive-ui-theming` (same `.dark` flag selects Naive `darkTheme`)
-
-<!-- ru-source-sha256: 603eefd7d53d415e9dbdee762c75f74383df8837ab75de97bc683e7b44bae70f -->

@@ -162,5 +162,3 @@ MUST NOT:
 - Start without scope fixed in writing
 - Plans > 15 steps or > 8 weeks without splitting
 - "Along the way" bump a major framework version — separate plan
-
-<!-- ru-source-sha256: c2031981a00657b20c898a25725bad1216f18475a0ba17fb736a404f5955a408 -->

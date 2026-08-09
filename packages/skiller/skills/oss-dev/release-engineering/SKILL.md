@@ -192,5 +192,3 @@ NEVER:
 - Use "git log dump" instead of changelog
 - Close a content commit (feat/fix/perf/refactor) without a line in `[Unreleased]` — except
   docs/chore/test or an explicit skip marker
-
-<!-- ru-source-sha256: 8175789d42bf4ff125fa348794731d85a5fb9e091781a7e761a79bb29591a20c -->

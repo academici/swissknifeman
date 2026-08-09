@@ -1147,11 +1147,10 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     lock_records: list[dict[str, object]] = []
     for identity in config["identities"]:
         base = package_root / "skills" / "repository-bootstrap" / identity
-        ru_path, en_path = base / "SKILL.ru.md", base / "SKILL.md"
-        if not ru_path.is_file() or not en_path.is_file():
+        en_path = base / "SKILL.md"
+        if not en_path.is_file():
             raise ValueError(f"repository-bootstrap identity {identity!r}: canonical source "
-                             f"is missing ({ru_path} / {en_path})")
-        ru_hash = hashlib.sha256(ru_path.read_bytes()).hexdigest()
+                             f"is missing ({en_path})")
         en_hash = hashlib.sha256(en_path.read_bytes()).hexdigest()
         frontmatter = parse_frontmatter(en_path) or {}
         if frontmatter.get("name") != identity:
@@ -1182,10 +1181,8 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
             lock_records.append({
                 "identity": identity, "provider": provider,
                 "target": target.relative_to(repo_root).as_posix(),
-                "canonical_ru": ru_path.relative_to(repo_root).as_posix(),
-                "canonical_ru_sha256": ru_hash,
-                "canonical_en": canonical_rel,
-                "canonical_en_sha256": en_hash,
+                "canonical": canonical_rel,
+                "canonical_sha256": en_hash,
                 "rendered_sha256": result.provenance.rendered_hash.removeprefix("sha256:"),
             })
 

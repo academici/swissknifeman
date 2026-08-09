@@ -3,11 +3,12 @@ try:
     from .test_plan_lint_support import *
 except ImportError:
     from test_plan_lint_support import *
+import task.plan_lint_checks.conflicts as conflicts_module
 
 
 class TestConflictsFlagUnits(unittest.TestCase):
     """Юниты `--conflicts` (2026.07.31-SKM-LEAN P5.9) на СИНТЕТИЧЕСКОМ каноне — фиксируют
-    ФОРМУ сверки, независимо от текущего текста живого `SKILL.ru.md` (тот же принцип, что
+    ФОРМУ сверки, независимо от текущего текста живого `SKILL.md` (тот же принцип, что
     `test_canon_literals.py::TestT1CollectorVectors`). Живой прогон против реального канона
     покрыт `TestConflictsFlagLiveRepo` ниже."""
 
@@ -16,40 +17,40 @@ class TestConflictsFlagUnits(unittest.TestCase):
 
     # --- статусы -------------------------------------------------------------
     def test_statuses_consistent_is_silent(self):
-        lines = ["РОВНО 6 канонических строк — копировать байт-в-байт:", "```text",
+        lines = [conflicts_module.CONFLICTS_ANCHOR_STATUSES, "```text",
                  *STATUSES, "```"]
         diag = self._diag()
-        _conflicts_statuses(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_statuses(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_statuses_mismatch_is_error_with_both_sides(self):
         corrupted = STATUSES[:3] + ("🟠 Done with STRANGE deviations",) + STATUSES[4:]
-        lines = ["РОВНО 6 канонических строк — копировать байт-в-байт:", "```text",
+        lines = [conflicts_module.CONFLICTS_ANCHOR_STATUSES, "```text",
                  *corrupted, "```"]
         diag = self._diag()
-        _conflicts_statuses(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_statuses(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         [msg] = diag.errors
-        self.assertIn("SKILL.ru.md:", msg)
+        self.assertIn("SKILL.md:", msg)
         self.assertIn("plan_lint.py:", msg)
         self.assertIn("STRANGE", msg)
 
     # --- 16 полей item'а -------------------------------------------------------
     def test_item_fields_consistent_is_silent(self):
-        lines = ["- **Items.** Поля — СТРОГО строками",
-                 "  `**Поле:** значение`, в этом порядке:",
+        lines = ["- **Items.** Fields are strict lines",
+                 f"  {conflicts_module.CONFLICTS_ANCHOR_ITEM_FIELDS}",
                  f"  `{', '.join(REQUIRED_ITEM_FIELDS)}`."]
         diag = self._diag()
-        _conflicts_item_fields(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_item_fields(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_item_fields_reordered_is_error(self):
         shuffled = REQUIRED_ITEM_FIELDS[1:] + REQUIRED_ITEM_FIELDS[:1]
-        lines = ["- **Items.** Поля — СТРОГО строками",
-                 "  `**Поле:** значение`, в этом порядке:",
+        lines = ["- **Items.** Fields are strict lines",
+                 f"  {conflicts_module.CONFLICTS_ANCHOR_ITEM_FIELDS}",
                  f"  `{', '.join(shuffled)}`."]
         diag = self._diag()
-        _conflicts_item_fields(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_item_fields(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "16-полей"), diag.errors)
 
@@ -60,39 +61,39 @@ class TestConflictsFlagUnits(unittest.TestCase):
         return gm.group(1).split("|")
 
     def test_next_forms_consistent_is_silent(self):
-        lines = ["**Допустимые формы `Next`**:", "```text", "| Форма Next | Когда |",
+        lines = ["**Allowed `Next` forms**:", "```text", conflicts_module.CONFLICTS_ANCHOR_NEXT_FORMS,
                  "|:--|:--|"]
         lines += [f"| {kind}: пример | пояснение |" for kind in self._code_next_kinds()]
         lines += ["Иная форма = ERROR plan-lint.", "```"]
         diag = self._diag()
-        _conflicts_next_forms(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_next_forms(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_next_forms_missing_one_is_error(self):
         kinds = self._code_next_kinds()[:-1]  # без последней формы (waiting)
-        lines = ["**Допустимые формы `Next`**:", "```text", "| Форма Next | Когда |",
+        lines = ["**Allowed `Next` forms**:", "```text", conflicts_module.CONFLICTS_ANCHOR_NEXT_FORMS,
                  "|:--|:--|"]
         lines += [f"| {kind}: пример | пояснение |" for kind in kinds]
         lines += ["Иная форма = ERROR plan-lint.", "```"]
         diag = self._diag()
-        _conflicts_next_forms(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_next_forms(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "формы Next"), diag.errors)
 
     # --- три значения Context ----------------------------------------------
     def test_context_values_consistent_is_silent(self):
-        lines = ["Context launch-block'а несёт РОВНО одно из трёх значений — не общее:"]
+        lines = [f"Context carries {conflicts_module.CONFLICTS_ANCHOR_CONTEXT}:"]
         lines += [f"- **`{v}`** — пояснение." for v in CONTEXT_VALUES]
         diag = self._diag()
-        _conflicts_context_values(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_context_values(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_context_values_mismatch_is_error(self):
         corrupted = ("same-session — item", "cold-start — orchestration", "cold-start — WRONG")
-        lines = ["Context launch-block'а несёт РОВНО одно из трёх значений — не общее:"]
+        lines = [f"Context carries {conflicts_module.CONFLICTS_ANCHOR_CONTEXT}:"]
         lines += [f"- **`{v}`** — пояснение." for v in corrupted]
         diag = self._diag()
-        _conflicts_context_values(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_context_values(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "Context"), diag.errors)
 
@@ -103,14 +104,14 @@ class TestConflictsFlagUnits(unittest.TestCase):
         with unittest.mock.patch.object(
                 plan_lint_module, "CANON_LITERALS", CANON_LITERALS + (fake_literal,)):
             _conflicts_i18n_literals("текст канона без директив", ["текст канона без директив"],
-                                     Path("SKILL.ru.md"), diag)
+                                     Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, fake_literal), diag.errors)
 
     def test_i18n_all_declared_is_silent(self):
         skill_text = "".join(f"<!-- i18n-keep: {lit} -->\n" for lit in CANON_LITERALS)
         diag = self._diag()
-        _conflicts_i18n_literals(skill_text, skill_text.splitlines(), Path("SKILL.ru.md"), diag)
+        _conflicts_i18n_literals(skill_text, skill_text.splitlines(), Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     # --- регекс-носители формы launch-block'а -------------------------------
@@ -119,31 +120,38 @@ class TestConflictsFlagUnits(unittest.TestCase):
                  "| Effort | ... |", "| Context | ... |", "| Суть | ... |",
                  "| Команда | `...` |"]
         diag = self._diag()
-        _conflicts_launch_table_regex(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_launch_table_missing_command_row_is_error(self):
         lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
                  "| Effort | ... |"]
         diag = self._diag()
-        _conflicts_launch_table_regex(lines, Path("SKILL.ru.md"), diag)
+        _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "LAUNCH_COMMAND_ROW_RE"), diag.errors)
 
 
 class TestConflictsFlagLiveRepo(unittest.TestCase):
-    """`--conflicts` против РЕАЛЬНОГО `SKILL.ru.md` — Validation п.6 (первый прогон на живом
+    """`--conflicts` против РЕАЛЬНОГО `SKILL.md` — Validation п.6 (первый прогон на живом
     дереве). Standalone-раскладка (пакет `task` вне монорепо) — тест пропускается, не падает:
     тот же класс деградации, что `test_canon_literals.py`."""
 
     def setUp(self):
-        if _find_skill_ru() is None:
-            self.skipTest("standalone-раскладка: SKILL.ru.md не найден от plan_lint.py вверх")
+        if _find_skill() is None:
+            self.skipTest("standalone-раскладка: SKILL.md не найден от plan_lint.py вверх")
 
     def test_conflicts_green_on_live_canon(self):
         diag = Diagnostics()
         run_conflicts_check(diag)
         self.assertTrue(diag.ok, diag.errors)
+
+    def test_missing_canon_is_error_not_vacuous_pass(self):
+        diag = Diagnostics()
+        with unittest.mock.patch.object(conflicts_module, "_find_skill", return_value=None):
+            run_conflicts_check(diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "canon plan-protocol"), diag.errors)
 
     def test_main_conflicts_flag_exit_0(self):
         out, err = io.StringIO(), io.StringIO()

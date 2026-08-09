@@ -83,5 +83,3 @@ Persona-dispatcher: stance "think like a startup CTO" + route to capability skil
 - `architect/agent-design` · `architect/eval-design` — AI direction.
 - `oss-dev/dependency-audit` · `oss-dev/dx-design` — build-vs-buy & DX.
 - `founder/risk-assessment` · `quality/tech-debt-audit` · `general/complex-task-orchestrator` — risks, debt, large initiatives.
-
-<!-- ru-source-sha256: d88745bbec38f4f8a33b3d3515382ce6ea4e568ccb64bec5d293c466f2c0846a -->

@@ -55,4 +55,3 @@ Scope: create a Laravel package from scratch or extend one. Scaffold (composer.j
 - `php/laravel` — architecture patterns inside the package; `php/laravel-structure` — class placement
 - `botkit/botkit` — example domain package publishing skills to consumers
 - `general/skills-ssot` — single source of truth for skills across multiple agents
-<!-- ru-source-sha256: 6c531543b19b6c2164cdb2cd766723694bd293a65945e6d7af69e18aac655d20 -->

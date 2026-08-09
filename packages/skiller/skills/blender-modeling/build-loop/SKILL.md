@@ -149,5 +149,3 @@ If mismatches, gaps, or inaccuracies found in model rules/skills — formulate a
 - `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: part stack, camera zones, thread params.
 - `blender-modeling/threading` — thread printing and radial clearances (Steps 2–7).
 - `blender-modeling/model-verification` — whole-model, export, and release evidence lifecycle.
-
-<!-- ru-source-sha256: 1598160c220dcb428d816c522517457e401516558743c141e8a11dd750b23bf9 -->

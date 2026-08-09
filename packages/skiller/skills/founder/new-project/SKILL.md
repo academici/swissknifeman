@@ -103,5 +103,3 @@ Orchestrator: does not duplicate domain skills, calls them by stage. Chain:
 - `architect/architecture`, `architect/data-schema`, `architect/api-design` — steps 10–12: technical design
 - `pm/monetization-design` — adjacent: business-model choice before unit-economics
 - `roles/solo-founder`, `roles/startup-cto` — personas that activate this chain
-
-<!-- ru-source-sha256: 6816f0c482ed5c8b9774bd8a8a728a7f15f0e58182f2aaef14427d978bb2a653 -->

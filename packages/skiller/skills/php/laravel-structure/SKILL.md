@@ -103,5 +103,3 @@ Canon for where to put files and how to name them (implementation skills answer 
 - Growth to modules (tens of domains, multiple teams): `laravel-architecture/modular-architecture`
 - Migrations, models, table naming: `php/database`
 - Per-domain tests (`tests/` mirror): `laravel-testing/laravel-testing`
-
-<!-- ru-source-sha256: cf7fc91ba352b8207643f50c29ec75481e665cfbb89deddc947d9a668a320be0 -->

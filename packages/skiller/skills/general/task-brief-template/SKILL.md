@@ -114,5 +114,3 @@ If the task needs several rounds with intermediate checks — fill the Loop fiel
 - `cross-layer-change-checklist` (general) — sync layers during execution.
 - `context-economy` (general) — Plan→Clear→Execute and `/plan`, `/execute` commands.
 - `anti-drift` (general) — iteration discipline, relies on fixed scope.
-
-<!-- ru-source-sha256: 15af13a31cb9eef8ee0912cbe4222c2b50aba39d8e815b9d52cde6120700e6b0 -->

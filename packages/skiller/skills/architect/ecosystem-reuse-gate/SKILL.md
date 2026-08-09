@@ -104,5 +104,3 @@ Not a standalone file — the decision is embedded into the design dialogue
   reference only).
 - The project-scoped binding to a specific ecosystem's data and registry path
   — a separate project skill that reads this mechanism via `requires`.
-
-<!-- ru-source-sha256: cdc054f99fd30655f17c4477aaa68ed0c90c67d7827593c5e227f38eb5534e80 -->

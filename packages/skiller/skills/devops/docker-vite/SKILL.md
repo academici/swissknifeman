@@ -54,5 +54,3 @@ Vite dev server = separate compose service next to Laravel app. Runs from same P
 - https://vite.dev/config/server-options — server.host / server.hmr
 - https://laravel.com/docs/vite — laravel-vite-plugin
 - Related: `docker-php` (Node in PHP image), `docker-dev-prod` (WSL2 override), `frontend-vite/vite-module-loader` (base Vite config/aliases), `frontend-vite/vite-multi-build` (multiple Vite builds in one project), `devops/node-pnpm-preflight` (Node/pnpm on host)
-
-<!-- ru-source-sha256: 13c3ee965754dc74801b0750815fc79dd1a66cdec39feb3d528c48d797d5875b -->

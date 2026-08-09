@@ -38,5 +38,3 @@ Reliable async delivery (webhooks, integration events) without lost or duplicate
 
 - `php:production-readiness-checklist` — verification pass (atomicity / race / after-commit).
 - `php:repositories` — persistence layering for the domain write.
-
-<!-- ru-source-sha256: 98daa7d52bd030670ee4b396cb8f3810d0b819036ef7dc46a4283fc3e81a0366 -->

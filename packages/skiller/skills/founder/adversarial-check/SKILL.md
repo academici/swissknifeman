@@ -91,5 +91,3 @@ When findings show the idea needs revision — that's the signal to pivot, not a
 - `founder/risk-assessment` — broader pre-mortem/RAID; adversarial-check is the fast targeted pressure-test
 - `founder/startup-lifecycle` — gate-review mandatorily runs adversarial before a PROCEED verdict
 - `pm/requirement-critic` — same spirit (skeptic, not author), for BRD requirements
-
-<!-- ru-source-sha256: 30a2108f0df2990ba87a3e209d7dec43672e83c6964f11c522bfbe7f856f6b4a -->

@@ -56,5 +56,3 @@ Full table: `snippets/auto-layout-mapping.md`. Short: `HORIZONTAL`→`Row`, `VER
 - snippets/auto-layout-mapping.md — Figma Auto-layout → Flutter table.
 - Related skills: `figma-mcp-core`.
 - [Flutter ThemeData](https://api.flutter.dev/flutter/material/ThemeData-class.html)
-
-<!-- ru-source-sha256: e08ed4aa4086898fd7117ff76e601a0eac4b697c5757cf195fab250744d6ad9a -->

@@ -33,5 +33,3 @@ Stable pagination for feeds / infinite-scroll, where rows are inserted while use
 ## Related
 
 - `php:database` (indexes), `php:production-readiness-checklist` (cursor invariant).
-
-<!-- ru-source-sha256: a7c534f097b72338a266c652b96404a3f5f742ab159031ab91d93ea3cc71a31e -->

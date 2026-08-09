@@ -98,5 +98,3 @@ Activate when: editing styles in `*.vue`/`*.blade.php` with Tailwind utilities o
 - https://tailwindcss.com/docs/upgrade-guide — v3 → v4 migration guide
 - https://tailwindcss.com/docs/theme — `@theme` directive and tokens
 - Related skills: `frontend-tailwind/dark-mode` (three-mode `useAppearance` composable, FOUC-free boot, SSR — owner of `.dark` state), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-linting/eslint-flat-config` (where the Prettier-plugin chain is declared), `frontend-reka/reka-ui-cva` (`cn()` and tokens in UI-kit components), `frontend-naive-ui/naive-ui-theming` (shared color source-of-truth via CSS vars)
-
-<!-- ru-source-sha256: 6b75a4225722464c379d2e75e05c610897077107b251e30534e611e51ffb8053 -->

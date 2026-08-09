@@ -191,5 +191,3 @@ NEVER:
 - `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS track relying on chosen stack (output).
 - `oss-dev/dependency-audit` — dependency licenses for OSS spin-off.
 - `php/laravel-structure` — if Laravel chosen: project structure canon for next step.
-
-<!-- ru-source-sha256: a3bfe04d531aacfc8f1e2ad2147dba28423bf8d5b288b9425f7e984db5add101 -->

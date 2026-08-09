@@ -96,5 +96,3 @@ Place in `docs/01_Business/04_Unit_Economics.md`. Structure:
 - `pm/go-to-market` — consumer: paid-channel launch gates (CAC < LTV, payback) taken from here.
 - `founder/pitch-deck` — consumer: financial slide of deck relies on these numbers.
 - `founder/risk-assessment` — negative unit economics → entry in Risk Register.
-
-<!-- ru-source-sha256: 4a3c226a1cd929b2106e7f02c740fc1beb0f8b318e2247276c090e1df621b9c0 -->

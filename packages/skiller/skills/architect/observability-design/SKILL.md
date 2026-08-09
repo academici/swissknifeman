@@ -157,5 +157,3 @@ NEVER:
 - `operator/incident-response` — response process relying on severity + alerts here (output).
 - `operator/capacity-planning` — what to monitor for scaling, based on USE-metrics here.
 - `laravel-testing/health-checks` — Laravel liveness/readiness (spatie/laravel-health) for design here.
-
-<!-- ru-source-sha256: f4c632f1d6c4cde196fef3463ad5aeb7dfa8b2900e4758483646149bc7db922c -->

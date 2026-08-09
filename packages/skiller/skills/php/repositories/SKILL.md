@@ -78,5 +78,3 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 - `general/naming-conventions` — naming repository methods by intent (vs `findByX...OrFail`-explosion) and scopes.
 - `php/database` — models and scopes the queries build on.
 - `laravel-auth/laravel-permissions` / `azguard/azguard` — where rights read by `VisibilityService` are defined.
-
-<!-- ru-source-sha256: 29c61ce3d81695d6194dd68014d4e92d869cacc72914254f0b5decc6ea67158e -->

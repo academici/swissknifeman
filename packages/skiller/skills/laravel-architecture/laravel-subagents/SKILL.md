@@ -73,5 +73,3 @@ Implemented feature + `laravel-reviewer` reports (per-unit verdicts) and `larave
 - `laravel-testing/laravel-testing` — tests written by `laravel-test-writer`; `php/static-analysis` — checks run by `laravel-reviewer`.
 - `oss-dev/gh-review` — review and handoff via `gh` with context economy.
 - `general/context-economy`, `general/session-handoff` — main session context management when delegating.
-
-<!-- ru-source-sha256: 782e9612ba40e12bdb5aa8981fcb8b4c271c686600a2d2d9f8788851eefdb224 -->

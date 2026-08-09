@@ -78,5 +78,3 @@ Data-flywheel story: how it works, how long it's been spinning, why a well-resou
 - `pm/go-to-market` — consumer: moat narrative feeds investor/enterprise messaging
 - `founder/pitch-deck` — consumer: moat slide
 - `pm/pmf-diagnostics` — precondition: moat only meaningful after PMF
-
-<!-- ru-source-sha256: a9660c7b7094de46daec335b6e05969d0df701806bd693c1a1b5b105b5b70088 -->

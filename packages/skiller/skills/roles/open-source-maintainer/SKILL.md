@@ -77,4 +77,3 @@ Persona-dispatcher: stance "think like an OSS maintainer", routes to `oss-dev` c
 - `quality/code-review` — severity grading in PR review.
 - `general/git-commit-rules` — commit format.
 - `roles/tech-lead` — adjacent role: review/workflow within one team (vs external contributors here).
-<!-- ru-source-sha256: 1fc3852c003d6f5fec9f937dab73fce178d818ef442aa53843b5d239fec5164e -->

@@ -74,5 +74,3 @@ scr.iterations   = max(turns - 1, 1)  # profile already spans one pitch
 - `blender-modeling/model-rules` — "Thread params" table in `models/{name}/ai/rules.md` holds pitch/depth/turns/clearance per part pair.
 - `blender-modeling/build-loop` — overall build/check cycle with thread printing embedded.
 - `blender/version-gotchas` — SCREW modifier and `temp_override` gotchas in Blender 5.0.
-
-<!-- ru-source-sha256: fa47f02b1859274af66dfb589556ef68294012ce4faa2c7f5d4d720965797ed3 -->

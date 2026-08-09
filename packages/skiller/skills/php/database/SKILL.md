@@ -128,5 +128,3 @@ php artisan make:model ModelName -m --no-interaction
 - `laravel-testing/laravel-testing`, `laravel-testing/test-isolation-guard` — test DB isolation when running migrations.
 - `architect/data-schema` — data schema design (entities, relations) before migrations.
 - `devops/docker-postgres`, `devops/db-test-preflight` — Postgres in Docker and test DB pre-flight.
-
-<!-- ru-source-sha256: be85a74d97166220389678a7dabf4411a78b2c2c0ff2d72e80fe0957d3689094 -->

@@ -78,5 +78,3 @@ Persona-dispatcher: stance "think like a solo founder" + route to capability ski
 - `roles/startup-cto` — tech stance of the same founder.
 - `founder/idea-discovery` · `founder/customer-discovery` · `founder/competitive-analysis` · `founder/defensibility` · `founder/new-project` · `founder/startup-lifecycle` · `founder/risk-assessment` — discovery, market, launch, risk.
 - `pm/product-roadmap` · `pm/brd` · `pm/prd-from-brd` · `pm/monetization-design` · `pm/unit-economics` · `pm/go-to-market` · `pm/pmf-diagnostics` — product, economics, launch, PMF.
-
-<!-- ru-source-sha256: e992450faf9ad7b82f6c36ff1981f6104e77b2986b445769756e24240c6222f2 -->

@@ -67,5 +67,3 @@ Use for changes spanning multiple system layers.
 
 - `complex-task-orchestrator` (general) — decomposition & DoD; this checklist = final layer sync before closing.
 - `quality/code-review` — final per-layer change review.
-
-<!-- ru-source-sha256: 6c20bb9c52e68cc8475df52c12df41f1c7f3f9584807af8faa9b7f79d72376f1 -->

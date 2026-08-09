@@ -83,5 +83,3 @@ Each class knows its altitude, never reaches into another's. Full map + forbidde
 - Migrations & models → `php/database`; growth into modules → `laravel-architecture/modular-architecture`
 - Tests for architecture layers → `laravel-testing/laravel-testing`
 - General Laravel best practices → `php/laravel-best-practices` (external)
-
-<!-- ru-source-sha256: 142796f0e7cf5493eeb9339a9534ba0c0d5c358d0468ed6d9a2ae49328428d2d -->

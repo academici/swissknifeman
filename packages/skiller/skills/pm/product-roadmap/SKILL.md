@@ -128,5 +128,3 @@ NEVER:
 - `founder/startup-lifecycle` — frame: MVP scope guard and phase gates = mechanics of Idea→MVP→Launch transition.
 - `founder/adversarial-check` — feature-amendment filter: genuine signal vs founder enthusiasm.
 - `founder/risk-assessment` — `[[Risk Register]]`: if a phase depends on an external risk, link explicitly.
-
-<!-- ru-source-sha256: 82d9416165c7afeefc9eadc231b0fb94da658003333b194e50cc68e440cc3067 -->

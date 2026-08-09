@@ -105,5 +105,3 @@ Not a standalone file — the decision is embedded into the design dialogue
   principle, read before this skill.
 - `02-Knowledge/00-Strategy/Ecosystem_Tech_Radar.md` — the single source of
   data (canon, live file in the Brain vault).
-
-<!-- ru-source-sha256: f8c949dfaeeeff0094f47a12bb56a568905fd8080c5446d6856c04b4069d2e2e -->

@@ -113,5 +113,3 @@ Patterns **combine**, not compete: DTO may hold VO fields; Pipeline stage takes/
 - `general/naming-conventions` — entity names: VO (domain noun, no suffix), DTO (`Data`/`Form`), and why a `findByX…OrFail` explosion is replaced by criterion/specification.
 - `php/laravel-structure` — where VO/DTO/Pipeline/Specification sit in the project tree.
 - `php/dependency-injection` — assembling Pipeline/Specification via constructor injection.
-
-<!-- ru-source-sha256: ec8d226681e6f98aba066a28425bd4c968aa30e52617b1eb5ffb04b974f89b09 -->

@@ -119,5 +119,3 @@ Connect a new project to skill distribution: `skiller connect` (Claude Code, plu
 - `shared-memory` (system bucket) — shared group "brain"; resolves members via the same topology.
 - `brain-locator` (system bucket) — drill-down into node `docs-hub` (Brain vault) with map-less fallback resolution.
 - `swissknifeman-locator` (system bucket) — drill-down into node `skills-hub` (swissknifeman) with map-less fallback resolution.
-
-<!-- ru-source-sha256: 9cec59ba30369843ebffa6f7304dfbd00fe6449702f0ef455f7ca494b41781f7 -->

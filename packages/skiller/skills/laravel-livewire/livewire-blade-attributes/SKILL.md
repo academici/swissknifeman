@@ -71,5 +71,3 @@ Do NOT activate: static attributes without conditions; Livewire lifecycle/bindin
 - Laravel Boost (`livewire/*`) — versioned Livewire 2/3/4 rules; not duplicated here.
 - `snippets/blade-attributes.blade.php` — before/after pairs.
 - Related skills: `laravel-filament/filament` (Livewire-based UI — same Blade components), `frontend-backend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
-
-<!-- ru-source-sha256: f3348019b425da2cb27ebe1bf01f1bc67c470a8f147742cfe1b46c880785f58b -->

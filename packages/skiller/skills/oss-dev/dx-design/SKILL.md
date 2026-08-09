@@ -148,5 +148,3 @@ FORBIDDEN:
 - Marketing text in README («revolutionary», «AI-powered» without substance)
 - Quick example requiring a config file
 - Hiding install behind a «requirements» section
-
-<!-- ru-source-sha256: cb7ce7872e7c4b05288ac5bdef0c4777994a1a859a922b8cdefe10d4932ecd87 -->

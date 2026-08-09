@@ -150,5 +150,3 @@ NEVER:
 - `architect/architecture` — critic is the last gate before the architecture phase (HOW).
 - `founder/idea-audit` — sibling: same skepticism but on a raw idea/concept (pre-BRD); requirement-critic works on the written spec/BRD doc.
 - `general/verify-claims` — discipline for checking `[UNVERIFIED]` claims via external search.
-
-<!-- ru-source-sha256: 271d3e0a2e4a7554a97827b2041b98e546530d52c5d8ef3eca5551938d7ba05c -->

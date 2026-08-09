@@ -157,5 +157,3 @@ Deck consumes ready artifacts, recomputes nothing. Slide sources:
 - `pm/monetization-design` — Business model slide (chosen business model).
 - `pm/product-roadmap` — Product slide + optional Roadmap.
 - `founder/risk-assessment` — optional Risk-acknowledgement slide in appendix.
-
-<!-- ru-source-sha256: 4e1f9e4eb3d6c779b3fd248c5e0d7929ab01d75dd36657564db5566ba0eee1e5 -->

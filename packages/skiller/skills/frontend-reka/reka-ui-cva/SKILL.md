@@ -103,5 +103,3 @@ Each component = thin wrapper over a Reka UI headless primitive: behavior/a11y/A
 - https://cva.style/docs
 - https://github.com/dcastil/tailwind-merge
 - Related skills: `frontend-tailwind/tailwind-conventions` (`cn()`, design tokens, `cva` in `tailwindFunctions`), `frontend-backend/inertia-vue` (where `components/ui/` lives), `frontend-linting/js-code-style`, `frontend-vue/vue-composition-api` (`<script setup>` components), `frontend-naive-ui/naive-ui-theming` (alternative: ready Naive UI kit instead of own on primitives)
-
-<!-- ru-source-sha256: 767969d59e3f383777e9dc23d8a088b1158bb43194c393048900abc7f2b6710e -->

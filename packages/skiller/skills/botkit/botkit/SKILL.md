@@ -34,5 +34,3 @@ Refs:
 - `php/laravel` — architectural patterns (actions, resources) bot logic builds on.
 - `php-packages/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
 - `php/laravel-structure` — placement of bot classes in the project tree.
-
-<!-- ru-source-sha256: 553d8a600c74f2c1f1d5775e73c71050b1ef0a60ee686001044bd217f16d9335 -->

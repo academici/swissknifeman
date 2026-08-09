@@ -50,5 +50,3 @@ A whole class of defects is invisible to per-unit happy-path tests (they force t
 ## Related
 
 - `php:transactional-outbox-relay`, `laravel-architecture:enum-state-machine`, `php:cursor-pagination-design`, `quality:code-review`.
-
-<!-- ru-source-sha256: b8c97c17c5a6dfeae87fa74d18442d1fecdf6d32d196eec5c8be3f049b265881 -->

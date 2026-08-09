@@ -74,5 +74,3 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 - `laravel-data-layer/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast and transition listeners.
 - `php/laravel`, `php/repositories` — Action/Repository boundaries the transition lives in.
 - `general/cross-layer-change-checklist` — layer sync when adding a transition.
-
-<!-- ru-source-sha256: 768b3953372f49fb2dc627e9d22e0268a7672979175259ffb93c1e15f16054c8 -->

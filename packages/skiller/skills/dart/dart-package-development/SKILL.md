@@ -63,5 +63,3 @@ Do not activate it for implementing a Flutter screen from Figma; use
 - [ ] Data boundaries have an encode/decode or conformance-fixture check.
 - [ ] `dart analyze`, format check, and tests ran or are honestly marked unavailable.
 - [ ] Version and migration/changelog changed only for release or breaking scope.
-
-<!-- ru-source-sha256: 953d33e949f23fc6f314a600ba409ec3e882e2dcd923b29f84530c2dd2292af5 -->

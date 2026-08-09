@@ -291,7 +291,7 @@ def do_vendor(env, target, opts, register=True):
             for item in sorted(bucket_dir.rglob("*")):
                 if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
                     continue
-                # SKILL.ru.md и прочие языковые альтернаты — не канон, не вендорим
+                # SKILL.*.md — неканонические localized/reference alternates, не вендорим
                 if item.name.startswith("SKILL.") and item.name.endswith(".md"):
                     continue
                 rel_item = item.relative_to(bucket_dir)

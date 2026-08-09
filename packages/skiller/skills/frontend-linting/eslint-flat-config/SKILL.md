@@ -92,5 +92,3 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
 - https://github.com/tailwindlabs/prettier-plugin-tailwindcss
 - snippets/eslint.config.js, snippets/prettierrc.json, snippets/package-scripts.json
 - Related skills: `frontend-linting/js-code-style` (WHAT — style rules), `frontend-wayfinder/wayfinder` (import boundary pattern), `frontend-backend/inertia-vue` (feature layers), `frontend-vue/vitest`, `frontend-tailwind/tailwind-conventions` (`prettier-plugin-tailwindcss` chain and `tailwindFunctions`)
-
-<!-- ru-source-sha256: 12f69cdb60c360a307fdaa7e5287a4d4cc8f235fab71f11a2723782f70c80f27 -->

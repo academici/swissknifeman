@@ -2,7 +2,7 @@
 `plans/<PLAN-ID>/{plan.md, phases/Pn.md, handoff.md}`.
 
 Схема (жёстко фиксирована — SSOT: скилл `packages/skiller/skills/general/
-plan-protocol/SKILL.ru.md` + его `snippets/{plan,phase,handoff}-template.md`;
+plan-protocol/SKILL.md` + его `snippets/{plan,phase,handoff}-template.md`;
 эти три файла и `commands/plan-{design,exec,close,audit}.md` уже вызывают
 именно этот скрипт как `scripts/plan-lint.py plans/<ID>`):
   plan.md      — «## 0. Meta» (ТАБЛИЦА `Поле|Значение`; обязательные
@@ -75,7 +75,7 @@ REQUIRED_META_FIELDS = ("Plan ID", "Title", "Version", "Status")
 V2_CORE_META_FIELDS = ("Plan ID", "Title")
 V2_STATUS_META_FIELDS = ("Version", "Status", "Last Updated")
 META_TABLE_COLUMNS = ("Поле", "Значение")
-# Полный канон item-полей — SKILL.ru.md §4 / snippets/phase-template.md, строго в этом
+# Полный канон item-полей — SKILL.md §5 / snippets/phase-template.md, строго в этом
 # порядке (порядок здесь не гейтится, только присутствие — см. lint_plan).
 REQUIRED_ITEM_FIELDS = (
     "Status", "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
@@ -201,9 +201,8 @@ CONTEXT_VALUES = (
     "cold-start — orchestration",
     "cold-start — plan-step",
 )
-# Директива непереводимого литерала (D28) — тот же формат, что грепает
-# `check-translations.sh` и (до P5.9) дублировал `test_canon_literals.py`; единственный
-# владелец регекса теперь этот модуль (`--conflicts` и тест реюзают его, не переиздают).
+# Директива канонического литерала (D28/D79) живёт в EN-only `SKILL.md`;
+# регексом владеет этот модуль, а `--conflicts` и тесты его переиспользуют.
 I18N_KEEP_RE = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
 PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")

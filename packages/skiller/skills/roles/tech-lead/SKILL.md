@@ -90,5 +90,3 @@ Tech Lead = engineering lead of one team. Owns team technical health + workflow 
 - `quality/code-review` · `quality/test-strategy` · `quality/tech-debt-audit` · `quality/refactoring-plan` — quality.
 - `devops/gitops` · `oss-dev/github-flow` · `oss-dev/gh-review` · `general/git-commit-rules` — workflow and review.
 - `general/session-handoff` — context handoff.
-
-<!-- ru-source-sha256: 1a7062fb0cccb3e5df1a9c59264800ba8618f3f146016c41092edb52edfcbbeb -->

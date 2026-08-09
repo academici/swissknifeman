@@ -154,5 +154,3 @@ FORBIDDEN:
 - `pm/brd` — consumer: takes the idea with a BUILD verdict and Scoring Matrix as input.
 - `founder/startup-lifecycle` — idea-audit = mandatory step before exiting the Idea stage.
 - `general/verify-claims` — web-grounding discipline for market facts.
-
-<!-- ru-source-sha256: d603b0bbc04c2de933b1936fd08eb900bfc125bf67d9fb6cfbd805e424460468 -->

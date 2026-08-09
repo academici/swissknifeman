@@ -1360,4 +1360,32 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 28c0c0cf05deaae44cf1097bb22d6f4f1d3b81c22ed4515b31c3036fbd92b54b -->
+## Canon literals
+
+<!-- i18n-keep: Closure Protocol -->
+<!-- i18n-keep: Поле | Значение -->
+<!-- i18n-keep: Items 🟢/всего -->
+<!-- i18n-keep: D# | Дата | Решение | Почему -->
+<!-- i18n-keep: Дата | Кто (role/model) | Что -->
+<!-- i18n-keep: Контракт | Версия | Статус | Потребители | Уведомлены -->
+<!-- i18n-keep: Контракт | Донор-план | Pinned | Замечено | Реакция -->
+<!-- i18n-keep: Команда -->
+<!-- i18n-keep: > СКЕЛЕТ — не детализирован -->
+<!-- i18n-keep: ЗАПУСК ВРУЧНУЮ -->
+<!-- i18n-keep: [NEEDS CLARIFICATION -->
+<!-- i18n-keep: RAG:✅ -->
+<!-- i18n-keep: RAG:— -->
+<!-- i18n-keep: [UNVERIFIED] -->
+<!-- i18n-keep: план закрыт -->
+<!-- i18n-keep: > УСТАРЕЛ — фаза реопенена -->
+<!-- i18n-keep: ОЖИДАНИЕ: -->
+<!-- i18n-keep: Вердикт: -->
+<!-- i18n-keep: РЕЖИМ: -->
+<!-- i18n-keep: ВХОД: -->
+<!-- i18n-keep: СКОУП: -->
+<!-- i18n-keep: НЕ ТРОГАТЬ: -->
+<!-- i18n-keep: pre_mutation: -->
+<!-- i18n-keep: pre_final: -->
+<!-- i18n-keep: write-site: -->
+<!-- i18n-keep: **Consequences:** -->
+<!-- i18n-keep: Возобновление: -->

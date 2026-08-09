@@ -154,4 +154,3 @@ DO NOT:
 - `operator/incident-response` — capacity incidents classified here; pre-event war room takes roles from here
 - `operator/oncall-rotation` — headroom affects page frequency; lack of capacity = on-call burnout
 - `operator/runbook` — scale-up as runbook mitigation relies on autoscaling policy from this skill
-<!-- ru-source-sha256: 759e15a6f25d663fa0d2caba26402c6e9a24e2d426c5ad28e0002bae7d8c83ff -->

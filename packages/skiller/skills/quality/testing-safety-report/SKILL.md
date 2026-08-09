@@ -66,5 +66,3 @@ Safety Report: <short change name>
 - `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — safe test DB guarantees during the run.
 - `oss-dev/dependency-audit` — dependency upgrade as a trigger for the report.
 - `quality/code-review` — report attached to PR so reviewer sees safety boundaries.
-
-<!-- ru-source-sha256: 5f75df054ca78538a5269e293da9e7305800e10875744708450a7f93480d0f67 -->

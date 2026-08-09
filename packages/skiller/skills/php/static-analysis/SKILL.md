@@ -78,5 +78,3 @@ Wrap chain in composer scripts (snippet `qa-composer-scripts.json`: `lint`, `lin
 - Skill `php/pao` — compact JSON output of PHPStan/Rector/tests for AI agent
 - Skill `php/named-arguments` — call style this pipeline checks/fixes
 - https://laravel.com/docs/pint, https://phpstan.org, https://getrector.com
-
-<!-- ru-source-sha256: 35cf3f9d8501d708903fff38e2f4ce69e35cc06439f812b2133a3c6341d6bac2 -->

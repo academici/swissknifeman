@@ -93,5 +93,3 @@ brain sync <project>     # sync
 - `local-topology` (system bucket) — root map of three nodes; Brain = node `docs-hub`.
 - `swissknifeman-locator` (system bucket) — paired locator for node `skills-hub`.
 - `shared-memory` (system bucket) — a DIFFERENT node: shared memory (maind agent-memory daemon), not Obsidian docs.
-
-<!-- ru-source-sha256: 7fc502203d04a02bccebdf6cb076bf49bbc325025dadf61f7cc0a38aed833523 -->

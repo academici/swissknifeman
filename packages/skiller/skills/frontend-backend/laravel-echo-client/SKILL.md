@@ -84,5 +84,3 @@ Build channel name from neutral domain model: `order.${orderId}`, `notifications
 - https://reverb.laravel.com/
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
 - Related skills: `laravel-data-layer/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-vue/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
-
-<!-- ru-source-sha256: 389f4932933c877ebe39c7552c899712e5676e66c13d89a52c9c563072618991 -->

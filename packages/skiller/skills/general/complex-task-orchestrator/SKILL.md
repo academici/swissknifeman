@@ -68,5 +68,3 @@ sha256: ""
 - `anti-drift` (general) — iteration discipline + circuit-breaker during execution.
 - `laravel-architecture/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
 - `session-handoff` (general) — hand off unfinished task to next session.
-
-<!-- ru-source-sha256: 5529d543d480b95c8164ae36be61c354b1ef05c2deb7439a96bc17bda87febf7 -->

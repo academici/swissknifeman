@@ -157,5 +157,3 @@ NEVER:
 - Omit SPDX in `package.json`/`composer.json` (hurts consumers' dependency-audit).
 - Accept PR without CONTRIBUTING.md (no rules → every PR review negotiated from scratch).
 - Ignore SECURITY.md (without it vulnerabilities arrive in public issues).
-
-<!-- ru-source-sha256: 2b633007d5fbe1d4291e989e2f8120fd66513ba9f048686311b3f851fb62647b -->

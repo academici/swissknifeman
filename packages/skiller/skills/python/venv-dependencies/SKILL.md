@@ -75,5 +75,3 @@ __pycache__/
 - `python/ml-project-structure` — project layout deciding where `requirements.txt`/`pyproject.toml` go and what enters `.gitignore`.
 - `php/static-analysis` — PHP analog of Black/Ruff/Mypy (Pint, PHPStan, Rector) locally and in CI.
 - `oss-dev/dependency-audit` — dependency audit (vuln scan, licenses, supply-chain, SBOM) on top of pinned versions.
-
-<!-- ru-source-sha256: d8811ab8cbf6d1f65e2f36e651db4fc67c2e27354627b9d16bb627ad3ef345db -->

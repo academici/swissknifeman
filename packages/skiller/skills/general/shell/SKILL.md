@@ -139,5 +139,3 @@ kept in a snippet on purpose so it can grow without bloating the skill.
 ## Related skills
 
 `anti-drift` (discipline: don't blindly repeat the same action).
-
-<!-- ru-source-sha256: ced52b3380e9d7cf032dde75a3c46a4c61dfa1270506fdae744a917cb2cfb1e0 -->

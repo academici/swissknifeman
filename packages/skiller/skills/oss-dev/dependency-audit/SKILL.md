@@ -110,5 +110,3 @@ NEVER:
 - Allow postinstall scripts from untrusted maintainers without allowlist
 - Skip committing lockfile in an app (for libraries — see discussion above)
 - Rely on `npm audit` as the only tool — it does not catch supply-chain
-
-<!-- ru-source-sha256: 2e15dfacdad9304e665aaf8bea3581015319ba94d994254f938ededc354a4a0e -->

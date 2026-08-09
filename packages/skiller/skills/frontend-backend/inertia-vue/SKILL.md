@@ -95,5 +95,3 @@ Boundary is enforced via ESLint flat-config `no-restricted-imports`: pattern `@/
 - https://inertiajs.com/
 - https://vuejs.org/guide/reusability/composables
 - Related skills: `frontend-wayfinder/wayfinder`, `frontend-vue/vitest`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-vue/pinia-stores` (layer `stores/`), `frontend-linting/eslint-flat-config` (enforce import boundary `no-restricted-imports`), `frontend-tailwind/tailwind-conventions`
-
-<!-- ru-source-sha256: d9cd8f1d1c17651367f223be62a1f7f30a559d93839e181bf888bb01f2e57d25 -->

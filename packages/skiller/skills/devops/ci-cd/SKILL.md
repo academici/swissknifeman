@@ -59,5 +59,3 @@ Gate mode: `hard` (blocks merge) on default branch and MR; `report`/`soft` for i
 - snippets/github-actions-security.yml — security-job: composer/npm audit + Trivy image scan
 - snippets/github-actions-coverage-gate.yml — coverage-job: pcov + `test --coverage` + gate script with global and critical-dir thresholds
 - snippets/gitlab-ci-practices.md — `.gitlab-ci.yml` practices + `.php-base`/`php-coverage` job for coverage-gate
-
-<!-- ru-source-sha256: c7e46c0ea646c7417cd176c55cf66fac16b266caeaf509910751145e6c2934dd -->

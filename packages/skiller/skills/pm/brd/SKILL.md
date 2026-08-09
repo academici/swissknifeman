@@ -58,5 +58,3 @@ BRD = WHAT the system does, not HOW. Audience: developers, in-repo AI agents, te
 - `pm/product-roadmap` — phasing requirements (MVP → v1 → v2) on top of BRD.
 - `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — third layer (HOW), consume BRD.
 - `general/spec-interview` — one-question-at-a-time interview technique to gather missing requirements before BRD.
-
-<!-- ru-source-sha256: c16ab7ef517ecdfc675a22cf0f7a08c407e8c7749f951967b9ad1814d5958a58 -->

@@ -72,5 +72,3 @@ Positional call with 2+ unclear args → request rewrite to named. Don't block o
 - `php/code-style-spatie` (external) — general Laravel/PHP code style this rule fits into.
 - `general/naming-conventions` — this rule is about *call* style; naming-conventions is about names of *entities* (classes, methods, fields).
 - `php/static-analysis` — pint/rector pipeline that partially cleans up call style.
-
-<!-- ru-source-sha256: 50e08ed5596fffd2b743be75d7314aeb06b07366459b5d2f4a71227b0ffecd63 -->

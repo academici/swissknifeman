@@ -125,5 +125,3 @@ If any missing → reviewer may close with "complete it and re-open".
 - `quality/test-strategy` — the "tests for new logic?" criterion (P1) relies on coverage strategy.
 - `quality/mutation-testing` — objective test-quality gate instead of manual "tests exist".
 - `general/git-commit-rules` — commit/PR conventions checked during review.
-
-<!-- ru-source-sha256: 2998019f26efd7f64af7d7869ead6d92129f08259a0f0a66277beadf05585efe -->

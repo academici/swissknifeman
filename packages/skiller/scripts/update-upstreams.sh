@@ -305,9 +305,7 @@ TRIAGE_RULES = [
     # sha256 его не покрывает, версия не пинована — ровно rug-pull-класс, который
     # CSA рекомендует закрывать пиновкой версий.
     ("PRM_REMOTE_INSTRUCTIONS", "over-permissive-tools",
-     # RU-ветка обязательна не для симметрии: у 55 из 56 бандлов рядом лежит
-     # переведённый SKILL.ru.md, и англоязычное правило на нём молчит — гейт
-     # рапортовал бы чистоту ровно на половине раздаваемой поверхности.
+    # Кириллическая ветка остаётся defense-in-depth для upstream-контента на русском языке.
      r"(?i)(?:(?:fetch|load|download|retrieve)[^\n]{0,80}"
      r"(?:latest|fresh|current)[^\n]{0,60}(?:guidelines|rules|instructions)"
      r"|fetched\s+(?:content|guidelines|file)[^\n]{0,80}"

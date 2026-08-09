@@ -170,5 +170,3 @@ NEVER:
 - Delete register entries — only move to status `resolved` / `accepted` / `obsolete` (history audit)
 - Audit someone else's code without team context (what they already know vs don't)
 - Use tech debt as a weapon in internal disputes ("everything's bad because of [name]")
-
-<!-- ru-source-sha256: 5e8736c18d0b8249181fb6fd057d007bbf071bbcc29fea4780622f4d43ff5e6f -->

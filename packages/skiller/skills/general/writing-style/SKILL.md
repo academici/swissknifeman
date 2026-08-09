@@ -124,5 +124,3 @@ Stays inside the team → Russian. Unsure who the reader is → default Russian.
 - `git-commit-rules` (general) — git format & mechanics: Conventional Commits, types, scope, breaking, husky/commitlint, action order.
 - `compact-responses` (general) — model output brevity (how much text, when); this skill is tone & language when text IS needed.
 - snippets/before-after.md — bad/good pairs for a comment and a commit subject.
-
-<!-- ru-source-sha256: f70f22617687a6cac7d09eba060e37d5334b9c5ff03f513319a5a0bd1c030685 -->

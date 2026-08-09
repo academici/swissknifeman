@@ -55,5 +55,3 @@ my_ml_project/
 - `python/venv-dependencies` — dependency/environment management for the folder this structure defines (`requirements.txt` / `pyproject.toml`, linters).
 - `php/laravel-structure` — analogous structure canon for Laravel projects.
 - `oss-dev/oss-development` — OSS-repo structure (README, ADR, CI) on top of project code.
-
-<!-- ru-source-sha256: b291fb17577086bb7c8b8f914d7529dcb127687a28d5c78af16cfe0259e8d760 -->

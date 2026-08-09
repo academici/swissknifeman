@@ -156,5 +156,3 @@ FORBIDDEN:
 - `frontend-wayfinder/wayfinder` — typesafe routes/actions on frontend for Laravel impl of this contract.
 - `laravel-data-layer/laravel-data` — DTO shape of request/response when implementing contract on Laravel.
 - `architect/package-contribution-protocol` — shared-package contract evolution: SemVer, "is this breaking?", migration guide, bloat gate.
-
-<!-- ru-source-sha256: 81f96acc2f9bdd8cf1f13480c2e222683aadd207f264d2e456f2c1663dd86cd0 -->

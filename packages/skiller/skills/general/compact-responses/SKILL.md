@@ -57,5 +57,3 @@ Mode stays active rest of conversation unless user says "normal mode" or "под
 - `pao` (php) — compress PHP-tool output (tests/static-analysis) to compact JSON.
 - `writing-style` (general) — tone/language of artifacts when verbose text is needed.
 - Output-style `lean` (harness) — session-wide enforcement of the same voice at system-prompt level; this skill = portable SSOT of the phrasings (the output-style distills it).
-
-<!-- ru-source-sha256: 808dc15ab760bac290e598ee47562ac5a6857d3e22c9a04ec62b46352eb30a04 -->

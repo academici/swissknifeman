@@ -89,8 +89,7 @@ INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
 # Мягкий порог: тело сверх него → warn (не error), подсказка вынести детали.
 # См. docs/guide/skill-taxonomy.md.
 LEAN_MAX_BODY_LINES = 150
-# Кириллица в загружаемом каноне SKILL.md. EN-канон дешевле RU у токенайзера Claude и
-# именно он попадает в контекст; русский держим в SKILL.ru.md. Жёсткий гейт на frontmatter
+# Кириллица в загружаемом EN-only каноне SKILL.md. Жёсткий гейт на frontmatter
 # `description` (резидентный ⊕ tier-0 — постоянный налог в КАЖДОМ запросе).
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 # Пороги гейта СОВОКУПНОЙ записи листинга (резидентный tier-0, P3.2 рэтчет,
@@ -239,7 +238,7 @@ for skill_md in skill_files:
     desc = fm.get("description", "")
     if CYRILLIC_RE.search(desc):
         errors.append(f"{rel}: frontmatter description содержит кириллицу — SKILL.md это "
-                      f"EN-канон (резидентный tier-0 в КАЖДОМ запросе); русский держи в SKILL.ru.md")
+                      f"EN-only канон (резидентный tier-0 в КАЖДОМ запросе)")
     if CYRILLIC_RE.search(fm.get("name", "")):
         errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
     # СОВОКУПНАЯ запись листинга (P3.5) — та же формула, что budget.py
@@ -1346,14 +1345,7 @@ if stale:
 print("bucket-path drift: нет протухших php/<skill>|frontend/<skill> ссылок")
 PY
 
-# --- 14. двуязычная свежесть (SKILL.ru.md → SKILL.md) ---------------------------
-# Гейт: RU-источник правлен, EN-канон не регенерён (или нет ru-source-sha256). Без
-# claude (чистая sha-сверка) — безопасно в CI. Чинить: regen SKILL.md + check-translations --stamp.
-"$REPO_ROOT/scripts/check-translations.sh" --strict || {
-  echo "ERROR: протухшие переводы SKILL.ru.md→SKILL.md (regen + check-translations.sh --stamp)" >&2
-  exit 1; }
-
-# --- 15. CORE резидентный бюджет (ЖЁСТКИЙ гейт) --------------------------------
+# --- 14. CORE резидентный бюджет (ЖЁСТКИЙ гейт) --------------------------------
 # ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — гейт против тихого роста ядра выше
 # target (resident_budget_target в core-policy.json). --strict = ненулевой код при
 # превышении. Раньше здесь был `|| true` (soft, вопреки этому же комменту) — честно

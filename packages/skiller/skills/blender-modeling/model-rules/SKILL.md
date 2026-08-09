@@ -96,5 +96,3 @@ set_viewport_camera(z_mm=<z>,  distance=<d>)  # <zone 2>
 - `blender-modeling/parametric-config` — implements cross-config deps and camera zones from this template in `config.py`/`profile.py`/`common.py`.
 - `blender-modeling/threading` — source of values for "Thread parameters" table.
 - `blender-modeling/config-conventions` — rules for cross-config deps recorded in this file.
-
-<!-- ru-source-sha256: 3e171c3d050da25fbe5e44bebef2ea93a4630b2e96af1b303303e4ba2760f82d -->

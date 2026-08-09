@@ -111,5 +111,3 @@ PMF reached / not reached / pivot diagnosis needed
 - `founder/adversarial-check` — adversarial case against your own traction
 - `founder/startup-lifecycle` — pmf-diagnostics closes the MVP→Launch gate
 - `pm/unit-economics` — adjacent metrics (LTV/CAC) for Launch readiness
-
-<!-- ru-source-sha256: 979ea32378112f61894b75b84797e83929003491325e0aa2f7966d398809f5e6 -->

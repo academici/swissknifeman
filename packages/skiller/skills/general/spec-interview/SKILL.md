@@ -62,5 +62,3 @@ sha256: ""
 - `to-issues` (oss-dev) — split a finished spec into independent issues by vertical slices.
 - `implement` (general) — implement per fixed spec/issue (explicit invocation).
 - `pm/requirement-critic` — audit a larger BRD for completeness and conflicts (different scale: product requirements, not a one-off task).
-
-<!-- ru-source-sha256: f60c43fcc65b8c26e1fd28f41afd5b09148bc24a70f11622926cd852f0380493 -->

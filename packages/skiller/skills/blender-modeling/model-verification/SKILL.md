@@ -101,5 +101,3 @@ performance, and print qualification unverified until direct evidence exists.
 - `blender-modeling/model-rules` — model-local construction and camera conventions.
 - `blender-modeling/parametric-config` — configuration, derivation, and plain-Python gates.
 - `blender/mcp-blender` — Blender execution, viewport, camera, and geometry inspection tools.
-
-<!-- ru-source-sha256: 358e66debc272cb7b238de4ea6e7f4bf9984a3ce733a6a8a948eac729f12a781 -->

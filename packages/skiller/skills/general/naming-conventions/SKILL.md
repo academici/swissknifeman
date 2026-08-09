@@ -98,5 +98,3 @@ Don't spawn a method per field. Allowed:
 - `general/writing-style` — prose & message style; naming is about code identifiers.
 - `quality/code-review` — where name checks fit into review (P2/P3 findings).
 - `general/anti-drift` — "simplicity first": simpler name = less drift.
-
-<!-- ru-source-sha256: a30a41cf4f9554c92c371ac9997d6004726bfb9f456289407abed896104ae084 -->

@@ -114,5 +114,3 @@ Rule: change only **sources**, never hand-edit generated.
 - registry `docs/boost-compatibility.md` — registry-skill compatibility with Laravel Boost (package: https://github.com/laravel/boost, docs: https://laravel.com/docs/boost).
 - `references/ssot-source-layout.md` — detailed `.ai/` design: data flows, three priority layers, guidelines vs skills, commands, common errors.
 - `references/ssot-scenarios.md` — "scenario → skill" table for typical agent tasks.
-
-<!-- ru-source-sha256: 9fe3b660fbf8509db6f7b4e85a3db1d94a506554fa5e25fe916661507f66e451 -->

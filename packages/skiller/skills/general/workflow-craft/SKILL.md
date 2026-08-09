@@ -215,5 +215,3 @@ unavailable — don't pass off unverified orchestration as verified.
 - `research/query-craft` — how to phrase a RAG query for non-standard
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
-
-<!-- ru-source-sha256: c2b49eca42fdbea7e5d9fc0daf352aee75af6aef4cc50fcf7b674a4d4eebec08 -->

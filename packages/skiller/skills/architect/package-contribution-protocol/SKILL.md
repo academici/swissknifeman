@@ -119,5 +119,3 @@ If a package edit is agreed:
 - snippets/adr-template.md
 - snippets/claude-md-priority.md
 - snippets/permissions-deny.md
-
-<!-- ru-source-sha256: 3473f0852ccf085d0c86891d013c073593549014b5c8d77d5a04d9841234e0f3 -->

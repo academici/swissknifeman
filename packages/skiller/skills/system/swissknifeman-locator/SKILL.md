@@ -98,5 +98,3 @@ Deeper (installing/changing/syncing skills via two channels, doc-sync) — runbo
 - `local-topology` (system bucket) — root map of three nodes; swissknifeman = node `skills-hub`.
 - `brain-locator` (system bucket) — paired locator for node `docs-hub`; bridge via `integrations.brain.path`.
 - `project-tooling-runbook`, `ecosystem-integration`, `harness-operations` — operational depth (if available).
-
-<!-- ru-source-sha256: 31d145c5391c9fcde3e0407b78c6a542ffc715c2cb80d2b900b9dbc4e9ac9089 -->

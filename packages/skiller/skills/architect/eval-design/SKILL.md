@@ -151,5 +151,3 @@ NEVER:
 - `architect/security-design` — anonymize real user requests before adding to eval-set.
 - `quality/test-strategy` — overall test pyramid; eval is its AI-specific layer.
 - `security/security` — external reference for adversarial/jailbreak scenarios.
-
-<!-- ru-source-sha256: 91386804ac248241f5a5d8d8b0a0e81798b1d85db543e53fff392641e0ade711 -->

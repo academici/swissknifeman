@@ -46,5 +46,3 @@ Activate before raising minor/major PHP version (constraint in `composer.json`, 
 - `devops/docker-php` — PHP image & extensions update.
 - `php/pao` — compact rector/phpstan/test output when running upgrade from agent.
 - Version-specific PHP/framework rules — Laravel Boost (`boost:update`).
-
-<!-- ru-source-sha256: 4445b853daddb72282c157e7d22277f54c5f4a4c00530a0992c27691075d689d -->

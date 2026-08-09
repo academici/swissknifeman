@@ -63,5 +63,3 @@ precedent `axioma-stack`). HOW plans/workflow are made — `plan-protocol`/`work
 - `general/plan-protocol` — plan-system canon (HOW).
 - `general/workflow-craft` — workflow authoring discipline.
 - `axioma/axioma-stack` — sibling axioma pointer.
-
-<!-- ru-source-sha256: 4e960a2b206f09c5c68d3045d5b1584d47aaa8200e0646e67e74e8eaece02298 -->

@@ -58,5 +58,3 @@ On failure PAO keeps everything needed to fix — file, line, message:
 - https://laravel.com/blog/introducing-laravel-pao-cleaner-output-for-ai-agents
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
 - Related skills: `laravel-testing/laravel-testing` (PHPUnit/Pest, output collapsed by PAO), `php/static-analysis` (PHPStan/Rector — also under PAO wrapper), `general/context-economy` (general agent context economy)
-
-<!-- ru-source-sha256: 870d164e8529095ef72d2833f558de178f9b30f66c4389b81a64a364937d417b -->

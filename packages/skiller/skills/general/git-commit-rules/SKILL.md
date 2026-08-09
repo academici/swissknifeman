@@ -102,5 +102,3 @@ ci(deps): добавить php-расширения для composer install
 - `writing-style` (general) — tone/language of commit body (Russian, reason over mechanics); format — here.
 - `devops/node-pnpm-preflight` — Node/pnpm check before commit with husky/commitlint hooks.
 - `oss-dev/github-flow` — Issue → Branch → PR → Merge → Tag chain and SemVer Oracle (commit type → version bump).
-
-<!-- ru-source-sha256: bffa72134a2da2d0a57a2f91c69fd335cef9e3605e3d2b3a5be88b251f380c94 -->

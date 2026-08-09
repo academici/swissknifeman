@@ -68,5 +68,3 @@ for obj in bpy.data.objects:
 - `blender/mcp-blender` — error-diagnosis table references these pitfalls (`temp_override`, normals after boolean, `surface_render_method`); `realism` mode already includes normal recalc.
 - `blender-modeling/parametric-config` — mesh build via `bmesh`/SCREW where these 5.0-API rules apply.
 - `blender-modeling/threading` — SCREW thread modifier, sensitive to API changes.
-
-<!-- ru-source-sha256: c5afde33c4d11ad26c65367c66e8c6aac46391454d9dcc4f63923bf9b4d19430 -->

@@ -37,5 +37,3 @@ Large namespace moves break silently. Stage them.
 ## Related
 
 - `php:laravel-structure`, `php:static-analysis` (phpstan seam).
-
-<!-- ru-source-sha256: 97ac35baeee90a491278a52c1d13bf89267db4c94332244d0f4d6a47398e7d92 -->

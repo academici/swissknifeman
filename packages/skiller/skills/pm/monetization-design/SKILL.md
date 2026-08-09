@@ -134,5 +134,3 @@ Only **model selection** and **trade-off rationale**.
 - `pm/go-to-market` — consumer: model drives channels and messaging.
 - `pm/brd` — consumer: chosen model adds mandatory features (billing, paywall, invoicing).
 - `founder/competitive-analysis` — analog models on market (maturity, take-rate) feed trade-off matrix.
-
-<!-- ru-source-sha256: f4e406a64f01498d4e8978646a6ce9116cdcc6a679fc9cde5923e9ee4d8c1dfd -->

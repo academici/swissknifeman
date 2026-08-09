@@ -550,8 +550,8 @@ def _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag
 # Дисциплина (гейт — tests/test_canon_literals.py):
 #   * `CANON_LITERALS` — строка, которую протокол ТРЕБУЕТ писать дословно (шапки таблиц,
 #     маркеры, формы `Next`). Агент флота берёт её из EN-канона `SKILL.md` ⇒ каждая обязана
-#     нести директиву `<!-- i18n-keep: … -->` в `SKILL.ru.md` (гейт присутствия в EN —
-#     `packages/skiller/scripts/check-translations.sh`). Тест T2 сверяет реестр с директивами.
+#     нести директиву `<!-- i18n-keep: … -->` в EN-only `SKILL.md`.
+#     Тест T2 сверяет реестр с директивами напрямую.
 #   * `HEURISTIC_LITERALS` — ДЕТЕКТОРЫ НАМЕРЕНИЯ в свободной прозе (стеммы, регистронезависимо):
 #     автор их дословно не пишет, EN-канон их не несёт и нести не обязан ⇒ директив у них нет.
 #   * Тест T1 (AST-обход этого файла) не даёт завести кириллическую сверку МИМО обоих реестров —
@@ -600,7 +600,7 @@ CANON_LITERALS = (
     CONSEQUENCES_LITERAL,                                     # §6, 2026.07.25-ECO-OPT P8.2/D103-D105: латиница — та же
                                                                # регистрация решением, T1 её не ловит
     RESUME_LITERAL,                                           # §6, 2026.07.25-ECO-OPT P8.3/D44: кириллица — обязательна
-                                                               # i18n-директива в SKILL.ru.md
+                                                               # i18n-директива в EN-only SKILL.md
     "Команда",                                                # строка таблицы launch-block'а (§8, P5.8/LAUNCH_COMMAND_ROW_RE)
 )
 # --- 2026.07.15-PLANFLOW-UX P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
@@ -617,17 +617,12 @@ C2_WAITING_STEMS_RE = re.compile(
 C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "audit",
                                "audit-design", "close", "close-archive"})
 
-# Якоря `--conflicts` (2026.07.31-SKM-LEAN P5.9) — грепаются в SKILL.ru.md (RU-ИСТОЧНИКЕ)
-# САМИМ этим модулем, не в теле плана автором. Кириллические, поэтому T1
-# (`test_canon_literals.py`) их ловит; в CANON_LITERALS (⇒ директива i18n-keep, EN-фиделити)
-# не идут — «--conflicts» никогда не читает `SKILL.md`, EN-параллель ему не нужна ни для
-# чего. Регистрация — ниже, в HEURISTIC_LITERALS, тем же основанием, что у
-# `оркестрац`/`фаза закрыта`: детектор смысла в известном (нашем же) тексте, не
-# канон-токен для стороннего автора.
-CONFLICTS_ANCHOR_STATUSES = "РОВНО 6 канонических строк"
-CONFLICTS_ANCHOR_ITEM_FIELDS = "`**Поле:** значение`, в этом порядке:"
+# Якоря `--conflicts` (P5.9 + D79 EN-only) грепаются в каноническом `SKILL.md`.
+# Эти стабильные English anchors связывают прозу с реестрами реализации.
+CONFLICTS_ANCHOR_STATUSES = "EXACTLY 6 canonical strings"
+CONFLICTS_ANCHOR_ITEM_FIELDS = "`**Field:** value`, in this order:"
 CONFLICTS_ANCHOR_NEXT_FORMS = "| Форма Next | Когда |"
-CONFLICTS_ANCHOR_CONTEXT = "РОВНО одно из трёх значений"
+CONFLICTS_ANCHOR_CONTEXT = "EXACTLY one of three values"
 CONFLICTS_ANCHOR_LAUNCH_TABLE = "| Параметр | Значение |"
 
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,

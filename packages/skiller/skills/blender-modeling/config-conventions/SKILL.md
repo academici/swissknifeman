@@ -186,5 +186,3 @@ Parts **may and must** read each other's configs on physical link; single source
 - `blender-modeling/model-rules` — `models/{name}/ai/rules.md` template fixing model-specific cross-config links.
 - `blender-modeling/scene-conventions` — scene object & material naming.
 - `blender-modeling/threading` — thread params (`*_clearance`, `*_thread_*`) set up per these conventions.
-
-<!-- ru-source-sha256: 0b8171e1384b9d41c661874b7ed7b8901593277cc9c6a79e0042ce38dfa66d08 -->

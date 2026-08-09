@@ -107,5 +107,3 @@ canonical source is this file's `SKILL.ru.md`; thin projections —
 by `skiller registry`, never hand-edited). Bucket `repository-bootstrap` is private/source-only:
 never published as an ordinary unit/core/marketplace entry, never vendored/connected into a
 consumer project.
-
-<!-- ru-source-sha256: 13bc4523b2483cb750086b05c484781bbc28ed28768ed78024b46f6430853458 -->

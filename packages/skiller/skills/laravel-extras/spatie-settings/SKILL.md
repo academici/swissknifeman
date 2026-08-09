@@ -141,5 +141,3 @@ Justified when: admin must change value without deploy and frontend needs it at 
 - snippets/create_example_settings.php — settings migration (defaults + evolution)
 - snippets/filament-settings-page.php — Filament form binding
 - Related skills: `laravel-filament/filament` (SettingsPage and plugin), `laravel-data-layer/laravel-data` (Data as settings property type and public frontend DTO), `laravel-architecture/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend-backend/laravel-echo-client` (consuming websocket settings on client), `frontend-backend/backend-type-sync` (settings DTO → TS type)
-
-<!-- ru-source-sha256: db1051023d0475f3bb6340a46675a1908da216a2ae31efc3365b1eafcb9aa0d5 -->

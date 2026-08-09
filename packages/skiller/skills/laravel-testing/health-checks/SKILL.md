@@ -97,5 +97,3 @@ Built-in package checks (`UsedDiskSpaceCheck`, `DatabaseCheck`, `DebugModeCheck`
 - snippets/ExampleCheck.php
 - snippets/config-health.php
 - Related skills: `architect/observability-design` (logging/metrics/tracing, SLO/SLI — health as part of prod readiness), `operator/runbook` and `operator/incident-response` (what to do on check failure), `devops/docker-services` (healthcheck `/up` and `depends_on: service_healthy`), `laravel-extras/spatie-settings` (another spatie config layer)
-
-<!-- ru-source-sha256: af7399f06b9c268a2b33646d0ff90817ebcfeba57bf6428510a2cbbc6261d927 -->

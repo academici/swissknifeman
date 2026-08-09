@@ -49,5 +49,3 @@ NOT `.claude/handoffs/`.
 - `context-economy` (general) — handoff before `/clear` as part of Plan→Clear→Execute.
 - `complex-task-orchestrator` (general) — open subtasks and risks go into the handoff.
 - `system/shared-memory` — if projects share memory, key facts go there (remember), not only the handoff file.
-
-<!-- ru-source-sha256: cdc4a4999c68f1121b16b8b20d5461b1e8d69f7aca9e137f4d06038612be1616 -->

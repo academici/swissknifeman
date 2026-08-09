@@ -168,5 +168,3 @@ Basic ToS draft. Same — DRAFT until lawyer.
 - `architect/eval-design` — for AI Act high/limited-risk: eval harness as part of conformity + transparency.
 - `architect/observability-design` — audit trail + log retention under Article 30 / breach-response.
 - `legal/legal` — external body on contracts/NDA/compliance (analysis, not mirror).
-
-<!-- ru-source-sha256: 1e4c9500df7143ec5ea9eafc470fe05cf4f13b88ecf68f34f3f9ace4245ce905 -->

@@ -92,5 +92,3 @@ Allowed: a single canonical `findByIdOrFail` over `queryForUser()` (see `reposit
 - `php/named-arguments` — named arguments on the call side.
 - `php/php-patterns` — VO/DTO/specification (where the "criterion" goes instead of `findByX`).
 - `php/laravel-structure` — where classes live in the project tree.
-
-<!-- ru-source-sha256: 7976420e69ed3fe3f9196b80da57a1230b8808b8a779c336cd8fc315306df125 -->

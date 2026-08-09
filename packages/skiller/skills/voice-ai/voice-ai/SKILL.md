@@ -204,5 +204,3 @@ FORBIDDEN:
 - `architect/architecture` — broader context where the voice loop is one container of the system.
 - `architect/security-design` — media-session auth, PII redaction on the control channel.
 - `architect/legal-compliance` — 152-FZ / consent to record, data residency in detail.
-
-<!-- ru-source-sha256: a2dd2e2fce526d63639a416ca54651e7c14f9795aea9cb80edcf864f09c097ce -->

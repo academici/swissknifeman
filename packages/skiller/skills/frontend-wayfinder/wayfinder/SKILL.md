@@ -58,5 +58,3 @@ Apply when: frontend calls backend routes; building forms/links to endpoints; ro
 - https://github.com/laravel/wayfinder
 - https://laravel.com/docs/wayfinder (check current version)
 - Related skills: `frontend-backend/inertia-vue` (resources/js layers, actions layer), `frontend-vue/vitest` (exclude autogen from coverage), `frontend-linting/eslint-flat-config` (where `no-restricted-imports` boundary lives), `frontend-backend/backend-type-sync` (paired generation: routes ≠ DTO/enum types)
-
-<!-- ru-source-sha256: 5afade308b8000dbf5b148d8eef83a70fa8287138d9c79f145faa76204286346 -->

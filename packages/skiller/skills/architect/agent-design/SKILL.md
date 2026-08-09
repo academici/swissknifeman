@@ -170,5 +170,3 @@ DO NOT:
 - `architect/observability-design` — traces, token-cost, latency per model, jailbreak metrics for prod agent.
 - `ai/ai-agents` — external compendium on building agents/MCP/RAG (analysis, not mirror).
 - `security/security` — external defensive playbook on prompt injection and tool-use safety.
-
-<!-- ru-source-sha256: b456f12838d88c22cba9a919c1d2c4f941433772b41de9192f725bf11c189cd6 -->

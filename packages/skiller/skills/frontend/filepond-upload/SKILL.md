@@ -103,5 +103,3 @@ Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + 
 - https://github.com/pqina/vue-filepond — Vue wrapper
 - https://github.com/rahulhaque/laravel-filepond — server-side (process/revert, `Filepond::field()`)
 - Related skills: `frontend-backend/inertia-vue` (forms/pages), `frontend-vue/vue-composition-api`, `frontend-wayfinder/wayfinder`
-
-<!-- ru-source-sha256: 7606abcb0b846e3e9373c9cd65d9c0465cedb89200e96ee2f39de43a83914af8 -->

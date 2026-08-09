@@ -125,5 +125,3 @@ DO NOT:
 - `founder/startup-lifecycle` — frame: launch-plan = entry to Launch, repeatable channel-driven growth = Launch-exit.
 - `founder/defensibility` — supplier of moat narrative for investor/enterprise voice at Scale.
 - `founder/pitch-deck` — consumer: deck GTM section comes from here.
-
-<!-- ru-source-sha256: 3228e986b165cc465b3170976ddf6650bc6a97f80f6cdf4c9355d29f9e4e7848 -->

@@ -179,5 +179,3 @@ NEVER:
 - Breaking changes without MAJOR version (if ≥ 1.0.0).
 - PHP package without PSR-4 autoloading.
 - Publish to Packagist without tests (coverage < 80%).
-
-<!-- ru-source-sha256: 78aafbf7b840f661273b7f63ed1570fba04581829450601fab4635909c5295f3 -->

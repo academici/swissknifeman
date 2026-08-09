@@ -30,8 +30,8 @@ AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
 # Файлы каталога скилла, которые НЕ едут в потребляющий проект ни одним каналом
 # физ.переноса (vendor/sync): upstream.json и .claude-plugin — служебные реестра;
-# SKILL.*.md (SKILL.ru.md и пр.) — человеческий ИСТОЧНИК (агент грузит лишь EN
-# SKILL.md, "SKILL.*.md" не матчит сам "SKILL.md"); evals/ — поведенческие тесты
+# SKILL.*.md — неканонические localized/reference alternates ("SKILL.*.md" не
+# матчит сам EN-only "SKILL.md"); evals/ — поведенческие тесты
 # скилла; __pycache__/*.pyc — байткод-кэш, появляется локально при ручном запуске
 # .py-сниппетов (напр. snippets/check.py) — найдено при расследовании нестабильного
 # content_sha256 у скилла с .py-сниппетами (registry --check зеленел локально и

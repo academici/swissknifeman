@@ -110,5 +110,3 @@ each finding names its profile.
 - `general/plan-protocol` — plan-protocol 2.0 schema + DoR = constitution of the plan/spec profile.
 - `quality/tech-debt-audit` — scheduled debt audit; deferred Major findings land there.
 - `general/git-commit-rules` — commit format for atomic review-fix commits.
-
-<!-- ru-source-sha256: 0c3510affe7641c3953905e275c4fae9166a6efd88250a0ae72e774d894d8dc7 -->

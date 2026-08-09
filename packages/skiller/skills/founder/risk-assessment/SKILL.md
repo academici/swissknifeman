@@ -131,5 +131,3 @@ DON'T:
 - `architect/legal-compliance` — deepens regulatory category (GDPR, AI Act, DSA, licensing)
 - `architect/security-design` — deepens technical category (auth, OWASP, STRIDE threat modeling)
 - `quality/tech-debt-audit` — adjacent for technical risks of existing code (impact × effort)
-
-<!-- ru-source-sha256: cf205cf0a5dd928f7eb18a5eefca1700bbc2c87ece25ed3ec54149d9d946a748 -->

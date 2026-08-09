@@ -64,5 +64,3 @@ sha256: ""
 - Skill `laravel-testing/test-isolation-guard` — hard protection against running on dev/prod DB and media disk
 - Skill `devops/db-test-preflight` — preflight of test Postgres DB in Docker
 - Skill `frontend-vite/vite-module-loader` — asset build Dusk needs before run
-
-<!-- ru-source-sha256: dc5703d143a576bc1ef0adf04391f2f8018bfce4b1e70258bfdeac399a567e1c -->

@@ -81,5 +81,3 @@ Global: `~/.claude/hooks/memory/env.ini` (MODE) + `config.json`. In project: `<p
 - `cross-project-coordinator` (system bucket) — source of cross-project findings (dups/divergences/shared-package candidates) worth `remember` for the group.
 - `general/session-handoff` — adjacent: one-off context handoff between sessions, vs shared-memory = persistent shared group store.
 - Install hook files: `harness hooks --global` (harness package).
-
-<!-- ru-source-sha256: 5624f36811f16981ae52f710294f3351a32f2ed48b2dcacc944bf4fd4dcb72c3 -->

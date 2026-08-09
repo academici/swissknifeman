@@ -71,5 +71,3 @@ Prioritized report: findings (type, `file:line` per project, unification, impact
 - `laravel-architecture/laravel-subagents` — pattern of dispatching concerns to Explore subagents (return findings, not file bodies).
 - `shared-memory` (system bucket) — where to record cross-project findings (dups, divergence, shared-package candidates) so other projects in the group see them.
 - `scan-skills.sh` — if the pattern is worth promoting INTO the skill registry.
-
-<!-- ru-source-sha256: 0de141c691f82026cf5a1aaab72a5f8b85e655a286074561c85863d11a51a1fc -->

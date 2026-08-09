@@ -36,5 +36,3 @@ Cache-safe pluggable abstractions for multi-panel / multi-tenant / driver resolu
 ## Related
 
 - `laravel-architecture:modular-architecture`, `php:production-readiness-checklist`.
-
-<!-- ru-source-sha256: accaa8e8aed4b1c71b8682edcc39362ed113da7574b654356c2c99469a5dc2a7 -->

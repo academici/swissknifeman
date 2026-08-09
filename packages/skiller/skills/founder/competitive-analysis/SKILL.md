@@ -105,5 +105,3 @@ Mandatory positioning table at the end:
 - `founder/pitch-deck` — consumer: Competition and Why-now slides take the market map from here
 - `founder/new-project` — orchestrator: calls this skill at stage 2 of the launch chain
 - `pm/monetization-design` — adjacent: business-model choice relies on competitors' segment and models
-
-<!-- ru-source-sha256: 38b1449b985efb8bf9b5625d982425b84fd808936c6ba63bddf794c64dd8985d -->

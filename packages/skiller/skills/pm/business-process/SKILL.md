@@ -87,5 +87,3 @@ After creating a file — update `docs/02_Workflow/_index.md`.
 - `pm/brd` — consumer: functional requirements and user stories rely on the processes described here.
 - `architect/api-design` — FSM transitions often become endpoints/commands; sequence diagram helps design the contract.
 - `laravel-architecture/enum-state-machine` — FSM implementation (enum + transitions) in Laravel code.
-
-<!-- ru-source-sha256: 21c43437414875751ad7871a146744eb844e3b3c1be5700e0df9df23e6686c01 -->

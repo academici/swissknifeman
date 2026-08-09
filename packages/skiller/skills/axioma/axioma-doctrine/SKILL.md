@@ -95,5 +95,3 @@ conversations (read before `axioma-stack`/`ecosystem-reuse-gate` and before
   concrete packages/vendors per task (data, not principle).
 - `Vertical_SaaS_Pattern`, `Marketplace_Extensions_Pattern` — `02-Knowledge`
   vault patterns detailing pillars 1 and 5.
-
-<!-- ru-source-sha256: 8c7eb145c23b20298e3ed07f29e3b5836bfbd23d950ef6e96c4c380284900e96 -->

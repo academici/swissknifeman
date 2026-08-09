@@ -118,5 +118,3 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - Skill `session-handoff` (general) — compress session into a handoff before `/clear`
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 - Skill `ecosystem-mcp` (maind) — project memory/graph MCP tools: when to call graph/Serena instead of file search
-
-<!-- ru-source-sha256: 966c3415b17b7162691ae8b32b7780233b7281ab1fb013e1fe94d7975a8a4a4e -->

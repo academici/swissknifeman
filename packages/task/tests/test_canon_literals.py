@@ -1,10 +1,8 @@
-"""Гейт ПОЛНОТЫ гейта непереводимых литералов (P2.16/D35, дефект H3).
+"""Гейт полноты канонических литералов (P2.16/D35 + D79 EN-only).
 
 Механизм двухступенчат:
-  * `SKILL.ru.md` объявляет директиву `<!-- i18n-keep: <литерал> -->`, а
-    `packages/skiller/scripts/check-translations.sh` требует её присутствия в EN-каноне
-    `SKILL.md` байт-в-байт (иначе генератор EN волен перевести строку, и линтер флота
-    перестанет её опознавать — инцидент G3);
+  * EN-only `SKILL.md` объявляет директиву `<!-- i18n-keep: <литерал> -->` и несёт
+    сам литерал байт-в-байт;
   * но сам гейт видит ТОЛЬКО объявленное. Инлайн-строка `план закрыт` (три сверки в
     `plan_lint.py`) константы не имела, в директивах не значилась — гейт был к ней СЛЕП.
 
@@ -15,7 +13,7 @@
        обязан быть покрыт реестром `CANON_LITERALS` ∪ `HEURISTIC_LITERALS`. Ссылки на имена —
        модульные И локальные — РАЗЫМЕНОВЫВАЮТСЯ: иначе гейт обходится тем же приёмом, что
        породил H3 (строка уехала в переменную).
-  T2 — каждый элемент `CANON_LITERALS` объявлен директивой `i18n-keep` в `SKILL.ru.md`
+  T2 — каждый элемент `CANON_LITERALS` объявлен директивой `i18n-keep` в `SKILL.md`
        (`HEURISTIC_LITERALS` — детекторы намерения в прозе, EN их нести не обязан).
 
 ГРАНИЦА ОБЕЩАНИЯ (P3.8/D52, сужает D35 — честно, а не задним числом). T1 ловит ПЕРЕЧИСЛЕННЫЕ
@@ -41,17 +39,25 @@ except ImportError:
 # Первым: fixture кладёт lib/ в sys.path; package- и discover-запуски оба поддержаны.
 import task.plan_lint as plan_lint  # noqa: E402
 from task.plan_lint import (  # noqa: E402
-    CANON_LITERALS, HEURISTIC_LITERALS, I18N_KEEP_RE, SKILL_RU_RELPATH, _find_skill_ru,
+    CANON_LITERALS, HEURISTIC_LITERALS, I18N_KEEP_RE, SKILL_RELPATH, _find_skill,
 )
 
 PLAN_LINT_PY = Path(plan_lint.__file__).resolve()
 # Скилл-SSOT канона: ищем от пакета вверх до корня монорепо. Standalone-раскладка (пакет
 # task вне монорепо, скиллов рядом нет) — тест пропускается, а не падает.
-# `_find_skill_ru`/`I18N_KEEP_RE` — реюз `plan_lint.py` (2026.07.31-SKM-LEAN P5.9, Required
+# `_find_skill`/`I18N_KEEP_RE` — реюз `plan_lint.py` (2026.07.31-SKM-LEAN P5.9, Required
 # Reads п. 4 «расширяется, не дублируется»): до этого item'а тот же обход и та же директива
 # были определены здесь ВТОРЫМ носителем; теперь единственный владелец — модуль, `--conflicts`
 # которого сверяет то же самое из CLI.
-SKILL_RELPATH = SKILL_RU_RELPATH
+
+
+def _canonical_skill_or_skip():
+    skill = _find_skill()
+    if skill is not None:
+        return skill
+    if any((parent / "packages" / "task").is_dir() for parent in PLAN_LINT_PY.parents):
+        raise AssertionError(f"монорепо найден, но canon SSOT отсутствует: {SKILL_RELPATH}")
+    raise unittest.SkipTest(f"standalone-раскладка: нет {SKILL_RELPATH}")
 
 CYRILLIC_RUN_RE = re.compile(r"[А-Яа-яЁё]")
 # Кириллическая ФРАЗА литерала — то, что обязано найтись в реестре ЦЕЛИКОМ. Пословная сверка
@@ -251,23 +257,19 @@ class TestCanonLiteralsRegistry(unittest.TestCase):
                 misses.append(
                     f"литерал «{literal}» (plan_lint.py:{lineno}) не объявлен "
                     f"(не покрыты: {', '.join(uncovered)}) — добавь его в CANON_LITERALS "
-                    f"и директивой `<!-- i18n-keep: {literal} -->` в SKILL.ru.md, ЛИБО "
+                    f"и директивой `<!-- i18n-keep: {literal} -->` в SKILL.md, ЛИБО "
                     f"внеси в HEURISTIC_LITERALS с обоснованием, ПОЧЕМУ присутствие в "
                     f"EN-каноне не требуется (детектор намерения в прозе, не канон-токен)")
         self.assertEqual(misses, [], "\n".join(["непокрытые литералы сверок:"] + misses))
 
-    def test_canon_literals_declared_in_skill_ru(self):
-        """T2: каждый элемент CANON_LITERALS объявлен директивой i18n-keep в SKILL.ru.md."""
-        skill_ru = _find_skill_ru()
-        if skill_ru is None:
-            self.skipTest(f"standalone-раскладка: не найден {SKILL_RELPATH} "
-                          f"(от {PLAN_LINT_PY} вверх) — SSOT канона недоступен")
-        declared = set(I18N_KEEP_RE.findall(skill_ru.read_text(encoding="utf-8")))
+    def test_canon_literals_declared_in_skill_canon(self):
+        """T2: каждый элемент CANON_LITERALS объявлен директивой i18n-keep в SKILL.md."""
+        skill_canon = _canonical_skill_or_skip()
+        declared = set(I18N_KEEP_RE.findall(skill_canon.read_text(encoding="utf-8")))
         missing = [lit for lit in CANON_LITERALS if lit not in declared]
         self.assertEqual(
             missing, [],
-            "литералы реестра CANON_LITERALS без директивы i18n-keep в SKILL.ru.md "
-            "(EN-канон волен их перевести, и гейт check-translations.sh промолчит): "
+            "литералы реестра CANON_LITERALS без директивы i18n-keep в EN-only SKILL.md: "
             + "; ".join(f"добавь `<!-- i18n-keep: {lit} -->`" for lit in missing))
 
 
@@ -303,25 +305,19 @@ class TestTaskContractCanonClaimIsBackedByCommands(unittest.TestCase):
                 f"standalone-раскладка: не найден {cls.SKILL_EN_RELPATH} "
                 f"(от {PLAN_LINT_PY} вверх) — SSOT канона недоступен")
         cls.repo_root = repo_root
-        cls.skill_en = (repo_root / cls.SKILL_EN_RELPATH).read_text(encoding="utf-8")
-        cls.skill_ru = _find_skill_ru().read_text(encoding="utf-8")
+        cls.skill_en = _canonical_skill_or_skip().read_text(encoding="utf-8")
         cls.plan_exec = (repo_root / cls.PLAN_EXEC_RELPATH).read_text(encoding="utf-8")
         cls.plan_close = (repo_root / cls.PLAN_CLOSE_RELPATH).read_text(encoding="utf-8")
 
     def test_canon_claims_the_checkpoints_call_the_compiler(self):
-        """§13 (both languages) must assert the CALL, naming both checkpoint commands
-        and the module — not a weaker "is available"/"can be called" hedge."""
-        for label, text in (("EN", self.skill_en), ("RU", self.skill_ru)):
-            with self.subTest(canon=label):
-                self.assertIn("task_contract.build", text)
-                self.assertIn("task_contract.evaluate", text)
-                self.assertIn("task:plan-exec", text)
-                self.assertIn("task:plan-close", text)
+        """§13 must assert the CALL, not a weaker availability hedge."""
+        self.assertIn("task_contract.build", self.skill_en)
+        self.assertIn("task_contract.evaluate", self.skill_en)
+        self.assertIn("task:plan-exec", self.skill_en)
+        self.assertIn("task:plan-close", self.skill_en)
 
     def test_canon_does_not_repeat_f1s_banned_conditional(self):
-        """F1's exact defect: a formulation conditioning the call on a JSON that
-        nothing ever mounts. Neither language may carry it again."""
-        self.assertNotIn(self.BANNED_CONDITIONAL_RU, self.skill_ru)
+        """F1's exact defect must not return to the EN canon."""
         self.assertNotIn(self.BANNED_CONDITIONAL_EN, self.skill_en)
 
     def test_plan_exec_pre_mutation_actually_calls_the_compiler(self):
@@ -374,8 +370,7 @@ class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
         cls.repo_root = repo_root
         cls.plan_exec = (repo_root / cls.PLAN_EXEC_RELPATH).read_text(encoding="utf-8")
         cls.plan_close = (repo_root / cls.PLAN_CLOSE_RELPATH).read_text(encoding="utf-8")
-        cls.skill_en = (repo_root / cls.SKILL_EN_RELPATH).read_text(encoding="utf-8")
-        cls.skill_ru = _find_skill_ru().read_text(encoding="utf-8")
+        cls.skill_en = _canonical_skill_or_skip().read_text(encoding="utf-8")
 
     def test_neither_closing_command_greenlights_n_a(self):
         """M1: the exact `in ("allow", "n/a")` predicate must be gone from BOTH
@@ -399,18 +394,13 @@ class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
         self.assertIn('result["pre_final"]', self.plan_exec)
         self.assertIn("task_contract.evaluate", self.plan_exec)
 
-    def test_canon_states_n_a_is_not_green_in_both_languages(self):
-        """D76's canonical claim: `n/a` is explicitly named NOT green, in both §13
-        language versions — not merely implied by an unchanged CLI predicate."""
+    def test_canon_states_n_a_is_not_green(self):
+        """D76's canonical claim explicitly names `n/a` as not green."""
         self.assertIn("NOT green", self.skill_en)
-        self.assertIn("НЕ зелёное", self.skill_ru)
 
-    def test_canon_names_the_pre_final_predicate_boundary_in_both_languages(self):
-        """D77: §13 names what `pre_final` asserts (spec-FORM property) versus what
-        it does not (good execution) — in both languages, not only in the command
-        bodies."""
+    def test_canon_names_the_pre_final_predicate_boundary(self):
+        """D77: §13 names the spec-FORM boundary rather than claiming good execution."""
         self.assertIn("spec's FORM", self.skill_en)
-        self.assertIn("ФОРМЫ спеки", self.skill_ru)
 
 
 class TestCommandReadPathProjection(unittest.TestCase):

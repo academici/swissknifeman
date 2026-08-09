@@ -87,5 +87,3 @@ Before developing against an unfamiliar file — run the readiness checklist (`s
 - [Guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server)
 - [W3C Design Tokens Format](https://design-tokens.github.io/community-group/format/)
 - Related skills: `figma-to-vue`, `figma-to-flutter`.
-
-<!-- ru-source-sha256: c0d92e7973ca1373ac37f08ef9a909acb8cec0c909dfcb8bbcda91602203f2aa -->

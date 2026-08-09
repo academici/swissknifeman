@@ -95,5 +95,3 @@ Easy-to-break rules:
 - https://pinia.vuejs.org/ssr/ (hydration, per-request instance)
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
 - Related skills: `frontend-vue/vue-composition-api` (local component state), `frontend-backend/inertia-vue` (where `stores/` sits in layered `resources/js`), `frontend-backend/laravel-echo-client` (live store updates via realtime events)
-
-<!-- ru-source-sha256: 962f03ef79fd5003c371afb0e4bb744d9ac15a18301d41a8c3135e1ee993d968 -->

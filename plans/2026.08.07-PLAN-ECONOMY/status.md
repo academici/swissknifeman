@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 36640b7f2ff2387c19094919b5e6925cb2cea5ebf2cc190b1c032778a8837790
+inputs_sha256: ee465c2f01bbc25ccae5f6549f30734dce176703fe755cccca3b80f747a3baa5
 generated_by: task plan-views status
 -->
 
@@ -105,7 +105,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P6.1 | Перевести пять команд на путь чтения v2 при сохранённом v1 | 🟢 Done | 2026-08-09 |
 | P6.2 | Научить закрывающие команды производить записи и снять переходное правило | 🟢 Done | 2026-08-09 |
-| P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | ⬜ Not started | 2026-08-09 |
+| P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | 🟠 Done with deviations | 2026-08-09 |
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | ⬜ Not started | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | ⬜ Not started | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | ⬜ Not started | 2026-08-09 |
@@ -320,6 +320,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · escalated · Эскалация: downstream finding ломает plan_returns; см. findings/P6.2-downstream-return-seam-conflict-2026-08-09.md. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · P6.2 resumed under D149: downstream records are excluded from return-seam selection. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · P6.2 closed: 3d4d5a62; package validation green; D149 resolves downstream return-seam selection. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · P6.3 начат после локального materialize bundle и закрытия P6.2 bookkeeping. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.3: 4afb41d76a23; 724 tests green (на 4afb41d76a23, unittest discover); validate green; deviation: Files расширены для CLI/test/generated snapshots; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -348,3 +350,4 @@ generated_by: task plan-views status
 - P5.5: known deviation
 - P6.1: known deviation
 - P6.2: known deviation
+- P6.3: known deviation

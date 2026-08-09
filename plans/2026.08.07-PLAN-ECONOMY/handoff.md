@@ -1,50 +1,54 @@
-# HANDOFF — 2026-08-09 — after P6.2
+# HANDOFF — 2026-08-09 — after P6.3
 
-**Next:** manual: frontier/high
+**Next:** manual: implementation/high
 
 ## Provider-neutral plan-protocol launch-block
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — frozen rubric wording is an open design decision |
-| Context | fresh root session — semantic boundary P6.3 |
-| Суть | Исполнить только P6.3 согласно её ТЗ. |
+| Model | implementation |
+| Thinking | high — четыре гейта требуют строгой атрибуции |
+| Context | continue (`/clear`) — ручной item |
+| Суть | Исполнить только P6.4 согласно её ТЗ. |
 | Команда | — |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.3
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.4
 
 РЕЖИМ: исполнение одного manual item
-ВХОД: plans/2026.08.07-PLAN-ECONOMY/plan.md, handoff.md и phases/P6/P6.3.md
-СКОУП: только P6.3 согласно её ТЗ
-НЕ ТРОГАТЬ: P6.1–P6.2, frozen P1–P5 contracts, packages/artifex
+ВХОД: обязательные слоты Layout v2 для P6.4
+СКОУП: только P6.4 согласно её ТЗ
+НЕ ТРОГАТЬ: P6.1–P6.3, frozen P1–P5 contracts, packages/artifex
 ```
 
 ## Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.4'
 ```
 
-**Done:** P6.2 closed by `3d4d5a62`: five canonical commands produce layout-v2 closure
-evidence, session provenance resolves fail-closed through the Codex adapter, and design provenance
-no longer advances execution position. The v2 rehearsal records a downstream result and keeps all
-views fresh; D149 excludes unrelated downstream records from the return-seam reducer. Codex is
-`verified`; Claude remains `pending-provider` with an explicit replay.
+**Done:** P6.3 закрыт с отклонениями на `4afb41d76a23`: пять canonical task-команд
+производят `DecisionRequest` через единый authority resolver и описывают provider-neutral
+`isolated-child-return`; frozen-schema reducer воздерживается для неизвестной пары
+`model_id × rubric_sha256` и order-sensitive swap. Добавлены versioned rubric, calibration
+registry, исторический discovery-bank/report и provider certification. На `4afb41d76a23`
+прошли 724 package tests и полный `packages/task/scripts/validate.sh`.
 
-**Remaining:** P6.3 owns the open design of the return-judgement rubric and its calibration
-registry. It must not enable the currently opt-in gates (P6.4), revise P6.2 semantics, or claim a
-Claude runtime replay.
+**Remaining:** P6.4 включает четыре уже произведённых проверки по одной за коммит и не меняет
+логику P6.3. Claude judgement/runtime replay остаётся `pending-provider` до Claude-owned прогона.
 
-**Sources of truth:** `phases/P6/P6.2.md` · `phases/P6/P6.2.state.md` ·
-`decisions/D147-restore-session-provenance-decision.md` ·
-`decisions/D148-separate-design-provenance-from-execution-state.md` ·
-`decisions/D149-return-seam-selection.md` · `artifacts/P6/provider-certification.md`.
+**Sources of truth:** `phases/P6/P6.3.md` · `phases/P6/P6.3.state.md` ·
+`artifacts/P6/judge-calibration-bank.jsonl` · `artifacts/P6/judge-calibration-report.md` ·
+`artifacts/P6/provider-certification.md` ·
+`packages/task/prompts/return-judgement-rubric-v1.md` ·
+`packages/task/configs/return-judgement-calibration.json`.
 
-**Open risks:** Current P6.2 execution used `gpt-5.6-sol/high` (frontier/high), an allowed tier
-overshoot above the planned implementation/high; its journal records `deviation`. Claude owns no
-runtime closure/session replay yet.
+**Open risks:** Files P6.3 были расширены для JSON CLI, test bootstrap и generated parity
+snapshots, нужных exact validation; поэтому статус не зелёный. Первый downstream replay дал RED
+на ложной shared-ledger зависимости P6.5 и сохранён finding'ом; после удаления mutable ledger из
+mandatory read-path P6.5 текущий downstream outcome — `unknown`, consumers отсутствуют. Для
+committed-bundle gate машинно уточнены существующие inputs P6.1/P6.4–P6.6 без изменения их целей.
 
-**Workarounds/Deferred/Open questions:** Package documentation/canon changes remain P6.5 by the
-P6.2 Scope Excluded boundary. No new design work was introduced while resolving D149.
+**Workarounds/Deferred/Open questions:** Canon/docs migration остаётся P6.5 по Scope Excluded.
+Generated package reference обновлён владельческим renderer как parity snapshot; отдельной
+пользовательской документации P6.3 не требует.

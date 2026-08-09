@@ -1,6 +1,7 @@
-# P6.1–P6.2 — Provider certification
+# P6.1–P6.3 — Provider certification
 
-**Scope:** путь чтения пяти canonical task-команд по `Layout`; frozen `read-path` v1 не менялся.
+**Scope:** путь чтения пяти canonical task-команд по `Layout`, closure production,
+`DecisionRequest` и judgement seam; frozen контракты v1 не менялись.
 
 | Layer | Status | Evidence |
 |:--|:--|:--|
@@ -15,6 +16,17 @@
 | Shared canonical commands | verified | Targeted canonical/session/state/return tests and the package validation script are green; v2 rehearsal materializes the downstream record and all generated views remain fresh. |
 | Codex projection | verified | Codex command projections and locks regenerate deterministically; the current Codex session resolves `CODEX_THREAD_ID` through the thin adapter. |
 | Claude projection | pending-provider | Canonical semantics are rendered, but no Claude-owned session-context and closure replay was run. |
+
+## P6.3 — DecisionRequest and judgement seam
+
+| Seam | Provider | Status | Evidence |
+|:--|:--|:--|:--|
+| judgement shared reducer/rubric | shared | verified | Frozen-schema tests prove enum monotonicity, calibrated-pair lookup and conservative swap reduction. |
+| judgement isolated-child-return | codex | verified | `openai:gpt-5.6-sol` is pinned to rubric SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`; the 30-case discovery bank records raw agreement, κ and three swap controls. |
+| judgement isolated-child-return | claude | pending-provider | No Claude-owned calibration replay exists; reducer abstains for an absent `anthropic:<model> × rubric_sha256` pair. |
+| DecisionRequest command seam | shared | verified | Five canonical commands route missing facts/authority through the frozen resolver outcomes and durable request transport; free-prose approval is prohibited. |
+| DecisionRequest command projection | codex | verified | Generated Codex projections and publication locks pass parity and no-op regeneration checks. |
+| DecisionRequest command projection | claude | pending-provider | Canonical semantics render, but no Claude-owned runtime replay has been claimed. |
 
 ## Claude replay
 
@@ -31,8 +43,13 @@ changing the Claude row to `verified`.
 For P6.2, also execute `plan-session.py current --id`, a v2 terminal closure and its downstream
 recording/replay from a Claude-owned checkout before changing that row to `verified`.
 
+For P6.3, replay `judge-calibration-bank.jsonl` against the same rubric bytes with an exact
+`anthropic:<model>` id, publish raw agreement/κ/swap evidence, and only then append that pair to
+`return-judgement-calibration.json`.
+
 ## Boundary
 
-P6.1 changes only how the five commands read declared v1/v2 carriers. It does not claim
-deterministic closure production (P6.2), model judgement (P6.3), enabled gates (P6.4), canon
-rollout (P6.5), or fleet rollout (P6.6).
+P6.1 changes only how the five commands read declared v1/v2 carriers. P6.2 adds deterministic
+closure production. P6.3 adds the shared DecisionRequest/judgement semantics and certifies only
+the Codex calibration row; it does not claim enabled gates (P6.4), canon rollout (P6.5), fleet
+rollout (P6.6), or Claude runtime parity.

@@ -47,7 +47,7 @@
 | P2.7 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — closure projection/status-aware resolution; P6.2 позже переносит `repair-now` в canonical commands |
 | P2.8 | solo | plan-run (manual) | implementation/high | ✅ D131 принят | lossless migration + честный baseline D2(a)/D2(b); не выдаёт future forecast за admission |
 | P2.9 | solo | plan-run (manual) | frontier/high | ✅ D131 принят | minor public-contract revision: stage-aware hard admission + bounded task carriers |
-| P2.10 | solo | plan-run (manual) | implementation/high | — | применить P2.9 ко всему read graph и вынести независимый self-host D74 verdict; без него P2 не закрывается |
+| P2.10 | solo | plan-run (manual) | implementation/high | — | REOPEN D152: исправить exact five-slot layout-v2 measurement, freshness/digests и доказать неизменность v1 |
 | P3.1 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — форма манифеста входов |
 | P3.2 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — детерминированный сборщик bundle |
 | P3.3 | solo | plan-run (manual) | implementation/high | — | ✅ terminal — D2 read-budget/readability gate |
@@ -72,8 +72,8 @@
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
 | P6.5 | solo | plan-run (manual) | frontier/high | — | 🟠 terminal with deviations — EN-only canon v2, hard-boundary enum, weight/fail-closed gates; scope expansion записан |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
-| P6.7 | solo | plan-run (manual) | frontier/high | — | заморозить stage-aware `acceptance-protocol` v1.1.0 по D150; v1.0.0 RED и threshold/scope/arms/canary неизменны |
-| P6.8 | solo | plan-run (manual) | frontier/high | — | две D2-руки + отдельный exact session-canary comparator; local field defect без automatic audit |
+| P6.7 | solo | plan-run (manual) | frontier/high | — | REOPEN после P2.10: заморозить successor patch с pinned repair evidence; prior results и threshold/scope/arms/canary неизменны |
+| P6.8 | solo | plan-design/plan-run | frontier/high | — | WAITING ON P2.10→P6.7: затем exact successor arms/canary и фактический verdict без подгонки |
 | P6.9 | solo | plan-exec | implementation/medium | — | бухгалтерия снятия паузы в чужом плане; предусловие — ВЕРДИКТ P6.8 |
 
 ## Готовые launch-block'и групп
@@ -139,7 +139,7 @@ exec-items: task:plan-exec 2026.08.07-PLAN-ECONOMY <Pn.m>
   Claude получает ту же семантику, но остаётся `pending-provider` до Claude-owned replay, а не
   объявляется зелёным по Codex-проверке (D119–D122).
 - P6.4 исполняется ТОЛЬКО после P6.2 и P6.3 (включение гейта требует существующих производителей).
-- P6.9 исполняется ТОЛЬКО при положительном вердикте P6.8; иначе остаётся 🔴 с `Возобновление:`.
+- P6.9 исполняется ТОЛЬКО после owner-approved successor acceptance identity и exact положительного verdict его append-only attempt-раздела; v1.0.0/v1.1.0 prior result или одно существование файла гейт не закрывает.
 - P6.5 внутри себя несёт жёсткий порядок двух коммитов: EN-only и перепривязка гейтов → канон v2.
 - Оркестрация (workflow-скрипт) НЕ заявлена ни одной фазой: items последовательно зависимы по
   данным, `plans/2026.08.07-PLAN-ECONOMY/workflows/` не заводится.

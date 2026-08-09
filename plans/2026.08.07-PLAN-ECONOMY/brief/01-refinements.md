@@ -299,3 +299,30 @@ terminal correction, а не переписыванием журнала или 
 `pending-producer` даёт `deferred`, а не pass/fail, и запрещает финальный GREEN до появления
 выхода producer. После повторной заморозки P6.7 приёмка возвращается в P6.8; P6.9 остаётся
 запрещённой до положительного финального вердикта.
+
+## 2026-08-09 — детализация повторного P6.8 до DoR
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8`.
+
+Нового права менять frozen v1.1.0 этот вход не даёт: единственная содержательная authority — D150.
+Редизайн устраняет collision carriers между v1.0.0 и новым attempt, сохраняет старый RED/raw,
+делает verdict P6.9 exact-versioned и убирает из bundle P6.9 дублирующее чтение donor `plan.md`
+целиком. Threshold/scope/arms/canary, historical specs и authoring commands не меняются.
+
+**Уточнение по результату preflight:** заявленная DoR не достигнута. Production `plan_weight`
+оказался legacy-v1 измерителем с обязательным `handoff`, тогда как frozen acceptance v1.1.0
+заявляет exact layout-v2 five-slot scope без `handoff`. Исполнение P6.8 припарковано: исправление
+требует owner verdict о reopening P2.10/P6.7 и successor freeze либо об отказе от дальнейшей
+приёмки. Сам вызов владельца не даёт полномочия самовольно открыть frozen contracts.
+
+## 2026-08-09 — owner gate P6.8: продолжить здесь до конца
+
+**Вход владельца:** «продолжай здесь до конца!»
+
+В контексте открытого DecisionRequest это выбирает рекомендуемый option `repair-and-refreeze`:
+терминальная остановка несовместима с прямым указанием продолжать. Текущая root-сессия получает
+право открыть P2.10 и P6.7, привести `plan_weight` к exact five-slot layout-v2 traversal с
+регрессионными тестами, выпустить successor patch `acceptance-protocol` с сохранением v1.0.0 и
+v1.1.0 как prior results, затем повторно детализировать и исполнить P6.8. Разрешение не меняет
+threshold, qualified unit, five-slot scope, arms или canary expectations и не разрешает
+переписывать prior evidence.

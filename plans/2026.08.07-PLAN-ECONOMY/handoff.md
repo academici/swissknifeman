@@ -1,41 +1,41 @@
-# HANDOFF — 2026-08-09 — after P6.7
+# HANDOFF — 2026-08-09 — after P6.8
 
-**Next:** design-item: task:plan-design 2026.08.07-PLAN-ECONOMY P6.8
+**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
 | Capabilities | — |
-| Context | cold-start — plan-step |
-| Суть | Снять разрешённую D150 эскалацию P6.8 и подготовить повторный run по frozen v1.1.0 |
-| Команда | `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8` |
+| Context | same-session — item |
+| Суть | Исправить exact five-slot layout-v2 measurement по D152 и доказать совместимость v1 |
+| Команда | — |
 
-**Done:** `P6.7` закрыт `🟠 Done with deviations`. `acceptance-protocol` v1.1.0 заморожен
-коммитом `edf04aee`; threshold/scope/arms/canary JSON-эквивалентны v1.0.0, прежний RED сохранён
-с report+hash provenance. Downstream self-poisoning исправлен коммитами `154cb3ec` и `536a1b3e`;
-новые append-only результаты `P6.6 → P6.8` и `P6.7 → P6.8` green на anchor `536a1b3e`.
+```text
+/model gpt-5.6-sol
+/effort high
+/task:plan-run 2026.08.07-PLAN-ECONOMY P2.10
+```
 
-**Remaining:** `P6.8` остаётся `🔴 Blocked` старым RED v1.0.0. Перед повторным исполнением его
-эскалационный блок и state должны быть reconciled с D150/v1.1.0; затем отдельно выполняются arm A,
-arm B и exact session canary. `P6.9` и снятие паузы ARTIFEX запрещены до положительного P6.8.
+**Done:** Owner response materialized and resolved as `repair-and-refreeze`; D152 accepted;
+P2.10/P2 forward-only reopened and redetailed to DoR. P6.8 remains stopped before arm A.
 
-**Sources of truth:** `phases/P6/P6.8.md` ·
-`root/contracts/acceptance-protocol-v1.md` ·
-`root/contracts/acceptance-protocol-v1.manifest.json` ·
-`decisions/D150-stage-aware-acceptance-v1-1.md` ·
-`findings/P6.7-downstream-P6.8-05592e969eb1-536a1b3e869f.md`.
+**Remaining:** Execute and close P2.10; reopen/freeze successor acceptance in P6.7; redetail and
+run P6.8; execute P6.9 only after exact positive acceptance verdict; close P6 and the plan.
 
-**Open risks:** P6.8 — дорогой manual `frontier/high` acceptance item; его прежний RED нельзя
-переименовать или пересчитать задним числом. Lifecycle hook provenance по прежнему field evidence
-имеет `record-provenance-mismatch`; repair вне P6.8 Files.
+**Sources of truth:** `decisions/D152-p2.10-five-slot-measurement-repair.md` ·
+`findings/P6.8-retry-preflight-2026-08-09.md` §5 ·
+`research/26-p6.8-retry-design-2026-08-09.md` §5 · `phases/P2/P2.10.md`.
 
-**Workarounds/Deferred/Open questions:** workarounds — nested downstream Validation подавляет
-только рекурсивный entrypoint `plan-lint.py`, прямой lint остаётся fail-closed · deferred — повтор
-P6.8, arm B, session canary, P6.9 · open_questions — none после D150.
+**Open risks:** common production path may still produce an honest acceptance fail/deferred;
+that result is terminal evidence, not permission to change the frozen threshold or scope.
 
-## Native Codex launch-block
+**Workarounds/Deferred/Open questions:** installed Codex skill projection 2.23.0 lags worktree
+SSOT 2.24.0; hook dry-run is RED `record-provenance-mismatch`. Worktree canonical skill and
+package scripts are the execution source. No open owner question remains.
+
+## Codex launch
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P2.10'
 ```

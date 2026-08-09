@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`skiller`/`task`: добавлены инвентарь раскатки и безопасный runbook миграции раскладки.**
+  Для `skiller update --all` зафиксирован инвентарь адопции, который отделяет актуальность канона
+  `plan-protocol` от доставки инстанса `authority-frame`; недоступные или устаревшие декларации
+  остаются явно помеченными как `unknown`, а не выдаются за актуальные. Владельцы также получили
+  fail-closed процедуру dry-run миграции v1→v2 (`2026.08.07-PLAN-ECONOMY` P6.6).
+
 - **`skiller`/`task`: plan-protocol переведён на EN-only compact canon и layout-v2 authoring.**
   Удалены 230 `SKILL.ru.md`, translation gate и RU→EN prompt; canonical `SKILL.md` стал
   маршрутизатором на reader-specific reference, получил две design-формы Next и три v2 context

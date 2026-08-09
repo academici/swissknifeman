@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-09
+
 - **`task`: пять protocol commands теперь выбирают declared read path по `Layout`.** Планы без
   поля сохраняют literal v1-ветвь; `Layout: v2` читает ровно plan core, phase context, item spec,
   digest-qualified bundle и fresh item state, без обязательного `handoff.md`. Codex-проекция
@@ -55,8 +57,6 @@
   через существующий item-scoped finding (`2026.08.07-PLAN-ECONOMY` P4.4, D138–D139).
 
 - Добавлен детерминированный вычислитель отпечатков возврата и durable-счётчик для планов.
-
-## [Unreleased]
 
 - **`task`: добавлен downstream-gate v1 для producer→consumer smoke-проверки.**
   Инструмент механически выводит потребителей из путей плана, исполняет только применимое

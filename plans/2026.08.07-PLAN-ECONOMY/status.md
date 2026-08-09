@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 754f062147b81313ba2d65c450be7c1d90cf5764b0475077992f19537ed791e9
+inputs_sha256: 0a132c84766193218f180d0655cc2e353bcb28ff3c5fb3b3e6deba38619b4e5c
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 0.28.0 |
+| Version | 0.29.0 |
 | Status | ⬜ Not started |
 | Last Updated | 2026-08-09 |
 
@@ -96,8 +96,8 @@ generated_by: task plan-views status
 | P5.1 | Заморозить контракт запроса и ответа решения | 🟢 Done | 2026-08-09 |
 | P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | 🟢 Done | 2026-08-09 |
 | P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | 🟠 Done with deviations | 2026-08-09 |
-| P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | 🟢 Done | 2026-08-09 |
-| P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | 🟢 Done | 2026-08-09 |
+| P5.4 | Принудить frozen queue contract и fail-closed outcome semantics | 🟢 Done | 2026-08-09 |
+| P5.5 | Доказать queue semantics исполняемым producer-based acceptance | 🟢 Done | 2026-08-09 |
 
 ## Phase P6
 
@@ -285,6 +285,18 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · Owner authorized local P5.5 Validation repair: use existing status projection and queue-record API; continuing without plan-design. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5: a346dea7; owner-authorized Validation repair; return-loop DecisionRequest and subject-local parking; 26 (на a346dea7) targeted, 692 (на a346dea7) validate; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 закрыта: сверены 5 терминальных items и known deviations |
+| 2026-08-09 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-09 | frontier/high | plan-design · in-progress · фаза реоткрыта D144; remediation P5.4→P5.5 доведена до DoR |
+| 2026-08-09 | frontier/high | plan-design · in-progress · D144 reopen: fail-closed ingress, outcome semantics и regeneration ТЗ готовы |
+| 2026-08-09 | frontier/high | plan-design · in-progress · D144 reopen: producer-based detached-tree acceptance ТЗ готово |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · D144 remediation: frozen queue enforcement and outcome semantics |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · escalated · Frozen schema excludes required action field; plan-design needed |
+| 2026-08-09 | gpt-5.6-terra/high | plan-design · in-progress · D145: transient action input reconciled with frozen durable shape |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4 ae56e9cd: schema ingress, outcomes, projections; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4 ae56e9cd; plan bookkeeping uncommitted: pre-existing shared plan diff; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4 ae56e9cd+b1152c41; bookkeeping uncommitted shared plan diff; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5 2c6f8d4b: 4 producer scenarios, 13 targeted/699 full tests, detached replay; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -310,4 +322,4 @@ generated_by: task plan-views status
 - P4.6: known deviation
 - P5.2: known deviation
 - P5.3: known deviation
-- P5.5: known deviation
+- P5.4: known deviation

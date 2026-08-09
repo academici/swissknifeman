@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: e42180904f266cc835a4200d1b6ca79fba684470c5f437981faeb60f7040b358
+inputs_sha256: 935e88edcbbf8364c84ac95e7cda02171767737b0d8c2f79b1aaa5e10208f59d
 generated_by: task plan-views status
 -->
 
@@ -274,6 +274,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · authority-frame v1 и owner instance заморожены D143; item tree 7624eed5; Validation P5.2 passed; process deviation: ошибочная blocked-запись journal.jsonl:153; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 focused tests, 684 с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 (на 98a23ea0) targeted, 686 (на dcaae917) с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -298,4 +299,3 @@ generated_by: task plan-views status
 - P4.5: known deviation
 - P4.6: known deviation
 - P5.2: known deviation
-- P5.3: known deviation

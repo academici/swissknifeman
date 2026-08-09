@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: ee465c2f01bbc25ccae5f6549f30734dce176703fe755cccca3b80f747a3baa5
+inputs_sha256: 399a8342692ebf39c8ed226e80b2caa2df421f628e32a2ec692f78a0d4a9817a
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.30.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 2/9 | ⬜ Not started |
+| P6 | Раскатать протокол и проверить критерий | 2/9 | 🔴 Blocked |
 
 ## Phase P0
 
@@ -106,7 +106,7 @@ generated_by: task plan-views status
 | P6.1 | Перевести пять команд на путь чтения v2 при сохранённом v1 | 🟢 Done | 2026-08-09 |
 | P6.2 | Научить закрывающие команды производить записи и снять переходное правило | 🟢 Done | 2026-08-09 |
 | P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | 🟠 Done with deviations | 2026-08-09 |
-| P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | ⬜ Not started | 2026-08-09 |
+| P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🔴 Blocked | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | ⬜ Not started | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | ⬜ Not started | 2026-08-09 |
 | P6.7 | Предобъявить протокол приёмки | ⬜ Not started | 2026-08-09 |
@@ -322,6 +322,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · P6.2 closed: 3d4d5a62; package validation green; D149 resolves downstream return-seam selection. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · P6.3 начат после локального materialize bundle и закрытия P6.2 bookkeeping. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.3: 4afb41d76a23; 724 tests green (на 4afb41d76a23, unittest discover); validate green; deviation: Files расширены для CLI/test/generated snapshots; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · escalated · P6.4 blocked: global status Updated prevents specified forward-only activation; plan-design required. |
 
 ## Owner Gates
 
@@ -351,3 +353,4 @@ generated_by: task plan-views status
 - P6.1: known deviation
 - P6.2: known deviation
 - P6.3: known deviation
+- P6.4: escalation

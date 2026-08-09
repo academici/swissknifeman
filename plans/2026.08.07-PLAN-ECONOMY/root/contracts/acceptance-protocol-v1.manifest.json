@@ -1,7 +1,7 @@
 {
   "$schema": "urn:swissknifeman:task:acceptance-protocol:v1",
   "contract_id": "acceptance-protocol",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "frozen",
   "frozen_by": "2026.08.07-PLAN-ECONOMY P6.7",
   "measurement": {
@@ -26,7 +26,11 @@
       "maximum_item_required_read_tokens": "totals.max_item_weight_tokens",
       "unresolved_inputs": "sum(items[*].gaps)",
       "whole_file_failures": "all items[*].files[*] where passes is false",
-      "scope_coverage": "resolved item paths / declared item paths"
+      "scope_coverage": "resolved item paths / declared item paths",
+      "ready_failures": "items where admission_state == ready and (admission_pass is not true or d2a_pass is not true or d2b_pass is not true or len(admission_gaps) > 0)",
+      "historical_evidence": "items where admission_state == historical-pre-v2, reported without hard pass or fail",
+      "pending_producers": "items where admission_state == pending-producer, reported as deferred",
+      "scope_coverage_by_admission_state": "resolved and declared item paths grouped separately by ready, historical-pre-v2, and pending-producer"
     },
     "calibration": {
       "path": "packages/task/configs/token-estimate-calibration.json",
@@ -95,6 +99,54 @@
     "deferred_work_reduces_weight": false,
     "missing_input_policy": "fail-closed"
   },
+  "admission_policy": {
+    "states": [
+      "ready",
+      "historical-pre-v2",
+      "pending-producer"
+    ],
+    "result_enum": [
+      "pass",
+      "fail",
+      "deferred"
+    ],
+    "precedence": [
+      "ready-failure:fail",
+      "pending-producer:deferred",
+      "all-ready-green:pass"
+    ],
+    "ready": {
+      "admission_pass": true,
+      "d2a_pass": true,
+      "d2b_pass": true,
+      "admission_gaps": 0,
+      "participates_in_hard_verdict": true
+    },
+    "historical-pre-v2": {
+      "gate_values": null,
+      "classification": "evidence-only",
+      "participates_in_hard_verdict": false
+    },
+    "pending-producer": {
+      "gate_values": null,
+      "classification": "deferred",
+      "participates_in_hard_verdict": false
+    },
+    "unknown_state_policy": "fail-closed",
+    "final_pass_requires_no_pending": true,
+    "coverage_reported_separately_by_state": true,
+    "raw_coverage_is_observation_only": true
+  },
+  "prior_results": [
+    {
+      "version": "1.0.0",
+      "verdict": "RED",
+      "report": "findings/12-p6-acceptance-measurement.md",
+      "markdown_sha256": "a3faa776d1fd659f1751a0d1c132bffcaec9add230cb087fa54417a50949d8c0",
+      "manifest_sha256": "9ec184b15e6319c0f2af299a649f77f2a59c249a87206d590e866ed5c2cf530b",
+      "commit": "48522653"
+    }
+  ],
   "thresholds": {
     "unit": "estimated upper-bound input tokens from token-estimate-calibration v2.0.0 for codex/gpt-5.6-terra using codex-exec-jsonl-v1 and differential-input-total-v2",
     "d2a": {
@@ -163,15 +215,17 @@
   },
   "failure_definition": {
     "conditions": [
-      "any primary threshold fails",
-      "scope coverage is incomplete",
-      "an input is missing, unreadable, stale, ambiguous, or undeclared",
+      "any ready item fails admission, D2(a), D2(b), or has an admission gap",
+      "ready scope coverage is incomplete",
+      "a ready input is missing, unreadable, stale, ambiguous, or undeclared",
       "the migrated aggregate does not demonstrate a real reduction",
       "the escape answer is positive or unresolved",
       "arm values or claims are merged",
       "the frozen contract changes after the first run",
       "the session canary differs from any frozen expectation"
     ],
+    "deferred_when": "no ready failure exists and at least one pending-producer exists",
+    "historical_pre_v2_policy": "evidence-only; never hard pass or fail",
     "on_failure": "escalate",
     "threshold_tuning_after_result": false,
     "exclusion_tuning_after_result": false
@@ -272,7 +326,7 @@
     "d2_budget_mixing_allowed": false
   },
   "change_control": {
-    "after_first_run": "reopen 2026.08.07-PLAN-ECONOMY P6.7, add a linked D-record, assign a new version, and downgrade prior pass claims",
+    "after_first_run": "reopen 2026.08.07-PLAN-ECONOMY P6.7, add a linked owner D-record, assign a new version, and preserve every prior result with report and hashes",
     "silent_amendment_allowed": false
   }
 }

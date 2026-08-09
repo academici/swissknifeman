@@ -2,13 +2,18 @@
 
 ## [Unreleased]
 
+- **`task`: `acceptance-protocol` перезаморожен как stage-aware v1.1.0.**
+  После сохранённого RED v1.0.0 reducer различает `ready`, evidence-only
+  `historical-pre-v2` и deferred `pending-producer`; threshold, scope traversal, arms и
+  session canary остались неизменными (`2026.08.07-PLAN-ECONOMY` P6.7, D150).
+
 - **`task`: двурукая приёмка остановлена на честном RED руке A.**
   Мигрированный `2026.08.07-PLAN-ECONOMY` превысил D2(a) (`101744 > 100000`) и сохранил четыре
   нерезолвленных входа; порог и frozen protocol не менялись, arm B/session canary не выдаются за
   пройденные, а снятие паузы ARTIFEX запрещено (`2026.08.07-PLAN-ECONOMY` P6.8).
 
-- **`task`: протокол приёмки заморожен до первого замера.**
-  `acceptance-protocol` v1 машинно фиксирует scope, две несмешиваемые руки,
+- **`task`: протокол приёмки v1.0.0 заморожен до первого замера.**
+  `acceptance-protocol` v1.0.0 машинно фиксирует scope, две несмешиваемые руки,
   пороги, антисмещение, failure policy, роли, конфаунды и четыре точные ветви
   `session_canary`; правка после прогона требует видимого реопена (`2026.08.07-PLAN-ECONOMY` P6.7).
 

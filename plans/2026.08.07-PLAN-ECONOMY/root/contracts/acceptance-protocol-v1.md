@@ -1,15 +1,24 @@
-# Acceptance Protocol v1
+# Acceptance Protocol v1.1
 
 **Contract ID:** `acceptance-protocol`
-**Version:** `1.0.0`
+**Version:** `1.1.0`
 **Status:** frozen
 **Frozen by:** `2026.08.07-PLAN-ECONOMY P6.7`
 **Machine source of truth:**
 [`acceptance-protocol-v1.manifest.json`](acceptance-protocol-v1.manifest.json)
 
-This protocol is frozen before either acceptance arm or any observed session-canary result is
-opened. During authoring, only the key/type shape of the existing migrated-arm artifact was read;
-no arm value was inspected or copied into this contract.
+Version 1.1.0 is frozen before the repeated acceptance arms or session canary are run. It preserves
+the thresholds, qualified unit, scope traversal, arms, anti-displacement controls, roles,
+confounds, and exact canary branches from v1.0.0. Only deterministic stage-aware adjudication and
+its provenance are added after owner decision D150.
+
+## Prior result
+
+Version v1.0.0 remains immutable and **RED**. Its report is
+`findings/12-p6-acceptance-measurement.md`; the frozen Markdown SHA-256 is
+`a3faa776d1fd659f1751a0d1c132bffcaec9add230cb087fa54417a50949d8c0` and the manifest SHA-256 is
+`9ec184b15e6319c0f2af299a649f77f2a59c249a87206d590e866ed5c2cf530b` at commit `48522653`.
+This version neither renames that result nor recomputes it under the new reducer.
 
 ## Measurement
 
@@ -23,7 +32,8 @@ protocol version.
 
 The caller supplies only `ACCEPTANCE_PLAN_DIR`. Raw command output is retained with each arm.
 Derived acceptance fields use the formulas in `measurement.derived_metrics`; they are not selected
-by judgement at measurement time.
+by judgement at measurement time. Raw totals remain observations, while hard verdict metrics and
+coverage are also reported separately for each admission state.
 
 ## Scope manifest
 
@@ -35,8 +45,25 @@ mandatory item-path weights, so moving a carrier or splitting an item cannot era
 
 Only carriers absent from every executor path and every selected bundle entry are excluded.
 Owner-, designer-, history-, and audit-only carriers remain excluded unless an item explicitly
-declares one through its bundle. Missing, unreadable, stale, ambiguous, or undeclared inputs fail
-closed. Cache hits, deferred work, links, and external stores never reduce measured work.
+declares one through its bundle. Missing, unreadable, stale, ambiguous, or undeclared ready inputs
+fail closed. Cache hits, deferred work, links, and external stores never reduce measured work.
+
+## Stage-aware admission and verdict
+
+Every measured item has exactly one closed admission state:
+
+- `ready` participates in the hard verdict and requires `admission_pass=true`, `d2a_pass=true`,
+  `d2b_pass=true`, and zero admission gaps;
+- `historical-pre-v2` retains `null` gates and is published as **evidence-only**; it can produce
+  neither a hard pass nor a hard fail;
+- `pending-producer` retains `null` gates and is **deferred** until its declared producer output is
+  available; while any pending producer remains, final pass is forbidden.
+
+The reducer is deterministic and ordered: any ready failure yields `fail`; otherwise any
+`pending-producer` yields `deferred`; otherwise all ready items being green yields `pass`.
+An unknown or fourth state fails closed. Historical maximums and gaps remain visible evidence but
+never enter the hard reducer. Coverage is reported separately for all three states; combined raw
+coverage is observation only.
 
 ## Thresholds and two arms
 
@@ -63,13 +90,13 @@ Both arms must answer this question verbatim:
 
 > Could this have passed exclusively by splitting, moving, caching, deferring, or excluding work?
 
-The mechanical test is the manifest's invariant traversal, aggregate comparison, complete scope
-coverage, unresolved-input count, and independent whole-file guards. A positive or unresolved
-answer is failure. Any primary threshold failure, incomplete scope, unresolved input, stale
-generated carrier, merged arm result, protocol drift, or session-canary mismatch is also failure.
-The only outcome action is `escalate`: repair the instance or create a new contract version through
-an owner decision. Retrofitting the threshold, exclusions, formulas, or expected branches is
-forbidden.
+The mechanical test is the manifest's invariant traversal, aggregate comparison, state-separated
+scope coverage, ready-item admission gaps, and independent whole-file guards. A positive or
+unresolved answer is failure. A ready primary-threshold failure, incomplete ready scope, invalid
+ready input, stale generated carrier, merged arm result, protocol drift, or session-canary mismatch
+is also failure. Historical evidence cannot create or conceal a hard outcome; pending producer
+evidence makes the result deferred. Retrofitting the threshold, exclusions, formulas, states, or
+expected branches is forbidden.
 
 ## Roles and confounds
 
@@ -98,6 +125,6 @@ field mismatch fails the canary.
 
 ## Change control
 
-Any edit after the first acceptance command is run requires reopening
-`2026.08.07-PLAN-ECONOMY P6.7`, adding a linked D-record, assigning a new protocol version, and
-downgrading every earlier pass claim. Silent amendment is never valid.
+Any edit after an acceptance command is run requires reopening
+`2026.08.07-PLAN-ECONOMY P6.7`, adding a linked owner D-record, assigning a new protocol version,
+and preserving every earlier result with its report and hashes. Silent amendment is never valid.

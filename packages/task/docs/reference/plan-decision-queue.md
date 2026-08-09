@@ -36,5 +36,6 @@ timestamps and temporary paths while recording queue cardinality, latest journal
 join verdicts, view freshness, retry count, and continuation mode; `--check` recomputes all twelve
 scenarios and compares the committed results and report byte-for-byte.
 
-`Decision Queue Gate | v1` in plan Meta enables the opt-in join check: terminal phases cannot carry
-an unresolved queue request. It is absent by default.
+The terminal-phase join is forward-only from its activation record in
+`configs/lint-check-dispositions.json`: a post-boundary terminal phase cannot carry an unresolved
+queue request. Historic phases remain outside the obligation without a Meta escape hatch.

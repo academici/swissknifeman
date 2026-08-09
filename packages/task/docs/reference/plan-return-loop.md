@@ -29,13 +29,13 @@ The affected subject remains blocked with `on_timeout=park`; independent subject
 executable. Command integration stays a later rollout concern, so this adapter does not enable a
 new protocol-command path by itself.
 
-`plan-lint` stays silent unless the plan Meta table explicitly says
-`Return Loop Gate | v1`. Once later phases enable that opt-in, D139 uses additive
+`plan-lint` applies the checks forward-only from the activation record in
+`configs/lint-check-dispositions.json`; it has no plan-local opt-in. D139 uses additive
 frontmatter on an existing item-scoped `findings/*.md` carrier: `gate:
 return-loop-v1`, `qualification: new|repeat|unqualifiable`, and (for grouped
 returns) `fingerprint_digest` plus `occurrences`. An over-cap return additionally
 needs `owner_authorization: D#` naming an existing decision. The evidence carrier
-is validated but P4.4 does not turn the new check on for ordinary plans.
+is validated for post-boundary items only; historic records remain immutable history.
 
 ## Return-judgement v1
 

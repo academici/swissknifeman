@@ -23,5 +23,8 @@ consumer under the plan's existing `findings/` carrier. If a producer is fixed a
 newest recorded producer commit in the current `HEAD` ancestry wins; the red finding remains as
 history instead of blocking forever.
 
-The `plan-lint` presence check is disabled by default. P6 enables it with Meta
-`Downstream Gate | v1` only after closing commands produce these records.
+The `plan-lint` presence check is forward-only. Its activation date and immutable
+journal-line boundary live beside the check in `configs/lint-check-dispositions.json`;
+only producers whose events are after that boundary must carry a record. This keeps
+layout-v1 plans and historic layout-v2 producers outside the new obligation without a
+plan-local opt-out switch.

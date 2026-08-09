@@ -285,3 +285,17 @@ layout-v2 carrier D91 восстанавливается forward-only через
 D148 без расфриза journal/item-state schemas; текущий run возвращает execution-state append-only
 terminal correction, а не переписыванием журнала или generated view.
 Новых owner decisions, provider-parity claims и разрешения на исполнение P6.2 этот вход не даёт.
+
+## 2026-08-09 — owner gate P6.7 после RED-приёмки
+
+**Вход владельца:** «утверждаю acceptance-protocol v1.1.0 со stage-aware admission».
+
+Версия `acceptance-protocol` v1.0.0 и её RED-результат сохраняются без переписывания: hashes
+контракта и manifest уже закреплены в `findings/12-p6-acceptance-measurement.md`. Порог `100000`,
+единица, scope traversal, две несмешиваемые руки и четыре exact ветви `session_canary` не меняются.
+
+Новая версия 1.1.0 обязана применять уже замороженную `read-budget` v1.1.0 stage-aware семантику:
+`ready` hard-gated; `historical-pre-v2` остаётся evidence-only и не переписывается ради pass;
+`pending-producer` даёт `deferred`, а не pass/fail, и запрещает финальный GREEN до появления
+выхода producer. После повторной заморозки P6.7 приёмка возвращается в P6.8; P6.9 остаётся
+запрещённой до положительного финального вердикта.

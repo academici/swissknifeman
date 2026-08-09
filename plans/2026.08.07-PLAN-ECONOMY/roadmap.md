@@ -72,7 +72,7 @@
 | P6.4 | solo | plan-run (manual) | implementation/high | — | включение защиты: ЧЕТЫРЕ коммита (по проверке), would-fail до включения, негативный e2e |
 | P6.5 | solo | plan-run (manual) | frontier/high | — | 🟠 terminal with deviations — EN-only canon v2, hard-boundary enum, weight/fail-closed gates; scope expansion записан |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
-| P6.7 | solo | plan-run (manual) | frontier/high | — | предобъявить machine `session_canary`: exact four branches/expected + command/result keys (D126) |
+| P6.7 | solo | plan-run (manual) | frontier/high | — | заморозить stage-aware `acceptance-protocol` v1.1.0 по D150; v1.0.0 RED и threshold/scope/arms/canary неизменны |
 | P6.8 | solo | plan-run (manual) | frontier/high | — | две D2-руки + отдельный exact session-canary comparator; local field defect без automatic audit |
 | P6.9 | solo | plan-exec | implementation/medium | — | бухгалтерия снятия паузы в чужом плане; предусловие — ВЕРДИКТ P6.8 |
 

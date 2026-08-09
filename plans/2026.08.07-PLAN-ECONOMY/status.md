@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 4024128776b3fd5670e351bac2c52294fd62e50bb7e9fe4b912eafb530dd2455
+inputs_sha256: 79243f1794ec2a637a705e8ce8f9517e5376fc0f0398c6326f12ef2b782478ba
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 0.30.0 |
+| Version | 0.31.0 |
 | Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
@@ -109,7 +109,7 @@ generated_by: task plan-views status
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🟠 Done with deviations | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
-| P6.7 | Предобъявить протокол приёмки | 🟠 Done with deviations | 2026-08-09 |
+| P6.7 | Перезаморозить stage-aware протокол приёмки v1.1.0 | 🟠 Done with deviations | 2026-08-09 |
 | P6.8 | Исполнить приёмку двумя руками и вынести вердикт | 🔴 Blocked | 2026-08-09 |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
 
@@ -340,6 +340,9 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.7 48522653: acceptance-protocol v1 frozen before measurement; manifest/session canary validated; task 733 tests and downstream P6.8 green. Deviations: brief §2.3 source repair and truncated-preview reread. write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Session gpt-5.6-sol/high; pre-mutation allow. Deviation: task-plan-design bootstrap projection declared by skill catalog is missing; canonical Codex adapter is available. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · blocked · P6.8 f6c31e9e: RED arm A, max 101744>100000 and 4 unresolved inputs; aggregate 1932319<7089706. Frozen protocol unchanged; arm B/canary not run after on_failure=escalate; P6.9 forbidden. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.7 536a1b3e: acceptance v1.1.0 frozen; schema/invariants/citations and 735 tests green; downstream P6.8 green. Deviation: tool guard fix outside Files (edf04aee,154cb3ec,536a1b3e). write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -417,10 +417,10 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon.",
+        "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
         "`lib/`",
         "`Env`",
-        "`SKILL.ru.md`",
+        "`SKILL.md`",
         "create a new skill only when it does not overlap an existing one"
       ]
     },

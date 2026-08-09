@@ -146,5 +146,3 @@ Selection (above) is about adding. Symmetric ritual — about what's ALREADY sit
 - `security/security` — review MCP tool configs for injection/exfiltration before connecting.
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
 - `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
-
-<!-- ru-source-sha256: 9cc73ee4c23181feddec38e205b1f90eaa17d27ad58497a0faba92d00edeacdf -->

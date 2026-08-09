@@ -409,6 +409,8 @@ def lint_plan(plan_dir, diag):
             ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_phase(ref_phase)
+        elif kind in ("design-finish", "design-roadmap"):
+            _check_plan_id(m.group(1))
         elif kind == "audit":
             ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
@@ -549,9 +551,8 @@ def discover_plan_dirs(root):
 
 
 # --- --conflicts: канон ↔ реализация (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) -----
-# Третья нога конфликт-скана — сверка `SKILL.ru.md` с реестрами-константами ЭТОГО модуля.
-# Первые две ноги (свежесть перевода RU→EN, присутствие i18n-keep литералов в EN и в теле RU)
-# уже покрыты `check-translations.sh` — не переиздаются здесь (Implementation Rule 2).
+# Конфликт-скан сверяет EN-only `SKILL.md` с реестрами-константами реализации.
+# Точные литералы переиспользуют общий `CANON_LITERALS`, а не второй реестр.
 #
 # Работает БЕЗ аргумента-плана (Implementation Rule 5): сверяет АРТЕФАКТЫ канона, не
 # конкретный `plans/<ID>`. Каждая сверка — структурная (код-фенс/бэктик-спан/маркированный

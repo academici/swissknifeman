@@ -1116,10 +1116,10 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     """Render the exact 26 class-A thin root-bootstrap projections plus the class-B (2026.07.24-AGENT-RELIABILITY P1.5,
     D43) public-bucket projections, and their one combined lock.
 
-    Reads ONLY the private/source-only canonical bilingual pairs named by
+    Reads ONLY the private/source-only canonical EN-only carriers named by
     `configs/repository-bootstrap-skills.json` for class-A; never scans the filesystem for
     identities and never copies canonical body text into a projection (D31/D38). Fails closed
-    on a missing canonical pair, a name mismatch, or a missing per-unit version. Class-A bytes
+    on a missing canonical carrier, a name mismatch, or a missing per-unit version. Class-A bytes
     and count are byte-for-byte unaffected by class-B (P1.5 byte-identical guard).
 
     `donor_enabled` is an EXPLICIT, caller-supplied inventory of which publication buckets are

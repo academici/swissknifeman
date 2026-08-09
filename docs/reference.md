@@ -392,3 +392,13 @@ docs-impact гейт, матрица возможностей, CI-гигиена
   Composite-провенанс (несколько источников в одном скилле) → **`upstream.json strategy=merge`**
   (`origins[]` base+supplement, ручной agent-merge). Supply-chain-скан/bootstrap/hook-профили (ECC,
   superpowers) → **отложены** — см. план.
+
+## Instruction-carrier weight policy (2026-08-07)
+
+- <https://docs.anthropic.com/en/docs/claude-code/memory> and
+  <https://docs.github.com/en/copilot/tutorials/optimize-ai-usage> informed the focused-carrier
+  guidance recorded in `plans/2026.08.07-PLAN-ECONOMY/findings/14-*`.
+- D93 implements a two-threshold gate in `plan-weight.py canon`: warning at a declared fraction,
+  hard failure at the measured one-read token cap, regression justification, and dated exceptions.
+- The fewer-than-500-lines vendor orientation is printed as an independent number; it never raises
+  or replaces the measured environment cap.

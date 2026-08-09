@@ -18,7 +18,7 @@ Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skill
 Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`. Also, keep token math in `budget.py` as the single source.
 <!-- instruction:skiller.engineering-invariants -->
 ## skiller.engineering-invariants
-Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.
+Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.
 <!-- instruction:skiller.validation-release -->
 ## skiller.validation-release
 Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`; after skill or bucket changes run `skiller registry` and use Russian Conventional Commit messages.

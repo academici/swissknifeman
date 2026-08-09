@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:4f24721fac322194067137dcac99cdfa23eb4532abd1ccd657f99b6295404db2
+Canonical SHA-256: sha256:eac4ee8d4212ddeefe1e1e6f19497203a2d69167edd5e734a60dae2a38e5abae
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -126,11 +126,10 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    ПЕРВОЙ, самой дешёвой командой — **`plan-lint.py --conflicts`** (без аргумента-плана, roadmap
    `plan-audit-loop.md` §A.1, 2026.07.31-SKM-LEAN P5.9): сверяет реестры-константы `plan_lint.py`
    (шесть статусов, 16 полей item'а, закрытый enum форм `Next`, три значения `Context`, литералы
-   `i18n-keep`, регекс-носители формы launch-block'а) с их объявлениями в `SKILL.ru.md` — тот же класс
-   «канон ↔ EN-копия ↔ `plan_lint.py`», что дал БОЛЬШИНСТВО окупающихся находок трёх RED-раундов
+   `i18n-keep`, регекс-носители launch-block'а, v2-carriers) с их объявлениями в `SKILL.md` — тот же класс
+   «канон ↔ `plan_lint.py`», что дал БОЛЬШИНСТВО окупающихся находок трёх RED-раундов
    `plan-audit-loop.md` (слип перевода `Items 🟢/всего` → `Items 🟢/total`), ловится за секунды. Следом —
-   остальные ступени скана: `validate.sh` затронутых пакетов · тесты линтера · `check-translations.sh`
-   (фаза правила скилл — свежесть перевода и присутствие литералов, `--conflicts` их НЕ дублирует) ·
+   остальные ступени скана: `validate.sh` затронутых пакетов · тесты линтера · EN-only canon weight gate ·
    `plan-lint plans/<PLAN-ID> --baseline <sha до фазы>`. Затем — adversarial-чтение **свежим
    контекстом**: Completion Notes писал исполнитель сам себе — суди по git/коду (`git log`/`git diff` по
    `Files` каждого item'а: slice, не файлы целиком).

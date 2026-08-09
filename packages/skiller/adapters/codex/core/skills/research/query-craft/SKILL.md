@@ -209,5 +209,3 @@ don't know", don't guess`.
      search/advanced/deep modes — from the perplexity-web server tool schemas.
      Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
      from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
-
-<!-- ru-source-sha256: c209416e6ccfb1336b51fc9065e6811019904c6cd1101f3feec0229bb0069032 -->

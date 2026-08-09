@@ -14,6 +14,18 @@
   ],
   "carriers": [
     {
+      "id": "plan-protocol-canon",
+      "path": "packages/skiller/skills/general/plan-protocol/SKILL.md",
+      "owner_reader": "designer",
+      "also_read_by": ["auditor", "owner"],
+      "mutability": "handwritten",
+      "volatility": "stable",
+      "volatility_basis": "protocol identity, invariants, closed enums, and navigation change only at an explicit canon decision boundary; D93 gates each change by measured weight",
+      "on_path_of": ["designer"],
+      "class": "spec",
+      "layout_versions": ["v1", "v2"]
+    },
+    {
       "id": "plan-core",
       "path": "plan.md",
       "owner_reader": "designer",

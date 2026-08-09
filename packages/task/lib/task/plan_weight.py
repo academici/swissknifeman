@@ -102,6 +102,7 @@ import json
 import os
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 from task import plan_admission, plan_lint, plan_layout, token_estimate
@@ -155,6 +156,9 @@ PATH_SUFFIX_RE = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,7}$")
 
 DEFAULT_READ_LIMIT_PATH = (
     Path(__file__).resolve().parent.parent.parent / "configs" / "read-limit.json"
+)
+DEFAULT_CANON_BUDGET_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "configs" / "canon-weight-budget.json"
 )
 
 # Артефакт прогона дифференциального харнесса P0.1 — единственный источник «истины» для
@@ -261,6 +265,101 @@ def measure_file(path, *, role, artifact, limits, model_id=None):
         "dense_ascii_share": dense_ascii_share(text),
         "gates": {GATE_SIZE_BYTES: size_ok, GATE_TOKENS: tokens_ok},
         "passes": size_ok and tokens_ok,
+    }
+
+
+def measure_document(path, measurer):
+    """Measure one UTF-8 instruction carrier in tokens and physical lines."""
+    path = Path(path)
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise PlanWeightError(f"document is not readable: {path}: {exc}") from exc
+    text = raw.decode("utf-8", errors="replace")
+    return {
+        "path": str(path),
+        "bytes": len(raw),
+        "lines": len(text.splitlines()),
+        "est_tokens": token_estimate.estimate_text(
+            text, artifact=measurer.artifact, session_model_id=measurer.model_id),
+    }
+
+
+def load_canon_budget(path):
+    """Load the D93 two-threshold canon budget; malformed policy fails closed."""
+    path = Path(path)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PlanWeightError(f"canon budget is not readable JSON: {path}: {exc}") from exc
+    required = ("canon_path", "baseline", "warning_fraction", "regression_percent",
+                "vendor_line_guidance", "exceptions")
+    missing = [key for key in required if key not in data]
+    if missing:
+        raise PlanWeightError(f"canon budget lacks required keys {missing}: {path}")
+    baseline = data["baseline"]
+    if not isinstance(baseline, dict) or not isinstance(baseline.get("est_tokens"), int):
+        raise PlanWeightError(f"canon budget baseline.est_tokens must be an integer: {path}")
+    warning = data["warning_fraction"]
+    regression = data["regression_percent"]
+    if (not isinstance(warning, (int, float)) or isinstance(warning, bool)
+            or not 0 < warning < 1):
+        raise PlanWeightError(f"canon budget warning_fraction must be between 0 and 1: {path}")
+    if (not isinstance(regression, (int, float)) or isinstance(regression, bool)
+            or regression < 0):
+        raise PlanWeightError(f"canon budget regression_percent must be non-negative: {path}")
+    exceptions = data["exceptions"]
+    if not isinstance(exceptions, list):
+        raise PlanWeightError(f"canon budget exceptions must be a list: {path}")
+    for entry in exceptions:
+        if not isinstance(entry, dict) or not entry.get("expires_at"):
+            raise PlanWeightError(f"every canon budget exception needs expires_at: {path}")
+        try:
+            date.fromisoformat(entry["expires_at"])
+        except (TypeError, ValueError) as exc:
+            raise PlanWeightError(
+                f"invalid canon budget exception expiry {entry.get('expires_at')!r}: {path}") from exc
+    return data
+
+
+def evaluate_canon_budget(budget_path, measurer, *, today=None):
+    """Evaluate hard cap, warning threshold, regression allowance, and dated exceptions."""
+    budget_path = Path(budget_path)
+    budget = load_canon_budget(budget_path)
+    canon_path = Path(budget["canon_path"])
+    if not canon_path.is_absolute():
+        canon_path = _MONOREPO_ROOT / canon_path
+    current = measure_document(canon_path, measurer)
+    baseline = budget["baseline"]
+    hard_cap = measurer.limits["tokens"]
+    warning_at = int(hard_cap * budget["warning_fraction"])
+    regression_limit = int(
+        baseline["est_tokens"] * (1 + budget["regression_percent"] / 100))
+    today = today or date.today()
+    active = [entry for entry in budget["exceptions"]
+              if date.fromisoformat(entry["expires_at"]) >= today]
+    cap_exceeded = current["est_tokens"] > hard_cap
+    regression_exceeded = current["est_tokens"] > regression_limit
+    has_justification = bool((budget.get("regression_justification") or "").strip())
+    failures = []
+    if cap_exceeded and not active:
+        failures.append("hard_cap")
+    if regression_exceeded and not has_justification and not active:
+        failures.append("regression")
+    return {
+        "schema": "canon-weight-v1",
+        "budget_path": str(budget_path),
+        "current": current,
+        "baseline": baseline,
+        "hard_cap_tokens": hard_cap,
+        "warning_threshold_tokens": warning_at,
+        "warning": current["est_tokens"] >= warning_at,
+        "regression_limit_tokens": regression_limit,
+        "regression_justification": budget.get("regression_justification", ""),
+        "vendor_line_guidance": budget["vendor_line_guidance"],
+        "active_exceptions": active,
+        "failures": failures,
+        "passes": not failures,
     }
 
 
@@ -821,6 +920,8 @@ def main(argv=None):
                              "дифференциального харнесса P0.1 на указанных файлах")
     parser.add_argument("--probe-log", default=None,
                         help="артефакт прогона харнесса P0.1 для --exact")
+    parser.add_argument("--file", default=None,
+                        help="измерить один документ (токены и строки)")
 
     common = argparse.ArgumentParser(add_help=False)
     _add_common_options(common, suppress=True)
@@ -833,10 +934,13 @@ def main(argv=None):
     p_plan.add_argument("plan_dir")
     p_sweep = sub.add_parser("sweep", help="замер по корням планов (вход P0.4)", parents=[common])
     p_sweep.add_argument("roots", nargs="+")
+    p_canon = sub.add_parser("canon", help="D93: двухпороговый гейт веса канона",
+                             parents=[common])
+    p_canon.add_argument("--budget", default=str(DEFAULT_CANON_BUDGET_PATH))
 
     args = parser.parse_args(argv)
-    if args.exact is None and args.cmd is None:
-        parser.error("нужна подкоманда item|plan|sweep либо режим --exact FILE…")
+    if args.exact is None and args.file is None and args.cmd is None:
+        parser.error("нужна подкоманда item|plan|sweep|canon либо режим --file/--exact")
 
     try:
         measurer = Measurer(calibration_path=args.calibration,
@@ -862,6 +966,41 @@ def main(argv=None):
                               f"{row['true_over_estimate']:.3f}"
                               + ("  ← ЗАНИЖЕНИЕ" if row["understated"] else ""))
             return 0
+
+        if args.file is not None:
+            payload = measure_document(args.file, measurer)
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            else:
+                print(f"{payload['path']}: {payload['est_tokens']} tokens, "
+                      f"{payload['lines']} lines")
+            return 0
+
+        if args.cmd == "canon":
+            payload = evaluate_canon_budget(args.budget, measurer)
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+            else:
+                before = payload["baseline"]
+                current = payload["current"]
+                print(f"canon before: {before['est_tokens']} tokens, {before['lines']} lines "
+                      f"@ {before['git_anchor']}")
+                print(f"canon after: {current['est_tokens']} tokens, {current['lines']} lines "
+                      f"@ working-tree")
+                print(f"hard cap: {payload['hard_cap_tokens']} tokens; warning: "
+                      f"{payload['warning_threshold_tokens']} tokens; regression limit: "
+                      f"{payload['regression_limit_tokens']} tokens")
+                print(f"vendor guidance: under {payload['vendor_line_guidance']} lines "
+                      f"(independent guidance; current {current['lines']})")
+                if payload["active_exceptions"]:
+                    expiries = ", ".join(e["expires_at"] for e in payload["active_exceptions"])
+                    print(f"active dated exception(s), expiry: {expiries}")
+                if payload["warning"]:
+                    print("WARNING: canon reached the warning threshold", file=sys.stderr)
+                if payload["failures"]:
+                    print("ERROR: canon budget failed: "
+                          + ", ".join(payload["failures"]), file=sys.stderr)
+            return 0 if payload["passes"] else 3
 
         if args.cmd == "sweep":
             payload = sweep(args.roots, measurer)

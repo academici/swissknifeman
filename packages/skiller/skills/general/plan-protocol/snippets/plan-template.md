@@ -21,17 +21,16 @@
 |:--|:--|
 | Plan ID | <PLAN-ID> |
 | Title | <краткое имя плана> |
+| Layout | v2 |
 | Version | 0.1.0 |
-| Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
-| Last Updated | <YYYY-MM-DD> |
 | Repository | <repo> |
 | Related Packages | <pkg1, pkg2> |
 | Execution Mode | phase-first |
 | Target Operator Classes | implementation (exec) · economy (LOW) · frontier (design/audit) |
 | Approval Owner | <человек, утверждающий план> |
-| Home | <необязательное: brain ИЛИ repo:путь — где живёт исполняемая копия, по умолчанию репо проекта, SKILL раздел 12> |
+| Home | repo:<repository> |
 | visibility | <необязательное: private ИЛИ public, дефолт private; public → в git только публичная выжимка, SKILL раздел 4> |
 | supersedes | <необязательное: старый PLAN-ID, чью волну трека сменяет план; предшественник в plans/archive/> |
 | Paused By | <необязательное: PLAN-ID перехватившего ACTIVE + дата; заполняет plan-design new; нет — «—»> |
@@ -59,24 +58,16 @@ plan-protocol; не копировать его целиком. Минимум:>
 | <Pn.m–Pn.k> | <frontier/high> | manual | <расфриз public-контракта: effort high+ MANDATORY> |
 | <Pn.m–Pn.k> | <implementation/low> | plan-exec | <doc-cleanup без новых решений> |
 
-## 4. Phase Index & Status Board
-
-| Phase | Title | Items 🟢/всего | Status |
-|:--|:--|:--|:--|
-| P1 | <title> | 0/3 | ⬜ Not started |
-| P2 | <title> | 0/2 | ⬜ Not started |
-
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
-|:--|:--|:--|:--|
-| D1 | <YYYY-MM-DD> | <решение> | <обоснование> |
+Каталог решений: `decisions/`; собрать:
+`python3 packages/task/scripts/plan-views.py decisions`.
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
-| <YYYY-MM-DD> | issue-planner/frontier | План создан |
+| <YYYY-MM-DD> | issue-planner/frontier/high | План создан |
 
 ## 7. Contracts
 

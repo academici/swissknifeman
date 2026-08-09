@@ -235,7 +235,7 @@
     },
     {
       "semantic_id": "skiller.engineering-invariants",
-      "literal": "edit local skills through `SKILL.ru.md` before regenerating the compact English canon"
+      "literal": "edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections"
     },
     {
       "semantic_id": "skiller.engineering-invariants",

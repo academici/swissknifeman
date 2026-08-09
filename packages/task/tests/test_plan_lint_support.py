@@ -25,7 +25,8 @@ import task.plan_lint as plan_lint_module  # noqa: E402 — --conflicts: monkeyp
 from task.plan_lint import (  # noqa: E402
     CANON_LITERALS, CONTEXT_VALUES, REQUIRED_ITEM_FIELDS, SEMANTIC_NEXT_RE, STATUSES,
     Diagnostics, _conflicts_context_values, _conflicts_i18n_literals, _conflicts_item_fields,
-    _conflicts_launch_table_regex, _conflicts_next_forms, _conflicts_statuses, _find_skill_ru,
+    _conflicts_launch_table_regex, _conflicts_layout_v2, _conflicts_next_forms,
+    _conflicts_statuses, _find_skill,
     _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
     run_conflicts_check,
 )

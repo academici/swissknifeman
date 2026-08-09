@@ -236,7 +236,7 @@
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
-| `plan-protocol` | Executable plans in plans/<ID>: schemas, 6 statuses, DoR, routing, semantic Next, handoff. | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
+| `plan-protocol` | Executable plans in plans/<ID>: schemas, statuses, routing, semantic Next, and handoff. | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Cross-session/agent handoff: compress a session into state, decisions, open items. | `workflow`, `context`, `tokens`, `handoff` |
 | `shell` | Growing cookbook of shell constructs compatible with this environment's hooks (currently … | `workflow`, `bash`, `shell`, `safety`, `hooks` |
@@ -420,7 +420,7 @@
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
-### repository-bootstrap — P1.2 (D31/D38): private/source-only bilingual canon for the 13 root-bootstrap identities (class A) — never published as an ordinary bucket/core/marketplace unit, never vendored/connected to a consumer project. Sole producer: registry.py -> publication.py root-bootstrap renderer, emitting thin .claude/.agents projections. (13)
+### repository-bootstrap — P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 13 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections. (13)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -436,7 +436,7 @@
 | `package-architecture` | Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, gene… | `skiller`, `architecture`, `distribution`, `root-bootstrap` |
 | `project-tooling-runbook` | Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor … | `runbook`, `skills`, `docs-sync`, `root-bootstrap` |
 | `release-discipline` | Closing out any substantive change in this repository: validate.sh → skiller registry → C… | `release`, `changelog`, `validate`, `root-bootstrap` |
-| `skill-authoring` | Rules for creating/editing registry skills (skills/**, generate-skill/): bilingual SKILL.… | `skill-authoring`, `bilingual`, `upstream`, `root-bootstrap` |
+| `skill-authoring` | Rules for creating or editing EN-only registry skills, references, snippets, metadata, pr… | `skill-authoring`, `en-only`, `upstream`, `root-bootstrap` |
 
 ### research — Research and knowledge management (2)
 
@@ -519,7 +519,6 @@
 | `barge-in` | `voice-ai` |
 | `bash` | `shell` |
 | `best-practices` | `laravel-best-practices` |
-| `bilingual` | `skill-authoring` |
 | `blade` | `livewire-blade-attributes` |
 | `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `model-verification`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
 | `botkit` | `botkit` |
@@ -610,6 +609,7 @@
 | `echo` | `laravel-broadcasting` |
 | `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `cross-project-optimizer`, `ecosystem-integration`, `ecosystem-map`, `ecosystem-mcp`, `ecosystem-reuse-gate`, `ecosystem-setup`, `maind-overview`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
+| `en-only` | `skill-authoring` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
 | `epistemics` | `decision-verification` |

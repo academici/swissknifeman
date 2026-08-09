@@ -18,4 +18,4 @@
 
 > Эти файлы — задел: тела скиллов сейчас уже на русском, перевод полезен при
 > миграции канона в компактный английский. Покрытие переводов:
-> `scripts/check-translations.sh`.
+> Do not write the result as a parallel registry canon: local registry skills are EN-only.

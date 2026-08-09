@@ -119,7 +119,7 @@ HANDOFF_TITLE_HELP = ("заголовок не соответствует ни �
 # Ровно эта строка — не «любая фаза P0» и не «любой item .0»: расширение = дыра в гейте.
 HANDOFF_TITLE_BOOTSTRAP = "P0.0"
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
-# Форма m8/B1/N1/N2 (+D8): `handoff.Next` допускает закрытый enum 9 форм (SKILL §8) —
+# `handoff.Next` accepts the closed semantic enum, including D80 design finish/roadmap.
 # ниже регулярки на каждую (кроме plan-exec/«план закрыт», уже объявленных). Порядок
 # проверки в резолвере (см. lint_plan) идёт от специфичной к общей: design-item ДО
 # design-phase (иначе `(?!\.\d)`-lookahead фазовой формы просто не даст матчу проиграть
@@ -131,6 +131,8 @@ PLAN_DESIGN_ITEM_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+\.\d+)")
 # протокола прямо предписывают plan-design перед plan-exec на фазах без заполненных
 # 16 полей) — ссылка на ФАЗУ (Pn), не на item (Pn.m).
 PLAN_DESIGN_PHASE_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+)(?!\.\d)\b")
+PLAN_DESIGN_FINISH_RE = re.compile(r"/task:plan-design\s+(\S+)\s+finish\b")
+PLAN_DESIGN_ROADMAP_RE = re.compile(r"/task:plan-design\s+(\S+)\s+roadmap\b")
 # Батч-серия roadmap (SKILL §8): одна сессия закрывает диапазон items текущей моделью.
 PLAN_RUN_RE = re.compile(r"/task:plan-run\s+(\S+)\s+(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?")
 # Pre-exec design-ревью всего плана (plan-audit, режим design).
@@ -139,14 +141,16 @@ PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
 SEMANTIC_NEXT_RE = re.compile(
-    r"^(exec-items|run-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
-    r"terminal|manual|waiting):\s*(.*)$")
+    r"^(exec-items|run-items|audit-design|design-phase|design-item|design-finish|"
+    r"design-roadmap|audit-phase|close|archive|terminal|manual|waiting):\s*(.*)$")
 SEMANTIC_NEXT_COMMANDS = {
     "exec-items": ("task:plan-exec", "exec"),
     "run-items": ("task:plan-run", "run"),
     "audit-design": ("task:plan-audit", "audit-design"),
     "design-phase": ("task:plan-design", "design-phase"),
     "design-item": ("task:plan-design", "design-item"),
+    "design-finish": ("task:plan-design", "design-finish"),
+    "design-roadmap": ("task:plan-design", "design-roadmap"),
     "audit-phase": ("task:plan-audit", "audit"),
     "close": ("task:plan-close", "close"),
     "archive": ("task:plan-close", "close-archive"),
@@ -158,6 +162,7 @@ NEXT_FORMS_HELP = (
     "`<kind>: task:<plan-command> <arguments>` (provider-neutral канон) · "
     "/task:plan-exec <ID> Pn.m · /task:plan-run <ID> Pn.a[-Pn.b] · "
     "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
+    "/task:plan-design <ID> finish · /task:plan-design <ID> roadmap · "
     "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "
     "/task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · "
     "«план закрыт» · «ЗАПУСК ВРУЧНУЮ: <model/effort>» · «ОЖИДАНИЕ: <условие> → <целевая форма>»"
@@ -191,15 +196,15 @@ RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED
 LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
 LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
-# `Context` launch-block'а (SKILL §8 «Session-restart discipline», D16/D30) — РОВНО три
+# Layout-v2 `Context` launch-block'а (SKILL §6, D16/D30/D125) — РОВНО три
 # значения. Реестр НЕ используется НИГДЕ вне `--conflicts` (2026.07.31-SKM-LEAN P5.9): до этого
 # item'а поле `Context` не гейтилось ни одним registry ни разу — сверка канон↔реализация для
 # него добавляется здесь ВПЕРВЫЕ, а не переиздаётся из существующего гейта (Pending Work P5.9
 # называет расширение до live-гейта отдельной задачей — этот item лишь делает класс сверяемым).
 CONTEXT_VALUES = (
-    "same-session — item",
-    "cold-start — orchestration",
-    "cold-start — plan-step",
+    "continue-root",
+    "isolated-child-return",
+    "cold-start-root",
 )
 # Директива канонического литерала (D28/D79) живёт в EN-only `SKILL.md`;
 # регексом владеет этот модуль, а `--conflicts` и тесты его переиспользуют.

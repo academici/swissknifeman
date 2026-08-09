@@ -29,7 +29,7 @@
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> — <причина> |
 | Capabilities | <semantic capability IDs> |
-| Context | cold-start: plan.md → roadmap.md → phases/<Pn>.md |
+| Context | continue-root |
 | Суть | Серия <Pn.a>–<Pn.b> одной сессией, гейты между items — внутри сессии |
 
 ```
@@ -45,7 +45,7 @@ exec-items: task:plan-exec <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
 ```
 kind: orchestration
 orchestration_id: <PLAN-ID>:W1
-inputs: [plan.md, roadmap.md, phases/<Pn>.md]
+inputs: [plan.md, roadmap.md, phases/<Pn>/<Pn>.md]
 required_capabilities: [command.subagents, command.workflow-carrier]
 provider_projection: <verified mapping reference>
 ```

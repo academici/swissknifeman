@@ -111,7 +111,7 @@ def _conflicts_item_fields(skill_lines, skill_path, diag):
 
 
 def _conflicts_next_forms(skill_lines, skill_path, diag):
-    """Класс 3/6: закрытый enum форм `Next` — SKILL.md §8 ↔
+    """Class 3/7: closed `Next` enum — SKILL.md §6 ↔
     альтернация `SEMANTIC_NEXT_RE` (читается у неё самой — не переиздаётся вторым списком)."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_NEXT_FORMS)
     if header_idx is None:
@@ -140,7 +140,7 @@ def _conflicts_next_forms(skill_lines, skill_path, diag):
 
 
 def _conflicts_context_values(skill_lines, skill_path, diag):
-    """Класс 4/6: три значения `Context` (CONTEXT_VALUES) — SKILL.md §8 «Session-restart
+    """Class 4/7: three layout-v2 `Context` values — SKILL.md §6 ↔
     discipline». Единственный класс, где реализация ДО этого item'а не существовала вовсе
     (см. комментарий у `CONTEXT_VALUES`) — сверка новая, не переиздание старой."""
     anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_CONTEXT)
@@ -168,7 +168,7 @@ def _conflicts_context_values(skill_lines, skill_path, diag):
 
 
 def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
-    """Класс 5/6: литералы `i18n-keep` — CANON_LITERALS ⊆ директивы, объявленные в
+    """Class 5/7: `i18n-keep` literals declared in the EN-only canon.
     EN-only SKILL.md (T2 `test_canon_literals.py` проверяет то же самое; здесь — тот же
     предикат, доступный из CLI без запуска unittest, Required Reads п. 4 «расширяется, не
     дублируется»: обе стороны читают один и тот же `CANON_LITERALS`/`I18N_KEEP_RE`)."""
@@ -190,7 +190,7 @@ def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
 
 
 def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
-    """Класс 6/6: регекс-носители формы launch-block'а (LAUNCH_TABLE_ROW_RE/
+    """Class 6/7: launch-block regex carriers (LAUNCH_TABLE_ROW_RE/
     LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.md §8."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
     if header_idx is None:
@@ -216,6 +216,21 @@ def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
                        f"plan_lint.py:{code_lineno}")
 
 
+def _conflicts_layout_v2(skill_lines, skill_path, diag):
+    """Class 7/7: the compact canon must route layout-v2 readers to its carrier contract."""
+    anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAYOUT_V2)
+    if anchor_idx is None:
+        diag.error(skill_path, None,
+                   f"--conflicts layout v2: missing anchor «{CONFLICTS_ANCHOR_LAYOUT_V2}»")
+        return
+    window = "\n".join(skill_lines[anchor_idx:anchor_idx + 20])
+    for carrier in ("phases/<Pn>/<Pn.m>.md", "phases/<Pn>/<Pn.m>.state.md",
+                    "bundles/<Pn.m>.json", "phases/<Pn>/<Pn>.closed.md"):
+        if carrier not in window:
+            diag.error(skill_path, anchor_idx + 1,
+                       f"--conflicts layout v2: anchor block lacks carrier «{carrier}»")
+
+
 def run_conflicts_check(diag):
     """`--conflicts`: сверка канон↔реализация по шести классам.
 
@@ -235,6 +250,7 @@ def run_conflicts_check(diag):
     _conflicts_context_values(skill_lines, skill_path, diag)
     _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag)
     _conflicts_launch_table_regex(skill_lines, skill_path, diag)
+    _conflicts_layout_v2(skill_lines, skill_path, diag)
 
 
 # --- --baseline: детерминированный счёт новых ошибок (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1/D5/D6) ---------

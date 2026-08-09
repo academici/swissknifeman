@@ -89,7 +89,7 @@ class TestConflictsFlagUnits(unittest.TestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_context_values_mismatch_is_error(self):
-        corrupted = ("same-session — item", "cold-start — orchestration", "cold-start — WRONG")
+        corrupted = ("continue-root", "isolated-child-return", "cold-start — WRONG")
         lines = [f"Context carries {conflicts_module.CONFLICTS_ANCHOR_CONTEXT}:"]
         lines += [f"- **`{v}`** — пояснение." for v in corrupted]
         diag = self._diag()
@@ -130,6 +130,24 @@ class TestConflictsFlagUnits(unittest.TestCase):
         _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "LAUNCH_COMMAND_ROW_RE"), diag.errors)
+
+    # --- layout v2 carrier anchor ------------------------------------------
+    def test_layout_v2_carriers_consistent_is_silent(self):
+        lines = [conflicts_module.CONFLICTS_ANCHOR_LAYOUT_V2,
+                 "phases/<Pn>/<Pn.m>.md", "phases/<Pn>/<Pn.m>.state.md",
+                 "bundles/<Pn.m>.json", "phases/<Pn>/<Pn>.closed.md"]
+        diag = self._diag()
+        _conflicts_layout_v2(lines, Path("SKILL.md"), diag)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_layout_v2_missing_carrier_is_error(self):
+        lines = [conflicts_module.CONFLICTS_ANCHOR_LAYOUT_V2,
+                 "phases/<Pn>/<Pn.m>.md", "phases/<Pn>/<Pn.m>.state.md",
+                 "bundles/<Pn.m>.json"]
+        diag = self._diag()
+        _conflicts_layout_v2(lines, Path("SKILL.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "<Pn>.closed.md"), diag.errors)
 
 
 class TestConflictsFlagLiveRepo(unittest.TestCase):

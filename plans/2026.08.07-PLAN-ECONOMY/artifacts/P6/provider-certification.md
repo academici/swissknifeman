@@ -47,9 +47,22 @@ For P6.3, replay `judge-calibration-bank.jsonl` against the same rubric bytes wi
 `anthropic:<model>` id, publish raw agreement/κ/swap evidence, and only then append that pair to
 `return-judgement-calibration.json`.
 
+## P6.5 — EN-only canon and layout-v2 authoring
+
+| Layer | Status | Evidence |
+|:--|:--|:--|
+| Shared canonical skill | verified | The only source is `packages/skiller/skills/general/plan-protocol/SKILL.md`; `plan-weight.py canon` records 36,651 → 4,575 estimated tokens and 1,391 → 282 lines, `--conflicts` checks seven classes, and missing/corrupt canon canaries fail closed. |
+| Codex skill projection | verified | `skiller registry`, byte comparison with the canonical skill, registry no-op check, and the P6.5 Codex `task:plan-run` replay validate publication and runtime consumption. |
+| Claude skill carrier | pending-provider | Claude consumes the shared canonical plugin carrier, but this item did not perform a Claude-owned runtime replay of the new context enum/design forms. |
+
+Claude replay for P6.5: from the same commit, run `skiller registry --check`, invoke the
+`plan-protocol` skill in a `Layout: v2` plan, and demonstrate `continue-root`,
+`isolated-child-return`, and one justified `cold-start-root` handoff before changing the row.
+
 ## Boundary
 
 P6.1 changes only how the five commands read declared v1/v2 carriers. P6.2 adds deterministic
 closure production. P6.3 adds the shared DecisionRequest/judgement semantics and certifies only
 the Codex calibration row; it does not claim enabled gates (P6.4), canon rollout (P6.5), fleet
-rollout (P6.6), or Claude runtime parity.
+rollout (P6.6), or Claude runtime parity. P6.5 certifies the shared/Codex canon carrier and keeps
+Claude at `pending-provider` until its own replay.

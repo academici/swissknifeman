@@ -427,12 +427,25 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         self.assertTrue(any("Next не соответствует" in item for item in diag.errors),
                         diag.errors)
 
+    def test_design_finish_and_roadmap_forms_are_accepted(self):
+        for declaration in ("design-finish: task:plan-design DEMO-1 finish",
+                            "design-roadmap: task:plan-design DEMO-1 roadmap"):
+            with self.subTest(declaration=declaration):
+                plan_dir = write_valid_plan(self.root, plan_id="DEMO-1")
+                handoff = plan_dir / "handoff.md"
+                text = handoff.read_text(encoding="utf-8").replace(
+                    "/task:plan-exec DEMO-1 P1.1", declaration)
+                handoff.write_text(text, encoding="utf-8")
+                _, diag = _lint(plan_dir)
+                self.assertTrue(diag.ok, diag.errors)
+
     def test_all_closed_semantic_kinds_resolve_before_provider_rendering(self):
         fixture = Path(__file__).with_name("fixtures_data") / "provider-plan-cases.json"
         declarations = json.loads(fixture.read_text(encoding="utf-8"))["next_declarations"]
         expected = {
             "exec-items": "exec", "run-items": "run", "audit-design": "audit-design",
             "design-phase": "design-phase", "design-item": "design-item",
+            "design-finish": "design-finish", "design-roadmap": "design-roadmap",
             "audit-phase": "audit", "close": "close", "archive": "close-archive",
             "terminal": "closed", "manual": "manual", "waiting": "waiting",
         }

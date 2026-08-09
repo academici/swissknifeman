@@ -11,10 +11,10 @@
 | `# HANDOFF — <YYYY-MM-DD> — after Pn.m` | закрыт item |
 | `# HANDOFF — <YYYY-MM-DD> — after Pn` | закрыта/проаудирована/ре-дизайнена ФАЗА — шаг без «последнего закрытого item'а» как адресата |
 
-**Поле `Context`** launch-block'а — закрытый enum трёх значений (SKILL §8):
-`same-session — item` · `cold-start — orchestration` · `cold-start — plan-step`
-(`plan-audit`/`plan-close`/`plan-design`). Статичное «рекомендован /clear»
-независимо от типа следующего шага — запрещено.
+**Поле `Context`** для layout v2 — `continue-root` · `isolated-child-return` ·
+`cold-start-root`. Последнее требует reason из закрытого enum:
+`context-budget` · `capability-missing` · `owner-pause-no-resume` ·
+`whole-plan-independent-audit`.
 
 Next обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
@@ -29,6 +29,8 @@ Next обязан нести launch-block (полная форма и прави
 | `audit-design: task:plan-audit <ID> design` | pre-exec аудит дизайна |
 | `design-phase: task:plan-design <ID> Pn` | следующая фаза — скелет |
 | `design-item: task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
+| `design-finish: task:plan-design <ID> finish` | reconciliation полностью детализированного дизайна |
+| `design-roadmap: task:plan-design <ID> roadmap` | обновить execution map без правки ТЗ |
 | `audit-phase: task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
 | `close: task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
 | `archive: task:plan-close archive <ID>` | план терминален целиком |
@@ -50,7 +52,7 @@ form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` wit
 | Model class | frontier |
 | Effort | high — <почему high+ MANDATORY по §9> |
 | Capabilities | — |
-| Context | same-session — item |
+| Context | continue-root |
 | Суть | <1 строка> |
 
 ````
@@ -69,7 +71,7 @@ form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` wit
 | Model class | implementation |
 | Effort | medium |
 | Capabilities | — |
-| Context | same-session — item |
+| Context | continue-root |
 | Суть | <1 строка: что сделает целевой шаг по снятии гейта> |
 
 ````
@@ -88,7 +90,7 @@ form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` wit
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> |
 | Capabilities | <semantic capability IDs; `—` если дополнительных нет> |
-| Context | <enum §8: same-session — item · cold-start — orchestration · cold-start — plan-step> |
+| Context | <enum §6: continue-root · isolated-child-return · cold-start-root> |
 | Суть | <1 строка: что делает следующий запуск> |
 
 ````

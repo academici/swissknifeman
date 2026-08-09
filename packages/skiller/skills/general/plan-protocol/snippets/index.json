@@ -93,6 +93,26 @@
         "closure",
         "template"
       ]
+    },
+    {
+      "file": "decision-record-template.md",
+      "description": "Layout-v2 append-only decision record with evidence, supersession, actor/model provenance, and consequences",
+      "tags": [
+        "workflow",
+        "planning",
+        "decision",
+        "template"
+      ]
+    },
+    {
+      "file": "item-state-template.md",
+      "description": "Layout-v2 generated item-state projection: status and five volatile result fields",
+      "tags": [
+        "workflow",
+        "planning",
+        "state",
+        "template"
+      ]
     }
   ]
 }

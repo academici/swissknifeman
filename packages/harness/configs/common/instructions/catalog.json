@@ -802,7 +802,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -831,7 +831,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -862,7 +862,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -892,7 +892,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -923,7 +923,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -955,7 +955,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
@@ -972,7 +972,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.",
+          "intent": "Apply this source-derived instruction: Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.",
           "obligations": [
             {
               "modality": "must",
@@ -986,14 +986,14 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon.",
+            "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
             "`lib/`",
             "`Env`",
-            "`SKILL.ru.md`",
+            "`SKILL.md`",
             "create a new skill only when it does not overlap an existing one"
           ]
         },
@@ -1017,7 +1017,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "2fdc1abfff8aec321b397cf0a42d4e84137d61f0bc152a7ed39841d59320c284"
+              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
             }
           ],
           "compatibility_assertions": [

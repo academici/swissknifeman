@@ -144,30 +144,30 @@ Pending Work (правка ТЗ закрытых items вне скоупа тр�
 ## `plan-lint.py --conflicts`
 
 Третья нога конфликт-скана `plan-audit-loop.md` §A.1 (2026.07.31-SKM-LEAN P5.9) — детерминированная
-сверка «канон (`SKILL.ru.md`) ↔ реализация (реестры-константы `plan_lint.py`)», **без аргумента-плана**
+сверка «EN-only канон (`SKILL.md`) ↔ реализация (реестры-константы `plan_lint.py`)», **без аргумента-плана**
 (артефакт-проверка, не линт конкретного `plans/<ID>`; `path`, если передан, игнорируется):
 
 ```bash
 python3 packages/task/scripts/plan-lint.py --conflicts
 ```
 
-Первые две ноги конфликт-скана (свежесть перевода RU→EN, присутствие `i18n-keep` литералов в
-EN-каноне и в теле RU-источника) — `packages/skiller/scripts/check-translations.sh`; `--conflicts`
-их НЕ дублирует. Шесть сверяемых классов, каждая находка — обе стороны с `файл:строка`
+Точные литералы объявляются директивами `i18n-keep` в том же EN-каноне. Семь сверяемых
+классов, каждая находка — обе стороны с `файл:строка`
 («канон говорит X → реализация говорит Y»):
 
-1. шесть канонических статусов (`STATUSES`) ↔ SKILL.ru.md §6;
-2. 16 полей item'а и их порядок (`REQUIRED_ITEM_FIELDS`) ↔ SKILL.ru.md §5;
-3. закрытый enum форм `Next` (альтернация `SEMANTIC_NEXT_RE`) ↔ SKILL.ru.md §8 «Допустимые формы Next»;
-4. три значения `Context` (`CONTEXT_VALUES`) ↔ SKILL.ru.md §8 «Session-restart discipline»;
-5. литералы `i18n-keep` (`CANON_LITERALS`) ↔ директивы `<!-- i18n-keep: … -->` в SKILL.ru.md (тот
+1. шесть канонических статусов (`STATUSES`) ↔ SKILL.md §4;
+2. 16 полей item'а и их порядок (`REQUIRED_ITEM_FIELDS`) ↔ SKILL.md §3;
+3. закрытый enum форм `Next` (альтернация `SEMANTIC_NEXT_RE`) ↔ SKILL.md §6;
+4. три значения layout-v2 `Context` (`CONTEXT_VALUES`) ↔ SKILL.md §6;
+5. литералы `i18n-keep` (`CANON_LITERALS`) ↔ директивы `<!-- i18n-keep: … -->` в SKILL.md (тот
    же предикат, что T2 `packages/task/tests/test_canon_literals.py`, доступный из CLI без unittest);
 6. регекс-носители формы launch-block'а (`LAUNCH_TABLE_ROW_RE`/`LAUNCH_COMMAND_ROW_RE`) ↔ строки
-   канон-таблицы `| Параметр | Значение |` в SKILL.ru.md §8.
+   канон-таблицы `| Параметр | Значение |` в SKILL.md §6;
+7. обязательные carrier literals блока `Layout v2 carrier contract`.
 
-Standalone-раскладка (пакет `task` вне монорепо, `SKILL.ru.md` недоступен от расположения
-`plan_lint.py` вверх) — `WARN` + exit 0, сверка пропущена (та же деградация, что
-`test_canon_literals.py`). Зарегистрирован ступенью `packages/task/scripts/validate.sh` и первой,
+Если монорепо должно нести canon, но `SKILL.md` исчез, сверка fail-closed. Только настоящий
+standalone package layout может пропустить literal unittest, не превращая repo-проверку в
+vacuous pass. Зарегистрирован ступенью `packages/task/scripts/validate.sh` и первой,
 самой дешёвой командой конфликт-скана `packages/task/commands/plan-audit.md` (§1).
 
 Отдельно, в РЕЖИМЕ ПЛАНА (без `--conflicts`, обычный `plan-lint.py plans/<ID>`) — диагностика

@@ -654,7 +654,7 @@ def _sibling_identities(repo_root, sibling, *, manifest_name):
 
 def _materialize_repository_bootstrap_sources(*, repo_root, package_root, tmp_root):
     """Copy exactly the bytes `render_repository_bootstrap_projections` reads (class-A
-    config + 13 canonical bilingual pairs; class-B canon at its real repo-relative path)
+    config + 13 canonical EN-only carriers; class-B canon at its real repo-relative path)
     into `tmp_root`, never the live repo — `render_repository_bootstrap_projections`
     calls `.resolve()` on `package_root`, which would defeat a symlink and silently read
     the real tree, so a real (small) copy is the only way to keep the read genuinely

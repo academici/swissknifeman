@@ -802,6 +802,8 @@ def _resolve_next_form(text):
     if LITERAL_PLAN_CLOSED in text.lower():
         return "closed", None
     for kind, rx in (("design-item", PLAN_DESIGN_ITEM_RE),
+                     ("design-finish", PLAN_DESIGN_FINISH_RE),
+                     ("design-roadmap", PLAN_DESIGN_ROADMAP_RE),
                      ("design-phase", PLAN_DESIGN_PHASE_RE),
                      ("audit-design", PLAN_AUDIT_DESIGN_RE),
                      ("audit", PLAN_AUDIT_RE),

@@ -1,0 +1,169 @@
+# Plan layout v2 reference
+
+This reference expands the compact `plan-protocol` entry carrier. It is normative for rules
+tagged `[v2]`; layout v1 remains valid and keeps its monolithic phase/handoff paths.
+
+## Selection and compatibility
+
+`plan.md` Meta `Layout | v2` selects v2. If `Layout` is absent, readers must select v1.
+Unknown values fail closed. A v2 reader must not silently fall back to v1 after seeing a v2
+declaration. Provider projections are adapters over these shared semantics.
+
+## Carrier registry
+
+| Carrier | Path | Owner reader | Mutability | Purpose |
+|:--|:--|:--|:--|:--|
+| plan core | `plan.md` | designer | handwritten/stable | identity, context, rules, routing |
+| status view | `status.md` | owner | generated/volatile | phase and item status projection |
+| decision record | `decisions/<D-id>.md` | auditor | append-only/slow | one accepted decision and provenance |
+| decision views | `decisions/{current,archive,index}.md` | designer | generated/slow | current/superseded navigation |
+| decision queue | `decisions/queue.jsonl` | owner | append-only/volatile | request/claim/response events |
+| owner gates | `decisions/_gates.md` | owner | generated/volatile | unresolved authority gates |
+| phase index | `phases/<Pn>/<Pn>.md` | designer | handwritten/stable | Phase Context and item addresses |
+| item spec | `phases/<Pn>/<Pn.m>.md` | executor | handwritten/stable | sealed 11-field execution contract |
+| item state | `phases/<Pn>/<Pn.m>.state.md` | executor | generated/volatile | status and five result fields |
+| phase closure | `phases/<Pn>/<Pn>.closed.md` | owner | generated/slow | terminal phase contract/result |
+| history view | `.plan-cache/history/<Pn.m>.md` | auditor | generated/on-demand | bounded journal projection |
+| journal | `journal.jsonl` | auditor | append-only/volatile | execution events |
+| handoff | `handoff.md` | owner | handwritten/volatile | next semantic action and launch block |
+| brief/findings/research | named Markdown files | designer | handwritten/stable | evidence layers |
+| bundle | `bundles/<Pn.m>.json` | executor | generated/stable | ordered digest-qualified inputs |
+| roadmap | `roadmap.md` | owner | handwritten/slow | execution grouping, never routing override |
+| canon | `packages/skiller/skills/general/plan-protocol/SKILL.md` | designer | handwritten/stable | protocol identity, invariants, enums, navigation |
+
+The machine-readable registry for the plan programme is
+`root/contracts/reader-contract-v1.registry.json`. New carriers require a decision record and a
+reader-path justification; adding a convenient second owner for an existing fact is forbidden.
+
+## Reader paths
+
+### Executor
+
+Read exactly, in order:
+
+1. `plan.md` (identity, Context, Execution Rules, Routing only);
+2. `phases/<Pn>/<Pn>.md` (Phase Context only);
+3. `phases/<Pn>/<Pn.m>.md` (the selected immutable item spec);
+4. `bundles/<Pn.m>.json` (ordered inputs and digests);
+5. `phases/<Pn>/<Pn.m>.state.md` (fresh volatile state).
+
+`handoff.md`, full `status.md`, full decisions, and raw journal are excluded from this path.
+The bundle may route to named required reads; every entry is resolved and digest checked before
+mutation. Missing, unreadable, stale, or digest-mismatched input fails closed.
+
+### Designer
+
+Read plan core, current status, current decisions, phase indexes/specs in design scope, roadmap,
+handoff, brief, and the evidence named by the design task. The designer owns stable specifications
+and appends decisions; it never hand-edits generated state/views.
+
+### Auditor
+
+Read plan core, phase/item specs, relevant bundle, decision records, generated current views, and
+the bounded history projection through the selected journal position. Recompute evidence where
+possible and classify the rest. The audit does not inherit an executor's uncommitted reasoning.
+
+### Owner
+
+Read `status.md`, `decisions/_gates.md`, phase closure views, and `handoff.md`; drill into specs or
+evidence only when a decision requires it.
+
+## Stable item spec and volatile state
+
+The v2 item spec contains exactly the stable fields:
+
+`Intent, Why, Scope Included, Scope Excluded, Inputs, Files, Required Reads, Implementation Rules, Code Guidance, Validation, Deliverables`
+
+The generated state contains exactly:
+
+`Status, Completion Notes, Pending Work, Known Deviations, Escalation Needed`
+
+The journal is authoritative history; the state file is a projection. Attempts append journal
+events, then regeneration derives current state. A state byte mismatch is a stale-carrier error,
+not permission to hand-edit it.
+
+## Decisions
+
+Each `decisions/<D-id>.md` records id, date, status, decision, reason, evidence marker,
+consequences, supersession links, and actor/model provenance. Accepted records are append-only in
+meaning. Correct a decision with a new record that supersedes it. Generated current/archive/index
+views provide navigation and compact compatibility pointers.
+
+Owner requests use `decisions/queue.jsonl`: request → claim → response or auto-answer. The queue
+does not replace a decision record. A resolved response is reconciled into the owning item/decision
+before execution resumes.
+
+## Closure carriers
+
+`closure/<Pn>.json` is opt-in judgement evidence under `Closure Protocol | v1`. It says which data
+class supported item/gate/metric claims: `real`, `synthetic`, or `baseline_pending`.
+
+`phases/<Pn>/<Pn>.closed.md` is the generated v2 phase closure contract. It states the terminal
+item set, phase result, scope commit, bookkeeping commit, gates, limitations, next action, and
+source digests. It is produced at the terminal transition and checked against current specs/state.
+
+These carriers are orthogonal: the JSON explains evidentiary judgement; the Markdown view supplies
+the designer/owner closure contract. Neither can be inferred away from the other.
+
+## Context boundary
+
+Context is chosen from the boundary predicate, not from command name:
+
+| Value | Predicate |
+|:--|:--|
+| `continue-root` | authoritative root session can continue within budget/capabilities |
+| `isolated-child-return` | bounded reviewer/worker returns evidence; root remains authoritative |
+| `cold-start-root` | root cannot safely resume and a new root must reread committed carriers |
+
+`cold-start-root` requires exactly one reason:
+
+- `context-budget` — root cannot complete within its measured context budget;
+- `capability-missing` — required capability cannot be added to the current root;
+- `owner-pause-no-resume` — owner paused and no resumable root exists;
+- `whole-plan-independent-audit` — adversarial audit of the whole plan requires independence.
+
+Ordinary item sequencing, local repair, plan close, or design finish does not itself justify a cold
+start. First eligible local failure is repaired in root; a repeated fingerprint or risk trigger
+permits one isolated reviewer. The child may report evidence but cannot close the root-owned item.
+
+## Semantic Next extensions
+
+In addition to execution/audit/close/archive/manual/waiting/terminal forms, v2 formalizes:
+
+- `design-finish: task:plan-design <ID> finish` — reconcile a fully detailed plan, regenerate
+  views/bundles, and prove design closure;
+- `design-roadmap: task:plan-design <ID> roadmap` — refresh grouping/launch blocks without
+  changing item specifications or Routing.
+
+Both forms carry the same provider-neutral meaning. Provider-native invocations are renderings.
+
+## Failure semantics
+
+| Failure | Required response |
+|:--|:--|
+| layout missing | select v1 |
+| layout unknown | fail closed |
+| required carrier missing/unreadable | fail closed, name carrier |
+| bundle digest mismatch | fail before mutation |
+| state projection stale | regenerate from journal/spec; check bytes |
+| generated view drift | run owner generator, then `--check` |
+| route undershoot/unknown | fail before mutation |
+| unsupported capability | owner/capability gate; no silent solo fallback |
+| downstream red | keep item non-green and record finding |
+| downstream unknown/unqualifiable | record limitation; follow owning contract's closure rule |
+| repeated local failure fingerprint | one isolated reviewer, then authority/capability gate |
+
+## Projection order
+
+For a v2 item transition:
+
+1. append the journal event with neutral session identity and actor/model;
+2. regenerate the selected item state;
+3. regenerate `status.md` and decisions views if affected;
+4. regenerate bundle/index views affected by stable-input changes;
+5. at phase terminality, generate `<Pn>.closed.md` and optional closure evidence;
+6. run owner `--check` commands and `plan-downstream.py --record`;
+7. rewrite handoff with semantic Next and provider-native launch block;
+8. lint the plan and commit bookkeeping.
+
+Never hand-edit generated carriers. A failure or skipped check is recorded as non-green evidence.

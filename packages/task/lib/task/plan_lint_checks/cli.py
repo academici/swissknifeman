@@ -24,7 +24,7 @@ def main(argv=None):
                               "или только по новым от --baseline (new); при недоступном "
                               "baseline gate=new деградирует к all (красное не пропускается)")
     parser.add_argument("--conflicts", action="store_true",
-                         help="сверка «канон (SKILL.ru.md) ↔ реализация (реестры этого "
+                         help="сверка «EN-only канон (SKILL.md) ↔ реализация (реестры этого "
                               "модуля)» без плана на входе (roadmap plan-audit-loop.md §A.1, "
                               "третья нога конфликт-скана); `path`, если передан, игнорируется")
     args = parser.parse_args(argv)

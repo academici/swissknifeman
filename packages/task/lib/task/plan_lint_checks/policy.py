@@ -624,6 +624,7 @@ CONFLICTS_ANCHOR_ITEM_FIELDS = "`**Field:** value`, in this order:"
 CONFLICTS_ANCHOR_NEXT_FORMS = "| Форма Next | Когда |"
 CONFLICTS_ANCHOR_CONTEXT = "EXACTLY one of three values"
 CONFLICTS_ANCHOR_LAUNCH_TABLE = "| Параметр | Значение |"
+CONFLICTS_ANCHOR_LAYOUT_V2 = "Layout v2 carrier contract"
 
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
 # D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
@@ -636,7 +637,7 @@ HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_H
                       + ("не раньше", "делать нечего", "тайм-гейт", "Обсуждение")
                       + (CONFLICTS_ANCHOR_STATUSES, CONFLICTS_ANCHOR_ITEM_FIELDS,
                          CONFLICTS_ANCHOR_NEXT_FORMS, CONFLICTS_ANCHOR_CONTEXT,
-                         CONFLICTS_ANCHOR_LAUNCH_TABLE)
+                         CONFLICTS_ANCHOR_LAUNCH_TABLE, CONFLICTS_ANCHOR_LAYOUT_V2)
                       # 2026.07.25-ECO-OPT P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
                       # (отмена/замена решения) в свободной прозе D-лога; EN-канон их не
                       # несёт и нести не обязан (research/23 §3).

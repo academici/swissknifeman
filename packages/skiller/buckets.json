@@ -344,7 +344,7 @@
     ]
   },
   "repository-bootstrap": {
-    "description": "P1.2 (D31/D38): private/source-only bilingual canon for the 13 root-bootstrap identities (class A) — never published as an ordinary bucket/core/marketplace unit, never vendored/connected to a consumer project. Sole producer: registry.py -> publication.py root-bootstrap renderer, emitting thin .claude/.agents projections.",
+    "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 13 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
     "category": "meta",
     "tags": ["root-bootstrap", "private", "source-only", "generated"],
     "private_source_only": true

@@ -1,22 +1,39 @@
-# Структура плана — канон папок 2.0
+# Структура плана — layouts v1 и v2
 
-Канонический корень `plans/<PLAN-ID>/` по plan-protocol 2.0 (SSOT — скилл
-`general/plan-protocol` §2–3). Обязательны только `plan.md` / `phases/` / `handoff.md`;
-остальное опционально, по потребности плана.
+SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
+`references/plan-layout-v2.md`. Поле Meta `Layout | v2` включает v2; отсутствие `Layout`
+означает совместимый v1.
 
 ```text
 plans/<PLAN-ID>/
-├── plan.md            # мастер-план: Meta, Context, Rules, Routing, Status Board, логи
-├── phases/Pn.md       # по файлу на фазу: контекст, items (16 полей), phase handoff
-├── handoff.md         # rolling-указатель «где мы» (перезаписывается, история — в git)
+├── plan.md            # stable core: Meta, Context, Rules, Routing
+├── status.md          # generated status view
+├── phases/Pn/         # stable phase index/items + generated state/closure
+│   ├── Pn.md
+│   ├── Pn.m.md
+│   ├── Pn.m.state.md
+│   └── Pn.closed.md
+├── bundles/Pn.m.json  # ordered digest-qualified executor inputs
+├── decisions/         # append-only records + generated views/owner gates
+├── handoff.md         # rolling owner/design/audit pointer; not executor input in v2
 ├── journal.jsonl      # append-only execution history
 ├── journal-exceptions.jsonl # optional D51 exact historical-schema exception sidecar
-├── findings/          # RAG-выжимки и recon-отчёты (компактный синтез, не сырьё)
-├── 20_research/       # research-артефакты плана
+├── brief/             # owner input/refinements
+├── findings/          # RAG-выжимки и recon-отчёты
+├── research/          # authored synthesis
 ├── artifacts/         # рабочий материал фаз — судьба: архив вместе с планом
 ├── root/              # долгоживущий материал — судьба: документация проекта
 └── open-questions.md  # спорное/нерешённое со статусами (не блокирует план)
 ```
+
+Для v2 обязательный путь исполнителя — ровно `plan.md` → `phases/<Pn>/<Pn>.md` →
+`phases/<Pn>/<Pn.m>.md` → `bundles/<Pn.m>.json` → `<Pn.m>.state.md`. `handoff.md`, весь
+`status.md`, весь журнал и весь каталог решений в этот путь не входят. v1 сохраняет
+`phases/Pn.md` и монолитный путь без миграции задним числом.
+
+У закрытия фазы два разных носителя: opt-in `closure/<Pn>.json` фиксирует класс
+свидетельства-суждения, а generated `phases/<Pn>/<Pn>.closed.md` — терминальный контракт и
+результат для дизайнера/владельца. Один не заменяет другой.
 
 Рядом с каталогами планов живёт `plans/ACTIVE.md` — 4-строчный указатель активного плана
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
@@ -125,9 +142,11 @@ tier(work) := committed-bundle   если work.sessions == "multi"
 
 ## Форма `Next` и порядок закрытия item'а
 
-`handoff.md` несёт `Next` ПЕРВОЙ СТРОКОЙ в одном из канонических видов: голая команда
-`/task:plan-exec <ID> Pn.m`, форма «ЗАПУСК ВРУЧНУЮ: <model/effort>» (`Exec = manual`) или
-`/task:plan-design|plan-close <ID> Pn`. Закрытый item обязан НАПЕЧАТАТЬ в `Completion Notes`
+`handoff.md` несёт provider-neutral `Next` первой строкой. В enum входят execution/audit/
+close/archive/manual/waiting/terminal и design-формы, включая
+`design-finish: task:plan-design <ID> finish` и
+`design-roadmap: task:plan-design <ID> roadmap`. Исторические slash-формы читаются для
+совместимости. Закрытый item обязан НАПЕЧАТАТЬ в `Completion Notes`
 коды обеих границ — `pre_mutation:` и `pre_final:`, оба со значением `allow` (`n/a` зелёным
 не считается). С 2026-07-27 это не только проза чеклиста аудита: `plan_lint`
 (`_lint_write_site_codes_44`, порог `WRITE_SITE_CODES_CANON_DATE`) даёт ERROR на `🟢`/`🟠`
@@ -147,6 +166,14 @@ item'е, чья дата в колонке `Updated` таблицы `## Phase St
 в теле фазы без выноса, — находка аудита; закрытие плана с pending-вопросами — только
 `🟠 Done with deviations`. Re-design поверх закрытых фаз — новый D# со ссылкой «supersedes
 D#-старый», старый D# не редактируется.
+
+## Контекст v2
+
+`Context` — ровно `continue-root`, `isolated-child-return` или `cold-start-root`.
+Cold start допустим только с причиной `context-budget`, `capability-missing`,
+`owner-pause-no-resume` или `whole-plan-independent-audit`; имя команды само по себе не
+является причиной. Обычная последовательность items остаётся в root, bounded reviewer
+возвращает evidence в root.
 
 ## Два дома плана
 

@@ -12,11 +12,17 @@
 
 | Путь | Назначение |
 |:--|:--|
-| `plan.md` | мастер-план: Meta, Context, Rules, §3 Routing, Status Board, D-лог, §7 Contracts |
-| `phases/P0.md … Pn.md` | по файлу на фазу: Phase Context + items + Phase Handoff |
+| `plan.md` | stable core: Meta, Context, Rules, §3 Routing, §7 Contracts |
+| `status.md` | generated status projection |
+| `phases/<Pn>/<Pn>.md` | stable Phase Context + item index |
+| `phases/<Pn>/<Pn.m>.md` | stable item specification |
+| `phases/<Pn>/<Pn.m>.state.md` | generated volatile item state |
+| `phases/<Pn>/<Pn>.closed.md` | generated terminal phase contract/result |
+| `bundles/<Pn.m>.json` | ordered digest-qualified executor inputs |
+| `decisions/` | append-only decisions + generated current/archive/index views |
 | `handoff.md` | rolling-указатель «где мы» (перезаписывается) |
 | `roadmap.md` | исполнительская карта: батчи/workflow/гейты |
-| `journal.jsonl` | append-only история запусков `/task:plan-*` (P1.1) |
+| `journal.jsonl` | append-only история запусков `task:plan-*` |
 | `brief/` | слой 0 «вход»: бриф владельца + уточнения |
 | `findings/` | слой 1 «сырьё»: RAG-выжимки, recon |
 | `research/` | слой 2 «синтез»: авторские design-документы |

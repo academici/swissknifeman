@@ -34,6 +34,8 @@ _PLAN_NEXT_COMMANDS = {
     "audit-design": "task:plan-audit",
     "design-phase": "task:plan-design",
     "design-item": "task:plan-design",
+    "design-finish": "task:plan-design",
+    "design-roadmap": "task:plan-design",
     "audit-phase": "task:plan-audit",
     "close": "task:plan-close",
     "archive": "task:plan-close",

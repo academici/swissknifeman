@@ -18,8 +18,7 @@ prompts/
 └── generate/   # создание и трансформация
     ├── claude-new-skill.md         # новый скилл по схеме
     ├── claude-compact-skill.md     # компактизация SKILL.md
-    ├── claude-canon-from-ru.md     # полный RU-источник → компактный EN-канон (контракт точности)
-    └── claude-translate-skill.md   # перевод SKILL.md → SKILL.<lang>.md (напр. EN-канон внешних → RU)
+    └── claude-translate-skill.md   # разовый перевод внешнего материала для анализа
 ```
 
 ## Модели

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **`skiller`/`task`: plan-protocol переведён на EN-only compact canon и layout-v2 authoring.**
+  Удалены 230 `SKILL.ru.md`, translation gate и RU→EN prompt; canonical `SKILL.md` стал
+  маршрутизатором на reader-specific reference, получил две design-формы Next и три v2 context
+  значения. Новый двухпороговый D93 weight-gate уменьшил carrier с 36 651 до 4 575 оценочных
+  токенов и fail-closed сверяет семь классов canon↔implementation
+  (`2026.08.07-PLAN-ECONOMY` P6.5).
+
 - **`task`: четыре hard gate plan-protocol включаются forward-only.** Общий реестр хранит
   дату и append-only journal boundary активации; per-item status projection больше не
   подменяет историю глобальной датой. Downstream, return qualification, return owner gate и

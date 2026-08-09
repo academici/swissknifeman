@@ -26,8 +26,9 @@ from task.plan_weight import (  # noqa: E402
     GAP_KINDS, GAP_MISSING_FILE, GAP_OVERSIZED_FILE, GAP_UNREADABLE_ROOT,
     GAP_UNRESOLVED_ENTRY, GATE_BOTH, GATE_SIZE_BYTES, GATE_TOKENS,
     MANDATORY_PATH_LITERALS, PLAN_EXEC_RELPATH, Measurer, PlanWeightError,
-    dense_ascii_share, expand_braces, load_read_limit, main, measure_item, measure_plan,
-    path_candidates, split_entries,
+    dense_ascii_share, evaluate_canon_budget, expand_braces, load_canon_budget,
+    load_read_limit, main, measure_document, measure_item, measure_plan, path_candidates,
+    split_entries,
 )
 
 CALIBRATION = {
@@ -561,6 +562,57 @@ class TestExactMode(MeasurerTestCase):
         for forbidden in ("import urllib", "import http", "import socket", "import requests",
                           "import subprocess", "ANTHROPIC_API_KEY"):
             self.assertNotIn(forbidden, code, f"в исполняемом коде появился «{forbidden}»")
+
+
+class TestCanonWeightGate(MeasurerTestCase):
+    def _budget(self, canon, *, baseline=100, warning=0.8, regression=10,
+                justification="", exceptions=None):
+        path = self.root / "canon-budget.json"
+        path.write_text(json.dumps({
+            "version": "1.0.0",
+            "canon_path": str(canon),
+            "baseline": {"git_anchor": "abc123", "est_tokens": baseline, "lines": 10},
+            "warning_fraction": warning,
+            "regression_percent": regression,
+            "regression_justification": justification,
+            "vendor_line_guidance": 500,
+            "exceptions": exceptions or [],
+        }), encoding="utf-8")
+        return path
+
+    def test_document_reports_tokens_and_lines(self):
+        canon = self.root / "SKILL.md"
+        canon.write_text("one\ntwo\n", encoding="utf-8")
+        record = measure_document(canon, self.measurer())
+        self.assertEqual(record["lines"], 2)
+        self.assertGreater(record["est_tokens"], 0)
+
+    def test_hard_cap_fails_without_active_exception(self):
+        canon = self.root / "SKILL.md"
+        canon.write_text("word " * 100, encoding="utf-8")
+        self.write_limits(size_bytes=10 ** 9, tokens=5)
+        result = evaluate_canon_budget(self._budget(canon, baseline=10), self.measurer())
+        self.assertIn("hard_cap", result["failures"])
+        self.assertFalse(result["passes"])
+
+    def test_regression_requires_justification(self):
+        canon = self.root / "SKILL.md"
+        canon.write_text("word " * 100, encoding="utf-8")
+        measured = measure_document(canon, self.measurer())["est_tokens"]
+        result = evaluate_canon_budget(
+            self._budget(canon, baseline=max(1, measured // 2), regression=0), self.measurer())
+        self.assertIn("regression", result["failures"])
+        justified = evaluate_canon_budget(
+            self._budget(canon, baseline=max(1, measured // 2), regression=0,
+                         justification="new observed failure mode"), self.measurer())
+        self.assertNotIn("regression", justified["failures"])
+
+    def test_every_exception_must_have_valid_expiry(self):
+        canon = self.root / "SKILL.md"
+        canon.write_text("small\n", encoding="utf-8")
+        budget = self._budget(canon, exceptions=[{"reason": "temporary"}])
+        with self.assertRaises(PlanWeightError):
+            load_canon_budget(budget)
 
 
 class TestSessionModelWarning(MeasurerTestCase):

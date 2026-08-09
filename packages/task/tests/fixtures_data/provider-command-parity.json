@@ -117,6 +117,8 @@
     {"kind": "audit-design", "valid": "audit-design: task:plan-audit PLAN design", "invalid": "audit-design: task:plan-design PLAN design"},
     {"kind": "design-phase", "valid": "design-phase: task:plan-design PLAN P5", "invalid": "design-phase: task:plan-audit PLAN P5"},
     {"kind": "design-item", "valid": "design-item: task:plan-design PLAN P4.5", "invalid": "design-item: task:plan-audit PLAN P4.5"},
+    {"kind": "design-finish", "valid": "design-finish: task:plan-design PLAN finish", "invalid": "design-finish: task:plan-audit PLAN finish"},
+    {"kind": "design-roadmap", "valid": "design-roadmap: task:plan-design PLAN roadmap", "invalid": "design-roadmap: task:plan-audit PLAN roadmap"},
     {"kind": "audit-phase", "valid": "audit-phase: task:plan-audit PLAN P4", "invalid": "audit-phase: task:plan-close PLAN P4"},
     {"kind": "close", "valid": "close: task:plan-close PLAN P4", "invalid": "close: task:plan-audit PLAN P4"},
     {"kind": "archive", "valid": "archive: task:plan-close archive PLAN", "invalid": "archive: task:plan-exec archive PLAN"},

@@ -40,7 +40,7 @@
       "notes": "Yandex SpeechKit STT (streaming gRPC v3, партиалы, лимит сессии ≤5 мин) — RU-стек, паттерн стриминговой STT-сессии и её ротации."
     }
   ],
-  "notes": "Авторский скилл (SKILL.md написан у нас, не зеркало апстрима): собран по ВНЕШНИМ паттернам и спецификациям голосовых агентов реального времени (WebRTC/Opus транспорт, OpenAI Realtime turn-detection/barge-in, Pipecat/LiveKit turn-taking, Yandex SpeechKit RU-стек). Чужой код НЕ вендорим — files[].path пусты (референсы, не локальные зеркала); url ведёт на спеку/доку/паттерн. strategy=notify — апстрим только репортится (не автонакат); факты подтверждены RAG на fetched_at. Тела скилла upstream НЕ определяет — правь SKILL.ru.md и регенерируй SKILL.md.",
+  "notes": "Авторский скилл (canonical SKILL.md написан у нас, не зеркало апстрима): собран по ВНЕШНИМ паттернам и спецификациям голосовых агентов реального времени (WebRTC/Opus транспорт, OpenAI Realtime turn-detection/barge-in, Pipecat/LiveKit turn-taking, Yandex SpeechKit RU-стек). Чужой код НЕ вендорим — files[].path пусты (референсы, не локальные зеркала); url ведёт на спеку/доку/паттерн. strategy=notify — апстрим только репортится (не автонакат); факты подтверждены RAG на fetched_at. Тела скилла upstream НЕ определяет — правь SKILL.md и регенерируй registry/provider projections.",
   "kind": "reference-only",
   "audit": {
     "verdict": "attention",

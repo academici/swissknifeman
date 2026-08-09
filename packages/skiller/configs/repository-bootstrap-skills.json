@@ -1,5 +1,5 @@
 {
-  "_doc": "P1.2 (D31/D38): private/source-only class-A root-bootstrap identities. Canonical bilingual sources and their two thin provider projections are derived FORMULAICALLY from `identity` (never hand-listed per-target) so the 26-target set stays exact and can't silently drift. Sole producer: registry.py -> publication.py root-bootstrap renderer. Canonical: packages/skiller/skills/repository-bootstrap/<identity>/{SKILL.ru.md,SKILL.md}. Projections: .claude/skills/<identity>/SKILL.md (Claude) and .agents/skills/<identity>/SKILL.md (Codex).",
+  "_doc": "P1.2/D31/D38, updated by P6.5/D93: private/source-only class-A root-bootstrap identities. One canonical EN-only SKILL.md and two thin provider projections are derived formulaically from identity. Sole producer: registry.py -> publication.py root-bootstrap renderer. Canonical: packages/skiller/skills/repository-bootstrap/<identity>/SKILL.md. Projections: .claude/skills/<identity>/SKILL.md and .agents/skills/<identity>/SKILL.md.",
   "schema_version": 1,
   "bucket": "repository-bootstrap",
   "publication_unit": "repository-bootstrap",

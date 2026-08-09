@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 90d66fdc4e23b22301ad613b90a18f3fba04a903263e877ae64cefc3f4750ec2
+inputs_sha256: 2cb185a1e09390fd8e8104ec208dbeaaae1373d9af06acb9e01c07bc7ace43b2
 generated_by: task plan-views status
 -->
 
@@ -308,6 +308,9 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · D146 P5.5 producer/error acceptance started; session route self-attested implementation/high. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5 f7a99e7f: P5.4 RED af1f209f/final 1b5751ba; 10 scenarios, 19 targeted, 705 full, validate, detached --check; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 закрыта после D146; сверены 5 terminal items и Known Deviations |
+| 2026-08-09 | frontier/xhigh | plan-audit · audit-red · заход 3, вердикт RED; AUDIT-CAP |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · P5.5: RED deca34a2 → fix d2e9dbf8; 12 acceptance, 21 queue/707 full/validate green; owner-authorized audit-cap remediation; write-site: pre_mutation: block:LOOP_BUDGET_EXCEEDED · pre_final: n/a |
+| 2026-08-09 | gpt-5.6-sol/high | plan-close · closed-deviations · фаза P5 закрыта: owner-authorized single-use remediation; P6.1 не запускалась |
 
 ## Owner Gates
 
@@ -333,3 +336,4 @@ generated_by: task plan-views status
 - P4.6: known deviation
 - P5.2: known deviation
 - P5.3: known deviation
+- P5.5: known deviation

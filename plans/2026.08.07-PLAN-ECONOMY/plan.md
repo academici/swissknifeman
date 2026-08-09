@@ -201,7 +201,7 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 | `return-judgement` | v1 | 🟢 Done | P4.6 (исполнение вердикта и монотонность), P6.3 (ассет рубрики, реестр калибровки, редьюсер-воздержание), P6.5 (канон) | 2026-08-08 — потребители внутри плана уведомлены закрытием P4.5; источник self-recognition/self-preference исправлен owning finding |
 | `decision-request` | v1 | 🟢 Done | P5.3 (резолвер исполняет форму дословно), P5.4 (что пишется в очередь и лимит записи), P5.5 (адаптер над пакетом P4), P6.3 (пять команд производят запрос вместо вопроса в чат), новые планы флота | 2026-08-09 — потребители внутри плана уведомлены закрытием P5.1; P4 owner packet принимается по ссылке без пересборки (D54) |
 | `authority-frame` | v1 | 🟢 Done | P5.1 (значения слота `decision_class` и таблица таймаут-политик), P5.3 (предикаты и агрегация), P5.5 (класс и внимание гейта кружения), P6.3/P6.6 (производство запросов командами и раскатка инстанса) | 2026-08-09 — действующий инстанс утверждён владельцем и заморожен D143; потребители внутри плана уведомлены закрытием P5.2 |
-| `acceptance-protocol` | v1.1.1 (v1.0.0 RED; v1.1.0 NOT-RUN preserved) | 🟢 Frozen | P6.8 исполняет exact arm A; arm B/canary только после pass | 2026-08-09 — D153: identity-only repair pin `c0ee730c`; threshold/unit/scope/reducer/arms/canary неизменны |
+| `acceptance-protocol` | v1.1.1 (v1.0.0 RED; v1.1.0 NOT-RUN preserved) | 🔴 Arm-A fail | P6.8: 30/30 ready failures; arm B/canary/P6.9 запрещены | 2026-08-09 — raw `acceptance-arm-a-migrated-v1.1.1.json`, SHA `48c00b9a…`; predicates неизменны |
 
 ### Consumed
 

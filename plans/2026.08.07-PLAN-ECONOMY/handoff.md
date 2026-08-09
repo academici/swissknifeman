@@ -1,40 +1,44 @@
-# HANDOFF — 2026-08-09 — after P2.10
+# HANDOFF — 2026-08-09 — after P6.8
 
-**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
+**Next:** ОЖИДАНИЕ: новый явный owner mandate на отдельный repair plan → design-item: task:plan-design 2026.08.07-PLAN-ECONOMY P6.8
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | same-session — item |
-| Суть | Заморозить acceptance successor patch с pinned five-slot repair и immutable prior results |
+| Context | cold-start — plan-step |
+| Суть | Не продолжать текущую acceptance; только новый owner mandate может спроектировать отдельный repair после arm-A fail |
 | Команда | — |
 
 ```text
+# НЕ раньше: новый явный owner mandate на отдельный repair plan
 /model gpt-5.6-sol
 /effort high
-/task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
+/task:plan-design 2026.08.07-PLAN-ECONOMY P6.8
 ```
 
-**Done:** P2.10 closed-deviations at `c0ee730c`: v1/v2 tests green; exact five-slot
-field run exposed 24 ready failures; full unittest 739 OK and repo plan-lint RED preserved.
+**Done:** Frozen v1.1.1 identity pinned `c0ee730c`; exact arm A retained in item commit
+`6901d080` at SHA `48c00b9a…`; reducer verdict `fail` from 30/30 ready failures. Report appended
+without changing the existing 4,866-byte prefix. Arm B, fresh plan and canary were not run.
 
-**Remaining:** Freeze successor acceptance identity in P6.7; run P6.8 arm A exactly; stop on
-its deterministic fail/deferred, otherwise continue arm B/canary; P6.9 only after exact pass.
+**Remaining:** P6.9 is forbidden and ARTIFEX remains paused. No in-scope executable item remains
+under the current frozen protocol; a new repair requires fresh owner authority and change control.
 
-**Sources of truth:** `decisions/D152-p2.10-five-slot-measurement-repair.md` ·
-`findings/P2.10-five-slot-measurement-repair-2026-08-09.md` · commit `c0ee730c` ·
-`root/contracts/acceptance-protocol-v1.manifest.json`.
+**Sources of truth:** `root/contracts/acceptance-protocol-v1.manifest.json` v1.1.1 ·
+`artifacts/P6/acceptance-arm-a-migrated-v1.1.1.json` ·
+`findings/12-p6-acceptance-measurement.md` §Attempt v1.1.1 · D153–D154.
 
-**Open risks:** exact arm A currently forecasts `fail` (24 ready failures); frozen reducer must
-decide from a newly retained raw artifact, not from this forecast.
+**Open risks:** Missing/stale/oversized carriers and D2(a) failures remain real; they were not
+repaired after observation. The programme goal is not accepted.
 
-**Workarounds/Deferred/Open questions:** No owner question remains. Installed skill 2.23.0 vs
-worktree 2.24.0 and hook `record-provenance-mismatch` remain disclosed environment defects.
+**Workarounds/Deferred/Open questions:** Hook dry-run remains RED
+`record-provenance-mismatch`; installed plan-protocol 2.23.0 lags worktree 2.24.0. Neither defect
+was counted green. Open question exists only if the owner chooses a new repair mandate.
 
 ## Codex launch
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7'
+# НЕ раньше: новый явный owner mandate на отдельный repair plan
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8'
 ```

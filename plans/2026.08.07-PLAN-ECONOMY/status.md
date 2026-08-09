@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 5053c135278cd577a420f27e3eacbbd593d6aa7416290acc0b9efb97de9eac92
+inputs_sha256: fb45fddb9eb8e1d9e2145a78afeab08fbaf999e6360bd6a1060387dec66e3828
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.34.0 |
-| Status | 🟡 In progress |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 2/9 | 🟡 In progress |
+| P6 | Раскатать протокол и проверить критерий | 2/9 | 🔴 Blocked |
 
 ## Phase P0
 
@@ -110,7 +110,7 @@ generated_by: task plan-views status
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
 | P6.7 | Заморозить acceptance-protocol v1.1.1 с repair pin | 🟠 Done with deviations | 2026-08-09 |
-| P6.8 | Исполнить acceptance v1.1.1 и вынести фактический вердикт | 🟡 In progress | 2026-08-09 |
+| P6.8 | Исполнить acceptance v1.1.1 и вынести фактический вердикт | 🔴 Blocked | 2026-08-09 |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -353,6 +353,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (178ef877). Freeze acceptance v1.1.1 identity-only successor per D153. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.7 f6988e83: v1.1.1 frozen; invariant/pin hashes OK, 59 tests and citations green. Deviation: repo plan-lint retains exact P2.10 RED baseline. Task Contract pre_mutation/pre_final allow. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · D154 redetails exact frozen v1.1.1 attempt; arm B/canary/P6.9 stop after arm-A non-pass. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (d7d75e4). Execute frozen acceptance v1.1.1 arm A only until reducer verdict. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · blocked · P6.8 v1.1.1 arm A fail: 30/30 ready failures, max 142562, 88 gaps; aggregate 1349223. Arm B/canary not run; P6.9 forbidden. Raw SHA 48c00b9a; Task Contract allow. |
 
 ## Owner Gates
 
@@ -387,3 +389,4 @@ generated_by: task plan-views status
 - P6.5: known deviation
 - P6.6: known deviation
 - P6.7: known deviation
+- P6.8: escalation

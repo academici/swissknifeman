@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 631c324a6661c57f86ee79bc46ebe53aa21ae9fdaa00a71c9557a4767281b682
+inputs_sha256: e857b3c7ccbe5e7808e9a73941e3de67163359d295ef90ae0a2fc003f088eabb
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Перестроить носители плана | 5/10 | 🟠 Done with deviations |
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
-| P5 | Безлюдный протокол решений и рамка полномочий | 3/5 | ⬜ Not started |
+| P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
 | P6 | Раскатать протокол и проверить критерий | 0/9 | ⬜ Not started |
 
 ## Phase P0
@@ -97,7 +97,7 @@ generated_by: task plan-views status
 | P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | 🟢 Done | 2026-08-09 |
 | P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | 🟠 Done with deviations | 2026-08-09 |
 | P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | 🟢 Done | 2026-08-09 |
-| P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | ⬜ Not started | 2026-08-09 |
+| P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | 🟢 Done | 2026-08-09 |
 
 ## Phase P6
 
@@ -280,6 +280,10 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · escalated · P5.4 Validation expects checks list; P3.6 registry is keyed map, so the required literal check cannot run without changing the live lint registry contract. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · Owner authorized a local P3.6 map-schema acceptance repair; implementing P5.4 without plan-design. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4: f48421c8; P3.6 keyed-map validation repaired locally; targeted 5 tests, full 691 tests and validate.sh OK; pre_final: allow. |
+| 2026-08-09 | gpt-5.6/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · escalated · Validation imports missing task.plan_layout.load_plan; plan-design must revise API and P5.5 Scope/Files/Validation. |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · Owner authorized local P5.5 Validation repair: use existing status projection and queue-record API; continuing without plan-design. |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5: a346dea7; owner-authorized Validation repair; return-loop DecisionRequest and subject-local parking; 26 (на a346dea7) targeted, 692 (на a346dea7) validate; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -305,3 +309,4 @@ generated_by: task plan-views status
 - P4.6: known deviation
 - P5.2: known deviation
 - P5.3: known deviation
+- P5.5: known deviation

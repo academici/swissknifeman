@@ -62,6 +62,30 @@
       "layout_versions": ["v2"]
     },
     {
+      "id": "decision-queue",
+      "path": "decisions/queue.jsonl",
+      "owner_reader": "owner",
+      "also_read_by": [],
+      "mutability": "append-only",
+      "volatility": "volatile",
+      "volatility_basis": "plan-decisions appends request, claim, response, and auto-answer events without rewriting prior records",
+      "on_path_of": [],
+      "class": "history",
+      "layout_versions": ["v2"]
+    },
+    {
+      "id": "owner-gate-view",
+      "path": "decisions/_gates.md",
+      "owner_reader": "owner",
+      "also_read_by": [],
+      "mutability": "generated-file",
+      "volatility": "volatile",
+      "volatility_basis": "plan-decisions render regenerates the owner gate projection after queue events",
+      "on_path_of": ["owner"],
+      "class": "state",
+      "layout_versions": ["v2"]
+    },
+    {
       "id": "phase-index",
       "path": "phases/<Pn>/<Pn>.md",
       "owner_reader": "designer",

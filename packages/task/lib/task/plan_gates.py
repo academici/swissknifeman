@@ -12,13 +12,14 @@ import re
 from pathlib import Path
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_item_state, plan_layout,
-                  plan_projection, plan_returns, plan_status, plan_weight)
+                  plan_projection, plan_requests, plan_returns, plan_status, plan_weight)
 
 
 GATE_ID = "read-budget-v1"
 BUNDLE_GATE_ID = "bundle-v1"
 PATH_GATE_ID = "read-path-v1"
 RETURN_LOOP_GATE_ID = "return-loop-v1"
+DECISION_QUEUE_GATE_ID = "decision-queue-v1"
 _META_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$")
 
 
@@ -54,6 +55,18 @@ def _return_loop_enabled(plan_dir: Path) -> bool:
     for line in lines:
         match = _META_ROW.match(line)
         if match and match.group(1).strip() == "Return Loop Gate":
+            return match.group(2).strip() == "v1"
+    return False
+
+
+def _decision_queue_enabled(plan_dir: Path) -> bool:
+    try:
+        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return False
+    for line in lines:
+        match = _META_ROW.match(line)
+        if match and match.group(1).strip() == "Decision Queue Gate":
             return match.group(2).strip() == "v1"
     return False
 
@@ -127,6 +140,25 @@ def lint_return_loop(plan_dir, layout: str, diag) -> None:
     """Run the two separately registered, opt-in D139 checks."""
     _lint_return_escalation_qualification(plan_dir, layout, diag)
     _lint_return_owner_authorization(plan_dir, layout, diag)
+    _lint_terminal_phase_unresolved_decisions(plan_dir, layout, diag)
+
+
+def _lint_terminal_phase_unresolved_decisions(plan_dir, layout: str, diag) -> None:
+    """Opt-in join: a terminal phase cannot leave a queue request unresolved."""
+    if layout != "v2" or not _decision_queue_enabled(Path(plan_dir)):
+        return
+    try:
+        for phase_id in plan_layout.phase_paths(plan_dir):
+            if not plan_layout.is_terminal_phase(plan_dir, phase_id):
+                continue
+            unresolved = plan_requests.unresolved_for_phase(plan_dir, phase_id)
+            if unresolved:
+                diag.error(Path(plan_dir) / "decisions" / "queue.jsonl", None,
+                           f"{DECISION_QUEUE_GATE_ID}: {phase_id}: unresolved decisions: "
+                           f"{', '.join(unresolved)}")
+    except (plan_layout.PlanLayoutError, plan_requests.RequestError) as exc:
+        diag.error(Path(plan_dir) / "decisions" / "queue.jsonl", None,
+                   f"{DECISION_QUEUE_GATE_ID}: queue unreadable: {exc}")
 
 
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
@@ -340,6 +372,6 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
     plan_downstream.lint_records(plan_dir, layout, diag)
 
 
-__all__ = ("BUNDLE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "RETURN_LOOP_GATE_ID",
+__all__ = ("BUNDLE_GATE_ID", "DECISION_QUEUE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "RETURN_LOOP_GATE_ID",
            "lint_bundle_freshness", "lint_read_budget", "lint_read_path_boundaries",
            "lint_return_loop")

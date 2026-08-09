@@ -4,6 +4,7 @@
   "checks": {
     "task.plan_gates._lint_return_escalation_qualification": {"disposition": "unchanged"},
     "task.plan_gates._lint_return_owner_authorization": {"disposition": "unchanged"},
+    "task.plan_gates._lint_terminal_phase_unresolved_decisions": {"disposition": "migrated", "default_enabled": false},
     "task.plan_lint_checks.common._lint_audit_scope_payload": {"disposition": "unchanged"},
     "task.plan_lint_checks.parsing._lint_contracts_cross_plan": {"disposition": "unchanged"},
     "task.plan_lint_checks.parsing._lint_journal_exceptions_20": {"disposition": "unchanged"},

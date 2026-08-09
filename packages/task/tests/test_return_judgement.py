@@ -17,14 +17,15 @@ ROOT = Path(__file__).resolve().parents[3]
 SCHEMA = ROOT / "packages/task/configs/return-judgement-v1.schema.json"
 
 
-def judgement(*, verdict="AVOIDABLE", reviewer="reviewer:gpt-5.6-sol", executor="sonnet/medium"):
+def judgement(*, verdict="AVOIDABLE", reviewer="reviewer:gpt-5.6-sol", executor="sonnet/medium",
+              event_id="RET-test-001", digest="5f474410de10cf4b31d3c72a432203bc8fb311f544c1be5dbb5183d4c23cfc5c"):
     return {
         "schema_version": "return-judgement.v1",
         "judgement_id": "RJ-test-001",
-        "return_event_id": "RET-test-001",
+        "return_event_id": event_id,
         "ts": "2026-07-02T00:05:30Z",
         "subject_id": "P1.1",
-        "fingerprint_digest": "5f474410de10cf4b31d3c72a432203bc8fb311f544c1be5dbb5183d4c23cfc5c",
+        "fingerprint_digest": digest,
         "model_id": "gpt-5.6-sol",
         "model_version": "test",
         "model_effort": "high",
@@ -86,8 +87,11 @@ class ReturnJudgementTests(unittest.TestCase):
 
     def test_first_schema_valid_record_wins_over_later_record(self):
         findings = self.plan / "findings"
-        (findings / "A-judgement.md").write_text(carrier(judgement(verdict="JUSTIFIED")), encoding="utf-8")
-        (findings / "Z-judgement.md").write_text(carrier(judgement(verdict="MALFORMED")), encoding="utf-8")
+        digest = plan_returns.returns(self.plan)["fingerprints"][0]["digest"]
+        (findings / "A-judgement.md").write_text(
+            carrier(judgement(verdict="JUSTIFIED", event_id="journal.jsonl:7", digest=digest)), encoding="utf-8")
+        (findings / "Z-judgement.md").write_text(
+            carrier(judgement(verdict="MALFORMED", event_id="journal.jsonl:7", digest=digest)), encoding="utf-8")
         gate = plan_returns.return_loop_gates(self.plan)[0]
         self.assertEqual(gate["judgement"]["verdict"], "JUSTIFIED")
         self.assertEqual(gate["action"], "owner-gate")
@@ -96,24 +100,68 @@ class ReturnJudgementTests(unittest.TestCase):
         bad = judgement()
         del bad["input_digest"]
         (self.plan / "findings/P1.1-fixture.md").unlink()
+        for path in (self.plan / "findings").glob("*judgement*.md"):
+            path.unlink()
         (self.plan / "findings/A-invalid.md").write_text(carrier(bad, seam=True), encoding="utf-8")
         gate = plan_returns.return_loop_gates(self.plan)[0]
         self.assertNotIn("judgement", gate)
 
     def test_self_judgement_is_rejected_without_later_retry(self):
-        (self.plan / "findings/P1.1-fixture.md").unlink()
         findings = self.plan / "findings"
-        (findings / "A-self.md").write_text(
-            carrier(judgement(reviewer="sonnet/medium", executor="sonnet/medium"), seam=True),
+        digest = plan_returns.returns(self.plan)["fingerprints"][0]["digest"]
+        (findings / "A-self.md").write_text(carrier(judgement(
+            reviewer="sonnet/medium", executor="sonnet/medium", event_id="journal.jsonl:7", digest=digest)),
             encoding="utf-8")
-        (findings / "Z-later.md").write_text(carrier(judgement(verdict="MALFORMED")), encoding="utf-8")
+        (findings / "Z-later.md").write_text(carrier(judgement(
+            verdict="MALFORMED", event_id="journal.jsonl:7", digest=digest)), encoding="utf-8")
         gate = plan_returns.return_loop_gates(self.plan)[0]
         self.assertNotIn("judgement", gate)
+        self.assertEqual([row["return_event_id"] for row in gate["owner_packet"]["judgements"]],
+                         ["journal.jsonl:3", "journal.jsonl:5"])
 
     def test_classified_fixture_exercises_packet_and_verdict(self):
         gate = plan_returns.return_loop_gates(self.plan)[0]
         self.assertEqual(gate["namespace"], "classified")
         self.assertTrue(gate["blocks"])
         self.assertEqual(gate["action"], "owner-gate")
-        self.assertEqual(gate["judgement"]["verdict"], "AVOIDABLE")
-        self.assertEqual(gate["owner_packet"]["judgements"], [gate["judgement"]])
+        self.assertEqual(gate["judgement"]["verdict"], "INSUFFICIENT_EVIDENCE")
+        self.assertEqual([row["return_event_id"] for row in gate["owner_packet"]["judgements"]],
+                         ["journal.jsonl:3", "journal.jsonl:5", "journal.jsonl:7"])
+
+    def test_gate_rows_never_block_and_allow_continuation_together(self):
+        rows = []
+        for occurrence in range(2):
+            minute = occurrence * 2
+            rows.extend((
+                {"ts": f"2026-07-03T00:{minute:02d}:00Z", "plan_id": "plan-v2", "item_id": "P1.1",
+                 "command": "plan-run", "session_id": None, "run_id": None, "attempt": occurrence + 1,
+                 "actor": "executor", "friction": ["retry"], "result": "closed-green", "cost_usd": None,
+                 "num_turns": None, "duration_ms": None, "note": None},
+                {"ts": f"2026-07-03T00:{minute + 1:02d}:00Z", "plan_id": "plan-v2", "item_id": "P1.1",
+                 "command": "plan-design", "session_id": None, "run_id": None, "attempt": occurrence + 1,
+                 "actor": "executor", "friction": [], "result": "in-progress", "cost_usd": None,
+                 "num_turns": None, "duration_ms": None, "note": None},
+            ))
+        (self.plan / "journal.jsonl").write_text(
+            "\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+        for path in (self.plan / "findings").glob("*judgement*.md"):
+            path.unlink()
+        incomplete = plan_returns.return_loop_gates(self.plan)[0]
+        self.assertEqual((incomplete["action"], incomplete["blocks"], incomplete["continue_allowed"]),
+                         ("isolated-review", True, False))
+        digest = plan_returns.returns(self.plan)["fingerprints"][0]["digest"]
+        for verdict, action, blocks, allowed in (
+            ("JUSTIFIED", "return-to-root", False, True),
+            ("INSUFFICIENT_EVIDENCE", "return-to-root", False, True),
+            ("AVOIDABLE", "judgement-stop", True, False),
+            ("OUT_OF_SCOPE", "judgement-stop", True, False),
+            ("MALFORMED", "judgement-stop", True, False),
+        ):
+            with self.subTest(verdict=verdict):
+                path = self.plan / "findings/A-current.md"
+                path.write_text(carrier(judgement(
+                    verdict=verdict, event_id="journal.jsonl:4", digest=digest)), encoding="utf-8")
+                gate = plan_returns.return_loop_gates(self.plan)[0]
+                self.assertEqual((gate["action"], gate["blocks"], gate["continue_allowed"]),
+                                 (action, blocks, allowed))
+                self.assertFalse(gate["blocks"] and gate["continue_allowed"])

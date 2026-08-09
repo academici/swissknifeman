@@ -19,18 +19,22 @@
 
 ## Тестовый план — полный `classified` путь
 
-`packages/task/tests/data/plan-v2` объявляет seam и хранит schema-valid независимый verdict
-`AVOIDABLE`. `plan-views.py returns --gate --json` выдаёт `classified`, `occurrences=3`, `cap=2`,
-блокирующий `owner-gate`, owner packet и выбранную первую запись суждения. Это synthetic acceptance,
-не утверждение о наличии исторического шва.
+`packages/task/tests/data/plan-v2` объявляет seam и хранит три schema-valid независимых verdict
+для событий `journal.jsonl:3`, `:5` и `:7`. Текущий gate выбирает только `:7`, а blocking
+`owner-gate` packet сохраняет все три accepted event-scoped records в порядке истории. Это
+synthetic acceptance, не утверждение о наличии исторического шва.
 
 ## Проверенный инвариант
 
 Тест перебирает все пять значений closed enum. `JUSTIFIED` и `INSUFFICIENT_EVIDENCE` сохраняют
 policy state; `AVOIDABLE`, `OUT_OF_SCOPE` и `MALFORMED` могут только потребовать раннюю остановку.
-Ни один verdict не меняет digest/namespace, не уменьшает count и не снимает owner gate. Повторная
-schema-valid запись не переигрывает первую, неполный provenance игнорируется, self-judgement
-отвергается.
+Ни один verdict не меняет digest/namespace, не уменьшает count и не снимает owner gate. Никакая
+ветвь не может одновременно блокировать и разрешать continuation. Повторная schema-valid запись
+того же event не переигрывает первую, неполный provenance игнорируется, self-judgement отвергается.
+
+`validate_acceptance.py` повторяет исторический замер дважды, сравнивает снимок и baseline без
+правки corpus, а также проверяет полный synthetic event-scoped packet. Скрипт запускается и из
+detached item tree; его `--refresh-historical` режим является единственным генератором снимка.
 
 Это артефактное воспроизведение сохранённого verdict; повторный вызов модели не выполнялся и не
 заявляется воспроизводимым.

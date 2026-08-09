@@ -337,16 +337,18 @@ def _evidence_fields(plan_dir: Path) -> list[dict]:
     return result
 
 
-def _first_judgement(plan_dir: Path, subject_id: str, fingerprint_digest: str) -> dict | None:
-    """Read the first schema-valid matching record from item-scoped findings.
+def _judgements_by_event(plan_dir: Path, subject_id: str, fingerprint_digest: str) -> dict[str, dict | None]:
+    """Reduce immutable judgement carriers once for each return event.
 
-    Findings are existing immutable history carriers.  Their additive compact
-    JSON field is data, never executable text.  A self-judgement is the first
-    matching record but is rejected rather than skipped for a later retry.
+    Findings are existing immutable history carriers. Their additive compact
+    JSON field is data, never executable text. A self-judgement consumes its
+    event as rejected, so a later carrier for that same event cannot become a
+    retry or tie-break. Callers select only ids present in durable history.
     """
     findings = plan_dir / "findings"
     if not findings.is_dir():
-        return None
+        return {}
+    selected: dict[str, dict | None] = {}
     for path in sorted(findings.rglob("*.md")):
         fields = _frontmatter(path)
         raw = fields.get(_JUDGEMENT_FIELD)
@@ -359,10 +361,14 @@ def _first_judgement(plan_dir: Path, subject_id: str, fingerprint_digest: str) -
             continue
         if record["subject_id"] != subject_id or record["fingerprint_digest"] != fingerprint_digest:
             continue
+        event_id = record["return_event_id"]
+        if event_id in selected:
+            continue
         if record["reviewer_actor"] == record["executor_actor"]:
-            return None
-        return record
-    return None
+            selected[event_id] = None
+            continue
+        selected[event_id] = record
+    return selected
 
 
 def return_loop_evidence(plan_dir) -> list[dict]:
@@ -393,14 +399,14 @@ def evidence_errors(fields: dict) -> list[str]:
 
 
 def _owner_packet(record: dict, occurrences: int, cap: int, history: list[dict],
-                  judgement: dict | None = None) -> dict:
+                  judgements: list[dict]) -> dict:
     return {
         "fingerprint_tuple": record["tuple"],
         "fingerprint_digest": record["digest"],
         "occurrences": occurrences,
         "cap": cap,
         "history": history,
-        "judgements": [judgement] if judgement is not None else [],
+        "judgements": judgements,
         "resolutions_tried": [],
     }
 
@@ -435,19 +441,43 @@ def return_loop_gates(plan_dir) -> list[dict]:
                 "action": action, "blocks": blocks_gate,
                 "review_required": action in ("isolated-review", "owner-gate"),
                 "reason_code": reason}
-        judgement = _first_judgement(plan_dir, record["tuple"]["subject"], digest)
+        judgements_by_event = _judgements_by_event(
+            Path(plan_dir), record["tuple"]["subject"], digest)
+        history_ids = [event["return_event_id"] for event in history]
+        judgement = judgements_by_event.get(history_ids[-1]) if history_ids else None
+        packet_judgements = [judgements_by_event[event_id] for event_id in history_ids
+                             if judgements_by_event.get(event_id) is not None]
         policy = decide(verdict=judgement["verdict"] if judgement else None,
                         occurrences=occurrences, cap=cap, namespace=record["namespace"],
                         fingerprint_digest=digest)
         gate.update(policy)
-        if judgement is not None:
+        if action == "owner-gate":
+            gate.update({"action": "owner-gate", "blocks": True,
+                         "continue_allowed": False, "stop_required": True,
+                         "review_required": True})
+            gate["owner_packet"] = _owner_packet(record, occurrences, cap, history, packet_judgements)
+        elif action == "isolated-review" and judgement is None:
+            gate["continue_allowed"] = False
+        elif action == "isolated-review" and judgement is not None:
+            if policy["stop_required"]:
+                gate.update({"action": "judgement-stop", "blocks": True,
+                             "continue_allowed": False, "review_required": True,
+                             "reason_code": "RETURN_JUDGEMENT_STOP_REQUIRED"})
+            else:
+                gate.update({"action": "return-to-root", "blocks": False,
+                             "continue_allowed": True, "stop_required": False,
+                             "review_required": True, "reason_code": None})
+        elif judgement is not None:
             gate["judgement"] = judgement
             if policy["stop_required"] and not gate["blocks"]:
                 gate.update({"action": "judgement-stop", "blocks": True,
+                             "continue_allowed": False,
                              "review_required": True,
                              "reason_code": "RETURN_JUDGEMENT_STOP_REQUIRED"})
-        if action == "owner-gate":
-            gate["owner_packet"] = _owner_packet(record, occurrences, cap, history, judgement)
+        if judgement is not None:
+            gate["judgement"] = judgement
+        if gate["blocks"]:
+            gate["continue_allowed"] = False
         gates.append(gate)
     for record in projected["fingerprints"]:
         if record["namespace"] == "ungroupable":

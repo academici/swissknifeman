@@ -32,11 +32,16 @@ is validated but P4.4 does not turn the new check on for ordinary plans.
 ## Return-judgement v1
 
 An item-scoped finding may add `return_judgement:` with one compact JSON object conforming to
-`configs/return-judgement-v1.schema.json`. The reducer scans findings in canonical path order,
-uses the first schema-valid record matching both subject and fingerprint digest, and ignores a
-record missing required provenance. A matching self-judgement is rejected and does not permit a
-later record to become a tie-break or retry.
+`configs/return-judgement-v1.schema.json`. The reducer scans findings in canonical path order and
+uses the first schema-valid record for each exact `subject_id × fingerprint_digest ×
+return_event_id`; a judgement for one return event cannot complete review of another. The owner
+packet retains every accepted event-scoped judgement in durable return-event order. A record
+missing required provenance is ignored. A matching self-judgement rejects that event and does not
+permit a later record for it to become a tie-break or retry.
 
-The reducer never calls a model. `JUSTIFIED` and `INSUFFICIENT_EVIDENCE` only preserve evidence;
-`AVOIDABLE`, `OUT_OF_SCOPE`, and `MALFORMED` can require an earlier stop. The durable counter,
-fingerprint namespace, and existing owner gate are monotone and cannot be weakened by any verdict.
+The reducer never calls a model. Until an obligatory review has an accepted current-event record,
+the gate remains `isolated-review` and blocks continuation. A completed `JUSTIFIED` or
+`INSUFFICIENT_EVIDENCE` review below the cap returns to the originating root; `AVOIDABLE`,
+`OUT_OF_SCOPE`, and `MALFORMED` require an earlier stop. The durable counter, fingerprint
+namespace, and existing owner gate are monotone and cannot be weakened by any verdict; no outcome
+may simultaneously set `blocks=true` and `continue_allowed=true`.

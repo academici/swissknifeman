@@ -8,9 +8,9 @@
   (`2026.08.07-PLAN-ECONOMY` P4.2, D142).
 
 - **`task`: return-judgement v1 теперь детерминированно потребляется return-loop.** Редьюсер
-  принимает только первую schema-valid независимую запись с полным provenance, сохраняет
-  монотонность всех пяти вердиктов и воспроизводит `classified` owner-gate на fixture
-  (`2026.08.07-PLAN-ECONOMY` P4.6).
+  выбирает первую schema-valid независимую запись для точного return event, собирает полный
+  event-scoped owner packet, не допускает `blocks=true` вместе с continuation и воспроизводит
+  acceptance из item tree (`2026.08.07-PLAN-ECONOMY` P4.6).
 
 - **`task`: добавлен return-loop v1 для возвратов plan-protocol.** `returns --gate`
   применяет lifted лимит, печатает hard-stop owner packet над durable history и даёт

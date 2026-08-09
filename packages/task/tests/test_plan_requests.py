@@ -53,6 +53,20 @@ class PlanRequestsTests(unittest.TestCase):
                 "reason_code": "P5_DECISION_OWNER_APPROVED", "provenance": {"source_system": "git",
                 "record_id": "r1", "record_version": "1", "verified": True}, "at": "2099-01-01T00:00:00Z"}
 
+    def _auto_answer_pair(self, request, *, option="approve", reclassified_to="clarification"):
+        """Return one contract-valid policy answer without bypassing queue validation."""
+        after = {"approve": "a", "park": "b", "reject": "c", "escalate": "d"}[option] * 64
+        response = self._response(request, option=option)
+        response.update({"resolver": "policy", "resolver_id": "policy:fixture",
+                         "reclassified_to": reclassified_to, "action_digest": after})
+        event = {"decision_id": request["decision_id"], "question_class": "plan",
+                 "resolver_id": "policy:fixture", "source_system": "git",
+                 "source_record_id": "r1", "source_record_version": "1",
+                 "before_digest": request["action_digest"], "after_digest": after,
+                 "provenance_verified": True, "policy_digest": request["policy_digest"],
+                 "reclassified_action_digest": after, "reclassified_to": reclassified_to}
+        return event, response
+
     def test_request_parks_only_subject_and_response_resumes_same_root(self):
         value = request_value()
         plan_requests.request(self.plan, value)
@@ -278,6 +292,62 @@ class PlanRequestsTests(unittest.TestCase):
         with mock.patch("task.plan_layout.is_terminal_phase", return_value=True):
             plan_gates.lint_return_loop(self.plan, "v2", diag)
         self.assertTrue(any(value["decision_id"] in line for line in diag.errors), diag.errors)
+
+    def test_terminal_auto_answer_is_single_use_in_ingress_and_reducer(self):
+        for option, outcome in (("approve", "apply"), ("park", "park"),
+                                ("reject", "reject"), ("escalate", "escalate")):
+            with self.subTest(outcome=outcome):
+                self.setUp()
+                value = request_value(decision_id=f"Q-terminal-{outcome}", kind="clarification")
+                plan_requests.request(self.plan, value)
+                event, policy_response = self._auto_answer_pair(value, option=option)
+                plan_requests.append_auto_answer(self.plan, event, response=policy_response)
+                self.assertEqual(outcome, plan_requests.semantic_outcome(
+                    plan_requests.states(self.plan)[value["decision_id"]]))
+                queue = self.plan / "decisions" / "queue.jsonl"
+                before = queue.read_bytes()
+                owner_response = self._response(value, option="reject")
+                owner_response["reclassified_to"] = "authorization"
+                with self.assertRaisesRegex(plan_requests.RequestError, "already resolved"):
+                    plan_requests.claim(self.plan, value["decision_id"], resolver_id="owner:1",
+                                        lease_expires_at="2099-01-01T00:00:00Z")
+                with self.assertRaisesRegex(plan_requests.RequestError, "already resolved"):
+                    plan_requests.resolve(self.plan, value["decision_id"], owner_response,
+                                          resolver_id="owner:1")
+                self.assertEqual(before, queue.read_bytes())
+
+                illegal_claim = {"type": "claim", "at": "2099-01-01T00:00:00Z",
+                                 "actor": "owner", "decision_id": value["decision_id"],
+                                 "resolver_id": "owner:1", "lease_expires_at": "2099-01-01T00:00:00Z"}
+                queue.write_bytes(before + plan_requests._canonical(illegal_claim) + b"\n")
+                with self.assertRaisesRegex(plan_requests.RequestError, "already resolved"):
+                    plan_requests.states(self.plan)
+
+                illegal_response = {"type": "response", "at": "2099-01-01T00:00:00Z",
+                                    "actor": "owner", "decision_id": value["decision_id"],
+                                    "resolver_id": "owner:1", "response": owner_response,
+                                    "outcome": "reject"}
+                queue.write_bytes(before + plan_requests._canonical(illegal_response) + b"\n")
+                with self.assertRaisesRegex(plan_requests.RequestError, "already resolved"):
+                    plan_requests.states(self.plan)
+
+    def test_pending_authorization_auto_answer_preserves_owner_flow(self):
+        value = request_value(decision_id="Q-pending-owner-flow", kind="clarification")
+        plan_requests.request(self.plan, value)
+        event, policy_response = self._auto_answer_pair(value, reclassified_to="authorization")
+        plan_requests.append_auto_answer(self.plan, event, response=policy_response)
+        self.assertEqual("pending-authorization", plan_requests.semantic_outcome(
+            plan_requests.states(self.plan)[value["decision_id"]]))
+        plan_requests.claim(self.plan, value["decision_id"], resolver_id="owner:1",
+                            lease_expires_at="2099-01-01T00:00:00Z")
+        response = self._response(value)
+        response["reclassified_to"] = "authorization"
+        resolved = plan_requests.resolve(self.plan, value["decision_id"], response,
+                                         resolver_id="owner:1",
+                                         current_continuation=value["continuation"])
+        self.assertEqual("resume-root", resolved["continuation"]["mode"])
+        self.assertEqual(["request", "auto_answer", "claim", "response"],
+                         [row["type"] for row in plan_requests._read_events(self.plan)])
 
     def test_request_accepts_two_substantive_plus_mandatory(self):
         value = request_value(decision_id="Q-two-substantive")

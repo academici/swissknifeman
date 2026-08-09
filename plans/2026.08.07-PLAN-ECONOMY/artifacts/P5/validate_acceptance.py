@@ -244,6 +244,78 @@ def policy_scenario(fixture: Path, *, authorization: bool) -> dict:
         directory.cleanup()
 
 
+def terminal_auto_answer_single_use_scenario(fixture: Path) -> dict:
+    """The policy producer's terminal apply cannot be claimed or overwritten."""
+    directory, plan_dir = fresh_plan(fixture)
+    try:
+        raw = clarification_request("policy-terminal-single-use")
+        plan_requests.request(plan_dir, raw, actor="policy")
+        produced = plan_authority.auto_answer_clarification(
+            {**copy.deepcopy(raw), "missing_fields": ["carrier"]},
+            question_class="plan_carrier", field="carrier",
+            sources={"plan_carrier": {"value": "plan.md", "record_id": "plan.md",
+                                      "record_version": "fixture-v1", "at": "2099-01-01T00:00:00Z"}},
+        )
+        require(isinstance(produced, dict), "policy producer did not return a contract pair")
+        plan_requests.append_auto_answer(plan_dir, produced["event"], response=produced["response"], actor="policy")
+        before = queue_counts(plan_dir)
+        denied = 0
+        try:
+            plan_requests.claim(plan_dir, raw["decision_id"], resolver_id="owner:p5.5",
+                                lease_expires_at="2099-01-01T00:00:00Z")
+        except plan_requests.RequestError as exc:
+            require("already resolved" in str(exc), "terminal claim failed for wrong reason")
+            denied += 1
+        owner = owner_response(plan_requests.states(plan_dir)[raw["decision_id"]]["request"], "reject")
+        owner["reclassified_to"] = "authorization"
+        try:
+            plan_requests.resolve(plan_dir, raw["decision_id"], owner, resolver_id="owner:p5.5")
+        except plan_requests.RequestError as exc:
+            require("already resolved" in str(exc), "terminal response failed for wrong reason")
+            denied += 1
+        require(denied == 2, "terminal auto-answer admitted a later owner flow")
+        require(queue_counts(plan_dir) == before, "terminal auto-answer ingress changed queue")
+        result = observations(plan_dir, subject_id="P1.2", decision_id=raw["decision_id"],
+                              continuation_mode="none")
+        return {"id": "policy-terminal-auto-answer-single-use", "observed_outcome": "apply",
+                "verified_provenance": True, "reclassified_to": produced["event"]["reclassified_to"],
+                "denied_owner_operations": denied, **result}
+    finally:
+        directory.cleanup()
+
+
+def authorization_owner_flow_scenario(fixture: Path) -> dict:
+    """Authorization reclassification is the sole policy-answer path an owner may resolve."""
+    directory, plan_dir = fresh_plan(fixture)
+    try:
+        raw = clarification_request("policy-authorization-owner-flow", reclassifies_to_authorization=True)
+        plan_requests.request(plan_dir, raw, actor="policy")
+        produced = plan_authority.auto_answer_clarification(
+            {**copy.deepcopy(raw), "missing_fields": ["carrier"]},
+            question_class="plan_carrier", field="carrier",
+            sources={"plan_carrier": {"value": "owner-authorized", "record_id": "plan.md",
+                                      "record_version": "fixture-v1", "at": "2099-01-01T00:00:00Z"}},
+        )
+        require(isinstance(produced, dict), "policy producer did not return a contract pair")
+        plan_requests.append_auto_answer(plan_dir, produced["event"], response=produced["response"], actor="policy")
+        require(plan_requests.semantic_outcome(plan_requests.states(plan_dir)[raw["decision_id"]]) == "pending-authorization",
+                "policy answer did not preserve owner authorization")
+        plan_requests.claim(plan_dir, raw["decision_id"], resolver_id="owner:p5.5",
+                            lease_expires_at="2099-01-01T00:00:00Z")
+        owner = owner_response(plan_requests.states(plan_dir)[raw["decision_id"]]["request"], "apply")
+        owner["reclassified_to"] = "authorization"
+        resolved = plan_requests.resolve(plan_dir, raw["decision_id"], owner, resolver_id="owner:p5.5",
+                                         current_continuation=continuation("P1.2"))
+        result = observations(plan_dir, subject_id="P1.2", decision_id=raw["decision_id"],
+                              continuation_mode=resolved["continuation"]["mode"])
+        require(result["queue_event_counts"] == {"auto_answer": 1, "claim": 1, "request": 1, "response": 1},
+                "pending authorization owner flow has wrong queue cardinality")
+        return {"id": "policy-authorization-owner-flow", "observed_outcome": "apply",
+                "verified_provenance": True, "reclassified_to": "authorization", **result}
+    finally:
+        directory.cleanup()
+
+
 def owner_scenario(fixture: Path, option: str) -> dict:
     directory, plan_dir = fresh_plan(fixture)
     try:
@@ -422,13 +494,14 @@ def resolve_retry_scenario(fixture: Path) -> dict:
 
 def generate(fixture: Path) -> dict:
     require((fixture / "decisions" / "queue.jsonl").is_file(), "baseline queue fixture is absent")
-    scenarios = [policy_scenario(fixture, authorization=False), policy_scenario(fixture, authorization=True)]
+    scenarios = [policy_scenario(fixture, authorization=False), policy_scenario(fixture, authorization=True),
+                 terminal_auto_answer_single_use_scenario(fixture), authorization_owner_flow_scenario(fixture)]
     scenarios.extend(owner_scenario(fixture, option) for option in ("continue", "park", "reject"))
     scenarios.extend(option_bound_scenario(fixture, count) for count in (2, 5))
     scenarios.append(mandatory_only_scenario(fixture))
     scenarios.extend((request_retry_scenario(fixture), resolve_retry_scenario(fixture)))
     return {
-        "artifact_version": "p5.5-acceptance-v3", "fixture": "packages/task/tests/data/plan-v2-p5",
+        "artifact_version": "p5.5-acceptance-v4", "fixture": "packages/task/tests/data/plan-v2-p5",
         "frozen_input_digests": frozen_digests(), "scenario_ids": [scenario["id"] for scenario in scenarios],
         "scenarios": scenarios,
     }
@@ -473,7 +546,7 @@ def main() -> int:
         require(results_path.is_file() and report_path.is_file(), "generated acceptance artifacts are absent")
         require(results_path.read_bytes() == results_bytes, "results are not byte-identical")
         require(report_path.read_bytes() == report_bytes, "report is not byte-identical")
-    print("acceptance: ten producer/error scenarios; deterministic results and report")
+    print("acceptance: twelve producer/error scenarios; deterministic results and report")
     return 0
 
 

@@ -153,25 +153,25 @@ def return_loop_request(plan_dir, gate: dict, *, continuation: dict, expires_at:
     required_packet = {"fingerprint_tuple", "fingerprint_digest", "occurrences", "cap",
                        "history", "judgements", "resolutions_tried"}
     if gate.get("action") != "owner-gate" or gate.get("blocks") is not True:
-        raise RequestError("P5_RETURN_LOOP_NOT_OWNER_GATE")
+        raise RequestError("P5_DECISION_REJECTED: return-loop не является блокирующим owner-gate")
     if not isinstance(packet, dict) or set(packet) != required_packet:
-        raise RequestError("P5_RETURN_LOOP_PACKET_INVALID")
+        raise RequestError("P5_DECISION_REJECTED: owner packet return-loop невалиден")
     subject_id = packet["fingerprint_tuple"].get("subject")
     if not isinstance(subject_id, str) or "." not in subject_id:
-        raise RequestError("P5_RETURN_LOOP_PACKET_SUBJECT_INVALID")
+        raise RequestError("P5_DECISION_REJECTED: owner packet не несёт subject Pn.m")
     phase_id = subject_id.split(".", 1)[0]
     if not isinstance(continuation, dict) or continuation.get("target", {}).get("item_id") != subject_id:
-        raise RequestError("P5_RETURN_LOOP_CONTINUATION_MISMATCH")
+        raise RequestError("P5_DECISION_REJECTED: continuation не соответствует subject owner-gate")
     packet_ref = _digest_reference(carrier="journal.jsonl",
                                    anchor=f"return-loop:{packet['fingerprint_digest']}", value=packet)
     evidence = [packet_ref]
     for row in packet["history"]:
         if not isinstance(row, dict) or not isinstance(row.get("return_event_id"), str):
-            raise RequestError("P5_RETURN_LOOP_HISTORY_INVALID")
+            raise RequestError("P5_DECISION_REJECTED: history owner packet невалидна")
         evidence.append(_digest_reference(carrier="journal.jsonl", anchor=row["return_event_id"], value=row))
     attempted = packet["resolutions_tried"]
     if not isinstance(attempted, list) or not all(isinstance(row, str) for row in attempted):
-        raise RequestError("P5_RETURN_LOOP_ATTEMPTS_INVALID")
+        raise RequestError("P5_DECISION_REJECTED: resolutions_tried owner packet невалиден")
     raw = {
         "decision_id": f"return-loop-{packet['fingerprint_digest']}", "action_version": 1,
         "kind": "authorization", "decision_class": "authority_change",

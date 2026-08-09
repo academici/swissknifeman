@@ -66,6 +66,14 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertEqual(command["command"], 'python3 -c "print(\'green\')"')
         self.assertEqual(command["returncode"], 0)
 
+    def test_markdown_validation_ignores_backticks_in_explanation(self):
+        self._commit_consumer(
+            '`python3 -c "print(\'green\')"` (статусы `ok|missing` попадают в отчёт)')
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+        command = result["consumers"][0]["commands"][0]
+        self.assertEqual(command["command"], 'python3 -c "print(\'green\')"')
+        self.assertEqual(command["returncode"], 0)
+
     def test_red_blocks_and_cannot_be_made_advisory(self):
         self._commit_consumer('python3 -c "raise SystemExit(3)"')
         result = plan_downstream.evaluate(self.plan, "P0.1")

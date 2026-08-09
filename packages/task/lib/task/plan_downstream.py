@@ -136,8 +136,9 @@ def _validation_commands(value: str) -> list[str]:
             continue
         # Validation is Markdown: execute the inline-code payload, never its
         # explanatory suffix ``(печатает …)`` or surrounding bold markers.
-        first, last = part.find("`"), part.rfind("`")
-        if first >= 0 and last > first:
+        first = part.find("`")
+        last = part.find("`", first + 1) if first >= 0 else -1
+        if last > first:
             part = part[first + 1:last]
         commands.append(part.strip())
     return commands

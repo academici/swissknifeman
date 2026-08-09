@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 26949108c081da32d0e54ec2c32239733b508d26326a08da2c2c4dbf56ec88ea
+inputs_sha256: 876732829f02214042e857a88b17fcb439aebf3eb23805c37edd02fa1ea8cd2f
 generated_by: task plan-views status
 -->
 
@@ -265,6 +265,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · D142: correction of terminal friction; test-double доказывает один engine.lint_plan→lint_return_loop; 2dba3164; bare discover требует PYTHONPATH. |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · D142: e534dbfb; event-scoped reducer/packet and detached acceptance passed; 17 focused + 666 task tests; history 10/1109/87, 7 over-cap; hook provenance-invalid. |
+| 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P4 закрыта: D142 remediation и P4 evidence сверены |
 
 ## Owner Gates
 

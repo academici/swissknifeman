@@ -7,7 +7,7 @@
 | Plan ID | 2026.08.07-PLAN-ECONOMY |
 | Title | Экономный протокол планов для больших многофазных проектов |
 | Document Type | Executable Master Plan |
-| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137, 2026-08-08) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
+| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137; `task:plan-design 2026.08.07-PLAN-ECONOMY P4`, RED-audit reopen D142, 2026-08-08) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
 | Repository | swissknifeman |
 | Related Packages | task (владелец протокола и команд) · skiller (раздача скилла `plan-protocol` по флоту) · core · harness (несёт потребителя раскладки на живом пути гейта прогона — `lib/harness/run/gate.py`, D85) |
 | Execution Mode | contract-first, phase-first |
@@ -18,7 +18,7 @@
 | Paused By | — |
 | Design Passes | 5/5 — прогон 5 явно добавлен владельцем после field-наблюдения двойной цены cold-start при escalation/audit и требования не запускать аудит на первом локальном сбое (D123). Он уточняет сквозные контракты P1/P4/P5/P6 до заморозки P1.5; исторические 4/4 и их обоснование остаются в Update Log/D81/D95/D104. Разрешённый D123 аудит выполнен заходом 4 и дал RED F4.1–F4.4; owning-root remediation D126 закрывает их без шестого design-pass и без пятого аудита |
 | Layout | v2 |
-<!-- migration-version: 0.27.0 -->
+<!-- migration-version: 0.28.0 -->
 
 ## 1. Context
 

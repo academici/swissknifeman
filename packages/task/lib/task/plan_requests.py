@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,10 +14,10 @@ QUEUE_NAME = "queue.jsonl"
 GATES_NAME = "_gates.md"
 RECORD_MAX_BYTES = 16384
 EVENT_TYPES = frozenset(("request", "claim", "response", "auto_answer"))
-FORBIDDEN_KEYS = frozenset(("model_reasoning", "model_transcript", "raw_provider_prompt",
-                             "raw_provider_stream", "secrets_or_tokens",
-                             "environment_file_contents", "worker_prose",
-                             "inline_evidence_payload", "return_loop_owner_packet_copy"))
+_CONTRACT_PATH = Path(__file__).resolve().parents[4] / "plans" / "2026.08.07-PLAN-ECONOMY" / "root" / "contracts" / "decision-request-v1.schema.json"
+_SCHEMA_KEYWORDS = frozenset(("additional_properties", "properties", "required", "type", "const",
+                              "enum", "enum_ref", "const_ref", "pattern", "minimum", "min_length",
+                              "items", "format", "unique_by", "required_when", "source", "description"))
 
 
 class RequestError(ValueError):
@@ -37,34 +39,170 @@ def _queue_path(plan_dir) -> Path:
     return plan_dir / "decisions" / QUEUE_NAME
 
 
-def _contains_forbidden(value) -> bool:
+def _schema() -> dict:
+    try:
+        value = json.loads(_CONTRACT_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RequestError(f"decision-request contract is unreadable: {_CONTRACT_PATH}") from exc
+    if value.get("contract_version") != "v1":
+        raise RequestError("unsupported decision-request contract")
+    return value
+
+
+def _path_value(value: dict, dotted: str):
+    current = value
+    for part in dotted.split("."):
+        if not isinstance(current, dict) or part not in current:
+            raise RequestError(f"contract reference is unresolved: {dotted}")
+        current = current[part]
+    return current
+
+
+def _type_matches(value, declared) -> bool:
+    values = declared if isinstance(declared, list) else [declared]
+    checks = {
+        "object": lambda item: isinstance(item, dict),
+        "array": lambda item: isinstance(item, list),
+        "string": lambda item: isinstance(item, str),
+        "integer": lambda item: isinstance(item, int) and not isinstance(item, bool),
+        "null": lambda item: item is None,
+        "boolean": lambda item: isinstance(item, bool),
+    }
+    return any(name in checks and checks[name](value) for name in values)
+
+
+def _date_time(value) -> bool:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        return False
+    try:
+        datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError:
+        return False
+    return True
+
+
+def _shape_errors(value, spec: dict, schema: dict, path: str) -> list[str]:
+    unknown = set(spec) - _SCHEMA_KEYWORDS
+    if unknown:
+        return [f"unsupported frozen schema keyword at {path}: {sorted(unknown)[0]}"]
+    errors: list[str] = []
+    if "type" in spec and not _type_matches(value, spec["type"]):
+        return [f"{path} has invalid type"]
+    if "const" in spec and value != spec["const"]:
+        errors.append(f"{path} must equal frozen constant")
+    if "enum" in spec and value not in spec["enum"]:
+        errors.append(f"{path} is outside frozen enum")
+    if "enum_ref" in spec and value not in _path_value(schema, spec["enum_ref"]):
+        errors.append(f"{path} is outside frozen enum")
+    if "const_ref" in spec and value != _path_value(schema, spec["const_ref"]):
+        errors.append(f"{path} differs from frozen constant")
+    if "pattern" in spec and (not isinstance(value, str) or not re.fullmatch(spec["pattern"], value)):
+        errors.append(f"{path} fails frozen pattern")
+    if "minimum" in spec and (not isinstance(value, int) or isinstance(value, bool) or value < spec["minimum"]):
+        errors.append(f"{path} is below frozen minimum")
+    if "min_length" in spec and (not isinstance(value, str) or len(value) < spec["min_length"]):
+        errors.append(f"{path} is too short")
+    if spec.get("format") == "date-time" and not _date_time(value):
+        errors.append(f"{path} is not ISO date-time")
     if isinstance(value, dict):
-        return any(key in FORBIDDEN_KEYS or _contains_forbidden(item) for key, item in value.items())
+        properties = spec.get("properties", {})
+        required = spec.get("required", [])
+        errors.extend(f"missing {path}.{name}" for name in required if name not in value)
+        if spec.get("additional_properties") is False:
+            errors.extend(f"unexpected {path}.{name}" for name in value if name not in properties)
+        for name, child in properties.items():
+            if name in value:
+                errors.extend(_shape_errors(value[name], child, schema, f"{path}.{name}"))
     if isinstance(value, list):
-        return any(_contains_forbidden(item) for item in value)
+        child = spec.get("items")
+        if isinstance(child, dict):
+            for index, item in enumerate(value):
+                errors.extend(_shape_errors(item, child, schema, f"{path}[{index}]"))
+        unique_by = spec.get("unique_by")
+        if unique_by:
+            keys = [item.get(unique_by) for item in value if isinstance(item, dict)]
+            if len(keys) != len(value) or len(set(keys)) != len(keys):
+                errors.append(f"{path} violates frozen unique_by {unique_by}")
+    return errors
+
+
+def _contains_forbidden(value, forbidden: frozenset[str]) -> bool:
+    if isinstance(value, dict):
+        return any(key in forbidden or _contains_forbidden(item, forbidden) for key, item in value.items())
+    if isinstance(value, list):
+        return any(_contains_forbidden(item, forbidden) for item in value)
     return False
 
 
 def _request_errors(request: dict) -> list[str]:
-    required = ("contract_version", "decision_id", "action_version", "kind", "decision_class",
-                "subject", "action_digest", "canonical_action", "material_fields", "options",
-                "default_option", "on_timeout", "expires_at", "evidence", "policy_digest",
-                "attempted", "continuation")
     if not isinstance(request, dict):
         return ["request must be an object"]
-    errors = [f"missing request field {key}" for key in required if key not in request]
-    if request.get("contract_version") != "v1":
-        errors.append("unsupported decision-request contract")
-    subject = request.get("subject")
-    if not isinstance(subject, dict) or not all(isinstance(subject.get(key), str) and subject[key]
-                                                for key in ("plan_id", "phase_id", "item_id")):
-        errors.append("invalid request subject")
-    continuation = request.get("continuation")
-    if not isinstance(continuation, dict) or continuation.get("preferred_mode") != "resume-root":
-        errors.append("invalid continuation identity")
-    if _contains_forbidden(request):
+    schema = _schema()
+    errors = _shape_errors(request, schema["request"], schema, "request")
+    forbidden = frozenset(schema["record"]["forbidden"])
+    if _contains_forbidden(request, forbidden):
         errors.append("P5_DECISION_FORBIDDEN_CONTENT")
-    return errors
+    if errors:
+        return errors
+    try:
+        frame = plan_authority.load_frame()
+        definition = frame["decision_classes"].get(request["decision_class"])
+        if not isinstance(definition, dict):
+            return ["P5_DECISION_UNCLASSIFIED_KIND"]
+        if request["on_timeout"] != definition["on_timeout"] or request["on_timeout"] not in schema["timeout_policy"][request["kind"]]["allowed"]:
+            return ["request timeout does not match authority envelope"]
+        if request["subject"]["plan_id"] != request["continuation"]["target"]["plan_id"] or request["subject"]["item_id"] != request["continuation"]["target"]["item_id"]:
+            return ["request continuation target mismatches subject"]
+        option_ids = [row["id"] for row in request["options"]]
+        if not schema["options"]["min_substantive"] <= len(option_ids) <= schema["options"]["max_substantive"]:
+            return ["request options violate frozen bounds"]
+        if not set(schema["options"]["mandatory"]).issubset(option_ids):
+            return ["request options omit frozen mandatory choices"]
+        if request["default_option"] is not None and request["default_option"] not in option_ids:
+            return ["request default option is undeclared"]
+        trusted = copy.deepcopy(request)
+        trusted["action"] = request["canonical_action"]["action"]
+        canonical = plan_authority.canonical_action(trusted, frame)
+        if canonical != request["canonical_action"]:
+            return ["request canonical action is not tool-derived"]
+        if request["action_digest"] != plan_authority.action_digest(trusted, frame):
+            return ["request action digest is not tool-derived"]
+        if request["policy_digest"] != plan_authority.policy_digest(frame):
+            return ["request policy digest is not current authority frame"]
+    except (KeyError, TypeError, plan_authority.AuthorityFrameError, plan_authority.AuthorityRequestError):
+        return ["request authority projection is invalid"]
+    return []
+
+
+def prepare_request(value: dict) -> dict:
+    """Create the durable closed request from a transient construction action (D145)."""
+    if not isinstance(value, dict) or not isinstance(value.get("action"), dict):
+        raise RequestError("request construction requires an action object")
+    try:
+        frame = plan_authority.load_frame()
+        raw = copy.deepcopy(value)
+        canonical = plan_authority.canonical_action(raw, frame)
+        digest = plan_authority.action_digest(raw, frame)
+        policy = plan_authority.policy_digest(frame)
+    except (plan_authority.AuthorityFrameError, plan_authority.AuthorityRequestError, KeyError, TypeError) as exc:
+        raise RequestError("request construction authority projection is invalid") from exc
+    durable = copy.deepcopy(raw)
+    durable.pop("action", None)
+    computed = {
+        "contract_version": "v1", "canonical_action": canonical,
+        "action_digest": digest,
+        "material_fields": _path_value(_schema(), "canonical_action.material_fields"),
+        "policy_digest": policy,
+    }
+    mismatched = [name for name, expected in computed.items()
+                  if name in durable and durable[name] != expected]
+    if mismatched:
+        raise RequestError(f"request tool-computed field mismatch: {mismatched[0]}")
+    durable.update(computed)
+    errors = _request_errors(durable)
+    if errors:
+        raise RequestError("; ".join(errors))
+    return durable
 
 
 def _read_events(plan_dir) -> list[dict]:
@@ -91,8 +229,9 @@ def _read_events(plan_dir) -> list[dict]:
 
 def _append(plan_dir, event: dict) -> Path:
     payload = _canonical(event)
-    if len(payload) > RECORD_MAX_BYTES:
-        raise RequestError(f"P5_DECISION_RECORD_TOO_LARGE: {len(payload)} > {RECORD_MAX_BYTES}")
+    maximum = _schema()["record"]["max_bytes"]
+    if len(payload) > maximum:
+        raise RequestError(f"P5_DECISION_RECORD_TOO_LARGE: {len(payload)} > {maximum}")
     path = _queue_path(plan_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
@@ -115,7 +254,7 @@ def states(plan_dir) -> dict[str, dict]:
             if errors:
                 raise RequestError("; ".join(errors))
             result[decision_id] = {"request": request, "request_event": event, "claims": [],
-                                   "response": None, "auto_answers": []}
+                                   "response": None, "auto_answer": None}
         elif decision_id not in result:
             raise RequestError(f"event before request for {decision_id}")
         elif event["type"] == "claim":
@@ -123,10 +262,61 @@ def states(plan_dir) -> dict[str, dict]:
         elif event["type"] == "response":
             if result[decision_id]["response"] is not None:
                 raise RequestError(f"duplicate response for {decision_id}")
+            errors = _response_errors(event.get("response"), result[decision_id]["request"])
+            if errors:
+                raise RequestError("; ".join(errors))
             result[decision_id]["response"] = event
         else:
-            result[decision_id]["auto_answers"].append(event)
+            if result[decision_id]["response"] is not None or result[decision_id]["auto_answer"] is not None:
+                raise RequestError(f"duplicate response for {decision_id}")
+            errors = _auto_answer_errors(event.get("event"), event.get("response"), result[decision_id]["request"])
+            if errors:
+                raise RequestError("; ".join(errors))
+            result[decision_id]["auto_answer"] = event
     return result
+
+
+def _response_errors(response: dict, request: dict) -> list[str]:
+    if not isinstance(response, dict):
+        return ["response must be an object"]
+    schema = _schema()
+    errors = _shape_errors(response, schema["response"], schema, "response")
+    if errors:
+        return errors
+    if request["kind"] == "clarification" and "reclassified_to" not in response:
+        return ["clarification response misses reclassified_to"]
+    if response["decision_id"] != request["decision_id"] or response["action_version"] != request["action_version"]:
+        return ["response identity mismatch"]
+    if response["action_digest"] != request["action_digest"] or response["policy_digest"] != request["policy_digest"]:
+        return ["response digest mismatch"]
+    if response["selected_option"] not in {row["id"] for row in request["options"]}:
+        return ["P5_DECISION_UNKNOWN_OPTION"]
+    return []
+
+
+def _auto_answer_errors(event: dict, response: dict, request: dict) -> list[str]:
+    if not isinstance(event, dict):
+        return ["auto answer event must be an object"]
+    schema = _schema()
+    missing = [name for name in schema["auto_answer_event"]["required"] if name not in event]
+    if missing:
+        return [f"missing auto answer field {missing[0]}"]
+    if event.get("decision_id") != request["decision_id"] or event.get("policy_digest") != request["policy_digest"]:
+        return ["auto answer identity mismatch"]
+    if event.get("provenance_verified") is not True:
+        return ["auto answer provenance is not verified"]
+    errors = _response_errors(response, request)
+    if errors:
+        return errors
+    if request["kind"] != "clarification":
+        return ["auto answer is only valid for clarification"]
+    if response["resolver"] != "policy" or response["reclassified_to"] != event["reclassified_to"]:
+        return ["auto answer lacks policy reclassification"]
+    if response["provenance"]["source_system"] != event["source_system"] or response["provenance"]["record_id"] != event["source_record_id"] or response["provenance"]["record_version"] != event["source_record_version"]:
+        return ["auto answer provenance mismatch"]
+    if response["action_digest"] != event["after_digest"] or event["reclassified_action_digest"] != event["after_digest"]:
+        return ["auto answer digest mismatch"]
+    return []
 
 
 def _frame_metadata(request: dict) -> dict:
@@ -219,6 +409,27 @@ def _journal_transition(plan_dir, request: dict, *, actor: str, result: str) -> 
     journal.append(plan_dir, entry)
 
 
+def _transition(plan_dir, request: dict, *, actor: str, result: str) -> None:
+    """Write the journal result and both generated subject views as one fail-closed boundary."""
+    try:
+        _journal_transition(plan_dir, request, actor=actor, result=result)
+        from task import plan_item_state, plan_status
+        item_id = request["subject"]["item_id"]
+        plan_item_state.build_states(plan_dir, item_id=item_id)
+        plan_status.build_status(plan_dir)
+        plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
+        plan_status.build_status(plan_dir, check=True)
+    except Exception as exc:
+        try:
+            _journal_transition(plan_dir, request, actor=actor, result="blocked")
+            from task import plan_item_state, plan_status
+            plan_item_state.build_states(plan_dir, item_id=request["subject"]["item_id"])
+            plan_status.build_status(plan_dir)
+        except Exception:
+            pass
+        raise RequestError("decision transition projection failed; subject remains blocked") from exc
+
+
 def journal_path_events(plan_dir, item_id: str) -> list[dict]:
     path = Path(plan_dir) / journal.FILENAME
     if not path.exists():
@@ -228,9 +439,7 @@ def journal_path_events(plan_dir, item_id: str) -> list[dict]:
 
 
 def request(plan_dir, value: dict, *, actor: str = "owner") -> dict:
-    errors = _request_errors(value)
-    if errors:
-        raise RequestError("; ".join(errors))
+    value = prepare_request(value)
     if value["subject"]["plan_id"] != Path(plan_dir).name:
         raise RequestError("request subject plan_id does not match queue plan")
     if value["decision_id"] in states(plan_dir):
@@ -238,7 +447,7 @@ def request(plan_dir, value: dict, *, actor: str = "owner") -> dict:
     event = {"type": "request", "at": _now(), "actor": actor, "decision_id": value["decision_id"],
              "request": value, **_frame_metadata(value)}
     _append(plan_dir, event)
-    _journal_transition(plan_dir, value, actor=actor, result="blocked")
+    _transition(plan_dir, value, actor=actor, result="blocked")
     return event
 
 
@@ -284,19 +493,28 @@ def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,
     if lease is None or lease.get("resolver_id") != resolver_id:
         raise RequestError("resolver has no active lease")
     request_value = state["request"]
-    if response.get("decision_id") != decision_id or response.get("action_version") != request_value.get("action_version"):
-        raise RequestError("response identity mismatch")
-    if response.get("action_digest") != request_value.get("action_digest") or response.get("policy_digest") != request_value.get("policy_digest"):
-        raise RequestError("response digest mismatch")
-    options = {row.get("id") for row in request_value.get("options", ()) if isinstance(row, dict)}
-    if response.get("selected_option") not in options:
-        raise RequestError("P5_DECISION_UNKNOWN_OPTION")
-    continuation = _continuation(request_value, current=current_continuation,
-                                 resume_available=resume_available, fallback_reason=fallback_reason)
+    errors = _response_errors(response, request_value)
+    if errors:
+        raise RequestError("; ".join(errors))
+    if response["resolver_id"] != resolver_id:
+        raise RequestError("response resolver identity mismatch")
+    selected = next(row for row in request_value["options"] if row["id"] == response["selected_option"])
+    outcome = selected["outcome"]
+    continuation = None
+    if outcome == "apply":
+        application = plan_authority.apply_response(
+            {**request_value, "action": request_value["canonical_action"]["action"]}, response)
+        if not isinstance(application, dict) or application.get("verdict") != "applied":
+            raise RequestError("response application rejected")
+        continuation = _continuation(request_value, current=current_continuation,
+                                     resume_available=resume_available, fallback_reason=fallback_reason)
     event = {"type": "response", "at": _now(), "actor": actor, "decision_id": decision_id,
-             "resolver_id": resolver_id, "response": response, "continuation": continuation}
+             "resolver_id": resolver_id, "response": response, "outcome": outcome}
+    if continuation is not None:
+        event["continuation"] = continuation
     _append(plan_dir, event)
-    _journal_transition(plan_dir, request_value, actor=actor, result="in-progress")
+    _transition(plan_dir, request_value, actor=actor,
+                result="in-progress" if outcome == "apply" else "blocked")
     return event
 
 
@@ -305,25 +523,26 @@ def append_auto_answer(plan_dir, event: dict, *, response: dict | None = None,
     decision_id = event.get("decision_id")
     if not isinstance(decision_id, str) or decision_id not in states(plan_dir):
         raise RequestError("auto answer refers to an unknown decision")
-    if response is not None:
-        if response.get("resolver") != "policy" or not isinstance(response.get("provenance"), dict):
-            raise RequestError("auto answer requires policy resolver provenance")
-        event = {**event, "resolver": response["resolver"], "provenance": response["provenance"]}
+    if response is None:
+        raise RequestError("auto answer requires response and provenance pair")
+    state = states(plan_dir)[decision_id]
+    errors = _auto_answer_errors(event, response, state["request"])
+    if errors:
+        raise RequestError("; ".join(errors))
     record = {"type": "auto_answer", "at": _now(), "actor": actor, "decision_id": decision_id,
-              "event": event}
+              "event": event, "response": response}
     _append(plan_dir, record)
-    request_value = states(plan_dir)[decision_id]["request"]
-    _journal_transition(plan_dir, request_value, actor=actor, result="in-progress")
-    from task import plan_item_state, plan_status
-    plan_item_state.build_states(plan_dir, item_id=request_value["subject"]["item_id"])
-    plan_status.build_status(plan_dir)
+    outcome = "blocked" if response["reclassified_to"] == "authorization" else next(
+        row["outcome"] for row in state["request"]["options"] if row["id"] == response["selected_option"])
+    _transition(plan_dir, state["request"], actor=actor,
+                result="in-progress" if outcome == "apply" else "blocked")
     return record
 
 
 def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
     groups: dict[tuple[str, str, str], list[dict]] = {}
     for decision_id, state in states(plan_dir).items():
-        if state["response"] is not None or state["auto_answers"]:
+        if state["response"] is not None or state["auto_answer"] is not None:
             continue
         event = state["request_event"]
         key = (state["request"]["decision_class"], event["attention_class"], event["required_approver"])
@@ -333,7 +552,7 @@ def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
 
 def unresolved_for_phase(plan_dir, phase_id: str) -> list[str]:
     return sorted(decision_id for decision_id, state in states(plan_dir).items()
-                  if state["response"] is None and not state["auto_answers"]
+                  if state["response"] is None and state["auto_answer"] is None
                   and state["request"]["subject"]["phase_id"] == phase_id)
 
 

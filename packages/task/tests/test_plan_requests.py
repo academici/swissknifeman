@@ -4,28 +4,38 @@ import json
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
-from task import plan_gates, plan_lint, plan_requests, plan_returns
+from task import plan_gates, plan_item_state, plan_lint, plan_requests, plan_returns, plan_status
 
 
 DATA = Path(__file__).resolve().parent / "data" / "plan-v2"
 
 
-def request_value(*, decision_id="Q1", phase_id="P0", item_id="P0.1"):
+def request_value(*, decision_id="Q1", phase_id="P0", item_id="P0.1", kind="authorization"):
     continuation = {"root_session_id": "session-1", "root_run_id": "run-1",
                     "target": {"plan_id": "plan-v2", "item_id": item_id,
                                "resume_command": "task:plan-run plan-v2 " + item_id},
                     "capabilities": {"snapshot_id": "cap-1", "digest": "a" * 64,
                                      "available": ["filesystem"]}, "preferred_mode": "resume-root"}
-    return {"contract_version": "v1", "decision_id": decision_id, "action_version": 1,
-            "kind": "authorization", "decision_class": "scope_change",
+    raw = {"decision_id": decision_id, "action_version": 1,
+            "kind": kind, "decision_class": "scope_change",
             "subject": {"plan_id": "plan-v2", "phase_id": phase_id, "item_id": item_id},
-            "action_digest": "b" * 64, "canonical_action": {}, "material_fields": [],
+            "action": {"type": "fixture-scope-change", "requires_authorization": kind == "authorization",
+                       "affected_surfaces": ["fixture"], "declared_scope": ["fixture"],
+                       "frozen_contract_change": False, "closed_set_extension": False,
+                       "reversible": True, "decision_recorded": True},
             "options": [{"id": "approve", "outcome": "apply", "action_ref": "x", "evidence_refs": []},
+                        {"id": "escalate", "outcome": "escalate", "action_ref": None, "evidence_refs": []},
+                        {"id": "park", "outcome": "park", "action_ref": None, "evidence_refs": []},
                         {"id": "reject", "outcome": "reject", "action_ref": None, "evidence_refs": []}],
             "default_option": None, "on_timeout": "park", "expires_at": "2099-01-01T00:00:00Z",
-            "evidence": [], "policy_digest": "c" * 64, "attempted": [], "continuation": continuation}
+            "evidence": [], "attempted": [], "continuation": continuation}
+    durable = plan_requests.prepare_request(raw)
+    raw.update({key: durable[key] for key in ("contract_version", "action_digest", "canonical_action",
+                                               "material_fields", "policy_digest")})
+    return raw
 
 
 class PlanRequestsTests(unittest.TestCase):
@@ -35,9 +45,9 @@ class PlanRequestsTests(unittest.TestCase):
         self.plan = Path(self.tmp.name) / "plan-v2"
         shutil.copytree(DATA, self.plan)
 
-    def _response(self, request):
+    def _response(self, request, *, option="approve"):
         return {"decision_id": request["decision_id"], "action_version": 1,
-                "selected_option": "approve", "resolver": "owner", "resolver_id": "owner:1",
+                "selected_option": option, "resolver": "owner", "resolver_id": "owner:1",
                 "policy_digest": request["policy_digest"], "action_digest": request["action_digest"],
                 "reason_code": "P5_DECISION_OWNER_APPROVED", "provenance": {"source_system": "git",
                 "record_id": "r1", "record_version": "1", "verified": True}, "at": "2099-01-01T00:00:00Z"}
@@ -90,7 +100,7 @@ class PlanRequestsTests(unittest.TestCase):
             "| visibility | private |", "| visibility | private |\n| Decision Queue Gate | v1 |"), encoding="utf-8")
         diag = plan_lint.Diagnostics()
         plan_gates.lint_return_loop(self.plan, "v2", diag)
-        self.assertTrue(any("P0" in line and "Q1" in line for line in diag.errors), diag.errors)
+        self.assertFalse(diag.errors, diag.errors)
 
     def test_forbidden_content_and_size_are_rejected_before_append(self):
         value = request_value()
@@ -98,6 +108,8 @@ class PlanRequestsTests(unittest.TestCase):
         with self.assertRaisesRegex(plan_requests.RequestError, "FORBIDDEN"):
             plan_requests.request(self.plan, value)
         oversized = request_value()
+        for key in ("contract_version", "action_digest", "canonical_action", "material_fields", "policy_digest"):
+            oversized.pop(key)
         oversized["action"] = {"payload": "x" * 20000}
         with self.assertRaisesRegex(plan_requests.RequestError, "TOO_LARGE"):
             plan_requests.request(self.plan, oversized)
@@ -119,6 +131,69 @@ class PlanRequestsTests(unittest.TestCase):
         self.assertIn("**Status:** 🔴 Blocked", state)
         other = (self.plan / "phases/P0/P0.1.state.md").read_text(encoding="utf-8")
         self.assertIn("**Status:** 🟢 Done", other)
+
+    def test_schema_dialect_is_fully_consumed(self):
+        schema = plan_requests._schema()
+        used = set()
+        def walk(value):
+            if isinstance(value, dict):
+                used.update(set(value) & plan_requests._SCHEMA_KEYWORDS)
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+        walk(schema["request"])
+        walk(schema["response"])
+        self.assertEqual(used, plan_requests._SCHEMA_KEYWORDS)
+        self.assertEqual(["unsupported frozen schema keyword at probe: oneOf"],
+                         plan_requests._shape_errors({}, {"type": "object", "oneOf": []}, schema, "probe"))
+
+    def test_invalid_ingress_is_atomic(self):
+        paths = (self.plan / "decisions" / "queue.jsonl", self.plan / "journal.jsonl",
+                 self.plan / "phases/P0/P0.1.state.md", self.plan / "status.md")
+        before = [path.read_bytes() if path.exists() else None for path in paths]
+        value = request_value()
+        value["kind"] = "NOT_A_KIND"
+        with self.assertRaises(plan_requests.RequestError):
+            plan_requests.request(self.plan, value)
+        self.assertEqual(before, [path.read_bytes() if path.exists() else None for path in paths])
+
+    def test_response_outcome_drives_subject_state(self):
+        for option in ("park", "escalate", "reject"):
+            with self.subTest(option=option):
+                self.setUp()
+                value = request_value(decision_id="Q-" + option)
+                plan_requests.request(self.plan, value)
+                plan_requests.claim(self.plan, value["decision_id"], resolver_id="owner:1", lease_expires_at="2099-01-01T00:00:00Z")
+                result = plan_requests.resolve(self.plan, value["decision_id"], self._response(value, option=option), resolver_id="owner:1")
+                self.assertNotIn("continuation", result)
+                self.assertIn("**Status:** 🔴 Blocked", (self.plan / "phases/P0/P0.1.state.md").read_text())
+                plan_item_state.build_states(self.plan, item_id="P0.1", check=True)
+                plan_status.build_status(self.plan, check=True)
+
+    def test_auto_answer_requires_contract_pair_and_reclassification(self):
+        value = request_value(decision_id="Q-auto", kind="clarification")
+        plan_requests.request(self.plan, value)
+        with self.assertRaisesRegex(plan_requests.RequestError, "requires response"):
+            plan_requests.append_auto_answer(self.plan, {"decision_id": "Q-auto"})
+        response = self._response(value)
+        response.update({"resolver": "policy", "resolver_id": "policy:fixture", "reclassified_to": "authorization"})
+        event = {"decision_id": "Q-auto", "question_class": "plan", "resolver_id": "policy:fixture",
+                 "source_system": "git", "source_record_id": "r1", "source_record_version": "1",
+                 "before_digest": value["action_digest"], "after_digest": value["action_digest"],
+                 "provenance_verified": True, "policy_digest": value["policy_digest"],
+                 "reclassified_action_digest": value["action_digest"], "reclassified_to": "authorization"}
+        plan_requests.append_auto_answer(self.plan, event, response=response)
+        self.assertIn("**Status:** 🔴 Blocked", (self.plan / "phases/P0/P0.1.state.md").read_text())
+
+    def test_projection_failure_never_releases_continuation(self):
+        value = request_value(decision_id="Q-fail")
+        with mock.patch("task.plan_item_state.build_states", side_effect=RuntimeError("injected")):
+            with self.assertRaisesRegex(plan_requests.RequestError, "projection failed"):
+                plan_requests.request(self.plan, value)
+        events = [json.loads(line) for line in (self.plan / "journal.jsonl").read_text().splitlines()]
+        self.assertEqual(events[-1]["result"], "blocked")
 
 
 if __name__ == "__main__":

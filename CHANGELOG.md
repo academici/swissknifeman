@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: очередь решений P5.4 теперь принуждает frozen contract fail-closed.** Все ingress
+  валидируются до append, `action` остаётся transient construction input, outcome варианта управляет
+  continuation, а переходы атомарно обновляют item/status projections (`2026.08.07-PLAN-ECONOMY`
+  P5.4, D144–D145).
+
 - **`task`: return-loop owner gate теперь создаёт ссылочный DecisionRequest.** Замороженный
   P4 packet не копируется в очередь, affected subject паркуется адресно, а policy auto-answer
   снимает только свою локальную паузу (`2026.08.07-PLAN-ECONOMY` P5.5).

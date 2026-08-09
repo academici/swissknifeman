@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: downstream consumer validation защищена от рекурсивного self-poisoning.**
+  Вложенный `plan-lint` больше не перечитывает append-only downstream RED во время проверки,
+  которая должна его supersede; прямой lint сохраняет fail-closed поведение.
+
 - **`task`: `acceptance-protocol` перезаморожен как stage-aware v1.1.0.**
   После сохранённого RED v1.0.0 reducer различает `ready`, evidence-only
   `historical-pre-v2` и deferred `pending-producer`; threshold, scope traversal, arms и

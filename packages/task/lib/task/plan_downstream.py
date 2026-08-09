@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -19,6 +20,7 @@ class DownstreamError(ValueError):
 GATE_ID = "downstream-gate-v1"
 VERSION = "1.0.0"
 ACTIVATION_CHECK = "task.plan_gates._lint_downstream_records"
+NESTED_VALIDATION_ENV = "TASK_DOWNSTREAM_NESTED_VALIDATION"
 OUTCOMES = frozenset(("green", "red", "unknown"))
 TERMINAL_STATUSES = frozenset(("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"))
 _ITEM = re.compile(r"^P\d+\.\d+$")
@@ -208,8 +210,14 @@ def _exists_in_tree(path: str, tree: set[str]) -> bool:
 
 
 def _default_runner(command: str, cwd: Path):
+    env = os.environ.copy()
+    # Consumer Validation may itself invoke plan-lint. Re-entering this gate
+    # would make an append-only RED record fail the very rerun intended to
+    # supersede it. Only the nested lint pass is suppressed; direct lint keeps
+    # the normal fail-closed record checks.
+    env[NESTED_VALIDATION_ENV] = "1"
     return subprocess.run(command, cwd=cwd, shell=True, executable="/bin/bash", text=True,
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
 
 def _bounded_output(value: str, limit: int = 4000) -> tuple[str, bool]:
@@ -357,6 +365,8 @@ def _records(plan_dir: Path) -> list[tuple[Path, dict]]:
 
 def lint_records(plan_dir, layout: str, diag) -> None:
     """Check only post-cutoff layout-v2 producers from the registry carrier."""
+    if os.environ.get(NESTED_VALIDATION_ENV) == "1":
+        return
     if layout != "v2":
         return
     plan_dir = Path(plan_dir)

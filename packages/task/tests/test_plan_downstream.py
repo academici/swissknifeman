@@ -1,6 +1,7 @@
 """Downstream-gate v1 discovery, outcomes, key and opt-in lint tests."""
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -132,6 +133,30 @@ class TestPlanDownstream(unittest.TestCase):
             plan_lint.lint_plan(self.plan, diag)
         self.assertTrue(any("red блокирует" in row and plan_downstream.GATE_ID in row
                             for row in diag.errors), diag.errors)
+
+    def test_nested_validation_does_not_consume_existing_downstream_records(self):
+        self._commit_consumer('python3 -c "raise SystemExit(5)"')
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+        plan_downstream.record(self.plan, result, date="2026-08-08")
+        with unittest.mock.patch.object(
+                plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
+            diag = plan_lint.Diagnostics()
+            plan_lint.lint_plan(self.plan, diag)
+            self.assertTrue(any("red блокирует" in row for row in diag.errors), diag.errors)
+            with unittest.mock.patch.dict(
+                    os.environ, {plan_downstream.NESTED_VALIDATION_ENV: "1"}):
+                nested_diag = plan_lint.Diagnostics()
+                plan_lint.lint_plan(self.plan, nested_diag)
+        self.assertFalse(any(plan_downstream.GATE_ID in row for row in nested_diag.errors),
+                         nested_diag.errors)
+
+    def test_default_runner_marks_nested_validation(self):
+        command = (
+            "python3 -c \"import os,sys; "
+            f"sys.exit(os.environ.get('{plan_downstream.NESTED_VALIDATION_ENV}') != '1')\""
+        )
+        completed = plan_downstream._default_runner(command, self.repo)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
 
     def test_newer_green_producer_commit_supersedes_append_only_red(self):
         self._commit_consumer('python3 -c "raise SystemExit(5)"')

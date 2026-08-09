@@ -154,10 +154,12 @@ def _request_errors(request: dict) -> list[str]:
         if request["subject"]["plan_id"] != request["continuation"]["target"]["plan_id"] or request["subject"]["item_id"] != request["continuation"]["target"]["item_id"]:
             return ["request continuation target mismatches subject"]
         option_ids = [row["id"] for row in request["options"]]
-        if not schema["options"]["min_substantive"] <= len(option_ids) <= schema["options"]["max_substantive"]:
-            return ["request options violate frozen bounds"]
-        if not set(schema["options"]["mandatory"]).issubset(option_ids):
+        mandatory = frozenset(schema["options"]["mandatory"])
+        if not mandatory.issubset(option_ids):
             return ["request options omit frozen mandatory choices"]
+        substantive = [option_id for option_id in option_ids if option_id not in mandatory]
+        if not schema["options"]["min_substantive"] <= len(substantive) <= schema["options"]["max_substantive"]:
+            return ["request options violate frozen bounds"]
         if request["default_option"] is not None and request["default_option"] not in option_ids:
             return ["request default option is undeclared"]
         trusted = copy.deepcopy(request)
@@ -274,6 +276,32 @@ def states(plan_dir) -> dict[str, dict]:
                 raise RequestError("; ".join(errors))
             result[decision_id]["auto_answer"] = event
     return result
+
+
+def semantic_outcome(state: dict) -> str:
+    """Reduce one durable queue state to its only permission/pending verdict."""
+    request_value = state.get("request")
+    if not isinstance(request_value, dict):
+        raise RequestError("decision state has no request")
+    response_event = state.get("response")
+    auto_event = state.get("auto_answer")
+    if response_event is None and auto_event is None:
+        return "pending"
+    if response_event is not None:
+        response = response_event.get("response")
+    else:
+        response = auto_event.get("response")
+        if isinstance(response, dict) and response.get("reclassified_to") == "authorization":
+            return "pending-authorization"
+    if not isinstance(response, dict):
+        raise RequestError("decision terminal event has no response")
+    selected_option = response.get("selected_option")
+    for option in request_value.get("options", ()):
+        if isinstance(option, dict) and option.get("id") == selected_option:
+            outcome = option.get("outcome")
+            if outcome in ("apply", "park", "reject", "escalate"):
+                return outcome
+    raise RequestError("decision terminal event has unknown outcome")
 
 
 def _response_errors(response: dict, request: dict) -> list[str]:
@@ -419,25 +447,34 @@ def _journal_transition(plan_dir, request: dict, *, actor: str, result: str) -> 
     journal.append(plan_dir, entry)
 
 
-def _transition(plan_dir, request: dict, *, actor: str, result: str) -> None:
-    """Write the journal result and both generated subject views as one fail-closed boundary."""
+def _transition_result(outcome: str) -> str:
+    return "in-progress" if outcome == "apply" else "blocked"
+
+
+def _refresh_views(plan_dir, item_id: str, *, check: bool) -> None:
+    from task import plan_item_state, plan_status
+    plan_item_state.build_states(plan_dir, item_id=item_id, check=check)
+    plan_status.build_status(plan_dir, check=check)
+    render(plan_dir, check=check)
+
+
+def _repair_transition(plan_dir, request: dict, *, actor: str, outcome: str) -> None:
+    """Converge journal and generated views without duplicating queue events."""
+    result = _transition_result(outcome)
+    prior = journal_path_events(plan_dir, request["subject"]["item_id"])
+    if prior and prior[-1].get("result") == result:
+        try:
+            _refresh_views(plan_dir, request["subject"]["item_id"], check=True)
+            return
+        except Exception:
+            # The durable event is authoritative; regenerate below rather than accepting stale views.
+            pass
     try:
         _journal_transition(plan_dir, request, actor=actor, result=result)
-        from task import plan_item_state, plan_status
-        item_id = request["subject"]["item_id"]
-        plan_item_state.build_states(plan_dir, item_id=item_id)
-        plan_status.build_status(plan_dir)
-        plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
-        plan_status.build_status(plan_dir, check=True)
+        _refresh_views(plan_dir, request["subject"]["item_id"], check=False)
+        _refresh_views(plan_dir, request["subject"]["item_id"], check=True)
     except Exception as exc:
-        try:
-            _journal_transition(plan_dir, request, actor=actor, result="blocked")
-            from task import plan_item_state, plan_status
-            plan_item_state.build_states(plan_dir, item_id=request["subject"]["item_id"])
-            plan_status.build_status(plan_dir)
-        except Exception:
-            pass
-        raise RequestError("decision transition projection failed; subject remains blocked") from exc
+        raise RequestError("decision transition projection failed; exact retry must repair views") from exc
 
 
 def journal_path_events(plan_dir, item_id: str) -> list[dict]:
@@ -452,12 +489,17 @@ def request(plan_dir, value: dict, *, actor: str = "owner") -> dict:
     value = prepare_request(value)
     if value["subject"]["plan_id"] != Path(plan_dir).name:
         raise RequestError("request subject plan_id does not match queue plan")
-    if value["decision_id"] in states(plan_dir):
-        raise RequestError(f"decision already exists: {value['decision_id']}")
+    existing = states(plan_dir).get(value["decision_id"])
+    if existing is not None:
+        if _canonical(existing["request"]) != _canonical(value):
+            raise RequestError(f"decision already exists: {value['decision_id']}")
+        _repair_transition(plan_dir, existing["request"], actor=actor,
+                           outcome=semantic_outcome(existing))
+        return existing["request_event"]
     event = {"type": "request", "at": _now(), "actor": actor, "decision_id": value["decision_id"],
              "request": value, **_frame_metadata(value)}
     _append(plan_dir, event)
-    _transition(plan_dir, value, actor=actor, result="blocked")
+    _repair_transition(plan_dir, value, actor=actor, outcome=semantic_outcome(states(plan_dir)[value["decision_id"]]))
     return event
 
 
@@ -497,34 +539,47 @@ def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,
             current_continuation: dict | None = None, resume_available: bool = True,
             fallback_reason: str | None = None, actor: str = "owner") -> dict:
     state = states(plan_dir).get(decision_id)
-    if state is None or state["response"] is not None:
+    if state is None:
         raise RequestError("decision is absent or already resolved")
-    lease = _active_claim(state, _now())
-    if lease is None or lease.get("resolver_id") != resolver_id:
-        raise RequestError("resolver has no active lease")
     request_value = state["request"]
     errors = _response_errors(response, request_value)
     if errors:
         raise RequestError("; ".join(errors))
     if response["resolver_id"] != resolver_id:
         raise RequestError("response resolver identity mismatch")
+    if state["response"] is not None:
+        existing = state["response"]
+        if (existing.get("resolver_id") != resolver_id
+                or _canonical(existing.get("response")) != _canonical(response)):
+            raise RequestError("decision response is already resolved")
+        outcome = semantic_outcome(state)
+        _repair_transition(plan_dir, request_value, actor=actor, outcome=outcome)
+        if outcome != "apply":
+            return existing
+        return {**existing, "continuation": _continuation(
+            request_value, current=current_continuation, resume_available=resume_available,
+            fallback_reason=fallback_reason)}
+    lease = _active_claim(state, _now())
+    if lease is None or lease.get("resolver_id") != resolver_id:
+        raise RequestError("resolver has no active lease")
     selected = next(row for row in request_value["options"] if row["id"] == response["selected_option"])
     outcome = selected["outcome"]
-    continuation = None
     if outcome == "apply":
         application = plan_authority.apply_response(
             {**request_value, "action": request_value["canonical_action"]["action"]}, response)
         if not isinstance(application, dict) or application.get("verdict") != "applied":
             raise RequestError("response application rejected")
-        continuation = _continuation(request_value, current=current_continuation,
-                                     resume_available=resume_available, fallback_reason=fallback_reason)
+        _continuation(request_value, current=current_continuation,
+                      resume_available=resume_available, fallback_reason=fallback_reason)
     event = {"type": "response", "at": _now(), "actor": actor, "decision_id": decision_id,
              "resolver_id": resolver_id, "response": response, "outcome": outcome}
-    if continuation is not None:
-        event["continuation"] = continuation
     _append(plan_dir, event)
-    _transition(plan_dir, request_value, actor=actor,
-                result="in-progress" if outcome == "apply" else "blocked")
+    outcome = semantic_outcome(states(plan_dir)[decision_id])
+    _repair_transition(plan_dir, request_value, actor=actor, outcome=outcome)
+    if outcome == "apply":
+        return {**event, "continuation": _continuation(
+            request_value, current=current_continuation, resume_available=resume_available,
+            fallback_reason=fallback_reason)}
     return event
 
 
@@ -542,17 +597,15 @@ def append_auto_answer(plan_dir, event: dict, *, response: dict | None = None,
     record = {"type": "auto_answer", "at": _now(), "actor": actor, "decision_id": decision_id,
               "event": event, "response": response}
     _append(plan_dir, record)
-    outcome = "blocked" if response["reclassified_to"] == "authorization" else next(
-        row["outcome"] for row in state["request"]["options"] if row["id"] == response["selected_option"])
-    _transition(plan_dir, state["request"], actor=actor,
-                result="in-progress" if outcome == "apply" else "blocked")
+    outcome = semantic_outcome(states(plan_dir)[decision_id])
+    _repair_transition(plan_dir, state["request"], actor=actor, outcome=outcome)
     return record
 
 
 def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
     groups: dict[tuple[str, str, str], list[dict]] = {}
     for decision_id, state in states(plan_dir).items():
-        if state["response"] is not None or state["auto_answer"] is not None:
+        if semantic_outcome(state) not in ("pending", "pending-authorization"):
             continue
         event = state["request_event"]
         key = (state["request"]["decision_class"], event["attention_class"], event["required_approver"])
@@ -562,7 +615,7 @@ def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
 
 def unresolved_for_phase(plan_dir, phase_id: str) -> list[str]:
     return sorted(decision_id for decision_id, state in states(plan_dir).items()
-                  if state["response"] is None and state["auto_answer"] is None
+                  if semantic_outcome(state) in ("pending", "pending-authorization")
                   and state["request"]["subject"]["phase_id"] == phase_id)
 
 

@@ -141,10 +141,18 @@ def lint_return_loop(plan_dir, layout: str, diag) -> None:
 
 def _lint_terminal_phase_unresolved_decisions(plan_dir, layout: str, diag) -> None:
     """Opt-in join: a terminal phase cannot leave a queue request unresolved."""
-    if layout != "v2" or not _decision_queue_enabled(Path(plan_dir)):
+    if layout != "v2":
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        active = plan_gate_activation.active_phases(plan_dir, "task.plan_gates._lint_terminal_phase_unresolved_decisions")
+    except plan_gate_activation.ActivationError as exc:
+        diag.error(plan_dir / "decisions" / "queue.jsonl", None, f"{DECISION_QUEUE_GATE_ID}: {exc}")
         return
     try:
         for phase_id in plan_layout.phase_paths(plan_dir):
+            if phase_id not in active:
+                continue
             if not plan_layout.is_terminal_phase(plan_dir, phase_id):
                 continue
             unresolved = plan_requests.unresolved_for_phase(plan_dir, phase_id)
@@ -365,6 +373,10 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
                         _path_error(diag, plan_dir / "plan.md",
                                     f"пункт {item['item_id']}, {field}: {candidate} адресует файл "
                                     "терминальной фазы; допустим только её closure digest")
+    _lint_downstream_records(plan_dir, layout, diag)
+
+
+def _lint_downstream_records(plan_dir, layout: str, diag) -> None:
     plan_downstream.lint_records(plan_dir, layout, diag)
 
 

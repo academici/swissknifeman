@@ -1,0 +1,17 @@
+{
+  "decision_id": "P6.6-rollout-ownership-repair-2026-08-09",
+  "action_version": 1,
+  "selected_option": "repair-ownership-conflicts",
+  "resolver": "owner",
+  "resolver_id": "repository_owner",
+  "policy_digest": "37df9c289931ee198c92039fd6a0337340b2dc4a2878c9ae6e86446b927b299f",
+  "action_digest": "b13c0baff132acea0f52a6a89db2b999f65d89290965247289bbb3c00438f1d8",
+  "reason_code": "P5_DECISION_OWNER_APPROVED",
+  "provenance": {
+    "source_system": "owner-chat",
+    "record_id": "2026-08-09-user-resume-without-design",
+    "record_version": "1",
+    "verified": true
+  },
+  "at": "2026-08-09T13:35:02Z"
+}

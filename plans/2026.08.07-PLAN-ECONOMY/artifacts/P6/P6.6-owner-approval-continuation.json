@@ -1,0 +1,15 @@
+{
+  "root_session_id": "019fe6aa-b8ce-77c1-9eec-1b0e06f25753",
+  "root_run_id": "plan-run:P6.6:019fe6aa-b8ce-77c1-9eec-1b0e06f25753",
+  "target": {
+    "plan_id": "2026.08.07-PLAN-ECONOMY",
+    "item_id": "P6.6",
+    "resume_command": "task:plan-run 2026.08.07-PLAN-ECONOMY P6.6"
+  },
+  "capabilities": {
+    "snapshot_id": "gpt-5.6-sol/high",
+    "digest": "9d4701ef7da2aed0543e94d3df8578eed59954a74f682f913322f9a9a01a73aa",
+    "available": ["skiller-update", "consumer-status", "plan-lint"]
+  },
+  "preferred_mode": "resume-root"
+}

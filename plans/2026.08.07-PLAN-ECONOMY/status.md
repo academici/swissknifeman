@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 2a4c5e8b8d41e6fae32c773a1e4ed1cd790e8f788f9dc88c2d62abe1385eb6a6
+inputs_sha256: a11f8be4f94e404d30cd52c28dd10b2a7533ac2cea3df701fd2c818d5a83570c
 generated_by: task plan-views status
 -->
 
@@ -108,7 +108,7 @@ generated_by: task plan-views status
 | P6.3 | Ввести интерфейсы модельного суждения: запрос решения и ассет рубрики среза | 🟠 Done with deviations | 2026-08-09 |
 | P6.4 | Включить четыре проверки по одной за коммит и ретайрить поле активации | 🟠 Done with deviations | 2026-08-09 |
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
-| P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | ⬜ Not started | — |
+| P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
 | P6.7 | Предобъявить протокол приёмки | ⬜ Not started | — |
 | P6.8 | Исполнить приёмку двумя руками и вынести вердикт | ⬜ Not started | — |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
@@ -330,6 +330,12 @@ generated_by: task plan-views status
 | 2026-08-09 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: scope/reads/validation сверены с modular owner-модулями plan_lint_checks |
 | 2026-08-09 | gpt-5.6-sol/xhigh | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-sol/xhigh | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:213 |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Session: gpt-5.6-sol/high; pre-mutation task contract allow; external rollout awaits formal owner gate. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · blocked · decision queue: P6.6-rollout-ownership-repair-2026-08-09 |
+| 2026-08-09 | owner | plan-run · in-progress · decision queue: P6.6-rollout-ownership-repair-2026-08-09 |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:217 |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Forward repair: downstream P6.8 record must be produced before terminal closure; prior red result preserved/superseded by the next keyed record. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:219 |
 
 ## Owner Gates
 
@@ -361,3 +367,4 @@ generated_by: task plan-views status
 - P6.3: known deviation
 - P6.4: known deviation
 - P6.5: known deviation
+- P6.6: known deviation

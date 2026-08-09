@@ -1,34 +1,34 @@
-# HANDOFF — 2026-08-09 — after P6.5
+# HANDOFF — 2026-08-09 — after P6.6
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P6.6
+**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | доступ к реестру проектов; запись только после владельческого гейта |
+| Capabilities | — |
 | Context | continue-root |
-| Суть | Выполнить dry-run раскатки EN-only канона, собрать инвентарь и запросить владельческий гейт перед записью в чужие репозитории. |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.6` |
+| Суть | Заморозить acceptance-protocol v1 и машинный session canary до любого прогона приёмки. |
+| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7` |
 
-**Done:** P6.5 закрыт как 🟠: 230 RU-носителей удалены; EN-only авторинг, compact plan-protocol v2, snippets/references, weight gate и fail-closed проверки опубликованы. Scope-коммиты: `e3d4b3da`, `4146b486`; downstream P6.6 — green на `4146b486`.
+**Done:** P6.6 закрыт как 🟠: владелец разрешил ремонт ownership/path conflicts; Claude-пути в `vintera/vintera` и `dterema/app` разведены с Codex. Полные dry-run и `skiller update --all` завершили 23/23 доступных целей; инвентарь даёт 52 `ok` из 57 деклараций. Runbook v1→v2 опубликован в `a73653c9`.
 
-**Remaining:** P6.6 — dry-run и инвентарь флота; внешние записи запрещены до явного владельческого решения. Затем P6.7–P6.9 по roadmap.
+**Remaining:** Пять устаревших деклараций остаются `unknown` без маскирующего удаления. Затем P6.7–P6.9 и phase/plan closure.
 
-**Sources of truth:** `plan.md` §3 Routing · `roadmap.md` · `phases/P6/P6.5.state.md` · `phases/P6/P6.6.md` · `artifacts/P6/canon-weight-before-after.json` · `findings/P6.5-downstream-P6.6-ff166cd9415c-4146b486b5d8.md` · `journal.jsonl`.
+**Sources of truth:** `phases/P6/P6.6.state.md` · `artifacts/P6/fleet-adoption-inventory.json` · `artifacts/P6/rollout-dry-run.txt` · `findings/P6.6-rollout-blockers-2026-08-09.md` · `decisions/queue.jsonl` · `journal.jsonl`.
 
-**Open risks:** Четыре ранних downstream-finding фиксируют красные попытки до parser/spec repair; их supersede'ит green finding на более новом producer commit. Полный `harness` validate сохраняет пять предсуществующих fixture-падений, воспроизводимых на baseline `3138238b`; `harness instructions check` для изменённой поверхности зелёный 14/14.
+**Open risks:** `agelto`, `diabox`, `flexcrm`, `azguard` и `sova` не доказывают актуальность каждой зарегистрированной декларации; это остаток реестра, а не сбой 23-целевой раскатки.
 
-**Workarounds/Deferred/Open questions:** workarounds — нет · deferred — Claude-native replay остаётся `pending-provider` · open_questions — владельческое разрешение на запись P6.6 в чужие репозитории.
+**Workarounds/Deferred/Open questions:** workarounds — none · deferred — точечная регистровая чистка пяти declarations · open_questions — none.
 
 Provider-neutral plan-protocol launch-block:
 
 ```text
-task:plan-run 2026.08.07-PLAN-ECONOMY P6.6
+task:plan-run 2026.08.07-PLAN-ECONOMY P6.7
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.6'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.7'
 ```

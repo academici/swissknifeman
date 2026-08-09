@@ -144,7 +144,8 @@ class TestPlanDownstream(unittest.TestCase):
             plan_lint.lint_plan(self.plan, diag)
             self.assertTrue(any("red блокирует" in row for row in diag.errors), diag.errors)
             with unittest.mock.patch.dict(
-                    os.environ, {plan_downstream.NESTED_VALIDATION_ENV: "1"}):
+                    os.environ, {plan_downstream.NESTED_VALIDATION_ENV: "1"}), \
+                    unittest.mock.patch.object(plan_downstream.sys, "argv", ["plan-lint.py"]):
                 nested_diag = plan_lint.Diagnostics()
                 plan_lint.lint_plan(self.plan, nested_diag)
         self.assertFalse(any(plan_downstream.GATE_ID in row for row in nested_diag.errors),

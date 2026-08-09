@@ -7,6 +7,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
@@ -365,7 +366,8 @@ def _records(plan_dir: Path) -> list[tuple[Path, dict]]:
 
 def lint_records(plan_dir, layout: str, diag) -> None:
     """Check only post-cutoff layout-v2 producers from the registry carrier."""
-    if os.environ.get(NESTED_VALIDATION_ENV) == "1":
+    if (os.environ.get(NESTED_VALIDATION_ENV) == "1"
+            and Path(sys.argv[0]).name == "plan-lint.py"):
         return
     if layout != "v2":
         return

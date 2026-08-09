@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -97,33 +98,30 @@ class TestPlanDownstream(unittest.TestCase):
                          hashlib.sha256(self.consumer.read_bytes()).hexdigest())
         self.assertEqual(consumer["result_key"]["producer_commit"], self._git("rev-parse", "HEAD"))
 
-    def test_lint_is_silent_by_default_and_opt_in_requires_record(self):
+    def test_lint_uses_registry_activation_and_requires_record(self):
         diag = plan_lint.Diagnostics()
         plan_lint.lint_plan(self.plan, diag)
         self.assertFalse(any(plan_downstream.GATE_ID in row for row in diag.errors), diag.errors)
-        plan_md = self.plan / "plan.md"
-        plan_md.write_text(plan_md.read_text(encoding="utf-8").replace(
-            "| Layout | v2 |", "| Layout | v2 |\n| Downstream Gate | v1 |"), encoding="utf-8")
-        diag = plan_lint.Diagnostics()
-        plan_lint.lint_plan(self.plan, diag)
+        with unittest.mock.patch.object(plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
+            diag = plan_lint.Diagnostics()
+            plan_lint.lint_plan(self.plan, diag)
         self.assertTrue(any("P0.1" in row and "P1.1" in row and plan_downstream.GATE_ID in row
                             for row in diag.errors), diag.errors)
         result = plan_downstream.evaluate(self.plan, "P0.1")
         plan_downstream.record(self.plan, result, date="2026-08-08")
-        diag = plan_lint.Diagnostics()
-        plan_lint.lint_plan(self.plan, diag)
+        with unittest.mock.patch.object(plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
+            diag = plan_lint.Diagnostics()
+            plan_lint.lint_plan(self.plan, diag)
         self.assertFalse(any(plan_downstream.GATE_ID in row for row in diag.errors), diag.errors)
 
-    def test_opt_in_lint_keeps_recorded_red_blocking(self):
+    def test_registry_activation_keeps_recorded_red_blocking(self):
         self._commit_consumer('python3 -c "raise SystemExit(5)"')
-        plan_md = self.plan / "plan.md"
-        plan_md.write_text(plan_md.read_text(encoding="utf-8").replace(
-            "| Layout | v2 |", "| Layout | v2 |\n| Downstream Gate | v1 |"), encoding="utf-8")
         result = plan_downstream.evaluate(self.plan, "P0.1")
         self.assertEqual(result["outcome"], "red")
         plan_downstream.record(self.plan, result, date="2026-08-08")
-        diag = plan_lint.Diagnostics()
-        plan_lint.lint_plan(self.plan, diag)
+        with unittest.mock.patch.object(plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
+            diag = plan_lint.Diagnostics()
+            plan_lint.lint_plan(self.plan, diag)
         self.assertTrue(any("red блокирует" in row and plan_downstream.GATE_ID in row
                             for row in diag.errors), diag.errors)
 

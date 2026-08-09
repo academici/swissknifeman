@@ -9,7 +9,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
-from task import plan_bundle, plan_layout, plan_weight
+from task import plan_bundle, plan_gate_activation, plan_layout, plan_weight
 
 
 class DownstreamError(ValueError):
@@ -18,13 +18,11 @@ class DownstreamError(ValueError):
 
 GATE_ID = "downstream-gate-v1"
 VERSION = "1.0.0"
-OPT_IN_FIELD = "Downstream Gate"
-OPT_IN_VALUE = "v1"
+ACTIVATION_CHECK = "task.plan_gates._lint_downstream_records"
 OUTCOMES = frozenset(("green", "red", "unknown"))
 TERMINAL_STATUSES = frozenset(("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"))
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _COMMIT = re.compile(r"^[0-9a-f]{7,64}$")
-_META_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$")
 _QUOTED_PATH = re.compile(r"['\"]([^'\"\s]+/[^'\"\s]+\.[A-Za-z][A-Za-z0-9_-]*)['\"]")
 _UNITTEST = re.compile(r"(?:^|\s)-m\s+unittest\s+([^;&|]+)")
 _CD = re.compile(r"(?:^|[;&|]\s*)cd\s+([^\s;&|]+)")
@@ -344,18 +342,6 @@ def record(plan_dir, result: dict, *, date: str | None = None) -> list[Path]:
     return written
 
 
-def opted_in(plan_dir) -> bool:
-    try:
-        lines = (Path(plan_dir) / "plan.md").read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return False
-    for line in lines:
-        match = _META_ROW.match(line)
-        if match and match.group(1).strip() == OPT_IN_FIELD:
-            return match.group(2).strip() == OPT_IN_VALUE
-    return False
-
-
 def _records(plan_dir: Path) -> list[tuple[Path, dict]]:
     records = []
     for path in sorted((plan_dir / "findings").rglob("*.md")):
@@ -369,10 +355,15 @@ def _records(plan_dir: Path) -> list[tuple[Path, dict]]:
 
 
 def lint_records(plan_dir, layout: str, diag) -> None:
-    """Opt-in linter check; default and every v1 plan remain byte-silent."""
-    if layout != "v2" or not opted_in(plan_dir):
+    """Check only post-cutoff layout-v2 producers from the registry carrier."""
+    if layout != "v2":
         return
     plan_dir = Path(plan_dir)
+    try:
+        active = plan_gate_activation.active_items(plan_dir, ACTIVATION_CHECK)
+    except plan_gate_activation.ActivationError as exc:
+        diag.error(plan_dir / "plan.md", None, f"{GATE_ID}: {exc}")
+        return
     repo_root = plan_weight.repo_root_for(plan_dir)
     try:
         head = _git(repo_root, "rev-parse", "--verify", "HEAD^{commit}")
@@ -381,7 +372,7 @@ def lint_records(plan_dir, layout: str, diag) -> None:
         return
     records = _records(plan_dir)
     for item_id, fields in sorted(_all_items(plan_dir).items()):
-        if fields.get("Status") not in TERMINAL_STATUSES:
+        if item_id not in active or fields.get("Status") not in TERMINAL_STATUSES:
             continue
         for consumer in discover_consumers(plan_dir, item_id):
             current_sha = consumer_spec_sha256(plan_dir, consumer["item"])
@@ -431,6 +422,6 @@ def dumps(result: dict) -> str:
     return json.dumps(result, ensure_ascii=False, sort_keys=True) + "\n"
 
 
-__all__ = ("DownstreamError", "GATE_ID", "OPT_IN_FIELD", "OPT_IN_VALUE", "OUTCOMES",
+__all__ = ("ACTIVATION_CHECK", "DownstreamError", "GATE_ID", "OUTCOMES",
            "consumer_spec_sha256", "discover_consumers", "dumps", "evaluate", "lint_records",
-           "opted_in", "parse_result_record", "record", "validate_result_record")
+           "parse_result_record", "record", "validate_result_record")

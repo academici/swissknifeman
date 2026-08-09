@@ -29,6 +29,9 @@ no observed values and cannot be reported as passed, skipped-green, or averaged 
 
 The plan was already evolving after its P2 conversion. This disclosed post-conversion evolution
 and the in-progress P6.8 state are confounds; neither changes the frozen pass predicates.
+After measurement, P6.8 received only the protocol-required greppable escalation block. That
+bookkeeping intervention is outside the anchored measurement, was not followed by a remeasurement,
+and is not used to improve any reported number.
 
 ## Arm A — migrated plan
 

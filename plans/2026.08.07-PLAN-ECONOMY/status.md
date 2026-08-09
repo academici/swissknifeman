@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: b7316623d4dfd6be235003eeeb8d30dd62909309f5f37444bc2775a86cd0877e
+inputs_sha256: 4024128776b3fd5670e351bac2c52294fd62e50bb7e9fe4b912eafb530dd2455
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.30.0 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 2/9 | ⬜ Not started |
+| P6 | Раскатать протокол и проверить критерий | 2/9 | 🔴 Blocked |
 
 ## Phase P0
 
@@ -110,7 +110,7 @@ generated_by: task plan-views status
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
 | P6.7 | Предобъявить протокол приёмки | 🟠 Done with deviations | 2026-08-09 |
-| P6.8 | Исполнить приёмку двумя руками и вынести вердикт | ⬜ Not started | — |
+| P6.8 | Исполнить приёмку двумя руками и вынести вердикт | 🔴 Blocked | 2026-08-09 |
 | P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -338,6 +338,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · note сокращена; полный текст: journal.jsonl:219 |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Session gpt-5.6-sol/high; pre-mutation allow. Process deviation: executor slots were reread after an earlier truncated preview; no acceptance measurement or arm-A values opened. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.7 48522653: acceptance-protocol v1 frozen before measurement; manifest/session canary validated; task 733 tests and downstream P6.8 green. Deviations: brief §2.3 source repair and truncated-preview reread. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Session gpt-5.6-sol/high; pre-mutation allow. Deviation: task-plan-design bootstrap projection declared by skill catalog is missing; canonical Codex adapter is available. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · blocked · P6.8 f6c31e9e: RED arm A, max 101744>100000 and 4 unresolved inputs; aggregate 1932319<7089706. Frozen protocol unchanged; arm B/canary not run after on_failure=escalate; P6.9 forbidden. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -371,3 +373,5 @@ generated_by: task plan-views status
 - P6.5: known deviation
 - P6.6: known deviation
 - P6.7: known deviation
+- P6.8: escalation
+- P6.8: known deviation

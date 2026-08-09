@@ -1,34 +1,40 @@
-# HANDOFF — 2026-08-09 — after P6.7
+# HANDOFF — 2026-08-09 — after P6.8
 
-**Next:** run-items: task:plan-run 2026.08.07-PLAN-ECONOMY P6.8
+**Next:** waiting: explicit owner decision for an acceptance-instance repair or a new contract version → design-item: task:plan-design 2026.08.07-PLAN-ECONOMY P6.7
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
 | Capabilities | — |
-| Context | continue-root |
-| Суть | Исполнить замороженный acceptance-protocol v1: две раздельные ветки измерения, реальный свежий план и session canary. |
-| Команда | `$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.8` |
+| Context | cold-start-root: owner-pause-no-resume |
+| Суть | Разобрать RED arm A без подстройки frozen threshold; только отдельное решение может разрешить repair или новую версию протокола. |
 
-**Done:** P6.7 закрыт как 🟠: `acceptance-protocol-v1.md` и машинный manifest заморожены коммитом `48522653` до первого измерения. Manifest, session-canary ветвление, 733 теста `task`, plan-lint и downstream P6.8 зелёные.
+```text
+# НЕ раньше: explicit owner decision for an acceptance-instance repair or a new contract version
+task:plan-design 2026.08.07-PLAN-ECONOMY P6.7
+```
 
-**Remaining:** P6.8 обязан исполнить протокол дословно без правки порогов: arm A и arm B считаются отдельно, свежий план создаётся production-командой, session canary сохраняет raw evidence. Затем P6.9 и закрытие фазы/плана.
+**Done:** P6.8 остановлен как 🔴: production-команда arm A сохранена в `f6c31e9e`. Максимум `101744 > 100000`, четыре входа не разрешились, coverage `43/47`; при этом агрегат снизился с `7089706` до `1932319`. Frozen protocol byte-clean.
 
-**Sources of truth:** `root/contracts/acceptance-protocol-v1.md` · `root/contracts/acceptance-protocol-v1.manifest.json` · `phases/P6/P6.8.md` · `bundles/P6.8.json` · `findings/P6.7-downstream-P6.8-c4fdd7f4aa32-485226533359.md`.
+**Remaining:** Arm B и session canary не запускались после decisive `on_failure=escalate`. P6.9 и снятие паузы ARTIFEX запрещены. Фаза и план не закрыты.
 
-**Open risks:** Любая ветка может честно дать красный вердикт; это не разрешает менять замороженный протокол или объединять migrated/fresh результаты.
+**Sources of truth:** `findings/12-p6-acceptance-measurement.md` · `artifacts/P6/acceptance-arm-a-migrated.json` · `root/contracts/acceptance-protocol-v1.md` · `root/contracts/acceptance-protocol-v1.manifest.json` · `phases/P6/P6.8.state.md`.
 
-**Workarounds/Deferred/Open questions:** workarounds — none · deferred — none · open_questions — none.
+**Open risks:** Редактирование P2.1 или исключений ради прохождения уничтожит миграционное before/after; изменение порога требует новой версии контракта и явного решения владельца.
+
+**Workarounds/Deferred/Open questions:** workarounds — none · deferred — arm B, session canary, P6.9 · open_questions — repair instance under the same threshold or authorize a new contract version.
 
 Provider-neutral plan-protocol launch-block:
 
 ```text
-task:plan-run 2026.08.07-PLAN-ECONOMY P6.8
+# НЕ раньше: explicit owner decision for an acceptance-instance repair or a new contract version
+task:plan-design 2026.08.07-PLAN-ECONOMY P6.7
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P6.8'
+# НЕ раньше: explicit owner decision for an acceptance-instance repair or a new contract version
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.7'
 ```

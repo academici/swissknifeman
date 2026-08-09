@@ -104,9 +104,12 @@ def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
 
 
 def _lint_return_owner_authorization(plan_dir, layout: str, diag) -> None:
-    if layout != "v2" or not _return_loop_enabled(Path(plan_dir)):
+    if layout != "v2":
         return
     plan_dir = Path(plan_dir)
+    active = _active_items(plan_dir, "task.plan_gates._lint_return_owner_authorization", diag, RETURN_LOOP_GATE_ID)
+    if not active:
+        return
     try:
         gates = plan_returns.return_loop_gates(plan_dir)
         evidence, _malformed = _return_evidence(plan_dir)
@@ -114,7 +117,11 @@ def _lint_return_owner_authorization(plan_dir, layout: str, diag) -> None:
     except (plan_returns.ReturnError, plan_decisions.DecisionError) as exc:
         _return_error(diag, plan_dir / "findings", f"RETURN_LOOP_OWNER_GATE_REQUIRED: {exc}")
         return
+    active_digests = {record["digest"] for record in plan_returns.returns(plan_dir)["fingerprints"]
+                      if record["tuple"]["subject"] in active}
     for gate in gates:
+        if gate["fingerprint_digest"] not in active_digests:
+            continue
         if not gate["blocks"] or gate["action"] != "owner-gate":
             continue
         digest, row = gate["fingerprint_digest"], evidence.get(gate["fingerprint_digest"])

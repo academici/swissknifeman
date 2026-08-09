@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: четыре hard gate plan-protocol включаются forward-only.** Общий реестр хранит
+  дату и append-only journal boundary активации; per-item status projection больше не
+  подменяет историю глобальной датой. Downstream, return qualification, return owner gate и
+  terminal decision join применяются к новой когорте без ретроактивной красноты (`2026.08.07-PLAN-ECONOMY` P6.4).
+
 - **`task`: model judgement и уточнения получили fail-closed command seams.** Пять plan-команд
   создают `DecisionRequest` вместо свободной прозы и исполняют закрытые исходы authority resolver;
   отдельная рубрика `return-judgement@1.0.0`, provider-qualified calibration registry и reducer

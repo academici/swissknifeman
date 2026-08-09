@@ -7,7 +7,7 @@
 | Plan ID | 2026.08.07-PLAN-ECONOMY |
 | Title | Экономный протокол планов для больших многофазных проектов |
 | Document Type | Executable Master Plan |
-| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137; `task:plan-design 2026.08.07-PLAN-ECONOMY P4`, RED-audit reopen D142, 2026-08-08; `task:plan-design 2026.08.07-PLAN-ECONOMY P5`, RED-audit reopen D144, 2026-08-09) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
+| Authoring Model | claude-opus-5[1m]/high (`task:plan-design new`, исходный дизайн) · gpt-5.6-sol/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P0.1`, Codex-first и сквозной multiprovider pass; `task:plan-design 2026.08.07-PLAN-ECONOMY finish`, adaptive-review pass 5; `task:plan-design 2026.08.07-PLAN-ECONOMY P2.8`, stage-aware admission redesign D131; `task:plan-design 2026.08.07-PLAN-ECONOMY P4.1`, provenance/history repairs D136–D137; `task:plan-design 2026.08.07-PLAN-ECONOMY P4`, RED-audit reopen D142, 2026-08-08; `task:plan-design 2026.08.07-PLAN-ECONOMY P5`, RED-audit reopen D144 и повторный RED-аудит reopen D146, 2026-08-09) · gpt-5.6-terra/high (`task:plan-design 2026.08.07-PLAN-ECONOMY P4.4`, owner-authorized local D138 remediation, 2026-08-08) |
 | Repository | swissknifeman |
 | Related Packages | task (владелец протокола и команд) · skiller (раздача скилла `plan-protocol` по флоту) · core · harness (несёт потребителя раскладки на живом пути гейта прогона — `lib/harness/run/gate.py`, D85) |
 | Execution Mode | contract-first, phase-first |
@@ -18,7 +18,7 @@
 | Paused By | — |
 | Design Passes | 5/5 — прогон 5 явно добавлен владельцем после field-наблюдения двойной цены cold-start при escalation/audit и требования не запускать аудит на первом локальном сбое (D123). Он уточняет сквозные контракты P1/P4/P5/P6 до заморозки P1.5; исторические 4/4 и их обоснование остаются в Update Log/D81/D95/D104. Разрешённый D123 аудит выполнен заходом 4 и дал RED F4.1–F4.4; owning-root remediation D126 закрывает их без шестого design-pass и без пятого аудита |
 | Layout | v2 |
-<!-- migration-version: 0.29.0 -->
+<!-- migration-version: 0.30.0 -->
 
 ## 1. Context
 
@@ -129,8 +129,8 @@ contract и Codex adapters/projections, а отсутствующий Claude о�
 |  | P5.1 | frontier/high | manual | форма запроса решения — публичный контракт, который начнут исполнять пять команд и планы всех новых проектов; открытые design-решения (сколько видов решения, что вычисляет инструмент, а что имеет право предлагать модель) и необратимая семантика после раскатки |
 |  | P5.2 | frontier/high | manual | рамка полномочий и есть семантика власти: её изменение само является `authority_change`, заморозка инстанса — владельческий гейт по построению, а ошибка тиражируется во все планы флота |
 |  | P5.3 | implementation/high | manual | реализация по двум замороженным формам, но одна ветка «разрешить по умолчанию» обесценивает всю фазу; утечка семантики в вызывающем адаптере — режим отказа, названный внешней практикой отдельно |
-|  | P5.4 | implementation/high | manual | D144 исполняет frozen contracts без новых design-решений, но fail-closed ingress/outcome и journal→views transition являются authority boundary; effort high обязателен, `Exec=manual` по деривации |
-|  | P5.5 | implementation/high | manual | D144 closing proof по замороженной семантике: producer-based scenarios и detached item-tree replay; главный риск — статический fixture/report вместо исполняемого доказательства, effort high обязателен |
+|  | P5.4 | implementation/high | manual | D146 исполняет frozen contracts без новых design-решений, но единый semantic outcome и retry-safe journal→views transition являются authority boundary; effort high обязателен, `Exec=manual` по деривации |
+|  | P5.5 | implementation/high | manual | D146 closing proof по замороженной семантике: producer/error scenarios, воспроизводимая исходная краснота и detached item-tree replay; effort high обязателен |
 |  | P6.1 | implementation/high | manual | перевод прозы пяти команд флота на ЗАМОРОЖЕННУЮ спецификацию пути при сохранённом v1: решений нет, но дословность v1-ветви и дифференцирующий литеральный тест — инвариант, который проверяется только байтовым сравнением |
 |  | P6.2 | implementation/high | manual | протокол ЗАКРЫТИЯ — историческое место лжи в отчётах: каждый новый шаг обязан иметь наблюдаемый след, а репетиционный прогон — единственное доказательство; предписано замороженными формами, поэтому implementation |
 |  | P6.3 | frontier/high | manual | ФОРМУЛИРОВКА рубрики судьи — открытое design-решение (P4.5 сознательно оставил её P6), и она становится текстом, который исполняют пять команд всего флота; ошибка тиражируется и обнаруживается только по несравнимым вердиктам |

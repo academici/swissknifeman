@@ -5,7 +5,7 @@
      таблицу (+строка в Update Log). Roadmap НЕ переопределяет §3 Routing — только группирует
      запуски. -->
 
-**Обновлён:** 2026-08-09 (P4 повторно закрыта после D142; P5 закрыта после remediation D144, перед P6.1 обязателен независимый аудит P5) · **Соответствует plan.md:** v0.29.0
+**Обновлён:** 2026-08-09 (P4 повторно закрыта после D142; P5 закрыта после remediation D146, перед P6.1 обязателен независимый аудит P5) · **Соответствует plan.md:** v0.30.0
 
 ## Как читать
 
@@ -64,8 +64,8 @@
 | P5.1 | solo | plan-run (manual) | frontier/high | — | ✅ terminal — frozen DecisionRequest + provider-neutral continuation identity |
 | P5.2 | solo | plan-run (manual) | frontier/high | ✅ утверждение ДЕЙСТВУЮЩЕГО инстанса рамки | ✅ terminal — owner instance frozen D143 |
 | P5.3 | solo | plan-run (manual) | implementation/high | — | 🟠 terminal with deviations — deterministic authority resolver остаётся неизменным входом D144 |
-| P5.4 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D144 — contract-driven ingress, outcome semantics, state/status regeneration |
-| P5.5 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D144 — producer-based policy/owner scenarios и detached item-tree acceptance |
+| P5.4 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D146 — semantic outcome, substantive bounds и exact request/resolve retry; RED `af1f209f`, fix `1b5751ba` |
+| P5.5 | solo | plan-run (manual) | implementation/high | — | ✅ terminal after D146 — ten producer/error scenarios and detached item-tree replay `f7a99e7f` |
 | P6.1 | solo | plan-run (manual) | implementation/high | — | команды различают auditor profile и context mode; fresh review не равен root handoff |
 | P6.2 | solo | plan-run (manual) | implementation/high | — | root/specialist session provenance, triage production и session-context resolver |
 | P6.3 | solo | plan-run (manual) | frontier/high | — | isolated child judgement по capsule; stronger route отдельно, затем resume root |

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 2a5fac7fe62c6952c5da5696c7c0c0e21bf334a8f8731492d7cbc5389b34b917
+inputs_sha256: 90d66fdc4e23b22301ad613b90a18f3fba04a903263e877ae64cefc3f4750ec2
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 0.29.0 |
+| Version | 0.30.0 |
 | Status | ⬜ Not started |
 | Last Updated | 2026-08-09 |
 
@@ -298,6 +298,16 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5 2c6f8d4b: 4 producer scenarios, 13 targeted/699 full tests, detached replay; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 повторно закрыта после D144; сверены 5 terminal items и Known Deviations |
+| 2026-08-09 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-09 | frontier/high | plan-design · in-progress · фаза повторно реоткрыта D146; remediation P5.4→P5.5 готова к исполнению |
+| 2026-08-09 | frontier/high | plan-design · in-progress · D146 reopen: semantic reducer, substantive bounds и exact retry ТЗ готовы |
+| 2026-08-09 | frontier/high | plan-design · in-progress · D146 reopen: producer/error acceptance и detached replay ТЗ готовы |
+| 2026-08-09 | unknown/unknown | plan-run · blocked · requires implementation/high; current session model and effort are not exposed, so route cannot be attested |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.4 RED af1f209f: 6 tests, 5 expected failures (semantic outcome, bounds, exact retry, durable continuation); final 1b5751ba: 6 targeted, 19 queue, 705 package tests OK; validate OK; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · D146 P5.5 producer/error acceptance started; session route self-attested implementation/high. |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-green · P5.5 f7a99e7f: P5.4 RED af1f209f/final 1b5751ba; 10 scenarios, 19 targeted, 705 full, validate, detached --check; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | implementation/low | plan-close · closed-deviations · фаза P5 закрыта после D146; сверены 5 terminal items и Known Deviations |
 
 ## Owner Gates
 
@@ -323,4 +333,3 @@ generated_by: task plan-views status
 - P4.6: known deviation
 - P5.2: known deviation
 - P5.3: known deviation
-- P5.4: known deviation

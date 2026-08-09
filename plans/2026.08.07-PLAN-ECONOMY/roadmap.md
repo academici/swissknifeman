@@ -73,7 +73,7 @@
 | P6.5 | solo | plan-run (manual) | frontier/high | — | 🟠 terminal with deviations — EN-only canon v2, hard-boundary enum, weight/fail-closed gates; scope expansion записан |
 | P6.6 | solo | plan-run (manual) | implementation/high | ✅ запись в ЧУЖИЕ репозитории (раскатка) | единственный item, действующий за пределами репозитория; `--dry-run` до гейта |
 | P6.7 | solo | plan-run (manual) | frontier/high | — | REOPEN после P2.10: заморозить successor patch с pinned repair evidence; prior results и threshold/scope/arms/canary неизменны |
-| P6.8 | solo | plan-design/plan-run | frontier/high | — | WAITING ON P2.10→P6.7: затем exact successor arms/canary и фактический verdict без подгонки |
+| P6.8 | solo | plan-run (manual) | frontier/high | — | v1.1.1: exact arm A + reducer; arm B/canary только после pass, non-pass терминально запрещает P6.9 |
 | P6.9 | solo | plan-exec | implementation/medium | — | бухгалтерия снятия паузы в чужом плане; предусловие — ВЕРДИКТ P6.8 |
 
 ## Готовые launch-block'и групп

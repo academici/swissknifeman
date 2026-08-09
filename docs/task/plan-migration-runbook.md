@@ -35,6 +35,11 @@ output passes `plan-lint`. Inspect the inventory before continuing: every legacy
 accounted for, and any warning or missing carrier is a reason to stop and repair the input or the
 migrator first.
 
+A legacy plan can convert structurally and still fail current lint because it predates a required
+read-budget contract, has a stale phase handoff, or lacks a canonical Decision Log table. Treat
+each case as a failed rehearsal: preserve the diagnostic and repair the owning source or migrator
+before asking for write authority.
+
 If the dry run fails, keep the temporary directory for diagnosis and do not retry with a write.
 The migration is fail-closed; editing generated v2 projections by hand does not repair it.
 

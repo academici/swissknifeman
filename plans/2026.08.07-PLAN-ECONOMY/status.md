@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 935e88edcbbf8364c84ac95e7cda02171767737b0d8c2f79b1aaa5e10208f59d
+inputs_sha256: d31d5edbfc0a7859547f066e1eeb87d317803032eeb72dd8896f246d523ee3f3
 generated_by: task plan-views status
 -->
 
@@ -275,6 +275,7 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 focused tests, 684 с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 (на 98a23ea0) targeted, 686 (на dcaae917) с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 (на 98a23ea0) targeted, 686 (на dcaae917) с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -299,3 +300,4 @@ generated_by: task plan-views status
 - P4.5: known deviation
 - P4.6: known deviation
 - P5.2: known deviation
+- P5.3: known deviation

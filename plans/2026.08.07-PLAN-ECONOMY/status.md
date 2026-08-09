@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: 8e7ea978aeca5a28fd87f91e97d09d5539bbb0b2181914171a1f0667d3cdc4a1
+inputs_sha256: e42180904f266cc835a4200d1b6ca79fba684470c5f437981faeb60f7040b358
 generated_by: task plan-views status
 -->
 
@@ -95,7 +95,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P5.1 | Заморозить контракт запроса и ответа решения | 🟢 Done | 2026-08-09 |
 | P5.2 | Заморозить владельческую рамку полномочий поверх классов AUTO/AUTO-FIX/OWNER | 🟢 Done | 2026-08-09 |
-| P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | ⬜ Not started | 2026-08-09 |
+| P5.3 | Построить детерминированный резолвер политики и автоответ уточнений | 🟠 Done with deviations | 2026-08-09 |
 | P5.4 | Носители очереди, адресная пауза субъекта и батчинг владельческих гейтов | ⬜ Not started | 2026-08-09 |
 | P5.5 | Надеть форму запроса на пакет гейта кружения и доказать приёмку фазы | ⬜ Not started | 2026-08-09 |
 
@@ -272,6 +272,8 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-terra/medium | plan-run · blocked · предписано frontier/high, фактическая сессия implementation/medium (gpt-5.6-terra) |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-green · authority-frame v1 и owner instance заморожены D143; item tree 7624eed5; Validation P5.2 passed; process deviation: ошибочная blocked-запись journal.jsonl:153; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-09 | gpt-5.6-terra/high | plan-run · closed-deviations · P5.3: 98a23ea0; 20 focused tests, 684 с корневым PYTHONPATH и validate OK; bare discover не видит core; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -296,3 +298,4 @@ generated_by: task plan-views status
 - P4.5: known deviation
 - P4.6: known deviation
 - P5.2: known deviation
+- P5.3: known deviation

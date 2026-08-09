@@ -1,4 +1,4 @@
-# HANDOFF — 2026-08-09 — after P5.2
+# HANDOFF — 2026-08-09 — after P5.3
 
 **Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
 
@@ -10,40 +10,41 @@
 | Effort | high |
 | Capabilities | — |
 | Context | continue (/clear) — ручной item |
-| Суть | Реализовать fail-closed резолвер политики и автоответ уточнений по frozen P5.1/P5.2 |
+| Суть | Реализовать durable очередь решений, адресную паузу субъекта и owner-gate view |
 | Команда | — |
 
 ```text
-$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.3
+$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.4
 ```
 
 ## Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.07-PLAN-ECONOMY P5.4'
 ```
 
-**Done:** P5.2 закрыта 🟢 item-коммитом `7624eed5`: заморожены Markdown- и JSON-носители
-`authority-frame` v1 и действующий инстанс `packages/task/configs/authority-frame.json`.
-Владелец явно утвердил точные байты инстанса в D143; обязательные pre-mutation/pre-final Task
-Contract дали `allow/allow`; все Validation-команды P5.2 и пакетный validate прошли.
+**Done:** P5.3 закрыта 🟠 item-коммитом `98a23ea0`: создан stdlib-only
+fail-closed `plan_authority`, закрытые структурированные verdict'ы и единственный
+adapter `authorize()`, item-scoped aggregation, provenance-only auto-answer с
+обязательной переклассификацией, проверка digest/single-use и `--shadow`. Таргетные
+20 тестов, полный набор из 684 тестов с корневым `PYTHONPATH` и `validate.sh` зелёные;
+pre-mutation/pre-final Task Contract дали `allow/allow`.
 
-**Remaining:** P5.3 — детерминированный резолвер политики и автоответ уточнений; затем P5.4 —
-durable очередь и адресная пауза, P5.5 — адаптер над пакетом P4 и приёмка фазы.
+**Remaining:** P5.4 — durable очередь/адресная пауза/join gate; затем P5.5 — адаптер
+над пакетом P4 и приёмка фазы.
 
-**Sources of truth:** `phases/P5/P5.3.md` · `root/contracts/decision-request-v1.md` ·
-`root/contracts/authority-frame-v1.md` · `packages/task/configs/authority-frame.json` · D60–D61 ·
-D143 · `research/07-p5-decision-protocol-design.md` §2/§3/§5 ·
-`findings/10-decision-policy-and-authority-2026-08-07.md` R13/R16.
+**Sources of truth:** `phases/P5/P5.4.md` · `root/contracts/decision-request-v1.md` ·
+`root/contracts/authority-frame-v1.md` · `packages/task/configs/authority-frame.json` ·
+`research/07-p5-decision-protocol-design.md` §4/§7/§8 ·
+`findings/01-rag-context-engineering-2026-08-07.md` R6.
 
-**Open risks:** append-only `journal.jsonl:153` сохраняет ошибочный process-only
-`routing-blocked` после неверного чтения default-конфигурации как route активной сессии; закрытие
-P5.2 записано попыткой 2 с friction `deviation,retry`. Baseline plan-lint несёт 6 предсуществующих
-WARN вне P5.2. Codex hook dry-run остаётся недоказанным отдельной CLI-командой, но `codex doctor`
-и `maind health` зелёные. Generated state/status projections синхронизированы отдельным fix-коммитом
-после чистой проверки committed tree; в worktree остаётся чужой `brief/index/roadmap` diff, который
-не входит в P5.2 и не должен быть перезаписан P5.3.
+**Open risks:** Literal `cd packages/task && python3 -m unittest discover -s tests`
+остаётся красным: шесть старых тестовых модулей импортируют shared `core`, которого нет
+в `sys.path`; с корневым `PYTHONPATH` 684 теста зелёные, как и `validate.sh`. Это material
+deviation P5.3; исправление test bootstrap вне scope item'а. Baseline plan-lint несёт
+6 предсуществующих WARN вне P5.3. В worktree остаётся чужой `brief/index/roadmap` diff,
+который не должен быть перезаписан P5.4.
 
-**Workarounds/Deferred/Open questions:** workaround — append-only ошибочная строка не удаляется,
-а квалифицирована последующей successful attempt и Known Deviations. Owner gate P5.2 закрыт D143;
-открытых вопросов для P5.3 нет.
+**Workarounds/Deferred/Open questions:** workaround — для полного unittest запускать
+из корня с `PYTHONPATH="$PWD"`; deferred — владелец старого test bootstrap, отдельный
+fix-item или plan-design при следующей ревизии Validation-команд; открытых вопросов P5.4 нет.

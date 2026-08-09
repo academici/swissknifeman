@@ -11,6 +11,11 @@
   P4 packet не копируется в очередь, affected subject паркуется адресно, а policy auto-answer
   снимает только свою локальную паузу (`2026.08.07-PLAN-ECONOMY` P5.5).
 
+- **`task`: P5.5 теперь доказывает queue semantics исполняемым producer acceptance.** Четыре
+  fresh-copy сценария создают policy auto-answer и P4→P5 owner `continue`/`park`/`reject`,
+  проверяют subject-local views и byte-replay generated results/report
+  (`2026.08.07-PLAN-ECONOMY` P5.5).
+
 - **`task`: добавлена durable очередь решений планов.** Append-only запросы, lease-claim,
   адресная пауза субъекта, exact root continuation, owner-gate projection и выключенный
   join-gate реализованы без добавления очереди на обязательный путь чтения

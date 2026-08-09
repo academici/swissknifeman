@@ -7,10 +7,11 @@ import unittest
 from unittest import mock
 from pathlib import Path
 
-from task import plan_gates, plan_item_state, plan_lint, plan_requests, plan_returns, plan_status
+from task import plan_authority, plan_gates, plan_item_state, plan_lint, plan_requests, plan_returns, plan_status
 
 
 DATA = Path(__file__).resolve().parent / "data" / "plan-v2"
+P5_DATA = Path(__file__).resolve().parent / "data" / "plan-v2-p5"
 
 
 def request_value(*, decision_id="Q1", phase_id="P0", item_id="P0.1", kind="authorization"):
@@ -188,6 +189,52 @@ class PlanRequestsTests(unittest.TestCase):
                  "reclassified_action_digest": after, "reclassified_to": "authorization"}
         plan_requests.append_auto_answer(self.plan, event, response=response)
         self.assertIn("**Status:** 🔴 Blocked", (self.plan / "phases/P0/P0.1.state.md").read_text())
+
+    def test_auto_answer_producer_creates_the_contract_valid_pair(self):
+        value = request_value(decision_id="Q-produced-auto", kind="clarification")
+        value["options"][0]["id"] = "apply"
+        for field in ("contract_version", "action_digest", "canonical_action", "material_fields", "policy_digest"):
+            value.pop(field)
+        plan_requests.request(self.plan, value)
+        producer_input = copy.deepcopy(value)
+        producer_input["missing_fields"] = ["carrier"]
+        produced = plan_authority.auto_answer_clarification(
+            producer_input, question_class="plan_carrier", field="carrier",
+            sources={"plan_carrier": {"value": "plan.md", "record_id": "plan.md",
+                                      "record_version": "fixture", "at": "2099-01-01T00:00:00Z"}})
+        self.assertIsInstance(produced, dict)
+        event = plan_requests.append_auto_answer(self.plan, produced["event"], response=produced["response"])
+        self.assertEqual(event["response"]["resolver"], "policy")
+        self.assertTrue(event["response"]["provenance"]["verified"])
+        self.assertEqual(plan_requests.unresolved_for_phase(self.plan, "P0"), [])
+        self.assertIn("**Status:** 🟡 In progress", (self.plan / "phases/P0/P0.1.state.md").read_text())
+
+    def test_return_loop_producer_outcomes_are_subject_local(self):
+        for option in ("continue", "park", "reject"):
+            with self.subTest(option=option):
+                plan = Path(self.tmp.name) / f"plan-v2-p5-{option}"
+                shutil.copytree(P5_DATA, plan)
+                (plan / "decisions" / "queue.jsonl").unlink()
+                continuation = {"root_session_id": "fixture-session", "root_run_id": "fixture-run",
+                                "target": {"plan_id": plan.name, "item_id": "P1.1",
+                                           "resume_command": f"task:plan-run {plan.name} P1.1"},
+                                "capabilities": {"snapshot_id": "cap-1", "digest": "a" * 64,
+                                                 "available": ["filesystem"]}, "preferred_mode": "resume-root"}
+                other_before = (plan / "phases/P1/P1.2.state.md").read_bytes()
+                created = plan_returns.dispatch_owner_gates(
+                    plan, continuations={"P1.1": continuation}, expires_at="2099-01-01T00:00:00Z")
+                self.assertEqual(1, len(created))
+                request = created[0]["request"]
+                plan_requests.claim(plan, request["decision_id"], resolver_id="owner:1",
+                                    lease_expires_at="2099-01-01T00:00:00Z")
+                resolved = plan_requests.resolve(
+                    plan, request["decision_id"], self._response(request, option=option), resolver_id="owner:1",
+                    current_continuation=continuation if option == "continue" else None)
+                self.assertEqual("resume-root" if option == "continue" else None,
+                                 resolved.get("continuation", {}).get("mode"))
+                expected = "🟡 In progress" if option == "continue" else "🔴 Blocked"
+                self.assertIn(f"**Status:** {expected}", (plan / "phases/P1/P1.1.state.md").read_text())
+                self.assertEqual(other_before, (plan / "phases/P1/P1.2.state.md").read_bytes())
 
     def test_projection_failure_never_releases_continuation(self):
         value = request_value(decision_id="Q-fail")

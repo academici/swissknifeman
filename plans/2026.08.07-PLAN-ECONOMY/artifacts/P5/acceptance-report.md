@@ -1,29 +1,14 @@
-Граница доказанного: два сценария выполнены на synthetic Layout-v2 плане `plan-v2-p5`; перевод пяти команд и проверка на живом плане флота остаются в P6.
+# P5.5 producer-based acceptance report
 
-# P5.5 — return-loop DecisionRequest acceptance
+Synthetic Layout-v2 scenarios are proven; P6 command integration and live fleet behavior are not proven.
 
-## Прогон 1 — технический вопрос
+The committed fixture queue is retained only as regression input. Each scenario below starts from a fresh copy, removes that pre-built queue, and creates its evidence through the runtime producer APIs.
 
-Allowlisted `plan_carrier` auto-answer записан в `decisions/queue.jsonl` как `policy`-ответ с
-проверяемым provenance. В очереди 1 такой ответ из 3 typed events; он не оставляет subject P1.2
-заблокированным.
+| Scenario | Outcome | Queue events | Journal rows | P1.1 | P1.2 | Continuation |
+|:--|:--|--:|--:|:--|:--|:--|
+| policy-auto-answer | apply | 2 | 11 | 🔴 Blocked | 🟡 In progress | none |
+| owner-continue | apply | 3 | 11 | 🟡 In progress | 🟡 In progress | resume-root |
+| owner-park | park | 3 | 11 | 🔴 Blocked | 🟡 In progress | none |
+| owner-reject | reject | 3 | 11 | 🔴 Blocked | 🟡 In progress | none |
 
-## Прогон 2 — owner gate
-
-Три одинаковых return events P1.1 пересекли frozen `same_return_max=2`. Адаптер оставил
-`blocks=true`, создал authorization `DecisionRequest` с `on_timeout=park` и ссылками на
-`journal.jsonl`, без копии owner packet. Только P1.1 имеет `🔴 Blocked`; P1.2 остался
-`🟡 In progress`.
-
-## Метрики
-
-- Доля запросов, разрешённых policy без человека: 1/2 (50%).
-- Припаркованных субъектов: 1.
-- Оставшихся исполнимыми субъектов: 1.
-
-Напечатанная доля policy-разрешений: 1/2.
-Напечатано припарковано субъектов: 1.
-Напечатано исполнимы субъектов: 1.
-
-Проверки: `tests.test_plan_requests`, `tests.test_plan_authority`, queue/owner-status probes и
-`packages/task/scripts/validate.sh`.
+All scenario claims derive from the generated results JSON; volatile timestamps and temporary paths are checked during execution but are not emitted.

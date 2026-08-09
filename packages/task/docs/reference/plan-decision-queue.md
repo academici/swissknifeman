@@ -16,5 +16,11 @@ answer must carry its matching policy response and verified provenance; a reclas
 `authorization` remains blocked. Every subject transition regenerates and verifies its item-state
 and owner-status projections before it is reported successful.
 
+The producer acceptance at
+`plans/2026.08.07-PLAN-ECONOMY/artifacts/P5/validate_acceptance.py` uses fresh fixture copies to
+exercise the policy auto-answer and P4→P5 owner `continue`/`park`/`reject` paths. Its generated
+results deliberately omit volatile timestamps and temporary paths; `--check` recomputes all four
+scenarios and compares the committed results and report byte-for-byte.
+
 `Decision Queue Gate | v1` in plan Meta enables the opt-in join check: terminal phases cannot carry
 an unresolved queue request. It is absent by default.

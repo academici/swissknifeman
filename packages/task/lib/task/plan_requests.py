@@ -137,6 +137,79 @@ def _frame_metadata(request: dict) -> dict:
     return {"attention_class": definition["attention"], "required_approver": definition["owner"]}
 
 
+def _digest_reference(*, carrier: str, anchor: str, value: dict) -> dict:
+    """Return a durable reference without embedding the referenced payload."""
+    return {"carrier": carrier, "anchor": anchor,
+            "digest": hashlib.sha256(_canonical(value)).hexdigest()}
+
+
+def return_loop_request(plan_dir, gate: dict, *, continuation: dict, expires_at: str) -> dict:
+    """Wrap one frozen P4 owner packet in the P5 DecisionRequest transport.
+
+    The packet remains owned by ``plan_returns``. Only digest-addressed carrier
+    references enter the queue, preventing divergence from the gate packet.
+    """
+    packet = gate.get("owner_packet")
+    required_packet = {"fingerprint_tuple", "fingerprint_digest", "occurrences", "cap",
+                       "history", "judgements", "resolutions_tried"}
+    if gate.get("action") != "owner-gate" or gate.get("blocks") is not True:
+        raise RequestError("P5_RETURN_LOOP_NOT_OWNER_GATE")
+    if not isinstance(packet, dict) or set(packet) != required_packet:
+        raise RequestError("P5_RETURN_LOOP_PACKET_INVALID")
+    subject_id = packet["fingerprint_tuple"].get("subject")
+    if not isinstance(subject_id, str) or "." not in subject_id:
+        raise RequestError("P5_RETURN_LOOP_PACKET_SUBJECT_INVALID")
+    phase_id = subject_id.split(".", 1)[0]
+    if not isinstance(continuation, dict) or continuation.get("target", {}).get("item_id") != subject_id:
+        raise RequestError("P5_RETURN_LOOP_CONTINUATION_MISMATCH")
+    packet_ref = _digest_reference(carrier="journal.jsonl",
+                                   anchor=f"return-loop:{packet['fingerprint_digest']}", value=packet)
+    evidence = [packet_ref]
+    for row in packet["history"]:
+        if not isinstance(row, dict) or not isinstance(row.get("return_event_id"), str):
+            raise RequestError("P5_RETURN_LOOP_HISTORY_INVALID")
+        evidence.append(_digest_reference(carrier="journal.jsonl", anchor=row["return_event_id"], value=row))
+    attempted = packet["resolutions_tried"]
+    if not isinstance(attempted, list) or not all(isinstance(row, str) for row in attempted):
+        raise RequestError("P5_RETURN_LOOP_ATTEMPTS_INVALID")
+    raw = {
+        "decision_id": f"return-loop-{packet['fingerprint_digest']}", "action_version": 1,
+        "kind": "authorization", "decision_class": "authority_change",
+        "subject": {"plan_id": Path(plan_dir).name, "phase_id": phase_id, "item_id": subject_id},
+        "action": {"type": "return-loop-owner-gate", "requires_authorization": True,
+                   "affected_surfaces": ["return-loop"], "declared_scope": ["return-loop"],
+                   "frozen_contract_change": False, "closed_set_extension": False,
+                   "reversible": True, "decision_recorded": True, "packet_ref": packet_ref},
+        "options": [
+            {"id": "continue", "outcome": "apply", "action_ref": packet_ref["anchor"],
+             "evidence_refs": [packet_ref["anchor"]]},
+            {"id": "park", "outcome": "park", "action_ref": None, "evidence_refs": []},
+            {"id": "escalate", "outcome": "escalate", "action_ref": None, "evidence_refs": []},
+            {"id": "reject", "outcome": "reject", "action_ref": None, "evidence_refs": []},
+        ],
+        "default_option": None, "expires_at": expires_at, "evidence": evidence,
+        "attempted": attempted, "continuation": continuation,
+    }
+    frame = plan_authority.load_frame()
+    canonical = plan_authority.canonical_action(raw, frame)
+    raw.update({"contract_version": "v1", "canonical_action": canonical,
+                "action_digest": plan_authority.action_digest(raw, frame),
+                "material_fields": list(canonical), "on_timeout": "park",
+                "policy_digest": plan_authority.policy_digest(frame)})
+    return raw
+
+
+def request_return_loop_gate(plan_dir, gate: dict, *, continuation: dict, expires_at: str,
+                             actor: str = "return-loop") -> dict:
+    """Persist P5 transport and refresh the subject-local blocked projection."""
+    value = return_loop_request(plan_dir, gate, continuation=continuation, expires_at=expires_at)
+    event = request(plan_dir, value, actor=actor)
+    from task import plan_item_state, plan_status
+    plan_item_state.build_states(plan_dir, item_id=value["subject"]["item_id"])
+    plan_status.build_status(plan_dir)
+    return event
+
+
 def _journal_transition(plan_dir, request: dict, *, actor: str, result: str) -> None:
     item_id = request["subject"]["item_id"]
     prior = [event for event in journal_path_events(plan_dir, item_id)]
@@ -227,20 +300,30 @@ def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,
     return event
 
 
-def append_auto_answer(plan_dir, event: dict, *, actor: str = "policy") -> dict:
+def append_auto_answer(plan_dir, event: dict, *, response: dict | None = None,
+                       actor: str = "policy") -> dict:
     decision_id = event.get("decision_id")
     if not isinstance(decision_id, str) or decision_id not in states(plan_dir):
         raise RequestError("auto answer refers to an unknown decision")
+    if response is not None:
+        if response.get("resolver") != "policy" or not isinstance(response.get("provenance"), dict):
+            raise RequestError("auto answer requires policy resolver provenance")
+        event = {**event, "resolver": response["resolver"], "provenance": response["provenance"]}
     record = {"type": "auto_answer", "at": _now(), "actor": actor, "decision_id": decision_id,
               "event": event}
     _append(plan_dir, record)
+    request_value = states(plan_dir)[decision_id]["request"]
+    _journal_transition(plan_dir, request_value, actor=actor, result="in-progress")
+    from task import plan_item_state, plan_status
+    plan_item_state.build_states(plan_dir, item_id=request_value["subject"]["item_id"])
+    plan_status.build_status(plan_dir)
     return record
 
 
 def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
     groups: dict[tuple[str, str, str], list[dict]] = {}
     for decision_id, state in states(plan_dir).items():
-        if state["response"] is not None:
+        if state["response"] is not None or state["auto_answers"]:
             continue
         event = state["request_event"]
         key = (state["request"]["decision_class"], event["attention_class"], event["required_approver"])
@@ -250,7 +333,8 @@ def pending_groups(plan_dir) -> dict[tuple[str, str, str], list[dict]]:
 
 def unresolved_for_phase(plan_dir, phase_id: str) -> list[str]:
     return sorted(decision_id for decision_id, state in states(plan_dir).items()
-                  if state["response"] is None and state["request"]["subject"]["phase_id"] == phase_id)
+                  if state["response"] is None and not state["auto_answers"]
+                  and state["request"]["subject"]["phase_id"] == phase_id)
 
 
 def render_gates(plan_dir) -> str:

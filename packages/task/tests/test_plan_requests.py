@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from task import plan_gates, plan_lint, plan_requests
+from task import plan_gates, plan_lint, plan_requests, plan_returns
 
 
 DATA = Path(__file__).resolve().parent / "data" / "plan-v2"
@@ -101,6 +101,24 @@ class PlanRequestsTests(unittest.TestCase):
         oversized["action"] = {"payload": "x" * 20000}
         with self.assertRaisesRegex(plan_requests.RequestError, "TOO_LARGE"):
             plan_requests.request(self.plan, oversized)
+
+    def test_return_loop_owner_gate_uses_references_and_parks_only_subject(self):
+        continuation = request_value(item_id="P1.1")["continuation"]
+        events = plan_returns.dispatch_owner_gates(
+            self.plan, continuations={"P1.1": continuation},
+            expires_at="2099-01-01T00:00:00Z")
+        self.assertEqual(len(events), 1)
+        request = events[0]["request"]
+        self.assertEqual(request["kind"], "authorization")
+        self.assertEqual(request["on_timeout"], "park")
+        self.assertEqual(request["decision_class"], "authority_change")
+        self.assertNotIn("owner_packet", request["canonical_action"]["action"])
+        self.assertTrue(request["evidence"])
+        self.assertTrue(all(row["carrier"] == "journal.jsonl" for row in request["evidence"]))
+        state = (self.plan / "phases/P1/P1.1.state.md").read_text(encoding="utf-8")
+        self.assertIn("**Status:** 🔴 Blocked", state)
+        other = (self.plan / "phases/P0/P0.1.state.md").read_text(encoding="utf-8")
+        self.assertIn("**Status:** 🟢 Done", other)
 
 
 if __name__ == "__main__":

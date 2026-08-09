@@ -489,6 +489,23 @@ def return_loop_gates(plan_dir) -> list[dict]:
     return gates
 
 
+def dispatch_owner_gates(plan_dir, *, continuations: dict[str, dict], expires_at: str,
+                         actor: str = "return-loop") -> list[dict]:
+    """Replace P4's temporary packet-print stop with P5 request transport."""
+    from task import plan_requests
+    events = []
+    for gate in return_loop_gates(plan_dir):
+        if gate.get("action") != "owner-gate" or gate.get("blocks") is not True:
+            continue
+        packet = gate.get("owner_packet") or {}
+        subject_id = (packet.get("fingerprint_tuple") or {}).get("subject")
+        if not isinstance(subject_id, str) or subject_id not in continuations:
+            raise ReturnError("owner-gate требует continuation для затронутого subject")
+        events.append(plan_requests.request_return_loop_gate(
+            plan_dir, gate, continuation=continuations[subject_id], expires_at=expires_at, actor=actor))
+    return events
+
+
 def returns(plan_dir) -> dict:
     plan_dir = Path(plan_dir)
     try:

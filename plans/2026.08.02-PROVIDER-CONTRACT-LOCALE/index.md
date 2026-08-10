@@ -57,3 +57,4 @@
 | `findings/17-layout-v2-phase-reopen-status-gap-2026-08-10.md` | findings | P0 reopen, Task protocol debt | Repo-grounded v2 status projection gap; generated views stay truthful and are never hand-edited. |
 | `research/11-p0-audit-reopen-design.md` | research | P0.5–P0.8, P0 audit pass 2 | F1–F7 ownership, sequential forward-fix topology, contract authority and immutable-history provenance repair. |
 | `artifacts/P0.5/fixtures/test_negative_fixtures.py` | artifact | P0.5, P0.6 | One-mutation copied fixtures for the repaired exact-set/privacy verifier. |
+| `artifacts/P0.8/execution-provenance-v1.json` | artifact | P0 closure, audit pass 2 | Deterministic Git/Task-Contract reconstruction of P0.1–P0.4, consumed by append-only correction events and regenerated state views. |

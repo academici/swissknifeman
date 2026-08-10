@@ -1,0 +1,234 @@
+{
+  "items": [
+    {
+      "changed_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.1/evidence/provider-source-snapshot.json"
+      ],
+      "contract_codes": {
+        "pre_final": "allow",
+        "pre_mutation": "allow"
+      },
+      "correction_result": "closed-deviations",
+      "deviation": "material: baseline bundle errors; process: route overshoot",
+      "historical_executor_route": {
+        "effort": "high",
+        "model": "gpt-5.6-sol",
+        "model_class": "frontier"
+      },
+      "item_commit": "0169e25678f94f601a9bb7ddc4ce80f9ede66156",
+      "item_id": "P0.1",
+      "prescribed_route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "topology": {
+        "bookkeeping_or_phase_paths": [],
+        "item_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.1/evidence/provider-source-snapshot.json"
+        ]
+      },
+      "validations": [
+        {
+          "anchor": "0169e25678f94f601a9bb7ddc4ce80f9ede66156",
+          "command": "git diff-tree --no-commit-id --name-only -r <anchor>"
+        },
+        {
+          "anchor": "0169e25678f94f601a9bb7ddc4ce80f9ede66156",
+          "command": "task.task_contract.build/evaluate on git archive <anchor>"
+        }
+      ]
+    },
+    {
+      "changed_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0-provider-fleet-classification.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p0-provider-fleet-classify.py",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.2.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_gates.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/queue.jsonl",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/index.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.2.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.2.state.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/09-fleet-migration-classification.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+      ],
+      "contract_codes": {
+        "pre_final": "allow",
+        "pre_mutation": "allow"
+      },
+      "correction_result": "closed-green",
+      "deviation": "process: item and bookkeeping paths were bundled; Required Reads changed in close commit",
+      "historical_executor_route": {
+        "effort": "high",
+        "model": "gpt-5.6-sol",
+        "model_class": "frontier"
+      },
+      "item_commit": "5703feb4ee8a086538f9bc64aa36b70de3f8c61f",
+      "item_id": "P0.2",
+      "prescribed_route": {
+        "effort": "high",
+        "model_class": "frontier"
+      },
+      "topology": {
+        "bookkeeping_or_phase_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0-provider-fleet-classification.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p0-provider-fleet-classify.py",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.2.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_gates.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/queue.jsonl",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/index.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.2.state.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/09-fleet-migration-classification.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+        ],
+        "item_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.2.md"
+        ]
+      },
+      "validations": [
+        {
+          "anchor": "5703feb4ee8a086538f9bc64aa36b70de3f8c61f",
+          "command": "git diff-tree --no-commit-id --name-only -r <anchor>"
+        },
+        {
+          "anchor": "5703feb4ee8a086538f9bc64aa36b70de3f8c61f",
+          "command": "task.task_contract.build/evaluate on git archive <anchor>"
+        }
+      ]
+    },
+    {
+      "changed_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0-security-trust-action-matrix.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.3/fixtures/no-op.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.3/recovery-gates-check.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p0-recovery-gates-check.py",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/test-p0-recovery-gates-check.py",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.3.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D63-p0-recovery-gates-freeze.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_archive.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_current.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_index.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/index.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/open-questions.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.3.state.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/10-p0-premortem.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/root/contracts/provider-recovery-gates-v1.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+      ],
+      "contract_codes": {
+        "pre_final": "allow",
+        "pre_mutation": "allow"
+      },
+      "correction_result": "closed-green",
+      "deviation": "process: item and bookkeeping paths were bundled",
+      "historical_executor_route": {
+        "effort": "high",
+        "model": "gpt-5.6-sol",
+        "model_class": "frontier"
+      },
+      "item_commit": "18571a14c69a57f04a8a4db58a7039f627e27c13",
+      "item_id": "P0.3",
+      "prescribed_route": {
+        "effort": "high",
+        "model_class": "frontier"
+      },
+      "topology": {
+        "bookkeeping_or_phase_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0-security-trust-action-matrix.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p0-recovery-gates-check.py",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/test-p0-recovery-gates-check.py",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.3.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D63-p0-recovery-gates-freeze.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_archive.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_current.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_index.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/index.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/open-questions.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.3.state.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/10-p0-premortem.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/root/contracts/provider-recovery-gates-v1.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+        ],
+        "item_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.3/fixtures/no-op.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.3/recovery-gates-check.json"
+        ]
+      },
+      "validations": [
+        {
+          "anchor": "18571a14c69a57f04a8a4db58a7039f627e27c13",
+          "command": "git diff-tree --no-commit-id --name-only -r <anchor>"
+        },
+        {
+          "anchor": "18571a14c69a57f04a8a4db58a7039f627e27c13",
+          "command": "task.task_contract.build/evaluate on git archive <anchor>"
+        }
+      ]
+    },
+    {
+      "changed_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.4/branch-verdict.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.4/fresh-security-trust-evidence.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.4.json",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P0-security-containment-evidence.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/handoff.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.4.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.4.state.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.md",
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+      ],
+      "contract_codes": {
+        "pre_final": "allow",
+        "pre_mutation": "allow"
+      },
+      "correction_result": "closed-green",
+      "deviation": "process: item/phase-close paths bundled; Required Reads changed in close commit; route overshoot",
+      "historical_executor_route": {
+        "effort": "high",
+        "model": "gpt-5.6-sol",
+        "model_class": "frontier"
+      },
+      "item_commit": "d17e4497ba751f61b131c5147ac93b87e6ad61d7",
+      "item_id": "P0.4",
+      "prescribed_route": {
+        "effort": "high",
+        "model_class": "implementation"
+      },
+      "topology": {
+        "bookkeeping_or_phase_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.4.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P0-security-containment-evidence.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/handoff.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.4.state.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.md",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md"
+        ],
+        "item_paths": [
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.4/branch-verdict.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.4/fresh-security-trust-evidence.json",
+          "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.4.md"
+        ]
+      },
+      "validations": [
+        {
+          "anchor": "d17e4497ba751f61b131c5147ac93b87e6ad61d7",
+          "command": "git diff-tree --no-commit-id --name-only -r <anchor>"
+        },
+        {
+          "anchor": "d17e4497ba751f61b131c5147ac93b87e6ad61d7",
+          "command": "task.task_contract.build/evaluate on git archive <anchor>"
+        }
+      ]
+    }
+  ],
+  "ledger_sha256": "e086dc3f658ef0d036bd2020711892d4e1df0cb5c693460a3197d8d652fb0254",
+  "plan_id": "2026.08.02-PROVIDER-CONTRACT-LOCALE",
+  "schema": "p0-execution-provenance/v1"
+}

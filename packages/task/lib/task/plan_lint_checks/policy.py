@@ -438,7 +438,7 @@ def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
 # --- 2026.07.25-ECO-OPT P8.3/D44: `CHECKPOINTED` — отказ несёт точную команду возобновления ------
 # Носитель — строка `Возобновление: <команда>` в поле `Pending Work` item'а (НЕ седьмой
 # статус, НЕ семнадцатое поле — оба варианта отклонены D44, ломают контракт трёх живых
-# планов/`plans/cross-plan-files.py`). Активация — тот же opt-in, что у 2026.07.25-ECO-OPT P8.1/P8.2:
+# планов/`packages/task/scripts/cross-plan-files.py`). Активация — тот же opt-in, что у 2026.07.25-ECO-OPT P8.1/P8.2:
 # Meta-поле `Closure Protocol | v1` (без даты-канона — на дату детализации в этом плане
 # живых 🔴/⛔ items с включённым протоколом нет, задним числом красить нечего).
 STATUS_SKIPPED = "⛔ Skipped by decision"
@@ -494,7 +494,7 @@ def _lint_checkpointed_83(meta, items, path, diag):
 
 # --- 2026.07.25-ECO-OPT P11.3/D129: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index
 # & Status Board» (F8 аудита P9: handoff соврал `P9 4/4`, доска несла `2/4`, права доска).
-# Дом — plan_lint.py, не verify-citations.py (D129): это согласованность двух секций ОДНОГО
+# Дом — plan_lint.py, не verify-plan-citations.py (D129): это согласованность двух секций ОДНОГО
 # плана, не резолв пути/цитаты — обратное решение размыло бы оба инструмента (`research/27-…`
 # §2.4, Scope Excluded P10.2 остаётся в силе). Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
 # (та же дисциплина, что WRITE_SITE_CODES_CANON_DATE/CONSEQUENCES_CANON_DATE): handoff старше

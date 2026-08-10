@@ -14,7 +14,7 @@ QUEUE_NAME = "queue.jsonl"
 GATES_NAME = "_gates.md"
 RECORD_MAX_BYTES = 16384
 EVENT_TYPES = frozenset(("request", "claim", "response", "auto_answer"))
-_CONTRACT_PATH = Path(__file__).resolve().parents[4] / "plans" / "2026.08.07-PLAN-ECONOMY" / "root" / "contracts" / "decision-request-v1.schema.json"
+_CONTRACT_PATH = Path(__file__).resolve().parents[2] / "configs" / "decision-request-v1.schema.json"
 _SCHEMA_KEYWORDS = frozenset(("additional_properties", "properties", "required", "type", "const",
                               "enum", "enum_ref", "const_ref", "pattern", "minimum", "min_length",
                               "items", "format", "unique_by", "required_when", "source", "description"))

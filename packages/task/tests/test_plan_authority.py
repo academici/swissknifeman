@@ -54,6 +54,12 @@ def _request(**overrides):
 
 
 class AuthorityEvaluationTests(unittest.TestCase):
+    def test_contract_metadata_is_package_owned(self):
+        frame = json.loads(FRAME_PATH.read_text(encoding="utf-8"))
+        contract = ROOT / frame["contract"]
+        self.assertTrue(contract.is_file())
+        self.assertNotIn("plans", Path(frame["contract"]).parts)
+
     def test_constructive_is_delegated(self):
         result = evaluate(_request())
         self.assertEqual(result.verdict, "delegated")

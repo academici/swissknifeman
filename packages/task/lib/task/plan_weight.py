@@ -1,4 +1,4 @@
-"""plan_weight — вес обязательного чтения пункта плана (2026.08.07-PLAN-ECONOMY P0.3).
+"""plan_weight — вес обязательного чтения пункта плана.
 
 Инструмент воспроизводит ОБЯЗАТЕЛЬНЫЙ ПУТЬ ЧТЕНИЯ исполнителя из
 `packages/task/commands/plan-exec.md` §1 буквально и считает его вес в оценочных
@@ -190,8 +190,7 @@ DEFAULT_CANON_BUDGET_PATH = (
 # Артефакт прогона дифференциального харнесса P0.1 — единственный источник «истины» для
 # `--exact` (тот же путь, что пишет `calibrate-token-estimate.py`); корень берётся от
 # раскладки самого модуля, а не от cwd.
-DEFAULT_PROBE_LOG_RELPATH = Path(
-    "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log-v2.json")
+DEFAULT_PROBE_LOG_RELPATH = Path("packages/task/configs/calibration-probe-log-v2.json")
 _MONOREPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PROBE_LOG_PATH = _MONOREPO_ROOT / DEFAULT_PROBE_LOG_RELPATH
 

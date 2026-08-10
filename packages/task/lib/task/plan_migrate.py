@@ -1,9 +1,9 @@
 """Deterministic, fail-closed v1 -> v2 executable-plan migrator.
 
 The converter is deliberately a one-way materializer: Git is the rollback
-mechanism.  It accepts an in-place run only for the self-hosting plan; other
-plans may be projected read-only with the explicit ``--dry-run --output``
-pair.  This makes the P3.7 canary safe before fleet migration is authorised.
+mechanism.  It only projects a source read-only with the explicit
+``--dry-run --output`` pair.  The historical self-host migration has been
+retired, so an archived plan can never become a runtime write target.
 """
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from pathlib import Path
 from task import journal, plan_decisions, plan_item_state, plan_layout, plan_status, plan_weight
 
 
-SELF_HOST_PLAN_ID = "2026.08.07-PLAN-ECONOMY"
 _ITEM_RE = re.compile(r"^###\s+(P\d+\.\d+)\s+—\s+(.+?)\s*$")
 _FIELD_RE = re.compile(r"^\*\*([^*:]+):\*\*\s*(.*)$")
 _PHASE_RE = re.compile(r"^#\s+(P\d+)\s+—\s+(.+?)\s*$")
@@ -361,6 +360,4 @@ def migrate_safely(source, *, dry_run=False, output=None, inventory_path=None) -
         return result
     if output is not None:
         raise MigrationError("--output допустим только вместе с --dry-run")
-    if source.name != SELF_HOST_PLAN_ID:
-        raise MigrationError("inplace-конвертер разрешён только для self-host плана; используйте --dry-run --output")
-    return migrate(source, inventory_path=inventory_path)
+    raise MigrationError("inplace-конвертер выведен из эксплуатации; используйте --dry-run --output")

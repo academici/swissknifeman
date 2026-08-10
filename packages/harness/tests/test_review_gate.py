@@ -14,7 +14,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
 RG_SRC = PKG / "configs" / "claude-code" / "hooks" / "review-gate"
-VC_SRC = PKG.parents[1] / "plans" / "verify-citations.py"
+VC_SRC = PKG.parents[1] / "packages" / "task" / "scripts" / "verify-plan-citations.py"
 
 
 def _run(cmd, cwd):
@@ -121,7 +121,7 @@ def _hookdir_citations(tmp):
 
 
 class TestPlanCitationsCheck(unittest.TestCase):
-    """P11.7: `plan-citations` — прогон РЕАЛЬНОГО `plans/verify-citations.py`
+    """P11.7: `plan-citations` — прогон РЕАЛЬНОГО `packages/task/scripts/verify-plan-citations.py`
     (не стаб) по задетому плану. Скрипт резолвит свой `REPO_ROOT` от
     собственного пути, поэтому копия в tmp-репо работает автономно."""
 
@@ -135,8 +135,8 @@ class TestPlanCitationsCheck(unittest.TestCase):
         (plan_dir / "phases").mkdir(parents=True)
         (plan_dir / "plan.md").write_text("# TESTPLAN\n")
         (plan_dir / "phases" / "P1.md").write_text("Cite `plans/TESTPLAN/plan.md:1` here.\n")
-        (self.repo / "plans").mkdir(exist_ok=True)
-        shutil.copy(VC_SRC, self.repo / "plans" / "verify-citations.py")
+        (self.repo / "packages" / "task" / "scripts").mkdir(parents=True)
+        shutil.copy(VC_SRC, self.repo / "packages" / "task" / "scripts" / "verify-plan-citations.py")
         _run(["git", "add", "."], self.repo)
         _run(["git", "config", "user.email", "review-gate-test@example.invalid"], self.repo)
         _run(["git", "commit", "-q", "-m", "plan skeleton"], self.repo)

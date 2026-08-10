@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-close`.
 - Invocation: `$ task:plan-close <arguments>`
 - Routing: `implementation/low -> gpt-5.6-terra/low`
 - Canonical source: `packages/task/commands/plan-close.md`
-- Canonical SHA-256: `sha256:1e673e4ac597049dcc6ad25f1fdd14714f4b25732bb39b3825670d2e92a06993`
+- Canonical SHA-256: `sha256:f267fcf72eebc692b4138cd7ebe18cdfa11cf19dc5a427aa3bba97a15c499fbe`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

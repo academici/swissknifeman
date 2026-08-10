@@ -27,7 +27,7 @@ different payload or resolver remains fail-closed. A durable response never stor
 the API returns it only after all four carriers have been regenerated and byte-checked.
 
 The producer acceptance at
-`plans/2026.08.07-PLAN-ECONOMY/artifacts/P5/validate_acceptance.py` uses fresh fixture copies to
+`plans/archive/2026.08.07-PLAN-ECONOMY/artifacts/P5/validate_acceptance.py` uses fresh fixture copies to
 exercise policy apply and its single-use boundary, authorization reclassification with its permitted
 owner flow, P4→P5 owner `continue`/`park`/`reject`,
 the 2- and 5-substantive-option boundaries, mandatory-only rejection, and one-shot request/resolve

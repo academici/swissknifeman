@@ -41,7 +41,7 @@ this reconciliation. RAG:— (owner/repo-grounded: `brief/17-audit9-resolver-val
 
 - Worktree-local `plan-lint.py`: 0 errors / 0 warnings; `--conflicts`: 0 mismatches /
   0 warnings.
-- `plans/verify-citations.py --strict`: 23 citations checked / 0 findings.
+- `packages/task/scripts/verify-plan-citations.py --strict`: 23 citations checked / 0 findings.
 - All 39 ordinary Task Contracts on their exact routed model/effort: `allow/allow`.
 - Protected Task Contracts: P3.8 through D95 and P6.1/P6.2 through D96 each resolve
   `granted=true`, `pre_mutation=allow`, `pre_final=allow`.

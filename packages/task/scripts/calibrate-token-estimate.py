@@ -28,16 +28,16 @@ FIXED_MARGIN = 1.05
 NNLS_ITERATIONS = 20000
 NNLS_LEARNING_RATE = 0.05
 ARTIFACT_PATH = _PKG_ROOT / "configs" / "token-estimate-calibration.json"
-V1_SNAPSHOT_PATH = _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/token-estimate-calibration-v1.json"
-PROBE_LOG_PATH = _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/artifacts/P0/calibration-probe-log-v2.json"
+V1_SNAPSHOT_PATH = _PKG_ROOT / "configs" / "token-estimate-calibration-v1.json"
+PROBE_LOG_PATH = _PKG_ROOT / "configs" / "calibration-probe-log-v2.json"
 
 # Exactly eight distinct real sources.  The first three are the measured dense-ASCII artefacts.
 CORPUS = (
     _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json",
     _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P3/package-promotion-manifest-v1.json",
     _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
-    _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/research/15-p0.1-provider-neutral-calibration-2026-08-08.md",
-    _REPO_ROOT / "plans/2026.08.07-PLAN-ECONOMY/findings/18-codex-token-usage-2026-08-08.md",
+    _PKG_ROOT / "configs" / "token-estimate-calibration-v1.json",
+    _PKG_ROOT / "configs" / "read-limit.json",
     _REPO_ROOT / "packages/task/lib/task/token_estimate.py",
     _REPO_ROOT / "packages/task/lib/task/token_probe.py",
     _REPO_ROOT / "packages/task/tests/test_token_estimate.py",

@@ -3,7 +3,7 @@
   "frozen_at": "2026-08-09",
   "description": "Repository owner authority frame for executable-plan decisions; deny by default and monotonic.",
   "default": "reserved",
-  "contract": "plans/2026.08.07-PLAN-ECONOMY/root/contracts/authority-frame-v1.schema.json",
+  "contract": "packages/task/configs/authority-frame-v1.schema.json",
   "aggregation": {
     "key": [
       "plan_id",

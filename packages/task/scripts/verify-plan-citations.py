@@ -9,7 +9,7 @@
 закрывающая заодно второй класс — протухшие линейные якоря на файлы, переписанные другим
 планом (D89).
 
-Форма и CLI повторяют `plans/cross-plan-files.py` (см. Required Reads P10.2): stdlib-only,
+Форма и CLI повторяют `packages/task/scripts/cross-plan-files.py` (см. Required Reads P10.2): stdlib-only,
 человекочитаемый отчёт всегда, `--strict` переключает только exit-код.
 
 Проверяемые формы ссылок (внутри одинарных бэктиков, ЦЕЛИКОМ токеном):
@@ -43,16 +43,16 @@ item'а P11.1, анти-подгонка): машина по-прежнему н
 генерируемые отчёты / переезжает в `docs/` проекта — не носитель плановой прозы).
 
 Известные исключения (ссылки на деливераблы БУДУЩИХ items, которых на этом дереве ещё нет по
-построению) — данными, не кодом: `plans/verify-citations-known-exceptions.json`
+построению) — данными, не кодом: `packages/task/configs/verify-citations-known-exceptions.json`
 (`{"exceptions": [{"citation": "...", "reason": "..."}]}`), формат — тот же принцип, что
 `cross-plan-files-known-intersections.json` у соседнего гейта.
 
 Использование:
-    python3 plans/verify-citations.py                        # все живые планы
-    python3 plans/verify-citations.py plans/<PLAN-ID> ...     # только названные (путь ИЛИ ID)
-    python3 plans/verify-citations.py --strict                # exit 1 при любой находке
-    python3 plans/verify-citations.py --include-archive        # + архивные планы
-    python3 plans/verify-citations.py --selftest               # embedded unittest (Files
+    python3 packages/task/scripts/verify-plan-citations.py                        # все живые планы
+    python3 packages/task/scripts/verify-plan-citations.py plans/<PLAN-ID> ...     # только названные (путь ИЛИ ID)
+    python3 packages/task/scripts/verify-plan-citations.py --strict                # exit 1 при любой находке
+    python3 packages/task/scripts/verify-plan-citations.py --include-archive        # + архивные планы
+    python3 packages/task/scripts/verify-plan-citations.py --selftest               # embedded unittest (Files
                                                                   # item'а не заводит отдельный
                                                                   # тестовый файл)
 """
@@ -65,9 +65,10 @@ import os
 import re
 import sys
 
-PLANS_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.normpath(os.path.join(PLANS_DIR, ".."))
-KNOWN_EXCEPTIONS_FILE = os.path.join(PLANS_DIR, "verify-citations-known-exceptions.json")
+REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+PLANS_DIR = os.path.join(REPO_ROOT, "plans")
+KNOWN_EXCEPTIONS_FILE = os.path.join(
+    REPO_ROOT, "packages", "task", "configs", "verify-citations-known-exceptions.json")
 
 CITATION_RE = re.compile(
     r"`((?:[\w.-]+/)+[\w.-]+\.[A-Za-z0-9]+)"

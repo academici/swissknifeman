@@ -133,7 +133,9 @@ def _lint_return_owner_authorization(plan_dir, layout: str, diag) -> None:
 
 
 def lint_return_loop(plan_dir, layout: str, diag) -> None:
-    """Run the two separately registered, opt-in D139 checks."""
+    """Run the execution-only return-loop checks for a live plan."""
+    if Path(plan_dir).parent.name == "archive":
+        return
     _lint_return_escalation_qualification(plan_dir, layout, diag)
     _lint_return_owner_authorization(plan_dir, layout, diag)
     _lint_terminal_phase_unresolved_decisions(plan_dir, layout, diag)
@@ -168,15 +170,18 @@ def _lint_terminal_phase_unresolved_decisions(plan_dir, layout: str, diag) -> No
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
     """Emit D2 errors for ready layout-v2 items only.
 
-    Layout v1 is structurally outside the frozen contract.  In layout v2 a missing
-    calibration, read-limit artifact, or plan-owned contract is an error rather than
-    an implicit skip.  ``measure_plan`` attaches the canonical admission result to
-    each item, so this function never re-counts files or parses producer annotations.
+    Layout v1 and archived plans are structurally outside the execution gate. In a
+    live layout-v2 plan a missing calibration, read-limit artifact, or plan-owned
+    contract is an error rather than an implicit skip. ``measure_plan`` attaches the
+    canonical admission result to each item, so this function never re-counts files
+    or parses producer annotations.
     """
     if layout != "v2":
         return
 
     plan_dir = Path(plan_dir)
+    if plan_dir.parent.name == "archive":
+        return
     try:
         measurer = plan_weight.Measurer()
         measured = plan_weight.measure_plan(plan_dir, measurer)

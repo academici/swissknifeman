@@ -63,7 +63,7 @@ class PlanReturnsTests(unittest.TestCase):
     def test_lifted_schema_is_byte_identical(self):
         root = Path(__file__).resolve().parents[3]
         self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-fingerprint-v1.schema.json",
-                                     root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
+                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
                                      shallow=False))
 
     def test_committed_fixture_emits_physical_return_event_ids_outside_fingerprint(self):
@@ -151,5 +151,5 @@ class PlanReturnsTests(unittest.TestCase):
     def test_lifted_return_loop_spec_is_byte_identical(self):
         root = Path(__file__).resolve().parents[3]
         self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-loop-v1.spec.json",
-                                     root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/return-loop-v1.spec.json",
+                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-loop-v1.spec.json",
                                      shallow=False))

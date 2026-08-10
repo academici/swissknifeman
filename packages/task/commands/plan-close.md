@@ -198,7 +198,7 @@ status-rule ниже. Точная команда, лестница маршру
    `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
    пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
    **Цитаты-доказательства (P11.6), на итоговом дереве (после перезаписи handoff'а выше):**
-   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 plans/verify-citations.py
+   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 packages/task/scripts/verify-plan-citations.py
    plans/<PLAN-ID> --strict`; счёт публикуется С АТРИБУЦИЕЙ: «цитаты: N находок — новых от
    диффа item'а: K» (baseline перечня `verify-citations-known-exceptions.json` чист — P11.5 —
    поэтому находка на итоговом дереве атрибутируется диффу ЭТОГО item'а). K > 0 — чинится
@@ -280,7 +280,7 @@ status-rule ниже. Точная команда, лестница маршру
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
    Следом (та же граница — после перезаписи handoff, на итоговом дереве): `python3
-   plans/verify-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
+   packages/task/scripts/verify-plan-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
    N находок — новых от закрытия: K» (baseline перечня `verify-citations-known-exceptions.json`
    чист — P11.5). K > 0 — чинится ДО коммита закрытия фазы; N − K > 0 (остаточные находки вне
    этой фазы) — строка в Open risks `handoff.md`.

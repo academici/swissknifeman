@@ -11,6 +11,16 @@ from task import plan_authority, plan_gates, plan_item_state, plan_lint, plan_re
 
 
 DATA = Path(__file__).resolve().parent / "data" / "plan-v2"
+
+
+class TestDecisionRequestSchemaLocation(unittest.TestCase):
+    def test_runtime_contract_is_package_owned(self):
+        self.assertEqual(
+            plan_requests._CONTRACT_PATH,
+            Path(__file__).resolve().parents[1] / "configs" / "decision-request-v1.schema.json",
+        )
+        self.assertNotIn("plans", plan_requests._CONTRACT_PATH.parts)
+        self.assertEqual(json.loads(plan_requests._CONTRACT_PATH.read_text(encoding="utf-8"))["contract_version"], "v1")
 P5_DATA = Path(__file__).resolve().parent / "data" / "plan-v2-p5"
 
 

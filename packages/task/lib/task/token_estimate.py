@@ -1,5 +1,5 @@
 """token_estimate — stdlib-only, детерминированная оценка числа токенов текста СВЕРХУ
-(2026.08.07-PLAN-ECONOMY D11/D14, канал калибровки — D92).
+(канал калибровки определён package-owned конфигурацией).
 
 Формула (D14): ``estimate(T) = ceil(Σ_c count_c(T)·r_c · safety_multiplier) +
 per_file_overhead_tokens`` — множитель безопасности масштабирует только посимвольную

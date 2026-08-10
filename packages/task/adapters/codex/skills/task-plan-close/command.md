@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:1e673e4ac597049dcc6ad25f1fdd14714f4b25732bb39b3825670d2e92a06993
+Canonical SHA-256: sha256:f267fcf72eebc692b4138cd7ebe18cdfa11cf19dc5a427aa3bba97a15c499fbe
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -212,7 +212,7 @@ status-rule ниже. Точная команда, лестница маршру
    `result["pre_mutation"]`/`result["pre_final"]` того же шага 4 (не вычисляй заново, не
    пересказывай прозой — `plan_lint.py` матчит только эту строку построчно).
    **Цитаты-доказательства (P11.6), на итоговом дереве (после перезаписи handoff'а выше):**
-   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 plans/verify-citations.py
+   если вердикт шага 4 закрывает item `🟢`/`🟠` — `python3 packages/task/scripts/verify-plan-citations.py
    plans/<PLAN-ID> --strict`; счёт публикуется С АТРИБУЦИЕЙ: «цитаты: N находок — новых от
    диффа item'а: K» (baseline перечня `verify-citations-known-exceptions.json` чист — P11.5 —
    поэтому находка на итоговом дереве атрибутируется диффу ЭТОГО item'а). K > 0 — чинится
@@ -294,7 +294,7 @@ status-rule ниже. Точная команда, лестница маршру
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
    Следом (та же граница — после перезаписи handoff, на итоговом дереве): `python3
-   plans/verify-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
+   packages/task/scripts/verify-plan-citations.py plans/<PLAN-ID> --strict`; счёт с той же атрибуцией: «цитаты:
    N находок — новых от закрытия: K» (baseline перечня `verify-citations-known-exceptions.json`
    чист — P11.5). K > 0 — чинится ДО коммита закрытия фазы; N − K > 0 (остаточные находки вне
    этой фазы) — строка в Open risks `handoff.md`.

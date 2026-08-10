@@ -86,7 +86,7 @@ self-preference с контролем качества собственного 
 ослаблена verdict'ом. **Не взято:** majority voting, ad-hoc resampling и обещание token-level
 воспроизводимости hosted-модели. Проверено 2026-08-08 по первичным страницам arXiv/ACL Anthology;
 коррекция ошибочной атрибуции исходного research-среза записана в
-`plans/2026.08.07-PLAN-ECONOMY/findings/24-p4.5-r12-source-provenance-repair-2026-08-08.md`.
+`plans/archive/2026.08.07-PLAN-ECONOMY/findings/24-p4.5-r12-source-provenance-repair-2026-08-08.md`.
 
 ### Официальный спек Claude Code — adopt
 Канон, на котором стоит всё. Субагент = `.claude/agents/*.md` с frontmatter
@@ -397,7 +397,7 @@ docs-impact гейт, матрица возможностей, CI-гигиена
 
 - <https://docs.anthropic.com/en/docs/claude-code/memory> and
   <https://docs.github.com/en/copilot/tutorials/optimize-ai-usage> informed the focused-carrier
-  guidance recorded in `plans/2026.08.07-PLAN-ECONOMY/findings/14-*`.
+  guidance recorded in `plans/archive/2026.08.07-PLAN-ECONOMY/findings/14-*`.
 - D93 implements a two-threshold gate in `plan-weight.py canon`: warning at a declared fraction,
   hard failure at the measured one-read token cap, regression justification, and dated exceptions.
 - The fewer-than-500-lines vendor orientation is printed as an independent number; it never raises

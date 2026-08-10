@@ -3,9 +3,9 @@
 # показывает её сырым именем (нет короткого кода в `_REVIEW_GATE_CHECK_CODES`
 # — fallback `doctor.py`, намеренно не тронутый этим item'ом). Режим — по
 # факту чистоты после P11.5 (см. `config.json`). Изменения задели
-# `plans/<ID>/` → прогон `plans/verify-citations.py plans/<ID>
+# `plans/<ID>/` → прогон `packages/task/scripts/verify-plan-citations.py plans/<ID>
 # --strict` по КАЖДОМУ задетому плану; нарушением считаются ТОЛЬКО находки
-# сверх baseline-перечня (`plans/verify-citations-known-exceptions.json`) —
+# сверх baseline-перечня (`packages/task/configs/verify-citations-known-exceptions.json`) —
 # скрипт сам вычитает known exceptions, гейт лишь читает его exit-код/вывод.
 # exit 0 = чисто, ≠0 = нарушение; stdout = plans/<ID>: <цитата> — <причина>.
 set -uo pipefail
@@ -20,7 +20,7 @@ plan_ids="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#^pla
 [ -n "$plan_ids" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-vc_py="$repo_root/plans/verify-citations.py"
+vc_py="$repo_root/packages/task/scripts/verify-plan-citations.py"
 [ -f "$vc_py" ] || exit 0   # гейт цитат не завезён в это дерево — не наш случай
 
 violations=0

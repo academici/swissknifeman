@@ -715,6 +715,13 @@ class TestRealFleetPlan(unittest.TestCase):
         self.assertTrue(all(g.get("gate") in (None, GATE_SIZE_BYTES, GATE_TOKENS, GATE_BOTH)
                             for g in record["gaps"]))
 
+    def test_exact_probe_log_is_package_owned(self):
+        self.assertEqual(
+            plan_weight.DEFAULT_PROBE_LOG_RELPATH,
+            Path("packages/task/configs/calibration-probe-log-v2.json"),
+        )
+        self.assertTrue(plan_weight.DEFAULT_PROBE_LOG_PATH.is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

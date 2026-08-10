@@ -72,7 +72,7 @@ snapshot above copied in before execution:
 | `bash packages/task/scripts/validate.sh` | exit 0; 484 tests; `validate: OK` (archived-plan warnings remain non-fatal/pre-existing) |
 | `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 0 errors/0 warnings |
 | `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
-| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
 | `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; plan snapshot hash recorded above |
 
 ## Preflight and scope
@@ -162,7 +162,7 @@ read-only.
 | `bash packages/task/scripts/validate.sh` | exit 0; 484 tests; `validate: OK`; archived-plan warnings remain pre-existing/non-fatal |
 | `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
 | `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
-| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
 | `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `aac6a1f2261dd3875df90d7611a0318219859af4e46e5c02da8b131230f84789` |
 
 The first matrix invocation used undeclared route-evidence source `independent-review` and stopped
@@ -296,7 +296,7 @@ remained read-only.
 | `bash packages/task/scripts/validate.sh` | exit 0; 485 tests; `validate: OK`; archived-plan warnings remain pre-existing/non-fatal |
 | `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
 | `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
-| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
 | `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `eac4255e88a76f4e94184ec6a86cc953ec859dddcb3ec335da3da1904a9c9009` |
 
 The protected request was `gate_id=G-OWNER-P5.4-SINGLE`,
@@ -420,7 +420,7 @@ read-only throughout review.
 | `bash packages/task/scripts/validate.sh` | exit 0; 485 tests; `validate: OK`; 245 archived-plan warnings are pre-existing/non-fatal |
 | `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 1 plan, 0 errors/0 warnings |
 | `PYTHONPATH=packages/task/lib python3 packages/task/scripts/plan-lint.py --conflicts` | exit 0; 0 conflicts/0 warnings |
-| `python3 plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
+| `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` | exit 0; 2 citations checked/0 findings |
 | `find plans/2026.08.03-ARTIFEX-SUPERVISOR -type f -print0 \| sort -z \| xargs -0 sha256sum \| sha256sum` | exit 0; input snapshot `de3f7f7d48515be94c8d26f838173e55370f8f6fa666beae0cf66b94068e3970` |
 
 Two first-pass reviewer harness invocations were invalid and are not counted as implementation

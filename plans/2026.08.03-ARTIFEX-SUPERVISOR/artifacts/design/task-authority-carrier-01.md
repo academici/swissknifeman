@@ -131,7 +131,7 @@ $ task:dev /home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTI
 485 tests; `python3 packages/task/scripts/plan-lint.py plans/2026.08.03-ARTIFEX-SUPERVISOR`
 — exit 0 (0 errors/0 warnings); `PYTHONPATH=packages/task/lib python3
 packages/task/scripts/plan-lint.py --conflicts` — exit 0 (0/0); `python3
-plans/verify-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` — exit 0 (2 checked/0
+packages/task/scripts/verify-plan-citations.py --strict plans/2026.08.03-ARTIFEX-SUPERVISOR` — exit 0 (2 checked/0
 findings). Independent 32-item evaluation — 32/32 `{pre_mutation=allow, pre_final=allow}` and
 zero foreign-D50 provenance. Protected-transition test matrix includes the exact allow plus
 missing, valid-owner-message synthetic `D999`, valid-owner-message duplicate old `D50`, wrong

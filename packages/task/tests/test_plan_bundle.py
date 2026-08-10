@@ -24,7 +24,7 @@ class PlanBundleTest(unittest.TestCase):
     def test_lifted_schema_is_byte_identical(self):
         root = Path(__file__).resolve().parents[3]
         self.assertTrue(filecmp.cmp(root / "packages/task/configs/bundle-v1.schema.json",
-                                     root / "plans/2026.08.07-PLAN-ECONOMY/root/contracts/bundle-v1.schema.json",
+                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/bundle-v1.schema.json",
                                      shallow=False))
 
     def test_build_is_deterministic_and_check_is_byte_fresh(self):

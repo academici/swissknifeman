@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-08-10
+
+- **`task`: runtime plan-protocol больше не зависит от конкретного архивного плана.**
+  Frozen schemas и калибровочные входы принадлежат `packages/task/configs/`; inplace
+  v1→v2 migration окончательно выведена из эксплуатации. Утилиты проверки планов
+  перенесены из `plans/` в `packages/task/scripts/` с конфигурацией в
+  `packages/task/configs/`; provider-проекции, hooks и документация используют новые пути.
+
 ## [0.11.0] - 2026-08-10
 
 - **`task`: downstream-gate исполняет только явные команды Validation.**
@@ -512,12 +520,12 @@
   запрещено — гранулярность экономит, слияние отнимает).
 
 - **`review-gate`: третья точка принуждения гейта цитат — `checks/plan-citations.sh` (P11.7,
-  `2026.07.25-ECO-OPT`).** Изменения задели `plans/<ID>/` → прогон `plans/verify-citations.py
+  `2026.07.25-ECO-OPT`).** Изменения задели `plans/<ID>/` → прогон `packages/task/scripts/verify-plan-citations.py
   plans/<ID> --strict` по каждому задетому плану поверх диспетчера P9.1 (`run-checks.sh`);
   строка `{"name":"plan-citations","mode":"warn"}` в `config.json` — режим по факту чистоты
   (`--strict` красный на живом дереве `2026.07.25-ECO-OPT`: 16 пред-существующих находок P11.5,
   Open risk (25) — `strict` даст необъяснённый шум, upgrade условен на их адресации); граceful
-  skip, если `plans/verify-citations.py` в дереве отсутствует. Два реальных live-прогона
+  skip, если `packages/task/scripts/verify-plan-citations.py` в дереве отсутствует. Два реальных live-прогона
   субагента (Agent-тул): битая цитата в `handoff.md` ловится `[WARN] plan-citations: …`,
   генуинно чистый план (`2026.07.24-AGENT-RELIABILITY`, 0 находок) остаётся молчаливым в этом
   же прогоне (замена цели B — на `2026.07.25-ECO-OPT` «чистого» состояния сегодня нет, тот же
@@ -527,21 +535,21 @@
 
 - **`plan-protocol` §8 «Порядок закрытия item'а» + `plan-close.md`: обязательный прогон гейта
   цитат при закрытии (P11.6, `2026.07.25-ECO-OPT`).** Рядом с шагом 4 (plan-lint, после
-  перезаписи handoff'а, на итоговом дереве) — `python3 plans/verify-citations.py plans/<ID>
+  перезаписи handoff'а, на итоговом дереве) — `python3 packages/task/scripts/verify-plan-citations.py plans/<ID>
   --strict`; шаг 5 несёт вторую строку счёта с атрибуцией: «цитаты: N находок — новых от диффа
   item'а: K» (K>0 чинится ДО bookkeeping-коммита, N−K>0 — Pending Work + Open risks). Та же
   врезка — в `commands/plan-close.md` (режим `Pn.m` шаг 6 и режим `Pn` шаг 7). Правило вводится
   ПОСЛЕ P11.5 (гейт на живых планах уже чист — K=0 по построению для первого закрываемого
   item'а). Шаги существующего канона НЕ перенумерованы (F4-рецидив: счёт без атрибуции).
 
-- **`plans/verify-citations-known-exceptions.json`: baseline-перечень + триаж остаточного
+- **`packages/task/configs/verify-citations-known-exceptions.json`: baseline-перечень + триаж остаточного
   корпуса гейта цитат (P11.5, `2026.07.25-ECO-OPT`).** Прогон гейта на живых планах после
   P11.1–P11.4 дал 105 находок (52 уникальных цитаты) — по четырём механическим правилам
   R1–R4 (`packages/task/docs/reference/plan-tooling.md` § «Известные исключения»): 18 цитат
   починены на полный путь (короткая форма восстановлена однозначно, `git ls-files`), 19
   занесены в перечень исключений с адресной причиной (внешние файлы — Claude Code CLI
   бандл/Serena, неоднозначные пути — несколько кандидатов `validate.sh`, цитаты в закрытых
-  item'ах и в чужих планах). `python3 plans/verify-citations.py --strict` — 0 находок на всех
+  item'ах и в чужих планах). `python3 packages/task/scripts/verify-plan-citations.py --strict` — 0 находок на всех
   живых планах (было 52); гейт готов к strict-классу (P11.7).
 
 - **`plan_lint.py`: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index & Status Board»
@@ -554,7 +562,7 @@
   нашёл реальное расхождение (`handoff.md:44` — `P3 1/6` vs доска `P3 0/6`), непочиненное до
   P11.8 (Scope Excluded этого item'а). Дом — структурный линтер, не `verify-citations.py` (D129).
 
-- **`plans/verify-citations.py`: класс цитаты `` `file.json::a.b.c` `` через `json.load`
+- **`packages/task/scripts/verify-plan-citations.py`: класс цитаты `` `file.json::a.b.c` `` через `json.load`
   с greedy-обходом (P11.2, `2026.07.25-ECO-OPT`, `research/27-P11-citation-gate-target-design.md`
   §2.3).** Раньше такая цитата резолвилась старой веткой `::symbol` — точка пути работала
   как метасимвол регэкспа, проверка была ложно-зелёной. Теперь: файл распарсен как JSON →
@@ -563,7 +571,7 @@
   напр. `owners.P2.2`); JSON не парсится → находка «JSON не парсится», не тихий пропуск.
   Граница: «ключ существует», значение не сверяется.
 
-- **`plans/verify-citations.py`: двухшаговый резолвер пути + семь шаблонов поверхности
+- **`packages/task/scripts/verify-plan-citations.py`: двухшаговый резолвер пути + семь шаблонов поверхности
   скана (P11.1, `2026.07.25-ECO-OPT`, D128).** Резолв цитаты — по ДВУМ базам в фиксированном
   порядке (корень репо → каталог плана-источника); внутриплановая короткая ссылка
   (`` `phases/P1.md:80` ``) резолвится второй базой вместо ложной находки — на живых планах
@@ -817,7 +825,7 @@
   с обязательными ключами схемы (`constants.SERENA_SCHEMA_FIELDS`, офлайновая копия факта,
   без сети) против того, что реально печатает рендерер — не значение пина, только связность.
   Подключено к `packages/maind/scripts/test.sh` через `tests/test_codegraph.py`.
-- **`plans/verify-citations.py`: гейт «ссылка-доказательство резолвится до символа»
+- **`packages/task/scripts/verify-plan-citations.py`: гейт «ссылка-доказательство резолвится до символа»
   (P10.2, `2026.07.25-ECO-OPT`).** Переносит в репозиторий класс проверки, дыру в котором
   чужой закрытый план назвал своим долгом (`verify_claim_verdicts.py` проверял только
   существование ФАЙЛА из `ref` до `::`, символ после `::` не валидировался — через эту
@@ -858,7 +866,7 @@
   смог» без пути назад. Носитель — строка `Возобновление: <точная команда>` в поле
   `Pending Work` item'а (НЕ седьмой статус и НЕ семнадцатое поле — оба варианта сломали
   бы контракт `plan_lint.STATUSES`/`TERMINAL_STATUSES` и межплановый гейт
-  `plans/cross-plan-files.py` на всех живых планах). Гейт `plan_lint.py` — opt-in ОДИН
+  `packages/task/scripts/cross-plan-files.py` на всех живых планах). Гейт `plan_lint.py` — opt-in ОДИН
   РАЗ (`Closure Protocol | v1`): `🔴 Blocked` без непустой команды (форма `Возобновление:
   — (внешний блокер: …)` легальна для блокера без локального шага) → ERROR с id item'а;
   `⛔ Skipped by decision` без РОВНО `Возобновление: —` и ссылки `D<номер>` → ERROR.

@@ -5,7 +5,7 @@
 импортировать напрямую, а тестам нужно дёргать резолвер/замер поштучно, не только
 через subprocess). Тот же шаблон, что у scripts/plan-lint.py.
 
-Вызов (2026.08.07-PLAN-ECONOMY P0.3):
+Вызов:
     python3 packages/task/scripts/plan-weight.py plan plans/<PLAN-ID>
     python3 packages/task/scripts/plan-weight.py item plans/<PLAN-ID> Pn.m --json
     python3 packages/task/scripts/plan-weight.py sweep plans/

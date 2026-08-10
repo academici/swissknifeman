@@ -59,7 +59,7 @@ Claude adapter — отдельная additive provider projection.
 продюсера. Проверка наличия записи выключена до P6. CLI, exit-коды и форма finding описаны в
 [`plan-downstream-gate.md`](plan-downstream-gate.md).
 
-## `plans/verify-citations.py`
+## `packages/task/scripts/verify-plan-citations.py`
 
 Проверяет ссылки-доказательства вида `` `path:line` ``/`` `path::symbol` `` во ВСЕЙ прозе живого
 плана: `plan.md`, `handoff.md`, `roadmap.md`, `phases/*.md`, `findings/**/*.md`,
@@ -69,11 +69,11 @@ Claude adapter — отдельная additive provider projection.
 БЕЗ AST-разбора).
 
 ```bash
-python3 plans/verify-citations.py                        # все живые планы
-python3 plans/verify-citations.py plans/<PLAN-ID>         # один план (путь ИЛИ голый ID)
-python3 plans/verify-citations.py plans/<PLAN-ID> --strict   # exit 1 при любой находке
-python3 plans/verify-citations.py --include-archive          # + архивные планы
-python3 plans/verify-citations.py --selftest                 # embedded unittest
+python3 packages/task/scripts/verify-plan-citations.py                        # все живые планы
+python3 packages/task/scripts/verify-plan-citations.py plans/<PLAN-ID>         # один план (путь ИЛИ голый ID)
+python3 packages/task/scripts/verify-plan-citations.py plans/<PLAN-ID> --strict   # exit 1 при любой находке
+python3 packages/task/scripts/verify-plan-citations.py --include-archive          # + архивные планы
+python3 packages/task/scripts/verify-plan-citations.py --selftest                 # embedded unittest
 ```
 
 **Читать exit-код:** без `--strict` скрипт всегда возвращает `0` (отчёт — для чтения глазами
@@ -108,7 +108,7 @@ python3 plans/verify-citations.py --selftest                 # embedded unittest
 
 **Известные исключения** — ссылки на пути ВНЕ репозитория (например, файл npm-зависимости,
 прочитанный напрямую при RAG-верификации) или на деливерабл БУДУЩЕГО item'а, которого на
-этом дереве ещё нет по построению. Данные, не код: `plans/verify-citations-known-exceptions.json`
+этом дереве ещё нет по построению. Данные, не код: `packages/task/configs/verify-citations-known-exceptions.json`
 (если файла нет — исключений нет, что и означает пустой отчёт по умолчанию); перечень
 глобален (по строке цитаты, не по плану), заводится и пополняется триажем гейта, не правкой
 кода:
@@ -132,11 +132,11 @@ python3 plans/verify-citations.py --selftest                 # embedded unittest
 транскриптов findings-документов, ссылающиеся на позиции того item'а) → запись в перечень +
 Pending Work (правка ТЗ закрытых items вне скоупа триажа).
 
-**Тесты** — `python3 plans/verify-citations.py --selftest` (embedded `unittest`, отдельного
+**Тесты** — `python3 packages/task/scripts/verify-plan-citations.py --selftest` (embedded `unittest`, отдельного
 файла в `packages/task/tests/` нет: скрипт stdlib-only и самодостаточен, той же формы, что
-`plans/cross-plan-files.py`).
+`packages/task/scripts/cross-plan-files.py`).
 
-## `plans/cross-plan-files.py`
+## `packages/task/scripts/cross-plan-files.py`
 
 См. докстринг файла — сверка `Files` между живыми планами, `--strict` baseline-режим против
 `cross-plan-known-intersections.json`.

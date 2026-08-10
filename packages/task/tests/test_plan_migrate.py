@@ -16,7 +16,7 @@ class PlanMigrateTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        self.source = write_valid_plan(self.root, plan_migrate.SELF_HOST_PLAN_ID)
+        self.source = write_valid_plan(self.root, "MIGRATION-FIXTURE")
         plan = (self.source / "plan.md").read_text(encoding="utf-8")
         plan += """\n## 5. Decision Log
 
@@ -54,13 +54,11 @@ class PlanMigrateTests(unittest.TestCase):
         plan_migrate.migrate(output)
         self.assertEqual(before_second_run, {path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()})
 
-    def test_requires_both_dry_run_and_output_for_non_self_host(self):
-        foreign = self.root / "FOREIGN"
-        self.source.rename(foreign)
+    def test_requires_dry_run_and_output_for_every_source(self):
         with self.assertRaisesRegex(plan_migrate.MigrationError, "inplace-конвертер"):
-            plan_migrate.migrate_safely(foreign)
+            plan_migrate.migrate_safely(self.source)
         with self.assertRaisesRegex(plan_migrate.MigrationError, "требует явный --output"):
-            plan_migrate.migrate_safely(foreign, dry_run=True)
+            plan_migrate.migrate_safely(self.source, dry_run=True)
 
     def test_output_inventory_has_all_item_ids(self):
         output = self.root / "output"
@@ -82,7 +80,7 @@ class PlanMigrateTests(unittest.TestCase):
 
     def test_dry_run_materializes_legacy_blocked_journal_state(self):
         journal.append(self.source, journal.new_entry(
-            plan_id=plan_migrate.SELF_HOST_PLAN_ID, item_id="P1.1", command="plan-run",
+            plan_id=self.source.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="blocked",
         ))
         output = self.root / "blocked-output"

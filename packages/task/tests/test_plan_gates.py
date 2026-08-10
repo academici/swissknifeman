@@ -73,6 +73,31 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(plan_dir)
         self.assertTrue(any("контракт порога" in row for row in diag.errors), diag.errors)
 
+    def test_archived_plan_skips_execution_only_read_budget_gate(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        plan_dir = Path(tmp.name) / "plans" / "archive" / "plan-v2"
+        plan_dir.parent.mkdir(parents=True)
+        shutil.copytree(DATA / "plan-v2", plan_dir)
+        (plan_dir / "root" / "contracts" / "read-budget-v1.md").unlink()
+        diag = lint(plan_dir)
+        self.assertFalse(any(plan_gates.GATE_ID in row for row in diag.errors), diag.errors)
+
+    def test_archived_plan_skips_execution_only_return_loop_gates(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        plan_dir = Path(tmp.name) / "plans" / "archive" / "plan-v2"
+        plan_dir.parent.mkdir(parents=True)
+        shutil.copytree(DATA / "plan-v2", plan_dir)
+        diag = lint(plan_dir)
+        with unittest.mock.patch.object(plan_gates, "_lint_return_escalation_qualification") as qualification, \
+                unittest.mock.patch.object(plan_gates, "_lint_return_owner_authorization") as authorization, \
+                unittest.mock.patch.object(plan_gates, "_lint_terminal_phase_unresolved_decisions") as unresolved:
+            plan_gates.lint_return_loop(plan_dir, "v2", diag)
+        qualification.assert_not_called()
+        authorization.assert_not_called()
+        unresolved.assert_not_called()
+
     def test_missing_calibration_and_limit_are_errors(self):
         plan_dir = self.copied_fixture("plan-v2")
         for message in ("артефакт калибровки не читается", "артефакт лимита чтения не читается"):

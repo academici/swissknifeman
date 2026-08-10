@@ -887,7 +887,7 @@ $ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE finish
 0 предупреждений**; `python3 packages/task/scripts/plan-lint.py
 plans/2026.08.02-PROVIDER-CONTRACT-LOCALE` — **0 ошибок / 0 предупреждений**; baseline
 относительно `HEAD` — **0 ошибок / 1 предупреждение**, потому что `git archive` не видит
-untracked-каталог плана и delta новых ошибок не вычисляется. `python3 plans/verify-citations.py
+untracked-каталог плана и delta новых ошибок не вычисляется. `python3 packages/task/scripts/verify-plan-citations.py
 plans/2026.08.02-PROVIDER-CONTRACT-LOCALE --strict` — **11 проверенных ссылок / 26 известных
 исключений / 0 находок**. `bash packages/task/scripts/validate.sh` — **479 tests, OK**,
 `plan-lint --conflicts` внутри suite — **0/0**. Структурная зелень не снимает дефекты
@@ -1065,7 +1065,7 @@ authority, generated-drift и crash-recovery carriers, а не потерей sc
 - Worktree содержит широкие чужие изменения. Аудит не менял code/provider/fleet/Brain/generated
   state и не интерпретирует dirty tree как evidence результата.
 - Первый citation invocation был ошибочно направлен в несуществующий plan-local path и завершился
-  2; он не принят. Точная команда `python3 plans/verify-citations.py ... --strict` затем зелёная.
+  2; он не принят. Точная команда `python3 packages/task/scripts/verify-plan-citations.py ... --strict` затем зелёная.
   Первая попытка локального IANA hash с cleanup была отклонена до изменения данных; stream-only
   повтор дал exact header/size/hash выше.
 - Worktree-local `harness doctor`, provider audit, `maind health --cwd --strict` и memory round-trip
@@ -1160,7 +1160,7 @@ execution 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1 остаётся закрыт
 - `python3 packages/task/scripts/plan-lint.py --conflicts` — **0/0**.
 - absolute plan lint — **0 errors / 0 warnings**; `--baseline HEAD` — **0 errors / 1 warning**
   because the plan directory is untracked and `git archive HEAD` cannot supply a baseline.
-- `python3 plans/verify-citations.py plans/2026.08.02-PROVIDER-CONTRACT-LOCALE --strict` —
+- `python3 packages/task/scripts/verify-plan-citations.py plans/2026.08.02-PROVIDER-CONTRACT-LOCALE --strict` —
   **12 citations / 26 known exceptions / 0 findings**.
 - Independent invariant script — **30 unique item IDs, 30 Not started statuses, exact unique
   D1–D54**. Textual mentions of `[NEEDS CLARIFICATION]` are negative assertions/history, not live
@@ -1290,7 +1290,7 @@ producer/consumer, authority, recovery, roadmap или brief-coverage разры
 - The same lint with `--baseline HEAD` — **0 errors / 1 warning** on `d9d44245`: the plan directory
   is untracked and unavailable to `git archive HEAD`, so baseline delta attribution is not
   computed and is not reported as green.
-- `python3 plans/verify-citations.py
+- `python3 packages/task/scripts/verify-plan-citations.py
   plans/2026.08.02-PROVIDER-CONTRACT-LOCALE --strict` — **12 citations / 26 known exceptions /
   0 findings**.
 - Independent invariant check — **30/30 unique phase/roadmap item IDs with empty set difference;

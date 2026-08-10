@@ -33,3 +33,16 @@ verdict — `fail`, arm B/canary NOT-RUN. D158 запрещает повторн
 ```bash
 # Terminal handoff: do not relaunch task:plan-design/task:plan-exec for this plan.
 ```
+
+## Archive migration — 2026-08-10
+
+План перенесён в `plans/archive/2026.08.07-PLAN-ECONOMY/` как неизменяемое историческое
+доказательство. Исполняемые consumers используют package-owned schemas/configs в
+`packages/task/configs/`; архив не является runtime write target, а inplace v1→v2 migration
+выведена из эксплуатации. Execution-only gates (read-budget и return-loop/decision queue) не
+применяются к архивам; structural lint остаётся включённым.
+
+Проверки после переноса: `bash packages/task/scripts/validate.sh` — 747 tests, OK;
+`plan-lint plans/archive/2026.08.07-PLAN-ECONOMY --baseline HEAD` — 0 ERROR / 7 historical WARN,
+new from working tree: 0. Эти семь предупреждений сохранены как исторические артефакты и не
+означают возобновления P6.9.

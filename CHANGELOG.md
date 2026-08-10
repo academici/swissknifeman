@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-10
+
+- **`task`: downstream-gate исполняет только явные команды Validation.**
+  Пояснительный Markdown без inline-code payload больше не становится shell-командой и не
+  фабрикует RED; сохранены legacy bare command prefixes. Fixture terminal-phase input переведён
+  на свежий closure digest, а P2.10 downstream evidence перепроверен зелёным.
+
 - **`task`: freshness item-state изолирована по item journal scope.**
   Append события одного item больше не инвалидирует state views остальных: digest и `through`
   следуют declared `item_id`, а двух-item regression сохраняет D148 execution semantics

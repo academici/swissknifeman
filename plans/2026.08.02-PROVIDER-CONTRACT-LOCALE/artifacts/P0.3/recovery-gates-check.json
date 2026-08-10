@@ -2,7 +2,7 @@
   "action_matrix_sha256": "sha256:4cfb375101f3e1578c673ad0d0480e1a63b5345f93649167032146058972fabd",
   "action_set": [],
   "branch": "admission",
-  "checker_sha256": "sha256:843d3ff5c668e413548dfd221ca8c185e81b61aae058d04b68aa73c80d7d7a6d",
+  "checker_sha256": "sha256:a8c9fd72ace2a7355263b89111a757422f42e7e40644462bdd777619f33a960b",
   "classification_sha256": "sha256:0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
   "contract_freeze_decision": "D67",
   "contract_sha256": "sha256:b6b66da4b69b42ffd171034c1ff35f7572d2358106b79471c2b25fb99f1c95b8",

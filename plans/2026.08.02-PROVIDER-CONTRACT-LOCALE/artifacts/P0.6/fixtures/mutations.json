@@ -38,6 +38,18 @@
       "new": "`P7.4`"
     },
     {
+      "id": "weaken-g03-successor-enforcement",
+      "target": "contract",
+      "old": "R04 preserves skill-publication parity before command/harness consumers",
+      "new": "allow"
+    },
+    {
+      "id": "negated-r03-verifier",
+      "target": "contract",
+      "old": "`task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P2`",
+      "new": "do not run `task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P2`"
+    },
+    {
       "id": "weaken-g02-source-row",
       "target": "provider-migration-gates.md",
       "old": "Config contract frozen v1.0.0; P1 items terminal; compatibility/no-write matrix green; audit GREEN; protected delta 0",

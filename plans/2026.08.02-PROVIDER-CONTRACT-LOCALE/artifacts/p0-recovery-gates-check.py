@@ -37,7 +37,46 @@ PREDECESSOR_GATE_HEADERS = (
     "Pass rule", "failure action",
 )
 SECRET_RE = re.compile(r"(?:sk-[A-Za-z0-9_-]{20,}|/(?:home|Users)/[^\s|`]+)")
+PRIVATE_MATERIAL_RE = re.compile(
+    r"(?:"
+    r"ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|"
+    r"AKIA[A-Z0-9]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|"
+    r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"
+    r"[A-Za-z]:\\Users\\[^\s|`]+"
+    r")"
+)
+SENSITIVE_ASSIGNMENT_RE = re.compile(
+    r"\b(?:account[_ -]?(?:id|identifier)|user[_ -]?id|api[_ -]?key|"
+    r"access[_ -]?token|refresh[_ -]?token|secret|credential)\s*[:=]\s*"
+    r"[`\"']?[A-Za-z0-9_./+@:-]{6,}",
+    re.IGNORECASE,
+)
 SHA_RE = re.compile(r"sha256:[0-9a-f]{64}")
+EXPECTED_MAPPING_ROW_SHA = {
+    "G01": "sha256:8f99b703c1dd070efafba570103508cd44be57ce335af06657479c92de260fd1",
+    "G02": "sha256:775751b358b2c6cb0c54a78c12d14707fbd6ed9ebda33c5a14f340cdf5ed9b6f",
+    "G03": "sha256:7b66d86eb386c64b33e761bccd3a7c42e3097ff9935aed9eb9418ecb89242ab0",
+    "G04": "sha256:b4f2cf5b74105071e64290ae41add5c37e477a8d89fc250ffc6486da9b674240",
+    "G05": "sha256:e94a360e77c379cdae330b619451256ca2f7f96df618849f4fc5f918b98524e9",
+    "G06": "sha256:2dcbc04f7f928c356a82b1d456feb06e61a6c2c477c628857a4b4ed31f89bf34",
+    "G07": "sha256:d969f274803d6423b596ee306c652e9081d4efd4d1fb5670ef8a4bfb15c5675a",
+    "G08": "sha256:68457bf4180df917cfa3cbb0e2a55447ec2c7cd433d26297f5442ea7bd1fe186",
+    "G09": "sha256:350ed2d168756919fed4c54bc3e78b4e5fabaf666106c25c26e5b09c5ee5eded",
+    "G10": "sha256:4ea1019bc833c39bb876e64448f48bba93e1a45a1cb8d8d41ad53aac10a3826c",
+    "G11": "sha256:dd6451320202b5e515e4412074b1f99a9a8ebc31c9d75858d2a08a4965fe6d63",
+}
+EXPECTED_RECOVERY_ROW_SHA = {
+    "R01": "sha256:55b165f0859e1d8e7aeabeaa6fae83b43fcb5762aff057185da6c5533d2bed81",
+    "R02": "sha256:070ec305e3db2085b1ec15b4d4679fd81e5d31868e195f2979c1cf9b1241e545",
+    "R03": "sha256:4dd8198cef552480ee4bae09457a34a39d92e2a7af9d741f0f961e9d7d4f2e12",
+    "R04": "sha256:929cd4992de46fb3d7de7aa6107c834c0ec2c6e6b907dc986e257206c0d762e9",
+    "R05": "sha256:e1941583c70e9ddf88f799c2b386321af28b21af7eec248355fdfecd537249cc",
+    "R06": "sha256:8af05e7968a1fccbeb2df03009c78f8d079f8547c53349211c8144d455e3e595",
+    "R07": "sha256:466b24f187387df4b585ef3359afbc15a2b991690d5dc1062ba71b450e2243d0",
+}
+EXPECTED_FINAL_AUDIT_ROW_SHA = (
+    "sha256:3e6d952f8c8f230a007ad697eb984d9de1e8243fe8bffd91aa28242154387b6d"
+)
 
 
 def sha(path: Path) -> str:
@@ -92,16 +131,39 @@ def decision_path(directory: Path, decision_id: str) -> Path:
     return matches[0]
 
 
+def frontmatter(text: str) -> dict[str, str]:
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError("decision frontmatter required")
+    try:
+        end = lines.index("---", 1)
+    except ValueError as exc:
+        raise ValueError("unterminated decision frontmatter") from exc
+    result: dict[str, str] = {}
+    for line in lines[1:end]:
+        if not line or line.lstrip().startswith("#"):
+            continue
+        if ":" not in line:
+            raise ValueError("malformed decision frontmatter")
+        key, value = (part.strip() for part in line.split(":", 1))
+        if not key or not value or key in result:
+            raise ValueError("malformed or duplicate decision frontmatter field")
+        result[key] = value
+    return result
+
+
 def require_freeze_decision(directory: Path, decision_id: str, contract: Path) -> Path:
     path = decision_path(directory, decision_id)
-    text = path.read_text(encoding="utf-8")
+    fields = frontmatter(path.read_text(encoding="utf-8"))
     required = {
-        "status: accepted",
-        "type: contract_freeze_decision",
-        f"contract_version: {CONTRACT_VERSION}",
-        f"contract_sha256: {sha(contract)}",
+        "id": decision_id,
+        "status": "accepted",
+        "type": "contract_freeze_decision",
+        "item": "P0.6",
+        "contract_version": CONTRACT_VERSION,
+        "contract_sha256": sha(contract),
     }
-    if not required.issubset(set(text.splitlines())):
+    if any(fields.get(key) != value for key, value in required.items()):
         raise ValueError("typed accepted exact-hash contract-freeze decision required")
     return path
 
@@ -142,8 +204,8 @@ def require_obligation_mapping(contract_text: str, predecessor_dir: Path) -> dic
         gate = row["Predecessor gate"]
         if row["Source row SHA-256"] != source[gate]:
             raise ValueError(f"predecessor obligation weakened or changed: {gate}")
-        if not row["Successor enforcement"] or not row["Failure action"]:
-            raise ValueError(f"incomplete obligation mapping: {gate}")
+        if row_sha(row) != EXPECTED_MAPPING_ROW_SHA[gate]:
+            raise ValueError(f"successor obligation semantics drift: {gate}")
     return source
 
 
@@ -166,8 +228,10 @@ def require_recovery_topology(contract_text: str) -> list[dict[str, str]]:
             raise ValueError(f"unavailable transition verifier: {row['Gate']}")
         if phase not in row["Producer"]:
             raise ValueError(f"producer phase mismatch: {row['Gate']}")
+        if row_sha(row) != EXPECTED_RECOVERY_ROW_SHA[row["Gate"]]:
+            raise ValueError(f"recovery row semantics drift: {row['Gate']}")
     final_rows = table(contract_text, "Final release audit", ("Role", "Verifier", "Scope", "Timing"))
-    if len(final_rows) != 1 or final_rows[0]["Verifier"] != "`P7.4`" or "never used to open P1–P7" not in final_rows[0]["Timing"]:
+    if len(final_rows) != 1 or row_sha(final_rows[0]) != EXPECTED_FINAL_AUDIT_ROW_SHA:
         raise ValueError("P7.4 final-only topology mismatch")
     return rows
 
@@ -177,7 +241,7 @@ def require_matrix(path: Path) -> None:
     required = ("`action_set=[]`", "no-op baseline", CONTRACT_VERSION, "pending exact freeze decision")
     if any(value not in text for value in required):
         raise ValueError("action matrix does not reference the corrective no-op contract")
-    if SECRET_RE.search(text):
+    if SECRET_RE.search(text) or PRIVATE_MATERIAL_RE.search(text) or SENSITIVE_ASSIGNMENT_RE.search(text):
         raise ValueError("matrix privacy leak")
 
 

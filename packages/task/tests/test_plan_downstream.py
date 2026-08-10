@@ -75,8 +75,14 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertEqual(command["command"], 'python3 -c "print(\'green\')"')
         self.assertEqual(command["returncode"], 0)
 
+    def test_markdown_validation_ignores_prose_without_inline_code(self):
+        self._commit_consumer("проверка остаётся описанием, а не shell-командой")
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertEqual(result["consumers"][0]["commands"], [])
+
     def test_red_blocks_and_cannot_be_made_advisory(self):
-        self._commit_consumer('python3 -c "raise SystemExit(3)"')
+        self._commit_consumer('`python3 -c "raise SystemExit(3)"`')
         result = plan_downstream.evaluate(self.plan, "P0.1")
         self.assertEqual(result["outcome"], "red")
         self.assertTrue(result["blocks"])

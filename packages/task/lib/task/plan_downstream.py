@@ -30,6 +30,9 @@ _QUOTED_PATH = re.compile(r"['\"]([^'\"\s]+/[^'\"\s]+\.[A-Za-z][A-Za-z0-9_-]*)['
 _UNITTEST = re.compile(r"(?:^|\s)-m\s+unittest\s+([^;&|]+)")
 _CD = re.compile(r"(?:^|[;&|]\s*)cd\s+([^\s;&|]+)")
 _FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+_BARE_COMMAND = re.compile(
+    r"(?:\./|(?:python(?:3)?|bash|sh|cd|git|make|npm|pnpm|composer|php|test|set|env)\b|"
+    r"[A-Za-z_][A-Za-z0-9_]*=)")
 
 
 def _sha(raw: bytes) -> str:
@@ -143,6 +146,13 @@ def _validation_commands(value: str) -> list[str]:
         last = part.find("`", first + 1) if first >= 0 else -1
         if last > first:
             part = part[first + 1:last]
+        elif first < 0 and not _BARE_COMMAND.match(part):
+            # A Validation field is Markdown. Prose without an inline-code
+            # payload describes a check, but it is not an executable command.
+            # Keep the established bare-command form for shell-like prefixes;
+            # everything else would turn an unknown consumer into a fabricated
+            # RED result.
+            continue
         commands.append(part.strip())
     return commands
 

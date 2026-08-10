@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 6c34abb2c96e267d922af1e5e923c73c7afcb491fb931dfbc57cdc03f9b06f20
+inputs_sha256: 65a2133bd797a6bba2452c9e35f0f4023c8432631897fa791e6e03376a7972bf
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.1 |
-| Status | ⬜ Not started |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 0/4 | ⬜ Not started |
+| P0 | Evidence, safety, and full fleet inventory | 0/4 | 🔴 Blocked |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -36,7 +36,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Capture reproducible provider and fleet baseline | ⬜ Not started | — |
+| P0.1 | Capture reproducible provider and fleet baseline | 🔴 Blocked | 2026-08-10 |
 | P0.2 | Classify every legacy projection and local override | ⬜ Not started | — |
 | P0.3 | Freeze recovery gates and exact owner action inventory | ⬜ Not started | — |
 | P0.4 | Apply only approved urgent security containment | ⬜ Not started | — |
@@ -131,7 +131,9 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · 2026-08-10 skills audit integrated into same 30-item plan; Perplexity-first verification and lean multi-provider contracts |
 | 2026-08-10 | frontier/xhigh | plan-audit · audit-red · заход 8, вердикт RED; F26–F30; AUDIT-CAP |
 | 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · design pass 4/4: owner threshold accepted; bounded F26-F30 execution-readiness remediation; no ninth whole-plan audit |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · escalated · Downstream gate is red: P0.4 literal allow is executed as a shell command (exit 127); plan-design must make its validator executable. |
 
 ## Owner Gates
 
-- —
+- P0.1: escalation

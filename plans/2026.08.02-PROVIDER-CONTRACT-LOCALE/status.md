@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 3f7833a1f804d01cd345cf16c05bd84b434420de43f5fbea4250e208361d542d
+inputs_sha256: 53b1a9b3ba48754fb993dc8ac06917812738f29708e1ebd4da4b726192b1e47a
 generated_by: task plan-views status
 -->
 
@@ -174,6 +174,7 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · P0.8 resumed after D69; execution-state transition from prior escalation. |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=b9d71e6a; D69; process: post-close spec/read-graph repair; old_decl=bb10fea2e2e7538b8efaf494d767333cbc37a6d85bd969714ba0b9b777a9a4f2; new_decl=dc4f3432e25ba18e8ec887fec7ea1a2a6a67494b3bc9893f37dd4064e16a86a1 |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=1e552dd4; D69 repair, compact P0.6 projection and P0 fan-in validated; process: route overshoot frontier/high over implementation/high. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-close · closed-deviations · P0 closed after D64-D69 remediation; inherited P0.1 material and process deviations retained. |
 
 ## Owner Gates
 

@@ -1,0 +1,53 @@
+{
+  "schema_version": "p0.6-recovery-mutations/v1",
+  "cases": [
+    {
+      "id": "missing-r07",
+      "target": "contract",
+      "old": "| R07 | P6 → P7 |",
+      "new": "| R99 | P6 → P7 |"
+    },
+    {
+      "id": "duplicate-r03",
+      "target": "contract",
+      "old": "| R04 | P3 → P4 |",
+      "new": "| R03 | P3 → P4 |"
+    },
+    {
+      "id": "reordered-transition",
+      "target": "contract",
+      "old": "| R02 | P1 → P2 |",
+      "new": "| R02 | P2 → P3 |"
+    },
+    {
+      "id": "orphan-g11",
+      "target": "contract",
+      "old": "| O-G11 | G11 |",
+      "new": "| O-G12 | G12 |"
+    },
+    {
+      "id": "future-verifier-phase",
+      "target": "contract",
+      "old": "| R03 | P2 → P3 | P2.1–P2.3 | `task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P2` | P2 |",
+      "new": "| R03 | P2 → P3 | P2.1–P2.3 | `task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P3` | P3 |"
+    },
+    {
+      "id": "future-p7.4-verifier",
+      "target": "contract",
+      "old": "`task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P4`",
+      "new": "`P7.4`"
+    },
+    {
+      "id": "weaken-g02-source-row",
+      "target": "provider-migration-gates.md",
+      "old": "Config contract frozen v1.0.0; P1 items terminal; compatibility/no-write matrix green; audit GREEN; protected delta 0",
+      "new": "P1 items terminal"
+    },
+    {
+      "id": "change-capability-pin-input",
+      "target": "provider-capability-contract.md",
+      "old": "**Version:** v1.0.0",
+      "new": "**Version:** v1.0.1"
+    }
+  ]
+}

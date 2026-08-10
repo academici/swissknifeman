@@ -1,13 +1,44 @@
 {
-  "action_matrix_sha256": "sha256:e0dda450352dae97c9e4f2be5f7a360a34d6fb64bff99fa8657d0e27b7d9faf9",
+  "action_matrix_sha256": "sha256:4cfb375101f3e1578c673ad0d0480e1a63b5345f93649167032146058972fabd",
   "action_set": [],
   "branch": "admission",
-  "checker_sha256": "sha256:f0b2d713cb1a71188e051fb9446ae23c91b87dc1a67b37d1473de9558a43e342",
+  "checker_sha256": "sha256:843d3ff5c668e413548dfd221ca8c185e81b61aae058d04b68aa73c80d7d7a6d",
   "classification_sha256": "sha256:0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
-  "contract_freeze_decision": "D63",
-  "contract_sha256": "sha256:a5c7a7cae93bec746926c9c95c509b2ae1efd2e035a8d563e77422a2403a822e",
-  "decision_sha256": "sha256:6bfa325b3c6a91fa5bfa845d6b063a802e4103981a122757298e436da6ece9f7",
+  "contract_freeze_decision": "D67",
+  "contract_sha256": "sha256:b6b66da4b69b42ffd171034c1ff35f7572d2358106b79471c2b25fb99f1c95b8",
+  "decision_sha256": "sha256:3d2235eb46ebf4adaea13fec8fbd3be9a9717bff24e845216e6739b405eb8108",
   "manifest_sha256": "sha256:b01ddffa1bea00191a16bdb2e0de274328b856d2fbcb8d2a12fb2e3461936cfb",
+  "obligation_row_sha256": {
+    "G01": "sha256:192d725d992b7aa0565766c7994a42b8d139228970515a72bb2ab2d9c7317c8c",
+    "G02": "sha256:08c041ad682a0715f2a43597c4684377506df8adadd0c025a107884ac937c178",
+    "G03": "sha256:861f5f9314ec57eff3ad987c0ed3c0ab4e0631dbbddce933b9e8638ccbc81070",
+    "G04": "sha256:75114032944a0621ecf6fa028c11d45c6b23fc47236d4440cc94cc58550b844b",
+    "G05": "sha256:c12459f83ba54a7cccb0394442c17a5ce65d76bfdb041dc8e98db926daa2934c",
+    "G06": "sha256:691033e9c9d031a0973c9bf243e526aa34c13e87c9c4b8cd933e3a3e170e56ec",
+    "G07": "sha256:9a13a25b9727678c49e3b3d86df4c28b86d42725bde6b0afc51054cf238f5c72",
+    "G08": "sha256:1a3fa32120bc8125ba5a0361930261a0e09856d5b2fe86f6a0c63d3059864930",
+    "G09": "sha256:5c31b4059dceb9a281323c10b7cd41e109c9939612caa8d6ec330abdddebdc8b",
+    "G10": "sha256:660c4b43df91adfa40d6f4ffab04be028f964242297a0a9abce7c33cb37b800e",
+    "G11": "sha256:60cdaff8993cdd7f82fb6903804f96e0d86e7ba1aee76c62969f2751ead28233"
+  },
+  "predecessor_sha256": {
+    "provider-artifact-contract.md": "sha256:79591611c409dc873a631a51d17b41a1ced194a2ce363db678b2e5e12a122289",
+    "provider-capability-contract.md": "sha256:b22e1df11bc31651a2f9a4e4eeaaa2996af1556eac656894e65712cb261c2d56",
+    "provider-command-routing-contract.md": "sha256:940c5492fd45934be63408b5b5f298f106fd45efaffe980eaa4c699ee8a7dbe6",
+    "provider-config-contract.md": "sha256:4456c60713754034050d9ad6e19945b26a3a017ffcda8f3b21924727d7e98a03",
+    "provider-harness-contract.md": "sha256:7309f3a4e80a2398b0fc7b84300c6cd1dd2a7d62d809b15e726ca78e790f1965",
+    "provider-instruction-contract.md": "sha256:37ab85d0b0ccc6b59d0fa5b197e17d85c7a31e63381c5f57d7e876ce27251910",
+    "provider-migration-gates.md": "sha256:e0b183aa0a14ba66d5e9b59709e5e4b8b324cb3509db088f55a6ebe846b64f6c"
+  },
+  "recovery_gates": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07"
+  ],
   "result": "pass",
-  "schema_version": "p0-recovery-gates-check/v1"
+  "schema_version": "p0-recovery-gates-check/v2"
 }

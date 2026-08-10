@@ -15,7 +15,7 @@
 | `bundles/<Pn.m>.json` | Генерируемые digest-qualified executor inputs; создаются JIT после terminal predecessors. |
 | `handoff.md` | Rolling-указатель следующего шага. |
 | `journal.jsonl` | Append-only история plan-protocol запусков. |
-| `roadmap.md` | 30-item карта исполнения, evidence-led skill modernization, per-cwd multi-package carrier, closed P4.4/P4.6 cwd→command matrix и P4 bounded-checkpoint/reviewer protocol; активируется только после нового GREEN design audit. |
+| `roadmap.md` | 34-item карта исполнения, включая P0.5–P0.8 RED-audit forward remediation, evidence-led skill modernization, per-cwd multi-package carrier, closed P4.4/P4.6 cwd→command matrix и P4 bounded-checkpoint/reviewer protocol. |
 | `brief/` | Слой 0: исходные требования владельца. |
 | `findings/` | Слой 1: RAG и наблюдаемые repository/fleet facts. |
 | `research/` | Слой 2: user-intent trace, target architecture, phase designs и finish reconcile. |
@@ -39,6 +39,7 @@
 | `findings/11-p7-release-acceptance-recon-2026-08-02.md` | findings | P7.1–P7.4 | Existing provider acceptance, regression, generated-doc and release surfaces plus gaps the final phase must close. |
 | `findings/12-design-audit-remediation-2026-08-03.md` | findings | P0.1, P2.1, P3.2, P4.1, P5, P6, P7, design audit | Official pinned IANA/RFC/HashiCorp provenance, exact public hook CLI reproduction and repository-grounded F16–F18 carrier remediation. |
 | `brief/01-owner-refinement-2026-08-10.md` | brief | P0–P7 | Current-model lightweight skills, official-doc/real-provider evidence order, additive Claude/Codex adapters and third-provider extensibility. |
+| `brief/03-p0-audit-reopen-2026-08-10.md` | brief | P0.5–P0.8 | Exact owner invocation and bounded RED-audit reopen scope; P1–P7 and external targets remain anti-scope. |
 | `findings/13-skills-audit-adjudication-2026-08-10.md` | findings | P0.1, P1.2, P2.3, P3.2–P3.3, P4.2–P4.3, P6.2, P7 | Perplexity-first external verification plus current repository measurements and a verdict for every audit claim. |
 | `research/01-target-architecture.md` | research | P0–P7 | Синтез desired/status split, adapter ownership, locale surfaces и legacy classification. |
 | `research/02-p2-locale-authoring-design.md` | research | P2–P7 | Locale surface/precedence, canonical English overlay and review-gate synthesis derived from P2 evidence. |
@@ -53,3 +54,6 @@
 | `research/09-fleet-migration-classification.md` | research | P0.3, P0.4, P5 | Exhaustive no-write P0.2 classification of the sealed provider-path snapshot; only proven broken links are non-ambiguous and every other unresolved row is preserved as no-op. |
 | `root/contracts/provider-recovery-gates-v1.md` | contract | P0.4–P7 | Frozen additive recovery gates, P0.4 no-op predicate, and immutable D63 contract-freeze binding. |
 | `research/10-p0-premortem.md` | research | P0.4–P7 | P0 failure modes, early signals, and assigned recovery-gate mitigations. |
+| `findings/17-layout-v2-phase-reopen-status-gap-2026-08-10.md` | findings | P0 reopen, Task protocol debt | Repo-grounded v2 status projection gap; generated views stay truthful and are never hand-edited. |
+| `research/11-p0-audit-reopen-design.md` | research | P0.5–P0.8, P0 audit pass 2 | F1–F7 ownership, sequential forward-fix topology, contract authority and immutable-history provenance repair. |
+| `artifacts/P0.5/fixtures/test_negative_fixtures.py` | artifact | P0.5, P0.6 | One-mutation copied fixtures for the repaired exact-set/privacy verifier. |

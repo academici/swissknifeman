@@ -131,3 +131,4 @@ and does not duplicate a supervisor runtime.
 | root/contracts/provider-harness-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 maps harness surfaces and independent security axes |
 | root/contracts/provider-instruction-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 preserves common canon plus additive provider extensions |
 | root/contracts/provider-analytics-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 maps provider-qualified observed evidence without raw payload leakage |
+| root/contracts/read-budget-v1.md | 2026.08.07-PLAN-ECONOMY | v1.1.0 | Layout v2 admission requires a plan-local frozen carrier | D62 execution-readiness normalization; P0.4 declares exact producer edges and remains pending until P0.2/P0.3 outputs exist |

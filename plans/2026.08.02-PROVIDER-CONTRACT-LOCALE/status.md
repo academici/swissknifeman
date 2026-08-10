@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 65a2133bd797a6bba2452c9e35f0f4023c8432631897fa791e6e03376a7972bf
+inputs_sha256: d069a6e4281567faf55c0f3c2b6c596b3b23ce230c77987c6f922ac98c2c8c1d
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.1 |
-| Status | 🔴 Blocked |
+| Status | ⬜ Not started |
 | Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 0/4 | 🔴 Blocked |
+| P0 | Evidence, safety, and full fleet inventory | 0/4 | ⬜ Not started |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -36,10 +36,10 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Capture reproducible provider and fleet baseline | 🔴 Blocked | 2026-08-10 |
+| P0.1 | Capture reproducible provider and fleet baseline | 🟠 Done with deviations | 2026-08-10 |
 | P0.2 | Classify every legacy projection and local override | ⬜ Not started | — |
 | P0.3 | Freeze recovery gates and exact owner action inventory | ⬜ Not started | — |
-| P0.4 | Apply only approved urgent security containment | ⬜ Not started | — |
+| P0.4 | Apply only approved urgent security containment | ⬜ Not started | 2026-08-10 |
 
 ## Phase P1
 
@@ -133,7 +133,12 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · design pass 4/4: owner threshold accepted; bounded F26-F30 execution-readiness remediation; no ninth whole-plan audit |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · escalated · Downstream gate is red: P0.4 literal allow is executed as a shell command (exit 127); plan-design must make its validator executable. |
+| 2026-08-10 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
+| 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · финальный P0 DoR: downstream P0.4 исправлен; resume P0.1 остаётся под supervisor release |
+| 2026-08-10 | repository_owner | plan-run · blocked · decision queue: P0.1-owner-resume-2026-08-10 |
+| 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.1-owner-resume-2026-08-10 |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-deviations · Baseline evidence refreshed; plan has six unresolved later-item bundle errors. |
 
 ## Owner Gates
 
-- P0.1: escalation
+- P0.1: known deviation

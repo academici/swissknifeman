@@ -1,35 +1,25 @@
-# HANDOFF — 2026-08-10 — after P0.2
+# HANDOFF — 2026-08-10 — after P0
 
-**Next:** design-item: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2
+**Next:** /task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P0
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
-| Capabilities | repository-plan-read · plan-contract-design |
-| Context | cold-start — plan-step |
-| Суть | Replace the impossible manual-review input with a deterministic, privacy-minimized classification carrier and explicit review boundary. |
-| Команда | `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2` |
+| Model | frontier |
+| Thinking | xhigh — independent phase verdict |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Independently audit completed P0 evidence, scope, generated views, and residual defects before P1. |
+| Команда | `/task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P0` |
 
-```text
-$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2
+**Done:** P0.1–P0.4 are terminal. P0.2 classified 13,421 sealed provider-path rows
+without a target write; P0.3 froze recovery gates under D63; P0.4 verified the no-op
+branch with `action_set=[]` and no external target mutation.
 
-РЕЖИМ: remediation
-ВХОД: phases/P0/P0.2.md; bundles/P0.2.json; phases/P0/P0.2.state.md; artifacts/P0.1/evidence/provider-{fleet-inventory,source-snapshot}.json
-СКОУП: 1) replace the 1.95M-token manual-read requirement with a deterministic, bounded evidence carrier; 2) preserve exact-one, no-write and fail-closed classification semantics; 3) make the validator and bundle executable under the declared read budget.
-НЕ ТРОГАТЬ: P0.1 evidence, P0.3/P0.4 contracts, provider/fleet targets, or any classification outcome without reviewed evidence.
-```
+**Remaining:** P1 remains closed until the independent P0 audit verdict.
 
-**Done:** P0.1 is closed with deviations in commits `0169e256` and `3989711b`. P0.2 route and Task Contract are valid, but the item is escalated before mutation because its required snapshots are mechanically 13,421 paths / approximately 1.95M estimated tokens while final heuristic classification is forbidden.
+**Sources of truth:** `phases/P0/P0.1.state.md` … `phases/P0/P0.4.state.md` ·
+`root/contracts/provider-recovery-gates-v1.md` · `artifacts/P0.4/branch-verdict.json` ·
+`journal.jsonl`.
 
-**Remaining:** Redesign P0.2's evidence boundary; P0.3 and P0.4 remain phase-first blocked behind a terminal P0.2.
-
-**Sources of truth:** `phases/P0/P0.2.md` · `bundles/P0.2.json` · `phases/P0/P0.2.state.md` · `journal.jsonl`.
-
-**Open risks:** `plans/verify-citations.py` is absent, so P0.1's citation gate could not run; this environment defect remains non-green.
-
-**Workarounds/Deferred/Open questions:**
-
-- workarounds: —
-- deferred: P3.2 owns the Codex hook provenance repair.
-- open_questions: —
+**Open risks:** P0.1 retains its recorded known deviation. The obsolete
+`plans/verify-citations.py` path is absent, while the current package verifier passed
+strictly with 0 findings on the final P0 tree.

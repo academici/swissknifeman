@@ -1,0 +1,11 @@
+{
+  "action_set": [],
+  "authority_reference": null,
+  "branch": "no-op",
+  "fresh_evidence_sha256": "sha256:0894bbcdee2c83b0a655dfcdc76e754e96957338e2970456b1f01bb39fc41313",
+  "p0_check_evidence_sha256": "sha256:73d74343f063352d631e5790f14dfa6b21164b34ec0425548241c361d24fbc09",
+  "plaintext_secret_findings": 0,
+  "protected_target_delta": 0,
+  "result": "pass",
+  "schema_version": "p0-branch-verdict/v1"
+}

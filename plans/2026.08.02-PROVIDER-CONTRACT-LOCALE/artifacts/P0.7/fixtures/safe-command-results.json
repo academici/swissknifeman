@@ -1,0 +1,7 @@
+{
+  "commands": [
+    {"id": "harness-provider-audit", "argv": ["harness", "doctor", "--provider-audit", "--json"], "exit": 0, "class": "green"},
+    {"id": "maind-strict-health", "argv": ["maind", "health", "--cwd", "--strict"], "exit": 0, "class": "green"},
+    {"id": "codex-doctor", "argv": ["codex", "doctor", "--json"], "exit": 0, "class": "green"}
+  ]
+}

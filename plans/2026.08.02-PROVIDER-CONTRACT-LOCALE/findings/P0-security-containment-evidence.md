@@ -1,20 +1,20 @@
-# P0.4 — security containment evidence
+# P0.7 — executable security containment evidence
 
 ## Branch
 
-The frozen no-op branch was selected. No `containment_mutation_decision` exists or
-was requested, `action_set=[]`, and no provider, fleet, Brain, credential, trust,
-or configuration target was changed.
+The executable P0.7 producer selected the frozen no-op branch. Its verifier accepted only
+`action_set=[]`, zero detector findings, zero protected-target delta and independently green
+Claude Code and Codex rows. No containment decision was requested and no external target changed.
 
-## Fresh redacted controls
+## Controls
 
-| Control | Result | Redacted evidence digest |
-|:--|:--|:--|
-| `harness doctor --provider-audit --json` | green; diagnostics empty | `sha256:9f7a06a831b54cae39eed98cb3f5b07624bc179cb9847c903c5d75d2fef356b5` |
-| `maind health --cwd --strict` | green | `sha256:88b279e3581f6c79e647d4557aefbad314bfc6c78d327bff1ae4a2bebf328453` |
-| `codex doctor --json` | green | `sha256:b1cbf920ded928c80407196b00e18bdf5847b1e91ba63ea9913832d0fc9f640e` |
-| P0 plan-local plaintext credential detector | 0 findings | file-name-only scan; no matching value was read or recorded |
+The evidence contains only literal command argv, exit class, observation/expiry, aggregate detector
+result and SHA-256 provenance. Raw output, absolute paths, account identifiers and secret values or
+hashes are not persisted. The producer pins the P0.1 manifest/classification, P0.6 contract/checker,
+P0.3 recovery evidence and D67; it recomputes the deterministic branch verdict on every `check`.
 
-The controls are observations, not evidence that approval policy implies trust or
-full access. The protected target delta is zero because this item made no target
-mutation; its committed delta consists only of the named P0 evidence carriers.
+## Boundary
+
+D68 assigns branch verification to the plan-local P0.7 producer. The frozen P0.6 recovery checker
+remains a pinned input and is not changed. A future nonempty action set remains refused without an
+exact accepted `containment_mutation_decision`.

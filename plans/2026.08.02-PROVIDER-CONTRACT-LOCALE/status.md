@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: c3a2c62b074ebf78e83a3ba3ee4b5bd9b15428e3dd40fb6b1bff6c570ed45075
+inputs_sha256: 5876fbba1cc9938f5a3335b5d2eb313cb5e2b4510946e1f5d23e886289c9dd65
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 1/4 | ⬜ Not started |
+| P0 | Evidence, safety, and full fleet inventory | 2/4 | ⬜ Not started |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -38,7 +38,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0.1 | Capture reproducible provider and fleet baseline | 🟠 Done with deviations | 2026-08-10 |
 | P0.2 | Classify every legacy projection and local override | 🟢 Done | 2026-08-10 |
-| P0.3 | Freeze recovery gates and exact owner action inventory | ⬜ Not started | — |
+| P0.3 | Freeze recovery gates and exact owner action inventory | 🟢 Done | 2026-08-10 |
 | P0.4 | Apply only approved urgent security containment | ⬜ Not started | 2026-08-10 |
 
 ## Phase P1
@@ -142,6 +142,7 @@ generated_by: task plan-views status
 | 2026-08-10 | repository_owner | plan-run · blocked · decision queue: P0.2-owner-remediation-2026-08-10 |
 | 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.2-owner-remediation-2026-08-10 |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · deterministic privacy-minimized no-write classification generated and verified |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · D63-bound recovery gates, no-op action matrix, checker, fixtures and premortem verified |
 
 ## Owner Gates
 

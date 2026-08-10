@@ -1,0 +1,13 @@
+{
+  "action_matrix_sha256": "sha256:e0dda450352dae97c9e4f2be5f7a360a34d6fb64bff99fa8657d0e27b7d9faf9",
+  "action_set": [],
+  "branch": "admission",
+  "checker_sha256": "sha256:f0b2d713cb1a71188e051fb9446ae23c91b87dc1a67b37d1473de9558a43e342",
+  "classification_sha256": "sha256:0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
+  "contract_freeze_decision": "D63",
+  "contract_sha256": "sha256:a5c7a7cae93bec746926c9c95c509b2ae1efd2e035a8d563e77422a2403a822e",
+  "decision_sha256": "sha256:6bfa325b3c6a91fa5bfa845d6b063a802e4103981a122757298e436da6ece9f7",
+  "manifest_sha256": "sha256:b01ddffa1bea00191a16bdb2e0de274328b856d2fbcb8d2a12fb2e3461936cfb",
+  "result": "pass",
+  "schema_version": "p0-recovery-gates-check/v1"
+}

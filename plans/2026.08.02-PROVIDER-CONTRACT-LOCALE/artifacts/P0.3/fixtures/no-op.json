@@ -1,0 +1,10 @@
+{
+  "schema_version": "p0-fresh-security-trust-evidence/v1",
+  "action_set": [],
+  "plaintext_secret_findings": 0,
+  "protected_target_delta": 0,
+  "provider_trust": {
+    "claude-code": "green",
+    "codex": "green"
+  }
+}

@@ -51,3 +51,5 @@
 | `research/09-lean-multi-provider-skills-design.md` | research | P0–P7, design audit | Minimum Skill Core, additive provider/third-provider seams, real replay/ablation loop, multi-label audit architecture and mapping onto the unchanged 30 items. |
 | `findings/P0-provider-fleet-baseline.md` | findings | P0.2–P0.4, P5–P7 | Sealed P0.1 redacted registry/carrier/provider baseline; includes the relative Codex hook CLI defect and absolute-target observer control without repair authority. |
 | `research/09-fleet-migration-classification.md` | research | P0.3, P0.4, P5 | Exhaustive no-write P0.2 classification of the sealed provider-path snapshot; only proven broken links are non-ambiguous and every other unresolved row is preserved as no-op. |
+| `root/contracts/provider-recovery-gates-v1.md` | contract | P0.4–P7 | Frozen additive recovery gates, P0.4 no-op predicate, and immutable D63 contract-freeze binding. |
+| `research/10-p0-premortem.md` | research | P0.4–P7 | P0 failure modes, early signals, and assigned recovery-gate mitigations. |

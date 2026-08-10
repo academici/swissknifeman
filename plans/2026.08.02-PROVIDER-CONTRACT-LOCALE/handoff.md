@@ -1,23 +1,32 @@
-# HANDOFF — 2026-08-10 — after P0.1
+# HANDOFF — 2026-08-10 — after P0.2
 
-**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2
+**Next:** design-item: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
-| Capabilities | repository-plan-read · fleet-read-only-evidence · provider-observation |
-| Context | same-session — item |
-| Суть | Classify the sealed P0.1 baseline without mutating provider or fleet targets. |
-| Команда | `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2` |
+| Capabilities | repository-plan-read · plan-contract-design |
+| Context | cold-start — plan-step |
+| Суть | Replace the impossible manual-review input with a deterministic, privacy-minimized classification carrier and explicit review boundary. |
+| Команда | `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2` |
 
-**Done:** P0.1 resumed through owner decision `P0.1-owner-resume-2026-08-10`; committed baseline evidence was refreshed in `0169e256` and the item's v2 state is terminal with deviations.
+```text
+$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2
 
-**Remaining:** P0.2 starts from the generated `bundles/P0.2.json`; P0.3 and P0.4 bundles remain unavailable until their declared producer outputs exist.
+РЕЖИМ: remediation
+ВХОД: phases/P0/P0.2.md; bundles/P0.2.json; phases/P0/P0.2.state.md; artifacts/P0.1/evidence/provider-{fleet-inventory,source-snapshot}.json
+СКОУП: 1) replace the 1.95M-token manual-read requirement with a deterministic, bounded evidence carrier; 2) preserve exact-one, no-write and fail-closed classification semantics; 3) make the validator and bundle executable under the declared read budget.
+НЕ ТРОГАТЬ: P0.1 evidence, P0.3/P0.4 contracts, provider/fleet targets, or any classification outcome without reviewed evidence.
+```
 
-**Sources of truth:** `phases/P0/P0.1.state.md` · `artifacts/P0.1/evidence/manifest.json` · `findings/P0-provider-fleet-baseline.md` · `journal.jsonl`.
+**Done:** P0.1 is closed with deviations in commits `0169e256` and `3989711b`. P0.2 route and Task Contract are valid, but the item is escalated before mutation because its required snapshots are mechanically 13,421 paths / approximately 1.95M estimated tokens while final heuristic classification is forbidden.
 
-**Open risks:** P0.1 validation found six outstanding layout/bundle errors owned by later P0 items; the required relative Codex hook dry-run remains an observed `ValueError`, while the absolute dry-run is green.
+**Remaining:** Redesign P0.2's evidence boundary; P0.3 and P0.4 remain phase-first blocked behind a terminal P0.2.
+
+**Sources of truth:** `phases/P0/P0.2.md` · `bundles/P0.2.json` · `phases/P0/P0.2.state.md` · `journal.jsonl`.
+
+**Open risks:** `plans/verify-citations.py` is absent, so P0.1's citation gate could not run; this environment defect remains non-green.
 
 **Workarounds/Deferred/Open questions:**
 

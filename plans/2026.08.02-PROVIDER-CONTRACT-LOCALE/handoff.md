@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-10 — P0.8 blocked after provenance ledger
+# HANDOFF — 2026-08-10 — after P0.8
 
-**Next:** task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8
+**Next:** redesign: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8
 
 | Параметр | Значение |
 |:--|:--|

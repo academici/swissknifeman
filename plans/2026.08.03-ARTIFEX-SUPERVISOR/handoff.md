@@ -1,16 +1,18 @@
 # HANDOFF — 2026-08-07 — after P5.4
 
-**Прогон #1 адъюдицирован `NO-GO`; item НЕ терминализован** (правило самого P5.4: «`NO-GO` … appends no terminal Completion Notes» + `plan.md` §2).
+**Пауза снята по полному GREEN owner-authorized acceptance successor v1.1.3; исторический `NO-GO` P5.4 не переадъюдицирован и не меняется.**
 
-**Next:** ОЖИДАНИЕ — план приостановлен владельцем 2026-08-07 до завершения плана оптимизации протокола планов. Ничего в этом плане не исполняется, пока пауза не снята.
+**Next:** manual: `$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | — (план на паузе) |
-| Thinking | — |
-| Context | NEW SESSION — шаг-не-item (когда пауза будет снята) |
-| Суть | ПАУЗА. Сначала выполняется план оптимизации протокола планов; только после него сюда возвращаются — и переизмерение P5.4 идёт через РЕАЛЬНЫЕ планы (`task:plan-design` → `task:dev`), а не через голые одноразовые задачи. Отложенный шаг после снятия паузы — развести четыре forward-remediation пункта первого прогона по владельцам. |
-| Команда | — (пауза; после снятия: `/task:plan-design 2026.08.03-ARTIFEX-SUPERVISOR P5.4`) |
+| Model | gpt-5.6-terra |
+| Thinking | high |
+| Context | NEW SESSION — item |
+| Суть | Resume is limited to the already-planned P5.5 producer; the former pause is cleared because Arm A, Arm B and every frozen canary branch are green. No retry of P5.4 or unplanned provider work is authorized by the resume itself. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.03-ARTIFEX-SUPERVISOR P5.5'` |
+
+**Resume evidence:** `2026.08.10-PLAN-ECONOMY-FINAL-ACCEPTANCE/artifacts/P0/` contains the frozen Arm A/Arm B raw artifacts and exact four-branch session-canary comparator. ARTIFEX itself has not been run in this successor.
 
 **Done:** P5.4 прогнан впервые до конца — оба предыдущих захода останавливались до intent. Pre-intent
 гейт 15/15 зелёных на СВОЁМ стартовом дереве (`9005fa92`), не по чужой записи; D109 fan-in 34/35

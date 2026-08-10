@@ -1,9 +1,9 @@
 {
   "$schema": "urn:swissknifeman:task:acceptance-protocol:v1",
   "contract_id": "acceptance-protocol",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "status": "frozen",
-  "frozen_by": "2026.08.07-PLAN-ECONOMY P6.7",
+  "frozen_by": "2026.08.07-PLAN-ECONOMY P6.9",
   "measurement": {
     "command": "python3 packages/task/scripts/plan-weight.py plan \"$ACCEPTANCE_PLAN_DIR\" --json",
     "tool": "packages/task/scripts/plan-weight.py",
@@ -160,6 +160,17 @@
       "markdown_sha256": "89ad3e23e7050534c1c2a9eb86b7f6d27ea178e48c84b6be95d70f702b571d9d",
       "manifest_sha256": "ff4926e7e98a7dbf979791fa44d55531326439e32b3a984881374c58b22fb476",
       "commit": "536a1b3e"
+    },
+    {
+      "version": "1.1.1",
+      "verdict": "fail",
+      "report": "findings/12-p6-acceptance-measurement.md#attempt-v111--exact-five-slot-repair-pinned-measurement",
+      "markdown_sha256": "b24d898f6e21d7ac79b15fc8426ab4dec612fde913dae05e6858ee5877fd87e7",
+      "raw": "artifacts/P6/acceptance-arm-a-migrated-v1.1.1.json",
+      "raw_sha256": "48c00b9a0dca8e238627d5d7193527379957831935c33fae6e9c2185ecb7ade8",
+      "contract_sha256": "2491a99f9b52d807f1e2871e7e6a2cdd5f7497a3c725a78947b7247d4a859748",
+      "manifest_sha256": "42b834d84c95178cb971aa26c09588ac97639b9d831111b3a8bd74a5b0ef4b01",
+      "commit": "f6988e83"
     }
   ],
   "thresholds": {

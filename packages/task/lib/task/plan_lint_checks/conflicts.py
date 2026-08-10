@@ -267,10 +267,9 @@ def _git_run(args, cwd, timeout=15):
 
 
 def _baseline_diag_keys(root, ref):
-    """Прогоняет lint на дереве `ref` для того же `root`-пути (git archive во временный
-    каталог, БЕЗ файла-состояния — источник истины git). Возвращает
+    """Прогоняет lint в detached worktree `ref` для того же `root`-пути. Возвращает
     `(normalized_keys, None)` либо `(None, причина)` при недоступности baseline —
-    graceful degrade (git отсутствует / не репозиторий / ref не найден / archive упал)."""
+    graceful degrade (git отсутствует / не репозиторий / ref не найден / worktree недоступен)."""
     root = Path(root).resolve()
 
     proc = _git_run(["rev-parse", "--show-toplevel"], cwd=root)
@@ -287,32 +286,34 @@ def _baseline_diag_keys(root, ref):
     if verify is None or verify.returncode != 0:
         return None, f"ref «{ref}» не найден"
 
-    archive = _git_run(["archive", ref, "--", str(relpath)], cwd=git_root, timeout=30)
-    if archive is None or archive.returncode != 0 or not archive.stdout:
-        return None, f"«git archive {ref} -- {relpath}» не удался"
-
     with tempfile.TemporaryDirectory(prefix="plan-lint-baseline-") as tmp:
-        tmpdir = Path(tmp)
+        baseline_repo = Path(tmp) / "repo"
+        checkout = _git_run(
+            ["worktree", "add", "--detach", "--quiet", str(baseline_repo), ref],
+            cwd=git_root,
+            timeout=30,
+        )
+        if checkout is None or checkout.returncode != 0:
+            detail = "" if checkout is None else checkout.stderr.decode("utf-8", "replace").strip()
+            return None, f"«git worktree add --detach {ref}» не удался: {detail or 'unknown error'}"
         try:
-            with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r|") as tar:
-                tar.extractall(path=tmpdir)
-        except tarfile.TarError as exc:
-            return None, f"распаковка архива не удалась: {exc}"
+            baseline_root = baseline_repo / relpath
+            baseline_dirs = discover_plan_dirs(baseline_root)
+            if not baseline_root.exists() or baseline_dirs is None:
+                return None, f"путь «{relpath}» отсутствует в «{ref}» (новый план?)"
 
-        baseline_root = tmpdir / relpath
-        baseline_dirs = discover_plan_dirs(baseline_root)
-        if not baseline_root.exists() or baseline_dirs is None:
-            return None, f"путь «{relpath}» отсутствует в «{ref}» (новый план?)"
+            baseline_diag = Diagnostics()
+            models = {}
+            for plan_dir in baseline_dirs:
+                models[plan_dir.name] = lint_plan(plan_dir, baseline_diag)
+            is_root = not (baseline_root / "plan.md").is_file()
+            if is_root:
+                lint_plans_root(baseline_root, models, baseline_diag)
 
-        baseline_diag = Diagnostics()
-        models = {}
-        for plan_dir in baseline_dirs:
-            models[plan_dir.name] = lint_plan(plan_dir, baseline_diag)
-        is_root = not (baseline_root / "plan.md").is_file()
-        if is_root:
-            lint_plans_root(baseline_root, models, baseline_diag)
-
-        return baseline_diag.normalized_keys(baseline_root), None
+            return baseline_diag.normalized_keys(baseline_root), None
+        finally:
+            _git_run(["worktree", "remove", "--force", str(baseline_repo)],
+                     cwd=git_root, timeout=30)
 
 
 # --- CLI ----------------------------------------------------------------------

@@ -44,6 +44,30 @@ class PlanItemStateTests(unittest.TestCase):
             "status": "⬜ Not started", "attempt": 0, "last_result": None,
         })
 
+    def test_item_event_does_not_stale_another_items_state(self):
+        first_spec = self.plan / "phases" / "P1" / "P1.1.md"
+        second_spec = first_spec.with_name("P1.2.md")
+        second_spec.write_text(
+            first_spec.read_text(encoding="utf-8").replace("P1.1", "P1.2"),
+            encoding="utf-8",
+        )
+        plan_item_state.build_states(self.plan)
+        second_state = second_spec.with_name("P1.2.state.md")
+        before = second_state.read_bytes()
+
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-design",
+            actor="frontier/high", result="in-progress",
+        ))
+
+        with self.assertRaises(plan_item_state.ItemStateError):
+            plan_item_state.build_states(self.plan, item_id="P1.1", check=True)
+        self.assertEqual(
+            plan_item_state.build_states(self.plan, item_id="P1.2", check=True),
+            (second_state,),
+        )
+        self.assertEqual(second_state.read_bytes(), before)
+
     def test_audit_and_execution_events_keep_their_execution_semantics(self):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-design",

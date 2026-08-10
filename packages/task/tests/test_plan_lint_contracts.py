@@ -89,6 +89,17 @@ class TestBaselineGate(TmpPlanTestCase):
         self._git("commit", "-q", "-m", "init")
         return plan_dir
 
+    def test_read_budget_observations_do_not_rekey_same_baseline_failure(self):
+        before, after = Diagnostics(), Diagnostics()
+        path = self.root / "plans" / "DEMO-1" / "plan.md"
+        before.error(path, None,
+                     "read-budget-v1: пункт P1.1: вес 100001 > порога 100000 "
+                     "оценочных токенов (calibration)")
+        after.error(path, None,
+                    "read-budget-v1: пункт P1.1: вес 100777 > порога 100000 "
+                    "оценочных токенов (calibration)")
+        self.assertEqual(before.normalized_keys(self.root), after.normalized_keys(self.root))
+
     @unittest.skipUnless(shutil.which("git"), "git недоступен")
     def test_baseline_no_new_errors_on_clean_tree(self):
         plan_dir = self._init_repo_with_valid_plan()

@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.08.03-ARTIFEX-SUPERVISOR
 
-**Обновлён:** 2026-08-06 · **Соответствует plan.md:** v0.27.0 · **Статус:** P1/P2 terminal;
+**Обновлён:** 2026-08-10 · **Соответствует plan.md:** v0.27.1 · **Статус:** P1/P2 terminal;
 P3 закрыта `🟠` (6 🟢, 2 🟠); P4 закрыта `🟠` (2 🟢, 6 🟠). Audit pass 2 остаётся
 историческим RED; D98/D103 и прямое owner-указание закрывают его bounded forward remediation с
 детерминированными GREEN gates, без третьего audit/design pass. **P5 = 2/8 `🟢` (P5.6, P5.7); P5.1,
@@ -22,7 +22,7 @@ P5.1 (v3-набор носителей). Ни один v1/v2-байт, ни ст
 (D120) не двигаются; пять неиспользованных `p5.4-wave-*` D105-строк списаны явно и истекают
 `2026-08-12` неистраченными.
 
-## Current execution status — второй стоп P5.4 расэскалирован (D132–D135)
+## Current execution status — pause lifted after final acceptance successor
 
 **Next:** manual: implementation/high
 

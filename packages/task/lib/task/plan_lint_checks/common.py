@@ -19,12 +19,10 @@ stdlib-only (re/argparse/pathlib/json/sys), сообщения — на русс
 """
 import argparse
 import ast
-import io
 import json
 import re
 import subprocess
 import sys
-import tarfile
 import tempfile
 from collections import Counter
 from pathlib import Path
@@ -387,8 +385,20 @@ class Diagnostics:
             except ValueError:
                 return str(path)
 
-        keys = [("ERROR", rel(p), m) for p, m in self._raw_errors]
-        keys += [("WARN", rel(p), m) for p, m in self._raw_warnings]
+        def stable_message(message):
+            message = re.sub(
+                r"(read-budget-v1: пункт P\d+\.\d+: вес )\d+( > порога \d+ оценочных токенов)",
+                r"\1<observed>\2",
+                message,
+            )
+            return re.sub(
+                r"(read-budget-v1: пункт P\d+\.\d+: файл .+ — )\d+( байт, )\d+( оценочных токенов; лимиты одного чтения )",
+                r"\1<observed-bytes>\2<observed-tokens>\3",
+                message,
+            )
+
+        keys = [("ERROR", rel(p), stable_message(m)) for p, m in self._raw_errors]
+        keys += [("WARN", rel(p), stable_message(m)) for p, m in self._raw_warnings]
         return keys
 
 

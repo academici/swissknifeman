@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: freshness item-state изолирована по item journal scope.**
+  Append события одного item больше не инвалидирует state views остальных: digest и `through`
+  следуют declared `item_id`, а двух-item regression сохраняет D148 execution semantics
+  (`2026.08.07-PLAN-ECONOMY` P6.8, D156).
+
 - **`task`: exact five-slot acceptance v1.1.1 завершилась arm-A fail.**
   Repair-pinned measurement сохранил raw evidence, обнаружил 30/30 ready failures и по
   frozen reducer остановил arm B/session canary; P6.9 и снятие паузы ARTIFEX запрещены

@@ -157,3 +157,43 @@ split/move/cache/exclusion interpretation can turn this attempt into pass.
 `2026.08.07-PLAN-ECONOMY P6.8` attempt v1.1.1 verdict is **`fail`**. P6.9 must remain
 unexecuted, the ARTIFEX pause remains, and no arm-B/canary claim exists. Threshold, unit, scope,
 admission states, arms and expected branches were not changed after observation.
+
+## Attempt v1.1.2 — owner-authorized bounded successor
+
+Frozen contract SHA-256: `182c03c75b919905a47d5f86ba19f8034e4b11b9db6fbac0c0cf690a36a0c754`.
+Frozen manifest SHA-256: `b759ad744669340facc262d7f6e9df02c51bf74c44c34546133def4a5c6ea984`.
+Threshold, qualified unit, five-slot scope, admission reducer, arms, anti-displacement predicates,
+measurement implementation and exact canary branches are unchanged from v1.1.1. D158 disclosed
+the only interventions: thirteen ready bundles materialized, invalid bundle declarations made
+explicit, and terminal P6.2/P6.5/P6.6 historical inputs narrowed to exact facts/digests without
+removing an item, slot, deliverable or terminal evidence.
+
+### Arm A — migrated plan
+
+Raw: `artifacts/P6/acceptance-arm-a-migrated-v1.1.2.json`, SHA-256
+`6a0b56d2c0fdcd49a2e7a4040df74c2c459e6720063f4b0f1025cd0f85074e0b`.
+
+| Metric | Observed | Frozen condition | Result |
+|:--|--:|:--|:--|
+| admission coverage | historical 17 · pending 0 · ready 30 | report separately | PASS |
+| ready failures | 0/30 | 0 | PASS |
+| maximum item weight | 89,015 | ≤100,000 | PASS |
+| ready gaps / oversized inputs | 0 / 0 | 0 / 0 | PASS |
+| historical gaps | 17 missing pre-v2 carriers | evidence-only | OBSERVED |
+
+The D2 reducer for arm A is `pass`; full ready coverage is 30/30. The anti-displacement answer is
+`no`: all 47 items and five executor slots remain traversed, current ready work was neither split
+nor deferred, and the terminal capsule retains source-set digests plus load-bearing facts.
+
+### Integrity failure, downstream stages and final verdict
+
+The mandatory decision projection immediately preceding raw capture failed because D157's filename
+contained an invalid dot slug and its reciprocal supersession metadata was incomplete. The
+non-fail-fast shell continued and captured the D2-positive raw. Renaming/correcting D157 after
+observation changes a selected P6.9 bundle input; rerunning would violate the one-shot D158
+change-control rule. Details are in
+`findings/P6.9-v1.1.2-terminal-integrity-failure-2026-08-09.md`.
+
+Therefore overall attempt v1.1.2 is **`fail`**. Arm B and session canary are **NOT-RUN**; no claim
+is made for either. ARTIFEX remains paused. P6.9 closes `Done with deviations`, and D158 forbids a
+new successor/design-loop from this plan.

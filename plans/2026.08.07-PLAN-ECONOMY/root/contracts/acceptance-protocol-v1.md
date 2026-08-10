@@ -1,16 +1,16 @@
-# Acceptance Protocol v1.1.1
+# Acceptance Protocol v1.1.2
 
 **Contract ID:** `acceptance-protocol`
-**Version:** `1.1.1`
+**Version:** `1.1.2`
 **Status:** frozen
-**Frozen by:** `2026.08.07-PLAN-ECONOMY P6.7`
+**Frozen by:** `2026.08.07-PLAN-ECONOMY P6.9`
 **Machine source of truth:**
 [`acceptance-protocol-v1.manifest.json`](acceptance-protocol-v1.manifest.json)
 
-Version 1.1.1 is frozen before the repeated acceptance arms or session canary are run. It preserves
+Version 1.1.2 is frozen before the repeated acceptance arms or session canary are run. It preserves
 the thresholds, qualified unit, scope traversal, admission reducer, arms, anti-displacement
-controls, roles, confounds, and exact canary branches from v1.1.0. The only patch is measurement
-implementation provenance after the owner-approved D152 repair, recorded by D153.
+controls, roles, confounds, exact canary branches and measurement implementation from v1.1.1. The
+only changes are successor identity, D158 owner provenance and the appended v1.1.1 prior result.
 
 ## Prior results
 
@@ -27,6 +27,12 @@ layout-v2 slots, so arm A was prohibited before evidence capture. Its report is
 `89ad3e23e7050534c1c2a9eb86b7f6d27ea178e48c84b6be95d70f702b571d9d` and the manifest SHA-256 is
 `ff4926e7e98a7dbf979791fa44d55531326439e32b3a984881374c58b22fb476` at commit `536a1b3e`.
 
+Version v1.1.1 remains immutable and **fail**. Its arm-A raw SHA-256 is
+`48c00b9a0dca8e238627d5d7193527379957831935c33fae6e9c2185ecb7ade8`; the frozen contract and
+manifest SHA-256 values are respectively `2491a99f9b52d807f1e2871e7e6a2cdd5f7497a3c725a78947b7247d4a859748`
+and `42b834d84c95178cb971aa26c09588ac97639b9d831111b3a8bd74a5b0ef4b01`. Its 30/30 ready failures
+and stop-after-arm-A outcome are not recomputed or renamed by v1.1.2.
+
 ## Measurement
 
 The production measurement command is the manifest's `measurement.command`. It invokes the
@@ -37,7 +43,7 @@ Their artifact paths, content hashes, and the read-path specification hash are f
 manifest; a different provider, model, calibration, path specification, or command is a different
 protocol version.
 
-Version 1.1.1 additionally pins production module commit `c0ee730c`, module SHA-256
+Version 1.1.2 retains the production module commit `c0ee730c`, module SHA-256
 `0a119876ac69a2e3e73a459f5b02741ef085d1b4af1f81fecb0d5ff51e8c1c07`, and launcher SHA-256
 `c678c28268759b55d455e7422f360f02bc9fcd1983a4216dd4447895c2428ce1`. This identifies the
 implementation without changing the command, formulas, scope, or adjudication.
@@ -137,6 +143,6 @@ field mismatch fails the canary.
 
 ## Change control
 
-Any edit after an acceptance command is run requires reopening
-`2026.08.07-PLAN-ECONOMY P6.7`, adding a linked owner D-record, assigning a new protocol version,
-and preserving every earlier result with its report and hashes. Silent amendment is never valid.
+Any edit after the v1.1.2 acceptance command is run is forbidden by the one-shot D158 mandate.
+P6.9 must terminalize the observed result; a later successor would require a new explicit owner
+decision and a new plan, while preserving every earlier result with its report and hashes.

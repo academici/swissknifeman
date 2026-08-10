@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-09
-inputs_sha256: fb45fddb9eb8e1d9e2145a78afeab08fbaf999e6360bd6a1060387dec66e3828
+inputs_sha256: 2d6426f86f724d3debcee05709b17d857c5ad2b856807ffa764365ad185fcdc7
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.34.0 |
-| Status | 🔴 Blocked |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-09 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Собирать bundle и включить машинный гейт | 5/7 | 🟠 Done with deviations |
 | P4 | Ограничитель кружения design↔exec | 3/6 | 🟠 Done with deviations |
 | P5 | Безлюдный протокол решений и рамка полномочий | 4/5 | 🟠 Done with deviations |
-| P6 | Раскатать протокол и проверить критерий | 2/9 | 🔴 Blocked |
+| P6 | Раскатать протокол и проверить критерий | 2/9 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -110,8 +110,8 @@ generated_by: task plan-views status
 | P6.5 | Перевести авторинг в EN-only и привести канон plan-protocol к v2 | 🟠 Done with deviations | 2026-08-09 |
 | P6.6 | Раскатать канон и рамку по флоту с инвентарём адопции | 🟠 Done with deviations | 2026-08-09 |
 | P6.7 | Заморозить acceptance-protocol v1.1.1 с repair pin | 🟠 Done with deviations | 2026-08-09 |
-| P6.8 | Исполнить acceptance v1.1.1 и вынести фактический вердикт | 🔴 Blocked | 2026-08-09 |
-| P6.9 | Снять паузу ARTIFEX и вернуть мандат замера | ⬜ Not started | — |
+| P6.8 | Исправить item-scoped freshness и реконсилировать failed acceptance | 🟠 Done with deviations | 2026-08-09 |
+| P6.9 | Выполнить bounded acceptance v1.1.2 и терминализировать план | 🟠 Done with deviations | 2026-08-09 |
 
 ## 6. Update Log
 
@@ -355,6 +355,13 @@ generated_by: task plan-views status
 | 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · D154 redetails exact frozen v1.1.1 attempt; arm B/canary/P6.9 stop after arm-A non-pass. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · in-progress · Task Contract pre_mutation=allow (d7d75e4). Execute frozen acceptance v1.1.1 arm A only until reducer verdict. |
 | 2026-08-09 | gpt-5.6-sol/high | plan-run · blocked · P6.8 v1.1.1 arm A fail: 30/30 ready failures, max 142562, 88 gaps; aggregate 1349223. Arm B/canary not run; P6.9 forbidden. Raw SHA 48c00b9a; Task Contract allow. |
+| 2026-08-09 | frontier/high | plan-design · in-progress · D155 довёл P6.8 до DoR: frozen fail сохранён, terminal reconciliation идёт в 🟠 без rerun/repair; P6.9 и ARTIFEX остаются запрещены. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · D156: item-state freshness изолирована по item journal rows; regression green, acceptance v1.1.1 и P6.9 не менялись. |
+| 2026-08-09 | implementation/low | plan-close · closed-deviations · P6.8 reconciled: item-scoped freshness repair verified; frozen v1.1.1 arm-A remains fail (30/30), P6.9/ARTIFEX stay gated. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-09 | frontier/high | plan-design · in-progress · ТЗ P6.9 доведено до DoR как waiting gate D157: без нового owner D# write scope отсутствует; ARTIFEX pause и frozen fail сохранены. |
+| 2026-08-09 | gpt-5.6-sol/high | plan-design · in-progress · D158: executable bounded v1.1.2, terminal no-self-loop outcome |
+| 2026-08-09 | gpt-5.6-sol/high | plan-run · closed-deviations · v1.1.2 terminal fail: arm A D2 pass, pre-run decision projection red, arm B/canary NOT-RUN, no retry |
+| 2026-08-09 | gpt-5.6-sol/high | plan-close · closed-deviations · Known deviation: v1.1.2 arm A D2 pass, but decision projection was red before raw; arm B/canary NOT-RUN, ARTIFEX paused, retry forbidden |
 
 ## Owner Gates
 
@@ -389,4 +396,5 @@ generated_by: task plan-views status
 - P6.5: known deviation
 - P6.6: known deviation
 - P6.7: known deviation
-- P6.8: escalation
+- P6.8: known deviation
+- P6.9: known deviation

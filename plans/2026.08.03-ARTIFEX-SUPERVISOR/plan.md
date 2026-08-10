@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.08.03-ARTIFEX-SUPERVISOR |
 | Title | Reliable long-horizon supervisor |
-| Version | 0.27.0 |
+| Version | 0.27.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-terra (bootstrap; effort not exported) · gpt-5.6-sol/high (P0/P1 detail; historical plan provenance) · prescribed semantic route `gpt-5.6-sol/high` (P2–P6 detail, original finish, post-D74 finish, post-D74/post-D76 audit remediations, P3.4 native-tool/successor-manifest remediations, P3 audit reopen, P5→P6 finished-product reconciliation, post-D88 cross-phase finish, audit-8 F1–F4 remediation, audit-9 authority/provenance remediation, audit-10 live-carrier/provenance remediation, D98 owner audit-loop closure, D99 P4.1 generation-aware terminal-validator reconciliation, final P4 audit-1 remediation, P5 last-pass generation-gate/business-grant fast track, D107 frozen-contract reconciliation, D108–D109 whole-P5 successor reconcile, D110 P5.5 probe-recovery design, D111 exact R2 owner grant/reopen, D112 Codex R2 cap-contract refinement; source — `task:plan-design` semantic pin) · gpt-5.6-sol/xhigh (P4 audit-2 bounded forward remediation; actual historical session) · claude-sonnet-5/high (D117 P5.2 self-authorization void remediation; actual session, invoked directly by the repository owner outside the routed selector) · claude-opus-5/high (D119–D120 P5.2 seam-ownership/version-pin design pass, D121–D122 P5.2 task-description-carrier reconciliation, D123–D127 P5.4 economic-adjudication re-design, and D132–D135 P5.4 package-authority remediation; actual sessions, invoked directly by the repository owner outside the routed selector). Actual selector/effort for routed sessions are not independently attested: `codex doctor` reports loaded config, not the already-running session selector. |
-| Last Updated | 2026-08-07 |
+| Last Updated | 2026-08-10 |
 | Repository | swissknifeman |
 | Related Packages | artifex (new mandatory package) · task · harness · core · analyst · maind |
 | Execution Mode | contract-first, phase-first |
@@ -19,7 +19,6 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
-| Paused By | 2026.08.07-PLAN-ECONOMY, 2026-08-07 — владелец: исполнение приостановлено до завершения плана оптимизации протокола планов (`task`). Причина — пол холодного старта этого плана 583 КБ ≈ 170к токенов, и любой дальнейший замер супервизора мерил бы болезнь протокола, а не пользу продукта. **Переизмерение P5.4 после снятия паузы обязано идти через РЕАЛЬНЫЕ планы** (`task:plan-design` → `task:dev`/`task:plan-exec`), а не через голые одноразовые задачи: прогон 2026-08-07 померил обвязку без планировщика и потому на вопрос об экономии не отвечает. |
 | Design Passes | 8/8 + finish + bounded remediations through D104 + P5 last-pass reconciliation + D107 frozen-contract stop + D108–D109 whole-P5 reconcile + D110 recovery design + D111 exact R2 owner grant/reopen + D112 Codex R2 cap-contract refinement + D113 owner terminalization direction + D117 P5.2 D114–D116 self-authorization void + D118 P5.2 bridge architecture (owner-delegated) + D119–D120 P5.2 seam-ownership reopen and version-pin discipline (owner-selected) + D121–D122 P5.2 task-description-carrier reopen and replacement-row grant (owner-selected) + D123–D127 P5.4 economic-adjudication re-design (four owner selections, two new items, two third reopens) + D132–D135 P5.4 package-authority remediation (D125 batch registration, one new gate-repair item, one fourth reopen; forward-conformance sweep per `brief/37`) — completed denominator unchanged |
 
 ## 1. Context
@@ -266,6 +265,7 @@ handoff. План не считается успешно завершённым,
 | 2026-08-07 | plan-run/claude-opus-5[1m]/high | P5.4 прогнан впервые и остаётся 🟡 НЕтерминальным: десять D125-допусков задиспатчены пятью парами, 2/5 волн приняты, вердикт `NO-GO` (floors `REL-BUDGET`/`REL-RECOVERY`/`SEC-WORKTREE`) — детали см. phases/P5.md P5.4 Pending Work, findings/P5-economic-verdict.md. |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟢 после четвёртого (D132) реопена: `GRANT_BATCHES` зарегистрировал D125, `branch` — внутрь строки батча, седьмая переморозка — детали см. phases/P5.md P5.5 Completion Notes. |
 | 2026-08-07 | plan-run/sonnet/high | P5.8 закрыт 🟢: три бесхозных гейта починены (F12 ledger-membership, `validate-assurance.py` двусторонний под D134, `lane_units` None-guard), P5.4's pre-intent-гейт прогнан целиком — 14 из 14 зелёных — детали см. phases/P5.md P5.8 Completion Notes, findings/P5.8-unowned-gate-repair.md. |
+| 2026-08-10 | gpt-5.6-terra/high | Owner-authorized successor `2026.08.10-PLAN-ECONOMY-FINAL-ACCEPTANCE` completed Arm A, Arm B and all four frozen canary branches GREEN; the pause is lifted only. No ARTIFEX item, provider process, grant, package byte or historical carrier was executed or changed. |
 | 2026-08-06 | plan-design/claude-opus-5[1m]/high | P5.4 расэскалирован (второй стоп): D132–D135 — четвёртый реопен P5.5, новый item P5.8, P4-якорь, F15; сверка `brief/37` исполнена — детали см. research/41-p5.4-package-authority-remediation.md |
 | 2026-08-06 | plan-run/claude-opus-5[1m]/high | P5.1 закрыт 🟠 после третьего (D125/D127) реопена: отчеканен аддитивный v3-набор из десяти D125-носителей (пять candidate/пять baseline, все claude-code, поднятые бюджеты), v1/v2 байты не сдвинуты — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-08-06 | plan-run/sonnet/high | P5.5 закрыт 🟠 после третьего (D123/D127) реопена: измеренный `economy`-конверт под `economy-evidence-v2`, G2B перезаморожен третий раз — детали см. phases/P5.md P5.5 Completion Notes, findings/P5.5-measured-economy-envelope.md. |

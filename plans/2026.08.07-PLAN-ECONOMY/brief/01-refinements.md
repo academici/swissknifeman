@@ -326,3 +326,46 @@ terminal correction, а не переписыванием журнала или 
 v1.1.0 как prior results, затем повторно детализировать и исполнить P6.8. Разрешение не меняет
 threshold, qualified unit, five-slot scope, arms или canary expectations и не разрешает
 переписывать prior evidence.
+
+## 2026-08-09 — повторный plan-design P6.8 после frozen v1.1.1 fail
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8`.
+
+Вызов требует довести текущий blocked item до исполнимого ТЗ, но не содержит отдельного мандата
+на новый repair plan, successor acceptance или изменение frozen predicates. Поэтому redesign
+устраняет локальное смешение acceptance verdict и item status: retained `fail` остаётся красным,
+а полностью исполненный fail-fast Scope P6.8 передаётся в reconciliation-close как
+`🟠 Done with deviations`. P6.9 и ARTIFEX остаются запрещены; новый attempt этим входом не открыт.
+
+## 2026-08-09 — owner mandate на item-scoped journal/state freshness repair
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8`; режим — remediation,
+расширение scope только после owner mandate. Обязательный scope: (1) исправить item-scoped
+journal/state freshness; (2) добавить регрессионный тест; (3) вернуть K=0 и handoff на
+`task:plan-close 2026.08.07-PLAN-ECONOMY P6.8`.
+
+**Анти-scope:** не менять acceptance v1.1.1, raw/report/journal history,
+threshold/unit/scope/arms/canary, P6.9, ARTIFEX и отсутствующие baseline bundles. Входной finding:
+`findings/P6.8-design-journal-freshness-cascade-2026-08-09.md`.
+
+## 2026-08-09 — детализация P6.9 после frozen v1.1.1 fail
+
+**Вход владельца:** `$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.9`.
+
+Команда разрешает уточнить ТЗ и handoff, но не является отдельным owner mandate на новый
+acceptance attempt, repair plan, изменение frozen predicates или снятие паузы ARTIFEX. Поэтому
+P6.9 переводится из устаревшего `plan-exec`-маршрута в структурное ожидание: до появления нового
+accepted owner D# item не имеет write scope и не исполняется; после появления такого D# первым
+шагом снова запускается `task:plan-design ... P6.9`, чтобы привязать scope к новому successor
+carrier. D155–D156, frozen verdict `fail` и отсутствие arm B/canary остаются неизменными.
+
+## 2026-08-09 — owner mandate: bounded successor и финал без design-loop
+
+**Literal owner input:** «или даже для этой сессии, чтобы до финала добить» после требования дать
+команду для новой сессии, устраняющую повторный design-loop.
+
+Владелец разрешает текущей сессии один bounded repair/successor acceptance после D155. Сохраняются
+v1.1.1 `fail` и все frozen predicates; разрешены только отсутствующие bundles, точные selectors и
+provenance-complete terminal capsule для P6.2/P6.5/P6.6, затем v1.1.2 и один полный прогон. Любой
+fail терминализирует P6.9 с deviations и сохранённой паузой ARTIFEX; только exact positive обеих
+arms и canary разрешает снять паузу. Повторный `plan-design` после результата запрещён.

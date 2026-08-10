@@ -1,44 +1,35 @@
-# HANDOFF — 2026-08-09 — after P6.8
+# HANDOFF — 2026-08-09 — after P6.9
 
-**Next:** ОЖИДАНИЕ: новый явный owner mandate на отдельный repair plan → design-item: task:plan-design 2026.08.07-PLAN-ECONOMY P6.8
+**Next:** план закрыт
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
+| Model class | — |
+| Effort | — |
 | Capabilities | — |
-| Context | cold-start — plan-step |
-| Суть | Не продолжать текущую acceptance; только новый owner mandate может спроектировать отдельный repair после arm-A fail |
+| Context | terminal |
+| Суть | v1.1.2 overall fail; ARTIFEX remains paused; no retry/self-loop. |
 | Команда | — |
 
-```text
-# НЕ раньше: новый явный owner mandate на отдельный repair plan
-/model gpt-5.6-sol
-/effort high
-/task:plan-design 2026.08.07-PLAN-ECONOMY P6.8
-```
+**Done:** D158 зафиксировал literal owner mandate и one-shot boundary. Три terminal input paths
+сжаты с provenance, тринадцать ready bundles материализованы, arm-A D2 raw прошёл: 30/30 ready
+green, maximum 89,015, raw SHA `6a0b56d2c0fdcd49a2e7a4040df74c2c459e6720063f4b0f1025cd0f85074e0b`.
 
-**Done:** Frozen v1.1.1 identity pinned `c0ee730c`; exact arm A retained in item commit
-`6901d080` at SHA `48c00b9a…`; reducer verdict `fail` from 30/30 ready failures. Report appended
-without changing the existing 4,866-byte prefix. Arm B, fresh plan and canary were not run.
+**Remaining:** Ничего исполнимого в этом плане. Decision-projection integrity check был красным до
+raw capture; исправление D157 после наблюдения меняет selected P6.9 input, поэтому v1.1.2 overall
+verdict — `fail`, arm B/canary NOT-RUN. D158 запрещает повторный successor/design-loop.
 
-**Remaining:** P6.9 is forbidden and ARTIFEX remains paused. No in-scope executable item remains
-under the current frozen protocol; a new repair requires fresh owner authority and change control.
+**Sources of truth:** `findings/12-p6-acceptance-measurement.md` §Attempt v1.1.2 ·
+`findings/P6.9-v1.1.2-terminal-integrity-failure-2026-08-09.md` ·
+`decisions/D158-owner-authorized-bounded-successor.md` ·
+`artifacts/P6/acceptance-arm-a-migrated-v1.1.2.json`.
 
-**Sources of truth:** `root/contracts/acceptance-protocol-v1.manifest.json` v1.1.1 ·
-`artifacts/P6/acceptance-arm-a-migrated-v1.1.1.json` ·
-`findings/12-p6-acceptance-measurement.md` §Attempt v1.1.1 · D153–D154.
+**Open risks:** Головное end-to-end acceptance-обещание не доказано. ARTIFEX остаётся paused;
+никакой donor/package/ACTIVE mutation не выполнялась.
 
-**Open risks:** Missing/stale/oversized carriers and D2(a) failures remain real; they were not
-repaired after observation. The programme goal is not accepted.
-
-**Workarounds/Deferred/Open questions:** Hook dry-run remains RED
-`record-provenance-mismatch`; installed plan-protocol 2.23.0 lags worktree 2.24.0. Neither defect
-was counted green. Open question exists only if the owner chooses a new repair mandate.
-
-## Codex launch
+**Workarounds/Deferred/Open questions:** Workarounds — нет. Deferred — нет внутри этого плана.
+Новая попытка возможна только как новый owner-authorized plan, не как продолжение P6.9.
 
 ```bash
-# НЕ раньше: новый явный owner mandate на отдельный repair plan
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.07-PLAN-ECONOMY P6.8'
+# Terminal handoff: do not relaunch task:plan-design/task:plan-exec for this plan.
 ```

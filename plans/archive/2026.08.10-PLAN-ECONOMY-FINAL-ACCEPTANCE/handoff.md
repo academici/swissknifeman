@@ -20,4 +20,5 @@
 ## Archive migration checklist
 
 - `root/` → `docs/`: не требуется — каталога `root/` в плане нет.
+- Arm-B fixture `2026.08.10-PLAN-MIGRATION`: физически удален по прямому указанию владельца после acceptance; сохранены только raw Arm-B output и нормализованное измерение в `artifacts/P0/`.
 - В архиве оставлены: `artifacts/`, `findings/`, `brief/`, `closure/`, `journal.jsonl` и остальные plan-owned evidence carriers.

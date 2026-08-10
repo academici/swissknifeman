@@ -105,6 +105,12 @@ and does not duplicate a supervisor runtime.
 
 Решения находятся в `decisions/`; собрать или проверить их виды: `python3 packages/task/scripts/plan-views.py decisions --plan-dir <plan-dir> [--check]`.
 
+## 6. Update Log
+
+| Дата | Кто (role/model) | Что |
+|:--|:--|:--|
+| 2026-08-10 | designer/gpt-5.6-sol/high | P0.7 redesigned by D68: its plan-local producer owns branch verification; the frozen P0.6 checker remains an input. |
+
 ## 7. Contracts
 
 ### Exported

@@ -1,33 +1,32 @@
-# HANDOFF — 2026-08-10 — after P0.6
+# HANDOFF — 2026-08-10 — after P0.7
 
-**Next:** ЗАПУСК ВРУЧНУЮ: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.7
+**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
 | Capabilities | — |
-| Context | same-session — item |
-| Суть | Создать исполняемое privacy-safe security/trust evidence и доказать no-op branch P0.7 |
-| Команда | — |
-
-```text
-select the session model class: implementation
-select the session effort: high
-$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.7
-```
+| Context | continue-root |
+| Суть | Reconcile P0 provenance and requalify the reopened phase. |
+| Команда | `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8` |
 
 #### Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.7'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8'
 ```
 
-**Done:** P0.6 closed green on item commits `ffc735d9` and `970ef84e`: D67 freezes the exact v1.0.1 contract bytes; the checker now binds exact G01–G11, R01–R07 and final-audit row semantics, strict decision frontmatter and privacy-safe matrix inputs. The expanded copied-input suite rejects every mapping/recovery-field weakening, verifier spoof, decision spoof and evidence mutation. Downstream gate is green.
-**Remaining:** Execute P0.7, then P0.8; close P0 and run the second independent `task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P0` before P1.
-**Sources of truth:** `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.7.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.6.state.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/root/contracts/provider-recovery-gates-v1.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/roadmap.md`
-**Open risks:** P0.7 must re-observe provider/trust state and may fail closed if a command is unavailable, red or expired. A nonempty action set still requires a separate exact `containment_mutation_decision`; D67 authorizes no mutation.
+**Done:** P0.7 closed green on item commit `9d05facc`: D68 assigns no-op branch verification to the plan-local producer; copied mutations and real capture/check pass with redacted evidence. `write-site: pre_mutation: allow · pre_final: allow`.
+
+**Remaining:** Execute P0.8, close P0, then run its second independent phase audit before P1.
+
+**Sources of truth:** `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.7.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p0-security-trust-evidence.py` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.8.md`.
+
+**Open risks:** Harness preflight still reports missing hook files and a stale run-report hook. Plan lint did not return observable output through this execution environment and is not attested green.
+
 **Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: Layout v2 phase-level reopen colour remains recorded in `findings/17-layout-v2-phase-reopen-status-gap-2026-08-10.md`; generated views remain generator-owned.
+
+- workarounds: route was `frontier/high` instead of prescribed `implementation/high`; this is a recorded process deviation.
+- deferred: Layout v2 phase-level reopen colour remains recorded in `findings/17-layout-v2-phase-reopen-status-gap-2026-08-10.md`.
 - open_questions: —

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: e82cf80c4202eecf5ae00afea0ba73ae55e6455db19c62f54136ef191b097eb8
+inputs_sha256: c05ec9e700ce89ca2785b4cfd4524845d8c831e7e3e26b274e7496c4e02d93f3
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 5/8 | ⬜ Not started |
+| P0 | Evidence, safety, and full fleet inventory | 6/8 | ⬜ Not started |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -42,7 +42,7 @@ generated_by: task plan-views status
 | P0.4 | Apply only approved urgent security containment | 🟢 Done | 2026-08-10 |
 | P0.5 | Rebuild the exact provider and skills baseline evidence | 🟢 Done | 2026-08-10 |
 | P0.6 | Patch recovery semantics and remove cyclic admission | 🟢 Done | 2026-08-10 |
-| P0.7 | Produce fresh security and trust evidence executably | ⬜ Not started | — |
+| P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-10 |
 | P0.8 | Reconcile P0 execution provenance and requalify closure | ⬜ Not started | — |
 
 ## Phase P1
@@ -158,7 +158,14 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · blocked · decision queue: P0.6-contract-freeze-v1.0.1-2026-08-10 |
 | 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.6-contract-freeze-v1.0.1-2026-08-10 |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; P0.6 closed: v1.0.1 frozen by D67; fail-closed checker, exhaustive mutations, evidence and downstream gate green; commits ffc735d9 + 970ef84e. |
+| 2026-08-10 | gpt-5.6-terra/medium | plan-run · blocked · required implementation/high; session implementation/medium |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · escalated · Validation requires absent verify-branch outside P0.7 Files; frozen checker ownership needs plan-design. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · P0.7 branch-verifier ownership reconciled to the permitted plan-local producer |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · P0.7 resumed after D68 design reconciliation |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · P0.7 producer, copied mutations and real no-op capture/check passed; frontier/high over implementation/high. |
 
 ## Owner Gates
 
 - P0.1: known deviation
+- P0.7: known deviation

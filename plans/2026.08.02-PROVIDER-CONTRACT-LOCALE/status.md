@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 4d5003aed6c0cbd370da89daf5d0fc8d83b77cadcd68e2f1abbd07c5b03106e6
+inputs_sha256: 3f7833a1f804d01cd345cf16c05bd84b434420de43f5fbea4250e208361d542d
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.2 |
-| Status | 🔴 Blocked |
+| Status | ⬜ Not started |
 | Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 6/8 | 🔴 Blocked |
+| P0 | Evidence, safety, and full fleet inventory | 7/8 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -43,7 +43,7 @@ generated_by: task plan-views status
 | P0.5 | Rebuild the exact provider and skills baseline evidence | 🟢 Done | 2026-08-10 |
 | P0.6 | Patch recovery semantics and remove cyclic admission | 🟢 Done | 2026-08-10 |
 | P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-10 |
-| P0.8 | Reconcile P0 execution provenance and requalify closure | 🔴 Blocked | 2026-08-10 |
+| P0.8 | Reconcile P0 execution provenance and requalify closure | 🟢 Done | 2026-08-10 |
 
 ## Phase P1
 
@@ -170,6 +170,10 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=18571a14; historical_route=frontier/high; deviation=process: item and bookkeeping paths were bundled; ledger=artifacts/P0.8/execution-provenance-v1.json |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=d17e4497; historical_route=frontier/high; deviation=process: item/phase-close paths bundled; Required Reads changed in close commit; route overshoot; ledger=artifacts/P0.8/execution-provenance-v1.json |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · escalated · P0 fan-in blocked: Layout v2 core, stale generated bundles and P0.6 read-budget breach require plan-design. |
+| 2026-08-10 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D69, Layout v2 core, compact P0.6 read carrier and bundle regeneration order. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · P0.8 resumed after D69; execution-state transition from prior escalation. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=b9d71e6a; D69; process: post-close spec/read-graph repair; old_decl=bb10fea2e2e7538b8efaf494d767333cbc37a6d85bd969714ba0b9b777a9a4f2; new_decl=dc4f3432e25ba18e8ec887fec7ea1a2a6a67494b3bc9893f37dd4064e16a86a1 |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=1e552dd4; D69 repair, compact P0.6 projection and P0 fan-in validated; process: route overshoot frontier/high over implementation/high. |
 
 ## Owner Gates
 
@@ -177,5 +181,6 @@ generated_by: task plan-views status
 - P0.2: known deviation
 - P0.3: known deviation
 - P0.4: known deviation
+- P0.6: known deviation
 - P0.7: known deviation
-- P0.8: escalation
+- P0.8: known deviation

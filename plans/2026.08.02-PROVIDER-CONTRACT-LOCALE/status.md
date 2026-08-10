@@ -1,0 +1,134 @@
+<!-- plan-projection
+projection: status-view
+projection_version: v1
+source_scope: plan core + phases + journal
+through: 2026-08-03
+inputs_sha256: f399e83aa5c3c06fe67d9caa192478e29e63c9105cfee71f139b2cbb6210a92c
+generated_by: task plan-views status
+-->
+
+# Статус плана
+
+> Не править руками: это генерируемый вид.
+
+## 0. Meta
+
+| Поле | Значение |
+|:--|:--|
+| Version | 1.0.5 |
+| Status | ⬜ Not started |
+| Last Updated | 2026-08-03 |
+
+## 4. Phase Index & Status Board
+
+| Phase | Title | Items 🟢/всего | Status |
+|:--|:--|:--|:--|
+| P0 | Evidence, safety, and full fleet inventory | 0/4 | ⬜ Not started |
+| P1 | Freeze provider-neutral control-plane contract | 0/3 | ⬜ Not started |
+| P2 | Freeze locale and compact-English authoring contract | 0/3 | ⬜ Not started |
+| P3 | Implement control-plane resolver and adapter boundaries | 0/3 | ⬜ Not started |
+| P4 | Implement locale rendering and English canonical migration tooling | 0/6 | ⬜ Not started |
+| P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
+| P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
+| P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
+
+## Phase P0
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P0.1 | Capture reproducible provider and fleet baseline | ⬜ Not started | — |
+| P0.2 | Classify every legacy projection and local override | ⬜ Not started | — |
+| P0.3 | Freeze recovery gates and exact owner action inventory | ⬜ Not started | — |
+| P0.4 | Apply only approved urgent security containment | ⬜ Not started | — |
+
+## Phase P1
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P1.1 | Define canonical desired state and status schema | ⬜ Not started | — |
+| P1.2 | Define capability negotiation and provider ownership | ⬜ Not started | — |
+| P1.3 | Define explicit legacy upgrade and rollback contract | ⬜ Not started | — |
+
+## Phase P2
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P2.1 | Specify locale surfaces, precedence, normalization, and fallback | ⬜ Not started | — |
+| P2.2 | Specify English canonical source and localized overlay format | ⬜ Not started | — |
+| P2.3 | Specify compactness, translation review, and comment policy | ⬜ Not started | — |
+
+## Phase P3
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P3.1 | Implement versioned canonical configuration and resolver | ⬜ Not started | — |
+| P3.2 | Implement adapter observe-diff-apply-readback boundary | ⬜ Not started | — |
+| P3.3 | Implement status, ownership, drift, and migration diagnostics | ⬜ Not started | — |
+
+## Phase P4
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P4.1 | Implement shared locale resolution and rendered surfaces | ⬜ Not started | — |
+| P4.2 | Implement English-source, overlay, admission, and rollback validators | ⬜ Not started | — |
+| P4.3 | Migrate canonical skill ownership and localized overlays | ⬜ Not started | — |
+| P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | ⬜ Not started | — |
+| P4.5 | Migrate code comments, docstrings, and test descriptions | ⬜ Not started | — |
+| P4.6 | Migrate development docs and regenerate the admitted corpus | ⬜ Not started | — |
+
+## Phase P5
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P5.1 | Freeze exact consumer action manifest and rollback domains | ⬜ Not started | — |
+| P5.2 | Preserve and explicitly register approved local overrides | ⬜ Not started | — |
+| P5.3 | Reconcile approved equivalent, broken, and stale-managed projections | ⬜ Not started | — |
+| P5.4 | Quarantine obsolete owned projections and prove convergence | ⬜ Not started | — |
+
+## Phase P6
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P6.1 | Repair Brain security, trust, dependency, and profile drift | ⬜ Not started | — |
+| P6.2 | Add provider parity and capability-health checks | ⬜ Not started | — |
+| P6.3 | Run and publish per-project Claude/Codex health evidence | ⬜ Not started | — |
+
+## Phase P7
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P7.1 | Test shared semantics and provider-specific strengths independently | ⬜ Not started | — |
+| P7.2 | Add regression, drift, locale, and isolation test suites | ⬜ Not started | — |
+| P7.3 | Document operations, migration, and rollback | ⬜ Not started | — |
+| P7.4 | Run adversarial final design and release audit | ⬜ Not started | — |
+
+## 6. Update Log
+
+| Дата | Кто (role/model) | Что |
+|:--|:--|:--|
+| 2026-08-02 | frontier/high | plan-design · in-progress · design pass 1/3: brief, RAG, synthesis, eight skeleton phases, and known defects captured |
+| 2026-08-02 | frontier/high | plan-design · in-progress · фаза детализирована до DoR; external registry routed through committed evidence bundle |
+| 2026-08-02 | frontier/high | plan-design · in-progress · фаза детализирована до DoR |
+| 2026-08-02 | gpt-5.6-sol/high | plan-design · in-progress · фаза детализирована до DoR: locale resolution, English canonical overlays and review gates |
+| 2026-08-02 | frontier/high | plan-design · in-progress · фаза детализирована до DoR; P0–P2 and frozen P1/P2 contract artifacts remain execution gates |
+| 2026-08-02 | gpt-5.6-sol/high | plan-design · in-progress · фаза детализирована до DoR: locale runtime, admission ledger, four sequential carrier migrations, terminal regeneration |
+| 2026-08-02 | gpt-5.6-sol/high | plan-design · in-progress · фаза детализирована до DoR: exact action freeze, override preservation, managed repair, recoverable cleanup and convergence |
+| 2026-08-02 | gpt-5.6-sol/high | plan-design · in-progress · фаза детализирована до DoR: owner-gated Brain repair, provider-health contract, exact-set fleet evidence |
+| 2026-08-02 | gpt-5.6-sol/high | plan-design · in-progress · фаза детализирована до DoR: exact-set acceptance, regressions, operations/release candidate, cold audit |
+| 2026-08-02 | frontier/high | plan-design · in-progress · design pass 3/3 finish: cross-phase contracts, brief trace, DoR and 30-item roadmap reconciled |
+| 2026-08-03 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-03 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-03 | gpt-5.6-sol/high | plan-design · in-progress · design-audit remediation F8-F12; runtime did not export active effort |
+| 2026-08-03 | frontier/xhigh | plan-audit · audit-red · заход 3, вердикт RED |
+| 2026-08-03 | gpt-5.6-sol/high | plan-design · in-progress · design-audit remediation F13-F15; runtime did not export active effort |
+| 2026-08-03 | frontier/xhigh | plan-audit · audit-red · заход 4, вердикт RED |
+| 2026-08-03 | gpt-5.6-sol/high | plan-design · in-progress · design-audit remediation F16-F18; runtime did not export active effort |
+| 2026-08-03 | frontier/xhigh | plan-audit · audit-red · заход 5, вердикт RED; F19–F25 |
+| 2026-08-03 | gpt-5.6-sol/high | plan-design · in-progress · design-audit remediation F19-F25; statuses remain 0/30; runtime did not export active effort |
+| 2026-08-03 | gpt-5.6-sol/high | plan-audit · escalated · заход 6: content GREEN, protocol ATTENTION; cold frontier/xhigh independence not proven |
+| 2026-08-03 | opus/xhigh | plan-audit · audit-green · заход 7, вердикт GREEN |
+| 2026-08-03 | migration/v2 | plan-design · in-progress · Layout v2 migration activation; source tree archived in artifacts/migration-source-v1. |
+
+## Owner Gates
+
+- —

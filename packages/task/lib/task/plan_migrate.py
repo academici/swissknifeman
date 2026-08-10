@@ -11,6 +11,7 @@ import hashlib
 import json
 import re
 import shutil
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from task import journal, plan_decisions, plan_item_state, plan_layout, plan_status, plan_weight
@@ -26,6 +27,8 @@ _SPEC_FIELDS = (
 )
 _STATE_FIELDS = ("Status", "Completion Notes", "Pending Work", "Known Deviations", "Escalation Needed")
 _MOVED_META = {"Version", "Status", "Last Updated"}
+_SOURCE_ARCHIVE_RELATIVE = Path("artifacts") / "migration-source-v1"
+_SOURCE_ARCHIVE_MANIFEST = "manifest.json"
 _TRANSITION_RULE = (
     "- **Переходное правило Layout v2 (до P6):** закрытие пункта фиксируется записью в "
     "`journal.jsonl`, находкой или решением при необходимости и регенерацией видов; поля "
@@ -43,6 +46,10 @@ def _norm(value: str) -> str:
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _bytes_sha256(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
 
 
 def _section(text: str, heading: str) -> str:
@@ -124,8 +131,10 @@ def _phase_source(path: Path) -> dict:
 
 def _decision_rows(text: str) -> list[dict]:
     rows = _table_rows(_section(text, "5. Decision Log"))
-    if not rows or rows[0][:4] != ["D#", "Дата", "Решение", "Почему"]:
-        raise MigrationError("Decision Log v1 не содержит каноническую таблицу")
+    accepted_headers = (("D#", "Дата", "Решение", "Почему"),
+                        ("D#", "Date", "Decision", "Why"))
+    if not rows or tuple(rows[0][:4]) not in accepted_headers:
+        raise MigrationError("Decision Log v1 не содержит поддерживаемую каноническую таблицу")
     result = []
     for row in rows[1:]:
         if len(row) < 4 or not re.fullmatch(r"D\d+", row[0]):
@@ -263,6 +272,93 @@ def _write_inventory(path: Path, inventory: dict, root: Path) -> dict:
     return payload
 
 
+def _write_source_archive(plan_dir: Path) -> dict:
+    """Preserve the complete v1 plan tree byte-for-byte before projection.
+
+    The migration overwrites stable carriers and adds generated ones.  A full
+    snapshot is simpler and safer than trying to maintain a partial list of
+    mutable paths: every source file and its exact text remain recoverable.
+    """
+    archive = plan_dir / _SOURCE_ARCHIVE_RELATIVE
+    if archive.exists():
+        raise MigrationError(f"архив исходника миграции уже существует: {archive}")
+    files = {path.relative_to(plan_dir): path.read_bytes()
+             for path in plan_dir.rglob("*") if path.is_file()}
+    archive.mkdir(parents=True)
+    records = []
+    for relative, payload in sorted(files.items()):
+        target = archive / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+        records.append({"path": relative.as_posix(), "bytes": len(payload),
+                        "sha256": _bytes_sha256(payload)})
+    manifest = {"schema": "plan-migration-source-v1", "files": records}
+    (archive / _SOURCE_ARCHIVE_MANIFEST).write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _verify_source_archive(plan_dir)
+    return manifest
+
+
+def _append_layout_activation(plan_dir: Path) -> None:
+    """Append one deterministic boundary between legacy and v2 execution history."""
+    journal_path = plan_dir / journal.FILENAME
+    timestamps = []
+    for number, raw in enumerate(journal_path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not raw.strip():
+            continue
+        try:
+            timestamps.append(datetime.fromisoformat(str(json.loads(raw)["ts"]).replace("Z", "+00:00")))
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise MigrationError(f"journal.jsonl:{number}: не удаётся вычислить границу Layout v2") from exc
+    timestamp = (max(timestamps, default=datetime(1970, 1, 1, tzinfo=timezone.utc)) + timedelta(seconds=1))
+    journal.append(plan_dir, journal.new_entry(
+        plan_id=plan_dir.name, item_id="layout-v2", command="plan-design", actor="migration/v2",
+        result="in-progress", note="Layout v2 migration activation; source tree archived in artifacts/migration-source-v1.",
+        ts=timestamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    ))
+
+
+def _verify_source_archive(plan_dir: Path) -> dict | None:
+    """Fail closed if a new-format migration's lossless source archive drifts."""
+    archive = plan_dir / _SOURCE_ARCHIVE_RELATIVE
+    if not archive.exists():
+        # Layout v2 predates this preservation carrier.  Do not invalidate its
+        # historical idempotence, but every new migration writes the archive.
+        return None
+    manifest_path = archive / _SOURCE_ARCHIVE_MANIFEST
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise MigrationError(f"архив исходника миграции не читается: {manifest_path}") from exc
+    if not isinstance(manifest, dict):
+        raise MigrationError("архив исходника миграции имеет невалидный manifest")
+    records = manifest.get("files")
+    if manifest.get("schema") != "plan-migration-source-v1" or not isinstance(records, list) or not records:
+        raise MigrationError("архив исходника миграции имеет невалидный manifest")
+    expected_paths = set()
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {"path", "bytes", "sha256"}:
+            raise MigrationError("архив исходника миграции содержит невалидную запись")
+        if not isinstance(record["path"], str):
+            raise MigrationError("архив исходника миграции содержит небезопасную запись")
+        relative = Path(record["path"])
+        if (relative.is_absolute() or ".." in relative.parts or record["path"] in expected_paths
+                or not isinstance(record["bytes"], int)
+                or not isinstance(record["sha256"], str)):
+            raise MigrationError("архив исходника миграции содержит небезопасную запись")
+        expected_paths.add(record["path"])
+        try:
+            payload = (archive / relative).read_bytes()
+        except OSError as exc:
+            raise MigrationError(f"архив исходника миграции потерял {record['path']}") from exc
+        if len(payload) != record["bytes"] or _bytes_sha256(payload) != record["sha256"]:
+            raise MigrationError(f"архив исходника миграции повреждён: {record['path']}")
+    actual_paths = {path.relative_to(archive).as_posix() for path in archive.rglob("*") if path.is_file()}
+    if actual_paths != expected_paths | {_SOURCE_ARCHIVE_MANIFEST}:
+        raise MigrationError("архив исходника миграции содержит непредусмотренные или отсутствующие файлы")
+    return manifest
+
+
 def _weights(plan_dir: Path, before: dict) -> dict:
     measurer = plan_weight.Measurer()
     after = plan_weight.measure_plan(plan_dir, measurer)
@@ -287,7 +383,8 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
     """Migrate one v1 tree in place and return its generated acceptance facts."""
     plan_dir = Path(plan_dir)
     plan_path = plan_dir / "plan.md"
-    source = plan_path.read_text(encoding="utf-8")
+    source_bytes = plan_path.read_bytes()
+    source = source_bytes.decode("utf-8")
     if plan_layout.layout_version(plan_dir) == "v2":
         inventory_path = Path(inventory_path) if inventory_path else plan_dir / "artifacts" / "p2-migration-inventory.json"
         weight_path = plan_dir / "artifacts" / "p2-weight-before-after.json"
@@ -298,7 +395,8 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
             raise MigrationError("v2-план не несёт валидные generated артефакты миграции") from exc
         if inventory.get("missing") != [] or not inventory.get("item_ids") or not weights.get("items"):
             raise MigrationError("v2-план не проходит инвентарь или замер миграции")
-        return {"inventory": inventory, "weights": weights}
+        return {"inventory": inventory, "weights": weights,
+                "source_archive": _verify_source_archive(plan_dir)}
     meta, decisions = _meta(source), _decision_rows(source)
     try:
         discussion = _section(source, "Обсуждение")
@@ -312,6 +410,7 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
     inventory = _inventory_source(meta, phases, decisions, updates, discussion)
     blocked_items = _blocked_journal_items(plan_dir)
     before = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
+    source_archive = _write_source_archive(plan_dir)
 
     (plan_dir / "plan.md").write_text(_render_core(source, meta), encoding="utf-8")
     shutil.rmtree(plan_dir / "phases")
@@ -332,6 +431,7 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
         (decisions_dir / "legacy-discussion.md").write_text(
             "# Legacy discussion\n\n" + discussion + "\n", encoding="utf-8")
 
+    _append_layout_activation(plan_dir)
     plan_item_state.build_states(plan_dir)
     plan_decisions.build_views(plan_dir)
     plan_status.build_status(plan_dir)
@@ -340,7 +440,7 @@ def migrate(plan_dir, *, inventory_path=None) -> dict:
     weights = _weights(plan_dir, before)
     weight_path = plan_dir / "artifacts" / "p2-weight-before-after.json"
     weight_path.write_text(json.dumps(weights, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return {"inventory": report, "weights": weights}
+    return {"inventory": report, "weights": weights, "source_archive": source_archive}
 
 
 def migrate_safely(source, *, dry_run=False, output=None, inventory_path=None) -> dict:

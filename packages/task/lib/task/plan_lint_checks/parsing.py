@@ -387,6 +387,11 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     for js in sorted(plan_dir.rglob("*.js")):
         if not js.is_file():
             continue
+        # A lossless v1 source snapshot is provenance, not a live plan-owned
+        # workflow location.  Its historical scripts must not be reclassified
+        # as v2 topology violations.
+        if js.relative_to(plan_dir).parts[:2] == ("artifacts", "migration-source-v1"):
+            continue
         try:
             text = js.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):

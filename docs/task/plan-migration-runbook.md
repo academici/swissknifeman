@@ -30,10 +30,11 @@ python3 packages/task/scripts/plan-migrate.py \
 python3 packages/task/scripts/plan-lint.py "$MIGRATION_TMP/$PLAN_ID"
 ```
 
-Green means the migrator prints `MIGRATED: …`, writes the requested inventory, and the generated
-output passes `plan-lint`. Inspect the inventory before continuing: every legacy element must be
-accounted for, and any warning or missing carrier is a reason to stop and repair the input or the
-migrator first.
+Green means the migrator prints `MIGRATED: …`, writes the requested inventory, preserves exact
+byte-identical copies of the complete legacy plan tree in `artifacts/migration-source-v1/` with
+its SHA-256 manifest, and the generated output passes `plan-lint`. Inspect both the inventory and
+that source archive before continuing: every legacy element and every source byte must be accounted
+for, and any warning or missing carrier is a reason to stop and repair the input or the migrator first.
 
 A legacy plan can convert structurally and still fail current lint because it predates a required
 read-budget contract, has a stale phase handoff, or lacks a canonical Decision Log table. Treat

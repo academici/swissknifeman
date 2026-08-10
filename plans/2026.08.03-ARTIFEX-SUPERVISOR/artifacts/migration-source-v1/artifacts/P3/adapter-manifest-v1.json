@@ -1,0 +1,142 @@
+{
+  "base_prototype": {
+    "files": [
+      {
+        "path": "artifex/__init__.py",
+        "sha256": "4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8"
+      },
+      {
+        "path": "artifex/__main__.py",
+        "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+      },
+      {
+        "path": "artifex/compiler.py",
+        "sha256": "b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c"
+      },
+      {
+        "path": "artifex/store.py",
+        "sha256": "dde40059630c7c9932c8421d920159f0f473413992cc1506ef18529968280aba"
+      },
+      {
+        "path": "artifex/authority.py",
+        "sha256": "5b10b2cd17606b6269d0956adabc803302aed5101474b12e8976a7f0780edf6d"
+      },
+      {
+        "path": "artifex/dispatch.py",
+        "sha256": "5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274"
+      },
+      {
+        "path": "artifex/scheduler.py",
+        "sha256": "e282fcedfe499fdbc7cbdd27fc8a144a03cf3c66046fd6126ad57f074bfa0921"
+      },
+      {
+        "path": "artifex/cli.py",
+        "sha256": "1929097de8760beee0f15574cbbf35e2f97149e0a9f0921e73797b5313f6d085"
+      },
+      {
+        "path": "tests/__init__.py",
+        "sha256": "a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c"
+      },
+      {
+        "path": "tests/support.py",
+        "sha256": "c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d"
+      },
+      {
+        "path": "tests/test_compiler.py",
+        "sha256": "0d87ac3632287fcca9f376a116f7d979546c6c3d29b86fbe7b5e02ec986f337b"
+      },
+      {
+        "path": "tests/test_store.py",
+        "sha256": "1c7941e0f7f96f5db8d35bae4ff72e7a36c093b2bff5b6260f8aa2032409281e"
+      },
+      {
+        "path": "tests/test_authority.py",
+        "sha256": "c6cd0ae140249d2581b663ee145af0bc0fa24abd18ea700dec20899d50e43eda"
+      },
+      {
+        "path": "tests/test_scheduler.py",
+        "sha256": "f743c7fba31f878bb790cce2bd128af04d004aa5d10ddfe9fa5185938065d4b6"
+      },
+      {
+        "path": "tests/test_cli.py",
+        "sha256": "3421e6afd5d08d6a39ada450988768173e424da043fc06c7e9dcc0732bbb277c"
+      },
+      {
+        "path": "tests/test_dispatch.py",
+        "sha256": "8a96927bf9db264988ca0ce9c631570de2e6d79dc092429917257a0c1580bce6"
+      },
+      {
+        "path": "tests/test_integration.py",
+        "sha256": "941bbdc5b6ea52d762ac75bdb21a61c896a50bef21b4f0c257848f982ac83815"
+      },
+      {
+        "path": "README.md",
+        "sha256": "dabfea98dca1b3d7fdffddffaf28a12d2a1baf709d4ca196fe09246f09880d3f"
+      }
+    ],
+    "git_commit": "6c2c2ef3",
+    "path": "artifacts/P2/prototype-manifest-v1.json",
+    "sha256": "bbd19ef8dab464e33b58be07519173127103528dcd321449557a4c771db312a1"
+  },
+  "current_files": [
+    {
+      "path": "artifacts/supervisor/artifex/activity.py",
+      "sha256": "2a1f460f04c18e77fdc9b571515d6780d94af4ab19d836a325efc5c16a00481c"
+    },
+    {
+      "path": "artifacts/supervisor/artifex/cli.py",
+      "sha256": "1fd5261fd59f934860c5071700c7421e614da67f2c45074e0cc2d2d58fe5efaf"
+    },
+    {
+      "path": "artifacts/supervisor/artifex/worker.py",
+      "sha256": "b0f53037e550ac6418e16eeba1da21305e129d7ce6254b792d269661926d0dd2"
+    },
+    {
+      "path": "artifacts/supervisor/artifex/scheduler.py",
+      "sha256": "14f423ee20e3258f99e5d9ad9dc7331e2d46cdb526adec81779e7ead76a033a6"
+    },
+    {
+      "path": "artifacts/supervisor/artifex/providers/codex.py",
+      "sha256": "225b63f281a70564b8d3ab70af6f62e34f30cedc0292107a21cfe274f7dc80de"
+    },
+    {
+      "path": "artifacts/supervisor/artifex/providers/claude_code.py",
+      "sha256": "e6ef9e89ea0daa8c9325b4a8f735a7f3b4a615e3ff4911aa945c4447dbcaa52c"
+    },
+    {
+      "path": "artifacts/supervisor/tests/test_cli.py",
+      "sha256": "247f6a794c8d40485920d8f2748ae3bd4d740c09cff76040654958723341cb7d"
+    },
+    {
+      "path": "artifacts/supervisor/tests/test_provider_activity.py",
+      "sha256": "10b2f91ac4f98429505da0cc3b3a707782447f56d69a799d0720cf463384bfa0"
+    },
+    {
+      "path": "artifacts/supervisor/tests/test_adapter_evidence.py",
+      "sha256": "bf1eb6604fbb2804de2831372609e4c9f857b28bedf026a878e330f3c5c829df"
+    },
+    {
+      "path": "artifacts/P3/probe-adapters.py",
+      "sha256": "d9e545fd7d534a1e3c295c166975ac6e68f7f33ce06585e566f368eb0589a764"
+    },
+    {
+      "path": "artifacts/P3/validate-adapters.py",
+      "sha256": "3f0021b35746cbc5bca176077544b540d5be4adf1ef6587b3e9d3863fa1b327e"
+    },
+    {
+      "path": "artifacts/P3/provider-parity-v1.json",
+      "sha256": "35e69e465394f324e7881084267f9048332ec074cdc582bf34beb1f83c648610"
+    },
+    {
+      "path": "artifacts/P3/provider-smoke/codex.json",
+      "sha256": "8c0444c7c132110d2abc859394f43d29cc29cd4b24a04e2eb05900d384788c9c"
+    },
+    {
+      "path": "artifacts/P3/provider-smoke/claude-code.json",
+      "sha256": "be77a2ce08f7723f9226e3cfb8ccb9815433c580f3c040369d34c37f4e7de0d2"
+    }
+  ],
+  "manifest_version": "1.0.0",
+  "readiness": "observed-current-tree",
+  "schema_version": "artifex-adapter-manifest-v1"
+}

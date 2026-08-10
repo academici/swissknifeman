@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "2026.08.03-ARTIFEX-SUPERVISOR",
+  "phase": "P3",
+  "closed_at": "2026-08-04",
+  "closed_by": {"command": "plan-close", "actor": "implementation/low"},
+  "phase_status": "🟠 Done with deviations",
+  "git": {"head_sha": "5c31d408bd301024f327870809ee069f9d23f08f", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "3bcf2e75691fb4c3c43c4f4b6295c1849cd7ab1e5ab9f9e3465a12a3aab48837",
+    "phases/P3.md": "185b28dddcb8ca1910eb806a5763342a78d3eb5eaba8c562b0e2107717438c15"
+  },
+  "items": [
+    {"id": "P3.1", "status": "🟢 Done", "evidence_class": "real", "evidence": "item commit 1a87d960; P3 closure rerun: supervisor suite includes Codex mapper coverage"},
+    {"id": "P3.2", "status": "🟢 Done", "evidence_class": "real", "evidence": "item commit cbc20abf; P3 closure rerun: supervisor suite includes Claude mapper coverage"},
+    {"id": "P3.3", "status": "🟢 Done", "evidence_class": "real", "evidence": "item commit f708310e; validate-provider-parity.py: 62 fields, 5 capabilities, 10 exits"},
+    {"id": "P3.4", "status": "🟠 Done with deviations", "evidence_class": "real", "evidence": "item commit d1362247; 52 supervisor tests; probe/adapter validators prove two exact non-green zero-activity readiness rows"}
+  ],
+  "gates": [
+    {"id": "supervisor-unittest", "status": "PASS", "evidence_class": "real", "evidence": "PYTHONPATH=plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor python3 -m unittest discover -s plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/supervisor/tests -p 'test_*.py' — 52 tests OK (на 5c31d408)"},
+    {"id": "validate-provider-parity", "status": "PASS", "evidence_class": "real", "evidence": "validate-provider-parity.py — 62 fields, 5 capabilities, 10 exits (на 5c31d408)"},
+    {"id": "probe-adapters", "status": "PASS", "evidence_class": "real", "evidence": "probe-adapters.py — 2 non-green rows; provider activity process_count=0 (на 5c31d408)"},
+    {"id": "validate-adapters", "status": "PASS", "evidence_class": "real", "evidence": "validate-adapters.py — two exact non-green zero-activity rows (на 5c31d408)"}
+  ],
+  "metrics": [
+    {"name": "items_green", "value": "3/4", "label": "real"},
+    {"name": "supervisor_tests", "value": "52", "label": "real"},
+    {"name": "provider_readiness_rows", "value": "2 non-green / 0 processes", "label": "real"}
+  ],
+  "limitations": [
+    "P1.6 admission validator remains red before provider activity because its frozen parent_task_contract_hash differs from current P3.4 successor contract.",
+    "Codex no-tool carrier is unproven and installed Claude Code version drifts from the pinned probe; both readiness rows remain non-green with zero provider processes.",
+    "The worktree was dirty at closure; unrelated changes were not used as P3 evidence."
+  ],
+  "external_side_effects": []
+}

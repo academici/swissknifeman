@@ -16,7 +16,7 @@ import unittest
 from pathlib import Path
 
 import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
-from task import task_contract  # noqa: E402
+from task import plan_layout, task_contract  # noqa: E402
 from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -431,9 +431,13 @@ class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
     """The prerequisite's ordinary-path proof: every current Artifex item stays runnable."""
 
     def test_all_current_unique_items_allow_without_foreign_d50_provenance(self):
-        item_ids = []
-        for phase_path in sorted((ARTIFEX_PLAN_ROOT / "phases").glob("P*.md")):
-            item_ids.extend(re.findall(r"^###\s+(P\d+\.\d+)\b", phase_path.read_text(encoding="utf-8"), re.M))
+        if plan_layout.layout_version(ARTIFEX_PLAN_ROOT) == "v2":
+            item_ids = [spec.stem for phase_id in plan_layout.phase_paths(ARTIFEX_PLAN_ROOT)
+                        for spec in plan_layout.item_spec_paths(ARTIFEX_PLAN_ROOT, phase_id)]
+        else:
+            item_ids = []
+            for phase_path in sorted((ARTIFEX_PLAN_ROOT / "phases").glob("P*.md")):
+                item_ids.extend(re.findall(r"^###\s+(P\d+\.\d+)\b", phase_path.read_text(encoding="utf-8"), re.M))
         self.assertTrue(item_ids)
         self.assertEqual(len(item_ids), len(set(item_ids)))
         self.assertTrue({"P3.5", "P3.6", "P3.7", "P3.8"}.issubset(item_ids))

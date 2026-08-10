@@ -1,0 +1,124 @@
+{
+  "admission_hash": "9bdb14b6cebae3ff1777e902f734a6fde776a2d5a93f4fbf937fdba40a52735a",
+  "admission_version": "1.0.0",
+  "grant": {
+    "branch": "p5-business-trials",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 64,
+      "max_output_bytes": 16384,
+      "max_slices": 1,
+      "max_turns": 8,
+      "timeout_ms": 180000,
+      "token_limit": 8000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary"
+    ],
+    "catalog_hash": "df5d7545b3d87fa3e78c567eb708e8dfb5f3d0983b789d7ebb1838c3daf2745f",
+    "controlled_root": "mktemp:p5-p5-2-p5.2-slice-02-worktree-binding",
+    "expiry": "2026-08-12T23:59:59Z",
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "grant_hash": "036a08e9a32911886c4541c0f8d9319407ff4bb0fd79ccaeedb5cc4d26ea0214",
+    "grant_id": "D105:p5.2-slice-02-worktree-binding",
+    "grant_version": "1.0.0",
+    "max_slices": 1,
+    "owner_decision": "D105",
+    "owner_marker": "[OWNER-GRANT:G-OWNER-P5-BUSINESS]",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "request_hash": "ec16d0c556abac6f106b285ff6bc84da1afb782f0466b7ed4a60feb70aeef52b",
+    "revoked": false,
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-grant-v1",
+    "task_hash": "54b7c327b06f0cbfab45a98da3ce0149dfbdd3e78748a3a82f84f401828fb9cc",
+    "task_id": "p5.2-slice-02-worktree-binding"
+  },
+  "purpose": "business-trial",
+  "replay": {
+    "attempt": 1,
+    "events": [],
+    "grant_id": "D105:p5.2-slice-02-worktree-binding",
+    "idempotency_key": "b43346aadeba6b6bafa4b95626cee7abb3761472b35859e46c34d4fb5ca497f4",
+    "replay_hash": "833eb5784db24c095158b80f628f27af62f7000c38c04eec32947c91df7ef150",
+    "run_id": "p5-business:p5.2-slice-02-worktree-binding",
+    "schema_version": "artifex-business-dispatch-replay-v1",
+    "slice_id": "p5.2-slice-02-worktree-binding:1",
+    "task_id": "p5.2-slice-02-worktree-binding",
+    "trial_id": "p5.2-slice-02-worktree-binding",
+    "used_slices": 0
+  },
+  "schema_version": "artifex-business-dispatch-admission-v1",
+  "task": {
+    "acceptance_refs": [
+      "REL-ACCEPTED-SCOPE",
+      "REL-RECOVERY",
+      "REL-IDEMPOTENCY",
+      "REL-VALIDATION",
+      "REL-BUDGET",
+      "SEC-AUTHORITY",
+      "SEC-PRIVACY",
+      "SEC-WORKTREE",
+      "SEC-HOOK-INTEGRITY",
+      "EVD-SOURCE-HASHES",
+      "EVD-INDEPENDENT-ADJUDICATOR",
+      "EVD-UNKNOWN-PRESERVATION",
+      "PRV-PARITY-SCOPE"
+    ],
+    "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 64,
+      "max_output_bytes": 16384,
+      "max_slices": 1,
+      "max_turns": 8,
+      "timeout_ms": 180000,
+      "token_limit": 8000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary"
+    ],
+    "catalog_hash": "df5d7545b3d87fa3e78c567eb708e8dfb5f3d0983b789d7ebb1838c3daf2745f",
+    "controlled_root": "mktemp:p5-p5-2-p5.2-slice-02-worktree-binding",
+    "files": [
+      "packages/artifex/lib/artifex/cli.py",
+      "packages/artifex/lib/artifex/scheduler.py",
+      "packages/artifex/lib/artifex/worker.py"
+    ],
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "manifest_version": "1.0.0",
+    "parent_item_id": "P5.2",
+    "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "repository": "swissknifeman-controlled-disposable",
+    "request_hash": "ec16d0c556abac6f106b285ff6bc84da1afb782f0466b7ed4a60feb70aeef52b",
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-task-v1",
+    "task_hash": "54b7c327b06f0cbfab45a98da3ce0149dfbdd3e78748a3a82f84f401828fb9cc",
+    "task_id": "p5.2-slice-02-worktree-binding",
+    "validation": [
+      "scoped-git-diff",
+      "frozen-acceptance",
+      "rollback-to-exact-base"
+    ]
+  },
+  "trial_id": "p5.2-slice-02-worktree-binding",
+  "usage": {
+    "max_slices": 1,
+    "reusable": false,
+    "used_slices": 0
+  }
+}

@@ -11,7 +11,7 @@ try:
 except ImportError:
     from fixtures import write_valid_plan
 
-from task import plan_bundle, plan_gates, plan_lint, plan_weight
+from task import journal, plan_bundle, plan_gates, plan_item_state, plan_lint, plan_status, plan_weight
 
 
 DATA = Path(__file__).resolve().parent / "data"
@@ -48,6 +48,12 @@ class TestReadBudgetGate(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         plan_dir = write_valid_plan(Path(tmp.name), layout="v2")
+        journal.append(plan_dir, journal.new_entry(
+            plan_id=plan_dir.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="in-progress",
+        ))
+        plan_item_state.build_states(plan_dir)
+        plan_status.build_status(plan_dir)
         contract = plan_dir / "root" / "contracts" / "read-budget-v1.md"
         contract.write_text(contract.read_text(encoding="utf-8").replace(
             "<= 100000", "<= 100"), encoding="utf-8")

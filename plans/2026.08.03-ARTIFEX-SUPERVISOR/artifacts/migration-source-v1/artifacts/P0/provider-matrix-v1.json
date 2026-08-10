@@ -1,0 +1,50 @@
+{
+  "schema_version": "provider-matrix-v1",
+  "observed_at": "2026-08-03",
+  "scope": "local installed CLI surface; bounded no-write temporary-git observations",
+  "providers": [
+    {
+      "provider": "codex",
+      "availability": "available",
+      "version": "codex-cli 0.146.0",
+      "record": "provider-probes/codex.json",
+      "capabilities": {
+        "structured_output": "supported",
+        "machine_events": "supported",
+        "permission_boundary": "supported",
+        "ephemeral_session": "supported",
+        "child_agent_control": "unknown"
+      },
+      "accounting": {
+        "usage": "observed",
+        "cache": "unknown",
+        "cost": "unknown"
+      },
+      "session_identity": "observed"
+    },
+    {
+      "provider": "claude-code",
+      "availability": "available",
+      "version": "2.1.220 (Claude Code)",
+      "record": "provider-probes/claude-code.json",
+      "capabilities": {
+        "structured_output": "degraded",
+        "machine_events": "supported",
+        "permission_boundary": "supported",
+        "ephemeral_session": "unsupported",
+        "child_agent_control": "supported"
+      },
+      "accounting": {
+        "usage": "observed",
+        "cache": "unknown",
+        "cost": "observed"
+      },
+      "session_identity": "observed"
+    }
+  ],
+  "harness_crosswalk": {
+    "provider_audit": "read-only provider-qualified render audit",
+    "exec_wave": "Claude Code only; sequential process worker; no Codex driver"
+  },
+  "verdict": "Capability states are local observations; unknown is not zero or parity."
+}

@@ -1,0 +1,93 @@
+{
+  "schema_version": "dispatch-grant-set-v1",
+  "set_version": "1.0.0",
+  "grants": [
+    {
+      "schema_version": "dispatch-grant-v1",
+      "grant_version": "1.0.0",
+      "grant_id": "D74-p3-smoke-codex-v1",
+      "grant_hash": "c9ed389814063a9eaca7b199bced7aba9a28584b31b50505934cea1ccbc4af3a",
+      "owner_decision": "D74",
+      "purpose": "provider-readiness-smoke",
+      "task_id": "p3-smoke-codex-v1",
+      "task_hash": "e8712127a818303474b862b9ad57f1954bdeecb72f829c97d17aa1e612709ff1",
+      "provider": "codex",
+      "route": {
+        "model_class": "implementation",
+        "effort": "high"
+      },
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary",
+        "ephemeral_session"
+      ],
+      "workspace": {
+        "kind": "temporary-empty-git",
+        "creation": "fresh-per-attempt",
+        "preimage": "empty-git-tree",
+        "postimage": "equals-preimage"
+      },
+      "permissions": {
+        "reads": [],
+        "writes": [],
+        "tools": []
+      },
+      "budgets": {
+        "max_slices": 1,
+        "timeout_ms": 180000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 8,
+        "max_turns": 1,
+        "max_output_bytes": 4096,
+        "token_limit": 2048,
+        "cost_limit_microunits": 1000000
+      },
+      "max_slices": 1,
+      "revoked": false
+    },
+    {
+      "schema_version": "dispatch-grant-v1",
+      "grant_version": "1.0.0",
+      "grant_id": "D74-p3-smoke-claude-code-v1",
+      "grant_hash": "b30831c314e9c40540135745ff137bf58dbef261341bad540eea4f0a9e6adaeb",
+      "owner_decision": "D74",
+      "purpose": "provider-readiness-smoke",
+      "task_id": "p3-smoke-claude-code-v1",
+      "task_hash": "894717db5c6b4d286198a2f8af3cbc63e1bf65b365a92f55e5244e67a794b55b",
+      "provider": "claude-code",
+      "route": {
+        "model_class": "implementation",
+        "effort": "high"
+      },
+      "capabilities": [
+        "structured_output",
+        "machine_events",
+        "permission_boundary"
+      ],
+      "workspace": {
+        "kind": "temporary-empty-git",
+        "creation": "fresh-per-attempt",
+        "preimage": "empty-git-tree",
+        "postimage": "equals-preimage"
+      },
+      "permissions": {
+        "reads": [],
+        "writes": [],
+        "tools": []
+      },
+      "budgets": {
+        "max_slices": 1,
+        "timeout_ms": 180000,
+        "max_envelope_bytes": 65536,
+        "max_event_count": 8,
+        "max_turns": 1,
+        "max_output_bytes": 4096,
+        "token_limit": 2048,
+        "cost_limit_microunits": 1000000
+      },
+      "max_slices": 1,
+      "revoked": false
+    }
+  ]
+}

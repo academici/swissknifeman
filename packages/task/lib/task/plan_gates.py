@@ -189,6 +189,20 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
         _error(diag, plan_dir / "plan.md", f"не удалось загрузить вход гейта: {exc}")
         return
 
+    try:
+        active_phases = {phase_id for phase_id, status in plan_layout.phase_statuses(plan_dir).items()
+                         if status == plan_status.STATUS_PROGRESS}
+    except plan_layout.PlanLayoutError:
+        # Isolated gate fixtures and pre-projection diagnostics have no owner
+        # status view yet.  Preserve the previous all-items fail-closed check
+        # until the generated carrier exists.
+        active_items = measured["items"]
+    else:
+        active_items = [item for item in measured["items"]
+                        if item["item_id"].split(".", 1)[0] in active_phases]
+    if not active_items:
+        return
+
     admission = measured["totals"].get("admission") or {}
     contract = admission.get("contract")
     if contract is None:
@@ -199,7 +213,7 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
     threshold = contract["item_tokens"]
     calibration = _calibration_label(measurer)
     limits = measurer.limits
-    for item in measured["items"]:
+    for item in active_items:
         if item.get("admission_state") != "ready" or item.get("admission_pass") is not False:
             continue
 

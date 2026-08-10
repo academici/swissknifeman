@@ -1,0 +1,215 @@
+{
+  "generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+  "generation_version": "1.0.0",
+  "predecessor": {
+    "commit": "124df816",
+    "digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "generation": "G2"
+  },
+  "schema_version": "artifex-business-successor-generation-v1",
+  "successor": {
+    "generation": "G2B",
+    "package_files": [
+      {
+        "path": "packages/artifex/AGENTS.md",
+        "sha256": "155090d4559697b7a03fd9a078bdc468db39c0cd382342349e751749f2191b8a"
+      },
+      {
+        "path": "packages/artifex/CLAUDE.md",
+        "sha256": "0842818d6424c4da4b59e51922c3977a835f878103943db5297d8cefa7816872"
+      },
+      {
+        "path": "packages/artifex/README.md",
+        "sha256": "e0aec6b70963965d4f8b96c96e4158f5e7b2dfdbbfc6937713bce05d5378a867"
+      },
+      {
+        "path": "packages/artifex/bin/artifex",
+        "sha256": "39d8faf5f37c78521788c30196411f5e303d4645d1da087840368a453f078684"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/__init__.py",
+        "sha256": "4f1c24bd05b0bd2a537e33039023ae45937cc38f52dd987c2b7b8e2ebf7263c8"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/__main__.py",
+        "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/activity.py",
+        "sha256": "bba23d79bc4f06379ed6c55c13de0140f85fb4cab60ce3dc5388b92660157074"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/authority.py",
+        "sha256": "574e0d066cab85a9b71601be0e7b6f9c8dc924582ea95d0d0b658a62409df7f2"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/business_dispatch.py",
+        "sha256": "2406f64fe7e14dcdc4fe51a3b5998a7787f71f670b5b67e6b48a4af06167f347"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/cli.py",
+        "sha256": "d52a64b269a59a6fc28102cb8603cd7c9e3956ea24fce6e41f2ccec0860915e4"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/compiler.py",
+        "sha256": "b400f5ab45b9795d41895a851599f605235fa2c77f04bbac9a094c10e529f60c"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/dispatch.py",
+        "sha256": "5ac1b2b48beaa42c4091875cd9187859d89680e22d30cf05e0c1f361f9e7c274"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/faults.py",
+        "sha256": "9a91abcaa6e326259c8aaa59f76888bf8f6675d02e618d43aa8b085eb6297647"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/providers/__init__.py",
+        "sha256": "3d6fd66f73adf6dfde76cd49c9bb8219cae9ca7bec5d3f6eb2634d0e42700316"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/providers/claude_code.py",
+        "sha256": "f0b9f6be6689b3236a5313753f3382fc2eed7656034073e9f36d9a1f65d9188d"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/providers/codex.py",
+        "sha256": "d024b0ddb8a82db9c89054f57e028942351dfac9385eba66ee3abc58c8529966"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/providers/common.py",
+        "sha256": "5f6d49ba079e2c959134202fc0281e5d64d6295e67cf8615a673778be5157888"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/providers/parity.py",
+        "sha256": "b66e7540975d0dbdfde37cb5c7362b3cc09e49908e9952de9953066e301a4610"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/scheduler.py",
+        "sha256": "924a9f74a1a87fe6589bfb2fc0438250c44180aa19bf1c37419cdc815deed882"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/security.py",
+        "sha256": "0eac2f1196e7d3211ed14ec96373a41c1cf1704925a059f7092a3bfdf61a8cce"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/store.py",
+        "sha256": "876f2174aad18de58ec1c28876d2bffcb7f0442b30fbca04cb135d991dc8cc6e"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/telemetry.py",
+        "sha256": "a743439a18123391aecc1b8109502ddf7565ffe1338e6cbff23647e68056b9de"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/worker.py",
+        "sha256": "51caf61f9ed51dcad0ad6ee5a32484caf11ce1222a0af38ec3f3a95dcf00310e"
+      },
+      {
+        "path": "packages/artifex/lib/artifex/worktree.py",
+        "sha256": "f6988ddacdccc6153e62a6e8683abac735d4b3ee4dd239b925ce1f6c9add4d4f"
+      },
+      {
+        "path": "packages/artifex/scripts/test.sh",
+        "sha256": "578f9f9529b33f3bf5b603041dcef46e2bc15a52d3adb2f889260258fbe844ef"
+      },
+      {
+        "path": "packages/artifex/scripts/validate.sh",
+        "sha256": "2dd31a860843a2859fdb40439aa7c60706ffeaecaf24163866b3508eaa59ea23"
+      },
+      {
+        "path": "packages/artifex/tests/__init__.py",
+        "sha256": "a055448a4351ca5e026d1c1207236ece56e4dec4a294945b2ae2d182b831151c"
+      },
+      {
+        "path": "packages/artifex/tests/support.py",
+        "sha256": "c8883bdf8dfcee12b6ae1ffabcb6598c983d8dc307bc53895c647fa3ad22750d"
+      },
+      {
+        "path": "packages/artifex/tests/test_adapter_evidence.py",
+        "sha256": "b30ae7743c5d31fec0018e908d56c0545499c904fc3c6a7ec3a64b356ebdae45"
+      },
+      {
+        "path": "packages/artifex/tests/test_attention_telemetry.py",
+        "sha256": "3854c8ad79bba5b543d65bbb2ba8304959280dab53b39dd1e28fdc41efc1e9dc"
+      },
+      {
+        "path": "packages/artifex/tests/test_authority.py",
+        "sha256": "6762040af226c0097e222fd8ad2b9dc050d5ce4d2bf4fbab5d6f5b727f61df9f"
+      },
+      {
+        "path": "packages/artifex/tests/test_business_dispatch.py",
+        "sha256": "9b4767808c3256dadaeadfb1eb743793fde847b9edde5b204eb3b7bc32f4b549"
+      },
+      {
+        "path": "packages/artifex/tests/test_business_provider_projection.py",
+        "sha256": "21eb4847a0c276600b3bed464ae43d37b303c99251f87fc457fb92a9b7aac42f"
+      },
+      {
+        "path": "packages/artifex/tests/test_cli.py",
+        "sha256": "0dcce445d1d9f705edfb3d922a3698d7aae5791b98b939cd064606ed891fe2e7"
+      },
+      {
+        "path": "packages/artifex/tests/test_compiler.py",
+        "sha256": "67e68be15b2c6b401c9f1ceb99cd7b8a7fe31a0512f8c4786821a934574efa04"
+      },
+      {
+        "path": "packages/artifex/tests/test_dispatch.py",
+        "sha256": "1f874ff9639a6f841aa50de9a4086855521cfcbf5a3b4dedf527db40a477ad5b"
+      },
+      {
+        "path": "packages/artifex/tests/test_fault_matrix.py",
+        "sha256": "d24909b4cd985838f24ba50e16699c7b7c9f73489bf016ad38e729cf749684fc"
+      },
+      {
+        "path": "packages/artifex/tests/test_integration.py",
+        "sha256": "07fc5bcc6da634a6875d8477000fc4fa48ac355c175ab3f939c17b32022f133b"
+      },
+      {
+        "path": "packages/artifex/tests/test_package_promotion.py",
+        "sha256": "e67caef0a176ff15d1d08e8b0545e67845a7765a84758355dc7620d825bb5403"
+      },
+      {
+        "path": "packages/artifex/tests/test_provider_activity.py",
+        "sha256": "84c1701762356b9c191332b07b9dda8fde373ca16cbe591fd1c51a14af5c9357"
+      },
+      {
+        "path": "packages/artifex/tests/test_provider_claude_code.py",
+        "sha256": "3a05f519f6815552e4e4ecd4c6545011d41b8c2213388418e661fddda464012a"
+      },
+      {
+        "path": "packages/artifex/tests/test_provider_codex.py",
+        "sha256": "468515b1fdb9c0ca3ab6a7a7ee23af9934951c759f9814f73a612cb2bacf9cd1"
+      },
+      {
+        "path": "packages/artifex/tests/test_provider_integration.py",
+        "sha256": "c58ff91408e1887f5f232f64d99ae433c5b24b77cccf4e6536588f64a733650e"
+      },
+      {
+        "path": "packages/artifex/tests/test_provider_parity.py",
+        "sha256": "0001aff64687a867877eaa3929aeb29c869a95fe6c71a82e04db70876ea2f651"
+      },
+      {
+        "path": "packages/artifex/tests/test_recovery_faults.py",
+        "sha256": "2e659149c8a0a1ec7633f5b6c7fe3f7d4e950721724cd3f9d942e3a03e50fecc"
+      },
+      {
+        "path": "packages/artifex/tests/test_scheduler.py",
+        "sha256": "0469a5978e0ade721704af623f271fb10e824bd978371f65fb0480a33ad9a6d9"
+      },
+      {
+        "path": "packages/artifex/tests/test_security_boundaries.py",
+        "sha256": "3be8d36fc74a1221346becec540934a8c319aba7d5ea9131c32da3b8c81e9cf7"
+      },
+      {
+        "path": "packages/artifex/tests/test_store.py",
+        "sha256": "07f4196a735cbaf753c9565978fbdc055827d28df14c633cf6889f6c92ac0650"
+      },
+      {
+        "path": "packages/artifex/tests/test_worker_lifecycle.py",
+        "sha256": "db6d9d80764236224bd5cba16b53a0514f57bf67e6a2bb4a26fabb8476596286"
+      },
+      {
+        "path": "packages/artifex/tests/test_worktree_isolation.py",
+        "sha256": "78d01b95d43936a24a8b083a853195a061e82b7e9ea72261ba88cfe3b16466f3"
+      }
+    ]
+  }
+}

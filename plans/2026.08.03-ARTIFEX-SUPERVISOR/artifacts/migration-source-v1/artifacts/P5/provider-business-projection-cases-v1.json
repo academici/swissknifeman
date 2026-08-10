@@ -1,0 +1,6 @@
+{
+  "schema_version": "artifex-provider-business-projection-cases-v1",
+  "case_version": "1.0.0",
+  "positive": ["codex-d108-canary", "claude-d108-canary"],
+  "negative": ["version-drift", "network", "web", "children", "user-config", "resume", "bypass", "unbounded-tools"]
+}

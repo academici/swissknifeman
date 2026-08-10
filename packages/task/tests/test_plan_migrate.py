@@ -33,6 +33,10 @@ class PlanMigrateTests(unittest.TestCase):
 ## Обсуждение
 
 Обсуждение.
+
+## Historical Audit
+
+Этот свободный исторический текст не имеет v2 runtime-carrier, но не должен исчезнуть.
 """
         (self.source / "plan.md").write_text(plan, encoding="utf-8")
 
@@ -41,6 +45,9 @@ class PlanMigrateTests(unittest.TestCase):
 
     def test_dry_run_is_read_only_and_output_is_v2(self):
         before = (self.source / "plan.md").read_bytes()
+        journal_before = (self.source / "journal.jsonl").read_text(encoding="utf-8")
+        phase_before = {path.relative_to(self.source): path.read_bytes()
+                        for path in (self.source / "phases").glob("P*.md")}
         output = self.root / "output"
         result = plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
         self.assertEqual(before, (self.source / "plan.md").read_bytes())
@@ -49,10 +56,28 @@ class PlanMigrateTests(unittest.TestCase):
         self.assertTrue((output / "phases" / "P1" / "P1.1.state.md").is_file())
         self.assertIn("| Layout | v2 |", (output / "plan.md").read_text(encoding="utf-8"))
         self.assertIn("| Version | 0.1.0 |", (output / "status.md").read_text(encoding="utf-8"))
+        archive = output / "artifacts" / "migration-source-v1"
+        manifest = json.loads((archive / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest, result["source_archive"])
+        self.assertEqual((archive / "plan.md").read_bytes(), before)
+        self.assertNotIn("Этот свободный исторический текст",
+                         (output / "plan.md").read_text(encoding="utf-8"))
+        for relative, payload in phase_before.items():
+            self.assertEqual((archive / relative).read_bytes(), payload)
+        self.assertEqual((archive / "journal.jsonl").read_text(encoding="utf-8"), journal_before)
+        self.assertIn("Layout v2 migration activation", (output / "journal.jsonl").read_text(encoding="utf-8"))
         self.assertEqual(plan_status.build_status(output, check=True), output / "status.md")
         before_second_run = {path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()}
         plan_migrate.migrate(output)
         self.assertEqual(before_second_run, {path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()})
+
+    def test_v2_refuses_a_drifted_source_archive(self):
+        output = self.root / "output"
+        plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
+        (output / "artifacts" / "migration-source-v1" / "plan.md").write_text(
+            "повреждено\n", encoding="utf-8")
+        with self.assertRaisesRegex(plan_migrate.MigrationError, "архив исходника миграции повреждён"):
+            plan_migrate.migrate(output)
 
     def test_requires_dry_run_and_output_for_every_source(self):
         with self.assertRaisesRegex(plan_migrate.MigrationError, "inplace-конвертер"):
@@ -77,6 +102,14 @@ class PlanMigrateTests(unittest.TestCase):
                       if row["kind"] == "discussion"]
         self.assertEqual(discussion, [{"kind": "discussion", "present": False, "value": ""}])
         self.assertFalse((output / "decisions" / "legacy-discussion.md").exists())
+
+    def test_dry_run_accepts_english_legacy_decision_headers(self):
+        plan_path = self.source / "plan.md"
+        plan_path.write_text(plan_path.read_text(encoding="utf-8").replace(
+            "| D# | Дата | Решение | Почему |", "| D# | Date | Decision | Why |"), encoding="utf-8")
+        output = self.root / "english-decisions"
+        plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
+        self.assertTrue((output / "decisions" / "D1-legacy.md").is_file())
 
     def test_dry_run_materializes_legacy_blocked_journal_state(self):
         journal.append(self.source, journal.new_entry(

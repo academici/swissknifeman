@@ -1,0 +1,150 @@
+{
+  "g2_predecessor": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+  "g2b_generation_hash": "61d9e34c2e0e51dbf69f0bbb328f6d81994bbbfb3e0a8e78ca2fee05403276d4",
+  "main_tree_delta": false,
+  "schema_version": "artifex-recovery-pilot-results-v1",
+  "self_test": {
+    "child_spawn_detection": {
+      "all_detected": true,
+      "trials": 3
+    },
+    "orphan_after_parent_kill": {
+      "all_orphaned": true,
+      "trials": 3
+    },
+    "reap_window_detection": {
+      "all_detected": true,
+      "trials": 3
+    }
+  },
+  "trials": [
+    {
+      "accepted": false,
+      "admission_hash": "ec6f215597654d32edeaf4bfa9e348481b03ecde5f34cfe0c2518d02568f7cbb",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "child_pid": 2087577,
+      "crash_verified": true,
+      "crashed": true,
+      "cut": "after_intent",
+      "duplicate_refused": false,
+      "mechanism": "real-crash-after-intent",
+      "orphan_verified_dead": true,
+      "provider": "codex",
+      "reconcile": {
+        "outcome": "preimage"
+      },
+      "rollback": true,
+      "trial_id": "p5.3-call-01-crash-after-intent"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "5c356eae64ecf13aced5ac2a45218b201c8c7f864e69fbf76db99372fab586b0",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "child_pid": 2089742,
+      "crash_verified": true,
+      "crashed": true,
+      "cut": "after_observation",
+      "duplicate_refused": false,
+      "mechanism": "real-crash-after-observation",
+      "orphan_verified_dead": true,
+      "provider": "claude-code",
+      "reconcile": {
+        "outcome": "preimage"
+      },
+      "rollback": true,
+      "trial_id": "p5.3-call-02-crash-after-observation"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "24960575a0905e1ec4666a7640dc27de1b9365e3ed3bacd12b3ee3c06741da7d",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "crashed": false,
+      "duplicate_refused": false,
+      "mechanism": "real-duplicate-refusal",
+      "process_count": 1,
+      "provider": "codex",
+      "reason_code": "OK",
+      "reconcile": {
+        "outcome": "preimage"
+      },
+      "rollback": true,
+      "seam_status": "success",
+      "trial_id": "p5.3-call-03-duplicate-dispatch"
+    },
+    {
+      "duplicate_refused": true,
+      "process_spawned": false,
+      "reason": "SLICE_ALREADY_RUN",
+      "trial_id": "p5.3-call-03-duplicate-dispatch"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "5ba7b87f6d760eb4007d0e6bc282c8be637cfc1588949f7a3f7b2f4386796847",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "crashed": false,
+      "duplicate_refused": false,
+      "fake_binary": true,
+      "mechanism": "fake-timeout",
+      "process_count": 1,
+      "provider": "codex",
+      "reason_code": "WALL_TIMEOUT",
+      "reconcile": {
+        "outcome": "preimage"
+      },
+      "rollback": true,
+      "seam_status": "refused",
+      "trial_id": "p5.3-call-04-timeout"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "87fae45c948cb6c8ad665d0f2342daba12f8eeb83ed664949e2e33381fa7a512",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "crashed": false,
+      "duplicate_refused": false,
+      "fake_binary": true,
+      "mechanism": "fake-schema-refusal",
+      "process_count": 1,
+      "provider": "claude-code",
+      "reason_code": "PROVIDER_PROTOCOL_UNKNOWN",
+      "reconcile": {
+        "outcome": "preimage"
+      },
+      "rollback": true,
+      "seam_status": "refused",
+      "trial_id": "p5.3-call-05-schema-refusal"
+    },
+    {
+      "admission_hash": "c997a5f0debdf028291b5c5b1b8c6189e894fac80a483334847b870680716737",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "child_pid_discarded": true,
+      "crash_verified": true,
+      "crashed": true,
+      "cut": "third_state_discard",
+      "duplicate_refused": false,
+      "forensic_changed_paths": [],
+      "mechanism": "real-third-state-orphan",
+      "preserved_worktree": "/tmp/p5-p53-p5.3-call-06-third-state-gehgln72/root",
+      "provider": "claude-code",
+      "reconcile": {
+        "outcome": "owner_unknown",
+        "reason": "PID_TRACKING_DISCARDED_BY_DESIGN"
+      },
+      "trial_id": "p5.3-call-06-third-state"
+    }
+  ],
+  "version_probe": {
+    "claude-code": {
+      "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+      "version": "2.1.222 (Claude Code)"
+    },
+    "codex": {
+      "binary": "/home/vostrikov/.local/bin/codex",
+      "version": "codex-cli 0.146.0"
+    }
+  }
+}

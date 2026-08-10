@@ -1,0 +1,76 @@
+{
+  "g2_predecessor": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+  "g2b_generation_hash": "7a44f9bc2a4e72fb940f29a1b96bbfcc0da2f086448ef4170ab7473358ac5891",
+  "main_tree_delta": false,
+  "schema_version": "artifex-repository-pilot-results-v1",
+  "slices": [
+    {
+      "accepted": false,
+      "admission_hash": "b865ebf8eb57bff3fa8f135fa169e89eacbea95273bc846c92ec890faeb3e722",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": null,
+      "dispatch_business": {
+        "intent_written": false,
+        "usage": 0
+      },
+      "evidence_gap": "harness process error (executor mistake, not a provider/candidate defect): dispatched via an ad-hoc CLI probe outside this harness immediately after the load_indexed/GRANT_BATCHES fix landed, to confirm the seam no longer refused ADMISSION_NOT_INDEXED. The disposable worktree was removed (git worktree remove --force) before its git diff was inspected, so changed_paths cannot be recovered for this slice; the worktree's removal itself proves no residue exists anywhere (rollback holds), but not what, if anything, codex wrote before the PROVIDER_PROTOCOL_UNKNOWN fold failure. This is the real, sole, one-shot attempt for this admission — not retried, per the item's own rule.",
+      "fresh_process": true,
+      "observation": {
+        "kind": "refused",
+        "process_count": 1,
+        "reason_code": "PROVIDER_PROTOCOL_UNKNOWN"
+      },
+      "provider": "codex",
+      "rollback": true,
+      "trial_id": "p5.2r-slice-01-worktree-core"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "09f3c54612589dbb941504283d43065a68c2289c028c03c9deb72b2d1a813e79",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "dispatch_business": {
+        "intent_written": false,
+        "usage": 0
+      },
+      "fresh_process": true,
+      "observation": {
+        "kind": "refused",
+        "process_count": 1,
+        "reason_code": "PROVIDER_PROTOCOL_UNKNOWN"
+      },
+      "provider": "claude-code",
+      "rollback": true,
+      "trial_id": "p5.2r-slice-02-worktree-binding"
+    },
+    {
+      "accepted": false,
+      "admission_hash": "b9ddc9dd2dbae2252eb579555706ea73b4e10fa378e5f9de4d5b26ae63b87bca",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [],
+      "dispatch_business": {
+        "intent_written": false,
+        "usage": 0
+      },
+      "fresh_process": true,
+      "observation": {
+        "kind": "refused",
+        "process_count": 1,
+        "reason_code": "PROVIDER_PROTOCOL_UNKNOWN"
+      },
+      "provider": "codex",
+      "rollback": true,
+      "trial_id": "p5.2r-slice-03-worktree-evidence"
+    }
+  ],
+  "version_probe": {
+    "claude-code": {
+      "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+      "version": "2.1.222 (Claude Code)"
+    },
+    "codex": {
+      "binary": "/home/vostrikov/.local/bin/codex",
+      "version": "codex-cli 0.146.0"
+    }
+  }
+}

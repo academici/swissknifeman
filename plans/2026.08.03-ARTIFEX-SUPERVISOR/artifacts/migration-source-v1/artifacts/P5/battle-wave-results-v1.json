@@ -1,0 +1,599 @@
+{
+  "g2_predecessor": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+  "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+  "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+  "main_tree_delta": false,
+  "owner_decision": "D125",
+  "provider_scope": "single-provider:claude-code",
+  "runs_root_declared": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/.p5.4-noop-runs",
+  "schema_version": "artifex-battle-wave-results-v1",
+  "waves": [
+    {
+      "accepted": true,
+      "admission_hash": "98748df8ec07bae205a0e7ca37109c8c87634ffc5d156a9f8abffcf52f1d9a88",
+      "admission_sha256": "904feb9606b84145d62b357c88a2f8d40bd14c09eb2cddffd5ce3a818b79c593",
+      "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+      "changed_paths": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "declared_files": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "economy": {
+        "coordinator": {
+          "cached_input_tokens": 0,
+          "cost_microunits": 0,
+          "duration_ms": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "turns": 0
+        },
+        "inclusion_bases": {
+          "worker/reasoning_tokens": {
+            "contained_field": "reasoning_tokens",
+            "containing_field": "output_tokens",
+            "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens",
+            "provider": "claude-code"
+          }
+        },
+        "unknown_reasons": {},
+        "worker": {
+          "cached_input_tokens": 373210,
+          "cost_microunits": 1019133,
+          "duration_ms": 194615,
+          "input_tokens": 32,
+          "output_tokens": 14398,
+          "reasoning_tokens": 0,
+          "turns": 22
+        },
+        "zero_bases": {
+          "coordinator": {
+            "component": "coordinator",
+            "path": "packages/artifex/lib/artifex/scheduler.py",
+            "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+          }
+        }
+      },
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "candidate",
+      "observation": {
+        "event_count": 1,
+        "kind": "success",
+        "process_count": 1,
+        "reason_code": "OK"
+      },
+      "order": 1,
+      "pair_id": "wave-01-recovery-fixture",
+      "provider": "claude-code",
+      "rollback": true,
+      "trial_id": "p5.4w-wave-01-recovery-fixture",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": true,
+      "admission_hash": "07c5b3b133db84811ce806fadcfd7f03a133850e4d1d231d9ee3c92bdd60ea3c",
+      "admission_sha256": "e7aa93c7720031176c4f7680280ff3174b00e7c59dc653bc6d2cf8e1c32482d4",
+      "base_commit": "618adbeafb428f259e4c83c79759fcf5dbfdd08b",
+      "changed_paths": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "declared_files": [
+        "packages/artifex/tests/test_recovery_faults.py"
+      ],
+      "economy": {
+        "coordinator": {
+          "cached_input_tokens": 0,
+          "cost_microunits": 0,
+          "duration_ms": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "turns": 0
+        },
+        "inclusion_bases": {
+          "worker/reasoning_tokens": {
+            "contained_field": "reasoning_tokens",
+            "containing_field": "output_tokens",
+            "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens",
+            "provider": "claude-code"
+          }
+        },
+        "unknown_reasons": {},
+        "worker": {
+          "cached_input_tokens": 328409,
+          "cost_microunits": 834468,
+          "duration_ms": 148147,
+          "input_tokens": 30,
+          "output_tokens": 11048,
+          "reasoning_tokens": 0,
+          "turns": 23
+        },
+        "zero_bases": {
+          "coordinator": {
+            "component": "coordinator",
+            "path": "packages/artifex/lib/artifex/scheduler.py",
+            "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+          }
+        }
+      },
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "baseline",
+      "observation": {
+        "event_count": 1,
+        "kind": "success",
+        "process_count": 1,
+        "reason_code": "OK"
+      },
+      "order": 2,
+      "pair_id": "wave-01-recovery-fixture",
+      "provider": "claude-code",
+      "rollback": true,
+      "trial_id": "p5.4b-wave-01-recovery-fixture",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "edebba313950f77bb256d8c904a7aa2ad2dd147ff9c7ae8cf8b658ff45248b81",
+      "admission_sha256": "0060aa5f3c295d09187a69b1ef2aee98e5db2c205f61425d0b91aa6499a1ddf4",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "declared_files": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "candidate",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "PROVIDER_NONZERO"
+      },
+      "order": 3,
+      "pair_id": "wave-02-worktree-isolation",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4w-wave-02-worktree-isolation",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "253da36749e85612cca252e9c6064c3a0048ec5afb7c9d5fbf6a7d6c5da3f70a",
+      "admission_sha256": "1ab05d44922ff0adabfb0ec773bcb699dc30f56c9b189cc8c8a29aadbc7f2d1e",
+      "base_commit": "bde07fb080074280540ea82e9354965af53049bf",
+      "changed_paths": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "declared_files": [
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/worker.py",
+        "packages/artifex/lib/artifex/worktree.py",
+        "packages/artifex/tests/test_worktree_isolation.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-worktree.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/worktree-results-v1.json"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "baseline",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "PROVIDER_NONZERO"
+      },
+      "order": 4,
+      "pair_id": "wave-02-worktree-isolation",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4b-wave-02-worktree-isolation",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "c6a2cd07b6cda55d65bd57d7a8a4d98a673cea33ff586d71519943f8404d8fdc",
+      "admission_sha256": "f8a3f9f9d7b37b5cff330378fed5defdfe24b0b712aea1abebda246d7b7c1ce6",
+      "base_commit": "56c4c1bc64851a36097ca10d5b5ee46f2eb25d87",
+      "changed_paths": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "declared_files": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "candidate",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "BUDGET_TURN_COUNT"
+      },
+      "order": 5,
+      "pair_id": "wave-03-security-boundary",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4w-wave-03-security-boundary",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "07709b27d7297398ac2d2a19c4464652f064ced0ca5a5489a857ec18913716f0",
+      "admission_sha256": "7ee0819c57b40d01c4c942e2820a384f811b6e6bf6909ba8d2e69459c2fbb0e0",
+      "base_commit": "56c4c1bc64851a36097ca10d5b5ee46f2eb25d87",
+      "changed_paths": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "declared_files": [
+        "packages/artifex/lib/artifex/activity.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/security.py",
+        "packages/artifex/tests/test_security_boundaries.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/security-results-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-security.py"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "baseline",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "PROVIDER_NONZERO"
+      },
+      "order": 6,
+      "pair_id": "wave-03-security-boundary",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4b-wave-03-security-boundary",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "5177eb8b1a15242bf7020c8f757a4fd424971c70011a0f1d869bcef9b2ed7409",
+      "admission_sha256": "b296fb53526b35a4a106c8747ffd44aadb7b38343653cf3a50105e2c2da074a4",
+      "base_commit": "17a57adc31c996815fb457a34bfbf1467ca08f2f",
+      "changed_paths": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py"
+      ],
+      "declared_files": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_authority.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/authority-policy-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/contract-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/validate-authority-policy.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-hook-integrity.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/supervisor-run-v1.md"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "candidate",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "BUDGET_TURN_COUNT"
+      },
+      "order": 7,
+      "pair_id": "wave-04-telemetry-assurance",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4w-wave-04-telemetry-assurance",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": false,
+      "admission_hash": "1c0ba11a9b33e287c0909811264d93c1cb09ab441cb515cbac09adbe82a6d4a6",
+      "admission_sha256": "0818c8c70bca6138f2553bf44a2cee8fe90c5c8e80e6fc31ab1e819c6f472cd5",
+      "base_commit": "17a57adc31c996815fb457a34bfbf1467ca08f2f",
+      "changed_paths": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py"
+      ],
+      "declared_files": [
+        "packages/artifex/README.md",
+        "packages/artifex/lib/artifex/authority.py",
+        "packages/artifex/lib/artifex/cli.py",
+        "packages/artifex/lib/artifex/scheduler.py",
+        "packages/artifex/lib/artifex/telemetry.py",
+        "packages/artifex/tests/test_attention_telemetry.py",
+        "packages/artifex/tests/test_authority.py",
+        "packages/artifex/tests/test_scheduler.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/authority-policy-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/contract-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/supervisor-run-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P1/validate-authority-policy.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/assurance-manifest-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/attention-cases-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-assurance.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-hook-integrity.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/supervisor-run-v1.md"
+      ],
+      "economy": null,
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "baseline",
+      "observation": {
+        "event_count": 1,
+        "kind": "provider_unavailable",
+        "process_count": 1,
+        "reason_code": "BUDGET_TURN_COUNT"
+      },
+      "order": 8,
+      "pair_id": "wave-04-telemetry-assurance",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4b-wave-04-telemetry-assurance",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": true,
+      "admission_hash": "81453915338062b75055c7b1fd937cd7a04c517755d531a3413cb9b2b0f6245e",
+      "admission_sha256": "d117112e2dd1ad0a87e31a91ece009cc9a0701972a6b661ac8c005dd5865108c",
+      "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+      "changed_paths": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "declared_files": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "economy": {
+        "coordinator": {
+          "cached_input_tokens": 0,
+          "cost_microunits": 0,
+          "duration_ms": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "turns": 0
+        },
+        "inclusion_bases": {
+          "worker/reasoning_tokens": {
+            "contained_field": "reasoning_tokens",
+            "containing_field": "output_tokens",
+            "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens",
+            "provider": "claude-code"
+          }
+        },
+        "unknown_reasons": {},
+        "worker": {
+          "cached_input_tokens": 2472328,
+          "cost_microunits": 4512510,
+          "duration_ms": 738152,
+          "input_tokens": 52,
+          "output_tokens": 60190,
+          "reasoning_tokens": 0,
+          "turns": 30
+        },
+        "zero_bases": {
+          "coordinator": {
+            "component": "coordinator",
+            "path": "packages/artifex/lib/artifex/scheduler.py",
+            "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+          }
+        }
+      },
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "candidate",
+      "observation": {
+        "event_count": 1,
+        "kind": "success",
+        "process_count": 1,
+        "reason_code": "OK"
+      },
+      "order": 9,
+      "pair_id": "wave-05-committed-gates",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4w-wave-05-committed-gates",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    },
+    {
+      "accepted": true,
+      "admission_hash": "acb96a3e7c894a53a6c91ab1e141fbed6cf48bee7d0a2b6e9fa89c611d38031f",
+      "admission_sha256": "4642c738bd1205d3313f62d8a47f4ccc1f24e2f20b905beaac21c6a816b2e3ed",
+      "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+      "changed_paths": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "declared_files": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/scripts/generate-provider-instructions.py",
+        "packages/harness/tests/test_run_plan_reader.py",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+        "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+      ],
+      "economy": {
+        "coordinator": {
+          "cached_input_tokens": 0,
+          "cost_microunits": 0,
+          "duration_ms": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "turns": 0
+        },
+        "inclusion_bases": {
+          "worker/reasoning_tokens": {
+            "contained_field": "reasoning_tokens",
+            "containing_field": "output_tokens",
+            "evidence_ref": "findings/P5.4-metric-surface-gap-2026-08-06.md F10: the claude-code result record exports usage.{input_tokens,cache_read_input_tokens,output_tokens} and no separate reasoning field; extended-thinking tokens are billed and reported inside output_tokens",
+            "provider": "claude-code"
+          }
+        },
+        "unknown_reasons": {},
+        "worker": {
+          "cached_input_tokens": 1918680,
+          "cost_microunits": 3729466,
+          "duration_ms": 707118,
+          "input_tokens": 56,
+          "output_tokens": 55256,
+          "reasoning_tokens": 0,
+          "turns": 34
+        },
+        "zero_bases": {
+          "coordinator": {
+            "component": "coordinator",
+            "path": "packages/artifex/lib/artifex/scheduler.py",
+            "statement": "the Artifex coordinator is the deterministic scheduler in this file; by D3 every model call is an activity behind the side-effect boundary, so the coordinator envelope is a measured all-zero, not an unmeasured one"
+          }
+        }
+      },
+      "fresh_process": true,
+      "g2b_assurance_hash": "9afea86fd55cef5045a2007791016945b36741c4f32047b4530fa2865ffdbb7f",
+      "g2b_generation_hash": "4773f67e9580c79904f9fdd1b71697100d57e4160705ae8f895ee6541ad63aee",
+      "lane": "baseline",
+      "observation": {
+        "event_count": 1,
+        "kind": "success",
+        "process_count": 1,
+        "reason_code": "OK"
+      },
+      "order": 10,
+      "pair_id": "wave-05-committed-gates",
+      "provider": "claude-code",
+      "rollback": false,
+      "trial_id": "p5.4b-wave-05-committed-gates",
+      "used_slices": 1,
+      "version_probe": {
+        "binary": "/home/vostrikov/.local/share/claude/versions/2.1.222",
+        "version": "2.1.222 (Claude Code)"
+      }
+    }
+  ]
+}

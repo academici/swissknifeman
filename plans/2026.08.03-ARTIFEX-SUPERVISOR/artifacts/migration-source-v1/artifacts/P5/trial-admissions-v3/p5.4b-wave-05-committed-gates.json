@@ -1,0 +1,126 @@
+{
+  "admission_hash": "acb96a3e7c894a53a6c91ab1e141fbed6cf48bee7d0a2b6e9fa89c611d38031f",
+  "admission_version": "1.0.0",
+  "grant": {
+    "branch": "p5-paired-battle-waves",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 512,
+      "max_output_bytes": 65536,
+      "max_slices": 1,
+      "max_turns": 40,
+      "timeout_ms": 900000,
+      "token_limit": 200000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary"
+    ],
+    "catalog_hash": "91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858",
+    "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-05-committed-gates",
+    "expiry": "2026-09-30T23:59:59Z",
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "grant_hash": "4239bbb302668ccc7deece7be8c8fc2a7cce5830f4bda255300102bd9ee0813f",
+    "grant_id": "D125:p5.4b-wave-05-committed-gates",
+    "grant_version": "1.0.0",
+    "max_slices": 1,
+    "owner_decision": "D125",
+    "owner_marker": "[OWNER-GRANT:G-OWNER-P5.4-PAIRED-WAVES]",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "request_hash": "47f0a7408efb19b073e27933e7e68f91ca604eeaf723821661543301fc6bd70d",
+    "revoked": false,
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-grant-v1",
+    "task_hash": "dd431fd91438582a5d64cbf6f3f3013cb0a278abb437a413985524bb0ec718c3",
+    "task_id": "p5.4b-wave-05-committed-gates"
+  },
+  "purpose": "business-trial",
+  "replay": {
+    "attempt": 1,
+    "events": [],
+    "grant_id": "D125:p5.4b-wave-05-committed-gates",
+    "idempotency_key": "764b3b7fbdfb3ec14544a4050730bff573d52c983796b2f89da40a94d209f0f0",
+    "replay_hash": "a0e3419042cc18daec15bb833cf462a1c04c3e811719dc1fa18c75001540c72d",
+    "run_id": "p5-business:p5.4b-wave-05-committed-gates",
+    "schema_version": "artifex-business-dispatch-replay-v1",
+    "slice_id": "p5.4b-wave-05-committed-gates:1",
+    "task_id": "p5.4b-wave-05-committed-gates",
+    "trial_id": "p5.4b-wave-05-committed-gates",
+    "used_slices": 0
+  },
+  "schema_version": "artifex-business-dispatch-admission-v1",
+  "task": {
+    "acceptance_refs": [
+      "REL-ACCEPTED-SCOPE",
+      "REL-RECOVERY",
+      "REL-IDEMPOTENCY",
+      "REL-VALIDATION",
+      "REL-BUDGET",
+      "SEC-AUTHORITY",
+      "SEC-PRIVACY",
+      "SEC-WORKTREE",
+      "SEC-HOOK-INTEGRITY",
+      "EVD-SOURCE-HASHES",
+      "EVD-INDEPENDENT-ADJUDICATOR",
+      "EVD-UNKNOWN-PRESERVATION",
+      "PRV-PARITY-SCOPE"
+    ],
+    "base_commit": "bd861202a2e86193f9b9c81bd297460a37216397",
+    "budgets": {
+      "cost_limit_microunits": 5000000,
+      "max_envelope_bytes": 65536,
+      "max_event_count": 512,
+      "max_output_bytes": 65536,
+      "max_slices": 1,
+      "max_turns": 40,
+      "timeout_ms": 900000,
+      "token_limit": 200000
+    },
+    "capabilities": [
+      "structured_output",
+      "machine_events",
+      "permission_boundary"
+    ],
+    "catalog_hash": "91c7fc0f6df4da127141781c6ed4c89eec21d108d52f532f58791c9be4d45858",
+    "controlled_root": "mktemp:p5-p5-4-p5.4b-wave-05-committed-gates",
+    "files": [
+      "packages/harness/docs/reference/provider-instructions.md",
+      "packages/harness/scripts/generate-provider-instructions.py",
+      "packages/harness/tests/test_run_plan_reader.py",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/provenance-reconciliation-v1.json",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P4/validate-provenance-reconciliation.py"
+    ],
+    "g2_package_digest": "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09",
+    "manifest_version": "1.0.0",
+    "parent_item_id": "P5.4",
+    "parent_plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+    "provider": "claude-code",
+    "purpose": "business-trial",
+    "repository": "swissknifeman-controlled-disposable",
+    "request_hash": "47f0a7408efb19b073e27933e7e68f91ca604eeaf723821661543301fc6bd70d",
+    "route": {
+      "effort": "high",
+      "model_class": "implementation"
+    },
+    "schema_version": "artifex-business-dispatch-task-v1",
+    "task_hash": "dd431fd91438582a5d64cbf6f3f3013cb0a278abb437a413985524bb0ec718c3",
+    "task_id": "p5.4b-wave-05-committed-gates",
+    "validation": [
+      "scoped-git-diff",
+      "frozen-acceptance",
+      "rollback-to-exact-base"
+    ]
+  },
+  "trial_id": "p5.4b-wave-05-committed-gates",
+  "usage": {
+    "max_slices": 1,
+    "reusable": false,
+    "used_slices": 0
+  }
+}

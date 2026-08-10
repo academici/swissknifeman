@@ -44,6 +44,18 @@ class PlanItemStateTests(unittest.TestCase):
             "status": "⬜ Not started", "attempt": 0, "last_result": None,
         })
 
+    def test_no_op_does_not_erase_a_closed_execution_position(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green",
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="no-op",
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"]["status"], "🟢 Done")
+
     def test_item_event_does_not_stale_another_items_state(self):
         first_spec = self.plan / "phases" / "P1" / "P1.1.md"
         second_spec = first_spec.with_name("P1.2.md")

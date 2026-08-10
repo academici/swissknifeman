@@ -1,0 +1,180 @@
+{
+  "files": [
+    {
+      "bytes": 1913,
+      "path": "brief/00-brief.md",
+      "sha256": "79586f3a7a9ceff7bbb8e1a1a3da5c65b8f55f3c641ff65b5a5d270c4d31b678"
+    },
+    {
+      "bytes": 1034,
+      "path": "findings/01-rag-locale-2026-08-02.md",
+      "sha256": "486d45c8ca023da757f2041571ecf8b4853f369ace82d76e7dda724c4d044bec"
+    },
+    {
+      "bytes": 1035,
+      "path": "findings/02-rag-control-plane-2026-08-02.md",
+      "sha256": "5adcc928830581ee0a4f8f22d538200a036623d57c728ec7d0411d0d8c6ef8d3"
+    },
+    {
+      "bytes": 1119,
+      "path": "findings/03-current-defects-2026-08-02.md",
+      "sha256": "b619ca84efda2e8dd28e6863e60a1dd524563bf0787157b0e32515ca9aae7538"
+    },
+    {
+      "bytes": 5100,
+      "path": "findings/04-authoring-environment-drift-2026-08-02.md",
+      "sha256": "5063d378c8dca9a4df26dc1ef688fc2a8f2ebcb8faa30837b72f41daedd3ddbf"
+    },
+    {
+      "bytes": 3162,
+      "path": "findings/05-p1-contract-verification-2026-08-02.md",
+      "sha256": "60e7b5a246762093bb9c921a3ad9fac353abad6671f912f40f16d7b57e287cf3"
+    },
+    {
+      "bytes": 4077,
+      "path": "findings/06-p2-locale-authoring-verification-2026-08-02.md",
+      "sha256": "357d2eed449753c7d851c8794d20719976a928418593197a70bb8a5a81ae4592"
+    },
+    {
+      "bytes": 2892,
+      "path": "findings/07-p3-control-plane-recon-2026-08-02.md",
+      "sha256": "7c8501574f1a8991911304399bab9cee77774b2c35a71b7d247c05d46e3dfe9c"
+    },
+    {
+      "bytes": 4008,
+      "path": "findings/08-p4-locale-migration-recon-2026-08-02.md",
+      "sha256": "96d364cbe5882d40bfffe92b362d53b2a0a5e41a639ed4f843298bdc8dbf0404"
+    },
+    {
+      "bytes": 4102,
+      "path": "findings/09-p5-consumer-migration-recon-2026-08-02.md",
+      "sha256": "b846e44d557d220de8b98dfe260af31884b68ad1351f35433a2be77bc4b1cc22"
+    },
+    {
+      "bytes": 4343,
+      "path": "findings/10-p6-health-control-recon-2026-08-02.md",
+      "sha256": "22cbd9b6d786fbf3b1d7dbd05a79eaa8d1e926550931e50501d56ccd6ca9ae01"
+    },
+    {
+      "bytes": 2695,
+      "path": "findings/11-p7-release-acceptance-recon-2026-08-02.md",
+      "sha256": "8240faaa93be44da878ad5fd3e372953985539b8ab115e21e21bdcecab099a34"
+    },
+    {
+      "bytes": 7648,
+      "path": "findings/12-design-audit-remediation-2026-08-03.md",
+      "sha256": "865f3db8879d9a1f9f2212e78c1a03ebee6d62a8578dad35806c407f85ba9b8c"
+    },
+    {
+      "bytes": 5035,
+      "path": "handoff.md",
+      "sha256": "696ef4a283fd4b4f1ab7d31b290e32988ac372c5f509a48b1e56638fbb43e6ac"
+    },
+    {
+      "bytes": 5591,
+      "path": "index.md",
+      "sha256": "1f5ed90b3c56ca60dde9550c221ce5d56de51ae5011b2ebd2259b6f8432b3175"
+    },
+    {
+      "bytes": 8460,
+      "path": "journal.jsonl",
+      "sha256": "929c74566853e62696c39512e494fdc7fa43f985d55644bd204140be0302dd50"
+    },
+    {
+      "bytes": 32766,
+      "path": "phases/P0.md",
+      "sha256": "ed22b1b385e30ef701fb6af44580333f87d68bdbec589c9552c10c65db534458"
+    },
+    {
+      "bytes": 25282,
+      "path": "phases/P1.md",
+      "sha256": "a4ca754028f352d8bd1fd2f058ec2aeaf46df6889fc83c6a643c1206f3fcd10f"
+    },
+    {
+      "bytes": 23176,
+      "path": "phases/P2.md",
+      "sha256": "b5924f763a3785933d0628343f62e2982b88c94f3738b322f0d221a6c4a26146"
+    },
+    {
+      "bytes": 24396,
+      "path": "phases/P3.md",
+      "sha256": "60581125ec5cc5eb9930c6248bab426756914b0fd549273d11e92a5b039333af"
+    },
+    {
+      "bytes": 53617,
+      "path": "phases/P4.md",
+      "sha256": "2ccf4916c03ad82b294d9138053c36ae6f8682b2572a79cb27922ec353030762"
+    },
+    {
+      "bytes": 36500,
+      "path": "phases/P5.md",
+      "sha256": "e5d9b111c72f721ff5c4feb912f25947ed5f756321276dc48c00fdb8bf0a2a6b"
+    },
+    {
+      "bytes": 30412,
+      "path": "phases/P6.md",
+      "sha256": "aaa5dca7dc609a2db99ee3504a6b2c7b653049fe381beb166c44b4b3a1c4b649"
+    },
+    {
+      "bytes": 34455,
+      "path": "phases/P7.md",
+      "sha256": "947db5f2f898e0600933053bbfed169e97a4ff9ce1b55f8e229c311fa550fe74"
+    },
+    {
+      "bytes": 152571,
+      "path": "plan.md",
+      "sha256": "d15eccf822915e4aa8e48042dd5015fbeba08805999d5efd91374b8dd28f2f9b"
+    },
+    {
+      "bytes": 4375,
+      "path": "research/00-user-intent.md",
+      "sha256": "fdeefb1d187de414d76d9f7a6303198bb0de8272525fb05c4db47feff3bd0578"
+    },
+    {
+      "bytes": 1264,
+      "path": "research/01-target-architecture.md",
+      "sha256": "3e7953e7feafcb1af9d3bd8dcda48b316f765789c4c5ca6c244d18f4bd16fd16"
+    },
+    {
+      "bytes": 3718,
+      "path": "research/02-p2-locale-authoring-design.md",
+      "sha256": "f3fe80aa8d2df8741ed269dd1a2c7388a7b4afe17366579b303dc1a868319c2b"
+    },
+    {
+      "bytes": 3422,
+      "path": "research/03-p3-control-plane-implementation-design.md",
+      "sha256": "03806d09fde976997edbc804053484f2f8f42d1351abcaa261419a18e15a59d6"
+    },
+    {
+      "bytes": 7134,
+      "path": "research/04-p4-locale-migration-implementation-design.md",
+      "sha256": "c9ec1c594490575af664578b38c29e5815030c2b7791f11733266d8e8e0a12ad"
+    },
+    {
+      "bytes": 7291,
+      "path": "research/05-p5-consumer-migration-design.md",
+      "sha256": "e1f03983bd3ffdb00d476a3ce713b18fe697487c8707cb905fe2419944e6958a"
+    },
+    {
+      "bytes": 7087,
+      "path": "research/06-p6-health-parity-design.md",
+      "sha256": "56d44f3a72fad227d53d3e5c7136afcc5be4b1c4080420c5e321c63ca8d6afd9"
+    },
+    {
+      "bytes": 3749,
+      "path": "research/07-p7-release-operational-design.md",
+      "sha256": "e55aa73d14edf7aa66bfd5720d37652702e9083fdbb2d4ad53d0864773ccd360"
+    },
+    {
+      "bytes": 5883,
+      "path": "research/08-finish-reconcile.md",
+      "sha256": "1e7c415fa2fd2c4413a9dcdf4881871ca1ba8ddc7c9633fabe30b83817351d16"
+    },
+    {
+      "bytes": 24669,
+      "path": "roadmap.md",
+      "sha256": "172d4aca398c11c0fb0debdd112c7890e97a73db2c2b8da8868df50e57fcf547"
+    }
+  ],
+  "schema": "plan-migration-source-v1"
+}

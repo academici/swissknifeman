@@ -64,13 +64,17 @@ python3 packages/task/scripts/plan-migrate.py plans/<SELF-HOST-PLAN>
 python3 packages/task/scripts/plan-migrate.py plans/<SOURCE> --dry-run --output /tmp/<projection>
 ```
 
-The converter writes a generated migration inventory and before/after read-weight
-evidence. A legacy source without `## Обсуждение` is valid: the inventory records
-that the optional carrier was absent and no replacement discussion file is
-invented. When the final journal position is blocked, the projection materializes
-the required v2 escalation marker from that journal state. Re-running it on an
-already migrated plan must not change bytes; use the normal `plan-views ...
---check` commands to verify generated carriers.
+The converter writes a generated migration inventory, before/after read-weight
+evidence, and `artifacts/migration-source-v1/`: a byte-identical copy of the
+complete legacy plan tree plus a SHA-256 manifest. The source archive retains
+historical free-form plan sections and generated views with no v2 runtime carrier.
+A legacy source without `## Обсуждение` is valid: the inventory records that the
+optional carrier was absent and no replacement discussion file is invented. The
+append-only journal receives one deterministic Layout v2 activation event, allowing
+admission to distinguish historical outcomes from future work. When the final journal
+position is blocked, the projection materializes the required v2 escalation marker
+from that journal state. Re-running it on an already migrated plan must not change
+bytes; use the normal `plan-views ... --check` commands to verify generated carriers.
 
 ## Item-state projection
 

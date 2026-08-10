@@ -91,7 +91,10 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     event_rows = _event_rows(plan_dir, item_id)
     events = [event for _number, _raw, event in event_rows]
     execution_events = [event for event in events if event.get("command") in _EXECUTION_COMMANDS]
-    last = execution_events[-1] if execution_events else {}
+    # A no-op is an observation after an execution position, not a state
+    # transition.  It must not make a previously closed item look unstarted.
+    last = next((event for event in reversed(execution_events)
+                 if event.get("result") != "no-op"), {})
     journal_path = plan_layout.carrier_path(plan_dir, "journal")
     last_event = event_rows[-1] if event_rows else (0, "", {})
     result = last.get("result")

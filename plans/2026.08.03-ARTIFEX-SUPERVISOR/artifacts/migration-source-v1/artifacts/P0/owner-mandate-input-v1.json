@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "mandate_id": "artifex-supervisor-p0.2-example-v1",
+  "status": "unsigned-input",
+  "plan_id": "2026.08.03-ARTIFEX-SUPERVISOR",
+  "item_id": "P0.2",
+  "source_set": {
+    "hash_algorithm": "sha256",
+    "sources": [
+      {"id": "owner-brief", "level": 4, "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/brief/00-brief.md", "sha256": "5e94521af0968164562f45fc06cf1a04a75b94483a45a162a516cde34f658aa4"},
+      {"id": "owner-refinements", "level": 4, "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/brief/01-refinements.md", "sha256": "ed759a3349935d73548bfe74792f5b3f556e060e32b9b740d806cb3cfb84151d"},
+      {"id": "owner-intent", "level": 4, "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/research/00-user-intent.md", "sha256": "67b97847959d305f2fae9a3bc10cb1a0b57aa2fd4f0a1c4025bf8f503088b6a6"},
+      {"id": "authority-policy", "level": 3, "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/research/02-authority-and-conflict-policy.md", "sha256": "85582fd84f29207927227d270d3289fcc65e859c619fb74c5bf0910ec3eb07f9"},
+      {"id": "baseline-selection", "level": 3, "path": "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P0/baseline-selection.md", "sha256": "91610ebc1c85d86b25edc60cd7ad138bd4205fce269d07aa77e5d1eb4add016f"},
+      {"id": "root-instructions", "level": 2, "path": "AGENTS.md", "sha256": "82c1bcf7b17b3b10c8220a11aa9aaa824d7c0759748fb33fca2f0e428b17836f"},
+      {"id": "task-instructions", "level": 2, "path": "packages/task/AGENTS.md", "sha256": "3dcb31e517e5c99a78656ea099679f79405f9b95cd77bfc665dc8c92685cd2ce"},
+      {"id": "harness-instructions", "level": 2, "path": "packages/harness/AGENTS.md", "sha256": "72d0c5249754235087bc40bc49e0d7879c71e4a2cbeb367378d785fe52bbf5e8"},
+      {"id": "harness-execution-policy", "level": 3, "path": "packages/harness/configs/common/agent-packs/execution-policy.json", "sha256": "f880a9f26b1dfff99e30aa67ebb09bc58fb20ab382c760e02b9df11d2337b8ef"},
+      {"id": "execution-state-machine", "level": 3, "path": "plans/archive/2026.07.24-AGENT-RELIABILITY/root/contracts/execution-state-machine-v1.md", "sha256": "73826b67750c461819cffe8d21336b7cc8de73c620867f8e13037223a8460df6"},
+      {"id": "risk-review-loop-budget", "level": 3, "path": "plans/archive/2026.07.24-AGENT-RELIABILITY/root/contracts/risk-review-loop-budget-v1.md", "sha256": "0975ccdea12f81197933b32447be4dce0681743fa9a9a53d7ed2a40a3332fcd8"}
+    ]
+  },
+  "precedence": [
+    {"level": 1, "name": "system-security-provider-hard-limits"},
+    {"level": 2, "name": "repository-and-package-instructions"},
+    {"level": 3, "name": "frozen-contracts-and-decisions"},
+    {"level": 4, "name": "signed-run-mandate-narrowing-only"},
+    {"level": 5, "name": "supervisor-defaults"}
+  ],
+  "envelope": {
+    "files": [
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/research/07-owner-canon-and-authority-freeze.md",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P0/owner-mandate-input-v1.json",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P0/authority-cases-v1.json",
+      "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P0/validate-authority.py"
+    ],
+    "tools": ["python3", "git"],
+    "providers": ["openai"],
+    "model_classes": ["frontier"],
+    "efforts": ["high"],
+    "budget_max": {"attempts": 2, "parallel_writers": 1, "parallel_readers": 2},
+    "required_validations": ["authority-verifier", "mandate-json", "cases-json", "diff-check"],
+    "action_classes": ["AUTO", "AUTO-FIX", "OWNER"]
+  },
+  "protected_boundaries": [
+    "security",
+    "destructive",
+    "irreversible",
+    "external",
+    "public-contract",
+    "dependency",
+    "package-topology",
+    "third-state",
+    "unknown-capability",
+    "same-level-conflict",
+    "unresolved-routine-choice",
+    "exhausted-budget"
+  ],
+  "routine_choice_order": [
+    "changed_file_and_behavior_count",
+    "existing_primitive_first",
+    "reversible_first",
+    "sequential_write_first",
+    "dependency_and_provider_branch_count",
+    "deterministic_validation_strength_desc",
+    "measured_token_cost"
+  ],
+  "retry_policy": {
+    "same_finding_max": 2,
+    "audit_rounds_max": 2,
+    "fresh_worker": true,
+    "finding_identity_must_match": true,
+    "acceptance_must_match": true
+  },
+  "decision_reason_schema": {
+    "required": [
+      "decision_id",
+      "requested_class",
+      "resolved_class",
+      "allowed",
+      "reason_code",
+      "controlling_sources",
+      "source_set_hash",
+      "mandate_hash",
+      "selected_alternative",
+      "rejected_alternatives",
+      "intent_sequence"
+    ],
+    "pre_side_effect_required": true
+  },
+  "signature": null
+}

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 4080759673fb25d0378a717a8aa4b0ade22f06c26a5091b34eb6192beb448b91
+inputs_sha256: c3a2c62b074ebf78e83a3ba3ee4b5bd9b15428e3dd40fb6b1bff6c570ed45075
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.1 |
-| Status | 🔴 Blocked |
+| Status | ⬜ Not started |
 | Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 0/4 | 🔴 Blocked |
+| P0 | Evidence, safety, and full fleet inventory | 1/4 | ⬜ Not started |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -37,7 +37,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Capture reproducible provider and fleet baseline | 🟠 Done with deviations | 2026-08-10 |
-| P0.2 | Classify every legacy projection and local override | 🔴 Blocked | 2026-08-10 |
+| P0.2 | Classify every legacy projection and local override | 🟢 Done | 2026-08-10 |
 | P0.3 | Freeze recovery gates and exact owner action inventory | ⬜ Not started | — |
 | P0.4 | Apply only approved urgent security containment | ⬜ Not started | 2026-08-10 |
 
@@ -139,8 +139,10 @@ generated_by: task plan-views status
 | 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.1-owner-resume-2026-08-10 |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-deviations · Baseline evidence refreshed; plan has six unresolved later-item bundle errors. |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · escalated · P0.2 requires ~1.95M-token manual review while forbidding heuristic classification; redesign the evidence boundary. |
+| 2026-08-10 | repository_owner | plan-run · blocked · decision queue: P0.2-owner-remediation-2026-08-10 |
+| 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.2-owner-remediation-2026-08-10 |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · deterministic privacy-minimized no-write classification generated and verified |
 
 ## Owner Gates
 
 - P0.1: known deviation
-- P0.2: escalation

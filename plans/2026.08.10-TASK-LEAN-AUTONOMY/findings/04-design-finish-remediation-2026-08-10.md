@@ -38,3 +38,14 @@ Pre-commit design tree checks (base `c1a6ba3e` + plan-only worktree):
 The reviewed plan directory is committed separately from foreign dirty ARTIFEX,
 `docs/reference.md`, `roadmap/` and `plans/ACTIVE.md` carriers. The committed anchor and a repeated
 targeted gate run are recorded in the terminal design-finish report.
+
+## Committed anchor
+
+Design carriers commit: `069986edc8ddc17543f392c52b7d30c5216b62e5`. On that exact commit:
+targeted lint/conflicts/citations were 0/0/0 findings, all generated views were byte-current, and
+all four Task Contracts built successfully. The subsequent bookkeeping commit adds only this
+anchor record; the next audit reads its own final `HEAD` and reruns the same deterministic gates.
+
+Foreign worktree changes remained unstaged and unchanged: ARTIFEX plan/status/journal,
+`docs/reference.md`, `plans/ACTIVE.md`, and
+`roadmap/2026.08.10-plan-run-routing-blocked-terminal-loop.md`.

@@ -16,3 +16,8 @@
 **Sources of truth:** plan.md · phases/P0.md · artifacts/P0/ · findings/v1.1.3-acceptance-report.md.
 **Open risks:** The root-wide task validation remains red on three predecessor-plan diagnostics; this successor and the fresh Arm-B plan lint green independently.
 **Workarounds/Deferred/Open questions:** Workarounds — no. Deferred — ARTIFEX execution starts only through its own P5.5 handoff. Open questions — no.
+
+## Archive migration checklist
+
+- `root/` → `docs/`: не требуется — каталога `root/` в плане нет.
+- В архиве оставлены: `artifacts/`, `findings/`, `brief/`, `closure/`, `journal.jsonl` и остальные plan-owned evidence carriers.

@@ -1,71 +1,54 @@
-# HANDOFF — 2026-08-03 — after P7
+# HANDOFF — 2026-08-10 — after P7
 
-**Next:** audit-design: task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design
+**Next:** waiting: `2026.08.03-ARTIFEX-SUPERVISOR` explicitly releases this paused plan → run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1
+
+**Provider-neutral plan-protocol launch block**
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | repository-plan-read · adversarial-design-audit |
-| Context | cold-start — plan-step; identity distinct from the remediation session |
-| Суть | Independently confirm the finding-free content verdict after F19–F25; execution remains closed unless literal GREEN is recorded. |
-| Команда | `$ task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design` |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | repository-plan-read · fleet-read-only-evidence · provider-observation |
+| Context | cold-start-root |
+| Суть | reason=`owner-pause-no-resume`; after the supervisor release, execute only P0.1 from its committed Layout v2 carrier path |
+| Команда | `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1` |
 
-**Done:** Fifth-audit remediation F19–F25 is complete without changing brief intent, accepted
-F1–F18 semantics, the 30-item topology or any item/status-board value. D50/P4 now carry one exact
-`deferred-derived-only` checkpoint state and a terminal generated-target union whose distinct
-Harness-only alphabetic writable subset is frozen by plan hash and passed through `--authorize`.
-D51/P0 adds a plan-local executable recovery checker with exact commands, schema/tests, self/input
-hashes and Decision Log row parsing; contract freeze, containment mutation and technical P4.6
-authorization are separate types. D52/P6.1 adds a durable hash-chained Brain WAL with fsync,
-restart reconcile/rollback and crash-boundary fixtures. D53 resolves P5.1 plan/check no-write
-semantics, while finding 12 now records its append-only scope-extension history. D54 and P7 bind
-the current dynamic Decision Log set as D1–D54. Research summaries were aligned with D50/D52.
+```bash
+# НЕ раньше: 2026.08.03-ARTIFEX-SUPERVISOR explicitly releases this paused plan
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1'
+```
 
-**Audit result:** Same-session adversarial pass 6 found no new design defect and records content
-GREEN, but its protocol verdict is ATTENTION because cold-start/frontier-xhigh reviewer separation
-and active effort were not observable. This is not authorization to execute
-2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1.
+**Done:** D62 accepts the 2026-08-10 integration as design pass 4/4, closes the owner readiness
+threshold to bounded F26–F30 remediation and removes the ninth-audit gate. P0.1 now has exact
+portable Inputs/Required Reads and a generated digest-qualified bundle. Later items name exact v2
+predecessor state/producer carriers for JIT bundle generation. Active roadmap/P0.3/index v1 paths
+are corrected, the remediation disposition is recorded, generated decisions/status/state views are
+current, and this handoff uses the canonical v2 semantic/context forms.
 
-**Remaining:** Run the independent cold design audit. Only literal GREEN may open phase-first
-execution from 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1 according to `roadmap.md`.
+**Remaining:** the plan remains paused. After the supervisor release, run P0.1 only; P0.2–P7.4
+remain sequential and their bundles are generated after their terminal predecessors produce the
+declared carriers. No ninth whole-plan design audit is required.
 
-**Sources of truth:** `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md` (D50–D54 and audit
-заходы 5–6) · `roadmap.md` · `phases/P0.md` · `phases/P4.md` · `phases/P5.md` · `phases/P6.md` ·
-`phases/P7.md` · `research/04-p4-locale-migration-implementation-design.md` ·
-`research/06-p6-health-parity-design.md` ·
-`findings/12-design-audit-remediation-2026-08-03.md`.
+**Sources of truth:** `plan.md` v1.1.1 · `brief/02-owner-execution-readiness-threshold-2026-08-10.md` ·
+`decisions/D62-execution-readiness-threshold.md` · `findings/14-design-audit-2026-08-10.md` ·
+`findings/15-remediation-disposition-F26-F30-2026-08-10.md` · `roadmap.md` ·
+`phases/P0/P0.md` · `phases/P0/P0.1.md` · `bundles/P0.1.json` ·
+`phases/P0/P0.1.state.md` · `status.md` · `decisions/_current.md` · `docs/reference.md`.
 
-**Validation:** Task package validation passed 479 tests; conflicts are 0/0; absolute plan lint is
-0 errors/0 warnings; strict citations are 12/0; the exact invariants are 30 unique items, 30
-`Not started` statuses and unique ordered D1–D54. Baseline lint has one disclosed WARN because the
-whole plan directory is untracked and absent from HEAD.
-
-**Open risks:** P0–P7 remain specifications only. The plan directory remains untracked inside a
-broad foreign dirty worktree, so baseline attribution is unavailable. The known absolute hook
-dry-run reports two `stale-source → update` operations assigned to
-2026.08.02-PROVIDER-CONTRACT-LOCALE P3.2/P7.2. `codex doctor` does not export active effort.
+**Open risks:** the preflight `harness hooks --target <absolute-repo> --provider codex ... --dry-run`
+currently refuses `harness.codex.lifecycle.hooks` with `record-provenance-mismatch`; the handler is
+clean/noop. D42 already assigns the public hook-path class to P0.1 observation and P3.2 repair, so
+this bounded design pass records it as JIT debt and does not mutate Harness. Future producer
+artifacts do not exist yet by construction; their bundles are not pre-generated.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none substitutes for the cold independent audit; absolute-path hook preflight is
-  used because the known relative-target defect is itself planned work.
-- deferred: every execution item, package/provider/fleet/Brain/generated/release mutation,
-  quarantine disposition and tag/push/publish.
-- open_questions: none; a non-GREEN independent audit returns an exact scope payload to
-  `task:plan-design`.
+- workarounds: —
+- deferred: hook provenance readback → P0.1 evidence, owning repair → P3.2; future bundle materialization → owning item after terminal predecessors
+- open_questions: —
+
+**Native Codex launch block**
 
 | Model | Thinking | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|
-| gpt-5.6-sol | xhigh | `NEW SESSION — шаг-не-item` | Codex launch: `-C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access`; independent design audit only | `$ task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design` |
-
-```text
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c model_reasoning_effort="xhigh" -a never -s danger-full-access
-
-$ task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design
-
-РЕЖИМ: независимый повторный design-аудит после remediation F19–F25, НЕ execution items
-ВХОД: plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md → `## Audit design — 2026-08-03 (заход 6)`; brief/plan/roadmap/phases/findings/research перечитать cold
-СКОУП: проверить closure F19–F25, brief→layers→spec, exact D1–D54 dynamic crosswalk contract, authorize/deferred split, typed P0 authority/checker, P6 Brain WAL/resume, 0/30 statuses; повторить conflicts/absolute+baseline lint/citations; записать GREEN|ATTENTION|RED без remediation в audit-сеансе
-НЕ ТРОГАТЬ: brief intent; item statuses 0/30; remediation F1–F25; frozen archives; code/provider/fleet/Brain/generated/release state; unrelated dirty worktree
-```
+| gpt-5.6-terra | high | `cold-start-root` | reason=`owner-pause-no-resume`; guarded P0.1 execution after supervisor release | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.1'` |

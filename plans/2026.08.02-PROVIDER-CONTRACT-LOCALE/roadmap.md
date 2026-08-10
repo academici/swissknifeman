@@ -1,6 +1,21 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-03 · **Соответствует plan.md:** v1.0.5 · **Статус:** design-audit remediation F1–F25 applied; execution remains closed until repeated independent `task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design` is GREEN.
+**Обновлён:** 2026-08-10 · **Соответствует plan.md:** v1.1.1, design pass 4/4 · **Статус:** D62 accepts the unchanged semantic design as sufficient after bounded F26–F30 remediation; no ninth whole-plan audit is required, and execution remains waiting only for the supervisor plan to release this paused plan.
+
+## Evidence-led skill modernization carrier
+
+The audit does not create a second plan or pre-authorize its proposed rewrites. Its verified work
+flows through the existing sequence:
+
+`P0.1 baseline → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
+
+Official current provider documentation defines the intended interface. P7.1 proves behavior with
+real Claude Code and Codex no-skill/minimum/provider-tuned workflows and instruction ablation;
+P7.2 preserves demonstrated failures with deterministic tests. The minimum shared Skill Core stays
+provider-neutral, while additive adapter descriptors carry discovery, invocation, projection and
+provider-only tuning. A synthetic third-provider descriptor is a mandatory extensibility test, not
+a claim of live efficacy. No audit heuristic, lexical overlap, token estimate or green synthetic
+suite can authorize a merge, retirement or release by itself.
 
 Все items последовательны по данным и/или несут contract/release/security риск. Каждый
 item имеет одного root coordinator и запускается через `task:plan-run` под route из
@@ -37,7 +52,7 @@ validation; no package session may self-close the item.
 | P3.2 | `core/provider`, core tests, manifest/close | `packages/harness` → `packages/maind` → `packages/skiller` → `packages/task` |
 | P3.3 | `core/provider`, core tests, manifest/close | `packages/harness` → `packages/maind` → `packages/skiller` → `packages/task` |
 | P4.1 | `core/locale`, pinned registry data/update producer, core/provider tests, fixtures, manifest/close | `packages/harness` → `packages/task` |
-| P4.2 | root slice `configs/locale-corpus-v1.json`, `core/locale/corpus.py`, `core/tests/locale/test_corpus.py`, `scripts/{check-locale-corpus.py,test-check-locale-corpus.py}`, fixtures, `artifacts/execution/P4.2/**`, integration/close | `packages/skiller`: `scripts/check-translations.sh`, `scripts/validate.sh` integration call and `tests/test_translation_direction.py` only |
+| P4.2 | root slice `configs/locale-corpus-v1.json`, `core/locale/corpus.py`, `core/tests/locale/test_corpus.py`, `scripts/{check-locale-corpus.py,test-check-locale-corpus.py}`, fixtures, `artifacts/execution/P4.2/**`, integration/close | `packages/skiller`: canonical `SKILL_TEMPLATE.md`, generated `generate-skill/generate-skill/snippets/SKILL_TEMPLATE.md` through its owner, template/generator checks, `scripts/check-translations.sh`, `scripts/validate.sh` integration call and corresponding tests only |
 | P4.3 | root slice `configs/locale-corpus-v1.json`, `artifacts/execution/P4.3/{manifest.json,checkpoints/**,reviews/**,cwd/**}`, integration/close | `packages/skiller`: admitted `skills/**`, three named repository-bootstrap canons, source-direction `scripts/check-translations.sh`, named `lib/skiller/**` modules and corresponding `tests/**` only |
 | P4.4 | core catalogs/diagnostics and shared ledger | `packages/harness` → `packages/maind` → `packages/skiller` → `packages/task` |
 | P4.5 | admitted `core/**`/`scripts/**`, shared ledger | `packages/analyst` → `packages/harness` → `packages/maind` → `packages/skiller` → `packages/task` |
@@ -53,8 +68,11 @@ an authority to close it. Substitute the exact package/item/scope and use the it
 codex -C /home/vostrikov/projects/packages/swissknifeman/packages/<name> -m <gpt-5.6-terra for implementation | gpt-5.6-sol for frontier> -c model_reasoning_effort="high" -a never -s danger-full-access
 
 Execute only package slice <scope> of 2026.08.02-PROVIDER-CONTRACT-LOCALE <item>.
-Read ../../AGENTS.md, AGENTS.md, ../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/<Pn>.md,
-and ../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/roadmap.md section "Per-cwd execution and evidence carrier".
+Read ../../AGENTS.md, AGENTS.md, ../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/<Pn>/<Pn>.md,
+../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/<Pn>/<Pn.m>.md,
+../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/<Pn.m>.json,
+../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/<Pn>/<Pn.m>.state.md, and
+../../plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/roadmap.md section "Per-cwd execution and evidence carrier".
 Do not edit item status/shared ledger/other packages. Return exact files, commit SHA, validation
 commands with exit codes, readback and foreign-diff comparison to the root coordinator.
 ```
@@ -65,17 +83,19 @@ The generic carrier above is specialized without executor interpretation. For P4
 coordinator runs `PYTHONPATH=. python3 -m unittest core.tests.locale.test_corpus`,
 `python3 scripts/test-check-locale-corpus.py`,
 `python3 scripts/check-locale-corpus.py --inventory --check --ledger configs/locale-corpus-v1.json`,
+`python3 packages/skiller/scripts/generate-skill-template.py --check`,
 `bash packages/skiller/scripts/check-translations.sh --strict`,
 `bash packages/skiller/scripts/test.sh` and `bash packages/skiller/scripts/validate.sh`; the
 Skiller cwd record must independently contain zero exits for
-`bash scripts/check-translations.sh --strict`, `bash scripts/test.sh` (which owns its
-monorepo/core import path and discovers `tests/test_translation_direction.py`) and
+`python3 scripts/generate-skill-template.py --check`, `bash scripts/check-translations.sh --strict`,
+`bash scripts/test.sh` (which owns its monorepo/core import path and discovers
+`tests/test_skill_template.py` plus `tests/test_translation_direction.py`) and
 `bash scripts/validate.sh`. For P4.3 every Skiller batch runs `bash scripts/test.sh` (covering
 the five test modules named in P4.3 Validation) and
 `bash scripts/check-translations.sh --strict --direction en-source`,
 `bash scripts/validate.sh` from `packages/skiller`; only checkpoint-enumerated P4.6 derived drift
 may remain non-zero. The root coordinator then runs the P4.3 ledger/checkpoint/review verifier
-from `phases/P4.md` and is the only writer of `configs/locale-corpus-v1.json`,
+from `phases/P4/P4.3.md` and is the only writer of `configs/locale-corpus-v1.json`,
 `artifacts/execution/P4.2/**`, `artifacts/execution/P4.3/**`, plan evidence, integration results,
 status and item closure. A package commit cannot advance the ledger or close either item.
 
@@ -104,7 +124,8 @@ otherwise P4.6 cannot close.
 
 The cwd key is an exact closed set. A checkpoint whose `cwd` is absent, or whose evidence omits
 one command listed for that item/cwd, is non-accepted. Commands are executed from the cwd in the
-first column; root integration commands remain in `phases/P4.md` Validation and are never
+first column; root integration commands remain in `phases/P4/P4.4.md` and `phases/P4/P4.6.md`
+Validation and are never
 substituted by a package runner.
 
 | Item | cwd | Exact command(s); source-checkpoint exit contract |
@@ -122,7 +143,7 @@ substituted by a package runner.
 | P4.6 | `packages/task` | `bash scripts/validate.sh` |
 
 P4.4 terminal integration additionally runs the one fully expanded cross-package unittest command
-in `phases/P4.md` P4.4 Validation. P4.6 terminal integration runs the four exact
+in `phases/P4/P4.4.md` Validation. P4.6 terminal integration runs the four exact
 `p4-terminal-regeneration.py` invocations there, including the frozen plan hash and the exact
 alphabetically ordered Harness `--authorize` target set. In both items the root coordinator finally runs
 `python3 packages/task/scripts/plan-lint.py plans/2026.08.02-PROVIDER-CONTRACT-LOCALE --baseline HEAD`;
@@ -145,10 +166,10 @@ exact path below, then runs the P4.2 checkpoint verifier before accepting it.
 
 | Item/checkpoint | Exact committed inputs | Reviewer stdout stored by root coordinator |
 |:--|:--|:--|
-| P4.3 `<checkpoint-id>` | `artifacts/execution/P4.3/checkpoints/<checkpoint-id>.json`; diff `<base_sha>..<candidate_sha>` limited to manifest paths; `configs/locale-corpus-v1.json`; frozen `root/contracts/{english-authoring-overlay-v1,locale-authoring-review-v1}.md`; `phases/P4.md` P4.3; `packages/skiller/AGENTS.md` and exact changed skill/canon sources | `artifacts/execution/P4.3/reviews/<checkpoint-id>.round-<round>.json` |
-| P4.4 `<checkpoint-id>` | `artifacts/execution/P4.4/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; the two frozen authoring/review contracts plus frozen P3 diagnostic contract; `phases/P4.md` P4.4; root and changed package `AGENTS.md`; exact changed canonical/catalog sources | `artifacts/execution/P4.4/reviews/<checkpoint-id>.round-<round>.json` |
-| P4.5 `<checkpoint-id>` | `artifacts/execution/P4.5/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; frozen compactness/review contract; `phases/P4.md` P4.5; root/current package `AGENTS.md`; exact changed files, AST/command-byte result and owning-runner result | `artifacts/execution/P4.5/reviews/<checkpoint-id>.round-<round>.json` |
-| P4.6 `<checkpoint-id>` | `artifacts/execution/P4.6/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; frozen authoring/review contracts; `phases/P4.md` P4.6; root/current package `AGENTS.md`; exact changed docs, link/build result; for `terminal-regeneration`, generated exact-set and second-run/readback results | `artifacts/execution/P4.6/reviews/<checkpoint-id>.round-<round>.json` |
+| P4.3 `<checkpoint-id>` | `artifacts/execution/P4.3/checkpoints/<checkpoint-id>.json`; diff `<base_sha>..<candidate_sha>` limited to manifest paths; `configs/locale-corpus-v1.json`; frozen `root/contracts/{english-authoring-overlay-v1,locale-authoring-review-v1}.md`; `phases/P4/P4.3.md`; `packages/skiller/AGENTS.md` and exact changed skill/canon sources | `artifacts/execution/P4.3/reviews/<checkpoint-id>.round-<round>.json` |
+| P4.4 `<checkpoint-id>` | `artifacts/execution/P4.4/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; the two frozen authoring/review contracts plus frozen P3 diagnostic contract; `phases/P4/P4.4.md`; root and changed package `AGENTS.md`; exact changed canonical/catalog sources | `artifacts/execution/P4.4/reviews/<checkpoint-id>.round-<round>.json` |
+| P4.5 `<checkpoint-id>` | `artifacts/execution/P4.5/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; frozen compactness/review contract; `phases/P4/P4.5.md`; root/current package `AGENTS.md`; exact changed files, AST/command-byte result and owning-runner result | `artifacts/execution/P4.5/reviews/<checkpoint-id>.round-<round>.json` |
+| P4.6 `<checkpoint-id>` | `artifacts/execution/P4.6/checkpoints/<checkpoint-id>.json`; same manifest-limited committed diff; ledger; frozen authoring/review contracts; `phases/P4/P4.6.md`; root/current package `AGENTS.md`; exact changed docs, link/build result; for `terminal-regeneration`, generated exact-set and second-run/readback results | `artifacts/execution/P4.6/reviews/<checkpoint-id>.round-<round>.json` |
 
 Substitute one item/checkpoint/round (`round` is exactly `1` or `2`) and its committed hashes from the checkpoint, then launch a
 new reviewer process with this complete carrier:
@@ -177,17 +198,17 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P0.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.3` | frontier/high | typed `contract_freeze_decision` only | freeze recovery semantics plus executable checker/hash evidence; does not authorize mutation |
 | P0.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.4` | implementation/high | mutation branch only: typed `containment_mutation_decision` | protected external/security transaction; evidenced no-op is the deterministic Validation/Note below, never owner authority |
 | P1.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1` | frontier/high | schema freeze | desired/status public contract |
-| P1.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` | frontier/high | ownership/capability freeze | consumes P1.1 and freezes ecosystem semantics |
+| P1.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` | frontier/high | ownership/capability freeze | freezes minimum Skill Core, additive provider adapters and third-provider registration seam |
 | P1.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3` | frontier/high | C1–C6 Owner approval | migration/rollback freeze after P0/P1 evidence |
 | P2.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.1` | frontier/high | locale contract/registry identity approval | freezes independent surfaces/precedence plus exact IANA bytes/provenance |
 | P2.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.2` | frontier/high | source/overlay approval | consumes P2.1, freezes canonical direction |
-| P2.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.3` | frontier/high | review/policy approval | closes compactness and translation-review contract |
+| P2.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.3` | frontier/high | review/policy approval | freezes compact authoring plus official-doc/real-provider/ablation evidence contract |
 | P3.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.1` | implementation/high | — | public resolver against frozen P1/P2 contracts |
 | P3.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.2` | implementation/high | — | root coordinator + four required package-cwd slices; owns relative-target public hook CLI fix and consumes P3.1 |
-| P3.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.3` | implementation/high | — | root coordinator + four required package-cwd slices; status/diagnostic contract feeds rollout/health |
+| P3.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.3` | implementation/high | — | multi-label audit evidence, typed batch failures, provider-qualified measurements and deduplicated diagnostics |
 | P4.1 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.1` | implementation/high | — | root coordinator owns stdlib runtime + pinned-registry reader/update producer; Harness/Task cwd slices consume the shared locale boundary |
-| P4.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2` | implementation/high | admission ledger approval | root coordinator owns tooling/ledger/evidence/closure; exact fresh Skiller cwd slice and validation paths are mandatory |
-| P4.3 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3` | implementation/high | admitted skill rows | root coordinator + exact Skiller cwd slice; ≤12 units and executable independent reviewer carrier per checkpoint |
+| P4.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2` | implementation/high | admission ledger approval | one canonical minimum-core template generates its distributed copy; cross-field risk/invocation and trigger boundaries are checked |
+| P4.3 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3` | implementation/high | admitted skill rows | evidence-admitted lean corpus changes only; no pre-approved Vue merge, universal Gotchas or heuristic-only retirement |
 | P4.4 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4` | implementation/high | admitted command/plugin rows | ≤10 rows, one package cwd per checkpoint; parser literals release-sensitive |
 | P4.5 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.5` | implementation/high | admitted code-prose rows | ≤12 files/≤40 prose spans, one package cwd; concrete runners + independent review |
 | P4.6 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.6` | implementation/high | terminal ledger | ≤10 docs files per checkpoint; terminal regeneration is a separate final integration stage |
@@ -196,10 +217,10 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P5.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.3` | implementation/high | approved managed actions | exact managed repair with write-ahead project rollback and deterministic resume |
 | P5.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.4` | implementation/high | exact quarantine D# | destructive boundary plus journal reconciliation and two-run convergence |
 | P6.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.1` | implementation/high | exact Brain action D# | protected external transaction with D52 WAL/resume/reconcile; P0.4 owns credentials |
-| P6.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.2` | frontier/high | provider-health freeze | root coordinator + Skiller/Harness/mAInd cwd slices |
+| P6.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.2` | frontier/high | provider-health freeze | provider/model/surface/unit/method/uncertainty/freshness remain typed and independently visible |
 | P6.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.3` | implementation/high | — | exact-set two-run evidence; may complete non-green |
-| P7.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.1` | implementation/high | — | deterministic gate: non-empty `release-blockers.json` stops P7.2/P7.3 release-green progression |
-| P7.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.2` | implementation/high | — | root coordinator + five package-cwd regression slices; includes pinned-registry and public relative/absolute hook CLI zero-write smoke |
+| P7.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.1` | implementation/high | — | real Claude/Codex no-skill/minimum/provider-tuned replay and ablation precede exact-set release blockers |
+| P7.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.2` | implementation/high | — | supplementary deterministic regressions lock behaviors demonstrated by P7.1; they never replace live evidence |
 | P7.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.3` | implementation/high | — | owns exact external `docs/reference.md` entries and registry identity in the release manifest; blocker set must be empty; no publish |
 | P7.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.4` | frontier/xhigh | Owner GREEN/ATTENTION/RED D# | cold read-only adversarial audit; dynamic exact-set decision crosswalk; no self-fix |
 
@@ -224,6 +245,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution starts from this map only after a GREEN independent
-`task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE design`. `handoff.md` is the sole current
-Next carrier; after that audit it must point to P0.1 under the route and Owner gates above.
+Execution starts from this map only after `2026.08.03-ARTIFEX-SUPERVISOR` explicitly releases
+the pause. D62 records that design pass 4/4 and bounded F26–F30 remediation satisfy the design
+threshold without a ninth whole-plan audit. `handoff.md` is the sole current Next carrier and
+points conditionally to P0.1 under the route and Owner gates above.

@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-03
-inputs_sha256: f399e83aa5c3c06fe67d9caa192478e29e63c9105cfee71f139b2cbb6210a92c
+through: 2026-08-10
+inputs_sha256: 6c34abb2c96e267d922af1e5e923c73c7afcb491fb931dfbc57cdc03f9b06f20
 generated_by: task plan-views status
 -->
 
@@ -15,19 +15,19 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.0.5 |
+| Version | 1.1.1 |
 | Status | ⬜ Not started |
-| Last Updated | 2026-08-03 |
+| Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 0/4 | ⬜ Not started |
-| P1 | Freeze provider-neutral control-plane contract | 0/3 | ⬜ Not started |
-| P2 | Freeze locale and compact-English authoring contract | 0/3 | ⬜ Not started |
-| P3 | Implement control-plane resolver and adapter boundaries | 0/3 | ⬜ Not started |
-| P4 | Implement locale rendering and English canonical migration tooling | 0/6 | ⬜ Not started |
+| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
+| P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
+| P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
+| P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
@@ -128,6 +128,9 @@ generated_by: task plan-views status
 | 2026-08-03 | gpt-5.6-sol/high | plan-audit · escalated · заход 6: content GREEN, protocol ATTENTION; cold frontier/xhigh independence not proven |
 | 2026-08-03 | opus/xhigh | plan-audit · audit-green · заход 7, вердикт GREEN |
 | 2026-08-03 | migration/v2 | plan-design · in-progress · Layout v2 migration activation; source tree archived in artifacts/migration-source-v1. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · 2026-08-10 skills audit integrated into same 30-item plan; Perplexity-first verification and lean multi-provider contracts |
+| 2026-08-10 | frontier/xhigh | plan-audit · audit-red · заход 8, вердикт RED; F26–F30; AUDIT-CAP |
+| 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · design pass 4/4: owner threshold accepted; bounded F26-F30 execution-readiness remediation; no ninth whole-plan audit |
 
 ## Owner Gates
 

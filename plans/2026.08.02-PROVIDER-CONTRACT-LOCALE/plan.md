@@ -5,20 +5,20 @@
 | Поле | Значение |
 |:--|:--|
 | Plan ID | 2026.08.02-PROVIDER-CONTRACT-LOCALE |
-| Title | Provider control plane, localization, and fleet recovery |
+| Title | Lean multi-provider skills, provider control plane, localization, and fleet recovery |
 | Document Type | Executable Master Plan |
 | Authoring Model | gpt-5.6-sol/high |
 | Repository | swissknifeman |
 | Related Packages | skiller · harness · maind · task · core |
-| Execution Mode | phase-first, contract-first |
+| Execution Mode | phase-first, contract-first, evidence-led |
 | Target Operator Models | implementation (execution) · economy (recon) · frontier (design/audit) |
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
-| Design Passes | 3/3 — cross-phase `finish` plus targeted audit remediation F1–F25 reconciled all P0–P7 contracts, brief coverage, routing and the final execution roadmap; repeated independent design audit is next |
+| Design Passes | 4/4 — design pass 4/4 is the 2026-08-10 skills-audit integration; D62 accepts the unchanged semantic design as sufficient, bounds this finish to F26–F30, and requires no ninth whole-plan audit; execution remains waiting for the supervisor release before P0.1 |
 | Layout | v2 |
-<!-- migration-version: 1.0.5 -->
+<!-- migration-version: 1.1.1 -->
 
 ## 1. Context
 
@@ -34,10 +34,29 @@ trust, legacy projections and unclassified local changes. No fleet cleanup or cr
 rotation is implicit authority. A project is not reported healthy until both adapters are
 observed, reconciled and behaviorally probed.
 
+Current frontier models must not be constrained by accumulated historical prompt ritual. The
+shared Skill Core therefore contains only a concrete job, discriminative trigger boundary,
+inputs/outputs, non-obvious invariants and on-demand resources. Claude Code and Codex add their
+own discovery, invocation, layout, measurement and replay adapters without replacing that meaning;
+a third provider joins through the same seams. Corpus changes are admitted by current official
+documentation, real provider workflows and with/without-skill ablation. Deterministic tests lock
+the implementation after those outcomes are established; they do not substitute for them.
+
+`audits/2026.08.10-skills-audit.md` is an evidence input, not an accepted change list. Every claim
+has a verdict in `findings/13-skills-audit-adjudication-2026-08-10.md`. Its supervisor references
+remain owned by `2026.08.03-ARTIFEX-SUPERVISOR`; this plan consumes only stable shared boundaries
+and does not duplicate a supervisor runtime.
+
 ## 2. Execution Rules
 
 - Canonical intent is the only cross-provider source of truth; adapters own only projections and status.
+- Shared skills contain no provider control fields; provider-native discovery/invocation policy is rendered by additive adapters.
+- A third provider must be addable through descriptor, renderer, capability, meter and replay seams without modifying existing adapters.
 - Claude Code and Codex may not write each other's target files or share mutable adapter state.
+- Official current documentation defines expected behavior; live provider replay and ablation establish outcomes; deterministic tests are supplementary regression gates.
+- An instruction, example, navigator or resident entry is retained only with a named repository invariant, official requirement, observed failure or measured outcome benefit.
+- Audit observations are multi-label and provider-qualified; lexical overlap, token heuristics and residency never become merge/dead decisions by themselves.
+- Measurements preserve provider/model/unit/method/uncertainty and expiry; incompatible Claude/Codex units are never added into one scalar verdict.
 - Existing local skills are preserved until classified; destructive migration needs ownership proof and backup.
 - English is source language; localized text is a rendered overlay, never a second implementation.
 - Locale resolution and fallback are deterministic, logged and tested at each precedence boundary.
@@ -50,19 +69,19 @@ observed, reconciled and behaviorally probed.
 
 | Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
-| P0.1 | implementation/high | manual | prescribed read-only fleet capture and final evidence verification; high effort is mandatory, frontier tier is not |
+| P0.1 | implementation/high | manual | prescribed read-only fleet plus current skill/audit/profile baseline with typed uncertainty and provider availability; high effort is mandatory, frontier tier is not |
 | P0.2–P0.3 | frontier/high | manual | ambiguous ownership classification and a recovery contract that freezes fleet/security boundaries |
 | P0.4 | implementation/high | manual | execute only the exact owner-approved external containment transaction and verify rollback |
 | P1.1 | frontier/high | manual | freezes the desired/status schema and diagnostics with open contract decisions |
-| P1.2 | frontier/high | manual | freezes ecosystem-wide capability negotiation and provider ownership boundaries |
+| P1.2 | frontier/high | manual | freezes the minimum Skill Core, capability negotiation, additive provider adapters, invocation intent and third-provider seam |
 | P1.3 | frontier/high | manual | freezes migration/rollback authority and compatibility after Owner approval |
-| P2.1–P2.3 | frontier/high | manual | locale contract and compact-English authoring decisions are still open |
+| P2.1–P2.3 | frontier/high | manual | locale plus current-model compact authoring, progressive disclosure and eval/ablation contracts are still open |
 | P3.1 | implementation/high | manual | public shared-core resolver against frozen P1/P2 contracts; high effort is mandatory while implementation tier remains sufficient |
-| P3.2 | implementation/high | manual | multi-package adapter boundary and ownership-preserving reconciliation against frozen contracts |
-| P3.3 | implementation/high | manual | redacted status/diagnostic semantics feed later migration and fleet gates; full review is mandatory |
+| P3.2 | implementation/high | manual | multi-package additive skill/provider adapter boundary, provider registration and ownership-preserving reconciliation against frozen contracts |
+| P3.3 | implementation/high | manual | multi-label audit graph, typed batch failures and provider-qualified measurement/status feed later migration and fleet gates; full review is mandatory |
 | P4.1 | implementation/high | manual | public locale runtime and provider render boundary against frozen contracts; full review required |
-| P4.2 | implementation/high | manual | migration admission/rollback validator becomes the write gate for repository canon |
-| P4.3 | implementation/high | manual | skill source-ownership migration changes canon consumed by every project; full review required |
+| P4.2 | implementation/high | manual | one canonical lean template plus semantic/provider-adapter admission and rollback validation becomes the write gate for repository canon |
+| P4.3 | implementation/high | manual | evidence-admitted skill consolidation/thinning/reclassification changes canon consumed by every project; full review required |
 | P4.4 | implementation/high | manual | command/plugin/diagnostic migration must preserve parser literals and provider parity |
 | P4.5 | implementation/high | manual | broad code-prose migration requires behavior/literal preservation and full review |
 | P4.6 | implementation/high | manual | terminal docs/corpus migration and protected generated-artifact regeneration/readback |
@@ -71,10 +90,10 @@ observed, reconciled and behaviorally probed.
 | P5.3 | implementation/high | manual | cross-project provider repair applies frozen adapters with per-project rollback; full review required |
 | P5.4 | implementation/high | manual | destructive-boundary quarantine and final fleet convergence require high-effort verification and full review |
 | P6.1 | implementation/high | manual | protected external Brain security/profile transaction with Owner gate and rollback; full review required |
-| P6.2 | frontier/high | manual | freezes ecosystem-wide provider-health contract and composes multi-package public diagnostics; full review required |
+| P6.2 | frontier/high | manual | freezes provider-qualified discovery/context health, uncertainty/drift probes and accepted degradation; full review required |
 | P6.3 | implementation/high | manual | final exact-set external fleet evidence and non-masking release gate; high effort and full review required |
-| P7.1 | implementation/high | manual | exact-set provider acceptance composes frozen multi-package/fleet evidence; full review required |
-| P7.2 | implementation/high | manual | cross-package release regressions at frozen provider/locale seams; full review required |
+| P7.1 | implementation/high | manual | exact-set real Claude/Codex no-skill/minimal/provider-tuned replay and instruction ablation compose frozen evidence; full review required |
+| P7.2 | implementation/high | manual | deterministic cross-package regressions harden P7.1 outcomes without substituting synthetic evidence for provider behavior |
 | P7.3 | implementation/high | manual | generated docs, full validation and release-candidate assembly; no tag/push/publish |
 | P7.4 | frontier/xhigh | manual | cold adversarial parity/release audit with an Owner-facing verdict |
 
@@ -94,6 +113,9 @@ observed, reconciled and behaviorally probed.
 | root/contracts/locale-authoring-review-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 | root/contracts/provider-recovery-gates-v1.md | v1.0.0-draft | draft | P0.4–P7 | — |
 | root/contracts/provider-health-v1.md | v1.0.0-draft | draft | P6–P7 | — |
+| root/contracts/skill-core-v1.md | v1.0.0-draft | draft | P2–P7 | — |
+| root/contracts/provider-skill-adapter-v1.md | v1.0.0-draft | draft | P3–P7 | — |
+| root/contracts/skill-evidence-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 
 ### Consumed
 

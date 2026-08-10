@@ -2006,7 +2006,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 2302
       },
@@ -2022,7 +2022,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 7725
       },
@@ -2038,7 +2038,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 3156
       },
@@ -2054,7 +2054,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 10588
       },
@@ -2070,7 +2070,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 5622
       },
@@ -2086,7 +2086,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 18850
       },
@@ -2102,7 +2102,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 5466
       },
@@ -2118,7 +2118,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 18344
       },
@@ -2134,7 +2134,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 2859
       },
@@ -2150,7 +2150,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 10268
       },
@@ -2166,7 +2166,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 4039
       },
@@ -2182,7 +2182,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 13535
       },
@@ -2198,7 +2198,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 4910
       },
@@ -2214,7 +2214,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 17153
       },
@@ -2230,7 +2230,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 7061
       },
@@ -2246,7 +2246,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 25014
       },
@@ -2262,7 +2262,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 3959
       },
@@ -2278,7 +2278,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 13273
       },
@@ -2294,7 +2294,7 @@
         "provider": "claude-code",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "ток",
         "value": 15695
       },
@@ -2310,7 +2310,7 @@
         "provider": "codex",
         "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
         "surface": "profile-listing",
-        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "tool_version": "39fe0ea68124af3784ae0b772240d5b1dcb0ffbe",
         "unit": "симв",
         "value": 54003
       }

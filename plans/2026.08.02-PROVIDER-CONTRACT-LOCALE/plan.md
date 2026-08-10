@@ -16,9 +16,9 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
-| Design Passes | 4/4 — design pass 4/4 is the 2026-08-10 skills-audit integration; D62 accepts the unchanged semantic design as sufficient, bounds this finish to F26–F30, and requires no ninth whole-plan audit; execution remains waiting for the supervisor release before P0.1 |
+| Design Passes | 4/4 — semantic design remains accepted; D64 records a post-execution P0 RED-audit reopen through P0.5–P0.8 without adding a fifth whole-plan design pass or ninth whole-plan audit |
 | Layout | v2 |
-<!-- migration-version: 1.1.1 -->
+<!-- migration-version: 1.1.2 -->
 
 ## 1. Context
 
@@ -72,6 +72,10 @@ and does not duplicate a supervisor runtime.
 | P0.1 | implementation/high | manual | prescribed read-only fleet plus current skill/audit/profile baseline with typed uncertainty and provider availability; high effort is mandatory, frontier tier is not |
 | P0.2–P0.3 | frontier/high | manual | ambiguous ownership classification and a recovery contract that freezes fleet/security boundaries |
 | P0.4 | implementation/high | manual | execute only the exact owner-approved external containment transaction and verify rollback |
+| P0.5 | implementation/high | manual | prescribed exact-set/privacy evidence repair against audit F1–F2; high effort is mandatory, frontier tier is not |
+| P0.6 | frontier/high | manual | corrective frozen-contract topology and exact new owner freeze remain decision-bearing |
+| P0.7 | implementation/high | manual | prescribed executable redacted security-evidence producer against D64–D65; high effort and full review required |
+| P0.8 | implementation/high | manual | append-only provenance reconciliation and committed-tree phase requalification; high effort and full review required |
 | P1.1 | frontier/high | manual | freezes the desired/status schema and diagnostics with open contract decisions |
 | P1.2 | frontier/high | manual | freezes the minimum Skill Core, capability negotiation, additive provider adapters, invocation intent and third-provider seam |
 | P1.3 | frontier/high | manual | freezes migration/rollback authority and compatibility after Owner approval |
@@ -131,4 +135,4 @@ and does not duplicate a supervisor runtime.
 | root/contracts/provider-harness-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 maps harness surfaces and independent security axes |
 | root/contracts/provider-instruction-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 preserves common canon plus additive provider extensions |
 | root/contracts/provider-analytics-contract.md | 2026.07.19-DUAL-PROVIDER | v1.0.0 | frozen predecessor available in archive | P1.2 maps provider-qualified observed evidence without raw payload leakage |
-| root/contracts/read-budget-v1.md | 2026.08.07-PLAN-ECONOMY | v1.1.0 | Layout v2 admission requires a plan-local frozen carrier | D62 execution-readiness normalization; P0.4 declares exact producer edges and remains pending until P0.2/P0.3 outputs exist |
+| root/contracts/read-budget-v1.md | 2026.08.07-PLAN-ECONOMY | v1.1.0 | Layout v2 admission requires a plan-local frozen carrier | D64 forward remediation; P0.5 is materialized now and P0.6–P0.8 remain JIT until terminal predecessors exist |

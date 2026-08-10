@@ -1,13 +1,13 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-10 · **Соответствует plan.md:** v1.1.1, design pass 4/4 · **Статус:** D62 accepts the unchanged semantic design as sufficient after bounded F26–F30 remediation; no ninth whole-plan audit is required, and execution remains waiting only for the supervisor plan to release this paused plan.
+**Обновлён:** 2026-08-10 · **Соответствует plan.md:** v1.1.2, design pass 4/4 · **Статус:** D64 reopens P0 after its independent RED audit through four sequential forward-remediation items; P1–P7 remain unchanged and closed to execution until P0 re-closes and passes audit 2.
 
 ## Evidence-led skill modernization carrier
 
 The audit does not create a second plan or pre-authorize its proposed rewrites. Its verified work
 flows through the existing sequence:
 
-`P0.1 baseline → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
+`P0.5 corrected baseline → P0.6 semantic recovery gates → P0.7 executable security evidence → P0.8 provenance/fan-in → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
 
 Official current provider documentation defines the intended interface. P7.1 proves behavior with
 real Claude Code and Codex no-skill/minimum/provider-tuned workflows and instruction ablation;
@@ -197,6 +197,10 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P0.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.2` | frontier/high | — | ownership-классификация несёт открытые решения и потребляет P0.1 |
 | P0.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.3` | frontier/high | typed `contract_freeze_decision` only | freeze recovery semantics plus executable checker/hash evidence; does not authorize mutation |
 | P0.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.4` | implementation/high | mutation branch only: typed `containment_mutation_decision` | protected external/security transaction; evidenced no-op is the deterministic Validation/Note below, never owner authority |
+| P0.5 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.5` | implementation/high | — | exact-set/privacy negative fixtures and complete provider-qualified D55–D61 baseline; consumes terminal history only |
+| P0.6 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.6` | frontier/high | new typed `contract_freeze_decision` for exact successor bytes | semantic G01–G11 non-weakening and acyclic phase-local verifier topology; D63 is not reusable |
+| P0.7 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.7` | implementation/high | mutation branch only: exact typed `containment_mutation_decision` | executable redacted producer replaces hand-authored green booleans; no-op remains deterministic |
+| P0.8 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8` | implementation/high | — | append-only provenance ledger/correction events and committed-tree P0 fan-in; historical bytes stay immutable |
 | P1.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1` | frontier/high | schema freeze | desired/status public contract |
 | P1.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` | frontier/high | ownership/capability freeze | freezes minimum Skill Core, additive provider adapters and third-provider registration seam |
 | P1.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3` | frontier/high | C1–C6 Owner approval | migration/rollback freeze after P0/P1 evidence |
@@ -228,7 +232,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 
 | Где | Predicate/evidence | Результат |
 |:--|:--|:--|
-| P0.4 evidenced no-op | The frozen P0.3 no-op predicate evaluates pass over committed P0.1 manifest/classification plus a fresh independent P0.4 redacted detector and provider/trust checks; the evidence record has `action_set=[]`, plaintext-secret findings 0 and protected-target delta 0. | Close P0.4 through its ordinary Validation with committed no-op evidence; no D# authorizes an empty mutation. If the predicate is false, mutation remains waiting until an exact containment D# exists. |
+| P0.7 evidenced no-op | The P0.7 executable producer recomputes the owner-frozen P0.6 predicate over committed P0.5 manifest/classification plus fresh redacted detector, provider/trust and protected pre/post evidence; the evidence record has `action_set=[]`, plaintext-secret findings 0 and protected-target delta 0. | Close P0.7 through ordinary Validation; no D# authorizes an empty mutation. If the predicate is false, mutation remains waiting until an exact containment D# exists. |
 | P4.3–P4.6 source checkpoint | The checkpoint verifier recomputes either `clean` or the exact ordered `deferred-derived-only` rows and proves zero other errors. | Accept/resume the source checkpoint; this is technical deferred state, not owner authority. P4.6 closure still requires terminal all-green. |
 | P4.6 terminal regeneration | Complete terminal source ledger + exact cumulative deferred set + frozen helper-plan hash; Harness writable targets are passed in its exact alphabetic order through `--authorize`. | Ordinary item-scoped generated write; no P0 contract/containment D# applies. Any plan-hash/target/order drift refuses before write. |
 
@@ -236,8 +240,8 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 
 | Где | Что утверждает | Блокирует |
 |:--|:--|:--|
-| P0.3 contract freeze | exact recovery-gate semantics and checker evidence | P1–P7 contract consumption; never authorizes a write |
-| P0.4 mutation branch | exact security/trust targets, preimages, backup and rollback | any containment mutation; the deterministic no-op row above is outside owner authority |
+| P0.6 contract successor freeze | exact corrective recovery-gate bytes, version and checker evidence | P0.7 and P1–P7 consumption; D63 is historical and never authorizes new bytes or a write |
+| P0.7 mutation branch | exact security/trust targets, preimages, backup and rollback | any containment mutation; the deterministic no-op row above is outside owner authority |
 | P1.1–P1.3 | provider-control-plane schema, ownership/capability map and C1–C6 migration/rollback freeze | P3–P7 |
 | P2.1–P2.3 | locale/source/overlay/review contracts | P4–P7 |
 | P4.2–P4.6 | admitted corpus rows and terminal independent review | each next migration batch and P5 |
@@ -245,7 +249,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution starts from this map only after `2026.08.03-ARTIFEX-SUPERVISOR` explicitly releases
-the pause. D62 records that design pass 4/4 and bounded F26–F30 remediation satisfy the design
-threshold without a ninth whole-plan audit. `handoff.md` is the sole current Next carrier and
-points conditionally to P0.1 under the route and Owner gates above.
+Execution resumes from P0.7. D64 supersedes D55/D62 only where their 30-item/Next clauses became
+obsolete after the independent P0 RED audit; it preserves the accepted P1–P7 design and the ban on
+a ninth whole-plan audit. `handoff.md` is the sole current Next carrier and points to P0.7 under
+the route and owner gates above.

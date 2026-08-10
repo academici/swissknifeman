@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-10
-inputs_sha256: 6013d530d9ba668db3e7a134a7be5469d15beb6da0f4121c7f69d9bd3682a3df
+inputs_sha256: e82cf80c4202eecf5ae00afea0ba73ae55e6455db19c62f54136ef191b097eb8
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.1.1 |
+| Version | 1.1.2 |
 | Status | ⬜ Not started |
 | Last Updated | 2026-08-10 |
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 3/4 | 🟠 Done with deviations |
+| P0 | Evidence, safety, and full fleet inventory | 5/8 | ⬜ Not started |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -40,6 +40,10 @@ generated_by: task plan-views status
 | P0.2 | Classify every legacy projection and local override | 🟢 Done | 2026-08-10 |
 | P0.3 | Freeze recovery gates and exact owner action inventory | 🟢 Done | 2026-08-10 |
 | P0.4 | Apply only approved urgent security containment | 🟢 Done | 2026-08-10 |
+| P0.5 | Rebuild the exact provider and skills baseline evidence | 🟢 Done | 2026-08-10 |
+| P0.6 | Patch recovery semantics and remove cyclic admission | 🟢 Done | 2026-08-10 |
+| P0.7 | Produce fresh security and trust evidence executably | ⬜ Not started | — |
+| P0.8 | Reconcile P0 execution provenance and requalify closure | ⬜ Not started | — |
 
 ## Phase P1
 
@@ -145,6 +149,15 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · D63-bound recovery gates, no-op action matrix, checker, fixtures and premortem verified |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · fresh redacted no-op branch verified; no external target changed |
 | 2026-08-10 | gpt-5.6-sol/high | plan-close · closed-deviations · фаза P0 закрыта: четыре terminal items, одно recorded deviation |
+| 2026-08-10 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-10 | frontier/high | plan-design · in-progress · фаза P0 переоткрыта; P0.5–P0.8 детализированы до DoR |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · Exact-set/privacy baseline rebuilt; verifier and copied negative fixtures pass; write-site: pre_mutation: allow · pre_final: allow; frontier/high over implementation/high. |
+| 2026-08-10 | implementation/low | plan-close · closed-green · P0.5 commit 39fe0ea6 and declared validation reconciled; Task Contract allow/allow; route deviation recorded. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · blocked · decision queue: P0.6-contract-freeze-v1.0.1-2026-08-10 |
+| 2026-08-10 | repository_owner | plan-run · in-progress · decision queue: P0.6-contract-freeze-v1.0.1-2026-08-10 |
+| 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; P0.6 closed: v1.0.1 frozen by D67; fail-closed checker, exhaustive mutations, evidence and downstream gate green; commits ffc735d9 + 970ef84e. |
 
 ## Owner Gates
 

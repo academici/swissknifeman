@@ -1,44 +1,18 @@
 {
   "commands": {
-    "bucket_audit": {
-      "command": [
-        "packages/skiller/bin/skiller",
-        "bucket-audit"
-      ],
-      "exit_code": 0,
-      "observations": [
-        "exit=0"
-      ],
-      "status": "green",
-      "stdout_schema": "text"
-    },
-    "budget_profiles": {
-      "command": [
-        "packages/skiller/bin/skiller",
-        "budget",
-        "--profiles"
-      ],
-      "exit_code": 0,
-      "observations": [
-        "exit=0"
-      ],
-      "status": "green",
-      "stdout_schema": "text"
-    },
     "codex_doctor": {
+      "availability": "available",
       "command": [
         "codex",
         "doctor",
         "--json"
       ],
       "exit_code": 0,
-      "observations": [
-        "overallStatus=ok"
-      ],
-      "status": "green",
-      "stdout_schema": "json-object"
+      "stdout_schema": "json",
+      "warnings": []
     },
     "codex_plugins": {
+      "availability": "available",
       "command": [
         "codex",
         "plugin",
@@ -46,13 +20,11 @@
         "--json"
       ],
       "exit_code": 0,
-      "observations": [
-        "task@swissknifeman=installed-enabled"
-      ],
-      "status": "green",
-      "stdout_schema": "json-object"
+      "stdout_schema": "json",
+      "warnings": []
     },
     "hooks_absolute": {
+      "availability": "available",
       "command": [
         "packages/harness/bin/harness",
         "hooks",
@@ -65,14 +37,11 @@
         "--dry-run"
       ],
       "exit_code": 0,
-      "observations": [
-        "plan-identity=sha256:2ddcf8475adf097cbcb227bd4155b5552c6026a9117f8607a61886eb6be65120",
-        "operation-set-present"
-      ],
-      "status": "green",
-      "stdout_schema": "text"
+      "stdout_schema": "text",
+      "warnings": []
     },
     "hooks_relative": {
+      "availability": "command-error",
       "command": [
         "packages/harness/bin/harness",
         "hooks",
@@ -85,13 +54,32 @@
         "--dry-run"
       ],
       "exit_code": 1,
-      "observations": [
+      "stdout_schema": "text",
+      "warnings": [
+        "           ^^^^^^^^^^^",
+        "           ^^^^^^^^^^^^^^^^^^^",
+        "    _block_codex_gates(env, target, opts)",
+        "    block_codex_lifecycle(env, target, surfaces=tuple(surfaces), trusted=bool(opts[\"trusted\"]),",
+        "    handler(env, args)",
+        "    main()",
+        "    plan = plan_artifact_lock(",
+        "    raise ValueError(\"root must be explicit and absolute\")",
+        "    root = _root(root)",
+        "  File \"<absolute-path>\", line 1122, in _block_codex_gates",
+        "  File \"<absolute-path>\", line 1144, in _root",
+        "  File \"<absolute-path>\", line 1162, in cmd_hooks",
+        "  File \"<absolute-path>\", line 314, in plan_artifact_lock",
+        "  File \"<absolute-path>\", line 49, in main",
+        "  File \"<absolute-path>\", line 5, in <module>",
+        "  File \"<absolute-path>\", line 787, in block_codex_lifecycle",
+        "  File \"<frozen runpy>\", line 198, in _run_module_as_main",
+        "  File \"<frozen runpy>\", line 88, in _run_code",
+        "Traceback (most recent call last):",
         "ValueError: root must be explicit and absolute"
-      ],
-      "status": "red",
-      "stdout_schema": "text"
+      ]
     },
     "maind_health": {
+      "availability": "available",
       "command": [
         "packages/maind/bin/maind",
         "health",
@@ -99,13 +87,11 @@
         "--strict"
       ],
       "exit_code": 0,
-      "observations": [
-        "exit=0"
-      ],
-      "status": "green",
-      "stdout_schema": "text"
+      "stdout_schema": "text",
+      "warnings": []
     },
     "provider_audit": {
+      "availability": "available",
       "command": [
         "packages/harness/bin/harness",
         "doctor",
@@ -113,12 +99,2230 @@
         "--json"
       ],
       "exit_code": 0,
-      "observations": [
-        "diagnostics=empty"
-      ],
-      "status": "green",
-      "stdout_schema": "json-object"
+      "stdout_schema": "json",
+      "warnings": []
     }
   },
-  "schema_version": 1
+  "schema_version": 2,
+  "skills_baseline": {
+    "availability": "available",
+    "bucket_audit": {
+      "availability": "available",
+      "command": [
+        "packages/skiller/bin/skiller",
+        "bucket-audit",
+        "--since",
+        "90",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout_schema": "json",
+      "stdout_sha256": "7fcc7a741a61c12a8ad82b569a5061623fb9d5fd856e8494394407fc2b24dbc8",
+      "warnings": [
+        "WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена"
+      ]
+    },
+    "bucket_count": 49,
+    "budget_profiles": {
+      "availability": "available",
+      "command": [
+        "packages/skiller/bin/skiller",
+        "budget",
+        "--profiles",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout_schema": "json",
+      "stdout_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+      "warnings": [
+        "WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена"
+      ]
+    },
+    "multi_label_observations": [
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "ai/ai-agents"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "ai/mcp-builder"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "ai/token-efficient"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/agent-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/api-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/architecture"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/codebase-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/data-schema"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "architect/domain-modeling"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/ecosystem-reuse-gate"
+      },
+      {
+        "labels": [
+          "merge",
+          "overlap",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/dev-engineering-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/eval-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/figma-mcp-core"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/legal-compliance"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/observability-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/package-contribution-protocol"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "architect/security-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "architect/tech-stack-selection"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "axioma/axioma-doctrine"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "axioma/axioma-glossary"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "axioma/axioma-stack"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "axioma/ecosystem-map"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "azguard/azguard"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender/mcp-blender"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender/version-gotchas"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/build-loop"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/config-conventions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/model-rules"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/model-verification"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/parametric-config"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/scene-conventions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "blender-modeling/threading"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "botkit/botkit"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "creative/content-creative-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "dart/dart-package-development"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/ci-cd"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/db-test-preflight"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker-dev-prod"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker-php"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker-postgres"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker-services"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/docker-vite"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/gitops"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/makefile"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "devops/node-pnpm-preflight"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "finance/finance-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/adversarial-check"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/competitive-analysis"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/customer-discovery"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/defensibility"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "founder/idea-audit"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/idea-discovery"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/new-project"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/pitch-deck"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/risk-assessment"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "founder/startup-lifecycle"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend/document-writer"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend/filepond-upload"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend/web-design-guidelines"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-animations/motion"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-backend/backend-type-sync"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-backend/inertia-vue"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-backend/laravel-echo-client"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-figma/figma-to-vue"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-linting/antfu"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-linting/eslint-flat-config"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-linting/js-code-style"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-linting/ts-library"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-naive-ui/naive-ui-theming"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-nuxt/nuxt"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-nuxt/nuxt-modules"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-nuxt/nuxt-seo"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-reka/reka-ui-cva"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-tailwind/dark-mode"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-tailwind/tailwind-conventions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vite/vite"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vite/vite-module-loader"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vite/vite-multi-build"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vite/vitepress"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/pinia"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/pinia-stores"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vitest"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vitest-vue"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue-best-practices"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue-composition-api"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue-dynamic-icons"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue-router-best-practices"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vue-testing-best-practices"
+      },
+      {
+        "labels": [
+          "resident",
+          "thin",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-vue/vueuse-functions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "frontend-wayfinder/wayfinder"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/anti-drift"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/compact-responses"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/complex-task-orchestrator"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "general/context-economy"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/cross-layer-change-checklist"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/git-commit-rules"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/git-safety"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/grill-with-docs"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/implement"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "general/mcp-advisor"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/naming-conventions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/packages-stack"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "general/plan-protocol"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/project-map"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/session-handoff"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/shell"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/skills-ssot"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/spec-interview"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/task-brief-template"
+      },
+      {
+        "labels": [
+          "merge",
+          "overlap",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/verify-claims"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "general/workflow-craft"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "general/writing-style"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/config-driven-abstraction"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/eloquent-accessors"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/enum-attributes"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/enum-state-machine"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/laravel-subagents"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-architecture/modular-architecture"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-auth/attribute-authorization"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-auth/laravel-permissions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-auth/laravel-security-audit"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-data-layer/laravel-broadcasting"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-data-layer/laravel-data"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-extras/medialibrary"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-extras/pennant-development"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-extras/spatie-settings"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-filament/filament"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-livewire/livewire-blade-attributes"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-testing/health-checks"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-testing/laravel-dusk"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-testing/laravel-testing"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "laravel-testing/test-isolation-guard"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "legal/legal-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "marketing/marketing-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "mobile/figma-to-flutter"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "operator/capacity-planning"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "operator/incident-response"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "operator/oncall-rotation"
+      },
+      {
+        "labels": [
+          "merge",
+          "overlap",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "operator/operations-cx-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "operator/postmortem"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "operator/runbook"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/dependency-audit"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/dx-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/gh-review"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/github-flow"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/issue-triage"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/oss-development"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/oss-governance"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/release-engineering"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/resolving-merge-conflicts"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "oss-dev/to-issues"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/code-style-spatie"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/cursor-pagination-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/database"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/dependency-injection"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/laravel"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/laravel-best-practices"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/laravel-structure"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/named-arguments"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/namespace-refactor-safety"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/php-naming-conventions"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/pao"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "php/php-patterns"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/php-upgrade-checklist"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/production-readiness-checklist"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/repositories"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/static-analysis"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php/transactional-outbox-relay"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-compatibility"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-docs"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-expressive"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-generate-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-release"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-scaffold"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-service-provider"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-package-testing"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "php-packages/laravel-packages"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/brd"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/business-process"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/go-to-market"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/monetization-design"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/pmf-diagnostics"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/prd-from-brd"
+      },
+      {
+        "labels": [
+          "merge",
+          "overlap",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/pm-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/product-roadmap"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/requirement-critic"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "pm/unit-economics"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "python/ml-project-structure"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "python/venv-dependencies"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/artifact-review"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/code-review"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/code-simplifier"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "quality/diagnosing-bugs"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "quality/mutation-testing"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "quality/playwright-e2e"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/refactoring-plan"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/tdd-discipline"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "quality/tech-debt-audit"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "quality/test-strategy"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "quality/testing-safety-report"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/cross-project-optimizer"
+      },
+      {
+        "labels": [
+          "merge",
+          "none",
+          "overlap",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/decision-verification"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/docs-maintenance"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/ecosystem-integration"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/ecosystem-mcp"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/ecosystem-setup"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/field-feedback-loop"
+      },
+      {
+        "labels": [
+          "none",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/harness-operations"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/maind-overview"
+      },
+      {
+        "labels": [
+          "none",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/package-architecture"
+      },
+      {
+        "labels": [
+          "none",
+          "thin",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/project-tooling-runbook"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/release-discipline"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "repository-bootstrap/skill-authoring"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "research/query-craft"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "research/research-knowledge-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "roles/open-source-maintainer"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "roles/solo-founder"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "roles/startup-cto"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "roles/tech-lead"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "sales/sales-super-skill"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "security/agent-security-super-skill"
+      },
+      {
+        "labels": [
+          "resident",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "system/agent-packs"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "system/brain-locator"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "system/cross-project-coordinator"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "system/local-topology"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "system/session-observer"
+      },
+      {
+        "labels": [
+          "keep",
+          "none",
+          "zero-direct-use"
+        ],
+        "skill": "system/shared-memory"
+      },
+      {
+        "labels": [
+          "keep",
+          "resident",
+          "zero-direct-use"
+        ],
+        "skill": "system/swissknifeman-locator"
+      },
+      {
+        "labels": [
+          "none",
+          "retrieval-only",
+          "zero-direct-use"
+        ],
+        "skill": "voice-ai/voice-ai"
+      }
+    ],
+    "profile_measurements": [
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "blender",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 2302
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "blender",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 7725
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "dart-flutter",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 3156
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "dart-flutter",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 10588
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "laravel-project",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 5622
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "laravel-project",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 18850
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "node-frontend",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 5466
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "node-frontend",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 18344
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "node-package",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 2859
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "node-package",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 10268
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "obsidian-vault",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 4039
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "obsidian-vault",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 13535
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "php-package",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 4910
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "php-package",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 17153
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "platform-service",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 7061
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "platform-service",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 25014
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": false,
+        "profile": "python-backend",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 3959
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "python-backend",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 13273
+      },
+      {
+        "availability": "available",
+        "budget": 10000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "standalone",
+        "provider": "claude-code",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "ток",
+        "value": 15695
+      },
+      {
+        "availability": "available",
+        "budget": 8000,
+        "expires_at": "2026-11-08",
+        "method": "packages/skiller/bin/skiller budget --profiles --json",
+        "model": "unreported",
+        "observed_at": "2026-08-10T13:23:44Z",
+        "over": true,
+        "profile": "standalone",
+        "provider": "codex",
+        "raw_sha256": "2ceb3d800577f19708d70ba4d8459b8a92756248257ce4e4bc97668bda78d5ad",
+        "surface": "profile-listing",
+        "tool_version": "46a82c1d599415c459f41244de4e3d69e6197587",
+        "unit": "симв",
+        "value": 54003
+      }
+    ],
+    "repeated_warning_set": [
+      "WARN: 'session-observer' requires 'shared-memory', но он в exclude — зависимость пропущена"
+    ],
+    "schema_version": 1,
+    "source_class_distribution": {
+      "none": 25,
+      "resident": 206
+    },
+    "source_skill_count": 231
+  }
 }

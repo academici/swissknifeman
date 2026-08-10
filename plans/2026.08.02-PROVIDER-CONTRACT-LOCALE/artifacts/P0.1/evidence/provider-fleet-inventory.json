@@ -1,6 +1,7 @@
 {
   "provider_rows": [
     {
+      "artifact_id": "project-6fe9a81f902e79a2:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude-plugin",
@@ -39,6 +40,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-6fe9a81f902e79a2:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -366,6 +368,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-8c234a131487ede5:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -465,6 +468,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-8c234a131487ede5:codex",
       "carrier_paths": [
         ".codex",
         "AGENTS.md"
@@ -476,6 +480,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ab471cd0f1c85b97:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/maind-memory.sh",
@@ -496,6 +501,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ab471cd0f1c85b97:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -716,6 +722,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-83c5b3c93ffe31c0:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/auto-approve.env.ini",
@@ -743,6 +750,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-83c5b3c93ffe31c0:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -933,6 +941,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-383351c63aaf37ac:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -1467,6 +1476,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-383351c63aaf37ac:codex",
       "carrier_paths": [
         ".agents",
         ".agents/guidelines/human-writing-style.md",
@@ -2181,6 +2191,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b06bcd38ed385da6:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -2697,6 +2708,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b06bcd38ed385da6:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/architect/.codex-plugin/plugin.json",
@@ -3521,6 +3533,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-2f270a6fe5f0bbcc:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -3607,6 +3620,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-2f270a6fe5f0bbcc:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -4106,6 +4120,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-7ff99b78a82ce1bf:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -4223,6 +4238,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-7ff99b78a82ce1bf:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/architect/.codex-plugin/plugin.json",
@@ -5208,6 +5224,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-014a1283da270bd6:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -5277,6 +5294,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-014a1283da270bd6:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -5811,6 +5829,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-6fcbd71ebeedc92c:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/auto-approve.env.ini",
@@ -5830,6 +5849,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-6fcbd71ebeedc92c:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/core/.codex-plugin/plugin.json",
@@ -5930,6 +5950,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-c9e6c8c25f188930:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -6433,6 +6454,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-c9e6c8c25f188930:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/core/.codex-plugin/plugin.json",
@@ -7185,6 +7207,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-1cf3a711c12e6a9b:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -7618,6 +7641,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-1cf3a711c12e6a9b:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -8057,6 +8081,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-4f583bba1e3d6be8:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -8133,6 +8158,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-4f583bba1e3d6be8:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -8633,6 +8659,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b1b34c916a75d8c9:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -8671,6 +8698,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b1b34c916a75d8c9:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -9113,6 +9141,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-48590a32ed307abd:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -9141,6 +9170,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-48590a32ed307abd:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -9381,6 +9411,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b90c0f619b100582:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/analyze/.gitignore",
@@ -9410,6 +9441,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-b90c0f619b100582:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -9590,6 +9622,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ae6cf52cbe90f84b:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/auto-approve.env.ini",
@@ -9615,6 +9648,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ae6cf52cbe90f84b:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -9846,6 +9880,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-cf305f1c831a36e2:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude-plugin",
@@ -9929,6 +9964,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-cf305f1c831a36e2:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/marketplace.json",
@@ -9975,6 +10011,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ffddc862898a8984:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/.maind-feature-log.last",
@@ -10073,6 +10110,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-ffddc862898a8984:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -10535,6 +10573,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-034bc815af5bcfbb:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -10746,6 +10785,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-034bc815af5bcfbb:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/core/.codex-plugin/plugin.json",
@@ -11139,6 +11179,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-d12b43a6d74056cf:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/analyze/.gitignore",
@@ -11667,6 +11708,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-d12b43a6d74056cf:codex",
       "carrier_paths": [
         ".agents",
         ".agents/guidelines/human-writing-style.md",
@@ -12377,6 +12419,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-62eb4ffd9db923d9:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/agent-pack.lock.json",
@@ -12491,6 +12534,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-62eb4ffd9db923d9:codex",
       "carrier_paths": [
         ".agents",
         ".agents/plugins/bundles/architect/.codex-plugin/plugin.json",
@@ -12961,6 +13005,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-1bb1c2eba307e990:claude-code",
       "carrier_paths": [
         ".claude",
         ".claude/analyze/.gitignore",
@@ -13054,6 +13099,7 @@
       "status": "green"
     },
     {
+      "artifact_id": "project-1bb1c2eba307e990:codex",
       "carrier_paths": [
         ".agents",
         ".agents/.swissknifeman-codex-links.json",
@@ -13558,5 +13604,5 @@
     "record_count": 57,
     "version": 1
   },
-  "schema_version": 1
+  "schema_version": 2
 }

@@ -1,6 +1,6 @@
 # HANDOFF — 2026-08-10 — after P0.8
 
-**Next:** redesign: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8
+**Next:** design-item: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8
 
 | Параметр | Значение |
 |:--|:--|

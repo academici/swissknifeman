@@ -23,6 +23,17 @@ PLAN_ID = "2026.08.02-PROVIDER-CONTRACT-LOCALE"
 PLAN_RELATIVE = Path("plans") / PLAN_ID
 LEDGER_RELATIVE = PLAN_RELATIVE / "artifacts/P0.8/execution-provenance-v1.json"
 WRITE_SITE = "write-site: pre_mutation: allow · pre_final: allow"
+P0_6_ITEM_COMMIT = "b9d71e6aad4fc13df48ec19501503e5d36596005"
+CLASSIFICATION_RELATIVE = PLAN_RELATIVE / "artifacts/P0-provider-fleet-classification.json"
+COMPACT_PROJECTION = {
+    "source_sha256": "0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
+    "source_bytes": 11724457,
+    "schema_version": 1,
+    "classification_rows": 13421,
+    "summary": {"ambiguous": 13319, "broken-link": 102},
+    "write_policy": "forbidden",
+}
+_LEDGER_CACHE: dict[Path, bytes] = {}
 
 ITEMS = (
     {
@@ -115,6 +126,10 @@ def historical_contract(repo: Path, item: dict[str, object]) -> dict[str, str]:
 
 
 def build_ledger(repo: Path) -> dict[str, object]:
+    cache_key = repo.resolve()
+    cached = _LEDGER_CACHE.get(cache_key)
+    if cached is not None:
+        return json.loads(cached)
     rows = []
     for item in ITEMS:
         resolved = git(repo, "rev-parse", f"{item['commit']}^{{commit}}").strip()
@@ -140,7 +155,8 @@ def build_ledger(repo: Path) -> dict[str, object]:
         })
     ledger = {"schema": "p0-execution-provenance/v1", "plan_id": PLAN_ID, "items": rows}
     ledger["ledger_sha256"] = hashlib.sha256(canonical(ledger)).hexdigest()
-    return ledger
+    _LEDGER_CACHE[cache_key] = canonical(ledger)
+    return json.loads(_LEDGER_CACHE[cache_key])
 
 
 def validate_ledger(repo: Path, ledger: dict[str, object]) -> None:
@@ -184,6 +200,73 @@ def correction_events(plan_dir: Path, ledger: dict[str, object], actor: str, ses
     return events
 
 
+def compact_projection(repo: Path) -> dict[str, object]:
+    """Return the minimal P0.6 model-facing projection from the full corpus.
+
+    The corpus remains a machine-only validation input.  This function asserts
+    every projected fact so the compact carrier cannot silently drift or become
+    a partial substitute for P0.2's row-level classification authority.
+    """
+    source = repo / CLASSIFICATION_RELATIVE
+    payload = source.read_bytes()
+    value = json.loads(payload)
+    summary = {entry["classification"]: 0 for entry in value["classifications"]}
+    for entry in value["classifications"]:
+        summary[entry["classification"]] += 1
+    observed = {
+        "source_sha256": hashlib.sha256(payload).hexdigest(),
+        "source_bytes": len(payload),
+        "schema_version": value.get("schema_version"),
+        "classification_rows": len(value.get("classifications", [])),
+        "summary": {
+            "ambiguous": summary.get("ambiguous", 0),
+            "broken-link": summary.get("broken-link", 0),
+        },
+        "write_policy": "forbidden",
+    }
+    if observed != COMPACT_PROJECTION:
+        raise ProvenanceError("P0.6 compact projection differs from the pinned full-corpus facts")
+    return observed
+
+
+def p0_6_declaration_digests(repo: Path) -> tuple[str, str]:
+    """Return the terminal and D69-updated P0.6 declaration digests."""
+    relative = PLAN_RELATIVE / "phases/P0/P0.6.md"
+    old = git(repo, "show", f"{P0_6_ITEM_COMMIT}:{relative.as_posix()}").encode()
+    current = (repo / relative).read_bytes()
+    old_digest, new_digest = hashlib.sha256(old).hexdigest(), hashlib.sha256(current).hexdigest()
+    if old_digest == new_digest:
+        raise ProvenanceError("P0.6 declaration repair is missing")
+    return old_digest, new_digest
+
+
+def p0_6_correction_event(repo: Path, plan_dir: Path, actor: str, session_id: str) -> dict[str, object] | None:
+    """Build one D69 correction event, or return None after a deterministic no-op."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages/task/lib"))
+    from task import journal
+
+    compact_projection(repo)
+    old_digest, new_digest = p0_6_declaration_digests(repo)
+    evidence_id = f"p0.8-p0.6-read-graph:D69:{old_digest}:{new_digest}"
+    existing = [json.loads(line) for line in (plan_dir / "journal.jsonl").read_text().splitlines() if line.strip()]
+    if any(event.get("evidence_id") == evidence_id for event in existing):
+        return None
+    attempt = max((int(event.get("attempt", 0)) for event in existing if event.get("item_id") == "P0.6"), default=0) + 1
+    note = (
+        f"{WRITE_SITE}; item_commit={P0_6_ITEM_COMMIT[:8]}; D69; "
+        f"process: post-close spec/read-graph repair; old_decl={old_digest}; new_decl={new_digest}"
+    )
+    if len(note) > journal.NOTE_MAX_CHARS:
+        raise ProvenanceError("P0.6 correction note exceeds the journal limit")
+    event = journal.new_entry(
+        plan_id=PLAN_ID, item_id="P0.6", command="plan-run", actor=actor,
+        session_id=session_id, attempt=attempt, result="closed-green",
+        friction=("deviation",), note=note,
+    )
+    event["evidence_id"] = evidence_id
+    return event
+
+
 def write(path: Path, ledger: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canonical(ledger))
@@ -191,7 +274,7 @@ def write(path: Path, ledger: dict[str, object]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="P0 append-only execution provenance")
-    parser.add_argument("action", choices=("write", "check", "emit-events"))
+    parser.add_argument("action", choices=("write", "check", "emit-events", "check-projection", "emit-p0.6-correction"))
     parser.add_argument("--plan-dir", required=True, type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--input", type=Path)
@@ -202,7 +285,10 @@ def main(argv: list[str] | None = None) -> int:
     repo = Path.cwd()
     output = args.output or args.plan_dir / "artifacts/P0.8/execution-provenance-v1.json"
     try:
-        if args.action == "write":
+        if args.action == "check-projection":
+            compact_projection(repo)
+            print("projection: verified P0.6 compact carrier against full corpus")
+        elif args.action == "write":
             ledger = build_ledger(repo)
             write(output, ledger)
             print(f"ledger: wrote {output}")
@@ -212,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
             validate_ledger(repo, ledger)
             if args.action == "check":
                 print(f"ledger: verified {source}")
-            else:
+            elif args.action == "emit-events":
                 if not args.apply:
                     raise ProvenanceError("emit-events requires --apply")
                 events = correction_events(args.plan_dir, ledger, args.actor, args.session_id)
@@ -221,6 +307,17 @@ def main(argv: list[str] | None = None) -> int:
                 for event in events:
                     journal.append(args.plan_dir, event)
                 print(f"events: appended {len(events)} corrections")
+            else:
+                if not args.apply:
+                    raise ProvenanceError("emit-p0.6-correction requires --apply")
+                event = p0_6_correction_event(repo, args.plan_dir, args.actor, args.session_id)
+                if event is None:
+                    print("events: P0.6 correction already present; no-op")
+                else:
+                    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages/task/lib"))
+                    from task import journal
+                    journal.append(args.plan_dir, event)
+                    print("events: appended P0.6 D69 correction")
     except (OSError, json.JSONDecodeError, ProvenanceError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

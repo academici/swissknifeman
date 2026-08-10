@@ -56,5 +56,9 @@
 | `research/10-p0-premortem.md` | research | P0.4–P7 | P0 failure modes, early signals, and assigned recovery-gate mitigations. |
 | `findings/17-layout-v2-phase-reopen-status-gap-2026-08-10.md` | findings | P0 reopen, Task protocol debt | Repo-grounded v2 status projection gap; generated views stay truthful and are never hand-edited. |
 | `research/11-p0-audit-reopen-design.md` | research | P0.5–P0.8, P0 audit pass 2 | F1–F7 ownership, sequential forward-fix topology, contract authority and immutable-history provenance repair. |
+| `findings/P0.8-validation-blocker-2026-08-10.md` | findings | P0.8 | Exact committed-tree fan-in blockers: Layout v2 core, dependency-stale bundles and P0.6 read-budget breach. |
+| `findings/19-p0.8-redesign-preflight-2026-08-10.md` | findings | P0.8 | Model/sandbox/MCP health, unsupported maind argument spelling, hook limitations and missing local task-plan-design bootstrap projection. |
+| `research/12-p0.8-validation-recovery-design.md` | research | P0.6, P0.8 | Layout v2 carrier repair, bundle regeneration order, digest-qualified compact P0.6 input and D74 anti-displacement verdict. |
+| `decisions/D69-p0.8-validation-recovery.md` | decision | P0.6, P0.8 | Forward repair authority for the v2 core, stale projections and post-close P0.6 read-graph correction. |
 | `artifacts/P0.5/fixtures/test_negative_fixtures.py` | artifact | P0.5, P0.6 | One-mutation copied fixtures for the repaired exact-set/privacy verifier. |
 | `artifacts/P0.8/execution-provenance-v1.json` | artifact | P0 closure, audit pass 2 | Deterministic Git/Task-Contract reconstruction of P0.1–P0.4, consumed by append-only correction events and regenerated state views. |

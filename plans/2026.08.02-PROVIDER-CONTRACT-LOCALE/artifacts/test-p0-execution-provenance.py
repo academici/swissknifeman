@@ -35,6 +35,13 @@ def main() -> int:
     rejected(lambda value: value["items"][3]["changed_paths"].pop())
     rejected(lambda value: value["items"][0]["validations"][0].__setitem__("anchor", "0" * 40))
     assert module.correction_note(ledger["items"][0]).startswith(module.WRITE_SITE)
+    projection = module.compact_projection(ROOT)
+    assert projection == module.COMPACT_PROJECTION
+    mutated_projection = dict(projection)
+    mutated_projection["classification_rows"] -= 1
+    assert mutated_projection != module.COMPACT_PROJECTION
+    old_digest, new_digest = module.p0_6_declaration_digests(ROOT)
+    assert old_digest != new_digest
     with tempfile.TemporaryDirectory() as temp:
         plan = Path(temp)
         (plan / "journal.jsonl").write_text(json.dumps({"item_id": "P0.1", "attempt": 1}) + "\n")
@@ -47,6 +54,15 @@ def main() -> int:
             pass
         else:
             raise AssertionError("duplicate correction evidence ID accepted")
+    with tempfile.TemporaryDirectory() as temp:
+        plan = Path(temp)
+        (plan / "journal.jsonl").write_text("")
+        event = module.p0_6_correction_event(ROOT, plan, "gpt-5.6-sol/high", "test")
+        assert event is not None
+        (plan / "journal.jsonl").write_text(json.dumps(event) + "\n")
+        before = (plan / "journal.jsonl").read_bytes()
+        assert module.p0_6_correction_event(ROOT, plan, "gpt-5.6-sol/high", "test") is None
+        assert (plan / "journal.jsonl").read_bytes() == before
     print("p0 execution provenance: ok")
     return 0
 

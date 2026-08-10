@@ -2,7 +2,7 @@
   "action_set": [],
   "authority_reference": null,
   "branch": "no-op",
-  "fresh_evidence_sha256": "sha256:f8d6d3d9d03cc6d7f1d1b8de30a4dd7499f4832b6e7498cf88f8733727b77fc4",
+  "fresh_evidence_sha256": "sha256:fafb2a4ca6cb467cd8244424ed1b0967bfb1f25ae1667755c56540b954bbe478",
   "plaintext_secret_findings": 0,
   "producer_sha256": "sha256:0b72b53727a28e2342ec773219c280a20b9727136af980ed9de2605b5d344be7",
   "protected_target_delta": 0,

@@ -49,3 +49,4 @@
 | `research/07-p7-release-operational-design.md` | research | P7.1–P7.4 | Exact-set acceptance, forward regressions, no-publish release candidate, dynamic D# crosswalk, cold audit and P7 pre-mortem. |
 | `research/08-finish-reconcile.md` | research | design audit, P0–P7 | Сквозной producer/consumer, contract registry, coupling, routing/roadmap и DoR verdict design pass 3/3. |
 | `research/09-lean-multi-provider-skills-design.md` | research | P0–P7, design audit | Minimum Skill Core, additive provider/third-provider seams, real replay/ablation loop, multi-label audit architecture and mapping onto the unchanged 30 items. |
+| `findings/P0-provider-fleet-baseline.md` | findings | P0.2–P0.4, P5–P7 | Sealed P0.1 redacted registry/carrier/provider baseline; includes the relative Codex hook CLI defect and absolute-target observer control without repair authority. |

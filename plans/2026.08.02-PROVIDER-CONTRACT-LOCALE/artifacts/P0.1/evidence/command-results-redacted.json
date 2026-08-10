@@ -1,0 +1,124 @@
+{
+  "commands": {
+    "bucket_audit": {
+      "command": [
+        "packages/skiller/bin/skiller",
+        "bucket-audit"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "exit=0"
+      ],
+      "status": "green",
+      "stdout_schema": "text"
+    },
+    "budget_profiles": {
+      "command": [
+        "packages/skiller/bin/skiller",
+        "budget",
+        "--profiles"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "exit=0"
+      ],
+      "status": "green",
+      "stdout_schema": "text"
+    },
+    "codex_doctor": {
+      "command": [
+        "codex",
+        "doctor",
+        "--json"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "overallStatus=ok"
+      ],
+      "status": "green",
+      "stdout_schema": "json-object"
+    },
+    "codex_plugins": {
+      "command": [
+        "codex",
+        "plugin",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "task@swissknifeman=installed-enabled"
+      ],
+      "status": "green",
+      "stdout_schema": "json-object"
+    },
+    "hooks_absolute": {
+      "command": [
+        "packages/harness/bin/harness",
+        "hooks",
+        "--target",
+        "<absolute-path>",
+        "--provider",
+        "codex",
+        "--observer",
+        "--trusted",
+        "--dry-run"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "plan-identity=sha256:2ddcf8475adf097cbcb227bd4155b5552c6026a9117f8607a61886eb6be65120",
+        "operation-set-present"
+      ],
+      "status": "green",
+      "stdout_schema": "text"
+    },
+    "hooks_relative": {
+      "command": [
+        "packages/harness/bin/harness",
+        "hooks",
+        "--target",
+        ".",
+        "--provider",
+        "codex",
+        "--observer",
+        "--trusted",
+        "--dry-run"
+      ],
+      "exit_code": 1,
+      "observations": [
+        "ValueError: root must be explicit and absolute"
+      ],
+      "status": "red",
+      "stdout_schema": "text"
+    },
+    "maind_health": {
+      "command": [
+        "packages/maind/bin/maind",
+        "health",
+        "--cwd",
+        "--strict"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "exit=0"
+      ],
+      "status": "green",
+      "stdout_schema": "text"
+    },
+    "provider_audit": {
+      "command": [
+        "packages/harness/bin/harness",
+        "doctor",
+        "--provider-audit",
+        "--json"
+      ],
+      "exit_code": 0,
+      "observations": [
+        "diagnostics=empty"
+      ],
+      "status": "green",
+      "stdout_schema": "json-object"
+    }
+  },
+  "schema_version": 1
+}

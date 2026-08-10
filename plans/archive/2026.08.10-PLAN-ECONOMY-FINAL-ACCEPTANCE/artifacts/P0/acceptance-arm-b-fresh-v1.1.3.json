@@ -1,0 +1,237 @@
+{
+  "calibration": {
+    "safety_multiplier": 1.1389011073364206,
+    "target": {
+      "adapter": "codex-exec-jsonl-v1",
+      "probe_protocol_version": "differential-input-total-v2",
+      "provider": "codex",
+      "requested_model_id": "gpt-5.6-terra",
+      "usage_semantics": "provider-reported-input-total-v1"
+    },
+    "version": "2.0.0"
+  },
+  "dense_ascii_min_run": 32,
+  "items": [
+    {
+      "admission_gaps": [],
+      "admission_pass": true,
+      "admission_state": "ready",
+      "d2a_pass": true,
+      "d2b_pass": true,
+      "files": [
+        {
+          "bytes": 3895,
+          "chars": 3053,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 1116,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/plan.md",
+          "role": "plan-core"
+        },
+        {
+          "bytes": 2101,
+          "chars": 1607,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 698,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/phases/P0/P0.md",
+          "role": "phase-context"
+        },
+        {
+          "bytes": 4603,
+          "chars": 3812,
+          "dense_ascii_share": 0.02833158447009444,
+          "est_tokens": 1444,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/phases/P0/P0.1.md",
+          "role": "item-spec"
+        },
+        {
+          "bytes": 10445,
+          "chars": 10445,
+          "dense_ascii_share": 0.2879846816658688,
+          "est_tokens": 3997,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/bundles/P0.1.json",
+          "role": "item-input-bundle"
+        },
+        {
+          "bytes": 1362,
+          "chars": 1097,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 542,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/research/00-user-intent.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 2571,
+          "chars": 2227,
+          "dense_ascii_share": 0.08845981140547822,
+          "est_tokens": 1013,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/findings/P0-arm-b-contract.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 1074,
+          "chars": 801,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 485,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/decisions/D1-single-pass-v2.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 1031,
+          "chars": 769,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 480,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/decisions/D2-validation-only-boundary.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 1195,
+          "chars": 883,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 501,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/decisions/D3-owner-preservation-boundary.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 1206,
+          "chars": 933,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 515,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/decisions/D4-read-budget-pin.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 800,
+          "chars": 796,
+          "dense_ascii_share": 0.0,
+          "est_tokens": 537,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/root/contracts/read-budget-v1.md",
+          "role": "bundle-input"
+        },
+        {
+          "bytes": 601,
+          "chars": 551,
+          "dense_ascii_share": 0.1161524500907441,
+          "est_tokens": 545,
+          "gates": {
+            "size_bytes": true,
+            "tokens": true
+          },
+          "passes": true,
+          "path": "plans/2026.08.10-PLAN-MIGRATION/phases/P0/P0.1.state.md",
+          "role": "item-state"
+        }
+      ],
+      "floor_tokens": 7800,
+      "gap_counts": {
+        "missing_file": 0,
+        "oversized_file": 0,
+        "unreadable_root": 0,
+        "unresolved_entry": 0
+      },
+      "gaps": [],
+      "item_id": "P0.1",
+      "phase_id": "P0",
+      "producer_edges": [],
+      "producer_item": null,
+      "required_reads_tokens": 4073,
+      "resolved_files": 12,
+      "status": "⬜ Not started",
+      "title": "Validate plan-only carriers",
+      "weight_bytes": 30884,
+      "weight_tokens": 11873
+    }
+  ],
+  "limits": {
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/configs/read-limit.json",
+    "size_bytes": 262144,
+    "tokens": 25000
+  },
+  "plan_dir": "plans/2026.08.10-PLAN-MIGRATION",
+  "plan_id": "2026.08.10-PLAN-MIGRATION",
+  "repo_root": "/home/vostrikov/projects/packages/swissknifeman",
+  "schema": "plan-weight-v1",
+  "session_model_id": null,
+  "session_provider_id": null,
+  "totals": {
+    "admission": {
+      "contract": {
+        "item_tokens": 100000,
+        "path": "plans/2026.08.10-PLAN-MIGRATION/root/contracts/read-budget-v1.md",
+        "version": "1.1.0"
+      },
+      "counts": {
+        "historical-pre-v2": 0,
+        "pending-producer": 0,
+        "ready": 1
+      },
+      "gap_counts": {},
+      "ready_failed": 0
+    },
+    "gap_counts": {
+      "missing_file": 0,
+      "oversized_file": 0,
+      "unreadable_root": 0,
+      "unresolved_entry": 0
+    },
+    "gaps": 0,
+    "items": 1,
+    "max_floor_tokens": 7800,
+    "max_item_weight_tokens": 11873,
+    "min_item_weight_tokens": 11873
+  }
+}

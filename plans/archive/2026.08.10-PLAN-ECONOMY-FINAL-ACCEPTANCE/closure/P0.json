@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "2026.08.10-PLAN-ECONOMY-FINAL-ACCEPTANCE",
+  "phase": "P0",
+  "closed_at": "2026-08-10",
+  "closed_by": {"command": "plan-close", "actor": "gpt-5.6-terra/high"},
+  "phase_status": "🟢 Done",
+  "git": {"head_sha": "d64ec4bc", "branch": "main", "dirty": true},
+  "inputs_sha256": {
+    "plan.md": "7ff9b8897f47fbe40f54e4b7b29c520e5abeab31bdcfc69eab1d782a5b2f117f",
+    "phases/P0.md": "098e4af673076b8bc523ca9ab0965b8876b4e923ac864105044140c0966e4613"
+  },
+  "items": [
+    {
+      "id": "P0.1",
+      "status": "🟢 Done",
+      "evidence_class": "real",
+      "evidence": "frozen projections passed; Arm A raw 46a20ac1 passed 30 ready / 0 failures / max 89047; sole Arm B raw c30607dc passed 1 ready / 0 failures / max 11873; four-branch canary exact comparator passed"
+    }
+  ],
+  "gates": [
+    {
+      "id": "predecessor-projections",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "plan-views decisions/state/status --check each returned green before raw capture"
+    },
+    {
+      "id": "arm-a",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "plan-weight JSON: 30 ready, 0 ready_failed, 0 ready admission gaps, max 89047 <= 100000"
+    },
+    {
+      "id": "arm-b",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "one controlled task:plan-design new command emitted exactly one turn.completed; fresh plan lint green and plan-weight raw passed every frozen ready/guardian predicate"
+    },
+    {
+      "id": "session-canary",
+      "status": "PASS",
+      "evidence_class": "real",
+      "evidence": "all four exact branches ran through the frozen production command and session-canary exact comparator returned SESSION-CANARY-EXACT-OK"
+    }
+  ],
+  "metrics": [
+    {"name": "arm_a_ready_failed", "value": "0/30", "label": "real"},
+    {"name": "arm_a_maximum_item_weight", "value": "89047", "label": "real"},
+    {"name": "arm_b_fresh_plan_created", "value": "true (1 ready, max 11873)", "label": "real"},
+    {"name": "canary_branches_run", "value": "4/4 exact PASS", "label": "real"}
+  ],
+  "limitations": [
+    "No item or bookkeeping commit exists because the owner explicitly prohibited commits.",
+    "No item or bookkeeping commit exists because the owner explicitly prohibited commits.",
+    "Root-wide task validation is not green solely because it reports three existing errors in the closed predecessor plan; successor and fresh-plan lints are green."
+  ],
+  "external_side_effects": []
+}

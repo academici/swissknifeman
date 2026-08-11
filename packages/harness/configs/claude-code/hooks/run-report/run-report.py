@@ -18,6 +18,7 @@
 """
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -25,6 +26,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib import parse_events  # noqa: E402
 
 _DEFAULT_KEEP = 30
+
+
+def _report_root(cwd):
+    """Git-root для новых отчётов; вне git сохраняем прежний cwd-path.
+
+    SessionEnd остаётся best-effort: отсутствие git, несуществующий cwd или сбой
+    subprocess не меняют его exit-код и не мешают завершению сессии.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=2, check=False,
+        )
+        root = result.stdout.strip()
+        if result.returncode == 0 and root:
+            return root
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return cwd
 
 
 def _read_enabled(cwd):
@@ -230,7 +250,7 @@ def main():
     except Exception:
         report["generated_at"] = None
 
-    runs_dir = Path(cwd) / ".claude" / "runs"
+    runs_dir = Path(_report_root(cwd)) / ".claude" / "runs"
     try:
         _atomic_write_json(runs_dir / f"{sid}.json", report)
         _prune(runs_dir, keep)

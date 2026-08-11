@@ -1,7 +1,7 @@
 # run-report — архивный захват исхода прогона (SessionEnd)
 
 Один **Python-хук** Claude Code (`SessionEnd`), который в конце сессии читает транскрипт и
-пишет структурированный **run-report** в `<project>/.claude/runs/<session_id>.json`. Отсюда
+пишет структурированный **run-report** в `<git-root>/.claude/runs/<session_id>.json`. Отсюда
 [`maind analyze`](../../../../../maind/) собирает пост-ран отчёт «всё ли сработало как надо».
 
 Захват **универсальный** (generic): исход снимается из транскрипта для ЛЮБОЙ задачи — не только
@@ -24,7 +24,7 @@ dev-loop-воркфлоу. Поэтому `dev-loop.js`/паки трогать 
 
 | Файл | Роль |
 |:--|:--|
-| `run-report.py` | SessionEnd-хук: stdin → транскрипт → `.claude/runs/<sid>.json` (атомарно, ретеншн) |
+| `run-report.py` | SessionEnd-хук: stdin → транскрипт → `<git-root>/.claude/runs/<sid>.json` (атомарно, ретеншн) |
 | `_lib.py` | защитный **строчный** парсер транскрипта (без слурпа) — тестируемо отдельно |
 | `env.ini` | `ENABLED` (kill-switch) + `RUNS_KEEP` (ретеншн). Per-project override в `.claude/run-report.env.ini` |
 
@@ -39,7 +39,10 @@ maind analyze --project <id>                 # разбор накопленны
 ## I/O-контракт (для отладки)
 
 Хук читает JSON payload на stdin (`transcript_path`/`session_id`/`cwd`/`reason`), пишет файл
-`<cwd>/.claude/runs/<session_id>.json` и ничего в stdout (SessionEnd stdout не виден модели).
+`<git-root>/.claude/runs/<session_id>.json` и ничего в stdout (SessionEnd stdout не виден модели).
+Корень определяется `git rev-parse --show-toplevel` от наблюдаемого `cwd`; вне Git хук
+сохраняет прежний путь `<cwd>/.claude/runs/`. Поле `cwd` в JSON всегда сохраняет фактический
+каталог запуска.
 Каталог `runs/` **само-игнорируется** (`.gitignore` = `*`): run-report'ы эфемерны/машинно-локальны,
 не засоряют `git status` (и не ломают проверку «чистое дерево» в `maind analyze`).
 

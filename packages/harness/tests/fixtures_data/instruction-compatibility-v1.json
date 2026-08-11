@@ -123,12 +123,12 @@
         "codex"
       ],
       "assertions": [
-        "Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
+        "Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`.",
         "`plans/<ID>/`",
+        "use the `plan-protocol` schema and commands",
         "`plan-protocol`",
-        "reference plan items by the full `<PLAN-ID> Pn.m`",
-        "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon.",
-        "A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect."
+        "reference items as `<PLAN-ID> Pn.m`",
+        "Vault topology and authoring-provenance carriers are defined by that on-demand protocol."
       ]
     },
     {
@@ -878,17 +878,8 @@
         "codex"
       ],
       "assertions": [
-        "Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`.",
-        "`design`",
-        "`dev`",
-        "`fix`",
-        "`research`",
-        "`review`",
-        "`plan-design`",
-        "`plan-exec`",
-        "`plan-run`",
-        "`plan-close`",
-        "`plan-audit`",
+        "Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort.",
+        "`commands/`",
         "each intent command declares its routed model class and effort"
       ]
     },
@@ -899,8 +890,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep executable plans in `plans/<PLAN-ID>/`",
-        "plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers.",
+        "Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.",
         "`plans/<PLAN-ID>/`",
         "`plan-run` inherits the owner session route"
       ]
@@ -960,17 +950,8 @@
         "claude-code"
       ],
       "assertions": [
-        "Claude Code exposes the catalog as `/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`, `/task:plan-design`, `/task:plan-exec`, `/task:plan-run`, `/task:plan-close`, and `/task:plan-audit`.",
-        "`/task:design`",
-        "`/task:dev`",
-        "`/task:fix`",
-        "`/task:research`",
-        "`/task:review`",
-        "`/task:plan-design`",
-        "`/task:plan-exec`",
-        "`/task:plan-run`",
-        "`/task:plan-close`",
-        "`/task:plan-audit`"
+        "Claude Code projects the Task command catalog as `/task:*` commands.",
+        "`/task:*`"
       ]
     },
     {
@@ -979,50 +960,100 @@
         "claude-code"
       ],
       "assertions": [
-        "Claude Code command frontmatter pins model and effort for each task type",
-        "do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
+        "Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route.",
+        "do not change those pins without explicit intent.",
         "`plan-run`"
       ]
     },
     {
       "id": "artifex.identity",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["`artifex` is the standalone deterministic supervisor package", "its package runtime is the sole live implementation after G1.", "`artifex`"]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "`artifex` is the standalone deterministic supervisor package",
+        "its package runtime is the sole live implementation after G1.",
+        "`artifex`"
+      ]
     },
     {
       "id": "artifex.layout",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.", "`bin/artifex`", "`lib/artifex/`", "`tests/`"]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.",
+        "`bin/artifex`",
+        "`lib/artifex/`",
+        "`tests/`"
+      ]
     },
     {
       "id": "artifex.runtime-boundaries",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["Keep provider adapters additive over one shared supervisor contract", "use bounded fresh processes and never make package runtime import `plans/**`.", "`plans/**`"]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep provider adapters additive over one shared supervisor contract",
+        "use bounded fresh processes and never make package runtime import `plans/**`.",
+        "`plans/**`"
+      ]
     },
     {
       "id": "artifex.provenance",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["Keep generation and source hashes explicit", "plan-local runtime remains immutable non-importable evidence rather than a package dependency."]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep generation and source hashes explicit",
+        "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
+      ]
     },
     {
       "id": "artifex.engineering-invariants",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.", "`lib/artifex/`"]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
+        "`lib/artifex/`"
+      ]
     },
     {
       "id": "artifex.validation-release",
-      "provider_ids": ["claude-code", "codex"],
-      "assertions": ["Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.", "`bash scripts/test.sh`", "`bash scripts/validate.sh`"]
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.",
+        "`bash scripts/test.sh`",
+        "`bash scripts/validate.sh`"
+      ]
     },
     {
       "id": "artifex.claude-code.package-scope",
-      "provider_ids": ["claude-code"],
-      "assertions": ["Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."]
+      "provider_ids": [
+        "claude-code"
+      ],
+      "assertions": [
+        "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
+      ]
     },
     {
       "id": "artifex.codex.package-scope",
-      "provider_ids": ["codex"],
-      "assertions": ["Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.", "`codex -C packages/artifex`"]
+      "provider_ids": [
+        "codex"
+      ],
+      "assertions": [
+        "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.",
+        "`codex -C packages/artifex`"
+      ]
     }
   ]
 }

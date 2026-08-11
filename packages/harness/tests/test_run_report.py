@@ -10,12 +10,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
+PKG = Path(__file__).resolve().parents[1]
+
+sys.path.insert(0, str(PKG.parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.hooks import block_run_report
 import tests.fixtures as fx
 
-PKG = Path(__file__).resolve().parents[1]
 RUN_REPORT = PKG / "configs" / "claude-code" / "hooks" / "run-report"
 HOOK_PY = RUN_REPORT / "run-report.py"
 
@@ -339,6 +341,20 @@ class HookBehaviorCase(unittest.TestCase):
                   "session_id": f"s{i}"})
         kept = list((claude / "runs").glob("*.json"))
         self.assertEqual(len(kept), 3)
+
+    def test_nested_git_cwd_writes_once_at_repository_root(self):
+        subprocess.run(["git", "init", "-q", str(self.proj)], check=True)
+        nested = self.proj / "packages" / "harness"
+        nested.mkdir(parents=True)
+
+        rc = hook({"transcript_path": str(self.tpath), "cwd": str(nested),
+                   "session_id": "nested"})
+
+        self.assertEqual(rc, 0)
+        output = self.proj / ".claude" / "runs" / "nested.json"
+        self.assertTrue(output.is_file())
+        self.assertFalse((nested / ".claude" / "runs" / "nested.json").exists())
+        self.assertEqual(json.loads(output.read_text())["cwd"], str(nested))
 
 
 # ── block_run_report: env.ini + регистрация SessionEnd ───────────────────────

@@ -107,7 +107,7 @@
     },
     {
       "semantic_id": "root.plan-lifecycle",
-      "literal": "Keep executable master plans in repository `plans/<ID>/`"
+      "literal": "Keep executable master plans in `plans/<ID>/`"
     },
     {
       "semantic_id": "root.development-validation",
@@ -119,7 +119,7 @@
     },
     {
       "semantic_id": "root.plan-lifecycle",
-      "literal": "reference plan items by the full `<PLAN-ID> Pn.m`"
+      "literal": "reference items as `<PLAN-ID> Pn.m`"
     },
     {
       "semantic_id": "root.reference-provenance",
@@ -422,16 +422,16 @@
       "literal": "Keep `lib/task/` stdlib-only"
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
-      "literal": "do not change those pins without explicit intent"
-    },
-    {
       "semantic_id": "task.schema-ownership",
       "literal": "change both when the schema changes"
     },
     {
       "semantic_id": "task.validation-release",
       "literal": "Before release run `bash packages/task/scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "task.claude-code.model-pins",
+      "literal": "do not change those pins without explicit intent"
     }
   ]
 }

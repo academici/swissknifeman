@@ -36,7 +36,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -101,7 +101,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -132,7 +132,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -168,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -201,7 +201,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -232,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -249,7 +249,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`. The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon. A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect.",
+          "intent": "Apply this source-derived instruction: Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`.",
           "obligations": [
             {
               "modality": "must",
@@ -270,16 +270,16 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
-            "Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
+            "Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`.",
             "`plans/<ID>/`",
+            "use the `plan-protocol` schema and commands",
             "`plan-protocol`",
-            "reference plan items by the full `<PLAN-ID> Pn.m`",
-            "The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon.",
-            "A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect."
+            "reference items as `<PLAN-ID> Pn.m`",
+            "Vault topology and authoring-provenance carriers are defined by that on-demand protocol."
           ]
         },
         {
@@ -302,7 +302,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -330,7 +330,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -362,7 +362,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -395,7 +395,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -422,7 +422,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -449,7 +449,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -476,7 +476,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -504,7 +504,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -531,7 +531,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -558,7 +558,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "beb226f241699c91c3c37c9884179d6031d8bffe410c60b0961b2cbe3b5e4432"
+              "sha256": "caf6cdde4d21fb56b3f2a1fb824a54c3c5e07ed94d60b7aa27adf474210b0cd6"
             }
           ],
           "compatibility_assertions": [
@@ -2085,7 +2085,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
@@ -2101,7 +2101,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 2,
-          "intent": "Apply this source-derived instruction: Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`. Also, each intent command declares its routed model class and effort.",
+          "intent": "Apply this source-derived instruction: Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort.",
           "obligations": [
             {
               "modality": "must",
@@ -2115,21 +2115,12 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
-            "Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`.",
-            "`design`",
-            "`dev`",
-            "`fix`",
-            "`research`",
-            "`review`",
-            "`plan-design`",
-            "`plan-exec`",
-            "`plan-run`",
-            "`plan-close`",
-            "`plan-audit`",
+            "Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort.",
+            "`commands/`",
             "each intent command declares its routed model class and effort"
           ]
         },
@@ -2139,7 +2130,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Keep executable plans in `plans/<PLAN-ID>/`; plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers. Also, `plan-run` inherits the owner session route.",
+          "intent": "Apply this source-derived instruction: Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.",
           "obligations": [
             {
               "modality": "must",
@@ -2153,12 +2144,11 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
-            "Keep executable plans in `plans/<PLAN-ID>/`",
-            "plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers.",
+            "Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.",
             "`plans/<PLAN-ID>/`",
             "`plan-run` inherits the owner session route"
           ]
@@ -2183,7 +2173,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
@@ -2214,7 +2204,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
@@ -2244,7 +2234,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
@@ -2272,7 +2262,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "b0c0af5ce4eee1c70909209a9fb6909078c13a3e9dab88759ed20f0e9b0d479d"
+              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
             }
           ],
           "compatibility_assertions": [
@@ -2286,7 +2276,7 @@
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 1,
-          "intent": "Apply this source-derived instruction: Claude Code exposes the catalog as `/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`, `/task:plan-design`, `/task:plan-exec`, `/task:plan-run`, `/task:plan-close`, and `/task:plan-audit`.",
+          "intent": "Apply this source-derived instruction: Claude Code projects the Task command catalog as `/task:*` commands.",
           "obligations": [
             {
               "modality": "must",
@@ -2300,21 +2290,12 @@
             {
               "source_id": "instruction.fragment.task.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
-              "sha256": "c5a0f2267544823f6243b64c87ca664e08ca7ec47e0e383c8df3196226f8b57e"
+              "sha256": "cb168e9ab163b4732ca1cce91e6973ac57fab30ae88607a01af4774c8190b3b4"
             }
           ],
           "compatibility_assertions": [
-            "Claude Code exposes the catalog as `/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`, `/task:plan-design`, `/task:plan-exec`, `/task:plan-run`, `/task:plan-close`, and `/task:plan-audit`.",
-            "`/task:design`",
-            "`/task:dev`",
-            "`/task:fix`",
-            "`/task:research`",
-            "`/task:review`",
-            "`/task:plan-design`",
-            "`/task:plan-exec`",
-            "`/task:plan-run`",
-            "`/task:plan-close`",
-            "`/task:plan-audit`"
+            "Claude Code projects the Task command catalog as `/task:*` commands.",
+            "`/task:*`"
           ]
         },
         {
@@ -2323,7 +2304,7 @@
           "kind": "provider-extension",
           "provider_id": "claude-code",
           "order": 2,
-          "intent": "Apply this source-derived instruction: Claude Code command frontmatter pins model and effort for each task type; do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
+          "intent": "Apply this source-derived instruction: Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route.",
           "obligations": [
             {
               "modality": "must",
@@ -2337,12 +2318,12 @@
             {
               "source_id": "instruction.fragment.task.claude-code",
               "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
-              "sha256": "c5a0f2267544823f6243b64c87ca664e08ca7ec47e0e383c8df3196226f8b57e"
+              "sha256": "cb168e9ab163b4732ca1cce91e6973ac57fab30ae88607a01af4774c8190b3b4"
             }
           ],
           "compatibility_assertions": [
-            "Claude Code command frontmatter pins model and effort for each task type",
-            "do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
+            "Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route.",
+            "do not change those pins without explicit intent.",
             "`plan-run`"
           ]
         }
@@ -2354,60 +2335,232 @@
       "codex_target": "packages/artifex/AGENTS.md",
       "sections": [
         {
-          "id": "artifex.identity", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 1,
+          "id": "artifex.identity",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
           "intent": "Apply this source-derived instruction: `artifex` is the standalone deterministic supervisor package; its package runtime is the sole live implementation after G1.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "preserve", "object": "artifex.identity.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["`artifex` is the standalone deterministic supervisor package", "its package runtime is the sole live implementation after G1.", "`artifex`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "preserve",
+              "object": "artifex.identity.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "`artifex` is the standalone deterministic supervisor package",
+            "its package runtime is the sole live implementation after G1.",
+            "`artifex`"
+          ]
         },
         {
-          "id": "artifex.layout", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 2,
+          "id": "artifex.layout",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
           "intent": "Apply this source-derived instruction: Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "maintain", "object": "artifex.layout.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.", "`bin/artifex`", "`lib/artifex/`", "`tests/`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "maintain",
+              "object": "artifex.layout.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.",
+            "`bin/artifex`",
+            "`lib/artifex/`",
+            "`tests/`"
+          ]
         },
         {
-          "id": "artifex.runtime-boundaries", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 3,
+          "id": "artifex.runtime-boundaries",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
           "intent": "Apply this source-derived instruction: Keep provider adapters additive over one shared supervisor contract; use bounded fresh processes and never make package runtime import `plans/**`.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "preserve", "object": "artifex.runtime-boundaries.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["Keep provider adapters additive over one shared supervisor contract", "use bounded fresh processes and never make package runtime import `plans/**`.", "`plans/**`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "preserve",
+              "object": "artifex.runtime-boundaries.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep provider adapters additive over one shared supervisor contract",
+            "use bounded fresh processes and never make package runtime import `plans/**`.",
+            "`plans/**`"
+          ]
         },
         {
-          "id": "artifex.provenance", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 4,
+          "id": "artifex.provenance",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
           "intent": "Apply this source-derived instruction: Keep generation and source hashes explicit; plan-local runtime remains immutable non-importable evidence rather than a package dependency.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "record", "object": "artifex.provenance.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["Keep generation and source hashes explicit", "plan-local runtime remains immutable non-importable evidence rather than a package dependency."]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "record",
+              "object": "artifex.provenance.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep generation and source hashes explicit",
+            "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
+          ]
         },
         {
-          "id": "artifex.engineering-invariants", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 5,
+          "id": "artifex.engineering-invariants",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
           "intent": "Apply this source-derived instruction: Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "enforce", "object": "artifex.engineering-invariants.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.", "`lib/artifex/`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "enforce",
+              "object": "artifex.engineering-invariants.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
+            "`lib/artifex/`"
+          ]
         },
         {
-          "id": "artifex.validation-release", "scope_id": "artifex", "kind": "common", "provider_id": null, "order": 6,
+          "id": "artifex.validation-release",
+          "scope_id": "artifex",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
           "intent": "Apply this source-derived instruction: Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.",
-          "obligations": [{"modality": "must", "subject": "artifex.maintainer", "action": "validate", "object": "artifex.validation-release.requirements", "boundary": "artifex.all"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.common", "path": "packages/harness/configs/common/instructions/packages/artifex/common.md", "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"}],
-          "compatibility_assertions": ["Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.", "`bash scripts/test.sh`", "`bash scripts/validate.sh`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.maintainer",
+              "action": "validate",
+              "object": "artifex.validation-release.requirements",
+              "boundary": "artifex.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.common",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
+              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`"
+          ]
         },
         {
-          "id": "artifex.claude-code.package-scope", "scope_id": "artifex", "kind": "provider-extension", "provider_id": "claude-code", "order": 1,
+          "id": "artifex.claude-code.package-scope",
+          "scope_id": "artifex",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
           "intent": "Apply this source-derived instruction: Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules.",
-          "obligations": [{"modality": "must", "subject": "artifex.claude-code.maintainer", "action": "preserve", "object": "artifex.claude-code.package-scope.requirements", "boundary": "artifex.provider.claude-code"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.claude-code", "path": "packages/harness/configs/common/instructions/packages/artifex/claude-code.md", "sha256": "3d9074062a67ba543e813d670ebef5ed81e2d40f06930b36af13ec9e4191b018"}],
-          "compatibility_assertions": ["Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.claude-code.maintainer",
+              "action": "preserve",
+              "object": "artifex.claude-code.package-scope.requirements",
+              "boundary": "artifex.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/claude-code.md",
+              "sha256": "3d9074062a67ba543e813d670ebef5ed81e2d40f06930b36af13ec9e4191b018"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
+          ]
         },
         {
-          "id": "artifex.codex.package-scope", "scope_id": "artifex", "kind": "provider-extension", "provider_id": "codex", "order": 1,
+          "id": "artifex.codex.package-scope",
+          "scope_id": "artifex",
+          "kind": "provider-extension",
+          "provider_id": "codex",
+          "order": 1,
           "intent": "Apply this source-derived instruction: Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.",
-          "obligations": [{"modality": "must", "subject": "artifex.codex.maintainer", "action": "start", "object": "artifex.codex.package-scope.requirements", "boundary": "artifex.provider.codex"}],
-          "sources": [{"source_id": "instruction.fragment.artifex.codex", "path": "packages/harness/configs/common/instructions/packages/artifex/codex.md", "sha256": "dc2b86f1730c1addbf8c16bfd4c05524bdf89199a531f7c899ac722a7824a9c3"}],
-          "compatibility_assertions": ["Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.", "`codex -C packages/artifex`"]
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "artifex.codex.maintainer",
+              "action": "start",
+              "object": "artifex.codex.package-scope.requirements",
+              "boundary": "artifex.provider.codex"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.artifex.codex",
+              "path": "packages/harness/configs/common/instructions/packages/artifex/codex.md",
+              "sha256": "dc2b86f1730c1addbf8c16bfd4c05524bdf89199a531f7c899ac722a7824a9c3"
+            }
+          ],
+          "compatibility_assertions": [
+            "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.",
+            "`codex -C packages/artifex`"
+          ]
         }
       ]
     }

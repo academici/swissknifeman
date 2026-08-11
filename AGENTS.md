@@ -40,7 +40,7 @@ Maintain one generated `swissknifeman` marketplace with package provenance; plug
 Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate. In addition, take external code as a pattern and rewrite it, never as a runtime dependency, and never roll out always-on context without a measured budget verdict.
 <!-- instruction:root.plan-lifecycle -->
 ## root.plan-lifecycle
-Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands. Also, reference plan items by the full `<PLAN-ID> Pn.m`, never the bare `Pn.m`. The vault keeps only the programme-level cross-project plan and a link to the control tower; the situational map of where things live is the `axioma/ecosystem-map` skill, not this canon. A plan's authoring-model provenance is likewise a canon obligation, carried by three existing carriers — `Authoring Model` in Meta, the Update Log role/model column, and the journal `actor` field — and a plan missing any one of them carries a defect.
+Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol.
 <!-- instruction:root.development-validation -->
 ## root.development-validation
 Run the affected package validation command before handoff and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.

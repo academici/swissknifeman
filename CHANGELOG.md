@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`harness`: новые SessionEnd run-report'ы сохраняются в корне Git-репозитория.**
+  Вложенный launch cwd остаётся в поле `cwd`, а вне Git сохранён прежний fallback; исторические
+  отчёты не мигрируются.
+
 - **`task`: v1→v2 plan migration теперь сохраняет полное исходное дерево плана.**
   Генератор добавляет `artifacts/migration-source-v1/` с точными байтами всех legacy
   файлов и SHA-256 manifest; исторические audit-разделы и свободная проза больше не

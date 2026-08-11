@@ -9,6 +9,10 @@
   а не недоступность MCP. После уточнения владельца запросы повторены через базовый search.
 - Post-audit remediation: два узких `search_advanced(sources=web)` запроса завершились 2/2;
   найденные official URLs открыты и проверены напрямую 2026-08-10.
+- Field-telemetry follow-up 2026-08-11: обычный `perplexity-web search` получил семь узких
+  запросов; четыре вернули usable synthesis, три — `No answer found`. No-answer не трактовался
+  как факт. Load-bearing resilience/alerting/session claims перепроверены по official Google SRE,
+  Azure, Kubernetes и Claude Code pages.
 - Нагрузочные выводы ниже сверены по первичным официальным материалам; WebSearch применялся
   только для открытия и перепроверки первоисточников, не вместо Perplexity RAG.
 
@@ -35,6 +39,15 @@
    complex-feature strategies недостаточны. Официальная формулировка — decomposition “adds the
    most overhead of any strategy”, не «самый дорогой вариант»; финансовая/token-cost
    интерпретация не делается. Проверено 2026-08-10.
+7. **Actionable symptom, not every cause.** Google SRE отделяет human-interrupt alert от
+   diagnostic cause: page должен быть urgent/actionable и отражать active/imminent impact.
+   Для Task tool error остаётся diagnostic, пока не доказан current acceptance impact.
+8. **Classify before retry.** Azure разделяет cancel/immediate/delayed retry, требует учитывать
+   idempotency и рекомендует восстановленные ранние failures логировать informational; финальная
+   неудача после bounded policy становится error.
+9. **Readiness is not liveness.** Kubernetes оставляет временно not-ready процесс живым и
+   резервирует restart для действительной inability to progress. Future carrier, живой PID и
+   временная dependency поэтому не равны terminal failure.
 
 ## Проектный синтез
 
@@ -78,11 +91,27 @@
   https://github.com/github/spec-kit
   https://github.github.com/spec-kit/concepts/complex-features.html
   https://github.github.com/spec-kit/concepts/spec-of-specs.html
+- Google SRE, *Monitoring Distributed Systems* — actionable symptom-based human interruption,
+  cause signals for diagnosis and alert-fatigue boundary:
+  https://sre.google/sre-book/monitoring-distributed-systems/
+- Microsoft Azure Architecture Center, *Retry pattern* — transient classification, bounded
+  retry, idempotency and informational early failures:
+  https://learn.microsoft.com/en-us/azure/architecture/patterns/retry
+- Microsoft Azure Architecture Center, *Circuit Breaker pattern* — stop repeating a persistent
+  failure while allowing the rest of the system to continue:
+  https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker
+- Kubernetes, *Liveness, Readiness, and Startup Probes* — temporary readiness vs terminal
+  liveness distinction:
+  https://kubernetes.io/docs/concepts/workloads/pods/probes/
+- Anthropic, *Claude Code environment variables* — observed `CLAUDE_CODE_SESSION_ID` in Bash/
+  PowerShell subprocesses:
+  https://code.claude.com/docs/en/env-vars
 
 ## Verification footer
 
 External fact classes covered: agent instruction design, context limits, progressive planning,
-management by exception, risk-based assurance and conditional decomposition. Confidence: high
+management by exception, risk-based assurance, conditional decomposition, actionable alerting,
+transient/idempotent retry, readiness/liveness and provider session identity. Confidence: high
 for the exact official tolerance/escalation boundary and Spec Kit workflow/overhead wording;
 medium for local tolerance calibration, which remains a field-canary responsibility. Nothing
 unverified; no workaround. No load-bearing conclusion rests only on a tool-poor summary or on the

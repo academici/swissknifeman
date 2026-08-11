@@ -39,6 +39,17 @@ gates, зависимости и следующий исполнимый сре�
 | Тот же failure fingerprint повторён | сменить тактику / один независимый review |
 | Authority, security, irreversible, acceptance change | остановить и запросить владельца |
 
+Для plan-audit детерминированный non-material bookkeeping defect является частным случаем первой
+строки: repair и один gate rerun происходят в том же attempt; новый verdict cycle не создаётся.
+Material/spec/authority finding остаётся за пределами этого envelope. RAG:— (repo-grounded: D11).
+
+До любого stop/retry исполнитель применяет D12: наблюдает actual process/diff, минимально
+воспроизводит сигнал, классифицирует его и только затем действует. Procedural/transient/
+dependency-not-ready/unrelated-pre-existing не меняют product status; acceptance/safety/authority
+останавливают только затронутый item. Unknown outcome non-idempotent write fail-closed до
+reconciliation. RAG:✅ 2026-08-11 (`findings/06-cross-project-execution-telemetry.md`,
+`research/07-adaptive-failure-and-telemetry-synthesis.md`).
+
 ## Группировка и сессии
 
 Roadmap предлагает causal groups, но не создаёт cursor/lease/manifest. Owning-agent вправе
@@ -52,3 +63,8 @@ Roadmap предлагает causal groups, но не создаёт cursor/leas
 interruptions и повторных чтений; смог ли агент закрыть малые отклонения сам; сохранились ли
 границы. Автотесты проверяют синтаксис и критические переходы, но не объявляют UX протокола
 успешным без живого canary.
+
+Canary также измеряет control-plane stop tax: routing blocks, audit/retry loops, duplicate
+terminals, cold starts, same-attempt recoveries и journal↔run join. D13 использует существующие
+journal/run-report carriers; отсутствие optional telemetry остаётся coverage gap, а не новым
+product gate.

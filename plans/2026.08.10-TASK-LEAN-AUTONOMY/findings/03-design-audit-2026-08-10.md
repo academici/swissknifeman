@@ -346,6 +346,7 @@ $ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
 СКОУП: 1) split invalid cross-phase Routing and make 4/4 Task Contracts build 2) replace prose Validation with exact commands and per-item package validate 3) reconcile S1/S2 with package-cwd launches 4) seal P1.1/P1.2 Files and stabilization admission 5) define GO/ADJUST status+Next 6) restore literal design-pass journal provenance 7) add D1–D6 actor/model and evidence links 8) render complete neutral+native group launches 9) minimize/regenerate bundles with measured budget 10) commit reviewed carriers and rerun final gates
 НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D6 safety/authority/public semantics; не hand-edit generated state/status/decision/bundle views; не включать и не откатывать чужие изменения ARTIFEX/docs/roadmap вне явно принятого remediation scope
 ```
+
 **Native Codex launch block**
 
 | Model | Thinking | Context | Суть | Команда |
@@ -360,6 +361,147 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 СКОУП: 1) split invalid cross-phase Routing and make 4/4 Task Contracts build 2) replace prose Validation with exact commands and per-item package validate 3) reconcile S1/S2 with package-cwd launches 4) seal P1.1/P1.2 Files and stabilization admission 5) define GO/ADJUST status+Next 6) restore literal design-pass journal provenance 7) add D1–D6 actor/model and evidence links 8) render complete neutral+native group launches 9) minimize/regenerate bundles with measured budget 10) commit reviewed carriers and rerun final gates
 НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D6 safety/authority/public semantics; не hand-edit generated state/status/decision/bundle views; не включать и не откатывать чужие изменения ARTIFEX/docs/roadmap вне явно принятого remediation scope'
 ```
+
+## Audit design — 2026-08-11 — заход 4
+
+**Вердикт: GREEN**
+
+**Заход: 4-й.** До запуска в `journal.jsonl` были три terminal-записи `plan-audit` для `design`.
+Лимит двух раундов относится к audit закрытой фазы Pn; design-ревью после material remediation
+F16–F19 выполнено на новом committed anchor.
+
+F1–F19 воспроизводимо закрыты. Preliminary pass обнаружил F20 — stale one-line freshness marker
+индекса. Владелец справедливо остановил ATTENTION/handoff как воспроизведение самой проблемы
+плана. F20 исправлен inline в этом же attempt, gates повторены, а D11 защищает эту семантику в
+runtime. Пятого audit/design pass/root нет.
+
+По прямому owner request тот же design root выполнил bounded research, а не новый audit: все
+доступные Agelto/Swiss Knife Man plan carriers, 2,187 journal events и 89 local run reports
+разобраны по конкретным причинам. Решения D12/D13 и exact P0.1/P0.2/P1.1/P1.2 acceptance
+добавлены до GREEN. Это material owner refinement audit target в пределах текущего незавершённого
+attempt, а не post-GREEN re-audit.
+
+### Tree anchor and deterministic checks
+
+Исходным committed anchor был `259bef51edb2827b1c428f163306b073f867c53f`; target-plan до
+этого attempt полностью совпадал с ref. Затем в том же незавершённом root были добавлены
+owner-requested D11–D13 refinement и terminal audit event; gates ниже повторены на итоговых
+target-only bytes. Foreign dirty ARTIFEX, `docs/reference.md`, root `roadmap/` и
+`plans/ACTIVE.md` не изменялись и не использовались как green evidence.
+
+- targeted `plan-lint` → **0 ERROR / 0 WARN**;
+  `plan-lint --conflicts` → **0 mismatches / 0 warnings**;
+- strict citation verifier → **22 citations / 0 findings**;
+- `plan-views.py state/status/decisions/bundle --check` → **4/1/4/4 byte-current**;
+- Task Contract build → **4/4 buildable**, **0 conflicts**; текущий pre-P1.1 runtime ещё эмитит
+  historical `same-session — item`, а exact v2 `continue-root` + v1 compatibility являются
+  явным red-first acceptance самого P1.1, не пропущенным design gap;
+- bundle estimated tokens / repeated `(path, selector)`: P0.1 **18,206 / 0**; P0.2
+  **22,205 / 0**; P1.1 **26,861 / 0**; P1.2 **14,482 / 0**;
+- `bash packages/task/scripts/validate.sh` → exit 0, **750 tests / 1 skip**, `validate: OK`;
+  repository scan → **0 ERROR / 252 WARN**, все WARN вне target plan;
+- единый D9+D13 precondition сейчас честно red: все шесть
+  `git grep ... HEAD -- docs/reference.md` вернули 1; roadmap поэтому оставляет P1.2 в
+  structural `waiting`, не маскирует prerequisite как green.
+
+## Inline repair evidence — заход 4
+
+### F20 · Minor · confidence high · resolved · `index.md:3`
+
+**Freshness-marker индекса датирован раньше newest carrier, который сам индекс уже объявляет.**
+
+Preliminary bytes сообщали `Обновлён: 2026-08-10`, хотя provenance table уже включала
+carrier'ы от `2026-08-11`. Исправлен только freshness marker; product/spec/acceptance/authority
+semantics не менялись.
+
+**Constitution rule:** существующий `index.md` — handwritten/slow navigation carrier; design
+checklist требует reconstructible и непротиворечивую цепочку brief → findings → research →
+decisions. Freshness-marker не должен утверждать более старый snapshot, чем перечисленные bytes.
+
+**Repair evidence:** `index.md` теперь датирован `2026-08-11`; D11, red-first P1.1 acceptance и
+P1.2 scorecard требуют same-attempt repair + one deterministic rerun для такого класса.
+
+**Boundary proof:** D11 не распространяется на sealed spec, material product/acceptance,
+security/authority, необратимость или model judgement. Открытых findings после repair нет.
+
+## Cross-project field evidence — заход 4
+
+- Agelto: 775 journal events; 38 audits, 9 routing-only blocks, 37 retries; 46 reports в 6 cwd
+  roots, 134 tool failures и 0 error loops.
+- Swiss Knife Man: 1,412 journal events; 103 audits, 33 blocked (минимум 23 procedural), 119
+  retries; 43 reports в 8 cwd roots, 73 tool failures и 0 error loops.
+- Нулевой journal↔run join, future consumers, premature PID terminalization, literal/status/date
+  cycles, inherited baseline red и duplicate close сведены в causal cases
+  `findings/06-cross-project-execution-telemetry.md`.
+- Verified Perplexity follow-up по Google SRE, Azure Retry/Circuit Breaker, Kubernetes probes и
+  Claude session identity синтезирован в `research/07-adaptive-failure-and-telemetry-synthesis.md`.
+- D12 сохраняет жёсткими reproduced acceptance/safety/authority; D13 добавляет только root
+  capture, identity correlation и idempotency, без supervisor/daemon/database.
+
+## Brief trace — заход 4
+
+| Мысль brief/refinements | Носители | Результат |
+|:--|:--|:--|
+| Strict initial contract, authority/safety boundaries | D1/D2/D6, четыре item specs | covered |
+| Adaptive grouping/local repair, без ritual loop | D1–D3, P0.2/P1.1, roadmap | covered |
+| Minimal always-on и progressive disclosure | D4, P0.1/P0.2 | covered |
+| Required Perplexity base-search stop | D6, P0.1/P0.2 | covered |
+| Compact plan/few sessions/bounded reads | 2 фазы, 4 package-owned solo, minimized bundles | covered |
+| Field-first acceptance, GO/ADJUST и no-event | D5/D8/D10, P1.2 | covered |
+| Inline non-material audit repair without loop | D11, findings-05, P0.2/P1.1/P1.2 | covered; F20 resolved same-attempt |
+| Actual-effect failure classification and safe fallbacks | D12, findings-06/research-07, P0.2/P1.1/P1.2 | covered |
+| Correlated/idempotent lean telemetry | D13, P0.1/P1.1/P1.2 | covered without new control plane |
+| Docs/release/provenance/foreign-diff boundaries | P1.1, D9/D10/D13, research-05/06/07 | covered; one owner ledger gate |
+
+Непокрытых мыслей brief/refinements не найдено.
+
+## Проверено без находок — заход 4
+
+- phase contracts acyclic: P0.1 → P0.2 → P1.1 → P1.2 through generated predecessor state;
+- Routing покрывает четыре item'а ровно по одному разу и совпадает с roadmap
+  `implementation/high · manual · full`;
+- roadmap покрывает все item'ы, объясняет каждый solo package-cwd boundary, содержит neutral/native
+  launch blocks; owner gates ограничены единым D9+D13 ledger и определённым D8/D10–D13 ADJUST;
+- no live skeleton/clarification marker; обе Phase DoR заполнены;
+- Design Passes 2/2 подтверждены literal pass 1/2 и 2/2 в journal/generated Update Log;
+- D1–D13 имеют actor/model/evidence provenance; никто не supersedes/cancels другой record, поэтому
+  `**Consequences:**` не требуется;
+- external RAG хранит source URL, verification date и confidence boundary; 2026-08-11
+  Perplexity follow-up перепроверен по primary official pages;
+- F1–F20 remediation и owner field refinement D11–D13 присутствуют в target carriers и
+  воспроизводятся перечисленными gates.
+
+## Проверка среды — заход 4
+
+- `codex doctor --json`: overall OK, `gpt-5.6-sol`, approval Never, filesystem unrestricted;
+  xhigh effort остаётся self-attested, как прямо допускает текущая route evidence boundary;
+- `maind health --cwd --json`: connected, provider trust green;
+- `harness doctor`: stale global `run-report` и unconfigured review-gate остаются environment
+  limitation; hook telemetry не использовалась как acceptance evidence;
+- installed cache `core:plan-protocol` 2.23.0 протух относительно worktree SSOT 2.24.0; аудит
+  применял полный worktree canon/reference. Worktree `packages/task/commands/plan-audit.md` имеет
+  expected canonical SHA-256 `eac4ee8d...`, поэтому semantic command body совпадает с projection.
+
+### Что запускать
+
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1
+
+**Provider-neutral plan-protocol launch block**
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | cold-start-root |
+| Суть | reason=`owner-pause-no-resume`; выполнить P0.1 Harness instruction thinning + D13 repository-root run evidence |
+| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1` |
+
+**Native Codex launch block**
+
+| Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|
+| gpt-5.6-terra | high | `cold-start-root` (`owner-pause-no-resume`) | P0.1 Harness instruction + run-report scope; preserve D4/D6/D12/D13 | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/harness -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1'` |
 
 ## Audit design — 2026-08-10 — заход 2
 

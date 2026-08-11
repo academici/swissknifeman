@@ -53,3 +53,34 @@
 - Обновить index для refinements, research-05/06 и D9/D10; переписать stale handoff на F16–F19.
 - Не выполнять P0/P1, не менять package/product code, не ослаблять D1–D9 и не hand-edit
   generated views.
+
+## Field feedback from final design audit — 2026-08-11
+
+- Сам audit не должен тормозить работу из-за детерминированной non-material plan-bookkeeping
+  мелочи: stale date/freshness marker, навигационная опечатка или generated-view drift в пределах
+  разрешённых plan carriers исправляются inline текущим owning-root.
+- После одной repair + deterministic gate rerun тот же audit attempt закрывается `GREEN`; новый
+  audit/design pass/session, `ATTENTION` handoff или reopen из-за такой мелочи не создаётся.
+- Это исключение не распространяется на material product/spec/acceptance, authority/security,
+  необратимость, sealed item scope или решение с модельным judgement: они остаются finding/gate.
+- Наблюдаемый инцидент: заход 4 почти остановил исполнение из-за `index.md` freshness date, хотя
+  содержательная трассировка была полной. Исправить F20 и сам протокол в текущем root, без пятого
+  audit-захода.
+
+## Cross-project telemetry directive — 2026-08-11
+
+- До исполнения разобрать конкретные причины остановок, retries, audit loops и tool failures во
+  всех доступных планах/logs Agelto и Swiss Knife Man; голые счётчики без causal case study
+  недостаточны.
+- Агент сначала проверяет, что фактически произошло с процессом, diff и acceptance, и только
+  затем решает repair/retry/continue/stop. Low-level error, ATTENTION, dirty tree или routing
+  mismatch не равны product failure.
+- Дать гибкую, лёгкую схему: мелкие items и строгие safety/authority/acceptance boundaries, но
+  свободная same-session группировка, локальные fallbacks и отсутствие panic/re-audit на
+  procedural noise.
+- Сохранить настоящие stop cases: security/data loss, frozen acceptance, irreversible/unknown
+  write outcome, live-state ownership и исчерпанная authority.
+- Дополнить repo evidence обычным Perplexity Web по adaptive execution, resilient failure
+  handling и alert fatigue; принимать только выводы, перепроверенные по первичным источникам.
+- Встроить решения непосредственно в executable items и canary scorecard; новый supervisor,
+  daemon или отдельный telemetry project не создавать.

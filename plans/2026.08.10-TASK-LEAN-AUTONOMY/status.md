@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 644d87547adc426d0e4c70e537b4759e3e403c3cc5104c903248e59246c1ab3d
+inputs_sha256: 6860e37243762833256496dc2839e31e220c0fcebff115742f45515e8a56ea40
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Минимизировать always-on instruction canon | ⬜ Not started | — |
+| P0.1 | Минимизировать always-on canon и стабилизировать run evidence | ⬜ Not started | — |
 | P0.2 | Сократить Skiller plan canon до adaptive loop | ⬜ Not started | — |
 
 ## Phase P1
@@ -57,6 +57,7 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-green · Post-audit finish F16–F19: committed-SSOT scope, one real canary with exact no-event values, pre-D9 changelog owner, refreshed index/handoff; ready for plan-only commit and independent audit. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · Post-commit gate: P1.2 bundle stale после worktree→committed provenance transition; fixing forward через owner generator. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-deviations · Correction: stale P1.2 bundle caused by research/06 EOF edit after generation, not provenance transition. Bundle regenerated after final stable bytes; fixing commit required. |
+| 2026-08-11 | gpt-5.6-sol/xhigh | plan-audit · audit-green · заход 4, GREEN: F20 исправлен inline; Agelto/SKM telemetry и D12/D13 интегрированы; нового audit root нет |
 
 ## Owner Gates
 

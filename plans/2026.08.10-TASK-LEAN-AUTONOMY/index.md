@@ -36,6 +36,7 @@
 | `findings/08-p1-read-budget-and-preflight.md` | findings | P1 | missing read-budget diagnosis, environment preflight and D9+D13 waiting evidence |
 | `findings/09-p1-read-budget-measurement.md` | findings | P1 | D15 qualified unit, per-item/aggregate result and D74 anti-displacement answer |
 | `findings/10-p1-final-audit-root-causes.md` | findings | P2.1, P2.2 | воспроизводимые причины семи Major findings и границы package ownership |
+| `findings/P2.2-harness-driver-integrity.md` | findings | P2.2, P2.3 | terminal Harness evidence и Task-owned mixed-state status root cause |
 | `research/01-target-operating-model.md` | research | P0.1–P1.2 | единый strict-frame/adaptive-loop contract |
 | `research/02-design-finish-reconciliation.md` | research | P0.1–P1.2 | package ownership, routing, GO/ADJUST, bundle policy |
 | `research/03-task-transition-map.md` | research | P1.1 | bounded Task change map |
@@ -44,7 +45,7 @@
 | `research/06-design-finish-remediation-f16-f19.md` | research | P1.1, P1.2 | committed SSOT, real canary, release ledger и index reconciliation |
 | `research/07-adaptive-failure-and-telemetry-synthesis.md` | research | P0.1–P1.2 | D12 decision table, D13 lean observability and verified Perplexity follow-up |
 | `research/08-p1-design-premortem.md` | research | P1 design | 6–12 month failure clusters, owners and existing D15/D16/D9/D13 mitigations |
-| `research/09-p2-quality-remediation-design.md` | research | P2.1–P2.3 | successor sequence, red-first cases, anti-shortcuts и requalification gates |
+| `research/09-p2-quality-remediation-design.md` | research | P2.1–P2.4 | successor sequence, red-first cases, anti-shortcuts и requalification gates |
 | `decisions/D9-external-ledger-prerequisite.md` | decision | P1.2 | owner-owned committed external-ledger prerequisite |
 | `decisions/D10-field-canary-and-release-ledger.md` | decision | P1.1, P1.2 | exact no-event values и pre-D9 `[Unreleased]` owner |
 | `decisions/D11-inline-nonmaterial-audit-repair.md` | decision | P0.2, P1.1, P1.2 | non-material audit bookkeeping repair inline без нового цикла |
@@ -58,7 +59,7 @@
 | `decisions/D19-p2-1-provider-parity-ownership.md` | decision | P2.1 | exact Files correction for context-enum parity regression |
 | `decisions/D20-v2-write-site-forward-only-cutoff.md` | decision | P2.1 | v2 activation cutoff without retroactive P0/P1 mutation |
 | `decisions/D21-p2-1-review-remediation-ownership.md` | decision | P2.1 | isolated-review scope amendment for tracked aggregate and canonical v2 phase completeness |
-| `decisions/D21-p2-1-review-remediation-ownership.md` | decision | P2.1 | isolated-review scope amendment for tracked aggregate and canonical v2 phase completeness |
+| `decisions/D22-status-projection-before-requalification.md` | decision | P2.3, P2.4 | mixed-state owner status fix precedes renumbered live requalification |
 
 ## Ключевые артефакты `root/`
 

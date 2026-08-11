@@ -3,7 +3,7 @@ projection: decision-current
 projection_version: v1
 source_scope: decisions/
 through: 2026-08-10/D9
-inputs_sha256: dc92133ddaf6eb23848621bbf8fc99fcf3223bd5bc5910761fc45742a7d9b0ec
+inputs_sha256: 2fc68aa139c0b03207f09aa21e0ba19db2768ed4134dfcc17b4783ff7128cabd
 generated_by: task plan-views decisions
 -->
 
@@ -25,6 +25,7 @@ generated_by: task plan-views decisions
 | D2 | 2026-08-10 | accepted | P0.2, P1.1 | Мелкий обратимый дефект в scope исправляется в той же owning-сессии. Повтор одного failure fingerprint вызывает смену тактики и максимум один scoped review; остановка обязательна только на material/authority boundary или при подтверждённом no-progress. |
 | D20 | 2026-08-11 | accepted | P2.1 | Сохранить v1 `WRITE_SITE_CODES_CANON_DATE=2026-07-27` и добавить отдельный layout-v2 cutoff `2026-08-12`, следующий календарный день после реализации v2 reader. Внутренняя status row несёт layout marker; policy выбирает cutoff по нему. V2 terminal item с `Updated >= 2026-08-12` и без канонической write-site строки обязан дать ERROR. |
 | D21 | 2026-08-11 | accepted | P2.1 | Принять обе находки изолированного review P2.1 как terminal-blocking для item'а и расширить exact Files только их владельцами: 1. Зафиксировать сгенерированный `docs/task/reference/provider-commands.md` через `scripts/docs-sync.sh`, потому что этот destination отслеживается Git и в clean checkout должен byte-for-byte совпадать с package source. 2. Перенести fail-closed проверку неполной v2 phase directory в канонический `task.plan_layout.phase_paths()`: каждый `phases/Pn/` обязан иметь readable regular `Pn.md`. Citation verifier по-прежнему не владеет topology glob и получает ошибку от canonical resolver. |
+| D22 | 2026-08-11 | accepted | P2.3, P2.4 | Вставить перед live requalification отдельный Task-owned item P2.3, который исправляет owner-facing status aggregation и закрепляет её red-first regression. Смесь terminal children и `⬜ Not started` означает уже начатый aggregate и обязана проецироваться как `🟡 In progress`; `⬜ Not started` остаётся только для пустого либо полностью не начатого набора. Текущие приоритеты `🔴 Blocked`, полностью `🟢 Done` и полностью terminal `🟢`/`🟠` сохраняются. Прежний P2.3 live requalification перенумеровывается в P2.4 и получает terminal P2.3 как явный input/read gate. Это безопасная forward-only смена адреса: прежний item не имеет journal events, его generated state показывает `⬜ Not started`, а product execution ещё не начиналось. D18 не переписывается: его successor-смысл сохраняется, а D22 фиксирует новый порядок и актуальные адреса. |
 | D3 | 2026-08-10 | accepted | P0.2, P1.1, P1.2 | После единственного pre-exec design audit новый аудит запускается только новым материальным триггером. Неизменившийся scope/SHA/risk переиспользует scoped verdict; minor/nit исправляется без re-audit. |
 | D4 | 2026-08-10 | accepted | P0.1, P0.2 | Always-on инструкции содержат только устойчивые инварианты и маршрутизацию. Подробная процедура и edge cases живут в on-demand skill/reference; generated projections меняются только через канонический Harness/Skiller источник. |
 | D5 | 2026-08-10 | accepted | P1.1, P1.2 | Focused deterministic checks остаются safety net; приёмка operating model требует живого canary и разбора фактической траектории. Новая exhaustive test matrix не создаётся. |

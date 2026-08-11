@@ -106,3 +106,13 @@
 - Любой новый конфликт разрешается по действующему repository canon, воспроизводимому коду и
   тестам; generated carriers меняются только через owning generators, чужой dirty worktree
   сохраняется.
+
+## Status projection amendment before live requalification — 2026-08-11
+
+- После terminal P2.2 generated owner view показывает P2 и весь план как `⬜ Not started`, хотя
+  P2.1/P2.2 уже terminal green; full Task validator этот mixed-state дефект не ловит.
+- Исправление принадлежит Task и должно быть отдельным regression item до product-free live
+  requalification: status является lifecycle truth для владельца и агентов, а не косметическим
+  отчётом.
+- Прежний не начатый canary item разрешено перенумеровать без переписывания terminal evidence;
+  новый порядок, зависимости, bundles, views, roadmap и handoff должны быть синхронизированы.

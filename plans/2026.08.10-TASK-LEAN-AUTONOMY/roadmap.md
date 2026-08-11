@@ -1,10 +1,11 @@
 # Roadmap исполнения — 2026.08.10-TASK-LEAN-AUTONOMY
 
-**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D18 successor P2 после final RED P1
+**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D18 successor + D22 status amendment
 
-P0/P1 остаются историей; D17 запрещает их третий audit/repair. Новое исполнение идёт по трём
-последовательным solo items с разными authoritative cwd. Batch не используется: P2.2 потребляет
-terminal P2.1, а P2.3 квалифицирует оба package anchors.
+P0/P1 остаются историей; D17 запрещает их третий audit/repair. Новое исполнение идёт по четырём
+последовательным solo items с authoritative package/root cwd. Batch не используется: P2.2
+потребляет terminal P2.1, P2.3 чинит обнаруженный после P2.2 owner-status defect, а P2.4
+квалифицирует все три package anchors.
 
 ## Карта исполнения
 
@@ -13,7 +14,8 @@ terminal P2.1, а P2.3 квалифицирует оба package anchors.
 | P0.1–P1.2 | history | — | — | D17 final RED | immutable provenance; не переисполнять |
 | P2.1 | solo | plan-run | implementation/high | D18 | Task-owned command/schema/verifier/docs-sync; cwd `packages/task` |
 | P2.2 | solo | plan-run | implementation/high | terminal green P2.1 | Harness driver/fixtures/docs/changelog; cwd `packages/harness` |
-| P2.3 | solo | plan-run | implementation/high | terminal green P2.1/P2.2 | root live requalification; product writes запрещены |
+| P2.3 | solo | plan-run | implementation/high | terminal green P2.2 + D22 | Task mixed-state status aggregation; cwd `packages/task` |
+| P2.4 | solo | plan-run | implementation/high | terminal green P2.1/P2.2/P2.3 | root live requalification; product writes запрещены |
 
 ## Готовые launch-block'и
 
@@ -47,7 +49,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.
 codex -C /home/vostrikov/projects/packages/swissknifeman/packages/harness -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.2'
 ```
 
-### P2.3 — root live requalification
+### P2.3 — Task owner-status regression
 
 **Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.3
 
@@ -55,11 +57,26 @@ codex -C /home/vostrikov/projects/packages/swissknifeman/packages/harness -m gpt
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Context | cold-start-root |
+| Context | cold-start-root: capability-missing |
 | Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.3` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.3'
+```
+
+### P2.4 — root live requalification
+
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.4
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Context | cold-start-root: capability-missing |
+| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.4` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.4'
 ```
 
 ## Гейты владельца

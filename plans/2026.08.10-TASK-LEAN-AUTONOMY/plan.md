@@ -75,12 +75,14 @@ canary, а не через новую исчерпывающую proof-сист�
 | — | P1.2 | implementation/high | manual | full | repository-root causal field verdict и stop-tax evidence: без product writes, но acceptance всего плана требует high/full |
 | — | P2.1 | implementation/high | manual | full | Task schema/command/verifier/docs-sync defects влияют на write-site и fail-closed guarantees |
 | — | P2.2 | implementation/high | manual | full | Harness v2 driver и cross-package fixtures управляют исполнением планов; ошибка может направить агента по ложному Next |
-| — | P2.3 | implementation/high | manual | full | root live canary и полная requalification являются acceptance всего successor-контракта |
+| — | P2.3 | implementation/high | manual | full | Task status projection является owner-facing lifecycle truth; ложный Not started скрывает фактический прогресс и ломает agent routing |
+| — | P2.4 | implementation/high | manual | full | root live canary и полная requalification являются acceptance всего successor-контракта |
 
 ## 4. Update Log
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | plan-designer / gpt-5.6-sol/high | D22 вставляет Task-owned P2.3 status aggregation regression перед canary; прежний не начатый P2.3 становится P2.4 без переписывания terminal evidence. |
 | 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |
 | 2026-08-11 | owner-authorized v2 forward-only activation / gpt-5.6-terra/high | D20 вводит отдельный v2 write-site cutoff 2026-08-12; immutable P0/P1 carriers не красятся задним числом. |
 | 2026-08-11 | owner-authorized P2.1 contract correction / gpt-5.6-terra/high | D19 добавляет omitted provider parity owner/test в exact Files; acceptance и четыре root causes не меняются. |

@@ -395,8 +395,8 @@ class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
         self.assertIn("task_contract.evaluate", self.plan_exec)
 
     def test_canon_states_n_a_is_not_green(self):
-        """D76's canonical claim explicitly names `n/a` as not green."""
-        self.assertIn("NOT green", self.skill_en)
+        """Compact D76 canon keeps the binary predicate without wording coupling."""
+        self.assertIn("both codes must be `allow`", self.skill_en)
 
     def test_canon_names_the_pre_final_predicate_boundary(self):
         """D77: §13 names the spec-FORM boundary rather than claiming good execution."""
@@ -445,12 +445,15 @@ class TestCommandReadPathProjection(unittest.TestCase):
                     self.assertIn(slot, text)
 
     def test_closing_commands_require_neutral_session_identity(self):
-        required = '--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"'
         for command in self.COMMANDS:
             with self.subTest(command=command):
                 text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
-                self.assertIn(required, text)
+                self.assertIn("plan-session.py current --id", text)
                 self.assertNotIn("CODEX_THREAD_ID", text)
+        for command in ("plan-exec.md", "plan-run.md"):
+            text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
+            self.assertIn("derive_run_id", text)
+            self.assertIn("--run-id", text)
 
     def test_v2_closure_production_is_explicit_and_v1_is_preserved(self):
         for command in ("plan-exec.md", "plan-close.md"):

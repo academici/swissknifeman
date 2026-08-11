@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:1d6d09f293924b891c7befae4609342714bf2ff116035c044b02cfe879f1202e
+Canonical SHA-256: sha256:9704f748ec02e95e697e7cc7c08ad343de44fa8eb5836d59af80910bede9c1a4
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -143,10 +143,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
+   сначала один раз получи observed `session_id` через `plan-session.py current --id` и вычисли
+   `run_id = task.journal.derive_run_id(plan_id, item_id, attempt, session_id)`; затем
    `PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
    команда> --actor <model>/<effort>
-   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result in-progress`
+   --session-id <session_id> --run-id <run_id> --attempt <N> --result in-progress`
    (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
@@ -154,9 +156,10 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 4. **Исполнение — СТРОГО в Scope Included.** Implementation Rules и Code Guidance item'а —
    жёсткие рамки, не рекомендации. Заметил «улучшить бы заодно» — запиши в **Pending Work**
-   item'а, НЕ делай. План разошёлся с реальным кодом (файла нет, сигнатура другая, якорь
-   не находится) → НЕ импровизировать, НЕ «чинить план на ходу» → эскалация (п. 5):
-   план правит plan-design, а не исполнитель. Recon/диагноз-deliverable item'а (если Deliverables
+   item'а, НЕ делай. Любой failure signal проходит `observe → minimal reproduce → classify → act → verify`.
+   Procedural/transient/dependency-not-ready/unrelated-pre-existing остаются в том же attempt:
+   safe fallback, локальная обратимая repair, bounded wait или независимое продолжение. Только
+   воспроизведённые acceptance/safety/authority границы останавливают затронутый item. Recon/диагноз-deliverable item'а (если Deliverables
    его декларируют) кладётся в `plans/<PLAN-ID>/findings/<Pn>-<slug>.md`.
 
 5. **Эскалация.** Триггеры (закрытый enum): многопакетный рефакторинг · неясная архитектура ·
@@ -172,7 +175,7 @@ Raw provider flags допустимы только в additive adapter/projectio
    - обнови `handoff.md` (Next: $ task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
    - **Журнал (D21, P1.1):** append финал-запись тем же вызовом, включая
-     `--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`: `--result escalated --friction escalation
+     теми же `--session-id <session_id> --run-id <run_id> --attempt <N>`: `--result escalated --friction escalation
      --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
      что старт-запись п. 3).
 
@@ -237,12 +240,14 @@ Raw provider flags допустимы только в additive adapter/projectio
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·
       **`Last Updated`** в `## 0. Meta` = дата закрытия item'а · **Журнал (D21, P1.1)**: append
-      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor/--session-id`, что старт-запись п. 3)
+      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor/--session-id/--run-id`, что старт-запись п. 3)
       `--result <closed-green|closed-deviations — по статусу выше> --attempt <N — 1-based счётчик
       попыток ЭТОГО item'а> --friction <из закрытого списка §2.1: deviation при непустых Known
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
       "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
+      Terminal append идемпотентен: повтор с тем же run/fingerprint возвращает существующий
+      `journal.jsonl:<line>` и не добавляет вторую terminal строку.
    `--note` обязана быть не длиннее 300 символов: writer отказывает ДО записи; полный отчёт
       живёт в Completion Notes/findings. Historical long note не переписывается, а owner status
       проецирует её коротким указателем `journal.jsonl:<line>` (D141).

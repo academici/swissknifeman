@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: plan-команды получили evidence-first runtime-переходы и коррелированный lifecycle.**
+  Routing preflight больше не записывает product failure, terminal journal close идемпотентен,
+  а phase candidate проходит свежий audit до close; каноническая документация Task теперь
+  собирается отдельно и в агрегированном сайте.
+
 - **`harness`: новые SessionEnd run-report'ы сохраняются в корне Git-репозитория.**
   Вложенный launch cwd остаётся в поле `cwd`, а вне Git сохранён прежний fallback; исторические
   отчёты не мигрируются.

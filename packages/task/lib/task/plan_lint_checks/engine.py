@@ -5,6 +5,32 @@ from .parsing import *
 from task import plan_gates
 
 
+_ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
+_ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
+
+
+def _lint_routing_item_cells(plan_lines, plan_path, diag):
+    """Keep lint and Task Contract on the same closed Routing ``Items`` grammar."""
+    _idx, body, start = _find_section(
+        plan_lines, re.compile(r"^##\s+3\.\s+Routing\s*$"))
+    if body is None:
+        return
+    headers, rows, _header = _parse_table(body, start)
+    if not headers or "Items" not in headers:
+        return
+    for row, line_number in rows:
+        cell = row.get("Items", "").strip().strip("`")
+        if _ROUTING_ITEM_RE.fullmatch(cell):
+            continue
+        match = _ROUTING_RANGE_RE.fullmatch(cell)
+        if match and match.group(1) == match.group(3) and int(match.group(2)) <= int(match.group(4)):
+            continue
+        diag.error(
+            plan_path, line_number,
+            f"Routing Items «{cell}» вне закрытой грамматики: допустим один item Pn.m "
+            "или возрастающий single-phase range Pn.a–Pn.b; batch задаётся отдельной колонкой")
+
+
 def lint_plan(plan_dir, diag):
     """Проверяет один план (plans/<PLAN-ID>/…). Возвращает распарсенную модель (dict)."""
     plan_dir = Path(plan_dir)
@@ -38,6 +64,8 @@ def lint_plan(plan_dir, diag):
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
         diag.error(plan_md, None, str(exc))
+    if layout == "v2" and plan_lines is not None:
+        _lint_routing_item_cells(plan_lines, plan_md, diag)
     board_phase_ids = set()
     if status_board:
         board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}

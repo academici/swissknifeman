@@ -1,4 +1,4 @@
-# Migration runbook for plan layout v1 → v2
+# Task migration runbook for plan layout v1 → v2
 
 Use this runbook to prepare a single repository-owned executable plan for the v2 layout.
 It does not authorize a migration: the plan owner must approve the target and inspect the dry-run

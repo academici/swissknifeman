@@ -1,4 +1,4 @@
-# Шаблоны plan-protocol — референс
+# Шаблоны Task plan-protocol — референс
 
 Все скелеты документов плана живут одним набором snippets в SSOT скилла:
 `packages/skiller/skills/general/plan-protocol/snippets/` (манифест — `index.json` там же).

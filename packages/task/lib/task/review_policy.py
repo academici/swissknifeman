@@ -32,6 +32,11 @@ from pathlib import Path
 FINDING_TYPES = ("product", "evidence", "process")
 SEVERITIES = ("blocker", "major", "minor", "nit")
 AUTHORITY_PROFILES = ("owner-gated", "self-host")
+SIGNAL_CLASSES = (
+    "procedural", "transient", "dependency-not-ready", "unrelated-pre-existing",
+    "acceptance", "safety", "authority",
+)
+TERMINAL_SIGNAL_CLASSES = frozenset({"acceptance", "safety", "authority"})
 
 # risk-review-loop-budget-v1.md §Loop budget and cadence.
 SAME_FINDING_MAX = 2
@@ -57,6 +62,41 @@ _VERIFYING_REOPEN_TARGET = "FIXING"
 # in a committed phase file, the same append-only audit region `plan-audit.md`'s
 # own two-round-cap grep already reads.
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
+
+
+def classify_signal(signal_class: str, *, reproduced: bool, scope_class: str,
+                    fingerprint: str, recovered: bool = False) -> dict:
+    """Map one observed failure to the lean D12 action boundary.
+
+    Raw tool/status/audit output is not accepted here as a terminal verdict: a
+    terminal class becomes terminal only after minimal reproduction.  Callers keep
+    their actual PID/diff/baseline checks; this helper owns only the closed taxonomy.
+    """
+    if signal_class not in SIGNAL_CLASSES:
+        raise ReviewPolicyError(
+            "FINDING_IDENTITY_UNSTABLE", f"unknown signal class {signal_class!r}")
+    if not isinstance(scope_class, str) or not scope_class:
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "scope_class is required")
+    if not isinstance(fingerprint, str) or not fingerprint:
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "fingerprint is required")
+    terminal = reproduced and signal_class in TERMINAL_SIGNAL_CLASSES and not recovered
+    actions = {
+        "procedural": "repair-local",
+        "transient": "retry-bounded",
+        "dependency-not-ready": "wait-or-continue-independent",
+        "unrelated-pre-existing": "record-baseline-delta-and-continue",
+        "acceptance": "stop-affected-item" if terminal else "reproduce-impact",
+        "safety": "reconcile-or-stop" if terminal else "reconcile-state",
+        "authority": "owner-gate" if terminal else "verify-authority",
+    }
+    return {
+        "signal_class": signal_class,
+        "scope_class": scope_class,
+        "fingerprint": fingerprint,
+        "action": actions[signal_class],
+        "recovered": bool(recovered),
+        "terminal": terminal,
+    }
 
 
 def _audit_blocks(phase_lines, phase_id: str):

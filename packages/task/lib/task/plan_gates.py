@@ -7,8 +7,10 @@ ready D2 result into actionable plan-lint diagnostics.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import subprocess
 from collections import Counter
 from pathlib import Path
 
@@ -21,6 +23,86 @@ BUNDLE_GATE_ID = "bundle-v1"
 PATH_GATE_ID = "read-path-v1"
 RETURN_LOOP_GATE_ID = "return-loop-v1"
 DECISION_QUEUE_GATE_ID = "decision-queue-v1"
+
+
+def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
+    """Classify inherited red without letting unrelated baseline failures gate work."""
+    current = set(current_failures)
+    baseline = set(baseline_failures)
+    owned = set(owned_failures)
+    introduced = current - baseline
+    return {
+        "introduced": tuple(sorted(introduced)),
+        "owned_regressions": tuple(sorted(introduced & owned if owned else introduced)),
+        "pre_existing": tuple(sorted(current & baseline)),
+        "blocks": bool(introduced & owned if owned else introduced),
+    }
+
+
+def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=()):
+    """Build D14's stable scope/item-head/risk fingerprint for a terminal candidate."""
+    plan_dir = Path(plan_dir)
+    if not re.fullmatch(r"P\d+", phase_id):
+        raise ValueError("phase_id должен иметь форму Pn")
+    items = []
+    for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
+        item_id = spec_path.stem
+        model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
+        status = model["state"]["position"]["status"]
+        if status not in {
+                plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
+                plan_status.STATUS_BLOCKED}:
+            raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
+        state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+        items.append({
+            "item_id": item_id,
+            "status": status,
+            "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+            "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
+        })
+    if not items:
+        raise ValueError(f"{phase_id} не содержит items")
+    completed = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=plan_dir, text=True,
+        capture_output=True, check=False)
+    head = completed.stdout.strip() if completed.returncode == 0 else "unknown"
+    snapshot = {
+        "phase_id": phase_id,
+        "scope": sorted(str(value) for value in scope),
+        "terminal_item_heads": sorted(items, key=lambda row: row["item_id"]),
+        "material_risks": sorted(str(value) for value in material_risks),
+        "repository_head": head,
+    }
+    encoded = json.dumps(snapshot, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return {"fingerprint": hashlib.sha256(encoded).hexdigest(), "snapshot": snapshot}
+
+
+def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint):
+    """Allow phase close only for the latest matching GREEN candidate audit."""
+    journal_path = Path(plan_dir) / "journal.jsonl"
+    latest = None
+    if journal_path.is_file():
+        for line_number, raw in enumerate(
+                journal_path.read_text(encoding="utf-8").splitlines(), start=1):
+            try:
+                event = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if event.get("command") == "plan-audit" and event.get("item_id") == phase_id:
+                latest = (line_number, event)
+    if latest is None:
+        return {"allow": False, "code": "PHASE_AUDIT_MISSING", "journal_line": None}
+    line_number, event = latest
+    if event.get("fingerprint") != candidate_fingerprint:
+        return {"allow": False, "code": "PHASE_AUDIT_STALE", "journal_line": line_number}
+    codes = {
+        "audit-green": (True, "allow"),
+        "audit-attention": (False, "PHASE_AUDIT_ATTENTION"),
+        "audit-red": (False, "PHASE_AUDIT_RED"),
+    }
+    allow, code = codes.get(event.get("result"), (False, "PHASE_AUDIT_INVALID"))
+    return {"allow": allow, "code": code, "journal_line": line_number}
 
 
 def _calibration_label(measurer) -> str:

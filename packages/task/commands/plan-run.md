@@ -62,15 +62,11 @@ fresh item state. Повторное чтение запрещено.
   закрывает item, которого сам не исполнял).
 - Routing-гейт п.2 инвертирован: сверяется ФАКТИЧЕСКАЯ модель/effort сессии с §3 Routing
   item'а (тир-порядок — plan-protocol §9). Недобор (модель или effort НИЖЕ предписанного)
-  → СТОП «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, сессия <фактическое>»,
-  статус item'а НЕ меняется. Перебор → исполнять, запись в Known Deviations (§6
+  → ДО journal start напечатай exact legal route/continuation для этого item'а и останови
+  только текущий dispatch; product status и journal НЕ меняются. Перебор → исполнять, запись в Known Deviations (§6
   `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
-  **Журнал (D21, P1.1):** при `ROUTING-BLOCKED`/`ROUTING-INCONSISTENT` append ОДНУ запись
-  `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m>
-  --command plan-run --actor <фактические model>/<фактический effort>
-  --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result blocked
-  --friction routing-blocked --note "<предписано vs фактическое>"` — работа не начиналась,
-  старт-запись плана-exec.md (п. 3) не пишется.
+  Routing reject до product work не является attempt и не создаёт `blocked`/`routing-blocked`
+  event: route correction — dispatch evidence, а не исход продукта.
 
 **Граница честности.** Самоатрибуция модели/effort агентом машинно НЕ проверяема (класс
 B2 аудита REGHUB). Фактическая модель/effort ОБЯЗАНЫ быть напечатаны в отчёте (строка
@@ -86,4 +82,7 @@ launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторн�
 Каждая journal-запись, которую `plan-run` наследует из `plan-exec.md`, передаёт тот же
 `--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`; resolver обязан
 найти ровно один provider adapter, иначе append не выполняется. Это provider-neutral правило:
-raw runtime identity принадлежит только adapter'у, а не canonical command.
+raw runtime identity принадлежит только adapter'у, а не canonical command. Перед start вычисли
+`run_id = task.journal.derive_run_id(plan_id, item_id, attempt, session_id)` и передай тот же
+непустой `--run-id` в start и terminal; повторный terminal close возвращает существующий pointer
+и не дописывает journal.

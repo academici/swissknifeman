@@ -103,6 +103,29 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
 
 
+class TestRoutingItemsGrammar(TmpPlanTestCase):
+    def _with_items(self, cell):
+        plan_id = "DEMO-" + cell.replace(".", "").replace("–", "TO")
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id, layout="v2")
+        path = plan_dir / "plan.md"
+        table = ("## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                 "|:--|:--|:--|:--|:--|:--|\n"
+                 f"| B1 | {cell} | implementation/high | manual | full | test |")
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "## 3. Routing", table), encoding="utf-8")
+        return plan_dir
+
+    def test_cross_phase_range_is_rejected_before_compiler(self):
+        _model, diag = _lint(self._with_items("P1.1–P2.1"))
+        self.assertTrue(_errors_containing(diag, "single-phase range"), diag.errors)
+
+    def test_single_item_and_same_phase_range_are_accepted(self):
+        for cell in ("P1.1", "P1.1–P1.3"):
+            with self.subTest(cell=cell):
+                _model, diag = _lint(self._with_items(cell))
+                self.assertEqual(_errors_containing(diag, "закрытой грамматики"), [])
+
+
 class TestNextDeclarationLine(TmpPlanTestCase):
     """D40 — форма `Next` объявляется ПЕРВОЙ строкой поля; проза launch-block'а (в т.ч.
     ячейка «Суть») законно ЦИТИРУЕТ другие формы enum'а и резолвер не перехватывает."""

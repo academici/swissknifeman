@@ -1,4 +1,4 @@
-# task — интент-команды постановки задач
+# task — команды постановки и выполнения задач
 
 **Что это.** Плагин Claude Code (`/task:*`) — тонкое лицо над agent-packs/workflow экосистемы.
 Каждая команда **пинит модель + reasoning effort + профиль workflow**, перебивая настройки сессии,
@@ -24,8 +24,8 @@
 | `/task:plan-design` | Opus / high | создать/детализировать мастер-план `plans/<ID>/` |
 | `/task:plan-exec` | Sonnet / medium | исполнить item плана по ТЗ |
 | `/task:plan-run` | маршрут текущей сессии | исполнить manual item без повторного выбора модели/effort |
-| `/task:plan-close` | Sonnet / low | закрыть item/фазу по git-фактам |
-| `/task:plan-audit` | Opus / xhigh | adversarial-аудит закрытой фазы |
+| `/task:plan-close` | Sonnet / low | recovery-сверка item либо закрытие фазы после свежего GREEN |
+| `/task:plan-audit` | Opus / xhigh | один pre-exec или pre-close аудит по material trigger |
 
 ## Как этим пользоваться
 
@@ -33,6 +33,11 @@
 `general/plan-protocol`. Процесс день за днём — [Разработка](/develop).
 
 Валидатор планов: `python3 packages/task/scripts/plan-lint.py plans/<PLAN-ID>`.
+
+Сбой инструмента или bookkeeping-дефект не открывает новый цикл дизайна. Исполнитель сначала
+воспроизводит влияние, чинит обратимую локальную причину в том же attempt и продолжает. Остановка
+нужна только для подтверждённой acceptance/safety/authority границы; повторный аудит без
+material scope/SHA/risk change не запускается.
 
 ## Отпечатки возвратов
 
@@ -71,7 +76,7 @@ python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phas
 
 | Страница | Что там |
 |:--|:--|
-| [Методология — полный цикл](/task/methodology) | Mermaid-карта research → design → refine (DoR, pre-mortem) → approve → exec (commit-гейт, два дома) → review (таксономия) → archive → docs |
-| [Структура плана](/task/plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
-| [Шаблоны](/task/templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
-| [Конструктор workflow](/task/workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |
+| [Методология — полный цикл](./methodology) | Mermaid-карта research → design → refine (DoR, pre-mortem) → approve → exec (commit-гейт, два дома) → review (таксономия) → archive → docs |
+| [Структура плана](./plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
+| [Шаблоны](./templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
+| [Конструктор workflow](./workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:f267fcf72eebc692b4138cd7ebe18cdfa11cf19dc5a427aa3bba97a15c499fbe
+Canonical SHA-256: sha256:8529d749310afbd4148a37caac2048a0d227ff874665c827b965459dc741d0ae
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -84,8 +84,9 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   | `$ task:plan-exec <ID> Pn.m` | следующий item детализирован, `Exec = plan-exec` (§9) |
   | `$ task:plan-design <ID> Pn` | следующая фаза — скелет |
   | `$ task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
-  | `$ task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
-  | `$ task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
+  | `$ task:plan-audit <ID> Pn` | terminal items образовали ещё не закрытый phase candidate |
+  | `$ task:plan-close <ID> Pn` | свежий GREEN audit совпадает с candidate fingerprint |
+  | `$ task:plan-close <ID> Pn.m` | только recovery legacy/incomplete journal/evidence mismatch; не normal Next |
   | `$ task:plan-close archive <ID>` | план терминален целиком |
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
@@ -97,10 +98,9 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   item'а либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18; копипаст без правок);
   самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
   только как дополнение. Скелет — `snippets/launch-block-template.md` скилла `plan-protocol`.
-- **`Context` — РОВНО одно из трёх значений** (§8, статичное общее значение вне enum'а —
-  дефект): `continue (reset the session context) — ручной item` (обычный item-by-item exec, включая
-  `Exec = manual` — рестарт сессии не нужен) · `NEW SESSION — Workflow-оркестрован` ·
-  `NEW SESSION — шаг-не-item` (следующий шаг сам — `plan-audit`/`plan-close`/`plan-design`).
+- **`Context` — РОВНО одно из трёх layout-v2 значений** (§6): `continue-root` ·
+  `isolated-child-return` · `cold-start-root` с одной declared reason. Обычная последовательность,
+  локальная repair и phase close используют `continue-root`; имя команды не требует новой сессии.
 - **Сверка с Execution Rules плана**: команда в Next не должна противоречить
   `## 2. Execution Rules` — план запрещает `$ task:plan-exec` (программный план) →
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
@@ -229,6 +229,9 @@ status-rule ниже. Точная команда, лестница маршру
 
 ## Режим `Pn` — закрытие фазы
 
+0. Вычисли `task.plan_gates.phase_candidate_fingerprint(...)` из scope, terminal item heads и
+   material risk. Затем `phase_close_gate(...)` обязан вернуть `allow`: отсутствующий, RED,
+   ATTENTION или stale audit отказывает без phase mutation. Audit сам фазу не закрывает.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —
@@ -360,10 +363,9 @@ launch-block не требуется, следующий план выбирае
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |
 | Суть | <1 строка: что делает следующий шаг> |
-| Команда | `<голая команда>` — оценка по факту закрытой фазы: фаза 🟢 без Known
-  Deviations и без эскалаций по её items → `$ task:plan-exec <PLAN-ID> P(n+1).1`
-  (implementation/medium); была хоть одна `🟠`/эскалация → сперва `$ task:plan-audit <PLAN-ID>
-  Pn` (frontier/xhigh); план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
+| Команда | `<голая команда>` — phase close уже означает свежий GREEN candidate audit:
+  следующая детализированная фаза → `$ task:plan-exec <PLAN-ID> P(n+1).1`; следующая
+  manual-фаза → `$ task:plan-run ...`; план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
   `$ task:plan-close archive <PLAN-ID>` либо вне протокола; команда не должна
   противоречить Execution Rules плана — правила в шапке; у `Exec = manual` — `—`
   (нет single-command эквивалента) |

@@ -1,4 +1,4 @@
-# Конструктор workflow-шаблонов
+# Конструктор Task workflow-шаблонов
 
 Оркестрация субагентов не пишется с нуля под каждую задачу: канон — **4 параметризуемых
 шаблон-скрипта** в `packages/task/workflows/` + правила заполнения слотов (README папки).
@@ -37,4 +37,4 @@
   артефакта) — скилл `quality/artifact-review`; conformance-finder'ы по скиллам стека —
   команда `/task:review`.
 - Полный цикл, в котором workflow-шаблоны занимают стадии research/exec/review —
-  [Методология](/task/methodology).
+  [Методология](./methodology).

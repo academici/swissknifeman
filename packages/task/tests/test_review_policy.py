@@ -16,11 +16,11 @@ import unittest
 from pathlib import Path
 
 import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
-from task import review_policy  # noqa: E402
+from task import journal, plan_gates, review_policy  # noqa: E402
 from task.review_policy import (  # noqa: E402
     AUTHORITY_PROFILES, CAP_SUBJECT_BY_PROFILE, SAME_FINDING_MAX, LoopBudget,
     ReviewPolicyError, cap_subject, finding_id, identity_of, reopens_product,
-    review_transition, same_finding_third, validation_cadence,
+    review_transition, same_finding_third, validation_cadence, classify_signal,
 )
 
 
@@ -35,6 +35,57 @@ def _finding(**overrides):
     }
     base.update(overrides)
     return base
+
+
+class EvidenceFirstSignalTests(unittest.TestCase):
+    def test_only_reproduced_acceptance_safety_authority_are_terminal(self):
+        for signal in review_policy.SIGNAL_CLASSES:
+            decision = classify_signal(
+                signal, reproduced=True, scope_class="item", fingerprint=signal)
+            self.assertEqual(
+                decision["terminal"], signal in review_policy.TERMINAL_SIGNAL_CLASSES)
+
+    def test_raw_acceptance_signal_requests_reproduction(self):
+        decision = classify_signal(
+            "acceptance", reproduced=False, scope_class="item", fingerprint="f1")
+        self.assertFalse(decision["terminal"])
+        self.assertEqual(decision["action"], "reproduce-impact")
+
+    def test_future_carrier_and_unchanged_baseline_do_not_block(self):
+        future = classify_signal(
+            "dependency-not-ready", reproduced=True, scope_class="consumer", fingerprint="f2")
+        self.assertFalse(future["terminal"])
+        delta = plan_gates.baseline_delta(
+            current_failures={"old"}, baseline_failures={"old"}, owned_failures={"old"})
+        self.assertFalse(delta["blocks"])
+        self.assertEqual(delta["pre_existing"], ("old",))
+
+    def test_phase_close_requires_matching_green_audit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            plan.mkdir()
+            fingerprint = "a" * 64
+            missing = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=fingerprint)
+            self.assertEqual(missing["code"], "PHASE_AUDIT_MISSING")
+            journal.append(plan, journal.new_entry(
+                plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
+                result="audit-green", fingerprint=fingerprint))
+            self.assertTrue(plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=fingerprint)["allow"])
+            self.assertEqual(plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint="b" * 64)["code"], "PHASE_AUDIT_STALE")
+
+    def test_attention_is_a_distinct_close_refusal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            plan.mkdir()
+            journal.append(plan, journal.new_entry(
+                plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
+                result="audit-attention", fingerprint="a" * 64))
+            gate = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint="a" * 64)
+            self.assertEqual(gate["code"], "PHASE_AUDIT_ATTENTION")
 
 
 class FindingIdentityTests(unittest.TestCase):

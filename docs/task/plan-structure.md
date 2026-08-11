@@ -1,4 +1,4 @@
-# Структура плана — layouts v1 и v2
+# Структура Task-плана — layouts v1 и v2
 
 SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
 `references/plan-layout-v2.md`. Поле Meta `Layout | v2` включает v2; отсутствие `Layout`
@@ -180,4 +180,4 @@ Cold start допустим только с причиной `context-budget`, `
 Где живёт SSOT — определяется стадией (скилл §12): до старта exec — Brain; на старте exec
 план переезжает в репо проекта (Meta `Home: repo:<путь>`), Brain-копия становится зеркалом
 (`brain sync`); после завершения — синк обратно → архив → миграция `root/` в docs. Полный
-цикл — [Методология](/task/methodology).
+цикл — [Методология](./methodology).

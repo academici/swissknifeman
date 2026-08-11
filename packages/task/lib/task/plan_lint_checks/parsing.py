@@ -11,7 +11,7 @@ def _lint_plan_md_20(lines, path, diag):
     (б) Update Log: ячейка «Что» длиннее UPDATE_LOG_MAX_CHARS (P0.3 рек#5);
     (в) D-лог с ≥3 решениями без единого RAG-маркера — эвристика отсутствия
         маркировки несущих фактов (SKILL §7)."""
-    # (а) нумерованные секции: номера по возрастанию, заголовки 0-6 — канонические
+    # (а) нумерованные секции: номера по возрастанию, заголовки зависят от layout.
     numbered = []
     for i, ln in enumerate(lines):
         m = PLAN_SECTION_NUM_RE.match(ln)
@@ -21,16 +21,17 @@ def _lint_plan_md_20(lines, path, diag):
     if nums != sorted(nums):
         diag.warning(path, numbered[0][2],
                      f"секции plan.md идут не по порядку: {nums} (канон — ## 0…6 по возрастанию)")
-    for n, title, lineno in numbered:
-        expected = PLAN_SECTION_TITLES.get(n)
-        if expected and title != expected:
-            diag.warning(path, lineno,
-                         f"секция «## {n}. {title}» ≠ канонической «## {n}. {expected}»")
-
     try:
         layout = plan_layout.layout_version(Path(path).parent)
     except plan_layout.PlanLayoutError:
         layout = "v1"
+    expected_titles = ({**PLAN_SECTION_TITLES, 4: "Update Log"}
+                       if layout == "v2" else PLAN_SECTION_TITLES)
+    for n, title, lineno in numbered:
+        expected = expected_titles.get(n)
+        if expected and title != expected:
+            diag.warning(path, lineno,
+                         f"секция «## {n}. {title}» ≠ канонической «## {n}. {expected}»")
 
     if layout == "v2":
         # The v2 core deliberately has neither an inline Update Log nor an inline
@@ -462,7 +463,7 @@ def parse_plan_md(path, diag):
     if layout == "v2":
         numbered = {int(match.group(1)): match.group(2)
                     for line in lines if (match := PLAN_SECTION_NUM_RE.match(line))}
-        allowed = {0, 1, 2, 3, 5, 7}
+        allowed = {0, 1, 2, 3, 4, 5, 7}
         for number in sorted(set(numbered) - allowed):
             diag.error(path, None,
                        f"Layout v2: секция «## {number}. {numbered[number]}» не входит в закрытый состав ядра")

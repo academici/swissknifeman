@@ -459,7 +459,7 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
 
 def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_privacy=None,
          protected_transition=None,
-         next_form="exec-items", next_context="same-session — item",
+         next_form="exec-items", next_context=None,
          next_origin="approved-goal", next_changed_by=None, carrier=None,
          routing_config_path=None) -> dict:
     """Task Contract v1 producer (2026.07.24-AGENT-RELIABILITY P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
@@ -509,6 +509,8 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     phase_token = item_id.split(".")[0]
     diag = plan_lint.Diagnostics()
     layout = plan_layout.layout_version(plan_dir)
+    if next_context is None:
+        next_context = "continue-root" if layout == "v2" else "same-session — item"
     plan_meta, _ = plan_lint.parse_plan_md(plan_layout.plan_core_path(plan_dir), diag)
     # `parse_plan_md` resolves v2 Version/Status/Last Updated from the owner
     # projection. Keep this compiler on that single path rather than reopening

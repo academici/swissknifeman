@@ -40,12 +40,13 @@ UPDATE_LOG_WHAT_MAX_CHARS = 300
 # --- канон схемы 2026.07.18-FOREMAN P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
 COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
 FRICTION_VALUES = (
-    "escalation", "routing-blocked", "red-audit", "deviation", "retry", "no-op",
+    "escalation", "routing-blocked", "route-deviation", "red-audit", "deviation", "retry", "no-op",
 )
 RESULT_VALUES = (
     "in-progress", "closed-green", "closed-deviations", "blocked",
-    "escalated", "no-op", "audit-green", "audit-red",
+    "escalated", "no-op", "audit-green", "audit-attention", "audit-red",
 )
+TERMINAL_CLOSE_RESULTS = ("closed-green", "closed-deviations", "blocked", "escalated")
 REQUIRED_FIELDS = (
     "ts", "plan_id", "item_id", "command", "session_id", "run_id", "attempt",
     "actor", "friction", "result", "cost_usd", "num_turns", "duration_ms", "note",
@@ -118,6 +119,16 @@ def entry_validation_errors(entry):
 
     for name in ("cost_usd", "num_turns", "duration_ms"):
         _check_number(name)
+
+    fingerprint = entry.get("fingerprint")
+    if fingerprint is not None and (
+            not isinstance(fingerprint, str) or not _SHA256_RE.fullmatch(fingerprint)):
+        errors.append(("fingerprint", "fingerprint: обязан быть lowercase SHA-256|null"))
+    decision = entry.get("decision")
+    if decision is not None:
+        required = {"signal_class", "scope_class", "action", "recovered", "terminal"}
+        if not isinstance(decision, dict) or not required <= set(decision):
+            errors.append(("decision", "decision: отсутствуют обязательные поля evidence"))
 
     return errors
 
@@ -197,6 +208,16 @@ def validate_exception(exception):
 def line_sha256(raw_line):
     """SHA-256 точных UTF-8 bytes строки journal без завершающего newline."""
     return hashlib.sha256(raw_line.encode("utf-8")).hexdigest()
+
+
+def derive_run_id(*, plan_id, item_id, attempt, session_id):
+    """Return one deterministic identity for a start/terminal execution pair."""
+    if (not all(isinstance(value, str) and value for value in (plan_id, item_id, session_id))
+            or isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1):
+        raise JournalValidationError(
+            "run_id: plan_id/item_id/session_id и attempt ≥1 обязательны")
+    value = "\0".join((plan_id, item_id, str(attempt), session_id))
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def new_exception(*, plan_id, target_line, target_sha256, invalid_fields,
@@ -299,7 +320,7 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
 
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
-              note=None, ts=None, trace_ref=None):
+              note=None, ts=None, trace_ref=None, fingerprint=None, decision=None):
     """Собирает запись по схеме 2026.07.18-FOREMAN P1.1 с дефолтами контракта (§2) — единая точка сборки,
     чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
 
@@ -326,6 +347,10 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
     }
     if trace_ref is not None:
         entry["trace_ref"] = trace_ref
+    if fingerprint is not None:
+        entry["fingerprint"] = fingerprint
+    if decision is not None:
+        entry["decision"] = dict(decision)
     return entry
 
 
@@ -346,6 +371,35 @@ def append(plan_dir, entry):
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(line + "\n")
     return path
+
+
+def append_idempotent_terminal(plan_dir, entry):
+    """Append one terminal, or return its existing line without changing bytes."""
+    validate_entry(entry)
+    validate_append_policy(entry)
+    if entry.get("result") not in TERMINAL_CLOSE_RESULTS or not entry.get("run_id"):
+        return append(plan_dir, entry), None, True
+    plan_dir = Path(plan_dir)
+    path = plan_dir / FILENAME
+    if path.is_file():
+        for line_number, raw in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), start=1):
+            if not raw.strip():
+                continue
+            try:
+                current = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            identity = (entry.get("item_id"), entry.get("attempt"), entry.get("run_id"))
+            if (current.get("item_id"), current.get("attempt"), current.get("run_id")) != identity:
+                continue
+            if current.get("result") not in TERMINAL_CLOSE_RESULTS:
+                continue
+            if all(current.get(field) == entry.get(field) for field in ("result", "fingerprint")):
+                return path, line_number, False
+            raise JournalValidationError(
+                f"terminal conflict: run_id уже закрыт в {FILENAME}:{line_number}")
+    return append(plan_dir, entry), None, True
 
 
 def append_exception(plan_dir, exception):
@@ -392,6 +446,10 @@ def _build_arg_parser():
         "--trace-ref", default=None,
         help="опционально: trace_id Unified Agent Trace (P3.1) — additive, не влияет на "
             "REQUIRED_FIELDS; опущен по умолчанию")
+    ap.add_argument("--fingerprint", default=None,
+                    help="SHA-256 material scope/SHA/risk или terminal evidence")
+    ap.add_argument("--decision-json", default=None,
+                    help="compact D12 decision evidence как JSON object")
     ep = sub.add_parser(
         "exception", help="дописать owner-gated exception для historical schema-invalid строки")
     ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
@@ -452,20 +510,30 @@ def main(argv=None):
                RouteEvidenceError) as exc:
             print(f"ERROR: --route-evidence не читается: {exc}", file=sys.stderr)
             return 1
+    decision = None
+    if args.decision_json is not None:
+        try:
+            decision = json.loads(args.decision_json)
+        except json.JSONDecodeError as exc:
+            print(f"ERROR: --decision-json невалиден: {exc}", file=sys.stderr)
+            return 1
     entry = new_entry(
         plan_id=args.plan_id, item_id=args.item_id, command=args.command,
         actor=actor, result=args.result, session_id=args.session_id,
         run_id=args.run_id, attempt=args.attempt,
         friction=_parse_friction(args.friction), cost_usd=args.cost_usd,
         num_turns=args.num_turns, duration_ms=args.duration_ms, note=args.note,
-        trace_ref=args.trace_ref,
+        trace_ref=args.trace_ref, fingerprint=args.fingerprint, decision=decision,
     )
     try:
-        path = append(args.plan_dir, entry)
+        path, line_number, appended = append_idempotent_terminal(args.plan_dir, entry)
     except JournalValidationError as e:
         print(f"ERROR: запись журнала не прошла валидацию: {e}", file=sys.stderr)
         return 1
-    print(f"journal: append → {path}")
+    if appended:
+        print(f"journal: append → {path}")
+    else:
+        print(f"journal: existing → {path}:{line_number}")
     return 0
 
 

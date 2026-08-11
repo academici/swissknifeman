@@ -1,11 +1,13 @@
 ---
-description: "План-протокол: adversarial-аудит закрытой фазы Pn (сверка 🟢 с кодом/git, no-op, scope drift, handoff) или pre-exec ревью всего плана (design). Пинит Opus/xhigh."
+description: "План-протокол: adversarial-аудит terminal phase candidate Pn перед phase close либо один pre-exec review плана (design). Пинит Opus/xhigh."
 argument-hint: "<PLAN-ID> Pn | <PLAN-ID> design"
 model: opus
 effort: xhigh
 ---
-Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Opus/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
+Это ADVERSARIAL-АУДИТ terminal phase candidate перед единственным phase close либо pre-exec
+review плана. Ввод пользователя: «$ARGUMENTS».
+Модель/effort запинены (Opus/xhigh) — не переключай вручную. Product items и код НЕ трогай;
+разрешена только D11 inline-repair детерминированного non-material plan bookkeeping через его owner.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 
@@ -94,7 +96,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    Protocol` (машинный `plan_lint.py`-гейт покрывает только подкласс при включённом протоколе
    и дате ≥ cutoff, SKILL §6); отсутствие — Minor находка design-ревью (дисциплина, не только
    машинный гейт).
-Находки НЕ чинишь — отчёт владельцу; после фиксов design-ревью повторяется до GREEN.
+В design-режиме findings возвращаются владельцу один раз; повторный review нужен только после
+material scope/SHA/risk change, а не из-за bookkeeping-правки.
 Остальные пункты ниже (git-сверка, no-op, Completion Notes) относятся к режиму `Pn` — в
 `design` их пропусти.
 
@@ -125,8 +128,10 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
      «найди всё плохое в артефакте». Находка вне scope фазы законна, но идёт Minor/Nit и вердикт НЕ красит.
    - **Порог severity: severity НАХОДКИ ≠ вердикт ФАЗЫ.** `RED` — только когда сломан ПРОДУКТ фазы:
      правило/код, ломающие потребителей; no-op под 🟢; невоспроизводимая Validation; ложное утверждение о
-     факте. Дефект бухгалтерии плана (число, устаревший блок, формулировка, проза) → `ATTENTION` + строка
-     в Pending Work, НЕ реопен. «При сомнении ставь ВЫШЕ» (п. 4) — про severity НАХОДКИ, не про ВЕРДИКТ.
+     факте. Детерминированный non-material дефект бухгалтерии плана исправь inline текущим root,
+     регенерируй owner-carrier и один раз повтори узкий gate в том же attempt. Только неустранимый
+     или out-of-scope остаток → `ATTENTION`, НЕ реопен. «При сомнении ставь ВЫШЕ» (п. 4) — про
+     severity НАХОДКИ, не про ВЕРДИКТ.
    - **Потолок раундов — два аудита на фазу.** Номер захода = число блоков `## Audit Pn` в
      `phases/Pn.md` + 1 (греп; печатается ВСЕГДА). Третий и далее → строка
      `AUDIT-CAP: Pn — <N>-й заход, решение за владельцем`: реопен ты не назначаешь, варианты владельцу
@@ -209,7 +214,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    запись» выше) — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
    --item <Pn — режим фазы|design — режим design> --command plan-audit --actor opus/xhigh
    --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
-   --result <audit-green|audit-red — GREEN даёт audit-green, ATTENTION/RED дают audit-red>
+   --result <audit-green|audit-attention|audit-red — три verdict'а не смешиваются>
+   --fingerprint <SHA-256 candidate scope + terminal item heads + material risk>
    --note "заход <N>, вердикт <вердикт>"`.
 
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
@@ -251,11 +257,10 @@ code-block'е, четыре строки фиксированного поряд
 твоём audit-блоке (датовые планы от 2026.07.16 — ERROR).
 
 Команду выбрать по вердикту:
-- `GREEN` / `ATTENTION` → движение ВПЕРЁД: `/task:plan-exec <PLAN-ID> P(n+1).1` (следующая фаза — скелет
-  ⇒ `/task:plan-design <PLAN-ID> P(n+1)`); находки ATTENTION идут в Pending Work items и в follow-up
-  СЛЕДУЮЩЕЙ фазы, не в реопен;
-- `RED` → `/task:plan-design <PLAN-ID> Pn` (реопен, 4 шага §3) — ТОЛЬКО если дефект в Deliverable закрытой
-  фазы; иначе follow-up items: `/task:plan-design <PLAN-ID> P(n+1)`;
+- `GREEN` → `/task:plan-close <PLAN-ID> Pn`; close сам проверяет свежесть того же candidate fingerprint;
+- `ATTENTION` / `RED` → repair-forward в owning item под его текущим ТЗ. `plan-design` допустим
+  только при реальной смене sealed contract/authority, не как универсальная реакция на finding.
+  Ordinary Next никогда не предлагает `plan-close Pn.m`: это recovery reconciliation;
 - `AUDIT-CAP` (третий и далее заход) → launch-block адресован ВЛАДЕЛЬЦУ: решение «сдать `🟠` с названным
   долгом / убить фазу»; команду не назначаешь.
 

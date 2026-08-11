@@ -211,9 +211,9 @@ class ProviderCommandParityTests(unittest.TestCase):
                 re.findall(r"[\w<>]+/effort", projected[record.command_id]))
             canonical_clear_controls += len(
                 re.findall(r"(?<![\w/])/clear\b", canonical_body))
-        self.assertEqual(len(canonical_route_notation), 29)
+        self.assertEqual(len(canonical_route_notation), 28)
         self.assertEqual(projected_route_notation, canonical_route_notation)
-        self.assertEqual(canonical_clear_controls, 5)
+        self.assertEqual(canonical_clear_controls, 4)
         self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))
         # Audit P4 attempt 2 observed 32 corrupt replacements across the runtimes.
         self.assertNotIn("modelsession effort setting", projected_text)

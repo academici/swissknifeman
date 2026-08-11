@@ -647,6 +647,7 @@ class BuildFixtureTests(unittest.TestCase):
         self.assertEqual(len(contract["never"]), 1)
         self.assertEqual(contract["route"]["required"],
                          {"model_class": "implementation", "effort": "medium"})
+        self.assertEqual(contract["next"]["context"], "same-session — item")
 
     def test_v2_phase_carrier_builds_through_layout_resolver(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -658,6 +659,7 @@ class BuildFixtureTests(unittest.TestCase):
             self.assertEqual(contract["route"]["required"],
                              {"model_class": "implementation", "effort": "medium"})
             self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
+            self.assertEqual(contract["next"]["context"], "continue-root")
 
     def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
         phase_path = self.plan_dir / "phases" / "P1.md"

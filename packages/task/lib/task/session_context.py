@@ -29,7 +29,13 @@ def _codex_adapter() -> SessionContext | None:
     return current()
 
 
-def resolve(*, adapters: Iterable[Adapter] = (_codex_adapter,)) -> SessionContext:
+def _claude_adapter() -> SessionContext | None:
+    from task.session_context_claude import current
+
+    return current()
+
+
+def resolve(*, adapters: Iterable[Adapter] = (_codex_adapter, _claude_adapter)) -> SessionContext:
     """Return exactly one applicable provider adapter, or reject the write."""
     resolved = [context for adapter in adapters if (context := adapter()) is not None]
     if not resolved:

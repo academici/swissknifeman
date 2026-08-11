@@ -5,8 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+try:
+    from . import fixtures  # noqa: F401
+except ImportError:
+    import fixtures  # noqa: F401,E402
 from task.journal import (  # noqa: E402
-    JournalValidationError, append, append_exception, line_sha256, main,
+    JournalValidationError, append, append_exception, append_idempotent_terminal,
+    derive_run_id, line_sha256, main,
     new_entry, new_exception, validate_entry, validate_exception, validate_exception_target,
 )
 
@@ -116,6 +121,36 @@ class TestTraceRef(TmpDirTestCase):
 
 
 class TestAppend(TmpDirTestCase):
+    def test_start_and_terminal_share_deterministic_run_id(self):
+        kwargs = dict(plan_id="P", item_id="P1.3", attempt=2, session_id="session-1")
+        self.assertEqual(derive_run_id(**kwargs), derive_run_id(**kwargs))
+        self.assertEqual(len(derive_run_id(**kwargs)), 64)
+
+    def test_duplicate_terminal_returns_pointer_without_appending(self):
+        run_id = derive_run_id(
+            plan_id="P", item_id="P1.3", attempt=1, session_id="session-1")
+        start = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/high",
+            result="in-progress", session_id="session-1", run_id=run_id)
+        terminal = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/high",
+            result="closed-green", session_id="session-1", run_id=run_id,
+            fingerprint="a" * 64)
+        append(self.plan_dir, start)
+        first = append_idempotent_terminal(self.plan_dir, terminal)
+        before = (self.plan_dir / "journal.jsonl").read_bytes()
+        second = append_idempotent_terminal(self.plan_dir, terminal)
+        self.assertEqual(first[2], True)
+        self.assertEqual(second[1:], (2, False))
+        self.assertEqual((self.plan_dir / "journal.jsonl").read_bytes(), before)
+
+    def test_attention_is_distinct_from_audit_red(self):
+        entry = new_entry(
+            plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
+            result="audit-attention", fingerprint="b" * 64)
+        validate_entry(entry)
+        self.assertEqual(entry["result"], "audit-attention")
+
     def test_append_writes_one_valid_json_line(self):
         entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
                            actor="sonnet/high", result="in-progress")

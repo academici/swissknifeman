@@ -90,22 +90,45 @@ def _conflicts_item_fields(skill_lines, skill_path, diag):
     """Класс 2/6: 16 полей item'а и их порядок (REQUIRED_ITEM_FIELDS) — SKILL.md §5."""
     anchor_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_ITEM_FIELDS)
     if anchor_idx is None:
-        diag.error(skill_path, None,
-                   f"--conflicts 16-полей: не найден якорь «{CONFLICTS_ANCHOR_ITEM_FIELDS}» "
-                   "(SKILL.md §5)")
-        return
-    joined = " ".join(skill_lines[anchor_idx + 1:anchor_idx + 4])
-    m = re.search(r"`([^`]+)`", joined)
-    if not m:
-        diag.error(skill_path, anchor_idx + 2,
-                   "--conflicts 16-полей: бэктик-список после якоря не найден")
-        return
-    normalized = re.sub(r"\s+", " ", m.group(1)).strip()
-    canon_fields = tuple(f.strip() for f in normalized.split(","))
+        # Compact canon deliberately routes the detailed carrier schema to the
+        # reference instead of duplicating all 16 names in SKILL.md.  Follow that
+        # pointer; treating compaction as schema removal made the consumer red
+        # while the canonical source was still complete.
+        reference = skill_path.parent / "references" / "plan-layout-v2.md"
+        try:
+            reference_text = reference.read_text(encoding="utf-8")
+        except OSError:
+            diag.error(reference, None,
+                       "--conflicts 16-полей: compact canon reference не читается")
+            return
+        spec = re.search(r"The v2 item spec contains exactly the stable fields:\s*\n\s*`([^`]+)`",
+                         reference_text)
+        state = re.search(r"The generated state contains exactly:\s*\n\s*`([^`]+)`",
+                          reference_text)
+        if not spec or not state:
+            diag.error(reference, None,
+                       "--conflicts 16-полей: reference не несёт обе exact field lists")
+            return
+        spec_fields = tuple(part.strip() for part in spec.group(1).split(","))
+        state_fields = tuple(part.strip() for part in state.group(1).split(","))
+        canon_fields = state_fields[:1] + spec_fields + state_fields[1:]
+        canon_ref = reference
+        canon_lineno = reference_text[:spec.start()].count("\n") + 1
+    else:
+        joined = " ".join(skill_lines[anchor_idx + 1:anchor_idx + 4])
+        m = re.search(r"`([^`]+)`", joined)
+        if not m:
+            diag.error(skill_path, anchor_idx + 2,
+                       "--conflicts 16-полей: бэктик-список после якоря не найден")
+            return
+        normalized = re.sub(r"\s+", " ", m.group(1)).strip()
+        canon_fields = tuple(f.strip() for f in normalized.split(","))
+        canon_ref = skill_path
+        canon_lineno = anchor_idx + 2
     code_lineno = _own_const_lineno("REQUIRED_ITEM_FIELDS")
     if canon_fields != REQUIRED_ITEM_FIELDS:
         diag.error(PLAN_LINT_PUBLIC_PATH, code_lineno,
-                   f"--conflicts 16-полей: канон {skill_path.name}:{anchor_idx + 2} = "
+                   f"--conflicts 16-полей: канон {canon_ref.name}:{canon_lineno} = "
                    f"{canon_fields!r} → реализация plan_lint.py:{code_lineno} = "
                    f"{REQUIRED_ITEM_FIELDS!r}")
 
@@ -115,20 +138,25 @@ def _conflicts_next_forms(skill_lines, skill_path, diag):
     альтернация `SEMANTIC_NEXT_RE` (читается у неё самой — не переиздаётся вторым списком)."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_NEXT_FORMS)
     if header_idx is None:
-        diag.error(skill_path, None,
-                   f"--conflicts формы Next: не найдена шапка таблицы "
-                   f"«{CONFLICTS_ANCHOR_NEXT_FORMS}»")
-        return
-    canon_forms = []
-    canon_lineno = None
-    i = header_idx + 1
-    while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):
-        m = NEXT_FORM_TABLE_ROW_RE.match(skill_lines[i].strip())
-        if m:
-            if canon_lineno is None:
-                canon_lineno = i + 1
-            canon_forms.append(m.group(1))
-        i += 1
+        compact_idx = _find_line(skill_lines, "Semantic Next is one of")
+        if compact_idx is None:
+            diag.error(skill_path, None,
+                       "--conflicts формы Next: compact enum не найден")
+            return
+        compact = " ".join(skill_lines[compact_idx:compact_idx + 4])
+        canon_forms = re.findall(r"`([a-z][a-z-]+)`", compact.split(";", 1)[0])
+        canon_lineno = compact_idx + 1
+    else:
+        canon_forms = []
+        canon_lineno = None
+        i = header_idx + 1
+        while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):
+            m = NEXT_FORM_TABLE_ROW_RE.match(skill_lines[i].strip())
+            if m:
+                if canon_lineno is None:
+                    canon_lineno = i + 1
+                canon_forms.append(m.group(1))
+            i += 1
     code_lineno = _own_const_lineno("SEMANTIC_NEXT_RE")
     gm = re.search(r"\^\((.*?)\):", SEMANTIC_NEXT_RE.pattern)
     code_forms = gm.group(1).split("|") if gm else []
@@ -194,10 +222,20 @@ def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
     LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.md §8."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
     if header_idx is None:
-        diag.error(skill_path, None,
-                   f"--conflicts launch-block регекс: не найдена шапка "
-                   f"«{CONFLICTS_ANCHOR_LAUNCH_TABLE}»")
-        return
+        snippet = skill_path.parent / "snippets" / "launch-block-template.md"
+        try:
+            source_lines = snippet.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            diag.error(snippet, None,
+                       "--conflicts launch-block регекс: canonical snippet не читается")
+            return
+        header_idx = _find_line(source_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
+        if header_idx is None:
+            diag.error(snippet, None,
+                       f"--conflicts launch-block регекс: не найдена шапка "
+                       f"«{CONFLICTS_ANCHOR_LAUNCH_TABLE}»")
+            return
+        skill_lines, skill_path = source_lines, snippet
     rows = []
     i = header_idx + 1
     while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):

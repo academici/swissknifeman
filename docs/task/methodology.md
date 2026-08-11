@@ -1,4 +1,4 @@
-# Методология plan-protocol v2 — полный цикл
+# Методология Task plan-protocol v2 — полный цикл
 
 Как план проживает жизнь от исследования до документации проекта. SSOT схем, гейтов и
 маркеров — компактный скилл `general/plan-protocol`; эта страница — карта цикла со ссылками
@@ -12,9 +12,11 @@ flowchart TD
     RF -- маркеры NEEDS CLARIFICATION --> D
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
     A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
-    E --> RV[review<br>/task:plan-audit · /task:review<br>таксономия по типу артефакта]
-    RV -- находки --> E
-    RV -- GREEN --> AR[archive<br>/task:plan-close archive]
+    E --> C[phase candidate<br>terminal items]
+    C --> RV[один pre-close audit<br>/task:plan-audit · material trigger]
+    RV -- локальная repair-forward --> E
+    RV -- GREEN --> PC[phase close<br>/task:plan-close]
+    PC --> AR[archive<br>/task:plan-close archive]
     AR --> DOCS[docs-миграция<br>root/ → документация проекта]
 ```
 
@@ -64,15 +66,13 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 не молчаливый merge, а `temporary divergence` + эскалация §10. Exec также сверяет свою
 модель/effort с Routing плана — расхождение фиксируется в Known Deviations.
 
-## review (таксономия)
+## review (по material trigger)
 
-Ревью диспетчируется по типу артефакта (скилл `quality/artifact-review`): **план/спека** —
-профиль `/task:plan-audit` (opus/xhigh): RAG-groundedness несущих, DoR-ретроспектива,
-«висящие» Open Questions, routing-adherence; **документация** и **код** — профили
-`/task:review`, для кода — плюс skill-conformance по применимым скиллам стека. Общая шкала
-severity: Blocker / Major / Minor / Nit + Conventional-Comments-лейбл — две независимые оси.
-Находки чинятся отдельными коммитами и возвращают item в exec; вердикт GREEN открывает путь
-к закрытию фазы (`/task:plan-close`).
+Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict
+переиспользуется, пока не изменились material scope, SHA или risk. Терминальные items образуют
+кандидата фазы; его свежий GREEN разрешает `/task:plan-close`. Bookkeeping и прочие
+детерминированные non-material дефекты чинятся inline в том же attempt. Подтверждённая material
+находка возвращается в owning item как repair-forward, а не в новый design-проход всего плана.
 
 **Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
 вердикт (`GREEN`/`ATTENTION`/`RED`) говорит «запись фазы сходится с кодом и git-фактами»,
@@ -83,7 +83,7 @@ severity: Blocker / Major / Minor / Nit + Conventional-Comments-лейбл — �
 умолчанию» на неизмеренном — запрещены; неизмеренная величина публикуется как `unknown` со
 скоупом, датой и названной причиной, а не округляется. Число, стоящее на классе
 `pinned-not-recomputable`/`unknown`, не может обосновывать приёмочный предикат
-([структура плана](/task/plan-structure) → «Портируемость»).
+([структура плана](./plan-structure) → «Портируемость»).
 
 ## archive
 
@@ -97,5 +97,5 @@ severity: Blocker / Major / Minor / Nit + Conventional-Comments-лейбл — �
 Долгоживущий материал из `root/` не архивируется, а становится документацией проекта по
 Diátaxis-типам: architecture/philosophy → explanation, data-model/contracts → reference,
 гайды фаз → how-to. Что и куда мигрирует — таблица на странице
-[Структура плана](/task/plan-structure); чек-лист миграции (что перенесено, что осталось
+[Структура плана](./plan-structure); чек-лист миграции (что перенесено, что осталось
 в архиве) обязателен в финальном handoff.

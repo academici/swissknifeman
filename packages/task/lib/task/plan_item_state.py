@@ -15,7 +15,8 @@ RESULT_STATUS = {
     "in-progress": "🟡 In progress", "closed-green": "🟢 Done",
     "closed-deviations": "🟠 Done with deviations", "blocked": "🔴 Blocked",
     "escalated": "🔴 Blocked", "no-op": "⬜ Not started",
-    "audit-green": "⬜ Not started", "audit-red": "🔴 Blocked",
+    "audit-green": "⬜ Not started", "audit-attention": "⬜ Not started",
+    "audit-red": "🔴 Blocked",
 }
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))

@@ -677,6 +677,24 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
 
+    def test_v2_post_cutoff_item_without_codes_is_error(self):
+        """Layout v2 uses journal-backed Updated instead of an inline phase table."""
+        plan_dir = write_valid_plan(self.root, plan_id="2026.08.11-DEMO", layout="v2")
+        journal = plan_dir / "journal.jsonl"
+        event = json.loads(journal.read_text(encoding="utf-8"))
+        event["ts"] = "2026-08-12T00:00:00Z"
+        event["note"] = "закрыто без write-site evidence"
+        journal.write_text(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n",
+                           encoding="utf-8")
+        from task import plan_bundle, plan_item_state, plan_status
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, "P1.1")
+
+        _, diag = _lint(plan_dir)
+
+        self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
+
 
 class TestClosureReports81(TmpPlanTestCase):
     """P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1), включаемый opt-in

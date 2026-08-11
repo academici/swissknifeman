@@ -489,5 +489,24 @@ class TestCommandReadPathProjection(unittest.TestCase):
                 self.assertIn("Layout: v1", text)
 
 
+class TestLayoutV2ContextEnum(unittest.TestCase):
+    """Consumer commands emit only the provider-neutral layout-v2 enum."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+
+    def test_plan_audit_and_exec_use_only_current_context_values(self):
+        for command in ("plan-audit.md", "plan-exec.md"):
+            with self.subTest(command=command):
+                text = (self.repo_root / "packages/task/commands" / command).read_text(
+                    encoding="utf-8")
+                for value in ("continue-root", "isolated-child-return", "cold-start-root"):
+                    self.assertIn(value, text)
+                self.assertNotIn("continue (/clear) — ручной item", text)
+                self.assertNotIn("NEW SESSION — Workflow-оркестрован", text)
+                self.assertNotIn("NEW SESSION — шаг-не-item", text)
+
+
 if __name__ == "__main__":
     unittest.main()

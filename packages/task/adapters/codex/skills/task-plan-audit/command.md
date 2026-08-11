@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:79bc005bcc16f73f8014c0101d8a6ef7653270fa4aded6afd57c31d6bda35c92
+Canonical SHA-256: sha256:832cc63ed30e5a7f4d42167f537f9c7dd9f53249754ef575594153ad87e80d5c
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -288,5 +288,6 @@ code-block'е, четыре строки фиксированного поряд
 - `AUDIT-CAP` при уже двух блоках → тот же owner outcome без третьего audit block/journal event.
 
 Model/Thinking — из §3 Routing плана (канон §9). `Context` — РОВНО одно из ТРЁХ значений enum'а §8:
-`continue (reset the session context) — ручной item` (обычный item-by-item exec, в т.ч. manual) · `NEW SESSION —
-Workflow-оркестрован` · `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design`).
+`continue-root` (authoritative root может продолжить) · `isolated-child-return` (bounded reviewer
+возвращает evidence в тот же root) · `cold-start-root` (новый root перечитывает committed carriers;
+обязателен один reason из канона). Команда сама по себе не определяет Context.

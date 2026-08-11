@@ -8,7 +8,10 @@ import shutil
 import tempfile
 import unittest
 
-import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
+try:
+    from . import fixtures  # noqa: F401,E402 — package invocation
+except ImportError:
+    import fixtures  # noqa: F401,E402 — direct discovery
 from task.command_catalog import CommandCatalogError, build_command_catalog
 from task.command_render import (build_provider_command_parity_report,
                                  mapping_from_catalog, parse_next_carrier,
@@ -213,7 +216,7 @@ class ProviderCommandParityTests(unittest.TestCase):
                 re.findall(r"(?<![\w/])/clear\b", canonical_body))
         self.assertEqual(len(canonical_route_notation), 28)
         self.assertEqual(projected_route_notation, canonical_route_notation)
-        self.assertEqual(canonical_clear_controls, 4)
+        self.assertEqual(canonical_clear_controls, 0)
         self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))
         # Audit P4 attempt 2 observed 32 corrupt replacements across the runtimes.
         self.assertNotIn("modelsession effort setting", projected_text)
@@ -221,6 +224,8 @@ class ProviderCommandParityTests(unittest.TestCase):
         plan_text = "\n".join(
             projected[command_id] for command_id in projected
             if self.catalog.by_id()[command_id].kind == "plan-protocol")
+        for value in ("continue-root", "isolated-child-return", "cold-start-root"):
+            self.assertIn(value, plan_text)
         for literal in _PLAN_STATUSES + _PLAN_ITEM_FIELDS:
             with self.subTest(literal=literal):
                 self.assertIn(literal, plan_text)

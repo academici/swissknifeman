@@ -605,6 +605,17 @@ def _parse_phase_v2(path, phase_id, diag):
     status_table = []
     combined_lines = list(lines)
     try:
+        owner_status = plan_status.status_model(path.parents[2])
+        updated_by_id = {
+            item["id"]: item["updated"]
+            for phase in owner_status["phases"] if phase["id"] == phase_id
+            for item in phase["items"]
+        }
+    except (plan_status.StatusError, plan_layout.PlanLayoutError) as exc:
+        diag.error(path.parents[2] / "status.md", None,
+                   f"Layout v2: не удалось получить journal-backed Updated: {exc}")
+        updated_by_id = {}
+    try:
         spec_paths = plan_layout.item_spec_paths(path.parents[2], phase_id)
     except plan_layout.PlanLayoutError as exc:
         diag.error(path, None, str(exc))
@@ -617,7 +628,8 @@ def _parse_phase_v2(path, phase_id, diag):
         items.setdefault(item_id, []).append(item)
         status, status_lineno = item["fields"].get("Status", ("", item["header_lineno"]))
         status_table.append(({"ID": item_id, "Title": item["title"], "Status": status,
-                              "Updated": ""}, status_lineno))
+                              "Updated": updated_by_id.get(item_id, ""),
+                              "Layout": "v2"}, status_lineno))
         combined_lines.extend(item["spec_lines"])
         combined_lines.extend(item["state_lines"])
 

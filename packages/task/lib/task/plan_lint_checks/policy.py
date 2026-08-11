@@ -71,6 +71,7 @@ def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
 # задним числом; правило доказывается синтетическими датированными фикстурами
 # (test_plan_lint.py), а не самоприменением к текущему прогону.
 WRITE_SITE_CODES_CANON_DATE = "2026-07-27"
+WRITE_SITE_CODES_V2_CANON_DATE = "2026-08-12"
 ITEM_UPDATED_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Канон кодов — `task_contract.evaluate()`: `pre_mutation` ∈ {allow, block:<CODE>};
 # `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное).
@@ -118,20 +119,24 @@ def _write_site_canonical_codes(completion_notes):
 
 def _lint_write_site_codes_44(status_table, items, path, diag):
     """2026.07.24-AGENT-RELIABILITY P4.4/D91 (ремонт находки Ф2), точность — 2026.07.25-ECO-OPT P10.1/D88/D102: item со статусом
-    🟢/🟠, чей `Updated` (Phase Status) ISO-датирован ≥ WRITE_SITE_CODES_CANON_DATE,
+    🟢/🟠, чей `Updated` ISO-датирован после layout-specific forward-only cutoff
+    (`WRITE_SITE_CODES_CANON_DATE` для v1, `WRITE_SITE_CODES_V2_CANON_DATE` для v2),
     обязан нести каноническую строку `write-site:` (см. `_write_site_canonical_codes`)
     с ОБОИМИ кодами `allow` (D76: `n/a` — не зелёное). Непарсимая/отсутствующая дата =
     item вне скоупа — МОЛЧАНИЕ, а не WARNING (И10: ни один существующий закрытый item
     не краснеет задним числом). Внутри скоупа — ERROR (правило уже канон:
     `plan-audit.md` чеклист «write-site»; машинная проверяемость — P4.4/P10.1)."""
-    updated_by_id = {row.get("ID"): row.get("Updated", "") for row, _ in status_table}
+    status_by_id = {row.get("ID"): row for row, _ in status_table}
     for item_id, occurrences in items.items():
         item = occurrences[0]
         status_val, _ = item["fields"].get("Status", ("", item["header_lineno"]))
         if status_val not in (STATUS_DONE, STATUS_DEVIATIONS):
             continue
-        updated = updated_by_id.get(item_id, "") or ""
-        if not ITEM_UPDATED_ISO_RE.match(updated) or updated < WRITE_SITE_CODES_CANON_DATE:
+        status_row = status_by_id.get(item_id, {})
+        updated = status_row.get("Updated", "") or ""
+        cutoff = (WRITE_SITE_CODES_V2_CANON_DATE
+                  if status_row.get("Layout") == "v2" else WRITE_SITE_CODES_CANON_DATE)
+        if not ITEM_UPDATED_ISO_RE.match(updated) or updated < cutoff:
             continue
         cn_val, cn_lineno = item["fields"].get("Completion Notes", ("", item["header_lineno"]))
         codes = _write_site_canonical_codes(cn_val)

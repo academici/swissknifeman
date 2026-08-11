@@ -23,6 +23,11 @@ sync_pkg() {
     tmp="$(mktemp -d)"
     cp -r "$src/." "$tmp/"
     rm -rf "$tmp/.vitepress"
+    if [ ! -e "$dst" ]; then
+      rm -rf "$tmp"
+      echo "  docs/$1 не материализован; source tree воспроизводим"
+      return
+    fi
     if ! diff -qr "$tmp" "$dst" >/dev/null; then
       echo "  docs/$1 устарел; запустите bash scripts/docs-sync.sh" >&2
       rm -rf "$tmp"

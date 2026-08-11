@@ -87,6 +87,10 @@ class Finding:
         return f"{self.source}:{self.line} → `{self.citation}` — {self.reason}"
 
 
+class PhaseSourceResolutionError(RuntimeError):
+    """Task's canonical phase resolver is unavailable or rejected the plan."""
+
+
 def live_plan_dirs(include_archive: bool = False) -> list[str]:
     out = []
     for path in sorted(glob.glob(os.path.join(PLANS_DIR, "*", "plan.md"))):
@@ -130,9 +134,17 @@ def _phase_source_files(plan_dir: str) -> list[str]:
         sys.path.insert(0, task_lib)
     try:
         resolver = importlib.import_module("task.plan_layout")
+    except ImportError as exc:
+        raise PhaseSourceResolutionError(
+            "canonical resolver task.plan_layout недоступен; проверьте "
+            "packages/task/lib в runtime verifier'а"
+        ) from exc
+    try:
         return [str(path) for path in resolver.phase_paths(plan_dir).values()]
-    except (ImportError, ValueError, OSError):
-        return []
+    except (ValueError, OSError) as exc:
+        raise PhaseSourceResolutionError(
+            f"canonical resolver не прочитал phase carriers плана {plan_dir}: {exc}"
+        ) from exc
 
 
 def plan_source_files(plan_dir: str) -> list[str]:
@@ -296,6 +308,7 @@ def _selftest() -> int:
     файл: скрипт stdlib-only и самодостаточен, как соседний `cross-plan-files.py`)."""
     import tempfile
     import unittest
+    from unittest import mock
 
     class VerifyCitationsTests(unittest.TestCase):
         def setUp(self) -> None:
@@ -308,6 +321,8 @@ def _selftest() -> int:
             # каталог плана — вторая база резолва; несёт СВОЙ файл, отсутствующий под корнем.
             self.plan_dir = os.path.join(self.repo_root, "plans", "P11-BASES-FIXTURE")
             os.makedirs(os.path.join(self.plan_dir, "phases"))
+            with open(os.path.join(self.plan_dir, "plan.md"), "w", encoding="utf-8") as fh:
+                fh.write("# legacy layout fixture\n")
             with open(os.path.join(self.plan_dir, "phases", "P1.md"), "w", encoding="utf-8") as fh:
                 fh.write("line1\nline2\n")
             self.bases = resolve_bases(self.repo_root, self.plan_dir)
@@ -379,6 +394,12 @@ def _selftest() -> int:
                 [label for label, _ in resolve_bases(self.repo_root, self.plan_dir)],
                 ["корня репо", "каталога плана"],
             )
+
+        def test_e7_phase_resolver_import_failure_is_fail_closed(self) -> None:
+            """Недоступный Task runtime не превращает phase surface в пустую."""
+            with mock.patch.object(importlib, "import_module", side_effect=ImportError("fixture")):
+                with self.assertRaises(RuntimeError):
+                    _phase_source_files(self.plan_dir)
 
         # --- P11.2: класс цитаты `file.json::a.b.c` (greedy-резолв) --------------------
 
@@ -473,7 +494,11 @@ def main() -> int:
     print(f"Проверка ссылок-доказательств по {len(plan_dirs)} план(ам)\n")
     for plan_dir in plan_dirs:
         plan_id = os.path.basename(plan_dir)
-        findings, checked = scan_plan(plan_dir, known, REPO_ROOT)
+        try:
+            findings, checked = scan_plan(plan_dir, known, REPO_ROOT)
+        except PhaseSourceResolutionError as exc:
+            print(f"  {plan_id}: ОШИБКА RESOLVER_UNAVAILABLE — {exc}", file=sys.stderr)
+            return 2
         total_checked += checked
         total_findings += findings
         print(f"  {plan_id}: цитат проверено {checked} · находок {len(findings)}")

@@ -274,5 +274,6 @@ code-block'е, четыре строки фиксированного поряд
 - `AUDIT-CAP` при уже двух блоках → тот же owner outcome без третьего audit block/journal event.
 
 Model/Thinking — из §3 Routing плана (канон §9). `Context` — РОВНО одно из ТРЁХ значений enum'а §8:
-`continue (/clear) — ручной item` (обычный item-by-item exec, в т.ч. manual) · `NEW SESSION —
-Workflow-оркестрован` · `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design`).
+`continue-root` (authoritative root может продолжить) · `isolated-child-return` (bounded reviewer
+возвращает evidence в тот же root) · `cold-start-root` (новый root перечитывает committed carriers;
+обязателен один reason из канона). Команда сама по себе не определяет Context.

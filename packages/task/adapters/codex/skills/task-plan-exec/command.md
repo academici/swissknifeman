@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:7897a72277562a09f85c458328dc3cea7a3cd1c121cda7c037f4765105ea9b4f
+Canonical SHA-256: sha256:bff5d8aac30c3b118ed3eb4ace7dea5687318be100b2d8fa20aed3fa06f2d32f
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -376,13 +376,12 @@ Raw provider flags допустимы только в additive adapter/projectio
      ОБЯЗАТЕЛЕН (не опционален для этого случая) и несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
      правок), а НЕ slash-команду (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан
      такой item отклонить — команда в code-block'е была бы инструкцией нарушить гейт); `Context` =
-     `continue (reset the session context) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID>
+     `continue-root`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID>
      Pn.m` (D18) — тем же обязательным code-block'ом (три строки не умещаются в ячейку таблицы).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `$ task:plan-design <PLAN-ID> Pn`, не
      `plan-exec` (упадёт на предусловии). Фаза терминальна → `$ task:plan-close <PLAN-ID> Pn`.
-   - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (reset the session context) — ручной
-     item` (обычный item-by-item exec, в т.ч. manual — рестарт сессии ему не нужен) ·
-     `NEW SESSION — Workflow-оркестрован` (следующий шаг — Workflow-оркестрованный кусок: фоновый
-     payload растит контекст сессии быстрее самой работы, `reset the session context` этого не решает) ·
-     `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design` — читают план с диска
-     заново; аудиту наследовать контекст исполнителя запрещено).
+   - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue-root`
+     (authoritative root продолжает в текущем бюджете/capabilities) · `isolated-child-return`
+     (bounded reviewer/worker возвращает evidence; root остаётся authoritative) ·
+     `cold-start-root` (root не может безопасно продолжить; указывается ровно один canonical
+     reason). Тип команды сам по себе не является основанием для cold start.

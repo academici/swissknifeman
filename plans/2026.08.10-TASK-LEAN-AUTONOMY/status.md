@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: f49798ec684a276098e625aba2963d4ed3110e1cc4e28b03f87531cd05273a33
+inputs_sha256: fc4c9737340f7a104356d1523fc1765476e44eea6bca6be1c1390c10e8cd88a8
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 | P2 | Contract integrity and field requalification | 4/4 | 🟢 Done |
-| P3 | Fail-closed recovery and final requalification | 1/2 | 🟡 In progress |
+| P3 | Fail-closed recovery and final requalification | 2/3 | 🟡 In progress |
 
 ## Phase P0
 
@@ -57,6 +57,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟢 Done | 2026-08-11 |
 | P3.2 | Повторить product-free requalification нового anchor | ⬜ Not started | — |
+| P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟢 Done | 2026-08-11 |
 
 ## 6. Update Log
 
@@ -114,6 +115,8 @@ generated_by: task plan-views status
 | 2026-08-11 | frontier/high | plan-design · in-progress · D23: фаза P3 детализирована до DoR; P2 final RED заморожен |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · fail-closed route and bundle dedupe fixed; 779 tests/1 skipped; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · P3.3 native launch provenance repair started |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.3: 780 tests/1 skipped; native smoke ROUTE-LAUNCH-OK; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

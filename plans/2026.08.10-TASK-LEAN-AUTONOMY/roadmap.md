@@ -1,11 +1,11 @@
 # Roadmap исполнения — 2026.08.10-TASK-LEAN-AUTONOMY
 
-**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D23 successor P3 после финального RED P2
+**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D24 P3.3 native-launch repair перед final P3.2
 
 P0/P1/P2 остаются историей; D17 запрещает третий audit/repair P1 и P2. Новое исполнение идёт по
-двум последовательным solo items P3. Batch не используется: P3.2 потребляет terminal P3.1 и
-квалифицирует полный post-P2.3 anchor. Оба запуска ждут provider-bound route evidence; config,
-selector и actor не снимают waiting gate.
+трём последовательным solo items P3. Batch не используется: P3.3 заменяет недостижимый provider
+probe, P3.2 потребляет terminal P3.1/P3.3 и квалифицирует полный post-P2.3 anchor. Fresh native
+launch provenance обязателен, но не выдаётся за runtime telemetry.
 
 ## Карта исполнения
 
@@ -13,7 +13,8 @@ selector и actor не снимают waiting gate.
 |:--|:--|:--|:--|:--|:--|
 | P0.1–P2.4 | history | — | — | D17/D23 final RED | immutable provenance; не переисполнять |
 | P3.1 | solo | plan-run | implementation/high | D23 + provider-bound route | Task fail-closed route, bundle dedupe, provider/docs projections; cwd `packages/task` |
-| P3.2 | solo | plan-run | implementation/high | terminal green P3.1 + provider-bound route | root live requalification; product writes запрещены |
+| P3.3 | solo | plan-run | implementation/high | D24 + fresh native launch | Task route repair; cwd `packages/task` |
+| P3.2 | solo | plan-run | implementation/high | terminal green P3.1/P3.3 + fresh native launch | root live requalification; product writes запрещены |
 
 ## Готовые launch-block'и
 
@@ -79,8 +80,8 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ## Гейты владельца
 
-Owner choice D23 принят. Новый owner choice не требуется, но capability gate остаётся: до
-thread-bound route evidence P3.1/P3.2 не стартуют и не пишут journal. Любая необходимость изменить
+Owner choices D23/D24 приняты. P3.3/P3.2 требуют fresh native launch with `-m` and
+`model_reasoning_effort`; это launch provenance, не runtime telemetry. Любая необходимость изменить
 stable Intent/Files/Validation P3 либо принять красный required gate снова требует владельца.
 
 ### P3.1 — Task fail-closed and projection recovery
@@ -101,16 +102,31 @@ codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.
 
 ### P3.2 — root final requalification
 
-**Next:** waiting: terminal green P3.1 и provider-bound model class+effort доступны → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
+**Next:** waiting: terminal green P3.1/P3.3 → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Context | cold-start-root (`capability-missing`) |
+| Context | continue-root |
 | Команда | — |
 
 ```bash
-# НЕ раньше: terminal green P3.1 и provider-bound model class+effort доступны
+# НЕ раньше: terminal green P3.1/P3.3; fresh native launch selects model and effort
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2'
+```
+
+### P3.3 — native launch provenance repair
+
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Context | continue-root |
+| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3'
 ```

@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 4/4; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2; D17 не переоткрывается |
+| Design Passes | 4/4; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2; D24 добавляет P3.3 forward fix; D17 не переоткрывается |
 | Paused By | — |
 
 ## 1. Context
@@ -78,12 +78,14 @@ canary, а не через новую исчерпывающую proof-сист�
 | — | P2.3 | implementation/high | manual | full | Task status projection является owner-facing lifecycle truth; ложный Not started скрывает фактический прогресс и ломает agent routing |
 | — | P2.4 | implementation/high | manual | full | root live canary и полная requalification являются acceptance всего successor-контракта |
 | — | P3.1 | implementation/high | manual | full | Task fail-closed route, deterministic bundle и generated provider/docs truth влияют на каждый следующий plan-run |
+| — | P3.3 | implementation/high | manual | full | official native launch provenance устраняет недостижимый provider probe только для manual plan-run |
 | — | P3.2 | implementation/high | manual | full | root field requalification полного post-P2.3 anchor является acceptance D23 и не допускает product writes |
 
 ## 4. Update Log
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | owner-authorized repair design / gpt-5.6-terra/high | D24 добавляет P3.3: manual plan-run использует fresh native `-m` + `model_reasoning_effort` как честно названный launch provenance; provider telemetry и plan-exec не ослабляются. |
 | 2026-08-11 | owner-authorized successor design / semantic gpt-5.6-sol/high | D23 отклоняет F1–F6 финального RED P2, замораживает P2 и создаёт P3.1/P3.2 с fail-closed Task remediation и новым product-free canary; actual selector/effort не аттестованы. |
 | 2026-08-11 | plan-designer / gpt-5.6-sol/high | D22 вставляет Task-owned P2.3 status aggregation regression перед canary; прежний не начатый P2.3 становится P2.4 без переписывания terminal evidence. |
 | 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |

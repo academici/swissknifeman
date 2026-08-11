@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 8a2dba1c5e1b57e2f5d7c936ad9178ea1a3c8d613353e07e621b0a9c841a1841
+inputs_sha256: 01dcf4e9f72508eecf1d68664e84da016cfba800d4dd7b8edddabd6464a453a4
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.2.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 | P2 | Contract integrity and field requalification | 4/4 | 🟢 Done |
-| P3 | Fail-closed recovery and final requalification | 3/4 | 🟡 In progress |
+| P3 | Fail-closed recovery and final requalification | 2/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -55,10 +55,10 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟢 Done | 2026-08-11 |
+| P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟠 Done with deviations | 2026-08-11 |
 | P3.2 | Повторить product-free requalification нового anchor | 🟢 Done | 2026-08-11 |
-| P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟢 Done | 2026-08-11 |
-| P3.4 | Восстановить Validation trust и execution provenance | ⬜ Not started | — |
+| P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟠 Done with deviations | 2026-08-11 |
+| P3.4 | Восстановить Validation trust и execution provenance | 🟢 Done | 2026-08-11 |
 
 ## 6. Update Log
 
@@ -122,6 +122,10 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 GO: Task 780/1 skip; Harness/Skiller/provider/docs/plan gates green; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
 | 2026-08-11 | frontier/high | plan-design · in-progress · D25: P3 детализирована до DoR; P3.4 repair и fresh P3.2 attempt 2 запинены |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · P3.4 committed-anchor validation and provenance repair started; route source=cli-flag. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · P3.1: historical full validator red at ddc196471e59253abfd2770d6637952d179fff53; corrected focus 144 (на f86a4e5e64999608bfe6d68134edae88536c2122); current f86a4e5e64999608bfe6d68134edae88536c2122; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · P3.3: undeclared parity test and post-factum spec/D24 at 57a922b39febc9dfb2eb2c19fb32ac2f284455b4/ec5c71bcf36c1e9abf233953635194fee57a3fc3; corrected focus 63 (на f86a4e5e64999608bfe6d68134edae88536c2122); write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.4: P3.1 144, P3.3 63, Task 780 (все на f86a4e5e64999608bfe6d68134edae88536c2122); P3.1/P3.3 reconciled append-only; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -129,3 +133,5 @@ generated_by: task plan-views status
 - P0.2: known deviation
 - P1.1: known deviation
 - P1.2: known deviation
+- P3.1: known deviation
+- P3.3: known deviation

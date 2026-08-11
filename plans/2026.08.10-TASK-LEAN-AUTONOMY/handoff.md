@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-11 — after P3
+# HANDOFF — 2026-08-11 — after P3.4
 
-**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.4
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
 
 **Provider-neutral plan-protocol launch block**
 
@@ -10,41 +10,38 @@
 | Effort | high |
 | Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
 | Context | cold-start-root: capability-missing |
-| Суть | Выполнить единственный D25 repair на committed amendment anchor и создать predecessor для fresh P3.2. |
+| Суть | В отдельной fresh native Codex session провести P3.2 attempt 2 на committed P3.4 predecessor. |
 | Команда | — |
 
 **Native Codex launch block**
 
 | Model | Thinking | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | cold-start-root: capability-missing | P3.4 Validation/provenance repair | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.4'` |
+| gpt-5.6-terra | high | cold-start-root: capability-missing | P3.2 attempt 2 root requalification | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2'` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2'
 ```
 
-**Done:** Audit P3 attempt 1 принят как RED. D25 добавляет ровно один product-free P3.4,
-делает P3.1/P3.3 focused Validation исполнимым через explicit `PYTHONPATH=tests`,
-добавляет фактически изменённый parity test в P3.3 Files и запинает P3.2 attempt 2
-на distinct fresh native session с git-ref anchored counts.
+**Done:** P3.4 regenerated stale P3.1/P3.2 bundles, verified corrected focused sets and
+the full Task validator in a clean worktree at `f86a4e5e64999608bfe6d68134edae88536c2122`,
+and append-only reconciled P3.1/P3.3 as `🟠 Done with deviations`.
 
-**Remaining:** P3.4 должен доказать clean committed input, append-only перевести P3.1/P3.3 в
-`🟠 Done with deviations`, записать anchored report/state и закоммитить plan-only bookkeeping
-handoff. После этого отдельный native Codex process из repository root выполняет P3.2 attempt 2;
-его terminal GO создаёт final P3 audit attempt-2 candidate.
+**Remaining:** Start P3.2 attempt 2 only after this P3.4 handoff is committed. Its session id
+must differ from P3.4 `019ff226-2ceb-74f2-acd7-4e6b0360bd46` and historical
+`019ff1c3-afd4-7531-8b05-908d1b12552f`; terminal GO creates the final P3 audit attempt-2 candidate.
 
-**Sources of truth:** `phases/P3/P3.md` → `Audit P3 — 2026-08-11` ·
-`decisions/D25-p3-audit-repair-forward.md` · `research/11-p3-audit-repair-forward.md` ·
-`phases/P3/P3.4.md` · amended `phases/P3/P3.1.md` · amended `phases/P3/P3.3.md` ·
-amended `phases/P3/P3.2.md` · `bundles/P3.4.json` · `journal.jsonl`.
+**Sources of truth:** `phases/P3/P3.4.md` · `findings/P3.4-validation-and-provenance-repair.md` ·
+`phases/P3/P3.4.state.md` · `phases/P3/P3.1.state.md` · `phases/P3/P3.3.state.md` ·
+`decisions/D25-p3-audit-repair-forward.md` · `journal.jsonl`.
 
-**Open risks:** Historical journal rows 52/54/56 и attempt-1 report остаются append-only evidence и не
-считаются qualification verdict. Global Harness `run-report` hook в preflight помечен как stale;
-P3.4/P3.2 поэтому доверяют только local journal owner commands, generated views и exact git refs.
-Unrelated ARTIFEX/root-roadmap dirty files и Task VitePress output остаются вне scope.
+**Open risks:** Historical P3.1/P3.3/P3.2 attempt-1 evidence remains non-qualification history.
+Pre-existing dirty Task route-evidence/test files remain outside scope; P3.2 must preserve them and
+capture its own scoped dirty-tree evidence. Global Harness `run-report` hook is stale; trust local
+journal owner commands, generated views, exact git refs, and explicit CLI-flag launch provenance only.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: focused module invocation использует explicit `PYTHONPATH=tests`; test/product source не меняется.
+- workarounds: focused module invocation uses explicit `PYTHONPATH=tests`; clean worktree isolated validation from unrelated Task edits.
 - deferred: global stale `run-report` hook repair и canonical exhausted-audit owner-outcome projection.
 - open_questions: —

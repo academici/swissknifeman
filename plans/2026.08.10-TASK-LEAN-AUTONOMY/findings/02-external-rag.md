@@ -7,6 +7,8 @@
 - `perplexity-web search`: 4/4 запросов завершились с ответом и источниками.
 - `search_advanced`: 3 попытки вернули `No answer found`; это деградация advanced-режима,
   а не недоступность MCP. После уточнения владельца запросы повторены через базовый search.
+- Post-audit remediation: два узких `search_advanced(sources=web)` запроса завершились 2/2;
+  найденные official URLs открыты и проверены напрямую 2026-08-10.
 - Нагрузочные выводы ниже сверены по первичным официальным материалам; WebSearch применялся
   только для открытия и перепроверки первоисточников, не вместо Perplexity RAG.
 
@@ -15,8 +17,10 @@
 1. **Progressive elaboration / rolling wave.** Жёстко фиксировать ближайший исполнимый
    контракт, дальнюю работу держать крупнее и уточнять только при приближении. Это поддерживает
    компактный initial skeleton без повторного проектирования каждого малого шага.
-2. **Management by exception.** Исполнитель действует внутри tolerances; escalation нужна при
-   прогнозе выхода за них, а не при каждом отклонении.
+2. **Management by exception.** В публичном материале PRINCE2/PeopleCert явно задана узкая
+   граница: команда действует внутри согласованных/явно определённых tolerances/acceptable
+   parameters, а выход за пределы эскалируется через governance. Более сильная формула про любой
+   forecast не приписывается источнику. Проверено 2026-08-10 по exact official pages ниже.
 3. **Risk-based assurance.** Глубина независимой проверки определяется последствиями и
    неопределённостью изменения. Новый evidence может сделать повторную проверку нужной;
    неизменившийся low-risk diff — нет.
@@ -26,9 +30,11 @@
 5. **Bounded repair, not bounded progress.** Ограничивать повторение одного и того же failure
    fingerprint; новый причинный фикс внутри scope может продолжаться. Эскалировать material
    boundary или подтверждённый no-progress.
-6. **Decompose only when needed.** GitHub Spec Kit полезен строгим Spec→Plan→Tasks→Implement,
-   но его же материалы называют decomposition самым дорогим вариантом и рекомендуют сначала
-   ограничить объём исполнения или применить более лёгкое разделение.
+6. **Decompose only when needed.** GitHub Spec Kit сохраняет `/specify → /plan → /tasks →
+   /implement` для каждого bounded slice и рекомендует spec-of-specs только когда lighter
+   complex-feature strategies недостаточны. Официальная формулировка — decomposition “adds the
+   most overhead of any strategy”, не «самый дорогой вариант»; финансовая/token-cost
+   интерпретация не делается. Проверено 2026-08-10.
 
 ## Проектный синтез
 
@@ -58,16 +64,26 @@
   https://www.pmi.org/-/media/pmi/documents/public/pdf/certifications/practice-standard-scheduling.pdf
 - NIST, *AI Risk Management Framework 1.0* — assurance proportional to context and risk:
   https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf
+- PRINCE2/PeopleCert, *How to report progress in an agile setting with dashboards* — deviations
+  beyond agreed scope/schedule/quality tolerances are escalated through governance:
+  https://www.prince2official.com/Prince2-News-and-Announcements/agile-progress-reporting-dashboards
+- PRINCE2/PeopleCert, *Delivering AI projects: structure, control and governance are imperative
+  for ROI* — explicitly defined acceptable parameters enable bounded experimentation and prompt
+  escalation beyond acceptable limits:
+  https://www.prince2official.com/Prince2-News-and-Announcements/delivering-ai-projects-structure-control-and-governance-are-imperative-for-roi
 - Liu et al., *Lost in the Middle* — sensitivity of long-context use to placement:
   https://aclanthology.org/2024.tacl-1.9/
-- GitHub, *Spec Kit* and *Complex Features* — structured contract plus escalation to
-  decomposition only for genuinely large work:
+- GitHub, *Spec Kit*, *Complex Features* and *Spec of Specs* — structured per-slice workflow plus
+  conditional decomposition only after lighter strategies are insufficient:
   https://github.com/github/spec-kit
   https://github.github.com/spec-kit/concepts/complex-features.html
+  https://github.github.com/spec-kit/concepts/spec-of-specs.html
 
 ## Verification footer
 
 External fact classes covered: agent instruction design, context limits, progressive planning,
-risk-based assurance and real-world workflow examples. Confidence: high for the combined
-operating model; medium for exact local tolerances, which must be calibrated by field canary.
-No load-bearing conclusion rests only on a tool-poor summary or on the failed advanced mode.
+management by exception, risk-based assurance and conditional decomposition. Confidence: high
+for the exact official tolerance/escalation boundary and Spec Kit workflow/overhead wording;
+medium for local tolerance calibration, which remains a field-canary responsibility. Nothing
+unverified; no workaround. No load-bearing conclusion rests only on a tool-poor summary or on the
+earlier failed advanced mode.

@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; следующий шаг — независимый pre-exec audit |
+| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19 без нового design pass; следующий шаг — независимый pre-exec audit |
 | Paused By | — |
 
 ## 1. Context

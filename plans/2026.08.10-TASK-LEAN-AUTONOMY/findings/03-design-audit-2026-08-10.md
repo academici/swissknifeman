@@ -346,7 +346,6 @@ $ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
 СКОУП: 1) split invalid cross-phase Routing and make 4/4 Task Contracts build 2) replace prose Validation with exact commands and per-item package validate 3) reconcile S1/S2 with package-cwd launches 4) seal P1.1/P1.2 Files and stabilization admission 5) define GO/ADJUST status+Next 6) restore literal design-pass journal provenance 7) add D1–D6 actor/model and evidence links 8) render complete neutral+native group launches 9) minimize/regenerate bundles with measured budget 10) commit reviewed carriers and rerun final gates
 НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D6 safety/authority/public semantics; не hand-edit generated state/status/decision/bundle views; не включать и не откатывать чужие изменения ARTIFEX/docs/roadmap вне явно принятого remediation scope
 ```
-
 **Native Codex launch block**
 
 | Model | Thinking | Context | Суть | Команда |
@@ -360,4 +359,412 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 ВХОД: plans/2026.08.10-TASK-LEAN-AUTONOMY/findings/03-design-audit-2026-08-10.md → блок `## Audit design — 2026-08-10`; прочитать ПЕРВЫМ
 СКОУП: 1) split invalid cross-phase Routing and make 4/4 Task Contracts build 2) replace prose Validation with exact commands and per-item package validate 3) reconcile S1/S2 with package-cwd launches 4) seal P1.1/P1.2 Files and stabilization admission 5) define GO/ADJUST status+Next 6) restore literal design-pass journal provenance 7) add D1–D6 actor/model and evidence links 8) render complete neutral+native group launches 9) minimize/regenerate bundles with measured budget 10) commit reviewed carriers and rerun final gates
 НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D6 safety/authority/public semantics; не hand-edit generated state/status/decision/bundle views; не включать и не откатывать чужие изменения ARTIFEX/docs/roadmap вне явно принятого remediation scope'
+```
+
+## Audit design — 2026-08-10 — заход 2
+
+**Вердикт: RED**
+
+**Заход: 2-й.** Earlier `plan-audit` journal records for `design`: 1.
+
+Remediation F1–F10 is structurally present: all four Task Contracts build, target lint/conflicts/
+citations are green, generated views are byte-current, Routing and roadmap cover every item, and
+the bundle budgets are reduced without repeated inputs. The plan is still not ready for execution:
+F11–F14 leave runtime/context, user documentation, repository provenance, and external-evidence
+obligations without a complete acceptance carrier. F15 is a non-blocking journal-lifecycle defect.
+
+### Tree anchor and deterministic checks
+
+The audited target plan is clean against committed anchor `e6f43bc4`; unrelated dirty ARTIFEX,
+`docs/reference.md`, `plans/ACTIVE.md`, and `roadmap/` changes were read only where explicitly
+named as evidence and were not modified.
+
+- `python3 packages/task/scripts/plan-lint.py plans/2026.08.10-TASK-LEAN-AUTONOMY` →
+  **0 ERROR / 0 WARN (on `e6f43bc4`)**.
+- `python3 packages/task/scripts/plan-lint.py --conflicts` → **0 mismatches / 0 warnings**.
+- `python3 packages/task/scripts/verify-plan-citations.py
+  plans/2026.08.10-TASK-LEAN-AUTONOMY --strict` → **5 local citations / 0 findings**.
+- `plan-views.py state --all --check`, `status --check`, `decisions --check`, and
+  `bundle --all --check` → byte-current (**4 item states, 1 status view, 4 decision views,
+  4 bundles**).
+- `task.task_contract build` → **4/4 buildable**, with no reported contract conflicts.
+- Bundle estimated tokens / repeated `(path, selector)`: P0.1 **10,837 / 0**; P0.2
+  **17,918 / 0**; P1.1 **11,269 / 0**; P1.2 **3,497 / 0**.
+- `bash packages/task/scripts/validate.sh` → exit 0, **750 tests / 1 skip**.
+
+## Findings — заход 2
+
+### F11 · Major · confidence high · issue · `phases/P1/P1.1.md:5` · PROMOTE-CANDIDATE
+
+**P1.1 does not make layout-v2 context semantics an acceptance target, while every current Task
+Contract still emits the historical `same-session — item` value.**
+
+The repository plan-protocol v2 allows `continue-root`, `isolated-child-return`, or
+`cold-start-root`; historical v1 strings are readable but must not be emitted for v2. The four
+admission builds all return `next.context = "same-session — item"`. P0.2 explicitly makes
+`continue-root` the normal continuation, but P1.1's Scope, transition map, Validation, and
+Deliverables cover routing/review/state only and contain no red-first context-carrier assertion.
+The existing 4/4 build gate proves construction, not semantic conformance of the built payload.
+
+**Constitution rule:** worktree-local `plan-protocol` §6 and
+`references/plan-layout-v2.md` “Context boundary”; design-audit checklist §2 (integration blind
+zones) and §4 (producer/consumer contracts).
+
+**failure_scenario:** P1.1 closes with all listed tests green while the v2 compiler/provider path
+continues emitting the v1 context literal. Consumers then either reject a supposedly buildable
+contract or silently translate two competing context enums, reintroducing the continuation ritual
+the plan is meant to remove.
+
+**Repair contract:** add explicit P0.2→P1.1 context semantics to P1.1 Scope/Deliverables, include
+the exact owning runtime files, and add a red-first v2 fixture proving `continue-root` plus a v1
+compatibility fixture. The finish gate must inspect the emitted contract value, not only count
+successful builds.
+
+### F12 · Major · confidence high · issue · `phases/P1/P1.1.md:8`
+
+**No item owns the user-facing Task documentation affected by the lifecycle change.**
+
+P1.1 changes five plan commands, status/review transitions, and the rule for when audit/close is
+needed, yet its finite `Files` contains no canonical Task documentation source. Current aggregate
+docs still draw `exec → plan-audit → findings → exec` and say a GREEN audit opens phase close
+(`docs/task/methodology.md:15–17,69–75`); the command index describes `plan-audit` only as a closed-
+phase audit (`docs/task/index.md:28`). `docs-maintenance` classifies changed processes and
+user-facing command behavior as documentation-required.
+
+**Constitution rule:** design-audit checklist §2 (documentation blind zone); root
+`docs-build`; repository `docs-maintenance` “Worth documenting” criteria.
+
+**failure_scenario:** code and generated command adapters implement material-triggered audit reuse,
+but operators follow the unchanged public workflow and keep launching the mandatory status-driven
+audit/close/reopen cycle. The product ships the old ritual in documentation after removing it from
+runtime.
+
+**Repair contract:** assign the authoritative Task docs source and deterministic umbrella
+projection/regeneration to P1.1 (or one bounded docs item), update the lifecycle/index wording, and
+add standalone plus aggregate docs checks. Do not hand-edit a generated aggregate.
+
+### F13 · Major · confidence high · issue · `phases/P1/P1.2.md:6`
+
+**The required root external-source ledger has no committed owner or precondition in the plan.**
+
+Root policy requires external design sources in `docs/reference.md`. The matching row currently
+exists only as a pre-existing uncommitted change at `docs/reference.md:44`; P1.2 explicitly excludes
+that file, and no earlier item's `Files` or owner gate adopts or waits for it. The plan therefore
+cannot rely on the row while also promising not to touch the foreign dirty carrier.
+
+**Constitution rule:** root `reference-provenance`; `plan-protocol` §§1/7 require portable
+repository evidence; design-audit checklist §2 (docs) and §3 (knowledge-layer reconstruction).
+
+**failure_scenario:** the foreign worktree change is committed elsewhere, edited, or discarded
+before execution. A cold clone then contains the plan-local RAG summary but not the umbrella source
+ledger mandated for this repository, while every item can still close green.
+
+**Repair contract:** add an exact pre-exec prerequisite/owner gate for the existing foreign row or
+assign a bounded item to reconcile and commit it through its real owner. Preserve the dirty file;
+do not absorb or overwrite it from design-finish without authority.
+
+### F14 · Major · confidence medium · issue · `findings/02-external-rag.md:18`
+
+**The RAG carrier is not source-complete and overstates one primary-source conclusion.**
+
+The load-bearing management-by-exception statement has no named supporting source in the primary
+source list. A fresh basic Perplexity verification found official PRINCE2 tolerance/exception
+guidance, but that source is absent from the plan. Separately, current official Spec Kit material
+supports phased partitioning for complex/large projects while keeping task generation in the core
+workflow; it does not substantiate the stronger sentence that decomposition itself is “the most
+expensive option”. D1–D4 cite this findings file as verified evidence.
+
+**Constitution rule:** `plan-protocol` §§1/7 knowledge layers require each load-bearing external
+fact to carry reconstructible `RAG:✅` evidence; `decision-verification` requires source, date, and
+confidence per external fact class.
+
+**failure_scenario:** a later designer treats the combined `RAG:✅` marker as proof that Spec Kit
+recommends avoiding decomposition generally, or cannot reproduce the tolerance boundary behind
+D1/D2 from the recorded sources. The plan's decision chain appears stronger than its stored
+evidence.
+
+**Repair contract:** record the exact official management-by-exception source and verification
+date in the findings/umbrella ledger, narrow the Spec Kit conclusion to conditional phased
+partitioning for complex work, and keep the owner-driven rejection of a new control plane as the
+independent repo-grounded reason.
+
+### F15 · Minor · confidence high · issue · `journal.jsonl:1`
+
+**The initial design run has an `in-progress` start with no matching terminal event.**
+
+Journal line 1 uses session `019fec91-d99e-70d2-851d-e182905d51f3`; later pass-repair events use a
+different session. The generated Update Log therefore still exposes `plan-design · in-progress`
+beside the closed Design Pass 2/2 provenance.
+
+**Constitution rule:** `plan-protocol` §7 and `task.journal` contract §2 require start/terminal
+pairs; journal history is append-only.
+
+**failure_scenario:** a cold reader or future active-run detector sees an apparently live design
+attempt after approval and cannot distinguish abandonment from concurrent ownership.
+
+**Repair contract:** append an honest terminal/compensating event for the original run through the
+canonical journal writer (or an owner-gated schema exception if pairing cannot be expressed), then
+regenerate/check status. Never rewrite line 1.
+
+## Brief trace — заход 2
+
+| Brief/refinement thought | Current carrier(s) | Result |
+|:--|:--|:--|
+| Strict initial intent/scope/acceptance/authority frame | D1, four item specs | covered |
+| Adaptive grouping and local repair | D1/D2, P0.2, roadmap | covered within package-cwd boundaries |
+| Minimal always-on canon and progressive disclosure | D4, P0.1/P0.2 | covered |
+| No status-only audit/reopen loop; review reuse on material change | D3, P1.1 | covered in spec; docs gap F12 |
+| Required Perplexity base-search stop | D6, P0.1/P0.2 | covered |
+| Compact implementation and bounded context | two phases/four solo items, minimized bundles | covered |
+| Field-first acceptance and exact GO/ADJUST | D5/D8, P1.2 | covered |
+| Reconstructible external basis | findings/02, D1–D6 | incomplete under F13/F14 |
+
+No owner thought is absent from the plan. The RED verdict comes from integration/provenance gaps
+that allow the stated items to close without delivering the whole repository-visible operating
+model.
+
+## Checked without findings — заход 2
+
+- Phase contracts are acyclic: P0.1 → P0.2 → P1.1 → P1.2 through terminal state inputs.
+- Routing covers all four items exactly once and matches the roadmap's implementation/high manual
+  launches; all solo rows explain the package-cwd boundary.
+- Roadmap launch blocks pin cwd, model, effort, approval, and sandbox; owner gates are limited to
+  P1.2 ADJUST.
+- No live skeleton or `[NEEDS CLARIFICATION …]` marker exists in stable plan/phase/decision
+  carriers; both phase DoR blocks are complete.
+- `Design Passes 2/2` is evidenced by literal pass 1/2 and pass 2/2 journal/Update Log rows.
+- D1–D8 have actor/model/evidence provenance. No record supersedes/cancels another, so
+  `**Consequences:**` is not triggered.
+- Previous F1–F10 remediation is present and its deterministic gates reproduce on the current
+  committed target plan.
+
+## Проверка (verification status) — заход 2
+
+- **RAG:** `perplexity-web search` ×3 (basic mode) OK on 2026-08-10; primary/official source
+  classes checked: Anthropic/OpenAI instruction guidance, PMI rolling-wave planning, PRINCE2
+  management by exception, NIST risk-proportionate assurance, GitHub Spec Kit, and Liu et al.
+  long-context position sensitivity. Confidence high except the exact local tolerance calibration,
+  which remains intentionally medium and belongs to P1.2.
+- **Непроверено → ПОВТОРНЫЙ ПРОХОД:** nothing; Context7 was not applicable because no library/API
+  claim was used. The basic Perplexity rung was available, so WebSearch fallback was not used.
+- **Обходки/[POSSIBLE-DEFECT]:** none. Hook-derived telemetry remains untrusted: global
+  notify/auto-approve/memory hooks are absent, run-report is stale, and review-gate is unconfigured.
+  `codex doctor` confirms `gpt-5.6-sol`, approval Never, and unrestricted filesystem; the session's
+  xhigh effort remains self-attested because the provider does not expose it independently.
+
+### Что запускать
+
+**Next:** design-finish: task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+**Provider-neutral plan-protocol launch block**
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write · command.external-research |
+| Context | cold-start-root |
+| Суть | reason=`owner-pause-no-resume`; bounded remediation F11–F15, no item execution |
+| Команда | `$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish` |
+
+```text
+$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+РЕЖИМ: whole-plan design-finish remediation, НЕ execution и НЕ phase reopen
+ВХОД: plans/2026.08.10-TASK-LEAN-AUTONOMY/findings/03-design-audit-2026-08-10.md → блок `## Audit design — 2026-08-10 — заход 2`; прочитать ПЕРВЫМ
+СКОУП: 1) добавить P1.1 exact layout-v2 context acceptance и red-first v2/v1 fixtures 2) назначить владельца canonical Task docs и standalone+aggregate checks 3) разрешить owner/prerequisite для чужой dirty записи docs/reference без её поглощения 4) дополнить RAG точным management-by-exception source и сузить Spec Kit claim 5) закрыть dangling journal start только append-событием и регенерировать views
+НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product behavior вне уточнения ТЗ; не ослаблять D1–D8; не hand-edit generated views/projections; не включать, не откатывать и не перезаписывать чужие ARTIFEX/docs/reference/roadmap/ACTIVE изменения
+```
+
+**Native Codex launch block**
+
+| Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | `cold-start-root` (`owner-pause-no-resume`) | Remediate F11–F15 through design-finish; no item execution | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish'` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+РЕЖИМ: whole-plan design-finish remediation, НЕ execution и НЕ phase reopen
+ВХОД: plans/2026.08.10-TASK-LEAN-AUTONOMY/findings/03-design-audit-2026-08-10.md → блок `## Audit design — 2026-08-10 — заход 2`; прочитать ПЕРВЫМ
+СКОУП: 1) добавить P1.1 exact layout-v2 context acceptance и red-first v2/v1 fixtures 2) назначить владельца canonical Task docs и standalone+aggregate checks 3) разрешить owner/prerequisite для чужой dirty записи docs/reference без её поглощения 4) дополнить RAG точным management-by-exception source и сузить Spec Kit claim 5) закрыть dangling journal start только append-событием и регенерировать views
+НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product behavior вне уточнения ТЗ; не ослаблять D1–D8; не hand-edit generated views/projections; не включать, не откатывать и не перезаписывать чужие ARTIFEX/docs/reference/roadmap/ACTIVE изменения'
+```
+
+## Audit design — 2026-08-10 — заход 3
+
+**Вердикт: RED**
+
+**Заход: 3-й.** До запуска в `journal.jsonl` были две terminal записи `plan-audit` для `design`.
+Лимит двух раундов относится к audit закрытой фазы Pn; design-ревью повторяется после material
+remediation до GREEN.
+
+F11–F15 отражены в carriers, targeted lint/citations/views зелёные, Routing и roadmap покрывают
+все четыре item. План ещё нельзя утверждать: F16 оставляет финальную remediation вне committed
+SSOT, F17 допускает неоднозначный field verdict без наблюдения ключевого события, F18 откладывает
+release ledger за независимый owner gate. F19 — неблокирующая навигационная протухлость.
+
+### Tree anchor and deterministic checks
+
+`e6f43bc48cc54946344f7bdc38cb18bcb9f6ebf9` — только база рабочего дерева: target plan содержит
+modified и untracked remediation carriers. Честного git-ref для проверенных bytes нет — это F16.
+
+- targeted `plan-lint` → **0 ERROR / 0 WARN (на working tree поверх `e6f43bc4`)**;
+  `plan-lint --conflicts` → **0 / 0**;
+- strict citation verifier → **13 citations / 0 findings**;
+- state/status/decisions/bundle `--check` → **4/1/4/4 byte-current**; closure неприменим без
+  terminal phase и требует `--phase`;
+- Task Contract build → **4/4 buildable**, conflicts пусты; текущий runtime ещё эмитит
+  `same-session — item`, поэтому v2 transition остаётся acceptance P1.1;
+- `bash packages/task/scripts/validate.sh` → exit 0, **750 tests / 1 skip**; root scan
+  **0 ERROR / 252 WARN**, все WARN вне target plan;
+- `skiller registry --check` и provider-command projection `--check` → byte-current;
+- Perplexity Web basic search ×3 → OK; official PRINCE2/PeopleCert, GitHub Spec Kit, Anthropic и
+  OpenAI pages открыты напрямую, stored RAG conclusions не шире первичных источников.
+
+## Findings — заход 3
+
+### F16 · Major · confidence high · issue · `handoff.md:18` · PROMOTE-CANDIDATE
+
+**Handoff объявляет design-finish carriers committed, но remediation F11–F15 живёт только в dirty
+working tree.**
+
+`git status --short` показывает modified target carriers и два untracked load-bearing файла:
+`decisions/D9-external-ledger-prerequisite.md` и
+`research/05-design-finish-remediation-f11-f15.md`. Bundles P1.1/P1.2 уже digest-pin эти bytes и
+классифицируют их как `committed`, хотя `HEAD` их не содержит.
+
+**Constitution rule:** worktree-local `plan-protocol` §§1–2/7 — repository/committed inputs are
+SSOT, layout-v2 fails closed on missing/digest-mismatched carriers; design checklist §§3–5;
+root `evidence-integrity`.
+
+**failure_scenario:** cold clone по P0.1 launch не видит D9/research-05 и не воспроизводит bundle
+hashes, либо dirty bytes меняются после audit при продолжающем утверждении «committed».
+
+**Repair contract:** commit only complete target-plan carriers, исключив foreign ARTIFEX,
+`docs/reference.md`, root `roadmap/` и `plans/ACTIVE.md`; regenerate/check views/bundles и повторить
+design audit на финальном git-ref.
+
+### F17 · Major · confidence medium · question · `research/04-field-canary-protocol.md:25`
+
+**GO/ADJUST не определяет исход, когда live run не наблюдает core local-repair или material-review
+event.**
+
+Scorecard требует local repair/material carrier, но не гарантирует такое событие после P1.1 и не
+задаёт `not observed`. P1.2 — единственный post-P1.1 live item, исключает package fixes и дополняет
+траекторию только read-only replay, который не исполняет обновлённый runtime.
+
+**Constitution rule:** `plan-protocol` §3 требует observable Validation/Deliverables; design
+checklist §§2/4; brief требует field canary для D2/D3.
+
+**failure_scenario:** при корректном P1.1 и отсутствии органического дефекта один executor выдаёт
+vacuous GO, другой — unknown/ADJUST. Один plan contract получает противоположные terminal outcomes.
+
+**Repair contract:** определить один bounded real post-P1.1 observation и exact значение
+`not observed`, не добавляя exhaustive synthetic matrix или второй audit loop.
+
+### F18 · Major · confidence high · issue · `phases/P1/P1.2.md:13`
+
+**Единственная `[Unreleased]` запись отложена до P1.2 GO за независимый D9 owner gate.**
+
+P0.1/P0.2/P1.1 дают release-visible instruction/skill/command/docs changes, но не владеют
+`CHANGELOG.md`. P1.2 пишет его только на GO; D9 может оставить item `waiting`, а ADJUST не задаёт
+release-ledger outcome.
+
+**Constitution rule:** root `development-validation` требует единственный root `CHANGELOG.md`
+`[Unreleased]`; design checklist §2 включает release/deploy/docs blind zones.
+
+**failure_scenario:** P0/P1.1 commits попадают в `main`, D9 ждёт или P1.2 даёт ADJUST, а release
+уходит с изменённой семантикой/доками без changelog record.
+
+**Repair contract:** назначить bounded changelog write до возможного waiting release-visible work
+и определить ADJUST ledger outcome; per-package changelog не создавать.
+
+### F19 · Minor · confidence high · issue · `index.md:28`
+
+**Provenance index предшествует F11–F15/D9 reconciliation.**
+
+Refinements mapped только к P1.2; research-05 и D9 отсутствуют; closing sentence всё ещё называет
+D1–D8. Executor path не сломан, поэтому finding Minor.
+
+**Constitution rule:** существующий `index.md` — findings/research→phase navigation carrier;
+design checklist §3 требует reconstructible knowledge chain.
+
+**failure_scenario:** cold designer пропускает newest reconciliation/D9 и принимает prerequisite
+за необъяснённую позднюю вставку.
+
+**Repair contract:** refresh index для refinements, research-05 и D9, не делая его новым status/
+decision owner.
+
+## Brief trace — заход 3
+
+| Thought | Carrier | Result |
+|:--|:--|:--|
+| Strict initial contract / authority | D1, four specs | covered |
+| Adaptive grouping / local repair | D1/D2/D7, P0.2/P1.1 | specified; field gap F17 |
+| Minimal always-on / on-demand detail | D4, P0.1/P0.2 | covered |
+| Material-triggered audit reuse | D3, P0.2/P1.1/P1.2 | covered |
+| Required Perplexity base-search stop | D6, P0.1/P0.2 | covered |
+| Compact plan / few sessions | 2 phases, 4 package-owned solos | covered; cwd explains solos |
+| Field-first acceptance | D5/D8, P1.2 | shape covered; no-event outcome F17 |
+| F1–F15 + foreign-diff boundary | refinements, D7–D9, research-02/05 | bytes covered; F16 uncommitted |
+
+No owner thought is wholly absent. RED comes from portability plus acceptance/release gaps.
+
+## Checked without findings — заход 3
+
+- phase contracts acyclic: P0.1 → P0.2 → P1.1 → P1.2 through generated state;
+- Routing covers four items once and matches roadmap implementation/high manual/full rows;
+- roadmap covers every item, explains solos, has neutral/native launches and D9 guard;
+- no live skeleton/clarification marker; both DoR blocks complete;
+- Design Passes 2/2 has literal pass 1/2 and 2/2 provenance; post-audit finish named separately;
+- D1–D9 carry actor/model/evidence; none supersedes/cancels, so Consequences not triggered;
+- F11–F15 repairs are present in working-tree design and pass structural gates.
+
+## Проверка (verification status) — заход 3
+
+- **RAG:** Perplexity basic ×3 OK; official primary pages directly checked 2026-08-10.
+- **Непроверено → ПОВТОРНЫЙ ПРОХОД:** local tolerance calibration intentionally belongs to P1.2;
+  no other external fact class used by the verdict remains unverified.
+- **Обходки/[POSSIBLE-DEFECT]:** none. Environment degraded: global `run-report` hook stale;
+  installed CORE plan-protocol cache 2.23.0 vs worktree canon 2.24.0. Audit uses SHA-matching
+  worktree `plan-audit.md` + worktree 2.24.0; hook telemetry/cached literals are not green evidence.
+
+### Что запускать
+
+**Next:** design-finish: task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+**Provider-neutral plan-protocol launch block**
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | frontier |
+| Effort | high |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | cold-start-root |
+| Суть | reason=`owner-pause-no-resume`; bounded remediation F16–F19, no item execution |
+| Команда | `$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish` |
+
+```text
+$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+РЕЖИМ: whole-plan design-finish remediation, НЕ execution и НЕ phase reopen
+ВХОД: plans/2026.08.10-TASK-LEAN-AUTONOMY/findings/03-design-audit-2026-08-10.md → блок Audit design — 2026-08-10 — заход 3; прочитать ПЕРВЫМ
+СКОУП: 1) commit complete target-plan carriers и rerun gates на git-ref 2) определить real canary и exact not-observed 3) вынести Unreleased ledger из-за D9 waiting и определить ADJUST 4) refresh index для D9/research-05 5) переписать stale handoff
+НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D9; не hand-edit generated views; не включать, откатывать или перезаписывать foreign ARTIFEX/docs-reference/root-roadmap/ACTIVE изменения
+```
+
+**Native Codex launch block**
+
+| Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | high | `cold-start-root` (`owner-pause-no-resume`) | Remediate F16–F19 through design-finish; no item execution | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish'` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY finish
+
+РЕЖИМ: whole-plan design-finish remediation, НЕ execution и НЕ phase reopen
+ВХОД: plans/2026.08.10-TASK-LEAN-AUTONOMY/findings/03-design-audit-2026-08-10.md → блок Audit design — 2026-08-10 — заход 3; прочитать ПЕРВЫМ
+СКОУП: 1) commit complete target-plan carriers и rerun gates на git-ref 2) определить real canary и exact not-observed 3) вынести Unreleased ledger из-за D9 waiting и определить ADJUST 4) refresh index для D9/research-05 5) переписать stale handoff
+НЕ ТРОГАТЬ: не выполнять P0/P1; не менять package/product code; не ослаблять D1–D9; не hand-edit generated views; не включать, откатывать или перезаписывать foreign ARTIFEX/docs-reference/root-roadmap/ACTIVE изменения'
 ```

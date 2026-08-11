@@ -131,6 +131,21 @@ class TestCodexPublication(unittest.TestCase):
             self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
             self.assertFalse((cached / excluded_path).exists())
 
+    def test_core_plan_protocol_keeps_the_adaptive_execution_contract(self):
+        core_root, core = self._core_artifacts()
+        relative = Path("skills/general/plan-protocol/SKILL.md")
+        artifacts = {
+            item.target.relative_to(core_root): item.managed_bytes
+            for item in core
+        }
+        canonical = (self.package_root / relative).read_bytes()
+        self.assertEqual(artifacts[relative], canonical)
+        canon_text = canonical.decode("utf-8")
+        for literal in ("observe → minimal reproduce → classify → act → verify",
+                        "procedural / transient / dependency-not-ready / unrelated-pre-existing",
+                        "Reuse a prior scoped verdict"):
+            self.assertIn(literal, canon_text)
+
     def test_core_bundle_projects_task_runtime_without_consumer_copy(self):
         core_root, core = self._core_artifacts()
         runtime_path = Path(

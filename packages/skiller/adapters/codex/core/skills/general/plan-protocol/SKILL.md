@@ -1,8 +1,8 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.24.0
-description: "Executable plans in plans/<ID>: schemas, statuses, routing, semantic Next, and handoff."
+version: 2.25.0
+description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
 persona: oss-dev
@@ -48,9 +48,8 @@ Rules common to layouts v1 and v2:
 
 Layout is selected only by Meta `Layout`:
 
-- **Layout v1:** `Layout` is absent. Preserve the monolithic paths `plan.md`, `phases/Pn.md`,
-  `handoff.md`, optional `roadmap.md`, `journal.jsonl`, `brief/`, `findings/`, `research/`,
-  `closure/`, `artifacts/`, `workflows/`, `root/`, and `open-questions.md`.
+- **Layout v1:** `Layout` is absent; preserve its monolithic plan/phase/handoff and optional
+  evidence carriers.
 - **Layout v2:** Meta contains `Layout | v2`. Stable specifications, volatile state, append-only
   history, and generated views are separate carriers. Rules explicitly tagged `[v2]` apply only
   here; `[v1]` rules apply only to v1; untagged rules apply to both.
@@ -71,29 +70,13 @@ replaces the other. Full carrier/reader tables and failure codes are in the refe
 
 ## 3. Plan and phase contracts
 
-`plan.md` sections, in order: `## 0. Meta`, `## 1. Context`, `## 2. Execution Rules`,
-`## 3. Routing`, `## 4. Phase Index & Status Board`, `## 5. Decision Log`, `## 6. Update Log`;
-`## 7. Contracts` is optional. New v2 plans keep decisions in `decisions/<D-id>.md` and render
-the compatible decision view; the compact pointer remains in `plan.md`.
+`plan.md` owns Meta, Context, Execution Rules, Routing, Status Board, Decision Log, and Update Log;
+Contracts are optional. Every item has the 16 ordered fields named by `plan-layout-v2.md`; `—` is
+empty. Inputs are predecessor evidence, Required Reads precede work, Files bound writes, and
+Validation/Deliverables are observable. Closure prints exactly
+`write-site: pre_mutation: <code> · pre_final: <code>`; both codes must be `allow`.
 
-Canonical table literals are `Поле | Значение`, `Items 🟢/всего`,
-`D# | Дата | Решение | Почему`, `Дата | Кто (role/model) | Что`,
-`Контракт | Версия | Статус | Потребители | Уведомлены`, and
-`Контракт | Донор-план | Pinned | Замечено | Реакция`.
-
-Every phase has Phase Context, Phase Status, item specifications, and Phase Handoff. `[v2]` stores
-these in separate phase index/item/state carriers; `[v1]` keeps them in `phases/Pn.md`.
-Write item fields as `**Field:** value`, in this order:
-
-`Status, Intent, Why, Scope Included, Scope Excluded, Inputs, Files, Required Reads, Implementation Rules, Code Guidance, Validation, Deliverables, Completion Notes, Pending Work, Known Deviations, Escalation Needed`
-
-All 16 fields are mandatory. `—` is the empty value. `Inputs` names predecessor-produced
-artifacts; `Required Reads` names files to read before work; `Files` bounds writes. Validation
-contains runnable commands and Deliverables names observable outputs. A completed item prints the
-two Task Contract verdicts on one line:
-`write-site: pre_mutation: <code> · pre_final: <code>`. Both must be `allow`; `n/a` is NOT green.
-
-## 4. Status, readiness, and closure
+## 4. Status, readiness, and adaptive execution
 
 There are EXACTLY 6 canonical strings:
 
@@ -114,49 +97,46 @@ condition.
 
 Before execution: the item has concrete intent/scope/inputs/files/validation/deliverables, all
 dependencies are terminal, required reads resolve, routing is unambiguous, and no
-`[NEEDS CLARIFICATION …]` remains. First eligible local validation failure is repaired in the
-current root session. The same failure fingerprint repeating, or a risk trigger, permits one
-isolated reviewer. Capability/authority boundaries go to the owner.
+`[NEEDS CLARIFICATION …]` remains. This initial contract is strict; inside it the owning root
+may group ready adjacent work, choose the local order, and repair a reversible in-scope defect.
 
-Close an item with two commits: scope implementation, then plan bookkeeping. Append journal
-events; never rewrite history. `[v2]` regenerate state/status/decision/closure/bundle views and
-run the downstream gate before handoff. `Completion Notes` carry evidence, exact validation,
-commit, remaining work, and known deviations. A decision that cancels or supersedes another adds
-`**Consequences:**`.
+Use this loop for every failure signal; a tool exit, status label, audit finding, or dirty tree is
+not itself a product verdict:
+
+| Evidence-first loop | Action in the owning root | Terminal only after reproduction |
+|:--|:--|:--|
+| observe → minimal reproduce → classify → act → verify | retain the smallest useful evidence and verify the resulting scope/acceptance delta | acceptance, safety, authority |
+| procedural / transient / dependency-not-ready / unrelated-pre-existing | use the safe fallback, local repair, bounded wait, or continue independent work | no |
+| unknown non-idempotent write | reconcile actual state before retry or close | safety until reconciled |
+| external process result | reconcile PID, output, and state before terminalizing | acceptance/safety only |
+
+Routing correction happens before journal start and never turns the current producer red. A future
+carrier is `dependency-not-ready`, not a failure of its producer. Compare inherited red against its
+baseline delta. On the first repeated failure fingerprint change tactics; only the next repeat or a
+new material risk permits one isolated reviewer. Reuse a prior scoped verdict while scope, SHA, and
+risk are unchanged; status, bookkeeping drift, and nits are not review triggers. A deterministic,
+non-material plan-bookkeeping defect is repaired inline by its owner, followed by one regeneration
+and gate rerun in the same attempt.
+
+Close with two commits: scope implementation, then plan bookkeeping. Append, never rewrite journal
+events; `[v2]` regenerates views and runs downstream before handoff. Completion Notes carry exact
+evidence; a cancelling/superseding decision adds `**Consequences:**`.
 
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
-generated `[v2]` phase-closure view.
+generated `[v2]` phase-closure view. A terminal phase is a candidate: a fresh GREEN audit precedes
+phase close; a RED or unresolved ATTENTION is repaired in its owning item before retrying that gate.
 
 ## 5. Routing
 
-Default neutral routing:
-
-| Role | Model class/effort | Work |
-|:--|:--|:--|
-| issue-planner | frontier/high | design |
-| invariant-auditor | frontier/xhigh | audit |
-| package-implementer | implementation/medium | implementation |
-| small-implementer | economy/low | mechanical low-risk slice |
-| repo-explorer | economy/low | read/map |
-| docs-curator | implementation/low | documentation/close |
-
-Model order is `economy < implementation < frontier`; effort order is
-`low < medium < high < xhigh`. Compare both independently. Exact or overshoot may proceed and is
-recorded; undershoot, missing/ambiguous selector, or unsupported capability blocks before mutation.
-Effort high+ does not automatically require frontier. Use frontier only for open design decisions
-or irreversible contract choices; frozen-spec implementation normally uses implementation/high.
-
-Routing rows use `| Batch | Items | Model class/effort | Exec | Review | Почему |`. `Items` is
-exactly one `Pn.m` or one same-phase range. `Exec` is `plan-exec`, `manual`, or `plan-design`.
-`Review` is `full`, `light`, or `none`; default/doubt is `full`. Full-review classes include public
-contracts, security, fiscal/payment, migration, tenant isolation, and fleet canon. A batch keeps
-each item close and inherits the highest review depth.
-
-`task:plan-exec` requires at least implementation/medium. A higher route or effort means
-`Exec=manual` unless an explicit safe command contract exists. `task:plan-run` executes manual
-items under the current session route and must print the actual class/effort; self-attestation is
-evidence, not a machine proof.
+Model order is `economy < implementation < frontier`; effort order is `low < medium < high < xhigh`.
+Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
+overshoot is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
+open design or irreversible choices. Routing rows are
+`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual`,
+or `plan-design`, and default/doubt Review is `full`. A batch inherits its highest review depth.
+`plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
+class/effort as evidence.
 
 ## 6. Handoff and semantic Next
 
@@ -165,37 +145,18 @@ evidence, not a machine proof.
 Open risks, and Workarounds/Deferred/Open questions. The first non-empty Next line declares the
 form; prose below cannot change it.
 
-| Форма Next | Когда |
-|:--|:--|
-| exec-items: task:plan-exec <ID> Pn.m [Pn.k …] | detailed executable item(s) |
-| run-items: task:plan-run <ID> Pn.m[-Pn.k] | manual items under current verified route |
-| audit-design: task:plan-audit <ID> design | whole-plan pre-exec audit |
-| design-phase: task:plan-design <ID> Pn | detail a phase skeleton |
-| design-item: task:plan-design <ID> Pn.m | redesign an item |
-| design-finish: task:plan-design <ID> finish | reconcile detailed design |
-| design-roadmap: task:plan-design <ID> roadmap | refresh execution roadmap |
-| audit-phase: task:plan-audit <ID> Pn | audit a terminal phase |
-| close: task:plan-close <ID> Pn[.m] | reconcile/close item or phase |
-| archive: task:plan-close archive <ID> | archive terminal plan |
-| terminal: план закрыт | no protocol work remains |
-| manual: <model-class/effort> | no single command; carry bare prompt |
-| waiting: <condition> → <target semantic form> | real step not executable yet |
+Semantic Next is one of `exec-items`, `run-items`, `audit-design`, `design-phase`, `design-item`,
+`design-finish`, `design-roadmap`, `audit-phase`, `close`, `archive`, `terminal`, `manual`, or
+`waiting`; its command is the corresponding `task:plan-*` form. Manual carries a bare prompt;
+waiting carries its executable condition and target form.
 
 Historical `/task:…`, `ЗАПУСК ВРУЧНУЮ:`, and `ОЖИДАНИЕ:` inputs remain compatible. New handoffs
 store the provider-neutral semantic form and separately render Claude `/task:…` or Codex
 `$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
 `РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
 
-Every runnable Next has this launch table:
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | neutral class |
-| Effort | neutral effort |
-| Capabilities | required semantic capability ids or `—` |
-| Context | one canonical value below |
-| Суть | bounded next action |
-| Команда | provider invocation or `—` for manual |
+Every runnable Next has Model class, Effort, Capabilities, Context, Суть, and Команда; manual has
+`Команда: —`. The launch snippet is the copyable form.
 
 For layout v2 the Context field carries EXACTLY one of three values:
 
@@ -209,7 +170,7 @@ For layout v2 the Context field carries EXACTLY one of three values:
 the hard-boundary predicate does. `handoff.Next` always carries the provider-neutral form and the
 native launch block together.
 
-## 7. Command protocol and evidence
+## 7. Command protocol, evidence, and safe fallbacks
 
 Commands read repository instructions root→cwd, then the layout-specific read path. They record
 session identity, route evidence, journal start/terminal events, exact validation, and commits.
@@ -227,19 +188,20 @@ Portable execution inputs must be committed or predecessor-produced. Host/chat/t
 are not committed bundle inputs. An external side effect requires explicit authority. Another
 agent's summary is evidence to verify, not self-verification.
 
+Use a factual fallback before stopping: resolve the repository root for wrong cwd/path; paginate or
+narrow an oversized read; reconcile a deterministic generated carrier through its owner; and check
+PID/output/state before calling a process failed. A missing required carrier, bundle digest mismatch,
+unsupported capability, authority boundary, safety concern, or reproduced acceptance failure fails
+closed. If the required meaning crosses a package boundary, record the exact gap for its owner and
+continue separable in-scope work; do not edit the other package.
+
 ## 8. Canon weight and maintenance
 
-`plan-weight.py canon --budget packages/task/configs/canon-weight-budget.json` enforces D93:
-hard cap equals the measured single-read token limit; warning is a declared fraction of the cap;
-growth above the declared baseline percentage requires a justification; every exception has an
-ISO expiry and follow-up. It prints tokens and physical lines. The vendor guidance of fewer than
-500 lines is an independent orientation, not the hard cap. Never raise the read cap to fit canon.
-
-Recalibrate when the tokenizer family changes, the calibration model id changes, or the scoring
-asset/classifier changes: rerun the owning calibration probe, regenerate the calibration artifact,
-measure this exact carrier, update the budget baseline with a git anchor and justification, run
-the canon gate, registry check, task validation, and skiller validation. An expired exception is
-ignored and the hard cap applies unconditionally.
+`plan-weight.py canon` enforces the measured hard cap, warning fraction, baseline-growth
+justification, and expiring exceptions; never raise the cap to fit canon. Recalibrate on tokenizer,
+calibration-model, or scoring changes, then regenerate the calibration and run its gates. Delete a
+repeated checklist before adding policy: one semantic rule lives in this canon/reference pair and
+provider files are additive adapters.
 
 ## References
 

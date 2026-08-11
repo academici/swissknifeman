@@ -6,6 +6,21 @@ item'ов этих классов ссылается сюда и подстав�
 независимо изобретённые планами AGENTOOLS (P2.8/P3.8), FLEX-IMPL (P2.2),
 THEMEON (P0.1). `<…>` — слоты подстановки.
 
+## 0. Evidence-first execution — adaptive items
+
+Для item'ов с внешними проверками, генерацией или shared-tree шумом.
+
+```text
+Перед остановкой применяй observe → minimal reproduce → classify → act → verify.
+procedural/transient/dependency-not-ready/unrelated-pre-existing сигнал исправляй безопасным
+fallback'ом, bounded wait или local repair в том же root; acceptance/safety/authority — стоп
+только после actual-impact evidence. Routing исправляй до journal start, future carrier не делает
+producer RED, а внешний процесс терминализируй только после PID/output/state reconciliation.
+Повтор fingerprint сначала меняет тактику; один scoped review допустим лишь после повтора или
+нового material scope/SHA/risk trigger. Deterministic non-material bookkeeping drift — одна
+regeneration + gate rerun в текущем attempt; sealed spec, safety, authority и acceptance не inline.
+```
+
 ## 1. Анти-подгонка — conformance/contract-items
 
 Для items, где код проверяется против эталона: contract-тесты, golden-векторы,

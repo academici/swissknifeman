@@ -1,12 +1,8 @@
 # Roadmap исполнения — <PLAN-ID>
 
-<!-- Собирается ПОСЛЕ полной детализации всех фаз (SKILL §5 дефолт, §8 канон roadmap).
-     Отвечает на «какую команду дальше?» без анализа всего плана. Живой документ:
-     закрытие фазы / re-design обновляет таблицу (+строка в Update Log плана).
-     Правила: Batch = последовательные мелкие items одной модели со сцепленным scope —
-     одна сессия, одна команда; solo — большой/сложный/рисковый (обоснование в Примечании
-     ОБЯЗАТЕЛЬНО); workflow — независимые по scope items (скрипт в plans/<ID>/workflows/).
-     Roadmap не переопределяет Routing §3 (модели/effort) — только группирует запуски. -->
+<!-- Живая карта «что запускать дальше», не второй план. Roadmap группирует только ready
+     adjacent items с совместимым scope/route; локальный порядок остаётся адаптивным в sealed
+     contract. Она не переопределяет Routing §3, owner gates или material-review trigger. -->
 
 **Обновлён:** <YYYY-MM-DD> · **Соответствует plan.md:** v<X.Y.Z>
 
@@ -14,10 +10,10 @@
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | B1 | plan-exec серия | implementation/medium | — | сцеплен с P0.2 по файлам |
-| P0.2 | B1 | ↑ | implementation/medium | — | |
-| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | design-item, объединять нельзя: вердикт владельца посреди; provider selector выбирает renderer |
-| P2.1–P2.3 | W1 | orchestration | implementation/medium | — | независимый scope → semantic orchestration carrier |
+| P0.1 | B1 | plan-exec серия | implementation/medium | — | ready adjacent scope |
+| P0.2 | B1 | ↑ | implementation/medium | — | shared validation boundary |
+| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | owner decision inside item |
+| P2.1–P2.3 | W1 | orchestration | implementation/medium | — | independent scope and declared capability |
 | … | | | | | |
 
 ## Готовые launch-block'и групп

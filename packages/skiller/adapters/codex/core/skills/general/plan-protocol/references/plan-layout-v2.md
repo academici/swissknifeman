@@ -105,7 +105,7 @@ source digests. It is produced at the terminal transition and checked against cu
 These carriers are orthogonal: the JSON explains evidentiary judgement; the Markdown view supplies
 the designer/owner closure contract. Neither can be inferred away from the other.
 
-## Context boundary
+## Context boundary and adaptive failure handling
 
 Context is chosen from the boundary predicate, not from command name:
 
@@ -125,6 +125,23 @@ Context is chosen from the boundary predicate, not from command name:
 Ordinary item sequencing, local repair, plan close, or design finish does not itself justify a cold
 start. First eligible local failure is repaired in root; a repeated fingerprint or risk trigger
 permits one isolated reviewer. The child may report evidence but cannot close the root-owned item.
+
+The strict spec is the boundary, not a demand for fixed stages. Inside a sealed item, the root may
+group ready adjacent work, reorder local steps, and repair a reversible defect. It first applies
+`observe → minimal reproduce → classify → act → verify`:
+
+| Classification | Root response | Close outcome |
+|:--|:--|:--|
+| `procedural`, `transient`, `dependency-not-ready`, `unrelated-pre-existing` | safe fallback, bounded wait, local repair, or independent continuation | nonterminal |
+| `acceptance`, `safety`, `authority` | stop only the affected item after actual-impact evidence | terminal/gated |
+| unknown non-idempotent write | reconcile durable state before retry | safety pending reconciliation |
+
+Correct routing before the start event. Do not classify a missing future consumer as producer RED;
+record its dependency state. Reconcile PID/output/state before declaring an external process
+terminal. A prior review remains valid without a new material scope/SHA/risk trigger. Deterministic
+non-material state/view/navigation drift is repaired by its owner, regenerated once, and rerun in
+the same root; sealed-spec, acceptance, security, safety, authority, and material changes are not
+inline repair.
 
 ## Semantic Next extensions
 
@@ -151,7 +168,7 @@ Both forms carry the same provider-neutral meaning. Provider-native invocations 
 | unsupported capability | owner/capability gate; no silent solo fallback |
 | downstream red | keep item non-green and record finding |
 | downstream unknown/unqualifiable | record limitation; follow owning contract's closure rule |
-| repeated local failure fingerprint | one isolated reviewer, then authority/capability gate |
+| repeated local failure fingerprint | change tactic once; then one isolated reviewer or authority/capability gate |
 
 ## Projection order
 

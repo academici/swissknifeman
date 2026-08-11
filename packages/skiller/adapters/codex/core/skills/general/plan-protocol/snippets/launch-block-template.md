@@ -14,7 +14,7 @@ vs code-block» ниже).
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> |
 | Capabilities | <минимальный набор semantic capability IDs; `—` если дополнительных нет> |
-| Context | <enum §8: same-session — item · cold-start — orchestration · cold-start — plan-step> |
+| Context | <enum: continue-root · isolated-child-return · cold-start-root (+ one reason)> |
 | Суть | <1 строка: что делает запуск> |
 | Команда | `<provider-rendered invocation>` — ТОЛЬКО сама команда, БЕЗ повторного `/model`/`/effort` (они уже названы строками `Model class`/`Effort` выше в той же таблице) |
 `````
@@ -46,7 +46,7 @@ code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, н�
 | Model class | implementation |
 | Effort | medium |
 | Capabilities | — |
-| Context | same-session — item |
+| Context | continue-root |
 | Суть | закрыть Pn.k |
 | Команда | `/task:plan-exec <PLAN-ID> Pn.k` |
 `````
@@ -78,19 +78,16 @@ code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, н�
   от матрицы обосновывается там же, не в launch-block.
 - **Capabilities** проверяются до invocation/work/write. Оркестрация обязана перечислить
   `command.subagents` и `command.workflow-carrier`; missing/unknown/unsupported блокирует запуск.
-- **Context** — закрытый enum ТРЁХ значений (SKILL раздел 8, D16/D30), выбирается по типу
-  СЛЕДУЮЩЕГО шага; статичное «рекомендован /clear» независимо от шага — запрещено:
-  - `same-session — item` — следующий шаг обычный item-by-item exec;
-  - `cold-start — orchestration` — следующий шаг оркестрован (payload
-    фоновых тасков растит контекст быстрее самой работы — нужна новая сессия);
-  - `cold-start — plan-step` — следующий шаг над планом (`plan-audit`/`plan-close`/
-    `plan-design`): читает план с диска свежим контекстом.
+- **Context** — закрытый enum ТРЁХ значений SKILL §6; выбирается границей, а не командой:
+  - `continue-root` — обычная последовательная работа и local repair;
+  - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
+  - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
+    `owner-pause-no-resume` или `whole-plan-independent-audit`.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
   (единственный SSOT), здесь только напоминание: `Model class` = предписанная Routing,
   строка `Команда` = `—` (эквивалента в одну команду нет), code-block ОБЯЗАТЕЛЕН и несёт
   **ГОЛЫЙ ПРОМПТ item'а** (либо последовательность `/model`+`/effort`+`/task:plan-run`)
-  вместо invocation, `Context` = обычное значение enum'а по типу шага (`same-session —
-  item`).
+  вместо invocation, `Context` = `continue-root`, если нет фактической hard boundary.
 - **Форма «ОЖИДАНИЕ: `<условие>` → `<целевая форма>`» (§8, D8)** — шаг реален, но неисполним
   сейчас (time-gate/накопление данных/кросс-план-гейт не терминален; НЕ дефект `🔴`, НЕ терминал
   «план закрыт»). Правило целиком в SKILL разделе 8; здесь напоминание: условие СТРУКТУРНО

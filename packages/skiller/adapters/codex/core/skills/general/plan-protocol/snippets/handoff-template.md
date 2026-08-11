@@ -14,7 +14,8 @@
 **Поле `Context`** для layout v2 — `continue-root` · `isolated-child-return` ·
 `cold-start-root`. Последнее требует reason из закрытого enum:
 `context-budget` · `capability-missing` · `owner-pause-no-resume` ·
-`whole-plan-independent-audit`.
+`whole-plan-independent-audit` · `audit-root-terminal`. Последняя причина обязательна для
+runnable successor после terminal `task:plan-audit`; audit root его не исполняет.
 
 Next обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска

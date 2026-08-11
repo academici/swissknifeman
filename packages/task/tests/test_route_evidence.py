@@ -65,7 +65,7 @@ class RequiredRouteTests(unittest.TestCase):
             with self.subTest(command_id=command_id):
                 required = re.required_route(record)
                 actual = re.capture_actual(
-                    required["model_class"], required["effort"], source="self-attested")
+                    required["model_class"], required["effort"], source="provider-doctor")
                 self.assertEqual(re.classify(required, actual), "exact")
                 self.assertIsNone(re.dispatch_guard(required, actual, ()))
 
@@ -85,9 +85,15 @@ class RequiredRouteTests(unittest.TestCase):
 
 
 class CaptureActualTests(unittest.TestCase):
+    def test_self_attestation_cannot_turn_a_selector_into_actual_route_evidence(self):
+        with self.assertRaises(re.RouteEvidenceError) as caught:
+            re.capture_actual(
+                "implementation", "high", source="self-attested", model="gpt-5.6-terra")
+        self.assertEqual(caught.exception.code, "ROUTE_ACTUAL_SOURCE_UNDECLARED")
+
     def test_valid_source_stamps_a_timestamp(self):
-        evidence = re.capture_actual("implementation", "high", source="self-attested")
-        self.assertEqual(evidence["source"], "self-attested")
+        evidence = re.capture_actual("implementation", "high", source="provider-doctor")
+        self.assertEqual(evidence["source"], "provider-doctor")
         self.assertTrue(evidence["ts"])
 
     def test_explicit_timestamp_is_preserved_verbatim(self):
@@ -190,16 +196,16 @@ class DispatchGuardTests(unittest.TestCase):
 
 class RouteChangeBoundaryTests(unittest.TestCase):
     def test_same_route_reports_unchanged(self):
-        before = re.capture_actual("implementation", "high", source="self-attested", ts="t0")
-        after = re.capture_actual("implementation", "high", source="self-attested", ts="t1")
+        before = re.capture_actual("implementation", "high", source="provider-doctor", ts="t0")
+        after = re.capture_actual("implementation", "high", source="provider-doctor", ts="t1")
         result = re.route_change_boundary(before, after)
         self.assertFalse(result["changed"])
         self.assertEqual(result["before"], before)
         self.assertEqual(result["after"], after)
 
     def test_switched_route_reports_changed(self):
-        before = re.capture_actual("implementation", "high", source="self-attested")
-        after = re.capture_actual("frontier", "high", source="self-attested")
+        before = re.capture_actual("implementation", "high", source="provider-doctor")
+        after = re.capture_actual("frontier", "high", source="provider-doctor")
         self.assertTrue(re.route_change_boundary(before, after)["changed"])
 
 
@@ -262,7 +268,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         contract = _load_base_contract()
         self.assertIsNone(task_contract.pre_mutation(contract))
         required = contract["route"]["required"]
-        actual = re.capture_actual(required["model_class"], required["effort"], source="self-attested")
+        actual = re.capture_actual(required["model_class"], required["effort"], source="provider-doctor")
         caps = re.capability_support(
             [c["id"] for c in contract["route"]["capabilities"]],
             {c["id"]: c["support"] for c in contract["route"]["capabilities"]})
@@ -279,7 +285,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         # never the raw `.index()` crash this predicate used to raise.
         contract = _load_base_contract()
         required = contract["route"]["required"]
-        unknown_actual = re.capture_actual(required["model_class"], None, source="self-attested")
+        unknown_actual = re.capture_actual(required["model_class"], None, source="provider-doctor")
         caps = re.capability_support(
             [c["id"] for c in contract["route"]["capabilities"]],
             {c["id"]: c["support"] for c in contract["route"]["capabilities"]})
@@ -312,7 +318,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
     def test_route_evidence_flag_derives_the_canonical_actor(self):
         evidence_path = self._write_evidence(
-            re.capture_actual("implementation", "high", source="self-attested", model="sonnet"))
+            re.capture_actual("implementation", "high", source="provider-doctor", model="sonnet"))
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
@@ -343,7 +349,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
         evidence_path = self._write_evidence(
-            re.capture_actual("implementation", "high", source="self-attested"))
+            re.capture_actual("implementation", "high", source="provider-doctor"))
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--actor", "implementation/high",
@@ -362,7 +368,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
     def test_unknown_effort_in_evidence_still_derives_a_canonical_unknown_actor(self):
         evidence_path = self._write_evidence(
-            re.capture_actual("implementation", None, source="self-attested", model="sonnet"))
+            re.capture_actual("implementation", None, source="provider-doctor", model="sonnet"))
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),

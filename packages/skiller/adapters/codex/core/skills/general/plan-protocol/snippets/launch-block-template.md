@@ -82,7 +82,9 @@ code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, н�
   - `continue-root` — обычная последовательная работа и local repair;
   - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
   - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
-    `owner-pause-no-resume` или `whole-plan-independent-audit`.
+    `owner-pause-no-resume`, `whole-plan-independent-audit` или `audit-root-terminal`.
+    После terminal `task:plan-audit` используется только `audit-root-terminal`: текущий audit root
+    не исполняет successor.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
   (единственный SSOT), здесь только напоминание: `Model class` = предписанная Routing,
   строка `Команда` = `—` (эквивалента в одну команду нет), code-block ОБЯЗАТЕЛЕН и несёт

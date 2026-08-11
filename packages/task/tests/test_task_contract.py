@@ -335,7 +335,7 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def _actual_route(self):
         from task import route_evidence
         return route_evidence.capture_actual("implementation", "medium",
-                                             source="self-attested", ts="t", model="test")
+                                             source="provider-doctor", ts="t", model="test")
 
     def _protected(self, **overrides):
         request = {"gate_id": "G-TEST", "branch": "go-branch", "scope": "finite-scope"}
@@ -452,7 +452,7 @@ class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
             with self.subTest(item=item_id):
                 required = task_contract.build(ARTIFEX_PLAN_ROOT, item_id)["route"]["required"]
                 actual = route_evidence.capture_actual(
-                    required["model_class"], required["effort"], source="self-attested",
+                    required["model_class"], required["effort"], source="provider-doctor",
                     ts="t", model="regression")
                 contract = task_contract.build(ARTIFEX_PLAN_ROOT, item_id, actual_route=actual)
                 self.assertEqual(task_contract.evaluate(contract), {
@@ -632,7 +632,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
                 contract = task_contract.build(PLAN_ROOT, item_id)
                 required = contract["route"]["required"]
                 actual = re_.capture_actual(required["model_class"], required["effort"],
-                                           source="self-attested", ts="t", model="sonnet")
+                                           source="provider-doctor", ts="t", model="sonnet")
                 caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
                 contract["route"] = re_.build_task_contract_route(required, actual, caps)
                 contract["version"]["content_hash"] = task_contract.content_hash(contract)

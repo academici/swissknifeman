@@ -40,7 +40,9 @@ except ImportError:  # pragma: no cover - standalone fallback, byte-identical to
 
 # §Scope — evidence provenance a captured ACTUAL route may declare. Never "requested"
 # or "config": those are exactly the static-config/actor-string stand-ins Code
-# Guidance forbids for a live actual.
+# Guidance forbids for a live actual. `self-attested` is restricted to unknown
+# axes: it records absent provider evidence and never turns a selector into proof
+# of the route that actually ran.
 SOURCES = ("self-attested", "provider-doctor", "cli-flag")
 
 # Usage/context budget axes — token/duration/tool counts only, no pricing (Code
@@ -112,6 +114,10 @@ def capture_actual(model_class, effort, *, source: str, ts: str | None = None,
     if source not in SOURCES:
         raise RouteEvidenceError(
             "ROUTE_ACTUAL_SOURCE_UNDECLARED", f"undeclared route evidence source {source!r}")
+    if source == "self-attested" and any(value is not None for value in (model_class, effort, model)):
+        raise RouteEvidenceError(
+            "ROUTE_ACTUAL_SOURCE_UNDECLARED",
+            "self-attested actual route must keep model, class, and effort unknown")
     for axis, value, ladder in (("model_class", model_class, MODEL_CLASS_ORDER),
                                ("effort", effort, EFFORT_ORDER)):
         if value is not None and value not in ladder:
@@ -251,8 +257,8 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     cap = sub.add_parser("capture", help="print one capture_actual() evidence record")
-    cap.add_argument("--model-class", required=True, choices=MODEL_CLASS_ORDER)
-    cap.add_argument("--effort", required=True, choices=EFFORT_ORDER)
+    cap.add_argument("--model-class", required=True, choices=(*MODEL_CLASS_ORDER, "unknown"))
+    cap.add_argument("--effort", required=True, choices=(*EFFORT_ORDER, "unknown"))
     cap.add_argument("--source", required=True, choices=SOURCES)
     cap.add_argument("--ts", default=None)
 
@@ -264,7 +270,10 @@ def main(argv=None) -> int:
 
     args = parser.parse_args(argv)
     if args.cmd == "capture":
-        evidence = capture_actual(args.model_class, args.effort, source=args.source, ts=args.ts)
+        evidence = capture_actual(
+            None if args.model_class == "unknown" else args.model_class,
+            None if args.effort == "unknown" else args.effort,
+            source=args.source, ts=args.ts)
         print(json.dumps(evidence, ensure_ascii=False, sort_keys=True))
         return 0
 

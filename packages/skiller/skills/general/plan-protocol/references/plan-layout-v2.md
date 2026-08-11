@@ -121,9 +121,11 @@ Context is chosen from the boundary predicate, not from command name:
 - `capability-missing` — required capability cannot be added to the current root;
 - `owner-pause-no-resume` — owner paused and no resumable root exists;
 - `whole-plan-independent-audit` — adversarial audit of the whole plan requires independence.
+- `audit-root-terminal` — a completed `task:plan-audit` must hand its successor to a fresh routed root.
 
 Ordinary item sequencing, local repair, plan close, or design finish does not itself justify a cold
-start. First eligible local failure is repaired in root; a repeated fingerprint or risk trigger
+start. A completed `task:plan-audit` is the explicit exception: its root must not execute the
+successor, even when the successor is otherwise compatible. First eligible local failure is repaired in root; a repeated fingerprint or risk trigger
 permits one isolated reviewer. The child may report evidence but cannot close the root-owned item.
 
 The strict spec is the boundary, not a demand for fixed stages. Inside a sealed item, the root may

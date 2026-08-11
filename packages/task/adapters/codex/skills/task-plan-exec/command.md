@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:bff5d8aac30c3b118ed3eb4ace7dea5687318be100b2d8fa20aed3fa06f2d32f
+Canonical SHA-256: sha256:a95d7b6c9fa655388942bccc6fee5e00d47edd5587758a9c3081f50a33eab946
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -120,16 +120,19 @@ Raw provider flags допустимы только в additive adapter/projectio
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
-       "implementation", "medium", source="self-attested", model="implementation"))
+       "<provider-attested model_class>", "<provider-attested effort>",
+       source="provider-doctor", model="<provider-attested model>"))
    result = task_contract.evaluate(contract)
    print(result)
    sys.exit(0 if result["pre_mutation"] == "allow" else 1)
    PY
    ```
 
-   `<PLAN-ID>`/`<Pn.m>` — те же, что «$ARGUMENTS»; `"implementation", "medium",
-   model="implementation"` — пин ЭТОЙ команды (frontmatter выше); `plan-run` подставляет
-   ФАКТИЧЕСКИЙ `model_class`/`effort`/`model` сессии (см. `plan-run.md`).
+   `<PLAN-ID>`/`<Pn.m>` — те же, что «$ARGUMENTS». Значения `actual_route` берутся ТОЛЬКО
+   из provider-attested environment API; command pin/selector/actor не являются actual evidence.
+   Если API не даёт модель или effort, вызови `capture_actual(None, None,
+   source="self-attested")`, напечатай `unknown/unknown` и остановись до мутации: selector
+   остаётся только частью fresh launch, а не подменой доказательства.
    **Зелёное:** `pre_mutation: 'allow'` (exit 0) — продолжай п. 3.
    **Отказ по коду** (`result["pre_mutation"]`, первый упавший — единственный):
 
@@ -198,8 +201,8 @@ Raw provider flags допустимы только в additive adapter/projectio
    **Pre-final — Task Contract (P2.2/P2.11, ОБЯЗАТЕЛЬНЫЙ шаг, штатный путь — М5).** `plan-exec`
    закрывает item САМ (эта топология) — граница pre-final ОБЯЗАНА пересекаться ЗДЕСЬ, а не только
    в реконсилирующем `task:plan-close Pn.m`, который на штатном пути exec'а не вызывается. Маршрут
-   `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а (D75): здесь это own pin ЭТОЙ команды
-   (`implementation`/`medium`), потому что команда сама исполнила item — сборка контракта одна на
+   `actual_route` — маршрут ИСПОЛНИТЕЛЯ item'а (D75), подтверждённый provider environment API;
+   own pin/selector ЭТОЙ команды не заменяет это доказательство. Одна сборка контракта покрывает
    оба предиката, `evaluate()` считает их за один вызов:
 
    ```
@@ -207,7 +210,8 @@ Raw provider flags допустимы только в additive adapter/projectio
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
-       "implementation", "medium", source="self-attested", model="implementation"))
+       "<provider-attested model_class>", "<provider-attested effort>",
+       source="provider-doctor", model="<provider-attested model>"))
    result = task_contract.evaluate(contract)
    print(result)
    sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)

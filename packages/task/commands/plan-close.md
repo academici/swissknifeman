@@ -136,14 +136,16 @@ status-rule ниже. Точная команда, лестница маршру
    import sys
    from task import task_contract, route_evidence
    contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
-       "<ФАКТИЧЕСКИЙ model_class с шага лестницы D75 выше>", "<ФАКТИЧЕСКИЙ effort>",
-       source="self-attested", model="<ФАКТИЧЕСКАЯ модель>"))
+       "<provider-attested model_class с шага лестницы D75 выше>", "<provider-attested effort>",
+       source="provider-doctor", model="<provider-attested модель>"))
    result = task_contract.evaluate(contract)
    print(result)
    sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
    PY
    ```
 
+   Provider API не аттестует модель/effort → передай `capture_actual(None, None,
+   source="self-attested")`, запиши unknown и остановись: self-attestation не заменяет selector.
    **Гейт бинарен.** Зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`.
    `n/a`, любой `block:*` и любое иное значение — красное; формулировки «условно зелёное»,
    «предупреждение», «продолжай, если …» и синонимы ЗАПРЕЩЕНЫ (`plan-protocol` §6 прямо

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`/`plan-protocol`: terminal audit отделён от следующего запуска.**
+  Завершившийся `plan-audit` теперь обязан передать successor свежему root с явно
+  запиненным маршрутом; selector больше не допускается выдавать за self-attested
+  actual-route evidence при отсутствии provider attestation.
+
 - **`task` / `harness`: layout-v2 execution сверено с owner-carriers.**
   Task теперь fail-closed проверяет phase citations и write-site, а generated command/docs
   surfaces воспроизводятся в clean checkout; Harness читает semantic `Next`

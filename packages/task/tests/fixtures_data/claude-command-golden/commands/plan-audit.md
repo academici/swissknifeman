@@ -225,6 +225,14 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
    протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.
 
+**AUDIT-ROOT-TERMINAL (routing/cost boundary).** После записи terminal verdict и обязательных
+carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполняет successor command, даже если тот
+совместим по capability или уже ready. Для каждого runnable successor из audit launch-block
+ставь `Context: cold-start-root: audit-root-terminal`, сначала provider-neutral semantic Next,
+затем native fresh launch block с selector'ами маршрута successor. Это fresh routed root, а не
+просьба переключить модель внутри audit session. Граница не ограничивает автономность внутри
+совместимого execution route и не меняет семантику routing overshoot.
+
 **Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (Minor/Nit либо дефект бухгалтерии
 плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
@@ -273,7 +281,8 @@ code-block'е, четыре строки фиксированного поряд
   «сдать `🟠` с названным долгом / остановить фазу», автоматическую команду не назначаешь;
 - `AUDIT-CAP` при уже двух блоках → тот же owner outcome без третьего audit block/journal event.
 
-Model/Thinking — из §3 Routing плана (канон §9). `Context` — РОВНО одно из ТРЁХ значений enum'а §8:
-`continue-root` (authoritative root может продолжить) · `isolated-child-return` (bounded reviewer
-возвращает evidence в тот же root) · `cold-start-root` (новый root перечитывает committed carriers;
-обязателен один reason из канона). Команда сама по себе не определяет Context.
+Model/Thinking — из §3 Routing плана (канон §9). В terminal audit successor Context всегда
+`cold-start-root: audit-root-terminal` по AUDIT-ROOT-TERMINAL выше; вне этого случая действуют
+три значения enum'а §8: `continue-root` (authoritative root может продолжить) ·
+`isolated-child-return` (bounded reviewer возвращает evidence в тот же root) ·
+`cold-start-root` (новый root перечитывает committed carriers; обязателен один reason из канона).

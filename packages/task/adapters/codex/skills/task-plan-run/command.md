@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:b62fd0835e42e25ea2399aeb429405d663c4d1be1b61bed7129305519bc7cfe6
+Canonical SHA-256: sha256:f14f70964db07de0380365db15829ec60adbb62977505c498f1c78547bc68927
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -64,13 +64,13 @@ fresh item state. Повторное чтение запрещено.
 с ТРЕМЯ отличиями:
 
 - Модель/effort НЕ запинены: действуют настройки сессии владельца.
-- **Pre-mutation/Pre-final write-site (P2.7/P2.11).** Литерал `"implementation", "medium",
-  model="implementation"` встречается ДВАЖДЫ в `plan-exec.md` — Pre-mutation (шаг 2) И Pre-final (шаг 7,
-  штатный путь закрытия, М5) — и ОТДЕЛЬНО `"implementation", "low", model="implementation"` в
-  `plan-close.md`'s Pre-final шаг 4: пин ТЕХ команд, не этой. Подставляй ФАКТИЧЕСКИЕ
-  `model_class`/`effort`/`model` ЭТОЙ сессии (те же значения, что уже прошли Routing-гейт ниже) в
-  КАЖДЫЙ из трёх вызовов `route_evidence.capture_actual(...)`. Шаг остаётся ОБЯЗАТЕЛЬНЫМ в обеих
-  точках `plan-exec.md` — замена лишь литералов, не условия. **Основание (D75, лестница
+- **Pre-mutation/Pre-final write-site (P2.7/P2.11).** В оба вызова
+  `route_evidence.capture_actual(...)` передавай ТОЛЬКО `model_class`/`effort`/`model`,
+  подтверждённые provider environment API (`source="provider-doctor"`). Если API не аттестует
+  хотя бы нужную ось, запиши `capture_actual(None, None, source="self-attested")` и остановись
+  до мутации: selector/actor/текст команды не подменяют actual evidence. Шаг остаётся
+  ОБЯЗАТЕЛЬНЫМ в обеих точках `plan-exec.md`; `plan-run` меняет источник actual-route, не
+  условия предиката. **Основание (D75, лестница
   разрешения маршрута исполнителя):** `plan-run` исполняет и закрывает item в ОДНОЙ сессии,
   поэтому её «фактический маршрут сессии» И ЕСТЬ маршрут исполнителя — на pre-final замена
   литерала остаётся верной той же логикой, что и на pre-mutation, без отдельной лестницы
@@ -84,11 +84,10 @@ fresh item state. Повторное чтение запрещено.
   Routing reject до product work не является attempt и не создаёт `blocked`/`routing-blocked`
   event: route correction — dispatch evidence, а не исход продукта.
 
-**Граница честности.** Самоатрибуция модели/effort агентом машинно НЕ проверяема (класс
-B2 аудита REGHUB). Фактическая модель/effort ОБЯЗАНЫ быть напечатаны в отчёте (строка
-`Session: <model>/<effort>`) и записаны в Update Log / Completion Notes наравне с прочими
-фактами. Жёсткий машинный гейт остаётся за `plan-exec` (его пин делает недобор структурно
-невозможным) — `plan-run` этот гейт НЕ заменяет, только снимает ритуал ручного
+**Граница честности.** Самоатрибуция модели/effort агентом не является доказательством (класс
+B2 аудита REGHUB). Без provider-attested API отчёт обязан нести `Session: unknown/unknown`
+с `source=self-attested`; запрещено подставлять selector или актор. Жёсткий машинный гейт
+остаётся за `plan-exec` — `plan-run` этот гейт НЕ заменяет, только снимает ритуал ручного
 переключения модели/effort перед серией manual-item'ов под одной моделью.
 
 Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,

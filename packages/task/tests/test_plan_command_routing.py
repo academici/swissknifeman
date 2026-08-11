@@ -49,6 +49,15 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.assertEqual(parse_next_carrier(declaration).kind, kind)
 
+    def test_terminal_audit_handoff_is_a_fresh_routed_session_boundary(self):
+        audit = (COMMAND_ROOT / "plan-audit.md").read_text(encoding="utf-8")
+        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
+            encoding="utf-8")
+        self.assertIn("AUDIT-ROOT-TERMINAL", audit)
+        self.assertIn("fresh routed root", audit)
+        self.assertIn("AUDIT-ROOT-TERMINAL", protocol)
+        self.assertIn("must not execute the successor", protocol)
+
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():
             carrier = PlanNextCarrier(

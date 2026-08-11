@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.25.0
+version: 2.26.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -166,9 +166,16 @@ For layout v2 the Context field carries EXACTLY one of three values:
 
 `[v1]` historical context strings remain readable but are not emitted for layout v2. A v2
 `cold-start-root` must give exactly one reason: `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, or `whole-plan-independent-audit`. Command names do not select context;
-the hard-boundary predicate does. `handoff.Next` always carries the provider-neutral form and the
-native launch block together.
+`owner-pause-no-resume`, `whole-plan-independent-audit`, or `audit-root-terminal`. Command names
+do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
+provider-neutral form and the native launch block together.
+
+**AUDIT-ROOT-TERMINAL.** A completed `task:plan-audit` invocation is a hard boundary: its root
+must not execute the successor, even when the successor is compatible or ready. Its runnable
+successor has `cold-start-root: audit-root-terminal` and a provider-neutral semantic Next plus a
+native fresh routed root launch block that pins the successor's route. This boundary protects
+independent audit and routing cost; it does not weaken autonomous execution within a compatible
+route and does not alter overshoot semantics.
 
 ## 7. Command protocol, evidence, and safe fallbacks
 

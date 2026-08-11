@@ -96,6 +96,12 @@ class CaptureActualTests(unittest.TestCase):
         self.assertEqual(evidence["source"], "provider-doctor")
         self.assertTrue(evidence["ts"])
 
+    def test_provider_config_source_is_declared(self):
+        evidence = re.capture_actual("implementation", "high", source="provider-config",
+                                     model="gpt-5.6-terra")
+        self.assertEqual(evidence["source"], "provider-config")
+        self.assertEqual(evidence["model"], "gpt-5.6-terra")
+
     def test_explicit_timestamp_is_preserved_verbatim(self):
         evidence = re.capture_actual(
             "frontier", "xhigh", source="provider-doctor", ts="2026-07-26T00:00:00Z")

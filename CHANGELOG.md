@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: Codex `plan-run` принимает provenance текущей provider config.**
+  Когда `codex doctor` не публикует effort активного thread, Terra/high из
+  `CODEX_HOME/config.toml` фиксируется как ограниченное `provider-config` evidence;
+  отчёт обязан отличать его от thread-bound attestation.
+
 - **`task`/`plan-protocol`: terminal audit отделён от следующего запуска.**
   Завершившийся `plan-audit` теперь обязан передать successor свежему root с явно
   запиненным маршрутом; selector больше не допускается выдавать за self-attested

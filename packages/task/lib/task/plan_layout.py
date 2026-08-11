@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import stat
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,11 +55,31 @@ def layout_version(plan_dir) -> str:
         raise PlanLayoutError(f"Layout: неизвестная раскладка {version!r}; допустимы v1, v2")
     phase_dir = plan_dir / "phases"
     has_v1 = any(_PHASE_FILE.match(p.name) for p in phase_dir.glob("*.md")) if phase_dir.is_dir() else False
-    has_v2 = any(p.is_dir() and _PHASE_FILE.match(p.name + ".md") for p in phase_dir.iterdir()) if phase_dir.is_dir() else False
+    v2_directories = [
+        path for path in phase_dir.iterdir()
+        if path.is_dir() and _PHASE_FILE.match(path.name + ".md")
+    ] if phase_dir.is_dir() else []
+    has_v2 = bool(v2_directories)
     if version == "v1" and has_v2:
         raise PlanLayoutError("Layout v1 объявлен, но дерево содержит phases/Pn/")
     if version == "v2" and (has_v1 or not has_v2):
         raise PlanLayoutError("Layout v2 объявлен, но дерево не состоит из phases/Pn/Pn.md")
+    if version == "v2":
+        invalid_indexes = []
+        for directory in sorted(v2_directories):
+            index = directory / f"{directory.name}.md"
+            try:
+                if not stat.S_ISREG(index.lstat().st_mode):
+                    raise OSError("не regular file")
+                with index.open("rb"):
+                    pass
+            except OSError:
+                invalid_indexes.append(index.relative_to(plan_dir).as_posix())
+        if invalid_indexes:
+            raise PlanLayoutError(
+                "Layout v2: phase index не читается или не regular file: "
+                + ", ".join(invalid_indexes)
+            )
     return version
 
 
@@ -127,8 +148,7 @@ def phase_paths(plan_dir) -> dict:
         if not directory.is_dir() or not re.match(r"^P\d+$", directory.name):
             continue
         path = directory / f"{directory.name}.md"
-        if path.is_file():
-            result[directory.name] = path
+        result[directory.name] = path
     return result
 
 

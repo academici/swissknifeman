@@ -42,6 +42,17 @@ class PlanLayoutTest(unittest.TestCase):
             (nested / "P1.1.md").write_text("### P1.1 — item\n", encoding="utf-8")
             self.assertEqual(plan_layout.item_spec_paths(plan, "P1"), [nested / "P1.1.md"])
 
+    def test_v2_phase_directory_without_index_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan(tmp, "v2")
+            (plan / "phases" / "P1").mkdir()
+
+            with self.assertRaisesRegex(
+                plan_layout.PlanLayoutError,
+                r"phases/P1/P1\.md",
+            ):
+                plan_layout.phase_paths(plan)
+
     def test_unknown_or_mismatched_layout_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan(tmp, "v3")

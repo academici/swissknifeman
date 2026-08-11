@@ -401,6 +401,19 @@ def _selftest() -> int:
                 with self.assertRaises(RuntimeError):
                     _phase_source_files(self.plan_dir)
 
+        def test_e8_incomplete_v2_phase_tree_is_fail_closed(self) -> None:
+            """`phases/Pn/` без `Pn.md` не исчезает из citation surface молча."""
+            with open(os.path.join(self.plan_dir, "plan.md"), "w", encoding="utf-8") as fh:
+                fh.write(
+                    "## 0. Meta\n\n| Поле | Значение |\n"
+                    "|:--|:--|\n| Layout | v2 |\n"
+                )
+            os.remove(os.path.join(self.plan_dir, "phases", "P1.md"))
+            os.makedirs(os.path.join(self.plan_dir, "phases", "P1"))
+
+            with self.assertRaisesRegex(PhaseSourceResolutionError, r"phases/P1/P1\.md"):
+                _phase_source_files(self.plan_dir)
+
         # --- P11.2: класс цитаты `file.json::a.b.c` (greedy-резолв) --------------------
 
         def test_f_json_path_resolves_nested_key(self) -> None:

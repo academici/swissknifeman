@@ -187,6 +187,7 @@ def model(plan_dir, item_id: str) -> dict:
     declarations, entries = {"inputs": [], "required_reads": []}, []
     for field, key in (("Inputs", "inputs"), ("Required Reads", "required_reads")):
         for ordinal, raw in enumerate(_raw_entries(fields.get(field, ""), field), 1):
+            seen = set()
             sources = []
             for token, _declared in (candidate for candidate in plan_weight.path_candidates(raw)
                                      if candidate[1]):
@@ -199,11 +200,15 @@ def model(plan_dir, item_id: str) -> dict:
             if not sources:
                 raise BundleError(f"unresolvable_entry: {raw}")
             for source, selectors in sources:
-                source_raw = source.read_bytes()
                 for selector in selectors:
-                    selected = _selected_bytes(source_raw, selector, source)
                     unit = {"ordinal": ordinal, "raw": raw, "path": _relative(source, plan_dir, repo_root),
                             "selector": selector}
+                    identity = (field, ordinal, unit["path"], canonical_json(selector))
+                    if identity in seen:
+                        continue
+                    seen.add(identity)
+                    source_raw = source.read_bytes()
+                    selected = _selected_bytes(source_raw, selector, source)
                     declarations[key].append(unit)
                     entries.append({"declaration_ref": {"field": field, "ordinal": ordinal},
                                     "path": unit["path"], "selector": selector,

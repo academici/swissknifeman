@@ -46,3 +46,22 @@ class PlanBundleTest(unittest.TestCase):
         with self.assertRaisesRegex(plan_bundle.BundleError, r"unresolvable_entry: .*missing\.md"):
             plan_bundle.build(self.plan, "P1.1")
         self.assertEqual(target.read_bytes(), expected)
+
+    def test_deduplicates_one_path_and_decision_resolution_in_the_same_ordinal(self):
+        spec = self.plan / "phases/P1/P1.1.md"
+        spec.write_text(
+            spec.read_text(encoding="utf-8").replace(
+                "**Required Reads:** 1) `brief/00-brief.md`",
+                "**Required Reads:** 1) `decisions/D1-fixture.md` (D1)",
+            ),
+            encoding="utf-8",
+        )
+
+        bundle = plan_bundle.model(self.plan, "P1.1")
+        declaration = bundle["declaration"]["required_reads"]
+        entries = [entry for entry in bundle["entries"]
+                   if entry["declaration_ref"] == {"field": "Required Reads", "ordinal": 1}]
+
+        self.assertEqual(len(declaration), 1)
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(declaration[0]["path"], "decisions/D1-fixture.md")

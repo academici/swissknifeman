@@ -23,7 +23,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
+try:
+    import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
+except ModuleNotFoundError:
+    from tests import fixtures  # noqa: F401,E402 — package-module invocation
 from task import journal  # noqa: E402
 from task import route_evidence as re  # noqa: E402
 from task import task_contract  # noqa: E402
@@ -96,11 +99,11 @@ class CaptureActualTests(unittest.TestCase):
         self.assertEqual(evidence["source"], "provider-doctor")
         self.assertTrue(evidence["ts"])
 
-    def test_provider_config_source_is_declared(self):
-        evidence = re.capture_actual("implementation", "high", source="provider-config",
-                                     model="gpt-5.6-terra")
-        self.assertEqual(evidence["source"], "provider-config")
-        self.assertEqual(evidence["model"], "gpt-5.6-terra")
+    def test_provider_config_source_is_rejected(self):
+        with self.assertRaises(re.RouteEvidenceError) as caught:
+            re.capture_actual("implementation", "high", source="provider-config",
+                              model="gpt-5.6-terra")
+        self.assertEqual(caught.exception.code, "ROUTE_ACTUAL_SOURCE_UNDECLARED")
 
     def test_explicit_timestamp_is_preserved_verbatim(self):
         evidence = re.capture_actual(
@@ -187,6 +190,10 @@ class DispatchGuardTests(unittest.TestCase):
         # route-required dispatch" — reuses ROUTE_UNDERSHOOT, never mints a third code.
         unknown = {"model_class": "implementation", "effort": None}
         self.assertEqual(re.dispatch_guard(self.REQUIRED, unknown, self.CAPS_OK), "ROUTE_UNDERSHOOT")
+
+    def test_unknown_actual_is_a_waiting_gate_not_config_recovery(self):
+        actual = re.capture_actual(None, None, source="self-attested")
+        self.assertEqual(re.dispatch_guard(self.REQUIRED, actual, self.CAPS_OK), "ROUTE_UNDERSHOOT")
 
     def test_route_checked_before_capability(self):
         under = {"model_class": "economy", "effort": "high"}

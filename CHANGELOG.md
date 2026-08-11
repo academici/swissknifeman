@@ -2,10 +2,10 @@
 
 ## [Unreleased]
 
-- **`task`: Codex `plan-run` принимает provenance текущей provider config.**
-  Когда `codex doctor` не публикует effort активного thread, Terra/high из
-  `CODEX_HOME/config.toml` фиксируется как ограниченное `provider-config` evidence;
-  отчёт обязан отличать его от thread-bound attestation.
+- **`task`: Codex `plan-run` требует thread-bound route evidence.**
+  Static `CODEX_HOME/config.toml` больше не выдаётся за фактический маршрут; без обеих осей
+  dispatch остаётся в `waiting` и не отправляет оператора в бесполезный повторный launch.
+  Bundle v2 дедуплицирует одинаковый path/decision input в одном ordinal.
 
 - **`task`/`plan-protocol`: terminal audit отделён от следующего запуска.**
   Завершившийся `plan-audit` теперь обязан передать successor свежему root с явно

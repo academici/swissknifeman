@@ -50,10 +50,9 @@ fresh item state. Повторное чтение запрещено.
 - Модель/effort НЕ запинены: действуют настройки сессии владельца.
 - **Pre-mutation/Pre-final write-site (P2.7/P2.11).** В оба вызова
   `route_evidence.capture_actual(...)` передавай `model_class`/`effort`/`model`,
-  подтверждённые provider environment API (`source="provider-doctor"`). Для Codex, когда API
-  не публикует effort активного thread, допустим узкий fallback: оба значения из эффективного
-  `CODEX_HOME/config.toml` с `source="provider-config"`; report называет его config evidence,
-  а не thread-bound attestation. Если оба источника не дают хотя бы нужную ось, запиши
+  подтверждённые provider environment API активного thread (`source="provider-doctor"`).
+  `CODEX_HOME/config.toml`, selector, actor и текст launch-block не являются fallback. Если API
+  не даёт хотя бы нужную ось, запиши
   `capture_actual(None, None, source="self-attested")` и остановись до мутации:
   selector/actor/текст команды не подменяют actual evidence. Шаг остаётся
   ОБЯЗАТЕЛЬНЫМ в обеих точках `plan-exec.md`; `plan-run` меняет источник actual-route, не
@@ -72,12 +71,12 @@ fresh item state. Повторное чтение запрещено.
   event: route correction — dispatch evidence, а не исход продукта.
 
 **Граница честности.** Самоатрибуция модели/effort агентом не является доказательством (класс
-B2 аудита REGHUB). `provider-config` — ограниченная Codex provenance и не равна thread-bound
-telemetry; report обязан назвать это ограничение. Без provider API либо обоих config-значений
-отчёт обязан нести `Session: unknown/unknown` с `source=self-attested`; запрещено подставлять
-selector или актор. Жёсткий машинный гейт остаётся за `plan-exec` — `plan-run` этот гейт НЕ
-заменяет, только снимает ритуал ручного переключения модели/effort перед серией manual-item'ов
-под одной моделью.
+B2 аудита REGHUB). Без provider API отчёт обязан нести `Session: unknown/unknown` с
+`source=self-attested`; запрещено подставлять config, selector или actor. Это `waiting`, а не
+предписание открыть новую сессию: новый launch сам по себе не добавляет thread-bound evidence.
+Native launch-block допустим только когда provider adapter уже подтвердил обе оси для целевого
+thread. Жёсткий машинный гейт остаётся за `plan-exec` — `plan-run` этот гейт НЕ заменяет, только
+снимает ритуал ручного переключения модели/effort перед серией manual-item'ов под одной моделью.
 
 Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется

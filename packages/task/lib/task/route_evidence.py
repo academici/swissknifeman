@@ -43,7 +43,7 @@ except ImportError:  # pragma: no cover - standalone fallback, byte-identical to
 # Guidance forbids for a live actual. `self-attested` is restricted to unknown
 # axes: it records absent provider evidence and never turns a selector into proof
 # of the route that actually ran.
-SOURCES = ("self-attested", "provider-doctor", "provider-config", "cli-flag")
+SOURCES = ("self-attested", "provider-doctor", "cli-flag")
 
 # Usage/context budget axes — token/duration/tool counts only, no pricing (Code
 # Guidance). Naming matches `analyst.readers` `usage.totals` keys (`in`/`out`/

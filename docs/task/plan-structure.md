@@ -153,6 +153,11 @@ close/archive/manual/waiting/terminal и design-формы, включая
 item'е, чья дата в колонке `Updated` таблицы `## Phase Status` не меньше порога, а кода нет
 или он отличен от `allow`. Скоуп forward-only по дате **item'а**: закрытое до порога не
 диагностируется вовсе — новый гейт не перекрашивает чужие живые планы задним числом.
+После первого non-GREEN phase audit `plan-exec`/`plan-run` может один раз вернуть явно названный
+terminal item в `🟡 In progress` без ре-дизайна, если стабильное ТЗ не менялось и Pre-mutation
+Task Contract остаётся `allow`. Второй audit финальный: его non-GREEN исчерпывает
+`audit_rounds_max`, поэтому следующий item execution получает `LOOP_BUDGET_EXCEEDED` и не создаёт
+третий цикл.
 Закрытие item'а — фиксированный порядок: дифф Scope →
 `validate.sh` пакета → bookkeeping плана (статусы, Completion Notes, Update Log) → перезапись
 `handoff.md` → `plan-lint --baseline HEAD` **после** handoff → счёт публикуется с атрибуцией

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:fb2f2bd01b2191579115f8949139932992f99d0b32c7ff03ff58d9e4c3e082b6
+Canonical SHA-256: sha256:79bc005bcc16f73f8014c0101d8a6ef7653270fa4aded6afd57c31d6bda35c92
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -146,10 +146,13 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
      регенерируй owner-carrier и один раз повтори узкий gate в том же attempt. Только неустранимый
      или out-of-scope остаток → `ATTENTION`, НЕ реопен. «При сомнении ставь ВЫШЕ» (п. 4) — про
      severity НАХОДКИ, не про ВЕРДИКТ.
-   - **Потолок раундов — два аудита на фазу.** Номер захода = число блоков `## Audit Pn` в
-     `phases/Pn.md` + 1 (греп; печатается ВСЕГДА). Третий и далее → строка
-     `AUDIT-CAP: Pn — <N>-й заход, решение за владельцем`: реопен ты не назначаешь, варианты владельцу
-     — сдать фазу `🟠 Done with deviations` с НАЗВАННЫМ долгом либо убить фазу.
+   - **Потолок — два аудита и один repair между ними.** Номер захода = число блоков
+     `## Audit Pn` в `phases/Pn.md` + 1 (греп; печатается ВСЕГДА). Первый non-GREEN разрешает
+     ровно один bounded repair-forward под неизменным ТЗ; второй аудит финальный. Если второй
+     снова non-GREEN, это `AUDIT-CAP: Pn — бюджет исчерпан, решение за владельцем`: третий audit,
+     repair или автоматический design-pass НЕ запускаются; варианты владельцу — сдать фазу `🟠 Done
+     with deviations` с НАЗВАННЫМ долгом либо остановить фазу. Команда, вызванная при уже двух
+     audit-блоках, ничего не дописывает в phase/journal и только возвращает этот cap-verdict.
    - **Дефолт ремедиации — follow-up items в СЛЕДУЮЩЕЙ фазе** (или отдельной фазе ремедиации). Реопен
      закрытой фазы (канон §3, 4 шага) — ТОЛЬКО если дефект в самом Deliverable этой фазы: каждый
      реопен растит число ручных отчётов, а с ним — поверхность следующего аудита.
@@ -224,7 +227,8 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
    launch-block'ом (см. Expected output). Launch-block живёт ИМЕННО ЗДЕСЬ, а не только в чате:
    чат умирает вместе с сессией и машиной не проверяется — на диске его гейтит `plan-lint`.
    Статусы/поля items НЕ править — их разруливают plan-design/plan-close по твоему отчёту.
-   **Журнал (D21, P1.1):** append ОДНУ запись (не правка markdown — не нарушает «единственная
+   **Журнал (D21, P1.1):** для реально выполненного первого/второго аудита append ОДНУ запись
+   (preflight `AUDIT-CAP` при уже двух audit-блоках не пишет ничего; не правка markdown — не нарушает «единственная
    запись» выше) — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
    --item <Pn — режим фазы|design — режим design> --command plan-audit --actor frontier/xhigh
    --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
@@ -238,8 +242,8 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
 **Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (Minor/Nit либо дефект бухгалтерии
 плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
-failure_scenario); третий
-и далее заход — строка `AUDIT-CAP:` (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
+failure_scenario); второй non-GREEN исчерпывает repair budget, а вызов при уже двух audit-блоках
+возвращает строку `AUDIT-CAP:` без нового блока/журнала (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
 Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
 чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
 `RED`/`ATTENTION` несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
@@ -256,9 +260,9 @@ item'а, не slash-команда, копипаст без правок. Тот
 code-block'е, четыре строки фиксированного порядка:
 
 ```
-$ task:plan-design <PLAN-ID> Pn
+<repair-command из Routing: $ task:plan-exec <PLAN-ID> Pn.m либо $ task:plan-run <PLAN-ID> Pn.m [Pn.k]>
 
-РЕЖИМ: реопен по §3 (4 шага), НЕ детализация
+РЕЖИМ: bounded audit repair-forward под текущим ТЗ item'а; НЕ детализация и НЕ реопен фазы
 ВХОД: plans/<PLAN-ID>/phases/Pn.md → блок `## Audit Pn — <дата>`; прочитать ПЕРВЫМ
 СКОУП: 1) <…> 2) <…> 3) <…>   — по одному пункту на находку/шаг, только то, что чинится
 НЕ ТРОГАТЬ: <ТЗ/Scope/Files/Validation закрытых items, чужие фазы — что оставить как есть>
@@ -272,11 +276,16 @@ $ task:plan-design <PLAN-ID> Pn
 
 Команду выбрать по вердикту:
 - `GREEN` → `$ task:plan-close <PLAN-ID> Pn`; close сам проверяет свежесть того же candidate fingerprint;
-- `ATTENTION` / `RED` → repair-forward в owning item под его текущим ТЗ. `plan-design` допустим
-  только при реальной смене sealed contract/authority, не как универсальная реакция на finding.
-  Ordinary Next никогда не предлагает `plan-close Pn.m`: это recovery reconciliation;
-- `AUDIT-CAP` (третий и далее заход) → launch-block адресован ВЛАДЕЛЬЦУ: решение «сдать `🟠` с названным
-  долгом / убить фазу»; команду не назначаешь.
+- первый `ATTENTION` / `RED` → один repair-forward в явно названные owning items под их текущим ТЗ:
+  `plan-exec` для `Exec=plan-exec`, `plan-run` для `Exec=manual`; несколько затронутых manual-items
+  передаются одной `plan-run` командой. Terminal status не отправляет в design: `plan-exec` владеет
+  bounded audit-repair exception. `plan-design` допустим только когда finding доказывает необходимость
+  изменить стабильные `Intent/Scope/Files/Validation`, public/frozen semantics либо authority, а не как
+  универсальная реакция на validation/evidence/state mismatch. Ordinary Next никогда не предлагает
+  `plan-close Pn.m`: это recovery reconciliation;
+- второй `ATTENTION` / `RED` → repair budget исчерпан; launch-block адресован ВЛАДЕЛЬЦУ: решение
+  «сдать `🟠` с названным долгом / остановить фазу», автоматическую команду не назначаешь;
+- `AUDIT-CAP` при уже двух блоках → тот же owner outcome без третьего audit block/journal event.
 
 Model/Thinking — из §3 Routing плана (канон §9). `Context` — РОВНО одно из ТРЁХ значений enum'а §8:
 `continue (reset the session context) — ручной item` (обычный item-by-item exec, в т.ч. manual) · `NEW SESSION —

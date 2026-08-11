@@ -273,9 +273,15 @@ class RouteAndCapabilityTests(unittest.TestCase):
 
 
 class AuthorityTests(unittest.TestCase):
-    def test_loop_budget_exceeded_blocks(self):
+    def test_first_audit_leaves_one_repair_round(self):
         base = _load_base_contract()
-        base["authority"]["observed_rounds"] = 3
+        base["authority"]["observed_rounds"] = 1
+        contract = _rehashed(base)
+        self.assertIsNone(task_contract.pre_mutation(contract))
+
+    def test_final_allowed_audit_exhausts_repair_budget(self):
+        base = _load_base_contract()
+        base["authority"]["observed_rounds"] = 2
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "LOOP_BUDGET_EXCEEDED")
 
@@ -520,6 +526,24 @@ class PreFinalTests(unittest.TestCase):
         base["done"]["public_acceptance"][0]["evidence_ref"] = "E2"  # pinned-not-recomputable
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_final(contract), "EVIDENCE_PROOF_CLASS_INSUFFICIENT")
+
+
+class AuditRoundCountingTests(unittest.TestCase):
+    def test_only_fingerprinted_candidate_audits_consume_the_phase_budget(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            phase_lines = [
+                "# P1", "## Audit P1 — legacy", "**Вердикт: RED**",
+                "## Audit P1 — candidate", "**Вердикт: RED**",
+            ]
+            events = [
+                {"command": "plan-audit", "item_id": "P1", "result": "audit-red"},
+                {"command": "plan-audit", "item_id": "P1", "result": "audit-red",
+                 "fingerprint": "a" * 64},
+            ]
+            (plan / "journal.jsonl").write_text(
+                "".join(json.dumps(event) + "\n" for event in events), encoding="utf-8")
+            self.assertEqual(task_contract._count_audit_rounds(plan, phase_lines, "P1"), 1)
 
     def test_base_fixture_pre_final_allows(self):
         base = _load_base_contract()

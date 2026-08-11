@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: phase-audit recovery ограничена одним дополнительным repair-подходом.**
+  Первый non-GREEN audit ведёт прямо в owning item под неизменным ТЗ; второй audit финальный,
+  после него Task Contract блокирует третий repair/audit. RED больше не маршрутизируется в
+  `plan-design` только из-за terminal status или validation/evidence mismatch.
+
 - **`task`: plan-design оценивает влияние конфликта до остановки.**
   Локальная обратимая проблема исправляется в текущем item; re-design или owner gate требуют
   подтверждённой границы package/contract/authority/acceptance/safety.

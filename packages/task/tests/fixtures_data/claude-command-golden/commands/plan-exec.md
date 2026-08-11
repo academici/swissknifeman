@@ -58,7 +58,13 @@ Raw provider flags допустимы только в additive adapter/projectio
    (в Brain/зеркале) — ошибка запуска: стоп и отчёт с правильным домом (голая команда перезапуска из
    `<путь>`); SSOT плана во время exec = репо, зеркало не исполняется (скилл `plan-protocol` §12).
    Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт (терминальный item не
-   переисполняется). **Phase-first:** item фазы N+1 не исполняется, пока фаза N не терминальна
+   переисполняется), **кроме bounded audit repair-forward**. Это исключение действует только когда
+   фаза ещё не закрыта, последний `## Audit Pn` имеет `RED`/`ATTENTION`, его findings явно называют
+   этот item, стабильное ТЗ item'а не изменено, а обязательный Pre-mutation ниже возвращает `allow`
+   (`observed_rounds < audit_rounds_max`). Тогда это ровно один repair attempt под прежним ТЗ:
+   journal start с новым attempt возвращает item в `🟡 In progress`; `plan-design`/реопен фазы не
+   запускаются. После второго аудита Pre-mutation возвращает `LOOP_BUDGET_EXCEEDED`, поэтому третьего
+   repair/audit цикла нет. **Phase-first:** item фазы N+1 не исполняется, пока фаза N не терминальна
    (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
 
    **Routing-гейт (ДО п. 3 — заблокированный item в 🟡 не остаётся).** Найди строку item'а в `plan.md`
@@ -117,7 +123,7 @@ Raw provider flags допустимы только в additive adapter/projectio
    |:--|:--|:--|
    | `ROUTE_UNDERSHOOT` | реальный (route ниже required) | СТОП: гейт п. 2 уже обязан был это поймать раньше — расхождение прозы и компилятора = D#-запись + `ROUTING-INCONSISTENT` |
    | `AUTHORITY_BOUNDARY` | реальный (owner-gate не выдан) | СТОП: эскалация п. 5 (owner-gate) |
-   | `LOOP_BUDGET_EXCEEDED` | реальный (аудит-cap исчерпан) | СТОП: `AUDIT-CAP`-путь, решение владельца |
+   | `LOOP_BUDGET_EXCEEDED` | реальный (финальный разрешённый аудит уже состоялся) | СТОП: `AUDIT-CAP`-путь, решение владельца; третий repair/audit не запускать |
    | `PORTABILITY_EXTERNAL_INPUT` / `PORTABILITY_INPUT_MISSING` | реальный (item несёт внешний/недостающий execution input) | СТОП: эскалация п. 5 (дефект спеки item'а), правит `plan-design` |
    | `VERSION_HASH_MISMATCH` / `CONFLICT_UNRESOLVED` / `CONFLICT_PRECEDENCE_VIOLATION` / `NEXT_CHANGED_WITHOUT_TRANSITION` / `CAPABILITY_UNSUPPORTED` / `SLICE_INCOMPLETE` / `COLD_START_INCOMPLETE` | структурный (`build()` этого не производит при корректной работе) | СТОП: D#-запись, реопен-кандидат P2.6 (владелец `build`), НЕ тихая правка здесь |
 

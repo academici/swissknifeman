@@ -13,9 +13,12 @@ flowchart TD
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
     A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
     E --> C[phase candidate<br>terminal items]
-    C --> RV[один pre-close audit<br>/task:plan-audit · material trigger]
-    RV -- локальная repair-forward --> E
+    C --> RV[первый pre-close audit<br>/task:plan-audit · material trigger]
+    RV -- первый non-GREEN --> RE[один bounded repair-forward<br>под прежним ТЗ]
     RV -- GREEN --> PC[phase close<br>/task:plan-close]
+    RE --> FRV[финальный audit<br>второй и последний]
+    FRV -- GREEN --> PC
+    FRV -- non-GREEN --> INC[owner incident<br>третьего repair/audit нет]
     PC --> AR[archive<br>/task:plan-close archive]
     AR --> DOCS[docs-миграция<br>root/ → документация проекта]
 ```
@@ -73,6 +76,11 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 кандидата фазы; его свежий GREEN разрешает `/task:plan-close`. Bookkeeping и прочие
 детерминированные non-material дефекты чинятся inline в том же attempt. Подтверждённая material
 находка возвращается в owning item как repair-forward, а не в новый design-проход всего плана.
+Первый non-GREEN phase audit разрешает ровно один такой repair под неизменным item-spec, включая
+явно названный terminal item. После него выполняется второй, финальный audit: повторный non-GREEN
+исчерпывает Task Contract loop budget и уходит владельцу как incident; третий repair/audit или
+автоматический `plan-design` запрещены. `plan-design` нужен только когда меняются стабильные
+Intent/Scope/Files/Validation, public/frozen semantics или authority.
 
 **Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
 вердикт (`GREEN`/`ATTENTION`/`RED`) говорит «запись фазы сходится с кодом и git-фактами»,

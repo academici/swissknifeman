@@ -174,20 +174,38 @@ def _require_field(item_id: str, fields: dict, name: str):
     return value, lineno
 
 
-def _count_audit_rounds(phase_lines, phase_id: str) -> int:
-    """`authority.observed_rounds` — the audit-round cap counter
-    (`risk-review-loop-budget-v1.md` §Loop budget, `audit_rounds_max`),
-    reconstructed by counting `## Audit <phase_id>` block headers already
-    committed in the phase file — the exact grep `plan-audit.md:52-54`'s own
-    canon already performs, never a second parser. Distinct from
-    `review_policy.LoopBudget.from_committed` (per-finding, not phase-level) —
-    see `findings/P2.6-contract-mapping.md`."""
-    count = 0
-    for ln in phase_lines:
-        m = _AUDIT_BLOCK_HEADER_RE.match(ln.strip())
-        if m and m.group(1) == phase_id:
-            count += 1
-    return count
+def _count_audit_rounds(plan_dir: Path, phase_lines, phase_id: str) -> int:
+    """Count fingerprinted phase-candidate audits in the append-only journal.
+
+    Historical design/closed-phase audit blocks predate the candidate fingerprint
+    protocol and must not consume a current item's repair budget.  The journal
+    fingerprint is the distinguishing carrier: D14 candidate audits require it,
+    while legacy blocks/events do not.  The phase Markdown still participates as
+    an integrity bound — a journal event without a matching audit block is ignored
+    here and remains an audit/lint defect rather than silently spending budget.
+    """
+    block_count = sum(
+        1 for ln in phase_lines
+        if (match := _AUDIT_BLOCK_HEADER_RE.match(ln.strip())) and match.group(1) == phase_id)
+    if block_count == 0:
+        return 0
+
+    journal_path = Path(plan_dir) / "journal.jsonl"
+    if not journal_path.is_file():
+        return 0
+    fingerprinted = 0
+    for raw in journal_path.read_text(encoding="utf-8").splitlines():
+        try:
+            event = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if (event.get("command") == "plan-audit"
+                and event.get("item_id") == phase_id
+                and event.get("result") in {"audit-green", "audit-attention", "audit-red"}
+                and isinstance(event.get("fingerprint"), str)
+                and event["fingerprint"]):
+            fingerprinted += 1
+    return min(block_count, fingerprinted)
 
 
 def _authority_request(item_id: str, protected_transition):
@@ -618,7 +636,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     codex_render = f"$ task:plan-exec {plan_id} {item_id}"
 
     phase_lines = plan_lint._read_lines(phase_path) or []
-    observed_rounds = _count_audit_rounds(phase_lines, phase_token)
+    observed_rounds = _count_audit_rounds(plan_dir, phase_lines, phase_token)
     authority_class, authority_granted, authority_granted_by = _resolve_authority(
         plan_lint, plan_lines, plan_dir, item_id, phase_path, impl_rules_text,
         protected_transition)
@@ -911,7 +929,12 @@ def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
             return "CAPABILITY_UNSUPPORTED"
 
     authority = contract["authority"]
-    if authority["observed_rounds"] > authority["loop_budget"]["audit_rounds_max"]:
+    # `audit_rounds_max` is the total audit budget, not the number of repairs that
+    # may follow it.  Once the final allowed audit has been observed there is no
+    # remaining repair round: GREEN proceeds to phase close, while non-GREEN is an
+    # incident/owner decision.  Using `>` here admitted one extra repair and a
+    # third audit despite the declared two-audit cap.
+    if authority["observed_rounds"] >= authority["loop_budget"]["audit_rounds_max"]:
         return "LOOP_BUDGET_EXCEEDED"
     if authority["class"] == "owner-gate" and not authority["granted"]:
         return "AUTHORITY_BOUNDARY"

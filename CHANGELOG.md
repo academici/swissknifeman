@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: plan-design оценивает влияние конфликта до остановки.**
+  Локальная обратимая проблема исправляется в текущем item; re-design или owner gate требуют
+  подтверждённой границы package/contract/authority/acceptance/safety.
+
 - **`task`: plan-команды получили evidence-first runtime-переходы и коррелированный lifecycle.**
   Routing preflight больше не записывает product failure, terminal journal close идемпотентен,
   а phase candidate проходит свежий audit до close; каноническая документация Task теперь

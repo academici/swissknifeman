@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: e4fe046d6c766371191e1f87e73b4dd6895f9b9f7191a9e1a5e7e6a09f3bb339
+inputs_sha256: 8f5d405219c49cedc9cc19a03e50ce452dd4c23d9912b50c88d0019c4bae6ace
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | ⬜ Not started |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
-| P2 | Contract integrity and field requalification | 2/4 | ⬜ Not started |
+| P2 | Contract integrity and field requalification | 3/4 | 🟡 In progress |
 
 ## Phase P0
 
@@ -47,7 +47,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P2.1 | Закрыть Task contract и validation regressions | 🟢 Done | 2026-08-11 |
 | P2.2 | Восстановить Harness plan-driver contract | 🟢 Done | 2026-08-11 |
-| P2.3 | Исправить mixed-state owner status projection | ⬜ Not started | — |
+| P2.3 | Исправить mixed-state owner status projection | 🟢 Done | 2026-08-11 |
 | P2.4 | Повторить live canary и requalify successor phase | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -97,6 +97,8 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · D22: status repair добавлен как P2.3, live requalification перенесена в P2.4; design child прерван после авторинга, закрытие carriers выполняет root. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · P2.3 status projection repair started |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · mixed-state projection fixed; 7 focused tests and 776 tests/1 skipped on ba882c9f; write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

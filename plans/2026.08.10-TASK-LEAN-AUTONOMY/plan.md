@@ -82,7 +82,6 @@ canary, а не через новую исчерпывающую proof-сист�
 | Date | Role / model | Change |
 |:--|:--|:--|
 | 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |
-| 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |
 | 2026-08-11 | owner-authorized v2 forward-only activation / gpt-5.6-terra/high | D20 вводит отдельный v2 write-site cutoff 2026-08-12; immutable P0/P1 carriers не красятся задним числом. |
 | 2026-08-11 | owner-authorized P2.1 contract correction / gpt-5.6-terra/high | D19 добавляет omitted provider parity owner/test в exact Files; acceptance и четыре root causes не меняются. |
 | 2026-08-11 | owner-authorized successor design / gpt-5.6-sol/high | D18 отклоняет Major-долг финального RED P1, замораживает P1 и создаёт P2.1–P2.3 с package-owned remediation и новым live canary. |

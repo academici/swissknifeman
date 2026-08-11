@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 6860e37243762833256496dc2839e31e220c0fcebff115742f45515e8a56ea40
+inputs_sha256: b1bfb7601b6081e1bfd6bfee135ca84de2c2e687281a04dc35f93220798fc93f
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Минимизировать always-on canon и стабилизировать run evidence | ⬜ Not started | — |
+| P0.1 | Минимизировать always-on canon и стабилизировать run evidence | 🟠 Done with deviations | 2026-08-11 |
 | P0.2 | Сократить Skiller plan canon до adaptive loop | ⬜ Not started | — |
 
 ## Phase P1
@@ -58,7 +58,11 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · Post-commit gate: P1.2 bundle stale после worktree→committed provenance transition; fixing forward через owner generator. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-deviations · Correction: stale P1.2 bundle caused by research/06 EOF edit after generation, not provenance transition. Bundle regenerated after final stable bytes; fixing commit required. |
 | 2026-08-11 | gpt-5.6-sol/xhigh | plan-audit · audit-green · заход 4, GREEN: F20 исправлен inline; Agelto/SKM telemetry и D12/D13 интегрированы; нового audit root нет |
+| 2026-08-11 | gpt-5.6-terra/medium | plan-run · blocked · required implementation/high vs actual gpt-5.6-terra/medium |
+| 2026-08-11 | gpt-5.6-terra/medium | plan-run · blocked · required implementation/high; session implementation/medium |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · run-report root resolver and canon thinning; package validation has five Task fixture failures |
 
 ## Owner Gates
 
-- —
+- P0.1: known deviation

@@ -1,6 +1,7 @@
-# HANDOFF — 2026-08-11 — after P1
+# HANDOFF — 2026-08-11 — after P0.1
 
-**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1
+**Next:** ЗАПУСК ВРУЧНУЮ: implementation/high — `2026.08.10-TASK-LEAN-AUTONOMY P0.2` из
+`packages/skiller`.
 
 **Provider-neutral plan-protocol launch block**
 
@@ -8,43 +9,35 @@
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | cold-start-root |
-| Суть | reason=`owner-pause-no-resume`; выполнить P0.1 Harness instruction thinning + D13 repository-root run evidence |
-| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1` |
+| Context | continue (/clear) — ручной item |
+| Суть | Сократить Skiller plan canon до adaptive loop без изменения Task runtime. |
+| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.2` |
 
 **Native Codex launch block**
 
-| Model | Thinking | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|
-| gpt-5.6-terra | high | `cold-start-root` (`owner-pause-no-resume`) | P0.1 from Harness cwd; preserve D4/D6/D12/D13 boundaries | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/harness -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.1'` |
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/skiller -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P0.2'
+```
 
-**Done:** final design audit attempt 4 closed F20 inline without a fifth audit. All available
-Agelto/Swiss Knife Man plan journals and run-report snapshots were analyzed causally; verified
-Perplexity/official-source follow-up produced D12 evidence-first stop taxonomy and D13
-idempotent/correlated lifecycle. P0.1/P0.2/P1.1/P1.2 specs, canary scorecard, roadmap and
-provenance index now carry those rules.
+**Done:** `2026.08.10-TASK-LEAN-AUTONOMY P0.1` item commit `e777f665` resolves new
+SessionEnd reports at repository root, retains actual `cwd`, thins root/Task instruction sources,
+regenerates provider projections and records measured budget 7,250 → 7,132 tokens.
 
-**Remaining:** execute P0.1 → P0.2 → P1.1 → P1.2 from their exact cwd carriers. Do not insert a
-new audit/close ritual without a new material D3 fingerprint. D12 procedural/transient/dependency/
-unrelated signals continue or repair same-attempt; reproduced acceptance/safety/authority remain
-fail-closed.
+**Remaining:** P0.2 → P1.1 → P1.2. P0.1's complete Harness validation remains red on five
+Task-owned plan-reader/CLI fixture failures; P1.1 owns their repair. Do not classify this known
+unrelated red as a product failure of P0.1.
 
-**Sources of truth:** `plan.md` · `findings/06-cross-project-execution-telemetry.md` ·
-`research/07-adaptive-failure-and-telemetry-synthesis.md` ·
-`decisions/D12-evidence-first-stop-taxonomy.md` ·
-`decisions/D13-idempotent-correlated-lifecycle.md` · `roadmap.md`.
+**Sources of truth:** `plan.md` · `phases/P0/P0.1.md` · `phases/P0/P0.1.state.md` ·
+`findings/P0.1-instruction-thinning.md` · `findings/06-cross-project-execution-telemetry.md` ·
+`decisions/D4-progressive-disclosure.md` · `decisions/D6-required-perplexity-stop.md` ·
+`decisions/D13-idempotent-correlated-lifecycle.md`.
 
-**Open risks:** the single D9+D13 `docs/reference.md` owner prerequisite remains before P1.2 and
-must be satisfied by the foreign-diff owner; P0.1–P1.1 are not blocked by it. Historical raw
-run-report retention is incomplete and fragmented, so baseline counts are lower bounds; D13 fixes
-new capture forward without migrating/deleting history. Current global run-report hook is stale
-and review-gate unconfigured; neither was used as green evidence.
+**Open risks:** `bash packages/harness/scripts/validate.sh` has five unrelated Task fixture
+failures. Historical run reports remain fragmented by design; P0.1 adds no migration. The
+foreign owner change in `docs/reference.md` remains out of scope.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; `No answer found` Perplexity responses were excluded, and load-bearing claims
-  were verified against primary official pages;
-- deferred: historical journal/run migration, daemon/supervisor and universal workflow carrier;
-  revisit only after P1.2 measures a residual defect;
+- workarounds: —
+- deferred: repair of Task-owned fixture/runtime mismatch in P1.1; no validation suppression.
 - open_questions: —

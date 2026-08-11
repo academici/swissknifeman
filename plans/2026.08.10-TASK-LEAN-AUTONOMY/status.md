@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 01dcf4e9f72508eecf1d68664e84da016cfba800d4dd7b8edddabd6464a453a4
+inputs_sha256: f0ea93a9c6ce4b3d86d177c32919d06e62b6eed5eadb83a4d8c0949b53a336be
 generated_by: task plan-views status
 -->
 
@@ -56,7 +56,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟠 Done with deviations | 2026-08-11 |
-| P3.2 | Повторить product-free requalification нового anchor | 🟢 Done | 2026-08-11 |
+| P3.2 | Полностью requalify и закрыть P3 | 🟢 Done | 2026-08-11 |
 | P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟠 Done with deviations | 2026-08-11 |
 | P3.4 | Восстановить Validation trust и execution provenance | 🟢 Done | 2026-08-11 |
 
@@ -126,6 +126,7 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · P3.1: historical full validator red at ddc196471e59253abfd2770d6637952d179fff53; corrected focus 144 (на f86a4e5e64999608bfe6d68134edae88536c2122); current f86a4e5e64999608bfe6d68134edae88536c2122; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · P3.3: undeclared parity test and post-factum spec/D24 at 57a922b39febc9dfb2eb2c19fb32ac2f284455b4/ec5c71bcf36c1e9abf233953635194fee57a3fc3; corrected focus 63 (на f86a4e5e64999608bfe6d68134edae88536c2122); write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.4: P3.1 144, P3.3 63, Task 780 (все на f86a4e5e64999608bfe6d68134edae88536c2122); P3.1/P3.3 reconciled append-only; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-11 | frontier/high | plan-design · in-progress · D26: P3 terminal closure materialized; direct repair → P3.2 → phase close |
 
 ## Owner Gates
 

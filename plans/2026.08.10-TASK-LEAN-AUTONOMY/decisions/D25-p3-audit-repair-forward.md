@@ -1,11 +1,11 @@
 ---
 id: D25
 date: 2026-08-11
-status: accepted
+status: superseded
 item: P3.4
 items: [P3.1, P3.2, P3.3, P3.4]
 supersedes: []
-superseded_by: null
+superseded_by: D26
 actor: repository-owner (explicit bounded audit repair-forward directive)
 model: gpt-5.6-sol/high (current semantic plan-design route)
 evidence: RAG:— phases/P3/P3.md Audit P3 + journal.jsonl:51-57 + git refs ddc19647/d8214950/57a922b3/ec5c71bc

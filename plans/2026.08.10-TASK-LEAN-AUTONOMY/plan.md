@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 5/5; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2, pass 5 — D25 bounded repair-forward после первого RED P3; D17 ограничивает следующий audit финальным |
+| Design Passes | 6/6; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2, pass 5 — D25 bounded repair-forward, pass 6 — D26 terminal closure без нового audit/repair-loop |
 | Paused By | — |
 <!-- migration-version: 0.2.0 -->
 
@@ -48,6 +48,8 @@ canary, а не через новую исчерпывающую proof-сист�
 - Повтор одного failure fingerprint требует смены тактики и максимум одного scoped review.
 - Новый audit/review требует записанного material trigger; прежний verdict переиспользуется,
   пока scope/SHA/risk не изменились.
+- Для P3 D26 заменяет D17/D25 terminal audit path: воспроизводимый дефект чинится в owning source,
+  P3.2 повторяет тот же deterministic gate до полного green и передаёт root прямо в `plan-close P3`.
 - Завершённые items делают фазу кандидатом, а не закрытой фазой: свежий зелёный audit этого
   кандидата предшествует `task:plan-close <PLAN-ID> Pn`. Первый RED либо unresolved `ATTENTION`
   разрешает ровно один repair-forward в явно названные owning items под неизменным ТЗ; terminal
@@ -87,6 +89,7 @@ canary, а не через новую исчерпывающую proof-сист�
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | owner-authorized terminal design / gpt-5.6-sol/high | D26 заменяет для P3 D17/D25 audit-loop на один executable repair → P3.2 → phase-close path без deviations или deferred work. |
 | 2026-08-11 | plan-designer / gpt-5.6-sol/high | D25 реопенит P3 для одного P3.4: executable focused Validation, append-only P3.1/P3.3 provenance, committed-input boundary и отдельный fresh P3.2 attempt 2. |
 | 2026-08-11 | owner-authorized repair design / gpt-5.6-terra/high | D24 добавляет P3.3: manual plan-run использует fresh native `-m` + `model_reasoning_effort` как честно названный launch provenance; provider telemetry и plan-exec не ослабляются. |
 | 2026-08-11 | owner-authorized successor design / semantic gpt-5.6-sol/high | D23 отклоняет F1–F6 финального RED P2, замораживает P2 и создаёт P3.1/P3.2 с fail-closed Task remediation и новым product-free canary; actual selector/effort не аттестованы. |

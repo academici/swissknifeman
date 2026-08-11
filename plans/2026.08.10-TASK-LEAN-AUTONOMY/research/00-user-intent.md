@@ -20,3 +20,4 @@
 | Сохранить лёгкость: fallbacks и same-session progress, жёстко только safety/authority/acceptance | D1/D2/D12 |
 | Не больше одного дополнительного repair после первого non-GREEN audit | D17, P1 audit recovery |
 | P3 repair только вокруг focused Validation, Files/provenance, git refs и fresh P3.2 | D25, P3.4, P3.2 attempt 2 |
+| Закрыть P3 без Known Deviations/deferred work и без нового audit-loop | D26, P3.2, `task:plan-close P3` |

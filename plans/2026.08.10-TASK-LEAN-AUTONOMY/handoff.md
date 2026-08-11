@@ -35,13 +35,10 @@ must differ from P3.4 `019ff226-2ceb-74f2-acd7-4e6b0360bd46` and historical
 `phases/P3/P3.4.state.md` · `phases/P3/P3.1.state.md` · `phases/P3/P3.3.state.md` ·
 `decisions/D25-p3-audit-repair-forward.md` · `journal.jsonl`.
 
-**Open risks:** Historical P3.1/P3.3/P3.2 attempt-1 evidence remains non-qualification history.
-Pre-existing dirty Task route-evidence/test files remain outside scope; P3.2 must preserve them and
-capture its own scoped dirty-tree evidence. Global Harness `run-report` hook is stale; trust local
-journal owner commands, generated views, exact git refs, and explicit CLI-flag launch provenance only.
+**Open risks:** —
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: focused module invocation uses explicit `PYTHONPATH=tests`; clean worktree isolated validation from unrelated Task edits.
-- deferred: global stale `run-report` hook repair и canonical exhausted-audit owner-outcome projection.
+- workarounds: —
+- deferred: —
 - open_questions: —

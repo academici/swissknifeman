@@ -138,3 +138,15 @@
 - Добавить ровно один owning repair item; не менять product semantics, если explicit
   unittest bootstrap делает исходные module sets исполнимыми.
 - Не трогать frozen P1/P2, unrelated dirty ARTIFEX/roadmap/docs build, release/tag/push.
+
+## Owner terminal-closure directive — 2026-08-11
+
+- Единственный допустимый исход P3 — полное закрытие фазы без открытых технических хвостов,
+  Known Deviations, deferred work или подменённых проверок.
+- Любой воспроизводимый дефект в P3 scope исправляется в owning source немедленно в том же
+  рабочем ходе; не создавать новый audit, repair-loop или формальный handoff вместо исправления.
+- P3.2 выполняет финальную requalification только после устранения всех таких дефектов и затем
+  закрывает P3; повторный non-GREEN не создаёт новый цикл, а требует исправить причину и повторить
+  те же детерминированные проверки до green.
+- Новый design-заход обязан materialize this directive as an owner decision, заменить D17/D25
+  terminal path for P3, убрать из Next audit-only continuation и оставить один executable close path.

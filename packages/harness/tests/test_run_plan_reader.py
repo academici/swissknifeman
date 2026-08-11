@@ -3,6 +3,7 @@
 и на синтетических tmp-планах (`monorepo_root=REPO_ROOT` — DI, plan-lint принимает
 произвольный путь `path`, нестингом под репозиторием не ограничен). Никакого
 мокания подпроцессов: чёрный ящик по границе процесса (D29)."""
+import json
 import sys
 import tempfile
 import unittest
@@ -40,6 +41,61 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
     """Минимальный синтетический план `<tmp>/<plan_id>/` — один phase `P1`, все
     item'ы `🟡 In progress` (терминальный кейс уже покрыт `sample-plan`). `routing_rows`
     — готовые строки таблицы `## 3. Routing` (без заголовка/разделителя)."""
+    if layout == "v2":
+        if item_ids != ["P1.1"]:
+            raise ValueError("v2 integration fixture supports the canonical single item P1.1")
+        from packages.task.tests.fixtures import write_valid_plan
+        from task import plan_bundle, plan_decisions, plan_item_state, plan_status
+
+        plan_dir = write_valid_plan(Path(tmp), plan_id=plan_id, layout="v2")
+        plan_path = plan_dir / "plan.md"
+        plan_path.write_text(
+            plan_path.read_text(encoding="utf-8").replace(
+                "## 3. Routing\n\n",
+                "## 3. Routing\n\n"
+                "| Items | Model class/effort | Exec | Почему |\n"
+                "|:--|:--|:--|:--|\n"
+                + "\n".join(routing_rows)
+                + "\n\n",
+            ),
+            encoding="utf-8",
+        )
+        (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after P1.1
+
+**Next:** {next_line}
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | medium |
+| Context | continue-root |
+| Суть | v2 owner handoff fixture |
+| Команда | `{next_line}` |
+
+**Done:** —
+**Remaining:** P1.1.
+**Sources of truth:** plan.md · phases/P1/P1.md
+**Open risks:** —
+**Workarounds/Deferred/Open questions:**
+- workarounds: —
+- deferred: —
+- open_questions: —
+""", encoding="utf-8")
+        event = {
+            "ts": "2026-08-01T00:00:00Z", "plan_id": plan_id, "item_id": "P1.1",
+            "command": "plan-run", "session_id": "fixture", "run_id": "1" * 64,
+            "attempt": 1, "actor": "implementation/medium", "friction": [],
+            "result": "in-progress", "cost_usd": None, "num_turns": None,
+            "duration_ms": None, "note": "v2 fixture",
+        }
+        (plan_dir / "journal.jsonl").write_text(
+            json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_status.build_status(plan_dir)
+        plan_decisions.build_views(plan_dir)
+        plan_bundle.build(plan_dir, "P1.1")
+        return plan_dir
+
     plan_dir = Path(tmp) / plan_id
     phase_dir = plan_dir / "phases" / "P1" if layout == "v2" else plan_dir / "phases"
     phase_dir.mkdir(parents=True)
@@ -61,6 +117,7 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 | Title | Синтетический план теста |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
+| Last Updated | 2026-08-01 |
 | Layout | {layout} |
 
 ## 1. Context
@@ -113,11 +170,6 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 
 Синтетика теста.
 """, encoding="utf-8")
-    if layout == "v2":
-        for item_id in item_ids:
-            (phase_dir / f"{item_id}.state.md").write_text(
-                f"**Next:** {next_line}\n", encoding="utf-8")
-
     (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after {item_ids[0]}
 
 **Next:** {next_line}
@@ -126,7 +178,7 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
-| Context | fresh session |
+| Context | continue-root |
 | Суть | тест |
 
 ````
@@ -173,15 +225,29 @@ class QueueSamplePlanTest(unittest.TestCase):
 
 
 class ExecCellTest(unittest.TestCase):
-    def test_v2_reads_next_from_item_state_not_handoff(self):
+    def test_v2_reads_next_from_handoff_with_schema_pure_state(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="V2-STATE", item_ids=["P1.1"],
                 routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
                 next_line="exec-items: task:plan-exec V2-STATE P1.1", layout="v2")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+            state = (plan_dir / "phases" / "P1" / "P1.1.state.md").read_text(encoding="utf-8")
         self.assertFalse(result["degraded"], result["degraded_reasons"])
+        self.assertEqual(result["next_form"]["kind"], "exec-items")
         self.assertEqual(result["items"][0]["next_form"]["kind"], "exec-items")
+        self.assertNotIn("**Next:**", state)
+
+    def test_v2_invalid_handoff_next_remains_undrivable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = _write_fixture(
+                tmp, plan_id="V2-BAD-HANDOFF", item_ids=["P1.1"],
+                routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
+                next_line="unsupported: V2-BAD-HANDOFF P1.1", layout="v2")
+            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+        self.assertTrue(result["degraded"])
+        self.assertEqual(result["items"], [])
+        self.assertIn("Next не соответствует", result["degraded_reasons"][0])
     def test_exec_manual_refuses(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(

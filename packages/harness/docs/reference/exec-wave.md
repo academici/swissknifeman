@@ -13,7 +13,9 @@
   оставшемуся — маршрут (`task.task_contract build`), значение `Exec`, право
   вождения. Право вождения даёт РОВНО дословное значение `Exec = plan-exec` в
   `## 3. Routing` — деривация из тира §9 никогда его не выдаёт (только
-  отказывает на противоречии).
+  отказывает на противоречии). Semantic `Next` для v1 и v2 берётся только из
+  owner `handoff.md`; layout-v2 item-state содержит только result fields и не является
+  fallback-источником orchestration.
 - **`worker`** запускает ОДИН item процессом `claude -p "/task:plan-exec
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` под таймаутом (по умолчанию 1800s),
   строго один воркер за раз (последовательная волна — параллельный fan-out на
@@ -58,10 +60,8 @@ harness run <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S]
 
 ## Приёмка
 
-Инструмент принят двумя прогонами (`findings/P4-wave-acceptance.md`
-плана `2026.07.31-SKM-LEAN`): `--dry-run` на реальной фазе живого плана
-(доказывает, что чтение работает на боевом входе) и сквозная волна на
-изолированном фикстурном плане с настоящими воркерами (доказывает, что цикл
-замыкается end-to-end). Доля вмешательств с фикстурной волны — синтетическое
-число, не боевая статистика: боевая накапливается журналом при обычных
-exec-волнах.
+Живая приёмка принадлежит package tests и `bash packages/harness/scripts/validate.sh`:
+v1/v2 plan-reader fixtures проверяют route/Next boundaries, CLI dry-run — read-only,
+а wave tests — stop-on-RED/continue-on-ATTENTION. Исторические полевые прогоны остаются
+provenance, но не заменяют current validators. Доля вмешательств с fixture-wave —
+синтетическое число; боевая статистика по-прежнему накапливается durable журналом.

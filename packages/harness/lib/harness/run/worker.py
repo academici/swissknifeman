@@ -1,5 +1,7 @@
-"""worker — запуск ОДНОГО item'а плана процессом клиента `-p` под таймаутом (P4.3,
-`root/contracts/driver-plan-protocol-v2.md` §6/§9 U1-U3).
+"""worker — запуск ОДНОГО item'а плана процессом клиента `-p` под таймаутом.
+
+Актуальный контракт последовательной волны и timeout/outcome границы живёт в
+`packages/harness/docs/reference/exec-wave.md`, а не в архивном plan contract.
 
 Процессный запуск, не Agent tool (`findings/rag-2026-07-31-native-skill-fields.md` §5 —
 подавление AgentTool приходит инъецированной системной инструкцией, не версией API) и

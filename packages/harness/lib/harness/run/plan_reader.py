@@ -1,5 +1,7 @@
-"""plan_reader — очередь исполнения ОДНОЙ фазы плана для драйвера exec-волны
-(P4.2, `root/contracts/driver-plan-protocol-v2.md` §2/§3).
+"""plan_reader — очередь исполнения ОДНОЙ фазы плана для драйвера exec-волны.
+
+Живой контракт драйвера — `packages/harness/docs/reference/exec-wave.md`;
+раскладкой плана владеет plan-protocol `plan-layout-v2.md`.
 
 Три источника фактов читаются ПРОЦЕССОМ (D29 — межпакетная граница: Python-импорт
 пакета `task` из этого модуля и склейка `sys.path` к его `lib`-каталогу запрещены):
@@ -8,9 +10,9 @@
 Собственный разбор (S4/S5, §3.1/§3.2 контракта) заведён РОВНО на две точки, у которых
 готового читателя в репозитории нет ни одного:
     S4 — ячейка `Exec` строки `## 3. Routing` (зеркалит `task_contract._find_routing_row`);
-    S5 — префиксный токен формы `**Next:**` (закрытый enum 11 форм, D40 — только
-         семантический префикс; исторические `/task:…`-входы совместимости S5 не
-         резолвит — контракт §3.2 явно ограничивает разбор ТОЛЬКО префиксным токеном).
+    S5 — префиксный токен owner `handoff.fields.Next` (закрытый enum;
+         исторические `/task:…`-входы не резолвятся). Layout v2 не читает
+         orchestration из schema-pure item-state.
 
 Функции чистые (path in → dict out): ни `print`, ни `sys.exit`, ни записи на диск —
 печать и коды возврата принадлежат CLI (P4.6). stdlib-only."""
@@ -234,20 +236,19 @@ def _call_task_contract_build(plan_dir, item_id, monorepo_root, *, timeout=60):
     return {"model_class": model_class, "effort": effort}, None
 
 
-def _call_plan_layout(plan_dir, monorepo_root, *, item_id=None, timeout=60):
+def _call_plan_layout(plan_dir, monorepo_root, *, timeout=60):
     """S3: task's resolver stays across the subprocess boundary (D29)."""
     task_lib = str(Path(monorepo_root) / "packages" / "task" / "lib")
     env = dict(os.environ)
     env["PYTHONPATH"] = task_lib + os.pathsep + str(monorepo_root)
     code = (
         "import importlib,json,sys; m=importlib.import_module('task.plan_layout'); "
-        "d=sys.argv[1]; i=sys.argv[2] if len(sys.argv)>2 else None; "
+        "d=sys.argv[1]; "
         "x={'core':str(m.plan_core_path(d)), 'layout':m.layout_version(d)}; "
-        "x.update({'state':str(m.carrier_path(d,'item-state',item_id=i))} if i and x['layout']=='v2' else {}); "
         "print(json.dumps(x))"
     )
     try:
-        args = ["python3", "-c", code, str(plan_dir)] + ([item_id] if item_id else [])
+        args = ["python3", "-c", code, str(plan_dir)]
         proc = subprocess.run(args, capture_output=True,
                               text=True, timeout=timeout, check=False, env=env)
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -331,8 +332,7 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
     handoff = plan_model.get("handoff") or {}
     next_raw = (handoff.get("fields") or {}).get("Next", "") or ""
     next_kind, next_declaring_line = _resolve_next_form(next_raw)
-    next_form = ({"kind": next_kind, "declaring_line": next_declaring_line}
-                 if layout["layout"] == "v1" else {"kind": "item-state", "declaring_line": None})
+    next_form = {"kind": next_kind, "declaring_line": next_declaring_line}
 
     plan_lines = _read_plan_lines(layout["core"]) if next_kind is not None else None
 
@@ -354,36 +354,20 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
             })
             continue
 
-        if layout["layout"] == "v1" and next_kind is None:
+        if next_kind is None:
             result_items.append({
                 "item_id": item_id, "status": status,
                 "route": None, "route_error": None,
                 "exec": None, "exec_error": None,
                 "drivable": False, "refusal": NEXT_FORM_UNSUPPORTED,
                 "refusal_detail": (
-                    f"форма `Next` вне закрытого enum §8 (S5, строка: {next_declaring_line!r})"
+                    f"форма owner `handoff.fields.Next` вне закрытого enum "
+                    f"(S5, строка: {next_declaring_line!r})"
                     " — вождение фазы отказано целиком, не по item'у"),
             })
             continue
 
         item_next_kind, item_next_line = next_kind, next_declaring_line
-        if layout["layout"] == "v2":
-            item_layout, item_layout_error = _call_plan_layout(
-                plan_dir, monorepo_root, item_id=item_id)
-            if item_layout is None:
-                item_next_kind, item_next_line = None, item_layout_error
-            else:
-                item_state = _read_plan_lines(item_layout["state"])
-                raw = "\n".join(item_state or [])
-                state_next = re.search(r"^\*\*Next:\*\*\s*(.*)$", raw, re.MULTILINE)
-                raw = state_next.group(1) if state_next else raw
-                item_next_kind, item_next_line = _resolve_next_form(raw)
-        if item_next_kind is None:
-            result_items.append({"item_id": item_id, "status": status, "route": None,
-                                 "route_error": None, "exec": None, "exec_error": None,
-                                 "drivable": False, "refusal": NEXT_FORM_UNSUPPORTED,
-                                 "refusal_detail": f"форма Next недоступна: {item_next_line}"})
-            continue
         if plan_lines is None:
             exec_value, exec_error = None, "`plan.md` недоступен для чтения §3 Routing"
         else:

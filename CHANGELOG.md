@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task` / `harness`: layout-v2 execution сверено с owner-carriers.**
+  Task теперь fail-closed проверяет phase citations и write-site, а generated command/docs
+  surfaces воспроизводятся в clean checkout; Harness читает semantic `Next`
+  только из `handoff.md`, не расширяя schema-pure item-state.
+
 - **`task`: phase-audit recovery ограничена одним дополнительным repair-подходом.**
   Первый non-GREEN audit ведёт прямо в owning item под неизменным ТЗ; второй audit финальный,
   после него Task Contract блокирует третий repair/audit. RED больше не маршрутизируется в

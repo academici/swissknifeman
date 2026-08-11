@@ -43,6 +43,7 @@ def _plan_md():
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
+| Last Updated | 2026-08-01 |
 | Repository | swissknifeman |
 | Approval Owner | dv |
 

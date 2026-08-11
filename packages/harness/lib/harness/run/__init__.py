@@ -1,8 +1,10 @@
-"""run — драйвер exec-волны (P4.2–P4.6, root/contracts/driver-plan-protocol-v2.md).
+"""run — драйвер exec-волны.
 
-Четыре модуля, каждый со своим item'ом: `plan_reader` (очередь фазы, P4.2),
-`worker` (запуск воркера, P4.3), `gate` (вердикт, P4.4), `journal` (журнал +
-сводка волны, P4.5). CLI-склейка (P4.6, этот файл) — `cmd_run(env, argv)`:
+Живой public contract описан в `packages/harness/docs/reference/exec-wave.md`;
+plan-carrier semantics принадлежит plan-protocol, а не архивному плану-донору.
+
+Четыре модуля разделяют очередь (`plan_reader`), запуск (`worker`), вердикт
+(`gate`) и durable журнал/сводку (`journal`). CLI-склейка `cmd_run(env, argv)`:
 регистрируется в `cli.COMMANDS["run"]`, ничего из четырёх модулей не
 переразбирает — только вызывает их публичный API в порядке очередь → воркер →
 вердикт → журнал, последовательно (D8), с остановкой волны на первом RED

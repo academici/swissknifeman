@@ -1,5 +1,7 @@
-"""gate — вердикт по item'у волны: GREEN/ATTENTION/RED из ЧЕТЫРЁХ источников признаков
-(P4.4, `root/contracts/driver-plan-protocol-v2.md` §5/§7, правка D103–D106).
+"""gate — вердикт по item'у волны: GREEN/ATTENTION/RED из ЧЕТЫРЁХ источников признаков.
+
+Актуальная семантика вердикта описана в `packages/harness/docs/reference/exec-wave.md`;
+исторические D103–D106 остаются provenance, но не runtime authority.
 
 Источники: (1) класс исхода прогона — приходит от `worker` (P4.3), готовым словарём,
 здесь не переразбирается; (2) `plan-lint --baseline <SHA до прогона> --gate new` — S1

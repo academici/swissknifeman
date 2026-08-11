@@ -15,6 +15,7 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parents[1]
 RG_SRC = PKG / "configs" / "claude-code" / "hooks" / "review-gate"
 VC_SRC = PKG.parents[1] / "packages" / "task" / "scripts" / "verify-plan-citations.py"
+TASK_RUNTIME_SRC = PKG.parents[1] / "packages" / "task" / "lib" / "task"
 
 
 def _run(cmd, cwd):
@@ -137,6 +138,10 @@ class TestPlanCitationsCheck(unittest.TestCase):
         (plan_dir / "phases" / "P1.md").write_text("Cite `plans/TESTPLAN/plan.md:1` here.\n")
         (self.repo / "packages" / "task" / "scripts").mkdir(parents=True)
         shutil.copy(VC_SRC, self.repo / "packages" / "task" / "scripts" / "verify-plan-citations.py")
+        runtime_dst = self.repo / "packages" / "task" / "lib" / "task"
+        runtime_dst.mkdir(parents=True)
+        for name in ("__init__.py", "plan_layout.py"):
+            shutil.copy(TASK_RUNTIME_SRC / name, runtime_dst / name)
         _run(["git", "add", "."], self.repo)
         _run(["git", "config", "user.email", "review-gate-test@example.invalid"], self.repo)
         _run(["git", "commit", "-q", "-m", "plan skeleton"], self.repo)
@@ -163,6 +168,17 @@ class TestPlanCitationsCheck(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(out.strip(), "")
         self.assertEqual(err.strip(), "")
+
+    def test_missing_task_runtime_fails_closed(self):
+        shutil.rmtree(self.repo / "packages" / "task" / "lib")
+        proc = subprocess.run(
+            ["python3", str(self.repo / "packages" / "task" / "scripts" /
+                            "verify-plan-citations.py"),
+             str(self.repo / "plans" / "TESTPLAN"), "--strict"],
+            cwd=self.repo, capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("canonical resolver task.plan_layout недоступен", proc.stderr)
 
 
 if __name__ == "__main__":

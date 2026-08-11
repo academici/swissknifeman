@@ -1,6 +1,8 @@
 """journal — дозапись в `plans/<ID>/journal.jsonl` СУЩЕСТВУЮЩИМ CLI ровно тех событий,
-которых воркер физически записать не мог (P4.5, D32, `root/contracts/driver-plan-protocol-v2.md`
-§5, `research/04-p4-driver-model.md` §5).
+которых воркер физически записать не мог.
+
+Живой driver/journal contract — `packages/harness/docs/reference/exec-wave.md` и
+Task plan-protocol; D32 сохранён ниже как provenance правила single-writer.
 
 `/task:plan-exec` (и его `plan-run`-форма) пишет журнал САМ: старт-запись `in-progress` и
 финал-запись `closed-green`/`closed-deviations`/`escalated`/`blocked` (`plan-exec.md` шаги 3

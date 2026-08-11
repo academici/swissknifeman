@@ -12,7 +12,7 @@ Cursor, lease, finish-manifest и новый orchestration runtime не ввод
 |:--|:--|:--|:--|:--|:--|
 | P0.1 | solo | plan-run | implementation/high | — | solo: Harness instruction + D13 root run-report scope, обязательный `packages/harness` cwd; P0.2 ждёт terminal state |
 | P0.2 | solo | plan-run | implementation/high | — | solo: Skiller D12 adaptive canon/generator scope, обязательный `packages/skiller` cwd |
-| P1.1 | solo | plan-run | implementation/high | — | solo: Task D11–D13 command/runtime/context/lifecycle + canonical docs + factual root `[Unreleased]` до D9; обязательный `packages/task` cwd |
+| P1.1 | solo | plan-run | implementation/high | — | solo: Task D11–D14 command/runtime/context/lifecycle, включая pre-close audit gate и recovery-only item close, + canonical docs + factual root `[Unreleased]` до D9; обязательный `packages/task` cwd |
 | P1.2 | solo | plan-run | implementation/high | единый D9+D13 committed ledger; затем GO/ADJUST по D8/D10–D13 | solo: repository-root causal canary + stop-tax evidence; не пишет package code/changelog и не поглощает foreign `docs/reference.md` diff |
 
 ## Готовые launch-block'и

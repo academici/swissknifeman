@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19; final audit attempt 4 закрыл F20 inline и owner-requested Agelto/SKM telemetry refinement D12/D13 без нового design/audit pass; следующий шаг — P0.1 |
+| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19; final audit attempt 4 закрыл F20 inline; owner-requested D14 добавляет pre-close audit gate и recovery-only item reconciliation без нового design/audit pass; следующий шаг — P0.2 |
 | Paused By | — |
 
 ## 1. Context
@@ -47,6 +47,10 @@ canary, а не через новую исчерпывающую proof-сист�
 - Повтор одного failure fingerprint требует смены тактики и максимум одного scoped review.
 - Новый audit/review требует записанного material trigger; прежний verdict переиспользуется,
   пока scope/SHA/risk не изменились.
+- Завершённые items делают фазу кандидатом, а не закрытой фазой: свежий зелёный audit этого
+  кандидата предшествует `task:plan-close <PLAN-ID> Pn`. RED либо unresolved `ATTENTION`
+  исправляются в owning item и повторно проверяются до close; обычный Next никогда не предлагает
+  `task:plan-close <PLAN-ID> Pn.m`.
 - Non-material deterministic plan-bookkeeping defect из audit исправляется inline тем же root по
   D11; один gate rerun завершает тот же attempt без ATTENTION/re-audit/design-pass handoff.
 - Owner stop обязателен для authority/security/privacy/destructive/irreversible, изменения
@@ -68,6 +72,12 @@ canary, а не через новую исчерпывающую proof-сист�
 | — | P0.2 | implementation/high | manual | full | Skiller-owned D1–D4/D6/D11/D12 plan canon и provider projections: fleet-wide semantic surface требует high/full |
 | — | P1.1 | implementation/high | manual | full | Task-owned D11–D13 command/runtime/lifecycle transitions и lint regressions: correctness-critical protocol surface требует high/full |
 | — | P1.2 | implementation/high | manual | full | repository-root causal field verdict и stop-tax evidence: без product writes, но acceptance всего плана требует high/full |
+
+## 4. Update Log
+
+| Date | Role / model | Change |
+|:--|:--|:--|
+| 2026-08-11 | owner-authorized plan amendment / gpt-5.6-terra/high | Добавлен D14: phase candidate → fresh GREEN audit → phase close; `plan-close Pn.m` ограничен recovery reconciliation. |
 
 ## 5. Decision Log
 

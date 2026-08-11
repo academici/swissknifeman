@@ -176,6 +176,19 @@ fresh item state. Повторное чтение запрещено; режим
    менялись КОНТРАКТЫ фаз (не только статусы) — предупреди владельца, что нужен новый
    `finish`, а не только пересборка карты.
 
+## Conflict-impact assessment before a stop
+
+До `Blocked`/escalation/re-design исполнитель обязан сделать короткую оценку, а не считать
+любой конфликт новым дизайном: (1) воспроизвести signal на минимальном scope; (2) назвать
+затронутые package/file/contract surfaces и проверить current source, generators и focused
+tests; (3) классифицировать изменение как local reversible, cross-package, frozen/public,
+authority или acceptance/safety; (4) оценить rollback и validation. Local reversible repair,
+не меняющий declared scope/public or frozen semantics и укладывающийся в текущий item, выполняется
+в той же сессии и фиксируется в Completion Notes/Known Deviations с impact. `plan-design` или
+owner-gate допустимы только для доказанной cross-package/frozen/public/authority boundary,
+невыполнимого acceptance или отсутствующего safe rollback. Нельзя парковать item только из-за
+старой projection, tool-noise, generated-carrier mismatch или предположения о blast radius.
+
 **Compiler (P2.2).** `§3 Routing`, портируемость (D26/D47) и precedence/conflict-разрешение
 компилируются одним модулем — `packages/task/lib/task/task_contract.py`
 (`root/contracts/task-contract-v1.md`, `root/contracts/plan-portability-v1.md`). Пишешь

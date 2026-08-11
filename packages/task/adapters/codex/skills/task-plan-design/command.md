@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:578601a6b011aa7da1fcda0fdc6ad37528902d2d01d97bf8fd4ed317642c4bb2
+Canonical SHA-256: sha256:d9ad20ce839d0c3297fb3c81994536e1e8e7caf21212185f1b13dd1e207c8430
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -189,6 +189,19 @@ fresh item state. Повторное чтение запрещено; режим
    переопределяет Routing §3) → строка Update Log. Если с последнего `finish`/`audit design`
    менялись КОНТРАКТЫ фаз (не только статусы) — предупреди владельца, что нужен новый
    `finish`, а не только пересборка карты.
+
+## Conflict-impact assessment before a stop
+
+До `Blocked`/escalation/re-design исполнитель обязан сделать короткую оценку, а не считать
+любой конфликт новым дизайном: (1) воспроизвести signal на минимальном scope; (2) назвать
+затронутые package/file/contract surfaces и проверить current source, generators и focused
+tests; (3) классифицировать изменение как local reversible, cross-package, frozen/public,
+authority или acceptance/safety; (4) оценить rollback и validation. Local reversible repair,
+не меняющий declared scope/public or frozen semantics и укладывающийся в текущий item, выполняется
+в той же сессии и фиксируется в Completion Notes/Known Deviations с impact. `plan-design` или
+owner-gate допустимы только для доказанной cross-package/frozen/public/authority boundary,
+невыполнимого acceptance или отсутствующего safe rollback. Нельзя парковать item только из-за
+старой projection, tool-noise, generated-carrier mismatch или предположения о blast radius.
 
 **Compiler (P2.2).** `§3 Routing`, портируемость (D26/D47) и precedence/conflict-разрешение
 компилируются одним модулем — `packages/task/lib/task/task_contract.py`

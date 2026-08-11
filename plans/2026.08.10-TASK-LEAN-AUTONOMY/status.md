@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 3d068219e1552c718580fdc142fe6a731d9a439f85722e5bce542cf9b48859d1
+inputs_sha256: bbb3365bd94da96f643ec8850e56dccbcfc44fe9920287618e3d0818b02d9c7e
 generated_by: task plan-views status
 -->
 
@@ -37,7 +37,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Выровнять Task commands и state/review transitions | ⬜ Not started | — |
+| P1.1 | Выровнять Task commands и state/review transitions | 🟠 Done with deviations | 2026-08-11 |
 | P1.2 | Провести живой canary и один stabilization pass | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -65,8 +65,13 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-design · no-op · Owner-authorized D14 amendment: phase candidate requires fresh GREEN audit before phase close; Pn.m close is recovery-only. No item execution or phase state changed; semantic plan-design route gpt-5.6-sol/high was unavailable in this session. |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · Adaptive Skiller canon and regenerated Core projection; bare publication unittest lacks package import paths. |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · in-progress · Прямое выполнение по решению владельца; route overshoot plan-audit→P1.1, без reopen/design/re-audit P0. |
+| 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · in-progress · Возобновлённый run: P1.1 code/docs validation и terminal lifecycle. |
+| 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · closed-deviations · P1.1 runtime/docs aligned; D2 read-budget contract outside item scope remains red. |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.2: known deviation
+- P1.1: known deviation

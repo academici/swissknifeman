@@ -1,48 +1,34 @@
-# HANDOFF — 2026-08-11 — after P0.2
+# HANDOFF — 2026-08-11 — after P1.1
 
-**Next:** audit-phase: task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P0
+**Next:** design-phase: task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1
 
 **Provider-neutral plan-protocol launch block**
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
-| Effort | xhigh |
-| Capabilities | skills.repository · command.filesystem-read · command.git-read |
-| Context | cold-start-root (`whole-plan-independent-audit`) |
-| Суть | Независимо проверить P0 как terminal phase candidate до phase close. |
-| Команда | `$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P0` |
+| Effort | high |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read |
+| Context | continue-root |
+| Суть | Добавить sealed D2 read-budget contract, затем повторить P1.1 validation before P1.2. |
+| Команда | `$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1` |
 
 **Native Codex launch block**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P0'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1'
 ```
 
-**Done:** `2026.08.10-TASK-LEAN-AUTONOMY P0.2` item commit `4d4da741` creates a compact
-Skiller adaptive plan canon, regenerates the Core Codex projection, and adds publication parity
-coverage. The declared five-file surface is 652 → 639 lines; validation evidence is in
-`findings/P0.2-command-surface.md`.
+**Done:** `2026.08.10-TASK-LEAN-AUTONOMY P1.1` scope commit `60e09915` aligns Task command/runtime transitions, provider projections, focused regressions and standalone/aggregate Task docs. The fresh attempt uses observed Codex session `019fef69-c9dd-7c01-9246-4a51c7218dea` and deterministic run `efcceb2428aec5de80abecf61e248e64b5c038fc36f9fe8af88fc22f99d6b7fe`.
 
-**Remaining:** P0 independent phase audit → P0 phase close if GREEN → P1.1 → P1.2.
+**Remaining:** Add the missing plan-owned `root/contracts/read-budget-v1.md`, regenerate P1 bundles/views, prove the P1.1 validation gate green, then run P1.2's one live canary.
 
-**Sources of truth:** `plan.md` · `phases/P0/P0.2.md` · `phases/P0/P0.2.state.md` ·
-`findings/P0.2-command-surface.md` · `findings/P0.2-downstream-P1.1-73d20b649a3c-4d4da7410e8f.md`
-· `decisions/D1-strict-contract-adaptive-execution.md` ·
-`decisions/D11-inline-nonmaterial-audit-repair.md` ·
-`decisions/D12-evidence-first-stop-taxonomy.md`.
+**Sources of truth:** `plan.md` · `phases/P1/P1.1.md` · `phases/P1/P1.1.state.md` · `journal.jsonl` · `findings/P1.1-runtime-alignment.md` · `packages/task/lib/task/{journal,plan_gates,review_policy,session_context}.py`.
 
-**Open risks:** P0.2 is `🟠` because the literal bare publication unittest omits package import
-paths, although the package-owned test launcher and the fallback run are green. `plan-lint` retains
-two P1.1-owned baseline errors (v2 Update Log schema and P0.1 journal friction); no new lint
-errors remain. The current v2 state generator also cannot render P0.2's required `write-site`
-Completion Notes line; both Task Contract predicates returned `allow`. The downstream P1.1 gate is
-`unknown` because its validation is not yet applicable.
+**Open risks:** P1.1 is `🟠 Done with deviations`: the v2 plan lacks its sealed D2 read-budget contract. The final package validation is green because P1.2 is not yet active; activating P1.2 without this carrier makes its D2 gate red. This is a plan-design carrier outside P1.1 Files, not a package runtime failure.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: run focused publication tests with `PYTHONPATH=lib:../..`; `scripts/test.sh` owns
-  the normal package import setup.
-- deferred: audit P0 first; then decide whether the bare command needs a bounded follow-up rather
-  than broadening P0.2 scope. P1.1 owns the Task plan-lint/runtime baseline errors.
+- workarounds: focused Task runtime tests and both documentation builds pass; do not call the complete package validation green.
+- deferred: create the D2 contract through `task:plan-design`, then rerun all P1.1 validation commands.
 - open_questions: —

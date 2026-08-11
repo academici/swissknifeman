@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19; final audit attempt 4 закрыл F20 inline; D17 сохраняет pre-close audit, но ограничивает recovery одним repair и финальным вторым audit без automatic design-loop |
+| Design Passes | 3/3; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1; D17 не переоткрывается |
 | Paused By | — |
 
 ## 1. Context
@@ -73,11 +73,19 @@ canary, а не через новую исчерпывающую proof-сист�
 | — | P0.2 | implementation/high | manual | full | Skiller-owned D1–D4/D6/D11/D12 plan canon и provider projections: fleet-wide semantic surface требует high/full |
 | — | P1.1 | implementation/high | manual | full | Task-owned D11–D13 command/runtime/lifecycle transitions и lint regressions: correctness-critical protocol surface требует high/full |
 | — | P1.2 | implementation/high | manual | full | repository-root causal field verdict и stop-tax evidence: без product writes, но acceptance всего плана требует high/full |
+| — | P2.1 | implementation/high | manual | full | Task schema/command/verifier/docs-sync defects влияют на write-site и fail-closed guarantees |
+| — | P2.2 | implementation/high | manual | full | Harness v2 driver и cross-package fixtures управляют исполнением планов; ошибка может направить агента по ложному Next |
+| — | P2.3 | implementation/high | manual | full | root live canary и полная requalification являются acceptance всего successor-контракта |
 
 ## 4. Update Log
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |
+| 2026-08-11 | owner-authorized P2.1 review remediation / gpt-5.6-terra/high | D21 принимает Blocker/Major из isolated review: tracked aggregate генерируется, а v2 phase completeness проверяет canonical resolver. |
+| 2026-08-11 | owner-authorized v2 forward-only activation / gpt-5.6-terra/high | D20 вводит отдельный v2 write-site cutoff 2026-08-12; immutable P0/P1 carriers не красятся задним числом. |
+| 2026-08-11 | owner-authorized P2.1 contract correction / gpt-5.6-terra/high | D19 добавляет omitted provider parity owner/test в exact Files; acceptance и четыре root causes не меняются. |
+| 2026-08-11 | owner-authorized successor design / gpt-5.6-sol/high | D18 отклоняет Major-долг финального RED P1, замораживает P1 и создаёт P2.1–P2.3 с package-owned remediation и новым live canary. |
 | 2026-08-11 | owner-authorized lifecycle correction / gpt-5.6-sol/high | D17 устраняет off-by-one и конфликт RED→plan-design: один bounded repair между первым и финальным вторым audit. |
 | 2026-08-11 | owner-authorized plan amendment / gpt-5.6-terra/high | Добавлен D14: phase candidate → fresh GREEN audit → phase close; `plan-close Pn.m` ограничен recovery reconciliation. |
 | 2026-08-11 | plan-designer / gpt-5.6-sol/high | P1 доведена до DoR после P1.1: добавлен plan-owned frozen read-budget v1.1.0 по D15; P1.2 остаётся waiting на committed D9+D13 ledger. |

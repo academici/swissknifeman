@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: db214a8f53a602667e8fe4957844af57f7d0ca173b2ef28a1aa6d57959193968
+inputs_sha256: 73e2e675a2717ff3d593b8d2b2fecbd28231963d7320bfd9904b9230bb7dca8c
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟠 Done with deviations |
+| Status | ⬜ Not started |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -25,6 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
+| P2 | Contract integrity and field requalification | 1/3 | ⬜ Not started |
 
 ## Phase P0
 
@@ -39,6 +40,14 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1.1 | Выровнять Task commands и state/review transitions | 🟢 Done | 2026-08-11 |
 | P1.2 | Провести живой canary и один stabilization pass | 🟠 Done with deviations | 2026-08-11 |
+
+## Phase P2
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P2.1 | Закрыть Task contract и validation regressions | 🟢 Done | 2026-08-11 |
+| P2.2 | Восстановить Harness plan-driver contract | ⬜ Not started | — |
+| P2.3 | Повторить live canary и requalify successor phase | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -80,6 +89,10 @@ generated_by: task plan-views status
 | 2026-08-11 | implementation/medium | plan-run · blocked · предписано implementation/high; сессия implementation/medium |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · Возобновлён bounded repair attempt: ошибочная self-attestation medium исправлена; фактическая сессия implementation/high. |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · Bounded repair P1.1: lifecycle cap/route contract aligned; validation и pre-final allow; false self-attestation recorded separately. |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-green · D18 owner-authorized successor: P1 final RED frozen; P2.1 Task, P2.2 Harness and P2.3 live requalification meet DoR. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

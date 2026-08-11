@@ -1,42 +1,42 @@
-# HANDOFF — 2026-08-11 — after P1.1
+# HANDOFF — 2026-08-11 — after P2.1
 
-**Next:** audit-phase: task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.2
 
 **Provider-neutral plan-protocol launch block**
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
+| Model class | implementation |
+| Effort | high |
 | Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Финальный audit P1 attempt 2 после единственного bounded repair; non-GREEN передаётся владельцу без нового repair/design-loop. |
-| Команда | `$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1` |
+| Context | cold-start-root |
+| Суть | Исполнить Harness-owned P2.2 из package cwd; читать v2 Next только из owner handoff. |
+| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.2` |
 
 **Native Codex launch block**
 
 | Model | Thinking | Context | Суть | Команда |
 |:--|:--|:--|:--|:--|
-| gpt-5.6-sol | xhigh | NEW SESSION — шаг-не-item | Финальный audit P1 после P1.1 bounded repair. | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1'` |
+| gpt-5.6-terra | high | cold-start-root | P2.2 Harness driver integrity | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/harness -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P2.2'` |
 
-**Done:** P1.1 bounded repair закрыт item-коммитом `73e53f51`; Task Contract дал
-`pre_mutation=allow` и `pre_final=allow`, target plan lint и package validation зелёные.
+**Done:** P2.1 GREEN в commits `f3c0da6f` + `7444762c`. Исправлены Task Context enum,
+journal-backed v2 write-site, fail-closed citation phase discovery и clean-checkout docs-sync.
+Повторное isolated review: 113 focused / 24 citation / 773 full Task tests, находок
+нет. Task Contract pre-mutation/pre-final = allow/allow.
 
-**Remaining:** Запустить финальный P1 audit attempt 2. Второй non-GREEN — owner incident:
-автоматический третий audit, repair или design-loop запрещены D17.
+**Remaining:** P2.2 Harness → P2.3 root live requalification. В P2.2 не добавлять fallback
+`Next` из item-state и не маскировать resolver-unavailable как fixture noise.
 
-**Sources of truth:** `plan.md` · `phases/P1/P1.md` ·
-`decisions/D17-bounded-audit-recovery.md` · `packages/task/commands/plan-audit.md` ·
-`packages/task/lib/task/task_contract.py` · `journal.jsonl`.
+**Sources of truth:** `phases/P2/P2.2.md` · `phases/P2/P2.1.state.md` ·
+`findings/P2.1-task-contract-integrity.md` · `findings/10-p1-final-audit-root-causes.md` ·
+`research/09-p2-quality-remediation-design.md` · `decisions/D18-successor-remediation-after-p1-red.md`.
 
-**Open risks:** Codex effective route всё ещё self-attested, поэтому ложный P1.1
-`routing-blocked` event сохранён append-only; provider-bound remedy отслежен в
-`roadmap/2026.08.11-codex-effective-route-observability.md` и не входит в P1.1.
-Unrelated ARTIFEX/root-roadmap dirty work остаётся вне scope.
+**Open risks:** Effective Codex selector/effort по-прежнему не аттестован environment API;
+semantic route зафиксирован, но не объявляется доказанным. Unrelated ARTIFEX/root-roadmap dirty
+work сохранён вне scope.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: terminal repair P1.1 выполнил D17 и закрыт; route evidence не объявляется
-  доказанным по пользовательской коррекции.
-- deferred: provider-bound Codex effective-route adapter — отдельный roadmap item.
+- workarounds: —
+- deferred: P2.3 повторно квалифицирует root live path только после Harness GREEN.
 - open_questions: —

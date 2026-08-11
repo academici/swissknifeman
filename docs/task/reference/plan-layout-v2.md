@@ -41,8 +41,10 @@ python3 packages/task/scripts/plan-views.py status --plan-dir <plan-dir> [--chec
 ```
 
 The projector derives item and phase status from v2 state carriers and its
-Update Log from `journal.jsonl`; `--check` regenerates in memory and rejects
-byte drift. A migrated plan carries its legacy version in a converter
+Update Log from `journal.jsonl`. An owner-visible aggregate is `⬜ Not started`
+only when it has no children or all children are not started; a mix of terminal
+children and `⬜ Not started`, like any child `🟡 In progress`, is `🟡 In progress`.
+`--check` regenerates in memory and rejects byte drift. A migrated plan carries its legacy version in a converter
 provenance marker, so `status.md` can render that value without inventing it.
 New journal appends reject `note` values longer than 300 characters before
 writing. Existing journal bytes remain immutable and schema-valid; when an

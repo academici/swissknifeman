@@ -51,6 +51,29 @@ class PlanStatusTests(unittest.TestCase):
         self.assertEqual(plan_status.status_model(self.plan_dir)["phases"][0]["status"],
                          "🟠 Done with deviations")
 
+    def test_mixed_terminal_and_not_started_items_are_in_progress_for_phase_and_plan(self):
+        source_phase = self.plan_dir / "phases" / "P1"
+        phase = self.plan_dir / "phases" / "P2"
+        phase.mkdir()
+        (phase / "P2.md").write_text(
+            (source_phase / "P1.md").read_text(encoding="utf-8").replace("# P1", "# P2", 1),
+            encoding="utf-8",
+        )
+        specification = (source_phase / "P1.1.md").read_text(encoding="utf-8")
+        state = (source_phase / "P1.1.state.md").read_text(encoding="utf-8")
+        (phase / "P2.1.md").write_text(specification.replace("P1.1", "P2.1"), encoding="utf-8")
+        (phase / "P2.1.state.md").write_text(state, encoding="utf-8")
+        (phase / "P2.2.md").write_text(specification.replace("P1.1", "P2.2"), encoding="utf-8")
+        (phase / "P2.2.state.md").write_text(
+            state.replace("**Status:** 🟢 Done", "**Status:** ⬜ Not started"), encoding="utf-8"
+        )
+
+        model = plan_status.status_model(self.plan_dir)
+
+        self.assertEqual(next(phase for phase in model["phases"] if phase["id"] == "P2")["status"],
+                         "🟡 In progress")
+        self.assertEqual(model["meta"]["Status"], "🟡 In progress")
+
     def test_linter_reads_v2_meta_and_board_from_owner_view(self):
         diagnostics = Diagnostics()
         model = lint_plan(self.plan_dir, diagnostics)

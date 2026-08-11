@@ -90,7 +90,9 @@ def _phase_status(statuses: list[str]) -> str:
     # phase after a layout-v2 migration.
     if statuses and all(status in (STATUS_DONE, STATUS_DEVIATIONS) for status in statuses):
         return STATUS_DEVIATIONS
-    if any(status == STATUS_PROGRESS for status in statuses):
+    if (any(status == STATUS_PROGRESS for status in statuses)
+            or (STATUS_NOT_STARTED in statuses
+                and any(status in (STATUS_DONE, STATUS_DEVIATIONS) for status in statuses))):
         return STATUS_PROGRESS
     return STATUS_NOT_STARTED
 

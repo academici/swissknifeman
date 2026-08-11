@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: b1bfb7601b6081e1bfd6bfee135ca84de2c2e687281a04dc35f93220798fc93f
+inputs_sha256: 3d068219e1552c718580fdc142fe6a731d9a439f85722e5bce542cf9b48859d1
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Thin contract and adaptive commands | 0/2 | ⬜ Not started |
+| P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 0/2 | ⬜ Not started |
 
 ## Phase P0
@@ -31,7 +31,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Минимизировать always-on canon и стабилизировать run evidence | 🟠 Done with deviations | 2026-08-11 |
-| P0.2 | Сократить Skiller plan canon до adaptive loop | ⬜ Not started | — |
+| P0.2 | Сократить Skiller plan canon до adaptive loop | 🟠 Done with deviations | 2026-08-11 |
 
 ## Phase P1
 
@@ -62,7 +62,11 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/medium | plan-run · blocked · required implementation/high; session implementation/medium |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · run-report root resolver and canon thinning; package validation has five Task fixture failures |
+| 2026-08-11 | gpt-5.6-terra/high | plan-design · no-op · Owner-authorized D14 amendment: phase candidate requires fresh GREEN audit before phase close; Pn.m close is recovery-only. No item execution or phase state changed; semantic plan-design route gpt-5.6-sol/high was unavailable in this session. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · Adaptive Skiller canon and regenerated Core projection; bare publication unittest lacks package import paths. |
 
 ## Owner Gates
 
 - P0.1: known deviation
+- P0.2: known deviation

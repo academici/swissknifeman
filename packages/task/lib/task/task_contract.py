@@ -208,6 +208,26 @@ def _count_audit_rounds(plan_dir: Path, phase_lines, phase_id: str) -> int:
     return min(block_count, fingerprinted)
 
 
+def _has_audit_cap_remediation_grant(plan_dir: Path, item_id: str) -> bool:
+    """Accept only a recorded direct-close remediation, never chat prose."""
+    for path in sorted((Path(plan_dir) / "decisions").glob("D*.md")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        parts = text.split("---", 2)
+        if len(parts) != 3:
+            continue
+        fields = dict(line.split(":", 1) for line in parts[1].splitlines() if ":" in line)
+        if (fields.get("status", "").strip() == "accepted"
+                and fields.get("item", "").strip() == item_id
+                and "AUDIT-CAP" in parts[2]
+                and "P5.6 обязан закрыть" in parts[2]
+                and "третьего Audit P5" in parts[2]):
+            return True
+    return False
+
+
 def _authority_request(item_id: str, protected_transition):
     """Validate the narrow request shape for a protected plan transition.
 
@@ -637,6 +657,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
     phase_lines = plan_lint._read_lines(phase_path) or []
     observed_rounds = _count_audit_rounds(plan_dir, phase_lines, phase_token)
+    audit_cap_remediation = _has_audit_cap_remediation_grant(plan_dir, item_id)
     authority_class, authority_granted, authority_granted_by = _resolve_authority(
         plan_lint, plan_lines, plan_dir, item_id, phase_path, impl_rules_text,
         protected_transition)
@@ -660,6 +681,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
             "loop_budget": {"audit_rounds_max": review_policy.AUDIT_ROUNDS_MAX,
                            "same_finding_max": review_policy.SAME_FINDING_MAX},
             "observed_rounds": observed_rounds,
+            "audit_cap_remediation": audit_cap_remediation,
         },
         "next": {"form": next_form, "carrier": carrier, "context": next_context,
                 "origin": next_origin, "changed_by": next_changed_by},
@@ -934,7 +956,8 @@ def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
     # remaining repair round: GREEN proceeds to phase close, while non-GREEN is an
     # incident/owner decision.  Using `>` here admitted one extra repair and a
     # third audit despite the declared two-audit cap.
-    if authority["observed_rounds"] >= authority["loop_budget"]["audit_rounds_max"]:
+    if (authority["observed_rounds"] >= authority["loop_budget"]["audit_rounds_max"]
+            and not authority.get("audit_cap_remediation", False)):
         return "LOOP_BUDGET_EXCEEDED"
     if authority["class"] == "owner-gate" and not authority["granted"]:
         return "AUTHORITY_BOUNDARY"

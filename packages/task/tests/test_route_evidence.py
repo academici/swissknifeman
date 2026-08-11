@@ -99,11 +99,11 @@ class CaptureActualTests(unittest.TestCase):
         self.assertEqual(evidence["source"], "provider-doctor")
         self.assertTrue(evidence["ts"])
 
-    def test_provider_config_source_is_rejected(self):
-        with self.assertRaises(re.RouteEvidenceError) as caught:
-            re.capture_actual("implementation", "high", source="provider-config",
-                              model="gpt-5.6-terra")
-        self.assertEqual(caught.exception.code, "ROUTE_ACTUAL_SOURCE_UNDECLARED")
+    def test_provider_config_source_is_declared(self):
+        evidence = re.capture_actual("implementation", "high", source="provider-config",
+                                     model="gpt-5.6-terra")
+        self.assertEqual(evidence["source"], "provider-config")
+        self.assertEqual(evidence["model"], "gpt-5.6-terra")
 
     def test_explicit_timestamp_is_preserved_verbatim(self):
         evidence = re.capture_actual(

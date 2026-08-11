@@ -273,6 +273,18 @@ class RouteAndCapabilityTests(unittest.TestCase):
 
 
 class AuthorityTests(unittest.TestCase):
+    def test_audit_cap_remediation_requires_an_accepted_item_scoped_decision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            decision = plan / "decisions" / "D76.md"
+            decision.parent.mkdir()
+            decision.write_text(
+                "---\nstatus: accepted\nitem: P5.6\n---\n"
+                "AUDIT-CAP: P5.6 обязан закрыть без waiver; третьего Audit P5 нет.\n",
+                encoding="utf-8")
+            self.assertTrue(task_contract._has_audit_cap_remediation_grant(plan, "P5.6"))
+            self.assertFalse(task_contract._has_audit_cap_remediation_grant(plan, "P5.5"))
+
     def test_first_audit_leaves_one_repair_round(self):
         base = _load_base_contract()
         base["authority"]["observed_rounds"] = 1

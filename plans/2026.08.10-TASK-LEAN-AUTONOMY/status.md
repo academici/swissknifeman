@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: f0ea93a9c6ce4b3d86d177c32919d06e62b6eed5eadb83a4d8c0949b53a336be
+inputs_sha256: efb2897485c24116e65d1c3a7b9a9a4a712430d9d521563684d63382342291bc
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 | P2 | Contract integrity and field requalification | 4/4 | 🟢 Done |
-| P3 | Fail-closed recovery and final requalification | 2/4 | 🟠 Done with deviations |
+| P3 | Fail-closed recovery and final requalification | 4/4 | 🟢 Done |
 
 ## Phase P0
 
@@ -55,9 +55,9 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟠 Done with deviations | 2026-08-11 |
+| P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟢 Done | 2026-08-11 |
 | P3.2 | Полностью requalify и закрыть P3 | 🟢 Done | 2026-08-11 |
-| P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟠 Done with deviations | 2026-08-11 |
+| P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟢 Done | 2026-08-11 |
 | P3.4 | Восстановить Validation trust и execution provenance | 🟢 Done | 2026-08-11 |
 
 ## 6. Update Log
@@ -127,6 +127,10 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · P3.3: undeclared parity test and post-factum spec/D24 at 57a922b39febc9dfb2eb2c19fb32ac2f284455b4/ec5c71bcf36c1e9abf233953635194fee57a3fc3; corrected focus 63 (на f86a4e5e64999608bfe6d68134edae88536c2122); write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.4: P3.1 144, P3.3 63, Task 780 (все на f86a4e5e64999608bfe6d68134edae88536c2122); P3.1/P3.3 reconciled append-only; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | frontier/high | plan-design · in-progress · D26: P3 terminal closure materialized; direct repair → P3.2 → phase close |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · P3.2 D26 requalification started; fresh cli-flag launch provenance. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · D26 reconciliation: corrected validation and provenance green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · D26 reconciliation: corrected validation and provenance green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 D26 GO: source/provider/cache/route and clean validation green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
 
 ## Owner Gates
 
@@ -134,5 +138,3 @@ generated_by: task plan-views status
 - P0.2: known deviation
 - P1.1: known deviation
 - P1.2: known deviation
-- P3.1: known deviation
-- P3.3: known deviation

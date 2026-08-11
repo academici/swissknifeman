@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: b3de5aa76bc73bbdd9721719ebdafcfeda91c393e0eb0802c2cc08c5ab251d8b
+inputs_sha256: 26a9a20dacb2b20f2cee1297e6dbe1a5af4f399464d8467c95deb220e27909a8
 generated_by: task plan-views status
 -->
 
@@ -101,6 +101,7 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · mixed-state projection fixed; 7 focused tests and 776 tests/1 skipped on ba882c9f; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-sol/high | plan-run · in-progress · P2.4 root live canary started on 679d4d39. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-run · closed-green · P2.4 GO: full validators green; scorecard complete; P1 RED immutable. |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
 
 ## Owner Gates
 

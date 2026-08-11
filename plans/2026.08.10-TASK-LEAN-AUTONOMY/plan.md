@@ -89,6 +89,7 @@ canary, а не через новую исчерпывающую proof-сист�
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | implementation/low | P3 закрыта через D26 direct-green-validation; все фазы терминальны, план завершён с историческими deviations P0/P1. |
 | 2026-08-11 | owner-authorized terminal design / gpt-5.6-sol/high | D26 заменяет для P3 D17/D25 audit-loop на один executable repair → P3.2 → phase-close path без deviations или deferred work. |
 | 2026-08-11 | plan-designer / gpt-5.6-sol/high | D25 реопенит P3 для одного P3.4: executable focused Validation, append-only P3.1/P3.3 provenance, committed-input boundary и отдельный fresh P3.2 attempt 2. |
 | 2026-08-11 | owner-authorized repair design / gpt-5.6-terra/high | D24 добавляет P3.3: manual plan-run использует fresh native `-m` + `model_reasoning_effort` как честно названный launch provenance; provider telemetry и plan-exec не ослабляются. |

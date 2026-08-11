@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: efb2897485c24116e65d1c3a7b9a9a4a712430d9d521563684d63382342291bc
+inputs_sha256: 7583b54e55e253bfd1f606bde8ab3dc728e7fd5bb7658a665dd507bc367c1a6a
 generated_by: task plan-views status
 -->
 
@@ -131,6 +131,7 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · D26 reconciliation: corrected validation and provenance green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · D26 reconciliation: corrected validation and provenance green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 D26 GO: source/provider/cache/route and clean validation green on 282a2b95ee3df634a064f0adb2c9dff0c4dbb460. |
+| 2026-08-11 | implementation/low | plan-close · closed-green · фаза P3 закрыта через D26 direct-green-validation; P3.1–P3.4 green |
 
 ## Owner Gates
 

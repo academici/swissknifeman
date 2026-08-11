@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** 2026.08.10-TASK-LEAN-AUTONOMY
-**Updated:** 2026-08-10
+**Active:** —
+**Updated:** 2026-08-11

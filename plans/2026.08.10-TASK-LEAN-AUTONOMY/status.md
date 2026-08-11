@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 26a9a20dacb2b20f2cee1297e6dbe1a5af4f399464d8467c95deb220e27909a8
+inputs_sha256: 72ebe78b7c3bfe3335d2240f06109fd4184d9d9f86d1c2c689cb76f151b26705
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟠 Done with deviations |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -26,6 +26,7 @@ generated_by: task plan-views status
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 | P2 | Contract integrity and field requalification | 4/4 | 🟢 Done |
+| P3 | Fail-closed recovery and final requalification | 0/2 | ⬜ Not started |
 
 ## Phase P0
 
@@ -49,6 +50,13 @@ generated_by: task plan-views status
 | P2.2 | Восстановить Harness plan-driver contract | 🟢 Done | 2026-08-11 |
 | P2.3 | Исправить mixed-state owner status projection | 🟢 Done | 2026-08-11 |
 | P2.4 | Повторить live canary и requalify successor phase | 🟢 Done | 2026-08-11 |
+
+## Phase P3
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P3.1 | Восстановить fail-closed route, bundle и docs truth | ⬜ Not started | — |
+| P3.2 | Повторить product-free requalification нового anchor | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -102,6 +110,8 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-sol/high | plan-run · in-progress · P2.4 root live canary started on 679d4d39. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-run · closed-green · P2.4 GO: full validators green; scorecard complete; P1 RED immutable. |
 | 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-11 | frontier/high | plan-design · in-progress · D23: фаза P3 детализирована до DoR; P2 final RED заморожен |
 
 ## Owner Gates
 

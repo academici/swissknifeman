@@ -1,21 +1,19 @@
 # Roadmap исполнения — 2026.08.10-TASK-LEAN-AUTONOMY
 
-**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D18 successor + D22 status amendment
+**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D23 successor P3 после финального RED P2
 
-P0/P1 остаются историей; D17 запрещает их третий audit/repair. Новое исполнение идёт по четырём
-последовательным solo items с authoritative package/root cwd. Batch не используется: P2.2
-потребляет terminal P2.1, P2.3 чинит обнаруженный после P2.2 owner-status defect, а P2.4
-квалифицирует все три package anchors.
+P0/P1/P2 остаются историей; D17 запрещает третий audit/repair P1 и P2. Новое исполнение идёт по
+двум последовательным solo items P3. Batch не используется: P3.2 потребляет terminal P3.1 и
+квалифицирует полный post-P2.3 anchor. Оба запуска ждут provider-bound route evidence; config,
+selector и actor не снимают waiting gate.
 
 ## Карта исполнения
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
-| P0.1–P1.2 | history | — | — | D17 final RED | immutable provenance; не переисполнять |
-| P2.1 | solo | plan-run | implementation/high | D18 | Task-owned command/schema/verifier/docs-sync; cwd `packages/task` |
-| P2.2 | solo | plan-run | implementation/high | terminal green P2.1 | Harness driver/fixtures/docs/changelog; cwd `packages/harness` |
-| P2.3 | solo | plan-run | implementation/high | terminal green P2.2 + D22 | Task mixed-state status aggregation; cwd `packages/task` |
-| P2.4 | solo | plan-run | implementation/high | terminal green P2.1/P2.2/P2.3 | root live requalification; product writes запрещены |
+| P0.1–P2.4 | history | — | — | D17/D23 final RED | immutable provenance; не переисполнять |
+| P3.1 | solo | plan-run | implementation/high | D23 + provider-bound route | Task fail-closed route, bundle dedupe, provider/docs projections; cwd `packages/task` |
+| P3.2 | solo | plan-run | implementation/high | terminal green P3.1 + provider-bound route | root live requalification; product writes запрещены |
 
 ## Готовые launch-block'и
 
@@ -81,7 +79,38 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ## Гейты владельца
 
-Новых owner choices нет. D18 уже разрешает repository conflicts и successor scope. Остановка
-требуется только при новой authority/security/privacy/destructive/irreversible границе либо если
-исправление потребует изменить stable Intent/Files/Validation. Обычный regression остаётся в
-owning item и не создаёт новый audit/design loop.
+Owner choice D23 принят. Новый owner choice не требуется, но capability gate остаётся: до
+thread-bound route evidence P3.1/P3.2 не стартуют и не пишут journal. Любая необходимость изменить
+stable Intent/Files/Validation P3 либо принять красный required gate снова требует владельца.
+
+### P3.1 — Task fail-closed and projection recovery
+
+**Next:** waiting: provider-bound model class+effort текущего Codex thread доступны → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.1
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Context | cold-start-root (`capability-missing`) |
+| Команда | — |
+
+```bash
+# НЕ раньше: provider-bound model class+effort текущего Codex thread доступны
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.1'
+```
+
+### P3.2 — root final requalification
+
+**Next:** waiting: terminal green P3.1 и provider-bound model class+effort доступны → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | high |
+| Context | cold-start-root (`capability-missing`) |
+| Команда | — |
+
+```bash
+# НЕ раньше: terminal green P3.1 и provider-bound model class+effort доступны
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2'
+```

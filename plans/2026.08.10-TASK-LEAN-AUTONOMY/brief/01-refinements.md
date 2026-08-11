@@ -116,3 +116,16 @@
   отчётом.
 - Прежний не начатый canary item разрешено перенумеровать без переписывания terminal evidence;
   новый порядок, зависимости, bundles, views, roadmap и handoff должны быть синхронизированы.
+
+## Owner decision after final P2 audit — 2026-08-11
+
+- Владелец явно утвердил D23 после чтения финального RED P2 attempt 2.
+- F1–F6 не принимаются как допустимый финальный долг; P2 qualification остановлена, а P1/P2
+  stable specs, journal и audit history не переписываются.
+- Третий P2 audit, repair или automatic design-loop запрещён; исправления получают новую P3.
+- P3.1 восстанавливает Task fail-closed route, bundle dedupe и current docs/provider projections;
+  P3.2 без product writes квалифицирует полный новый anchor.
+- Static config, selector, actor и launch text не считаются actual route. До thread-bound model
+  class+effort P3 execution остаётся waiting без journal/state mutation.
+- Штатный recovery P2.4 возвращает `block:LOOP_BUDGET_EXCEEDED`/`n/a`; generated state вручную
+  не редактируется, а D23/handoff временно владеют owner outcome.

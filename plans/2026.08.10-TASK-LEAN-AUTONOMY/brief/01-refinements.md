@@ -129,3 +129,12 @@
   class+effort P3 execution остаётся waiting без journal/state mutation.
 - Штатный recovery P2.4 возвращает `block:LOOP_BUDGET_EXCEEDED`/`n/a`; generated state вручную
   не редактируется, а D23/handoff временно владеют owner outcome.
+
+## Bounded repair-forward after P3 audit 1 — 2026-08-11
+
+- Первым входом в design прочитать `phases/P3/P3.md` → `Audit P3 — 2026-08-11`.
+- Ограничить repair executable focused tests, P3.3 Files/provenance, git-ref anchors и
+  отдельным fresh rerun P3.2.
+- Добавить ровно один owning repair item; не менять product semantics, если explicit
+  unittest bootstrap делает исходные module sets исполнимыми.
+- Не трогать frozen P1/P2, unrelated dirty ARTIFEX/roadmap/docs build, release/tag/push.

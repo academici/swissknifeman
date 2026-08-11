@@ -26,7 +26,7 @@
 | Источник | Слой | Питает | Суть |
 |:--|:--|:--|:--|
 | `brief/00-brief.md` | brief | P0, P1 | граница строгого каркаса и свободного execution |
-| `brief/01-refinements.md` | brief | P0–P3 | compact/field-first acceptance, remediation F1–F20, telemetry и owner decisions D18/D23 |
+| `brief/01-refinements.md` | brief | P0–P3 | compact/field-first acceptance, remediation F1–F20, telemetry и owner decisions D18/D23/D25 |
 | `findings/01-repository-problem-map.md` | findings | P0.1, P0.2, P1.1 | конкретные противоречия и размер текущего процесса |
 | `findings/02-external-rag.md` | findings | P0.1, P0.2 | verified design patterns и первичные источники |
 | `findings/03-design-audit-2026-08-10.md` | findings | design-finish | три RED audit-захода и F1–F19 |
@@ -47,6 +47,10 @@
 | `research/08-p1-design-premortem.md` | research | P1 design | 6–12 month failure clusters, owners and existing D15/D16/D9/D13 mitigations |
 | `research/09-p2-quality-remediation-design.md` | research | P2.1–P2.4 | successor sequence, red-first cases, anti-shortcuts и requalification gates |
 | `research/10-p2-final-red-owner-outcome.md` | research | P3.1, P3.2 | mapping F1–F6 → owner outcome, fail-closed repair и final requalification |
+| `research/11-p3-audit-repair-forward.md` | research | P3.4, P3.2 | mapping P3 audit-1 findings → executable Validation, honest state и fresh-session proof |
+| `findings/P3.1-fail-closed-and-projection-recovery.md` | findings | P3.1, P3.4 | historical P3.1 result, audited validation mismatch и repair input |
+| `findings/P3.2-final-field-requalification.md` | findings | P3.2, P3.4 | historical attempt-1 GO, не заменяющий fresh rerun |
+| `findings/P3.3-codex-route-observability.md` | findings | P3.3, P3.4 | native-launch evidence и historical provenance input |
 | `decisions/D9-external-ledger-prerequisite.md` | decision | P1.2 | owner-owned committed external-ledger prerequisite |
 | `decisions/D10-field-canary-and-release-ledger.md` | decision | P1.1, P1.2 | exact no-event values и pre-D9 `[Unreleased]` owner |
 | `decisions/D11-inline-nonmaterial-audit-repair.md` | decision | P0.2, P1.1, P1.2 | non-material audit bookkeeping repair inline без нового цикла |
@@ -62,6 +66,8 @@
 | `decisions/D21-p2-1-review-remediation-ownership.md` | decision | P2.1 | isolated-review scope amendment for tracked aggregate and canonical v2 phase completeness |
 | `decisions/D22-status-projection-before-requalification.md` | decision | P2.3, P2.4 | mixed-state owner status fix precedes renumbered live requalification |
 | `decisions/D23-p3-successor-after-final-p2-red.md` | decision | P2.4, P3.1, P3.2 | final RED P2 frozen; debt rejected; P3 successor and route-evidence waiting boundary |
+| `decisions/D24-plan-run-native-launch-provenance.md` | decision | P3.3, P3.2 | fresh native cli-flag provenance без runtime-telemetry claim |
+| `decisions/D25-p3-audit-repair-forward.md` | decision | P3.1–P3.4 | один bounded repair, committed inputs, anchored state и distinct P3.2 session |
 
 ## Ключевые артефакты `root/`
 

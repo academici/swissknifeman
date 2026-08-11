@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: b148ff43bb79fdfe85db686944736365df92e964756fc4e3f3833c91ece62e2f
+inputs_sha256: 8a2dba1c5e1b57e2f5d7c936ad9178ea1a3c8d613353e07e621b0a9c841a1841
 generated_by: task plan-views status
 -->
 
@@ -15,8 +15,8 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | — |
-| Status | 🟠 Done with deviations |
+| Version | 0.2.0 |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
 | P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 | P2 | Contract integrity and field requalification | 4/4 | 🟢 Done |
-| P3 | Fail-closed recovery and final requalification | 3/3 | 🟢 Done |
+| P3 | Fail-closed recovery and final requalification | 3/4 | 🟡 In progress |
 
 ## Phase P0
 
@@ -58,6 +58,7 @@ generated_by: task plan-views status
 | P3.1 | Восстановить fail-closed route, bundle и docs truth | 🟢 Done | 2026-08-11 |
 | P3.2 | Повторить product-free requalification нового anchor | 🟢 Done | 2026-08-11 |
 | P3.3 | Сделать route gate `plan-run` исполнимым через native launch provenance | 🟢 Done | 2026-08-11 |
+| P3.4 | Восстановить Validation trust и execution provenance | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -119,6 +120,8 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.3: 780 tests/1 skipped; native smoke ROUTE-LAUNCH-OK; write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · P3.2 field requalification started on ec5c71bc; launch provenance cli-flag. |
 | 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 GO: Task 780/1 skip; Harness/Skiller/provider/docs/plan gates green; write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-11 | frontier/high | plan-design · in-progress · D25: P3 детализирована до DoR; P3.4 repair и fresh P3.2 attempt 2 запинены |
 
 ## Owner Gates
 

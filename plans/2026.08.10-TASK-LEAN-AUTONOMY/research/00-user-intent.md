@@ -19,3 +19,4 @@
 | Связать plan lifecycle с run telemetry без нового control plane | D13, 2026.08.10-TASK-LEAN-AUTONOMY P0.1/P1.1/P1.2 |
 | Сохранить лёгкость: fallbacks и same-session progress, жёстко только safety/authority/acceptance | D1/D2/D12 |
 | Не больше одного дополнительного repair после первого non-GREEN audit | D17, P1 audit recovery |
+| P3 repair только вокруг focused Validation, Files/provenance, git refs и fresh P3.2 | D25, P3.4, P3.2 attempt 2 |

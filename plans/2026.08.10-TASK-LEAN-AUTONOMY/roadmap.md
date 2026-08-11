@@ -1,20 +1,20 @@
 # Roadmap исполнения — 2026.08.10-TASK-LEAN-AUTONOMY
 
-**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D24 P3.3 native-launch repair перед final P3.2
+**Обновлён:** 2026-08-11 · **Соответствует plan.md:** D25 P3.4 bounded repair → fresh P3.2 attempt 2
 
-P0/P1/P2 остаются историей; D17 запрещает третий audit/repair P1 и P2. Новое исполнение идёт по
-трём последовательным solo items P3. Batch не используется: P3.3 заменяет недостижимый provider
-probe, P3.2 потребляет terminal P3.1/P3.3 и квалифицирует полный post-P2.3 anchor. Fresh native
-launch provenance обязателен, но не выдаётся за runtime telemetry.
+P0/P1/P2 остаются историей; D17 запрещает третий audit/repair P1 и P2. P3 audit-1 RED
+открывает ровно один solo P3.4: product-free Validation/provenance repair на committed amendment
+anchor. После его terminal bookkeeping commit отдельный native process выполняет P3.2 attempt 2.
+Batch нет: committed-input и fresh-session boundaries не допускают same-session grouping.
 
 ## Карта исполнения
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
 | P0.1–P2.4 | history | — | — | D17/D23 final RED | immutable provenance; не переисполнять |
-| P3.1 | solo | plan-run | implementation/high | D23 + provider-bound route | Task fail-closed route, bundle dedupe, provider/docs projections; cwd `packages/task` |
-| P3.3 | solo | plan-run | implementation/high | D24 + fresh native launch | Task route repair; cwd `packages/task` |
-| P3.2 | solo | plan-run | implementation/high | terminal green P3.1/P3.3 + fresh native launch | root live requalification; product writes запрещены |
+| P3.1/P3.3/P3.2 attempt 1 | history | — | — | Audit P3 RED + D25 | append-only evidence; не запускать как qualification |
+| P3.4 | solo | plan-run | implementation/high | committed D25/spec/bundle/handoff | focused Validation + append-only P3.1/P3.3 reconciliation; cwd `packages/task`; product writes нет |
+| P3.2 attempt 2 | solo | plan-run | implementation/high | terminal committed P3.4 + distinct fresh native session | root live requalification; новый report only |
 
 ## Готовые launch-block'и
 
@@ -80,53 +80,38 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ## Гейты владельца
 
-Owner choices D23/D24 приняты. P3.3/P3.2 требуют fresh native launch with `-m` and
-`model_reasoning_effort`; это launch provenance, не runtime telemetry. Любая необходимость изменить
-stable Intent/Files/Validation P3 либо принять красный required gate снова требует владельца.
+Owner choices D23–D25 приняты. P3.1/P3.3/P3.2 attempt 1 — history, не runnable Next.
+P3.4 требует committed plan-only amendment; P3.2 attempt 2 — committed terminal P3.4 и
+отдельный fresh native process. Если P3.4 или финальный audit-2 non-GREEN, автоматического
+третьего repair/audit нет.
 
-### P3.1 — Task fail-closed and projection recovery
+### P3.4 — Validation/provenance repair
 
-**Next:** waiting: provider-bound model class+effort текущего Codex thread доступны → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.1
+**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.4
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Context | cold-start-root (`capability-missing`) |
+| Context | cold-start-root: capability-missing |
 | Команда | — |
 
 ```bash
-# НЕ раньше: provider-bound model class+effort текущего Codex thread доступны
-codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.1'
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.4'
 ```
 
-### P3.2 — root final requalification
+### P3.2 attempt 2 — fresh root requalification
 
-**Next:** waiting: terminal green P3.1/P3.3 → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
+**Next:** waiting: terminal committed P3.4 → run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
-| Context | continue-root |
+| Context | cold-start-root: capability-missing |
 | Команда | — |
 
 ```bash
-# НЕ раньше: terminal green P3.1/P3.3; fresh native launch selects model and effort
+# НЕ раньше: P3.4 terminal report/state/handoff находятся в committed HEAD
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.2'
-```
-
-### P3.3 — native launch provenance repair
-
-**Next:** run-items: task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | high |
-| Context | continue-root |
-| Команда | `$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3` |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.10-TASK-LEAN-AUTONOMY P3.3'
 ```

@@ -16,8 +16,9 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 4/4; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2; D24 добавляет P3.3 forward fix; D17 не переоткрывается |
+| Design Passes | 5/5; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F20, pass 3 — owner-authorized successor P2 после финального RED P1, pass 4 — owner-authorized successor P3 по D23 после финального RED P2, pass 5 — D25 bounded repair-forward после первого RED P3; D17 ограничивает следующий audit финальным |
 | Paused By | — |
+<!-- migration-version: 0.2.0 -->
 
 ## 1. Context
 
@@ -79,12 +80,14 @@ canary, а не через новую исчерпывающую proof-сист�
 | — | P2.4 | implementation/high | manual | full | root live canary и полная requalification являются acceptance всего successor-контракта |
 | — | P3.1 | implementation/high | manual | full | Task fail-closed route, deterministic bundle и generated provider/docs truth влияют на каждый следующий plan-run |
 | — | P3.3 | implementation/high | manual | full | official native launch provenance устраняет недостижимый provider probe только для manual plan-run |
+| — | P3.4 | implementation/high | manual | full | first RED P3 repair: validation trust, append-only historical provenance и committed predecessor для fresh rerun |
 | — | P3.2 | implementation/high | manual | full | root field requalification полного post-P2.3 anchor является acceptance D23 и не допускает product writes |
 
 ## 4. Update Log
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | plan-designer / gpt-5.6-sol/high | D25 реопенит P3 для одного P3.4: executable focused Validation, append-only P3.1/P3.3 provenance, committed-input boundary и отдельный fresh P3.2 attempt 2. |
 | 2026-08-11 | owner-authorized repair design / gpt-5.6-terra/high | D24 добавляет P3.3: manual plan-run использует fresh native `-m` + `model_reasoning_effort` как честно названный launch provenance; provider telemetry и plan-exec не ослабляются. |
 | 2026-08-11 | owner-authorized successor design / semantic gpt-5.6-sol/high | D23 отклоняет F1–F6 финального RED P2, замораживает P2 и создаёт P3.1/P3.2 с fail-closed Task remediation и новым product-free canary; actual selector/effort не аттестованы. |
 | 2026-08-11 | plan-designer / gpt-5.6-sol/high | D22 вставляет Task-owned P2.3 status aggregation regression перед canary; прежний не начатый P2.3 становится P2.4 без переписывания terminal evidence. |

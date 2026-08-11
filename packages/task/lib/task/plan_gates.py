@@ -78,8 +78,36 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
     return {"fingerprint": hashlib.sha256(encoded).hexdigest(), "snapshot": snapshot}
 
 
-def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint):
-    """Allow phase close only for the latest matching GREEN candidate audit."""
+def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: str | None):
+    """Validate D26's deliberately narrow direct-green-validation escape hatch."""
+    if owner_decision is None:
+        return None
+    if not isinstance(owner_decision, str) or not re.fullmatch(r"D[1-9][0-9]*", owner_decision):
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_INVALID"}
+    paths = sorted((plan_dir / "decisions").glob(f"{owner_decision}-*.md"))
+    if len(paths) != 1:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_MISSING"}
+    try:
+        decision = plan_decisions.parse_decision(paths[0])
+    except plan_decisions.DecisionError:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_INVALID"}
+    if decision.status != "accepted" or decision.superseded_by:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_NOT_ACCEPTED"}
+    if decision.item != phase_id or phase_id not in decision.items:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH"}
+    if not decision.supersedes:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_SUPERSEDES_MISSING"}
+    if "`phase-close: direct-green-validation`" not in decision.body:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_LITERAL_MISSING"}
+    return {"allow": True, "code": "allow", "owner_decision": decision.identifier}
+
+
+def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, owner_decision=None):
+    """Allow a matching GREEN audit or an accepted phase-scoped owner override."""
+    plan_dir = Path(plan_dir)
+    override = _phase_close_owner_override(plan_dir, phase_id, owner_decision)
+    if override is not None:
+        return override
     journal_path = Path(plan_dir) / "journal.jsonl"
     latest = None
     if journal_path.is_file():

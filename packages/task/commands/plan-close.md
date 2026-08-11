@@ -220,6 +220,13 @@ status-rule ниже. Точная команда, лестница маршру
 0. Вычисли `task.plan_gates.phase_candidate_fingerprint(...)` из scope, terminal item heads и
    material risk. Затем `phase_close_gate(...)` обязан вернуть `allow`: отсутствующий, RED,
    ATTENTION или stale audit отказывает без phase mutation. Audit сам фазу не закрывает.
+   **D26 direct-green-validation — узкий owner override.** Только explicit
+   `phase_close_gate(..., owner_decision="D26")` может заменить audit-путь, и только когда
+   carrier `decisions/D26-*.md` ровно один, `accepted`, не superseded, exact phase-scoped
+   (`item` и `items` содержат закрываемый `Pn`), supersedes прежний путь и несёт literal
+   `` `phase-close: direct-green-validation` ``. Любое отсутствие/несовпадение возвращает
+   named refusal без phase mutation; вызов без `owner_decision` сохраняет byte-semantically
+   прежний audit GREEN path.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —

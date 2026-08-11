@@ -82,6 +82,11 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 автоматический `plan-design` запрещены. `plan-design` нужен только когда меняются стабильные
 Intent/Scope/Files/Validation, public/frozen semantics или authority.
 
+Исключение возможно лишь как явное owner decision: `phase_close_gate(..., owner_decision="D#")`
+разрешает direct-green-validation только для одного accepted, phase-scoped и superseding decision
+carrier с literal `phase-close: direct-green-validation`. Отсутствие или любое несовпадение
+остаётся fail-closed и использует обычный audit GREEN путь.
+
 **Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
 вердикт (`GREEN`/`ATTENTION`/`RED`) говорит «запись фазы сходится с кодом и git-фактами»,
 а приёмка — что ИЗМЕРЕННЫЕ величины плана взяли объявленные пороги (floors). План с

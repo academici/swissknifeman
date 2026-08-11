@@ -87,6 +87,65 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 plan, "P1", candidate_fingerprint="a" * 64)
             self.assertEqual(gate["code"], "PHASE_AUDIT_ATTENTION")
 
+    def test_accepted_phase_scoped_decision_allows_direct_green_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            decisions = plan / "decisions"
+            decisions.mkdir(parents=True)
+            (decisions / "D26-direct-close.md").write_text(
+                "---\n"
+                "id: D26\n"
+                "date: 2026-08-11\n"
+                "status: accepted\n"
+                "item: P3\n"
+                "items: [P3, P3.2]\n"
+                "supersedes: [D25]\n"
+                "superseded_by: null\n"
+                "---\n\n"
+                "## Решение\n\n"
+                "`phase-close: direct-green-validation`\n\n"
+                "## Почему\n\n"
+                "test\n\n"
+                "## Consequences\n\n"
+                "test\n",
+                encoding="utf-8",
+            )
+            gate = plan_gates.phase_close_gate(
+                plan, "P3", candidate_fingerprint="a" * 64, owner_decision="D26")
+            self.assertTrue(gate["allow"])
+            self.assertEqual(gate["code"], "allow")
+            self.assertEqual(gate["owner_decision"], "D26")
+
+    def test_invalid_owner_override_refuses_without_weakening_default_audit_gate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            decisions = plan / "decisions"
+            decisions.mkdir(parents=True)
+            (decisions / "D26-wrong-scope.md").write_text(
+                "---\n"
+                "id: D26\n"
+                "date: 2026-08-11\n"
+                "status: accepted\n"
+                "item: P2\n"
+                "items: [P2]\n"
+                "supersedes: [D25]\n"
+                "superseded_by: null\n"
+                "---\n\n"
+                "## Решение\n\n"
+                "`phase-close: direct-green-validation`\n\n"
+                "## Почему\n\n"
+                "test\n\n"
+                "## Consequences\n\n"
+                "test\n",
+                encoding="utf-8",
+            )
+            refused = plan_gates.phase_close_gate(
+                plan, "P3", candidate_fingerprint="a" * 64, owner_decision="D26")
+            self.assertEqual(refused["code"], "PHASE_OWNER_DECISION_SCOPE_MISMATCH")
+            default = plan_gates.phase_close_gate(
+                plan, "P3", candidate_fingerprint="a" * 64)
+            self.assertEqual(default["code"], "PHASE_AUDIT_MISSING")
+
 
 class FindingIdentityTests(unittest.TestCase):
     def test_same_seam_gives_same_id(self):

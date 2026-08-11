@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: phase close поддерживает узкий owner-authorized direct-green-validation путь.**
+  Только accepted, phase-scoped и superseding decision с literal
+  `phase-close: direct-green-validation` может обойти audit gate; default audit path и все
+  несовпадения остаются fail-closed.
+
 - **`task`: Codex `plan-run` использует проверяемый native launch provenance.**
   Свежий launch с `-m` и `model_reasoning_effort` задаёт маршрут manual item без недоступного
   provider probe; provenance честно не выдаётся за runtime telemetry. `plan-exec` сохраняет

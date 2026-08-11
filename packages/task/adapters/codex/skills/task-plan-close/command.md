@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:5a80f5885f9ba30e9b22a424bc9d040184801daa968f6286199b86dddfd62362
+Canonical SHA-256: sha256:9c17b20c1915d47181e625b049c14a5315c856863f0b5e18d6fb278d138ea8c6
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -234,6 +234,13 @@ status-rule ниже. Точная команда, лестница маршру
 0. Вычисли `task.plan_gates.phase_candidate_fingerprint(...)` из scope, terminal item heads и
    material risk. Затем `phase_close_gate(...)` обязан вернуть `allow`: отсутствующий, RED,
    ATTENTION или stale audit отказывает без phase mutation. Audit сам фазу не закрывает.
+   **D26 direct-green-validation — узкий owner override.** Только explicit
+   `phase_close_gate(..., owner_decision="D26")` может заменить audit-путь, и только когда
+   carrier `decisions/D26-*.md` ровно один, `accepted`, не superseded, exact phase-scoped
+   (`item` и `items` содержат закрываемый `Pn`), supersedes прежний путь и несёт literal
+   `` `phase-close: direct-green-validation` ``. Любое отсутствие/несовпадение возвращает
+   named refusal без phase mutation; вызов без `owner_decision` сохраняет byte-semantically
+   прежний audit GREEN path.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —

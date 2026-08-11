@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: bbb3365bd94da96f643ec8850e56dccbcfc44fe9920287618e3d0818b02d9c7e
+inputs_sha256: db214a8f53a602667e8fe4957844af57f7d0ca173b2ef28a1aa6d57959193968
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | ⬜ Not started |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-11 |
 
 ## 4. Phase Index & Status Board
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Thin contract and adaptive commands | 0/2 | 🟠 Done with deviations |
-| P1 | Minimal runtime alignment and field canary | 0/2 | ⬜ Not started |
+| P1 | Minimal runtime alignment and field canary | 1/2 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -37,8 +37,8 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Выровнять Task commands и state/review transitions | 🟠 Done with deviations | 2026-08-11 |
-| P1.2 | Провести живой canary и один stabilization pass | ⬜ Not started | — |
+| P1.1 | Выровнять Task commands и state/review transitions | 🟢 Done | 2026-08-11 |
+| P1.2 | Провести живой canary и один stabilization pass | 🟠 Done with deviations | 2026-08-11 |
 
 ## 6. Update Log
 
@@ -69,9 +69,21 @@ generated_by: task plan-views status
 | 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · in-progress · Прямое выполнение по решению владельца; route overshoot plan-audit→P1.1, без reopen/design/re-audit P0. |
 | 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · in-progress · Возобновлённый run: P1.1 code/docs validation и terminal lifecycle. |
 | 2026-08-11 | gpt-5.6-sol/xhigh | plan-run · closed-deviations · P1.1 runtime/docs aligned; D2 read-budget contract outside item scope remains red. |
+| 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · P1 доведена до DoR: D15 read-budget v1.1.0, D16 pre-close audit; P1.2 ждёт committed D9+D13 ledger |
+| 2026-08-11 | gpt-5.6-terra/medium | plan-run · blocked · required implementation/high; session implementation/medium |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · Recovery attempt after false self-attested routing rejection; current session implementation/high. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · blocked · decision queue: p1-2-routing-preflight-recovery |
+| 2026-08-11 | owner:repository-owner | plan-run · in-progress · decision queue: p1-2-routing-preflight-recovery |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-deviations · Completed in the live session: stale cache was a procedural deviation; current source and focused validation are green; no product scope change. |
+| 2026-08-11 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-11 | gpt-5.6-sol/high | plan-run · in-progress · D17 bounded audit repair: Task lifecycle cap/route conflict; pre-mutation allow. |
+| 2026-08-11 | implementation/medium | plan-run · blocked · предписано implementation/high; сессия implementation/medium |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · in-progress · Возобновлён bounded repair attempt: ошибочная self-attestation medium исправлена; фактическая сессия implementation/high. |
+| 2026-08-11 | gpt-5.6-terra/high | plan-run · closed-green · Bounded repair P1.1: lifecycle cap/route contract aligned; validation и pre-final allow; false self-attestation recorded separately. |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.2: known deviation
 - P1.1: known deviation
+- P1.2: known deviation

@@ -18,3 +18,4 @@
 | Разобрать все доступные Agelto/SKM планы и логи по конкретным причинам | findings/06, research/07 |
 | Связать plan lifecycle с run telemetry без нового control plane | D13, 2026.08.10-TASK-LEAN-AUTONOMY P0.1/P1.1/P1.2 |
 | Сохранить лёгкость: fallbacks и same-session progress, жёстко только safety/authority/acceptance | D1/D2/D12 |
+| Не больше одного дополнительного repair после первого non-GREEN audit | D17, P1 audit recovery |

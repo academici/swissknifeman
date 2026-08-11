@@ -1,11 +1,11 @@
 ---
 id: D8
 date: 2026-08-10
-status: accepted
+status: superseded
 item: P1.2
 items: [P1.2]
 supersedes: []
-superseded_by: null
+superseded_by: D16
 actor: plan-designer
 model: gpt-5.6-sol/high (semantic plan-design route; effort self-attested)
 evidence: RAG:— findings/03-design-audit-2026-08-10.md F5 + plan-protocol v2 status/Next canon

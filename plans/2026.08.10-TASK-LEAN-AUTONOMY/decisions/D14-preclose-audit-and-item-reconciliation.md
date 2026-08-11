@@ -1,11 +1,11 @@
 ---
 id: D14
 date: 2026-08-11
-status: accepted
+status: superseded
 item: P1.1
 items: [P1.1]
 supersedes: []
-superseded_by: null
+superseded_by: D17
 actor: repository-owner (explicit lifecycle correction directive)
 model: gpt-5.6-terra/high (actual plan-amendment session; semantic plan-design route unavailable in this session)
 evidence: repo-grounded: findings/07-preclose-audit-lifecycle.md

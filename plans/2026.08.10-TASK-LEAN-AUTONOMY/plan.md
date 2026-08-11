@@ -16,7 +16,7 @@
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
 | visibility | private |
-| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19; final audit attempt 4 закрыл F20 inline; owner-requested D14 добавляет pre-close audit gate и recovery-only item reconciliation без нового design/audit pass; следующий шаг — P0.2 |
+| Design Passes | 2/2; pass 1 — bootstrap/full detail, pass 2 — design-finish remediation F1–F10; post-audit finish закрыл F11–F19; final audit attempt 4 закрыл F20 inline; D17 сохраняет pre-close audit, но ограничивает recovery одним repair и финальным вторым audit без automatic design-loop |
 | Paused By | — |
 
 ## 1. Context
@@ -48,9 +48,10 @@ canary, а не через новую исчерпывающую proof-сист�
 - Новый audit/review требует записанного material trigger; прежний verdict переиспользуется,
   пока scope/SHA/risk не изменились.
 - Завершённые items делают фазу кандидатом, а не закрытой фазой: свежий зелёный audit этого
-  кандидата предшествует `task:plan-close <PLAN-ID> Pn`. RED либо unresolved `ATTENTION`
-  исправляются в owning item и повторно проверяются до close; обычный Next никогда не предлагает
-  `task:plan-close <PLAN-ID> Pn.m`.
+  кандидата предшествует `task:plan-close <PLAN-ID> Pn`. Первый RED либо unresolved `ATTENTION`
+  разрешает ровно один repair-forward в явно названные owning items под неизменным ТЗ; terminal
+  status не требует `plan-design`. Второй audit финальный: повторный non-GREEN — owner incident,
+  третьего repair/audit/design-loop нет. Обычный Next никогда не предлагает `task:plan-close Pn.m`.
 - Non-material deterministic plan-bookkeeping defect из audit исправляется inline тем же root по
   D11; один gate rerun завершает тот же attempt без ATTENTION/re-audit/design-pass handoff.
 - Owner stop обязателен для authority/security/privacy/destructive/irreversible, изменения
@@ -77,9 +78,19 @@ canary, а не через новую исчерпывающую proof-сист�
 
 | Date | Role / model | Change |
 |:--|:--|:--|
+| 2026-08-11 | owner-authorized lifecycle correction / gpt-5.6-sol/high | D17 устраняет off-by-one и конфликт RED→plan-design: один bounded repair между первым и финальным вторым audit. |
 | 2026-08-11 | owner-authorized plan amendment / gpt-5.6-terra/high | Добавлен D14: phase candidate → fresh GREEN audit → phase close; `plan-close Pn.m` ограничен recovery reconciliation. |
+| 2026-08-11 | plan-designer / gpt-5.6-sol/high | P1 доведена до DoR после P1.1: добавлен plan-owned frozen read-budget v1.1.0 по D15; P1.2 остаётся waiting на committed D9+D13 ledger. |
 
 ## 5. Decision Log
 
 Каталог решений: `decisions/`; generated views собираются через
 `python3 packages/task/scripts/plan-views.py decisions --plan-dir plans/2026.08.10-TASK-LEAN-AUTONOMY`.
+
+## 7. Contracts
+
+### Consumed
+
+| Контракт | Донор-план | Pinned | Замечено | Реакция |
+|:--|:--|:--|:--|:--|
+| `root/contracts/read-budget-v1.md` | `2026.08.07-PLAN-ECONOMY` | v1.1.0 | v1.1.0 (2026-08-11) | D15 — plan-owned frozen copy; admission P1.1/P1.2 до P1.2 canary |

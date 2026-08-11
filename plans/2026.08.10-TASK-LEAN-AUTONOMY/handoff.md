@@ -1,34 +1,42 @@
 # HANDOFF — 2026-08-11 — after P1.1
 
-**Next:** design-phase: task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1
+**Next:** audit-phase: task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1
 
 **Provider-neutral plan-protocol launch block**
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
-| Effort | high |
-| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read |
-| Context | continue-root |
-| Суть | Добавить sealed D2 read-budget contract, затем повторить P1.1 validation before P1.2. |
-| Команда | `$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1` |
+| Effort | xhigh |
+| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Финальный audit P1 attempt 2 после единственного bounded repair; non-GREEN передаётся владельцу без нового repair/design-loop. |
+| Команда | `$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1` |
 
 **Native Codex launch block**
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.10-TASK-LEAN-AUTONOMY P1'
-```
+| Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|
+| gpt-5.6-sol | xhigh | NEW SESSION — шаг-не-item | Финальный audit P1 после P1.1 bounded repair. | `codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.10-TASK-LEAN-AUTONOMY P1'` |
 
-**Done:** `2026.08.10-TASK-LEAN-AUTONOMY P1.1` scope commit `60e09915` aligns Task command/runtime transitions, provider projections, focused regressions and standalone/aggregate Task docs. The fresh attempt uses observed Codex session `019fef69-c9dd-7c01-9246-4a51c7218dea` and deterministic run `efcceb2428aec5de80abecf61e248e64b5c038fc36f9fe8af88fc22f99d6b7fe`.
+**Done:** P1.1 bounded repair закрыт item-коммитом `73e53f51`; Task Contract дал
+`pre_mutation=allow` и `pre_final=allow`, target plan lint и package validation зелёные.
 
-**Remaining:** Add the missing plan-owned `root/contracts/read-budget-v1.md`, regenerate P1 bundles/views, prove the P1.1 validation gate green, then run P1.2's one live canary.
+**Remaining:** Запустить финальный P1 audit attempt 2. Второй non-GREEN — owner incident:
+автоматический третий audit, repair или design-loop запрещены D17.
 
-**Sources of truth:** `plan.md` · `phases/P1/P1.1.md` · `phases/P1/P1.1.state.md` · `journal.jsonl` · `findings/P1.1-runtime-alignment.md` · `packages/task/lib/task/{journal,plan_gates,review_policy,session_context}.py`.
+**Sources of truth:** `plan.md` · `phases/P1/P1.md` ·
+`decisions/D17-bounded-audit-recovery.md` · `packages/task/commands/plan-audit.md` ·
+`packages/task/lib/task/task_contract.py` · `journal.jsonl`.
 
-**Open risks:** P1.1 is `🟠 Done with deviations`: the v2 plan lacks its sealed D2 read-budget contract. The final package validation is green because P1.2 is not yet active; activating P1.2 without this carrier makes its D2 gate red. This is a plan-design carrier outside P1.1 Files, not a package runtime failure.
+**Open risks:** Codex effective route всё ещё self-attested, поэтому ложный P1.1
+`routing-blocked` event сохранён append-only; provider-bound remedy отслежен в
+`roadmap/2026.08.11-codex-effective-route-observability.md` и не входит в P1.1.
+Unrelated ARTIFEX/root-roadmap dirty work остаётся вне scope.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: focused Task runtime tests and both documentation builds pass; do not call the complete package validation green.
-- deferred: create the D2 contract through `task:plan-design`, then rerun all P1.1 validation commands.
+- workarounds: terminal repair P1.1 выполнил D17 и закрыт; route evidence не объявляется
+  доказанным по пользовательской коррекции.
+- deferred: provider-bound Codex effective-route adapter — отдельный roadmap item.
 - open_questions: —

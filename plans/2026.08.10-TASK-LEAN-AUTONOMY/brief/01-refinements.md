@@ -84,3 +84,13 @@
   handling и alert fatigue; принимать только выводы, перепроверенные по первичным источникам.
 - Встроить решения непосредственно в executable items и canary scorecard; новый supervisor,
   daemon или отдельный telemetry project не создавать.
+
+## Owner correction after P1 audit — 2026-08-11
+
+- Больше одного дополнительного repair-подхода после первого non-GREEN audit считается дефектом
+  lifecycle, а не нормальным refine-loop.
+- Первый non-GREEN обязан вести прямо в один bounded repair по текущему ТЗ; `plan-design` не
+  используется как универсальная реакция на validation/evidence/state mismatch.
+- Второй audit финальный. Повторный non-GREEN останавливает автоматический цикл и отдаёт владельцу
+  выбор принять названный долг либо остановить фазу; третьего repair/audit нет.
+- Исправить конфликт немедленно в Task command/compiler source и закрепить regression tests.

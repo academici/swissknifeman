@@ -19,6 +19,7 @@
 | `roadmap.md` | exact package-cwd карта четырёх solo launches |
 | `handoff.md` | rolling next pointer |
 | `journal.jsonl` | append-only execution history |
+| `root/contracts/read-budget-v1.md` | plan-owned frozen D15 admission contract |
 
 ## Провенанс
 
@@ -32,6 +33,8 @@
 | `findings/04-design-finish-remediation-2026-08-10.md` | findings | audit design | deterministic remediation evidence |
 | `findings/05-inline-audit-repair-friction.md` | findings | P0.2, P1.1, P1.2 | field feedback: audit bookkeeping repair stays in the same attempt |
 | `findings/06-cross-project-execution-telemetry.md` | findings | P0.1–P1.2 | all available Agelto/SKM plans, journals, run reports, causes and real stop counterexamples |
+| `findings/08-p1-read-budget-and-preflight.md` | findings | P1 | missing read-budget diagnosis, environment preflight and D9+D13 waiting evidence |
+| `findings/09-p1-read-budget-measurement.md` | findings | P1 | D15 qualified unit, per-item/aggregate result and D74 anti-displacement answer |
 | `research/01-target-operating-model.md` | research | P0.1–P1.2 | единый strict-frame/adaptive-loop contract |
 | `research/02-design-finish-reconciliation.md` | research | P0.1–P1.2 | package ownership, routing, GO/ADJUST, bundle policy |
 | `research/03-task-transition-map.md` | research | P1.1 | bounded Task change map |
@@ -39,12 +42,17 @@
 | `research/05-design-finish-remediation-f11-f15.md` | research | P1.1, P1.2 | context/docs/D9/RAG/journal reconciliation F11–F15 |
 | `research/06-design-finish-remediation-f16-f19.md` | research | P1.1, P1.2 | committed SSOT, real canary, release ledger и index reconciliation |
 | `research/07-adaptive-failure-and-telemetry-synthesis.md` | research | P0.1–P1.2 | D12 decision table, D13 lean observability and verified Perplexity follow-up |
+| `research/08-p1-design-premortem.md` | research | P1 design | 6–12 month failure clusters, owners and existing D15/D16/D9/D13 mitigations |
 | `decisions/D9-external-ledger-prerequisite.md` | decision | P1.2 | owner-owned committed external-ledger prerequisite |
 | `decisions/D10-field-canary-and-release-ledger.md` | decision | P1.1, P1.2 | exact no-event values и pre-D9 `[Unreleased]` owner |
 | `decisions/D11-inline-nonmaterial-audit-repair.md` | decision | P0.2, P1.1, P1.2 | non-material audit bookkeeping repair inline без нового цикла |
 | `decisions/D12-evidence-first-stop-taxonomy.md` | decision | P0.2, P1.1, P1.2 | actual-impact classification; terminal only acceptance/safety/authority |
 | `decisions/D13-idempotent-correlated-lifecycle.md` | decision | P0.1, P1.1, P1.2 | repository-root reports, joined identity and idempotent close |
+| `decisions/D14-preclose-audit-and-item-reconciliation.md` | decision | P1.1 | terminal items → candidate → fresh GREEN audit → phase close |
+| `decisions/D15-read-budget-consumption.md` | decision | P1.1, P1.2 | consume unchanged frozen read-budget v1.1.0 without reopening P1.1 |
+| `decisions/D16-go-through-preclose-audit.md` | decision | P1.2 | supersedes D8 GO direct-close branch; candidate audit precedes P1 close |
 
 ## Ключевые артефакты `root/`
 
-План не создаёт долгоживущих frozen contracts; целевой смысл остаётся в skill/commands и D1–D13.
+`root/contracts/read-budget-v1.md` — plan-owned frozen copy v1.1.0 по D15. Она потребляется
+Task admission до P1.2 и не меняет локальное решение D2 про repair envelope.

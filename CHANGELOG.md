@@ -2,10 +2,10 @@
 
 ## [Unreleased]
 
-- **`task`: Codex `plan-run` требует thread-bound route evidence.**
-  Static `CODEX_HOME/config.toml` больше не выдаётся за фактический маршрут; без обеих осей
-  dispatch остаётся в `waiting` и не отправляет оператора в бесполезный повторный launch.
-  Bundle v2 дедуплицирует одинаковый path/decision input в одном ordinal.
+- **`task`: Codex `plan-run` использует проверяемый native launch provenance.**
+  Свежий launch с `-m` и `model_reasoning_effort` задаёт маршрут manual item без недоступного
+  provider probe; provenance честно не выдаётся за runtime telemetry. `plan-exec` сохраняет
+  строгий provider-attested gate. Bundle v2 дедуплицирует одинаковый path/decision input в одном ordinal.
 
 - **`task`/`plan-protocol`: terminal audit отделён от следующего запуска.**
   Завершившийся `plan-audit` теперь обязан передать successor свежему root с явно

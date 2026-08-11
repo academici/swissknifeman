@@ -85,6 +85,20 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertIn("-a never -s danger-full-access", codex_runtime)
         self.assertIn("do not reuse the preceding session's route", codex_runtime)
 
+    def test_plan_run_uses_fresh_native_launch_provenance_not_an_unavailable_provider_probe(self):
+        canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
+        self.assertIn('source="cli-flag"', canonical)
+        self.assertIn("свежем Codex", canonical)
+        self.assertIn("launch provenance", canonical)
+        self.assertNotIn('source="provider-doctor"', canonical)
+        self.assertNotIn('source="self-attested"', canonical)
+
+        runtime = next(
+            artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
+            if artifact.path.endswith("/task-plan-run/command.md"))
+        self.assertIn('source="cli-flag"', runtime)
+        self.assertNotIn('source="provider-doctor"', runtime)
+
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (
             b"\nmodel/effort <model/effort> path/effort\n"

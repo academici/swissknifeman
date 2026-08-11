@@ -48,35 +48,29 @@ fresh item state. Повторное чтение запрещено.
 с ТРЕМЯ отличиями:
 
 - Модель/effort НЕ запинены: действуют настройки сессии владельца.
-- **Pre-mutation/Pre-final write-site (P2.7/P2.11).** В оба вызова
-  `route_evidence.capture_actual(...)` передавай `model_class`/`effort`/`model`,
-  подтверждённые provider environment API активного thread (`source="provider-doctor"`).
-  `CODEX_HOME/config.toml`, selector, actor и текст launch-block не являются fallback. Если API
-  не даёт хотя бы нужную ось, запиши
-  `capture_actual(None, None, source="self-attested")` и остановись до мутации:
-  selector/actor/текст команды не подменяют actual evidence. Шаг остаётся
-  ОБЯЗАТЕЛЬНЫМ в обеих точках `plan-exec.md`; `plan-run` меняет источник actual-route, не
-  условия предиката. **Основание (D75, лестница
-  разрешения маршрута исполнителя):** `plan-run` исполняет и закрывает item в ОДНОЙ сессии,
-  поэтому её «фактический маршрут сессии» И ЕСТЬ маршрут исполнителя — на pre-final замена
-  литерала остаётся верной той же логикой, что и на pre-mutation, без отдельной лестницы
-  Completion Notes↔journal (та лестница нужна только реконсилирующему `plan-close`, который
-  закрывает item, которого сам не исполнял).
-- Routing-гейт п.2 инвертирован: сверяется ФАКТИЧЕСКАЯ модель/effort сессии с §3 Routing
-  item'а (тир-порядок — plan-protocol §9). Недобор (модель или effort НИЖЕ предписанного)
-  → ДО journal start напечатай exact legal route/continuation для этого item'а и останови
-  только текущий dispatch; product status и journal НЕ меняются. Перебор → исполнять, запись в Known Deviations (§6
-  `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
+- **Pre-mutation/Pre-final write-site (D24).** `plan-run` принимается только в свежем Codex
+  thread, созданном ровно native launch-block из текущего handoff: `-m <model-selector>` и
+  `-c 'model_reasoning_effort="<effort-selector>"'` обязаны покрывать минимум §3 Routing.
+  В оба вызова `route_evidence.capture_actual(...)` передавай класс/effort из этого launch-block,
+  concrete selector как `model` и `source="cli-flag"`. Это **launch provenance**, а не
+  thread telemetry: не называй его provider-attested actual route, не читай private rollout и
+  не подставляй `config.toml`, actor или свободную самоаттестацию. После `/model` или иной
+  смены маршрута thread нельзя продолжать item: запусти новый native block до journal start.
+  Шаг остаётся обязательным в обеих точках `plan-exec.md`; `plan-run` меняет только разрешённый
+  источник для fresh-session launch provenance, не условия предиката.
+- Routing-гейт п.2 сверяет launch-provenance модель/effort с §3 Routing item'а (тир-порядок —
+  plan-protocol §9). Недобор → ДО journal start напечатай exact native launch-block и останови
+  только текущий dispatch; product status и journal НЕ меняются. Перебор → исполнять, запись в
+  Known Deviations (§6 `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
   Routing reject до product work не является attempt и не создаёт `blocked`/`routing-blocked`
   event: route correction — dispatch evidence, а не исход продукта.
 
-**Граница честности.** Самоатрибуция модели/effort агентом не является доказательством (класс
-B2 аудита REGHUB). Без provider API отчёт обязан нести `Session: unknown/unknown` с
-`source=self-attested`; запрещено подставлять config, selector или actor. Это `waiting`, а не
-предписание открыть новую сессию: новый launch сам по себе не добавляет thread-bound evidence.
-Native launch-block допустим только когда provider adapter уже подтвердил обе оси для целевого
-thread. Жёсткий машинный гейт остаётся за `plan-exec` — `plan-run` этот гейт НЕ заменяет, только
-снимает ритуал ручного переключения модели/effort перед серией manual-item'ов под одной моделью.
+**Граница честности.** `cli-flag` доказывает выбранные параметры свежего native запуска, а не
+наблюдает фактический runtime thread. Документированного programmatic current-thread API с обеими
+осями в Codex нет; поэтому `plan-run` не требует несуществующий provider probe и не выдаёт
+launch provenance за telemetry. Если требуется independently observed runtime route, используй
+строгий `plan-exec` с provider-attested source. `plan-run` не принимает config, actor, текст
+прошлого handoff или самоаттестацию как substitute для текущего fresh native launch.
 
 Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется

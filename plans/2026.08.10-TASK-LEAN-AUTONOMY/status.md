@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-11
-inputs_sha256: 8b7e54be998c1521f7864f9c10431436c73de3d7d58ccbb2b405125b7be533bb
+inputs_sha256: 644d87547adc426d0e4c70e537b4759e3e403c3cc5104c903248e59246c1ab3d
 generated_by: task plan-views status
 -->
 
@@ -55,6 +55,8 @@ generated_by: task plan-views status
 | 2026-08-10 | frontier/xhigh | plan-audit · audit-red · заход 3, вердикт RED |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · Design-finish remediation F16–F19 начата; execution, phase reopen и foreign carriers вне scope. |
 | 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-green · Post-audit finish F16–F19: committed-SSOT scope, one real canary with exact no-event values, pre-D9 changelog owner, refreshed index/handoff; ready for plan-only commit and independent audit. |
+| 2026-08-11 | gpt-5.6-sol/high | plan-design · in-progress · Post-commit gate: P1.2 bundle stale после worktree→committed provenance transition; fixing forward через owner generator. |
+| 2026-08-11 | gpt-5.6-sol/high | plan-design · closed-deviations · Correction: stale P1.2 bundle caused by research/06 EOF edit after generation, not provenance transition. Bundle regenerated after final stable bytes; fixing commit required. |
 
 ## Owner Gates
 

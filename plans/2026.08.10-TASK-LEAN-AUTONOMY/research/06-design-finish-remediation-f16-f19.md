@@ -24,3 +24,11 @@
 D1–D9 не отменены и не ослаблены. P0/P1 не исполняются в design-finish. Package/product code,
 foreign ARTIFEX, dirty `docs/reference.md`, root `roadmap/` и `plans/ACTIVE.md` не входят в write
 или commit scope. Generated state/status/decision/bundle views обновляются только owner generator.
+
+## Post-commit gate repair
+
+Первый commit `a9812f07` оказался не финальным: после последней bundle generation был удалён один
+лишний EOF blank line из этого stable research carrier, но `bundles/P1.2.json` не был повторно
+собран. Git-ref `--check` честно вернул stale digest. Причина — нарушенный projection order после
+editorial edit, не смена provenance class. Fixing commit регенерирует bundle после последнего
+stable byte, повторяет gates на новом git-ref и сохраняет первый commit в истории.

@@ -1,0 +1,247 @@
+{
+  "$schema": "urn:swissknifeman:task:roadmap-gap-matrix:v1",
+  "schema_version": "1.0.0",
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "item_id": "P0.1",
+  "verified_tree": "7d45c29221603f12e10c887ee0bb8be34edc6329",
+  "owner_decision_required": false,
+  "roadmap_inputs": [
+    {
+      "id": "R1",
+      "source": "roadmap/2026.08.10-adaptive-plan-governance.md",
+      "symptom": "Static status-driven audit and design loops repeat without a new material risk.",
+      "current_seams": [
+        "packages/task/lib/task/plan_gates.py::phase_candidate_fingerprint",
+        "packages/task/lib/task/task_contract.py::_count_audit_rounds",
+        "packages/task/commands/plan-close.md"
+      ],
+      "current_state": "partial",
+      "gap": "No machine-readable review_requirements carrier binds trigger, scope, evidence freshness, reuse and required check.",
+      "owning_phase": "P5",
+      "acceptance": "A material-triggered review requirement is deterministic and reusable while its inputs are unchanged; historical/process deviations alone do not request another audit, while authority and frozen-contract gates remain fail-closed."
+    },
+    {
+      "id": "R2",
+      "source": "roadmap/2026.08.11-local-repair-vs-escalation-classifier.md",
+      "symptom": "A bounded reversible defect is terminalized as Blocked or plan-design escalation.",
+      "current_seams": [
+        "packages/task/lib/task/journal.py::RESULT_VALUES",
+        "packages/task/lib/task/plan_item_state.py::OBSERVATION_RESULTS",
+        "packages/task/lib/task/plan_blocking.py::evaluate"
+      ],
+      "current_state": "partial",
+      "gap": "Nonterminal event/state semantics exist, but there is no closed all-five repair evidence carrier or Files-boundary enforcement for an incidental repair.",
+      "owning_phase": "P3-P4",
+      "acceptance": "A qualified repair records one path, all classifier predicates, pre/post original validation and bounded diff; semantic, multi-path, generated, authority and contract changes fail closed."
+    },
+    {
+      "id": "R3",
+      "source": "roadmap/2026.08.11-codex-effective-route-observability.md",
+      "symptom": "Caller-supplied model or effort can create a false routing verdict.",
+      "current_seams": [
+        "packages/task/lib/task/route_evidence.py::capture_actual",
+        "packages/task/lib/task/route_evidence.py::dispatch_guard",
+        "packages/task/commands/plan-run.md"
+      ],
+      "current_state": "open",
+      "gap": "cli-flag proves fresh launch selection only; Codex supplies no immutable thread-bound effective model+effort telemetry.",
+      "owning_phase": "P3",
+      "acceptance": "Provider-bound route evidence controls admission; absent evidence returns a typed nonterminal unverifiable result and never fabricates blocked state or actual-route telemetry."
+    },
+    {
+      "id": "R4",
+      "source": "roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md",
+      "symptom": "A self-invalidating single evidence anchor produces repeated symptom-level RED audits.",
+      "current_seams": [
+        "packages/task/lib/task/plan_gates.py::phase_candidate_fingerprint",
+        "packages/task/lib/task/plan_downstream.py"
+      ],
+      "current_state": "partial",
+      "gap": "Stable phase fingerprints exist, but explicit spec/product/closure anchors, collision refusal and product byte-identity are absent.",
+      "owning_phase": "P5",
+      "acceptance": "Self-invalidating input/output collisions refuse before mutation; split anchors close with byte-identical product paths and grouped same-seam audit repair."
+    },
+    {
+      "id": "R5",
+      "source": "roadmap/2026.08.11-terminal-final-continuity-receipt.md",
+      "symptom": "The agent can emit transport-level final while the item remains nonterminal.",
+      "current_seams": [
+        "packages/task/lib/task/plan_delivery.py::build_terminal_receipt",
+        "packages/task/scripts/plan-delivery.py",
+        "packages/task/commands/plan-exec.md"
+      ],
+      "current_state": "partial",
+      "gap": "Task receipts are byte-bound, but provider final enforcement, quiet/heartbeat policy and interrupted-resume lifecycle are outside the implemented seam.",
+      "owning_phase": "P5",
+      "acceptance": "Actual provider final is rejected without a fresh terminal receipt; long work has bounded liveness and resumes the same authorized run without a new owner approval."
+    },
+    {
+      "id": "R6",
+      "source": "roadmap/2026.08.11-terminal-handoff-recommendation-receipt.md",
+      "symptom": "A terminal response can omit or alter the exact persisted next-step recommendation.",
+      "current_seams": [
+        "packages/task/lib/task/plan_delivery.py::_handoff",
+        "packages/task/lib/task/plan_delivery.py::verify_receipt"
+      ],
+      "current_state": "partial",
+      "gap": "Receipt verification covers persisted bytes, but no runtime/harness hook verifies the emitted final transcript before run completion.",
+      "owning_phase": "P5",
+      "acceptance": "Green, deviation, blocked, phase and archive transcript fixtures must contain the exact receipt recommendation; missing or mismatched Next prevents completion."
+    },
+    {
+      "id": "R7",
+      "source": "roadmap/2026.08.11-plan-views-history-cli-contract.md",
+      "symptom": "Generated callers prescribe history --stdout while the CLI rejects that flag.",
+      "current_seams": [
+        "packages/task/scripts/plan-views.py::main",
+        "packages/task/lib/task/plan_item_state.py::state_model"
+      ],
+      "current_state": "open",
+      "gap": "History stdout is implicit, but --stdout is still advertised globally and explicitly rejected for history; callers are not regenerated around one interface.",
+      "owning_phase": "P5",
+      "acceptance": "One canonical history command emitted by state/help executes successfully, and the deprecated contradictory form is removed or supported consistently with regression coverage."
+    },
+    {
+      "id": "R8",
+      "source": "roadmap/2026.08.11-roadmap-batch-selection-is-authoritative.md",
+      "symptom": "A declared multi-item batch can be split into standalone item invocations before Task consults the roadmap.",
+      "current_seams": [
+        "packages/task/commands/plan-run.md",
+        "packages/task/lib/task/task_contract.py",
+        "packages/task/lib/task/command_render.py"
+      ],
+      "current_state": "open",
+      "gap": "No execution-batches schema, pre-mutation resolver, ROADMAP_BATCH_REQUIRED refusal, checkpoint or batch receipt exists.",
+      "owning_phase": "P3-P5",
+      "acceptance": "A partial direct invocation is refused before journal start with the exact canonical batch command; exact batch and durable resume subsets preserve ordered item commits and continuation."
+    }
+  ],
+  "owner_requirements": [
+    {
+      "id": "O1",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Do not stop or leave work incomplete without a reproducible reason.",
+      "current_seam": "Continue-first command prose plus nonterminal journal/state observations.",
+      "gap": "The policy is not yet closed across route, repair, block and delivery transport seams.",
+      "owning_phase": "P3-P5",
+      "acceptance": "Every signal follows reproduce/classify/action/verify and only a proven safety, authority or acceptance boundary terminalizes work."
+    },
+    {
+      "id": "O2",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Bounded local deviations repair inline instead of opening Blocked, escalation or another design pass.",
+      "current_seam": "journal local-repair observation and plan_blocking local branch.",
+      "gap": "All-five repair evidence and Files-boundary enforcement are missing.",
+      "owning_phase": "P3-P4",
+      "acceptance": "Qualified bounded repair repeats the original carrier in the same attempt; material changes fail closed."
+    },
+    {
+      "id": "O3",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Every external blocker is verified by RAG rather than model memory.",
+      "current_seam": "plan_blocking requires verified nonempty RAG evidence for external candidates.",
+      "gap": "Schema does not attest the specifically required Perplexity tool or preserve rag-pending after bounded failure.",
+      "owning_phase": "P0-P4",
+      "acceptance": "External terminal verdict coverage is complete; required Perplexity failure remains nonterminal rag-pending and fallback evidence cannot close the gate."
+    },
+    {
+      "id": "O4",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Terminal Blocked is confirmed by one independent agent; otherwise root continues.",
+      "current_seam": "plan_blocking requires isolated-child-return, reviewer_actor != executor_actor and JUSTIFIED.",
+      "gap": "Candidate implementation still requires phase acceptance and provider projection parity verification.",
+      "owning_phase": "P4",
+      "acceptance": "Only one fresh independent JUSTIFIED verdict plus deterministic boundary allows terminal block; all other verdicts return to repair or evidence."
+    },
+    {
+      "id": "O5",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "New plans use YYYY.MM.DD-№N-CODE and Title starts with План №N.",
+      "current_seam": "plan_lint_checks.common numbered regexes and parsing numbered identity checks.",
+      "gap": "Candidate is implemented but not yet accepted as the frozen package contract.",
+      "owning_phase": "P2",
+      "acceptance": "Positive same-day ordinal and matching Title are enforced for new plans while legacy identifiers remain readable."
+    },
+    {
+      "id": "O6",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Comments and docstrings reference the full PLAN-ID plus item, never ambiguous bare Pn.m.",
+      "current_seam": "Plan-protocol prose declares the qualified form.",
+      "gap": "Current lint does not inspect arbitrary product comments/docstrings or provider projections for bare item references.",
+      "owning_phase": "P2",
+      "acceptance": "Canonical and both provider projections detect ambiguous bare item references and accept qualified PLAN-ID Pn.m references."
+    },
+    {
+      "id": "O7",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/00-brief.md",
+      "requirement": "Complete plan, implementation, release tag and rollout in one authorized lifecycle.",
+      "current_seam": "Active phase-first plan with P6 release and registered-project rollout boundary.",
+      "gap": "P0-P5 acceptance must complete before release/tag/rollout; no early side effects are authorized.",
+      "owning_phase": "P6",
+      "acceptance": "Affected package gates pass, local v0.13.0 is created only after terminal P6.1, and rollout touches only registered channels with post-status evidence."
+    },
+    {
+      "id": "O8",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Keep the plan active through release and rollout.",
+      "current_seam": "plans/ACTIVE.md and active Layout-v2 plan directory.",
+      "gap": "None at P0.1; the invariant must remain true until terminal archive.",
+      "owning_phase": "P0-P6",
+      "acceptance": "The plan remains active and visible until release and rollout are terminal."
+    },
+    {
+      "id": "O9",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Use explicit Layout v2 with separate detailed phase and item carriers.",
+      "current_seam": "plan Layout v2 plus phases/Pn/Pn.md, Pn.m.md, bundles and generated state.",
+      "gap": "None for this plan; later v1 fleet migration remains separate P1 work.",
+      "owning_phase": "P0-P1",
+      "acceptance": "All active execution carriers are v2 and pass bundle/state/status checks."
+    },
+    {
+      "id": "O10",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Treat existing implementation as a candidate and re-accept it phase by phase.",
+      "current_seam": "Phase-first execution rules and item-scoped validation.",
+      "gap": "Candidate seams remain partial/open as recorded by R1-R8.",
+      "owning_phase": "P0-P5",
+      "acceptance": "Each phase closes only after its declared targeted checks and terminal gate, without inheriting a previous candidate verdict."
+    },
+    {
+      "id": "O11",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Do not tag or roll out before the visible active plan closes its pre-release gates.",
+      "current_seam": "P6 phase boundary; no current v0.13.0 side effect.",
+      "gap": "Release and rollout are intentionally pending.",
+      "owning_phase": "P6",
+      "acceptance": "Tag creation follows terminal P6.1 and rollout follows the tag gate."
+    },
+    {
+      "id": "O12",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Required Perplexity evidence cannot be replaced by empty, unavailable or fallback search results.",
+      "current_seam": "Plan evidence records a repaired live Perplexity rerun; block reducer requires verified RAG generically.",
+      "gap": "Runtime needs a Perplexity-qualified evidence/rag-pending contract rather than generic verified status.",
+      "owning_phase": "P0-P4",
+      "acceptance": "Required Perplexity success is provenance-qualified; bounded failure persists rag-pending and prevents terminal verdict/phase close."
+    },
+    {
+      "id": "O13",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Retire only Task execution Layout v1, not unrelated v1-named contracts.",
+      "current_seam": "plan_layout and commands still branch on Layout v1/v2; plan_migrate owns conversion.",
+      "gap": "Execution-specific v1 readers and command branches remain live.",
+      "owning_phase": "P1",
+      "acceptance": "Only execution-layout v1 paths are removed after migration; unrelated v1 schemas remain byte-compatible."
+    },
+    {
+      "id": "O14",
+      "source": "plans/2026.08.12-№1-TASK-RESILIENCE/brief/01-refinements.md",
+      "requirement": "Migrate all active repository and registered-project v1 plans before deleting readers; archives remain inert history.",
+      "current_seam": "plan_migrate exists and current readers still support v1.",
+      "gap": "No zero-active-v1 fleet proof exists yet, so reader and migrator removal is not admissible.",
+      "owning_phase": "P1",
+      "acceptance": "Inventory is complete, every active v1 plan is migrated and regenerated, zero-active-v1 is proven, then readers/commands/migrator retire while archives remain unchanged."
+    }
+  ]
+}

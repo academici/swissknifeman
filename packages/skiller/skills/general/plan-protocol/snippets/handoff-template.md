@@ -22,6 +22,8 @@
 Next обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
 + provider-rendered invocation одним code-block. `plan-lint` проверяет их наличие.
+Для execution Next таблица всегда несёт `Batch` из Routing, а команда — весь оставшийся
+adjacent-суффикс группы; одиночный запуск помечается `Batch: solo`. Для иных Next — `Batch: n/a`.
 
 **Формы `Next`** — закрытый enum (иная форма = ERROR линтера; канон — SKILL §8):
 
@@ -52,6 +54,7 @@ form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` wit
 
 | Параметр | Значение |
 |:--|:--|
+| Batch | <Batch ID / solo> |
 | Model class | frontier |
 | Effort | high — <почему high+ MANDATORY по §9> |
 | Capabilities | — |

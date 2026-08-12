@@ -7,28 +7,112 @@ from task import plan_gates
 
 _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
+_ROUTING_COLUMNS = ("Batch", "Items", "Model class/effort", "Exec", "Review", "Почему")
+_ROUTING_BATCH_RE = re.compile(r"^[A-Z][A-Z0-9._-]*$", re.IGNORECASE)
+_ROUTING_EXEC_VALUES = frozenset(("plan-exec", "manual", "plan-design"))
+_ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 
 
-def _lint_routing_item_cells(plan_lines, plan_path, diag):
-    """Keep lint and Task Contract on the same closed Routing ``Items`` grammar."""
+def _routing_items(cell):
+    """Expand the closed one-item/same-phase-range grammar."""
+    cell = cell.strip().strip("`")
+    if _ROUTING_ITEM_RE.fullmatch(cell):
+        return [cell]
+    match = _ROUTING_RANGE_RE.fullmatch(cell)
+    if (match and match.group(1) == match.group(3)
+            and int(match.group(2)) <= int(match.group(4))):
+        return [f"{match.group(1)}.{number}" for number in
+                range(int(match.group(2)), int(match.group(4)) + 1)]
+    return None
+
+
+def _lint_routing(plan_lines, plan_path, plan_id, layout, diag):
+    """Validate canonical batch routing and return expanded rows for handoff checks."""
     _idx, body, start = _find_section(
         plan_lines, re.compile(r"^##\s+3\.\s+Routing\s*$"))
     if body is None:
-        return
+        return []
     headers, rows, _header = _parse_table(body, start)
+    strict = layout == "v2" and bool(PLAN_ID_NUMBERED_RE.match(plan_id))
+    if strict and headers != list(_ROUTING_COLUMNS):
+        diag.error(
+            plan_path, _header,
+            "Routing schema: новый layout-v2 план обязан нести таблицу "
+            "`Batch | Items | Model class/effort | Exec | Review | Почему`; "
+            "Batch/Review не опциональны")
+        return []
+    if strict and not rows:
+        diag.error(plan_path, _header,
+                   "Routing schema: таблица нового layout-v2 плана не может быть пустой")
+        return []
     if not headers or "Items" not in headers:
-        return
+        return []
+    expanded_rows = []
     for row, line_number in rows:
         cell = row.get("Items", "").strip().strip("`")
-        if _ROUTING_ITEM_RE.fullmatch(cell):
+        items = _routing_items(cell)
+        if items is None:
+            diag.error(
+                plan_path, line_number,
+                f"Routing Items «{cell}» вне закрытой грамматики: допустим один item Pn.m "
+                "или возрастающий single-phase range Pn.a–Pn.b; batch задаётся отдельной колонкой")
             continue
-        match = _ROUTING_RANGE_RE.fullmatch(cell)
-        if match and match.group(1) == match.group(3) and int(match.group(2)) <= int(match.group(4)):
-            continue
-        diag.error(
-            plan_path, line_number,
-            f"Routing Items «{cell}» вне закрытой грамматики: допустим один item Pn.m "
-            "или возрастающий single-phase range Pn.a–Pn.b; batch задаётся отдельной колонкой")
+        if strict:
+            batch = row.get("Batch", "").strip()
+            if not batch or not _ROUTING_BATCH_RE.fullmatch(batch):
+                diag.error(plan_path, line_number,
+                           f"Routing Batch «{batch}» недопустим: ожидается `solo` или стабильный ID группы")
+            elif batch.lower() == "solo" and len(items) != 1:
+                diag.error(plan_path, line_number,
+                           "Routing Batch `solo` может адресовать ровно один item")
+            if row.get("Exec", "").strip() not in _ROUTING_EXEC_VALUES:
+                diag.error(plan_path, line_number,
+                           "Routing Exec должен быть plan-exec, manual или plan-design")
+            if row.get("Review", "").strip() not in _ROUTING_REVIEW_VALUES:
+                diag.error(plan_path, line_number,
+                           "Routing Review должен быть full, light или none")
+        expanded_rows.append({**row, "_items": items, "_line": line_number})
+    return expanded_rows
+
+
+def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, diag):
+    """Every new-plan item is assigned exactly once; real batches stay phase-local."""
+    if layout != "v2" or not PLAN_ID_NUMBERED_RE.match(plan_id):
+        return
+    owners = {}
+    batches = {}
+    for row in routing_rows:
+        batch = row.get("Batch", "").strip()
+        for item_id in row["_items"]:
+            owners.setdefault(item_id, []).append(row["_line"])
+            if batch.lower() != "solo":
+                batches.setdefault(batch, []).append((item_id, row))
+    for item_id in sorted(all_items):
+        lines = owners.get(item_id, [])
+        if not lines:
+            diag.error(plan_path, None, f"Routing schema: item {item_id} не назначен ни в Batch, ни в solo")
+        elif len(lines) > 1:
+            diag.error(plan_path, lines[-1], f"Routing schema: item {item_id} назначен более одного раза")
+    for item_id, lines in owners.items():
+        if item_id not in all_items:
+            diag.error(plan_path, lines[0], f"Routing schema: неизвестный item {item_id}")
+    for batch, members in batches.items():
+        item_ids = [item_id for item_id, _row in members]
+        phases = {item_id.split(".", 1)[0] for item_id in item_ids}
+        exec_modes = {row.get("Exec", "").strip() for _item_id, row in members}
+        numbers = sorted(int(item_id.split(".", 1)[1]) for item_id in item_ids)
+        if len(item_ids) < 2:
+            diag.error(plan_path, members[0][1]["_line"],
+                       f"Routing Batch {batch} содержит один item: используй `solo`")
+        if len(phases) != 1:
+            diag.error(plan_path, members[0][1]["_line"],
+                       f"Routing Batch {batch} пересекает фазовый audit/close boundary")
+        if len(exec_modes) != 1:
+            diag.error(plan_path, members[0][1]["_line"],
+                       f"Routing Batch {batch} смешивает несовместимые Exec-режимы {sorted(exec_modes)}")
+        if numbers and numbers != list(range(numbers[0], numbers[-1] + 1)):
+            diag.error(plan_path, members[0][1]["_line"],
+                       f"Routing Batch {batch} не является adjacent-цепочкой")
 
 
 def lint_plan(plan_dir, diag):
@@ -64,8 +148,9 @@ def lint_plan(plan_dir, diag):
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
         diag.error(plan_md, None, str(exc))
-    if layout == "v2" and plan_lines is not None:
-        _lint_routing_item_cells(plan_lines, plan_md, diag)
+    routing_rows = []
+    if plan_lines is not None:
+        routing_rows = _lint_routing(plan_lines, plan_md, plan_id, layout, diag)
     board_phase_ids = set()
     if status_board:
         board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}
@@ -186,6 +271,8 @@ def lint_plan(plan_dir, diag):
     for title, ids in titles.items():
         if len(ids) > 1:
             diag.warning(plan_dir, None, f"дубль Title «{title}» среди items: {sorted(ids)}")
+
+    _lint_routing_coverage(plan_md, plan_id, layout, routing_rows, all_items, diag)
 
     # --- Status Board согласован с фазами: счётчик 🟢/всего и статус фазы --
     board_by_phase = {row.get("Phase"): (row, lineno) for row, lineno in status_board}
@@ -340,6 +427,61 @@ def lint_plan(plan_dir, diag):
             # первая строка прозаическая, а команда живёт в launch-block'е, читаются как
             # прежде (резолв по всему полю).
             kind, m = _resolve_next_form(next_val)
+
+        # New numbered layout-v2 plans keep the chosen batch visible at every
+        # executable session boundary.  The handoff cannot silently collapse a
+        # roadmap batch into an unlabelled single-item launch.
+        if layout == "v2" and PLAN_ID_NUMBERED_RE.match(plan_id):
+            execution_match = None
+            if kind in ("exec", "run"):
+                execution_match = m
+            elif kind == "manual":
+                execution_match = re.search(
+                    r"(?:/|\b)task:plan-run\s+\S+\s+(P\d+\.\d+)", next_val)
+            if kind in ("exec", "run", "manual"):
+                batch_rows = [LAUNCH_BATCH_ROW_RE.match(line) for line in next_val.splitlines()]
+                batch_values = [match.group(1).strip() for match in batch_rows if match]
+                if not batch_values:
+                    diag.error(handoff_path, next_lineno,
+                               "handoff.Next: нет строки `| Batch | <id|solo> |`; "
+                               "граница нового исполнения теряет batch/solo")
+                elif execution_match:
+                    first_item = (execution_match.group(2) if kind in ("exec", "run")
+                                  else execution_match.group(1))
+                    expected = next((row.get("Batch", "").strip() for row in routing_rows
+                                     if first_item in row.get("_items", [])), None)
+                    if expected and batch_values[0] != expected:
+                        diag.error(handoff_path, next_lineno,
+                                   f"handoff.Next: Batch «{batch_values[0]}» ≠ Routing «{expected}» "
+                                   f"для {first_item}")
+                    if expected and batch_values[0] == expected:
+                        if kind == "run":
+                            command_items = _routing_items(
+                                first_item + (f"-{execution_match.group(3)}"
+                                              if execution_match.group(3) else "")) or []
+                        elif kind == "exec":
+                            command_items = re.findall(r"\bP\d+\.\d+\b", next_decl)
+                        else:
+                            run = re.search(
+                                r"(?:/|\b)task:plan-run\s+\S+\s+"
+                                r"(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?", next_val)
+                            command_items = (_routing_items(
+                                run.group(1) + (f"-{run.group(2)}" if run.group(2) else ""))
+                                if run else re.findall(r"\bP\d+\.\d+\b", next_decl)) or []
+                        members = ([first_item] if expected.lower() == "solo" else sorted(
+                            (item_id for row in routing_rows
+                             if row.get("Batch", "").strip() == expected
+                             for item_id in row.get("_items", [])
+                             if all_items.get(item_id, {}).get("status") not in
+                             (STATUS_DONE, STATUS_DEVIATIONS, STATUS_BLOCKED,
+                              "⛔ Skipped by decision")),
+                            key=lambda value: tuple(int(part) for part in value[1:].split(".")),
+                        ))
+                        if command_items != members:
+                            diag.error(
+                                handoff_path, next_lineno,
+                                f"handoff.Next: Batch {expected} должен адресовать весь оставшийся "
+                                f"adjacent-суффикс {members}, получено {command_items}")
 
         # --- C2 (D8): прозаическая gate-оговорка при runnable-форме → WARNING ------
         # Автор вписал в объявление runnable slash-форму «команда есть, но не сейчас»

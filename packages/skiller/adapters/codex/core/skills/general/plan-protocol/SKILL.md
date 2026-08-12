@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.29.0
+version: 2.30.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -152,6 +152,16 @@ or `plan-design`, and default/doubt Review is `full`. A batch inherits its highe
 `plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
 class/effort as evidence.
 
+For every new layout-v2 plan, `Batch` and `Review` are mandatory and Routing covers every item.
+`Batch=solo` means one independently launched item and its `Почему` must name the concrete boundary
+that makes reuse uneconomic or unsafe. Otherwise group adjacent items of one phase when they share
+a producer/consumer chain, files, required reads, setup, or validation context and one session saves
+more rereading/setup than it adds coupling. Do not split merely because items have separate commits,
+deliverables, or per-item close gates: those gates still run inside the batch. A batch never crosses
+a phase audit/close boundary, mixes `Exec` modes, hides an owner/irreversible gate, or exceeds the
+remaining context budget. Its launch route and review are the maxima of its rows and capabilities are
+the union. After each item, persist the same batch plus only its remaining adjacent suffix.
+
 ## 6. Handoff and semantic Next
 
 `handoff.md` is the rolling owner/design/audit pointer. Title is
@@ -169,8 +179,10 @@ store the provider-neutral semantic form and separately render Claude `/task:…
 `$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
 `РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
 
-Every runnable Next has Model class, Effort, Capabilities, Context, Суть, and Команда; manual has
-`Команда: —`. The launch snippet is the copyable form.
+Every runnable execution Next has Batch, Model class, Effort, Capabilities, Context, Суть, and
+Команда; non-execution Next uses `Batch: n/a`. Manual has `Команда: —`. `Batch` is copied from
+Routing and an execution handoff names the whole remaining batch, never silently one item from it.
+The launch snippet is the copyable form.
 
 For layout v2 the Context field carries EXACTLY one of three values:
 

@@ -6,13 +6,22 @@
 
 **Обновлён:** <YYYY-MM-DD> · **Соответствует plan.md:** v<X.Y.Z>
 
+## Правило группировки
+
+- Сначала ищи связную adjacent-цепочку одной фазы: общий producer/consumer, файлы,
+  Required Reads, setup или Validation. Объединяй, когда reuse сокращает время и токены.
+- Не атомизируй из-за отдельных коммитов/Deliverables: per-item lifecycle сохраняется внутри batch.
+- `solo` допустим только с конкретной причиной: несовместимый Exec, owner/irreversible gate,
+  отдельная capability/hard boundary или ожидаемое переполнение контекста.
+- Batch не пересекает phase audit/close; launch использует максимум route/review и union capabilities.
+
 ## Карта исполнения
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
 | P0.1 | B1 | plan-exec серия | implementation/medium | — | ready adjacent scope |
 | P0.2 | B1 | ↑ | implementation/medium | — | shared validation boundary |
-| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | owner decision inside item |
+| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | owner gate исключает безопасную цепочку |
 | P2.1–P2.3 | W1 | orchestration | implementation/medium | — | independent scope and declared capability |
 | … | | | | | |
 
@@ -22,6 +31,7 @@
 
 | Параметр | Значение |
 |:--|:--|
+| Batch | B1 |
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> — <причина> |
 | Capabilities | <semantic capability IDs> |

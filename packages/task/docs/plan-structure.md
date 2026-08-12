@@ -70,14 +70,19 @@ with `task.journal exception`; do not rewrite or compensate the historical journ
 Чек-лист миграции (что перенесено в docs, что осталось в архиве) — обязательная часть
 финального `handoff.md` архивированного плана.
 
-## Routing (§3 плана) — колонка Exec
+## Routing (§3 плана) — Batch, route и review
 
-Таблица `## 3. Routing` в `plan.md` несёт колонку **Exec** (enum `plan-exec` | `manual` |
-`plan-design`) поверх model/effort per-item. Пустая ячейка — деривация по тир-порядку
-(`haiku < sonnet < opus ≈ fable`, `low < medium < high < xhigh < max`): `model ≤ sonnet` И
-`effort ≤ medium` → `plan-exec`; иначе → `manual`. `plan-exec` (команда пинит sonnet/medium)
-отклоняет item с `Exec = manual`/`plan-design` на предусловии — запуск только вручную под
-предписанной моделью/effort.
+Новый layout-v2 план использует ровно шесть колонок:
+`Batch | Items | Model class/effort | Exec | Review | Почему`. Routing покрывает каждый item
+ровно один раз. `Exec` — enum `plan-exec` | `manual` | `plan-design`; `Review` —
+`full` | `light` | `none`.
+
+Adjacent items одной фазы объединяются, когда общий producer/consumer, Required Reads, setup
+или Validation позволяют сэкономить повторный cold start. Отдельный commit/Deliverable не
+разрывает Batch: lifecycle каждого item выполняется внутри группы. `solo` требует конкретной
+причины — несовместимый Exec, owner/irreversible gate, отдельная capability или context budget.
+Batch не пересекает phase audit/close и не смешивает Exec; запуск использует максимальные
+model/effort/review группы и union capabilities.
 
 ## Contracts (§7/§11 плана) — cross-plan notification
 
@@ -146,7 +151,9 @@ tier(work) := committed-bundle   если work.sessions == "multi"
 close/archive/manual/waiting/terminal и design-формы, включая
 `design-finish: task:plan-design <ID> finish` и
 `design-roadmap: task:plan-design <ID> roadmap`. Исторические slash-формы читаются для
-совместимости. Закрытый item обязан НАПЕЧАТАТЬ в `Completion Notes`
+совместимости. Каждый execution Next несёт строку `Batch` из Routing и команду всего оставшегося
+adjacent-суффикса; linter не позволяет handoff молча схлопнуть группу до одного item. Закрытый
+item обязан НАПЕЧАТАТЬ в `Completion Notes`
 коды обеих границ — `pre_mutation:` и `pre_final:`, оба со значением `allow` (`n/a` зелёным
 не считается). С 2026-07-27 это не только проза чеклиста аудита: `plan_lint`
 (`_lint_write_site_codes_44`, порог `WRITE_SITE_CODES_CANON_DATE`) даёт ERROR на `🟢`/`🟠`

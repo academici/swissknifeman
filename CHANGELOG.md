@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: batch/solo теперь обязательная часть нового плана и handoff.**
+  Шестиколоночный Routing покрывает каждый item; планировщик группирует связные adjacent items
+  одной фазы при экономии чтения/setup/validation, а `solo` требует конкретной границы. Linter
+  отклоняет новый layout-v2 план без `Batch`/`Review` и execution handoff, потерявший Batch.
+
 - **`task` / `plan-protocol`: проектирование больше не запускает исполнение автоматически.**
   Terminal `plan-design` возвращает владельцу только маршрутизированную рекомендацию; successor
   получает отдельный `cold-start-root: design-root-terminal`, а design-root не вызывает команду и

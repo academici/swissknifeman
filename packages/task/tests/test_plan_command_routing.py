@@ -72,6 +72,19 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertIn("DESIGN-ROOT-TERMINAL", protocol)
         self.assertIn("must not execute or spawn the successor", protocol)
 
+    def test_new_plan_batch_is_mandatory_and_survives_every_handoff_writer(self):
+        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
+                    ).read_text(encoding="utf-8")
+        template = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/snippets/plan-template.md"
+                    ).read_text(encoding="utf-8")
+        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", protocol)
+        self.assertIn("For every new layout-v2 plan, `Batch` and `Review` are mandatory", protocol)
+        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", template)
+        for command in ("plan-design", "plan-exec", "plan-audit", "plan-close"):
+            with self.subTest(command=command):
+                body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
+                self.assertIn("Batch", body)
+
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():
             carrier = PlanNextCarrier(

@@ -194,7 +194,9 @@ fresh item state. Повторное чтение запрещено; режим
    полного свипа): после изменения/добавления/закрытия фаз, смены Routing или re-design'а.
    Шаги: гейт на скелеты (как в finish) → перечитать Status Board + Phase Status всех фаз →
    пересобрать `roadmap.md` по `snippets/roadmap-template.md` (закрытые items пометить,
-   батчи/workflow/solo с обоснованиями, гейты владельца, launch-block'и групп; roadmap не
+   батчи/workflow/solo с обоснованиями выгоды/границы, гейты владельца, launch-block'и групп;
+   сначала пробуй adjacent-группу одной фазы с общими reads/setup/validation и ставь `solo`
+   только при конкретной несовместимости/hard boundary/context-budget; roadmap не
    переопределяет Routing §3) → строка Update Log. Если с последнего `finish`/`audit design`
    менялись КОНТРАКТЫ фаз (не только статусы) — предупреди владельца, что нужен новый
    `finish`, а не только пересборка карты.
@@ -225,9 +227,10 @@ owner-gate допустимы только для доказанной cross-pac
   Target Operator Models / Approval Owner; необязательные: `Home` — `brain`|`repo:<путь>`,
   `Paused By` — кто перехватил ACTIVE и когда) · `## 1. Context` (5–15 строк, самодостаточно) ·
   `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` — канон-таблица
-  `| Items | Model/effort | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
-  одной сессии — и `Review` — глубина ревью `full`|`light`|`none` — для батчинга подфаз,
-  легаси-форма без них валидна); колонка **Exec** — enum `plan-exec` |
+  `| Batch | Items | Model class/effort | Exec | Review | Почему |` (SKILL §5): для нового
+  layout-v2 плана `Batch`/`Review` обязательны, каждый item получает stable batch ID или `solo`;
+  `solo` требует конкретной причины, а связные adjacent items одной фазы группируются при
+  экономии повторного чтения/setup/validation; колонка **Exec** — enum `plan-exec` |
   `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ sonnet` И `effort ≤
   medium` → `plan-exec`, иначе `manual`); design/contract-item'ы получают `Exec = manual`
   явно; пустая секция = дефолты SSOT-матрицы ·
@@ -329,7 +332,10 @@ Perplexity. Полный канон RECOVERY-дисциплины + критер
 маркеры сняты; Scope Included/Excluded фазы заполнены; Alternatives несущих решений —
 в D-логе; Open Questions разнесены по статусам; несущие факты несут RAG-маркеры;
 внешние факт-классы фазы перечислены, у каждого — источник;
-**§3 Routing покрывает каждый item фазы ПОСТРОЧНО** (или явно сказано — действуют дефолты §9);
+**§3 Routing покрывает каждый item фазы ПОСТРОЧНО шестью обязательными колонками**;
+каждый item классифицирован как stable Batch либо `solo`; у `solo` названа граница, у batch —
+конкретный reuse-выигрыш, группа adjacent, phase-local и с единым Exec; launch использует
+максимум route/review и union capabilities;
 тир модели — по Tier policy §9 (верхний тир ТОЛЬКО при открытых design-решениях/необратимой
 цене ошибки; «effort high+» тир НЕ поднимает); диапазон-строка легальна лишь для однородных
 items (один риск-класс, одна фраза «почему» истинна для каждого — SKILL §9 «Гранулярность»),
@@ -365,7 +371,7 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
 DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего
 шага** (SKILL §8, форма `snippets/launch-block-template.md`): таблица
-`| Параметр | Значение |` с рядом строк `Model / Thinking / Context / Суть /` `| Команда |`
+`| Параметр | Значение |` с рядом строк `Batch / Model / Thinking / Context / Суть /` `| Команда |`
 (последней) — строка `| Команда |` несёт голую команду и, когда она выражает следующий шаг
 целиком, является всем ответом;
 отдельный code-block ОПЦИОНАЛЕН (появляется, когда шаг реально отличается от строки —

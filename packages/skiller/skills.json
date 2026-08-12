@@ -2307,10 +2307,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "2.29.0",
+      "version": "2.30.0",
       "description": "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff.",
-      "sha256": "01ed3ff9e7293f598d72e239e6bcab6a26a7f929d74b21876f24be4ac8daebb7",
-      "content_sha256": "7b7eea8dfeef49e2d424c508e2f286b54eb9c594a7f8b79feed1f4b80f8b00ff",
+      "sha256": "a72944f9ba4f0cbd235983feaaa990d028125940b4df0063af06a0dc18660b9e",
+      "content_sha256": "7666821ef2e29a0507c362bddf08d53fbaaa362e3497862735ab5e001d6436af",
       "tags": [
         "workflow",
         "planning",

@@ -6,6 +6,7 @@
 
 | Параметр | Значение |
 |:--|:--|
+| Batch | solo |
 | Model class | frontier |
 | Effort | high |
 | Capabilities | Perplexity Web · filesystem · git |
@@ -33,7 +34,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 **Remaining:**
 
 - P0.3, затем phase audit/close P0.
-- P1–P6 по phase-first порядку плана.
+- P1–P6 по phase-first порядку и Batch-карте roadmap; следующий связный запуск после P0 — B-P1-CUTOVER (P1.1–P1.3).
 
 **Sources of truth:**
 
@@ -42,6 +43,8 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 - `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.3.md`
 - `plans/2026.08.12-№1-TASK-RESILIENCE/bundles/P0.3.json`
 - `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.3.state.md`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/roadmap.md`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/research/03-execution-batching-and-orchestration-negation.md`
 
 **Open risks:**
 

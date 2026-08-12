@@ -126,6 +126,113 @@ class TestRoutingItemsGrammar(TmpPlanTestCase):
                 self.assertEqual(_errors_containing(diag, "закрытой грамматики"), [])
 
 
+class TestRoutingBatchSchema(TmpPlanTestCase):
+    """Новые layout-v2 планы не могут потерять batch/solo между design и handoff."""
+
+    PLAN_ID = "2026.08.12-№1-DEMO"
+
+    def _plan(self, routing=None, *, batch_in_handoff=True):
+        from task import plan_bundle, plan_status
+
+        plan_dir = write_valid_plan(self.root, self.PLAN_ID, layout="v2")
+        plan_path = plan_dir / "plan.md"
+        text = plan_path.read_text(encoding="utf-8").replace(
+            "| Title | Демо-план |", "| Title | План №1 — Демо-план |")
+        if routing is not None:
+            text = text.replace("## 3. Routing", "## 3. Routing\n\n" + routing)
+        plan_path.write_text(text, encoding="utf-8")
+        if batch_in_handoff:
+            handoff = plan_dir / "handoff.md"
+            handoff.write_text(
+                handoff.read_text(encoding="utf-8").replace(
+                    "| Model | sonnet |", "| Batch | solo |\n| Model | sonnet |"),
+                encoding="utf-8",
+            )
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, "P1.1")
+        return plan_dir
+
+    def test_missing_routing_table_is_error(self):
+        _, diag = _lint(self._plan())
+        self.assertTrue(_errors_containing(diag, "Routing schema"), diag.errors)
+
+    def test_legacy_four_column_routing_is_error(self):
+        routing = (
+            "| Items | Model class/effort | Exec | Почему |\n"
+            "|:--|:--|:--|:--|\n"
+            "| P1.1 | implementation/medium | plan-exec | test |"
+        )
+        _, diag = _lint(self._plan(routing))
+        self.assertTrue(_errors_containing(diag, "Routing schema"), diag.errors)
+
+    def test_canonical_solo_row_is_accepted(self):
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+        )
+        _, diag = _lint(self._plan(routing))
+        self.assertEqual(_errors_containing(diag, "Routing schema"), [], diag.errors)
+        self.assertEqual(_errors_containing(diag, "Routing Batch"), [], diag.errors)
+
+    def test_executable_handoff_requires_batch_row(self):
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+        )
+        _, diag = _lint(self._plan(routing, batch_in_handoff=False))
+        self.assertTrue(_errors_containing(diag, "handoff.Next: нет строки `| Batch |"),
+                        diag.errors)
+
+    def test_handoff_batch_must_match_routing(self):
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+        )
+        plan_dir = self._plan(routing)
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Batch | solo |", "| Batch | B-wrong |"), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "≠ Routing «solo»"), diag.errors)
+
+    def test_handoff_cannot_collapse_batch_to_one_item(self):
+        from task import plan_bundle, plan_item_state, plan_status
+
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| B1 | P1.1 | implementation/high | manual | full | shared reads |\n"
+            "| B1 | P1.2 | implementation/high | manual | light | producer chain |"
+        )
+        plan_dir = self._plan(routing)
+        phase = plan_dir / "phases" / "P1"
+        second = (phase / "P1.1.md").read_text(encoding="utf-8").replace(
+            "P1.1", "P1.2").replace("Валидация конфига", "Вторая валидация")
+        (phase / "P1.2.md").write_text(second, encoding="utf-8")
+        (plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_item_state.build_states(plan_dir, item_id="P1.2")
+        plan_bundle.build(plan_dir, "P1.2")
+        plan_status.build_status(plan_dir)
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Batch | solo |", "| Batch | B1 |").replace(
+            "/task:plan-exec", "/task:plan-run"), encoding="utf-8")
+
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), diag.errors)
+
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            f"/task:plan-run {self.PLAN_ID} P1.1",
+            f"/task:plan-run {self.PLAN_ID} P1.1-P1.2"), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), [],
+                         diag.errors)
+
+
 class TestNextDeclarationLine(TmpPlanTestCase):
     """D40 — форма `Next` объявляется ПЕРВОЙ строкой поля; проза launch-block'а (в т.ч.
     ячейка «Суть») законно ЦИТИРУЕТ другие формы enum'а и резолвер не перехватывает."""

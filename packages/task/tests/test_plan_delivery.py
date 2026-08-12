@@ -67,6 +67,14 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "handoff-persisted")
         self.assertEqual(receipt["next_exact"], "/task:plan-exec DEMO-HANDOFF P1.1")
 
+    def test_handoff_receipt_preserves_visible_batch(self):
+        plan = write_valid_plan(self.root, "DEMO-BATCH-HANDOFF")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Model | sonnet |", "| Batch | B1 |\n| Model | sonnet |"), encoding="utf-8")
+        receipt = plan_delivery.build_handoff_receipt(plan, "design")
+        self.assertEqual(receipt["route"]["batch"], "B1")
+
     def test_stale_handoff_recommendation_is_rejected(self):
         plan = self._terminal_plan()
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")

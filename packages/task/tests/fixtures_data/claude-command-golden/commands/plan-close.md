@@ -88,7 +88,7 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
   предписанную модель и голый промпт item'а отдельным code-block (либо `/model`+`/effort`+`/task:plan-run <ID> Pn.m`, D18) |
-- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть / Команда` — строка
+- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Batch / Model / Thinking / Context / Суть / Команда` — строка
   `Команда` несёт голую команду и, когда она полностью выражает следующий шаг, является всем
   ответом; отдельный code-block ОПЦИОНАЛЕН и появляется, только когда шаг реально отличается от
   строки (у `Exec = manual` — строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт голый промпт
@@ -381,6 +381,7 @@ launch-block не требуется, следующий план выбирае
 ```
 | Параметр | Значение |
 |:--|:--|
+| Batch | <stable ID из Routing / solo; n/a для close/archive> |
 | Model | <sonnet | opus | haiku | fable> |
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |

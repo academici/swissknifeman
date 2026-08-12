@@ -3,7 +3,7 @@ projection: decision-index
 projection_version: v1
 source_scope: decisions/
 through: 2026-08-12/D9
-inputs_sha256: 03beea9444caac95d8c8f30971cc4ae62a381f0100af07e1bad7c0602e9f6154
+inputs_sha256: eed17479b4f85f4a6b8d3539700fb72990527722952d73a7db3b0426566709d5
 generated_by: task plan-views decisions
 -->
 
@@ -14,6 +14,8 @@ generated_by: task plan-views decisions
 | ID | Date | Status | Items | Решение |
 |:--|:--|:--|:--|:--|
 | D1 | 2026-08-12 | accepted | P2.1, P2.2 | Новые планы используют `YYYY.MM.DD-№N-CODE`, где `N` — положительный уникальный внутри даты номер; Title начинается с `План №N —`. Legacy IDs остаются readable. RAG:— (owner/repo-grounded: `brief/00-brief.md`, `findings/00-roadmap-and-runtime-gap.md`). |
+| D10 | 2026-08-12 | accepted | P0.3, P1.1, P1.2, P1.3, P2.1, P2.2, P3.1, P3.2, P3.3, P4.1, P4.2, P5.1, P5.2, P5.3, P6.1, P6.2, P6.3 | Каждый item нового layout-v2 плана имеет обязательный `Batch` либо `solo` в §3 Routing. Adjacent items одной фазы объединяются, когда общий producer/consumer, reads, setup или Validation экономят время и токены; per-item lifecycle остаётся полным внутри группы. `solo` требует конкретной hard/economy boundary. Batch не пересекает phase audit/close, не смешивает Exec и передаётся в каждый execution handoff вместе со всем оставшимся суффиксом. RAG:— (repo-grounded: research/03). |
+| D11 | 2026-08-12 | accepted | P3.3, P5.3 | Workflow requirement выводится одним line-scoped semantic predicate. `scriptPath` или явное positive multi-agent/orchestration declaration включает его; явное отрицание в том же утверждении не включает. Отрицание не гасит positive declaration на другой строке/в другом блоке. Правило одно для обоих layout parser-path и canonical provider meaning. RAG:— (repo-grounded: `roadmap/2026.08.12-task-orchestration-negation-lint.md`, current parser/tests). |
 | D2 | 2026-08-12 | accepted | P2.2, P5.3 | В коде, docstring, PR/review comments item именуется полной формой `<PLAN-ID> Pn.m`; bare `Pn.m` допустим только внутри носителей самого плана. RAG:— (owner-grounded: `brief/00-brief.md`). |
 | D3 | 2026-08-12 | accepted | P3.1, P3.2, P4.1 | `routing-rejected`, `decision-pending`, `local-repair`, `rag-pending` и `block-candidate` — observation results: они пишут provenance, но не меняют state и attempt. RAG:— (repo-grounded: `roadmap/2026.08.11-local-repair-vs-escalation-classifier.md`, `roadmap/2026.08.11-codex-effective-route-observability.md`). |
 | D4 | 2026-08-12 | accepted | P4.1, P4.2 | Terminal block разрешает только deterministic reducer после одного свежего distinct-context isolated reviewer verdict `JUSTIFIED`; для external candidate до review обязателен verified RAG. RAG:— (owner-grounded: `brief/00-brief.md`; repo-grounded: `research/01-target-design.md`). |

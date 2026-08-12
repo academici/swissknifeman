@@ -11,6 +11,7 @@ vs code-block» ниже).
 
 | Параметр | Значение |
 |:--|:--|
+| Batch | <Routing Batch ID / solo; n/a только для design/audit/close/archive> |
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> |
 | Capabilities | <минимальный набор semantic capability IDs; `—` если дополнительных нет> |
@@ -76,6 +77,9 @@ code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, н�
   не несёт — payload'а не требует.
 - **Model class/Effort** — из Routing плана (SSOT-матрица — SKILL раздел 9); отклонение
   от матрицы обосновывается там же, не в launch-block.
+- **Batch** — из Routing плана. Для execution Next указывается ID группы или `solo`, а команда
+  адресует весь ещё не закрытый adjacent-суффикс группы. Поле не исчезает при новом handoff;
+  `n/a` допустимо только для design/audit/close/archive шага без исполнения item'ов.
 - **Capabilities** проверяются до invocation/work/write. Оркестрация обязана перечислить
   `command.subagents` и `command.workflow-carrier`; missing/unknown/unsupported блокирует запуск.
 - **Context** — закрытый enum ТРЁХ значений SKILL §6; выбирается границей, а не командой:

@@ -35,7 +35,12 @@ practices, рынок) добываются `/task:research` — многоис�
 
 `task:plan-design` (frontier/high) строит layout-v2 план: stable `plan.md`, phase index/item
 specs, append-only decisions и generated state/views/bundles. `design-finish` сверяет
-детализированный дизайн, `design-roadmap` обновляет только execution map. Спорное место —
+детализированный дизайн, `design-roadmap` обновляет только execution map. Каждый item нового
+плана обязан иметь `Batch`: `solo` с причиной или стабильный batch-ID. Смежные items одной
+фазы объединяются, когда общие reads/files/setup/validation экономят контекст; отдельные
+deliverables, commit-гейты и item acceptance внутри batch сохраняются. Phase audit/close,
+разный `Exec`, authority/irreversible gate или ожидаемое переполнение контекста — границы
+объединения. Спорное место —
 либо маркер `[NEEDS CLARIFICATION: <вопрос>]`, либо вопрос владельцу; самовольное допущение
 запрещено. Незатребованные фазы несут скелет-маркер, а не «просто пустые поля». Порог
 «нужен ли план вообще» — эвристика в §1 скилла: мелкая правка идёт в `/task:fix` без плана.
@@ -67,7 +72,10 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 до старта exec базовый план живёт в Brain; на старте переезжает в репо проекта (Meta
 `Home: repo:<путь>`), SSOT = репо, Brain — зеркало; расхождение базового с working-копией —
 не молчаливый merge, а `temporary divergence` + эскалация §10. Exec также сверяет свою
-модель/effort с Routing плана — расхождение фиксируется в Known Deviations.
+модель/effort с Routing плана — расхождение фиксируется в Known Deviations. Execution handoff
+всегда показывает `Batch`; batch выполняется последовательно в одной сессии, после каждого
+item проходят его собственные acceptance/commit/close gates, а следующий carrier сохраняет
+весь оставшийся смежный suffix группы. Audit/close фазы запускается уже отдельным carrier.
 
 Ошибка в ходе exec проходит continue-first gate: малый обратимый дефект чинится в том же attempt,
 а Blocked появляется только после isolated `JUSTIFIED` и verified RAG для внешнего класса. Перед

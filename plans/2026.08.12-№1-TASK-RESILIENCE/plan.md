@@ -15,7 +15,7 @@
 | Target Operator Classes | implementation (exec) · economy (mechanical checks) · frontier (design/audit) |
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
-| Design Passes | 1/1 — фазы восстановлены из проверенного roadmap/runtime evidence; владелец явно потребовал полную пофазную детализацию немедленно |
+| Design Passes | 2/2 — pass 2 устранил системную потерю Batch/solo и включил negation-lint roadmap после repo-grounded анализа |
 | visibility | private |
 | Paused By | — |
 
@@ -35,6 +35,7 @@ Microsoft Durable Functions; synthesis и URLs —
 ## 2. Execution Rules
 
 - Исполнять строго P0 → P1 → P2 → P3 → P4 → P5 → P6; статус берётся только из generated state.
+- Внутри фазы запускать stable Batch из §3 целиком; каждый item всё равно проходит собственные validation/commit/state/receipt. Phase audit/close — жёсткая граница группы.
 - P1 сначала мигрирует все active v1 plans, затем удаляет v1 execution schema/path; обратный порядок запрещён.
 - Любой failure signal проходит `observe → minimal reproduce → classify → act → verify`.
 - Procedural/transient/dependency/tool-noise/stale projection и bounded local reversible defect чинятся inline; это nonterminal `local-repair`.
@@ -53,26 +54,27 @@ Microsoft Durable Functions; synthesis и URLs —
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
-|:--|:--|:--|:--|
-| P0.1 | frontier/high | manual | сквозной roadmap/runtime verdict и acceptance boundary |
-| P0.2 | frontier/high | manual | замораживает continue-first матрицу и внешний RAG gate |
-| P0.3 | frontier/high | manual | повторный обязательный Perplexity pass и fail-closed RAG contract |
-| P1.1 | frontier/high | manual | inventory/contract всех live v1 consumers перед irreversible cutover |
-| P1.2 | implementation/high | manual | deterministic active-plan migration и carrier regeneration |
-| P1.3 | implementation/high | manual | удаление v1 execution schema/branches после zero-active-v1 proof |
-| P2.1 | implementation/high | manual | fleet-wide identity parser/linter с Unicode/back-compat |
-| P2.2 | implementation/high | manual | canonical/provider comment-reference parity |
-| P3.1 | implementation/high | manual | journal/state transition semantics |
-| P3.2 | implementation/high | manual | continue-first admission в пяти commands |
-| P4.1 | implementation/high | manual | closed schema/reducer для terminal block authority |
-| P4.2 | frontier/high | manual | isolated reviewer + 100% external RAG policy |
-| P5.1 | implementation/high | manual | terminal delivery receipt и exact persisted Next |
-| P5.2 | implementation/high | manual | phase candidate/audit/fingerprint lifecycle |
-| P5.3 | implementation/high | manual | generated provider/docs/registry parity |
-| P6.1 | implementation/high | manual | exact release tree и affected-package gates |
-| P6.2 | implementation/medium | plan-exec | annotated tag после release gate |
-| P6.3 | implementation/high | manual | registered-project rollout и post-status evidence |
+| Batch | Items | Model class/effort | Exec | Review | Почему |
+|:--|:--|:--|:--|:--|:--|
+| B-P0-EVIDENCE | P0.1 | frontier/high | manual | full | общий gap→acceptance producer chain; закрыто |
+| B-P0-EVIDENCE | P0.2 | frontier/high | manual | full | reuse gap matrix и acceptance boundary; закрыто |
+| solo | P0.3 | frontier/high | manual | full | отдельная Perplexity capability и mandatory evidence checkpoint |
+| B-P1-CUTOVER | P1.1 | frontier/high | manual | full | inventory питает migration/removal в той же fleet context |
+| B-P1-CUTOVER | P1.2 | implementation/high | manual | full | producer→consumer; reuse registry и migration evidence |
+| B-P1-CUTOVER | P1.3 | implementation/high | manual | full | removal сразу после zero-live proof, без повторной инвентаризации |
+| B-P2-IDENTITY | P2.1 | implementation/high | manual | full | общий PLAN-ID parser/linter/canon context |
+| B-P2-IDENTITY | P2.2 | implementation/high | manual | full | qualified refs потребляют identity grammar и provider surface |
+| B-P3-CONTINUE | P3.1 | implementation/high | manual | full | state semantics питают command repair flow |
+| B-P3-CONTINUE | P3.2 | implementation/high | manual | full | общие Task commands/tests и nonterminal contract |
+| B-P3-CONTINUE | P3.3 | implementation/high | manual | light | узкий lint predicate использует тот же false-stop/plan canon context |
+| B-P4-BLOCK | P4.1 | implementation/high | manual | full | candidate schema/reducer — producer confirmer flow |
+| B-P4-BLOCK | P4.2 | frontier/high | manual | full | reuse block/RAG fixtures; batch route повышается до frontier/high |
+| B-P5-DELIVERY | P5.1 | implementation/high | manual | full | receipt питает candidate/audit/close lifecycle |
+| B-P5-DELIVERY | P5.2 | implementation/high | manual | full | общие journal/state/fingerprint/receipt fixtures |
+| solo | P5.3 | implementation/high | manual | full | cross-package generators/docs и широкий validation требуют отдельного бюджета |
+| solo | P6.1 | implementation/high | manual | full | clean committed release-tree gate перед side effect |
+| solo | P6.2 | implementation/medium | plan-exec | full | irreversible annotated-tag boundary и отдельный Exec |
+| solo | P6.3 | implementation/high | manual | full | external registered-project rollout после verified tag |
 
 ## 5. Decision Log
 

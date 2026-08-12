@@ -63,7 +63,7 @@ def _handoff(plan_dir: Path) -> dict:
     if not recommendation:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "recommendation пуста")
 
-    route = {"model": None, "thinking": None, "context": None, "command": None}
+    route = {"batch": None, "model": None, "thinking": None, "context": None, "command": None}
     rows = []
     for line in lines[start:end]:
         if not line.strip().startswith("|"):
@@ -73,6 +73,7 @@ def _handoff(plan_dir: Path) -> dict:
             rows.append(cells)
     keyed = {row[0]: row[1] for row in rows if len(row) == 2}
     route.update({
+        "batch": keyed.get("Batch"),
         "model": keyed.get("Model"),
         "thinking": keyed.get("Thinking"),
         "context": keyed.get("Context"),

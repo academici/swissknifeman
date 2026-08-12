@@ -332,7 +332,7 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
    на закоммиченном дереве = **ложное утверждение**, даже если в момент написания было верным.
 
    **Схема `handoff.md`** (шаг 3): `# HANDOFF — <ISO-дата> — after Pn.m`, затем **Next:** (launch-block
-   п. 8 — таблица `Model / Thinking / Context / Суть` + голая команда ИЛИ голый промпт отдельным
+   п. 8 — таблица `Batch / Model / Thinking / Context / Суть` + голая команда ИЛИ голый промпт отдельным
    code-block'ом, копипаст без правок; самодостаточен из холодной сессии: plan-ID + cold-start reads;
    скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of
    truth:** / **Open risks:** / **Workarounds/Deferred/Open questions:** (workarounds · deferred ·
@@ -363,6 +363,7 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
    Launch-block (следующий шаг):
    | Параметр | Значение |
    |:--|:--|
+   | Batch | <stable ID из Routing / solo> |
    | Model | <sonnet|opus|haiku|fable> |
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
@@ -384,9 +385,11 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
 
    **Launch-block** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО шага по факту его текста в
    `phases/Pn.md` (уже прочитан в п. 1), `plan.md` §3 Routing И `plans/<PLAN-ID>/roadmap.md`
-   (SKILL §8): если roadmap существует и следующий шаг входит в batch/workflow-группу —
+   (SKILL §8): launch-block всегда показывает `Batch`; если roadmap существует и следующий шаг
+   входит в batch/workflow-группу —
    launch-block несёт КОМАНДУ ГРУППЫ (`/task:plan-run <ID> Pn.a-Pn.b` / `Workflow({scriptPath})`),
-   а не одиночный item; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
+   а не одиночный item. После закрытия item команда сохраняет тот же Batch и адресует только
+   оставшийся adjacent-суффикс; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
    - Следующий item, `Exec = plan-exec` → строка `Команда` = `/task:plan-exec <PLAN-ID> Pn.k`
      (весь ответ, code-block не заводится); Model/Thinking — из Routing (дефолт `sonnet/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =

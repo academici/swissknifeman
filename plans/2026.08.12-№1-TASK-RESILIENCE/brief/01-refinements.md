@@ -21,3 +21,21 @@
   reader/command/migrator path; архивные v1 остаются inert history.
 - После ремонта `perplexity-web-mcp` формирование этого плана продолжается, а прежние fallback
   результаты не используются как замена обязательного Perplexity evidence.
+
+## 2026-08-12 — обязательные execution batches
+
+- До коррекции план не отвечал, какие items исполняются `solo`, а какие одной сессией.
+- Сначала исправляется сама схема/шаблон/lint/handoff, чтобы `Batch` больше нельзя было забыть;
+  только затем мигрируется этот план.
+- Нельзя атомизировать ради атомизации: adjacent items группируются при реальной экономии
+  повторного чтения, setup и Validation, сохраняя per-item commits/gates.
+- `solo` используется только с конкретной hard/economy boundary; Batch всегда виден в команде
+  следующего исполнения и не пересекает phase audit/close.
+
+## 2026-08-12 — orchestration negation lint roadmap
+
+- Включить `roadmap/2026.08.12-task-orchestration-negation-lint.md` в активный план после
+  repo-grounded анализа.
+- Явное «оркестрация не заявлена/не требуется» не должно считаться positive declaration.
+- Настоящий `scriptPath`/multi-agent positive и positive после отрицания остаются gated.
+- Не переписывать пострадавший Agelto plan эвфемизмами; исправить общий parser и parity.

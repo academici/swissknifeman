@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:3551f610401744265362295199344f550881ebfc6c76c0d803a2e21829d1b7dd
+Canonical SHA-256: sha256:2acc8e1ca8240fd6f77a21d6b1621fcb66f860c2a31538b7f061439e26549715
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -112,6 +112,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    `Design Passes: k/N` — k≥N по Update Log-строкам «Design pass …» (недобор без D-записи
    владельца = Major).
 6. **Roadmap исполним (SKILL §8):** `roadmap.md` есть (план детализирован — иначе ERROR линтера),
+   §3 несёт обязательные `Batch`/`Review` и покрывает каждый item; batch phase-local/adjacent,
+   имеет единый Exec и доказанный reuse-выигрыш; `solo` называет конкретную hard/economy boundary;
    покрывает ВСЕ items без дыр, батчи обоснованы (сцепленный scope + одна модель), у каждого
    solo — причина «почему нельзя объединить», у batch/workflow-групп — готовые launch-block'и,
    гейты владельца — только там, где решение реально его; roadmap не противоречит §3 Routing.
@@ -268,8 +270,8 @@ carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполн�
 плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
 failure_scenario); второй non-GREEN исчерпывает repair budget, а вызов при уже двух audit-блоках
-возвращает строку `AUDIT-CAP:` без нового блока/журнала (п. 2). Затем launch-block (форма канона §8): таблица `| Model |
-Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
+возвращает строку `AUDIT-CAP:` без нового блока/журнала (п. 2). Затем launch-block (форма канона §8): таблица `| Batch |
+Model | Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
 чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
 `RED`/`ATTENTION` несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
 (четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:

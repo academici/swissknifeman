@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:fa6e8844608aaadf31a7ad01fede295697098af46e3d2e8808c9b6402d36e0d3
+Canonical SHA-256: sha256:0b748ae07823dd64239643db944d22188f85de1a86a4faff48d834a2be0a1127
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -102,7 +102,7 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
   предписанную модель и голый промпт item'а отдельным code-block (либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) |
-- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть / Команда` — строка
+- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Batch / Model / Thinking / Context / Суть / Команда` — строка
   `Команда` несёт голую команду и, когда она полностью выражает следующий шаг, является всем
   ответом; отдельный code-block ОПЦИОНАЛЕН и появляется, только когда шаг реально отличается от
   строки (у `Exec = manual` — строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт голый промпт
@@ -395,6 +395,7 @@ launch-block не требуется, следующий план выбирае
 ```
 | Параметр | Значение |
 |:--|:--|
+| Batch | <stable ID из Routing / solo; n/a для close/archive> |
 | Model | <implementation | frontier | economy | frontier> |
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |

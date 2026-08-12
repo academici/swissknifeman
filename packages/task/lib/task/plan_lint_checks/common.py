@@ -192,6 +192,7 @@ RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED
 # В ТОЙ ЖЕ таблице ИЛИ code-block ниже — P5.8, аддитивно: обе формы валидны, back-compat
 # 26+ живых планов флота, писавших только code-block, не ломается).
 LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
+LAUNCH_BATCH_ROW_RE = re.compile(r"^\|\s*Batch\s*\|\s*([^|]+?)\s*\|")
 LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Layout-v2 `Context` launch-block'а (SKILL §6, D16/D30/D125) — РОВНО три

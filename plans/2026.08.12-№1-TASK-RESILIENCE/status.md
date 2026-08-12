@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 54e41cf2e1dcfc45932f342f0a878222fc93f9bbaf01ce12479664bfb6a79d6c
+inputs_sha256: e7ee671968ee722e8f0d32891e8b3adc2ec42384ad0f214c51da3b5caf18c351
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Roadmap evidence and acceptance freeze | 2/3 | 🟡 In progress |
 | P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
-| P3 | Nonterminal observations and inline local repair | 0/2 | ⬜ Not started |
+| P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
@@ -60,6 +60,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Add nonterminal journal results and state semantics | ⬜ Not started | — |
 | P3.2 | Apply continue-first repair flow to canonical commands | ⬜ Not started | — |
+| P3.3 | Make orchestration declaration detection negation-aware | ⬜ Not started | — |
 
 ## Phase P4
 
@@ -106,6 +107,7 @@ write-site: pre_mutation: allow · pre_final: block:ACCEPTANCE_NOT_PUBLIC |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Authorized spec repair made Validation public; Task Contract now evaluates allow/allow. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · Artifacts committed at e01b2a65; declared Validation and negative mutations passed; startup actor metadata was corrected append-only.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | frontier/high | plan-design · in-progress · Design pass 2: обязательные Batch/Review и batch-aware handoff; roadmap orchestration-negation включён как P3.3/P5.3. |
 
 ## Owner Gates
 

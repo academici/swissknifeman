@@ -54,12 +54,15 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 ## 3. Routing
 
-<ТОЛЬКО отклонения от SSOT-матрицы plan-protocol §9. Пусто = дефолты SSOT-матрицы §9.>
+<ПОСТРОЧНОЕ покрытие всех items. Batch/Review обязательны: `solo` только с конкретной
+причиной; связные adjacent items одной фазы группировать, если общий контекст экономит
+повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.>
 
-| Items | Model class/effort | Exec | Почему |
-|:--|:--|:--|:--|
-| <Pn.m–Pn.k> | <frontier/high> | manual | <расфриз public-контракта: effort high+ MANDATORY> |
-| <Pn.m–Pn.k> | <implementation/low> | plan-exec | <doc-cleanup без новых решений> |
+| Batch | Items | Model class/effort | Exec | Review | Почему |
+|:--|:--|:--|:--|:--|:--|
+| B1 | <Pn.m> | <frontier/high> | manual | full | <общие reads/setup с Pn.(m+1)> |
+| B1 | <Pn.(m+1)> | <implementation/high> | manual | light | <producer→consumer, выгодно продолжить> |
+| solo | <Pn.k> | <implementation/medium> | plan-exec | full | <конкретный hard/owner/side-effect boundary> |
 
 ## 5. Decision Log
 

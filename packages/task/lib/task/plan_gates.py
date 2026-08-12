@@ -54,25 +54,31 @@ def _declared_file_paths(value: str) -> tuple[str, ...]:
 
 def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[dict]]:
     """Hash declared product carriers while excluding plan/audit bookkeeping."""
+    plan_dir = plan_dir.resolve()
     completed = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"], cwd=plan_dir, text=True,
         capture_output=True, check=False,
     )
-    repository_root = (Path(completed.stdout.strip()) if completed.returncode == 0
-                       and completed.stdout.strip() else plan_dir.parents[1])
+    repository_root = (Path(completed.stdout.strip()).resolve() if completed.returncode == 0
+                       and completed.stdout.strip() else plan_weight.repo_root_for(plan_dir))
     rows = []
     for declared in sorted(declared_paths):
         candidate = Path(declared)
         if candidate.is_absolute() or declared.startswith(("~", "../")):
             rows.append({"declared": declared, "state": "external"})
             continue
-        path = repository_root / candidate
+        path = next((root / candidate for root in (repository_root, plan_dir)
+                     if (root / candidate).exists() or (root / candidate).is_symlink()), None)
+        if path is None:
+            rows.append({"declared": declared, "state": "missing"})
+            continue
+        relative_path = path.relative_to(repository_root).as_posix()
         if path.is_symlink():
-            rows.append({"declared": declared, "path": candidate.as_posix(),
+            rows.append({"declared": declared, "path": relative_path,
                          "state": "symlink", "target": str(path.readlink())})
             continue
         if path.is_file():
-            rows.append({"declared": declared, "path": candidate.as_posix(), "state": "file",
+            rows.append({"declared": declared, "path": relative_path, "state": "file",
                          "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
             continue
         if path.is_dir():
@@ -89,7 +95,7 @@ def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[d
                                     "sha256": hashlib.sha256(member.read_bytes()).hexdigest()})
             rows.append({"declared": declared, "state": "directory", "members": members})
             continue
-        rows.append({"declared": declared, "state": "missing"})
+        rows.append({"declared": declared, "path": relative_path, "state": "missing"})
     encoded = json.dumps(rows, ensure_ascii=False, sort_keys=True,
                          separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest(), rows

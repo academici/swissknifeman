@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: phase candidate fingerprint учитывает plan-relative product files.**
+  Declared `Files` сначала сохраняют совместимый repo-relative resolution, затем разрешаются от
+  каталога плана; байты acceptance/RAG carriers теперь инвалидируют stale phase audit.
+
 - **`task`: phase handoff и close получили единый risk-adaptive audit gate.**
   Low-risk фазы больше не получают гарантированно холостой `plan-close`: audit выбирается заранее
   по Review, material risk, terminal status и multi-item объёму.

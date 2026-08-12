@@ -1,6 +1,7 @@
 """D2/P3 gate tests: v2 refuses, v1 remains silent."""
 import copy
 import shutil
+import subprocess
 import tempfile
 import unittest
 import unittest.mock
@@ -66,6 +67,44 @@ class TestReadBudgetGate(unittest.TestCase):
             product.write_text("VALUE = 2\n", encoding="utf-8")
             after_product_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             self.assertNotEqual(after_product_change["fingerprint"], after_item_change["fingerprint"])
+
+    def test_v2_phase_candidate_fingerprint_tracks_plan_and_repo_relative_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            plan_dir = write_valid_plan(root, layout="v2")
+            spec = plan_dir / "phases" / "P1" / "P1.1.md"
+            spec.write_text(
+                spec.read_text(encoding="utf-8").replace(
+                    "**Files:** lib/pkg/config.py",
+                    "**Files:** `artifacts/result.txt` · `packages/task/result.txt`",
+                ),
+                encoding="utf-8",
+            )
+            plan_product = plan_dir / "artifacts" / "result.txt"
+            repo_product = root / "packages" / "task" / "result.txt"
+            plan_product.parent.mkdir(parents=True)
+            repo_product.parent.mkdir(parents=True)
+            plan_product.write_text("plan-v1\n", encoding="utf-8")
+            repo_product.write_text("repo-v1\n", encoding="utf-8")
+
+            before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            rows = {row["declared"]: row for row in before["snapshot"]["product_files"]}
+            self.assertEqual(rows["artifacts/result.txt"]["state"], "file")
+            self.assertEqual(
+                rows["artifacts/result.txt"]["path"],
+                "plans/DEMO-1/artifacts/result.txt",
+            )
+            self.assertEqual(rows["packages/task/result.txt"]["state"], "file")
+            self.assertEqual(rows["packages/task/result.txt"]["path"], "packages/task/result.txt")
+
+            plan_product.write_text("plan-v2\n", encoding="utf-8")
+            after_plan_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertNotEqual(after_plan_change["fingerprint"], before["fingerprint"])
+
+            repo_product.write_text("repo-v2\n", encoding="utf-8")
+            after_repo_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertNotEqual(after_repo_change["fingerprint"], after_plan_change["fingerprint"])
 
     def test_overweight_v2_item_names_item_weight_threshold_and_unit(self):
         diag = lint(self.copied_fixture("plan-v2-overweight"))

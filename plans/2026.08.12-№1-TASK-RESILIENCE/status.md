@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: ed7aff0d4fcd03d7b7f919a8e2a78366bfedfb9f032b228549cf74a1e931ad3c
+inputs_sha256: 7e4cbc1d11d9fdd1855ce5d51d87d10499abed9c2a920f01bdbe98c4b382f566
 generated_by: task plan-views status
 -->
 
@@ -194,6 +194,11 @@ Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run;
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P1.5 gates green; findings/10 records 7 restarts / 8 launches and mandates fresh P1 diff audit.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Product commit 7b9eb580; all P1.5 gates green. findings/10: 7 restarts / 8 launches; fresh P1 diff audit mandatory.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-12 | frontier/xhigh | plan-run · in-progress · Bounded repair прямого RED-аудита в той же owner-сессии; route выше implementation/high принят как явное owner continuation. |
+| 2026-08-12 | frontier/xhigh | plan-run · closed-deviations · Repair commit 6c07566c: удалён legacy fixture adapter, audit receipt исправлен, Batch-first lint согласован; Task 836/1 skip, skiller 633, docs builds GREEN. Отклонение: same-session owner continuation и route выше требуемого. |
+| 2026-08-12 | frontier/xhigh | plan-run · closed-deviations · Carrier-only correction for attempt 8: Task Contract 1e553cc7 evaluated GREEN. Product remains 6c07566c.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

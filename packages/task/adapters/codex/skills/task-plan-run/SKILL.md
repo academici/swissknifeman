@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-run`.
 - Invocation: `$ task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:52a2680d553ea32b34854d0e5e4953299a0595262aeaa144000572291107aa91`
+- Canonical SHA-256: `sha256:fc5dc7e0423acef37a465ab314aa8eba0063cb474241b296116dc9000051d0d1`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

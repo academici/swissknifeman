@@ -37,6 +37,25 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
 
+## Continue-first block gate (v1)
+
+`Blocked` и escalation — не реакция на signal. Снача воспроизведи минимальный signal,
+классифицируй его и запиши nonterminal journal result: `routing-rejected`,
+`decision-pending`, `local-repair` или `block-candidate`. Procedural/transient/tool-noise,
+dependency-not-ready, unrelated-pre-existing и bounded local reversible defect автоматически
+чинятся в том же attempt; `local-repair` не меняет status/attempt, после него
+повторяется original Validation carrier.
+
+Если остался material block candidate, собери closed `block-candidate/v1` capsule.
+Для external-класса RAG обязателен в 100% случаев: `rag.status=verified` и непустые
+digest-qualified `evidence_ids`; без этого action — `gather-rag`, а не stop. Затем ровно один
+свежий reviewer в `isolated-child-return`, чьи actor/context отличаются от executor,
+применяет `prompts/block-confirmation-rubric-v1.md`. Root валидирует capsule и вызывает
+`task.plan_blocking.evaluate()`; reviewer даёт evidence, но не authorization. Только action
+`terminal-block` после `JUSTIFIED` разрешает 🔴/escalation. `AVOIDABLE` → local repair,
+`INSUFFICIENT_EVIDENCE` → сбор evidence, `OUT_OF_SCOPE|MALFORMED` → repair capsule; все три
+ветки nonterminal и продолжают owning root.
+
 1. **Порядок чтения — РОВНО такой, ничего сверх.** Сначала прочитай поле `Layout` в `## 0. Meta`;
    по дереву файлов раскладка НЕ выводится. `Layout` отсутствует → v1:
    1) `plans/<PLAN-ID>/plan.md` — Context, Execution Rules, **§3 Routing (читать ОБЯЗАТЕЛЬНО — п. 2)**,
@@ -157,9 +176,10 @@ Raw provider flags допустимы только в additive adapter/projectio
    воспроизведённые acceptance/safety/authority границы останавливают затронутый item. Recon/диагноз-deliverable item'а (если Deliverables
    его декларируют) кладётся в `plans/<PLAN-ID>/findings/<Pn>-<slug>.md`.
 
-5. **Эскалация.** Триггеры (закрытый enum): многопакетный рефакторинг · неясная архитектура ·
+5. **Эскалация после block gate.** Material-триггеры (закрытый enum): многопакетный рефакторинг · неясная архитектура ·
    public contract/SemVer · protected generated assets · конфликт правил · неясные acceptance.
-   При срабатывании оставь ТРИ greppable-артефакта и остановись:
+   Сам триггер создаёт `block-candidate`, но не блок. Только `task.plan_blocking` action
+   `terminal-block` из раздела выше разрешает оставить ТРИ greppable-артефакта и остановиться:
    - blockquote в item: `> 🔴 ESCALATION Pn.m: <причина> | trigger: <из enum> | нужен: plan-design`;
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
    - **при `Closure Protocol | v1` (opt-in, D44/P8.3):** строка `Возобновление: <точная
@@ -318,7 +338,16 @@ Raw provider flags допустимы только в additive adapter/projectio
    truth:** / **Open risks:** / **Workarounds/Deferred/Open questions:** (workarounds · deferred ·
    open_questions; «—» если нет).
 
-8. **Expected output — фиксированный формат (по блоку на item):**
+8. **Terminal delivery receipt — до `final`, без исключений.** После terminal journal
+   append, persisted state и перезаписи `handoff.md` выполни
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py" --plan-dir plans/<PLAN-ID>
+   --subject <Pn.m> --kind terminal`. Код `FINAL_BEFORE_TERMINAL_FORBIDDEN`, missing/stale
+   journal/state/handoff или ненулевой exit запрещают `final`: диспатч остаётся активным
+   и возвращается в repair/reconciliation. В `final` выведи строку
+   `Delivery receipt: <compact JSON>` и отдельно `Рекомендация следующего шага:` с exact
+   `recommendation` из receipt; сокращённое «Next Pn.m» не заменяет persisted recommendation.
+
+9. **Expected output — фиксированный формат (по блоку на item):**
    ```
    ### Pn.m — <Title>
    Status: 🟢 Done | 🟠 Done with deviations | 🔴 Blocked

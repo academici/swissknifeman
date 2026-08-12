@@ -33,6 +33,17 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
 
+## Continue-first block gate (v1)
+
+Не превращай finding в terminal stop по предположению. Deterministic non-material
+bookkeeping чини inline; процедурный/transient/dependency/tool signal пиши как
+nonterminal `local-repair` и повтори gate. Material block suspicion пиши как
+`block-candidate`, собери closed `block-candidate/v1`; external-класс в 100% случаев
+требует verified RAG. Затем один свежий reviewer, отличный от executor, в
+`isolated-child-return` применяет `block-confirmation-rubric-v1`; root вызывает
+`task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` может дать
+terminal red/incident; все остальные actions возвращают owning root в repair/evidence.
+
 ## Путь чтения по объявленной раскладке
 
 Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву файлов раскладка НЕ выводится.
@@ -224,6 +235,12 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
 
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
    протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.
+
+**Handoff delivery receipt.** После записи verdict и final handoff, но до `final`, вызови
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py" --plan-dir plans/<PLAN-ID>
+--subject <design|Pn> --kind handoff`. Receipt связывает ответ с exact persisted `Next`;
+ненулевой exit запрещает `final` до repair. Финал печатает `Delivery receipt:
+<compact JSON>` и `Рекомендация следующего шага:` с exact `recommendation` receipt.
 
 **AUDIT-ROOT-TERMINAL (routing/cost boundary).** После записи terminal verdict и обязательных
 carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполняет successor command, даже если тот

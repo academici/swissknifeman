@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: выполнение стало continue-first.** Route rejection, pending
+  decision, local repair и block candidate теперь являются nonterminal journal observations и не
+  расходуют attempt. Terminal `Blocked` разрешается только после isolated `JUSTIFIED`; для каждого
+  внешнего кандидата обязателен verified RAG, а малые обратимые дефекты исправляются в текущем run.
+
+- **`task`: terminal final и handoff связаны machine receipt.** Новый `plan-delivery.py`
+  отказывает на нетерминальном/stale state, связывает journal run ID с digest'ами plan/handoff/state/
+  closure и переносит в финальный ответ точную сохранённую рекомендацию следующего шага.
+
+- **`task` / `plan-protocol`: новые планы получили дневную нумерацию.** Канон
+  `YYYY.MM.DD-№N-CODE` проверяет положительный уникальный ordinal и согласованный Title `План №N`;
+  внешние комментарии и review findings ссылаются на item как `<PLAN-ID> Pn.m`, старые IDs читаются.
+
 - **`task`: packaged plan-protocol projection makes standalone `--conflicts` fail closed.**
   Generator-owned runtime carries canonical SHA-256 provenance; a missing or drifted projection
   is rejected instead of searching arbitrary sibling or cache paths.

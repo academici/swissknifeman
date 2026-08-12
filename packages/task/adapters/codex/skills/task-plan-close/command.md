@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:9c17b20c1915d47181e625b049c14a5315c856863f0b5e18d6fb278d138ea8c6
+Canonical SHA-256: sha256:fa6e8844608aaadf31a7ad01fede295697098af46e3d2e8808c9b6402d36e0d3
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -46,6 +46,17 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 передаёт запись детерминированному reducer и продолжает исходный run. Неоткалиброванная пара
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
+
+## Continue-first block gate (v1)
+
+До любого 🔴/escalation примени общий gate: durable nonterminal
+`routing-rejected|decision-pending|local-repair|block-candidate`; автофикс малого reversible
+отклонения и повтор original carrier; closed `block-candidate/v1`; verified RAG для
+100% external-кандидатов; ровно один отличный от executor reviewer в
+`isolated-child-return`; deterministic `task.plan_blocking.evaluate()`. Только action
+`terminal-block` после `JUSTIFIED` разрешает terminal Blocked. `AVOIDABLE`,
+`INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` и `MALFORMED` не закрывают subject и возвращают
+его в local repair/evidence под authoritative root. Reviewer не выдаёт authorization.
 
 ## Путь чтения по объявленной раскладке
 
@@ -313,7 +324,8 @@ status-rule ниже. Точная команда, лестница маршру
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
    --command plan-close --actor implementation/low
-   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --result <closed-green — все items 🟢 |
+   --session-id "$(python3 packages/task/scripts/plan-session.py current --id)" --run-id <derive_run_id для plan/Pn/attempt/session>
+   --attempt <N> --result <closed-green — все items 🟢 |
    closed-deviations — хоть один 🟠> --note "фаза Pn закрыта"` — ДО коммита закрытия (шаг 9,
    `journal.jsonl` входит в `git add plans/<PLAN-ID>` того же коммита).
 9. **Коммит закрытия фазы — ОДИН** (только плановые пути + docs/, если правился шагом 3;
@@ -345,9 +357,24 @@ status-rule ниже. Точная команда, лестница маршру
    ссылки на `plans/<ID>` в живых доках/реестрах → `plans/archive/<ID>`.
 5. **Чек-лист миграции** (что перенесено в docs — файл→файл, что осталось в архиве) —
    допиши в финальный `handoff.md` архивированного плана (уже в `plans/archive/<ID>/`).
-6. Миграционный дифф (docs + реестры + handoff) — вторым коммитом
+6. До второго коммита допиши в перенесённый journal terminal `item_id=archive`,
+   `command=plan-close`, `result=closed-green` с непустым `session_id` и derived
+   `run_id`; journal обязан войти во второй коммит, а не остаться незакоммиченным.
+7. Миграционный дифф (docs + реестры + handoff + terminal journal) — вторым коммитом
    `docs(plan): миграция root/ <ID> → docs`. Прогони plan-lint по `plans/archive/<ID>`
-   как в п. 6 режима `Pn` (счёт с атрибуцией `--baseline HEAD`).
+   как в п. 6 режима `Pn` (счёт с атрибуцией `--baseline HEAD`). После коммита собери receipt
+   `python3 "$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/scripts/plan-delivery.py" --plan-dir plans/archive/<ID>
+   --subject archive --kind terminal`. Ненулевой exit запрещает `final` и возвращает
+   к repair носителей.
+
+## Delivery receipt before final
+
+В режиме `Pn.m` вызови `plan-delivery.py --subject Pn.m --kind terminal`; в режиме
+`Pn` — `--subject Pn --kind terminal`; archive использует шаг 7. Receipt собирается
+ТОЛЬКО после terminal journal/state, final handoff и closure, где она есть.
+`FINAL_BEFORE_TERMINAL_FORBIDDEN`, stale digest, missing run_id или recommendation оставляют
+dispatch активным. Финал обязан вывести `Delivery receipt: <compact JSON>` и
+`Рекомендация следующего шага:` с exact `recommendation` receipt.
 
 **Expected output режима `archive`:** строка `PLAN-ARCHIVED: <ID>` + чек-лист миграции
 (перенесено → куда | осталось в архиве) + два sha коммитов. Next вне протокола —

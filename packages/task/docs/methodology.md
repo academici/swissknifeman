@@ -69,6 +69,11 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 не молчаливый merge, а `temporary divergence` + эскалация §10. Exec также сверяет свою
 модель/effort с Routing плана — расхождение фиксируется в Known Deviations.
 
+Ошибка в ходе exec проходит continue-first gate: малый обратимый дефект чинится в том же attempt,
+а Blocked появляется только после isolated `JUSTIFIED` и verified RAG для внешнего класса. Перед
+final terminal-команды собирают delivery receipt, связанный с terminal state и exact persisted
+handoff. См. [Continue-first](./continue-first).
+
 ## review (по material trigger)
 
 Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict

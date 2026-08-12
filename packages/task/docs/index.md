@@ -77,6 +77,7 @@ python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phas
 | Страница | Что там |
 |:--|:--|
 | [Методология — полный цикл](./methodology) | Mermaid-карта research → design → refine (DoR, pre-mortem) → approve → exec (commit-гейт, два дома) → review (таксономия) → archive → docs |
+| [Continue-first, block confirmation и delivery receipt](./continue-first) | Автофикс малых отклонений, isolated-подтверждение реального Blocked, 100% RAG для external-кандидатов и защита от раннего final |
 | [Структура плана](./plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
 | [Шаблоны](./templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
 | [Конструктор workflow](./workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |

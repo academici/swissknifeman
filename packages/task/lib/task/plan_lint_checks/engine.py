@@ -214,9 +214,11 @@ def lint_plan(plan_dir, diag):
         if item_statuses and any(s == STATUS_BLOCKED for s in item_statuses) and phase_status != STATUS_BLOCKED:
             diag.error(plan_md, row_lineno,
                        f"Status Board {pid}: есть 🔴 Blocked item, но статус фазы «{phase_status}» ≠ 🔴 Blocked")
-        if item_statuses and all(s == STATUS_DONE for s in item_statuses) and phase_status != STATUS_DONE:
+        if (item_statuses and all(s == STATUS_DONE for s in item_statuses)
+                and phase_status not in (STATUS_DONE, STATUS_IN_PROGRESS)):
             diag.error(plan_md, row_lineno,
-                       f"Status Board {pid}: все items 🟢 Done, но статус фазы «{phase_status}» ≠ 🟢 Done")
+                       f"Status Board {pid}: все items 🟢 Done, но статус фазы «{phase_status}» "
+                       f"не является audit candidate 🟡 In progress или closed 🟢 Done")
 
         # --- 2.0 WARNING: [NEEDS CLARIFICATION] в фазе 🟡+ = DoR-гейт не пройден --
         if phase_status and phase_status != "⬜ Not started":
@@ -446,11 +448,18 @@ def lint_plan(plan_dir, diag):
             if ref_phase in phases:
                 row = board_by_phase.get(ref_phase)
                 phase_status = row[0].get("Status", "") if row else ""
-                if phase_status not in TERMINAL_STATUSES:
+                phase_items = [
+                    info for item_id, info in all_items.items()
+                    if item_id.startswith(ref_phase + ".")
+                ]
+                terminal_candidate = bool(phase_items) and all(
+                    info["status"] in TERMINAL_STATUSES for info in phase_items
+                )
+                if phase_status not in TERMINAL_STATUSES and not terminal_candidate:
                     diag.warning(handoff_path, next_lineno,
-                                 f"Next: /task:plan-audit {ref_phase} — фаза в статусе "
-                                 f"«{phase_status}», не терминальна (аудит гоняется по "
-                                 f"закрытой фазе, SKILL §13)")
+                                 f"Next: /task:plan-audit {ref_phase} — фаза не терминальна: "
+                                 f"статус «{phase_status}», не все её items терминальны "
+                                 f"(audit требует terminal phase candidate, SKILL §13)")
         elif kind == "close-archive":
             _check_plan_id(m.group(1))
             if not plan_closed:

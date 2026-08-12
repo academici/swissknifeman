@@ -1048,6 +1048,8 @@ def _project_codex_runtime_tokens(text: str) -> str:
                         f'PYTHONPATH="{task_root}/lib"')
     text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py"',
                         f'python3 "{task_root}/scripts/plan-lint.py"')
+    text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py"',
+                        f'python3 "{task_root}/scripts/plan-delivery.py"')
     def replacement(match: re.Match[str]) -> str:
         if match.group("workflow_path") or match.group("workflow"):
             return _CODEX_WORKFLOW_CARRIER

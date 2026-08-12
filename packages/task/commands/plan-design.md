@@ -34,6 +34,18 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
 
+## Continue-first block gate (v1)
+
+Небольшое отклонение не открывает новый design pass. Procedural/transient/dependency,
+tool-noise, stale projection и bounded local reversible defect чинятся inline и фиксируются
+nonterminal `local-repair`; original gate повторяется. Если после минимального
+воспроизведения остаётся material block candidate, запиши `block-candidate`, собери
+closed `block-candidate/v1`; для 100% external-кандидатов сначала verified RAG.
+Один свежий reviewer, отличный от executor, в `isolated-child-return` применяет
+`block-confirmation-rubric-v1`, после чего root вызывает `task.plan_blocking.evaluate()`. Только
+`terminal-block` после `JUSTIFIED` разрешает Blocked/escalation; неподтверждённый
+кандидат возвращается в repair/evidence без новой фазы дизайна.
+
 ## Путь чтения существующего плана
 
 Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`; по
@@ -331,6 +343,11 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 Прогони линтер: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<ID>`
 (переменная не задана или скрипта нет — предупреди и пропусти, не блокер).
 Красное линтера почини в созданных файлах.
+После final handoff, но до `final`, собери
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py" --plan-dir plans/<ID>
+--subject design --kind handoff`. Ненулевой exit означает stale/missing persisted Next:
+почини handoff и не выводи `final`. Финал печатает `Delivery receipt: <compact JSON>`
+и `Рекомендация следующего шага:` с exact `recommendation` receipt.
 
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
 DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего

@@ -30,6 +30,16 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
 
+## Continue-first block gate (v1)
+
+Наследуй `plan-exec.md` Continue-first block gate без ослаблений: signal снача становится
+nonterminal `routing-rejected|decision-pending|local-repair|block-candidate`; малый reversible
+дефект автофиксится и original Validation повторяется. Material-кандидат перед
+любым 🔴 проходит closed `block-candidate/v1` → verified RAG для 100% external-случаев
+→ ровно один отличный от executor reviewer в `isolated-child-return` →
+`task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` разрешает
+Blocked/escalation; любой другой action продолжает repair/evidence в owning root.
+
 **Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву
 файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution Rules,
 §3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) →
@@ -59,11 +69,13 @@ fresh item state. Повторное чтение запрещено.
   Шаг остаётся обязательным в обеих точках `plan-exec.md`; `plan-run` меняет только разрешённый
   источник для fresh-session launch provenance, не условия предиката.
 - Routing-гейт п.2 сверяет launch-provenance модель/effort с §3 Routing item'а (тир-порядок —
-  plan-protocol §9). Недобор → ДО journal start напечатай exact native launch-block и останови
-  только текущий dispatch; product status и journal НЕ меняются. Перебор → исполнять, запись в
+  plan-protocol §9). Недобор → ДО product journal start допиши provenance-event
+  `--result routing-rejected --friction routing-blocked` (он не state transition и не attempt),
+  напечатай exact native launch-block и останови только текущий dispatch; product status
+  не меняется. Перебор → исполнять, запись в
   Known Deviations (§6 `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
-  Routing reject до product work не является attempt и не создаёт `blocked`/`routing-blocked`
-  event: route correction — dispatch evidence, а не исход продукта.
+  Routing reject до product work никогда не создаёт `blocked|escalated`: route correction —
+  durable dispatch evidence, а не исход продукта.
 
 **Граница честности.** `cli-flag` доказывает выбранные параметры свежего native запуска, а не
 наблюдает фактический runtime thread. Документированного programmatic current-thread API с обеими

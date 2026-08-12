@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:77814df3061a49e6e7be4daf231f2cd564307ad38bac0d6edc7c13ba87714aab
+Canonical SHA-256: sha256:3551f610401744265362295199344f550881ebfc6c76c0d803a2e21829d1b7dd
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -46,6 +46,17 @@ SHA-256 `63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`); roo
 передаёт запись детерминированному reducer и продолжает исходный run. Неоткалиброванная пара
 `model_id × rubric_sha256` и order-sensitive swap трактуются как `INSUFFICIENT_EVIDENCE`.
 Raw provider flags допустимы только в additive adapter/projection.
+
+## Continue-first block gate (v1)
+
+Не превращай finding в terminal stop по предположению. Deterministic non-material
+bookkeeping чини inline; процедурный/transient/dependency/tool signal пиши как
+nonterminal `local-repair` и повтори gate. Material block suspicion пиши как
+`block-candidate`, собери closed `block-candidate/v1`; external-класс в 100% случаев
+требует verified RAG. Затем один свежий reviewer, отличный от executor, в
+`isolated-child-return` применяет `block-confirmation-rubric-v1`; root вызывает
+`task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` может дать
+terminal red/incident; все остальные actions возвращают owning root в repair/evidence.
 
 ## Путь чтения по объявленной раскладке
 
@@ -238,6 +249,12 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
 
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
    протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.
+
+**Handoff delivery receipt.** После записи verdict и final handoff, но до `final`, вызови
+`python3 "$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/scripts/plan-delivery.py" --plan-dir plans/<PLAN-ID>
+--subject <design|Pn> --kind handoff`. Receipt связывает ответ с exact persisted `Next`;
+ненулевой exit запрещает `final` до repair. Финал печатает `Delivery receipt:
+<compact JSON>` и `Рекомендация следующего шага:` с exact `recommendation` receipt.
 
 **AUDIT-ROOT-TERMINAL (routing/cost boundary).** После записи terminal verdict и обязательных
 carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполняет successor command, даже если тот

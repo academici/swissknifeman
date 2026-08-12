@@ -433,6 +433,25 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertFalse(any("Next не соответствует" in item for item in diag.errors))
 
+    def test_audit_phase_accepts_terminal_items_before_formal_phase_close(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        plan.write_text(plan.read_text(encoding="utf-8").replace(
+            "| P1 | Фаза раз | 1/1 | 🟢 Done |",
+            "| P1 | Фаза раз | 1/1 | 🟡 In progress |",
+        ), encoding="utf-8")
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec DEMO-1 P1.1",
+            "audit-phase: task:plan-audit DEMO-1 P1",
+        ), encoding="utf-8")
+
+        _, diag = _lint(plan_dir)
+
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertFalse(any("terminal phase candidate" in item for item in diag.warnings),
+                         diag.warnings)
+
     def test_historical_slash_next_remains_accepted(self):
         plan_dir = write_valid_plan(self.root)
         _, diag = _lint(plan_dir)

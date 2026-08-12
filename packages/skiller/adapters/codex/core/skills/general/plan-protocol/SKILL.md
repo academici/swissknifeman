@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.27.0
+version: 2.28.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -115,6 +115,15 @@ not itself a product verdict:
 | unknown non-idempotent write | reconcile actual state before retry or close | safety until reconciled |
 | external process result | reconcile PID, output, and state before terminalizing | acceptance/safety only |
 
+Journal results `routing-rejected`, `decision-pending`, `local-repair`, and `block-candidate` are
+durable observations: they do not change item status or consume an execution attempt. A bounded
+local reversible defect is repaired automatically in the owning attempt and the original carrier is
+rerun. A material block candidate uses `block-candidate/v1`; every external candidate has verified
+RAG evidence, and one fresh non-executor reviewer in `isolated-child-return` returns evidence under
+`block-confirmation-rubric-v1`. The deterministic root reducer alone chooses the action. Only
+`JUSTIFIED` may become a terminal block; `AVOIDABLE`, `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, and
+`MALFORMED` continue repair/evidence without opening a new design pass.
+
 Routing correction happens before journal start and never turns the current producer red. A future
 carrier is `dependency-not-ready`, not a failure of its producer. Compare inherited red against its
 baseline delta. On the first repeated failure fingerprint change tactics; only the next repeat or a
@@ -174,6 +183,14 @@ For layout v2 the Context field carries EXACTLY one of three values:
 `owner-pause-no-resume`, `whole-plan-independent-audit`, or `audit-root-terminal`. Command names
 do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
 provider-neutral form and the native launch block together.
+
+Before a terminal response, `plan-exec`, `plan-run`, and `plan-close` build a
+`terminal-delivery-receipt/v1` from the terminal journal pointer/run ID, current state/closure,
+and exact persisted handoff recommendation. A nonterminal or stale carrier returns
+`FINAL_BEFORE_TERMINAL_FORBIDDEN` and keeps the dispatch active. Design/audit delivery builds the
+non-product `handoff-recommendation-receipt/v1`. Every final response labels
+`Рекомендация следующего шага:` and copies the receipt's exact recommendation; a bare item ID
+is not a delivery receipt.
 
 **AUDIT-ROOT-TERMINAL.** A completed `task:plan-audit` invocation is a hard boundary: its root
 must not execute the successor, even when the successor is compatible or ready. Its runnable

@@ -1,0 +1,75 @@
+{
+  "$schema": "urn:swissknifeman:task:rag-gate-evidence:v1",
+  "schema_version": "1.0.0",
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "item_id": "P0.3",
+  "captured_at": "2026-08-12",
+  "provider": "perplexity-web",
+  "bridge": {
+    "repository": "/home/vostrikov/projects/packages/perplexity-web-mcp",
+    "commit": "d77ce0e",
+    "before": {"attempts": 7, "nonempty_answers": 1, "empty_answers": 6},
+    "after": {"mandatory_modes_nonempty": ["search", "advanced", "deep"]}
+  },
+  "post_fix_runs": [
+    {
+      "mode": "search",
+      "query": "According to current official Microsoft Durable Functions documentation, how should breaking orchestrator code or schema changes be deployed while instances are still running, and when is legacy code safe to remove?",
+      "query_sha256": "032e59c15612096edb910b4bf7fa34606cd581ee17b3b61537056ed793adfc5e",
+      "answer_length": 2238,
+      "nonempty": true,
+      "source_provenance": "inline",
+      "source_urls": [
+        "https://learn.microsoft.com/en-us/azure/durable-task/durable-functions/durable-functions-versioning",
+        "https://learn.microsoft.com/en-us/azure/durable-task/common/durable-orchestration-versioning"
+      ],
+      "source_domains": ["learn.microsoft.com"]
+    },
+    {
+      "mode": "advanced",
+      "query": "Using current official documentation, compare safe migration of breaking execution schema or workflow code across Temporal and Microsoft Durable Functions. Focus on version pinning, active-instance migration, and zero-consumer proof before legacy removal. End with a Sources section containing the full official URLs.",
+      "query_sha256": "8f63455a65f239491d03de7a022c0a9688bc42454fed3bc12ed4bf4cc208c4c5",
+      "answer_length": 1285,
+      "nonempty": true,
+      "source_provenance": "cross-mode:deep",
+      "inline_source_urls": [],
+      "source_urls": [
+        "https://learn.microsoft.com/en-us/azure/durable-task/durable-functions/durable-functions-versioning",
+        "https://docs.temporal.io/develop/php/workflows/versioning",
+        "https://docs.temporal.io/encyclopedia/worker-versioning-legacy"
+      ],
+      "source_domains": ["docs.temporal.io", "learn.microsoft.com"],
+      "transport_note": "advanced returned a nonempty CSV synthesis without source metadata after bounded retries; official provenance is an explicitly separate Perplexity deep cross-check, not attributed as inline advanced citations"
+    },
+    {
+      "mode": "deep",
+      "query": "Research current official guidance for resilient durable workflows: classify retryable versus terminal failures, use bounded retries and checkpoints, preserve running instances across breaking execution-schema changes, and prove zero active legacy consumers before removing old executors.",
+      "query_sha256": "0527adb4f30d749d6542bb4f88638a290247f5a50f75f69132de77250c24392d",
+      "answer_length": 7104,
+      "nonempty": true,
+      "source_provenance": "inline",
+      "source_urls": [
+        "https://learn.microsoft.com/en-us/azure/architecture/patterns/retry",
+        "https://docs.cloud.google.com/run/docs/jobs-retries",
+        "https://learn.microsoft.com/en-us/azure/durable-task/durable-functions/durable-functions-versioning",
+        "https://docs.temporal.io/develop/php/workflows/versioning",
+        "https://docs.temporal.io/encyclopedia/worker-versioning-legacy"
+      ],
+      "source_domains": ["docs.cloud.google.com", "docs.temporal.io", "learn.microsoft.com"]
+    }
+  ],
+  "mandatory_fact_classes": [
+    "retryable-versus-terminal",
+    "breaking-execution-schema-versioning",
+    "zero-active-legacy-consumers"
+  ],
+  "unresolved_mandatory_fact_classes": [],
+  "gate": {
+    "status": "verified",
+    "mandatory_provider": "perplexity-web",
+    "fallback_sufficient": false,
+    "terminal_allowed": true,
+    "phase_close_allowed": true
+  },
+  "copyright": {"full_generated_answers_stored": false}
+}

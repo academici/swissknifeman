@@ -292,6 +292,24 @@
         "review": {"required": false, "count": 0, "context": "none", "verdict": "none", "actor_distinct": false},
         "receipt": {"required": false, "terminal": false, "recommendation": "not-applicable", "result": "absent"}
       }
+    },
+    {
+      "id": "mandatory_perplexity_empty_with_fallback",
+      "requirement_id": "O12",
+      "owning_phase": "P4",
+      "input_class": "perplexity-gate",
+      "given": {
+        "mandatory_perplexity_nonempty": false,
+        "fallback_evidence_available": true,
+        "terminal_allowed": false,
+        "phase_close_allowed": false
+      },
+      "expected": {
+        "action": "rag-pending", "status": "in-progress", "attempt_delta": 0,
+        "rag": {"required": true, "status": "pending", "provider": "perplexity-web", "evidence_min": 0},
+        "review": {"required": false, "count": 0, "context": "none", "verdict": "none", "actor_distinct": false},
+        "receipt": {"required": false, "terminal": false, "recommendation": "not-applicable", "result": "absent"}
+      }
     }
   ]
 }

@@ -63,6 +63,11 @@ legacy removal и проверка отсутствия live legacy consumers. E
 - После ремонта: тот же Microsoft question через `search` → 660 chars/1 official source;
   schema migration через `advanced` → 1192 chars; recovery/schema query через `deep` →
   8462 chars/4 sources. Mandatory Perplexity gate — GREEN.
+- P0.3 terminal rerun: `search` → 2238 chars/2 official URLs; `advanced` → 1285 chars,
+  непустой CSV без source metadata после bounded retries; `deep` → 7104 chars/5 official URLs.
+  Для advanced provenance записан отдельный Perplexity deep cross-check, а не вымышленные inline
+  citations. Exact queries, SHA-256, modes, lengths, URLs/domains и bridge commit находятся в
+  `artifacts/P0/rag-gate-evidence-v1.json`; полные generated answers не сохранены.
 - WebSearch x4 остаётся independent official cross-check, но не считается заменой обязательного
   Perplexity результата.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего.

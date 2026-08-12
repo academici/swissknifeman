@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: c182ad2ddfceee74a9fac184562180932200488dd2c8e8916382a6224ff7dda6
+inputs_sha256: d24658360581984870b50825d501929e92ddaa6ddf8ebf517273b963c954d65a
 generated_by: task plan-views status
 -->
 
@@ -45,7 +45,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1.1 | Inventory every active Layout v1 consumer | 🟢 Done | 2026-08-12 |
 | P1.2 | Normalize legacy Routing without widening v2 grammar | 🟢 Done | 2026-08-12 |
-| P1.3 | Freeze full-fleet admission policy and green every preview | ⬜ Not started | — |
+| P1.3 | Freeze full-fleet admission policy and green every preview | 🟠 Done with deviations | 2026-08-12 |
 | P1.4 | Apply the approved fleet cutover and prove zero live v1 | ⬜ Not started | — |
 | P1.5 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
 
@@ -160,9 +160,18 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Closing repair: write-site carrier должен занимать отдельную строку. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 Legacy Routing comma-list нормализован; tests и target dry-run зелёные; process deviations: frontier/high вместо implementation/high, package validate красный на pre-existing archive lint. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · P1.3: начата frozen full-fleet admission policy и preview validation. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Policy 54 rows; 15/15 previews: 0 ERROR; 849 tests OK (1 skipped); apply не запускался; write-site: pre_mutation: allow · pre_final: allow; validate.sh red только на 7 pre-existing archive Routing errors; Files расширен plan_admission.py и test_plan_admission.py. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bookkeeping repair: materialize standalone write-site evidence line. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run; validate.sh red only on 7 pre-existing archive Routing errors; Files expanded to plan_admission.py/test.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bookkeeping repair: preserve deviation in generated terminal state. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
+Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run; validate.sh red on 7 pre-existing archive Routing errors; Files expanded to plan_admission.py/test; attempts 2-3 repaired bookkeeping. |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.3: known deviation
 - P1.2: known deviation
+- P1.3: known deviation

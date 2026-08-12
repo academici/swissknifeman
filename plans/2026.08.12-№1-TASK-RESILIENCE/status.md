@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 789abd1980dd51fe2b69276298e4597b1ae24e1816fcd86a02472b7d25a63a5b
+inputs_sha256: 8efa14a942f06f136526b4756fc8c0e907a4f9c842a12988ad1ccb264d0fed61
 generated_by: task plan-views status
 -->
 
@@ -126,6 +126,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bounded audit repair: reconcile material deviation and provenance carriers. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.3 audit repair: product anchor 6f08c69d retained; runtime follow-up 5294642e changed Task plan_downstream, docs, and CHANGELOG outside Files/P0 scope, so status is material deviation.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
 
 ## Owner Gates
 

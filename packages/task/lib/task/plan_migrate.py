@@ -20,6 +20,8 @@ from task import journal, plan_decisions, plan_item_state, plan_layout, plan_sta
 _ITEM_RE = re.compile(r"^###\s+(P\d+\.\d+)\s+—\s+(.+?)\s*$")
 _FIELD_RE = re.compile(r"^\*\*([^*:]+):\*\*\s*(.*)$")
 _PHASE_RE = re.compile(r"^#\s+(P\d+)\s+—\s+(.+?)\s*$")
+_ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
+_ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 
 _SPEC_FIELDS = (
     "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
@@ -149,6 +151,52 @@ def _update_rows(text: str) -> list[str]:
     return [" | ".join(row) for row in _table_rows(_section(text, "6. Update Log"))[1:]]
 
 
+def _legal_routing_token(value: str) -> bool:
+    if _ROUTING_ITEM_RE.fullmatch(value):
+        return True
+    match = _ROUTING_RANGE_RE.fullmatch(value)
+    return bool(match and match.group(1) == match.group(3)
+                and int(match.group(2)) <= int(match.group(4)))
+
+
+def _normalize_routing_rows(body: str) -> str:
+    """Split legacy comma-list Items cells without changing v2 grammar."""
+    result = []
+    items_column = None
+    column_count = None
+    for line in body.splitlines():
+        if not line.startswith("|"):
+            result.append(line)
+            continue
+        cells = line.split("|")
+        values = [cell.strip() for cell in cells[1:-1]]
+        if "Items" in values:
+            items_column = values.index("Items") + 1
+            column_count = len(cells)
+            result.append(line)
+            continue
+        if items_column is None or len(cells) != column_count:
+            result.append(line)
+            continue
+        raw_items = cells[items_column]
+        if "," not in raw_items:
+            result.append(line)
+            continue
+        tokens = [token.strip() for token in raw_items.strip().split(",")]
+        if not tokens or any(not token or not _legal_routing_token(token) for token in tokens):
+            raise MigrationError(
+                f"Routing Items «{raw_items.strip()}» нельзя безопасно разбить: "
+                "ожидаются только item Pn.m или возрастающие single-phase range Pn.a–Pn.b"
+            )
+        leading = raw_items[:len(raw_items) - len(raw_items.lstrip())]
+        trailing = raw_items[len(raw_items.rstrip()):]
+        for token in tokens:
+            projected = list(cells)
+            projected[items_column] = f"{leading}{token}{trailing}"
+            result.append("|".join(projected))
+    return "\n".join(result)
+
+
 def _render_core(text: str, meta: list[tuple[str, str]]) -> str:
     meta_without_volatile = [(name, value) for name, value in meta if name not in _MOVED_META]
     if not any(name == "Layout" for name, _value in meta_without_volatile):
@@ -167,6 +215,8 @@ def _render_core(text: str, meta: list[tuple[str, str]]) -> str:
             raise
         if heading == "2. Execution Rules" and _TRANSITION_RULE not in body:
             body = body.rstrip() + "\n" + _TRANSITION_RULE
+        if heading == "3. Routing":
+            body = _normalize_routing_rows(body)
         sections.extend(("", f"## {heading}", "", body))
     sections.extend(("", "## 5. Decision Log", "",
                      "Решения находятся в `decisions/`; собрать или проверить их виды: "

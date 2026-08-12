@@ -119,6 +119,12 @@ class TestRoutingItemsGrammar(TmpPlanTestCase):
         _model, diag = _lint(self._with_items("P1.1–P2.1"))
         self.assertTrue(_errors_containing(diag, "single-phase range"), diag.errors)
 
+    def test_comma_list_and_descending_range_remain_rejected(self):
+        for cell in ("P1.1, P1.2", "P1.3–P1.1"):
+            with self.subTest(cell=cell):
+                _model, diag = _lint(self._with_items(cell))
+                self.assertTrue(_errors_containing(diag, "закрытой грамматики"), diag.errors)
+
     def test_single_item_and_same_phase_range_are_accepted(self):
         for cell in ("P1.1", "P1.1–P1.3"):
             with self.subTest(cell=cell):

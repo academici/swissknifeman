@@ -111,6 +111,51 @@ class PlanMigrateTests(unittest.TestCase):
         plan_migrate.migrate_safely(self.source, dry_run=True, output=output)
         self.assertTrue((output / "decisions" / "D1-legacy.md").is_file())
 
+    def test_routing_comma_lists_are_split_without_other_cell_drift(self):
+        cells = (
+            "P0.1–P0.3, P0.5",
+            "P1.1–P1.5, P6.1–P6.3",
+            "P3.1, P3.3–P3.8",
+            "P5.2–P5.3, P6.4–P6.5",
+        )
+        header = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|"
+        )
+        source_rows = [
+            f"| B{index} | {cell} | implementation/high | manual | full | keep bytes {index} |"
+            for index, cell in enumerate(cells, start=1)
+        ]
+
+        rendered = plan_migrate._normalize_routing_rows(
+            "\n".join((header, *source_rows)))
+
+        expected_rows = []
+        for index, cell in enumerate(cells, start=1):
+            expected_rows.extend(
+                f"| B{index} | {token.strip()} | implementation/high | manual | full | keep bytes {index} |"
+                for token in cell.split(",")
+            )
+        self.assertEqual(rendered, "\n".join((header, *expected_rows)))
+
+    def test_routing_comma_list_rejects_non_grammar_tokens(self):
+        invalid = (
+            "обсудить P1.1, P1.2",
+            "P1.1, later",
+            "P1.1–P2.1, P2.2",
+            "P1.3–P1.1, P1.4",
+            "P1.1,",
+        )
+        for cell in invalid:
+            with self.subTest(cell=cell):
+                body = (
+                    "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                    "|:--|:--|:--|:--|:--|:--|\n"
+                    f"| B1 | {cell} | implementation/high | manual | full | test |"
+                )
+                with self.assertRaisesRegex(plan_migrate.MigrationError, "нельзя безопасно разбить"):
+                    plan_migrate._normalize_routing_rows(body)
+
     def test_dry_run_materializes_legacy_blocked_journal_state(self):
         journal.append(self.source, journal.new_entry(
             plan_id=self.source.name, item_id="P1.1", command="plan-run",

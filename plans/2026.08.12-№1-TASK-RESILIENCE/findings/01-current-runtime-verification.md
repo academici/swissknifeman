@@ -1,6 +1,6 @@
 # P0.1 — Current runtime verification
 
-**Verified tree:** `7d45c29221603f12e10c887ee0bb8be34edc6329`  
+**Verified tree:** `7d45c29221603f12e10c887ee0bb8be34edc6329`
 **Method:** required roadmap carriers were compared with current `packages/task` and
 `packages/harness` source; focused runtime tests were then run against the same worktree.
 No previous candidate verdict was used as proof.

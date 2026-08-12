@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 02564dd273d01832ce977caee49d4ec4340663b54c77cf008d0f48bfcec1b8b8
+inputs_sha256: c2e6810e7699b5cb240d33c6609566b4f7389129b8f7fafffee28e11e76a1ce6
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
-| P3 | Nonterminal observations and inline local repair | 3/3 | 🟢 Done |
+| P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
@@ -62,7 +62,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Add nonterminal journal results and state semantics | 🟢 Done | 2026-08-12 |
 | P3.2 | Apply continue-first repair flow to canonical commands | 🟢 Done | 2026-08-12 |
-| P3.3 | Make orchestration declaration detection negation-aware | 🟢 Done | 2026-08-12 |
+| P3.3 | Make orchestration declaration detection negation-aware | 🟠 Done with deviations | 2026-08-12 |
 
 ## Phase P4
 
@@ -237,6 +237,22 @@ P3.3: regenerated runtime parity after downstream drift; original and downstream
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Docs sync found the owned aggregate provider reference stale; regenerate it and rerun the declared docs gate. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 P3.3: aggregate docs parity repaired; renderer, docs and downstream gates are green. |
+| 2026-08-12 | frontier/xhigh | plan-audit · audit-attention · заход 1, вердикт ATTENTION |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Audit repair-forward: record committed-tree validation anchor and exact evidence. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow. Evidence anchor a8867749; exact P3.1 validation: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Audit repair-forward: record committed-tree validation anchor and exact evidence. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow. Evidence anchor c1a92619; exact P3.2 validation: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Audit repair-forward: record evidence and material five-carrier scope deviation. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow. Evidence anchor 381adc74; material five-carrier out-of-Files deviation in product 2f795943: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Local repair: put write-site boundary codes on their required standalone line. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+Evidence anchor a8867749; full validation: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Local repair: put write-site boundary codes on their required standalone line. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+Evidence anchor c1a92619; full validation: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Local repair: put write-site boundary codes on their required standalone line. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
+Evidence anchor 381adc74; material five-carrier out-of-Files deviation in product 2f795943. Full validation: findings/P3-audit-repair-forward-2026-08-12.md. |
 
 ## Owner Gates
 
@@ -247,3 +263,4 @@ P3.3: aggregate docs parity repaired; renderer, docs and downstream gates are gr
 - P1.4: known deviation
 - P1.5: known deviation
 - P2.2: known deviation
+- P3.3: known deviation

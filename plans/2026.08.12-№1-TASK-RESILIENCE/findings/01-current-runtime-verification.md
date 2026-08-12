@@ -1,8 +1,9 @@
 # P0.1 — Current runtime verification
 
-**Verified tree:** `7d45c29221603f12e10c887ee0bb8be34edc6329`
+**Verified tree:** `28f2d2b2d39bddac3ab11e290d07511f26db9807`
 **Method:** required roadmap carriers were compared with current `packages/task` and
-`packages/harness` source; focused runtime tests were then run against the same worktree.
+`packages/harness` source; focused runtime tests were then run against the same worktree. The final
+P0 audit finding was reproduced and repaired before this carrier was refreshed.
 No previous candidate verdict was used as proof.
 
 ## Focused observations
@@ -38,8 +39,18 @@ The machine-readable full matrix, including every owner requirement, is
 - The active plan is Layout v2 and remains active; release tag and registered-project rollout
   are intentionally absent until P6.
 
-No current observation requires an owner decision. Each open remainder has an owning phase and
-deterministic acceptance in the JSON matrix.
+No unresolved owner decision remains. D12 records the owner-authorized remediation and the
+AUDIT-CAP close path; each open roadmap remainder still has an owning phase and deterministic
+acceptance in the JSON matrix.
+
+## Owner-authorized final-audit remediation
+
+The final P0 audit reproduced four existing plan-relative `Files` as constant `missing` rows in
+the phase candidate snapshot. Commit `28f2d2b2` preserves repository-relative resolution first and
+falls back to the plan directory, so both declared path classes bind actual bytes. The regression
+test changes one plan-relative and one repository-relative product independently and requires both
+mutations to change the public `phase_candidate_fingerprint()` result. On the repaired tree, all six
+declared P0 product rows resolve as `file`; none remains `missing`.
 
 ## Execution-gate defects discovered and repaired during P0.1
 

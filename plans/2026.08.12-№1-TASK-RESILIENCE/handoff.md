@@ -1,57 +1,56 @@
-# HANDOFF — 2026-08-12 — after P0.3
+# HANDOFF — 2026-08-12 — after P0
 
-**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0
-
-Policy code: `PHASE_AUDIT_REQUIRED_NON_GREEN` (`non-green-terminal-item`).
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
+| Batch | B-P1-CUTOVER |
 | Model | frontier |
-| Thinking | xhigh — full phase repair audit |
-| Context | cold-start-root: audit-root-terminal |
-| Суть | Повторно проверить P0 candidate после bounded audit repair-forward. |
-| Команда | `task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0` |
+| Thinking | high — fleet cutover и migration safety |
+| Capabilities | filesystem, git, skiller registry, maind projects |
+| Context | continue-root |
+| Суть | Инвентаризировать active v1 fleet, мигрировать его в v2 и удалить legacy execution path. |
+| Команда | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3` |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3'
 ```
 
 **Done:**
 
-- P0.1 product anchor `a8fd256d` сохранён; material runtime repair `7d45c292` зафиксирован в terminal state.
-- P0.3 product anchor `6f08c69d` сохран; material runtime follow-up `5294642e` зафиксирован в terminal state и generated status commit map.
-- Phase DoR согласован с верифицированным external fact class P0.3; source path в handoff исправлен.
-- P0.1 и P0.3 закрыты как `🟠 Done with deviations`; P0 closure пересобран owning generator.
+- P0.1–P0.3 terminal; P0 закрыта как `🟠 Done with deviations` по owner decision D12.
+- `phase_candidate_fingerprint()` хеширует repo-relative и plan-relative product files;
+  текущий P0 snapshot разрешает 6/6 declared carriers как `file`.
+- Material deviations полностью сведены в generated item-state, status и closure views.
+- Третий audit не запускался; close gate: `allow`, owner decision D12.
 
 **Remaining:**
 
-- Выполнить повторный P0 phase audit по policy `PHASE_AUDIT_REQUIRED_NON_GREEN`.
-- После audit verdict исполнить exact recommendation его terminal receipt.
+- P1–P6 не начаты; следующий stable batch — B-P1-CUTOVER.
 
 **Sources of truth:**
 
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.md` — Audit P0 findings и исправленный DoR.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.1.state.md` — terminal P0.1 repair state.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.3.state.md` — terminal P0.3 repair state.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.closed.md` — generated phase candidate carrier.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/findings/02-rag-resilience-and-schema-cutover-2026-08-12.md` — valid P0.3 RAG carrier.
+- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.md` — final audits и phase handoff.
+- `plans/2026.08.12-№1-TASK-RESILIENCE/decisions/D12-audit-cap-remediation.md` — owner decision.
+- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.closed.md` — generated closure.
+- `plans/2026.08.12-№1-TASK-RESILIENCE/findings/01-current-runtime-verification.md` — repaired current-runtime evidence.
+- `packages/task/lib/task/plan_gates.py` и `packages/task/tests/test_plan_gates.py` — runtime и regression coverage.
 
 **Open risks:**
 
-- P0 не закрывается до повторного audit: terminal items non-green и потребовали full review.
-- Полный `packages/task/scripts/validate.sh` имеет pre-existing historical archive lint debt вне P0 scope; item validation, downstream checks и active-plan lint зелёные.
+- Полный `packages/task/scripts/validate.sh` остаётся RED ровно на pre-existing historical
+  `plans/archive/**` debt: 7 ERROR / 252 WARN; Task unit suite 839 passed, 1 skipped.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: отдельный fix для historical `plans/archive/**` lint debt.
+- Deferred: historical `plans/archive/**` lint debt вне P0 и явного owner scope.
 - Open questions: —

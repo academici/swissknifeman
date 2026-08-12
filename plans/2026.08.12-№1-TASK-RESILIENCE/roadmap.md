@@ -1,6 +1,7 @@
 # Roadmap исполнения — 2026.08.12-№1-TASK-RESILIENCE
 
-**Статус:** design pass 2 complete; P0.1/P0.2 закрыты, следующий executable item — P0.3.
+**Статус:** design pass 2 complete; P0 закрыта по owner decision D12,
+следующий executable batch — B-P1-CUTOVER (P1.1–P1.3).
 Порядок фаз: P0 → P1 → P2 → P3 → P4 → P5 → P6. Batch не пересекает phase audit/close.
 
 ## Правило группировки

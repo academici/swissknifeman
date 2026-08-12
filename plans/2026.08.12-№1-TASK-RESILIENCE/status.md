@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 8efa14a942f06f136526b4756fc8c0e907a4f9c842a12988ad1ccb264d0fed61
+inputs_sha256: 64c63f14c035b009b9304c72ee10d0650b74233a8435ba6b91f90a2e4303eff9
 generated_by: task plan-views status
 -->
 
@@ -127,6 +127,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.3 audit repair: product anchor 6f08c69d retained; runtime follow-up 5294642e changed Task plan_downstream, docs, and CHANGELOG outside Files/P0 scope, so status is material deviation.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · Owner remediation D12: 7d45c292 and 28f2d2b2 changed Task runtime outside P0.1 Files/read-only P0; fingerprint now binds all 6 P0 product carriers.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · Owner remediation D12: 5294642e, e3025015 and fd09f3ee changed Task/skiller runtime, docs or active-plan carriers outside P0.3 Files/read-only P0.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · Фаза P0 закрыта по owner decision D12 после remediation; close gate allow, третьего audit нет. |
 
 ## Owner Gates
 

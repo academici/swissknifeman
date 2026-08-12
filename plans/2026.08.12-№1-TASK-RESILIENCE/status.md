@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: a9082c48b17babadf248a513c32bf0e612ffd16ff195e8191269dd6b035ecf8b
+inputs_sha256: bbf68aa08e03fd2727c25c9a02fdb0d43e93cf4baa73c7687d6577465bc5e178
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
-| P2 | Numbered plan identity and collision-free references | 1/2 | 🟡 In progress |
+| P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
@@ -54,7 +54,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P2.1 | Implement and verify numbered PLAN-ID | 🟢 Done | 2026-08-12 |
-| P2.2 | Publish qualified item-reference canon | ⬜ Not started | — |
+| P2.2 | Publish qualified item-reference canon | 🟠 Done with deviations | 2026-08-12 |
 
 ## Phase P3
 
@@ -209,6 +209,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Bookkeeping repair: materialize required write-site. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 Проверены numbered PLAN-ID и CLI Unicode round-trip; добавлен regression test. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
+Canonical qualified-reference rule and source-level parity tests added; P5.3 owns stale projections. |
 
 ## Owner Gates
 
@@ -218,3 +221,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P1.3: known deviation
 - P1.4: known deviation
 - P1.5: known deviation
+- P2.2: known deviation

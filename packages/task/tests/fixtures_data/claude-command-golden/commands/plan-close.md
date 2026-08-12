@@ -44,6 +44,11 @@ Raw provider flags допустимы только в additive adapter/projectio
 `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` и `MALFORMED` не закрывают subject и возвращают
 его в local repair/evidence под authoritative root. Reviewer не выдаёт authorization.
 
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
+
 ## Путь чтения по объявленной раскладке
 
 Сначала прочитай поле `Layout` в `## 0. Meta`; исполняется только явный `Layout | v2`

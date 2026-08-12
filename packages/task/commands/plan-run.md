@@ -40,6 +40,11 @@ nonterminal `routing-rejected|decision-pending|local-repair|block-candidate`; м
 `task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` разрешает
 Blocked/escalation; любой другой action продолжает repair/evidence в owning root.
 
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
+
 **Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`;
 исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает
 `PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:

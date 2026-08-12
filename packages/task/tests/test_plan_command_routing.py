@@ -2,9 +2,14 @@
 from dataclasses import replace
 import json
 from pathlib import Path
+import sys
 import unittest
 
-import fixtures  # noqa: F401,E402 — restores monorepo core/lib fallbacks
+try:
+    import fixtures  # noqa: F401,E402 — discover from packages/task
+except ModuleNotFoundError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import fixtures  # noqa: F401,E402 — explicit root invocation fallback
 from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
                                  parse_next_carrier, plan_provider_invocation,

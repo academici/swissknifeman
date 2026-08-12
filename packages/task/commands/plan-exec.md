@@ -56,6 +56,11 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
 `INSUFFICIENT_EVIDENCE` → сбор evidence, `OUT_OF_SCOPE|MALFORMED` → repair capsule; все три
 ветки nonterminal и продолжают owning root.
 
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
+
 1. **Порядок чтения — РОВНО такой, ничего сверх.** Сначала прочитай поле `Layout` в `## 0. Meta`;
    исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает
    `PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:

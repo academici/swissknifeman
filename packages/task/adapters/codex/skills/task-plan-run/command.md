@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:cc5d7077a56446dbd4d5c0c2c697181a0b8869cc7d2a227479ab74eba7fbeda1
+Canonical SHA-256: sha256:a6da3612de45a766b8b5eb161e6f6c2a24da7224982eb4f9c1bac2bfa0625b7d
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -76,6 +76,11 @@ nonterminal `routing-rejected|decision-pending|local-repair|block-candidate`; м
 → ровно один отличный от executor reviewer в `isolated-child-return` →
 `task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` разрешает
 Blocked/escalation; любой другой action продолжает repair/evidence в owning root.
+
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
 
 **Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`;
 исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает

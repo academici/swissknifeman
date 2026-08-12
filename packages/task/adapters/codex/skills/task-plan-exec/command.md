@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:0dd9bb837f01cd038204128a40dd2f32014717a27df0ed471cb4f03b83633587
+Canonical SHA-256: sha256:5be9d8c7bfbfa2257f404bd6cbdf85c0a219b516c3c1af0f0920b380b68f8d5d
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -69,6 +69,11 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
 `terminal-block` после `JUSTIFIED` разрешает 🔴/escalation. `AVOIDABLE` → local repair,
 `INSUFFICIENT_EVIDENCE` → сбор evidence, `OUT_OF_SCOPE|MALFORMED` → repair capsule; все три
 ветки nonterminal и продолжают owning root.
+
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
 
 1. **Порядок чтения — РОВНО такой, ничего сверх.** Сначала прочитай поле `Layout` в `## 0. Meta`;
    исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает

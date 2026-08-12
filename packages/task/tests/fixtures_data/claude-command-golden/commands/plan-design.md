@@ -61,6 +61,11 @@ closed `block-candidate/v1`; для 100% external-кандидатов снач�
 `terminal-block` после `JUSTIFIED` разрешает Blocked/escalation; неподтверждённый
 кандидат возвращается в repair/evidence без новой фазы дизайна.
 
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
+
 ## Путь чтения существующего плана
 
 Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`;

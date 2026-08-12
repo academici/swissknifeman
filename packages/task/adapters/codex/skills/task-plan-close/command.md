@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:7257d760627d06114a6e56f23211f79c50c2a8a861a319884b05cda83141dc2a
+Canonical SHA-256: sha256:ac747ecc0360a6ae693ffb021c44bf69823de21be6c74fccf73a54ea853a6c08
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -57,6 +57,11 @@ Raw provider flags допустимы только в additive adapter/projectio
 `terminal-block` после `JUSTIFIED` разрешает terminal Blocked. `AVOIDABLE`,
 `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` и `MALFORMED` не закрывают subject и возвращают
 его в local repair/evidence под authoritative root. Reviewer не выдаёт authorization.
+
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
 
 ## Путь чтения по объявленной раскладке
 

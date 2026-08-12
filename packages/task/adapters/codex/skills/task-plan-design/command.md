@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:b44f50fe3472f2a194dec13ee8e94c3ea24302c1ef3efe830355a624e7fb26fb
+Canonical SHA-256: sha256:bdcde7f6713b00b5f9b08c9253dd3ef24cb54d661e4a89a00c235863ffa798de
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -74,6 +74,11 @@ closed `block-candidate/v1`; для 100% external-кандидатов снач�
 `block-confirmation-rubric-v1`, после чего root вызывает `task.plan_blocking.evaluate()`. Только
 `terminal-block` после `JUSTIFIED` разрешает Blocked/escalation; неподтверждённый
 кандидат возвращается в repair/evidence без новой фазы дизайна.
+
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
 
 ## Путь чтения существующего плана
 

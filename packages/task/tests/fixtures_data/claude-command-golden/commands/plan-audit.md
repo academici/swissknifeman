@@ -44,6 +44,11 @@ nonterminal `local-repair` и повтори gate. Material block suspicion пи
 `task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` может дать
 terminal red/incident; все остальные actions возвращают owning root в repair/evidence.
 
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
+
 ## Путь чтения по объявленной раскладке
 
 Сначала прочитай поле `Layout` в `## 0. Meta`; исполняется только явный `Layout | v2`

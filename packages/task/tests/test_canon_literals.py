@@ -522,5 +522,24 @@ class TestLayoutV2ContextEnum(unittest.TestCase):
                 self.assertNotIn("NEW SESSION — шаг-не-item", text)
 
 
+class TestContinueFirstCommandFlow(unittest.TestCase):
+    """P3.2: every canonical command keeps route gaps nonterminal."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+
+    def test_all_canonical_commands_share_the_nonterminal_route_gap_flow(self):
+        required = ("Continue-first block gate (v1)", "local-repair", "block-candidate",
+                    "routing-rejected", "ROUTE-UNVERIFIABLE", "не attempt и не transition статуса")
+        for command in ("plan-exec.md", "plan-run.md", "plan-design.md", "plan-audit.md",
+                        "plan-close.md"):
+            with self.subTest(command=command):
+                text = (self.repo_root / "packages/task/commands" / command).read_text(
+                    encoding="utf-8")
+                for literal in required:
+                    self.assertIn(literal, text)
+
+
 if __name__ == "__main__":
     unittest.main()

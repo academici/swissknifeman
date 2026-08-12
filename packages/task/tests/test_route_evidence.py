@@ -19,6 +19,7 @@ Run: cd packages/task && python3 -m unittest discover -s tests
 """
 import copy
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,7 +27,8 @@ from pathlib import Path
 try:
     import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 except ModuleNotFoundError:
-    from tests import fixtures  # noqa: F401,E402 — package-module invocation
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import fixtures  # noqa: F401,E402 — explicit root invocation fallback
 from task import journal  # noqa: E402
 from task import route_evidence as re  # noqa: E402
 from task import task_contract  # noqa: E402

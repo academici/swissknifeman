@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:b8b2f731f84106af81a1f525b305ebd5500969d7f23e92f1bf873364a07bcc20
+Canonical SHA-256: sha256:4deda8dd30fb4213011f956d552181bef731a876f1a3fa16f78d58df0a01dc4c
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -57,6 +57,11 @@ nonterminal `local-repair` и повтори gate. Material block suspicion пи
 `isolated-child-return` применяет `block-confirmation-rubric-v1`; root вызывает
 `task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` может дать
 terminal red/incident; все остальные actions возвращают owning root в repair/evidence.
+
+Недоступное или не верифицируемое route evidence до product journal start обозначай
+`ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
+fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй
+evidence конфигом, актором или свободным текстом.
 
 ## Путь чтения по объявленной раскладке
 

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 0c5881a771fc8abc2bb67277f3a28d12edb48f82f54d20b8b894bab31af72cfa
+inputs_sha256: dfd76337280b3609a0c54cf6a8d4e1cedc9cb28c220b78decdeb2e4e247bae39
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Roadmap evidence and acceptance freeze | 3/3 | 🟢 Done |
+| P0 | Roadmap evidence and acceptance freeze | 2/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
@@ -35,7 +35,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Reconcile roadmap conflicts with current runtime | 🟢 Done | 2026-08-12 |
+| P0.1 | Reconcile roadmap conflicts with current runtime | 🟠 Done with deviations | 2026-08-12 |
 | P0.2 | Freeze continue-first acceptance bank | 🟢 Done | 2026-08-12 |
 | P0.3 | Close mandatory Perplexity evidence and freeze RAG-pending semantics | 🟢 Done | 2026-08-12 |
 
@@ -114,6 +114,14 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · P0.3 закрыт: Perplexity evidence, source provenance и rag-pending acceptance зафиксированы |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Append-only correction: terminal projection must expose canonical write-site. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · Perplexity evidence и rag-pending acceptance зафиксированы; advanced inline sources пусты, provenance подтверждён deep mode.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | frontier/xhigh | plan-audit · audit-attention · заход 1, вердикт ATTENTION |
+| 2026-08-12 | unknown/unknown | plan-run · routing-rejected · ROUTE_LAUNCH_MISMATCH: ancestor argv не содержит -m/--model; требуется свежий native launch |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bounded audit repair: reconcile material deviation status carriers. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.1 audit repair: product anchor a8fd256d retained; runtime repair 7d45c292 touched packages/task/lib/task/plan_weight.py outside Files and P0 scope, so status is material deviation.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Local repair: correct append-only friction serialization. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.1 audit repair: product anchor a8fd256d retained; material out-of-Files runtime repair 7d45c292 recorded. Append-only attempt 3 corrects prior friction serialization.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

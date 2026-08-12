@@ -24,7 +24,7 @@ Append-only journal сохраняет provenance, но reducer отделяет
 transitions. `routing-rejected`, `decision-pending`, `local-repair` и `block-candidate` не
 увеличивают attempt и не меняют item в `🔴`; `in-progress`/terminal outcomes остаются владельцами
 позиции. RAG:— (repo-grounded:
-`roadmap/2026.08.10-plan-run-routing-blocked-terminal-loop.md:31`).
+`findings/00-roadmap-and-runtime-gap.md:12`).
 
 ## 3. Block confirmation
 

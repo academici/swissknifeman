@@ -63,7 +63,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 |:--|:--|:--|:--|
 | D1 | 2026-08-12 | supersedes `2026.07.25-ECO-OPT` D3 в части отказа от ordinal: новые планы используют `YYYY.MM.DD-№N-CODE`, Title `План №N — …`; кодовые комментарии используют полный `<PLAN-ID> Pn.m`. **Consequences:** новый ID содержит Unicode `№`; CLI/lint/tests обязаны доказать round-trip, старые IDs остаются readable. | Прямая директива владельца; full ID без ordinal формально был реализован, но требуемая визуальная/дневная нумерация отсутствует. RAG:— (repo-grounded: `brief/00-brief.md:12`, `plans/archive/2026.07.25-ECO-OPT/plan.md:234`). |
 | D2 | 2026-08-12 | Полный дизайн и исполнение идут одной фазой/одним root без дополнительных design passes. | Три независимых, последовательно совместимых item и явный запрос «максимально быстро». RAG:— (owner-grounded: `brief/00-brief.md:18`). |
-| D3 | 2026-08-12 | Journal разделяет observation и terminal outcomes; route rejection, pending decision, local repair и block candidate не меняют state/attempt. | Устраняет детерминированную петлю `не начал → Blocked → нельзя повторить`. RAG:— (repo-grounded: `roadmap/2026.08.10-plan-run-routing-blocked-terminal-loop.md:13`). |
+| D3 | 2026-08-12 | Journal разделяет observation и terminal outcomes; route rejection, pending decision, local repair и block candidate не меняют state/attempt. | Устраняет детерминированную петлю `не начал → Blocked → нельзя повторить`. RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:12`). |
 | D4 | 2026-08-12 | Terminal block разрешает только reducer после isolated reviewer `JUSTIFIED`; внешний класс дополнительно требует verified RAG evidence. | Separate agent проверяет гипотезу, но authority остаётся у deterministic root policy; неподтверждённый блок продолжает repair/evidence. RAG:— (owner-grounded: `brief/00-brief.md:8`). |
 | D5 | 2026-08-12 | Изменение выпускается как minor `v0.12.0`; после terminal plan archive тег ставится на release commit, затем зарегистрированные проекты обновляются по их существующему channel. | Меняется framework capability/schema; release-discipline классифицирует это как minor. RAG:— (repo-grounded: `packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md:45`). |
 
@@ -74,6 +74,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 | 2026-08-12 | plan-designer/frontier/high | Design pass 1/1: План №1 создан и полностью детализирован; ACTIVE переключён с `—`. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.1 закрыт: numbered PLAN-ID, Title/comment contract и Unicode lint GREEN; см. Completion Notes. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.2 закрыт: observation events не терминализируют item; isolated review/RAG gate доказан тестами. |
+| 2026-08-12 | executor/gpt-5.6-sol | P0.3 закрыт: terminal receipt, provider parity, audit-candidate lint, docs/roadmap и release metadata GREEN; см. Completion Notes. |
 
 ## 7. Contracts
 
@@ -83,7 +84,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 |:--|:--|:--|:--|:--|
 | numbered-plan-identity | v1.0.0 | delivered | plan-protocol, plan-lint, provider commands | registry/provider projections regenerated |
 | continue-first-block-policy | v1.0.0 | delivered | task commands, journal/state, provider adapters | P0.3 подключает command/provider surfaces |
-| terminal-delivery-receipt | v1.0.0 | planned | task commands/provider delivery | — |
+| terminal-delivery-receipt | v1.0.0 | delivered | task commands/provider delivery | generated Claude/Codex projections + docs |
 
 ## Audit design — 2026-08-12
 

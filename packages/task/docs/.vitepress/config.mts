@@ -20,6 +20,7 @@ export default withMermaid(defineConfig({
           { text: 'Миграция v1 → v2', link: '/plan-migration-runbook' },
           { text: 'Шаблоны', link: '/templates' },
           { text: 'Workflow', link: '/workflows' },
+          { text: 'Контракт read-budget', link: '/reference/read-budget-contract' },
         ],
       }],
     },

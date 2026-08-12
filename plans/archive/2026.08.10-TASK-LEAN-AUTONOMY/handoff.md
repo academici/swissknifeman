@@ -34,3 +34,10 @@ state/status/decisions/closure views синхронизированы.
 - workarounds: —
 - deferred: —
 - open_questions: —
+
+## Archive migration checklist — 2026-08-12
+
+- Перенесено в docs: `root/contracts/read-budget-v1.md` →
+  `packages/task/docs/reference/read-budget-contract.md`.
+- Осталось в архиве: `artifacts/` отсутствует; `findings/`, `research/`, `brief/`,
+  `bundles/`, `decisions/` и phase carriers — историческое evidence, не документация.

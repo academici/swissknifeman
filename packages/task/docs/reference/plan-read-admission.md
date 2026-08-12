@@ -1,8 +1,8 @@
 # Stage-aware admission бюджета чтения
 
 `task.plan_weight` для планов Layout v2 различает момент применения D2, не меняя единицу,
-порог `100000`, single-read limits или anti-displacement D74. Публичный контракт находится в
-`plans/<PLAN-ID>/root/contracts/read-budget-v1.md`; числовых fallback в коде нет.
+порог `100000`, single-read limits или anti-displacement D74. Публичный контракт описан в
+[контракте read-budget v1](./read-budget-contract.md); числовых fallback в коде нет.
 
 ## Состояния
 

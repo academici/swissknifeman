@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 78c06ed9bd1f9672246b672bfb35acd9aa68f88ca5690631380755bf773043aa
+inputs_sha256: a5fa1a05af325d7e399f56936bb653d948f55e745e902433cf3997c0638c5043
 generated_by: task plan-views status
 -->
 
@@ -61,7 +61,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Add nonterminal journal results and state semantics | 🟢 Done | 2026-08-12 |
-| P3.2 | Apply continue-first repair flow to canonical commands | ⬜ Not started | — |
+| P3.2 | Apply continue-first repair flow to canonical commands | ⬜ Not started | 2026-08-12 |
 | P3.3 | Make orchestration declaration detection negation-aware | ⬜ Not started | — |
 
 ## Phase P4
@@ -221,6 +221,7 @@ Provider projections regenerated; Task 841/1 skip, skiller 633 green. Material d
 | 2026-08-12 | implementation/high | plan-run · in-progress · P3.1: начато расширение observation taxonomy. |
 | 2026-08-12 | implementation/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 P3.1: rag-pending добавлен в journal/state; 45 focused tests и validate.sh зелёные. |
+| 2026-08-12 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR; remaining suffix B-P3-CONTINUE сохранён как P3.2-P3.3 |
 
 ## Owner Gates
 

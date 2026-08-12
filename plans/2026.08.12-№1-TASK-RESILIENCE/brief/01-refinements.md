@@ -82,3 +82,11 @@
   impact, root cause и обязательные prevention controls.
 - До конца текущей owner-сессии действует zero-restart invariant:
   route/protocol deviation фиксируется, но чинится прямо в этом процессе.
+
+## 2026-08-12 — P3 batch continuation
+
+Владелец уточнил, что P3.1–P3.3 должны исполняться как один уже объявленный
+`B-P3-CONTINUE`, а не как отдельные одиночные запуски. P3.1 уже терминален; после ремонта
+portable Inputs/DoR P3.2 handoff обязан адресовать весь оставшийся suffix `P3.2-P3.3` по
+D10 и `roadmap.md`. RAG:— (owner-grounded: уточнение владельца 2026-08-12; repo-grounded: D10,
+`roadmap.md`).

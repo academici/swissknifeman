@@ -82,7 +82,10 @@ code-block. `plan-lint` требует ХОТЯ БЫ ОДИН из двух, н�
   - `continue-root` — обычная последовательная работа и local repair;
   - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
   - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
-    `owner-pause-no-resume`, `whole-plan-independent-audit` или `audit-root-terminal`.
+    `owner-pause-no-resume`, `whole-plan-independent-audit`, `design-root-terminal` или
+    `audit-root-terminal`.
+    После terminal `task:plan-design` используется только `design-root-terminal`:
+    текущий design root возвращает recommendation владельцу и не исполняет successor.
     После terminal `task:plan-audit` используется только `audit-root-terminal`: текущий audit root
     не исполняет successor.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8

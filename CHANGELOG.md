@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: проектирование больше не запускает исполнение автоматически.**
+  Terminal `plan-design` возвращает владельцу только маршрутизированную рекомендацию; successor
+  получает отдельный `cold-start-root: design-root-terminal`, а design-root не вызывает команду и
+  не спавнит исполнителя даже для уже готового item.
+
 ## [0.12.0] - 2026-08-12
 
 - **`task` / `plan-protocol`: выполнение стало continue-first.** Route rejection, pending

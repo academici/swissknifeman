@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.28.0
+version: 2.29.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -180,7 +180,8 @@ For layout v2 the Context field carries EXACTLY one of three values:
 
 `[v1]` historical context strings remain readable but are not emitted for layout v2. A v2
 `cold-start-root` must give exactly one reason: `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, `whole-plan-independent-audit`, or `audit-root-terminal`. Command names
+`owner-pause-no-resume`, `whole-plan-independent-audit`, `design-root-terminal`, or
+`audit-root-terminal`. Command names
 do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
 provider-neutral form and the native launch block together.
 
@@ -198,6 +199,14 @@ successor has `cold-start-root: audit-root-terminal` and a provider-neutral sema
 native fresh routed root launch block that pins the successor's route. This boundary protects
 independent audit and routing cost; it does not weaken autonomous execution within a compatible
 route and does not alter overshoot semantics.
+
+**DESIGN-ROOT-TERMINAL.** A completed `task:plan-design` invocation is an authoring boundary:
+its root must not execute or spawn the successor, even when the successor is compatible, ready,
+or the original brief also mentions later implementation. A design launch block is a routed
+recommendation, never execution authority. Every runnable successor has
+`cold-start-root: design-root-terminal` and a native fresh routed root launch block that pins the
+successor's model and effort. Execution begins only in a separate routed invocation after the
+design result has been returned to the owner.
 
 ## 7. Command protocol, evidence, and safe fallbacks
 

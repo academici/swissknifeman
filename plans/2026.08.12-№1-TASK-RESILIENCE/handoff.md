@@ -1,15 +1,17 @@
 # HANDOFF — 2026-08-12 — after P0.2
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3
+**Next:** manual: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3
+
+> P0.3 остаётся `⬜ Not started`. Автоматическое продолжение запрещено; нужен отдельный ручной dispatch владельца.
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
 | Capabilities | Perplexity Web · filesystem · git |
-| Context | continue-root |
+| Context | cold-start-root: design-root-terminal |
 | Суть | Закрыть mandatory Perplexity evidence и запечатать fail-closed rag-pending semantics. |
-| Команда | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3` |
+| Команда | — |
 
 Provider-neutral launch-block:
 

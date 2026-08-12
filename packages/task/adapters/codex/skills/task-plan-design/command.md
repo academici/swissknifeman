@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:ba89ccd243d40489c07925b82ae34d724c6c7489bb53e22c8f8a485c195b9703
+Canonical SHA-256: sha256:785cd4fa606dd10a381e9d4974ad4d7875501d465b7f919d128df033462628a8
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -23,6 +23,17 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
+
+## DESIGN-ROOT-TERMINAL (authoring/execution boundary)
+
+`task:plan-design` заканчивается после записи плана, final handoff и delivery
+receipt. Launch-block — только маршрутизированная рекомендация, а не авторизация
+на исполнение. Текущий design root НЕ вызывает successor command, НЕ спавнит
+исполнителя и НЕ начинает `plan-audit`/`plan-exec`/`plan-run`/Workflow — даже если
+successor уже ready или исходный бриф упоминал последующую реализацию. Исполнение
+начинается только отдельным routed invocation после design-result. Любой runnable
+successor из design handoff несёт `Context: cold-start-root: design-root-terminal`
+и native launch с моделью и effort именно successor'а.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 
@@ -362,6 +373,8 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 --subject design --kind handoff`. Ненулевой exit означает stale/missing persisted Next:
 почини handoff и не выводи `final`. Финал печатает `Delivery receipt: <compact JSON>`
 и `Рекомендация следующего шага:` с exact `recommendation` receipt.
+После этих строк срабатывает `DESIGN-ROOT-TERMINAL`: верни управление владельцу и не
+исполняй напечатанную команду в этом root.
 
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
 DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего

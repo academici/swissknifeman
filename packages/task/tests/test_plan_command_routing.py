@@ -58,6 +58,20 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertIn("AUDIT-ROOT-TERMINAL", protocol)
         self.assertIn("must not execute the successor", protocol)
 
+    def test_terminal_design_handoff_cannot_auto_execute_its_successor(self):
+        design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
+        codex_design = (REPO_ROOT / "packages/task/adapters/codex/skills/task-plan-design/command.md"
+                        ).read_text(encoding="utf-8")
+        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
+            encoding="utf-8")
+        self.assertIn("DESIGN-ROOT-TERMINAL", design)
+        self.assertIn("НЕ спавнит", design)
+        self.assertIn("cold-start-root: design-root-terminal", design)
+        self.assertIn("DESIGN-ROOT-TERMINAL", codex_design)
+        self.assertIn("НЕ спавнит", codex_design)
+        self.assertIn("DESIGN-ROOT-TERMINAL", protocol)
+        self.assertIn("must not execute or spawn the successor", protocol)
+
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():
             carrier = PlanNextCarrier(

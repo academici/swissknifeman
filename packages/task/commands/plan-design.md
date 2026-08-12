@@ -10,6 +10,17 @@ effort: high
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
 
+## DESIGN-ROOT-TERMINAL (authoring/execution boundary)
+
+`task:plan-design` заканчивается после записи плана, final handoff и delivery
+receipt. Launch-block — только маршрутизированная рекомендация, а не авторизация
+на исполнение. Текущий design root НЕ вызывает successor command, НЕ спавнит
+исполнителя и НЕ начинает `plan-audit`/`plan-exec`/`plan-run`/Workflow — даже если
+successor уже ready или исходный бриф упоминал последующую реализацию. Исполнение
+начинается только отдельным routed invocation после design-result. Любой runnable
+successor из design handoff несёт `Context: cold-start-root: design-root-terminal`
+и native launch с моделью и effort именно successor'а.
+
 ## DecisionRequest и isolated-child-return (P6.3)
 
 Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует
@@ -348,6 +359,8 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 --subject design --kind handoff`. Ненулевой exit означает stale/missing persisted Next:
 почини handoff и не выводи `final`. Финал печатает `Delivery receipt: <compact JSON>`
 и `Рекомендация следующего шага:` с exact `recommendation` receipt.
+После этих строк срабатывает `DESIGN-ROOT-TERMINAL`: верни управление владельцу и не
+исполняй напечатанную команду в этом root.
 
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
 DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего

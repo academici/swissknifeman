@@ -15,7 +15,10 @@ python3 packages/task/scripts/plan-downstream.py \
 
 The tool discovers edges from `Files`/`Deliverables` to `Inputs`/`Required Reads`; it never accepts
 a manual consumer list. It runs only Validation commands whose addressed repository paths exist at
-the producer commit. No applicable command produces a recorded `unknown`, not a pass.
+the producer commit. Path extraction reads executable argv directly, including Unicode numbered
+plan IDs with `№`; a future validator absent from the producer tree is dependency-not-ready and
+produces recorded `unknown`, not a fabricated command failure. No applicable command also produces
+`unknown`, not a pass.
 
 Each consumer finding is keyed by the SHA-256 of its item specification and the producer commit.
 Changing either value invalidates the old evidence. `--record` writes one append-only finding per

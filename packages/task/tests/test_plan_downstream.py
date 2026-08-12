@@ -99,6 +99,18 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertEqual(fields["outcome"], "unknown")
         plan_downstream.validate_result_record(fields)
 
+    def test_missing_validation_under_numbered_plan_path_is_unknown(self):
+        path = "plans/2026.08.12-№1-DEMO/artifacts/P1/future-validator.py"
+        self._commit_consumer(f"python3 {path}")
+
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertFalse(result["blocks"])
+        command = result["consumers"][0]["commands"][0]
+        self.assertFalse(command["applicable"])
+        self.assertEqual(command["missing_paths"], [path])
+
     def test_record_without_content_commit_pair_is_rejected(self):
         with self.assertRaisesRegex(plan_downstream.DownstreamError, "consumer_spec_sha256"):
             plan_downstream.validate_result_record({

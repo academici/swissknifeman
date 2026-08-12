@@ -176,6 +176,20 @@ def _command_paths(command: str, *, plan_dir: Path, repo_root: Path) -> set[str]
     # is as explicit as a backticked path in an item field.
     raw_paths = {token for token, _declared in plan_weight.path_candidates(command)}
     raw_paths.update(_QUOTED_PATH.findall(command))
+    # ``plan_weight.path_candidates`` intentionally uses the ASCII path grammar
+    # of plan prose.  Shell argv may legitimately contain the numbered-plan
+    # marker ``№``; read clean slash-bearing argv tokens as a second, executable
+    # carrier so a missing future validator is ``unknown`` instead of a fabricated
+    # RED command result.
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        argv = command.split()
+    for word in argv:
+        candidate = word.split("=", 1)[1] if "=" in word else word
+        if ("/" in candidate and "://" not in candidate
+                and not any(char in candidate for char in ";&|<>()")):
+            raw_paths.add(candidate)
     match = _UNITTEST.search(command)
     if match:
         try:

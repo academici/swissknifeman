@@ -66,6 +66,47 @@ class TestValidPlan(TmpPlanTestCase):
         json.dumps(model, ensure_ascii=False)
 
 
+class TestNumberedPlanIdentity(TmpPlanTestCase):
+    def _numbered(self, plan_id="2026.08.12-№1-DEMO", title="План №1 — Демо"):
+        plan_dir = write_valid_plan(self.root, plan_id)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8").replace("| Title | Демо-план |", f"| Title | {title} |")
+        plan.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_numbered_plan_id_and_matching_title_are_valid(self):
+        plan_dir = self._numbered()
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "PLAN-ID"), diag.errors)
+        self.assertFalse([w for w in diag.warnings if "PLAN-ID" in w], diag.warnings)
+
+    def test_new_legacy_dated_id_requires_number(self):
+        plan_dir = write_valid_plan(self.root, "2026.08.12-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "требует порядковый номер"), diag.errors)
+
+    def test_numbered_plan_rejects_zero_ordinal(self):
+        plan_dir = self._numbered("2026.08.12-№0-DEMO", "План №0 — Демо")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "положительным"), diag.errors)
+
+    def test_numbered_plan_title_must_match_ordinal(self):
+        plan_dir = self._numbered(title="План №2 — Демо")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Title должен начинаться"), diag.errors)
+
+    def test_same_day_ordinal_must_be_unique_across_active_and_archive(self):
+        plan_dir = self._numbered()
+        archived = self.root / "plans" / "archive" / "2026.08.12-№1-OLD"
+        shutil.copytree(plan_dir, archived)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
+
+    def test_numbered_plan_codename_excludes_ordinal(self):
+        from task.plan_lint import _plan_codename
+        self.assertEqual(_plan_codename("2026.08.12-№12-TASK-RESILIENCE"), "task-resilience")
+
+
 class TestPlanMdStructure(TmpPlanTestCase):
     def test_missing_plan_md(self):
         plan_dir = self.root / "plans" / "DEMO-1"

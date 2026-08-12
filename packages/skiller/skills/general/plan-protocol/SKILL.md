@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.26.0
+version: 2.27.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -31,6 +31,11 @@ work requires an executable plan.
 
 Rules common to layouts v1 and v2:
 
+- New plans use `YYYY.MM.DD-№N-CODENAME` with a positive ordinal unique within that date;
+  Meta `Title` starts with `План №N — …`. Historical plan IDs remain readable and are never renamed.
+- A code comment, docstring, PR comment, review finding, or external note that cites an item uses
+  the collision-free `<PLAN-ID> Pn.m` form. Bare `Pn.m` is allowed only inside that plan's own
+  carriers when the plan identity is already unambiguous.
 - Repository files are the source of truth; chat, memory, MCP output, and generated views are not.
 - Read `plan.md` and the selected phase/item carriers before mutation. Follow `Required Reads` in
   declared order and fail closed on a missing required input.

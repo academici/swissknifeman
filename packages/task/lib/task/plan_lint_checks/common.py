@@ -233,10 +233,18 @@ PHASE_CONTEXT_HEADER_RE = re.compile(r"^##\s+Phase Context\s*$")
 SKELETON_EMPTY_RATIO = 0.5
 
 # --- 2026.07.10-SKM-ROADMAP-005 P4.3: канон ID / места-имени workflow-скрипта / supersedes (D24/D27/D28) --
-# Регулярка PLAN-ID (D16/D24) — union: датовый канон `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`
-# и старый паттерн (back-compat: живые планы SKM-ROADMAP-005/SKM-AUDIT-004 матчат
-# старый → 0 warning; несоответствие ни одному — WARNING, никогда не ERROR).
-PLAN_ID_DATED_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}-[A-Z][A-Z0-9-]*$")
+# С 2026-08-12 forward-only канон нового PLAN-ID несёт положительный дневной ordinal:
+# `ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`.  Прежний датовый формат остаётся
+# readable для истории; `PLAN_ID_DATED_RE` намеренно объединяет обе формы, чтобы
+# возрастные brief/journal gates не теряли numbered plans.
+NUMBERED_PLAN_ID_CANON_DATE = "2026.08.12"
+PLAN_ID_NUMBERED_RE = re.compile(
+    r"^(?P<date>\d{4}\.\d{2}\.\d{2})-№(?P<ordinal>[1-9][0-9]*)-(?P<codename>[A-Z][A-Z0-9-]*)$")
+PLAN_ID_NUMBERED_CANDIDATE_RE = re.compile(
+    r"^(?P<date>\d{4}\.\d{2}\.\d{2})-№(?P<ordinal>[0-9]+)-(?P<codename>[A-Z][A-Z0-9-]*)$")
+PLAN_ID_LEGACY_DATED_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}-[A-Z][A-Z0-9-]*$")
+PLAN_ID_DATED_RE = re.compile(
+    r"^\d{4}\.\d{2}\.\d{2}-(?:№[1-9][0-9]*-)?[A-Z][A-Z0-9-]*$")
 PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
 # Маркер workflow-скрипта в теле .js — детект ПОДСТРОКОЙ (не eval/import JS,
 # прецедент 2026.07.10-SKM-ROADMAP-005 P2.1/D19 `parse_script_meta`).
@@ -323,6 +331,9 @@ def _plan_codename(plan_id):
     """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
     датовый ID `ГГГГ.ММ.ДД-ИМЯ` → часть после даты; старый ID → весь ID; всегда `.lower()`.
     Примеры: `2026.07.10-FLEX` → `flex`; `SKM-ROADMAP-005` → `skm-roadmap-005`."""
+    numbered = PLAN_ID_NUMBERED_RE.match(plan_id)
+    if numbered:
+        return numbered.group("codename").lower()
     if PLAN_ID_DATED_RE.match(plan_id) and "-" in plan_id:
         return plan_id.split("-", 1)[1].lower()
     return plan_id.lower()

@@ -375,11 +375,49 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     plan_dir = Path(plan_dir)
     meta = meta or {}
 
-    # (1) регулярка PLAN-ID (union старого и датового; несоответствие → warning)
+    # (1) PLAN-ID: исторические формы readable, но новые датовые планы
+    # обязаны нести `№N`; ordinal связан с Title и уникален внутри даты.
     if not (PLAN_ID_LEGACY_RE.match(plan_id) or PLAN_ID_DATED_RE.match(plan_id)):
         diag.warning(plan_dir, None,
                      f"имя каталога-плана «{plan_id}» не соответствует канону PLAN-ID "
-                     f"(старый `[A-Z][A-Z0-9-]+` ИЛИ датовый `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`, D24)")
+                     f"(старый `[A-Z][A-Z0-9-]+` ИЛИ новый "
+                     f"`ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`)")
+
+    numbered = PLAN_ID_NUMBERED_RE.match(plan_id)
+    numbered_candidate = PLAN_ID_NUMBERED_CANDIDATE_RE.match(plan_id)
+    if (PLAN_ID_LEGACY_DATED_RE.match(plan_id)
+            and plan_id[:10] >= NUMBERED_PLAN_ID_CANON_DATE):
+        diag.error(plan_dir, None,
+                   f"новый датовый PLAN-ID «{plan_id}» требует порядковый номер: "
+                   "`ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`")
+    if numbered_candidate and int(numbered_candidate.group("ordinal")) == 0:
+        diag.error(plan_dir, None, "порядковый номер PLAN-ID должен быть положительным")
+    if numbered:
+        ordinal = numbered.group("ordinal")
+        title = (meta.get("Title", ("", None))[0] or "").strip()
+        expected_prefix = f"План №{ordinal}"
+        if not (title == expected_prefix or title.startswith(expected_prefix + " — ")):
+            diag.error(plan_md, meta.get("Title", ("", None))[1],
+                       f"Title должен начинаться с «{expected_prefix} — …» "
+                       f"для PLAN-ID «{plan_id}»")
+
+        plans_root = plan_dir.parent.parent if plan_dir.parent.name == "archive" else plan_dir.parent
+        peers = [p for p in plans_root.iterdir() if p.is_dir() and p.name != "archive"]
+        archive_dir = plans_root / "archive"
+        if archive_dir.is_dir():
+            peers.extend(p for p in archive_dir.iterdir() if p.is_dir())
+        duplicates = []
+        for peer in peers:
+            if peer == plan_dir:
+                continue
+            match = PLAN_ID_NUMBERED_RE.match(peer.name)
+            if (match and match.group("date") == numbered.group("date")
+                    and match.group("ordinal") == ordinal):
+                duplicates.append(peer.relative_to(plans_root).as_posix())
+        if duplicates:
+            diag.error(plan_dir, None,
+                       f"PLAN-ID «{plan_id}» дублирует порядковый номер "
+                       f"№{ordinal} за {numbered.group('date')}: {', '.join(sorted(duplicates))}")
 
     codename = _plan_codename(plan_id)
 

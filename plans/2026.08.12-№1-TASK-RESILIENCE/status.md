@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: bbf68aa08e03fd2727c25c9a02fdb0d43e93cf4baa73c7687d6577465bc5e178
+inputs_sha256: 5da3a056ad5baf3939b833c40bd83ec1ed469d77e633d24315080092b08881f2
 generated_by: task plan-views status
 -->
 
@@ -212,6 +212,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
 Canonical qualified-reference rule and source-level parity tests added; P5.3 owns stale projections. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Repair-forward: generated provider projections and full task validation are green. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Reconcile resolved P2.2 deviation. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
+Provider projections regenerated; Task 841/1 skip, skiller 633 green. Material deviation: P5.3-owned generated Files repaired in P2.2. |
 
 ## Owner Gates
 

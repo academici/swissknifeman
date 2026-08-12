@@ -1,40 +1,52 @@
-# HANDOFF — 2026-08-12 — after P0.1
+# HANDOFF — 2026-08-12 — after P0.2
 
-**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
-
-**Provider-neutral plan-protocol launch block**
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | high |
-| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Capabilities | Perplexity Web · filesystem · git |
 | Context | continue-root |
-| Суть | Заморозить machine-readable continue-first acceptance bank и traceability к gap matrix P0.1. |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.2` |
+| Суть | Закрыть mandatory Perplexity evidence и запечатать fail-closed rag-pending semantics. |
+| Команда | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3` |
 
-**Native Codex launch block**
+Provider-neutral launch-block:
 
-| Model | Thinking | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | continue-root | Continue-first acceptance bank | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.2'` |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.2'
+```text
+task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3
 ```
 
-**Done:** P0.1 закрыт GREEN; current-runtime finding и closed roadmap/owner gap matrix
-зафиксированы item-коммитами `5f34d99f` + `a8fd256d`; forward repairs
-acceptance/admission — `bbcff1bf` + `7d45c292`.
+Native Codex launch-block:
 
-**Remaining:** исполнить P0.2–P6.3; фаза P0 остаётся `In progress` и не закрывается
-до terminal P0.2/P0.3.
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3'
+```
 
-**Sources of truth:** `plan.md` · `status.md` · `phases/P0/P0.1.state.md` ·
-`findings/01-current-runtime-verification.md` · `artifacts/P0/roadmap-gap-matrix-v1.json`.
+**Done:**
 
-**Open risks:** exact partial/open seams запечатаны в gap matrix; P0.3 bundle остаётся
-`pending-producer` до terminal P0.2 и появления acceptance bank.
+- P0.1 закрыл roadmap/runtime gap matrix.
+- P0.2 закрыл machine-readable continue-first acceptance bank и independent stdlib validator; item-коммит `e01b2a65`, write-site `allow/allow`.
 
-**Workarounds/Deferred/Open questions:** workarounds — нет; deferred — push/GitHub release;
-open_questions — нет.
+**Remaining:**
+
+- P0.3, затем phase audit/close P0.
+- P1–P6 по phase-first порядку плана.
+
+**Sources of truth:**
+
+- `plans/2026.08.12-№1-TASK-RESILIENCE/plan.md`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.md`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.3.md`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/bundles/P0.3.json`
+- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.3.state.md`
+
+**Open risks:**
+
+- Downstream P0.2 → P0.3 остаётся `unknown` до исполнения producer-owned RAG evidence P0.3; P0.3 bundle сформирован и готов к исполнению.
+
+**Workarounds/Deferred/Open questions:**
+
+- Workaround: —.
+- Deferred: —.
+- Open questions: —.

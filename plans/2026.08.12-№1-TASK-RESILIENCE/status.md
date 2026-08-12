@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: b9abbc0fc9585cb30d19409adf965d5b69644b912953aef840298674a0382ced
+inputs_sha256: 54e41cf2e1dcfc45932f342f0a878222fc93f9bbaf01ce12479664bfb6a79d6c
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟡 In progress |
+| P0 | Roadmap evidence and acceptance freeze | 2/3 | 🟡 In progress |
 | P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/2 | ⬜ Not started |
@@ -36,7 +36,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Reconcile roadmap conflicts with current runtime | 🟢 Done | 2026-08-12 |
-| P0.2 | Freeze continue-first acceptance bank | ⬜ Not started | — |
+| P0.2 | Freeze continue-first acceptance bank | 🟢 Done | 2026-08-12 |
 | P0.3 | Close mandatory Perplexity evidence and freeze RAG-pending semantics | ⬜ Not started | — |
 
 ## Phase P1
@@ -95,6 +95,16 @@ generated_by: task plan-views status
 | 2026-08-12 | frontier/high | plan-run · closed-green · Deliverables committed at a8fd256d; declared Validation and targeted seam tests passed; forward local repairs bbcff1bf/7d45c292. write-site: pre_mutation: allow · pre_final: allow. |
 | 2026-08-12 | frontier/high | plan-run · local-repair · Closure projection requires write-site on its own line; append-only terminal correction follows. |
 | 2026-08-12 | frontier/high | plan-run · closed-green · Deliverables committed at a8fd256d; declared Validation and targeted seam tests passed; forward local repairs bbcff1bf/7d45c292.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/xhigh | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Исправлена вперёд metadata-ошибка стартового actor: delegated route gpt-5.6-sol/high. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Acceptance bank закрыт; pre-final классифицировал Validation с /dev/null как internal. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Closure projection requires a write-site line and complete evidence; append-only correction follows. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bookkeeping reconciliation: generated state needs the required write-site line. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Artifacts committed at e01b2a65; declared Validation passed; negative deleted-case and external-without-RAG mutations rejected; startup actor metadata repaired forward.
+write-site: pre_mutation: allow · pre_final: block:ACCEPTANCE_NOT_PUBLIC |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Authorized spec repair made Validation public; Task Contract now evaluates allow/allow. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · Artifacts committed at e01b2a65; declared Validation and negative mutations passed; startup actor metadata was corrected append-only.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

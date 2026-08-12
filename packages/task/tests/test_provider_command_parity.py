@@ -230,6 +230,22 @@ class ProviderCommandParityTests(unittest.TestCase):
             with self.subTest(literal=literal):
                 self.assertIn(literal, plan_text)
 
+    def test_qualified_item_reference_rule_survives_provider_rendering(self):
+        literal = "внешняя ссылка на item использует"
+        source = self.catalog.content_for("task:plan-design").decode("utf-8")
+        self.assertIn(literal, source)
+        self.assertIn("`<PLAN-ID> Pn.m`; голый `Pn.m` допустим", source)
+        for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan)):
+            with self.subTest(provider=provider_id):
+                rendered = "\n".join(
+                    artifact.managed_bytes.decode("utf-8")
+                    for artifact in plan.artifacts
+                    if artifact.path == "packages/task/commands/plan-design.md"
+                    or "task-plan-design" in artifact.path
+                )
+                self.assertIn(literal, rendered)
+                self.assertIn("`<PLAN-ID> Pn.m`; голый `Pn.m` допустим", rendered)
+
     def test_all_contract_diagnostics_have_fail_closed_negative_cases(self):
         observed = set()
         with tempfile.TemporaryDirectory() as temporary:

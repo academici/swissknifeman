@@ -481,6 +481,28 @@ class TestCommandReadPathProjection(unittest.TestCase):
                 self.assertIn("unqualifiable", text)
 
 
+class TestQualifiedItemReferenceCanon(unittest.TestCase):
+    """P2.2: global item references carry the plan identity."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+        cls.skill = (cls.repo_root / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
+            encoding="utf-8")
+        cls.template = (cls.repo_root / "packages/skiller/skills/general/plan-protocol/"
+                        "snippets/plan-template.md").read_text(encoding="utf-8")
+        cls.plan_design = (cls.repo_root / "packages/task/commands/plan-design.md").read_text(
+            encoding="utf-8")
+
+    def test_canonical_sources_distinguish_global_and_plan_local_references(self):
+        self.assertIn("collision-free `<PLAN-ID> Pn.m` form", self.skill)
+        self.assertIn("Bare `Pn.m` is allowed only inside that plan's own", self.skill)
+        self.assertIn("carriers when the plan identity is already unambiguous", self.skill)
+        self.assertIn("формой `<PLAN-ID> Pn.m`; голый `Pn.m` допустим", self.template)
+        self.assertIn("внешняя ссылка на item использует", self.plan_design)
+        self.assertIn("`<PLAN-ID> Pn.m`; голый `Pn.m` допустим", self.plan_design)
+
+
 class TestLayoutV2ContextEnum(unittest.TestCase):
     """Consumer commands emit only the provider-neutral layout-v2 enum."""
 

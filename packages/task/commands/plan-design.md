@@ -10,6 +10,10 @@ effort: high
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
 
+В кодовых комментариях, docstring и PR/review notes внешняя ссылка на item использует
+`<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри носителей этого плана, где его
+identity уже однозначна.
+
 ## DESIGN-ROOT-TERMINAL (authoring/execution boundary)
 
 `task:plan-design` заканчивается после записи плана, final handoff и delivery

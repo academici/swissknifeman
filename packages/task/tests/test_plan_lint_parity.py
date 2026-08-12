@@ -1,4 +1,4 @@
-"""Diagnostic parity of the public coordinator on v1 and v2 carriers."""
+"""Diagnostic parity of the public coordinator on the v2-only carrier."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,11 +13,10 @@ from task.plan_lint_checks import engine
 
 
 class TestDiagnosticParity(unittest.TestCase):
-    def test_public_surface_matches_split_engine_on_v1_and_v2(self):
+    def test_public_surface_matches_split_engine_on_v2(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            plans = (write_valid_plan(root, "DEMO-V1"),
-                     write_valid_plan(root, "DEMO-V2", layout="v2"))
+            plans = (write_valid_plan(root, "DEMO-V2", layout="v2"),)
             for plan_dir in plans:
                 public_diag = plan_lint.Diagnostics()
                 engine_diag = plan_lint.Diagnostics()
@@ -25,7 +24,7 @@ class TestDiagnosticParity(unittest.TestCase):
                 engine.lint_plan(plan_dir, engine_diag)
                 self.assertEqual(public_diag.normalized_keys(root),
                                  engine_diag.normalized_keys(root))
-        print("DIAGNOSTIC-PARITY-OK v1-v2-fixtures")
+        print("DIAGNOSTIC-PARITY-OK v2-fixture")
 
 
 if __name__ == "__main__":

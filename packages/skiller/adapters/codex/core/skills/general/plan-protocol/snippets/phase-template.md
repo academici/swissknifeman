@@ -1,8 +1,8 @@
 # Шаблон layout v2: `phases/<Pn>/<Pn>.md` + `<Pn.m>.md`
 
-Layout v2 отделяет стабильный Phase Context/item spec от generated state. Блок Phase Status,
-пять result-полей и Phase Handoff ниже показаны для layout v1 compatibility; в v2 их владельцы —
-`status.md`, `<Pn.m>.state.md` и `handoff.md`/`<Pn>.closed.md`. Первый item (P1.1) — полностью заполненный ОБРАЗЕЦ (какой
+Layout v2 отделяет стабильный Phase Context/item spec от generated state. Phase Status,
+пять result-полей и Phase Handoff принадлежат `status.md`, `<Pn.m>.state.md` и
+`handoff.md`/`<Pn>.closed.md`. Первый item (P1.1) — полностью заполненный ОБРАЗЕЦ (какой
 уровень детализации обязателен, включая RAG-маркеры на несущих фактах — SKILL
 раздел 7), второй (Pn.m) — пустой скелет с каноническим «—».
 
@@ -45,7 +45,7 @@ Code Guidance = «—»; без неё пустой Code Guidance — дефек
 - [ ] Open Questions разнесены по статусам `open-questions.md`.
 - [ ] Несущие факты несут RAG-маркеры (`RAG:✅ …` / `[UNVERIFIED]`).
 
-## Phase Status <!-- layout v1 only; omit in v2 phase index -->
+<!-- Phase Status lives in status.md. -->
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
@@ -54,7 +54,7 @@ Code Guidance = «—»; без неё пустой Code Guidance — дефек
 
 ### P1.1 — Валидация конфига при загрузке
 
-**Status:** ⬜ Not started <!-- layout v1; v2: item-state-template.md -->
+<!-- Status lives in item-state-template.md. -->
 **Intent:** Добавить в load_config() проверку обязательных ключей и типов до первого использования.
 **Why:** Битый конфиг сейчас падает глубоко в рантайме с невнятным KeyError — диагностика дорогая; ~треть инцидентов онбординга — битые конфиги [UNVERIFIED].
 **Scope Included:** функция load_config() и её тесты.
@@ -91,7 +91,7 @@ Code Guidance = «—»; без неё пустой Code Guidance — дефек
 **Known Deviations:** —
 **Escalation Needed:** —
 
-## Phase Handoff <!-- layout v1 only; v2 uses handoff.md + generated <Pn>.closed.md -->
+## Phase Handoff
 
 <Заполняется при закрытии фазы: что сдали, известные отклонения, что дальше.>
 ```

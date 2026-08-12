@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:bce9a47ed1a974845855a3d98dfb3112204de5c03f9629525d7a646aa62b1594",
+      "source_hash": "sha256:9f8841695ddb553d1c0149f29f2477b06b66220273d149b0e10a3ee287bbf6b5",
       "rendered_hash": "sha256:7feb7d57fa227b1fdffa13744a50cd5ba490a1c7681dab193348e97dd843d56f"
     },
     {
@@ -120,83 +120,83 @@
     },
     {
       "path": "skills/general/plan-protocol/SKILL.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
-      "rendered_hash": "sha256:fc04555c8a756b8a73dcca8002ab19e8c2d4910446bbf08f0dc152d847776e88"
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
+      "rendered_hash": "sha256:3b1ac3ceca3c6a212ae59d46c307c244267a816f596117a2b47ca9c81d070668"
     },
     {
       "path": "skills/general/plan-protocol/snippets/active-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:5f055389e6db9583dfecf3b6fb2dad9c6e015a32ebc74d104b7e80f0d251017a"
     },
     {
       "path": "skills/general/plan-protocol/snippets/closure-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:c43edc9f58921085bc6a008311d364b13088c8598747a06c37276333092d701c"
     },
     {
       "path": "skills/general/plan-protocol/snippets/code-guidance-patterns.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:95a0c1615f56d38e516a7f38128a2cd6969082edb9f22281985b2a0f51a9904a"
     },
     {
       "path": "skills/general/plan-protocol/snippets/decision-record-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:f5bd43b5aa916ec5185e1e74eb30eaf8e2c48e547b658763ae8b06267b0c80e4"
     },
     {
       "path": "skills/general/plan-protocol/snippets/handoff-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:1b670c9042f363117847837e2e4d832e1da05bc4cad9ce00f15cddf8a8265674"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:669d1f97ea3cb0c2975cfdc7cf990db015a2e698f39b48c2bfaa7fe25b6e6763"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index.json",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:23f5e8ed3360e98ec9c237a038c29b62c4770eb62fc282427e5b79959d1533f8"
     },
     {
       "path": "skills/general/plan-protocol/snippets/item-state-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:1ee331ca6b612bdea0731ea32b18ee433f7bd5ee5b05b8efa8aaf38ecd3e997e"
     },
     {
       "path": "skills/general/plan-protocol/snippets/journal-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:88327fc24847c3e0bc5c6a8d0291a2676d354c140977aba311282f4a79a4a98d"
     },
     {
       "path": "skills/general/plan-protocol/snippets/launch-block-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:a0aeb78b24e3f4b7232ea99a0c86489ee3eacb959c806ff891c849cea7b3b71c"
     },
     {
       "path": "skills/general/plan-protocol/snippets/phase-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
-      "rendered_hash": "sha256:ca381cff388f2b3d46ea9817f7c8525c159cac762174aea9d87ea0ebee420288"
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
+      "rendered_hash": "sha256:e8003463024cf68b48ffdfd57ffc525c92698954aa60a87a51af38706fb172ef"
     },
     {
       "path": "skills/general/plan-protocol/snippets/plan-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:d36df5e23cd2e5d4ba67de57e69d6fefd376bb982693ec8e629f7d718d0ea2ae"
     },
     {
       "path": "skills/general/plan-protocol/snippets/roadmap-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:fc30c7ccd11705b8e5dd79723ea6ad72ce1666c9a1cd7d627abd65382a2b6344"
     },
     {
       "path": "skills/general/plan-protocol/snippets/source-evidence-template.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
       "rendered_hash": "sha256:c0594eff04fb0f2fe75b93fa7436c7a1dc8f10a51d44282e1f7fb3ad1218b9c5"
     },
     {
       "path": "skills/general/plan-protocol/references/plan-layout-v2.md",
-      "source_hash": "sha256:514ef1355f029113c550ddc6d9ea4521e4944a46ac3c699dd7df253cdf031344",
-      "rendered_hash": "sha256:1549d9d1450e572b6b5572ef78fb644b32dc8d3e6e904bdc878155f515528cc1"
+      "source_hash": "sha256:59d437ae5c4a93452a17426b6e9f69c3287ea60a873942b67290568b1af7d237",
+      "rendered_hash": "sha256:9c58c68bb0b2d94542993b229bbc934da8479262dc81268c88508309ef8d32e1"
     }
   ]
 }

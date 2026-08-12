@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:236df4c4fd6aa0b9d53fe6bdb172c7f28e0b5bfe7e2fda8e74dd54f45de100b7
+Canonical SHA-256: sha256:cc5d7077a56446dbd4d5c0c2c697181a0b8869cc7d2a227479ab74eba7fbeda1
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -77,10 +77,9 @@ nonterminal `routing-rejected|decision-pending|local-repair|block-candidate`; м
 `task.plan_blocking.evaluate()`. Только `terminal-block` после `JUSTIFIED` разрешает
 Blocked/escalation; любой другой action продолжает repair/evidence в owning root.
 
-**Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву
-файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution Rules,
-§3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) →
-Required Reads в объявленном порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+**Путь чтения делегируемого item.** Сначала прочитай поле `Layout` в `## 0. Meta`;
+исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает
+`PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:
 
 1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
 2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;

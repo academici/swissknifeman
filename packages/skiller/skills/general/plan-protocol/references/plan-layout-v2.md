@@ -1,13 +1,11 @@
 # Plan layout v2 reference
 
-This reference expands the compact `plan-protocol` entry carrier. It is normative for rules
-tagged `[v2]`; layout v1 remains valid and keeps its monolithic phase/handoff paths.
+This reference expands the compact `plan-protocol` entry carrier for the sole executable layout.
 
 ## Selection and compatibility
 
-`plan.md` Meta `Layout | v2` selects v2. If `Layout` is absent, readers must select v1.
-Unknown values fail closed. A v2 reader must not silently fall back to v1 after seeing a v2
-declaration. Provider projections are adapters over these shared semantics.
+`plan.md` must declare `Layout | v2`. Missing, `v1`, and unknown declarations fail closed with
+`PLAN_LAYOUT_V1_RETIRED`; provider projections are adapters over these shared semantics.
 
 ## Carrier registry
 

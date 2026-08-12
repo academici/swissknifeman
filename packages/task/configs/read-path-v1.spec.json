@@ -84,15 +84,6 @@
     }
   },
   "layout_versions": {
-    "v1": {
-      "canonical_source": "packages/task/commands/plan-exec.md §1",
-      "executor_read_order": [
-        {"order": 1, "carrier_id": "legacy-plan-monolith", "selection": "Context, Execution Rules, Routing, Status Board"},
-        {"order": 2, "carrier_id": "handoff", "selection": "whole file"},
-        {"order": 3, "carrier_id": "legacy-phase-monolith", "selection": "Phase Context and selected item in one phase file"},
-        {"order": 4, "carrier_id": "legacy-phase-monolith", "selection": "resolve and read the selected item's Required Reads in declared order"}
-      ]
-    },
     "v2": {
       "paths_ref": "#/paths"
     }

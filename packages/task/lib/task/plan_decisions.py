@@ -127,7 +127,8 @@ def load_decisions(plan_dir) -> tuple[Decision, ...]:
         raise DecisionError(f"каталог решений отсутствует: {directory}")
     paths = [path for path in directory.glob(pattern.name)
              if path.is_file() and _DECISION_NAME_RE.match(path.name)]
-    decisions = tuple(sorted((parse_decision(path) for path in paths), key=lambda item: item.identifier))
+    decisions = tuple(sorted((parse_decision(path) for path in paths),
+                             key=lambda item: int(item.identifier[1:])))
     by_id = {decision.identifier: decision for decision in decisions}
     if len(by_id) != len(decisions):
         raise DecisionError("идентификаторы решений повторяются")

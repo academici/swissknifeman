@@ -131,7 +131,7 @@
       "volatility_basis": "task commands append an event at each attempt boundary and never rewrite prior events",
       "on_path_of": ["auditor"],
       "class": "history",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "handoff",
@@ -143,7 +143,7 @@
       "volatility_basis": "the closing command rewrites the cold-start handoff after every completed or escalated item",
       "on_path_of": ["designer", "auditor", "owner"],
       "class": "state",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "brief",
@@ -155,7 +155,7 @@
       "volatility_basis": "the owner supplies or explicitly refines the brief before a design pass; item execution does not rewrite it",
       "on_path_of": ["designer", "auditor", "owner"],
       "class": "evidence",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "research",
@@ -167,7 +167,7 @@
       "volatility_basis": "plan-design appends synthesized research at a design boundary rather than during routine item closure",
       "on_path_of": ["designer", "auditor"],
       "class": "evidence",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "findings",
@@ -179,7 +179,7 @@
       "volatility_basis": "an execution, research, or audit item writes a scoped finding at its explicit boundary; unrelated item closures do not rewrite it",
       "on_path_of": ["designer", "executor", "auditor", "owner"],
       "class": "evidence",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "roadmap",
@@ -191,7 +191,7 @@
       "volatility_basis": "plan-design regenerates the roadmap when phase structure or routing changes, not on ordinary item closure",
       "on_path_of": ["designer", "auditor", "owner"],
       "class": "index",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "index",
@@ -215,7 +215,7 @@
       "volatility_basis": "plan-design or the owner changes a question only at a decision or authority boundary",
       "on_path_of": ["designer", "auditor", "owner"],
       "class": "state",
-      "layout_versions": ["v1", "v2"]
+      "layout_versions": ["v2"]
     },
     {
       "id": "bundle",
@@ -239,35 +239,7 @@
       "volatility_basis": "the owning item generator creates a reproducible artifact at an explicit item boundary; other item closures do not rewrite it",
       "on_path_of": ["designer", "executor", "auditor", "owner"],
       "class": "evidence",
-      "layout_versions": ["v1", "v2"]
-    },
-    {
-      "id": "legacy-plan-monolith",
-      "path": "plan.md",
-      "owner_reader": "designer",
-      "also_read_by": ["executor", "auditor", "owner"],
-      "mutability": "managed-block",
-      "volatility": "volatile",
-      "volatility_basis": "in layout v1 plan-design owns stable prose while every item closure rewrites Meta, Status Board, and Update Log in the same file",
-      "on_path_of": ["designer", "executor", "auditor", "owner"],
-      "class": "spec",
-      "managed_block_justification": "layout v1 already mixes stable plan prose and volatile bookkeeping; the target split is implemented only by P2",
-      "layout_versions": ["v1"],
-      "superseded_by": "plan-core"
-    },
-    {
-      "id": "legacy-phase-monolith",
-      "path": "phases/<Pn>.md",
-      "owner_reader": "designer",
-      "also_read_by": ["executor", "auditor", "owner"],
-      "mutability": "managed-block",
-      "volatility": "volatile",
-      "volatility_basis": "in layout v1 plan-design owns phase and item specifications while each item closure rewrites Phase Status and completion sections in the same file",
-      "on_path_of": ["designer", "executor", "auditor", "owner"],
-      "class": "spec",
-      "managed_block_justification": "layout v1 physically combines stable phase and item specifications with volatile status and completion bookkeeping until P2 migrates it",
-      "layout_versions": ["v1"],
-      "superseded_by": "phase-index"
+      "layout_versions": ["v2"]
     }
   ]
 }

@@ -59,10 +59,9 @@ closed `block-candidate/v1`; для 100% external-кандидатов снач�
 
 ## Путь чтения существующего плана
 
-Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`; по
-дереву файлов раскладка НЕ выводится. `Layout` отсутствует → v1: `plan.md` (Context, Execution
-Rules, §3 Routing и Status Board) → `handoff.md` → `phases/Pn.md` (Phase Context + выбранный
-item) → Required Reads в объявленном порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+Для режима, адресующего существующий item, сначала прочитай поле `Layout` в `## 0. Meta`;
+исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает
+`PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:
 
 1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
 2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;

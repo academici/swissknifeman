@@ -31,11 +31,11 @@ class TestBriefLayer(TmpPlanTestCase):
     def test_skeleton_phase_does_not_require_roadmap(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
         (plan_dir / "roadmap.md").unlink()
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = phase_index_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
         marker = ("> СКЕЛЕТ — не детализирован, разворачивается "
                   "/task:plan-design 2026.07.16-DEMO P1\n\n")
-        p1.write_text(text.replace("## Phase Status", marker + "## Phase Status", 1),
+        p1.write_text(text.replace("Демо-фаза.", "Демо-фаза.\n\n" + marker, 1),
                       encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "roadmap.md"), [])
@@ -152,6 +152,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 
     def test_owner_gated_historical_exception_suppresses_exact_field_only(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        write_decision_record(plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["friction"] = ["Major: historical free-form value"]
@@ -193,6 +194,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 
     def test_foreign_event_and_sidecar_plan_ids_cannot_exempt_mismatch(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        write_decision_record(plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["plan_id"] = "2026.07.18-FOREIGN"
@@ -224,6 +226,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 
     def test_historical_exception_rejects_inexact_invalid_field_set(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        write_decision_record(plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["command"] = "plan-nope"
@@ -255,6 +258,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 
     def test_historical_exception_hash_mismatch_is_error(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        write_decision_record(plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["friction"] = ["Major: historical free-form value"]
@@ -307,6 +311,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
     def test_validated_exception_suppresses_only_exact_schema_error(self):
         plan_id = "2026.07.19-DEMO"
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        write_decision_record(plan_dir, "D51", decision="owner")
         entry = json.loads((plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
         entry["friction"] = "legacy"
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
@@ -381,7 +386,7 @@ class TestAuditScopePayload(TmpPlanTestCase):
 
     def _write_audit(self, plan_id, verdict, payload):
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
-        phase = plan_dir / "phases" / "P1.md"
+        phase = phase_index_path(plan_dir)
         phase.write_text(phase.read_text(encoding="utf-8")
                          + self.PAYLOAD.format(verdict=verdict, payload=payload),
                          encoding="utf-8")
@@ -426,7 +431,7 @@ class TestAuditScopePayload(TmpPlanTestCase):
     def test_block_without_verdict_line_is_not_gated(self):
         """Граница: `## Audit …` без строки вердикта — свободная заметка, не отчёт."""
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
-        phase = plan_dir / "phases" / "P1.md"
+        phase = phase_index_path(plan_dir)
         phase.write_text(phase.read_text(encoding="utf-8")
                          + "\n## Audit P1 — 2026-07-17\n\nСвободная заметка без вердикта.\n",
                          encoding="utf-8")
@@ -442,7 +447,7 @@ class TestTieredPortability(TmpPlanTestCase):
 
     def _write(self, plan_id, *, required_reads="1) lib/pkg/config.py"):
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
-        phase = plan_dir / "phases" / "P1.md"
+        phase = item_spec_path(plan_dir)
         text = phase.read_text(encoding="utf-8")
         text = text.replace("**Required Reads:** 1) lib/pkg/config.py",
                             f"**Required Reads:** {required_reads}")
@@ -483,7 +488,7 @@ class TestTieredPortability(TmpPlanTestCase):
         Reads/Validation) — provenance, не execution input; та же дисциплина, что
         закрепляет self-conformance фикстура этого плана на `brief/00-brief.md`."""
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
-        phase = plan_dir / "phases" / "P1.md"
+        phase = item_spec_path(plan_dir)
         text = phase.read_text(encoding="utf-8")
         text = text.replace(
             "**Why:** Диагностика дорогая.",
@@ -502,7 +507,7 @@ class TestTieredPortability(TmpPlanTestCase):
             "2026.07.27-DEMO",
             required_reads="1) lib/pkg/config.py",
         )
-        phase = plan_dir / "phases" / "P1.md"
+        phase = item_spec_path(plan_dir)
         text = phase.read_text(encoding="utf-8")
         text = text.replace(
             "**Validation:** bash scripts/test.sh — зелёный.",
@@ -513,9 +518,9 @@ class TestTieredPortability(TmpPlanTestCase):
 
     def test_dated_plan_without_any_committed_execution_input_is_error(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.27-DEMO")
-        phase = plan_dir / "phases" / "P1.md"
+        phase = item_spec_path(plan_dir)
         text = phase.read_text(encoding="utf-8")
-        text = (text.replace("**Inputs:** список ключей.", "**Inputs:** ничего внешнего.")
+        text = (text.replace("**Inputs:** `lib/pkg/config.py`.", "**Inputs:** ничего внешнего.")
                     .replace("**Required Reads:** 1) lib/pkg/config.py",
                              "**Required Reads:** прочитать контекст владельца.")
                     .replace("**Validation:** bash scripts/test.sh — зелёный.",
@@ -537,22 +542,27 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
     def _write(self, *, updated, item_status="🟢 Done",
                completion_notes="сделано, тест зелёный"):
         plan_dir = write_valid_plan(self.root)
-        phase = plan_dir / "phases" / "P1.md"
-        phase.write_text(
-            phase_md(item_status=item_status, completion_notes=completion_notes,
-                      updated=updated),
-            encoding="utf-8")
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status=item_status, completion_notes=completion_notes,
+                               updated=updated))
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["ts"] = f"{updated}T00:00:00Z"
+        journal.write_text(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n",
+                           encoding="utf-8")
+        from task import plan_status
+        plan_status.build_status(plan_dir)
         return plan_dir
 
     def test_a_pre_cutoff_item_without_codes_is_silent(self):
         """(а) Updated < cutoff, без кодов → молчание (forward-only, И10)."""
-        plan_dir = self._write(updated="2026-07-26")
+        plan_dir = self._write(updated="2026-08-11")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
 
     def test_b_post_cutoff_item_without_codes_is_error(self):
         """(б) Updated ≥ cutoff, без кодов → ERROR."""
-        plan_dir = self._write(updated="2026-07-27")
+        plan_dir = self._write(updated="2026-08-12")
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "без напечатанных кодов границ"), diag.errors)
 
@@ -563,7 +573,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         по плану после починки fail-open/ложного ERROR (гейт теперь матчит ТОЛЬКО
         каноническую строку); предмет проверки не изменился."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: n/a")
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
@@ -572,7 +582,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         """(г) Updated ≥ cutoff, оба `allow` → молчание. Фикстура конвертирована на
         каноническую строку `write-site:` (D102, P10.1) — см. докстринг test_c."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: allow")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation"), [])
@@ -584,7 +594,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         Fail-open дефекта: старый `re.search` по всему полю засчитывал цитату как
         собственные коды item'а."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes=(
                 "Разбор соседнего item'а для контекста: там стояло "
                 "`pre_mutation: allow`, `pre_final: allow` — у нас другая ситуация."))
@@ -597,7 +607,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         (объясняя, почему тот не закрылся) → диагностик НЕТ. Ложный ERROR дефекта:
         старый `re.search` брал ПЕРВОЕ вхождение в поле — цитату, а не свою строку."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes=(
                 "Для сравнения: соседний item был заблокирован (`pre_final: "
                 "block:ACCEPTANCE_NOT_PUBLIC`). У этого item — иначе.\n"
@@ -611,7 +621,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         (буллет `- `, blockquote `> `, `**bold**` — Implementation Rules P10.1 (1)) —
         item проходит без диагностик, как и голая форма."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes=(
                 "Готово.\n"
                 "- **write-site:** `pre_mutation: allow` · `pre_final: allow`"))
@@ -624,7 +634,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         (`block:*`) — ERROR по D76, симметрично test_c (там красный код был у
         `pre_final`). Различает поле, а не только «хоть один код неверный»."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes="write-site: pre_mutation: block:LOOP_BUDGET_EXCEEDED · pre_final: n/a")
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "закрытие на не-allow"), diag.errors)
@@ -637,7 +647,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         `Updated ≥` cutoff — замер Inputs P10.1 — этот кейс синтетически
         воспроизводит «что если бы был», не текущее дерево)."""
         plan_dir = self._write(
-            updated="2026-07-26",
+            updated="2026-08-11",
             completion_notes=(
                 "Сделано. Для контекста цитата соседнего item'а: `pre_mutation: "
                 "allow`, `pre_final: block:X`."))
@@ -653,7 +663,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
         поиск и скрыть настоящую каноническую строку ниже — гейт обязан продолжить
         перебор строк и найти реальную."""
         plan_dir = self._write(
-            updated="2026-07-27",
+            updated="2026-08-12",
             completion_notes=(
                 "Форма — одна строка `write-site: pre_mutation: <код> · pre_final: "
                 "<код>` (D88), это не сама сдача.\n"
@@ -672,7 +682,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
     def test_not_done_status_is_never_gated(self):
         """Статус вне `🟢`/`🟠` (напр. `⬜ Not started`) — правило не применяется, каким бы
         ни был Updated."""
-        plan_dir = self._write(updated="2026-07-27", item_status="⬜ Not started",
+        plan_dir = self._write(updated="2026-08-12", item_status="⬜ Not started",
                                 completion_notes="—")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "pre_mutation/pre_final"), [])
@@ -811,9 +821,8 @@ class TestClosureReports81(TmpPlanTestCase):
         """Нетерминальная фаза отчёта не обязана иметь — правило forward-only по СТАТУСУ
         фазы, а не «каждая фаза плана с включённым протоколом»."""
         plan_dir = self._plan(phase_status="🟡 In progress")
-        phase = plan_dir / "phases" / "P1.md"
-        phase.write_text(phase_md(item_status="🟡 In progress", completion_notes="—"),
-                         encoding="utf-8")
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "отчёта закрытия нет"), [])
 
@@ -844,6 +853,17 @@ class TestConsequencesGate82(TmpPlanTestCase):
             plan_md(plan_dir.name, closure_protocol=closure_protocol,
                     decision_log_rows=decision_log_rows),
             encoding="utf-8")
+        cells = [cell.strip() for cell in decision_log_rows.strip().strip("|").split("|")]
+        if len(cells) >= 3:
+            identifier, date, decision = cells[:3]
+            has_consequences = "**Consequences:**" in decision
+            decision = decision.replace("**Consequences:**", "").strip()
+            path = write_decision_record(
+                plan_dir, identifier, decision=decision, date=date[:10])
+            if has_consequences:
+                path.write_text(path.read_text(encoding="utf-8")
+                                + "\n## Consequences\n\nТестовое последствие.\n",
+                                encoding="utf-8")
         return plan_dir
 
     def test_a_supersedes_with_consequences_passes(self):

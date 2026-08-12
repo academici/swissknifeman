@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: executable Layout v1 retired after fleet cutover.**
+  Runtime readers, migrator, policy schema and compatibility commands are removed; missing/v1
+  plans fail with `PLAN_LAYOUT_V1_RETIRED`. Canonical fixtures and provider projections are v2-only,
+  while terminal bundles remain schema-checked historical evidence without live source re-resolution.
+
 - **`task`: fleet v1→v2 migration получил frozen admission policy и controlled apply.**
   Closed defect classes, full-tree preimage digests, byte-exact source archive, current-state/
   decision/Routing projection и migration-pending read-budget admission дают 15/15 previews без

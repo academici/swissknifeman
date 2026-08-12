@@ -1,8 +1,8 @@
-# Структура Task-плана — layouts v1 и v2
+# Структура Task-плана — layout v2
 
 SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
-`references/plan-layout-v2.md`. Поле Meta `Layout | v2` включает v2; отсутствие `Layout`
-означает совместимый v1.
+`references/plan-layout-v2.md`. Поле Meta `Layout | v2` обязательно; отсутствие или `v1`
+отклоняется диагностикой `PLAN_LAYOUT_V1_RETIRED`.
 
 ```text
 plans/<PLAN-ID>/
@@ -28,8 +28,7 @@ plans/<PLAN-ID>/
 
 Для v2 обязательный путь исполнителя — ровно `plan.md` → `phases/<Pn>/<Pn>.md` →
 `phases/<Pn>/<Pn.m>.md` → `bundles/<Pn.m>.json` → `<Pn.m>.state.md`. `handoff.md`, весь
-`status.md`, весь журнал и весь каталог решений в этот путь не входят. v1 сохраняет
-`phases/Pn.md` и монолитный путь без миграции задним числом.
+`status.md`, весь журнал и весь каталог решений в этот путь не входят.
 
 У закрытия фазы два разных носителя: opt-in `closure/<Pn>.json` фиксирует класс
 свидетельства-суждения, а generated `phases/<Pn>/<Pn>.closed.md` — терминальный контракт и

@@ -17,7 +17,7 @@ if (_REPO_ROOT / "core").is_dir() and str(_REPO_ROOT) not in sys.path:
 
 
 def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",
-            closure_protocol=None, decision_log_rows=None, layout=None):
+            closure_protocol=None, decision_log_rows=None, layout="v2"):
     # `closure_protocol` (P8.1/D42) — opt-in Meta-поле `Closure Protocol`; None = строки нет
     # вовсе (аддитивность: план без поля обязан линтоваться байт-в-байт как до P8.1).
     closure_row = f"\n| Closure Protocol | {closure_protocol} |" if closure_protocol else ""
@@ -40,7 +40,7 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 |:--|:--|
 | Plan ID | {plan_id} |
 | Title | Демо-план |
-| Layout | v2 |
+| Layout | v2 |{closure_row}
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
 | Repository | swissknifeman |
@@ -195,6 +195,123 @@ def item_state_md(*, item_status="🟢 Done", completion_notes="сделано, 
 """
 
 
+def phase_index_path(plan_dir, phase_id="P1"):
+    """Return the v2 phase-index carrier path used by fixture mutations."""
+    return Path(plan_dir) / "phases" / phase_id / f"{phase_id}.md"
+
+
+def item_spec_path(plan_dir, item_id="P1.1"):
+    """Return the v2 immutable item-spec carrier path."""
+    phase_id = item_id.split(".", 1)[0]
+    return Path(plan_dir) / "phases" / phase_id / f"{item_id}.md"
+
+
+def item_state_path(plan_dir, item_id="P1.1"):
+    """Return the v2 generated outcome carrier path."""
+    phase_id = item_id.split(".", 1)[0]
+    return Path(plan_dir) / "phases" / phase_id / f"{item_id}.state.md"
+
+
+def write_v2_phase_from_legacy(plan_dir, text, *, phase_id="P1", refresh_views=True):
+    """Split a legacy combined phase fixture into the canonical v2 test carriers.
+
+    This is a test migration adapter, not a runtime compatibility path.  It lets
+    focused tests keep expressing one malformed semantic condition with the old
+    compact builder while every executable fixture on disk remains Layout v2.
+    """
+    import re
+
+    plan_dir = Path(plan_dir)
+    phase_dir = plan_dir / "phases" / phase_id
+    phase_dir.mkdir(parents=True, exist_ok=True)
+    item_match = re.search(r"(?ms)^### (P\d+\.\d+) — .+?(?=^## Phase Handoff\s*$|\Z)", text)
+    if item_match:
+        item_block = item_match.group(0).replace(
+            "**Inputs:** список ключей.", "**Inputs:** `lib/pkg/config.py`.").rstrip() + "\n"
+        item_id = item_match.group(1)
+        lines = item_block.splitlines()
+        spec_fields = set(("Intent", "Why", "Scope Included", "Scope Excluded", "Inputs",
+                           "Files", "Required Reads", "Implementation Rules", "Code Guidance",
+                           "Validation", "Deliverables"))
+        state_fields = set(("Status", "Completion Notes", "Pending Work", "Known Deviations",
+                            "Escalation Needed"))
+        spec = [lines[0], ""]
+        state = []
+        extras = []
+        last_target = None
+        for line in lines[1:]:
+            field = re.match(r"^\*\*([^*]+):\*\*", line)
+            if field and field.group(1) in spec_fields:
+                spec.append(line)
+                last_target = spec
+            elif field and field.group(1) in state_fields:
+                state.append(line)
+                last_target = state
+            elif line.startswith(">"):
+                extras.append(line)
+            elif line.strip() and not field:
+                (last_target if last_target is not None else extras).append(line)
+        if extras:
+            spec.extend(("", *extras))
+        (phase_dir / f"{item_id}.md").write_text("\n".join(spec).rstrip() + "\n", encoding="utf-8")
+        (phase_dir / f"{item_id}.state.md").write_text(
+            "\n".join(state).rstrip() + "\n", encoding="utf-8")
+
+    context = re.search(r"(?ms)^## Phase Context\s*\n(.*?)(?=^## |^### |\Z)", text)
+    handoff = re.search(r"(?ms)^## Phase Handoff\s*\n(.*?)(?=^## |\Z)", text)
+    title = next((line for line in text.splitlines() if line.startswith("# ")), f"# {phase_id} — Фаза")
+    index = (f"{title}\n\n## Phase Context\n\n"
+             f"{(context.group(1).strip() if context else '')}\n\n"
+             f"## Phase Handoff\n\n{(handoff.group(1).strip() if handoff else '')}\n")
+    (phase_dir / f"{phase_id}.md").write_text(index, encoding="utf-8")
+
+    if refresh_views:
+        try:
+            import json as _json
+            from task import plan_bundle, plan_decisions, plan_item_state, plan_status
+            status_value = next((line.split(":**", 1)[1].strip() for line in state
+                                 if line.startswith("**Status:**")), "") if item_match else ""
+            if status_value == "🟡 In progress":
+                journal_path = plan_dir / "journal.jsonl"
+                entries = [_json.loads(row) for row in journal_path.read_text(
+                    encoding="utf-8").splitlines() if row.strip()]
+                entries[-1]["result"] = "in-progress"
+                entries[-1]["note"] = None
+                journal_path.write_text("".join(
+                    _json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
+                    for entry in entries), encoding="utf-8")
+                plan_item_state.build_states(plan_dir, item_id=item_match.group(1))
+            plan_decisions.build_views(plan_dir)
+            plan_status.build_status(plan_dir)
+            if item_match:
+                plan_bundle.build(plan_dir, item_match.group(1))
+        except Exception:
+            # Malformed fixtures intentionally exercise the owning linter error.
+            pass
+    return phase_dir
+
+
+def write_decision_record(plan_dir, identifier, *, decision="test", reason="RAG:—",
+                          item_id="P1.1", date="2026-07-20"):
+    """Write one canonical v2 decision fixture."""
+    path = Path(plan_dir) / "decisions" / f"{identifier}-fixture.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "---\n"
+        f"id: {identifier}\n"
+        f"date: {date}\n"
+        "status: accepted\n"
+        f"item: {item_id}\n"
+        f"items: [{item_id}]\n"
+        "supersedes: []\n"
+        "superseded_by: null\n"
+        "---\n"
+        f"## Решение\n\n{decision}\n\n"
+        f"## Почему\n\n{reason}\n",
+        encoding="utf-8")
+    return path
+
+
 def handoff_md(plan_id, *, item_id="P1.1"):
     # Next несёт launch-block (таблица `| Model |` + code-block) — канон 2.0;
     # без него green-path ловил бы warning «Next без launch-block».
@@ -334,7 +451,7 @@ def index_md(plan_id):
 """
 
 
-def write_valid_plan(root, plan_id="DEMO-1", *, layout=None):
+def write_valid_plan(root, plan_id="DEMO-1", *, layout="v2"):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""
     plan_dir = Path(root) / "plans" / plan_id

@@ -51,13 +51,9 @@ Rules common to layouts v1 and v2:
 
 ## 2. Layout selection and read paths
 
-Layout is selected only by Meta `Layout`:
-
-- **Layout v1:** `Layout` is absent; preserve its monolithic plan/phase/handoff and optional
-  evidence carriers.
-- **Layout v2:** Meta contains `Layout | v2`. Stable specifications, volatile state, append-only
-  history, and generated views are separate carriers. Rules explicitly tagged `[v2]` apply only
-  here; `[v1]` rules apply only to v1; untagged rules apply to both.
+`Layout | v2` is the only executable layout. Missing or `v1` declarations fail closed with
+`PLAN_LAYOUT_V1_RETIRED`; read their inert source archive or use the prior compatible tag.
+Stable specifications, volatile state, append-only history, and generated views are separate carriers.
 
 **Layout v2 carrier contract** — the executor path is exactly:
 

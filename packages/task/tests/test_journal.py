@@ -215,6 +215,9 @@ class TestAppend(TmpDirTestCase):
 
 class TestHistoricalSchemaException(TmpDirTestCase):
     def _invalid_target(self, *, plan_id="P", invalid_command=False):
+        (self.plan_dir / "phases" / "P1").mkdir(parents=True, exist_ok=True)
+        (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
+        (self.plan_dir / "decisions").mkdir(exist_ok=True)
         entry = new_entry(
             plan_id=plan_id, item_id="design", command="plan-audit",
             actor="opus/xhigh", result="audit-red",
@@ -225,7 +228,10 @@ class TestHistoricalSchemaException(TmpDirTestCase):
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
         (self.plan_dir / "plan.md").write_text(
-            "| D51 | 2026-07-19 | owner gate | reason |\n", encoding="utf-8")
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+        (self.plan_dir / "decisions" / "D51-owner-gate.md").write_text(
+            "# D51\n", encoding="utf-8")
         return raw
 
     def _exception(self, raw):
@@ -356,8 +362,14 @@ class TestCli(TmpDirTestCase):
         )
         (self.plan_dir / "journal.jsonl").write_text(
             json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+        (self.plan_dir / "phases" / "P1").mkdir(parents=True)
+        (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
         (self.plan_dir / "plan.md").write_text(
-            "| D51 | 2026-07-19 | owner gate | reason |\n", encoding="utf-8")
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+        decisions = self.plan_dir / "decisions"
+        decisions.mkdir()
+        (decisions / "D51-owner-gate.md").write_text("# D51\n", encoding="utf-8")
         rc = main([
             "exception", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--target-line", "1", "--invalid-fields", "friction",

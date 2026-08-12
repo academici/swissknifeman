@@ -142,12 +142,13 @@ def lint_plan(plan_dir, diag):
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
     phase_files = {}  # phase_id -> Path
-    layout = "v1"
+    layout = "v2"
     try:
         layout = plan_layout.layout_version(plan_dir)
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
         diag.error(plan_md, None, str(exc))
+        return {"plan_id": plan_id, "meta": meta or {}, "phases": {}, "items": {}}
     routing_rows = []
     if plan_lines is not None:
         routing_rows = _lint_routing(plan_lines, plan_md, plan_id, layout, diag)
@@ -704,8 +705,10 @@ ARCHIVE_DIR_NAME = "archive"  # N3/D14: контейнер архивных пл
 
 def discover_plan_dirs(root):
     """path — либо сам plans/<ID> (есть plan.md), либо plans/ (перебор подкаталогов).
-    `plans/archive/` в переборе НЕ участвует как план (N3/D14) — вместо неё в перебор
-    попадают её подкаталоги `plans/archive/<ID>` (архивные планы линтуются как планы)."""
+    `plans/archive/` в переборе НЕ участвует как план (N3/D14). Из его
+    подкаталогов исполняемым текущим линтером остаётся только Layout v2;
+    исторические v1/missing-layout bytes являются inert source archive и
+    проверяются прежним совместимым тегом."""
     root = Path(root)
     if (root / "plan.md").is_file():
         return [root]
@@ -721,9 +724,16 @@ def discover_plan_dirs(root):
         if p.name.startswith(".") or p.name == "__pycache__":
             continue
         if p.name == ARCHIVE_DIR_NAME:
-            dirs.extend(sorted(a for a in p.iterdir()
-                               if a.is_dir() and not a.name.startswith(".")
-                               and a.name != "__pycache__"))
+            for archived in sorted(p.iterdir()):
+                if (not archived.is_dir() or archived.name.startswith(".")
+                        or archived.name == "__pycache__"):
+                    continue
+                try:
+                    plan_text = (archived / "plan.md").read_text(encoding="utf-8")
+                except OSError:
+                    continue
+                if re.search(r"^\|\s*Layout\s*\|\s*v2\s*\|", plan_text, re.MULTILINE):
+                    dirs.append(archived)
             continue
         dirs.append(p)
     return dirs

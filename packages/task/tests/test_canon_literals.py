@@ -428,12 +428,7 @@ class TestBoundedAuditRepairContract(unittest.TestCase):
 
 
 class TestCommandReadPathProjection(unittest.TestCase):
-    """P6.1/D36: five command bodies must project both declared layouts.
-
-    The test intentionally requires the v2 branch that did not exist in the
-    pre-P6.1 command bodies.  It therefore went RED against the old text before
-    the prose and provider projections were changed.
-    """
+    """P1.5: five command bodies project the sole executable layout."""
 
     COMMANDS = ("plan-design.md", "plan-exec.md", "plan-run.md", "plan-close.md", "plan-audit.md")
     V2_SLOTS = (
@@ -450,20 +445,19 @@ class TestCommandReadPathProjection(unittest.TestCase):
         cls.spec = json.loads((cls.repo_root / "packages/task/configs/read-path-v1.spec.json")
                               .read_text(encoding="utf-8"))
 
-    def test_spec_keeps_both_declared_layouts(self):
-        self.assertEqual(set(self.spec["layout_versions"]), {"v1", "v2"})
+    def test_spec_keeps_only_v2_layout(self):
+        self.assertEqual(set(self.spec["layout_versions"]), {"v2"})
         self.assertEqual(len(self.spec["paths"]["executor"]["slots"]), 5)
         self.assertEqual(
             self.spec["predicates"]["executor_handoff_exclusion"],
             "no executor slot carrier id is handoff",
         )
 
-    def test_every_command_has_literal_layout_branch(self):
+    def test_every_command_requires_explicit_v2_layout(self):
         for command in self.COMMANDS:
             with self.subTest(command=command):
                 text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
-                self.assertIn("`Layout` отсутствует → v1", text)
-                self.assertIn("`Layout: v2` →", text)
+                self.assertIn("PLAN_LAYOUT_V1_RETIRED", text)
                 self.assertIn("`handoff.md` НЕ входит в обязательный путь", text)
                 for slot in self.V2_SLOTS:
                     self.assertIn(slot, text)
@@ -479,14 +473,12 @@ class TestCommandReadPathProjection(unittest.TestCase):
             self.assertIn("derive_run_id", text)
             self.assertIn("--run-id", text)
 
-    def test_v2_closure_production_is_explicit_and_v1_is_preserved(self):
+    def test_closure_production_is_explicit(self):
         for command in ("plan-exec.md", "plan-close.md"):
             with self.subTest(command=command):
                 text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
-                self.assertIn("Layout v2", text)
                 self.assertIn("plan-downstream.py", text)
                 self.assertIn("unqualifiable", text)
-                self.assertIn("Layout: v1", text)
 
 
 class TestLayoutV2ContextEnum(unittest.TestCase):

@@ -34,7 +34,7 @@ Safety и authority gates остаются fail-closed: reviewer только п
 право на действие.
 
 После последнего terminal item фаза остаётся `🟡 In progress` как audit candidate. Fingerprint
-одинаково поддерживает Layout v1 и v2, привязывает item specs/state и digest объявленных `Files`,
+требует явный Layout v2, привязывает item specs/state и digest объявленных `Files`,
 но не общий Git HEAD: audit bookkeeping не инвалидирует собственное доказательство, а изменение
 product carrier инвалидирует. Только fresh GREEN разрешает последующий `plan-close Pn`.
 

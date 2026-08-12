@@ -24,12 +24,12 @@ class PlanLayoutTest(unittest.TestCase):
         (plan / "plan.md").write_text("## 0. Meta\n\n| Поле | Значение |\n" + row, encoding="utf-8")
         return plan
 
-    def test_missing_layout_is_v1_and_resolves_monolith(self):
+    def test_missing_layout_is_rejected_as_retired(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan(tmp)
             (plan / "phases" / "P1.md").write_text("# P1", encoding="utf-8")
-            self.assertEqual(plan_layout.layout_version(plan), "v1")
-            self.assertEqual(plan_layout.phase_path(plan, "P1"), plan / "phases" / "P1.md")
+            with self.assertRaisesRegex(plan_layout.PlanLayoutError, "PLAN_LAYOUT_V1_RETIRED"):
+                plan_layout.layout_version(plan)
 
     def test_v2_requires_nested_phase_tree(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -59,16 +59,16 @@ class PlanLayoutTest(unittest.TestCase):
             with self.assertRaises(plan_layout.PlanLayoutError):
                 plan_layout.layout_version(plan)
 
-    def test_declared_layout_must_match_phase_tree_in_both_directions(self):
+    def test_declared_v1_is_rejected_before_tree_inspection(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan(tmp, "v1")
             nested = plan / "phases" / "P1"
             nested.mkdir()
             (nested / "P1.md").write_text("# P1", encoding="utf-8")
-            with self.assertRaises(plan_layout.PlanLayoutError):
+            with self.assertRaisesRegex(plan_layout.PlanLayoutError, "PLAN_LAYOUT_V1_RETIRED"):
                 plan_layout.layout_version(plan)
 
-    def test_v1_terminality_uses_declared_status_column(self):
+    def test_retired_layout_cannot_enter_phase_status_resolution(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan(tmp)
             (plan / "phases" / "P1.md").write_text("# P1", encoding="utf-8")
@@ -80,11 +80,8 @@ class PlanLayoutTest(unittest.TestCase):
 |:--|:--|:--|:--|
 | P1 | Finished phase | 1/1 | 🟢 Done |
 """, encoding="utf-8")
-            self.assertTrue(plan_layout.is_terminal_phase(plan, "P1"))
-            with self.assertRaises(plan_layout.PlanLayoutError):
-                plan_layout.phase_context_path(plan, "P1", reader="executor")
-            self.assertEqual(plan_layout.phase_context_path(plan, "P1", reader="auditor"),
-                             plan / "phases" / "P1.md")
+            with self.assertRaisesRegex(plan_layout.PlanLayoutError, "PLAN_LAYOUT_V1_RETIRED"):
+                plan_layout.phase_statuses(plan)
 
     def test_linter_keeps_the_same_phase_model_for_v2(self):
         with tempfile.TemporaryDirectory() as tmp:

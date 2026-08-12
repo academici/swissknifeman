@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:e0e32e12b57c1ecfd289e801c00c2c18026289e5faf06a7fc24cdbfa5771ec42
+Canonical SHA-256: sha256:7257d760627d06114a6e56f23211f79c50c2a8a861a319884b05cda83141dc2a
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -60,10 +60,8 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 ## Путь чтения по объявленной раскладке
 
-Сначала прочитай поле `Layout` в `## 0. Meta`; по дереву файлов раскладка НЕ выводится.
-`Layout` отсутствует → v1: `plan.md` (Context, Execution Rules, §3 Routing и Status Board) →
-`handoff.md` → `phases/Pn.md` (Phase Context + выбранный item) → Required Reads в объявленном
-порядке. `Layout: v2` → РОВНО пять обязательных слотов:
+Сначала прочитай поле `Layout` в `## 0. Meta`; исполняется только явный `Layout | v2`
+(отсутствующий или `v1` возвращает `PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:
 
 1. `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
 2. `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
@@ -82,7 +80,6 @@ fresh item state. Повторное чтение запрещено.
 producer commit; `red` блокирует закрытие. Terminal escalation получает return-evidence с одним из
 `new`/`repeat`/`unqualifiable`, без схлопывания последнего в `new`. `closure/<Pn>.json` существует
 только при `Closure Protocol | v1`, а `<Pn>.closed.md` всегда генерируется как отдельный read-model.
-Ветка `Layout: v1` остаётся прежней дословно.
 
 **Правила handoff.Next (любой режим, записывающий handoff):**
 - **Заголовок — ДВЕ формы** (иная = ERROR `plan-lint`, D30): `# HANDOFF — <ISO-дата> —

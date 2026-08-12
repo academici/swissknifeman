@@ -102,18 +102,17 @@ def _handoff(plan_dir: Path) -> dict:
 
 def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     phase_id = item_id.split(".", 1)[0]
-    layout = plan_layout.layout_version(plan_dir)
+    plan_layout.layout_version(plan_dir)
     phase_path = plan_layout.phase_path(plan_dir, phase_id)
     diagnostics = plan_lint.Diagnostics()
-    phase = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics, layout=layout)
+    phase = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics, layout="v2")
     occurrences = phase["items"].get(item_id) if phase else None
     if not occurrences:
         raise DeliveryError("DELIVERY_STATE_INVALID", f"item {item_id} не найден")
     if diagnostics.errors:
         raise DeliveryError("DELIVERY_STATE_INVALID", diagnostics.errors[0])
     status = occurrences[0]["fields"].get("Status", (None, None))[0]
-    state_path = (plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
-                  if layout == "v2" else phase_path)
+    state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
     return status, state_path
 
 

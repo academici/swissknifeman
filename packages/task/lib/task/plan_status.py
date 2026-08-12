@@ -24,8 +24,9 @@ STATUS_DEVIATIONS = "🟠 Done with deviations"
 STATUS_BLOCKED = "🔴 Blocked"
 STATUS_PROGRESS = "🟡 In progress"
 STATUS_NOT_STARTED = "⬜ Not started"
+STATUS_SKIPPED = "⛔ Skipped by decision"
 _STATUSES = frozenset((STATUS_DONE, STATUS_DEVIATIONS, STATUS_BLOCKED,
-                       STATUS_PROGRESS, STATUS_NOT_STARTED))
+                       STATUS_PROGRESS, STATUS_NOT_STARTED, STATUS_SKIPPED))
 _STATUS_META = ("Version", "Status", "Last Updated")
 _BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/всего", "Status")
 _ITEM_COLUMNS = ("ID", "Title", "Status", "Updated")
@@ -88,7 +89,8 @@ def _phase_status(statuses: list[str]) -> str:
     # A phase is terminal when every item is terminal.  ``Done with deviations``
     # is not work in progress; treating it as such falsely blocks the next
     # phase after a layout-v2 migration.
-    if statuses and all(status in (STATUS_DONE, STATUS_DEVIATIONS) for status in statuses):
+    if statuses and all(status in (STATUS_DONE, STATUS_DEVIATIONS, STATUS_SKIPPED)
+                        for status in statuses):
         return STATUS_DEVIATIONS
     if (any(status == STATUS_PROGRESS for status in statuses)
             or (STATUS_NOT_STARTED in statuses

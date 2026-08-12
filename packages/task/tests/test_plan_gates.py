@@ -1,5 +1,6 @@
-"""D2/P3 gate tests: v2 refuses, v1 remains silent."""
+"""D2/P3 gate tests for the sole executable layout."""
 import copy
+import json
 import shutil
 import subprocess
 import tempfile
@@ -32,41 +33,11 @@ class TestReadBudgetGate(unittest.TestCase):
         shutil.copytree(DATA / name, target)
         return target
 
-    def test_v1_is_unconditionally_silent(self):
+    def test_retired_layout_is_rejected_before_execution_gates(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = write_valid_plan(Path(tmp), layout=None)
             diag = lint(plan_dir)
-        self.assertFalse(any(plan_gates.GATE_ID in row for row in diag.errors), diag.errors)
-
-    def test_v1_phase_candidate_fingerprint_ignores_audit_append_but_tracks_item_fields(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            plan_dir = write_valid_plan(Path(tmp), layout=None)
-            product = Path(tmp) / "lib" / "pkg" / "config.py"
-            product.parent.mkdir(parents=True)
-            product.write_text("VALUE = 1\n", encoding="utf-8")
-            before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
-            phase = plan_dir / "phases" / "P1.md"
-            phase.write_text(
-                phase.read_text(encoding="utf-8")
-                + "\n## Audit P1 — 2026-08-12\n\n**Вердикт: GREEN**\n",
-                encoding="utf-8",
-            )
-            after_audit = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
-            self.assertEqual(after_audit["fingerprint"], before["fingerprint"])
-
-            phase.write_text(
-                phase.read_text(encoding="utf-8").replace(
-                    "**Intent:** Добавить проверку.",
-                    "**Intent:** Добавить проверку и изменённый контракт.",
-                ),
-                encoding="utf-8",
-            )
-            after_item_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
-            self.assertNotEqual(after_item_change["fingerprint"], before["fingerprint"])
-
-            product.write_text("VALUE = 2\n", encoding="utf-8")
-            after_product_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
-            self.assertNotEqual(after_product_change["fingerprint"], after_item_change["fingerprint"])
+        self.assertTrue(any("PLAN_LAYOUT_V1_RETIRED" in row for row in diag.errors), diag.errors)
 
     def test_v2_phase_candidate_fingerprint_tracks_plan_and_repo_relative_files(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -185,6 +156,23 @@ class TestReadBudgetGate(unittest.TestCase):
     def test_clean_v2_bundle_and_views_are_fresh(self):
         diag = lint(self.copied_fixture("plan-v2"))
         self.assertFalse(any(plan_gates.BUNDLE_GATE_ID in row for row in diag.errors), diag.errors)
+
+    def test_terminal_bundle_keeps_schema_checks_without_live_source_resolution(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        target = plan_dir / "bundles" / "P0.1.json"
+        bundle = json.loads(target.read_text(encoding="utf-8"))
+        bundle["entries"][0]["path"] = "retired/source.md"
+        target.write_text(plan_bundle.canonical_json(bundle), encoding="utf-8")
+
+        diag = lint(plan_dir)
+        self.assertFalse(any("P0.1" in row and "unresolvable_entry" in row
+                             for row in diag.errors), diag.errors)
+
+        bundle["unexpected"] = True
+        target.write_text(plan_bundle.canonical_json(bundle), encoding="utf-8")
+        diag = lint(plan_dir)
+        self.assertTrue(any("P0.1" in row and "terminal evidence schema invalid" in row
+                            for row in diag.errors), diag.errors)
 
     def test_missing_bundle_for_pending_producer_is_not_required(self):
         plan_dir = self.copied_fixture("plan-v2")

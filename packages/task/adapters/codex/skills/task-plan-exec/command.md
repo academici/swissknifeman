@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:f133d8dc993dc2fedb76ccf74ec7cddc07bf06451cd8e0b18f15a6d2d61d15bf
+Canonical SHA-256: sha256:0dd9bb837f01cd038204128a40dd2f32014717a27df0ed471cb4f03b83633587
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -71,13 +71,8 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
 ветки nonterminal и продолжают owning root.
 
 1. **Порядок чтения — РОВНО такой, ничего сверх.** Сначала прочитай поле `Layout` в `## 0. Meta`;
-   по дереву файлов раскладка НЕ выводится. `Layout` отсутствует → v1:
-   1) `plans/<PLAN-ID>/plan.md` — Context, Execution Rules, **§3 Routing (читать ОБЯЗАТЕЛЬНО — п. 2)**,
-      Status Board;
-   2) `plans/<PLAN-ID>/handoff.md` — где мы;
-   3) `plans/<PLAN-ID>/phases/Pn.md` — Phase Context + твой item Pn.m целиком;
-   4) файлы из **Required Reads** item'а — в указанном порядке.
-   `Layout: v2` → РОВНО пять обязательных слотов:
+   исполняется только явный `Layout | v2` (отсутствующий или `v1` возвращает
+   `PLAN_LAYOUT_V1_RETIRED`). РОВНО пять обязательных слотов:
    1) `plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing;
    2) `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context;
    3) `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item;
@@ -291,7 +286,7 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
       terminal escalation записывается return-evidence с `new`/`repeat`/`unqualifiable`, причём
       `unqualifiable` не читается как `new`. `closure/<Pn>.json` пишется только при `Closure
       Protocol | v1`; генерируемый `<Pn>.closed.md` регенерируется всегда — это два разных
-      носителя. При `Layout: v1` сохраняется прежний порядок этого шага дословно.
+      носителя.
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

@@ -24,9 +24,8 @@ def _lint_plan_md_20(lines, path, diag):
     try:
         layout = plan_layout.layout_version(Path(path).parent)
     except plan_layout.PlanLayoutError:
-        layout = "v1"
-    expected_titles = ({**PLAN_SECTION_TITLES, 4: "Update Log"}
-                       if layout == "v2" else PLAN_SECTION_TITLES)
+        layout = "v2"
+    expected_titles = {**PLAN_SECTION_TITLES, 4: "Update Log"}
     for n, title, lineno in numbered:
         expected = expected_titles.get(n)
         if expected and title != expected:
@@ -94,8 +93,7 @@ def _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag):
     """v2 keeps decision truth in ``decisions/``, not an inline table.
 
     Link integrity belongs to the P2 projector, not the plan linter until P3.
-    This intentionally checks only the v2 carrier shape and leaves every v1
-    diagnostic untouched.
+    This checks the sole executable carrier shape.
     """
     try:
         if plan_layout.layout_version(plan_dir) != "v2":
@@ -475,9 +473,7 @@ def parse_plan_md(path, diag):
     try:
         layout = plan_layout.layout_version(Path(path).parent)
     except plan_layout.PlanLayoutError:
-        # layout_version is reported by lint_plan below; retain v1 parsing here so
-        # its legacy diagnostics remain byte-for-byte stable.
-        layout = "v1"
+        layout = "v2"
 
     meta = {}
     _, meta_body, meta_start = _find_section(lines, META_HEADER_RE)
@@ -576,6 +572,13 @@ def _parse_v2_item_file(path, item_id, diag):
                        f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
                        f"повтор {path.name}:{dup_ln} → «{_preview(dup_val)}»)")
 
+    canonical_index = {field: index for index, field in enumerate(ITEM_SPEC_FIELDS)}
+    present_order = [field for field in fields if field in canonical_index]
+    if present_order != sorted(present_order, key=canonical_index.get):
+        diag.warning(path, header_lineno,
+                     f"item {item_id}: поля идут не в каноническом порядке "
+                     "(канон — SKILL §5 / phase-template)")
+
     state_path = path.with_name(path.stem + ".state.md")
     state_lines = _read_lines(state_path)
     if state_lines is None:
@@ -606,6 +609,10 @@ def _parse_v2_item_file(path, item_id, diag):
             merged[field] = fields[field]
         elif field in state_fields:
             merged[field] = state_fields[field]
+    status_value, status_lineno = merged.get("Status", ("", header_lineno))
+    if status_value and status_value not in STATUSES:
+        diag.error(state_path, status_lineno,
+                   f"item {item_id}: недопустимый статус «{status_value}»")
     return {"title": title, "header_lineno": header_lineno, "fields": merged,
             "has_escalation": any(ESCALATION_RE.match(line)
                                     and ESCALATION_RE.match(line).group(1) == actual_id
@@ -641,7 +648,7 @@ def _parse_phase_v2(path, phase_id, diag):
 
     items = {}
     status_table = []
-    combined_lines = list(lines)
+    gate_lines = _lines_before_audit(lines)
     try:
         owner_status = plan_status.status_model(path.parents[2])
         updated_by_id = {
@@ -668,10 +675,16 @@ def _parse_phase_v2(path, phase_id, diag):
         status_table.append(({"ID": item_id, "Title": item["title"], "Status": status,
                               "Updated": updated_by_id.get(item_id, ""),
                               "Layout": "v2"}, status_lineno))
-        combined_lines.extend(item["spec_lines"])
-        combined_lines.extend(item["state_lines"])
+        gate_lines.extend(item["spec_lines"])
+        gate_lines.extend(item["state_lines"])
+        empty = sum(1 for field in REQUIRED_ITEM_FIELDS
+                    if _is_empty(item["fields"].get(field, ("",))[0]))
+        if not is_skeleton and empty >= len(REQUIRED_ITEM_FIELDS) * SKELETON_EMPTY_RATIO:
+            diag.warning(spec_path, item["header_lineno"],
+                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} полей пусты, "
+                         "а в Phase Context нет маркера «> СКЕЛЕТ — не детализирован…» — "
+                         "либо детализировать, либо пометить фазу скелетом")
 
-    gate_lines = _lines_before_audit(combined_lines)
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
             "phase_handoff_stale": bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line)),
             "phase_handoff_lineno": handoff_lineno, "phase_handoff_first_line": handoff_first_line,
@@ -682,10 +695,14 @@ def _parse_phase_v2(path, phase_id, diag):
                                            for line in gate_lines)}
 
 
-def parse_phase_md(path, phase_id, diag, *, layout="v1"):
+def parse_phase_md(path, phase_id, diag, *, layout="v2"):
     """phases/Pn.md → dict со status_table/items/handoff (см. lint_plan)."""
     if layout == "v2":
         return _parse_phase_v2(path, phase_id, diag)
+    diag.error(path, None, "PLAN_LAYOUT_V1_RETIRED: исполняется только Layout v2")
+    return None
+
+    # Historical parser retained below only for source archive compatibility.
     lines = _read_lines(path)
     if lines is None:
         diag.error(path, None, "файл фазы отсутствует или не читается")

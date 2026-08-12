@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-exec`.
 - Invocation: `$ task:plan-exec <arguments>`
 - Routing: `implementation/medium -> gpt-5.6-terra/medium`
 - Canonical source: `packages/task/commands/plan-exec.md`
-- Canonical SHA-256: `sha256:f133d8dc993dc2fedb76ccf74ec7cddc07bf06451cd8e0b18f15a6d2d61d15bf`
+- Canonical SHA-256: `sha256:0dd9bb837f01cd038204128a40dd2f32014717a27df0ed471cb4f03b83633587`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

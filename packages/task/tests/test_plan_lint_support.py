@@ -13,13 +13,15 @@ from pathlib import Path
 
 try:  # package invocation used by the focused P4 command-projection gate
     from .fixtures import (  # noqa: E402
-        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
-        phase_md, plan_md, write_closure, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, item_spec_path,
+        item_state_path, journal_jsonl, phase_index_path, phase_md, plan_md, write_closure,
+        write_decision_record, write_valid_plan, write_v2_phase_from_legacy,
     )
 except ImportError:  # direct discovery from packages/task remains supported
     from fixtures import (  # noqa: E402
-        active_md, closure_json, contracts_section, handoff_md, index_md, journal_jsonl,
-        phase_md, plan_md, write_closure, write_valid_plan,
+        active_md, closure_json, contracts_section, handoff_md, index_md, item_spec_path,
+        item_state_path, journal_jsonl, phase_index_path, phase_md, plan_md, write_closure,
+        write_decision_record, write_valid_plan, write_v2_phase_from_legacy,
     )
 import task.plan_lint as plan_lint_module  # noqa: E402 — --conflicts: monkeypatch реестров
 from task.plan_lint import (  # noqa: E402

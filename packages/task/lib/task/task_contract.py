@@ -313,7 +313,8 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     owner gate so `pre_mutation()` emits the frozen `AUTHORITY_BOUNDARY` code instead of
     inventing a new bypass code.
     """
-    item_carrier = f"phases/{phase_path.name}:{item_id}"
+    item_carrier_path = phase_path.parent / f"{item_id}.md"
+    item_carrier = f"{item_carrier_path.relative_to(plan_dir).as_posix()}:{item_id}"
     request = _authority_request(item_id, protected_transition)
     if request is None:
         return "routine", True, item_carrier
@@ -324,11 +325,13 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     if marker not in implementation_rules:
         return "owner-gate", False, item_carrier
 
-    _idx, body, body_start = plan_lint._find_section(
-        plan_lines, plan_lint.DECISION_LOG_HEADER_RE)
-    if body is None:
+    from task import plan_decisions
+    try:
+        decisions = plan_decisions.load_decisions(plan_dir)
+    except plan_decisions.DecisionError:
         return "owner-gate", False, item_carrier
-    _headers, rows, _header_lineno = plan_lint._parse_table(body, body_start)
+    rows = [({"D#": decision.identifier, "Решение": decision.decision_text}, 1)
+            for decision in decisions]
     if not _has_contiguous_decision_identities(rows):
         return "owner-gate", False, item_carrier
 
@@ -357,7 +360,7 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
             or not _owner_message_matches(plan_dir, record.group("owner_message"), request)
             or any(revocation > decision_id for revocation in revocations)):
         return "owner-gate", False, item_carrier
-    return "owner-gate", True, f"plan.md:D{decision_id}:{lineno} {marker}"
+    return "owner-gate", True, f"decisions/D{decision_id}:{lineno} {marker}"
 
 
 # D78/2026.07.24-AGENT-RELIABILITY P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9

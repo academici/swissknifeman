@@ -19,7 +19,7 @@ class PlanDeliveryTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def _terminal_plan(self, *, layout=None, result="closed-green"):
+    def _terminal_plan(self, *, layout="v2", result="closed-green"):
         plan = write_valid_plan(self.root, "DEMO-DELIVERY", layout=layout)
         (plan / "journal.jsonl").write_text("", encoding="utf-8")
         journal.append(plan, journal.new_entry(
@@ -32,8 +32,7 @@ class PlanDeliveryTests(unittest.TestCase):
             run_id="run-1",
             fingerprint="a" * 64,
         ))
-        if layout == "v2":
-            plan_item_state.build_states(plan, item_id="P1.1")
+        plan_item_state.build_states(plan, item_id="P1.1")
         return plan
 
     def test_terminal_item_receipt_binds_state_journal_and_exact_recommendation(self):
@@ -61,14 +60,14 @@ class PlanDeliveryTests(unittest.TestCase):
             plan_delivery.build_terminal_receipt(plan, "P1.1")
 
     def test_handoff_receipt_is_available_for_nonterminal_design_delivery(self):
-        plan = write_valid_plan(self.root, "DEMO-HANDOFF")
+        plan = write_valid_plan(self.root, "DEMO-HANDOFF", layout="v2")
         receipt = plan_delivery.build_handoff_receipt(plan, "design")
         self.assertEqual(receipt["schema_version"], "handoff-recommendation-receipt/v1")
         self.assertEqual(receipt["status"], "handoff-persisted")
         self.assertEqual(receipt["next_exact"], "/task:plan-exec DEMO-HANDOFF P1.1")
 
     def test_handoff_receipt_preserves_visible_batch(self):
-        plan = write_valid_plan(self.root, "DEMO-BATCH-HANDOFF")
+        plan = write_valid_plan(self.root, "DEMO-BATCH-HANDOFF", layout="v2")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
             "| Model | sonnet |", "| Batch | B1 |\n| Model | sonnet |"), encoding="utf-8")

@@ -1,9 +1,4 @@
-"""Versioned carrier-address resolver for executable-plan layouts.
-
-The frozen P1 contracts are installed next to this module as data.  A missing
-``Layout`` Meta field intentionally means legacy v1; every other value must be
-explicitly supported and must agree with the physical phase tree.
-"""
+"""Carrier-address resolver for the v2-only executable-plan contract."""
 from __future__ import annotations
 
 import json
@@ -44,15 +39,21 @@ def _meta_layout(plan_dir: Path) -> str:
         match = _META_ROW.match(line)
         if match:
             return match.group(1).strip()
-    return "v1"
+    raise PlanLayoutError(
+        "PLAN_LAYOUT_V1_RETIRED: Layout | v2 обязателен; исторический v1 "
+        "исполняется только прежним совместимым тегом")
 
 
 def layout_version(plan_dir) -> str:
-    """Return ``v1`` or ``v2`` and reject a declaration/tree disagreement."""
+    """Return the sole executable layout and reject retired declarations."""
     plan_dir = Path(plan_dir)
     version = _meta_layout(plan_dir)
-    if version not in ("v1", "v2"):
-        raise PlanLayoutError(f"Layout: неизвестная раскладка {version!r}; допустимы v1, v2")
+    if version == "v1":
+        raise PlanLayoutError(
+            "PLAN_LAYOUT_V1_RETIRED: Layout | v1 больше не исполняется; "
+            "откройте исторический source archive или предыдущий совместимый тег")
+    if version != "v2":
+        raise PlanLayoutError(f"Layout: неизвестная раскладка {version!r}; допустим только v2")
     phase_dir = plan_dir / "phases"
     has_v1 = any(_PHASE_FILE.match(p.name) for p in phase_dir.glob("*.md")) if phase_dir.is_dir() else False
     v2_directories = [
@@ -60,26 +61,23 @@ def layout_version(plan_dir) -> str:
         if path.is_dir() and _PHASE_FILE.match(path.name + ".md")
     ] if phase_dir.is_dir() else []
     has_v2 = bool(v2_directories)
-    if version == "v1" and has_v2:
-        raise PlanLayoutError("Layout v1 объявлен, но дерево содержит phases/Pn/")
-    if version == "v2" and (has_v1 or not has_v2):
+    if has_v1 or not has_v2:
         raise PlanLayoutError("Layout v2 объявлен, но дерево не состоит из phases/Pn/Pn.md")
-    if version == "v2":
-        invalid_indexes = []
-        for directory in sorted(v2_directories):
-            index = directory / f"{directory.name}.md"
-            try:
-                if not stat.S_ISREG(index.lstat().st_mode):
-                    raise OSError("не regular file")
-                with index.open("rb"):
-                    pass
-            except OSError:
-                invalid_indexes.append(index.relative_to(plan_dir).as_posix())
-        if invalid_indexes:
-            raise PlanLayoutError(
-                "Layout v2: phase index не читается или не regular file: "
-                + ", ".join(invalid_indexes)
-            )
+    invalid_indexes = []
+    for directory in sorted(v2_directories):
+        index = directory / f"{directory.name}.md"
+        try:
+            if not stat.S_ISREG(index.lstat().st_mode):
+                raise OSError("не regular file")
+            with index.open("rb"):
+                pass
+        except OSError:
+            invalid_indexes.append(index.relative_to(plan_dir).as_posix())
+    if invalid_indexes:
+        raise PlanLayoutError(
+            "Layout v2: phase index не читается или не regular file: "
+            + ", ".join(invalid_indexes)
+        )
     return version
 
 
@@ -141,8 +139,6 @@ def phase_paths(plan_dir) -> dict:
     plan_dir = Path(plan_dir)
     version = layout_version(plan_dir)
     phases = plan_dir / "phases"
-    if version == "v1":
-        return {m.group(1): p for p in sorted(phases.glob("*.md")) if (m := _PHASE_FILE.match(p.name))}
     result = {}
     for directory in sorted(phases.iterdir() if phases.is_dir() else ()):
         if not directory.is_dir() or not re.match(r"^P\d+$", directory.name):
@@ -160,46 +156,17 @@ def phase_path(plan_dir, phase_id) -> Path:
         raise PlanLayoutError(f"фаза {phase_id} не найдена в Layout {layout_version(plan_dir)}") from exc
 
 
-def _v1_phase_statuses(plan_dir: Path) -> dict[str, str]:
-    """Read declared phase statuses from the legacy owner board, not item heuristics."""
-    try:
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
-    except OSError as exc:
-        raise PlanLayoutError(f"plan.md не читается: {exc}") from exc
-    in_board = False
-    headers = None
-    statuses = {}
-    for line in text.splitlines():
-        if line.startswith("## "):
-            in_board = line == "## 4. Phase Index & Status Board"
-            headers = None
-            continue
-        if not in_board or not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if all(cell.startswith(":") or cell.startswith("-") for cell in cells):
-            continue
-        if headers is None:
-            headers = cells
-            continue
-        if headers == ["Phase", "Title", "Items 🟢/всего", "Status"] and len(cells) == 4:
-            statuses[cells[0]] = cells[3]
-    return statuses
-
-
 def phase_statuses(plan_dir) -> dict[str, str]:
     """Return the authoritative declared status for every phase in a plan."""
     plan_dir = Path(plan_dir)
-    if layout_version(plan_dir) == "v1":
-        statuses = _v1_phase_statuses(plan_dir)
-    else:
-        # Deferred import avoids the plan_layout ↔ plan_status module cycle.
-        from task import plan_status
-        try:
-            _meta, board = plan_status.parse_status_view(plan_dir)
-        except plan_status.StatusError as exc:
-            raise PlanLayoutError(f"владельческий вид статуса не читается: {exc}") from exc
-        statuses = {row["Phase"]: row["Status"] for row, _lineno in board}
+    layout_version(plan_dir)
+    # Deferred import avoids the plan_layout ↔ plan_status module cycle.
+    from task import plan_status
+    try:
+        _meta, board = plan_status.parse_status_view(plan_dir)
+    except plan_status.StatusError as exc:
+        raise PlanLayoutError(f"владельческий вид статуса не читается: {exc}") from exc
+    statuses = {row["Phase"]: row["Status"] for row, _lineno in board}
     missing = sorted(set(phase_paths(plan_dir)) - set(statuses))
     if missing:
         raise PlanLayoutError(f"нет объявленного статуса фаз: {', '.join(missing)}")
@@ -221,8 +188,7 @@ def phase_context_path(plan_dir, phase_id, *, reader: str) -> Path:
         raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
     if reader != "auditor" and is_terminal_phase(plan_dir, phase_id):
         raise PlanLayoutError(f"{reader}: терминальная фаза {phase_id} не входит в живой путь")
-    carrier_id = "phase-index" if layout_version(plan_dir) == "v2" else "legacy-phase-monolith"
-    return carrier_path(plan_dir, carrier_id, phase_id=phase_id)
+    return carrier_path(plan_dir, "phase-index", phase_id=phase_id)
 
 
 def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
@@ -279,4 +245,5 @@ def item_spec_paths(plan_dir, phase_id) -> list[Path]:
 
 
 def plan_core_path(plan_dir) -> Path:
-    return carrier_path(plan_dir, "legacy-plan-monolith" if layout_version(plan_dir) == "v1" else "plan-core")
+    layout_version(plan_dir)
+    return carrier_path(plan_dir, "plan-core")

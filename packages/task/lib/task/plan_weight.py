@@ -6,16 +6,8 @@
 `configs/token-estimate-calibration.json`), проверяя каждый обязательный файл против
 ИЗМЕРЕННОГО лимита одного чтения P0.2 (`configs/read-limit.json`).
 
-Обязательный путь зависит только от объявленной раскладки. Для layout v1 он остаётся
-legacy-путём (`MANDATORY_PATH_LITERALS`):
-
-    1) plans/<PLAN-ID>/plan.md      → роль `plan`
-    2) plans/<PLAN-ID>/handoff.md   → роль `handoff`
-    3) plans/<PLAN-ID>/phases/Pn.md → роль `phase`
-    4) файлы из **Required Reads** пункта, в указанном порядке → роль `required_read`
-
-Для layout v2 (`V2_MANDATORY_PATH_LITERALS`) production path совпадает с пятью executor
-slots замороженного `read-path` v1:
+Обязательный путь требует явный `Layout | v2` и совпадает с пятью executor
+slots замороженного `read-path` contract:
 
     1) plan.md                         → `plan-core`
     2) phases/<Pn>/<Pn>.md             → `phase-context`
@@ -620,7 +612,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
         however, must still see a declared missing producer input before that bundle
         can exist; otherwise the consumer is circularly classified as ``ready`` and
         bundle materialization fails.  The fallback is deliberately limited to the
-        same Required Reads resolver used by v1 and is used only while the bundle is
+        Required Reads resolver and is used only while the bundle is
         absent or untrusted.
         """
         for entry in split_entries(_field(fields, "Required Reads")):
@@ -643,41 +635,32 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                              "detail": "позиция не приводится к существующему пути — "
                                        "прозой названный вход резолверу недоступен"})
 
-    layout_version = plan_layout.layout_version(plan_dir)
-    if layout_version == "v1":
-        # Legacy branch is intentionally unchanged: plan → handoff → phase → Required Reads.
-        layout = [(plan_dir / "plan.md", "plan"), (plan_dir / "handoff.md", "handoff")]
-        if phase_file is not None:
-            layout.append((Path(phase_file), "phase"))
-        for path, role in layout:
-            add_carrier(path, role)
+    try:
+        plan_layout.layout_version(plan_dir)
+        plan_core = plan_layout.plan_core_path(plan_dir)
+        item_spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
+        bundle_path = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
+        state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+    except plan_layout.PlanLayoutError as exc:
+        raise PlanWeightError(str(exc)) from exc
 
-        add_required_reads()
-    else:
-        try:
-            plan_core = plan_layout.plan_core_path(plan_dir)
-            item_spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
-            bundle_path = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
-            state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
-        except plan_layout.PlanLayoutError as exc:
-            raise PlanWeightError(str(exc)) from exc
+    add_carrier(plan_core, "plan-core")
+    add_carrier(Path(phase_file) if phase_file is not None else
+                plan_layout.phase_path(plan_dir, item_id.split(".")[0]), "phase-context")
+    add_carrier(item_spec, "item-spec")
 
-        add_carrier(plan_core, "plan-core")
-        add_carrier(Path(phase_file) if phase_file is not None else
-                    plan_layout.phase_path(plan_dir, item_id.split(".")[0]), "phase-context")
-        add_carrier(item_spec, "item-spec")
+    bundle_fresh = bundle_path.is_file()
+    if bundle_fresh:
         add_carrier(bundle_path, "item-input-bundle")
-
-        bundle_fresh = bundle_path.is_file()
-        if bundle_fresh:
-            try:
-                plan_bundle.build(plan_dir, item_id, check=True)
-            except plan_bundle.BundleError as exc:
-                bundle_fresh = False
-                gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
-                             "path": _rel(bundle_path, rel_to),
-                             "role": "item-input-bundle", "entry": None,
-                             "detail": f"generated bundle не byte-fresh: {exc}"})
+    if bundle_fresh:
+        try:
+            plan_bundle.build(plan_dir, item_id, check=True)
+        except plan_bundle.BundleError as exc:
+            bundle_fresh = False
+            gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                         "path": _rel(bundle_path, rel_to),
+                         "role": "item-input-bundle", "entry": None,
+                         "detail": f"generated bundle не byte-fresh: {exc}"})
         if bundle_fresh:
             try:
                 bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
@@ -715,22 +698,22 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                           f"#section:{selector['anchor']}")
                 add(source, V2_INPUT_ROLE, entry=unit.get("declaration_ref"), raw=selected,
                     selector=selector, display_suffix=suffix)
-        else:
-            # A future producer output cannot be bundled before it exists.  Expose
-            # the spec edge to stage-aware admission so the consumer becomes
-            # pending-producer instead of a false ready/bundle failure.
-            add_required_reads()
+    else:
+        # A future producer output cannot be bundled before it exists. Expose
+        # the spec edge to stage-aware admission so the consumer becomes
+        # pending-producer instead of a false ready/bundle failure.
+        add_required_reads()
 
-        state_fresh = state_path.is_file()
-        if state_fresh:
-            try:
-                plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
-            except plan_item_state.ItemStateError as exc:
-                gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
-                             "path": _rel(state_path, rel_to), "role": "item-state",
-                             "entry": None,
-                             "detail": f"generated item state не byte-fresh: {exc}"})
-        add_carrier(state_path, "item-state")
+    state_fresh = state_path.is_file()
+    if state_fresh:
+        try:
+            plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
+        except plan_item_state.ItemStateError as exc:
+            gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
+                         "path": _rel(state_path, rel_to), "role": "item-state",
+                         "entry": None,
+                         "detail": f"generated item state не byte-fresh: {exc}"})
+    add_carrier(state_path, "item-state")
 
     weight = sum(f["est_tokens"] for f in files)
     input_roles = {"required_read", V2_INPUT_ROLE}
@@ -812,7 +795,10 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
 
     admission = None
     if layout == "v2":
-        admission = plan_admission.classify(plan_dir, items, specs)
+        try:
+            admission = plan_admission.classify(plan_dir, items, specs)
+        except plan_admission.AdmissionError as exc:
+            raise PlanWeightError(str(exc)) from exc
     selected_items = ([item for item in items if item["item_id"] == only_item]
                       if only_item is not None else items)
     if admission is not None and only_item is not None:

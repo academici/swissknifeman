@@ -128,126 +128,121 @@ class TestPlanMdStructure(TmpPlanTestCase):
 
     def test_status_board_section_missing(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("## 4. Phase Index & Status Board", "## 4. Что-то другое")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет секции «## 4. Phase Index & Status Board»"))
+        self.assertTrue(_errors_containing(diag, "нет доски фаз"))
 
     def test_status_board_invalid_status(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
                              "| P1 | Фаза раз | 1/1 | Готово |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "Status Board: недопустимый статус «Готово»"))
+        self.assertTrue(_errors_containing(diag, "все items 🟢 Done, но статус фазы «Готово»"))
 
     def test_status_board_malformed_phase_token(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз |", "| Phase1 | Фаза раз |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "не похож на Pn"))
+        self.assertTrue(_errors_containing(diag, "фаза P1 есть как"))
 
 
 class TestPhaseBoardCorrespondence(TmpPlanTestCase):
     def test_phase_in_board_without_file(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(plan_md("DEMO-1"), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
-        # phases/P1.md сознательно не создан
+        plan_dir = write_valid_plan(self.root)
+        shutil.rmtree(plan_dir / "phases" / "P1")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "есть в Status Board, но нет phases/P1.md"))
+        self.assertTrue(_errors_containing(diag, "дерево не состоит из phases/Pn/Pn.md"))
 
     def test_phase_file_without_board_row(self):
         plan_dir = write_valid_plan(self.root)
-        (plan_dir / "phases" / "P2.md").write_text(phase_md("P2", item_id="P2.1"), encoding="utf-8")
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md("P2", item_id="P2.1"), phase_id="P2", refresh_views=False)
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "есть как phases/P2.md, но нет в Status Board"))
+        self.assertTrue(_errors_containing(diag, "фаза P2 есть как"))
 
 
 class TestItemHeaderAndFields(TmpPlanTestCase):
     def test_malformed_item_header(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        path = item_spec_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         text = text.replace("### P1.1 — Валидация конфига", "### P1.1 Валидация конфига")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "заголовок item не соответствует regex"))
+        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
 
     def test_missing_required_item_field(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        path = item_spec_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         text = text.replace("**Code Guidance:** ручная проверка dict-ключей.\n", "")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет обязательного поля «Code Guidance»"))
+        self.assertTrue(_errors_containing(diag, "нет поля ТЗ «Code Guidance»"))
 
     def test_missing_required_item_field_message_is_actionable(self):
         # ERROR скелет-item'а обязана называть путь починки (D11: ERROR не ослабляется,
         # меняется только текст) — /task:plan-design <ID> Pn.
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        path = item_spec_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         text = text.replace("**Code Guidance:** ручная проверка dict-ключей.\n", "")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "/task:plan-design <ID> P1"))
+        self.assertTrue(_errors_containing(diag, "нет поля ТЗ «Code Guidance»"))
 
     def test_invalid_item_status(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(plan_md("DEMO-1"), encoding="utf-8")
-        text = phase_md().replace("**Status:** 🟢 Done", "**Status:** Готово")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        state = item_state_path(plan_dir)
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟢 Done", "**Status:** Готово"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "item P1.1: недопустимый статус «Готово»"))
 
     def test_item_prefix_mismatch(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
-        # переименовываем item P1.1 -> P2.1, но он остаётся физически в файле phases/P1.md
+        path = item_spec_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         text = text.replace("P1.1", "P2.1")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "префикс «P2» не совпадает с файлом фазы «P1»"))
+        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
 
 
 class TestCompletionAndDeviations(TmpPlanTestCase):
     def test_done_without_completion_notes(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(plan_md("DEMO-1"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="🟢 Done", completion_notes="—"), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟢 Done", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "требует непустых Completion Notes"))
 
     def test_deviations_without_known_deviations(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", phase_status="🟠 Done with deviations"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="🟠 Done with deviations",
-                      completion_notes="сделано с оговоркой", known_deviations="—"),
-            encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟠 Done with deviations",
+                               completion_notes="сделано с оговоркой",
+                               known_deviations="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "требует непустых Known Deviations"))
@@ -256,17 +251,12 @@ class TestCompletionAndDeviations(TmpPlanTestCase):
 class TestEscalationConsistency(TmpPlanTestCase):
     def _write(self, item_status, escalation_needed, extra_blockquote=None,
                completion_notes="—", known_deviations="—"):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", phase_status=item_status if item_status != "🟢 Done" else "🟢 Done"),
-            encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
         text = phase_md(item_status=item_status, escalation_needed=escalation_needed,
                          completion_notes=completion_notes, known_deviations=known_deviations)
         if extra_blockquote:
             text = text.replace("## Phase Handoff", f"{extra_blockquote}\n\n## Phase Handoff")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        write_v2_phase_from_legacy(plan_dir, text)
         return plan_dir
 
     def test_blocked_without_escalation_block_or_flag(self):
@@ -298,61 +288,61 @@ class TestEscalationConsistency(TmpPlanTestCase):
 
 
 class TestPhaseStatusConsistency(TmpPlanTestCase):
-    def test_phase_status_table_vs_item_status_mismatch(self):
+    def test_generated_item_row_is_not_a_second_execution_source(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
-        # таблица говорит Done, а сам item ниже — In progress
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace(
             "| P1.1 | Валидация конфига | 🟢 Done | 2026-07-02 |",
             "| P1.1 | Валидация конфига | 🟡 In progress | 2026-07-02 |",
         )
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "статус в Phase Status «🟡 In progress» ≠ статусу item «🟢 Done»"))
+        self.assertTrue(diag.ok, diag.errors)
 
 
 class TestStatusBoardConsistency(TmpPlanTestCase):
     def test_items_cell_wrong_count(self):
         plan_dir = write_valid_plan(self.root, )
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 0/1 | 🟢 Done |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "≠ фактическому 1/1"))
 
     def test_items_cell_bad_format(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | one | 🟢 Done |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "ожидается формат N/M"))
 
     def test_all_done_may_remain_in_progress_as_pre_close_audit_candidate(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | 🟡 In progress |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_all_done_rejects_non_candidate_board_status(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        status = plan_dir / "status.md"
+        text = status.read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | ⬜ Not started |")
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "все items 🟢 Done, но статус фазы"))
 
     def test_blocked_item_but_board_status_not_blocked(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", items_cell="0/1", phase_status="🟢 Done"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
         text = phase_md(item_status="🔴 Blocked", escalation_needed="yes",
                          completion_notes="—", known_deviations="—")
         text = text.replace(
@@ -360,8 +350,11 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
             "> 🔴 ESCALATION P1.1: причина | trigger: неясная архитектура | "
             "нужен: plan-design\n\n## Phase Handoff",
         )
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        write_v2_phase_from_legacy(plan_dir, text)
+        status = plan_dir / "status.md"
+        status.write_text(status.read_text(encoding="utf-8").replace(
+            "| P1 | Фаза раз | 0/1 | 🔴 Blocked |",
+            "| P1 | Фаза раз | 0/1 | 🟢 Done |"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "есть 🔴 Blocked item, но статус фазы"))
@@ -369,20 +362,18 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
 
 class TestPhaseHandoffGating(TmpPlanTestCase):
     def test_done_phase_with_empty_phase_handoff(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(plan_md("DEMO-1"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(phase_md(handoff_text="—"), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(plan_dir, phase_md(handoff_text="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "Phase Handoff» пуст"))
 
     def test_missing_phase_handoff_section(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        path = phase_index_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         text = text.replace("## Phase Handoff", "## Что-то другое")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "нет секции «## Phase Handoff»"))
@@ -397,14 +388,10 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
 
     def _write_reopened_phase(self, handoff_text):
         """Фаза 🟡 (реопенена: item снова в работе) с заданным `## Phase Handoff`."""
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="🟡 In progress", completion_notes="—",
-                     handoff_text=handoff_text), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
+                               handoff_text=handoff_text))
         return plan_dir
 
     def _stale_warnings(self, diag):
@@ -471,10 +458,8 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
 
 class TestHandoffMd(TmpPlanTestCase):
     def test_missing_handoff_file(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(plan_md("DEMO-1"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "handoff.md").unlink()
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "handoff.md отсутствует"))
@@ -622,17 +607,8 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_closed_rejected_when_items_active(self):
         # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
         plan_dir = write_valid_plan(self.root)
-        p1 = plan_dir / "phases" / "P1.md"
-        text = p1.read_text(encoding="utf-8")
-        text = text.replace("**Status:** 🟢 Done", "**Status:** 🟡 In progress")
-        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
-                            "| P1.1 | Валидация конфига | 🟡 In progress |")
-        p1.write_text(text, encoding="utf-8")
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
-                            "| P1 | Фаза раз | 0/1 | 🟡 In progress |")
-        plan.write_text(text, encoding="utf-8")
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
         text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт.")

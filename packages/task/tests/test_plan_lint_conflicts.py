@@ -232,10 +232,10 @@ class TestLint20Warnings(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         plan = plan_dir / "plan.md"
         text = plan.read_text(encoding="utf-8")
-        # меняем местами Decision Log (5) и Update Log (6) — номера не по возрастанию
-        text = text.replace("## 5. Decision Log", "## X-TMP")
-        text = text.replace("## 6. Update Log", "## 5. Decision Log… нет, Update Log")
-        text = text.replace("## X-TMP", "## 6. Update Log")
+        # Меняем номера двух v2-core секций, сохраняя канонические title.
+        text = text.replace("## 1. Context", "## X-TMP")
+        text = text.replace("## 2. Execution Rules", "## 1. Context")
+        text = text.replace("## X-TMP", "## 2. Execution Rules")
         plan.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
@@ -251,59 +251,51 @@ class TestLint20Warnings(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(self._warnings_containing(diag, "≠ канонической"), diag.warnings)
 
-    def test_update_log_too_long_warning(self):
+    def test_v2_update_projection_bounds_long_journal_note(self):
         plan_dir = write_valid_plan(self.root)
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        text = text.replace("| 2026-07-02 | issue-planner/opus | План создан |",
-                            "| 2026-07-02 | issue-planner/opus | " + "х" * 301 + " |")
-        plan.write_text(text, encoding="utf-8")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["note"] = "х" * 301
+        journal.write_text(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n",
+                           encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertTrue(self._warnings_containing(diag, "Update Log"), diag.warnings)
+        self.assertEqual(self._warnings_containing(diag, "Update Log"), [], diag.warnings)
 
     def test_decision_log_without_rag_markers_warning(self):
         plan_dir = write_valid_plan(self.root)
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        extra = ("| D2 | 2026-07-02 | ещё решение | так надо |\n"
-                 "| D3 | 2026-07-02 | третье решение | и так надо |\n")
-        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
-                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
-        plan.write_text(text, encoding="utf-8")
+        self._write_decisions(plan_dir, ("тест", "так надо", "и так надо"))
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(self._warnings_containing(diag, "RAG:✅"), diag.warnings)
 
     def test_decision_log_with_rag_marker_no_warning(self):
         plan_dir = write_valid_plan(self.root)
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        extra = ("| D2 | 2026-07-02 | ещё решение | RAG:✅ 2026-07-02 запрос |\n"
-                 "| D3 | 2026-07-02 | третье решение | [UNVERIFIED] |\n")
-        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
-                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
-        plan.write_text(text, encoding="utf-8")
+        self._write_decisions(plan_dir, ("тест", "RAG:✅ 2026-07-02 запрос", "[UNVERIFIED]"))
         _, diag = _lint(plan_dir)
         self.assertEqual(self._warnings_containing(diag, "RAG:✅»/«[UNVERIFIED]"), [])
 
     def test_decision_log_with_rag_dash_marker_no_warning(self):
         # третий маркер enum'а §7 (D29): `RAG:—` — repo-grounded факт, WARNING'а быть не должно
         plan_dir = write_valid_plan(self.root)
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        extra = ("| D2 | 2026-07-02 | ещё решение | RAG:— (repo-grounded: lib/pkg/config.py) |\n"
-                 "| D3 | 2026-07-02 | третье решение | RAG:— |\n")
-        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
-                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
-        plan.write_text(text, encoding="utf-8")
+        self._write_decisions(plan_dir, ("тест", "RAG:— (repo-grounded: lib/pkg/config.py)", "RAG:—"))
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "Decision Log:"), [])
 
+    def _write_decisions(self, plan_dir, reasons):
+        for number, reason in enumerate(reasons, 1):
+            (plan_dir / "decisions" / f"D{number}-fixture.md").write_text(
+                "---\n"
+                f"id: D{number}\n"
+                "date: 2026-07-02\nstatus: accepted\nitem: P1.1\n"
+                "items: [P1.1]\nsupersedes: []\nsuperseded_by: null\n---\n"
+                f"## Решение\n\nРешение {number}.\n\n## Почему\n\n{reason}\n",
+                encoding="utf-8")
+
     def test_item_fields_out_of_order_warning(self):
         plan_dir = write_valid_plan(self.root)
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = item_spec_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
         # Intent и Why меняем местами — канонический порядок нарушен
         text = text.replace("**Intent:** Добавить проверку.\n**Why:** Диагностика дорогая.",
@@ -315,7 +307,7 @@ class TestLint20Warnings(TmpPlanTestCase):
 
     def _make_hollow_item(self, plan_dir):
         """P1.1 с ⬜ и ≥50% пустых полей (скелетоподобный item)."""
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = item_spec_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
         for field, val in (("Intent", "Добавить проверку."), ("Why", "Диагностика дорогая."),
                            ("Scope Included", "load_config()."), ("Scope Excluded", "формат конфига."),
@@ -324,16 +316,18 @@ class TestLint20Warnings(TmpPlanTestCase):
                            ("Implementation Rules", "stdlib-only."),
                            ("Code Guidance", "ручная проверка dict-ключей.")):
             text = text.replace(f"**{field}:** {val}", f"**{field}:** —")
-        text = text.replace("**Status:** 🟢 Done", "**Status:** ⬜ Not started")
-        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
-                            "| P1.1 | Валидация конфига | ⬜ Not started |")
         p1.write_text(text, encoding="utf-8")
+        state = item_state_path(plan_dir)
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟢 Done", "**Status:** ⬜ Not started"), encoding="utf-8")
         plan = plan_dir / "plan.md"
         ptext = plan.read_text(encoding="utf-8")
         ptext = ptext.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
                               "| P1 | Фаза раз | 0/1 | ⬜ Not started |")
         ptext = ptext.replace("| Status | 🟢 Done |", "| Status | 🟡 In progress |")
         plan.write_text(ptext, encoding="utf-8")
+        from task import plan_status
+        plan_status.build_status(plan_dir)
         return p1
 
     def test_hollow_item_without_skeleton_marker_warning(self):
@@ -345,7 +339,8 @@ class TestLint20Warnings(TmpPlanTestCase):
 
     def test_hollow_item_with_skeleton_marker_no_warning(self):
         plan_dir = write_valid_plan(self.root)
-        p1 = self._make_hollow_item(plan_dir)
+        self._make_hollow_item(plan_dir)
+        p1 = phase_index_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
         text = text.replace(
             "Демо-фаза.",
@@ -356,7 +351,7 @@ class TestLint20Warnings(TmpPlanTestCase):
 
     def test_needs_clarification_in_active_phase_warning(self):
         plan_dir = write_valid_plan(self.root)
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = item_spec_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
         text = text.replace("**Why:** Диагностика дорогая.",
                             "**Why:** Диагностика дорогая. [NEEDS CLARIFICATION: какой формат ошибок?]")
@@ -479,7 +474,7 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         (self.root / "plans" / "archive" / "DEMO-1").mkdir(parents=True)
         plan = plan_dir / "plan.md"
         text = plan.read_text(encoding="utf-8").replace(
-            "| Status | 🟢 Done |", "| Status | 🟢 Done |\n| supersedes | DEMO-OLD |")
+            "| Layout | v2 |", "| Layout | v2 |\n| supersedes | DEMO-OLD |")
         plan.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
@@ -505,7 +500,7 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
 
     def _inject_orchestration(self, plan_dir, phase="P1"):
         """Добавляет грепаемый признак оркестрации в Phase Context фазы."""
-        p = plan_dir / "phases" / f"{phase}.md"
+        p = phase_index_path(plan_dir, phase)
         text = p.read_text(encoding="utf-8").replace(
             "Демо-фаза.", "Демо-фаза. Оркестрация fan-out субагентов, launch-block по scriptPath.")
         p.write_text(text, encoding="utf-8")
@@ -544,7 +539,7 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
     # токен-учёт): консервативный набор маркеров намеренно НЕ ловит одиночное слово.
     def test_bare_fanout_in_prose_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
-        p = plan_dir / "phases" / "P1.md"
+        p = phase_index_path(plan_dir)
         text = p.read_text(encoding="utf-8").replace(
             "Демо-фаза.", "Демо-фаза. Искажение метрики при fan-out субагентов — допущено.")
         p.write_text(text, encoding="utf-8")
@@ -554,14 +549,12 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
 
     # --- негатив: фаза заявляет оркестрацию, но статус ⬜ → тишина (не в exec) -----
     def test_orchestration_phase_not_started_silent(self):
-        plan_dir = Path(self.root) / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", items_cell="0/1", phase_status="⬜ Not started"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="⬜ Not started", completion_notes="—",
-                     handoff_text="—"), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        state = item_state_path(plan_dir)
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟢 Done", "**Status:** ⬜ Not started"), encoding="utf-8")
+        from task import plan_status
+        plan_status.build_status(plan_dir)
         self._inject_orchestration(plan_dir)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)

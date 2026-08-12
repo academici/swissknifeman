@@ -20,6 +20,12 @@ from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activa
 
 GATE_ID = "read-budget-v1"
 BUNDLE_GATE_ID = "bundle-v1"
+TERMINAL_ITEM_STATUSES = {
+    plan_status.STATUS_DONE,
+    plan_status.STATUS_DEVIATIONS,
+    plan_status.STATUS_BLOCKED,
+    "⛔ Skipped by decision",
+}
 PATH_GATE_ID = "read-path-v1"
 RETURN_LOOP_GATE_ID = "return-loop-v1"
 DECISION_QUEUE_GATE_ID = "decision-queue-v1"
@@ -120,63 +126,25 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         raise ValueError("phase_id должен иметь форму Pn")
     items = []
     declared_paths = set()
-    if plan_layout.layout_version(plan_dir) == "v1":
-        # A v1 phase co-locates item specs, state, and append-only audit blocks.
-        # Hash canonical per-item fields so appending the audit verdict does not
-        # invalidate the exact candidate it attests.
-        from task.plan_lint_checks.common import (  # local import avoids a lint coordinator cycle
-            Diagnostics, ITEM_SPEC_FIELDS, ITEM_STATE_FIELDS,
-        )
-        from task.plan_lint_checks.parsing import parse_phase_md
-
-        phase_path = plan_layout.phase_path(plan_dir, phase_id)
-        diagnostics = Diagnostics()
-        parsed = parse_phase_md(phase_path, phase_id, diagnostics, layout="v1")
-        if parsed is None or diagnostics.errors:
-            raise ValueError(f"{phase_id} не candidate: phase carrier невалиден")
-        for item_id, occurrences in sorted(parsed["items"].items()):
-            item = occurrences[0]
-            fields = {key: value[0] for key, value in item["fields"].items()}
-            declared_paths.update(_declared_file_paths(fields.get("Files", "")))
-            status = fields.get("Status")
-            if status not in {
-                    plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
-                    plan_status.STATUS_BLOCKED}:
-                raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
-            spec = {key: fields[key] for key in ITEM_SPEC_FIELDS if key in fields}
-            state = {key: fields[key] for key in ITEM_STATE_FIELDS if key in fields}
-            spec_bytes = json.dumps(
-                {"title": item["title"], "fields": spec}, ensure_ascii=False,
-                sort_keys=True, separators=(",", ":"),
-            ).encode("utf-8")
-            state_bytes = json.dumps(
-                state, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
-            ).encode("utf-8")
-            items.append({
-                "item_id": item_id,
-                "status": status,
-                "spec_sha256": hashlib.sha256(spec_bytes).hexdigest(),
-                "state_sha256": hashlib.sha256(state_bytes).hexdigest(),
-            })
-    else:
-        for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
-            item_id = spec_path.stem
-            files_value = next((match.group(1) for line in spec_path.read_text(
-                encoding="utf-8").splitlines() if (match := _FILES_FIELD_RE.match(line))), "")
-            declared_paths.update(_declared_file_paths(files_value))
-            model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
-            status = model["state"]["position"]["status"]
-            if status not in {
-                    plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
-                    plan_status.STATUS_BLOCKED}:
-                raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
-            state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
-            items.append({
-                "item_id": item_id,
-                "status": status,
-                "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
-                "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
-            })
+    plan_layout.layout_version(plan_dir)
+    for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
+        item_id = spec_path.stem
+        files_value = next((match.group(1) for line in spec_path.read_text(
+            encoding="utf-8").splitlines() if (match := _FILES_FIELD_RE.match(line))), "")
+        declared_paths.update(_declared_file_paths(files_value))
+        model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
+        status = model["state"]["position"]["status"]
+        if status not in {
+                plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
+                plan_status.STATUS_BLOCKED}:
+            raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
+        state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+        items.append({
+            "item_id": item_id,
+            "status": status,
+            "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+            "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
+        })
     if not items:
         raise ValueError(f"{phase_id} не содержит items")
     completed = subprocess.run(
@@ -553,8 +521,8 @@ def _lint_terminal_phase_unresolved_decisions(plan_dir, layout: str, diag) -> No
 def lint_read_budget(plan_dir, layout: str, diag) -> None:
     """Emit D2 errors for ready layout-v2 items only.
 
-    Layout v1 and archived plans are structurally outside the execution gate. In a
-    live layout-v2 plan a missing calibration, read-limit artifact, or plan-owned
+    Archived plans are structurally outside the execution gate. In a live plan a
+    missing calibration, read-limit artifact, or plan-owned
     contract is an error rather than an implicit skip. ``measure_plan`` attaches the
     canonical admission result to each item, so this function never re-counts files
     or parses producer annotations.
@@ -582,7 +550,8 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
         active_items = measured["items"]
     else:
         active_items = [item for item in measured["items"]
-                        if item["item_id"].split(".", 1)[0] in active_phases]
+                        if item["item_id"].split(".", 1)[0] in active_phases
+                        and item.get("status") not in TERMINAL_ITEM_STATUSES]
     if not active_items:
         return
 
@@ -644,7 +613,21 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
         return
     active_items = [item for item in measured["items"]
                     if item.get("admission_state") == "ready"
-                    and item["item_id"].split(".", 1)[0] in active_phases]
+                    and item["item_id"].split(".", 1)[0] in active_phases
+                    and item.get("status") not in TERMINAL_ITEM_STATUSES]
+    # D17: a terminal bundle remains historical evidence.  Keep validating its
+    # own bytes/schema, but never re-render it or resolve retired source inputs.
+    for item in measured["items"]:
+        if item.get("status") not in TERMINAL_ITEM_STATUSES:
+            continue
+        target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"])
+        if not target.is_file():
+            continue
+        try:
+            plan_bundle.validate(json.loads(target.read_text(encoding="utf-8")))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, plan_bundle.BundleError) as exc:
+            _bundle_error(diag, target,
+                          f"пункт {item['item_id']}: terminal evidence schema invalid: {exc}")
     # Bundle v1 became a committed carrier in P3. A v2 plan that has not entered
     # that producer surface must remain compatible with the pre-P3 reader path.
     if not any(plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"]).is_file()

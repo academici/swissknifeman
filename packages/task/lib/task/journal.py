@@ -286,14 +286,10 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
             f"invalid_fields: ожидалось точное множество {sorted(target_fields)}")
 
     try:
-        if plan_layout.layout_version(plan_dir) == "v1":
-            plan_text = plan_layout.plan_core_path(plan_dir).read_text(encoding="utf-8")
-            decision = re.escape(exception["owner_decision"])
-            exists = bool(re.search(rf"^\|\s*{decision}\s*\|", plan_text, re.MULTILINE))
-        else:
-            decision_glob = plan_layout.carrier_glob(plan_dir, "decision-record")
-            exists = any(p.name.startswith(exception["owner_decision"] + "-")
-                         for p in decision_glob.parent.glob(decision_glob.name))
+        plan_layout.layout_version(plan_dir)
+        decision_glob = plan_layout.carrier_glob(plan_dir, "decision-record")
+        exists = any(p.name.startswith(exception["owner_decision"] + "-")
+                     for p in decision_glob.parent.glob(decision_glob.name))
     except (OSError, UnicodeDecodeError, plan_layout.PlanLayoutError) as exc:
         raise JournalValidationError(f"owner_decision: носитель решений не читается: {exc}") from exc
     if not exists:

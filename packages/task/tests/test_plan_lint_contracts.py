@@ -158,7 +158,7 @@ class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
         return [w for w in diag.warnings if needle in w]
 
     def _append_audit_block(self, plan_dir, body, phase="P1"):
-        p = plan_dir / "phases" / f"{phase}.md"
+        p = phase_index_path(plan_dir, phase)
         p.write_text(p.read_text(encoding="utf-8")
                      + f"\n## Audit {phase} — 2026-07-15\n\n**Вердикт:** 🟢 GREEN\n\n{body}\n",
                      encoding="utf-8")
@@ -175,7 +175,7 @@ class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
     # --- контроль: тот же маркер в ТЕЛЕ item'а → WARNING (гейт не ослаблен) -------
     def test_clarification_marker_in_item_body_still_warns(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = item_spec_path(plan_dir)
         p1.write_text(p1.read_text(encoding="utf-8").replace(
             "**Why:** Диагностика дорогая.",
             "**Why:** Диагностика дорогая. [NEEDS CLARIFICATION: какой формат?]"),
@@ -208,10 +208,9 @@ class TestCheckpointedGate83(TmpPlanTestCase):
         (plan_dir / "plan.md").write_text(
             plan_md(plan_dir.name, closure_protocol=closure_protocol),
             encoding="utf-8")
-        phase = plan_dir / "phases" / "P1.md"
         text = phase_md(item_status=item_status).replace(
             "**Pending Work:** —", f"**Pending Work:** {pending_work}")
-        phase.write_text(text, encoding="utf-8")
+        write_v2_phase_from_legacy(plan_dir, text)
         return plan_dir
 
     def test_a_blocked_with_resume_command_passes(self):

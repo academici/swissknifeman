@@ -38,14 +38,10 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self.assertEqual([w for w in diag.warnings if "не терминальна" in w], [])
 
     def test_plan_audit_nonterminal_phase_warns(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="🟡 In progress", completion_notes="—", handoff_text="—"),
-            encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
+                               handoff_text="—"))
         self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("не терминальна" in w for w in diag.warnings), diag.warnings)
@@ -77,14 +73,10 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_plan_close_archive_form_warns_when_not_closed(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text(
-            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md(item_status="🟡 In progress", completion_notes="—", handoff_text="—"),
-            encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
+                               handoff_text="—"))
         self._next(plan_dir, "/task:plan-close archive DEMO-1")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("план ещё не терминален целиком" in w for w in diag.warnings), diag.warnings)
@@ -245,17 +237,8 @@ class TestNextDeclarationLine(TmpPlanTestCase):
 
     def _activate_item(self, plan_dir):
         """Делает единственный item 🟡 (план перестаёт быть терминальным целиком)."""
-        p1 = plan_dir / "phases" / "P1.md"
-        text = p1.read_text(encoding="utf-8")
-        text = text.replace("**Status:** 🟢 Done", "**Status:** 🟡 In progress")
-        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
-                            "| P1.1 | Валидация конфига | 🟡 In progress |")
-        p1.write_text(text, encoding="utf-8")
-        plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
-                            "| P1 | Фаза раз | 0/1 | 🟡 In progress |")
-        plan.write_text(text, encoding="utf-8")
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
 
     def _sut(self, plan_dir, next_decl, sut_cell):
         """Переписывает handoff: объявление формы + ячейка «Суть» launch-block'а."""
@@ -385,12 +368,12 @@ class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
     plan.md/handoff.md), а `plans/archive/<ID>` линтуется как обычный план."""
 
     def _write_archived_plan(self, plan_id="DEMO-OLD"):
-        plan_dir = self.root / "plans" / "archive" / plan_id
-        (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
-        (plan_dir / "plan.md").write_text(plan_md(plan_id), encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
-        return plan_dir
+        source = write_valid_plan(self.root, plan_id)
+        archive = self.root / "plans" / "archive"
+        archive.mkdir(parents=True, exist_ok=True)
+        target = archive / plan_id
+        source.rename(target)
+        return target
 
     def test_archive_container_produces_no_phantom_errors(self):
         write_valid_plan(self.root, "DEMO-1")
@@ -421,112 +404,90 @@ class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
         names = sorted(p.name for p in found)
         self.assertEqual(names, ["DEMO-1", "DEMO-OLD"])
 
+    def test_historical_v1_archive_is_inert(self):
+        write_valid_plan(self.root, "DEMO-1")
+        archived_dir = self._write_archived_plan("DEMO-V1")
+        text = (archived_dir / "plan.md").read_text(encoding="utf-8")
+        text = text.replace("| Layout | v2 |", "| Layout | v1 |")
+        (archived_dir / "plan.md").write_text(text, encoding="utf-8")
+
+        found = discover_plan_dirs(self.root / "plans")
+
+        self.assertEqual([path.name for path in found], ["DEMO-1"])
+
 
 class TestGlobalUniqueness(TmpPlanTestCase):
     def test_duplicate_item_id_across_phases(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        text = plan_md("DEMO-1").replace(
-            "| P1 | Фаза раз | 1/1 | 🟢 Done |",
-            "| P1 | Фаза раз | 1/1 | 🟢 Done |\n| P2 | Фаза два | 1/1 | 🟢 Done |",
-        )
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(phase_md("P1", item_id="P1.1"), encoding="utf-8")
-        # умышленный баг: во второй фазе снова P1.1 (должно быть P2.1)
-        (plan_dir / "phases" / "P2.md").write_text(phase_md("P2", item_id="P1.1"), encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        plan_dir = write_valid_plan(self.root)
+        phase = plan_dir / "phases" / "P1"
+        foreign = phase / "P2.1.md"
+        foreign.write_text(item_spec_path(plan_dir).read_text(encoding="utf-8"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "переиспользован в фазах"))
+        self.assertTrue(_errors_containing(diag, "имеет префикс P2"))
 
     def test_duplicate_item_id_within_one_file(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        path = item_spec_path(plan_dir)
+        text = path.read_text(encoding="utf-8")
         block = text.split("### P1.1", 1)[1]
         text = text + "\n### P1.1" + block
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "повторяется в файле"))
+        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
 
 
 class TestWarnings(TmpPlanTestCase):
     def test_duplicate_title_warning(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        text = plan_md("DEMO-1").replace(
-            "| P1 | Фаза раз | 1/1 | 🟢 Done |",
-            "| P1 | Фаза раз | 2/2 | 🟢 Done |",
-        )
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
-
-        # второй item с ТЕМ ЖЕ Title, что и P1.1 ("Валидация конфига") — добавляем
-        # его строку в Phase Status и сам item-блок перед `## Phase Handoff`.
-        second_item_block = """### P1.2 — Валидация конфига
-
-**Status:** 🟢 Done
-**Intent:** —
-**Why:** —
-**Scope Included:** —
-**Scope Excluded:** —
-**Inputs:** —
-**Files:** —
-**Required Reads:** —
-**Implementation Rules:** —
-**Code Guidance:** —
-**Validation:** —
-**Deliverables:** —
-**Completion Notes:** сделано
-**Pending Work:** —
-**Known Deviations:** —
-**Escalation Needed:** —
-
-## Phase Handoff"""
-        phase_text = phase_md("P1", item_id="P1.1")
-        phase_text = phase_text.replace(
-            "| P1.1 | Валидация конфига | 🟢 Done | 2026-07-02 |",
-            "| P1.1 | Валидация конфига | 🟢 Done | 2026-07-02 |\n"
-            "| P1.2 | Валидация конфига | 🟢 Done | 2026-07-02 |",
-        )
-        phase_text = phase_text.replace("## Phase Handoff", second_item_block)
-        (plan_dir / "phases" / "P1.md").write_text(phase_text, encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        from task import plan_bundle, plan_decisions, plan_item_state, plan_status
+        plan_dir = write_valid_plan(self.root)
+        phase = plan_dir / "phases" / "P1"
+        (phase / "P1.2.md").write_text(
+            item_spec_path(plan_dir).read_text(encoding="utf-8").replace("P1.1", "P1.2"),
+            encoding="utf-8")
+        journal = plan_dir / "journal.jsonl"
+        event = json.loads(journal.read_text(encoding="utf-8"))
+        event["item_id"] = "P1.2"
+        journal.write_text(journal.read_text(encoding="utf-8")
+                           + json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n",
+                           encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.2")
+        plan_decisions.build_views(plan_dir)
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, "P1.2")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(any("дубль Title" in w for w in diag.warnings))
 
     def test_phase_first_warning(self):
-        plan_dir = self.root / "plans" / "DEMO-1"
-        (plan_dir / "phases").mkdir(parents=True)
-        text = plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress")
-        text = text.replace(
-            "| P1 | Фаза раз | 0/1 | 🟡 In progress |",
-            "| P1 | Фаза раз | 0/1 | 🟡 In progress |\n| P2 | Фаза два | 0/1 | 🟡 In progress |",
-        )
-        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(
-            phase_md("P1", item_id="P1.1", item_status="⬜ Not started",
-                      completion_notes="—", known_deviations="—"),
-            encoding="utf-8")
-        (plan_dir / "phases" / "P2.md").write_text(
-            phase_md("P2", item_id="P2.1", item_status="🟡 In progress",
-                      completion_notes="—", known_deviations="—"),
-            encoding="utf-8")
-        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1", item_id="P2.1"), encoding="utf-8")
+        from task import plan_bundle, plan_decisions, plan_item_state, plan_status
+        plan_dir = write_valid_plan(self.root)
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md("P1", item_id="P1.1", item_status="⬜ Not started",
+                               completion_notes="—", known_deviations="—"))
+        write_v2_phase_from_legacy(
+            plan_dir, phase_md("P2", item_id="P2.1", item_status="🟡 In progress",
+                               completion_notes="—", known_deviations="—"), phase_id="P2")
+        journal = plan_dir / "journal.jsonl"
+        event = json.loads(journal.read_text(encoding="utf-8"))
+        event.update({"item_id": "P2.1", "result": "in-progress", "note": None})
+        journal.write_text(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n",
+                           encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        plan_item_state.build_states(plan_dir, item_id="P2.1")
+        plan_decisions.build_views(plan_dir)
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, "P1.1")
+        plan_bundle.build(plan_dir, "P2.1")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("phase-first" in w for w in diag.warnings), diag.warnings)
 
     def test_empty_required_reads_warning_for_active_item(self):
         plan_dir = write_valid_plan(self.root)
-        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
-        text = text.replace("**Status:** 🟢 Done", "**Status:** 🟡 In progress")
-        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |", "| P1.1 | Валидация конфига | 🟡 In progress |")
-        text = text.replace("**Required Reads:** 1) lib/pkg/config.py", "**Required Reads:** —")
-        text = text.replace("**Completion Notes:** сделано, тест зелёный", "**Completion Notes:** —")
-        board = (plan_dir / "plan.md").read_text(encoding="utf-8")
-        board = board.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 0/1 | 🟡 In progress |")
-        (plan_dir / "plan.md").write_text(board, encoding="utf-8")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        text = phase_md(item_status="🟡 In progress", completion_notes="—").replace(
+            "**Required Reads:** 1) lib/pkg/config.py", "**Required Reads:** —")
+        write_v2_phase_from_legacy(plan_dir, text)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(any("пустые Required Reads" in w for w in diag.warnings))
@@ -584,8 +545,9 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
 
     def test_design_finish_and_roadmap_forms_are_accepted(self):
         for declaration in ("design-finish: task:plan-design DEMO-1 finish",
-                            "design-roadmap: task:plan-design DEMO-1 roadmap"):
+            "design-roadmap: task:plan-design DEMO-1 roadmap"):
             with self.subTest(declaration=declaration):
+                shutil.rmtree(self.root / "plans" / "DEMO-1", ignore_errors=True)
                 plan_dir = write_valid_plan(self.root, plan_id="DEMO-1")
                 handoff = plan_dir / "handoff.md"
                 text = handoff.read_text(encoding="utf-8").replace(
@@ -657,10 +619,9 @@ class TestPlansRoot(TmpPlanTestCase):
         # дефолт фикстуры — Meta Status «🟢 Done»; переводим оба плана в «🟡 In progress»
         # (только Meta-строку — консистентность items/board эта проверка не трогает).
         for pid in ("DEMO-1", "DEMO-2"):
-            p = self._plans_root() / pid / "plan.md"
-            text = p.read_text(encoding="utf-8").replace(
-                "| Status | 🟢 Done |", "| Status | 🟡 In progress |")
-            p.write_text(text, encoding="utf-8")
+            write_v2_phase_from_legacy(
+                self._plans_root() / pid,
+                phase_md(item_status="🟡 In progress", completion_notes="—"))
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])
@@ -786,16 +747,16 @@ class TestDuplicateItemFieldGate(unittest.TestCase):
 
     def test_duplicate_validation_field_in_completion_notes_is_error(self):
         plan_dir = write_valid_plan(self.root)
-        p1 = plan_dir / "phases" / "P1.md"
+        p1 = item_state_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
-        needle = "**Completion Notes:** сделано, тест зелёный"
+        needle = "**Completion Notes:** тест"
         self.assertIn(needle, text)
         injected = (needle + "\n**Validation:** переприёмка на item-коммите abc123 — зелёная "
                    "(инлайн-заметка, НЕ настоящее поле)")
         p1.write_text(text.replace(needle, injected, 1), encoding="utf-8")
         diag = Diagnostics()
         lint_plan(plan_dir, diag)
-        hits = _errors_containing(diag, "поле «Validation» встречается повторно")
+        hits = _errors_containing(diag, "поле ТЗ «Validation» запрещено")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("P1.1" in h for h in hits), hits)
 

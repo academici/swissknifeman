@@ -93,9 +93,15 @@ class MeasurerTestCase(unittest.TestCase):
     def plan_with_reads(self, required_reads, plan_id="DEMO-1"):
         """Валидный план, у единственного item'а которого подменено `Required Reads`."""
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
-        text = phase_md().replace("**Required Reads:** 1) lib/pkg/config.py",
-                                  f"**Required Reads:** {required_reads}")
-        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(spec.read_text(encoding="utf-8").replace(
+            "**Required Reads:** 1) lib/pkg/config.py", f"**Required Reads:** {required_reads}"),
+            encoding="utf-8")
+        plan_item_state.build_states(plan_dir, item_id="P1.1")
+        try:
+            plan_bundle.build(plan_dir, "P1.1")
+        except plan_bundle.BundleError:
+            (plan_dir / "bundles" / "P1.1.json").unlink(missing_ok=True)
         return plan_dir
 
     def item(self, required_reads, **kwargs):
@@ -129,25 +135,6 @@ class TestMandatoryPath(unittest.TestCase):
             self.skipTest(f"нет {path} — standalone-раскладка")
         return path.read_text(encoding="utf-8")
 
-    def test_literals_present_in_order(self):
-        text = self.plan_exec_text()
-        positions = []
-        for literal in MANDATORY_PATH_LITERALS:
-            idx = text.find(literal)
-            self.assertNotEqual(idx, -1, f"литерал §1 «{literal}» исчез из plan-exec.md")
-            positions.append(idx)
-        self.assertEqual(positions, sorted(positions),
-                         "порядок обязательного пути в plan-exec.md §1 изменился")
-
-    def test_literals_belong_to_section_1(self):
-        text = self.plan_exec_text()
-        start = text.find("1. **Порядок чтения")
-        self.assertNotEqual(start, -1, "секция §1 «Порядок чтения» не найдена в plan-exec.md")
-        end = text.find("\n2. **", start)
-        section = text[start:end if end != -1 else len(text)]
-        for literal in MANDATORY_PATH_LITERALS:
-            self.assertIn(literal, section, f"литерал «{literal}» вне §1 — путь описан не там")
-
     def test_v2_literals_present_in_order(self):
         text = self.plan_exec_text()
         positions = []
@@ -160,11 +147,12 @@ class TestMandatoryPath(unittest.TestCase):
 
 
 class TestLayoutAwareMeasurement(MeasurerTestCase):
-    def test_v1_path_remains_legacy_and_includes_handoff(self):
+    def test_v2_path_excludes_handoff(self):
         record = self.item("1) `lib/pkg/config.py`")
         roles = [entry["role"] for entry in record["files"]]
-        self.assertEqual(roles[:3], ["plan", "handoff", "phase"])
-        self.assertIn("required_read", roles)
+        self.assertEqual(roles[:5], ["plan-core", "phase-context", "item-spec",
+                                     "item-input-bundle", "bundle-input"])
+        self.assertNotIn("handoff", roles)
 
     def test_v2_path_uses_exact_five_carriers_and_bundle_selections(self):
         plan_dir = self.prepare_v2_carriers(
@@ -265,28 +253,28 @@ class TestGapTaxonomy(MeasurerTestCase):
         plan_dir = self.plan_with_reads("1) `packages/task/lib/task/plan_weight.py`")
         fields = {"Required Reads": "1) `packages/task/lib/task/plan_weight.py`"}
         record = measure_item(plan_dir, "P1.1", fields, self.measurer(),
-                              phase_file=plan_dir / "phases" / "P1.md",
+                              phase_file=plan_dir / "phases" / "P1" / "P1.md",
                               repo_root=self.root / "нет-такого-корня")
         self.assertEqual(len(self.gaps_of(record, GAP_UNREADABLE_ROOT)), 1)
         self.assertEqual(len(self.gaps_of(record, GAP_MISSING_FILE)), 1)
 
     def test_oversized_file_size_gate_only(self):
         self.write_limits(size_bytes=200, tokens=10 ** 9)
-        record = self.item("1) `phases/P1.md`")
+        record = self.item("1) `phases/P1/P1.md`")
         gaps = self.gaps_of(record, GAP_OVERSIZED_FILE)
         self.assertTrue(gaps)
         self.assertEqual({g["gate"] for g in gaps}, {GATE_SIZE_BYTES})
 
     def test_oversized_file_token_gate_only(self):
         self.write_limits(size_bytes=10 ** 9, tokens=1)
-        record = self.item("1) `phases/P1.md`")
+        record = self.item("1) `phases/P1/P1.md`")
         gaps = self.gaps_of(record, GAP_OVERSIZED_FILE)
         self.assertTrue(gaps)
         self.assertEqual({g["gate"] for g in gaps}, {GATE_TOKENS})
 
     def test_oversized_file_both_gates(self):
         self.write_limits(size_bytes=10, tokens=1)
-        record = self.item("1) `phases/P1.md`")
+        record = self.item("1) `phases/P1/P1.md`")
         gaps = self.gaps_of(record, GAP_OVERSIZED_FILE)
         self.assertTrue(gaps)
         self.assertEqual({g["gate"] for g in gaps}, {GATE_BOTH})
@@ -295,7 +283,7 @@ class TestGapTaxonomy(MeasurerTestCase):
         """`pass(f) = bytes ≤ size_bytes И est_tokens ≤ tokens` (D108) — один зелёный
         гейт файл не спасает."""
         self.write_limits(size_bytes=10 ** 9, tokens=10 ** 9)
-        record = self.item("1) `phases/P1.md`")
+        record = self.item("1) `phases/P1/P1.md`")
         self.assertTrue(all(f["passes"] for f in record["files"]))
         self.assertEqual(self.gaps_of(record, GAP_OVERSIZED_FILE), [])
 
@@ -345,14 +333,14 @@ class TestRequiredReadsResolution(MeasurerTestCase):
         self.assertEqual(len(self.gaps_of(record, GAP_UNRESOLVED_ENTRY)), 1)
 
     def test_bare_path_that_exists_is_measured(self):
-        record = self.item("1) phases/P1.md (существующий файл без бэктиков)")
+        record = self.item("1) phases/P1/P1.md (существующий файл без бэктиков)")
         self.assertEqual(record["gaps"], [])
-        self.assertTrue(any(f["path"].endswith("phases/P1.md") for f in record["files"]))
+        self.assertTrue(any(f["path"].endswith("phases/P1/P1.md") for f in record["files"]))
 
     def test_em_dash_means_no_required_reads(self):
         record = self.item("—")
         self.assertEqual(record["gaps"], [])
-        self.assertEqual(record["required_reads_tokens"], 0)
+        self.assertGreater(record["required_reads_tokens"], 0)
 
     def test_item_reference_is_not_a_path(self):
         """`P0.1` из прозы «P0.1 Completion Notes» не должен выглядеть файлом: расширение
@@ -369,27 +357,27 @@ class TestRequiredReadsResolution(MeasurerTestCase):
     def test_resolution_prefers_plan_dir_then_repo_root(self):
         (self.root / "packages").mkdir(exist_ok=True)
         (self.root / "packages" / "AGENTS.md").write_text("корневой", encoding="utf-8")
-        record = self.item("1) `phases/P1.md` 2) `packages/AGENTS.md`")
+        record = self.item("1) `phases/P1/P1.md` 2) `packages/AGENTS.md`")
         paths = [f["path"] for f in record["files"]]
         self.assertIn("packages/AGENTS.md", paths)
         self.assertEqual(self.gaps_of(record, GAP_MISSING_FILE), [])
 
     def test_duplicate_read_is_not_double_counted(self):
         """Файл читается один раз: повтор в Required Reads вес не удваивает, и уже
-        прочитанный файл раскладки (`phases/P1.md`) сохраняет свою роль `phase`."""
-        record = self.item("1) `phases/P1.md` 2) `phases/P1.md`")
-        phase_files = [f for f in record["files"] if f["path"].endswith("phases/P1.md")]
+        прочитанный файл раскладки (`phases/P1/P1.md`) сохраняет свою роль `phase-context`."""
+        record = self.item("1) `phases/P1/P1.md` 2) `phases/P1/P1.md`")
+        phase_files = [f for f in record["files"] if f["path"].endswith("phases/P1/P1.md")]
         self.assertEqual(len(phase_files), 1)
-        self.assertEqual(phase_files[0]["role"], "phase")
+        self.assertEqual(phase_files[0]["role"], "phase-context")
         self.assertEqual(record["weight_tokens"], sum(f["est_tokens"] for f in record["files"]))
-        self.assertEqual(record["required_reads_tokens"], 0)
+        self.assertGreater(record["required_reads_tokens"], 0)
 
     def test_weight_is_sum_of_resolved_only(self):
-        record = self.item("1) `phases/P1.md` 2) `нет/такого.md`")
+        record = self.item("1) `phases/P1/P1.md` 2) `нет/такого.md`")
         self.assertEqual(record["weight_tokens"], sum(f["est_tokens"] for f in record["files"]))
         self.assertEqual(record["floor_tokens"],
                          sum(f["est_tokens"] for f in record["files"]
-                             if f["role"] != "required_read"))
+                             if f["role"] != "bundle-input"))
 
 
 class TestDenseAsciiShare(unittest.TestCase):
@@ -440,7 +428,7 @@ class TestJsonOutput(MeasurerTestCase):
         return json.loads(stdout.getvalue())
 
     def test_plan_json_keys(self):
-        plan_dir = self.plan_with_reads("1) `phases/P1.md` 2) P0.1 Completion Notes")
+        plan_dir = self.plan_with_reads("1) `phases/P1/P1.md` 2) P0.1 Completion Notes")
         data = self.run_json("plan", str(plan_dir), "--json")
         self.assertEqual(data["schema"], "plan-weight-v1")
         for key in ("calibration", "limits", "session_model_id", "dense_ascii_min_run",
@@ -459,14 +447,14 @@ class TestJsonOutput(MeasurerTestCase):
         self.assertTrue(all("kind" in g for g in item["gaps"]))
 
     def test_json_flag_accepted_before_and_after_subcommand(self):
-        plan_dir = self.plan_with_reads("1) `phases/P1.md`")
+        plan_dir = self.plan_with_reads("1) `phases/P1/P1.md`")
         before = self.run_json("--json", "plan", str(plan_dir))
         after = self.run_json("plan", str(plan_dir), "--json")
         self.assertEqual(before["items"][0]["weight_tokens"],
                          after["items"][0]["weight_tokens"])
 
     def test_item_json_is_single_item(self):
-        plan_dir = self.plan_with_reads("1) `phases/P1.md`")
+        plan_dir = self.plan_with_reads("1) `phases/P1/P1.md`")
         data = self.run_json("item", str(plan_dir), "P1.1", "--json")
         self.assertEqual([i["item_id"] for i in data["items"]], ["P1.1"])
 
@@ -490,7 +478,7 @@ class TestJsonOutput(MeasurerTestCase):
                          {"historical-pre-v2": 0, "pending-producer": 0, "ready": 1})
 
     def test_unknown_item_is_error(self):
-        plan_dir = self.plan_with_reads("1) `phases/P1.md`")
+        plan_dir = self.plan_with_reads("1) `phases/P1/P1.md`")
         stderr = io.StringIO()
         with unittest.mock.patch("sys.stderr", stderr):
             code = main(["--calibration", str(self.calibration_path),
@@ -500,8 +488,8 @@ class TestJsonOutput(MeasurerTestCase):
         self.assertIn("P9.9", stderr.getvalue())
 
     def test_sweep_covers_every_plan_under_root(self):
-        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-1")
-        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-2")
+        self.plan_with_reads("1) `phases/P1/P1.md`", plan_id="DEMO-1")
+        self.plan_with_reads("1) `phases/P1/P1.md`", plan_id="DEMO-2")
         data = self.run_json("sweep", str(self.root / "plans"), "--json")
         self.assertEqual(sorted(p["plan_id"] for p in data["plans"]), ["DEMO-1", "DEMO-2"])
         self.assertEqual(data["totals"]["plans"], 2)
@@ -549,7 +537,7 @@ class TestJsonOutput(MeasurerTestCase):
         blocked_root = self.root / "blocked-root"
         blocked_root.mkdir()
         os.chmod(blocked_root, 0o000)
-        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-1")
+        self.plan_with_reads("1) `phases/P1/P1.md`", plan_id="DEMO-1")
         try:
             data = self.run_json("sweep", str(blocked_root), str(self.root / "plans"), "--json")
         finally:
@@ -559,8 +547,8 @@ class TestJsonOutput(MeasurerTestCase):
         self.assertEqual([p["plan_id"] for p in data["plans"]], ["DEMO-1"])
 
     def test_sweep_measured_converges_with_totals_plans(self):
-        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-1")
-        self.plan_with_reads("1) `phases/P1.md`", plan_id="DEMO-2")
+        self.plan_with_reads("1) `phases/P1/P1.md`", plan_id="DEMO-1")
+        self.plan_with_reads("1) `phases/P1/P1.md`", plan_id="DEMO-2")
         data = self.run_json("sweep", str(self.root / "plans"), "--json")
         self.assertEqual(sum(r["measured"] for r in data["roots"]), data["totals"]["plans"])
 

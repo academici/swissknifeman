@@ -20,8 +20,9 @@ from task import plan_layout, task_contract  # noqa: E402
 from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-PLAN_ROOT = resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")
-EXAMPLES_PATH = PLAN_ROOT / "artifacts/P0.2/task-contract-examples.json"
+PLAN_ROOT = resolve_plan_dir(REPO_ROOT, "2026.08.12-№1-TASK-RESILIENCE")
+EXAMPLES_PATH = (REPO_ROOT / "plans/archive/2026.07.24-AGENT-RELIABILITY/"
+                 "artifacts/P0.2/task-contract-examples.json")
 ARTIFEX_PLAN_ROOT = REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR"
 
 
@@ -327,19 +328,18 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
             "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
         self.plan_dir = fixtures.write_valid_plan(self.root, "DEMO-AUTH")
         (self.plan_dir / "plan.md").write_text(plan_md, encoding="utf-8")
+        self._replace_decision_rows(decision_rows)
         (self.plan_dir / "brief" / "00-brief.md").write_text(
             "# Owner message\n\n"
             "[REPOSITORY-OWNER-MESSAGE:grant-g-test] [OWNER-GRANT:G-TEST] "
             "branch=`go-branch`; scope=`finite-scope`; provenance=`repository-owner`\n",
             encoding="utf-8")
-        phase_path = self.plan_dir / "phases" / "P1.md"
-        phase_path.write_text(
-            fixtures.phase_md().replace(
+        fixtures.write_v2_phase_from_legacy(
+            self.plan_dir, fixtures.phase_md().replace(
                 "**Required Reads:** 1) lib/pkg/config.py",
                 "**Required Reads:** 1) `lib/pkg/config.py`").replace(
                 "**Implementation Rules:** stdlib-only.",
-                "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition."),
-            encoding="utf-8")
+                "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition."))
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -363,15 +363,26 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         return "\n".join([*prefix, *tail])
 
     def _replace_decision_rows(self, rows):
-        plan = fixtures.plan_md("DEMO-AUTH", decision_log_rows=rows).replace(
-            "## 3. Routing\n\n", "## 3. Routing" + _routing_row())
-        (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+        decisions = self.plan_dir / "decisions"
+        for path in decisions.glob("D*.md"):
+            path.unlink()
+        for raw in rows.splitlines():
+            cells = [cell.strip() for cell in raw.strip().strip("|").split("|")]
+            if len(cells) < 3 or not re.fullmatch(r"D\d+", cells[0]):
+                continue
+            target = decisions / f"{cells[0]}-fixture.md"
+            if target.exists():
+                duplicate = decisions / f"{cells[0]}-duplicate.md"
+                duplicate.write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
+                continue
+            fixtures.write_decision_record(
+                self.plan_dir, cells[0], decision=cells[2], date=cells[1])
 
     def test_routine_authority_uses_the_current_item_carrier(self):
         contract = task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
         self.assertEqual(contract["authority"]["class"], "routine")
         self.assertTrue(contract["authority"]["granted"])
-        self.assertEqual(contract["authority"]["granted_by"], "phases/P1.md:P1.1")
+        self.assertEqual(contract["authority"]["granted_by"], "phases/P1/P1.1.md:P1.1")
         self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
 
     def test_exact_matching_owner_grant_allows_the_protected_transition(self):
@@ -614,7 +625,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
     requirement (не только собранный самим item свежий кейс)."""
 
     def test_builds_over_three_real_items_with_nonempty_required_arrays(self):
-        for item_id in ("P0.1", "P2.1", "P2.6"):
+        for item_id in ("P1.1", "P1.5", "P2.1"):
             with self.subTest(item=item_id):
                 contract = task_contract.build(PLAN_ROOT, item_id)
                 self.assertGreaterEqual(len(contract["must"]), 1)
@@ -625,13 +636,13 @@ class BuildSelfConformanceTests(unittest.TestCase):
                                 task_contract.content_hash(contract))
 
     def test_build_is_byte_deterministic_across_two_calls(self):
-        first = json.dumps(task_contract.build(PLAN_ROOT, "P2.6"), sort_keys=True)
-        second = json.dumps(task_contract.build(PLAN_ROOT, "P2.6"), sort_keys=True)
+        first = json.dumps(task_contract.build(PLAN_ROOT, "P1.5"), sort_keys=True)
+        second = json.dumps(task_contract.build(PLAN_ROOT, "P1.5"), sort_keys=True)
         self.assertEqual(first, second)
 
     def test_default_actual_route_is_unresolved_and_dispatch_guard_denies_it(self):
         from task import route_evidence as re_
-        contract = task_contract.build(PLAN_ROOT, "P2.6")
+        contract = task_contract.build(PLAN_ROOT, "P1.5")
         required, actual = contract["route"]["required"], contract["route"]["actual"]
         self.assertIsNone(actual["model_class"])
         self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
@@ -639,7 +650,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
 
     def test_live_actual_route_matching_required_allows_both_predicates(self):
         from task import route_evidence as re_
-        for item_id in ("P0.1", "P2.1", "P2.6"):
+        for item_id in ("P1.1", "P1.5", "P2.1"):
             with self.subTest(item=item_id):
                 contract = task_contract.build(PLAN_ROOT, item_id)
                 required = contract["route"]["required"]
@@ -698,9 +709,9 @@ class BuildFixtureTests(unittest.TestCase):
             self.assertEqual(contract["next"]["context"], "continue-root")
 
     def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
-        phase_path = self.plan_dir / "phases" / "P1.md"
+        phase_path = fixtures.item_spec_path(self.plan_dir)
         phase_path.write_text(
-            fixtures.phase_md().replace(
+            phase_path.read_text(encoding="utf-8").replace(
                 "**Validation:** bash scripts/test.sh — зелёный.", "**Validation:** —"),
             encoding="utf-8")
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
@@ -711,8 +722,8 @@ class BuildFixtureTests(unittest.TestCase):
     def test_missing_routing_row_fails_closed(self):
         # fixtures.plan_md() leaves §3 Routing empty; P1.1's default row was added in
         # setUp only for THIS plan.md, so an item absent from it (P1.2) has no row.
-        (self.plan_dir / "phases" / "P1.md").write_text(
-            fixtures.phase_md(item_id="P1.2"), encoding="utf-8")
+        fixtures.write_v2_phase_from_legacy(
+            self.plan_dir, fixtures.phase_md(item_id="P1.2"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.2")
         self.assertEqual(ctx.exception.field, "Routing")
@@ -809,8 +820,8 @@ class RoutingFormTests(unittest.TestCase):
     def _write_phase_item(self, item_id):
         # `build()` parses the phase item BEFORE §3 Routing, so an item_id absent from
         # phases/P1.md would refuse on field `item` and never reach the branch under test.
-        (self.plan_dir / "phases" / "P1.md").write_text(
-            fixtures.phase_md(item_id=item_id), encoding="utf-8")
+        fixtures.write_v2_phase_from_legacy(
+            self.plan_dir, fixtures.phase_md(item_id=item_id))
 
     def _assert_comma_list_diagnostic(self, message, cell, item_id):
         self.assertIn("comma list", message)

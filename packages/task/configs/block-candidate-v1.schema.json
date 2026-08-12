@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swissknifeman.local/task/block-candidate-v1.schema.json",
+  "title": "Task block candidate v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "item_id",
+    "signal_class",
+    "scope_class",
+    "external",
+    "executor_actor",
+    "evidence_ids",
+    "resolutions_tried",
+    "rag",
+    "review"
+  ],
+  "properties": {
+    "schema_version": {"const": "block-candidate/v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "item_id": {"type": "string", "pattern": "^P[0-9]+\\.[0-9]+$"},
+    "signal_class": {
+      "enum": [
+        "procedural",
+        "transient",
+        "dependency-not-ready",
+        "unrelated-pre-existing",
+        "routing-rejection",
+        "tool-noise",
+        "local-reversible",
+        "acceptance-failure",
+        "safety-risk",
+        "authority-boundary",
+        "public-contract-change",
+        "frozen-contract-change",
+        "cross-package-change",
+        "irreversible-operation",
+        "security-boundary",
+        "data-boundary",
+        "external-dependency"
+      ]
+    },
+    "scope_class": {
+      "enum": [
+        "local",
+        "acceptance",
+        "safety",
+        "authority",
+        "public-contract",
+        "frozen-contract",
+        "cross-package",
+        "irreversible",
+        "security",
+        "data-boundary",
+        "external"
+      ]
+    },
+    "external": {"type": "boolean"},
+    "executor_actor": {"type": "string", "minLength": 1},
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "resolutions_tried": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "rag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "evidence_ids"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "status": {"enum": ["not-required", "missing", "verified"]},
+        "evidence_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "review": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewer_actor", "context", "verdict", "evidence_ids"],
+          "properties": {
+            "reviewer_actor": {"type": "string", "minLength": 1},
+            "context": {"const": "isolated-child-return"},
+            "verdict": {
+              "enum": [
+                "JUSTIFIED",
+                "AVOIDABLE",
+                "INSUFFICIENT_EVIDENCE",
+                "OUT_OF_SCOPE",
+                "MALFORMED"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

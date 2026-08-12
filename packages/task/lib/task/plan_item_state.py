@@ -17,9 +17,20 @@ RESULT_STATUS = {
     "escalated": "🔴 Blocked", "no-op": "⬜ Not started",
     "audit-green": "⬜ Not started", "audit-attention": "⬜ Not started",
     "audit-red": "🔴 Blocked",
+    "routing-rejected": "⬜ Not started", "decision-pending": "⬜ Not started",
+    "local-repair": "⬜ Not started", "block-candidate": "⬜ Not started",
 }
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
+OBSERVATION_RESULTS = frozenset((
+    "no-op", "routing-rejected", "decision-pending", "local-repair", "block-candidate",
+))
+OBSERVATION_NEXT_STEPS = {
+    "routing-rejected": "Retry the same command after route correction.",
+    "decision-pending": "Continue after the recorded decision is available.",
+    "local-repair": "Repeat the original validation after local repair.",
+    "block-candidate": "Run isolated block confirmation; do not terminalize.",
+}
 
 def _read(path):
     try:
@@ -91,11 +102,12 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     event_rows = _event_rows(plan_dir, item_id)
     events = [event for _number, _raw, event in event_rows]
-    execution_events = [event for event in events if event.get("command") in _EXECUTION_COMMANDS]
-    # A no-op is an observation after an execution position, not a state
-    # transition.  It must not make a previously closed item look unstarted.
-    last = next((event for event in reversed(execution_events)
-                 if event.get("result") != "no-op"), {})
+    execution_events = [event for event in events
+                        if event.get("command") in _EXECUTION_COMMANDS
+                        and event.get("result") not in OBSERVATION_RESULTS]
+    # Observation rows remain durable provenance and freshness inputs, but do
+    # not become an execution position or consume an attempt.
+    last = execution_events[-1] if execution_events else {}
     journal_path = plan_layout.carrier_path(plan_dir, "journal")
     last_event = event_rows[-1] if event_rows else (0, "", {})
     result = last.get("result")
@@ -116,7 +128,10 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     }, "state": {
         "world": {"paths": [], "commits": []},
         "position": {"status": RESULT_STATUS[result] if result else "⬜ Not started", "attempt": len(execution_events), "last_result": result},
-        "next_step": "Continue item execution." if result in (None, "in-progress") else "Proceed according to the plan.",
+        "next_step": (OBSERVATION_NEXT_STEPS.get(events[-1].get("result"))
+                      if events and events[-1].get("result") in OBSERVATION_NEXT_STEPS
+                      else "Continue item execution." if result in (None, "in-progress")
+                      else "Proceed according to the plan."),
         "active_context": {"risks": [], "workarounds": [], "decisions": []},
         "history_pointer": {"view": f".plan-cache/history/{item_id}.md", "command": f"python3 packages/task/scripts/plan-views.py history --item {item_id}"},
     }}

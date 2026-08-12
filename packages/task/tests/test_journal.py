@@ -98,6 +98,12 @@ class TestNewEntryAndValidate(TmpDirTestCase):
                                actor="sonnet/high", result=result, friction=FRICTION_VALUES)
             validate_entry(entry)  # не бросает ни на одном каноническом значении
 
+    def test_continue_first_observations_are_not_terminal_results(self):
+        from task.journal import RESULT_VALUES, TERMINAL_CLOSE_RESULTS
+        observations = {"routing-rejected", "decision-pending", "local-repair", "block-candidate"}
+        self.assertLessEqual(observations, set(RESULT_VALUES))
+        self.assertTrue(observations.isdisjoint(TERMINAL_CLOSE_RESULTS))
+
 
 class TestTraceRef(TmpDirTestCase):
     """P3.1 (`root/contracts/unified-agent-trace-v1.md` § Journal reference):

@@ -56,6 +56,38 @@ class PlanItemStateTests(unittest.TestCase):
         model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
         self.assertEqual(model["state"]["position"]["status"], "🟢 Done")
 
+    def test_routing_rejection_is_provenance_without_execution_attempt(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/medium", result="routing-rejected",
+            friction=["routing-blocked"],
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "⬜ Not started", "attempt": 0, "last_result": None,
+        })
+        self.assertEqual(
+            model["state"]["next_step"],
+            "Retry the same command after route correction.",
+        )
+
+    def test_observations_do_not_replace_live_execution_position_or_attempt(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="in-progress",
+        ))
+        for result in ("decision-pending", "local-repair", "block-candidate"):
+            journal.append(self.plan, journal.new_entry(
+                plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+                actor="implementation/high", result=result,
+            ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "🟡 In progress", "attempt": 1, "last_result": "in-progress",
+        })
+        self.assertEqual(model["state"]["next_step"],
+                         "Run isolated block confirmation; do not terminalize.")
+
     def test_item_event_does_not_stale_another_items_state(self):
         first_spec = self.plan / "phases" / "P1" / "P1.1.md"
         second_spec = first_spec.with_name("P1.2.md")

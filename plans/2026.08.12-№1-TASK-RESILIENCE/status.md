@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 64c63f14c035b009b9304c72ee10d0650b74233a8435ba6b91f90a2e4303eff9
+inputs_sha256: a3d29e7fdd7d199a5782975c73e60e1b244d2267abf0b87762800630d19bb4be
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-12 |
 
 ## 4. Phase Index & Status Board
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
-| P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
+| P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | 🔴 Blocked |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
@@ -43,7 +43,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Inventory every active Layout v1 consumer | ⬜ Not started | — |
+| P1.1 | Inventory every active Layout v1 consumer | 🔴 Blocked | 2026-08-12 |
 | P1.2 | Migrate all active v1 plans and prove zero live consumers | ⬜ Not started | — |
 | P1.3 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
 
@@ -132,8 +132,15 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · Owner remediation D12: 5294642e, e3025015 and fd09f3ee changed Task/skiller runtime, docs or active-plan carriers outside P0.3 Files/read-only P0.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · Фаза P0 закрыта по owner decision D12 после remediation; close gate allow, третьего audit нет. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Исправлены keyword-only derive_run_id и обязательный item selector plan-views state. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Package suite tests passed; aggregate plan-lint remained red from dependency-not-ready P1.2/P1.3 carriers and archived pre-existing errors. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Full review findings repaired: registry parsing, exact ACTIVE, exhaustive carriers, symlink containment, dirty verification and unique paths. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · block-candidate · Pre-final blocks: Validation redirection >/dev/null is classified external, so no public acceptance remains; item scope cannot repair the contract/spec. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · escalated · P1.1 escalated: pre-final ACCEPTANCE_NOT_PUBLIC caused by >/dev/null classification; resume with task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1. |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.3: known deviation
+- P1.1: escalation

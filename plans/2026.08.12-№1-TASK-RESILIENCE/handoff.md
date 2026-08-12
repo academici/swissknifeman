@@ -1,56 +1,54 @@
-# HANDOFF — 2026-08-12 — after P0
+# HANDOFF — 2026-08-12 — after P1.1
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3
+**Next:** design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | B-P1-CUTOVER |
 | Model | frontier |
-| Thinking | high — fleet cutover и migration safety |
-| Capabilities | filesystem, git, skiller registry, maind projects |
-| Context | continue-root |
-| Суть | Инвентаризировать active v1 fleet, мигрировать его в v2 и удалить legacy execution path. |
-| Команда | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3` |
+| Thinking | high — acceptance contract repair |
+| Context | cold-start-root |
+| Суть | Исправить public-acceptance carrier P1.1 и определить повторное закрытие. |
+| Команда | `task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1` |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3
+$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1'
 ```
 
 **Done:**
 
-- P0.1–P0.3 terminal; P0 закрыта как `🟠 Done with deviations` по owner decision D12.
-- `phase_candidate_fingerprint()` хеширует repo-relative и plan-relative product files;
-  текущий P0 snapshot разрешает 6/6 declared carriers как `file`.
-- Material deviations полностью сведены в generated item-state, status и closure views.
-- Третий audit не запускался; close gate: `allow`, owner decision D12.
+- P1.1 inventory deliverables созданы; declared validation и full reviewer зелёны.
+- Inventory классифицирует registered roots и plans, фиксирует migration order и fail-closed blockers.
+- Pre-final воспроизведён как `block:ACCEPTANCE_NOT_PUBLIC`; isolated reviewer вернул `JUSTIFIED`, reducer — `terminal-block / BLOCK_CONFIRMED`.
 
 **Remaining:**
 
-- P1–P6 не начаты; следующий stable batch — B-P1-CUTOVER.
+- P1.1 заблокирован до redesign acceptance carrier; P1.2–P1.3 не начинались.
 
 **Sources of truth:**
 
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.md` — final audits и phase handoff.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/decisions/D12-audit-cap-remediation.md` — owner decision.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/phases/P0/P0.closed.md` — generated closure.
-- `plans/2026.08.12-№1-TASK-RESILIENCE/findings/01-current-runtime-verification.md` — repaired current-runtime evidence.
-- `packages/task/lib/task/plan_gates.py` и `packages/task/tests/test_plan_gates.py` — runtime и regression coverage.
+- `phases/P1/P1.1.md` — stable item spec и escalation marker.
+- `phases/P1/P1.1.state.md` — generated terminal state.
+- `findings/03-layout-v1-cutover-inventory.md` — inventory verdict, environment defects и return evidence.
+- `artifacts/P1/active-layout-inventory-v1.json` — machine-readable fleet snapshot.
+- `journal.jsonl` — append-only attempt, repair, block-candidate и terminal evidence.
 
 **Open risks:**
 
-- Полный `packages/task/scripts/validate.sh` остаётся RED ровно на pre-existing historical
-  `plans/archive/**` debt: 7 ERROR / 252 WARN; Task unit suite 839 passed, 1 skipped.
+- P1.1 Validation текст с `>/dev/null` классифицируется `task_contract` как internal; pre-final не даёт `allow`.
+- Aggregate Task validation красна на dependency-not-ready carriers P1.2/P1.3 и pre-existing archive lint debt; unit suite зелёный.
+- Post-terminal return-loop projection даёт provisional first-occurrence `local-fix`; terminal authorization получена от отдельного continue-first block reducer по закрытому capsule.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: historical `plans/archive/**` lint debt вне P0 и явного owner scope.
-- Open questions: —
+- Deferred: P1.2–P1.3 до terminal repair P1.1; historical archive lint debt вне Files P1.1.
+- Open questions: выбрать owning repair — изменить Validation carrier или исправить `task_contract` classification в отдельном item.

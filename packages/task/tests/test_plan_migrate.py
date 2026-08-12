@@ -239,6 +239,28 @@ class PlanMigrateTests(unittest.TestCase):
             plan_migrate.migrate_safely(
                 self.source, dry_run=True, output=self.root / "unknown", policy_path=policy)
 
+    def test_already_v2_admission_moves_legacy_volatile_meta(self):
+        migrated = self.root / "first" / self.source.name
+        plan_migrate.migrate_safely(self.source, dry_run=True, output=migrated)
+        plan_path = migrated / "plan.md"
+        plan_path.write_text(plan_path.read_text(encoding="utf-8").replace(
+            "| Layout | v2 |",
+            "| Version | 9.8.7 |\n| Last Updated | 2026-08-12 |\n| Layout | v2 |",
+        ), encoding="utf-8")
+        policy = self._write_policy(migrated, ("already-v2-admission",))
+        output = self.root / "second" / self.source.name
+
+        plan_migrate.migrate_safely(
+            migrated, dry_run=True, output=output, policy_path=policy)
+
+        rendered = (output / "plan.md").read_text(encoding="utf-8")
+        self.assertNotIn("| Version |", rendered)
+        self.assertNotIn("| Last Updated |", rendered)
+        self.assertIn("<!-- migration-version:", rendered)
+        diag = plan_lint.Diagnostics()
+        plan_lint.lint_plan(output, diag)
+        self.assertEqual(diag.errors, [])
+
     def test_controlled_apply_rolls_back_byte_exact_on_post_write_failure(self):
         classes = ("current-state-import", "read-budget-carrier", "semantic-handoff")
         policy = self._write_policy(self.source, classes)

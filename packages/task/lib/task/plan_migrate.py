@@ -294,6 +294,36 @@ def _render_core(text: str, meta: list[tuple[str, str]], *, compatibility: bool 
     return "\n".join(sections).rstrip() + "\n"
 
 
+def _normalize_existing_v2_meta(plan_dir: Path) -> None:
+    """Move legacy volatile Meta rows out of an already-v2 core document."""
+    path = plan_dir / "plan.md"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        start = lines.index("## 0. Meta") + 1
+    except ValueError as exc:
+        raise MigrationError("already-v2 plan.md не содержит секцию Meta") from exc
+    end = next(
+        (index for index in range(start, len(lines)) if lines[index].startswith("## ")),
+        len(lines),
+    )
+    kept = []
+    legacy_version = None
+    for line in lines[start:end]:
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if line.startswith("|") and len(cells) == 2 and cells[0] in _MOVED_META:
+            if cells[0] == "Version":
+                legacy_version = cells[1]
+            continue
+        kept.append(line)
+    if legacy_version and not any(
+            line.strip().startswith("<!-- migration-version:") for line in kept):
+        while kept and not kept[-1]:
+            kept.pop()
+        kept.extend((f"<!-- migration-version: {legacy_version} -->", ""))
+    path.write_text("\n".join((*lines[:start], *kept, *lines[end:])).rstrip() + "\n",
+                    encoding="utf-8")
+
+
 def _blocked_journal_items(plan_dir: Path) -> set[str]:
     """Return items whose last durable event projects to a blocked state.
 
@@ -687,6 +717,8 @@ def _admit_existing_v2(plan_dir: Path, *, inventory_path: Path,
         raise MigrationError("v2-план не проходит инвентарь или замер миграции")
     source_archive = _verify_source_archive(plan_dir)
     if policy_context is not None:
+        if _policy_has(policy_context, "already-v2-admission"):
+            _normalize_existing_v2_meta(plan_dir)
         archive = plan_dir / _SOURCE_ARCHIVE_RELATIVE
         phase_paths = sorted((archive / "phases").glob("P*.md"))
         phases = [_phase_source(path, compatibility=True) for path in phase_paths]

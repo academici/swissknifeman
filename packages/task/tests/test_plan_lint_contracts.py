@@ -208,9 +208,9 @@ class TestCheckpointedGate83(TmpPlanTestCase):
         (plan_dir / "plan.md").write_text(
             plan_md(plan_dir.name, closure_protocol=closure_protocol),
             encoding="utf-8")
-        text = phase_md(item_status=item_status).replace(
-            "**Pending Work:** —", f"**Pending Work:** {pending_work}")
-        write_v2_phase_from_legacy(plan_dir, text)
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(
+                item_status=item_status, pending_work=pending_work))
         return plan_dir
 
     def test_a_blocked_with_resume_command_passes(self):

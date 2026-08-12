@@ -6,6 +6,8 @@
   Runtime readers, migrator, policy schema and compatibility commands are removed; missing/v1
   plans fail with `PLAN_LAYOUT_V1_RETIRED`. Canonical fixtures and provider projections are v2-only,
   while terminal bundles remain schema-checked historical evidence without live source re-resolution.
+  Phase-audit receipts bind the latest persisted audit launch block instead of a stale handoff, and
+  canonical Batch-first launch tables are accepted by the same lint gate that publishes them.
 
 - **`task`: fleet v1→v2 migration получил frozen admission policy и controlled apply.**
   Closed defect classes, full-tree preimage digests, byte-exact source archive, current-state/

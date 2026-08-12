@@ -44,6 +44,108 @@ def file_digest(path) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
+def _route_from_lines(lines: list[str]) -> dict:
+    route = {"batch": None, "model": None, "thinking": None, "context": None, "command": None}
+    rows = []
+    for line in lines:
+        if not line.strip().startswith("|"):
+            continue
+        cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+        if cells and not all(set(cell) <= {":", "-"} for cell in cells):
+            rows.append(cells)
+    keyed = {row[0]: row[1] for row in rows if len(row) == 2}
+    route.update({
+        "batch": keyed.get("Batch"),
+        "model": keyed.get("Model"),
+        "thinking": keyed.get("Thinking"),
+        "context": keyed.get("Context"),
+        "command": keyed.get("Команда"),
+    })
+    for index, header in enumerate(rows[:-1]):
+        if not {"Model", "Thinking", "Context", "Суть", "Команда"}.issubset(header):
+            continue
+        values = rows[index + 1]
+        if len(values) != len(header):
+            continue
+        row = dict(zip(header, values))
+        route.update({
+            "batch": row.get("Batch"),
+            "model": row.get("Model"),
+            "thinking": row.get("Thinking"),
+            "context": row.get("Context"),
+            "rationale": row.get("Суть"),
+            "command": row.get("Команда"),
+        })
+        break
+    return route
+
+
+def _latest_event(plan_dir: Path) -> dict | None:
+    path = plan_layout.carrier_path(plan_dir, "journal")
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return None
+    latest = None
+    for raw in rows:
+        if not raw.strip():
+            continue
+        try:
+            event = json.loads(raw)
+            journal.validate_entry(event)
+        except (json.JSONDecodeError, journal.JournalValidationError):
+            continue
+        latest = event
+    return latest
+
+
+def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
+    if not _PHASE_RE.fullmatch(subject):
+        return None
+    event = _latest_event(plan_dir)
+    if not event or (event.get("item_id") != subject
+                     or event.get("command") != "plan-audit"
+                     or event.get("result") not in {"audit-green", "audit-attention", "audit-red"}):
+        return None
+    path = plan_layout.phase_path(plan_dir, subject)
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"audit carrier не читается: {exc}") from exc
+    starts = [index for index, line in enumerate(lines) if line.startswith(f"## Audit {subject} ")]
+    if not starts:
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"для {subject} нет audit block")
+    start = starts[-1]
+    end = next((index for index in range(start + 1, len(lines))
+                if lines[index].startswith("## Audit ")), len(lines))
+    launch = next((index for index in range(start, end)
+                   if lines[index].strip() == "### Что запускать"), None)
+    if launch is None:
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "в latest audit block нет «Что запускать»")
+    body = lines[launch + 1:end]
+    route = _route_from_lines(body)
+    next_exact = route.get("command")
+    if not next_exact or next_exact == "—":
+        in_fence = False
+        for line in body:
+            if line.strip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence and line.strip().startswith(("$ task:", "/task:")):
+                next_exact = line.strip()
+                break
+    if not next_exact or next_exact == "—":
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "latest audit launch block не несёт команду")
+    recommendation = f"**Next:** {next_exact}\n\n" + "\n".join(body).strip()
+    return {
+        "next_exact": next_exact,
+        "recommendation": recommendation,
+        "route": route,
+        "rationale": {"remaining": None, "open_risks": None},
+        "digest": file_digest(path),
+    }
+
+
 def _handoff(plan_dir: Path) -> dict:
     path = plan_dir / "handoff.md"
     try:
@@ -63,28 +165,7 @@ def _handoff(plan_dir: Path) -> dict:
     if not recommendation:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "recommendation пуста")
 
-    route = {"batch": None, "model": None, "thinking": None, "context": None, "command": None}
-    rows = []
-    for line in lines[start:end]:
-        if not line.strip().startswith("|"):
-            continue
-        cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
-        if cells and not all(set(cell) <= {":", "-"} for cell in cells):
-            rows.append(cells)
-    keyed = {row[0]: row[1] for row in rows if len(row) == 2}
-    route.update({
-        "batch": keyed.get("Batch"),
-        "model": keyed.get("Model"),
-        "thinking": keyed.get("Thinking"),
-        "context": keyed.get("Context"),
-        "command": keyed.get("Команда"),
-    })
-    for index, row in enumerate(rows[:-1]):
-        if row == ["Model", "Thinking", "Context", "Суть", "Команда"]:
-            values = rows[index + 1]
-            if len(values) == 5:
-                route.update(dict(zip(("model", "thinking", "context", "rationale", "command"), values)))
-            break
+    route = _route_from_lines(lines[start:end])
 
     def field(name):
         prefix = f"**{name}:**"
@@ -166,8 +247,8 @@ def _closure_digest(plan_dir: Path, phase_id: str) -> str | None:
 
 def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: str,
                   state_digest: str | None, closure_digest: str | None,
-                  terminal: dict | None) -> dict:
-    handoff = _handoff(plan_dir)
+                  terminal: dict | None, prefer_audit: bool = False) -> dict:
+    handoff = (_audit_handoff(plan_dir, subject) if prefer_audit else None) or _handoff(plan_dir)
     return {
         "schema_version": schema_version,
         "plan_id": plan_dir.name,
@@ -194,6 +275,7 @@ def build_handoff_receipt(plan_dir, subject: str) -> dict:
         plan_dir, subject,
         schema_version="handoff-recommendation-receipt/v1",
         status="handoff-persisted", state_digest=None, closure_digest=None, terminal=None,
+        prefer_audit=True,
     )
 
 

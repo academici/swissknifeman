@@ -74,6 +74,33 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_handoff_receipt(plan, "design")
         self.assertEqual(receipt["route"]["batch"], "B1")
 
+    def test_phase_audit_receipt_prefers_latest_audit_launch_block(self):
+        plan = write_valid_plan(self.root, "DEMO-AUDIT", layout="v2")
+        phase = plan / "phases" / "P1" / "P1.md"
+        phase.write_text(
+            phase.read_text(encoding="utf-8")
+            + "\n## Audit P1 — 2026-08-12\n\n**Вердикт: RED**\n\n"
+            "### Что запускать\n\n"
+            "| Batch | Model | Thinking | Context | Суть | Команда |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| repair | frontier | high | `cold-start-root: audit-root-terminal` | fix | "
+            "`$ task:plan-run DEMO-AUDIT P1.1` |\n\n"
+            "```text\n$ task:plan-run DEMO-AUDIT P1.1\n\n"
+            "РЕЖИМ: bounded audit repair-forward\nВХОД: audit\nСКОУП: fix\nНЕ ТРОГАТЬ: other\n```\n",
+            encoding="utf-8",
+        )
+        journal.append(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1", command="plan-audit",
+            actor="frontier/xhigh", result="audit-red", session_id="session-audit",
+            fingerprint="b" * 64,
+        ))
+        receipt = plan_delivery.build_handoff_receipt(plan, "P1")
+        self.assertEqual(receipt["next_exact"], "$ task:plan-run DEMO-AUDIT P1.1")
+        self.assertEqual(receipt["route"]["batch"], "repair")
+        self.assertEqual(receipt["route"]["model"], "frontier")
+        self.assertIn("РЕЖИМ: bounded audit repair-forward", receipt["recommendation"])
+        self.assertEqual(receipt["digests"]["handoff"], plan_delivery.file_digest(phase))
+
     def test_stale_handoff_recommendation_is_rejected(self):
         plan = self._terminal_plan()
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")

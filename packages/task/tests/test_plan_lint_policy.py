@@ -414,6 +414,23 @@ class TestAuditScopePayload(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
 
+    def test_batch_first_horizontal_launch_table_is_clean(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        phase = phase_index_path(plan_dir)
+        phase.write_text(
+            phase.read_text(encoding="utf-8")
+            + "\n## Audit P1 — 2026-07-17\n\n**Вердикт: RED**\n\n"
+            "### Что запускать\n\n"
+            "| Batch | Model | Thinking | Context | Суть | Команда |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| repair | frontier | high | cold-start-root | fix | `$ task:plan-run 2026.07.16-DEMO P1.1` |\n\n"
+            "```text\n$ task:plan-run 2026.07.16-DEMO P1.1\n\n"
+            "РЕЖИМ: bounded audit repair-forward\nВХОД: audit\nСКОУП: fix\nНЕ ТРОГАТЬ: other\n```\n",
+            encoding="utf-8",
+        )
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
+
     def test_green_does_not_require_payload(self):
         """GREEN находок не несёт — payload'а не требуем (иначе маркеры = ритуал)."""
         plan_dir = self._write_audit("2026.07.16-DEMO", "GREEN", "")
@@ -542,9 +559,9 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
     def _write(self, *, updated, item_status="🟢 Done",
                completion_notes="сделано, тест зелёный"):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status=item_status, completion_notes=completion_notes,
-                               updated=updated))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(
+                item_status=item_status, completion_notes=completion_notes))
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["ts"] = f"{updated}T00:00:00Z"
@@ -821,8 +838,8 @@ class TestClosureReports81(TmpPlanTestCase):
         """Нетерминальная фаза отчёта не обязана иметь — правило forward-only по СТАТУСУ
         фазы, а не «каждая фаза плана с включённым протоколом»."""
         plan_dir = self._plan(phase_status="🟡 In progress")
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "отчёта закрытия нет"), [])
 

@@ -39,9 +39,9 @@ class TestNextFormsEnum(TmpPlanTestCase):
 
     def test_plan_audit_nonterminal_phase_warns(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
-                               handoff_text="—"))
+        write_v2_carriers(
+            plan_dir, phase_index=phase_index_md(handoff_text="—"),
+            item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("не терминальна" in w for w in diag.warnings), diag.warnings)
@@ -74,9 +74,9 @@ class TestNextFormsEnum(TmpPlanTestCase):
 
     def test_plan_close_archive_form_warns_when_not_closed(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
-                               handoff_text="—"))
+        write_v2_carriers(
+            plan_dir, phase_index=phase_index_md(handoff_text="—"),
+            item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         self._next(plan_dir, "/task:plan-close archive DEMO-1")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("план ещё не терминален целиком" in w for w in diag.warnings), diag.warnings)
@@ -237,8 +237,8 @@ class TestNextDeclarationLine(TmpPlanTestCase):
 
     def _activate_item(self, plan_dir):
         """Делает единственный item 🟡 (план перестаёт быть терминальным целиком)."""
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
 
     def _sut(self, plan_dir, next_decl, sut_cell):
         """Переписывает handoff: объявление формы + ячейка «Суть» launch-block'а."""
@@ -463,12 +463,13 @@ class TestWarnings(TmpPlanTestCase):
     def test_phase_first_warning(self):
         from task import plan_bundle, plan_decisions, plan_item_state, plan_status
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md("P1", item_id="P1.1", item_status="⬜ Not started",
-                               completion_notes="—", known_deviations="—"))
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md("P2", item_id="P2.1", item_status="🟡 In progress",
-                               completion_notes="—", known_deviations="—"), phase_id="P2")
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(
+                item_status="⬜ Not started", completion_notes="—"), refresh_views=False)
+        write_v2_carriers(
+            plan_dir, phase_id="P2", item_id="P2.1",
+            item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"),
+            refresh_views=False)
         journal = plan_dir / "journal.jsonl"
         event = json.loads(journal.read_text(encoding="utf-8"))
         event.update({"item_id": "P2.1", "result": "in-progress", "note": None})
@@ -485,9 +486,11 @@ class TestWarnings(TmpPlanTestCase):
 
     def test_empty_required_reads_warning_for_active_item(self):
         plan_dir = write_valid_plan(self.root)
-        text = phase_md(item_status="🟡 In progress", completion_notes="—").replace(
+        spec = item_spec_md().replace(
             "**Required Reads:** 1) lib/pkg/config.py", "**Required Reads:** —")
-        write_v2_phase_from_legacy(plan_dir, text)
+        write_v2_carriers(
+            plan_dir, item_spec=spec,
+            item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(any("пустые Required Reads" in w for w in diag.warnings))
@@ -619,9 +622,9 @@ class TestPlansRoot(TmpPlanTestCase):
         # дефолт фикстуры — Meta Status «🟢 Done»; переводим оба плана в «🟡 In progress»
         # (только Meta-строку — консистентность items/board эта проверка не трогает).
         for pid in ("DEMO-1", "DEMO-2"):
-            write_v2_phase_from_legacy(
+            write_v2_carriers(
                 self._plans_root() / pid,
-                phase_md(item_status="🟡 In progress", completion_notes="—"))
+                item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])

@@ -111,7 +111,7 @@ class TestPlanMdStructure(TmpPlanTestCase):
     def test_missing_plan_md(self):
         plan_dir = self.root / "plans" / "DEMO-1"
         (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(legacy_phase_md(), encoding="utf-8")
         (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -168,8 +168,8 @@ class TestPhaseBoardCorrespondence(TmpPlanTestCase):
 
     def test_phase_file_without_board_row(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md("P2", item_id="P2.1"), phase_id="P2", refresh_views=False)
+        write_v2_carriers(
+            plan_dir, phase_id="P2", item_id="P2.1", refresh_views=False)
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "фаза P2 есть как"))
@@ -231,18 +231,18 @@ class TestItemHeaderAndFields(TmpPlanTestCase):
 class TestCompletionAndDeviations(TmpPlanTestCase):
     def test_done_without_completion_notes(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟢 Done", completion_notes="—"))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(item_status="🟢 Done", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "требует непустых Completion Notes"))
 
     def test_deviations_without_known_deviations(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟠 Done with deviations",
-                               completion_notes="сделано с оговоркой",
-                               known_deviations="—"))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(
+                item_status="🟠 Done with deviations",
+                completion_notes="сделано с оговоркой", known_deviations="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "требует непустых Known Deviations"))
@@ -252,11 +252,14 @@ class TestEscalationConsistency(TmpPlanTestCase):
     def _write(self, item_status, escalation_needed, extra_blockquote=None,
                completion_notes="—", known_deviations="—"):
         plan_dir = write_valid_plan(self.root)
-        text = phase_md(item_status=item_status, escalation_needed=escalation_needed,
-                         completion_notes=completion_notes, known_deviations=known_deviations)
+        spec = item_spec_md()
         if extra_blockquote:
-            text = text.replace("## Phase Handoff", f"{extra_blockquote}\n\n## Phase Handoff")
-        write_v2_phase_from_legacy(plan_dir, text)
+            spec = spec.rstrip() + f"\n\n{extra_blockquote}\n"
+        write_v2_carriers(
+            plan_dir, item_spec=spec,
+            item_state=item_state_md(
+                item_status=item_status, escalation_needed=escalation_needed,
+                completion_notes=completion_notes, known_deviations=known_deviations))
         return plan_dir
 
     def test_blocked_without_escalation_block_or_flag(self):
@@ -343,14 +346,13 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
 
     def test_blocked_item_but_board_status_not_blocked(self):
         plan_dir = write_valid_plan(self.root)
-        text = phase_md(item_status="🔴 Blocked", escalation_needed="yes",
-                         completion_notes="—", known_deviations="—")
-        text = text.replace(
-            "## Phase Handoff",
-            "> 🔴 ESCALATION P1.1: причина | trigger: неясная архитектура | "
-            "нужен: plan-design\n\n## Phase Handoff",
-        )
-        write_v2_phase_from_legacy(plan_dir, text)
+        spec = item_spec_md().rstrip() + (
+            "\n\n> 🔴 ESCALATION P1.1: причина | trigger: неясная архитектура | "
+            "нужен: plan-design\n")
+        write_v2_carriers(
+            plan_dir, item_spec=spec,
+            item_state=item_state_md(
+                item_status="🔴 Blocked", escalation_needed="yes", completion_notes="—"))
         status = plan_dir / "status.md"
         status.write_text(status.read_text(encoding="utf-8").replace(
             "| P1 | Фаза раз | 0/1 | 🔴 Blocked |",
@@ -363,7 +365,7 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
 class TestPhaseHandoffGating(TmpPlanTestCase):
     def test_done_phase_with_empty_phase_handoff(self):
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(plan_dir, phase_md(handoff_text="—"))
+        write_v2_carriers(plan_dir, phase_index=phase_index_md(handoff_text="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "Phase Handoff» пуст"))
@@ -389,9 +391,9 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
     def _write_reopened_phase(self, handoff_text):
         """Фаза 🟡 (реопенена: item снова в работе) с заданным `## Phase Handoff`."""
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—",
-                               handoff_text=handoff_text))
+        write_v2_carriers(
+            plan_dir, phase_index=phase_index_md(handoff_text=handoff_text),
+            item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         return plan_dir
 
     def _stale_warnings(self, diag):
@@ -607,8 +609,8 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_closed_rejected_when_items_active(self):
         # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
         plan_dir = write_valid_plan(self.root)
-        write_v2_phase_from_legacy(
-            plan_dir, phase_md(item_status="🟡 In progress", completion_notes="—"))
+        write_v2_carriers(
+            plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
         text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт.")

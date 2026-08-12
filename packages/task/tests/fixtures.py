@@ -1,8 +1,4 @@
-"""Фикстуры-шаблоны plan-протокола для unittest: строки plan.md/phases/Pn.md/handoff.md
-байт-в-байт по `packages/skiller/skills/general/plan-protocol/snippets/*-template.md`
-(один item на фазу — минимум, покрывающий все обязательные секции/поля). Тесты
-мутируют эти строки точечными `.replace(...)`, чтобы получить один конкретный дефект
-на кейс (не пересобирают шаблон руками — меньше шанса случайно сломать НЕ то поле)."""
+"""Explicit Layout-v2 plan fixtures plus one isolated retired-layout rejection fixture."""
 import sys
 from pathlib import Path
 
@@ -113,10 +109,8 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 """
 
 
-def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
-             completion_notes="сделано, тест зелёный", known_deviations="—",
-             escalation_needed="—", handoff_text="Фаза сдана: всё зелёное.",
-             updated="2026-07-02"):
+def legacy_phase_md(phase_id="P1", *, item_id="P1.1"):
+    """Return the one explicit retired-layout fixture used by rejection tests."""
     return f"""# {phase_id} — Фаза раз
 
 ## Phase Context
@@ -127,11 +121,11 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {item_id} | Валидация конфига | {item_status} | {updated} |
+| {item_id} | Валидация конфига | 🟢 Done | 2026-07-02 |
 
 ### {item_id} — Валидация конфига
 
-**Status:** {item_status}
+**Status:** 🟢 Done
 **Intent:** Добавить проверку.
 **Why:** Диагностика дорогая.
 **Scope Included:** load_config().
@@ -143,14 +137,14 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 **Code Guidance:** ручная проверка dict-ключей.
 **Validation:** bash scripts/test.sh — зелёный.
 **Deliverables:** валидация + тест.
-**Completion Notes:** {completion_notes}
+**Completion Notes:** сделано, тест зелёный
 **Pending Work:** —
-**Known Deviations:** {known_deviations}
-**Escalation Needed:** {escalation_needed}
+**Known Deviations:** —
+**Escalation Needed:** —
 
 ## Phase Handoff
 
-{handoff_text}
+Фаза сдана: всё зелёное.
 """
 
 
@@ -186,10 +180,10 @@ def item_spec_md(item_id="P1.1"):
 
 
 def item_state_md(*, item_status="🟢 Done", completion_notes="сделано, тест зелёный",
-                  known_deviations="—", escalation_needed="—"):
+                  pending_work="—", known_deviations="—", escalation_needed="—"):
     return f"""**Status:** {item_status}
 **Completion Notes:** {completion_notes}
-**Pending Work:** —
+**Pending Work:** {pending_work}
 **Known Deviations:** {known_deviations}
 **Escalation Needed:** {escalation_needed}
 """
@@ -212,82 +206,42 @@ def item_state_path(plan_dir, item_id="P1.1"):
     return Path(plan_dir) / "phases" / phase_id / f"{item_id}.state.md"
 
 
-def write_v2_phase_from_legacy(plan_dir, text, *, phase_id="P1", refresh_views=True):
-    """Split a legacy combined phase fixture into the canonical v2 test carriers.
-
-    This is a test migration adapter, not a runtime compatibility path.  It lets
-    focused tests keep expressing one malformed semantic condition with the old
-    compact builder while every executable fixture on disk remains Layout v2.
-    """
-    import re
-
+def write_v2_carriers(plan_dir, *, phase_id="P1", item_id=None, item_spec=None,
+                      item_state=None, phase_index=None, refresh_views=True):
+    """Write explicit Layout-v2 carriers without parsing a retired monolith."""
     plan_dir = Path(plan_dir)
+    item_id = item_id or f"{phase_id}.1"
     phase_dir = plan_dir / "phases" / phase_id
     phase_dir.mkdir(parents=True, exist_ok=True)
-    item_match = re.search(r"(?ms)^### (P\d+\.\d+) — .+?(?=^## Phase Handoff\s*$|\Z)", text)
-    if item_match:
-        item_block = item_match.group(0).replace(
-            "**Inputs:** список ключей.", "**Inputs:** `lib/pkg/config.py`.").rstrip() + "\n"
-        item_id = item_match.group(1)
-        lines = item_block.splitlines()
-        spec_fields = set(("Intent", "Why", "Scope Included", "Scope Excluded", "Inputs",
-                           "Files", "Required Reads", "Implementation Rules", "Code Guidance",
-                           "Validation", "Deliverables"))
-        state_fields = set(("Status", "Completion Notes", "Pending Work", "Known Deviations",
-                            "Escalation Needed"))
-        spec = [lines[0], ""]
-        state = []
-        extras = []
-        last_target = None
-        for line in lines[1:]:
-            field = re.match(r"^\*\*([^*]+):\*\*", line)
-            if field and field.group(1) in spec_fields:
-                spec.append(line)
-                last_target = spec
-            elif field and field.group(1) in state_fields:
-                state.append(line)
-                last_target = state
-            elif line.startswith(">"):
-                extras.append(line)
-            elif line.strip() and not field:
-                (last_target if last_target is not None else extras).append(line)
-        if extras:
-            spec.extend(("", *extras))
-        (phase_dir / f"{item_id}.md").write_text("\n".join(spec).rstrip() + "\n", encoding="utf-8")
-        (phase_dir / f"{item_id}.state.md").write_text(
-            "\n".join(state).rstrip() + "\n", encoding="utf-8")
-
-    context = re.search(r"(?ms)^## Phase Context\s*\n(.*?)(?=^## |^### |\Z)", text)
-    handoff = re.search(r"(?ms)^## Phase Handoff\s*\n(.*?)(?=^## |\Z)", text)
-    title = next((line for line in text.splitlines() if line.startswith("# ")), f"# {phase_id} — Фаза")
-    index = (f"{title}\n\n## Phase Context\n\n"
-             f"{(context.group(1).strip() if context else '')}\n\n"
-             f"## Phase Handoff\n\n{(handoff.group(1).strip() if handoff else '')}\n")
-    (phase_dir / f"{phase_id}.md").write_text(index, encoding="utf-8")
+    (phase_dir / f"{phase_id}.md").write_text(
+        phase_index or phase_index_md(phase_id), encoding="utf-8")
+    (phase_dir / f"{item_id}.md").write_text(
+        item_spec or item_spec_md(item_id), encoding="utf-8")
+    (phase_dir / f"{item_id}.state.md").write_text(
+        item_state or item_state_md(), encoding="utf-8")
 
     if refresh_views:
-        try:
-            import json as _json
-            from task import plan_bundle, plan_decisions, plan_item_state, plan_status
-            status_value = next((line.split(":**", 1)[1].strip() for line in state
-                                 if line.startswith("**Status:**")), "") if item_match else ""
-            if status_value == "🟡 In progress":
-                journal_path = plan_dir / "journal.jsonl"
-                entries = [_json.loads(row) for row in journal_path.read_text(
-                    encoding="utf-8").splitlines() if row.strip()]
-                entries[-1]["result"] = "in-progress"
-                entries[-1]["note"] = None
-                journal_path.write_text("".join(
-                    _json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
-                    for entry in entries), encoding="utf-8")
-                plan_item_state.build_states(plan_dir, item_id=item_match.group(1))
-            plan_decisions.build_views(plan_dir)
-            plan_status.build_status(plan_dir)
-            if item_match:
-                plan_bundle.build(plan_dir, item_match.group(1))
-        except Exception:
-            # Malformed fixtures intentionally exercise the owning linter error.
-            pass
+        from task import plan_bundle, plan_decisions, plan_item_state, plan_status
+        state_text = item_state or item_state_md()
+        if "**Status:** 🟡 In progress" in state_text:
+            import json
+
+            journal_path = plan_dir / "journal.jsonl"
+            entries = [json.loads(row) for row in journal_path.read_text(
+                encoding="utf-8").splitlines() if row.strip()]
+            entries[-1].update({
+                "plan_id": plan_dir.name,
+                "item_id": item_id,
+                "result": "in-progress",
+                "note": None,
+            })
+            journal_path.write_text("".join(
+                json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
+                for entry in entries), encoding="utf-8")
+            plan_item_state.build_states(plan_dir, item_id=item_id)
+        plan_decisions.build_views(plan_dir)
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, item_id)
     return phase_dir
 
 
@@ -475,7 +429,7 @@ def write_valid_plan(root, plan_id="DEMO-1", *, layout="v2"):
         phase_path.write_text(phase_index_md(), encoding="utf-8")
         (phase_path.parent / "P1.1.md").write_text(item_spec_md(), encoding="utf-8")
     else:
-        phase_path.write_text(phase_md(), encoding="utf-8")
+        phase_path.write_text(legacy_phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
     (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")

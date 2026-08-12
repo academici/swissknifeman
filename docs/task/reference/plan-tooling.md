@@ -65,7 +65,7 @@ Claude adapter — отдельная additive provider projection.
 Обычный `plan-lint.py plans/<ID>` применяет frozen `read-budget` v1 только к плану с
 `Layout | v2`. Для каждого `ready` item он отказывает при превышении D2(a), нечитаемом или
 нерезолвленном обязательном входе и файле, превышающем любой из двух лимитов чтения. Отсутствие
-калибровки, `read-limit` или plan-owned threshold contract также является ERROR; layout v1 не
+калибровки, `read-limit` или plan-owned threshold contract также является ERROR; retired layout не
 получает ни opt-in, ни warning-ветви. Детали диагностик и владельцы вычислений —
 [`plan-read-budget-gate.md`](plan-read-budget-gate.md).
 

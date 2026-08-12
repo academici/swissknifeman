@@ -1,8 +1,8 @@
 # Plan layout v2
 
-`task.plan_layout` is the sole resolver for the two executable-plan layouts.
+`task.plan_layout` is the sole resolver for the executable-plan layout.
 The frozen registry and read-path specification are copied byte-for-byte to
-`packages/task/configs/`; missing `Layout` means v1. A v2 plan must declare
+`packages/task/configs/`; every executable plan must declare
 `Layout: v2` in Meta and keeps a phase at `phases/Pn/Pn.md`; item specifications
 and state resolve to `phases/Pn/Pn.m.md` and `phases/Pn/Pn.m.state.md`.
 
@@ -51,32 +51,11 @@ writing. Existing journal bytes remain immutable and schema-valid; when an
 owner-facing `Что` cell would exceed 300 characters, the projector renders a
 deterministic `journal.jsonl:<line>` pointer to the full source row instead.
 
-## Migrating a plan
+## Retired layout
 
-`plan-migrate.py` deterministically converts a legacy v1 plan to v2. In-place
-migration is deliberately restricted to the approved self-host plan; every
-other source may only be read through an explicit dry run and a new output
-directory. Git remains the rollback mechanism.
-
-```bash
-# approved self-host plan only
-python3 packages/task/scripts/plan-migrate.py plans/<SELF-HOST-PLAN>
-
-# any other plan: source stays byte-identical
-python3 packages/task/scripts/plan-migrate.py plans/<SOURCE> --dry-run --output /tmp/<projection>
-```
-
-The converter writes a generated migration inventory, before/after read-weight
-evidence, and `artifacts/migration-source-v1/`: a byte-identical copy of the
-complete legacy plan tree plus a SHA-256 manifest. The source archive retains
-historical free-form plan sections and generated views with no v2 runtime carrier.
-A legacy source without `## Обсуждение` is valid: the inventory records that the
-optional carrier was absent and no replacement discussion file is invented. The
-append-only journal receives one deterministic Layout v2 activation event, allowing
-admission to distinguish historical outcomes from future work. When the final journal
-position is blocked, the projection materializes the required v2 escalation marker
-from that journal state. Re-running it on an already migrated plan must not change
-bytes; use the normal `plan-views ... --check` commands to verify generated carriers.
+Layout v1 is no longer accepted by the runtime. Its archive remains readable as inert history;
+for an executable historical plan, use the prior compatible release. The runtime never infers,
+migrates, or silently falls back from a missing Layout declaration.
 
 ## Item-state projection
 

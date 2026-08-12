@@ -334,12 +334,10 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
             "[REPOSITORY-OWNER-MESSAGE:grant-g-test] [OWNER-GRANT:G-TEST] "
             "branch=`go-branch`; scope=`finite-scope`; provenance=`repository-owner`\n",
             encoding="utf-8")
-        fixtures.write_v2_phase_from_legacy(
-            self.plan_dir, fixtures.phase_md().replace(
-                "**Required Reads:** 1) lib/pkg/config.py",
-                "**Required Reads:** 1) `lib/pkg/config.py`").replace(
-                "**Implementation Rules:** stdlib-only.",
-                "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition."))
+        spec = fixtures.item_spec_md().replace(
+            "**Implementation Rules:** stdlib-only.",
+            "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition.")
+        fixtures.write_v2_carriers(self.plan_dir, item_spec=spec)
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -694,7 +692,7 @@ class BuildFixtureTests(unittest.TestCase):
         self.assertEqual(len(contract["never"]), 1)
         self.assertEqual(contract["route"]["required"],
                          {"model_class": "implementation", "effort": "medium"})
-        self.assertEqual(contract["next"]["context"], "same-session — item")
+        self.assertEqual(contract["next"]["context"], "continue-root")
 
     def test_v2_phase_carrier_builds_through_layout_resolver(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -722,8 +720,7 @@ class BuildFixtureTests(unittest.TestCase):
     def test_missing_routing_row_fails_closed(self):
         # fixtures.plan_md() leaves §3 Routing empty; P1.1's default row was added in
         # setUp only for THIS plan.md, so an item absent from it (P1.2) has no row.
-        fixtures.write_v2_phase_from_legacy(
-            self.plan_dir, fixtures.phase_md(item_id="P1.2"))
+        fixtures.write_v2_carriers(self.plan_dir, item_id="P1.2", refresh_views=False)
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.2")
         self.assertEqual(ctx.exception.field, "Routing")
@@ -820,8 +817,7 @@ class RoutingFormTests(unittest.TestCase):
     def _write_phase_item(self, item_id):
         # `build()` parses the phase item BEFORE §3 Routing, so an item_id absent from
         # phases/P1.md would refuse on field `item` and never reach the branch under test.
-        fixtures.write_v2_phase_from_legacy(
-            self.plan_dir, fixtures.phase_md(item_id=item_id))
+        fixtures.write_v2_carriers(self.plan_dir, item_id=item_id, refresh_views=False)
 
     def _assert_comma_list_diagnostic(self, message, cell, item_id):
         self.assertIn("comma list", message)

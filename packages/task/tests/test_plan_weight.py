@@ -16,9 +16,9 @@ import unittest.mock
 from pathlib import Path
 
 try:  # пакетный запуск
-    from .fixtures import phase_md, write_valid_plan
+    from .fixtures import write_valid_plan
 except ImportError:  # прямой discovery из packages/task
-    from fixtures import phase_md, write_valid_plan
+    from fixtures import write_valid_plan
 
 import task.plan_weight as plan_weight  # noqa: E402
 from task import plan_bundle, plan_item_state  # noqa: E402

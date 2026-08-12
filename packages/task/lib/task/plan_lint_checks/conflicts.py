@@ -1,4 +1,7 @@
 """Canon-conflict and git-baseline checks for plan-lint."""
+from hashlib import sha256
+import json
+
 from .common import *
 from .policy import *
 from .parsing import *
@@ -6,15 +9,38 @@ from .engine import *
 
 
 SKILL_RELPATH = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
+RUNTIME_SKILL_RELPATH = Path("packages/task/runtime/plan-protocol/SKILL.md")
+RUNTIME_PROVENANCE_RELPATH = Path("packages/task/runtime/plan-protocol/provenance.json")
 
 
 def _find_skill():
-    """Найти EN-only canon SSOT (`SKILL.md`) от этого модуля вверх до корня монорепо."""
+    """Найти canon SSOT либо его digest-locked packaged projection.
+
+    В монорепо приоритет остаётся за handwritten canon `packages/skiller`.
+    Standalone Task может читать только собственную generated projection с точной
+    provenance-парой; произвольный sibling/cache search намеренно отсутствует.
+    """
     here = Path(__file__).resolve()
     for parent in here.parents:
         candidate = parent / SKILL_RELPATH
         if candidate.is_file():
             return candidate
+    for parent in here.parents:
+        runtime = parent / RUNTIME_SKILL_RELPATH
+        provenance = parent / RUNTIME_PROVENANCE_RELPATH
+        if not runtime.is_file() or not provenance.is_file():
+            continue
+        try:
+            payload = json.loads(provenance.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        expected = {
+            "canonical_source": SKILL_RELPATH.as_posix(),
+            "canonical_sha256": "sha256:" + sha256(runtime.read_bytes()).hexdigest(),
+        }
+        if payload == expected:
+            return runtime
+        return None
     return None
 
 

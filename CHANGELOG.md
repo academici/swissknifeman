@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: packaged plan-protocol projection makes standalone `--conflicts` fail closed.**
+  Generator-owned runtime carries canonical SHA-256 provenance; a missing or drifted projection
+  is rejected instead of searching arbitrary sibling or cache paths.
+
 - **`task`: phase close поддерживает узкий owner-authorized direct-green-validation путь.**
   Только accepted, phase-scoped и superseding decision с literal
   `phase-close: direct-green-validation` может обойти audit gate; default audit path и все

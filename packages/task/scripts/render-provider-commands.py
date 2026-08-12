@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
 import json
 import sys
 from pathlib import Path
@@ -34,6 +35,9 @@ from task.command_render import (  # noqa: E402
 
 _PARITY_FIXTURE = Path("packages/task/tests/fixtures_data/provider-command-parity.json")
 _OPERATOR_REFERENCE = Path("packages/task/docs/reference/provider-commands.md")
+_PLAN_PROTOCOL_SOURCE = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
+_PLAN_PROTOCOL_RUNTIME = Path("packages/task/runtime/plan-protocol/SKILL.md")
+_PLAN_PROTOCOL_PROVENANCE = Path("packages/task/runtime/plan-protocol/provenance.json")
 
 
 def _build_plans(root: Path):
@@ -57,6 +61,18 @@ def _build_plans(root: Path):
     return claude_plan, codex_plan, render_provider_commands_reference(report)
 
 
+def _plan_protocol_projection(root: Path) -> tuple[bytes, bytes]:
+    source = root / _PLAN_PROTOCOL_SOURCE
+    if not source.is_file():
+        raise FileNotFoundError(f"plan-protocol canon missing: {source}")
+    runtime = source.read_bytes()
+    provenance = json.dumps({
+        "canonical_source": _PLAN_PROTOCOL_SOURCE.as_posix(),
+        "canonical_sha256": "sha256:" + sha256(runtime).hexdigest(),
+    }, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    return runtime, provenance
+
+
 def _print_diagnostics(label: str, plan) -> None:
     for diagnostic in plan.diagnostics:
         print(f"{label}: {diagnostic.severity} {diagnostic.code} "
@@ -74,7 +90,13 @@ def cmd_check(root: Path, claude_plan, codex_plan, reference_bytes: bytes) -> in
     reference_path = root / _OPERATOR_REFERENCE
     reference_drift = (not reference_path.is_file()
                        or reference_path.read_bytes() != reference_bytes)
-    if not claude_drift and not codex_drift and not reference_drift:
+    runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
+    runtime_drift = tuple(
+        path for path, expected in ((root / _PLAN_PROTOCOL_RUNTIME, runtime_bytes),
+                                    (root / _PLAN_PROTOCOL_PROVENANCE, provenance_bytes))
+        if not path.is_file() or path.read_bytes() != expected
+    )
+    if not claude_drift and not codex_drift and not reference_drift and not runtime_drift:
         print("render-provider-commands: check OK (no-op)")
         return 0
     for path in claude_drift:
@@ -83,6 +105,8 @@ def cmd_check(root: Path, claude_plan, codex_plan, reference_bytes: bytes) -> in
         print(f"drift: codex {action.artifact_id} {action.action.value}", file=sys.stderr)
     if reference_drift:
         print(f"drift: operator-reference {_OPERATOR_REFERENCE}", file=sys.stderr)
+    for path in runtime_drift:
+        print(f"drift: plan-protocol-runtime {path.relative_to(root)}", file=sys.stderr)
     return 1
 
 
@@ -107,6 +131,12 @@ def cmd_write(root: Path, claude_plan, codex_plan, reference_bytes: bytes, *, re
     reference_path = root / _OPERATOR_REFERENCE
     reference_path.parent.mkdir(parents=True, exist_ok=True)
     reference_path.write_bytes(reference_bytes)
+    runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
+    runtime_path = root / _PLAN_PROTOCOL_RUNTIME
+    provenance_path = root / _PLAN_PROTOCOL_PROVENANCE
+    runtime_path.parent.mkdir(parents=True, exist_ok=True)
+    runtime_path.write_bytes(runtime_bytes)
+    provenance_path.write_bytes(provenance_bytes)
     written = len([action for action in codex_artifact_plan.actions
                   if action.action.value != "noop"])
     print(f"render-provider-commands: wrote {len(claude_plan.artifacts)} Claude artifact(s), "

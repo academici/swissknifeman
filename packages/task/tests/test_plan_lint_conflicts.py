@@ -4,6 +4,8 @@ try:
 except ImportError:
     from test_plan_lint_support import *
 import task.plan_lint_checks.conflicts as conflicts_module
+from hashlib import sha256
+import json
 
 
 class TestConflictsFlagUnits(unittest.TestCase):
@@ -170,6 +172,26 @@ class TestConflictsFlagLiveRepo(unittest.TestCase):
             run_conflicts_check(diag)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "canon plan-protocol"), diag.errors)
+
+    def test_digest_locked_runtime_projection_is_accepted_standalone_and_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runtime = root / conflicts_module.RUNTIME_SKILL_RELPATH
+            provenance = root / conflicts_module.RUNTIME_PROVENANCE_RELPATH
+            runtime.parent.mkdir(parents=True)
+            source = _find_skill().read_bytes()
+            runtime.write_bytes(source)
+            provenance.write_text(json.dumps({
+                "canonical_source": conflicts_module.SKILL_RELPATH.as_posix(),
+                "canonical_sha256": "sha256:" + sha256(source).hexdigest(),
+            }), encoding="utf-8")
+            staged_module = root / "packages/task/lib/task/plan_lint_checks/conflicts.py"
+            staged_module.parent.mkdir(parents=True)
+            staged_module.write_text("# locator anchor\n", encoding="utf-8")
+            with unittest.mock.patch.object(conflicts_module, "__file__", staged_module):
+                self.assertEqual(conflicts_module._find_skill(), runtime)
+                provenance.write_text("{}", encoding="utf-8")
+                self.assertIsNone(conflicts_module._find_skill())
 
     def test_main_conflicts_flag_exit_0(self):
         out, err = io.StringIO(), io.StringIO()

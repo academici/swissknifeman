@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.30.0
+version: 2.31.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write

@@ -154,7 +154,11 @@ def _validation_commands(value: str) -> list[str]:
             # RED result.
             continue
         commands.append(part.strip())
-    return commands
+    carriers = [command for command in commands
+                if re.search(r"docker/tests/p5\.\d+-[A-Za-z0-9_-]+\.sh(?:$|\s)", command)]
+    # P5 declares one executable, item-owned Docker carrier.  Treat every
+    # explanatory continuation as prose; a missing carrier remains unknown.
+    return carriers[:1] or commands
 
 
 def _command_cwd(command: str, repo_root: Path) -> Path:
@@ -250,7 +254,13 @@ def evaluate(plan_dir, producer_item: str, *, producer_commit: str = "HEAD", run
         commands = []
         applicable_count = 0
         consumer_red = False
-        for command in _validation_commands(consumer["validation"]):
+        selected = _validation_commands(consumer["validation"])
+        # A multi-fragment Validation without an explicit carrier is planning
+        # prose, not a command list.  Retain the one-command fixture form used
+        # by existing generic consumers.
+        if len(selected) > 1 and not any("docker/tests/p5." in command for command in selected):
+            selected = []
+        for command in selected:
             addressed = sorted(_command_paths(command, plan_dir=plan_dir, repo_root=repo_root))
             missing = [path for path in addressed if not _exists_in_tree(path, tree)]
             row = {"command": command, "addressed_paths": addressed,

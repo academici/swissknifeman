@@ -17,7 +17,7 @@ class ReturnError(ValueError):
 
 _ITEM = re.compile(r"^P\d+(?:\.\d+)?$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
-_NEGATIVE_RESULTS = frozenset(("blocked", "escalated", "audit-red"))
+_NEGATIVE_RESULTS = frozenset(("blocked", "escalated", "audit-red", "audit-attention"))
 _SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-fingerprint-v1.schema.json"
 _LOOP_SPEC = Path(__file__).resolve().parents[2] / "configs" / "return-loop-v1.spec.json"
 _JUDGEMENT_SCHEMA = Path(__file__).resolve().parents[2] / "configs" / "return-judgement-v1.schema.json"

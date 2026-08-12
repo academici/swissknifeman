@@ -85,22 +85,23 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertIn("-a never -s danger-full-access", codex_runtime)
         self.assertIn("do not reuse the preceding session's route", codex_runtime)
 
-    def test_plan_run_uses_fresh_native_launch_provenance_not_an_unavailable_provider_probe(self):
+    def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
         self.assertIn('source="cli-flag"', canonical)
         self.assertIn("route_evidence_codex.capture_current", canonical)
-        self.assertIn("ancestor process chain", canonical)
-        self.assertIn("свежем Codex", canonical)
-        self.assertIn("launch provenance", canonical)
-        self.assertNotIn('source="provider-doctor"', canonical)
-        self.assertNotIn('source="self-attested"', canonical)
 
         runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
             if artifact.path.endswith("/task-plan-run/command.md"))
+        self.assertIn('source="provider-thread-state"', runtime)
+        self.assertIn("codex-turn-context-v1", runtime)
+        self.assertIn("CODEX_THREAD_ID", runtime)
+        self.assertIn("Codex clear command", runtime)
+        self.assertIn("compatibility fallback", runtime)
         self.assertIn('source="cli-flag"', runtime)
         self.assertIn("route_evidence_codex.capture_current", runtime)
         self.assertNotIn('source="provider-doctor"', runtime)
+        self.assertNotIn('source="self-attested"', runtime)
 
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (

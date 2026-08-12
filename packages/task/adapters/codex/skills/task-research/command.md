@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
 Canonical SHA-256: sha256:14cbac2b918121ebaeefd88c00cf6bd5137ac9d2e4ac39415eeca2d7377c38c5
-Adapter: task.codex-command/1.0.5
+Adapter: task.codex-command/1.0.7
 -->
 Это задача ИССЛЕДОВАНИЯ. Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/high) — не переключай вручную.

@@ -2,20 +2,19 @@
 
 ## Codex launch-block для handoff
 
-`$ task:…` запускает команду только внутри уже открытой сессии Codex. Поэтому handoff на новый
-plan step обязан дополнительно дать нативную команду с явными cwd, моделью, effort, approval и
-sandbox. Для `plan-run` модель и effort берутся из Routing следующего item'а, а не из предыдущей
-сессии:
+`plan-run` поддерживает два равноправных входа. В уже открытой CLI-сессии оператор может выполнить
+`/clear`, выбрать требуемые Routing модель/effort и вставить provider-neutral `$ task:…` command.
+Либо можно открыть новый процесс нативной командой с явными cwd, моделью, effort, approval и
+sandbox. Поэтому handoff сохраняет обе формы; для `plan-run` маршрут всегда берётся из Routing
+следующего item'а:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:plan-run <PLAN-ID> <Pn.m>'
 ```
 
-Провайдер-нейтральный launch-block остаётся рядом с этой командой: он несёт семантический
-маршрут, а native-блок делает запуск воспроизводимым.
+Provider-neutral форма удобна для `/clear`, native-блок делает отдельный запуск воспроизводимым.
 
-Перед `plan-run` Codex-проекция получает launch provenance автоматически из ancestor process
-chain текущего thread:
+Перед `plan-run` Codex-проекция получает current-route provenance автоматически:
 
 ```bash
 PYTHONPATH=packages/task/lib python3 -m task.route_evidence_codex capture \
@@ -23,12 +22,14 @@ PYTHONPATH=packages/task/lib python3 -m task.route_evidence_codex capture \
   --expected-cwd "$PWD"
 ```
 
-Adapter сверяет исходный argv owning Codex process: exact Task prompt, cwd, `-m`,
-`model_reasoning_effort`, `-a never` и `-s danger-full-access`; selector резолвится через
-`configs/command-routing.json`, а evidence связывается с `CODEX_THREAD_ID`. Это доказательство
-выбранных параметров Linux-launch, не provider telemetry фактически обслужившей thread модели.
-При недоступном `/proc` проверка fail-closed возвращает `ROUTE_LAUNCH_UNAVAILABLE` и не подменяет
-данные `codex doctor`, config-файлом или памятью агента.
+Adapter сначала связывает `CODEX_THREAD_ID` с единственным active rollout и читает последний
+provider-written `turn_context`: model, effort, cwd, approval, sandbox и exact Task prompt.
+Evidence получает `source=provider-thread-state`; поэтому смена `/model`/`/reasoning` и новый chat
+после `/clear` проверяются по текущему состоянию, а не по argv старого процесса. Если thread state
+действительно отсутствует, остаётся compatibility fallback: exact native argv с `-m`,
+`model_reasoning_effort`, `-C`, `-a never`, `-s danger-full-access` и Task prompt. Malformed или
+mismatched state отказывает fail-closed и не подменяется `codex doctor`, config-файлом, actor prose
+или памятью агента.
 
 Два stdlib-скрипта в `plans/` (не в `packages/task/lib/`, не встроены в `plan_lint.py` —
 у каждого свой предмет): `cross-plan-files.py` (межплановые пересечения `Files`) и

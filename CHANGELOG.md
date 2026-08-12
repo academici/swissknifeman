@@ -6,9 +6,10 @@
   Low-risk фазы больше не получают гарантированно холостой `plan-close`: audit выбирается заранее
   по Review, material risk, terminal status и multi-item объёму.
 
-- **`task`: Codex `plan-run` больше не теряет маршрут корректного native launch.**
-  Новый stdlib-adapter извлекает model/effort, cwd, Task prompt и safety flags из ancestor argv,
-  связывает provenance с `CODEX_THREAD_ID` и исключает повторную ручную self-attestation агента.
+- **`task`: Codex `plan-run` проверяет текущий маршрут и после `/clear`.**
+  Thread-bound adapter читает model/effort, cwd, Task prompt и safety state из текущего
+  `turn_context`; exact native argv сохранён как fallback. Смена модели в открытой CLI-сессии
+  больше не требует перезапуска, а Claude Code projection остаётся byte-compatible.
 
 - **`task`: downstream gate не терминализирует отсутствующий валидатор будущего item.**
   Unicode-пути numbered plans читаются из executable argv; dependency-not-ready теперь

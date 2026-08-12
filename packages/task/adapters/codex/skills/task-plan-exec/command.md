@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
 Canonical SHA-256: sha256:f133d8dc993dc2fedb76ccf74ec7cddc07bf06451cd8e0b18f15a6d2d61d15bf
-Adapter: task.codex-command/1.0.5
+Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
 

@@ -22,7 +22,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.5"
+ADAPTER_VERSION = "1.0.7"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1004,7 +1004,11 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes,
     body = "".join(lines[closing + 1:])
     projected = _project_codex_runtime_tokens(body)
     if record.kind == "plan-protocol":
-        projected = _codex_native_launch_rule(mapping) + projected
+        provider_rule = (
+            _codex_current_route_rule()
+            if record.command_id == "task:plan-run" else ""
+        )
+        projected = _codex_native_launch_rule(mapping) + provider_rule + projected
     provenance = (
         "<!-- Generated Codex runtime projection; do not edit as source.\n"
         f"Canonical source: {record.source.path}\n"
@@ -1037,6 +1041,32 @@ Derive the class and effort from the next item's Routing before rendering it; fo
 do not reuse the preceding session's route. Current Codex mapping: {class_routes};
 {effort_routes}. Keep the provider-neutral launch-block too, but never hand off only
 `$ task:…` or an unpinned `codex` command.
+
+'''
+
+
+def _codex_current_route_rule() -> str:
+    """Bind inherited ``plan-run`` routing to Codex's current chat state."""
+    return '''## Codex current-route binding — provider-specific
+
+For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
+`CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete
+model, reasoning effort, cwd, approval policy, sandbox policy, and the exact current Task
+prompt. The resulting actual-route record carries `source="provider-thread-state"` and
+`source_version="codex-turn-context-v1"`.
+
+This path is valid both after a full native launch and after the Codex clear command, which
+starts a fresh chat inside the same CLI process. A model or reasoning change before product
+journal start is therefore checked from the current chat state, never from stale process argv.
+If persisted thread state is genuinely absent, exact ancestor argv remains a compatibility
+fallback with `source="cli-flag"`. Malformed/mismatched thread state fails closed; config,
+doctor output, actor prose, and self-attestation remain forbidden substitutes.
+
+This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
+command below. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
+its private-rollout prohibition forbids manual probing but not this validated adapter-owned
+read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
+evidence.
 
 '''
 

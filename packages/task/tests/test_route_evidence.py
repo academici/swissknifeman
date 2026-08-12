@@ -105,6 +105,12 @@ class CaptureActualTests(unittest.TestCase):
         self.assertEqual(evidence["source"], "provider-config")
         self.assertEqual(evidence["model"], "gpt-5.6-terra")
 
+    def test_provider_thread_state_source_is_declared(self):
+        evidence = re.capture_actual(
+            "frontier", "high", source="provider-thread-state", model="gpt-5.6-sol")
+        self.assertEqual(evidence["source"], "provider-thread-state")
+        self.assertEqual(evidence["model"], "gpt-5.6-sol")
+
     def test_explicit_timestamp_is_preserved_verbatim(self):
         evidence = re.capture_actual(
             "frontier", "xhigh", source="provider-doctor", ts="2026-07-26T00:00:00Z")
@@ -393,6 +399,119 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
 
 class CodexLaunchEvidenceTests(unittest.TestCase):
+    def _write_thread_state(self, root, *, thread_id, model, effort, prompt,
+                            cwd="/workspace/repo"):
+        path = root / "2026" / "08" / "12" / f"rollout-{thread_id}.jsonl"
+        path.parent.mkdir(parents=True)
+        turn_context = {"type": "turn_context", "payload": {
+            "turn_id": f"turn-{thread_id}", "model": model, "effort": effort,
+            "cwd": cwd, "approval_policy": "never",
+            "sandbox_policy": {"type": "danger-full-access"},
+        }}
+        events = (
+            {"type": "session_meta", "payload": {
+                "id": thread_id, "cwd": cwd, "model_provider": "openai",
+            }},
+            turn_context,
+            {"type": "event_msg", "payload": {
+                "type": "item_completed", "turn_id": f"turn-{thread_id}",
+                "item": {"type": "UserMessage", "content": [
+                    {"type": "text", "text": prompt},
+                ]},
+            }},
+            # Compaction may re-emit the same turn context after the user event.
+            turn_context,
+        )
+        path.write_text(
+            "".join(json.dumps(event, ensure_ascii=False) + "\n" for event in events),
+            encoding="utf-8",
+        )
+        return path
+
+    def test_interactive_thread_state_proves_current_route_without_launch_selectors(self):
+        from task import route_evidence_codex
+
+        prompt = "$ task:plan-run PLAN P0.3"
+        prompt_with_payload = prompt + "\n\nРЕЖИМ: bounded audit repair-forward"
+        with tempfile.TemporaryDirectory() as directory:
+            state_root = Path(directory)
+            self._write_thread_state(
+                state_root, thread_id="thread-after-clear", model="gpt-5.6-terra",
+                effort="high", prompt=prompt_with_payload,
+            )
+            process_table = {
+                200: (100, ("python3", "-m", "task.route_evidence_codex", "capture")),
+                100: (1, (
+                    "codex", "-c", 'approval_policy="never"',
+                    "-s", "danger-full-access",
+                )),
+            }
+
+            evidence = route_evidence_codex.capture_current(
+                expected_invocation=prompt,
+                expected_cwd="/workspace/repo",
+                thread_id="thread-after-clear",
+                start_pid=200,
+                process_table=process_table,
+                state_root=state_root,
+            )
+
+        self.assertEqual(evidence["model"], "gpt-5.6-terra")
+        self.assertEqual(evidence["model_class"], "implementation")
+        self.assertEqual(evidence["effort"], "high")
+        self.assertEqual(evidence["source"], "provider-thread-state")
+        self.assertEqual(evidence["thread_id"], "thread-after-clear")
+        self.assertEqual(evidence["source_version"], "codex-turn-context-v1")
+
+    def test_current_thread_state_wins_over_stale_native_launch_route(self):
+        from task import route_evidence_codex
+
+        prompt = "$ task:plan-run PLAN P0.3"
+        with tempfile.TemporaryDirectory() as directory:
+            state_root = Path(directory)
+            self._write_thread_state(
+                state_root, thread_id="thread-123", model="gpt-5.6-terra",
+                effort="medium", prompt=prompt,
+            )
+            process_table = {
+                200: (100, ("python3", "-m", "task.route_evidence_codex", "capture")),
+                100: (1, (
+                    "codex", "-C", "/workspace/repo", "-m", "gpt-5.6-sol",
+                    "-c", 'model_reasoning_effort="high"', "-a", "never",
+                    "-s", "danger-full-access", prompt,
+                )),
+            }
+
+            evidence = route_evidence_codex.capture_current(
+                expected_invocation=prompt,
+                expected_cwd="/workspace/repo",
+                thread_id="thread-123",
+                start_pid=200,
+                process_table=process_table,
+                state_root=state_root,
+            )
+
+        self.assertEqual(evidence["model"], "gpt-5.6-terra")
+        self.assertEqual(evidence["effort"], "medium")
+        self.assertEqual(evidence["source"], "provider-thread-state")
+
+    def test_thread_state_rejects_a_prompt_from_an_older_turn(self):
+        from task import route_evidence_codex
+
+        with tempfile.TemporaryDirectory() as directory:
+            state_root = Path(directory)
+            self._write_thread_state(
+                state_root, thread_id="thread-123", model="gpt-5.6-sol",
+                effort="high", prompt="$ task:plan-run PLAN P0.2",
+            )
+            with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                route_evidence_codex.capture_current(
+                    expected_invocation="$ task:plan-run PLAN P0.3",
+                    expected_cwd="/workspace/repo",
+                    thread_id="thread-123",
+                    state_root=state_root,
+                )
+
     def test_exact_native_launch_is_captured_from_the_current_ancestor_chain(self):
         from task import route_evidence_codex
 
@@ -407,13 +526,15 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
             )),
         }
 
-        evidence = route_evidence_codex.capture_current(
-            expected_invocation="$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
-            expected_cwd="/workspace/repo",
-            thread_id="thread-123",
-            start_pid=300,
-            process_table=process_table,
-        )
+        with tempfile.TemporaryDirectory() as directory:
+            evidence = route_evidence_codex.capture_current(
+                expected_invocation="$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
+                expected_cwd="/workspace/repo",
+                thread_id="thread-123",
+                start_pid=300,
+                process_table=process_table,
+                state_root=Path(directory),
+            )
 
         self.assertEqual(evidence["model"], "gpt-5.6-sol")
         self.assertEqual(evidence["model_class"], "frontier")
@@ -434,14 +555,16 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
             )),
         }
 
-        with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
-            route_evidence_codex.capture_current(
-                expected_invocation="$ task:plan-run PLAN P0.3",
-                expected_cwd="/workspace/repo",
-                thread_id="thread-123",
-                start_pid=200,
-                process_table=process_table,
-            )
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                route_evidence_codex.capture_current(
+                    expected_invocation="$ task:plan-run PLAN P0.3",
+                    expected_cwd="/workspace/repo",
+                    thread_id="thread-123",
+                    start_pid=200,
+                    process_table=process_table,
+                    state_root=Path(directory),
+                )
 
 
 if __name__ == "__main__":

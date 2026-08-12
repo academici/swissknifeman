@@ -38,12 +38,15 @@ except ImportError:  # pragma: no cover - standalone fallback, byte-identical to
     def _now_iso():
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-# §Scope — evidence provenance a captured ACTUAL route may declare. Never "requested"
-# or "config": those are exactly the static-config/actor-string stand-ins Code
-# Guidance forbids for a live actual. `self-attested` is restricted to unknown
-# axes: it records absent provider evidence and never turns a selector into proof
-# of the route that actually ran.
-SOURCES = ("self-attested", "provider-doctor", "provider-config", "cli-flag")
+# §Scope — evidence provenance a captured ACTUAL route may declare. Static config
+# alone never proves a live route; `provider-thread-state` is different because it
+# is selected by the current provider thread identity and records the active turn.
+# `self-attested` is restricted to unknown axes: it records absent provider evidence
+# and never turns a selector into proof of the route that actually ran.
+SOURCES = (
+    "self-attested", "provider-doctor", "provider-config", "cli-flag",
+    "provider-thread-state",
+)
 
 # Usage/context budget axes — token/duration/tool counts only, no pricing (Code
 # Guidance). Naming matches `analyst.readers` `usage.totals` keys (`in`/`out`/

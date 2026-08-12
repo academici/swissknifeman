@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-07
-inputs_sha256: 2aebe3b31df1fdd80fbd5b48924c89bf4cab2373110e4a776368c50451b24685
+through: 2026-08-10
+inputs_sha256: a83aa8962a97f2c3330b092fdb0bf7d236f348084953233cc4bb906fbd205d25
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | 0.27.1 |
 | Status | 🔴 Blocked |
-| Last Updated | 2026-08-07 |
+| Last Updated | 2026-08-10 |
 
 ## 4. Phase Index & Status Board
 
@@ -343,6 +343,7 @@ generated_by: task plan-views status
 | 2026-08-07 | claude-opus-5[1m]/high | plan-run · in-progress · — |
 | 2026-08-07 | claude-opus-5[1m]/high | plan-run · blocked · прогон #1: 10 D125-диспатчей, 2/5 волн приняты, вердикт NO-GO (REL-BUDGET/REL-RECOVERY/SEC-WORKTREE); item НЕтерминален, блокер — новый owner-грант на turn-бюджет |
 | 2026-08-07 | migration/v2 | plan-design · in-progress · Layout v2 migration activation; source tree archived in artifacts/migration-source-v1. |
+| 2026-08-10 | gpt-5.6-sol/high | plan-design · in-progress · План поставлен на паузу новым ACTIVE 2026.08.10-TASK-LEAN-AUTONOMY; item-state не изменён. |
 
 ## Owner Gates
 

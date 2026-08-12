@@ -5,6 +5,8 @@ __pycache__/
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+packages/*/docs/.vitepress/dist/
+packages/*/docs/.vitepress/cache/
 # playwright MCP --output-dir (P5.6): скриншоты/снапшоты сессии, не покрыты
 # раздаваемым .gitignore-шаблоном (harness такого не раздаёт) — проект,
 # подключивший пресет playwright, обязан игнорировать это сам.

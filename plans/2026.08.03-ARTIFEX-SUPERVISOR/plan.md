@@ -16,6 +16,7 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | supersedes | 2026.07.18-FOREMAN (только остаточный supervisor-трек; архив не переписывается) |
+| Paused By | 2026.08.10-TASK-LEAN-AUTONOMY, 2026-08-10 |
 | Design Passes | 8/8 + finish + bounded remediations through D104 + P5 last-pass reconciliation + D107 frozen-contract stop + D108–D109 whole-P5 reconcile + D110 recovery design + D111 exact R2 owner grant/reopen + D112 Codex R2 cap-contract refinement + D113 owner terminalization direction + D117 P5.2 D114–D116 self-authorization void + D118 P5.2 bridge architecture (owner-delegated) + D119–D120 P5.2 seam-ownership reopen and version-pin discipline (owner-selected) + D121–D122 P5.2 task-description-carrier reopen and replacement-row grant (owner-selected) + D123–D127 P5.4 economic-adjudication re-design (four owner selections, two new items, two third reopens) + D132–D135 P5.4 package-authority remediation (D125 batch registration, one new gate-repair item, one fourth reopen; forward-conformance sweep per `brief/37`) — completed denominator unchanged |
 | Layout | v2 |
 <!-- migration-version: 0.27.1 -->

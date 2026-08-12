@@ -74,7 +74,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 | 2026-08-12 | plan-designer/frontier/high | Design pass 1/1: План №1 создан и полностью детализирован; ACTIVE переключён с `—`. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.1 закрыт: numbered PLAN-ID, Title/comment contract и Unicode lint GREEN; см. Completion Notes. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.2 закрыт: observation events не терминализируют item; isolated review/RAG gate доказан тестами. |
-| 2026-08-12 | executor/gpt-5.6-sol | P0.3 закрыт: terminal receipt, provider parity, audit-candidate lint, docs/roadmap и release metadata GREEN; см. Completion Notes. |
+| 2026-08-12 | executor/gpt-5.6-sol | P0.3 закрыт: terminal receipt, provider parity и v1/v2 audit candidate, docs/roadmap и release metadata GREEN; см. Completion Notes. |
 
 ## 7. Contracts
 

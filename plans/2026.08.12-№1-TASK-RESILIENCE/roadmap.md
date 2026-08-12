@@ -1,7 +1,7 @@
 # Roadmap исполнения — 2026.08.12-№1-TASK-RESILIENCE
 
-**Статус:** design pass 2 complete; P0 закрыта по owner decision D12,
-следующий executable batch — B-P1-CUTOVER (P1.1–P1.3).
+**Статус:** design pass 2 complete; P0 закрыта по owner decision D12; P1.1 закрыта,
+а owner resolution `authorize-phase-redesign` развёрнут в P1.2–P1.5 по D16.
 Порядок фаз: P0 → P1 → P2 → P3 → P4 → P5 → P6. Batch не пересекает phase audit/close.
 
 ## Правило группировки
@@ -21,9 +21,11 @@
 | P0.1 | B-P0-EVIDENCE | — | frontier/high | manual | full | gap matrix → acceptance; 🟢 закрыт |
 | P0.2 | B-P0-EVIDENCE | P0.1 | frontier/high | manual | full | reuse gap matrix; 🟢 закрыт |
 | P0.3 | solo | P0.2 | frontier/high | manual | full | mandatory Perplexity capability/checkpoint |
-| P1.1 | B-P1-CUTOVER | P0 | frontier/high | manual | full | единый fleet inventory context |
-| P1.2 | B-P1-CUTOVER | P1.1 | implementation/high | manual | full | inventory→migration producer chain |
-| P1.3 | B-P1-CUTOVER | P1.2 | implementation/high | manual | full | zero-live proof→removal без reread |
+| P1.1 | B-P1-MIGRATOR | P0 | frontier/high | manual | full | closed producer; единый fleet inventory context для P1.2–P1.3 |
+| P1.2 | B-P1-MIGRATOR | P1.1 | implementation/high | manual | full | узкая Routing compatibility на общих migrator tests |
+| P1.3 | B-P1-MIGRATOR | P1.2 | frontier/high | manual | full | frozen policy + 15 previews; reuse matrix/migrator context |
+| P1.4 | B-P1-FLEET | P1.3 | implementation/high | manual | full | external-write boundary, apply previews и zero-live ledger |
+| P1.5 | B-P1-FLEET | P1.4 | implementation/high | manual | full | zero-live proof→removal без повторной fleet reconnaissance |
 | P2.1 | B-P2-IDENTITY | P1 | implementation/high | manual | full | общий identity parser/linter |
 | P2.2 | B-P2-IDENTITY | P2.1 | implementation/high | manual | full | identity grammar→qualified refs |
 | P3.1 | B-P3-CONTINUE | P2 | implementation/high | manual | full | state semantics→commands |
@@ -43,7 +45,8 @@
 | Batch | Items запуска | Route | Capabilities | Команда |
 |:--|:--|:--|:--|:--|
 | solo | P0.3 | frontier/high | Perplexity Web, filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3` |
-| B-P1-CUTOVER | P1.1–P1.3 | frontier/high | filesystem, git, skiller registry, maind projects | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.1-P1.3` |
+| B-P1-MIGRATOR | P1.2–P1.3 | frontier/high | filesystem, git, Task package validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.2-P1.3` |
+| B-P1-FLEET | P1.4–P1.5 | implementation/high | filesystem, git, skiller registry, maind projects, decision queue | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.4-P1.5` |
 | B-P2-IDENTITY | P2.1–P2.2 | implementation/high | filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2` |
 | B-P3-CONTINUE | P3.1–P3.3 | implementation/high | filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P3.1-P3.3` |
 | B-P4-BLOCK | P4.1–P4.2 | frontier/high | filesystem, git, isolated-child-return, RAG | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2` |

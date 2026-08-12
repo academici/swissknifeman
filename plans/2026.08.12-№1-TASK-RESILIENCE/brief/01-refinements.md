@@ -44,3 +44,22 @@
 
 - Владелец просит разрешать все локальные конфликты автономно и доводить авторизованный scope до terminal result.
 - P1.1 repair выбирает минимальную обратимую правку Validation carrier; product scope и public/frozen contracts не расширяются.
+
+## 2026-08-12 — P1.2 full-fleet admission boundary
+
+- Владелец разрешил узкий redesign migrator/linter compatibility для P1.2 через
+  `plan_migrate.py`, `plan_lint_checks/parsing.py` и Task tests.
+- После этого решения read-only rehearsal всех 15 targets показал, что проблема
+  не сводится к Routing: 9/15 targets доходят до output lint, 0/15 проходят его.
+- Выбор политики для missing/unknown journal, noncanonical decisions, empty phases,
+  terminal-state projection, read-budget, stale handoff и controlled in-place write не входит в
+  прежний exact action. P1.2 не объявляется DoR без нового owner decision.
+
+## 2026-08-12 — owner response: phase decomposition
+
+- Владелец выбрал `authorize-phase-redesign` в `DR-P1.2-full-fleet-migration-policy`.
+- Узкая Routing compatibility остаётся отдельным item; policy/dry-run, external apply/zero-live
+  и reader retirement получают разные acceptance/rollback boundaries.
+- Авторизация покрывает 15 exact `migration_order` targets; registry-row deletion и semantic repair
+  invalid candidates вне этого списка остаются explicit authority gates, если они ещё есть
+  в fresh inventory.

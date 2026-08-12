@@ -4,8 +4,8 @@
 |:--|:--|
 | `brief/` | исходное намерение и уточнения владельца |
 | `findings/` | roadmap/runtime/RAG и будущие execution verdicts |
-| `research/` | target design, phase topology, execution batching и negation-lint analysis |
-| `decisions/` | D1–D11, authoritative design choices |
+| `research/` | target design, phase topology, execution batching, negation-lint analysis и P1 migration-policy synthesis/pre-mortem |
+| `decisions/` | D1–D16, authoritative design choices |
 | `phases/P0` | evidence and acceptance freeze |
 | `phases/P1` | active v1 migration and retirement |
 | `phases/P2` | identity and qualified references |

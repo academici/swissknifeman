@@ -1,55 +1,44 @@
-# HANDOFF — 2026-08-12 — after P1.2
+# HANDOFF — 2026-08-12 — after P1
 
-**Next:** waiting: owner resolves `DR-P1.2-layout-migration-contract` → design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.2
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.2-P1.3
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | B-P1-CUTOVER |
+| Batch | B-P1-MIGRATOR |
 | Model class | frontier |
 | Effort | high |
-| Capabilities | owner decision, filesystem, git |
-| Context | continue-root |
-| Суть | Авторизовать redesign migrator/linter compatibility и возобновить P1.2. |
-| Команда | — |
-
-Provider-neutral continuation after approval:
-
-```text
-$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.2
-```
-
-Native Codex launch-block after approval:
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.2'
-```
+| Capabilities | filesystem, git, Task package validation |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Закрыть узкую Routing compatibility, затем frozen policy и 15/15 green previews без external writes. |
+| Команда | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P1.2-P1.3'` |
 
 **Done:**
 
-- P1.1 inventory product commit: `6553d06d`.
-- P1.2 deterministic dry-run evidence commit: `7ae12d1a`.
-- First pinned v1 target migrated only into a temporary dry-run tree; output lint found four Routing grammar errors and the source SHA-256 remained unchanged.
-- Durable owner decision `DR-P1.2-layout-migration-contract` is pending.
+- Owner response `authorize-phase-redesign` reconciled as D16; unresolved owner gates: 0.
+- P1 redesigned into narrow compatibility (P1.2), frozen preview policy (P1.3), controlled fleet apply/zero-live proof (P1.4), and v1 runtime retirement (P1.5).
+- The 15-target write authority is separated from registry deletion/invalid-plan semantics; those remain exact DecisionRequest gates if present in fresh inventory.
+- Ecosystem-core pre-mortem and mitigations are persisted in `research/05-P1-phase-redesign-and-premortem.md`.
 
 **Remaining:**
 
-- Owner resolves the scope-change request for migrator/linter compatibility.
-- After an approved redesign and a green rerun of P1.2, P1.3 may remove v1 execution support.
+- Execute B-P1-MIGRATOR P1.2–P1.3 and close both items independently.
+- Execute B-P1-FLEET P1.4–P1.5 only after 15/15 previews are green; P1.5 additionally requires the checked zero-live ledger.
+- Audit/close P1 before entering P2.
 
 **Sources of truth:**
 
-- `phases/P1/P1.2.md` and `phases/P1/P1.2.state.md`.
-- `findings/04-layout-v1-migration-results.md`.
-- `decisions/queue.jsonl` and `decisions/_gates.md`.
-- `journal.jsonl`.
+- `plan.md`, `phases/P1/P1.md`, `phases/P1/P1.2.md`, `phases/P1/P1.3.md`, `phases/P1/P1.4.md`, `phases/P1/P1.5.md`.
+- `decisions/D15-authorize-narrow-p1-2-migration-compatibility.md` and `decisions/D16-phase-decomposition-full-fleet-cutover.md`.
+- `findings/05-layout-v1-full-fleet-admission-matrix.md` and `research/05-P1-phase-redesign-and-premortem.md`.
 
 **Open risks:**
 
-- `plan-decisions.py request` projects the pending authorization to `🔴 Blocked`, while v2 item specs remain immutable and therefore lack the legacy escalation block required by the current linter. The resulting lint error is an owning Task generator/linter defect, not a green check.
-- P1.3 must not run without a P1.2 zero-live-v1 proof.
+- Current registries still contain unreachable temporary roots; removing them is not implicit in the 15-target action.
+- Invalid active candidates outside `migration_order` may require a target-owner semantic decision before zero-live can become true.
+- External target plan subtrees may change between preview and apply; P1.4 must fail on preimage mismatch and preserve every unrelated diff.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: repair the decision-queue projection/linter mismatch through the approved redesign.
-- Open questions: owner choice for `DR-P1.2-layout-migration-contract`.
+- Deferred: external writes until P1.3 closes with 15/15 green previews.
+- Open questions: —; any still-present invalid/unreachable row becomes a durable DecisionRequest, not an implicit assumption.

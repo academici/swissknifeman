@@ -59,9 +59,11 @@ Microsoft Durable Functions; synthesis и URLs —
 | B-P0-EVIDENCE | P0.1 | frontier/high | manual | full | общий gap→acceptance producer chain; закрыто |
 | B-P0-EVIDENCE | P0.2 | frontier/high | manual | full | reuse gap matrix и acceptance boundary; закрыто |
 | solo | P0.3 | frontier/high | manual | full | отдельная Perplexity capability и mandatory evidence checkpoint |
-| B-P1-CUTOVER | P1.1 | frontier/high | manual | full | inventory питает migration/removal в той же fleet context |
-| B-P1-CUTOVER | P1.2 | implementation/high | manual | full | producer→consumer; reuse registry и migration evidence |
-| B-P1-CUTOVER | P1.3 | implementation/high | manual | full | removal сразу после zero-live proof, без повторной инвентаризации |
+| B-P1-MIGRATOR | P1.1 | frontier/high | manual | full | closed inventory producer питает compatibility/policy в той же fleet context |
+| B-P1-MIGRATOR | P1.2 | implementation/high | manual | full | узкая Routing-нормализация переиспользует 15-target rehearsal и migrator tests |
+| B-P1-MIGRATOR | P1.3 | frontier/high | manual | full | frozen migration policy и dry-run admission всех 15 targets делят тот же migrator/matrix context |
+| B-P1-FLEET | P1.4 | implementation/high | manual | full | отдельная external-write boundary: применить approved previews и доказать zero-live |
+| B-P1-FLEET | P1.5 | implementation/high | manual | full | removal сразу после zero-live ledger, без повторной fleet reconnaissance |
 | B-P2-IDENTITY | P2.1 | implementation/high | manual | full | общий PLAN-ID parser/linter/canon context |
 | B-P2-IDENTITY | P2.2 | implementation/high | manual | full | qualified refs потребляют identity grammar и provider surface |
 | B-P3-CONTINUE | P3.1 | implementation/high | manual | full | state semantics питают command repair flow |

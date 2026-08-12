@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: d4c5a8757c3696d27fe8eba49eb337a7fc7ad3796dcd2e656bfd78908d23eeb8
+inputs_sha256: b0c40fbe6d9c3abfe97879831ef16c1dbafe199987f6bb7da6dca7c033efbe6c
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-12 |
 
 ## 4. Phase Index & Status Board
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
-| P1 | Active-plan migration and Layout v1 execution retirement | 1/3 | 🔴 Blocked |
+| P1 | Active-plan migration and Layout v1 execution retirement | 1/5 | 🟡 In progress |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
@@ -44,8 +44,10 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P1.1 | Inventory every active Layout v1 consumer | 🟢 Done | 2026-08-12 |
-| P1.2 | Migrate all active v1 plans and prove zero live consumers | 🔴 Blocked | 2026-08-12 |
-| P1.3 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
+| P1.2 | Normalize legacy Routing without widening v2 grammar | 🟡 In progress | 2026-08-12 |
+| P1.3 | Freeze full-fleet admission policy and green every preview | ⬜ Not started | — |
+| P1.4 | Apply the approved fleet cutover and prove zero live v1 | ⬜ Not started | — |
+| P1.5 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
 
 ## Phase P2
 
@@ -146,9 +148,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Начата проверяемая миграция active Layout v1 targets. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · block-candidate · Output lint target 1: 4 ошибки Routing; migrator/linter contract вне Scope P1.2. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · blocked · decision queue: DR-P1.2-layout-migration-contract |
+| 2026-08-12 | owner | plan-run · in-progress · decision queue: DR-P1.2-layout-migration-contract |
+| 2026-08-12 | frontier/high | plan-run · blocked · decision queue: DR-P1.2-full-fleet-migration-policy |
+| 2026-08-12 | owner | plan-run · in-progress · decision queue: DR-P1.2-full-fleet-migration-policy |
+| 2026-08-12 | frontier/high | plan-design · in-progress · фаза детализирована до DoR |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.3: known deviation
-- P1.2: escalation

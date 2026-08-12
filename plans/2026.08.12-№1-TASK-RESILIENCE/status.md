@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: a3d29e7fdd7d199a5782975c73e60e1b244d2267abf0b87762800630d19bb4be
+inputs_sha256: 534cfb870fcc8553c901c6a5bd22fe757df28b04adfb2d6bd0302faaf541d38c
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-12 |
 
 ## 4. Phase Index & Status Board
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
-| P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | 🔴 Blocked |
+| P1 | Active-plan migration and Layout v1 execution retirement | 1/3 | 🟡 In progress |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
@@ -43,7 +43,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Inventory every active Layout v1 consumer | 🔴 Blocked | 2026-08-12 |
+| P1.1 | Inventory every active Layout v1 consumer | 🟢 Done | 2026-08-12 |
 | P1.2 | Migrate all active v1 plans and prove zero live consumers | ⬜ Not started | — |
 | P1.3 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
 
@@ -138,9 +138,13 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Full review findings repaired: registry parsing, exact ACTIVE, exhaustive carriers, symlink containment, dirty verification and unique paths. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · block-candidate · Pre-final blocks: Validation redirection >/dev/null is classified external, so no public acceptance remains; item scope cannot repair the contract/spec. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · escalated · P1.1 escalated: pre-final ACCEPTANCE_NOT_PUBLIC caused by >/dev/null classification; resume with task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.1. |
+| 2026-08-12 | frontier/high | plan-design · in-progress · ТЗ item-а доведено до DoR: Validation carrier сделан публично наблюдаемым по D13. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · D13 repaired the public acceptance carrier; resume P1.1 under the verified frontier/high route. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · local-repair · Fleet snapshot drift reproduced after plan repair and concurrent registered-plan carrier changes; rebuild with the owning validator. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-green · Inventory committed at 6553d06d; declared Validation, fail-closed focused regressions and full isolated review passed.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P0.3: known deviation
-- P1.1: escalation

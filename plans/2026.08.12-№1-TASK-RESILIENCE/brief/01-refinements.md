@@ -39,3 +39,8 @@
 - Явное «оркестрация не заявлена/не требуется» не должно считаться positive declaration.
 - Настоящий `scriptPath`/multi-agent positive и positive после отрицания остаются gated.
 - Не переписывать пострадавший Agelto plan эвфемизмами; исправить общий parser и parity.
+
+## 2026-08-12 — autonomous conflict resolution
+
+- Владелец просит разрешать все локальные конфликты автономно и доводить авторизованный scope до terminal result.
+- P1.1 repair выбирает минимальную обратимую правку Validation carrier; product scope и public/frozen contracts не расширяются.

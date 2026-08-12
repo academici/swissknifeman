@@ -37,6 +37,29 @@ class TestReadBudgetGate(unittest.TestCase):
             diag = lint(plan_dir)
         self.assertFalse(any(plan_gates.GATE_ID in row for row in diag.errors), diag.errors)
 
+    def test_v1_phase_candidate_fingerprint_ignores_audit_append_but_tracks_item_fields(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = write_valid_plan(Path(tmp), layout=None)
+            before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            phase = plan_dir / "phases" / "P1.md"
+            phase.write_text(
+                phase.read_text(encoding="utf-8")
+                + "\n## Audit P1 — 2026-08-12\n\n**Вердикт: GREEN**\n",
+                encoding="utf-8",
+            )
+            after_audit = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertEqual(after_audit["fingerprint"], before["fingerprint"])
+
+            phase.write_text(
+                phase.read_text(encoding="utf-8").replace(
+                    "**Intent:** Добавить проверку.",
+                    "**Intent:** Добавить проверку и изменённый контракт.",
+                ),
+                encoding="utf-8",
+            )
+            after_item_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertNotEqual(after_item_change["fingerprint"], before["fingerprint"])
+
     def test_overweight_v2_item_names_item_weight_threshold_and_unit(self):
         diag = lint(self.copied_fixture("plan-v2-overweight"))
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]

@@ -45,21 +45,59 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
     if not re.fullmatch(r"P\d+", phase_id):
         raise ValueError("phase_id должен иметь форму Pn")
     items = []
-    for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
-        item_id = spec_path.stem
-        model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
-        status = model["state"]["position"]["status"]
-        if status not in {
-                plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
-                plan_status.STATUS_BLOCKED}:
-            raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
-        state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
-        items.append({
-            "item_id": item_id,
-            "status": status,
-            "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
-            "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
-        })
+    if plan_layout.layout_version(plan_dir) == "v1":
+        # A v1 phase co-locates item specs, state, and append-only audit blocks.
+        # Hash canonical per-item fields so appending the audit verdict does not
+        # invalidate the exact candidate it attests.
+        from task.plan_lint_checks.common import (  # local import avoids a lint coordinator cycle
+            Diagnostics, ITEM_SPEC_FIELDS, ITEM_STATE_FIELDS,
+        )
+        from task.plan_lint_checks.parsing import parse_phase_md
+
+        phase_path = plan_layout.phase_path(plan_dir, phase_id)
+        diagnostics = Diagnostics()
+        parsed = parse_phase_md(phase_path, phase_id, diagnostics, layout="v1")
+        if parsed is None or diagnostics.errors:
+            raise ValueError(f"{phase_id} не candidate: phase carrier невалиден")
+        for item_id, occurrences in sorted(parsed["items"].items()):
+            item = occurrences[0]
+            fields = {key: value[0] for key, value in item["fields"].items()}
+            status = fields.get("Status")
+            if status not in {
+                    plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
+                    plan_status.STATUS_BLOCKED}:
+                raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
+            spec = {key: fields[key] for key in ITEM_SPEC_FIELDS if key in fields}
+            state = {key: fields[key] for key in ITEM_STATE_FIELDS if key in fields}
+            spec_bytes = json.dumps(
+                {"title": item["title"], "fields": spec}, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":"),
+            ).encode("utf-8")
+            state_bytes = json.dumps(
+                state, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+            ).encode("utf-8")
+            items.append({
+                "item_id": item_id,
+                "status": status,
+                "spec_sha256": hashlib.sha256(spec_bytes).hexdigest(),
+                "state_sha256": hashlib.sha256(state_bytes).hexdigest(),
+            })
+    else:
+        for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
+            item_id = spec_path.stem
+            model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
+            status = model["state"]["position"]["status"]
+            if status not in {
+                    plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
+                    plan_status.STATUS_BLOCKED}:
+                raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
+            state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+            items.append({
+                "item_id": item_id,
+                "status": status,
+                "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+                "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
+            })
     if not items:
         raise ValueError(f"{phase_id} не содержит items")
     completed = subprocess.run(

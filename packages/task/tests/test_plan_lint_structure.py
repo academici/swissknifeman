@@ -331,10 +331,18 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "ожидается формат N/M"))
 
-    def test_all_done_but_board_status_not_done(self):
+    def test_all_done_may_remain_in_progress_as_pre_close_audit_candidate(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "plan.md").read_text(encoding="utf-8")
         text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | 🟡 In progress |")
+        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_all_done_rejects_non_candidate_board_status(self):
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | ⬜ Not started |")
         (plan_dir / "plan.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)

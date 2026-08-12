@@ -76,7 +76,7 @@ class PlanItemStateTests(unittest.TestCase):
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
             actor="implementation/high", result="in-progress",
         ))
-        for result in ("decision-pending", "local-repair", "block-candidate"):
+        for result in ("decision-pending", "local-repair", "rag-pending", "block-candidate"):
             journal.append(self.plan, journal.new_entry(
                 plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
                 actor="implementation/high", result=result,
@@ -87,6 +87,18 @@ class PlanItemStateTests(unittest.TestCase):
         })
         self.assertEqual(model["state"]["next_step"],
                          "Run isolated block confirmation; do not terminalize.")
+
+    def test_rag_pending_is_provenance_without_execution_attempt(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="rag-pending",
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "⬜ Not started", "attempt": 0, "last_result": None,
+        })
+        self.assertEqual(model["state"]["next_step"],
+                         "Gather required RAG evidence; do not terminalize.")
 
     def test_item_event_does_not_stale_another_items_state(self):
         first_spec = self.plan / "phases" / "P1" / "P1.1.md"

@@ -46,7 +46,7 @@ FRICTION_VALUES = (
 RESULT_VALUES = (
     "in-progress", "closed-green", "closed-deviations", "blocked",
     "escalated", "no-op", "audit-green", "audit-attention", "audit-red",
-    "routing-rejected", "decision-pending", "local-repair", "block-candidate",
+    "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",
 )
 TERMINAL_CLOSE_RESULTS = ("closed-green", "closed-deviations", "blocked", "escalated")
 REQUIRED_FIELDS = (

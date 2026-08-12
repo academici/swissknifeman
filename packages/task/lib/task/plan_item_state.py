@@ -18,17 +18,19 @@ RESULT_STATUS = {
     "audit-green": "⬜ Not started", "audit-attention": "⬜ Not started",
     "audit-red": "🔴 Blocked",
     "routing-rejected": "⬜ Not started", "decision-pending": "⬜ Not started",
-    "local-repair": "⬜ Not started", "block-candidate": "⬜ Not started",
+    "local-repair": "⬜ Not started", "rag-pending": "⬜ Not started",
+    "block-candidate": "⬜ Not started",
 }
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
 OBSERVATION_RESULTS = frozenset((
-    "no-op", "routing-rejected", "decision-pending", "local-repair", "block-candidate",
+    "no-op", "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",
 ))
 OBSERVATION_NEXT_STEPS = {
     "routing-rejected": "Retry the same command after route correction.",
     "decision-pending": "Continue after the recorded decision is available.",
     "local-repair": "Repeat the original validation after local repair.",
+    "rag-pending": "Gather required RAG evidence; do not terminalize.",
     "block-candidate": "Run isolated block confirmation; do not terminalize.",
 }
 

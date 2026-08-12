@@ -7,7 +7,7 @@
 | Plan ID | 2026.08.12-№1-TASK-RESILIENCE |
 | Title | План №1 — Continue-first Task |
 | Version | 1.0.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier/high |
 | Last Updated | 2026-08-12 |
@@ -55,7 +55,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Continue-first Task release | 0/3 | 🟡 In progress |
+| P0 | Continue-first Task release | 0/3 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -75,6 +75,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 | 2026-08-12 | executor/gpt-5.6-sol | P0.1 закрыт: numbered PLAN-ID, Title/comment contract и Unicode lint GREEN; см. Completion Notes. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.2 закрыт: observation events не терминализируют item; isolated review/RAG gate доказан тестами. |
 | 2026-08-12 | executor/gpt-5.6-sol | P0.3 закрыт: terminal receipt, provider parity и v1/v2 audit candidate, docs/roadmap и release metadata GREEN; см. Completion Notes. |
+| 2026-08-12 | closer/gpt-5.6-sol | P0 закрыта после audit GREEN `08942a9a`; план терминален, следующий шаг — archive. |
 
 ## 7. Contracts
 

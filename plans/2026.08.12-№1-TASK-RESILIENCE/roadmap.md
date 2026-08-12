@@ -23,6 +23,7 @@
 
 ## Terminal release steps
 
-После GREEN audit, close и archive: переименовать `[Unreleased]` в `[0.12.0]`, commit release,
+P0.1–P0.3 исполнены, audit GREEN и phase close завершены. После archive: переименовать
+`[Unreleased]` в `[0.12.0]`, commit release,
 создать annotated `v0.12.0`, затем обновить зарегистрированные проекты по существующему channel
 и проверить `swissknifeman status --all --json`.

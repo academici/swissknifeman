@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** 2026.08.12-№1-TASK-RESILIENCE
+**Active:** —
 **Updated:** 2026-08-12

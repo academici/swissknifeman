@@ -1,4 +1,7 @@
 """Carrier structure, item state and handoff cases for plan-lint."""
+import subprocess
+import sys
+
 try:
     from .test_plan_lint_support import *
 except ImportError:
@@ -105,6 +108,30 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
     def test_numbered_plan_codename_excludes_ordinal(self):
         from task.plan_lint import _plan_codename
         self.assertEqual(_plan_codename("2026.08.12-№12-TASK-RESILIENCE"), "task-resilience")
+
+    def test_numbered_plan_id_round_trips_through_unicode_cli(self):
+        plan_dir = self._numbered()
+        plan = plan_dir / "plan.md"
+        plan.write_text(plan.read_text(encoding="utf-8").replace(
+            "## 3. Routing\n",
+            "## 3. Routing\n\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | fixture |\n",
+        ), encoding="utf-8")
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Model | sonnet |", "| Batch | solo |\n| Model | sonnet |",
+        ), encoding="utf-8")
+        script = Path(__file__).parents[1] / "scripts" / "plan-lint.py"
+        result = subprocess.run(
+            [sys.executable, str(script), str(plan_dir)],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("plan-lint: OK", result.stdout)
 
 
 class TestPlanMdStructure(TmpPlanTestCase):

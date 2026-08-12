@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: dfd76337280b3609a0c54cf6a8d4e1cedc9cb28c220b78decdeb2e4e247bae39
+inputs_sha256: 789abd1980dd51fe2b69276298e4597b1ae24e1816fcd86a02472b7d25a63a5b
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Roadmap evidence and acceptance freeze | 2/3 | 🟠 Done with deviations |
+| P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
@@ -37,7 +37,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0.1 | Reconcile roadmap conflicts with current runtime | 🟠 Done with deviations | 2026-08-12 |
 | P0.2 | Freeze continue-first acceptance bank | 🟢 Done | 2026-08-12 |
-| P0.3 | Close mandatory Perplexity evidence and freeze RAG-pending semantics | 🟢 Done | 2026-08-12 |
+| P0.3 | Close mandatory Perplexity evidence and freeze RAG-pending semantics | 🟠 Done with deviations | 2026-08-12 |
 
 ## Phase P1
 
@@ -122,6 +122,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Local repair: correct append-only friction serialization. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.1 audit repair: product anchor a8fd256d retained; material out-of-Files runtime repair 7d45c292 recorded. Append-only attempt 3 corrects prior friction serialization.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bounded audit repair: reconcile material deviation and provenance carriers. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P0.3 audit repair: product anchor 6f08c69d retained; runtime follow-up 5294642e changed Task plan_downstream, docs, and CHANGELOG outside Files/P0 scope, so status is material deviation.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

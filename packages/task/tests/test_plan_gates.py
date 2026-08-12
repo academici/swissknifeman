@@ -147,6 +147,68 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(self.copied_fixture("plan-v2"))
         self.assertFalse(any(plan_gates.BUNDLE_GATE_ID in row for row in diag.errors), diag.errors)
 
+    def test_missing_bundle_for_pending_producer_is_not_required(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        producer = plan_dir / "phases" / "P1" / "P1.1.md"
+        producer.write_text(producer.read_text(encoding="utf-8").replace(
+            "**Deliverables:** валидация + тест.",
+            "**Deliverables:** `artifacts/future.json`."), encoding="utf-8")
+        (plan_dir / "phases" / "P1" / "P1.2.md").write_text(
+            "### P1.2 — Потребить будущий артефакт\n\n"
+            "**Intent:** Проверить admission до материализации bundle.\n"
+            "**Why:** Будущий producer output ещё не существует.\n"
+            "**Scope Included:** stage-aware admission.\n"
+            "**Scope Excluded:** создание артефакта.\n"
+            "**Inputs:** `brief/00-brief.md`\n"
+            "**Files:** packages/task/lib/task/plan_weight.py\n"
+            "**Required Reads:** 1) `artifacts/future.json` (producer: P1.1)\n"
+            "**Implementation Rules:** Не ослаблять ready-гейт.\n"
+            "**Code Guidance:** Использовать declared producer edge.\n"
+            "**Validation:** admission_state == pending-producer.\n"
+            "**Deliverables:** проверенный consumer.\n",
+            encoding="utf-8",
+        )
+        plan_item_state.build_states(plan_dir)
+        plan_status.build_status(plan_dir)
+
+        measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer(), only_item="P1.2")
+        consumer = measured["items"][0]
+        self.assertEqual(consumer["admission_state"], "pending-producer")
+        self.assertEqual(consumer["producer_item"], "P1.1")
+
+        diag = lint(plan_dir)
+        rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
+        self.assertFalse(any("P1.2" in row for row in rows), rows)
+
+    def test_missing_bundle_with_unannotated_missing_read_stays_fail_closed(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        (plan_dir / "phases" / "P1" / "P1.2.md").write_text(
+            "### P1.2 — Потребить отсутствующий вход\n\n"
+            "**Intent:** Проверить fail-closed admission.\n"
+            "**Why:** Неаннотированный вход не является producer edge.\n"
+            "**Scope Included:** stage-aware admission.\n"
+            "**Scope Excluded:** создание входа.\n"
+            "**Inputs:** `brief/00-brief.md`\n"
+            "**Files:** packages/task/lib/task/plan_weight.py\n"
+            "**Required Reads:** 1) `artifacts/missing.json`\n"
+            "**Implementation Rules:** Не выводить pending без producer.\n"
+            "**Code Guidance:** Сохранить fail-closed поведение.\n"
+            "**Validation:** admission_state == ready, admission_pass == false.\n"
+            "**Deliverables:** проверенный consumer.\n",
+            encoding="utf-8",
+        )
+        plan_item_state.build_states(plan_dir)
+        plan_status.build_status(plan_dir)
+
+        measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer(), only_item="P1.2")
+        consumer = measured["items"][0]
+        self.assertEqual(consumer["admission_state"], "ready")
+        self.assertFalse(consumer["admission_pass"])
+
+        diag = lint(plan_dir)
+        rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
+        self.assertTrue(any("P1.2" in row and "bundle" in row for row in rows), rows)
+
     def test_future_phase_is_outside_bundle_materialization_scope(self):
         plan_dir = self.copied_fixture("plan-v2")
         (plan_dir / "bundles" / "P1.1.json").unlink()

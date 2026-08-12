@@ -612,17 +612,18 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                          "detail": "обязательный файл раскладки плана отсутствует"})
 
     roots = [plan_dir] + ([repo_root] if root_readable else [])
-    layout_version = plan_layout.layout_version(plan_dir)
-    if layout_version == "v1":
-        # Legacy branch is intentionally unchanged: plan → handoff → phase → Required Reads.
-        layout = [(plan_dir / "plan.md", "plan"), (plan_dir / "handoff.md", "handoff")]
-        if phase_file is not None:
-            layout.append((Path(phase_file), "phase"))
-        for path, role in layout:
-            add_carrier(path, role)
 
-        entries = split_entries(_field(fields, "Required Reads"))
-        for entry in entries:
+    def add_required_reads():
+        """Resolve spec reads when no trusted bundle can carry them yet.
+
+        Layout v2 normally consumes only digest-qualified bundle entries.  Admission,
+        however, must still see a declared missing producer input before that bundle
+        can exist; otherwise the consumer is circularly classified as ``ready`` and
+        bundle materialization fails.  The fallback is deliberately limited to the
+        same Required Reads resolver used by v1 and is used only while the bundle is
+        absent or untrusted.
+        """
+        for entry in split_entries(_field(fields, "Required Reads")):
             hits = 0
             declared_misses = 0
             for token, declared in path_candidates(entry):
@@ -641,6 +642,17 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                 gaps.append({"kind": GAP_UNRESOLVED_ENTRY, "entry": _preview(entry),
                              "detail": "позиция не приводится к существующему пути — "
                                        "прозой названный вход резолверу недоступен"})
+
+    layout_version = plan_layout.layout_version(plan_dir)
+    if layout_version == "v1":
+        # Legacy branch is intentionally unchanged: plan → handoff → phase → Required Reads.
+        layout = [(plan_dir / "plan.md", "plan"), (plan_dir / "handoff.md", "handoff")]
+        if phase_file is not None:
+            layout.append((Path(phase_file), "phase"))
+        for path, role in layout:
+            add_carrier(path, role)
+
+        add_required_reads()
     else:
         try:
             plan_core = plan_layout.plan_core_path(plan_dir)
@@ -703,6 +715,11 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                           f"#section:{selector['anchor']}")
                 add(source, V2_INPUT_ROLE, entry=unit.get("declaration_ref"), raw=selected,
                     selector=selector, display_suffix=suffix)
+        else:
+            # A future producer output cannot be bundled before it exists.  Expose
+            # the spec edge to stage-aware admission so the consumer becomes
+            # pending-producer instead of a false ready/bundle failure.
+            add_required_reads()
 
         state_fresh = state_path.is_file()
         if state_fresh:

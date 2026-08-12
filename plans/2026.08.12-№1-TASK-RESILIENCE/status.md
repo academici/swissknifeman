@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: d24658360581984870b50825d501929e92ddaa6ddf8ebf517273b963c954d65a
+inputs_sha256: 005319d7706c763ad5a2841d3b31886ebe40b63873468e7f9880049461209eda
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
-| P1 | Active-plan migration and Layout v1 execution retirement | 2/5 | 🟡 In progress |
+| P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟡 In progress |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
@@ -46,7 +46,7 @@ generated_by: task plan-views status
 | P1.1 | Inventory every active Layout v1 consumer | 🟢 Done | 2026-08-12 |
 | P1.2 | Normalize legacy Routing without widening v2 grammar | 🟢 Done | 2026-08-12 |
 | P1.3 | Freeze full-fleet admission policy and green every preview | 🟠 Done with deviations | 2026-08-12 |
-| P1.4 | Apply the approved fleet cutover and prove zero live v1 | ⬜ Not started | — |
+| P1.4 | Apply the approved fleet cutover and prove zero live v1 | 🟢 Done | 2026-08-12 |
 | P1.5 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
 
 ## Phase P2
@@ -168,6 +168,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · in-progress · Bookkeeping repair: preserve deviation in generated terminal state. |
 | 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
 Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run; validate.sh red on 7 pre-existing archive Routing errors; Files expanded to plan_admission.py/test; attempts 2-3 repaired bookkeeping. |
+| 2026-08-12 | frontier/high | plan-run · in-progress · — |
+| 2026-08-12 | frontier/high | plan-run · blocked · decision queue: DR-P1.4-bounded-registry-invalid-repair |
+| 2026-08-12 | owner | plan-run · in-progress · decision queue: DR-P1.4-bounded-registry-invalid-repair |
+| 2026-08-12 | frontier/high | plan-run · local-repair · Pre-final route capture: exact continuation line after user steering; same provider thread/model/effort/cwd as pre-mutation. |
+| 2026-08-12 | frontier/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:69 |
 
 ## Owner Gates
 
@@ -175,3 +180,4 @@ Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run;
 - P0.3: known deviation
 - P1.2: known deviation
 - P1.3: known deviation
+- P1.4: known deviation

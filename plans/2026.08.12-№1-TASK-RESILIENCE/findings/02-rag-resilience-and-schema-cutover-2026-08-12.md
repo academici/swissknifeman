@@ -70,5 +70,9 @@ legacy removal и проверка отсутствия live legacy consumers. E
   `artifacts/P0/rag-gate-evidence-v1.json`; полные generated answers не сохранены.
 - WebSearch x4 остаётся independent official cross-check, но не считается заменой обязательного
   Perplexity результата.
+- Downstream pre-close на item-коммите `1db68de9` выявил ложный RED: будущий
+  validator P1.1 ещё не создан, а ASCII-only parser потерял path с `№`. Task fix
+  `5294642e` классифицирует такой dependency-not-ready consumer как `unknown`; реальный
+  non-zero от applicable command остаётся `red`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего.
 - Обходки/[POSSIBLE-DEFECT]: нет.

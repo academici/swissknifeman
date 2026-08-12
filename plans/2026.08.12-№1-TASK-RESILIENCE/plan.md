@@ -72,6 +72,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-08-12 | plan-designer/frontier/high | Design pass 1/1: План №1 создан и полностью детализирован; ACTIVE переключён с `—`. |
+| 2026-08-12 | executor/gpt-5.6-sol | P0.1 закрыт: numbered PLAN-ID, Title/comment contract и Unicode lint GREEN; см. Completion Notes. |
 
 ## 7. Contracts
 
@@ -79,7 +80,7 @@ RAG:— (repo-grounded: `findings/00-roadmap-and-runtime-gap.md:1`).
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| numbered-plan-identity | v1.0.0 | planned | plan-protocol, plan-lint, provider commands | — |
+| numbered-plan-identity | v1.0.0 | delivered | plan-protocol, plan-lint, provider commands | registry/provider projections regenerated |
 | continue-first-block-policy | v1.0.0 | planned | task commands, journal/state, provider adapters | — |
 | terminal-delivery-receipt | v1.0.0 | planned | task commands/provider delivery | — |
 

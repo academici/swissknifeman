@@ -8,6 +8,22 @@
 
 ## Верифицированные выводы
 
+- Perplexity Deep Research синтезировал continue-first invariant по current official sources:
+  worker/process failure сначала восстанавливает checkpoint; retry применяется к target activity,
+  а исчерпание retry budget требует новой классификации в external block или terminal defect.
+  Terminal external block хранит проверяемое unblock condition; local repair остаётся bounded,
+  journaled operation. Источники Perplexity:
+  https://docs.temporal.io/encyclopedia/retry-policies и
+  https://docs.temporal.io/design-patterns/non-retryable-errors
+  (повторный MCP-проход после bridge fix 2026-08-12, confidence: high).
+- Для schema retirement Perplexity подтвердил: каждый run пинится к execution contract/version;
+  breaking semantics не меняются in-place; old executors остаются до zero-consumer proof,
+  включая running/retry/blocked/timer/callback paths. Forced retirement является cancellation,
+  а не migration. Источники Perplexity:
+  https://docs.temporal.io/develop/safe-deployments и
+  https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-versioning
+  (повторный MCP deep/basic cross-check 2026-08-12, confidence: high).
+
 - Google Cloud IAM рекомендует для retry-safe transient failures ограниченный
   exponential backoff с jitter и deadline; для concurrency `409 ABORTED` повторяется
   весь read-modify-write cycle, а не только последняя запись. Это поддерживает
@@ -40,6 +56,14 @@ legacy removal и проверка отсутствия live legacy consumers. E
 
 ## Проверка (verification status)
 
-- RAG: `perplexity-web` x3 — 1 partial recovery synthesis, 2 `No answer found`; WebSearch fallback x4 official-domain queries — OK.
-- Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего; все три несущих класса покрыты official sources.
-- Обходки/[POSSIBLE-DEFECT]: Perplexity migration synthesis unavailable; official-source fallback дал прямую проверку, не workaround в product design.
+- До ремонта: `perplexity-web` x7 — 1 ответ и 6 `No answer found`; daemon evidence показывал
+  полный `.prose` при десяти пустых `[role=tabpanel]`.
+- Ремонт: `/home/vostrikov/projects/packages/perplexity-web-mcp` commit `d77ce0e` выбирает
+  непустой legacy tabpanel либо current `main .prose`; 51 passed, 1 skipped, lint/build GREEN.
+- После ремонта: тот же Microsoft question через `search` → 660 chars/1 official source;
+  schema migration через `advanced` → 1192 chars; recovery/schema query через `deep` →
+  8462 chars/4 sources. Mandatory Perplexity gate — GREEN.
+- WebSearch x4 остаётся independent official cross-check, но не считается заменой обязательного
+  Perplexity результата.
+- Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего.
+- Обходки/[POSSIBLE-DEFECT]: нет.

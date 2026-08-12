@@ -1,0 +1,24 @@
+<!-- plan-projection
+projection: decision-current
+projection_version: v1
+source_scope: decisions/
+through: 2026-08-12/D9
+inputs_sha256: 03beea9444caac95d8c8f30971cc4ae62a381f0100af07e1bad7c0602e9f6154
+generated_by: task plan-views decisions
+-->
+
+# Текущие решения
+
+> Не править руками: это генерируемый вид.
+
+| ID | Date | Status | Items | Решение |
+|:--|:--|:--|:--|:--|
+| D1 | 2026-08-12 | accepted | P2.1, P2.2 | Новые планы используют `YYYY.MM.DD-№N-CODE`, где `N` — положительный уникальный внутри даты номер; Title начинается с `План №N —`. Legacy IDs остаются readable. RAG:— (owner/repo-grounded: `brief/00-brief.md`, `findings/00-roadmap-and-runtime-gap.md`). |
+| D2 | 2026-08-12 | accepted | P2.2, P5.3 | В коде, docstring, PR/review comments item именуется полной формой `<PLAN-ID> Pn.m`; bare `Pn.m` допустим только внутри носителей самого плана. RAG:— (owner-grounded: `brief/00-brief.md`). |
+| D3 | 2026-08-12 | accepted | P3.1, P3.2, P4.1 | `routing-rejected`, `decision-pending`, `local-repair`, `rag-pending` и `block-candidate` — observation results: они пишут provenance, но не меняют state и attempt. RAG:— (repo-grounded: `roadmap/2026.08.11-local-repair-vs-escalation-classifier.md`, `roadmap/2026.08.11-codex-effective-route-observability.md`). |
+| D4 | 2026-08-12 | accepted | P4.1, P4.2 | Terminal block разрешает только deterministic reducer после одного свежего distinct-context isolated reviewer verdict `JUSTIFIED`; для external candidate до review обязателен verified RAG. RAG:— (owner-grounded: `brief/00-brief.md`; repo-grounded: `research/01-target-design.md`). |
+| D5 | 2026-08-12 | accepted | P5.1, P5.2, P5.3 | Task публикует byte-bound terminal delivery receipt с exact persisted Next, journal pointer, commit и carrier digests; nonterminal субъект получает `FINAL_BEFORE_TERMINAL_FORBIDDEN`. Transport heartbeat/final interception остаётся честной harness/provider boundary. RAG:— (repo-grounded: `roadmap/2026.08.11-terminal-final-continuity-receipt.md`, `roadmap/2026.08.11-terminal-handoff-recommendation-receipt.md`). |
+| D6 | 2026-08-12 | accepted | P0.1, P0.2, P0.3, P6.1, P6.2, P6.3 | Преждевременный однофазный v1 не сохраняется как второй носитель: Git history уже хранит его evidence. Единственный активный план перезапущен сразу в Layout v2 с P0–P6; прежний код — candidate, а не закрытое исполнение. Ранний локальный tag `v0.12.0` удалён, rollout не начинался. RAG:— (owner-grounded: `brief/01-refinements.md`). |
+| D7 | 2026-08-12 | accepted | P1.1, P1.2, P1.3 | Все неархивные Layout v1 планы детерминированно мигрируются в v2 до удаления v1 execution reader/schema/branches. После cutover активный план без `Layout | v2` fail-closed; архивный v1 остаётся историческими байтами, но не исполняется Task runtime. RAG:✅ 2026-08-12 `Microsoft Durable Functions versioning` + `Kubernetes deprecated API migration`; выжимка и URLs — `findings/02-rag-resilience-and-schema-cutover-2026-08-12.md`. |
+| D8 | 2026-08-12 | accepted | P0.3, P4.1, P4.2 | Если ТЗ требует Perplexity Web, пустой/недоступный ответ проходит bounded retry и становится nonterminal `rag-pending`. Context7/WebSearch разрешены как provisional cross-check, но не закрывают этот item, phase audit или terminal block verdict. Закрытие разрешено только после успешного Perplexity rerun с сохранённой выжимкой и source provenance. RAG:✅ 2026-08-12 (собственный воспроизведённый bridge defect + успешный basic/advanced/deep rerun; findings/02). |
+| D9 | 2026-08-12 | accepted | P6.1, P6.2, P6.3 | Следующий локальный annotated release tag — `v0.13.0`. Неопубликованный `v0.12.0` tag был удалён; его candidate changes входят в новый release вместе с намеренным breaking retirement Layout v1. Для pre-1.0 umbrella это minor bump. Push и GitHub release не входят без отдельной команды владельца. RAG:— (repo-grounded: release-discipline, Git tags и owner instruction). |

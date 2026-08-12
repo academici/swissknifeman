@@ -2,8 +2,8 @@
 id: D1
 date: 2026-08-12
 status: accepted
-item: P1.1
-items: [P1.1, P1.2]
+item: P2.1
+items: [P2.1, P2.2]
 supersedes: []
 superseded_by: null
 ---

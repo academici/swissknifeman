@@ -28,8 +28,9 @@ Task слишком рано превращает route/tool/projection/local re
 идентичность плана, nonterminal observations/local repair, подтверждение
 реальной блокировки, terminal delivery и release/rollout. Уже написанный код
 считается лишь release candidate: каждая фаза отдельно сверяет его с ТЗ и
-чинит расхождения до релиза. RAG:— (repo-grounded:
-`findings/00-roadmap-and-runtime-gap.md`, `research/01-target-design.md`).
+чинит расхождения до релиза. RAG:✅ 2026-08-12 (Perplexity Web: Temporal,
+Microsoft Durable Functions; synthesis и URLs —
+`findings/02-rag-resilience-and-schema-cutover-2026-08-12.md`).
 
 ## 2. Execution Rules
 
@@ -39,13 +40,15 @@ Task слишком рано превращает route/tool/projection/local re
 - Procedural/transient/dependency/tool-noise/stale projection и bounded local reversible defect чинятся inline; это nonterminal `local-repair`.
 - Route rejection, pending decision, local repair и block candidate не меняют item status/attempt.
 - Внешний block candidate обязан иметь verified RAG; покрытие external-класса — 100%.
+- Если план требует Perplexity Web, пустой/недоступный ответ после bounded retry пишет
+  nonterminal `rag-pending`: fallback не закрывает item/phase и не разрешает terminal verdict.
 - Terminal `Blocked`/escalation до одного свежего isolated reviewer verdict `JUSTIFIED` запрещены.
 - `AVOIDABLE` возвращает root в repair; `INSUFFICIENT_EVIDENCE` — в сбор evidence; reviewer не даёт authority.
 - Material safety/authority/frozen/public/acceptance boundary не автофиксится.
 - Generated provider/docs/registry/state/bundle носители менятся только owning generator.
 - Кодовая/docstring/PR/review ссылка на item: `2026.08.12-№1-TASK-RESILIENCE Pn.m`; bare `Pn.m` — только внутри этого плана.
 - Каждый item получает product commit и отдельный bookkeeping commit; посторонний дифф не стейджить.
-- Tag создаётся только после terminal P5.1; rollout — только по уже зарегистрированным project/channel.
+- Tag `v0.13.0` создаётся только после terminal P6.1; rollout — только по уже зарегистрированным project/channel.
 - Push/GitHub release без отдельного owner instruction не выполнять.
 
 ## 3. Routing
@@ -54,6 +57,7 @@ Task слишком рано превращает route/tool/projection/local re
 |:--|:--|:--|:--|
 | P0.1 | frontier/high | manual | сквозной roadmap/runtime verdict и acceptance boundary |
 | P0.2 | frontier/high | manual | замораживает continue-first матрицу и внешний RAG gate |
+| P0.3 | frontier/high | manual | повторный обязательный Perplexity pass и fail-closed RAG contract |
 | P1.1 | frontier/high | manual | inventory/contract всех live v1 consumers перед irreversible cutover |
 | P1.2 | implementation/high | manual | deterministic active-plan migration и carrier regeneration |
 | P1.3 | implementation/high | manual | удаление v1 execution schema/branches после zero-active-v1 proof |
@@ -68,7 +72,7 @@ Task слишком рано превращает route/tool/projection/local re
 | P5.3 | implementation/high | manual | generated provider/docs/registry parity |
 | P6.1 | implementation/high | manual | exact release tree и affected-package gates |
 | P6.2 | implementation/medium | plan-exec | annotated tag после release gate |
-| P6.3 | implementation/high | manual | external project rollout и post-status evidence |
+| P6.3 | implementation/high | manual | registered-project rollout и post-status evidence |
 
 ## 5. Decision Log
 
@@ -81,12 +85,17 @@ Task слишком рано превращает route/tool/projection/local re
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| numbered-plan-identity | v1.0.0 | candidate | plan-protocol, plan-lint, Task provider commands | P1/P4 |
-| continue-first-block-policy | v1.0.0 | candidate | Task commands, journal/state, provider adapters | P2/P3/P4 |
-| terminal-delivery-receipt | v1.0.0 | candidate | Task commands and provider delivery seam | P4 |
+| numbered-plan-identity | v1.0.0 | candidate | plan-protocol, plan-lint, Task provider commands | P2/P5 |
+| plan-layout-v2-only-execution | v1.0.0 | candidate | Task readers, commands, active plan fleet | P1/P5/P6 |
+| continue-first-block-policy | v1.0.0 | candidate | Task commands, journal/state, provider adapters | P3/P4/P5 |
+| terminal-delivery-receipt | v1.0.0 | candidate | Task commands and provider delivery seam | P5 |
 
 ## Проверка (verification status)
 
-- RAG: `perplexity-web` x3 degraded (1 partial, 2 no-answer) → official-domain WebSearch fallback x4 OK; выжимка и URLs в `findings/02-rag-resilience-and-schema-cutover-2026-08-12.md`.
-- Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего; external fact classes покрыты official sources.
-- Обходки/[POSSIBLE-DEFECT]: нет product workaround; сбой Perplexity честно зафиксирован как engine degradation.
+- RAG: до ремонта моста `perplexity-web` x7 → 1 ответ, 6 `No answer found`; после
+  `perplexity-web-mcp` commit `d77ce0e` повторены `search`/`advanced`/`deep` → 660/1192/8462
+  символов, у basic/deep есть official sources. Выжимка и URLs — в findings/02.
+- Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего; обязательный Perplexity gate закрыт успешным rerun,
+  а не WebSearch fallback.
+- Обходки/[POSSIBLE-DEFECT]: нет; временная DOM-диагностика удалена, bridge regression покрыт
+  51 passed + 1 skipped package tests и тремя живыми MCP-вызовами.

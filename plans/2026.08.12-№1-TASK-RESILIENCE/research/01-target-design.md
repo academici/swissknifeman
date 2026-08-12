@@ -7,7 +7,8 @@ signal
   → minimal reproduce
   → deterministic classify
   → local/transient/procedural: repair/retry/continue
-  → external: mandatory RAG evidence
+  → external: mandatory Perplexity RAG evidence
+  → Perplexity empty/unavailable: bounded retry → rag-pending, nonterminal
   → material block candidate: isolated reviewer
   → JUSTIFIED + deterministic boundary: terminal Blocked
   → AVOIDABLE: owning-root repair
@@ -17,6 +18,11 @@ signal
 Raw tool exit, route mismatch, pending decision и первая гипотеза о blast radius не являются
 terminal product outcomes. RAG:— (repo-grounded:
 `roadmap/2026.08.11-local-repair-vs-escalation-classifier.md:35`).
+
+Fallback WebSearch/context7 может дать provisional evidence, но не закрывает явно обязательный
+Perplexity gate. `rag-pending` сохраняет точный query/tool/attempt defect и блокирует только
+terminal verdict/phase close, а не безопасную локальную работу. RAG:✅ 2026-08-12
+(Perplexity Web recovery synthesis; findings/02).
 
 ## 2. State/event separation
 
@@ -54,3 +60,11 @@ hook на final, остаётся явно названным остатком, 
 Title начинается `План №N —`. Ссылки из комментария/docstring: полный
 `YYYY.MM.DD-№N-CODE Pn.m`, никогда bare `Pn.m`. Старые dated/legacy IDs читаются для back-compat.
 RAG:— (owner-grounded: `brief/00-brief.md:12`).
+
+## 6. Layout v2-only execution
+
+Все active plan roots во всём зарегистрированном fleet мигрируются до cutover. После zero-active-v1
+proof отсутствие `Layout | v2` — typed refusal `PLAN_LAYOUT_V1_RETIRED`; Task не выводит v1 из
+дерева, не читает monolithic phase/handoff path и не предлагает выполнить migrator. Архивные v1
+байты остаются только Git/history evidence. RAG:✅ 2026-08-12 (Perplexity Web + Microsoft Durable
+Functions versioning; findings/02).

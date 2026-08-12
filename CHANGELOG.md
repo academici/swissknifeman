@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-12
+
 - **`task` / `plan-protocol`: выполнение стало continue-first.** Route rejection, pending
   decision, local repair и block candidate теперь являются nonterminal journal observations и не
   расходуют attempt. Terminal `Blocked` разрешается только после isolated `JUSTIFIED`; для каждого

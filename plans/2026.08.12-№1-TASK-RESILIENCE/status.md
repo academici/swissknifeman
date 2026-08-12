@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 7e4cbc1d11d9fdd1855ce5d51d87d10499abed9c2a920f01bdbe98c4b382f566
+inputs_sha256: 3b6dce138d68e2e88965dbf59f85da24977591c8a2e970203edfd6e072ddbbd1
 generated_by: task plan-views status
 -->
 
@@ -200,6 +200,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | frontier/xhigh | plan-run · closed-deviations · Repair commit 6c07566c: удалён legacy fixture adapter, audit receipt исправлен, Batch-first lint согласован; Task 836/1 skip, skiller 633, docs builds GREEN. Отклонение: same-session owner continuation и route выше требуемого. |
 | 2026-08-12 | frontier/xhigh | plan-run · closed-deviations · Carrier-only correction for attempt 8: Task Contract 1e553cc7 evaluated GREEN. Product remains 6c07566c.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | frontier/xhigh | plan-audit · audit-green · заход 2, вердикт GREEN |
+| 2026-08-12 | gpt-5.6-terra/low | plan-close · closed-deviations · фаза P1 закрыта; GREEN audit fingerprint совпал, item deviations сохранены |
 
 ## Owner Gates
 

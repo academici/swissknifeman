@@ -1,37 +1,36 @@
-# HANDOFF — 2026-08-12 — after P1.5
+# HANDOFF — 2026-08-12 — after P1
 
-**Next:** /task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P1
+**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high — independent restart-accumulation audit |
-| Context | NEW SESSION — cold-start-root |
-| Суть | Аудит всего P1 и отдельная проверка накопленного диффа после 7 рестартов. |
-| Команда | `/task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P1` |
-
-Provider-neutral launch-block:
+| Batch | B-P2-IDENTITY |
+| Model | implementation (`gpt-5.6-terra`) |
+| Thinking | high |
+| Context | `cold-start-root: phase-boundary` |
+| Суть | Исполнить manual batch P2.1–P2.2 из committed handoff |
+| Команда | — |
 
 ```text
-$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P1
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2
 ```
 
-Native Codex launch-block:
+**Native Codex launch block**
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P1'
-```
+| Batch | Model | Thinking | Context | Суть | Команда |
+|:--|:--|:--|:--|:--|:--|
+| B-P2-IDENTITY | gpt-5.6-terra | high | `cold-start-root: phase-boundary` | Исполнить manual batch P2.1–P2.2 из committed handoff | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2'` |
 
-**Done:** P1.1–P1.5 исполнены; P1.5 закрыт с deviation из-за оркестрационного инцидента. Task 834 tests, Task validate, skiller validate, provider generation check, active inventory и active-plan lint — green.
+**Done:** P1 terminal — Layout v1 execution retired, active inventory proves `v1-active=0`, second audit GREEN.
 
-**Remaining:** В отдельной свежей сессии провести adversarial audit P1. Обязательно проверить duplicate helpers, compatibility branches, dead code, weakened assertions/gates, generated-owner violations и unrelated scope; затем закрыть фазу по вердикту.
+**Remaining:** P2.1–P2.2 implement numbered PLAN-ID and qualified references under existing stable specs.
 
-**Sources of truth:** `findings/10-P1-execution-restart-incident.md` · `phases/P1/P1.5.state.md` · D17 · P1.1–P1.5 commits.
+**Sources of truth:** `phases/P1/P1.md` latest Audit P1 · `phases/P1/P1.5.state.md` · `artifacts/P1/active-layout-inventory-v1.json` · D7/D16/D17.
 
-**Open risks:** Из-за 7 рестартов / 8 P1.5 launches зелёные тесты не считаются достаточными для самосертификации; терминальное закрытие P1 зависит от fresh-session audit.
+**Open risks:** P1 product risks closed; process deviations remain recorded verbatim in Phase Handoff and item states.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: historical Layout v1 archives remain inert bytes and are checked by the prior compatible tag.
-- deferred: terminal phase closure only after the separate audit.
+- workarounds: historical Layout v1 archives require the prior compatible release for execution.
+- deferred: none from P1; P2 scope remains unchanged.
 - open_questions: —

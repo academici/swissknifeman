@@ -20,3 +20,15 @@ Redesign the migrator/linter compatibility contract before resuming P1.2. The re
 must preserve the existing Routing semantics or emit a v2-supported normalized form,
 then repeat this target's dry-run and output lint before processing the remaining
 inventory targets.
+
+## Decision-queue transport defect
+
+The required `plan-decisions.py request` path was exercised for
+`DR-P1.2-layout-migration-contract`. It correctly returned
+`approval_required`, but its generated journal transition wrote a terminal
+`blocked` event with `run_id: null` and `session_id: null`. The terminal delivery
+receipt rejected that event with `TERMINAL_RUN_ID_MISSING`. Its projected v2 state
+also requires a legacy escalation block in the immutable item specification, so
+the active plan's lint reports one error. These are defects in the Task
+decision-queue/projection and linter contract; neither carrier is manually
+edited as a workaround.

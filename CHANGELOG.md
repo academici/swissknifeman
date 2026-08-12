@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: external item references are plan-qualified, and provider projections stay synced.**
+  Canonical authoring guidance, Codex artifacts, Claude golden surface and the operator reference
+  now carry the same `<PLAN-ID> Pn.m` rule; audit-cap recovery grants remain limited to their
+  explicitly named Validation items.
+
 - **`task` / `plan-protocol`: executable Layout v1 retired after fleet cutover.**
   Runtime readers, migrator, policy schema and compatibility commands are removed; missing/v1
   plans fail with `PLAN_LAYOUT_V1_RETIRED`. Canonical fixtures and provider projections are v2-only,

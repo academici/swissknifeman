@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:fbf4a7a1f5a74ae49a6952e78a625e84402ed54f3c75ab5e4e55307203a03bc7
+Canonical SHA-256: sha256:b44f50fe3472f2a194dec13ee8e94c3ea24302c1ef3efe830355a624e7fb26fb
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -23,6 +23,10 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
+
+В кодовых комментариях, docstring и PR/review notes внешняя ссылка на item использует
+`<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри носителей этого плана, где его
+identity уже однозначна.
 
 ## DESIGN-ROOT-TERMINAL (authoring/execution boundary)
 

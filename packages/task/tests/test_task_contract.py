@@ -286,6 +286,25 @@ class AuthorityTests(unittest.TestCase):
             self.assertTrue(task_contract._has_audit_cap_remediation_grant(plan, "P5.6"))
             self.assertFalse(task_contract._has_audit_cap_remediation_grant(plan, "P5.5"))
 
+    def test_audit_cap_recovery_allows_only_explicit_validation_items(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            decision = plan / "decisions" / "D79.md"
+            decision.parent.mkdir()
+            decision.write_text(
+                "---\nstatus: accepted\nitem: P6.7\n"
+                "items: [P6.1, P6.2, P6.3, P6.4, P6.5, P6.6, P6.7]\n---\n"
+                "AUDIT-CAP P6 закрывается bounded recovery без третьего Audit P6. "
+                "Владелец разрешает повторить исходные Validation для P6.1/P6.3/P6.5, "
+                "P6.6 и P6.7 только в fresh native roots с provider-attested маршрутами; "
+                "новых terminal attempts недостаточно без route evidence.\n",
+                encoding="utf-8",
+            )
+            for item_id in ("P6.1", "P6.3", "P6.5", "P6.6", "P6.7"):
+                self.assertTrue(task_contract._has_audit_cap_remediation_grant(plan, item_id))
+            for item_id in ("P6.2", "P6.4"):
+                self.assertFalse(task_contract._has_audit_cap_remediation_grant(plan, item_id))
+
     def test_first_audit_leaves_one_repair_round(self):
         base = _load_base_contract()
         base["authority"]["observed_rounds"] = 1
@@ -648,7 +667,10 @@ class BuildSelfConformanceTests(unittest.TestCase):
 
     def test_live_actual_route_matching_required_allows_both_predicates(self):
         from task import route_evidence as re_
-        for item_id in ("P1.1", "P1.5", "P2.1"):
+        # P1 has already consumed its two phase-audit attempts, so its historical
+        # items must fail the loop gate even with a matching live route.  Keep this
+        # positive route regression on the un-audited current P2 items instead.
+        for item_id in ("P2.1", "P2.2"):
             with self.subTest(item=item_id):
                 contract = task_contract.build(PLAN_ROOT, item_id)
                 required = contract["route"]["required"]
@@ -659,6 +681,19 @@ class BuildSelfConformanceTests(unittest.TestCase):
                 contract["version"]["content_hash"] = task_contract.content_hash(contract)
                 self.assertIsNone(task_contract.pre_mutation(contract))
                 self.assertIsNone(task_contract.pre_final(contract))
+
+    def test_live_items_in_an_audit_capped_phase_remain_blocked(self):
+        from task import route_evidence as re_
+        for item_id in ("P1.1", "P1.5"):
+            with self.subTest(item=item_id):
+                contract = task_contract.build(PLAN_ROOT, item_id)
+                required = contract["route"]["required"]
+                actual = re_.capture_actual(required["model_class"], required["effort"],
+                                            source="provider-doctor", ts="t", model="sonnet")
+                caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
+                contract["route"] = re_.build_task_contract_route(required, actual, caps)
+                contract["version"]["content_hash"] = task_contract.content_hash(contract)
+                self.assertEqual(task_contract.pre_mutation(contract), "LOOP_BUDGET_EXCEEDED")
 
     def test_unknown_item_id_fails_closed(self):
         with self.assertRaises(task_contract.TaskContractBuildError):

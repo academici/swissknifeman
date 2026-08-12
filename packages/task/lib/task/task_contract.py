@@ -219,11 +219,24 @@ def _has_audit_cap_remediation_grant(plan_dir: Path, item_id: str) -> bool:
         if len(parts) != 3:
             continue
         fields = dict(line.split(":", 1) for line in parts[1].splitlines() if ":" in line)
+        body = parts[2]
         if (fields.get("status", "").strip() == "accepted"
                 and fields.get("item", "").strip() == item_id
-                and "AUDIT-CAP" in parts[2]
-                and "P5.6 обязан закрыть" in parts[2]
-                and "третьего Audit P5" in parts[2]):
+                and "AUDIT-CAP" in body
+                and "P5.6 обязан закрыть" in body
+                and "третьего Audit P5" in body):
+            return True
+        normalized_body = " ".join(body.split())
+        recovery_clause = re.search(
+            r"повторить исходные Validation для (?P<items>.+?) только в fresh native roots",
+            normalized_body,
+        )
+        if (fields.get("status", "").strip() == "accepted"
+                and "AUDIT-CAP" in normalized_body
+                and "provider-attested" in normalized_body
+                and "новых terminal attempts" in normalized_body
+                and recovery_clause is not None
+                and item_id in set(re.findall(r"P\d+\.\d+", recovery_clause.group("items")))):
             return True
     return False
 

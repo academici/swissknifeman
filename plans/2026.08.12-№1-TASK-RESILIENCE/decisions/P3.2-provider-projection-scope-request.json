@@ -1,0 +1,71 @@
+{
+  "contract_version": "v1",
+  "decision_id": "P3.2-provider-projection-scope-2026-08-12",
+  "action_version": 1,
+  "kind": "authorization",
+  "decision_class": "scope_change",
+  "subject": {
+    "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+    "phase_id": "P3",
+    "item_id": "P3.2"
+  },
+  "action": {
+    "requires_authorization": true,
+    "affected_surfaces": [
+      "packages/task/adapters",
+      "packages/task/docs/reference"
+    ]
+  },
+  "options": [
+    {
+      "id": "expand-p3.2",
+      "outcome": "apply",
+      "action_ref": "task:plan-design 2026.08.12-№1-TASK-RESILIENCE P3.2",
+      "evidence_refs": ["findings/P3.2-provider-projection-scope-conflict.md"]
+    },
+    {
+      "id": "rescope-validation",
+      "outcome": "apply",
+      "action_ref": "task:plan-design 2026.08.12-№1-TASK-RESILIENCE P3.2",
+      "evidence_refs": ["findings/P3.2-provider-projection-scope-conflict.md"]
+    },
+    {
+      "id": "escalate",
+      "outcome": "escalate",
+      "action_ref": null,
+      "evidence_refs": ["findings/P3.2-provider-projection-scope-conflict.md"]
+    },
+    {
+      "id": "reject",
+      "outcome": "reject",
+      "action_ref": null,
+      "evidence_refs": ["findings/P3.2-provider-projection-scope-conflict.md"]
+    }
+  ],
+  "default_option": null,
+  "on_timeout": "park",
+  "expires_at": "2026-08-19T19:05:00Z",
+  "evidence": [
+    {
+      "carrier": "findings/P3.2-provider-projection-scope-conflict.md",
+      "anchor": "Signal",
+      "digest": "1b02cb60965e5b7cd6edb949297c130c3c99e036788d37be68d31e6c36cb8fed"
+    }
+  ],
+  "attempted": ["journal.jsonl:113"],
+  "continuation": {
+    "root_session_id": "019ff756-9863-74d0-b7ef-1275928afa79",
+    "root_run_id": "2ed1b178f280b00a3e7d2ff1f2676a5c4a2ca093ec959a3ce2372fd4521c391b",
+    "target": {
+      "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+      "item_id": "P3.2",
+      "resume_command": "task:plan-design 2026.08.12-№1-TASK-RESILIENCE P3.2"
+    },
+    "capabilities": {
+      "snapshot_id": "filesystem-git-v1",
+      "digest": "e48c31187c83092b43f7d48b3cad397f2c162fe72b5b63732c031b9ad8d5bc82",
+      "available": ["filesystem", "git"]
+    },
+    "preferred_mode": "resume-root"
+  }
+}

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: a5fa1a05af325d7e399f56936bb653d948f55e745e902433cf3997c0638c5043
+inputs_sha256: 1339a1be127562c3889191b1b16a9280aa0a530257f107da92b09894553eebc2
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
-| P3 | Nonterminal observations and inline local repair | 1/3 | 🟡 In progress |
+| P3 | Nonterminal observations and inline local repair | 2/3 | 🟡 In progress |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
@@ -61,7 +61,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Add nonterminal journal results and state semantics | 🟢 Done | 2026-08-12 |
-| P3.2 | Apply continue-first repair flow to canonical commands | ⬜ Not started | 2026-08-12 |
+| P3.2 | Apply continue-first repair flow to canonical commands | 🟢 Done | 2026-08-12 |
 | P3.3 | Make orchestration declaration detection negation-aware | ⬜ Not started | — |
 
 ## Phase P4
@@ -222,6 +222,12 @@ Provider projections regenerated; Task 841/1 skip, skiller 633 green. Material d
 | 2026-08-12 | implementation/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 P3.1: rag-pending добавлен в journal/state; 45 focused tests и validate.sh зелёные. |
 | 2026-08-12 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR; remaining suffix B-P3-CONTINUE сохранён как P3.2-P3.3 |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · block-candidate · P3.2: provider projections stale; generated-asset write excluded from item scope. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · blocked · decision queue: P3.2-provider-projection-scope-2026-08-12 |
+| 2026-08-12 | owner | plan-run · in-progress · decision queue: P3.2-provider-projection-scope-2026-08-12 |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+P3.2: five commands and owned provider projections regenerated; package validation passed. |
 
 ## Owner Gates
 

@@ -19,4 +19,3 @@ reader/schema/branches. После cutover активный план без `Lay
 
 Удаление execution compatibility до миграции live plans может оставить их невозобновляемыми; после
 доказанного zero-active-v1 второй executable schema лишь сохраняет divergence и regression surface.
-

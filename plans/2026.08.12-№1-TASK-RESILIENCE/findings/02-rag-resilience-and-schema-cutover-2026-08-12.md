@@ -43,4 +43,3 @@ legacy removal и проверка отсутствия live legacy consumers. E
 - RAG: `perplexity-web` x3 — 1 partial recovery synthesis, 2 `No answer found`; WebSearch fallback x4 official-domain queries — OK.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: ничего; все три несущих класса покрыты official sources.
 - Обходки/[POSSIBLE-DEFECT]: Perplexity migration synthesis unavailable; official-source fallback дал прямую проверку, не workaround в product design.
-

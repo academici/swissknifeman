@@ -12,4 +12,3 @@
 Порядок задан зависимостями: provider commands P4 проецируют каноны
 P1–P3, а release P5 принимает только их совместный зелёный результат. RAG:—
 (repo-grounded: `findings/00-roadmap-and-runtime-gap.md`, `research/01-target-design.md`).
-

@@ -16,4 +16,3 @@ RAG:— (owner-grounded: `brief/00-brief.md`; repo-grounded: `research/01-target
 ## Почему
 
 Модельная гипотеза о блоке не доказывает boundary; reviewer даёт evidence verdict, но не authority.
-

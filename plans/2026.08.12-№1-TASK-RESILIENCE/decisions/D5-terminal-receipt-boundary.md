@@ -18,4 +18,3 @@ Transport heartbeat/final interception остаётся честной harness/p
 ## Почему
 
 Prompt-only final contract не связывал chat termination с durable terminal plan state и терял recommendation.
-

@@ -258,13 +258,31 @@ WORKFLOW_DIR_NAME = "workflows"  # единственный дом скрипт�
 DEV_LOOP_EXEMPT_NAME = "dev-loop.js"
 
 # --- 2026.07.10-SKM-ROADMAP-005 P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
-# КОНСЕРВАТИВНЫЙ набор маркеров в теле фазы: явный `scriptPath` launch-block'а,
+# КОНСЕРВАТИВНЫЙ набор маркеров в Phase Context: явный `scriptPath` launch-block'а,
 # «оркестрац», «мультиагент»/`multi-agent`. Правило Code Guidance «при сомнении НЕ
 # срабатывать» перевешивает буквальный список: бумерный `fan-out` НАМЕРЕННО исключён —
 # как одиночное слово он ловит нерелевантную прозу (напр. «искажение при fan-out» в
 # Known Deviations про токен-учёт), давая ложный warning. Условность (D29): ручное
 # item-by-item исполнение workflow не требует — маркер должен быть намеренным.
 ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
+ORCHESTRATION_NEGATION_RE = re.compile(
+    r"(?:не\s+(?:заяв\w*|треб\w*|использ\w*|нуж\w*)|"
+    r"без\s+(?:workflow|оркестрац\w*|scriptPath|мультиагент\w*|multi-agent)|"
+    r"(?:scriptPath|оркестрац\w*|мультиагент\w*|multi-agent)\w*\s+"
+    r"(?:не\s+(?:заяв\w*|треб\w*)|отсутств\w*))",
+    re.IGNORECASE,
+)
+
+
+def phase_declares_orchestration(line):
+    """Return whether one Phase Context line declares a workflow requirement.
+
+    D11 deliberately keeps this predicate line-scoped: an explicit negation applies
+    only to the statement that contains it, so a later positive declaration remains
+    effective. Item specs are not phase declarations and their acceptance prose must
+    not manufacture a workflow requirement.
+    """
+    return bool(ORCHESTRATION_MARKER_RE.search(line) and not ORCHESTRATION_NEGATION_RE.search(line))
 
 # --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34: протухший `## Phase Handoff` при реопене фазы (H2) --------------
 # Реопен (SKILL §3, 4-й шаг) НЕ удаляет блок сдачи, а помечает его ПЕРВОЙ НЕПУСТОЙ строкой

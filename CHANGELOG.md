@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: workflow lint теперь различает явный запрет и требование.**
+  Только positive declaration в `Phase Context` требует canonical workflow asset; negation той же
+  строки не маскирует отдельный `scriptPath` или multi-agent declaration. Codex и Claude
+  проекции пересобраны из общего канона.
+
 - **`task`: external item references are plan-qualified, and provider projections stay synced.**
   Canonical authoring guidance, Codex artifacts, Claude golden surface and the operator reference
   now carry the same `<PLAN-ID> Pn.m` rule; audit-cap recovery grants remain limited to their

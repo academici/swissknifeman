@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:bdcde7f6713b00b5f9b08c9253dd3ef24cb54d661e4a89a00c235863ffa798de
+Canonical SHA-256: sha256:5059ce5785e2c18647c63966f09f517e1e343fcab48f9513995e370fbd1cc94c
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -407,3 +407,5 @@ DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщени�
 готов в `plans/<ID>/workflows/`) → `native orchestration carrier for the referenced plan-owned workflow script`
 с пометкой NEW SESSION (session-restart discipline, SKILL §8), не `plan-exec`;
 режим `new` (все фазы — скелеты) → `$ task:plan-design <ID> P0` (frontier/high).
+Явная negation в том же утверждении Phase Context не объявляет orchestration и не гасит
+отдельное positive statement; semantic predicate принадлежит plan-lint, не этому command.

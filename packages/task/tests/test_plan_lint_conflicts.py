@@ -534,6 +534,42 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
 
+    def test_p6_shaped_explicit_negation_is_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p = phase_index_path(plan_dir)
+        text = p.read_text(encoding="utf-8").replace(
+            "Демо-фаза.",
+            "## Sequence and orchestration\n\n"
+            "Оркестрация не заявлена и workflow не требуется; цепочка строго последовательна.")
+        p.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+    def test_script_path_and_multi_agent_declarations_still_warn(self):
+        for plan_id, declaration in (
+                ("DEMO-1", "launch-block использует scriptPath для orchestration."),
+                ("DEMO-2", "Мультиагентная оркестрация заявлена для фазы.")):
+            with self.subTest(declaration=declaration):
+                plan_dir = write_valid_plan(self.root, plan_id)
+                p = phase_index_path(plan_dir)
+                p.write_text(p.read_text(encoding="utf-8").replace(
+                    "Демо-фаза.", declaration), encoding="utf-8")
+                _, diag = _lint(plan_dir)
+                self.assertTrue(diag.ok, diag.errors)
+                self.assertTrue(self._warnings_containing(diag, self._NEEDLE), diag.warnings)
+
+    def test_positive_line_after_negation_still_warns(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p = phase_index_path(plan_dir)
+        p.write_text(p.read_text(encoding="utf-8").replace(
+            "Демо-фаза.",
+            "Оркестрация не заявлена и workflow не требуется.\n"
+            "Мультиагентная оркестрация заявлена для retry flow."), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, self._NEEDLE), diag.warnings)
+
     # --- негатив: бумерное `fan-out` в прозе (не декларация) → тишина ------------
     # регрессия на ложный warning SKM-MASTER-002/P3 (fan-out в Known Deviations про
     # токен-учёт): консервативный набор маркеров намеренно НЕ ловит одиночное слово.

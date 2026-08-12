@@ -649,6 +649,7 @@ def _parse_phase_v2(path, phase_id, diag):
     items = {}
     status_table = []
     gate_lines = _lines_before_audit(lines)
+    orchestration_lines = tuple(gate_lines)
     try:
         owner_status = plan_status.status_model(path.parents[2])
         updated_by_id = {
@@ -691,8 +692,8 @@ def _parse_phase_v2(path, phase_id, diag):
             "is_skeleton": is_skeleton,
             "needs_clarification": [i + 1 for i, line in enumerate(gate_lines)
                                     if NEEDS_CLARIFICATION_RE.search(line)],
-            "declares_orchestration": any(ORCHESTRATION_MARKER_RE.search(line)
-                                           for line in gate_lines)}
+            "declares_orchestration": any(phase_declares_orchestration(line)
+                                           for line in orchestration_lines)}
 
 
 def parse_phase_md(path, phase_id, diag, *, layout="v2"):
@@ -746,7 +747,8 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
 
     # --- 2026.07.10-SKM-ROADMAP-005 P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
     # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
-    declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in gate_lines)
+    _, phase_context, _ = _find_section(gate_lines, PHASE_CONTEXT_HEADER_RE)
+    declares_orchestration = any(phase_declares_orchestration(ln) for ln in (phase_context or ()))
 
     items = {}
     for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):

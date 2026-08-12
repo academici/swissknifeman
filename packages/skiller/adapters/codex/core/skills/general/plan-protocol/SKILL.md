@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.30.0
+version: 2.31.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -160,6 +160,11 @@ deliverables, or per-item close gates: those gates still run inside the batch. A
 a phase audit/close boundary, mixes `Exec` modes, hides an owner/irreversible gate, or exceeds the
 remaining context budget. Its launch route and review are the maxima of its rows and capabilities are
 the union. After each item, persist the same batch plus only its remaining adjacent suffix.
+
+Workflow requirement is a line-scoped positive declaration in Phase Context, not a keyword grep:
+`scriptPath` or a positive orchestration/multi-agent statement requires a canonical workflow asset.
+An explicit negation in that same statement does not; it never suppresses a separate positive line.
+Authoring and audit use this one predicate rather than copying a regex into command prose.
 
 ## 6. Handoff and semantic Next
 

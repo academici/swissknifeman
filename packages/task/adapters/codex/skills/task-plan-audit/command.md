@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:4deda8dd30fb4213011f956d552181bef731a876f1a3fa16f78d58df0a01dc4c
+Canonical SHA-256: sha256:4af7c35e97fb43dc1283dc3611c503ec589e07f477a67a2ea3810164c0155814
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -120,6 +120,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    покрывает ВСЕ items без дыр, батчи обоснованы (сцепленный scope + одна модель), у каждого
    solo — причина «почему нельзя объединить», у batch/workflow-групп — готовые launch-block'и,
    гейты владельца — только там, где решение реально его; roadmap не противоречит §3 Routing.
+   Проверяй orchestration shared line-scoped predicate: explicit negation того же statement не
+   требует workflow, но отдельное positive `scriptPath`/multi-agent declaration требует.
 7. **D-лог: `Consequences` у отменяющих/заменяющих записей (SKILL §6).** Каждая D-запись,
    объявляющая `supersedes D#`/отмену/замену ранее принятого решения, несёт инлайн-подполе
    `**Consequences:**` внутри ячейки `Решение` — независимо от того, включён ли `Closure

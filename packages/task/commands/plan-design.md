@@ -393,3 +393,5 @@ DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщени�
 готов в `plans/<ID>/workflows/`) → `Workflow({scriptPath: "plans/<ID>/workflows/wf-….js"})`
 с пометкой NEW SESSION (session-restart discipline, SKILL §8), не `plan-exec`;
 режим `new` (все фазы — скелеты) → `/task:plan-design <ID> P0` (Opus/high).
+Явная negation в том же утверждении Phase Context не объявляет orchestration и не гасит
+отдельное positive statement; semantic predicate принадлежит plan-lint, не этому command.

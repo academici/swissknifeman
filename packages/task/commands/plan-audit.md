@@ -106,6 +106,8 @@ material/process ниже. `plan_lint.py`'s tiered-portability находки �
    покрывает ВСЕ items без дыр, батчи обоснованы (сцепленный scope + одна модель), у каждого
    solo — причина «почему нельзя объединить», у batch/workflow-групп — готовые launch-block'и,
    гейты владельца — только там, где решение реально его; roadmap не противоречит §3 Routing.
+   Проверяй orchestration shared line-scoped predicate: explicit negation того же statement не
+   требует workflow, но отдельное positive `scriptPath`/multi-agent declaration требует.
 7. **D-лог: `Consequences` у отменяющих/заменяющих записей (SKILL §6).** Каждая D-запись,
    объявляющая `supersedes D#`/отмену/замену ранее принятого решения, несёт инлайн-подполе
    `**Consequences:**` внутри ячейки `Решение` — независимо от того, включён ли `Closure

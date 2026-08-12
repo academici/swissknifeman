@@ -23,6 +23,8 @@ BUNDLE_GATE_ID = "bundle-v1"
 PATH_GATE_ID = "read-path-v1"
 RETURN_LOOP_GATE_ID = "return-loop-v1"
 DECISION_QUEUE_GATE_ID = "decision-queue-v1"
+_FILES_FIELD_RE = re.compile(r"^\*\*Files:\*\*\s*(.*)$")
+_BACKTICK_PATH_RE = re.compile(r"`([^`]+)`")
 
 
 def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
@@ -39,12 +41,64 @@ def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
     }
 
 
+def _declared_file_paths(value: str) -> tuple[str, ...]:
+    """Extract repository paths from the canonical Files field without inventing scope."""
+    paths = _BACKTICK_PATH_RE.findall(value or "")
+    if not paths and value and value.strip() != "—":
+        paths = [part.strip() for part in re.split(r"\s*[·,]\s*", value) if part.strip()]
+    return tuple(sorted(set(paths)))
+
+
+def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[dict]]:
+    """Hash declared product carriers while excluding plan/audit bookkeeping."""
+    completed = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], cwd=plan_dir, text=True,
+        capture_output=True, check=False,
+    )
+    repository_root = (Path(completed.stdout.strip()) if completed.returncode == 0
+                       and completed.stdout.strip() else plan_dir.parents[1])
+    rows = []
+    for declared in sorted(declared_paths):
+        candidate = Path(declared)
+        if candidate.is_absolute() or declared.startswith(("~", "../")):
+            rows.append({"declared": declared, "state": "external"})
+            continue
+        path = repository_root / candidate
+        if path.is_symlink():
+            rows.append({"declared": declared, "path": candidate.as_posix(),
+                         "state": "symlink", "target": str(path.readlink())})
+            continue
+        if path.is_file():
+            rows.append({"declared": declared, "path": candidate.as_posix(), "state": "file",
+                         "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+            continue
+        if path.is_dir():
+            members = []
+            for member in sorted(path.rglob("*")):
+                relative = member.relative_to(repository_root).as_posix()
+                if ".git" in member.relative_to(repository_root).parts:
+                    continue
+                if member.is_symlink():
+                    members.append({"path": relative, "state": "symlink",
+                                    "target": str(member.readlink())})
+                elif member.is_file():
+                    members.append({"path": relative, "state": "file",
+                                    "sha256": hashlib.sha256(member.read_bytes()).hexdigest()})
+            rows.append({"declared": declared, "state": "directory", "members": members})
+            continue
+        rows.append({"declared": declared, "state": "missing"})
+    encoded = json.dumps(rows, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest(), rows
+
+
 def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=()):
     """Build D14's stable scope/item-head/risk fingerprint for a terminal candidate."""
     plan_dir = Path(plan_dir)
     if not re.fullmatch(r"P\d+", phase_id):
         raise ValueError("phase_id должен иметь форму Pn")
     items = []
+    declared_paths = set()
     if plan_layout.layout_version(plan_dir) == "v1":
         # A v1 phase co-locates item specs, state, and append-only audit blocks.
         # Hash canonical per-item fields so appending the audit verdict does not
@@ -62,6 +116,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         for item_id, occurrences in sorted(parsed["items"].items()):
             item = occurrences[0]
             fields = {key: value[0] for key, value in item["fields"].items()}
+            declared_paths.update(_declared_file_paths(fields.get("Files", "")))
             status = fields.get("Status")
             if status not in {
                     plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
@@ -85,6 +140,9 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
     else:
         for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
             item_id = spec_path.stem
+            files_value = next((match.group(1) for line in spec_path.read_text(
+                encoding="utf-8").splitlines() if (match := _FILES_FIELD_RE.match(line))), "")
+            declared_paths.update(_declared_file_paths(files_value))
             model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
             status = model["state"]["position"]["status"]
             if status not in {
@@ -104,15 +162,19 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         ["git", "rev-parse", "HEAD"], cwd=plan_dir, text=True,
         capture_output=True, check=False)
     head = completed.stdout.strip() if completed.returncode == 0 else "unknown"
-    snapshot = {
+    product_tree_sha256, product_files = _product_tree(plan_dir, declared_paths)
+    digest_snapshot = {
         "phase_id": phase_id,
         "scope": sorted(str(value) for value in scope),
         "terminal_item_heads": sorted(items, key=lambda row: row["item_id"]),
         "material_risks": sorted(str(value) for value in material_risks),
-        "repository_head": head,
+        "declared_files": sorted(declared_paths),
+        "product_tree_sha256": product_tree_sha256,
     }
-    encoded = json.dumps(snapshot, ensure_ascii=False, sort_keys=True,
+    encoded = json.dumps(digest_snapshot, ensure_ascii=False, sort_keys=True,
                          separators=(",", ":")).encode("utf-8")
+    snapshot = {**digest_snapshot, "product_files": product_files,
+                "observed_repository_head": head}
     return {"fingerprint": hashlib.sha256(encoded).hexdigest(), "snapshot": snapshot}
 
 

@@ -40,6 +40,9 @@ class TestReadBudgetGate(unittest.TestCase):
     def test_v1_phase_candidate_fingerprint_ignores_audit_append_but_tracks_item_fields(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = write_valid_plan(Path(tmp), layout=None)
+            product = Path(tmp) / "lib" / "pkg" / "config.py"
+            product.parent.mkdir(parents=True)
+            product.write_text("VALUE = 1\n", encoding="utf-8")
             before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             phase = plan_dir / "phases" / "P1.md"
             phase.write_text(
@@ -59,6 +62,10 @@ class TestReadBudgetGate(unittest.TestCase):
             )
             after_item_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             self.assertNotEqual(after_item_change["fingerprint"], before["fingerprint"])
+
+            product.write_text("VALUE = 2\n", encoding="utf-8")
+            after_product_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertNotEqual(after_product_change["fingerprint"], after_item_change["fingerprint"])
 
     def test_overweight_v2_item_names_item_weight_threshold_and_unit(self):
         diag = lint(self.copied_fixture("plan-v2-overweight"))

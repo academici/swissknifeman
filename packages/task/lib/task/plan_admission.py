@@ -24,6 +24,7 @@ CODE_PRODUCER_PENDING = "producer_pending"
 CODE_PRODUCER_TERMINAL_MISSING = "producer_terminal_missing"
 CODE_UNRESOLVED = "unresolved_entry"
 CODE_CONTRACT = "read_budget_contract_invalid"
+CODE_MIGRATION_PENDING = "migration_pending_redesign"
 
 TERMINAL_STATUSES = frozenset(
     ("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision")
@@ -68,13 +69,14 @@ def load_contract(plan_dir) -> dict:
             "item_tokens": thresholds.pop()}
 
 
-def _journal_facts(plan_dir: Path) -> tuple[int | None, dict[str, int]]:
-    """Return the layout-v2 activation line and terminal line per item."""
+def _journal_facts(plan_dir: Path) -> tuple[int | None, dict[str, int], set[str]]:
+    """Return activation, terminal lines, and post-activation execution subjects."""
     path = plan_dir / "journal.jsonl"
     activation = None
     terminal = {}
+    events = []
     if not path.is_file():
-        return activation, terminal
+        return activation, terminal, set()
     for lineno, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         if not raw.strip():
             continue
@@ -83,13 +85,49 @@ def _journal_facts(plan_dir: Path) -> tuple[int | None, dict[str, int]]:
         except json.JSONDecodeError as exc:
             raise AdmissionError(f"журнал невалиден: {path}:{lineno}") from exc
         note = str(event.get("note") or "")
-        if activation is None and _MIGRATION_RE.search(note):
+        if (activation is None and event.get("item_id") == "layout-v2"
+                and _MIGRATION_RE.search(note)):
             activation = lineno
+        events.append((lineno, event))
         if str(event.get("result") or "").startswith("closed-"):
             item_id = str(event.get("item_id") or "")
             if item_id:
                 terminal[item_id] = lineno
-    return activation, terminal
+    post_activation = {
+        str(event.get("item_id")) for lineno, event in events
+        if activation is not None and lineno > activation
+        and event.get("command") in ("plan-exec", "plan-run", "plan-close", "plan-audit")
+        and event.get("item_id")
+    }
+    return activation, terminal, post_activation
+
+
+def _migration_pending_items(plan_dir: Path) -> set[str]:
+    """Read the migrator-owned transitional admission carrier, if present."""
+    path = plan_dir / "artifacts" / "p2-migration-inventory.json"
+    try:
+        inventory = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    imported = inventory.get("current_state_import")
+    preimage = inventory.get("policy_preimage")
+    if (inventory.get("schema") != "plan-migration-inventory-v1"
+            or inventory.get("missing") != []
+            or not isinstance(imported, dict)
+            or imported.get("kind") != "canonical-current-state-not-chronology"
+            or not isinstance(imported.get("rows"), list)
+            or not isinstance(preimage, dict)
+            or not isinstance(preimage.get("defect_classes"), list)
+            or not {"current-state-import", "read-budget-carrier"}
+            <= set(preimage["defect_classes"])
+            or not re.fullmatch(r"[0-9a-f]{64}", str(preimage.get("source_digest", "")))
+            or not (plan_dir / "artifacts" / "migration-source-v1" / "manifest.json").is_file()):
+        return set()
+    return {
+        row["item"] for row in imported["rows"]
+        if isinstance(row, dict) and isinstance(row.get("item"), str)
+        and row.get("projected_result") is None
+    }
 
 
 def _entry_for_path(entries: list[str], path: str) -> str:
@@ -113,7 +151,8 @@ def classify(plan_dir, items: list[dict], specs: dict[str, dict], *, contract=No
         except AdmissionError as exc:
             contract = None
             contract_error = str(exc)
-    activation, terminal_lines = _journal_facts(plan_dir)
+    activation, terminal_lines, post_activation = _journal_facts(plan_dir)
+    migration_pending = _migration_pending_items(plan_dir)
     order = {record["item_id"]: index for index, record in enumerate(items)}
     by_id = {record["item_id"]: record for record in items}
     admission_counts = {state: 0 for state in STATES}
@@ -165,7 +204,18 @@ def classify(plan_dir, items: list[dict], specs: dict[str, dict], *, contract=No
             else:
                 codes.append({"code": CODE_PRODUCER_PENDING, "item_id": item_id, **edge})
 
-        if historical:
+        migration_hold = (activation is not None and item_id in migration_pending
+                          and item_id not in post_activation)
+        if migration_hold:
+            state = STATE_PENDING
+            admission_pass = None
+            codes.append({
+                "code": CODE_MIGRATION_PENDING,
+                "item_id": item_id,
+                "detail": ("legacy item ожидает post-migration plan-design/read-budget admission; "
+                           "первое execution event снимает переходный hold"),
+            })
+        elif historical:
             state = STATE_HISTORICAL
             admission_pass = None
         elif edges and codes and all(row["code"] == CODE_PRODUCER_PENDING for row in codes):

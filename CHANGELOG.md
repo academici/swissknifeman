@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: fleet v1→v2 migration получил frozen admission policy и controlled apply.**
+  Closed defect classes, full-tree preimage digests, byte-exact source archive, current-state/
+  decision/Routing projection и migration-pending read-budget admission дают 15/15 previews без
+  plan-lint ERROR; staged apply проверяет preview и восстанавливает preimage при post-write сбое.
+
 - **`task`: phase candidate fingerprint учитывает plan-relative product files.**
   Declared `Files` сначала сохраняют совместимый repo-relative resolution, затем разрешаются от
   каталога плана; байты acceptance/RAG carriers теперь инвалидируют stale phase audit.

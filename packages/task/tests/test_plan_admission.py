@@ -1,4 +1,5 @@
 """Negative producer matrix and stage transitions for plan admission."""
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -99,6 +100,60 @@ class TestProducerAdmission(unittest.TestCase):
         self.assertEqual(items[0]["admission_gaps"][0]["code"],
                          "read_budget_contract_invalid")
         self.assertIsNone(summary["contract"])
+
+    def test_migration_pending_hold_clears_on_first_post_activation_execution(self):
+        artifacts = self.plan_dir / "artifacts"
+        archive = artifacts / "migration-source-v1"
+        archive.mkdir(parents=True)
+        (archive / "manifest.json").write_text("{}\n", encoding="utf-8")
+        (artifacts / "p2-migration-inventory.json").write_text(json.dumps({
+            "schema": "plan-migration-inventory-v1",
+            "missing": [],
+            "policy_preimage": {
+                "source_digest": "0" * 64,
+                "defect_classes": ["current-state-import", "read-budget-carrier"],
+            },
+            "current_state_import": {
+                "kind": "canonical-current-state-not-chronology",
+                "rows": [{"item": "P1.1", "source_status": "⬜ Not started",
+                          "projected_result": None}],
+            },
+        }), encoding="utf-8")
+        activation = {"item_id": "layout-v2", "command": "plan-design",
+                      "result": "in-progress", "note": "Layout v2 migration activation"}
+        (self.plan_dir / "journal.jsonl").write_text(
+            json.dumps(activation) + "\n", encoding="utf-8")
+        items = [_record("P1.1", gaps=[_missing()])]
+        specs = {"P1.1": {"required_read_entries": ["`out/result.json`"]}}
+
+        self.classify(items, specs)
+        self.assertEqual(items[0]["admission_state"], "pending-producer")
+        self.assertIsNone(items[0]["admission_pass"])
+        self.assertIn("migration_pending_redesign",
+                      [gap["code"] for gap in items[0]["admission_gaps"]])
+
+        execution = {"item_id": "P1.1", "command": "plan-run",
+                     "result": "in-progress", "note": "start"}
+        (self.plan_dir / "journal.jsonl").write_text(
+            json.dumps(activation) + "\n" + json.dumps(execution) + "\n",
+            encoding="utf-8")
+        items = [_record("P1.1", gaps=[_missing()])]
+        self.classify(items, specs)
+        self.assertEqual(items[0]["admission_state"], "ready")
+        self.assertFalse(items[0]["admission_pass"])
+
+    def test_current_state_note_is_not_mistaken_for_activation_boundary(self):
+        imported = {"item_id": "P1.1", "command": "plan-run",
+                    "result": "closed-green", "note": "Layout v2 current-state import"}
+        activation = {"item_id": "layout-v2", "command": "plan-design",
+                      "result": "in-progress", "note": "Layout v2 migration activation"}
+        (self.plan_dir / "journal.jsonl").write_text(
+            json.dumps(imported) + "\n" + json.dumps(activation) + "\n",
+            encoding="utf-8")
+        items = [_record("P1.1", status="🟢 Done", gaps=[_missing()])]
+        self.classify(items, {"P1.1": {"required_read_entries": ["`out/result.json`"]}})
+        self.assertEqual(items[0]["admission_state"], "historical-pre-v2")
+        self.assertIsNone(items[0]["admission_pass"])
 
 
 if __name__ == "__main__":

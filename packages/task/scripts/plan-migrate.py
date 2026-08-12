@@ -18,15 +18,25 @@ def main(argv=None):
     parser.add_argument("--dry-run", action="store_true", help="читать source и писать только в --output")
     parser.add_argument("--output", type=Path, help="новый каталог результата dry-run")
     parser.add_argument("--inventory", type=Path, help="явный путь generated inventory")
+    parser.add_argument("--policy", type=Path, help="frozen closed migration-policy manifest")
+    parser.add_argument("--apply", action="store_true",
+                        help="атомарно применить отдельно проверенный preview")
+    parser.add_argument("--preview", type=Path,
+                        help="явный Layout-v2 preview для controlled --apply")
     args = parser.parse_args(argv)
     try:
-        result = migrate_safely(args.plan_dir, dry_run=args.dry_run, output=args.output,
-                                inventory_path=args.inventory)
+        result = migrate_safely(
+            args.plan_dir, dry_run=args.dry_run, output=args.output,
+            inventory_path=args.inventory, policy_path=args.policy,
+            apply=args.apply, preview=args.preview)
     except (MigrationError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
-    print(f"MIGRATED: {len(result['inventory']['item_ids'])} items; "
-          f"inventory {result['inventory']['checked']} elements")
+    if args.apply:
+        print(f"APPLY: {'installed' if result['applied'] else 'no-op'}; {result['reason']}")
+    else:
+        print(f"MIGRATED: {len(result['inventory']['item_ids'])} items; "
+              f"inventory {result['inventory']['checked']} elements")
     return 0
 
 

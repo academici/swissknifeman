@@ -139,6 +139,15 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertEqual(unqualifiable["qualification"], "unqualifiable")
         self.assertIn("missing_carrier_reason", unqualifiable)
 
+    def test_phase_audit_attention_reopen_does_not_create_an_item_return(self):
+        rows = [entry("2026-07-02T00:00:00Z", "plan-audit", "audit-attention", item="P1"),
+                entry("2026-07-02T00:01:00Z", "plan-design", "in-progress", item="P1")]
+        (self.plan / "journal.jsonl").write_text(
+            "\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+        result = plan_returns.returns(self.plan)
+        self.assertEqual(result["fingerprints"], [])
+        self.assertEqual(result["counts"], {})
+
     def test_observed_risk_trigger_requires_isolated_review_on_first_occurrence(self):
         (self.plan / "findings/P1.1-fixture.md").write_text(
             "---\nitem: P1.1\ndate: 2026-07-02\nfile: a.py\n"

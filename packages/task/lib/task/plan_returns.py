@@ -603,6 +603,14 @@ def returns(plan_dir) -> dict:
         candidates = [candidate for candidate in executions
                       if (candidate["entry"].get("item_id") == subject
                           or candidate["entry"].get("item_id", "").split(".")[0] == phase)]
+        # A phase-level audit attention is a control-plane transition to
+        # `plan-design Pn`, not an item return.  Treating `Pn` as an item here
+        # manufactured a provisional fingerprint that frozen evidence cannot
+        # truthfully qualify; item-level Pn.m returns remain unchanged.
+        if ("." not in subject and candidates
+                and candidates[-1]["entry"].get("command") == "plan-audit"
+                and candidates[-1]["entry"].get("result") == "audit-attention"):
+            continue
         if candidates:
             fingerprint = _fingerprint(subject, candidates[-1], row, seams)
             fingerprints.append(fingerprint)

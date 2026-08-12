@@ -179,7 +179,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
 
 
 def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: str | None):
-    """Validate D26's deliberately narrow direct-green-validation escape hatch."""
+    """Validate a deliberately narrow direct-green-validation escape hatch."""
     if owner_decision is None:
         return None
     if not isinstance(owner_decision, str) or not re.fullmatch(r"D[1-9][0-9]*", owner_decision):
@@ -194,7 +194,21 @@ def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: s
     if decision.status != "accepted" or decision.superseded_by:
         return {"allow": False, "code": "PHASE_OWNER_DECISION_NOT_ACCEPTED"}
     if decision.item != phase_id or phase_id not in decision.items:
-        return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH"}
+        has_audit_cap_direct_close_markers = (
+            re.fullmatch(rf"{re.escape(phase_id)}\.\d+", decision.item) is not None
+            and "AUDIT-CAP" in decision.body
+            and f"третьего Audit {phase_id}" in decision.body
+            and "фаза закрывается штатным `task:plan-close`" in decision.body
+        )
+        if not has_audit_cap_direct_close_markers:
+            return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH"}
+        try:
+            phase_items = {path.stem for path in plan_layout.item_spec_paths(plan_dir, phase_id)}
+        except plan_layout.PlanLayoutError:
+            return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH"}
+        if set(decision.items) != phase_items:
+            return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH"}
+        return {"allow": True, "code": "allow", "owner_decision": decision.identifier}
     if not decision.supersedes:
         return {"allow": False, "code": "PHASE_OWNER_DECISION_SUPERSEDES_MISSING"}
     if "`phase-close: direct-green-validation`" not in decision.body:

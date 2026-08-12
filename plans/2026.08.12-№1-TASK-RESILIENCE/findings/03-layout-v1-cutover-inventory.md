@@ -59,8 +59,9 @@ the validation form above and review of the resulting diff.
 - The initial documented preflight form `maind health --cwd <path>` is incompatible with the
   current CLI, whose `--cwd` is boolean. `packages/maind/bin/maind health` resolved the current
   repository and completed green; the failed invocation was not counted as green.
-- `codex doctor --json` did not produce an observable terminal result in the execution tool and
-  remains an environment defect, not validation evidence.
+- В предыдущем attempt `codex doctor --json` не дал observable terminal result; в repair-заходе
+  2026-08-12 команда завершилась `overallStatus=ok`, поэтом дефект больше не влияет
+  на validation trust.
 - The registered skill catalog pointed at removed Task cache `0.11.1`; canonical worktree content
   and installed cache `0.12.0` exist. Execution used the canonical worktree projection.
 - Current journal helpers require keyword-only `derive_run_id` arguments, and `plan-views state`
@@ -71,6 +72,13 @@ the validation form above and review of the resulting diff.
   returned `JUSTIFIED`; `task.plan_blocking.evaluate()` returned `terminal-block` with
   `BLOCK_CONFIRMED`. This finding records pre-escalation return evidence as `unqualifiable` because
   the journal-derived terminal fingerprint does not exist until after the terminal event.
+- D13 устранила этот acceptance-only дефект: JSON-команда сохранена, но больше не
+  подавляет stdout. `task_contract.evaluate()` после регенерации bundle вернул
+  `pre_mutation=allow` и `pre_final=allow` на provider-thread-state route `frontier/high`.
+- Первый validation repair-заход зафиксировал дрейф fleet snapshot: в registered Agelto plan
+  появился новый generated `P6.closed.md`, а текущий plan получил repair carriers. Это
+  локальный snapshot drift; inventory пересобирается owning-скриптом и исходная
+  Validation повторяется.
 
 ## Provenance
 

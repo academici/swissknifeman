@@ -55,14 +55,21 @@ def registered_paths() -> tuple[list[dict], list[dict]]:
     skiller_output = run(skiller_command)
     maind_output = run(maind_command)
 
+    skiller_lines = skiller_output.splitlines()
+    if not skiller_lines or skiller_lines[0].split() != [
+            "STATE", "CHANNEL", "PROFILE", "UPDATED", "PATH"]:
+        raise InventoryError("skiller list has an unknown header")
     skiller_rows = []
-    for line in skiller_output.splitlines()[1:]:
+    for line_number, line in enumerate(skiller_lines[1:], start=2):
+        if not line.strip():
+            continue
         cells = line.split(maxsplit=4)
         if len(cells) != 5:
-            continue
+            raise InventoryError(f"skiller list row {line_number} is malformed: {line!r}")
         candidate = Path(os.path.expanduser(cells[4]))
         if not candidate.is_absolute():
-            continue
+            raise InventoryError(
+                f"skiller list row {line_number} has a relative path: {cells[4]!r}")
         if cells[3] != "-" and not re.fullmatch(
                 r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", cells[3]):
             raise InventoryError(f"skiller list row has an unknown UPDATED value: {line!r}")
@@ -73,10 +80,22 @@ def registered_paths() -> tuple[list[dict], list[dict]]:
         raise InventoryError(f"maind projects list --json is invalid: {exc}") from exc
     if not isinstance(maind_rows, list):
         raise InventoryError("maind projects list --json did not return a list")
+    maind_paths = []
+    for index, row in enumerate(maind_rows):
+        if not isinstance(row, dict):
+            raise InventoryError(f"maind project row {index} is not an object")
+        raw_path = row.get("local_path")
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            raise InventoryError(f"maind project row {index} has no local_path")
+        candidate = Path(os.path.expanduser(raw_path))
+        if not candidate.is_absolute():
+            raise InventoryError(
+                f"maind project row {index} has a relative local_path: {raw_path!r}")
+        maind_paths.append(raw_path)
 
     raw = [("repository", str(ROOT))]
     raw.extend(("skiller", path) for path in skiller_rows)
-    raw.extend(("maind", str(row.get("local_path", ""))) for row in maind_rows)
+    raw.extend(("maind", path) for path in maind_paths)
     roots: dict[str, dict] = {}
     for source, raw_path in raw:
         if not raw_path:
@@ -146,7 +165,9 @@ def active_pointer(plans_dir: Path, root: Path) -> tuple[set[str], str | None]:
     for line in text.splitlines():
         match = re.fullmatch(r"\*\*Active:\*\*\s+([^\s]+)\s*", line)
         if match:
-            active.add(match.group(1).strip("`"))
+            active_id = match.group(1).strip("`")
+            if active_id != "—":
+                active.add(active_id)
             in_active_list = False
             continue
         if line.strip() == "**Active:**":
@@ -157,7 +178,9 @@ def active_pointer(plans_dir: Path, root: Path) -> tuple[set[str], str | None]:
         if in_active_list:
             list_match = re.match(r"^-\s+([^\s]+)(?:\s+—|\s*$)", line)
             if list_match:
-                active.add(list_match.group(1).strip("`"))
+                active_id = list_match.group(1).strip("`")
+                if active_id != "—":
+                    active.add(active_id)
     return active, None
 
 
@@ -215,7 +238,7 @@ def classify_plan(plan_dir: Path, root: Path, active_ids: set[str], *, archived:
         "root": str(root),
         "classification": "invalid",
         "declared_layout": None,
-        "active_pointer_match": plan_dir.name in active_ids,
+        "active_pointer_match": not archived and plan_dir.name in active_ids,
         "migration_disposition": "blocks-removal",
         "diagnostic": None,
     }
@@ -227,6 +250,11 @@ def classify_plan(plan_dir: Path, root: Path, active_ids: set[str], *, archived:
         record["diagnostic"] = boundary_error
         return record
     if archived:
+        try:
+            record["declared_layout"] = plan_layout._meta_layout(plan_dir)
+        except (OSError, UnicodeError, plan_layout.PlanLayoutError) as exc:
+            record["diagnostic"] = str(exc)
+            return record
         record.update(classification="archive", migration_disposition="inert-history")
         return record
     try:
@@ -311,6 +339,7 @@ def scan_root(root_record: dict) -> tuple[dict, list[dict], list[str]]:
         }], [str(plans_dir.resolve(strict=False))]
     active_ids, pointer_error = active_pointer(plans_dir, root)
     plans, discovered = [], []
+    direct_candidate_ids = set()
     if pointer_error:
         pointer_path = plans_dir / "ACTIVE.md"
         discovered.append(str(pointer_path.resolve(strict=False)))
@@ -322,8 +351,17 @@ def scan_root(root_record: dict) -> tuple[dict, list[dict], list[str]]:
         plans.append(invalid_record(plans_dir, root, f"plans directory is unreadable: {exc}", plan_id="*"))
         return record, plans, discovered
     for child in children:
+        try:
+            child_mode = child.lstat().st_mode
+        except OSError as exc:
+            direct_candidate_ids.add(child.name)
+            discovered.append(str(child.absolute()))
+            invalid = invalid_record(child, root, f"direct plans child is unreadable: {exc}")
+            invalid["active_pointer_match"] = child.name in active_ids
+            plans.append(invalid)
+            continue
         if child.name.lower() in {"archive", "archives"}:
-            if child.is_symlink() or not child.is_dir():
+            if stat.S_ISLNK(child_mode) or not stat.S_ISDIR(child_mode):
                 discovered.append(str(child.resolve(strict=False)))
                 plans.append(invalid_record(child, root, "archive container is not a directory or is a symlink"))
                 continue
@@ -331,28 +369,40 @@ def scan_root(root_record: dict) -> tuple[dict, list[dict], list[str]]:
             plans.extend(archived)
             discovered.extend(archived_discovered)
             continue
-        if child.is_symlink():
+        if stat.S_ISLNK(child_mode):
             discovered.append(str(child.absolute()))
-            plans.append(invalid_record(child, root, "direct plans child is a symlink"))
+            direct_candidate_ids.add(child.name)
+            invalid = invalid_record(child, root, "direct plans child is a symlink")
+            invalid["active_pointer_match"] = child.name in active_ids
+            plans.append(invalid)
             continue
-        try:
-            is_directory = stat.S_ISDIR(child.lstat().st_mode)
-        except OSError as exc:
-            discovered.append(str(child.resolve(strict=False)))
-            plans.append(invalid_record(child, root, f"direct plans child is unreadable: {exc}"))
-            continue
-        if not is_directory:
+        if not stat.S_ISDIR(child_mode):
             continue
         plan_carrier = child / "plan.md"
         try:
             child_entries = {entry.name for entry in child.iterdir()}
         except OSError as exc:
+            direct_candidate_ids.add(child.name)
             discovered.append(str(child.resolve(strict=False)))
-            plans.append(invalid_record(child, root, f"direct plans child is unreadable: {exc}"))
+            invalid = invalid_record(child, root, f"direct plans child is unreadable: {exc}")
+            invalid["active_pointer_match"] = child.name in active_ids
+            plans.append(invalid)
             continue
         if "plan.md" in child_entries:
+            direct_candidate_ids.add(child.name)
             discovered.append(str(child.resolve(strict=False)))
             plans.append(classify_plan(child, root, active_ids, archived=False))
+    for active_id in sorted(active_ids - direct_candidate_ids):
+        candidate = plans_dir / active_id
+        discovered.append(str(candidate.absolute()))
+        invalid = invalid_record(
+            candidate,
+            root,
+            "ACTIVE.md target is not a direct executable plans/<ID>/plan.md candidate",
+            plan_id=active_id,
+        )
+        invalid["active_pointer_match"] = True
+        plans.append(invalid)
     return record, plans, discovered
 
 
@@ -397,6 +447,13 @@ def build_inventory() -> dict:
 def stable_projection(inventory: dict) -> dict:
     projection = json.loads(json.dumps(inventory))
     projection.pop("generated_at", None)
+    for root in projection.get("roots", []):
+        dirty = root.get("dirty")
+        if isinstance(dirty, dict):
+            # Exact porcelain entries are point-in-time evidence. Comparing
+            # them would make the committed snapshot fail on a clean checkout
+            # merely because its own carriers stopped being dirty.
+            dirty["entries"] = []
     return projection
 
 

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:fc5dc7e0423acef37a465ab314aa8eba0063cb474241b296116dc9000051d0d1
+Canonical SHA-256: sha256:236df4c4fd6aa0b9d53fe6bdb172c7f28e0b5bfe7e2fda8e74dd54f45de100b7
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -77,11 +77,18 @@ fresh item state. Повторное чтение запрещено.
 - **Pre-mutation/Pre-final write-site (D24).** `plan-run` принимается только в свежем Codex
   thread, созданном ровно native launch-block из текущего handoff: `-m <model-selector>` и
   `-c 'model_reasoning_effort="<effort-selector>"'` обязаны покрывать минимум §3 Routing.
-  В оба вызова `route_evidence.capture_actual(...)` передавай класс/effort из этого launch-block,
-  concrete selector как `model` и `source="cli-flag"`. Это **launch provenance**, а не
-  thread telemetry: не называй его provider-attested actual route, не читай private rollout и
-  не подставляй `config.toml`, actor или свободную самоаттестацию. После `select the session model class` или иной
-  смены маршрута thread нельзя продолжать item: запусти новый native block до journal start.
+  В оба вызова НЕ переписывай selector/effort из памяти или handoff: получи один typed record
+  через `task.route_evidence_codex.capture_current(expected_invocation="$ task:plan-run
+  <arguments>", expected_cwd="<repo-cwd>")`. Adapter идёт по ancestor process chain до
+  owning Codex process, читает его исходный argv, сверяет exact Task prompt/cwd/`-a never`/
+  `-s danger-full-access`, резолвит `-m`/`model_reasoning_effort` через committed
+  `command-routing.json` и связывает запись с provider session identity; его record уже несёт concrete
+  selector как `model` и `source="cli-flag"`. Ошибка `ROUTE_LAUNCH_UNAVAILABLE|MISMATCH` —
+  nonterminal route-evidence gap до product journal start, а не повод подставить config/doctor
+  либо фабриковать undershoot. Это **launch provenance**, а не thread telemetry: не называй его
+  provider-attested actual route, не читай private rollout и не подставляй `config.toml`, actor
+  или свободную самоаттестацию. После `select the session model class` или иной смены маршрута thread нельзя продолжать
+  item: запусти новый native block до journal start.
   Шаг остаётся обязательным в обеих точках `plan-exec.md`; `plan-run` меняет только разрешённый
   источник для fresh-session launch provenance, не условия предиката.
 - Routing-гейт п.2 сверяет launch-provenance модель/effort с §3 Routing item'а (тир-порядок —

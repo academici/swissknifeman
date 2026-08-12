@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: Codex `plan-run` больше не теряет маршрут корректного native launch.**
+  Новый stdlib-adapter извлекает model/effort, cwd, Task prompt и safety flags из ancestor argv,
+  связывает provenance с `CODEX_THREAD_ID` и исключает повторную ручную self-attestation агента.
+
 - **`task` / `plan-protocol`: batch/solo теперь обязательная часть нового плана и handoff.**
   Шестиколоночный Routing покрывает каждый item; планировщик группирует связные adjacent items
   одной фазы при экономии чтения/setup/validation, а `solo` требует конкретной границы. Linter

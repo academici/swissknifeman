@@ -392,5 +392,57 @@ class JournalActorIntegrationTests(unittest.TestCase):
         self.assertEqual(entry["actor"], "sonnet/unknown")
 
 
+class CodexLaunchEvidenceTests(unittest.TestCase):
+    def test_exact_native_launch_is_captured_from_the_current_ancestor_chain(self):
+        from task import route_evidence_codex
+
+        process_table = {
+            300: (200, ("python3", "-m", "task.route_evidence_codex", "capture")),
+            200: (100, ("/bin/bash", "-c", "python3 -m task.route_evidence_codex capture")),
+            100: (1, (
+                "codex", "-C", "/workspace/repo", "-m", "gpt-5.6-sol",
+                "-c", 'model_reasoning_effort="high"', "-a", "never",
+                "-s", "danger-full-access",
+                "$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
+            )),
+        }
+
+        evidence = route_evidence_codex.capture_current(
+            expected_invocation="$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
+            expected_cwd="/workspace/repo",
+            thread_id="thread-123",
+            start_pid=300,
+            process_table=process_table,
+        )
+
+        self.assertEqual(evidence["model"], "gpt-5.6-sol")
+        self.assertEqual(evidence["model_class"], "frontier")
+        self.assertEqual(evidence["effort"], "high")
+        self.assertEqual(evidence["source"], "cli-flag")
+        self.assertEqual(evidence["thread_id"], "thread-123")
+        self.assertEqual(evidence["source_version"], "codex-ancestor-argv-v1")
+
+    def test_wrong_prompt_is_rejected_instead_of_reusing_a_stale_codex_session(self):
+        from task import route_evidence_codex
+
+        process_table = {
+            200: (100, ("python3", "-m", "task.route_evidence_codex", "capture")),
+            100: (1, (
+                "codex", "-C", "/workspace/repo", "-m", "gpt-5.6-sol",
+                "-c", 'model_reasoning_effort="high"', "-a", "never",
+                "-s", "danger-full-access", "$ task:plan-run PLAN P0.2",
+            )),
+        }
+
+        with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+            route_evidence_codex.capture_current(
+                expected_invocation="$ task:plan-run PLAN P0.3",
+                expected_cwd="/workspace/repo",
+                thread_id="thread-123",
+                start_pid=200,
+                process_table=process_table,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,22 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Провайдер-нейтральный launch-block остаётся рядом с этой командой: он несёт семантический
 маршрут, а native-блок делает запуск воспроизводимым.
 
+Перед `plan-run` Codex-проекция получает launch provenance автоматически из ancestor process
+chain текущего thread:
+
+```bash
+PYTHONPATH=packages/task/lib python3 -m task.route_evidence_codex capture \
+  --expected-invocation '$ task:plan-run <PLAN-ID> <Pn.m>' \
+  --expected-cwd "$PWD"
+```
+
+Adapter сверяет исходный argv owning Codex process: exact Task prompt, cwd, `-m`,
+`model_reasoning_effort`, `-a never` и `-s danger-full-access`; selector резолвится через
+`configs/command-routing.json`, а evidence связывается с `CODEX_THREAD_ID`. Это доказательство
+выбранных параметров Linux-launch, не provider telemetry фактически обслужившей thread модели.
+При недоступном `/proc` проверка fail-closed возвращает `ROUTE_LAUNCH_UNAVAILABLE` и не подменяет
+данные `codex doctor`, config-файлом или памятью агента.
+
 Два stdlib-скрипта в `plans/` (не в `packages/task/lib/`, не встроены в `plan_lint.py` —
 у каждого свой предмет): `cross-plan-files.py` (межплановые пересечения `Files`) и
 `verify-citations.py` (ссылки-доказательства резолвятся до факта). Оба — CLI одной формы:

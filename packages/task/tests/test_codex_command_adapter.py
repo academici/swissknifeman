@@ -88,6 +88,8 @@ class CodexCommandAdapterTests(unittest.TestCase):
     def test_plan_run_uses_fresh_native_launch_provenance_not_an_unavailable_provider_probe(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
         self.assertIn('source="cli-flag"', canonical)
+        self.assertIn("route_evidence_codex.capture_current", canonical)
+        self.assertIn("ancestor process chain", canonical)
         self.assertIn("свежем Codex", canonical)
         self.assertIn("launch provenance", canonical)
         self.assertNotIn('source="provider-doctor"', canonical)
@@ -97,6 +99,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
             if artifact.path.endswith("/task-plan-run/command.md"))
         self.assertIn('source="cli-flag"', runtime)
+        self.assertIn("route_evidence_codex.capture_current", runtime)
         self.assertNotIn('source="provider-doctor"', runtime)
 
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):

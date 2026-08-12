@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 3b6dce138d68e2e88965dbf59f85da24977591c8a2e970203edfd6e072ddbbd1
+inputs_sha256: a9082c48b17babadf248a513c32bf0e612ffd16ff195e8191269dd6b035ecf8b
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
-| P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
+| P2 | Numbered plan identity and collision-free references | 1/2 | 🟡 In progress |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
@@ -53,7 +53,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Implement and verify numbered PLAN-ID | ⬜ Not started | — |
+| P2.1 | Implement and verify numbered PLAN-ID | 🟢 Done | 2026-08-12 |
 | P2.2 | Publish qualified item-reference canon | ⬜ Not started | — |
 
 ## Phase P3
@@ -202,6 +202,13 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-12 | frontier/xhigh | plan-audit · audit-green · заход 2, вердикт GREEN |
 | 2026-08-12 | gpt-5.6-terra/low | plan-close · closed-deviations · фаза P1 закрыта; GREEN audit fingerprint совпал, item deviations сохранены |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Восстановлен отсутствующий generated bundle через plan-views. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · Проверены numbered PLAN-ID и CLI Unicode round-trip; добавлен regression test. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Терминальная заметка требует отдельную строку write-site. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Bookkeeping repair: materialize required write-site. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+Проверены numbered PLAN-ID и CLI Unicode round-trip; добавлен regression test. |
 
 ## Owner Gates
 

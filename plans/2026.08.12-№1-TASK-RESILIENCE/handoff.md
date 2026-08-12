@@ -1,36 +1,32 @@
-# HANDOFF — 2026-08-12 — after P1
+# HANDOFF — 2026-08-12 — after P2.1
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.2
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | B-P2-IDENTITY |
 | Model | implementation (`gpt-5.6-terra`) |
 | Thinking | high |
-| Context | `cold-start-root: phase-boundary` |
-| Суть | Исполнить manual batch P2.1–P2.2 из committed handoff |
-| Команда | — |
-
-```text
-$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2
-```
+| Context | continue-root |
+| Суть | Закрыть оставшийся item qualified item-reference canon |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.2` |
 
 **Native Codex launch block**
 
-| Batch | Model | Thinking | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|:--|
-| B-P2-IDENTITY | gpt-5.6-terra | high | `cold-start-root: phase-boundary` | Исполнить manual batch P2.1–P2.2 из committed handoff | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2'` |
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.2'
+```
 
-**Done:** P1 terminal — Layout v1 execution retired, active inventory proves `v1-active=0`, second audit GREEN.
+**Done:** P2.1 closed at `2f22ad03`: numbered PLAN-ID validation is covered through the Unicode CLI round-trip.
 
-**Remaining:** P2.1–P2.2 implement numbered PLAN-ID and qualified references under existing stable specs.
+**Remaining:** P2.2 must publish the qualified item-reference canon and parity tests.
 
-**Sources of truth:** `phases/P1/P1.md` latest Audit P1 · `phases/P1/P1.5.state.md` · `artifacts/P1/active-layout-inventory-v1.json` · D7/D16/D17.
+**Sources of truth:** `phases/P2/P2.md` · `phases/P2/P2.1.md` · `phases/P2/P2.1.state.md` · `bundles/P2.2.json` · `decisions/D1-numbered-plan-identity.md`.
 
-**Open risks:** P1 product risks closed; process deviations remain recorded verbatim in Phase Handoff and item states.
+**Open risks:** `packages/task/scripts/validate.sh` has 2 reproduced failures outside P2.1 scope; evidence: `findings/11-P2.1-package-validation-defect.md`.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: historical Layout v1 archives require the prior compatible release for execution.
-- deferred: none from P1; P2 scope remains unchanged.
+- workarounds: —
+- deferred: repair the dirty `task_contract` change with its owner.
 - open_questions: —

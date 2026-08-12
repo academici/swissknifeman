@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 005319d7706c763ad5a2841d3b31886ebe40b63873468e7f9880049461209eda
+inputs_sha256: ed7aff0d4fcd03d7b7f919a8e2a78366bfedfb9f032b228549cf74a1e931ad3c
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
-| P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟡 In progress |
+| P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
@@ -47,7 +47,7 @@ generated_by: task plan-views status
 | P1.2 | Normalize legacy Routing without widening v2 grammar | 🟢 Done | 2026-08-12 |
 | P1.3 | Freeze full-fleet admission policy and green every preview | 🟠 Done with deviations | 2026-08-12 |
 | P1.4 | Apply the approved fleet cutover and prove zero live v1 | 🟢 Done | 2026-08-12 |
-| P1.5 | Remove Layout v1 execution schema and compatibility paths | ⬜ Not started | — |
+| P1.5 | Remove Layout v1 execution schema and compatibility paths | 🟠 Done with deviations | 2026-08-12 |
 
 ## Phase P2
 
@@ -173,6 +173,28 @@ Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run;
 | 2026-08-12 | owner | plan-run · in-progress · decision queue: DR-P1.4-bounded-registry-invalid-repair |
 | 2026-08-12 | frontier/high | plan-run · local-repair · Pre-final route capture: exact continuation line after user steering; same provider thread/model/effort/cwd as pre-mutation. |
 | 2026-08-12 | frontier/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:69 |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Regenerated stale P1.3 bundle and reconciled P1.4 handoff suffix before P1.5. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · validate.sh exposes remaining v1-only fixture and test cases; convert them to v2 rejection coverage before closure. |
+| 2026-08-12 | unknown/unknown | plan-run · routing-rejected · ROUTE_LAUNCH_MISMATCH: current turn has no exact task invocation line; start fresh native block. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Full validation exposes remaining retired monolith test fixtures; migrate them to v2 carriers. |
+| 2026-08-12 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D17, terminal-bundle boundary, v2 fixture fleet и полные validation gates |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Full Task validation: 61 failures/69 errors; legacy tests directly target retired phases/Pn.md carriers. Convert suite to v2 index/item/state fixtures. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · D17 repaired: terminal bundles retain schema checks without live source re-resolution; full Task suite still contains legacy monolith fixtures requiring v2 conversion. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · v2 fixture conversion repair-forward after current route binding |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Journal and Claude golden fixtures are v2-only; 54 failures and 67 errors remain in legacy monolith tests. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Resume v2 fixture conversion with verified current route. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Full suite: 53 failures/67 errors from retired monolith test fixtures; migrate to v2 phase/item/state carriers. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Resume P1.5 with verified implementation/high route. |
+| 2026-08-12 | gpt-5.6-terra/high | plan-run · local-repair · Regenerated active-layout inventory after archive-label resolver retirement. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P1.5 implementation complete; all specified product gates are green. Process deviation: 7 restarts / 8 P1.5 launches. findings/10 requires a fresh-session restart-accumulation diff audit before terminal phase closure. |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P1.5 implementation and specified gates are green; findings/10 records 7 restarts / 8 launches and mandates fresh P1 diff audit. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · P1.5 gates green; findings/10 records 7 restarts / 8 launches and mandates fresh P1 diff audit.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-12 | gpt-5.6-sol/high | plan-run · closed-deviations · Product commit 7b9eb580; all P1.5 gates green. findings/10: 7 restarts / 8 launches; fresh P1 diff audit mandatory.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -181,3 +203,4 @@ Policy 54 rows; 15/15 previews 0 ERROR; 849 tests OK (1 skipped); apply not run;
 - P1.2: known deviation
 - P1.3: known deviation
 - P1.4: known deviation
+- P1.5: known deviation

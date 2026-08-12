@@ -63,3 +63,22 @@
 - Авторизация покрывает 15 exact `migration_order` targets; registry-row deletion и semantic repair
   invalid candidates вне этого списка остаются explicit authority gates, если они ещё есть
   в fresh inventory.
+
+## 2026-08-12 — P1.5 repair-forward design
+
+- Владелец запустил `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P1.5`
+  после начала retirement implementation.
+- Фактический gate показал, что P1.5 должен охватить не только runtime
+  branches, но и весь shared v1-shaped fixture fleet, terminal-bundle admission boundary,
+  generated provider parity и release-visible CHANGELOG.
+- Закрытые P1.1–P1.4 specs/bundles не переписываются под новый
+  filesystem; live re-resolution ограничивается nonterminal executable items.
+
+## 2026-08-12 — owner escalation: repeated executor restarts
+
+- Владелец потребовал зафиксировать в плане полный incident по поводу
+  семи рестартов P1.5 и довести работу без новых запусков.
+- `findings/10-P1-execution-restart-incident.md` хранит exact count, chronology,
+  impact, root cause и обязательные prevention controls.
+- До конца текущей owner-сессии действует zero-restart invariant:
+  route/protocol deviation фиксируется, но чинится прямо в этом процессе.

@@ -230,6 +230,21 @@ def carrier_boundary_error(plan_dir: Path, root: Path) -> str | None:
     return None
 
 
+def declared_layout_for_history(plan_dir: Path) -> str | None:
+    """Read an archive label without resolving it as an executable layout."""
+    try:
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+    except OSError as exc:
+        raise InventoryError(f"plan.md is unreadable: {exc}") from exc
+    for line in text.splitlines():
+        match = re.match(r"^\|\s*Layout\s*\|\s*([^|]+)\|", line)
+        if match:
+            return match.group(1).strip()
+    # A missing declaration is retired v1 in historical evidence only.  This
+    # preserves the pre-cutover inventory label without making it executable.
+    return "v1"
+
+
 def classify_plan(plan_dir: Path, root: Path, active_ids: set[str], *, archived: bool) -> dict:
     resolved = plan_dir.resolve(strict=False)
     record = {
@@ -251,8 +266,8 @@ def classify_plan(plan_dir: Path, root: Path, active_ids: set[str], *, archived:
         return record
     if archived:
         try:
-            record["declared_layout"] = plan_layout._meta_layout(plan_dir)
-        except (OSError, UnicodeError, plan_layout.PlanLayoutError) as exc:
+            record["declared_layout"] = declared_layout_for_history(plan_dir)
+        except (InventoryError, UnicodeError) as exc:
             record["diagnostic"] = str(exc)
             return record
         record.update(classification="archive", migration_disposition="inert-history")

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: fd8ef0ea80b0cb0e34d6364228cb035d27bc81b55aac1f882c3065b80c60b4e4
+inputs_sha256: 78c06ed9bd1f9672246b672bfb35acd9aa68f88ca5690631380755bf773043aa
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟠 Done with deviations |
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
-| P3 | Nonterminal observations and inline local repair | 0/3 | ⬜ Not started |
+| P3 | Nonterminal observations and inline local repair | 1/3 | 🟡 In progress |
 | P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
@@ -60,7 +60,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P3.1 | Add nonterminal journal results and state semantics | ⬜ Not started | — |
+| P3.1 | Add nonterminal journal results and state semantics | 🟢 Done | 2026-08-12 |
 | P3.2 | Apply continue-first repair flow to canonical commands | ⬜ Not started | — |
 | P3.3 | Make orchestration declaration detection negation-aware | ⬜ Not started | — |
 
@@ -218,6 +218,9 @@ Canonical qualified-reference rule and source-level parity tests added; P5.3 own
 Provider projections regenerated; Task 841/1 skip, skiller 633 green. Material deviation: P5.3-owned generated Files repaired in P2.2. |
 | 2026-08-12 | gpt-5.6-sol/xhigh | plan-audit · audit-green · заход 1, GREEN; reproducible validation and generator no-op; P2.2 scope deviation remains named. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-close · closed-deviations · P2 closed: GREEN audit fingerprint f8faba2b; P2.2 material scope deviation retained; docs synced. |
+| 2026-08-12 | implementation/high | plan-run · in-progress · P3.1: начато расширение observation taxonomy. |
+| 2026-08-12 | implementation/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+P3.1: rag-pending добавлен в journal/state; 45 focused tests и validate.sh зелёные. |
 
 ## Owner Gates
 

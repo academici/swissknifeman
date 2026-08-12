@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-12
-inputs_sha256: 7a3c9980f71c3066b2d09e8811dacb5d1275b3d52f4f81cd745b5b98895ffa88
+inputs_sha256: b9abbc0fc9585cb30d19409adf965d5b69644b912953aef840298674a0382ced
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | ⬜ Not started |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-12 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Roadmap evidence and acceptance freeze | 0/3 | ⬜ Not started |
+| P0 | Roadmap evidence and acceptance freeze | 1/3 | 🟡 In progress |
 | P1 | Active-plan migration and Layout v1 execution retirement | 0/3 | ⬜ Not started |
 | P2 | Numbered plan identity and collision-free references | 0/2 | ⬜ Not started |
 | P3 | Nonterminal observations and inline local repair | 0/2 | ⬜ Not started |
@@ -35,7 +35,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Reconcile roadmap conflicts with current runtime | ⬜ Not started | — |
+| P0.1 | Reconcile roadmap conflicts with current runtime | 🟢 Done | 2026-08-12 |
 | P0.2 | Freeze continue-first acceptance bank | ⬜ Not started | — |
 | P0.3 | Close mandatory Perplexity evidence and freeze RAG-pending semantics | ⬜ Not started | — |
 
@@ -89,7 +89,14 @@ generated_by: task plan-views status
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-08-12 | frontier/high | plan-design · in-progress · Layout v2: новый пофазный план P0–P6 полностью детализирован; mandatory Perplexity rerun GREEN |
+| 2026-08-12 | frontier/high | plan-run · in-progress · — |
+| 2026-08-12 | frontier/high | plan-run · block-candidate · Committed spec has no public acceptance; future P0 bundle inputs are generator-unresolvable. |
+| 2026-08-12 | frontier/high | plan-run · local-repair · Forward repair: committed specs and pending-producer bundle admission restored public acceptance and lint. |
+| 2026-08-12 | frontier/high | plan-run · closed-green · Deliverables committed at a8fd256d; declared Validation and targeted seam tests passed; forward local repairs bbcff1bf/7d45c292. write-site: pre_mutation: allow · pre_final: allow. |
+| 2026-08-12 | frontier/high | plan-run · local-repair · Closure projection requires write-site on its own line; append-only terminal correction follows. |
+| 2026-08-12 | frontier/high | plan-run · closed-green · Deliverables committed at a8fd256d; declared Validation and targeted seam tests passed; forward local repairs bbcff1bf/7d45c292.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
-- —
+- P0.1: known deviation

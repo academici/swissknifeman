@@ -25,6 +25,9 @@ RETURN_LOOP_GATE_ID = "return-loop-v1"
 DECISION_QUEUE_GATE_ID = "decision-queue-v1"
 _FILES_FIELD_RE = re.compile(r"^\*\*Files:\*\*\s*(.*)$")
 _BACKTICK_PATH_RE = re.compile(r"`([^`]+)`")
+_ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
+_ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
+_REVIEW_ORDER = {"none": 0, "light": 1, "full": 2}
 
 
 def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
@@ -90,6 +93,18 @@ def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[d
     encoded = json.dumps(rows, ensure_ascii=False, sort_keys=True,
                          separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest(), rows
+
+
+def _candidate_snapshot_fingerprint(snapshot: dict) -> str:
+    """Bind the policy input to the exact candidate material fingerprint."""
+    digest_snapshot = {
+        key: snapshot[key]
+        for key in ("phase_id", "scope", "terminal_item_heads", "material_risks",
+                    "declared_files", "product_tree_sha256")
+    }
+    encoded = json.dumps(digest_snapshot, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=()):
@@ -171,11 +186,132 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         "declared_files": sorted(declared_paths),
         "product_tree_sha256": product_tree_sha256,
     }
-    encoded = json.dumps(digest_snapshot, ensure_ascii=False, sort_keys=True,
-                         separators=(",", ":")).encode("utf-8")
     snapshot = {**digest_snapshot, "product_files": product_files,
                 "observed_repository_head": head}
-    return {"fingerprint": hashlib.sha256(encoded).hexdigest(), "snapshot": snapshot}
+    return {"fingerprint": _candidate_snapshot_fingerprint(snapshot), "snapshot": snapshot}
+
+
+def _routing_items(value: str) -> tuple[str, ...] | None:
+    value = value.strip().strip("`")
+    if _ROUTING_ITEM_RE.fullmatch(value):
+        return (value,)
+    match = _ROUTING_RANGE_RE.fullmatch(value)
+    if not match or match.group(1) != match.group(3):
+        return None
+    first, last = int(match.group(2)), int(match.group(4))
+    if first > last:
+        return None
+    return tuple(f"{match.group(1)}.{number}" for number in range(first, last + 1))
+
+
+def _phase_reviews(plan_dir: Path, phase_id: str) -> dict[str, str]:
+    """Read the declared Review cells for one phase; unresolved input fails closed."""
+    try:
+        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+    in_routing = False
+    headers = None
+    reviews = {}
+    for line in lines:
+        if re.fullmatch(r"##\s+3\.\s+Routing\s*", line.strip()):
+            in_routing = True
+            continue
+        if in_routing and line.startswith("## "):
+            break
+        if not in_routing or not line.strip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if headers is None:
+            if "Items" in cells and "Review" in cells:
+                headers = cells
+            continue
+        if all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells):
+            continue
+        if len(cells) != len(headers):
+            return {}
+        row = dict(zip(headers, cells))
+        items = _routing_items(row.get("Items", ""))
+        review = row.get("Review", "").strip()
+        if items is None or review not in _REVIEW_ORDER:
+            return ()
+        if any(item.startswith(f"{phase_id}.") for item in items):
+            for item in items:
+                if not item.startswith(f"{phase_id}."):
+                    continue
+                if item in reviews:
+                    return {}
+                reviews[item] = review
+    return reviews
+
+
+def _audit_policy_decision(plan_dir: Path, phase_id: str, *, required: bool,
+                           code: str, review: str, reason: str) -> dict:
+    kind = "audit-phase" if required else "close"
+    command = "task:plan-audit" if required else "task:plan-close"
+    return {
+        "audit_required": required,
+        "code": code,
+        "effective_review": review,
+        "next_kind": kind,
+        "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}",
+        "reasons": [reason],
+    }
+
+
+def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
+    """Choose audit-phase vs direct close from committed risk and volume evidence.
+
+    ``Review`` is the plan author's risk decision. Runtime evidence may only raise
+    its depth: material risk or a non-green terminal item always requires audit;
+    a multi-item ``light`` phase requires integration audit. Process-only
+    deviations keep the item green and therefore do not manufacture an audit.
+    Missing evidence defaults to audit instead of guessing.
+    """
+    plan_dir = Path(plan_dir)
+    if not re.fullmatch(r"P\d+", phase_id):
+        raise ValueError("phase_id должен иметь форму Pn")
+    reviews = _phase_reviews(plan_dir, phase_id)
+    snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else {}
+    heads = snapshot.get("terminal_item_heads")
+    risks = snapshot.get("material_risks")
+    head_ids = [row.get("item_id") for row in heads if isinstance(row, dict)] \
+        if isinstance(heads, list) else []
+    if (snapshot.get("phase_id") != phase_id or not isinstance(heads, list)
+            or not heads or not isinstance(risks, list) or not reviews
+            or len(head_ids) != len(heads) or set(head_ids) != set(reviews)):
+        return _audit_policy_decision(
+            plan_dir, phase_id, required=True,
+            code="PHASE_AUDIT_REQUIRED_UNASSESSED", review="full",
+            reason="candidate-or-routing-unresolved")
+    statuses = [row.get("status") for row in heads if isinstance(row, dict)]
+    if len(statuses) != len(heads) or any(status != plan_status.STATUS_DONE for status in statuses):
+        return _audit_policy_decision(
+            plan_dir, phase_id, required=True,
+            code="PHASE_AUDIT_REQUIRED_NON_GREEN",
+            review=max(reviews.values(), key=_REVIEW_ORDER.__getitem__),
+            reason="non-green-terminal-item")
+    if risks:
+        return _audit_policy_decision(
+            plan_dir, phase_id, required=True,
+            code="PHASE_AUDIT_REQUIRED_MATERIAL_RISK",
+            review=max(reviews.values(), key=_REVIEW_ORDER.__getitem__),
+            reason="material-risk")
+    effective = max(reviews.values(), key=_REVIEW_ORDER.__getitem__)
+    if effective == "full":
+        return _audit_policy_decision(
+            plan_dir, phase_id, required=True,
+            code="PHASE_AUDIT_REQUIRED_FULL_REVIEW", review=effective,
+            reason="routing-review-full")
+    if effective == "light" and len(heads) > 1:
+        return _audit_policy_decision(
+            plan_dir, phase_id, required=True,
+            code="PHASE_AUDIT_REQUIRED_MULTI_ITEM", review=effective,
+            reason="multi-item-integration")
+    return _audit_policy_decision(
+        plan_dir, phase_id, required=False,
+        code="PHASE_DIRECT_CLOSE_LOW_RISK", review=effective,
+        reason="single-green-item" if effective == "light" else "routing-review-none")
 
 
 def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: str | None):
@@ -216,12 +352,26 @@ def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: s
     return {"allow": True, "code": "allow", "owner_decision": decision.identifier}
 
 
-def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, owner_decision=None):
-    """Allow a matching GREEN audit or an accepted phase-scoped owner override."""
+def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_snapshot=None,
+                     owner_decision=None):
+    """Allow adaptive direct close, matching GREEN audit, or an owner override."""
     plan_dir = Path(plan_dir)
+    if candidate_snapshot is not None:
+        try:
+            bound_fingerprint = _candidate_snapshot_fingerprint(candidate_snapshot)
+        except (KeyError, TypeError, ValueError):
+            bound_fingerprint = None
+        if bound_fingerprint != candidate_fingerprint:
+            return {"allow": False, "code": "PHASE_CANDIDATE_SNAPSHOT_MISMATCH",
+                    "journal_line": None}
     override = _phase_close_owner_override(plan_dir, phase_id, owner_decision)
     if override is not None:
         return override
+    audit_policy = phase_audit_policy(
+        plan_dir, phase_id, candidate_snapshot=candidate_snapshot)
+    if not audit_policy["audit_required"]:
+        return {"allow": True, "code": "allow", "journal_line": None,
+                "audit_policy": audit_policy}
     journal_path = Path(plan_dir) / "journal.jsonl"
     latest = None
     if journal_path.is_file():
@@ -234,17 +384,20 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, owner_decisio
             if event.get("command") == "plan-audit" and event.get("item_id") == phase_id:
                 latest = (line_number, event)
     if latest is None:
-        return {"allow": False, "code": "PHASE_AUDIT_MISSING", "journal_line": None}
+        return {"allow": False, "code": "PHASE_AUDIT_MISSING", "journal_line": None,
+                "audit_policy": audit_policy}
     line_number, event = latest
     if event.get("fingerprint") != candidate_fingerprint:
-        return {"allow": False, "code": "PHASE_AUDIT_STALE", "journal_line": line_number}
+        return {"allow": False, "code": "PHASE_AUDIT_STALE", "journal_line": line_number,
+                "audit_policy": audit_policy}
     codes = {
         "audit-green": (True, "allow"),
         "audit-attention": (False, "PHASE_AUDIT_ATTENTION"),
         "audit-red": (False, "PHASE_AUDIT_RED"),
     }
     allow, code = codes.get(event.get("result"), (False, "PHASE_AUDIT_INVALID"))
-    return {"allow": allow, "code": code, "journal_line": line_number}
+    return {"allow": allow, "code": code, "journal_line": line_number,
+            "audit_policy": audit_policy}
 
 
 def _calibration_label(measurer) -> str:

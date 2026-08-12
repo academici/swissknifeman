@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:0b748ae07823dd64239643db944d22188f85de1a86a4faff48d834a2be0a1127
+Canonical SHA-256: sha256:e0e32e12b57c1ecfd289e801c00c2c18026289e5faf06a7fc24cdbfa5771ec42
 Adapter: task.codex-command/1.0.5
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -95,8 +95,8 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   | `$ task:plan-exec <ID> Pn.m` | следующий item детализирован, `Exec = plan-exec` (§9) |
   | `$ task:plan-design <ID> Pn` | следующая фаза — скелет |
   | `$ task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
-  | `$ task:plan-audit <ID> Pn` | terminal items образовали ещё не закрытый phase candidate |
-  | `$ task:plan-close <ID> Pn` | свежий GREEN audit совпадает с candidate fingerprint |
+  | `$ task:plan-audit <ID> Pn` | `phase_audit_policy` требует audit для terminal phase candidate |
+  | `$ task:plan-close <ID> Pn` | policy разрешает direct close либо fresh GREEN audit совпадает с candidate fingerprint |
   | `$ task:plan-close <ID> Pn.m` | только recovery legacy/incomplete journal/evidence mismatch; не normal Next |
   | `$ task:plan-close archive <ID>` | план терминален целиком |
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
@@ -242,10 +242,17 @@ status-rule ниже. Точная команда, лестница маршру
 
 ## Режим `Pn` — закрытие фазы
 
-0. Вычисли `task.plan_gates.phase_candidate_fingerprint(...)` из scope, terminal item heads и
-   material risk. Затем `phase_close_gate(...)` обязан вернуть `allow`: отсутствующий, RED,
-   ATTENTION или stale audit отказывает без phase mutation. Audit сам фазу не закрывает.
-   **D26 direct-green-validation — узкий owner override.** Только explicit
+0. Вычисли `candidate = task.plan_gates.phase_candidate_fingerprint(...)` из scope, terminal
+   item heads и material risk, затем вызови
+   `task.plan_gates.phase_audit_policy(..., candidate_snapshot=candidate["snapshot"])` и
+   `phase_close_gate(..., candidate_fingerprint=candidate["fingerprint"],
+   candidate_snapshot=candidate["snapshot"])`. Это ОДИН policy seam для handoff и close:
+   `full`, material risk, non-green terminal item или multi-item `light` требуют fresh GREEN
+   audit; `none` и single-item `light` при всех 🟢 и без material risk разрешают direct close.
+   Process-only deviation при 🟢 сам по себе audit не включает. Если policy требует audit,
+   отсутствующий, RED, ATTENTION или stale audit отказывает без phase mutation; если не требует —
+   gate возвращает `allow` без exploratory отказа. Audit сам фазу не закрывает.
+   **D26 direct-green-validation — узкий owner override для ветки, где policy требует audit.** Только explicit
    `phase_close_gate(..., owner_decision="D26")` может заменить audit-путь, и только когда
    carrier `decisions/D26-*.md` ровно один, `accepted`, не superseded, exact phase-scoped
    (`item` и `items` содержат закрываемый `Pn`), supersedes прежний путь и несёт literal

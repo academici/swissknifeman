@@ -138,8 +138,11 @@ evidence; a cancelling/superseding decision adds `**Consequences:**`.
 
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
-generated `[v2]` phase-closure view. A terminal phase is a candidate: a fresh GREEN audit precedes
-phase close; a RED or unresolved ATTENTION is repaired in its owning item before retrying that gate.
+generated `[v2]` phase-closure view. A terminal phase is a candidate. Both handoff and close call
+`task.plan_gates.phase_audit_policy` over the same candidate snapshot: `full`, material risk,
+non-green terminal state, or multi-item `light` requires a fresh GREEN audit; `none` and a
+single-item `light` phase with only green items and no material risk close directly. A process-only
+deviation does not manufacture an audit. RED or unresolved ATTENTION is repaired in its owning item.
 
 ## 5. Routing
 
@@ -178,6 +181,11 @@ Historical `/task:…`, `ЗАПУСК ВРУЧНУЮ:`, and `ОЖИДАНИЕ:` 
 store the provider-neutral semantic form and separately render Claude `/task:…` or Codex
 `$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
 `РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
+
+A terminal-item handoff never probes `plan-close` to discover that audit is missing. It evaluates
+`phase_audit_policy` once: `next_kind=audit-phase` renders `task:plan-audit`, while
+`next_kind=close` renders `task:plan-close`. Handoff copies the returned `next_exact`; the close
+gate consumes the same snapshot and policy.
 
 Every runnable execution Next has Batch, Model class, Effort, Capabilities, Context, Суть, and
 Команда; non-execution Next uses `Batch: n/a`. Manual has `Команда: —`. `Batch` is copied from

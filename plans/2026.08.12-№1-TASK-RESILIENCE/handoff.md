@@ -1,29 +1,29 @@
 # HANDOFF — 2026-08-12 — after P0.3
 
-**Next:** manual: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P0
+**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0
 
-> Все items P0 терминальны. Следующий отдельный запуск проверяет fresh phase audit gate и закрывает фазу либо выдаёт точную команду аудита без перехода к P1.
+> Все items P0 терминальны. `phase_audit_policy` вернул `PHASE_AUDIT_REQUIRED_FULL_REVIEW`; следующий отдельный запуск выполняет fresh phase audit до close.
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | solo |
-| Model class | implementation |
-| Effort | low |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | filesystem · git |
-| Context | cold-start-root: phase-close |
-| Суть | Реконсилировать терминальную фазу P0 и пройти обязательный phase-close gate. |
-| Команда | — |
+| Context | cold-start-root: whole-plan-independent-audit |
+| Суть | Независимо проверить terminal candidate P0 перед разрешением phase close. |
+| Команда | `task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0` |
 
 Provider-neutral launch-block:
 
 ```text
-task:plan-close 2026.08.12-№1-TASK-RESILIENCE P0
+task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P0'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P0'
 ```
 
 **Done:**
@@ -34,7 +34,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 **Remaining:**
 
-- Fresh audit и закрытие фазы P0 отдельной командой `task:plan-close`/её точной audit-рекомендацией.
+- Fresh audit P0 отдельной командой `task:plan-audit`; после GREEN — отдельный `task:plan-close`.
 - P1–P6 по phase-first порядку; после закрытия P0 следующий batch — B-P1-CUTOVER.
 
 **Sources of truth:**
@@ -49,7 +49,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 **Open risks:**
 
-- Fresh phase audit для текущего fingerprint P0 ещё не записан; phase-close gate обязан отказать без него и вернуть точную audit-команду.
+- Fresh phase audit для текущего fingerprint P0 ещё не записан; `PHASE_AUDIT_REQUIRED_FULL_REVIEW` запрещает direct close.
 - Perplexity advanced mode вернул непустой ответ без inline source metadata; provenance не выдуман, а подтверждён official-source URLs из deep mode и сохранён как process deviation.
 
 **Workarounds/Deferred/Open questions:**

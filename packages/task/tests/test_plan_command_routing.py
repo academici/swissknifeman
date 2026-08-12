@@ -85,6 +85,19 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
                 self.assertIn("Batch", body)
 
+    def test_terminal_phase_handoff_uses_audit_policy_instead_of_probe_close(self):
+        execution = (COMMAND_ROOT / "plan-exec.md").read_text(encoding="utf-8")
+        close = (COMMAND_ROOT / "plan-close.md").read_text(encoding="utf-8")
+        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
+                    ).read_text(encoding="utf-8")
+        for carrier in (execution, close, protocol):
+            with self.subTest(carrier=carrier[:40]):
+                self.assertIn("phase_audit_policy", carrier)
+        self.assertNotIn(
+            "Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`", execution)
+        self.assertIn("audit-phase: task:plan-audit", execution)
+        self.assertIn("close: task:plan-close", execution)
+
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():
             carrier = PlanNextCarrier(

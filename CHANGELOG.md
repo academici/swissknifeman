@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: phase handoff и close получили единый risk-adaptive audit gate.**
+  Low-risk фазы больше не получают гарантированно холостой `plan-close`: audit выбирается заранее
+  по Review, material risk, terminal status и multi-item объёму.
+
 - **`task`: Codex `plan-run` больше не теряет маршрут корректного native launch.**
   Новый stdlib-adapter извлекает model/effort, cwd, Task prompt и safety flags из ancestor argv,
   связывает provenance с `CODEX_THREAD_ID` и исключает повторную ручную self-attestation агента.

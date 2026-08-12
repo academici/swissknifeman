@@ -13,7 +13,9 @@ flowchart TD
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
     A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
     E --> C[phase candidate<br>terminal items]
-    C --> RV[первый pre-close audit<br>/task:plan-audit · material trigger]
+    C --> AP{phase_audit_policy<br>Review · risk · status · volume}
+    AP -- audit required --> RV[первый pre-close audit<br>/task:plan-audit]
+    AP -- direct close --> PC
     RV -- первый non-GREEN --> RE[один bounded repair-forward<br>под прежним ТЗ]
     RV -- GREEN --> PC[phase close<br>/task:plan-close]
     RE --> FRV[финальный audit<br>второй и последний]
@@ -86,7 +88,11 @@ handoff. См. [Continue-first](./continue-first).
 
 Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict
 переиспользуется, пока не изменились material scope, SHA или risk. Терминальные items образуют
-кандидата фазы; его свежий GREEN разрешает `/task:plan-close`. Bookkeeping и прочие
+кандидата фазы. Единый `phase_audit_policy` выбирает следующий исполняемый carrier без пробного
+`plan-close`: `Review=full`, material risk, non-green terminal item или несколько items при
+`Review=light` требуют `/task:plan-audit`; `Review=none` и один зелёный `light` item без material
+risk идут прямо в `/task:plan-close`. Process-only deviation при статусе 🟢 сам по себе аудит не
+включает. Если аудит требуется, только его свежий GREEN разрешает `/task:plan-close`. Bookkeeping и прочие
 детерминированные non-material дефекты чинятся inline в том же attempt. Подтверждённая material
 находка возвращается в owning item как repair-forward, а не в новый design-проход всего плана.
 Первый non-GREEN phase audit разрешает ровно один такой repair под неизменным item-spec, включая

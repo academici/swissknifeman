@@ -401,7 +401,13 @@ digest-qualified `evidence_ids`; без этого action — `gather-rag`, а �
      `continue-root`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID>
      Pn.m` (D18) — тем же обязательным code-block'ом (три строки не умещаются в ячейку таблицы).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `/task:plan-design <PLAN-ID> Pn`, не
-     `plan-exec` (упадёт на предусловии). Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`.
+     `plan-exec` (упадёт на предусловии). Если текущая фаза терминальна, НЕ используй
+     `plan-close` как пробную команду: вычисли `phase_candidate_fingerprint(...)`, затем единый
+     `task.plan_gates.phase_audit_policy(..., candidate_snapshot=candidate["snapshot"])`.
+     `audit_required=true` → `audit-phase: task:plan-audit <PLAN-ID> Pn`;
+     `audit_required=false` → `close: task:plan-close <PLAN-ID> Pn`. Handoff обязан копировать
+     `next_exact` и сохранить `code` политики; свободная оценка объёма или отклонений поверх
+     результата запрещена.
    - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue-root`
      (authoritative root продолжает в текущем бюджете/capabilities) · `isolated-child-return`
      (bounded reviewer/worker возвращает evidence; root остаётся authoritative) ·

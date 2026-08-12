@@ -38,6 +38,85 @@ def _finding(**overrides):
 
 
 class EvidenceFirstSignalTests(unittest.TestCase):
+    def _candidate(self, *, statuses=("🟢 Done",), material_risks=(), files=("docs/x.md",)):
+        return {
+            "phase_id": "P1",
+            "scope": [],
+            "terminal_item_heads": [
+                {"item_id": f"P1.{index}", "status": status}
+                for index, status in enumerate(statuses, start=1)
+            ],
+            "material_risks": list(material_risks),
+            "declared_files": list(files),
+            "product_tree_sha256": "b" * 64,
+        }
+
+    def _plan_with_review(self, root, review, *, items="P1.1"):
+        plan = Path(root) / "P"
+        plan.mkdir()
+        (plan / "plan.md").write_text(
+            "## 3. Routing\n\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            f"| solo | {items} | implementation/high | manual | {review} | test |\n",
+            encoding="utf-8",
+        )
+        return plan
+
+    def test_phase_audit_policy_skips_separate_audit_for_low_risk_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan_with_review(tmp, "none")
+            policy = plan_gates.phase_audit_policy(
+                plan, "P1", candidate_snapshot=self._candidate())
+            self.assertFalse(policy["audit_required"])
+            self.assertEqual(policy["next_kind"], "close")
+            self.assertEqual(policy["next_exact"], "close: task:plan-close P P1")
+
+            snapshot = self._candidate()
+            gate = plan_gates.phase_close_gate(
+                plan, "P1",
+                candidate_fingerprint=plan_gates._candidate_snapshot_fingerprint(snapshot),
+                candidate_snapshot=snapshot)
+            self.assertTrue(gate["allow"])
+            self.assertEqual(gate["audit_policy"]["code"], "PHASE_DIRECT_CLOSE_LOW_RISK")
+
+    def test_phase_audit_policy_uses_review_risk_and_phase_volume(self):
+        cases = (
+            ("full", ("🟢 Done",), (), True, "PHASE_AUDIT_REQUIRED_FULL_REVIEW"),
+            ("light", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_LOW_RISK"),
+            ("light", ("🟢 Done", "🟢 Done"), (), True, "PHASE_AUDIT_REQUIRED_MULTI_ITEM"),
+            ("none", ("🟢 Done",), ("public contract",), True, "PHASE_AUDIT_REQUIRED_MATERIAL_RISK"),
+            ("none", ("🟠 Done with deviations",), (), True, "PHASE_AUDIT_REQUIRED_NON_GREEN"),
+        )
+        for review, statuses, risks, required, code in cases:
+            with self.subTest(review=review, statuses=statuses, risks=risks):
+                with tempfile.TemporaryDirectory() as tmp:
+                    items = "P1.1–P1.2" if len(statuses) == 2 else "P1.1"
+                    plan = self._plan_with_review(tmp, review, items=items)
+                    policy = plan_gates.phase_audit_policy(
+                        plan, "P1", candidate_snapshot=self._candidate(
+                            statuses=statuses, material_risks=risks))
+                    self.assertEqual(policy["audit_required"], required)
+                    self.assertEqual(policy["code"], code)
+
+    def test_phase_audit_policy_fails_closed_when_routing_does_not_cover_candidate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan_with_review(tmp, "none", items="P1.1")
+            policy = plan_gates.phase_audit_policy(
+                plan, "P1", candidate_snapshot=self._candidate(
+                    statuses=("🟢 Done", "🟢 Done")))
+            self.assertTrue(policy["audit_required"])
+            self.assertEqual(policy["code"], "PHASE_AUDIT_REQUIRED_UNASSESSED")
+
+    def test_phase_close_binds_policy_snapshot_to_candidate_fingerprint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan_with_review(tmp, "none")
+            gate = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint="a" * 64,
+                candidate_snapshot=self._candidate())
+            self.assertFalse(gate["allow"])
+            self.assertEqual(gate["code"], "PHASE_CANDIDATE_SNAPSHOT_MISMATCH")
+
     def test_only_reproduced_acceptance_safety_authority_are_terminal(self):
         for signal in review_policy.SIGNAL_CLASSES:
             decision = classify_signal(

@@ -2,6 +2,10 @@
 import copy
 import hashlib
 import json
+import os
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,7 +16,7 @@ except ImportError:  # direct discovery from tests/
     import fixtures  # noqa: F401,E402
 from task.plan_authority import (  # noqa: E402
     AuthorityFrameError, CommitmentStore, ResponseStore, apply_response,
-    auto_answer_clarification, authorize, canonical_action, evaluate, load_frame,
+    auto_answer_clarification, authorize, canonical_action, default_frame_path, evaluate, load_frame,
 )
 
 
@@ -59,6 +63,31 @@ class AuthorityEvaluationTests(unittest.TestCase):
         contract = ROOT / frame["contract"]
         self.assertTrue(contract.is_file())
         self.assertNotIn("plans", Path(frame["contract"]).parts)
+
+    def test_default_frame_is_package_relative(self):
+        self.assertEqual(default_frame_path(), FRAME_PATH)
+
+    def test_installed_package_resolves_its_bundled_frame_without_monorepo(self):
+        package_root = ROOT / "packages/task"
+        with tempfile.TemporaryDirectory() as tmp:
+            installed_root = Path(tmp) / "plugins/task/0.12.0"
+            shutil.copytree(package_root, installed_root)
+            environment = os.environ | {"PYTHONPATH": str(installed_root / "lib")}
+            environment.pop("TASK_AUTHORITY_FRAME", None)
+            result = subprocess.run(
+                args=[sys.executable, "-c", (
+                    "from task.plan_authority import default_frame_path, load_frame; "
+                    "path = default_frame_path(); "
+                    "assert path == path.parents[1] / 'configs/authority-frame.json'; "
+                    "load_frame(); print(path)"
+                )],
+                cwd=tmp,
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_constructive_is_delegated(self):
         result = evaluate(_request())

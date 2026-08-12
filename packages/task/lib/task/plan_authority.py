@@ -19,7 +19,7 @@ from typing import Any
 
 
 FRAME_ENV = "TASK_AUTHORITY_FRAME"
-FRAME_RELATIVE_PATH = "packages/task/configs/authority-frame.json"
+FRAME_RELATIVE_PATH = "configs/authority-frame.json"
 KIND_VALUES = ("clarification", "authorization")
 VERDICT_VALUES = ("delegated", "approval_required", "denied")
 AUTO_ANSWER_CLASSES = {
@@ -94,12 +94,13 @@ class ResponseStore:
         return True
 
 
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[4]
+def _package_root() -> Path:
+    """Resolve Task's own package root in checkout and installed plugin layouts."""
+    return Path(__file__).resolve().parents[2]
 
 
 def default_frame_path() -> Path:
-    return Path(os.environ.get(FRAME_ENV, _repo_root() / FRAME_RELATIVE_PATH))
+    return Path(os.environ.get(FRAME_ENV, _package_root() / FRAME_RELATIVE_PATH))
 
 
 def _canonical_bytes(value: Any) -> bytes:

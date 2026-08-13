@@ -2,12 +2,14 @@
 
 ## [Unreleased]
 
+- —
+
+## [0.13.0] - 2026-08-13
+
 - **`task`: Codex plan runtime передаёт один current-thread route record в contract gates.**
   Устаревший `provider-doctor`/`self-attested` рецепт больше не остаётся ниже корректного
   provider binding в `plan-exec` и `plan-close`; это устраняет ложный `ROUTE_UNDERSHOOT`
   после нового запуска, `/clear` и прямого `$ task:…` вызова.
-
-## [0.13.0] - 2026-08-13
 
 - **`task`: все Codex plan-команды проверяют effective route по текущему thread state.**
   Generated projections запускают adapter-owned capture до первой journal-мутации и

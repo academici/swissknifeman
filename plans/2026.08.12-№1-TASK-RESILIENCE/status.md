@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: c3eed0c7acb433074718eb2061d8cc60acec0e96301e5629ec10b2a1e941e7f6
+inputs_sha256: 34c0524d893d2d9dbef664640731ae76b63fb4414f049a74db7dcaa613b9fdd8
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
+| P5 | Durable terminal delivery and provider parity | 1/3 | 🟡 In progress |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -75,7 +75,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P5.1 | Enforce byte-bound terminal delivery receipts | ⬜ Not started | 2026-08-13 |
+| P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
 | P5.2 | Stabilize candidate-first phase audit and closure | ⬜ Not started | — |
 | P5.3 | Regenerate providers, registry and docs from canonical sources | ⬜ Not started | — |
 
@@ -289,6 +289,9 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: five-command receipt boundary, subject/refusal matrix и P4 predecessor gate |
 | 2026-08-13 | frontier/high | plan-close · closed-deviations · P4 закрыта по D23; targeted continue-first validation и Task suite зелёные, P4.2 deviation сохранён |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P5.1 execution started after deterministic bundle recovery; product patch was committed before durable start record (process deviation). |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Product e39956f8; receipt tests 12 passed; validate.sh 867 passed, 1 skipped. Process deviation: product commit preceded durable start after bundle recovery. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -302,3 +305,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P3.3: known deviation
 - P4.1: known deviation
 - P4.2: known deviation
+- P5.1: known deviation

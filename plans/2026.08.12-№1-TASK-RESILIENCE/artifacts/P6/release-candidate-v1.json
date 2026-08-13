@@ -1,6 +1,6 @@
 {
   "$schema": "urn:swissknifeman:release-candidate:v1",
-  "candidate_commit": "8ed159c9073143bee7c13e0e4b660202ff639846",
+  "candidate_commit": "0ed08fda6b92858c44d69ca3dc28c3070b0d3f47",
   "item_id": "P6.2",
   "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
   "push_status": "not-authorized",

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: dcd488b669710fafbe24b457fea59e032bdff6d5724a037a341eaacda3bb2187
+inputs_sha256: b96430af2b54c7d87ed6db25b642a69bd44002857976cd2ee6246b74045913c3
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 1/4 | 🟡 In progress |
+| P6 | Release, new tag and registered-project rollout | 2/4 | 🟡 In progress |
 
 ## Phase P0
 
@@ -84,7 +84,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟢 Done | 2026-08-13 |
-| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟡 In progress | 2026-08-13 |
+| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟢 Done | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | ⬜ Not started | — |
 | P6.4 | Roll out to every registered project/channel and verify | ⬜ Not started | — |
 
@@ -340,6 +340,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | owner | plan-run · in-progress · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 release requalification resumed in verified Codex session. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · Harness fixture repair requires coherent v2 carriers; partial conversion discarded. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Durable Harness scope applied; canonical v2 fixtures and complete P6.2 gates are green; candidate 8ed159c9073143bee7c13e0e4b660202ff639846 remains untagged. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; terminal carrier repair, candidate 8ed159c9073143bee7c13e0e4b660202ff639846 remains untagged. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · Candidate superseded by downstream-gate repair; requalifying exact candidate 0ed08fda6b92858c44d69ca3dc28c3070b0d3f47. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: b96430af2b54c7d87ed6db25b642a69bd44002857976cd2ee6246b74045913c3
+inputs_sha256: 193a817c9700dc64ae4f6557dbe851480b9d21ec39fb3e669c4c5f0fb6f22ac1
 generated_by: task plan-views status
 -->
 
@@ -345,6 +345,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · Candidate superseded by downstream-gate repair; requalifying exact candidate 0ed08fda6b92858c44d69ca3dc28c3070b0d3f47. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 requalification started for exact candidate 3c5548f7 after route-evidence repair. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Requalified candidate 3c5548f7; five packages and release drift checks passed. |
 
 ## Owner Gates
 

@@ -19,7 +19,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 **Done:**
 
 - P6.2 is GREEN: canonical Harness Layout-v2 fixtures, the downstream Git-ref defer fix, five package validations, registry, provider renderer, docs sync, and diff check all passed.
-- Exact untagged tag-input candidate: `0ed08fda6b92858c44d69ca3dc28c3070b0d3f47`; capsule and finding 19 bind its evidence.
+- Exact untagged tag-input candidate: `3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0`; capsule and finding 19 bind its requalification evidence.
 - `v0.13.0` remains absent; no push, GitHub release, or rollout was performed.
 
 **Remaining:**

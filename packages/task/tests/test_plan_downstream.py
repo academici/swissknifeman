@@ -81,6 +81,22 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertEqual(result["outcome"], "unknown")
         self.assertEqual(result["consumers"][0]["commands"], [])
 
+    def test_consumer_owned_git_ref_postcondition_is_deferred(self):
+        self._consumer(validation="git cat-file -t v0.13.0")
+        text = self.consumer.read_text(encoding="utf-8").replace(
+            "**Implementation Rules:**", "**Implementation Rules:** create the ref with `git tag -a v0.13.0`. ")
+        self.consumer.write_text(text, encoding="utf-8")
+        self._git("add", str(self.consumer.relative_to(self.repo)))
+        self._git("commit", "-qm", "tag consumer")
+
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertFalse(result["blocks"])
+        command = result["consumers"][0]["commands"][0]
+        self.assertFalse(command["applicable"])
+        self.assertEqual(command["deferred"], "consumer-owned-git-ref")
+
     def test_red_blocks_and_cannot_be_made_advisory(self):
         self._commit_consumer('`python3 -c "raise SystemExit(3)"`')
         result = plan_downstream.evaluate(self.plan, "P0.1")

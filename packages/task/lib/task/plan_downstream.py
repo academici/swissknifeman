@@ -33,6 +33,7 @@ _FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 _BARE_COMMAND = re.compile(
     r"(?:\./|(?:python(?:3)?|bash|sh|cd|git|make|npm|pnpm|composer|php|test|set|env)\b|"
     r"[A-Za-z_][A-Za-z0-9_]*=)")
+_GIT_REF_POSTCONDITION = re.compile(r"^git\s+cat-file\s+-t\s+[^\s]+$")
 
 
 def _sha(raw: bytes) -> str:
@@ -127,7 +128,8 @@ def discover_consumers(plan_dir, producer_item: str) -> list[dict]:
         matched = sorted(outputs & inputs)
         if matched:
             consumers.append({"item": item_id, "matched_paths": matched,
-                              "validation": fields.get("Validation", "")})
+                              "validation": fields.get("Validation", ""),
+                              "owns_git_ref": "git tag" in " ".join(fields.values())})
     return consumers
 
 
@@ -275,6 +277,10 @@ def evaluate(plan_dir, producer_item: str, *, producer_commit: str = "HEAD", run
         if len(selected) > 1 and not any("docker/tests/p5." in command for command in selected):
             selected = []
         for command in selected:
+            if consumer["owns_git_ref"] and _GIT_REF_POSTCONDITION.fullmatch(command):
+                commands.append({"command": command, "addressed_paths": [], "applicable": False,
+                                 "missing_paths": [], "deferred": "consumer-owned-git-ref"})
+                continue
             addressed = sorted(_command_paths(command, plan_dir=plan_dir, repo_root=repo_root))
             missing = [path for path in addressed if not _exists_in_tree(path, tree)]
             row = {"command": command, "addressed_paths": addressed,

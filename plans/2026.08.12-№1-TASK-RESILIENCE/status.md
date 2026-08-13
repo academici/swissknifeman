@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 9bc28fa10b4220fe8b4e2743ef965ff843b620efdd84a6e2ad13ddfe27016693
+inputs_sha256: b4bddda843ab0bd6a36280f2edee8a2e2daad884a1a1456cd4db951f16854fe5
 generated_by: task plan-views status
 -->
 
@@ -84,7 +84,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟢 Done | 2026-08-13 |
-| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | ⬜ Not started | 2026-08-13 |
+| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟡 In progress | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | ⬜ Not started | — |
 | P6.4 | Roll out to every registered project/channel and verify | ⬜ Not started | — |
 
@@ -333,6 +333,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/high | plan-run · local-repair · Carrier-only repair after terminal P6.1: materialize mandatory boundary evidence without changing release evidence.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: release requalification, compact candidate, tag/rollout split по D26 |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 release requalification started after verified Codex route evidence. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · Correcting start record run_id before product work; canonical derived run follows. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 canonical derived run_id started after journal local repair. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
 
 ## Owner Gates
 

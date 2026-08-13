@@ -6,7 +6,9 @@
 |:--|:--|
 | Batch | solo |
 | Model class | implementation |
+| Model | implementation (`gpt-5.6-terra`) |
 | Effort | high |
+| Thinking | high |
 | Capabilities | filesystem · git · local-tag |
 | Context | cold-start-root: design-root-terminal |
 | Суть | Исполнить D29: собрать и квалифицировать exact byte-fresh v0.13.2 candidate, затем создать только новый локальный annotated tag. |

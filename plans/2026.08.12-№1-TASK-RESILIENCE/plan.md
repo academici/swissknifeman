@@ -78,7 +78,7 @@ Microsoft Durable Functions; synthesis и URLs —
 | solo | P5.2 | implementation/high | manual | full | historical terminal block и D24 redesign требуют отдельный recovery launch; P5.1 уже терминален, а P5.3 — другая package-scope boundary |
 | solo | P5.3 | implementation/high | manual | full | package-scope restart в `packages/skiller` и cross-package owning generators/docs — hard context boundary после canonical P5.2 producer |
 | solo | P6.1 | implementation/high | manual | full | clean committed release-tree gate перед side effect |
-| solo | P6.2 | implementation/high | manual | full | post-P6.1 route/schema fix требует нового clean release-candidate и полного validation sweep |
+| solo | P6.2 | implementation/high | manual | full | owner-authorized recovery меняет frozen fingerprint runtime и выпускает отдельный v0.13.1 patch, не двигая v0.13.0 |
 | solo | P6.3 | implementation/medium | plan-exec | full | irreversible annotated-tag boundary отделена от release requalification |
 | solo | P6.4 | implementation/high | manual | full | external registered-project rollout после verified tag capsule |
 

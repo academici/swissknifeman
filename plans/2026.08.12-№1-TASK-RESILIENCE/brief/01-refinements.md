@@ -1,5 +1,13 @@
 # Уточнения владельца
 
+## 2026-08-13 — owner response: P6 fingerprint repair and patch release
+
+- Владелец запустил exact action-ref `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2`
+  из DecisionRequest `P6-audit-frozen-release-boundary-2026-08-13`.
+- Выбран вариант `repair-and-patch-release`: исправить deterministic tracked-tree/glob
+  fingerprint, повторно квалифицировать candidate и выпустить patch `v0.13.1`.
+- `v0.13.0`, P6.3/P6.4 evidence, push/GitHub release и P0–P5 не трогаются.
+
 ## 2026-08-13 — effective-route incident before P6.2
 
 - Владелец повторно запустил exact native `task:plan-design` route, но agent ложно принял

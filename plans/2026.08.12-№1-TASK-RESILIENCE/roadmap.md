@@ -1,7 +1,8 @@
 # Roadmap исполнения — 2026.08.12-№1-TASK-RESILIENCE
 
-**Статус:** design pass 2 complete; P0–P5 терминальны; P6.1 закрыт, а P6.2–P6.4
-перепроектированы после post-P6.1 effective-route/schema repair: requalification → tag → rollout.
+**Статус:** P0–P5 терминальны; historical P6.1–P6.4 выпустили и раскатали
+`v0.13.0`. RED-аудит и D27 переоткрыли P6.2 для tracked-tree fingerprint repair,
+полной requalification и нового локального `v0.13.1`; `v0.13.0`/P6.3/P6.4 evidence неизменны.
 Порядок фаз: P0 → P1 → P2 → P3 → P4 → P5 → P6. Batch не пересекает phase audit/close.
 
 ## Правило группировки
@@ -37,9 +38,9 @@
 | P5.2 | solo | P5.1 | implementation/high | manual | full | historical terminal block + D24 redesign require a dedicated recovery launch; focused producer acceptance, P5.3 nonterminal dependency |
 | P5.3 | solo | P5.2 | implementation/high | manual | full | package-scope restart в `packages/skiller` + cross-package generated/provider/docs aggregate gate |
 | P6.1 | solo | P5 | implementation/high | manual | full | clean release-tree hard gate |
-| P6.2 | solo | P6.1 | implementation/high | manual | full | post-P6.1 fix требует полной release requalification |
-| P6.3 | solo | P6.2 | implementation/medium | plan-exec | full | irreversible tag по exact compact candidate |
-| P6.4 | solo | P6.3 | implementation/high | manual | full | external rollout после verified tag capsule |
+| P6.2 | solo | P6 RED audit + D27 | implementation/high | manual | full | reopened frozen-runtime/patch-tag boundary; tracked-tree repair + exact gates + local v0.13.1 |
+| P6.3 | solo | historical P6.2 episode | implementation/medium | plan-exec | full | 🟢 immutable annotated v0.13.0 evidence; не перезапускается |
+| P6.4 | solo | P6.3 | implementation/high | manual | full | 🟢 immutable registered rollout evidence; не переписывается |
 
 ## Точные provider-neutral запуски
 
@@ -54,7 +55,7 @@
 | solo | P5.2 | implementation/high | filesystem, git, Task focused validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2` |
 | solo | P5.3 | implementation/high | filesystem, git, skiller canon, owning generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3` |
 | solo | P6.1 | implementation/high | filesystem, git, validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1` |
-| solo | P6.2 | implementation/high | filesystem, git, package validation, owning generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
+| solo | P6.2 | implementation/high | filesystem, git, tracked-tree fingerprint, package validation, owning generators, local annotated tag | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 | solo | P6.3 | implementation/medium | filesystem, git | `task:plan-exec 2026.08.12-№1-TASK-RESILIENCE P6.3` |
 | solo | P6.4 | implementation/high | filesystem, git, skiller registered channels | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.4` |
 

@@ -15,6 +15,7 @@
 | Комментарий ссылается полным PLAN-ID + item | D2 | P2.2, P5.3 |
 | Активные Layout v1 мигрируются, v1 больше не исполняется | D7 | P1, P6.3 |
 | Быстро реализовать, выпустить новый тег, раскатать | D5, D6 | P5, P6 |
+| Исправить доказанную fingerprint-дыру forward patch release, не двигая v0.13.0 | D27 | reopened P6.2 |
 
 Непокрытых требований брифа и refinements нет. RAG:— (repo-grounded:
 `brief/00-brief.md:1`, `brief/01-refinements.md`).

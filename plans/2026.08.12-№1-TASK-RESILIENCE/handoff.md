@@ -1,60 +1,52 @@
-# HANDOFF — 2026-08-13 — after P6
+# HANDOFF — 2026-08-13 — after P6.2
 
-**Next:** ОЖИДАНИЕ: repository owner resolves `P6-audit-frozen-release-boundary-2026-08-13` with `repair-and-patch-release` → task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2
 
-| Parameter | Value |
+| Параметр | Значение |
 |:--|:--|
-| Batch | owner-gate P6 |
-| Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high |
-| Capabilities | filesystem · git · release evidence · DecisionRequest resolution |
-| Context | cold-start-root: audit-root-terminal |
-| Summary | Resolve the frozen fingerprint/release boundary; recommended: repair and issue a patch release without moving `v0.13.0`. |
-| Command | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2` after owner approval |
-
-Provider-neutral SCOPE-PAYLOAD:
-
-```text
-$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
-
-РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
-ВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13`; прочитать ПЕРВЫМ
-СКОУП: 1) разрешить DecisionRequest `P6-audit-frozen-release-boundary-2026-08-13` 2) при approve спроектировать deterministic tracked-tree/glob fingerprint repair 3) зафиксировать stable Files/runtime boundary 4) переквалифицировать candidate и выпустить новую patch-version, не двигая `v0.13.0`
-НЕ ТРОГАТЬ: не удалять/не перезаписывать/не двигать `v0.13.0`; P6.3/P6.4 evidence; push/GitHub release; P0–P5; не принимать risk без явного repository-owner response
-```
+| Batch | solo |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | filesystem · git · tracked-tree fingerprint · package-validation · owning-generators · local annotated tag |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Исправить deterministic tracked-tree/glob fingerprint, повторно квалифицировать exact candidate и выпустить локальный v0.13.1, не двигая v0.13.0. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2\n\nРЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit\nВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13`; прочитать ПЕРВЫМ\nСКОУП: 1) разрешить DecisionRequest `P6-audit-frozen-release-boundary-2026-08-13` 2) при approve спроектировать deterministic tracked-tree/glob fingerprint repair 3) зафиксировать stable Files/runtime boundary 4) переквалифицировать candidate и выпустить новую patch-version, не двигая `v0.13.0`\nНЕ ТРОГАТЬ: не удалять/не перезаписывать/не двигать `v0.13.0`; P6.3/P6.4 evidence; push/GitHub release; P0–P5; не принимать risk без явного repository-owner response'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2'
 ```
 
 **Done:**
 
-- Audit attempt 1 is RED and bound to rebound candidate
-  `38da95944dfea136b8b617d74a8ee2cad1c4bec873d24139e95fa71c9f57783a`.
-- P6.1/P6.2 material deviations are recorded append-only; P6.3/P6.4 evidence remains
-  intact.
-- Authority resolver returned `approval_required`; the durable owner gate is pending.
+- DecisionRequest `P6-audit-frozen-release-boundary-2026-08-13` append-only разрешён
+  owner-option `repair-and-patch-release`; D27 фиксирует forward `v0.13.1`.
+- P6.2 переоткрыт и доведён до DoR; research фиксирует tracked-set/pathspec
+  семантику и отклонённые альтернативы.
+- Existing `v0.13.0` object/target и P6.3/P6.4 evidence не изменены.
 
 **Remaining:**
 
-- Repository owner selects the DecisionRequest outcome. The audit recommends
-  `repair-and-patch-release`; timeout parks the continuation.
-- P6 close/archive is forbidden while the request is unresolved.
+- Выполнить P6.2 как один recovery item: runtime/tests → version/generator/CHANGELOG →
+  exact committed-candidate gates → local annotated `v0.13.1` → compact evidence.
+- После terminal P6.2 нужен fresh audit P6; push/GitHub release не авторизованы.
 
 **Sources of truth:**
 
-- `phases/P6/P6.md` audit block, `findings/22-P6-audit-2026-08-13.md`,
-  `decisions/queue.jsonl`, `decisions/_gates.md`, `journal.jsonl`.
+- `phases/P6/P6.2.md`, `decisions/D27-repair-fingerprint-and-patch-release.md`.
+- `research/09-P6.2-tracked-tree-patch-release-design.md`,
+  `findings/22-P6-audit-2026-08-13.md`, `artifacts/P6/verified-tag-v1.json`.
 
 **Open risks:**
 
-- Candidate fingerprint does not bind the declared Harness wildcard tree.
-- Historical P6.1 validation claims were not reproducible at their exact anchor.
+- Candidate membership is security/release evidence: Git/pathspec failure must fail closed rather
+  than silently fall back to worktree recursion.
+- Task aggregate validation reads active plans; generated state/status/bundle must remain byte-fresh
+  before the exact candidate sweep.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: push/GitHub release remain unauthorized.
-- open_questions: owner choice for the frozen repair/release boundary.
+- deferred: push/GitHub release; registered-project mutation.
+- open_questions: none.

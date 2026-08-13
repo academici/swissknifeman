@@ -1,64 +1,66 @@
 # HANDOFF — 2026-08-13 — after P6
 
-**Next:** design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | owner-gate P6 |
-| Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high |
-| Context | cold-start-root: audit-root-terminal |
-| Суть | Разрешить RED-границу `v0.13.1`; рекомендован exact forward candidate и новый immutable `v0.13.2`. |
-| Команда | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2` |
+| Batch | solo |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | filesystem · git · local-tag |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Исполнить D29: собрать и квалифицировать exact byte-fresh v0.13.2 candidate, затем создать только новый локальный annotated tag. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 
-Provider-neutral SCOPE-PAYLOAD:
+Provider-neutral launch:
 
 ```text
-$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
-
-РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
-ВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13 (attempt 2)`; прочитать ПЕРВЫМ
-СКОУП: 1) разрешить DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` 2) при approve спроектировать exact committed release candidate с byte-fresh plan carriers 3) выпустить новый v0.13.2, не двигая v0.13.0/v0.13.1 4) повторить все release gates на exact commit
-НЕ ТРОГАТЬ: не удалять/не двигать/не перезаписывать v0.13.0/v0.13.1; P6.3/P6.4 evidence; push/GitHub release/registered rollout; P0–P5
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2
 ```
 
-Native Codex launch:
+Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2\n\nРЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit\nВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13 (attempt 2)`; прочитать ПЕРВЫМ\nСКОУП: 1) разрешить DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` 2) при approve спроектировать exact committed release candidate с byte-fresh plan carriers 3) выпустить новый v0.13.2, не двигая v0.13.0/v0.13.1 4) повторить все release gates на exact commit\nНЕ ТРОГАТЬ: не удалять/не двигать/не перезаписывать v0.13.0/v0.13.1; P6.3/P6.4 evidence; push/GitHub release/registered rollout; P0–P5'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2'
 ```
 
 **Done:**
 
-- Audit attempt 2 reproduced Task aggregate exit `1` on exact tagged candidate
-  `3e24951ec643ad8826cba3018883fc93acaba51f` and returned verdict RED.
-- Capsule `patch-release-v1.json` now records `task_validate: 1`; P6.2 is
-  `🟠 Done with deviations`; candidate rebound is
-  `ec2e01d5100a9160c706c80c8a54ffb1a1380cb65b62926d099d6a35eb5ebe27`.
-- Fresh isolated reviewer returned schema-valid `JUSTIFIED`.
-- Resolver returned `approval_required / P5_DECISION_ESCALATED`; request
-  `P6-audit-v0131-validation-boundary-2026-08-13` is durable and unresolved.
-- `v0.13.0` and `v0.13.1` remain unchanged; no push, GitHub release or rollout repeat ran.
+- DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` resolved with owner option
+  `repair-and-patch-release-v0.13.2`; generated decision gate is clear.
+- D29 supersedes D27 only for the active recovery target; v0.13.1 history and corrected red
+  capsule remain intact.
+- P6.2 stable spec now defines separate pre-candidate bookkeeping, exact candidate and
+  post-candidate evidence commits; clean detached validation forbids overlays.
+- Owner brief, preflight finding, design synthesis, decisions/state/status and P6.2 bundle are
+  synchronized through owning generators; plan-lint is 0 ERROR / 0 WARN.
 
 **Remaining:**
 
-- Repository owner chooses the DecisionRequest outcome.
-- Recommended on approval: design an exact byte-fresh candidate, run every release gate on
-  that commit, then issue `v0.13.2` without changing older tags.
+- Execute P6.2 from the committed design carriers.
+- Persist the execution-start qualification/carriers, then produce an all-zero release matrix on
+  one exact candidate SHA, create local annotated `v0.13.2`, and commit separate additive
+  v0.13.2 capsule/finding plus terminal bookkeeping.
+- Close/audit P6 only through the existing plan gates after P6.2 is terminal.
 
 **Sources of truth:**
 
-- `phases/P6/P6.md` final audit block; `findings/25-P6-v0131-exact-validation-audit.md`.
-- `findings/24-P6.2-patch-release.md`; `artifacts/P6/patch-release-v1.json`.
-- `decisions/queue.jsonl`; `decisions/_gates.md`; `phases/P6/P6.2.state.md`.
+- `plan.md` §3 Routing; `phases/P6/P6.2.md`; `bundles/P6.2.json`;
+  `phases/P6/P6.2.state.md`.
+- `decisions/D29-issue-v0132-from-byte-fresh-candidate.md`;
+  `research/10-P6.2-v0132-exact-candidate-design.md`.
+- `findings/25-P6-v0131-exact-validation-audit.md`;
+  `findings/26-P6.2-v0132-design-preflight.md`.
 
 **Open risks:**
 
-- `v0.13.1` exists locally but does not satisfy its declared aggregate Task release gate.
-- Current plan lint intentionally reports one error until the owner resolves the request.
+- Local `v0.13.1` remains immutable but its exact candidate has a known mandatory Task validation
+  failure; only a fully green exact `v0.13.2` candidate resolves the release boundary.
+- Any pre-existing `v0.13.2` or changed v0.13.0/v0.13.1 anchor is a safety/authority stop, never a
+  reason to delete or force-update tags.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; overlaying later plan carriers is explicitly forbidden.
-- deferred: `v0.13.2`, push, GitHub release, registered-project rollout repeat.
-- open_questions: owner choice for the durable DecisionRequest.
+- workarounds: none; carrier overlays and weakened validation are forbidden.
+- deferred: push, GitHub release and registered-project rollout remain unauthorized.
+- open_questions: —

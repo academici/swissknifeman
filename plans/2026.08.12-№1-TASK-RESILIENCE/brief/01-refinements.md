@@ -1,5 +1,16 @@
 # Уточнения владельца
 
+## 2026-08-13 — owner response: exact v0.13.2 after v0.13.1 validation RED
+
+- Владелец запустил exact action-ref `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2`
+  из DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` и тем самым выбрал
+  option `repair-and-patch-release-v0.13.2`.
+- Новый release candidate обязан быть отдельным committed SHA с byte-fresh P6.2 spec/bundle/state;
+  все release gates повторяются в clean detached worktree ровно на этом SHA без overlay.
+- После зелёных gates выпускается только новый локальный annotated `v0.13.2`; tag objects и peeled
+  commits `v0.13.0`/`v0.13.1` не удаляются, не двигаются и не перезаписываются.
+- P6.3/P6.4 evidence, push, GitHub release, registered rollout и P0–P5 остаются вне scope.
+
 ## 2026-08-13 — owner response: P6 fingerprint repair and patch release
 
 - Владелец запустил exact action-ref `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2`

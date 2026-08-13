@@ -153,7 +153,7 @@ class PlanRequestsTests(unittest.TestCase):
         self.assertTrue(request["evidence"])
         self.assertTrue(all(row["carrier"] == "journal.jsonl" for row in request["evidence"]))
         state = (self.plan / "phases/P1/P1.1.state.md").read_text(encoding="utf-8")
-        self.assertIn("**Status:** 🔴 Blocked", state)
+        self.assertIn("**Status:** 🟡 In progress", state)
         other = (self.plan / "phases/P0/P0.1.state.md").read_text(encoding="utf-8")
         self.assertIn("**Status:** 🟢 Done", other)
 
@@ -212,7 +212,7 @@ class PlanRequestsTests(unittest.TestCase):
                  "provenance_verified": True, "policy_digest": value["policy_digest"],
                  "reclassified_action_digest": after, "reclassified_to": "authorization"}
         plan_requests.append_auto_answer(self.plan, event, response=response)
-        self.assertIn("**Status:** 🔴 Blocked", (self.plan / "phases/P0/P0.1.state.md").read_text())
+        self.assertIn("**Status:** 🟢 Done", (self.plan / "phases/P0/P0.1.state.md").read_text())
 
     def test_auto_answer_producer_creates_the_contract_valid_pair(self):
         value = request_value(decision_id="Q-produced-auto", kind="clarification")
@@ -266,7 +266,7 @@ class PlanRequestsTests(unittest.TestCase):
             with self.assertRaisesRegex(plan_requests.RequestError, "projection failed"):
                 plan_requests.request(self.plan, value)
         events = [json.loads(line) for line in (self.plan / "journal.jsonl").read_text().splitlines()]
-        self.assertEqual(events[-1]["result"], "blocked")
+        self.assertEqual(events[-1]["result"], "decision-pending")
 
     def test_auto_answer_semantic_outcome_is_consistent_across_consumers(self):
         value = request_value(decision_id="Q-auto-semantic", kind="clarification")
@@ -285,7 +285,7 @@ class PlanRequestsTests(unittest.TestCase):
 
         state = plan_requests.states(self.plan)[value["decision_id"]]
         self.assertEqual("pending-authorization", plan_requests.semantic_outcome(state))
-        self.assertIn("**Status:** 🔴 Blocked",
+        self.assertIn("**Status:** 🟢 Done",
                       (self.plan / "phases/P0/P0.1.state.md").read_text())
         self.assertIn(value["decision_id"], {
             row["decision_id"] for records in plan_requests.pending_groups(self.plan).values()

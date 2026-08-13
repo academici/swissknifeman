@@ -433,7 +433,7 @@ def return_loop_request(plan_dir, gate: dict, *, continuation: dict, expires_at:
 
 def request_return_loop_gate(plan_dir, gate: dict, *, continuation: dict, expires_at: str,
                              actor: str = "return-loop") -> dict:
-    """Persist P5 transport and refresh the subject-local blocked projection."""
+    """Persist P5 transport and refresh the subject-local decision projection."""
     value = return_loop_request(plan_dir, gate, continuation=continuation, expires_at=expires_at)
     event = request(plan_dir, value, actor=actor)
     from task import plan_item_state, plan_status
@@ -452,6 +452,8 @@ def _journal_transition(plan_dir, request: dict, *, actor: str, result: str) -> 
 
 
 def _transition_result(outcome: str) -> str:
+    if outcome in ("pending", "pending-authorization"):
+        return "decision-pending"
     return "in-progress" if outcome == "apply" else "blocked"
 
 

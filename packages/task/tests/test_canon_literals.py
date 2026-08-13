@@ -403,8 +403,8 @@ class TestPreFinalGateIsBinaryNotGreenlitByNA(unittest.TestCase):
         self.assertIn("spec's FORM", self.skill_en)
 
 
-class TestBoundedAuditRepairContract(unittest.TestCase):
-    """D17: RED audit recovery is direct and has one repair round, not a design loop."""
+class TestAuditFixerContract(unittest.TestCase):
+    """D24: one audit root detects, repairs, rebinds and only then emits a verdict."""
 
     @classmethod
     def setUpClass(cls):
@@ -414,17 +414,15 @@ class TestBoundedAuditRepairContract(unittest.TestCase):
         cls.plan_exec = (repo_root / "packages/task/commands/plan-exec.md").read_text(
             encoding="utf-8")
 
-    def test_red_payload_routes_to_the_owning_item_not_phase_design(self):
-        self.assertIn("<repair-command из Routing:", self.plan_audit)
-        self.assertIn("несколько затронутых manual-items", self.plan_audit)
-        self.assertNotIn(
-            "\n/task:plan-design <PLAN-ID> Pn\n\nРЕЖИМ:", self.plan_audit)
+    def test_safe_findings_are_repaired_by_the_audit_root(self):
+        self.assertIn("safe in-scope ремонтом", self.plan_audit)
+        self.assertIn("audit_fixer_rebind(before, after)", self.plan_audit)
+        self.assertIn("repair-run или second audit", self.plan_audit)
 
-    def test_second_audit_is_final_and_terminal_item_has_one_repair_exception(self):
-        self.assertIn("второй аудит финальный", self.plan_audit)
-        self.assertIn("кроме bounded audit repair-forward", self.plan_exec)
-        self.assertIn("observed_rounds < audit_rounds_max", self.plan_exec)
-        self.assertIn("третьего\n   repair/audit цикла нет", self.plan_exec)
+    def test_audit_fixer_only_escalates_a_proven_boundary(self):
+        self.assertIn("authority/safety/public-frozen/acceptance boundary", self.plan_audit)
+        self.assertIn("кроме accepted D24 recovery", self.plan_exec)
+        self.assertNotIn("Потолок — два аудита и один repair между ними", self.plan_audit)
 
 
 class TestCommandReadPathProjection(unittest.TestCase):

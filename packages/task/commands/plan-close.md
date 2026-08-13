@@ -252,6 +252,8 @@ status-rule ниже. Точная команда, лестница маршру
    candidate_snapshot=candidate["snapshot"])`. Это ОДИН policy seam для handoff и close:
    `full`, material risk, non-green terminal item или multi-item `light` требуют fresh GREEN
    audit; `none` и single-item `light` при всех 🟢 и без material risk разрешают direct close.
+   Fresh audit означает final verdict одного audit-fixer root на rebound candidate, а не routine
+   repair-run/second-audit цепочку.
    Process-only deviation при 🟢 сам по себе audit не включает. Если policy требует audit,
    отсутствующий, RED, ATTENTION или stale audit отказывает без phase mutation; если не требует —
    gate возвращает `allow` без exploratory отказа. Audit сам фазу не закрывает.

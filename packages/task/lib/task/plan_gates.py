@@ -165,6 +165,36 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
     return {"fingerprint": _candidate_snapshot_fingerprint(snapshot), "snapshot": snapshot}
 
 
+def audit_fixer_rebind(before, after):
+    """Bind an audit verdict to the candidate rebuilt after an inline repair.
+
+    Candidate bookkeeping is deliberately absent from the fingerprint.  Therefore
+    an unchanged digest is audit bookkeeping only; a changed digest proves that a
+    product carrier or terminal item evidence changed and must be rebound before a
+    verdict may be emitted.
+    """
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        raise ValueError("audit candidates must be mappings")
+    before_snapshot, after_snapshot = before.get("snapshot"), after.get("snapshot")
+    if not isinstance(before_snapshot, dict) or not isinstance(after_snapshot, dict):
+        raise ValueError("audit candidate snapshot is required")
+    if before_snapshot.get("phase_id") != after_snapshot.get("phase_id"):
+        raise ValueError("audit candidates must belong to one phase")
+    before_fingerprint = before.get("fingerprint")
+    after_fingerprint = after.get("fingerprint")
+    if (before_fingerprint != _candidate_snapshot_fingerprint(before_snapshot)
+            or after_fingerprint != _candidate_snapshot_fingerprint(after_snapshot)):
+        raise ValueError("audit candidate fingerprint does not bind its snapshot")
+    rebound = before_fingerprint != after_fingerprint
+    return {
+        "phase_id": after_snapshot["phase_id"],
+        "before": before_fingerprint,
+        "after": after_fingerprint,
+        "rebound": rebound,
+        "reason": "product-or-terminal-evidence-changed" if rebound else "audit-bookkeeping-only",
+    }
+
+
 def _routing_items(value: str) -> tuple[str, ...] | None:
     value = value.strip().strip("`")
     if _ROUTING_ITEM_RE.fullmatch(value):

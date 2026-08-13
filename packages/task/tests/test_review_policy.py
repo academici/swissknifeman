@@ -24,6 +24,7 @@ from task.review_policy import (  # noqa: E402
     AUTHORITY_PROFILES, CAP_SUBJECT_BY_PROFILE, SAME_FINDING_MAX, LoopBudget,
     ReviewPolicyError, cap_subject, finding_id, identity_of, reopens_product,
     review_transition, same_finding_third, validation_cadence, classify_signal,
+    audit_fixer_action,
 )
 
 
@@ -141,6 +142,34 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             current_failures={"old"}, baseline_failures={"old"}, owned_failures={"old"})
         self.assertFalse(delta["blocks"])
         self.assertEqual(delta["pre_existing"], ("old",))
+
+    def test_audit_fixer_repairs_safe_work_without_a_successor(self):
+        self.assertEqual(
+            audit_fixer_action(in_scope=True),
+            {"action": "repair-inline", "terminal": False, "reason": "safe-in-scope"},
+        )
+
+    def test_audit_fixer_changes_tactic_then_allows_one_return(self):
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, repeated_fingerprint=1)["action"],
+            "change-tactic",
+        )
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, repeated_fingerprint=2)["action"],
+            "isolated-child-return",
+        )
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, repeated_fingerprint=3, reviewer_returns=1)["action"],
+            "repair-inline",
+        )
+
+    def test_audit_fixer_preserves_non_gating_and_authority_boundaries(self):
+        self.assertEqual(
+            audit_fixer_action(in_scope=False)["action"], "record-non-gating")
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, boundary="authority"),
+            {"action": "decision-request", "terminal": True, "reason": "authority-boundary"},
+        )
 
     def test_phase_close_requires_matching_green_audit(self):
         with tempfile.TemporaryDirectory() as tmp:

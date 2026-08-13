@@ -111,7 +111,7 @@ launch provenance за telemetry. Если требуется independently obse
 строгий `plan-exec` с provider-attested source. `plan-run` не принимает config, actor, текст
 прошлого handoff или самоаттестацию как substitute для текущего fresh native launch.
 
-Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,
+Всё остальное (D24 same-root audit-fixer, эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется
 (правило двух SSOT).
 

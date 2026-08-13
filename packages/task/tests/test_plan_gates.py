@@ -77,6 +77,22 @@ class TestReadBudgetGate(unittest.TestCase):
             after_repo_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             self.assertNotEqual(after_repo_change["fingerprint"], after_plan_change["fingerprint"])
 
+    def test_audit_fixer_rebind_distinguishes_product_change_from_bookkeeping(self):
+        before = {
+            "fingerprint": "",
+            "snapshot": {"phase_id": "P1", "scope": [], "terminal_item_heads": [],
+                         "material_risks": [], "declared_files": [], "product_tree_sha256": "a" * 64},
+        }
+        before["fingerprint"] = plan_gates._candidate_snapshot_fingerprint(before["snapshot"])
+        bookkeeping = {"fingerprint": before["fingerprint"], "snapshot": copy.deepcopy(before["snapshot"])}
+        self.assertEqual(plan_gates.audit_fixer_rebind(before, bookkeeping)["reason"], "audit-bookkeeping-only")
+        repaired = {"fingerprint": "", "snapshot": copy.deepcopy(before["snapshot"])}
+        repaired["snapshot"]["product_tree_sha256"] = "b" * 64
+        repaired["fingerprint"] = plan_gates._candidate_snapshot_fingerprint(repaired["snapshot"])
+        rebound = plan_gates.audit_fixer_rebind(before, repaired)
+        self.assertTrue(rebound["rebound"])
+        self.assertEqual(rebound["reason"], "product-or-terminal-evidence-changed")
+
     def test_overweight_v2_item_names_item_weight_threshold_and_unit(self):
         diag = lint(self.copied_fixture("plan-v2-overweight"))
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]

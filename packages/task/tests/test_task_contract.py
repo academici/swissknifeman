@@ -15,7 +15,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
+try:
+    from . import fixtures  # noqa: F401,E402 — package invocation from repository root
+except ImportError:  # pragma: no cover - discovery from packages/task
+    import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 from task import plan_layout, task_contract  # noqa: E402
 from core.repo import resolve_plan_dir  # noqa: E402
 

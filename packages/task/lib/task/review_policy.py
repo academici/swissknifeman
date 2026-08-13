@@ -37,6 +37,7 @@ SIGNAL_CLASSES = (
     "acceptance", "safety", "authority",
 )
 TERMINAL_SIGNAL_CLASSES = frozenset({"acceptance", "safety", "authority"})
+AUDIT_FIXER_BOUNDARIES = frozenset({"authority", "safety", "public-frozen"})
 
 # risk-review-loop-budget-v1.md §Loop budget and cadence.
 SAME_FINDING_MAX = 2
@@ -97,6 +98,47 @@ def classify_signal(signal_class: str, *, reproduced: bool, scope_class: str,
         "recovered": bool(recovered),
         "terminal": terminal,
     }
+
+
+def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
+                       repeated_fingerprint: int = 0, material_risk: bool = False,
+                       reviewer_returns: int = 0, boundary: str | None = None) -> dict:
+    """Choose the next action for one finding inside an owning phase-audit root.
+
+    The audit may repair only a safe, in-scope seam.  A repeated fingerprint first
+    changes tactic; a second recurrence (or a new material risk) may use exactly
+    one isolated reviewer, whose evidence returns to this same root.  This helper
+    deliberately never manufactures a repair successor or a second audit round.
+    """
+    if not isinstance(in_scope, bool) or not isinstance(bounded_incidental, bool):
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "scope flags must be bool")
+    if (isinstance(repeated_fingerprint, bool) or not isinstance(repeated_fingerprint, int)
+            or repeated_fingerprint < 0):
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "repeated_fingerprint must be int >= 0")
+    if not isinstance(material_risk, bool) or (isinstance(reviewer_returns, bool)
+            or not isinstance(reviewer_returns, int) or reviewer_returns < 0):
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "review inputs are invalid")
+    if boundary is not None and boundary not in AUDIT_FIXER_BOUNDARIES:
+        raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", f"unknown audit boundary {boundary!r}")
+    if boundary is not None:
+        return {"action": "decision-request", "terminal": True,
+                "reason": f"{boundary}-boundary"}
+    if not in_scope:
+        return {"action": "record-non-gating", "terminal": False,
+                "reason": "out-of-scope-non-product"}
+    if reviewer_returns > 0:
+        return {"action": "repair-inline", "terminal": False,
+                "reason": "review-evidence-returned"}
+    if material_risk or repeated_fingerprint >= 2:
+        return {"action": "isolated-child-return", "terminal": False,
+                "reason": "material-risk" if material_risk else "repeated-fingerprint"}
+    if repeated_fingerprint == 1:
+        return {"action": "change-tactic", "terminal": False,
+                "reason": "first-repeated-fingerprint"}
+    if bounded_incidental:
+        return {"action": "repair-inline", "terminal": False,
+                "reason": "bounded-incidental"}
+    return {"action": "repair-inline", "terminal": False, "reason": "safe-in-scope"}
 
 
 def _audit_blocks(phase_lines, phase_id: str):

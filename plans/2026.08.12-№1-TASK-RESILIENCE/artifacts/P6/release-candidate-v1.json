@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:release-candidate:v1",
+  "candidate_commit": "8ed159c9073143bee7c13e0e4b660202ff639846",
+  "item_id": "P6.2",
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "push_status": "not-authorized",
+  "release_version": "0.13.0",
+  "schema_version": 1,
+  "source_digests": {
+    "D26-requalify-after-route-repair.md": "341e89536dfe6ffad5fa948ef8c8654729408947ab940a3e9a48874c7e0a9980",
+    "D9-release-v0-13-0.md": "996db00b2c0e0f77522ac9956ad7fff320fd68ea8dd2e4622821ea70afcc79e2",
+    "layout-migration-ledger-v1.json": "2b7304d59cee21d212d87ca26f7115a306950dc72c414e7896b805605925fe57"
+  },
+  "tag_status": "absent",
+  "validation": [
+    {"command": "test -z $(git tag --list v0.13.0)", "exit_code": 0},
+    {"command": "bash packages/task/scripts/validate.sh", "exit_code": 0},
+    {"command": "bash packages/skiller/scripts/validate.sh", "exit_code": 0},
+    {"command": "bash packages/harness/scripts/validate.sh", "exit_code": 0},
+    {"command": "bash packages/maind/scripts/validate.sh", "exit_code": 0},
+    {"command": "bash packages/analyst/scripts/validate.sh", "exit_code": 0},
+    {"command": "packages/skiller/bin/skiller registry --check", "exit_code": 0},
+    {"command": "python3 packages/task/scripts/render-provider-commands.py --root . --check", "exit_code": 0},
+    {"command": "bash scripts/docs-sync.sh --check", "exit_code": 0},
+    {"command": "git diff --check", "exit_code": 0}
+  ]
+}

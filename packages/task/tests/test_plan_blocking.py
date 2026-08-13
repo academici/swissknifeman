@@ -1,7 +1,13 @@
 """Continue-first block candidate policy."""
+import itertools
+import json
 import unittest
+from pathlib import Path
 
-from task import plan_blocking
+from task import journal, plan_blocking
+
+
+PERPLEXITY_EVIDENCE_ID = f"rag:perplexity:sha256:{'a' * 64}"
 
 
 def candidate(**overrides):
@@ -39,6 +45,7 @@ class PlanBlockingTests(unittest.TestCase):
             "action": action,
             "terminal_allowed": terminal,
             "reason_code": plan_blocking.ACTION_REASON_CODES[action],
+            "journal_result": plan_blocking.ACTION_OBSERVATION_RESULTS[action],
         })
 
     def test_local_reversible_signal_continues_without_reviewer(self):
@@ -76,14 +83,114 @@ class PlanBlockingTests(unittest.TestCase):
             external=True,
             scope_class="external",
             signal_class="external-dependency",
-            rag={"required": True, "status": "verified", "evidence_ids": ["rag:source-1"]},
+            rag={"required": True, "status": "verified", "evidence_ids": [PERPLEXITY_EVIDENCE_ID]},
             review=review(),
         )
         self.assertDecision(value, "terminal-block", terminal=True)
 
-    def test_closed_schema_rejects_unknown_field(self):
+    def test_closed_schema_validator_rejects_unknown_field(self):
         with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "неизвестные поля"):
-            plan_blocking.evaluate(candidate(extra=True))
+            plan_blocking.validate(candidate(extra=True))
+
+    def test_malformed_candidate_fails_closed_to_nonterminal_repair(self):
+        self.assertDecision(candidate(extra=True), "repair-candidate")
+
+    def test_verified_rag_rejects_fallback_or_unqualified_evidence(self):
+        for evidence_id in ("fallback:web:result", "rag:perplexity:sha256:example"):
+            value = candidate(
+                external=True,
+                scope_class="external",
+                signal_class="external-dependency",
+                rag={"required": True, "status": "verified", "evidence_ids": [evidence_id]},
+                review=review(),
+            )
+            self.assertDecision(value, "gather-rag")
+
+    def test_external_not_required_claim_routes_to_rag_pending(self):
+        value = candidate(
+            external=True,
+            scope_class="external",
+            signal_class="external-dependency",
+            rag={"required": True, "status": "not-required", "evidence_ids": []},
+            review=review(),
+        )
+        self.assertDecision(value, "gather-rag")
+
+    def test_external_rag_states_remain_nonterminal_until_verified(self):
+        for status in ("missing", "pending", "unavailable", "fallback-only"):
+            with self.subTest(status=status):
+                value = candidate(
+                    external=True,
+                    scope_class="external",
+                    signal_class="external-dependency",
+                    rag={
+                        "required": True,
+                        "status": status,
+                        "evidence_ids": (["fallback:web:result"]
+                                         if status == "fallback-only" else []),
+                    },
+                    review=review(),
+                )
+                self.assertDecision(value, "gather-rag")
+
+    def test_reducer_matrix_has_exact_nonterminal_outcome(self):
+        rag_states = ("missing", "pending", "unavailable", "fallback-only", "verified")
+        verdicts = (None, "JUSTIFIED", "AVOIDABLE", "INSUFFICIENT_EVIDENCE",
+                    "OUT_OF_SCOPE", "MALFORMED")
+        for status, verdict in itertools.product(rag_states, verdicts):
+            with self.subTest(status=status, verdict=verdict):
+                value = candidate(
+                    external=True,
+                    scope_class="external",
+                    signal_class="external-dependency",
+                    rag={
+                        "required": True,
+                        "status": status,
+                        "evidence_ids": (
+                            [PERPLEXITY_EVIDENCE_ID] if status == "verified"
+                            else ["fallback:web:result"] if status == "fallback-only"
+                            else []
+                        ),
+                    },
+                    review=review(verdict) if verdict else None,
+                )
+                decision = plan_blocking.evaluate(value)
+                if status != "verified":
+                    expected = "gather-rag"
+                elif verdict is None:
+                    expected = "request-isolated-review"
+                elif verdict == "JUSTIFIED":
+                    expected = "terminal-block"
+                elif verdict == "AVOIDABLE":
+                    expected = "continue-local-repair"
+                elif verdict == "INSUFFICIENT_EVIDENCE":
+                    expected = "gather-evidence"
+                else:
+                    expected = "repair-candidate"
+                self.assertEqual(decision["action"], expected)
+                self.assertEqual(decision["reason_code"],
+                                 plan_blocking.ACTION_REASON_CODES[expected])
+                self.assertEqual(decision["journal_result"],
+                                 plan_blocking.ACTION_OBSERVATION_RESULTS[expected])
+                self.assertEqual(decision["terminal_allowed"], expected == "terminal-block")
+
+    def test_every_observation_result_is_a_nonterminal_journal_enum(self):
+        observations = {
+            value for value in plan_blocking.ACTION_OBSERVATION_RESULTS.values() if value
+        }
+        self.assertLessEqual(observations, set(journal.RESULT_VALUES))
+        self.assertTrue(observations.isdisjoint(journal.TERMINAL_CLOSE_RESULTS))
+
+    def test_json_schema_parses_and_names_all_rag_states(self):
+        schema_path = (
+            Path(plan_blocking.__file__).resolve().parents[2]
+            / "configs" / "block-candidate-v1.schema.json"
+        )
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        statuses = schema["properties"]["rag"]["properties"]["status"]["enum"]
+        self.assertEqual(statuses, [
+            "not-required", "missing", "pending", "unavailable", "fallback-only", "verified",
+        ])
 
 
 if __name__ == "__main__":

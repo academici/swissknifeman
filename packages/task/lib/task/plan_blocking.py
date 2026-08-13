@@ -14,13 +14,28 @@ class BlockCandidateError(ValueError):
     """The candidate is not a valid block-candidate/v1 value."""
 
 
+class RagEvidenceError(BlockCandidateError):
+    """The mandatory Perplexity evidence is absent or not digest-qualified."""
+
+
 ACTION_REASON_CODES = {
+    "repair-candidate": "CANDIDATE_INVALID",
     "continue-local-repair": "LOCAL_REPAIR_REQUIRED",
     "gather-rag": "EXTERNAL_RAG_REQUIRED",
     "request-isolated-review": "ISOLATED_REVIEW_REQUIRED",
     "repair-review": "REVIEW_INVALID",
     "gather-evidence": "EVIDENCE_INSUFFICIENT",
     "terminal-block": "BLOCK_CONFIRMED",
+}
+
+ACTION_OBSERVATION_RESULTS = {
+    "repair-candidate": "block-candidate",
+    "continue-local-repair": "local-repair",
+    "gather-rag": "rag-pending",
+    "request-isolated-review": "block-candidate",
+    "repair-review": "block-candidate",
+    "gather-evidence": "block-candidate",
+    "terminal-block": None,
 }
 
 _ROOT_FIELDS = frozenset((
@@ -30,6 +45,7 @@ _ROOT_FIELDS = frozenset((
 _RAG_FIELDS = frozenset(("required", "status", "evidence_ids"))
 _REVIEW_FIELDS = frozenset(("reviewer_actor", "context", "verdict", "evidence_ids"))
 _ITEM_RE = re.compile(r"^P[0-9]+\.[0-9]+$")
+_PERPLEXITY_EVIDENCE_RE = re.compile(r"^rag:perplexity:sha256:[0-9a-f]{64}$")
 _SCHEMA_PATH = Path(__file__).resolve().parents[2] / "configs" / "block-candidate-v1.schema.json"
 
 
@@ -89,8 +105,19 @@ def validate(candidate: dict) -> None:
         raise BlockCandidateError("rag.required должен совпадать с external")
     if not rag["required"] and (rag["status"] != "not-required" or rag["evidence_ids"]):
         raise BlockCandidateError("rag без external должен быть not-required без evidence")
+    if rag["required"] and rag["status"] == "not-required":
+        raise RagEvidenceError("external RAG не может быть not-required")
+    if rag["status"] in ("missing", "pending", "unavailable") and rag["evidence_ids"]:
+        raise BlockCandidateError(f"{rag['status']} RAG не принимает evidence_ids")
+    if rag["status"] == "fallback-only" and not rag["evidence_ids"]:
+        raise BlockCandidateError("fallback-only RAG требует provisional evidence_ids")
     if rag["status"] == "verified" and not rag["evidence_ids"]:
-        raise BlockCandidateError("verified RAG требует evidence_ids")
+        raise RagEvidenceError("verified RAG требует evidence_ids")
+    if rag["status"] == "verified" and not all(
+            _PERPLEXITY_EVIDENCE_RE.fullmatch(evidence_id)
+            for evidence_id in rag["evidence_ids"]):
+        raise RagEvidenceError(
+            "verified RAG требует digest-qualified Perplexity evidence_ids")
 
     review = candidate["review"]
     if review is None:
@@ -108,12 +135,18 @@ def _decision(action: str) -> dict:
         "action": action,
         "terminal_allowed": action == "terminal-block",
         "reason_code": ACTION_REASON_CODES[action],
+        "journal_result": ACTION_OBSERVATION_RESULTS[action],
     }
 
 
 def evaluate(candidate: dict) -> dict:
     """Choose the next action; missing proof always remains nonterminal."""
-    validate(candidate)
+    try:
+        validate(candidate)
+    except RagEvidenceError:
+        return _decision("gather-rag")
+    except BlockCandidateError:
+        return _decision("repair-candidate")
     if candidate["scope_class"] == "local":
         return _decision("continue-local-repair")
     rag = candidate["rag"]
@@ -132,4 +165,6 @@ def evaluate(candidate: dict) -> dict:
         return _decision("continue-local-repair")
     if verdict == "INSUFFICIENT_EVIDENCE":
         return _decision("gather-evidence")
+    if verdict in ("OUT_OF_SCOPE", "MALFORMED"):
+        return _decision("repair-candidate")
     return _decision("repair-review")

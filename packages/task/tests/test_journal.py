@@ -106,6 +106,22 @@ class TestNewEntryAndValidate(TmpDirTestCase):
         self.assertLessEqual(observations, set(RESULT_VALUES))
         self.assertTrue(observations.isdisjoint(TERMINAL_CLOSE_RESULTS))
 
+    def test_rag_pending_and_candidate_accept_decision_evidence(self):
+        for result, action in (("rag-pending", "gather-rag"),
+                               ("block-candidate", "request-isolated-review")):
+            entry = new_entry(
+                plan_id="P", item_id="P1.1", command="plan-run",
+                actor="model/high", result=result,
+                decision={
+                    "signal_class": "external-dependency",
+                    "scope_class": "external",
+                    "action": action,
+                    "recovered": False,
+                    "terminal": False,
+                },
+            )
+            validate_entry(entry)
+
 
 class TestTraceRef(TmpDirTestCase):
     """P3.1 (`root/contracts/unified-agent-trace-v1.md` § Journal reference):

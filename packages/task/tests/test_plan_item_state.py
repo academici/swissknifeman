@@ -100,6 +100,22 @@ class PlanItemStateTests(unittest.TestCase):
         self.assertEqual(model["state"]["next_step"],
                          "Gather required RAG evidence; do not terminalize.")
 
+    def test_rag_pending_after_start_preserves_live_attempt(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="in-progress",
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="rag-pending",
+        ))
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "🟡 In progress", "attempt": 1, "last_result": "in-progress",
+        })
+        self.assertEqual(model["state"]["next_step"],
+                         "Gather required RAG evidence; do not terminalize.")
+
     def test_item_event_does_not_stale_another_items_state(self):
         first_spec = self.plan / "phases" / "P1" / "P1.1.md"
         second_spec = first_spec.with_name("P1.2.md")

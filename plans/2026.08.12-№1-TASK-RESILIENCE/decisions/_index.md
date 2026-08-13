@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D24
-inputs_sha256: 7a6e194f2251bb517bba56f701c0dbab54260c785cc08ffcabe31de321f14898
+through: 2026-08-13/D25
+inputs_sha256: 733e7b5ca60522363edd2860c09c22aba72ff8a927f05713af7713389330f864
 generated_by: task plan-views decisions
 -->
 
@@ -35,3 +35,4 @@ generated_by: task plan-views decisions
 | D22 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 дополнительно синхронизирует immediate umbrella projection `docs/task/reference/provider-commands.md` из уже обновлённого package reference только owning `scripts/docs-sync.sh`. P5.3 сохраняет final aggregate docs sweep для всего P0–P5.2 surface; его validation должна увидеть эту проекцию no-op. RAG:— (repo-grounded: root.docs-build, docs-maintenance closeout и observed `docs-sync.sh --check` drift). |
 | D23 | 2026-08-13 | accepted | P4.1, P4.2 | AUDIT-CAP: третьего Audit P4 нет; фаза закрывается штатным `task:plan-close`. Владелец разрешает точечный repair-forward P4.1 без нового audit: принять уже закоммиченный `168b576a` как реализацию exhaustive continue-first signal matrix и повторить только его focused validation. Новых terminal attempts после закрытия фазы не допускается. |
 | D24 | 2026-08-13 | accepted | P5.2, P5.3 | Phase audit становится audit-fixer: свежий независимый audit root сам исправляет все безопасные in-scope находки, повторяет исходную Validation, регенерирует state/status/bundle, пересобирает candidate и только затем публикует финальный verdict. Штатный audit больше не выдаёт отдельный repair-run, второй audit или автоматический design-pass. `AUDIT-ROOT-TERMINAL` остаётся границей только после финального verdict. RAG:— (owner-grounded: `brief/01-refinements.md`; repo-grounded: `findings/15-P5-audit-fixer-redesign.md`, `research/08-P5-audit-fixer-design.md`). P5.2 владеет canonical Task audit-fixer/runtime seam и focused acceptance. P5.3 потребляет этот committed producer, синхронизирует EN-only plan-protocol и все generated provider/registry/docs carriers, затем выполняет aggregate validation. Незапущенный P5.3 для P5.2 — `dependency-not-ready`, а не terminal block. |
+| D25 | 2026-08-13 | accepted | P5.1, P5.2, P5.3 | Владелец применил option `expand-p5.3-files` из DecisionRequest `P5.3-files-boundary-2026-08-13`: stable `Files` P5.3 включает четыре generated Codex carrier `task-plan-exec`/`task-plan-run`, уже произведённые owning renderer в product commit `4d03ff55`. Разрешение не меняет Intent, Scope, Validation или generated product bytes и не распространяется на иные файлы. RAG:— (owner/repo-grounded: durable response в `decisions/queue.jsonl`, `findings/16-P5.3-files-boundary.md`, commit `4d03ff55`). |

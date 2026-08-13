@@ -1,55 +1,46 @@
-# HANDOFF — 2026-08-13 — after P5
+# HANDOFF — 2026-08-13 — after P5.3
 
-**Next:** waiting: ОЖИДАНИЕ: repository_owner resolves DecisionRequest `P5.3-files-boundary-2026-08-13` → task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.3
+**Next:** close: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high |
-| Capabilities | filesystem · git · plan-design |
-| Context | cold-start-root: audit-root-terminal |
-| Суть | Разрешить stable Files scope boundary P5.3 без повторного audit. |
-| Команда | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.3` |
-
-Provider-neutral launch-block:
-
-```text
-$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.3
-
-РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
-ВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P5/P5.md → блок `## Audit P5 — 2026-08-13`; прочитать ПЕРВЫМ
-СКОУП: 1) разрешить DecisionRequest `P5.3-files-boundary-2026-08-13` 2) при approve добавить в stable P5.3 `Files` четыре generated Codex `task-plan-exec`/`task-plan-run` carrier 3) повторить exact P5.3 Validation и пересобрать candidate
-НЕ ТРОГАТЬ: P5.1/P5.2 specs и product; P5.3 Intent/Scope/Validation и generated product bytes; P0–P4/P6; `packages/task` runtime
-```
+| Batch | n/a |
+| Model class | implementation |
+| Effort | low |
+| Capabilities | filesystem · git · plan-close |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Закрыть terminal P5 candidate `82192f13f14467223cd5771a0a3f922c7207242b1dea324beefe97a831b60655` по owner decision D25 без второго audit. |
+| Команда | `$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.3\n\nРЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit\nВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P5/P5.md → блок `## Audit P5 — 2026-08-13`; прочитать ПЕРВЫМ\nСКОУП: 1) разрешить DecisionRequest `P5.3-files-boundary-2026-08-13` 2) при approve добавить в stable P5.3 `Files` четыре generated Codex `task-plan-exec`/`task-plan-run` carrier 3) повторить exact P5.3 Validation и пересобрать candidate\nНЕ ТРОГАТЬ: P5.1/P5.2 specs и product; P5.3 Intent/Scope/Validation и generated product bytes; P0–P4/P6; `packages/task` runtime'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5'
 ```
 
 **Done:**
 
-- P5.1/P5.2 safe findings и bounded incidental decision projection исправлены в том же audit root.
-- P5.1/P5.2 закрыты `🟢`, P5.3 — `🟠`; exact Validation и generated views зелены.
-- Final P5 verdict: `ATTENTION`; rebound candidate `34e4f2dbcdfa163bd38c91e849fe068c2498b7830d9d96cc6efccfac15d4af44`.
+- DecisionRequest `P5.3-files-boundary-2026-08-13` разрешён option `expand-p5.3-files`; durable owner response и D25 записаны.
+- Stable P5.3 `Files` дополнен четырьмя generated Codex `task-plan-exec`/`task-plan-run` carriers; P5.3 Intent/Scope/Validation и product bytes не менялись.
+- Exact P5.3 Validation зелёная; generated state/status/decisions/bundle byte-fresh, P5.3 — `🟢 Done`.
+- P5 candidate пересобран как `82192f13f14467223cd5771a0a3f922c7207242b1dea324beefe97a831b60655`; `phase_close_gate(..., owner_decision="D25")` разрешает close.
 
 **Remaining:**
 
-- Repository owner must resolve `P5.3-files-boundary-2026-08-13`; P6 and phase close do not start before that boundary is recorded.
+- Закрыть P5 штатным `task:plan-close`; P6 не запускать до persisted phase closure.
 
 **Sources of truth:**
 
-- `phases/P5/P5.md` latest audit block, `findings/16-P5.3-files-boundary.md`, `findings/17-P5-decision-pending-projection.md`.
-- `decisions/queue.jsonl`, `decisions/_gates.md`, `journal.jsonl`, generated P5 states/bundles/closure and `status.md`.
+- `phases/P5/P5.md` → `## Resolution P5.3 — 2026-08-13`.
+- `phases/P5/P5.3.md`, `phases/P5/P5.3.state.md`, `bundles/P5.3.json`.
+- `decisions/D25-authorize-p5-3-files-boundary.md`, `decisions/queue.jsonl`, `journal.jsonl`.
 
 **Open risks:**
 
-- Product `4d03ff55` contains four generated Codex outputs outside stable P5.3 `Files`; DecisionRequest is unresolved.
+- Optional P5 closure carrier не собирается до отдельного phase-close; это ожидаемый незакрытый lifecycle state, не green check текущего design root.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: owner-gated P5.3 Files scope change
-- open_questions: DecisionRequest `P5.3-files-boundary-2026-08-13`
+- deferred: P5 phase closure
+- open_questions: —

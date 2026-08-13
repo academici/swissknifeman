@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 9d956027ade130972d15b8b093da40d3ce6a181ea19cf75cc0991cced3b1634c
+inputs_sha256: beef8e0e3526c1e8dd2a043ec5013d32e3c8d14ff22cc13537b4386222882fa6
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 2/3 | 🟠 Done with deviations |
+| P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -77,7 +77,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
 | P5.2 | Make phase audit repair and verify in one root | 🟢 Done | 2026-08-13 |
-| P5.3 | Publish audit-fixer parity from canonical sources | 🟠 Done with deviations | 2026-08-13 |
+| P5.3 | Publish audit-fixer parity from canonical sources | 🟢 Done | 2026-08-13 |
 
 ## Phase P6
 
@@ -322,6 +322,10 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Repair audit evidence projection after friction CLI misuse. |
 | 2026-08-13 | frontier/xhigh | plan-audit · closed-deviations · 008430d6: pending→decision-pending; focused 102; Task 873/1; aggregate renderer/registry/docs 0, provider 5+20, Skiller 633. Material: 4d03ff55 wrote four Codex plan-exec/run carriers outside P5.3 Files. write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/xhigh | plan-audit · audit-attention · audit-fixer, кандидат 34e4f2dbcdfa163bd38c91e849fe068c2498b7830d9d96cc6efccfac15d4af44, вердикт ATTENTION |
+| 2026-08-13 | owner | plan-run · in-progress · decision queue: P5.3-files-boundary-2026-08-13 |
+| 2026-08-13 | frontier/high | plan-design · closed-green · note сокращена; полный текст: journal.jsonl:205 |
+| 2026-08-13 | frontier/high | plan-run · closed-green · D25 scope-resolution; bookkeeping continuation, not ordinary repair-run/second audit. Exact Validation GREEN: generators/docs no-op; provider 5+20; Task 873/1; Skiller test+validate 0; product bytes unchanged.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -336,4 +340,3 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P4.1: known deviation
 - P4.2: known deviation
 - P5.1: known deviation
-- P5.3: known deviation

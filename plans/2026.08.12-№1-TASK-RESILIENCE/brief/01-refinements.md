@@ -98,3 +98,15 @@ D10 и `roadmap.md`. RAG:— (owner-grounded: уточнение владель�
 - Immediate projections canonical command sources переносятся в P4.2: owning renderer,
   Codex adapters/locks, Claude golden fixtures и operator reference. P5.3 сохраняет
   final aggregate parity/registry/docs sweep, но не принимает stale outputs от раннего producer.
+
+## 2026-08-13 — P5.2 design-item recovery
+
+- Владелец запустил `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2` для
+  восстановления executable ТЗ и digest-qualified bundle без ручной подмены
+  generated carrier.
+- Удалённая roadmap-запись `2026.08.10-audit-before-close-phase-gate.md` остаётся
+  historical Git evidence; Required Reads ссылаются только на существующие current
+  carriers.
+- P5.2 ограничен candidate fingerprint/audit policy/close gate/terminal closure seam;
+  return-loop `plan_returns.py`, полная spec→product→closure topology и provider projection в него
+  не входят.

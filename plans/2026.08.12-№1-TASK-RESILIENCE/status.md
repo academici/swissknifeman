@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 34c0524d893d2d9dbef664640731ae76b63fb4414f049a74db7dcaa613b9fdd8
+inputs_sha256: c43063d303f10f227e239d1659399f27facb91079aa2deb7c8542098cd15fb32
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 1/3 | 🟡 In progress |
+| P5 | Durable terminal delivery and provider parity | 1/3 | 🔴 Blocked |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -76,7 +76,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
-| P5.2 | Stabilize candidate-first phase audit and closure | ⬜ Not started | — |
+| P5.2 | Stabilize candidate-first phase audit and closure | 🔴 Blocked | 2026-08-13 |
 | P5.3 | Regenerate providers, registry and docs from canonical sources | ⬜ Not started | — |
 
 ## Phase P6
@@ -292,6 +292,11 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P5.1 execution started after deterministic bundle recovery; product patch was committed before durable start record (process deviation). |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Product e39956f8; receipt tests 12 passed; validate.sh 867 passed, 1 skipped. Process deviation: product commit preceded durable start after bundle recovery. write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ P5.2 доведено до DoR: current carriers, stable candidate/audit/close seam и generated bundle |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P5.2 product execution started after route and task-contract gates. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · block-candidate · Malformed block-review capsule repaired; fresh closed review required. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · block-candidate · Self-review rejected by reducer; independent actor required. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · escalated · BLOCK_CONFIRMED: P5.3-owned provider generation blocks P5.2 closure; plan-design must resolve scope/order. |
 
 ## Owner Gates
 
@@ -306,3 +311,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P4.1: known deviation
 - P4.2: known deviation
 - P5.1: known deviation
+- P5.2: escalation

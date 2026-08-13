@@ -1,54 +1,51 @@
-# HANDOFF — 2026-08-13 — after P4
+# HANDOFF — 2026-08-13 — after P5.1
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.1-P5.2
+**Next:** design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | B-P5-DELIVERY |
-| Model | implementation (`gpt-5.6-terra`) |
-| Thinking | high — receipt и phase-lifecycle batch |
-| Context | cold-start-root: owner-pause-no-resume |
-| Суть | Выполнить P5.1–P5.2 после закрытия P4, сохраняя общий receipt/candidate context |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.1-P5.2` |
+| Model | frontier (`gpt-5.6-sol`) |
+| Thinking | high — устранить непереносимый input carrier |
+| Context | cold-start-root: capability-missing |
+| Суть | Детализировать P5.2 Inputs так, чтобы owning generator собрал digest-qualified bundle без ручной подмены |
+| Команда | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2` |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.1-P5.2
+$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.1-P5.2'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2'
 ```
 
 **Done:**
 
-- P4 закрыта по owner-grant D23 без третьего audit; P4.1 continue-first repair `168b576a` подтверждён focused validation.
-- P4.2 сохраняет `🟠 Done with deviations` за historical `dd9c098c`, изменивший `CHANGELOG.md` вне `Files`.
-- P5.1 specification is detailed to DoR: it includes the `plan-design` handoff boundary and subject/refusal matrix.
+- P5.1 closed green: `e39956f8` makes missing terminal item state and missing terminal run ID distinct delivery refusals.
+- Receipt regression suite now covers item, phase and archive subjects, stale/missing/mismatched carriers, atomic replace and the five-command boundary.
 
 **Remaining:**
 
-- Execute remaining `B-P5-DELIVERY` suffix `P5.1–P5.2` in one fresh routed root.
+- P5.2 is not executable until its `Inputs` are made generator-resolvable and `bundles/P5.2.json` can be generated and checked.
+- Then resume the remaining `B-P5-DELIVERY` suffix as `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2` under implementation/high.
 
 **Sources of truth:**
 
-- `plan.md` §§2–3.
-- `phases/P4/P4.closed.md` and `phases/P4/P4.md` → Phase Handoff.
-- `phases/P5/P5.1.md`, `phases/P5/P5.2.md` and their generated states.
-- `decisions/D23-p4-audit-cap-targeted-repair-close.md`.
-- `decisions/D5-terminal-receipt-boundary.md`.
+- `phases/P5/P5.1.md`, generated `P5.1.state.md`, and `bundles/P5.1.json`.
+- `phases/P5/P5.2.md` and failed owning-generator admission for `bundles/P5.2.json`.
+- `packages/task/lib/task/plan_delivery.py` and `packages/task/tests/test_plan_delivery.py`.
 
 **Open risks:**
 
-- P4.2 intentionally remains non-green because its historical out-of-`Files` commit is material under status-rule.
-- P5.1 must prove persisted delivery receipt; P5.2 must bind the fresh phase candidate/close lifecycle.
-- Harness hook dry-run crashes for relative `--target .`; absolute target is green/no-op. Defect is outside P4 scope.
+- P5.2 currently states semantic inputs as prose, while the bundle generator requires resolvable repository carriers.
+- P5.1 has one process-only deviation: its product commit preceded the durable start record during deterministic bundle recovery.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: relative-target Harness preflight defect is not repaired in P4.
+- workarounds: none; do not hand-write `bundles/P5.2.json`.
+- deferred: P5.2 input-carrier repair belongs to its design item.
 - open_questions: —

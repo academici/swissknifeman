@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: owner override фазы больше не зависит от номера decision.**
+  Audit-cap remediation допускается только для accepted carrier с полным точным item-set
+  фазы и required literals; неполный scope получает отдельный fail-closed refusal.
+
 - **`task` / `plan-protocol`: terminal block проходит один isolated confirmer.**
   Design, exec, run, audit и close теперь используют одну closed sequence:
   immutable capsule, distinct fresh-context reviewer и deterministic reducer. External block

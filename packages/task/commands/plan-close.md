@@ -255,13 +255,15 @@ status-rule ниже. Точная команда, лестница маршру
    Process-only deviation при 🟢 сам по себе audit не включает. Если policy требует audit,
    отсутствующий, RED, ATTENTION или stale audit отказывает без phase mutation; если не требует —
    gate возвращает `allow` без exploratory отказа. Audit сам фазу не закрывает.
-   **D26 direct-green-validation — узкий owner override для ветки, где policy требует audit.** Только explicit
-   `phase_close_gate(..., owner_decision="D26")` может заменить audit-путь, и только когда
-   carrier `decisions/D26-*.md` ровно один, `accepted`, не superseded, exact phase-scoped
-   (`item` и `items` содержат закрываемый `Pn`), supersedes прежний путь и несёт literal
-   `` `phase-close: direct-green-validation` ``. Любое отсутствие/несовпадение возвращает
-   named refusal без phase mutation; вызов без `owner_decision` сохраняет byte-semantically
-   прежний audit GREEN path.
+   **Owner direct-close override — узкая ветка для policy, требующей audit.** Только explicit
+   `phase_close_gate(..., owner_decision="D#")` может заменить audit-путь. Accepted,
+   non-superseded carrier проходит либо как exact phase-scoped direct-green-validation
+   (`item` и `items` содержат закрываемый `Pn`, есть `supersedes` и literal
+   `` `phase-close: direct-green-validation` ``), либо как full-phase AUDIT-CAP remediation:
+   `item` принадлежит фазе, `items` в точности равен всем item'ам фазы и body несёт literals
+   `AUDIT-CAP`, `третьего Audit Pn` и штатный `task:plan-close`. Номер D — данные carrier,
+   не product constant. Любое отсутствие/несовпадение возвращает named refusal без phase
+   mutation; вызов без `owner_decision` сохраняет byte-semantically прежний audit GREEN path.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —

@@ -15,7 +15,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
+try:
+    from . import fixtures  # noqa: F401,E402 — package invocation from repository root
+except ImportError:  # pragma: no cover - discovery from packages/task
+    import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 from task import journal, plan_gates, review_policy  # noqa: E402
 from task.review_policy import (  # noqa: E402
     AUTHORITY_PROFILES, CAP_SUBJECT_BY_PROFILE, SAME_FINDING_MAX, LoopBudget,
@@ -195,7 +198,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             self.assertEqual(gate["code"], "allow")
             self.assertEqual(gate["owner_decision"], "D26")
 
-    def test_audit_cap_remediation_covering_a_whole_phase_allows_direct_close(self):
+    def test_audit_cap_remediation_uses_any_accepted_decision_id_for_the_whole_phase(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = Path(tmp) / "P"
             phase = plan / "phases" / "P5"
@@ -206,9 +209,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             (phase / "P5.md").write_text("# P5\n", encoding="utf-8")
             for item_id in ("P5.1", "P5.2"):
                 (phase / f"{item_id}.md").write_text(f"### {item_id}\n", encoding="utf-8")
-            (decisions / "D76-audit-cap-remediation.md").write_text(
+            (decisions / "D91-audit-cap-remediation.md").write_text(
                 "---\n"
-                "id: D76\n"
+                "id: D91\n"
                 "date: 2026-08-11\n"
                 "status: accepted\n"
                 "item: P5.2\n"
@@ -223,10 +226,42 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 encoding="utf-8",
             )
             gate = plan_gates.phase_close_gate(
-                plan, "P5", candidate_fingerprint="a" * 64, owner_decision="D76")
+                plan, "P5", candidate_fingerprint="a" * 64, owner_decision="D91")
             self.assertTrue(gate["allow"])
             self.assertEqual(gate["code"], "allow")
-            self.assertEqual(gate["owner_decision"], "D76")
+            self.assertEqual(gate["owner_decision"], "D91")
+
+    def test_audit_cap_remediation_refuses_an_incomplete_phase_item_set(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            phase = plan / "phases" / "P5"
+            decisions = plan / "decisions"
+            phase.mkdir(parents=True)
+            decisions.mkdir()
+            (plan / "plan.md").write_text("| Layout | v2 |\n", encoding="utf-8")
+            (phase / "P5.md").write_text("# P5\n", encoding="utf-8")
+            for item_id in ("P5.1", "P5.2"):
+                (phase / f"{item_id}.md").write_text(f"### {item_id}\n", encoding="utf-8")
+            (decisions / "D91-incomplete-audit-cap.md").write_text(
+                "---\n"
+                "id: D91\n"
+                "date: 2026-08-11\n"
+                "status: accepted\n"
+                "item: P5.2\n"
+                "items: [P5.2]\n"
+                "supersedes: []\n"
+                "superseded_by: null\n"
+                "---\n\n"
+                "## Решение\n\n"
+                "AUDIT-CAP: третьего Audit P5 нет; фаза закрывается штатным `task:plan-close`.\n\n"
+                "## Почему\n\n"
+                "test\n",
+                encoding="utf-8",
+            )
+            gate = plan_gates.phase_close_gate(
+                plan, "P5", candidate_fingerprint="a" * 64, owner_decision="D91")
+            self.assertFalse(gate["allow"])
+            self.assertEqual(gate["code"], "PHASE_OWNER_DECISION_ITEM_SET_MISMATCH")
 
     def test_invalid_owner_override_refuses_without_weakening_default_audit_gate(self):
         with tempfile.TemporaryDirectory() as tmp:

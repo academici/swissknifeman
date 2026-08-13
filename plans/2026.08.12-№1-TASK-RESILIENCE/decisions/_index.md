@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D20
-inputs_sha256: e7af6abe770e32ac72472b9f10694538c7f4355d082848c3847ecc88898e7f25
+through: 2026-08-13/D21
+inputs_sha256: 09c679ff216e2c628ad90f180272e3485b90aa059cbc93719748a30603aff96e
 generated_by: task plan-views decisions
 -->
 
@@ -31,3 +31,4 @@ generated_by: task plan-views decisions
 | D18 | 2026-08-12 | accepted | P3.2 | Владелец разрешил P3.2 регенерировать ровно те provider projections, Claude golden fixtures и operator reference, которые детерминированно изменяет `packages/task/scripts/render-provider-commands.py` после canonical continue-first изменения. Разрешение зафиксировано response `P3.2-provider-projection-scope-2026-08-12` в `decisions/queue.jsonl`; оно не распространяется на иные generated assets или изменения provider semantics. RAG:— (owner/repo-grounded: durable owner response and `findings/P3.2-provider-projection-scope-conflict.md`). |
 | D19 | 2026-08-12 | accepted | P3.3 | Владелец потребовал довести P3.2–P3.3 до terminal без парковки. Поэтому P3.3 получает узкое разрешение регенерировать generated provider/runtime parity, которую детерминированно изменяют её canonical plan-lint, authoring и audit sources, включая агрегированный docs projection. Запись не разрешает менять workflow runtime или provider semantics вручную: только owning renderer, `docs-sync` и их `--check`. RAG:— (owner-grounded: direct mandate 2026-08-12; repo-grounded: P3.3 validation). |
 | D20 | 2026-08-13 | accepted | P3.1, P3.2, P3.3 | AUDIT-CAP: третьего Audit P3 нет; фаза закрывается штатным `task:plan-close` Владелец разрешает единственный repair-forward P3.3: повторить исходные Validation для P3.1, P3.2, P3.3 только в fresh native roots с provider-attested route; новых terminal attempts после закрытия фазы не допускается. |
+| D21 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 владеет immediate provider projections, locks, Claude golden fixtures и operator reference, которые детерминированно изменились из-за его canonical command edits. Проекции собираются owning renderer'ом, fixtures синхронизируются механически из canonical Claude surfaces, затем все checks обязаны быть no-op/GREEN. P5.3 сохраняет свой final aggregate parity, registry, marketplace и docs-sync scope, но не служит отложенным владельцем stale outputs более раннего canonical producer. RAG:— (owner-grounded: direct mandate 2026-08-13; repo-grounded: findings/P4.2-downstream-P5.3-376a63d44c4a-1ea10e742795.md). |

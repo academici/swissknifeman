@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 5bd798c4674d5f4eb08dfe76fb8f85e211e61604d2b603c31ca371833f50d7f2
+inputs_sha256: 17a486c8bff102482cef2a11d8eba9e783952686a7af4879cf83ff0e09221f0b
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🔴 Blocked |
+| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -69,7 +69,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
-| P4.2 | Require one isolated block confirmer in every plan command | 🔴 Blocked | 2026-08-13 |
+| P4.2 | Require one isolated block confirmer in every plan command | 🟡 In progress | 2026-08-13 |
 
 ## Phase P5
 
@@ -273,6 +273,8 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Repair-forward: повтор полной block-confirmation последовательности после schema-rejected observation. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · block-candidate · Isolated reviewer JUSTIFIED; reducer BLOCK_CONFIRMED. Полное evidence: findings/P4.2-return-evidence-2026-08-13.md. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · escalated · Конфликт правил: Scope Excluded P4.2, владелец P5.3, phase-first и downstream red образуют deadlock. |
+| 2026-08-13 | frontier/high | plan-design · in-progress · P4.2 ТЗ расширено immediate provider projections по D21; deadlock устранён. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · D21 сняла deadlock; same-session owner mandate возобновляет P4.2 с immediate provider projections. |
 
 ## Owner Gates
 
@@ -284,4 +286,3 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P1.5: known deviation
 - P2.2: known deviation
 - P3.3: known deviation
-- P4.2: escalation

@@ -90,3 +90,11 @@
 portable Inputs/DoR P3.2 handoff обязан адресовать весь оставшийся suffix `P3.2-P3.3` по
 D10 и `roadmap.md`. RAG:— (owner-grounded: уточнение владельца 2026-08-12; repo-grounded: D10,
 `roadmap.md`).
+
+## 2026-08-13 — owner mandate: resolve P4.2 in the current session
+
+- Владелец запретил парковать P4.2 на terminal `Blocked` и потребовал
+  разрешить конфликт автономно в текущей сессии и вернуть результат.
+- Immediate projections canonical command sources переносятся в P4.2: owning renderer,
+  Codex adapters/locks, Claude golden fixtures и operator reference. P5.3 сохраняет
+  final aggregate parity/registry/docs sweep, но не принимает stale outputs от раннего producer.

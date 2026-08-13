@@ -1,53 +1,51 @@
 # HANDOFF — 2026-08-13 — after P4.2
 
-**Next:** /task:plan-design 2026.08.12-№1-TASK-RESILIENCE P4.2
+**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | B-P4-BLOCK |
 | Model | frontier |
-| Thinking | high — reconcile phase-first/provider-generation ownership |
+| Thinking | high — regenerate and verify immediate provider projections |
 | Context | continue-root |
-| Суть | Устранить deadlock между P4.2 Scope Excluded, downstream P5.3 и phase-first. |
-| Команда | `/task:plan-design 2026.08.12-№1-TASK-RESILIENCE P4.2` |
+| Суть | Возобновить P4.2 по D21 и довести provider parity до GREEN. |
+| Команда | — |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P4.2
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P4.2'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2'
 ```
 
 **Done:**
 
-- P4.1 закрыт зелёным: block-candidate/RAG/reducer и write-site repair-forward зафиксированы в `aefd1450` и `cc7a0523`.
-- P4.2 product commit `1ea10e74` унифицирует isolated confirmer в пяти canonical commands; targeted 56-test validation зелёная.
-- Isolated confirmer вернул `JUSTIFIED`; deterministic reducer вернул `terminal-block/BLOCK_CONFIRMED`.
+- D21 перенёс immediate renderer-owned projections/fixtures/reference в P4.2.
+- P5.3 сохранил final aggregate parity/registry/docs scope без phase-first deadlock.
+- Owner mandate зафиксирован в `brief/01-refinements.md`; Task Contract pre-mutation/pre-final = `allow/allow`.
 
 **Remaining:**
 
-- Перепроектировать P4.2: либо перенести provider generation/parity в его Scope/Files, либо изменить ordering/downstream contract, чтобы явно отложенный P5.3 не блокировал producer.
-- После редизайна возобновить P4.2; P4 audit/close, P5 и P6 остаются pending.
+- Запустить owning renderer, синхронизировать пять Claude golden fixtures и довести full Task validation до GREEN.
+- Повторить downstream P5.2/P5.3 gates и закрыть P4.2.
 
 **Sources of truth:**
 
-- `phases/P4/P4.2.md` и `phases/P4/P4.2.state.md`.
+- `decisions/D21-p4-2-owns-immediate-provider-projections.md`.
+- `phases/P4/P4.2.md` и fresh `bundles/P4.2.json`.
 - `findings/P4.2-downstream-P5.3-376a63d44c4a-1ea10e742795.md`.
-- `findings/P4.2-return-evidence-2026-08-13.md`.
-- Product commit `1ea10e74` и append-only `journal.jsonl`.
 
 **Open risks:**
 
-- `bash packages/task/scripts/validate.sh` красный на трёх provider parity/golden проверках; owning generator `render-provider-commands.py --check` подтверждает drift, отложенный текущим ТЗ до P5.3.
-- P4 не может получить closure carrier, пока P4.2 заблокирован.
+- До регенерации renderer `--check` и full Task validation остаются red.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: provider-specific generated projections — заявленный владелец P5.3, но текущий downstream gate не позволяет до него дойти.
-- Open questions: какой из двух ownership/order вариантов закрепить в design contract.
+- Deferred: final registry/marketplace/aggregate docs parity остаётся в P5.3.
+- Open questions: —

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-08-13
+
 - **`task`: terminal delivery игнорирует только исторический malformed terminal при наличии свежего валидного.**
   Receipt по-прежнему fail-closed возвращает `TERMINAL_RUN_ID_MISSING`, если ни одна terminal-запись
   subject не несёт `run_id`, но больше не блокирует исправленный append-only lifecycle старой строкой.

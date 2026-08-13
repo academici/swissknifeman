@@ -22,6 +22,8 @@ RESULT_STATUS = {
     "block-candidate": "⬜ Not started",
 }
 _ITEM = re.compile(r"^P\d+\.\d+$")
+_WRITE_SITE = re.compile(
+    r"^write-site: pre_mutation: \S+ · pre_final: \S+$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
 OBSERVATION_RESULTS = frozenset((
     "no-op", "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",
@@ -76,6 +78,17 @@ def _inputs_sha256(plan_dir, spec_path, item_id, event_rows):
         digest.update(b"\n")
     digest.update(b"\0")
     return digest.hexdigest()
+
+
+def _latest_write_site(event_rows):
+    for _number, _raw, event in reversed(event_rows):
+        note = event.get("note")
+        if not isinstance(note, str):
+            continue
+        for line in reversed(note.splitlines()):
+            if _WRITE_SITE.fullmatch(line):
+                return line
+    return None
 
 def _validate(model):
     schema = Path(__file__).resolve().parents[2] / "configs" / "item-state-projection-v1.schema.json"
@@ -146,8 +159,14 @@ def _render_state(plan_dir, item_id, *, legacy_freshness=False):
     meta, state = model["projection_meta"], model["state"]
     block = plan_projection.metadata_block(projection=meta["projection"], projection_version=meta["projection_version"], source_scope=json.dumps(meta["source_scope"], sort_keys=True), through=json.dumps(meta["through"], sort_keys=True), inputs_sha256_value=meta["inputs_sha256"], generated_by="task plan-views state")
     result = state["position"]["last_result"]
+    completion_note = note
+    write_site = _latest_write_site(_event_rows(plan_dir, item_id))
+    if result and result.startswith("closed-") and write_site:
+        lines = completion_note.splitlines() if completion_note != "—" else []
+        if write_site not in lines:
+            completion_note = "\n".join((*lines, write_site))
     fields = (("Status", state["position"]["status"]),
-              ("Completion Notes", note if result and result.startswith("closed-") else "—"),
+              ("Completion Notes", completion_note if result and result.startswith("closed-") else "—"),
               ("Pending Work", "—"), ("Known Deviations", note if "deviation" in friction else "—"),
               # A blocked position has the same mandatory escalation triple as an
               # explicit ``escalated`` event.  The event enum retains ``blocked``

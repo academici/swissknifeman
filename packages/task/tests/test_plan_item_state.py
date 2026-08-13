@@ -116,6 +116,28 @@ class PlanItemStateTests(unittest.TestCase):
         self.assertEqual(model["state"]["next_step"],
                          "Gather required RAG evidence; do not terminalize.")
 
+    def test_write_site_local_repair_projects_without_reopening_terminal_item(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green", note="summary",
+        ))
+        before, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="local-repair",
+            friction=["local-repair"],
+            note="write-site: pre_mutation: allow · pre_final: allow",
+        ))
+        after, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(after["state"]["position"], before["state"]["position"])
+        text = plan_item_state.render_state(self.plan, "P1.1")
+        self.assertIn(
+            "**Completion Notes:** summary\n"
+            "write-site: pre_mutation: allow · pre_final: allow",
+            text,
+        )
+        self.assertIn("**Known Deviations:** —", text)
+
     def test_item_event_does_not_stale_another_items_state(self):
         first_spec = self.plan / "phases" / "P1" / "P1.1.md"
         second_spec = first_spec.with_name("P1.2.md")

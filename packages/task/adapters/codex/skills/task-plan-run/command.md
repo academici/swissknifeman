@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:ad682f28b4d2735ebbab86bf94cbe4f25d98e15af9320a0ec809d287e8ddf4ac
+Canonical SHA-256: sha256:7159c37a87b114668c3439b1ae7725cc5bb9e16673f711000c863d7b5b36de96
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -148,7 +148,7 @@ launch provenance за telemetry. Если требуется independently obse
 строгий `plan-exec` с provider-attested source. `plan-run` не принимает config, actor, текст
 прошлого handoff или самоаттестацию как substitute для текущего fresh native launch.
 
-Всё остальное (эскалация, validation, топология закрытия, status-rule, якорь дерева,
+Всё остальное (D24 same-root audit-fixer, эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется
 (правило двух SSOT).
 

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:89ea2cd1bcd9c78eed67e56d4fc625ed1024b0d344f3a66e29f604eddc6fe4de
+Canonical SHA-256: sha256:119eb163331fa401d36848c5f8ad06da6c07f23cb8cae22c9abf6e82648b9571
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -266,16 +266,20 @@ status-rule ниже. Точная команда, лестница маршру
    candidate_snapshot=candidate["snapshot"])`. Это ОДИН policy seam для handoff и close:
    `full`, material risk, non-green terminal item или multi-item `light` требуют fresh GREEN
    audit; `none` и single-item `light` при всех 🟢 и без material risk разрешают direct close.
+   Fresh audit означает final verdict одного audit-fixer root на rebound candidate, а не routine
+   repair-run/second-audit цепочку.
    Process-only deviation при 🟢 сам по себе audit не включает. Если policy требует audit,
    отсутствующий, RED, ATTENTION или stale audit отказывает без phase mutation; если не требует —
    gate возвращает `allow` без exploratory отказа. Audit сам фазу не закрывает.
-   **D26 direct-green-validation — узкий owner override для ветки, где policy требует audit.** Только explicit
-   `phase_close_gate(..., owner_decision="D26")` может заменить audit-путь, и только когда
-   carrier `decisions/D26-*.md` ровно один, `accepted`, не superseded, exact phase-scoped
-   (`item` и `items` содержат закрываемый `Pn`), supersedes прежний путь и несёт literal
-   `` `phase-close: direct-green-validation` ``. Любое отсутствие/несовпадение возвращает
-   named refusal без phase mutation; вызов без `owner_decision` сохраняет byte-semantically
-   прежний audit GREEN path.
+   **Owner direct-close override — узкая ветка для policy, требующей audit.** Только explicit
+   `phase_close_gate(..., owner_decision="D#")` может заменить audit-путь. Accepted,
+   non-superseded carrier проходит либо как exact phase-scoped direct-green-validation
+   (`item` и `items` содержат закрываемый `Pn`, есть `supersedes` и literal
+   `` `phase-close: direct-green-validation` ``), либо как full-phase AUDIT-CAP remediation:
+   `item` принадлежит фазе, `items` в точности равен всем item'ам фазы и body несёт literals
+   `AUDIT-CAP`, `третьего Audit Pn` и штатный `task:plan-close`. Номер D — данные carrier,
+   не product constant. Любое отсутствие/несовпадение возвращает named refusal без phase
+   mutation; вызов без `owner_decision` сохраняет byte-semantically прежний audit GREEN path.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —

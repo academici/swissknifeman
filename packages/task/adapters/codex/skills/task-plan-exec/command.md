@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:5647e89e4609217a26b954e7239aaa92d4b3bab35c8712d29233d572aa26d679
+Canonical SHA-256: sha256:cb20a036e5dcadfe27008da4302e6b9085003a00f42f7b4ba88e52e534f16e54
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -98,13 +98,13 @@ evidence конфигом, актором или свободным тексто
    (в Brain/зеркале) — ошибка запуска: стоп и отчёт с правильным домом (голая команда перезапуска из
    `<путь>`); SSOT плана во время exec = репо, зеркало не исполняется (скилл `plan-protocol` §12).
    Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт (терминальный item не
-   переисполняется), **кроме bounded audit repair-forward**. Это исключение действует только когда
+   переисполняется), **кроме accepted D24 recovery**. Это исключение действует только когда
    фаза ещё не закрыта, последний `## Audit Pn` имеет `RED`/`ATTENTION`, его findings явно называют
    этот item, стабильное ТЗ item'а не изменено, а обязательный Pre-mutation ниже возвращает `allow`
-   (`observed_rounds < audit_rounds_max`). Тогда это ровно один repair attempt под прежним ТЗ:
+   (accepted redesign/resume evidence). Тогда это ровно один recovery attempt под прежним ТЗ:
    journal start с новым attempt возвращает item в `🟡 In progress`; `plan-design`/реопен фазы не
-   запускаются. После второго аудита Pre-mutation возвращает `LOOP_BUDGET_EXCEEDED`, поэтому третьего
-   repair/audit цикла нет. **Phase-first:** item фазы N+1 не исполняется, пока фаза N не терминальна
+   запускаются. При `LOOP_BUDGET_EXCEEDED` остановись по коду контракта; обычный audit-fixer не
+   создаёт отдельного repair/audit цикла. **Phase-first:** item фазы N+1 не исполняется, пока фаза N не терминальна
    (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
 
    **Routing-гейт (ДО п. 3 — заблокированный item в 🟡 не остаётся).** Найди строку item'а в `plan.md`

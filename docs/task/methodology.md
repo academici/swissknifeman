@@ -16,11 +16,10 @@ flowchart TD
     C --> AP{phase_audit_policy<br>Review · risk · status · volume}
     AP -- audit required --> RV[первый pre-close audit<br>/task:plan-audit]
     AP -- direct close --> PC
-    RV -- первый non-GREEN --> RE[один bounded repair-forward<br>под прежним ТЗ]
-    RV -- GREEN --> PC[phase close<br>/task:plan-close]
-    RE --> FRV[финальный audit<br>второй и последний]
-    FRV -- GREEN --> PC
-    FRV -- non-GREEN --> INC[owner incident<br>третьего repair/audit нет]
+    RV -- safe finding --> RE[inline audit-fixer repair<br>в том же root]
+    RE --> RV
+    RV -- final GREEN --> PC[phase close<br>/task:plan-close]
+    RV -- proven boundary --> INC[DecisionRequest / block evidence]
     PC --> AR[archive<br>/task:plan-close archive]
     AR --> DOCS[docs-миграция<br>root/ → документация проекта]
 ```
@@ -92,14 +91,14 @@ handoff. См. [Continue-first](./continue-first).
 `plan-close`: `Review=full`, material risk, non-green terminal item или несколько items при
 `Review=light` требуют `/task:plan-audit`; `Review=none` и один зелёный `light` item без material
 risk идут прямо в `/task:plan-close`. Process-only deviation при статусе 🟢 сам по себе аудит не
-включает. Если аудит требуется, только его свежий GREEN разрешает `/task:plan-close`. Bookkeeping и прочие
-детерминированные non-material дефекты чинятся inline в том же attempt. Подтверждённая material
-находка возвращается в owning item как repair-forward, а не в новый design-проход всего плана.
-Первый non-GREEN phase audit разрешает ровно один такой repair под неизменным item-spec, включая
-явно названный terminal item. После него выполняется второй, финальный audit: повторный non-GREEN
-исчерпывает Task Contract loop budget и уходит владельцу как incident; третий repair/audit или
-автоматический `plan-design` запрещены. `plan-design` нужен только когда меняются стабильные
-Intent/Scope/Files/Validation, public/frozen semantics или authority.
+включает. Если аудит требуется, только его fresh GREEN на rebound candidate разрешает `/task:plan-close`.
+Audit-fixer остаётся независимым при старте, но после обнаружения владеет safe in-scope ремонтом:
+повторяет точную Validation, регенерирует owner views и пересобирает candidate в том же root.
+Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет
+tactic; лишь повтор или новый material risk допускает один isolated reviewer return в этот же root.
+Только доказанная authority/safety/public-frozen/acceptance boundary выходит к владельцу.
+`plan-design` нужен только когда меняются стабильные Intent/Scope/Files/Validation, public/frozen
+semantics или authority.
 
 Исключение возможно лишь как явное owner decision: `phase_close_gate(..., owner_decision="D#")`.
 Direct-green-validation требует один accepted, phase-scoped и superseding decision carrier с

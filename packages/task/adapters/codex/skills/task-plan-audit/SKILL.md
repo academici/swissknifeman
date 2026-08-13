@@ -1,6 +1,6 @@
 ---
 name: task-plan-audit
-description: "План-протокол: adversarial-аудит terminal phase candidate Pn перед phase close либо один pre-exec review плана (design). Пинит frontier/xhigh."
+description: "План-протокол: независимый audit-fixer terminal phase candidate Pn перед phase close либо один pre-exec review плана (design). Пинит frontier/xhigh."
 ---
 
 # Task plan-audit
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-audit`.
 - Invocation: `$ task:plan-audit <arguments>`
 - Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
 - Canonical source: `packages/task/commands/plan-audit.md`
-- Canonical SHA-256: `sha256:9fa5f0286af4dc9afbbececc390b108878268ae80619ae2041bf8894fbf5c3fc`
+- Canonical SHA-256: `sha256:f811b807827fd120450c2459f0b5a920daaae2299c07acace7e607552f051bf7`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

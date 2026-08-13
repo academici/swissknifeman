@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 186ee80db36e6d83ee238ff2e52c1e756c74045cd3b90daed103f21ef8298699
+inputs_sha256: f5c9659fc69daa02a872faca633af7c016a955e0fd472bd86864697ccaaa1387
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🔴 Blocked |
+| Status | 🟡 In progress |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 1/3 | 🔴 Blocked |
+| P5 | Durable terminal delivery and provider parity | 2/3 | 🟡 In progress |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -76,7 +76,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
-| P5.2 | Make phase audit repair and verify in one root | 🔴 Blocked | 2026-08-13 |
+| P5.2 | Make phase audit repair and verify in one root | 🟢 Done | 2026-08-13 |
 | P5.3 | Publish audit-fixer parity from canonical sources | ⬜ Not started | — |
 
 ## Phase P6
@@ -298,6 +298,9 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · block-candidate · Self-review rejected by reducer; independent actor required. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · escalated · BLOCK_CONFIRMED: P5.3-owned provider generation blocks P5.2 closure; plan-design must resolve scope/order. |
 | 2026-08-13 | frontier/high | plan-design · in-progress · фаза реопенена по D24 и детализирована до DoR: audit-fixer в одном root |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · D24 resume: audit-fixer recovery starts. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Product 82f5c597; focused matrix 223 passed; plan-lint 0 errors/0 warnings. P5.3-owned provider projections changed by downstream record. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -312,4 +315,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P4.1: known deviation
 - P4.2: known deviation
 - P5.1: known deviation
-- P5.2: escalation
+- P5.2: known deviation

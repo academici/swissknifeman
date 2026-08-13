@@ -1,8 +1,7 @@
 # Roadmap исполнения — 2026.08.12-№1-TASK-RESILIENCE
 
-**Статус:** design pass 2 complete; P0–P4 терминальны; P5 реопенена по D24,
-чтобы заменить read-only audit loop на один audit-fixer root и устранить
-producer→generated-consumer false block P5.2/P5.3.
+**Статус:** design pass 2 complete; P0–P5 терминальны; P6.1 закрыт, а P6.2–P6.4
+перепроектированы после post-P6.1 effective-route/schema repair: requalification → tag → rollout.
 Порядок фаз: P0 → P1 → P2 → P3 → P4 → P5 → P6. Batch не пересекает phase audit/close.
 
 ## Правило группировки
@@ -38,8 +37,9 @@ producer→generated-consumer false block P5.2/P5.3.
 | P5.2 | solo | P5.1 | implementation/high | manual | full | historical terminal block + D24 redesign require a dedicated recovery launch; focused producer acceptance, P5.3 nonterminal dependency |
 | P5.3 | solo | P5.2 | implementation/high | manual | full | package-scope restart в `packages/skiller` + cross-package generated/provider/docs aggregate gate |
 | P6.1 | solo | P5 | implementation/high | manual | full | clean release-tree hard gate |
-| P6.2 | solo | P6.1 | implementation/medium | plan-exec | full | irreversible tag + другой Exec |
-| P6.3 | solo | P6.2 | implementation/high | manual | full | external rollout после verified tag |
+| P6.2 | solo | P6.1 | implementation/high | manual | full | post-P6.1 fix требует полной release requalification |
+| P6.3 | solo | P6.2 | implementation/medium | plan-exec | full | irreversible tag по exact compact candidate |
+| P6.4 | solo | P6.3 | implementation/high | manual | full | external rollout после verified tag capsule |
 
 ## Точные provider-neutral запуски
 
@@ -54,8 +54,9 @@ producer→generated-consumer false block P5.2/P5.3.
 | solo | P5.2 | implementation/high | filesystem, git, Task focused validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2` |
 | solo | P5.3 | implementation/high | filesystem, git, skiller canon, owning generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3` |
 | solo | P6.1 | implementation/high | filesystem, git, validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1` |
-| solo | P6.2 | implementation/medium | filesystem, git | `task:plan-exec 2026.08.12-№1-TASK-RESILIENCE P6.2` |
-| solo | P6.3 | implementation/high | filesystem, git, skiller registered channels | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.3` |
+| solo | P6.2 | implementation/high | filesystem, git, package validation, owning generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
+| solo | P6.3 | implementation/medium | filesystem, git | `task:plan-exec 2026.08.12-№1-TASK-RESILIENCE P6.3` |
+| solo | P6.4 | implementation/high | filesystem, git, skiller registered channels | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.4` |
 
 Фактический handoff каждого запуска добавляет native provider command и вычисленный Context.
 Первый запуск после terminal design/audit использует соответствующий `cold-start-root` reason;

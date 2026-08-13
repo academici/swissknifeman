@@ -1,5 +1,12 @@
 # Уточнения владельца
 
+## 2026-08-13 — effective-route incident before P6.2
+
+- Владелец повторно запустил exact native `task:plan-design` route, но agent ложно принял
+  `codex doctor --json` config за effective route и отказал в P6.2.
+- Снача исправить общий Codex plan-command routing gate, затем сразу довести P6.2 до DoR.
+- Product fix должен войти в `v0.13.0`; tag на прежний P6.1 target больше недопустим.
+
 ## 2026-08-12 — коррекция формы плана
 
 Владелец отверг преждевременно закрытый однофазный v1-план. Требуется:

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 1bdae4a8d04e0c1ac983708780a4a04d2bed2a26300112f58fb4e36bad3f3dfb
+inputs_sha256: 9bc28fa10b4220fe8b4e2743ef965ff843b620efdd84a6e2ad13ddfe27016693
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
+| P6 | Release, new tag and registered-project rollout | 1/4 | 🟡 In progress |
 
 ## Phase P0
 
@@ -83,9 +83,10 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P6.1 | Prepare and validate the v0.13.0 release tree | ⬜ Not started | — |
-| P6.2 | Create and verify the annotated v0.13.0 tag | ⬜ Not started | — |
-| P6.3 | Roll out to every registered project/channel and verify | ⬜ Not started | — |
+| P6.1 | Prepare and validate the v0.13.0 release tree | 🟢 Done | 2026-08-13 |
+| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | ⬜ Not started | 2026-08-13 |
+| P6.3 | Create and verify the annotated v0.13.0 tag | ⬜ Not started | — |
+| P6.4 | Roll out to every registered project/channel and verify | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -327,6 +328,11 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | frontier/high | plan-run · closed-green · D25 scope-resolution; bookkeeping continuation, not ordinary repair-run/second audit. Exact Validation GREEN: generators/docs no-op; provider 5+20; Task 873/1; Skiller test+validate 0; product bytes unchanged.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/low | plan-close · closed-green · P5 закрыта по D25; candidate 82192f13, exact P5 matrix 243 tests GREEN. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.1 release-tree preparation started |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · v0.13.0 release tree committed and validated; tag deferred to P6.2 |
+| 2026-08-13 | frontier/high | plan-run · local-repair · Carrier-only repair after terminal P6.1: materialize mandatory boundary evidence without changing release evidence.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: release requalification, compact candidate, tag/rollout split по D26 |
 
 ## Owner Gates
 

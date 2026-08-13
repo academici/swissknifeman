@@ -1,44 +1,43 @@
-# HANDOFF — 2026-08-13 — after P5
+# HANDOFF — 2026-08-13 — after P6
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | solo |
 | Model class | implementation |
 | Effort | high |
-| Capabilities | filesystem · git · release-validation |
-| Context | continue-root |
-| Суть | Подготовить и проверить committed release tree v0.13.0 до создания тега. |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1` |
+| Capabilities | filesystem · git · package-validation · owning-generators |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Повторно квалифицировать v0.13.0 candidate после route/schema repair и запечатать compact tag input. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2'
 ```
 
 **Done:**
 
-- P5 terminal candidate закрыт по D25; `phase_close_gate` вернул `allow`.
-- Phase closure, status, decisions и bundles пересобраны owning generators; terminal phase journal event записан до commit.
+- P6.1 terminal release-tree evidence сохранено без переписывания.
+- Effective-route/schema repairs зафиксированы `33a7dbcf`/`0948381c`; P6.2 split на requalification/tag/rollout запечатан D26.
 
 **Remaining:**
 
-- Выполнить P6.1; P6.2/P6.3 остаются запрещены до terminal P6.1.
+- Выполнить P6.2; P6.3 tag и P6.4 rollout запрещены до terminal compact candidate.
 
 **Sources of truth:**
 
-- `phases/P5/P5.md` → `## Phase Handoff` и `## Resolution P5.3 — 2026-08-13`.
-- `phases/P5/P5.closed.md`, `status.md`, `journal.jsonl`.
-- `decisions/D25-authorize-p5-3-files-boundary.md`.
+- `phases/P6/P6.2.md`, `decisions/D26-requalify-after-route-repair.md`.
+- `findings/18-P6.2-design-preflight.md`, `status.md`, `journal.jsonl`.
 
 **Open risks:**
 
-- Historical P0.1 bundle remains a known out-of-scope freshness baseline; it is not P5 release evidence.
+- Aggregate repository validation still reports a separate old active plan without its next bundle; P6.2 acceptance uses the affected package gates and records any unrelated baseline explicitly.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: P6 release/tag/rollout
+- deferred: P6.3 tag, P6.4 rollout
 - open_questions: —

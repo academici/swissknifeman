@@ -1,57 +1,56 @@
-# HANDOFF — 2026-08-13 — after P5.2
+# HANDOFF — 2026-08-13 — after P5
 
-**Next:** design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high — решить scope/order conflict |
-| Capabilities | filesystem · git |
-| Context | cold-start-root: context-budget |
-| Суть | Устранить конфликт: P5.2 закрывает canonical owner-override seam, а обязательный provider check принадлежит P5.3 и блокирует его downstream gate |
-| Команда | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2` |
+| Batch | solo |
+| Model | implementation (`gpt-5.6-terra`) |
+| Thinking | high — frozen audit/close behavior and false-terminal regressions |
+| Capabilities | filesystem · git · Task focused validation |
+| Context | cold-start-root: design-root-terminal |
+| Суть | Возобновить P5.2 по D24 и реализовать one-invocation audit-fixer без repair/audit loop |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2` |
 
 Provider-neutral launch-block:
 
 ```text
-task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2
+task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P5.2'
+codex -C /home/vostrikov/projects/packages/swissknifeman/packages/task -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2'
 ```
 
 **Done:**
 
-- P5.2 stable spec доведён до DoR: разделены candidate/audit/closure seam, residual evidence-topology roadmap, return-loop и P5.3 provider boundary.
-- Удалённый roadmap input заменён current repo carriers; provenance и selected design записаны в `findings/14-P5.2-design-preflight.md` и `research/07-P5.2-candidate-audit-closure-design.md`.
-- Owning generator собрал digest-qualified `bundles/P5.2.json`; active-phase projection repair также материализовал требуемый `bundles/P5.3.json`.
-- Product commit `f0538e2f` removes decision-number coupling and rejects incomplete AUDIT-CAP item sets; focused matrix passed 86 tests.
-- Reducer accepted one fresh frontier isolated review (`JUSTIFIED`) and terminalized P5.2 as blocked after the P5.3 downstream renderer failure.
+- Owner refinement записан в brief; current read-only audit loop и P5.2 false block зафиксированы в findings/15.
+- D24 закрепил fresh audit root как owning audit-fixer до финального verdict.
+- P5.2 разделён с P5.3 по producer/consumer acceptance: focused canonical seam не блокируется ещё не запущенной projection.
+- P5 реопенена как design contract; её прежний Phase Handoff инвалидирован D24.
 
 **Remaining:**
 
-- Design owner decision: move the generated provider parity work into P5.2, alter ordering/downstream semantics so P5.3 cannot block its producer, or otherwise revise the frozen scope contract.
-- После решения продолжить по exact newly persisted semantic Next; P5.3 нельзя запускать, пока P5.2 остаётся blocked.
+- P5.2: Task canonical audit-fixer/runtime semantics and focused regressions.
+- P5.3: EN-only plan-protocol plus generated Claude/Codex/registry/docs parity and aggregate validation.
+- One P5 audit-fixer invocation, phase close, then P6 release/rollout.
 
 **Sources of truth:**
 
 - `plan.md`, `phases/P5/P5.md`, `phases/P5/P5.2.md`, `bundles/P5.2.json`, generated `P5.2.state.md`.
-- `findings/14-P5.2-design-preflight.md` и `research/07-P5.2-candidate-audit-closure-design.md`.
-- `packages/task/lib/task/plan_gates.py`, `packages/task/lib/task/plan_closure.py`, `packages/task/tests/test_review_policy.py`.
-- `findings/P5.2-downstream-P5.3-376a63d44c4a-f0538e2f76ae.md` и terminal journal run `19b20367…`.
+- `brief/01-refinements.md`, `findings/15-P5-audit-fixer-redesign.md`, `research/08-P5-audit-fixer-design.md`, `decisions/D24-audit-fixer-single-invocation.md`.
+- `packages/task/commands/plan-audit.md`, `packages/task/lib/task/plan_gates.py`, `packages/task/lib/task/plan_item_state.py`.
 
 **Open risks:**
 
-- Surviving roadmap `2026.08.10-plan-evidence-anchor-audit-loop.md` содержит более широкий residual spec→product→closure backlog; P5.2 не должен выдавать свой узкий seam за его полную реализацию.
-- P5.1 сохраняет process-only deviation: product commit предшествовал durable start во время deterministic bundle recovery.
-- P5.2 cannot satisfy its required package/provider checks without P5.3-owned generated artifacts; direct scope expansion would violate its sealed Scope Excluded.
+- Generated P5.2 state remains historical `🔴 Blocked` until the recommended resumed `plan-run` appends `in-progress`; D24 and the item escalation/resume carrier make that continuation explicit without hand-editing generated state.
+- Residual full spec→product→closure topology in `roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md` remains outside P5.2 and must not be claimed complete.
+- P5.1 retains its process-only deviation; P5 audit-fixer must inspect it but may preserve it only if current product acceptance is exact and no safe in-scope repair remains.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; do not hand-edit generated provider artifacts.
-- deferred: residual evidence-topology roadmap remains outside this escalation.
+- workarounds: none; generated carriers are rebuilt only through owners.
+- deferred: residual evidence-anchor topology remains in roadmap with its existing measured trigger.
 - open_questions: —

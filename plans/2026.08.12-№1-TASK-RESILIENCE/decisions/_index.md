@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D23
-inputs_sha256: a2dff5c39cacfbf7ca8c966290e864ce82c276c654ca50f603d4f5da1dca7fbb
+through: 2026-08-13/D24
+inputs_sha256: 7a6e194f2251bb517bba56f701c0dbab54260c785cc08ffcabe31de321f14898
 generated_by: task plan-views decisions
 -->
 
@@ -34,3 +34,4 @@ generated_by: task plan-views decisions
 | D21 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 владеет immediate provider projections, locks, Claude golden fixtures и operator reference, которые детерминированно изменились из-за его canonical command edits. Проекции собираются owning renderer'ом, fixtures синхронизируются механически из canonical Claude surfaces, затем все checks обязаны быть no-op/GREEN. P5.3 сохраняет свой final aggregate parity, registry, marketplace и docs-sync scope, но не служит отложенным владельцем stale outputs более раннего canonical producer. RAG:— (owner-grounded: direct mandate 2026-08-13; repo-grounded: findings/P4.2-downstream-P5.3-376a63d44c4a-1ea10e742795.md). |
 | D22 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 дополнительно синхронизирует immediate umbrella projection `docs/task/reference/provider-commands.md` из уже обновлённого package reference только owning `scripts/docs-sync.sh`. P5.3 сохраняет final aggregate docs sweep для всего P0–P5.2 surface; его validation должна увидеть эту проекцию no-op. RAG:— (repo-grounded: root.docs-build, docs-maintenance closeout и observed `docs-sync.sh --check` drift). |
 | D23 | 2026-08-13 | accepted | P4.1, P4.2 | AUDIT-CAP: третьего Audit P4 нет; фаза закрывается штатным `task:plan-close`. Владелец разрешает точечный repair-forward P4.1 без нового audit: принять уже закоммиченный `168b576a` как реализацию exhaustive continue-first signal matrix и повторить только его focused validation. Новых terminal attempts после закрытия фазы не допускается. |
+| D24 | 2026-08-13 | accepted | P5.2, P5.3 | Phase audit становится audit-fixer: свежий независимый audit root сам исправляет все безопасные in-scope находки, повторяет исходную Validation, регенерирует state/status/bundle, пересобирает candidate и только затем публикует финальный verdict. Штатный audit больше не выдаёт отдельный repair-run, второй audit или автоматический design-pass. `AUDIT-ROOT-TERMINAL` остаётся границей только после финального verdict. RAG:— (owner-grounded: `brief/01-refinements.md`; repo-grounded: `findings/15-P5-audit-fixer-redesign.md`, `research/08-P5-audit-fixer-design.md`). P5.2 владеет canonical Task audit-fixer/runtime seam и focused acceptance. P5.3 потребляет этот committed producer, синхронизирует EN-only plan-protocol и все generated provider/registry/docs carriers, затем выполняет aggregate validation. Незапущенный P5.3 для P5.2 — `dependency-not-ready`, а не terminal block. |

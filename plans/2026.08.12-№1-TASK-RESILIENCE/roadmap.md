@@ -1,7 +1,8 @@
 # Roadmap исполнения — 2026.08.12-№1-TASK-RESILIENCE
 
-**Статус:** design pass 2 complete; P0 закрыта по owner decision D12; P1.1 закрыта,
-а owner resolution `authorize-phase-redesign` развёрнут в P1.2–P1.5 по D16.
+**Статус:** design pass 2 complete; P0–P4 терминальны; P5 реопенена по D24,
+чтобы заменить read-only audit loop на один audit-fixer root и устранить
+producer→generated-consumer false block P5.2/P5.3.
 Порядок фаз: P0 → P1 → P2 → P3 → P4 → P5 → P6. Batch не пересекает phase audit/close.
 
 ## Правило группировки
@@ -33,9 +34,9 @@
 | P3.3 | B-P3-CONTINUE | P3.2 | implementation/high | manual | light | тот же false-stop/canon context; узкий predicate |
 | P4.1 | B-P4-BLOCK | P3 | implementation/high | manual | full | candidate schema→confirmer |
 | P4.2 | B-P4-BLOCK | P4.1 | frontier/high | manual | full | reuse block/RAG fixtures; route=max |
-| P5.1 | B-P5-DELIVERY | P4 | implementation/high | manual | full | receipt→phase lifecycle |
-| P5.2 | B-P5-DELIVERY | P5.1 | implementation/high | manual | full | общие state/fingerprint fixtures |
-| P5.3 | solo | P5.2 | implementation/high | manual | full | переход на cross-package generator/docs surface |
+| P5.1 | solo | P4 | implementation/high | manual | full | terminal before D24 redesign; frozen receipt evidence has no reusable execution suffix |
+| P5.2 | solo | P5.1 | implementation/high | manual | full | historical terminal block + D24 redesign require a dedicated recovery launch; focused producer acceptance, P5.3 nonterminal dependency |
+| P5.3 | solo | P5.2 | implementation/high | manual | full | package-scope restart в `packages/skiller` + cross-package generated/provider/docs aggregate gate |
 | P6.1 | solo | P5 | implementation/high | manual | full | clean release-tree hard gate |
 | P6.2 | solo | P6.1 | implementation/medium | plan-exec | full | irreversible tag + другой Exec |
 | P6.3 | solo | P6.2 | implementation/high | manual | full | external rollout после verified tag |
@@ -50,8 +51,8 @@
 | B-P2-IDENTITY | P2.1–P2.2 | implementation/high | filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P2.1-P2.2` |
 | B-P3-CONTINUE | P3.1–P3.3 | implementation/high | filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P3.1-P3.3` |
 | B-P4-BLOCK | P4.1–P4.2 | frontier/high | filesystem, git, isolated-child-return, RAG | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2` |
-| B-P5-DELIVERY | P5.1–P5.2 | implementation/high | filesystem, git | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.1-P5.2` |
-| solo | P5.3 | implementation/high | filesystem, git, generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3` |
+| solo | P5.2 | implementation/high | filesystem, git, Task focused validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.2` |
+| solo | P5.3 | implementation/high | filesystem, git, skiller canon, owning generators | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3` |
 | solo | P6.1 | implementation/high | filesystem, git, validation | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1` |
 | solo | P6.2 | implementation/medium | filesystem, git | `task:plan-exec 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 | solo | P6.3 | implementation/high | filesystem, git, skiller registered channels | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.3` |
@@ -64,4 +65,5 @@
 
 Только material authority/safety/irreversible/acceptance change или подтверждённый external block
 останавливает цепочку. Local/procedural/transient/RAG-provider defect сохраняет item nonterminal
-и exact retry/repair Next. Push/GitHub release не авторизованы.
+и exact retry/repair Next. Phase audit не передаёт ordinary repair другому root: он чинит,
+валидирует и пересобирает candidate сам до final verdict. Push/GitHub release не авторизованы.

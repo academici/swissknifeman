@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: c43063d303f10f227e239d1659399f27facb91079aa2deb7c8542098cd15fb32
+inputs_sha256: 186ee80db36e6d83ee238ff2e52c1e756c74045cd3b90daed103f21ef8298699
 generated_by: task plan-views status
 -->
 
@@ -76,8 +76,8 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
-| P5.2 | Stabilize candidate-first phase audit and closure | 🔴 Blocked | 2026-08-13 |
-| P5.3 | Regenerate providers, registry and docs from canonical sources | ⬜ Not started | — |
+| P5.2 | Make phase audit repair and verify in one root | 🔴 Blocked | 2026-08-13 |
+| P5.3 | Publish audit-fixer parity from canonical sources | ⬜ Not started | — |
 
 ## Phase P6
 
@@ -297,6 +297,7 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · block-candidate · Malformed block-review capsule repaired; fresh closed review required. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · block-candidate · Self-review rejected by reducer; independent actor required. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · escalated · BLOCK_CONFIRMED: P5.3-owned provider generation blocks P5.2 closure; plan-design must resolve scope/order. |
+| 2026-08-13 | frontier/high | plan-design · in-progress · фаза реопенена по D24 и детализирована до DoR: audit-fixer в одном root |
 
 ## Owner Gates
 

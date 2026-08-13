@@ -110,3 +110,19 @@ D10 и `roadmap.md`. RAG:— (owner-grounded: уточнение владель�
 - P5.2 ограничен candidate fingerprint/audit policy/close gate/terminal closure seam;
   return-loop `plan_returns.py`, полная spec→product→closure topology и provider projection в него
   не входят.
+
+## 2026-08-13 — owner refinement: audit должен быть audit-fixer
+
+- После завершения ограниченной по объёму фазы её audit должен по горячим следам
+  сам исправлять все безопасные in-scope отклонения, а не выдавать отдельные
+  design/dev запуски и ещё один audit.
+- `🟠 Done with deviations` или найденная во время audit проблема — это вход в repair,
+  а не разрешение сохранить долг или поставить block из-за сложности.
+- Аудитор остаётся свежим независимым root относительно исполнителя, но после
+  находки он же становится owning fixer: группирует симптомы по root seam,
+  чинит, повторяет исходные validation и строит новый candidate в том же root.
+- Штатная остановка допустима только на доказанной authority/safety или
+  public/frozen-contract границе. Объём тестов, несколько файлов, generator drift,
+  грязное дерево или сама сложность решения не являются terminal evidence.
+- Программный audit cap остаётся только аварийной защитой; обычный путь
+  больше не создаёт audit → repair-run → audit → owner loop.

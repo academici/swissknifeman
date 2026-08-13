@@ -8,9 +8,13 @@
 | Недоступный обязательный Perplexity не маскируется fallback | D8 | P0.3, P4.1 |
 | Blocked подтверждает отдельный агент | D4 | P4.2 |
 | Неподтверждённый block возвращается в repair | D4 | P4.2 |
+| Phase audit сам исправляет in-scope отклонения по горячим следам | D24 | P5.2 |
+| Обычная remediation не создаёт отдельные design/dev/повторный audit запуски | D24 | P5.2–P5.3 |
+| Сложность, широкая validation и generator drift не разрешают ленивый Blocked | D24 | P5.2 |
 | PLAN-ID содержит `№N`, title содержит `План №N` | D1 | P2.1 |
 | Комментарий ссылается полным PLAN-ID + item | D2 | P2.2, P5.3 |
 | Активные Layout v1 мигрируются, v1 больше не исполняется | D7 | P1, P6.3 |
 | Быстро реализовать, выпустить новый тег, раскатать | D5, D6 | P5, P6 |
 
-Непокрытых требований брифа нет. RAG:— (repo-grounded: `brief/00-brief.md:1`).
+Непокрытых требований брифа и refinements нет. RAG:— (repo-grounded:
+`brief/00-brief.md:1`, `brief/01-refinements.md`).

@@ -28,7 +28,8 @@ Task слишком рано превращает route/tool/projection/local re
 идентичность плана, nonterminal observations/local repair, подтверждение
 реальной блокировки, terminal delivery и release/rollout. Уже написанный код
 считается лишь release candidate: каждая фаза отдельно сверяет его с ТЗ и
-чинит расхождения до релиза. RAG:✅ 2026-08-12 (Perplexity Web: Temporal,
+чинит расхождения до релиза. Phase audit завершает этот контур как audit-fixer:
+находит и сам исправляет безопасные in-scope отклонения в одном свежем root. RAG:✅ 2026-08-12 (Perplexity Web: Temporal,
 Microsoft Durable Functions; synthesis и URLs —
 `findings/02-rag-resilience-and-schema-cutover-2026-08-12.md`).
 
@@ -45,6 +46,8 @@ Microsoft Durable Functions; synthesis и URLs —
   nonterminal `rag-pending`: fallback не закрывает item/phase и не разрешает terminal verdict.
 - Terminal `Blocked`/escalation до одного свежего isolated reviewer verdict `JUSTIFIED` запрещены.
 - `AVOIDABLE` возвращает root в repair; `INSUFFICIENT_EVIDENCE` — в сбор evidence; reviewer не даёт authority.
+- Phase audit — audit-fixer: все безопасные in-scope находки чинятся, валидируются и перепривязываются к candidate в одном audit root; отдельный repair-run/второй audit не создаются.
+- Сложность, объём validation, generator drift, unrelated dirty tree и незапущенный downstream consumer — nonterminal; останавливают только доказанные authority/safety/public/frozen/acceptance boundaries.
 - Material safety/authority/frozen/public/acceptance boundary не автофиксится.
 - Generated provider/docs/registry/state/bundle носители менятся только owning generator.
 - Кодовая/docstring/PR/review ссылка на item: `2026.08.12-№1-TASK-RESILIENCE Pn.m`; bare `Pn.m` — только внутри этого плана.
@@ -71,9 +74,9 @@ Microsoft Durable Functions; synthesis и URLs —
 | B-P3-CONTINUE | P3.3 | implementation/high | manual | light | узкий lint predicate использует тот же false-stop/plan canon context |
 | B-P4-BLOCK | P4.1 | implementation/high | manual | full | candidate schema/reducer — producer confirmer flow |
 | B-P4-BLOCK | P4.2 | frontier/high | manual | full | reuse block/RAG fixtures; batch route повышается до frontier/high |
-| B-P5-DELIVERY | P5.1 | implementation/high | manual | full | receipt питает candidate/audit/close lifecycle |
-| B-P5-DELIVERY | P5.2 | implementation/high | manual | full | общие journal/state/fingerprint/receipt fixtures |
-| solo | P5.3 | implementation/high | manual | full | cross-package generators/docs и широкий validation требуют отдельного бюджета |
+| solo | P5.1 | implementation/high | manual | full | item уже терминален до D24 redesign; его frozen receipt evidence не переиспользует execution context в recovery P5.2 |
+| solo | P5.2 | implementation/high | manual | full | historical terminal block и D24 redesign требуют отдельный recovery launch; P5.1 уже терминален, а P5.3 — другая package-scope boundary |
+| solo | P5.3 | implementation/high | manual | full | package-scope restart в `packages/skiller` и cross-package owning generators/docs — hard context boundary после canonical P5.2 producer |
 | solo | P6.1 | implementation/high | manual | full | clean committed release-tree gate перед side effect |
 | solo | P6.2 | implementation/medium | plan-exec | full | irreversible annotated-tag boundary и отдельный Exec |
 | solo | P6.3 | implementation/high | manual | full | external registered-project rollout после verified tag |
@@ -93,6 +96,7 @@ Microsoft Durable Functions; synthesis и URLs —
 | plan-layout-v2-only-execution | v1.0.0 | candidate | Task readers, commands, active plan fleet | P1/P5/P6 |
 | continue-first-block-policy | v1.0.0 | candidate | Task commands, journal/state, provider adapters | P3/P4/P5 |
 | terminal-delivery-receipt | v1.0.0 | candidate | Task commands and provider delivery seam | P5 |
+| phase-audit-fixer | v1.0.0 | candidate | Task audit/close, plan-protocol, provider adapters | P5/P6 |
 
 ## Проверка (verification status)
 

@@ -8,7 +8,7 @@
 | Model | frontier |
 | Thinking | xhigh — independent terminal phase audit |
 | Context | cold-start-root: independent-audit-required |
-| Суть | Проверить P6 candidate `61f35e254f062057fc41b79fa08147a7722ff3058d44cf7f3d155409b86363ca` после tracked-tree patch release. |
+| Суть | Проверить P6 candidate `de59b8d450c8ba27478037fcaac8f9791d4665a5789a3bee20dc85d6801bbce8` после tracked-tree patch release и delivery-gate repair. |
 | Команда | `$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6` |
 
 Provider-neutral launch:
@@ -32,6 +32,8 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 - Local annotated `v0.13.1` object `e5492ebcae1d36de735042a08f27a0c4f6a2fd6f` peels to the exact
   product candidate; `v0.13.0` remains unchanged and no push/rollout was performed.
 - P6.2 is terminal GREEN; D28 records the generator-owned provider lock carrier.
+- Follow-up commit `8775852dc38f32109371b13da7dfae54dc93a2b5` repairs the receipt gate against
+  historical malformed terminals; it is `[Unreleased]` and does not move `v0.13.1`.
 
 **Remaining:**
 

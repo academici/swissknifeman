@@ -2,8 +2,8 @@
 projection: decision-current
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-12/D19
-inputs_sha256: 62a5a210b97c46d87d82959653705c2e3d986b2289b2af7a01d91292a01baefd
+through: 2026-08-13/D20
+inputs_sha256: e7af6abe770e32ac72472b9f10694538c7f4355d082848c3847ecc88898e7f25
 generated_by: task plan-views decisions
 -->
 
@@ -30,3 +30,4 @@ generated_by: task plan-views decisions
 | D17 | 2026-08-12 | accepted | P1.5 | Live path/digest re-resolution bundle/read-budget gate применяется только к nonterminal executable items. Bundle terminal item остаётся closure-time digest manifest: его схема и carrier bytes проверяются, но намеренно удалённый retirement input не резолвится заново и не заставляет переписывать закрытую историю. Canonical test fixture после P1.5 всегда создаёт v2; retired missing/v1 input создаётся только как explicit rejection fixture без compatibility/generated-view path. RAG:— (repo-grounded: `findings/09-P1.5-retirement-preflight.md`, `research/06-P1.5-retirement-acceptance-boundary.md`). |
 | D18 | 2026-08-12 | accepted | P3.2 | Владелец разрешил P3.2 регенерировать ровно те provider projections, Claude golden fixtures и operator reference, которые детерминированно изменяет `packages/task/scripts/render-provider-commands.py` после canonical continue-first изменения. Разрешение зафиксировано response `P3.2-provider-projection-scope-2026-08-12` в `decisions/queue.jsonl`; оно не распространяется на иные generated assets или изменения provider semantics. RAG:— (owner/repo-grounded: durable owner response and `findings/P3.2-provider-projection-scope-conflict.md`). |
 | D19 | 2026-08-12 | accepted | P3.3 | Владелец потребовал довести P3.2–P3.3 до terminal без парковки. Поэтому P3.3 получает узкое разрешение регенерировать generated provider/runtime parity, которую детерминированно изменяют её canonical plan-lint, authoring и audit sources, включая агрегированный docs projection. Запись не разрешает менять workflow runtime или provider semantics вручную: только owning renderer, `docs-sync` и их `--check`. RAG:— (owner-grounded: direct mandate 2026-08-12; repo-grounded: P3.3 validation). |
+| D20 | 2026-08-13 | accepted | P3.1, P3.2, P3.3 | AUDIT-CAP: третьего Audit P3 нет; фаза закрывается штатным `task:plan-close` Владелец разрешает единственный repair-forward P3.3: повторить исходные Validation для P3.1, P3.2, P3.3 только в fresh native roots с provider-attested route; новых terminal attempts после закрытия фазы не допускается. |

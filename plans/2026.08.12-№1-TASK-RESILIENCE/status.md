@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-12
-inputs_sha256: c2e6810e7699b5cb240d33c6609566b4f7389129b8f7fafffee28e11e76a1ce6
+through: 2026-08-13
+inputs_sha256: 686afd1465cad81bfd40cc5250d98de76af8cdac21d801aa3b23242993a87283
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
-| Last Updated | 2026-08-12 |
+| Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
 
@@ -62,7 +62,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Add nonterminal journal results and state semantics | 🟢 Done | 2026-08-12 |
 | P3.2 | Apply continue-first repair flow to canonical commands | 🟢 Done | 2026-08-12 |
-| P3.3 | Make orchestration declaration detection negation-aware | 🟠 Done with deviations | 2026-08-12 |
+| P3.3 | Make orchestration declaration detection negation-aware | 🟠 Done with deviations | 2026-08-13 |
 
 ## Phase P4
 
@@ -253,6 +253,10 @@ Evidence anchor c1a92619; full validation: findings/P3-audit-repair-forward-2026
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · in-progress · Local repair: put write-site boundary codes on their required standalone line. |
 | 2026-08-12 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
 Evidence anchor 381adc74; material five-carrier out-of-Files deviation in product 2f795943. Full validation: findings/P3-audit-repair-forward-2026-08-12.md. |
+| 2026-08-13 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · AUDIT-CAP repair: restrict Layout v2 orchestration predicate to Phase Context. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
+Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs checks; historical material five-carrier deviation remains. |
 
 ## Owner Gates
 

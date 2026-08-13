@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 878df1693770361644be1c91549d784149aca5a398ee290579ede60d9f59c552
+inputs_sha256: a3585d73c3ee30d6fc08fddc265f839018d7e3460f555801d675a322643dde64
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 4/4 | 🟢 Done |
+| P6 | Release, new tag and registered-project rollout | 2/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -83,8 +83,8 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P6.1 | Prepare and validate the v0.13.0 release tree | 🟢 Done | 2026-08-13 |
-| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟢 Done | 2026-08-13 |
+| P6.1 | Prepare and validate the v0.13.0 release tree | 🟠 Done with deviations | 2026-08-13 |
+| P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟠 Done with deviations | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | 🟢 Done | 2026-08-13 |
 
@@ -353,6 +353,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.4 registered-channel rollout started after verified route and contract gates. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · 29 applied, 3 vendor no-op, 0 failures; 30 Task probes GREEN. Process deviations: start run_id and probe predicate repaired forward. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | audit-fixer | plan-run · decision-pending · decision queue: P6-audit-frozen-release-boundary-2026-08-13 |
+| 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · 4efef7a3: Task/Harness replay exit 1; three generated Task carriers outside stable Files. P6.2 later requalified 3c5548f7. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · Candidate gates green; 8ed159c9 crossed stable Files and wildcard tests tree is unhashed. Frozen repair/release strategy owner-gated. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | audit-fixer | plan-run · decision-pending · decision queue: P6-audit-frozen-release-boundary-2026-08-13 |
+| 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · audit-red · audit-fixer; rebound candidate 38da9594; RED: declared Harness wildcard unhashed and frozen release boundary owner-gated. |
 
 ## Owner Gates
 
@@ -367,4 +372,6 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.1: known deviation
 - P4.2: known deviation
 - P5.1: known deviation
+- P6.1: known deviation
+- P6.2: known deviation
 - P6.4: known deviation

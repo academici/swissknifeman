@@ -153,6 +153,15 @@
   },
   "allOf": [
     {
+      "if": {
+        "anyOf": [
+          {"properties": {"scope_class": {"const": "external"}}},
+          {"properties": {"signal_class": {"const": "external-dependency"}}}
+        ]
+      },
+      "then": {"properties": {"external": {"const": true}}}
+    },
+    {
       "if": {"properties": {"external": {"const": false}}},
       "then": {
         "properties": {

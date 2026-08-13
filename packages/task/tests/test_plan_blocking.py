@@ -116,6 +116,22 @@ class PlanBlockingTests(unittest.TestCase):
         )
         self.assertDecision(value, "gather-rag")
 
+    def test_external_enum_cannot_bypass_rag_with_false_flag(self):
+        external_classes = (
+            {"scope_class": "external"},
+            {"signal_class": "external-dependency"},
+            {"scope_class": "external", "signal_class": "external-dependency"},
+        )
+        for classes in external_classes:
+            with self.subTest(classes=classes):
+                value = candidate(
+                    **classes,
+                    external=False,
+                    rag={"required": False, "status": "not-required", "evidence_ids": []},
+                    review=review(),
+                )
+                self.assertDecision(value, "gather-rag")
+
     def test_external_rag_states_remain_nonterminal_until_verified(self):
         for status in ("missing", "pending", "unavailable", "fallback-only"):
             with self.subTest(status=status):
@@ -190,6 +206,12 @@ class PlanBlockingTests(unittest.TestCase):
         statuses = schema["properties"]["rag"]["properties"]["status"]["enum"]
         self.assertEqual(statuses, [
             "not-required", "missing", "pending", "unavailable", "fallback-only", "verified",
+        ])
+        external_guard = schema["allOf"][0]
+        self.assertEqual(external_guard["then"]["properties"]["external"], {"const": True})
+        self.assertEqual(external_guard["if"]["anyOf"], [
+            {"properties": {"scope_class": {"const": "external"}}},
+            {"properties": {"signal_class": {"const": "external-dependency"}}},
         ])
 
 

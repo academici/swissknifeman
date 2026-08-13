@@ -74,6 +74,11 @@ def _closed_fields(value, expected, *, field):
         raise BlockCandidateError(f"{field}: неизвестные поля {unknown}")
 
 
+def _has_external_class(candidate: dict) -> bool:
+    return (candidate["scope_class"] == "external"
+            or candidate["signal_class"] == "external-dependency")
+
+
 def validate(candidate: dict) -> None:
     """Validate the closed schema without adding a runtime JSON-schema dependency."""
     _closed_fields(candidate, _ROOT_FIELDS, field="candidate")
@@ -90,6 +95,8 @@ def validate(candidate: dict) -> None:
             raise BlockCandidateError(f"{field}: значение вне закрытого enum")
     if not isinstance(candidate["external"], bool):
         raise BlockCandidateError("external: ожидается boolean")
+    if _has_external_class(candidate) and not candidate["external"]:
+        raise RagEvidenceError("external enum требует external=true и mandatory RAG")
     if not _string_list(candidate["evidence_ids"], field="evidence_ids", allow_empty=False):
         raise BlockCandidateError("evidence_ids: ожидается non-empty unique string array")
     if not _string_list(candidate["resolutions_tried"], field="resolutions_tried", allow_empty=True):

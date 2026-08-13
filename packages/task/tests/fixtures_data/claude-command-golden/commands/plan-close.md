@@ -35,14 +35,29 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 ## Continue-first block gate (v1)
 
-До любого 🔴/escalation примени общий gate: durable nonterminal
-`routing-rejected|decision-pending|local-repair|block-candidate`; автофикс малого reversible
-отклонения и повтор original carrier; closed `block-candidate/v1`; verified RAG для
-100% external-кандидатов; ровно один отличный от executor reviewer в
-`isolated-child-return`; deterministic `task.plan_blocking.evaluate()`. Только action
-`terminal-block` после `JUSTIFIED` разрешает terminal Blocked. `AVOIDABLE`,
-`INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` и `MALFORMED` не закрывают subject и возвращают
-его в local repair/evidence под authoritative root. Reviewer не выдаёт authorization.
+<!-- block-confirmation:v1:begin -->
+`block-confirmation/v1` выполняется одной закрытой последовательностью:
+
+1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
+   `block-candidate`; observation не меняет status/attempt.
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+   candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
+   `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
+   `rag-pending` и возвращает `gather-rag` без reviewer.
+3. На один свежий fingerprint вызывается ровно один fresh reviewer с actor/context, отличными
+   от executor, в `isolated-child-return`; тот же fingerprint переиспользует записанный review,
+   второй reviewer разрешён только после доказанного material fingerprint change.
+4. Reviewer получает только immutable capsule/evidence, применяет
+   `block-confirmation-rubric-v1` и возвращает закрытый object
+   `reviewer_actor/context/verdict/evidence_ids`, где verdict — ровно `JUSTIFIED`, `AVOIDABLE`,
+   `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` или `MALFORMED`.
+5. Root валидирует capsule и review, затем единожды вызывает `task.plan_blocking.evaluate()`;
+   reviewer даёт evidence, но не authorization.
+6. Только reducer action `terminal-block` после distinct `JUSTIFIED` разрешает terminal
+   `blocked`/`escalated`. `AVOIDABLE` продолжает local repair, `INSUFFICIENT_EVIDENCE` — сбор
+   evidence, `OUT_OF_SCOPE`/`MALFORMED` — repair capsule. Прямой append terminal event без
+   reducer outcome запрещён.
+<!-- block-confirmation:v1:end -->
 
 Недоступное или не верифицируемое route evidence до product journal start обозначай
 `ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact

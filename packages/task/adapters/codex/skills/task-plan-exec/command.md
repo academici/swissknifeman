@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:5be9d8c7bfbfa2257f404bd6cbdf85c0a219b516c3c1af0f0920b380b68f8d5d
+Canonical SHA-256: sha256:5647e89e4609217a26b954e7239aaa92d4b3bab35c8712d29233d572aa26d679
 Adapter: task.codex-command/1.0.7
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -53,22 +53,29 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 ## Continue-first block gate (v1)
 
-`Blocked` и escalation — не реакция на signal. Снача воспроизведи минимальный signal,
-классифицируй его и запиши nonterminal journal result: `routing-rejected`,
-`decision-pending`, `local-repair` или `block-candidate`. Procedural/transient/tool-noise,
-dependency-not-ready, unrelated-pre-existing и bounded local reversible defect автоматически
-чинятся в том же attempt; `local-repair` не меняет status/attempt, после него
-повторяется original Validation carrier.
+<!-- block-confirmation:v1:begin -->
+`block-confirmation/v1` выполняется одной закрытой последовательностью:
 
-Если остался material block candidate, собери closed `block-candidate/v1` capsule.
-Для external-класса RAG обязателен в 100% случаев: `rag.status=verified` и непустые
-digest-qualified `evidence_ids`; без этого action — `gather-rag`, а не stop. Затем ровно один
-свежий reviewer в `isolated-child-return`, чьи actor/context отличаются от executor,
-применяет `prompts/block-confirmation-rubric-v1.md`. Root валидирует capsule и вызывает
-`task.plan_blocking.evaluate()`; reviewer даёт evidence, но не authorization. Только action
-`terminal-block` после `JUSTIFIED` разрешает 🔴/escalation. `AVOIDABLE` → local repair,
-`INSUFFICIENT_EVIDENCE` → сбор evidence, `OUT_OF_SCOPE|MALFORMED` → repair capsule; все три
-ветки nonterminal и продолжают owning root.
+1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
+   `block-candidate`; observation не меняет status/attempt.
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+   candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
+   `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
+   `rag-pending` и возвращает `gather-rag` без reviewer.
+3. На один свежий fingerprint вызывается ровно один fresh reviewer с actor/context, отличными
+   от executor, в `isolated-child-return`; тот же fingerprint переиспользует записанный review,
+   второй reviewer разрешён только после доказанного material fingerprint change.
+4. Reviewer получает только immutable capsule/evidence, применяет
+   `block-confirmation-rubric-v1` и возвращает закрытый object
+   `reviewer_actor/context/verdict/evidence_ids`, где verdict — ровно `JUSTIFIED`, `AVOIDABLE`,
+   `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` или `MALFORMED`.
+5. Root валидирует capsule и review, затем единожды вызывает `task.plan_blocking.evaluate()`;
+   reviewer даёт evidence, но не authorization.
+6. Только reducer action `terminal-block` после distinct `JUSTIFIED` разрешает terminal
+   `blocked`/`escalated`. `AVOIDABLE` продолжает local repair, `INSUFFICIENT_EVIDENCE` — сбор
+   evidence, `OUT_OF_SCOPE`/`MALFORMED` — repair capsule. Прямой append terminal event без
+   reducer outcome запрещён.
+<!-- block-confirmation:v1:end -->
 
 Недоступное или не верифицируемое route evidence до product journal start обозначай
 `ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact

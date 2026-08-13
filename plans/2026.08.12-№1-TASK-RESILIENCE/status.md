@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: fe1baa2ca72de8254d90f013dfd7b59e0d3749f0ef2a86903efa8b2080bc154a
+inputs_sha256: 5bd798c4674d5f4eb08dfe76fb8f85e211e61604d2b603c31ca371833f50d7f2
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
+| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🔴 Blocked |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -69,7 +69,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
-| P4.2 | Require one isolated block confirmer in every plan command | ⬜ Not started | — |
+| P4.2 | Require one isolated block confirmer in every plan command | 🔴 Blocked | 2026-08-13 |
 
 ## Phase P5
 
@@ -262,6 +262,17 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · Matrix fixture: fallback-only требует provisional evidence; точечная правка и повтор validation |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · P4.1 закрыт: reducer требует digest-qualified Perplexity evidence и сохраняет nonterminal journal outcomes |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · Rubric assertion зависел от Markdown line-wrap; устойчивый fragment и повтор validation |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-deviations · P4.2 deviation: validate.sh red на deferred provider/golden parity; targeted validation green; remediation P5.3 |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Downstream red запрещает terminal producer; состояние возвращено in-progress без переписывания journal |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · block-candidate · P4.2/P5.3 phase-first deadlock: isolated confirmation requested |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Repair-forward после downstream red: isolated confirmer и reducer подтвердили эскалацию. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · escalated · Конфликт правил: P4.2 исключает provider projections, P5.3 ими владеет, но phase-first и downstream red взаимно блокируют продвижение. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Repair-forward: повтор полной block-confirmation последовательности после schema-rejected observation. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · block-candidate · Isolated reviewer JUSTIFIED; reducer BLOCK_CONFIRMED. Полное evidence: findings/P4.2-return-evidence-2026-08-13.md. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · escalated · Конфликт правил: Scope Excluded P4.2, владелец P5.3, phase-first и downstream red образуют deadlock. |
 
 ## Owner Gates
 
@@ -273,3 +284,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P1.5: known deviation
 - P2.2: known deviation
 - P3.3: known deviation
+- P4.2: escalation

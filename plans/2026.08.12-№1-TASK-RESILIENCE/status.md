@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 17a486c8bff102482cef2a11d8eba9e783952686a7af4879cf83ff0e09221f0b
+inputs_sha256: 32b46418a712999c499dc3b91d3188f6673773576c225a3d2c9c882071b3fb69
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
+| P4 | Confirmed blocking and mandatory external RAG | 2/2 | 🟢 Done |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -69,7 +69,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
-| P4.2 | Require one isolated block confirmer in every plan command | 🟡 In progress | 2026-08-13 |
+| P4.2 | Require one isolated block confirmer in every plan command | 🟢 Done | 2026-08-13 |
 
 ## Phase P5
 
@@ -275,6 +275,10 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · escalated · Конфликт правил: Scope Excluded P4.2, владелец P5.3, phase-first и downstream red образуют deadlock. |
 | 2026-08-13 | frontier/high | plan-design · in-progress · P4.2 ТЗ расширено immediate provider projections по D21; deadlock устранён. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · D21 сняла deadlock; same-session owner mandate возобновляет P4.2 с immediate provider projections. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · P4.2 закрыт: canonical confirmer и provider projections byte-current; 78 focused + 861 full tests GREEN; P5.2/P5.3 downstream GREEN. |
+| 2026-08-13 | frontier/high | plan-design · in-progress · D22 добавила immediate umbrella docs projection после docs-maintenance drift. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Closeout repair: owning docs-sync для immediate umbrella provider reference по D22. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · P4.2 closeout GREEN: renderer/registry/docs-sync no-op; 861 full tests GREEN; P5.2/P5.3 downstream GREEN. |
 
 ## Owner Gates
 

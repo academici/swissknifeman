@@ -22,7 +22,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.7"
+ADAPTER_VERSION = "1.0.8"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1004,10 +1004,7 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes,
     body = "".join(lines[closing + 1:])
     projected = _project_codex_runtime_tokens(body)
     if record.kind == "plan-protocol":
-        provider_rule = (
-            _codex_current_route_rule()
-            if record.command_id == "task:plan-run" else ""
-        )
+        provider_rule = _codex_current_route_rule(record)
         projected = _codex_native_launch_rule(mapping) + provider_rule + projected
     provenance = (
         "<!-- Generated Codex runtime projection; do not edit as source.\n"
@@ -1045,9 +1042,21 @@ do not reuse the preceding session's route. Current Codex mapping: {class_routes
 '''
 
 
-def _codex_current_route_rule() -> str:
-    """Bind inherited ``plan-run`` routing to Codex's current chat state."""
-    return '''## Codex current-route binding — provider-specific
+def _codex_current_route_rule(record: CommandRecord) -> str:
+    """Bind every plan command's route to Codex's current chat state."""
+    invocation = f"$ {record.command_id} <arguments>"
+    task_root = codex_task_plugin_root_expression()
+    return f'''## Codex current-route binding — provider-specific
+
+Before the first product-journal mutation, capture the effective route for this exact command:
+
+```bash
+PYTHONPATH="{task_root}/lib" python3 -m task.route_evidence_codex capture \
+  --expected-invocation '{invocation}' --expected-cwd <repo-cwd>
+```
+
+Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
+cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
 
 For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
 `CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete

@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
 Canonical SHA-256: sha256:f811b807827fd120450c2459f0b5a920daaae2299c07acace7e607552f051bf7
-Adapter: task.codex-command/1.0.7
+Adapter: task.codex-command/1.0.8
 -->
 ## Native Codex launch-block — mandatory for every handoff
 
@@ -17,6 +17,36 @@ Derive the class and effort from the next item's Routing before rendering it; fo
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
 low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
 `$ task:…` or an unpinned `codex` command.
+
+## Codex current-route binding — provider-specific
+
+Before the first product-journal mutation, capture the effective route for this exact command:
+
+```bash
+PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-audit <arguments>' --expected-cwd <repo-cwd>
+```
+
+Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
+cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
+
+For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
+`CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete
+model, reasoning effort, cwd, approval policy, sandbox policy, and the exact current Task
+prompt. The resulting actual-route record carries `source="provider-thread-state"` and
+`source_version="codex-turn-context-v1"`.
+
+This path is valid both after a full native launch and after the Codex clear command, which
+starts a fresh chat inside the same CLI process. A model or reasoning change before product
+journal start is therefore checked from the current chat state, never from stale process argv.
+If persisted thread state is genuinely absent, exact ancestor argv remains a compatibility
+fallback with `source="cli-flag"`. Malformed/mismatched thread state fails closed; config,
+doctor output, actor prose, and self-attestation remain forbidden substitutes.
+
+This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
+command below. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
+its private-rollout prohibition forbids manual probing but not this validated adapter-owned
+read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
+evidence.
 
 Это независимый ADVERSARIAL audit-fixer terminal phase candidate перед единственным phase close
 либо pre-exec review плана. Ввод пользователя: «$ARGUMENTS».

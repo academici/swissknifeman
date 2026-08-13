@@ -14,7 +14,10 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 
 Provider-neutral форма удобна для `/clear`, native-блок делает отдельный запуск воспроизводимым.
 
-Перед `plan-run` Codex-проекция получает current-route provenance автоматически:
+Перед любой plan-командой (`plan-design`, `plan-exec`, `plan-run`, `plan-audit`,
+`plan-close`) Codex-проекция получает current-route provenance автоматически до первой
+product-journal мутации. Команда ниже показана для `plan-run`; проекция подставляет exact
+текущую Task-команду и её аргументы:
 
 ```bash
 PYTHONPATH=packages/task/lib python3 -m task.route_evidence_codex capture \

@@ -306,10 +306,14 @@
             "enum": [
               "escalation",
               "routing-blocked",
+              "route-deviation",
               "red-audit",
               "deviation",
               "retry",
-              "no-op"
+              "no-op",
+              "local-repair",
+              "block-review",
+              "external-evidence"
             ]
           }
         },

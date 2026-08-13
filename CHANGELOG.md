@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **`task`: все Codex plan-команды проверяют effective route по текущему thread state.**
+  Generated projections запускают adapter-owned capture до первой journal-мутации и
+  fail-closed запрещают подменять provider-written `turn_context` выводом `codex doctor`,
+  config-файлом либо self-attestation; regression test покрывает все пять plan-команд.
+  Заодно lifted return-fingerprint contract принимает весь закрытый journal friction enum,
+  поэтому `local-repair` и другие штатные наблюдения больше не ломают return-loop lint.
+
 - **`task` / `plan-protocol`: lint проверяет bundle следующего запускаемого item.**
   План с отсутствующим или устаревшим четвёртым execution-slot теперь отклоняется до dispatch;
   future predecessor-dependent bundles остаются отложенными до появления их входного артефакта.

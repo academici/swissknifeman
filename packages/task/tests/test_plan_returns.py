@@ -10,7 +10,7 @@ _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from task import plan_returns
+from task import journal, plan_returns
 
 
 def entry(ts, command, result, *, item="P1.1", friction=(), note=None, attempt=1):
@@ -65,6 +65,13 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-fingerprint-v1.schema.json",
                                      root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
                                      shallow=False))
+
+    def test_return_fingerprint_accepts_every_journal_friction_value(self):
+        schema_values = set(
+            plan_returns._schema()["$defs"]["valid_friction_class"]
+            ["properties"]["friction"]["items"]["enum"]
+        )
+        self.assertEqual(schema_values, set(journal.FRICTION_VALUES))
 
     def test_committed_fixture_emits_physical_return_event_ids_outside_fingerprint(self):
         fixture = Path(__file__).parent / "data" / "plan-v2"

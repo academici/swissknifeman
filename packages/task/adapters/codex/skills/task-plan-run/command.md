@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
 Canonical SHA-256: sha256:7159c37a87b114668c3439b1ae7725cc5bb9e16673f711000c863d7b5b36de96
-Adapter: task.codex-command/1.0.7
+Adapter: task.codex-command/1.0.8
 -->
 ## Native Codex launch-block — mandatory for every handoff
 
@@ -19,6 +19,15 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 `$ task:…` or an unpinned `codex` command.
 
 ## Codex current-route binding — provider-specific
+
+Before the first product-journal mutation, capture the effective route for this exact command:
+
+```bash
+PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-run <arguments>' --expected-cwd <repo-cwd>
+```
+
+Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
+cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
 
 For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
 `CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete

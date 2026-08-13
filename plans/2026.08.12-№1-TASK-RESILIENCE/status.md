@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 87ece834401c789944df3830bf2c4bac2e5a2845260d3c2f26d587cb1cb91d24
+inputs_sha256: fe1baa2ca72de8254d90f013dfd7b59e0d3749f0ef2a86903efa8b2080bc154a
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 0/2 | ⬜ Not started |
+| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -68,7 +68,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Enforce a closed block candidate and fail-closed RAG gate | ⬜ Not started | — |
+| P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
 | P4.2 | Require one isolated block confirmer in every plan command | ⬜ Not started | — |
 
 ## Phase P5
@@ -258,6 +258,10 @@ Evidence anchor 381adc74; material five-carrier out-of-Files deviation in produc
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
 Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs checks; historical material five-carrier deviation remains. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-close · closed-deviations · P3 закрыта штатным phase-close gate с owner_decision D20; третьего Audit P3 нет. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · Matrix fixture: fallback-only требует provisional evidence; точечная правка и повтор validation |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · P4.1 закрыт: reducer требует digest-qualified Perplexity evidence и сохраняет nonterminal journal outcomes |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -1,40 +1,52 @@
-# HANDOFF — 2026-08-13 — after P3
+# HANDOFF — 2026-08-13 — after P4.1
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2
+**Next:** ЗАПУСК ВРУЧНУЮ: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | B-P4-BLOCK |
-| Model class | frontier |
-| Model | `gpt-5.6-sol` |
-| Effort | high |
-| Thinking | high |
-| Capabilities | filesystem · git |
+| Model | frontier |
+| Thinking | high — confirmer contract and command surfaces |
 | Context | continue-root |
-| Суть | Исполнить P4.1 после проверки и owning regeneration его отсутствующего bundle. |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2` |
+| Суть | Закрепить isolated confirmer и deterministic reducer в Task commands. |
+| Команда | — |
 
-**Native Codex launch block**
+Provider-neutral launch-block:
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2'
+```text
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
 ```
 
-**Done:** P3 закрыта `🟠 Done with deviations` owner-authorized gate D20 после repair
-P3.3 `30c71218`; третий Audit P3 не запускался.
+Native Codex launch-block:
 
-**Remaining:** P4.1–P4.2 — remaining suffix B-P4-BLOCK.
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2'
+```
 
-**Sources of truth:** `plan.md` · `phases/P3/P3.md` · `phases/P3/P3.3.state.md` ·
-`decisions/D20-audit-cap-remediation.md` · `journal.jsonl`.
+**Done:**
 
-**Open risks:** P3.2 journal содержит append-only recovery trace от scope DecisionRequest.
-P5.2 pending risk: glob/brace fingerprint under-binding может не включить declared generated
-provider/runtime bytes в candidate fingerprint. `bundles/P4.1.json` отсутствует и должен быть
-собран owning generator'ом до P4.1; P3 его не меняла.
+- P4.1: item commit `aefd1450` — closed block candidate schema, fail-closed Perplexity RAG gate, deterministic journal outcomes and matrix tests.
+- P4.1 review-fix commit `cc7a0523` — write-site local-repair projects forward without rewriting journal or reopening the item.
+- Downstream validation for P4.2: green; item-scoped finding recorded.
+
+**Remaining:**
+
+- P4.2, then phase P4 audit/close according to the deterministic phase policy.
+- P5 and P6 remain outside this handoff scope.
+
+**Sources of truth:**
+
+- `plan.md` §§3 Routing and Execution Rules.
+- `phases/P4/P4.2.md` and `phases/P4/P4.2.state.md`.
+- `findings/P4.1-downstream-P4.2-6f0c468063dd-cc7a0523eadd.md`.
+- Product commits `aefd1450` and `cc7a0523`.
+
+**Open risks:**
+
+- Phase P4 closure carrier is intentionally unavailable until P4.2 is terminal.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: P5.2 устраняет glob/brace fingerprint under-binding; P3 не меняет runtime.
-- open_questions: —
+- Workarounds: —
+- Deferred: —
+- Open questions: —

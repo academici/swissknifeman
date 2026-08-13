@@ -20,9 +20,10 @@ product-journal мутации. Команда ниже показана для 
 текущую Task-команду и её аргументы:
 
 ```bash
-PYTHONPATH=packages/task/lib python3 -m task.route_evidence_codex capture \
+export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH=packages/task/lib \
+  python3 -m task.route_evidence_codex capture \
   --expected-invocation '$ task:plan-run <PLAN-ID> <Pn.m>' \
-  --expected-cwd "$PWD"
+  --expected-cwd "$PWD")"
 ```
 
 Adapter сначала связывает `CODEX_THREAD_ID` с единственным active rollout и читает последний
@@ -33,6 +34,12 @@ Evidence получает `source=provider-thread-state`; поэтому сме�
 `model_reasoning_effort`, `-C`, `-a never`, `-s danger-full-access` и Task prompt. Malformed или
 mismatched state отказывает fail-closed и не подменяется `codex doctor`, config-файлом, actor prose
 или памятью агента.
+
+Codex runtime передаёт этот JSON-объект непосредственно в оба `task_contract` gate
+(`pre-mutation` и `pre-final`). Поэтому один и тот же provider-written record, а не повторно
+введённые модель/effort placeholders, определяет разрешение. Старый рецепт
+`provider-doctor`/`self-attested` не допускается в Codex projection; regression test проверяет это
+для всех пяти plan-команд.
 
 Два stdlib-скрипта в `plans/` (не в `packages/task/lib/`, не встроены в `plan_lint.py` —
 у каждого свой предмет): `cross-plan-files.py` (межплановые пересечения `Files`) и

@@ -22,7 +22,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.8"
+ADAPTER_VERSION = "1.0.10"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1051,8 +1051,9 @@ def _codex_current_route_rule(record: CommandRecord) -> str:
 Before the first product-journal mutation, capture the effective route for this exact command:
 
 ```bash
-PYTHONPATH="{task_root}/lib" python3 -m task.route_evidence_codex capture \
-  --expected-invocation '{invocation}' --expected-cwd <repo-cwd>
+export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="{task_root}/lib" \
+  python3 -m task.route_evidence_codex capture \
+  --expected-invocation '{invocation}' --expected-cwd <repo-cwd>)"
 ```
 
 Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
@@ -1072,7 +1073,9 @@ fallback with `source="cli-flag"`. Malformed/mismatched thread state fails close
 doctor output, actor prose, and self-attestation remain forbidden substitutes.
 
 This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
-command below. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
+command below. The projected contract snippets consume exactly
+`json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])`; do not recreate route evidence from
+placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
 its private-rollout prohibition forbids manual probing but not this validated adapter-owned
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
@@ -1089,6 +1092,35 @@ def _project_codex_runtime_tokens(text: str) -> str:
                         f'python3 "{task_root}/scripts/plan-lint.py"')
     text = text.replace('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py"',
                         f'python3 "{task_root}/scripts/plan-delivery.py"')
+    text = text.replace(
+        "from task import task_contract, route_evidence",
+        "import json\n   import os\n   from task import task_contract",
+    )
+    text = text.replace(
+        '''route_evidence.capture_actual(
+       "<provider-attested model_class>", "<provider-attested effort>",
+       source="provider-doctor", model="<provider-attested model>")''',
+        'json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])',
+    )
+    text = re.sub(
+        r'''route_evidence\.capture_actual\(\n       "<provider-attested [^"]+>", "<provider-attested effort>",\n       source="provider-doctor", model="<provider-attested [^"]+>"\)''',
+        'json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])',
+        text,
+    )
+    text = text.replace(
+        '''Если API не даёт модель или effort, вызови `capture_actual(None, None,
+   source="self-attested")`, напечатай `unknown/unknown` и остановись до мутации: selector
+   остаётся только частью fresh launch, а не подменой доказательства.''',
+        '''Codex runtime получает запись только из provider-specific binding выше. Если захват
+   не удался, это `ROUTE-UNVERIFIABLE`: не начинай item и не подставляй другой источник.''',
+    )
+    text = text.replace(
+        '''Provider API не аттестует модель/effort → передай `capture_actual(None, None,
+   source="self-attested")`, запиши unknown и остановись: self-attestation не заменяет selector.''',
+        '''Codex runtime получает запись только из provider-specific binding выше. Если захват
+   не удался, это `ROUTE-UNVERIFIABLE`: не закрывай item и не подставляй модель/effort
+   из другого источника.''',
+    )
     def replacement(match: re.Match[str]) -> str:
         if match.group("workflow_path") or match.group("workflow"):
             return _CODEX_WORKFLOW_CARRIER

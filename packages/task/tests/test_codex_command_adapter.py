@@ -120,9 +120,25 @@ class CodexCommandAdapterTests(unittest.TestCase):
             with self.subTest(command=command):
                 runtime = runtimes[command]
                 self.assertIn("task.route_evidence_codex capture", runtime)
+                self.assertIn("TASK_CODEX_ROUTE_EVIDENCE", runtime)
                 self.assertIn('source="provider-thread-state"', runtime)
                 self.assertIn("doctor output", runtime)
                 self.assertIn("forbidden substitutes", runtime)
+
+    def test_plan_runtimes_do_not_reintroduce_the_retired_route_recipe(self):
+        plan_commands = (
+            "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
+        )
+        runtimes = {
+            artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
+            artifact.managed_bytes.decode("utf-8")
+            for artifact in self.render().artifacts
+            if "/task-plan-" in artifact.path and artifact.path.endswith("/command.md")
+        }
+        for command in plan_commands:
+            with self.subTest(command=command):
+                self.assertNotIn('source="provider-doctor"', runtimes[command])
+                self.assertNotIn('source="self-attested"', runtimes[command])
 
     def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
         boundary_case = (

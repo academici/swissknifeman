@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
 Canonical SHA-256: sha256:119eb163331fa401d36848c5f8ad06da6c07f23cb8cae22c9abf6e82648b9571
-Adapter: task.codex-command/1.0.8
+Adapter: task.codex-command/1.0.10
 -->
 ## Native Codex launch-block — mandatory for every handoff
 
@@ -23,7 +23,7 @@ low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch
 Before the first product-journal mutation, capture the effective route for this exact command:
 
 ```bash
-PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-close <arguments>' --expected-cwd <repo-cwd>
+export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib"   python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-close <arguments>' --expected-cwd <repo-cwd>)"
 ```
 
 Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
@@ -43,7 +43,9 @@ fallback with `source="cli-flag"`. Malformed/mismatched thread state fails close
 doctor output, actor prose, and self-attestation remain forbidden substitutes.
 
 This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
-command below. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
+command below. The projected contract snippets consume exactly
+`json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])`; do not recreate route evidence from
+placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
 its private-rollout prohibition forbids manual probing but not this validated adapter-owned
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
@@ -206,18 +208,19 @@ status-rule ниже. Точная команда, лестница маршру
    ```
    PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 - <<'PY'
    import sys
-   from task import task_contract, route_evidence
-   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
-       "<provider-attested model_class с шага лестницы D75 выше>", "<provider-attested effort>",
-       source="provider-doctor", model="<provider-attested модель>"))
+   import json
+   import os
+   from task import task_contract
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"]))
    result = task_contract.evaluate(contract)
    print(result)
    sys.exit(0 if result["pre_mutation"] == "allow" and result["pre_final"] == "allow" else 1)
    PY
    ```
 
-   Provider API не аттестует модель/effort → передай `capture_actual(None, None,
-   source="self-attested")`, запиши unknown и остановись: self-attestation не заменяет selector.
+   Codex runtime получает запись только из provider-specific binding выше. Если захват
+   не удался, это `ROUTE-UNVERIFIABLE`: не закрывай item и не подставляй модель/effort
+   из другого источника.
    **Гейт бинарен.** Зелёное — РОВНО `pre_mutation == "allow"` И `pre_final == "allow"`.
    `n/a`, любой `block:*` и любое иное значение — красное; формулировки «условно зелёное»,
    «предупреждение», «продолжай, если …» и синонимы ЗАПРЕЩЕНЫ (`plan-protocol` §6 прямо

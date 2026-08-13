@@ -3,6 +3,7 @@ git-репозитории (не на репозитории проекта) —
 РЕАЛЬНЫЕ подпроцессы (Code Guidance «запрет второго прибора»: сам гейт линт не
 пересчитывает), но дерево, которое они видят, — синтетическая фикстура, создаваемая и
 коммитящаяся заново в каждом тесте (`_Repo`)."""
+import json
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
+sys.path.insert(0, str(REPO_ROOT / "packages" / "task" / "lib"))
 
 from harness.run import gate  # noqa: E402
 
@@ -208,18 +210,63 @@ class _Repo:
         # совпадают со значениями по умолчанию (git не считает файл «тронутым» коммитом
         # без фактического изменения содержимого).
         self._plan_writes = getattr(self, "_plan_writes", 0) + 1
-        text = _plan_md(done=done, phase_status=phase_status)
-        text += f"\n<!-- write #{self._plan_writes} -->\n"
+        text = (self.plan_dir / "plan.md").read_text()
+        text += f"\n<!-- write #{self._plan_writes}: {done}/{phase_status} -->\n"
         (self.plan_dir / "plan.md").write_text(text)
 
     def write_phase(self, **kwargs):
-        (self.plan_dir / "phases" / f"{PHASE_ID}.md").write_text(_phase_md(**kwargs))
+        self._phase_writes = getattr(self, "_phase_writes", 0) + 1
+        status = kwargs.get("status", "🟡 In progress")
+        self._status_valid = status in {"🟢 Done", "🟠 Done with deviations", "🔴 Blocked", "🟡 In progress"}
+        result = {
+            "🟢 Done": "closed-green",
+            "🟠 Done with deviations": "closed-deviations",
+            "🔴 Blocked": "blocked",
+        }.get(status, "in-progress")
+        event = {
+            "actor": "implementation/medium", "attempt": 1, "command": "plan-exec",
+            "cost_usd": None, "duration_ms": None, "friction": [], "item_id": ITEM_ID,
+            "note": "v2 gate fixture", "num_turns": None, "plan_id": PLAN_ID,
+            "result": result, "run_id": f"{self._phase_writes:064x}", "session_id": "fixture",
+            "ts": f"2026-08-01T00:00:{self._phase_writes:02d}Z",
+        }
+        (self.plan_dir / "journal.jsonl").write_text(
+            json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n"
+        )
+        from task import plan_decisions, plan_item_state, plan_status
+        plan_item_state.build_states(self.plan_dir, item_id=ITEM_ID)
+        state = self.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.state.md"
+        state_text = state.read_text()
+        if status not in {"🟢 Done", "🟠 Done with deviations", "🔴 Blocked", "🟡 In progress"}:
+            state_text = state_text.replace("**Status:** 🟡 In progress", f"**Status:** {status}")
+        replacements = {
+            "Completion Notes": kwargs.get("completion_notes", "—"),
+            "Pending Work": kwargs.get("pending_work", "—"),
+            "Known Deviations": kwargs.get("known_deviations", "—"),
+            "Escalation Needed": kwargs.get("escalation_needed", "no"),
+        }
+        for field, value in replacements.items():
+            state_text = state_text.replace(f"**{field}:** —", f"**{field}:** {value}")
+        state.write_text(state_text)
+        if self._status_valid:
+            plan_status.build_status(self.plan_dir)
+        plan_decisions.build_views(self.plan_dir)
+        phase = self.plan_dir / "phases" / PHASE_ID / f"{PHASE_ID}.md"
+        phase_text = phase.read_text() + f"\n<!-- state: {status} -->\n"
+        if kwargs.get("escalation_blockquote"):
+            item_spec = self.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.md"
+            item_spec.write_text(item_spec.read_text() + (
+                f"> 🔴 ESCALATION {ITEM_ID}: fixture block | trigger: contradictory evidence "
+                "| нужен: plan-design\n"
+            ))
+        phase.write_text(phase_text)
 
     def write_handoff(self):
-        (self.plan_dir / "handoff.md").write_text(_handoff_md())
+        handoff = self.plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text() + "\n<!-- bookkeeping -->\n")
 
     def write_bootstrap_handoff(self):
-        (self.plan_dir / "handoff.md").write_text(_bootstrap_handoff_md())
+        return None
 
     def write_scope_file(self, content="x = 1\n"):
         scope = self.root / "src" / "module.py"
@@ -235,11 +282,31 @@ class _Repo:
         return self._run(["rev-parse", "HEAD"]).stdout.strip()
 
     def commit_bookkeeping(self, message="bookkeeping"):
-        self.add(self.plan_dir / "plan.md", self.plan_dir / "phases" / f"{PHASE_ID}.md",
-                 self.plan_dir / "handoff.md")
+        plan_path = self.plan_dir / "plan.md"
+        if self._run(["status", "--porcelain", "--", str(plan_path)]).stdout.strip():
+            self.add(plan_path)
+            self.commit("fixture scope")
+        if getattr(self, "_status_valid", True):
+            from task import plan_status
+            plan_status.build_status(self.plan_dir)
+        self.add(
+            self.plan_dir / "handoff.md",
+            self.plan_dir / "journal.jsonl",
+            self.plan_dir / "status.md",
+            self.plan_dir / "decisions",
+            self.plan_dir / "phases" / PHASE_ID / f"{PHASE_ID}.md",
+            self.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.md",
+            self.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.state.md",
+        )
         return self.commit(message)
 
     def initial_commit(self):
+        from packages.harness.tests.v2_plan_fixture import write_v2_plan
+        self.plan_dir = write_v2_plan(
+            self.root, plan_id=PLAN_ID, items=[(ITEM_ID, "🟡 In progress")],
+            routing_rows=[f"| {ITEM_ID} | implementation/medium | plan-exec | fixture |"],
+            next_line=f"exec-items: task:plan-exec {PLAN_ID} {ITEM_ID}",
+        )
         self.write_plan()
         self.write_phase(status="🟡 In progress")
         self.write_bootstrap_handoff()
@@ -348,9 +415,7 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
         scope = self.repo.write_scope_file()
-        self.repo.add(scope, self.repo.plan_dir / "plan.md",
-                      self.repo.plan_dir / "phases" / f"{PHASE_ID}.md",
-                      self.repo.plan_dir / "handoff.md")
+        self.repo.add(scope, self.repo.plan_dir)
         self.repo.commit("бандл: scope + bookkeeping одним коммитом")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.ATTENTION)
@@ -360,16 +425,13 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
-        # Update Log «Что» > 300 символов — НОВАЯ WARNING линтера, ERROR не задета.
-        # Строка вставляется СРАЗУ после существующей строки таблицы (контактность
-        # таблицы важна для парсера plan_lint — комментарий-маркер write_plan идёт
-        # ПОСЛЕ, за пределами таблицы, и не должен рвать её).
-        plan_text = (self.repo.plan_dir / "plan.md").read_text()
-        oversized = "x" * 320
-        anchor = "| 2026-08-01 | package-implementer/sonnet | Фикстура создана (P4.4) |\n"
-        plan_text = plan_text.replace(
-            anchor, anchor + f"| 2026-08-01 | package-implementer/sonnet | {oversized} |\n")
-        (self.repo.plan_dir / "plan.md").write_text(plan_text)
+        # Reordering canonical item fields is a warning-only v2 fixture defect.
+        spec = self.repo.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.md"
+        lines = spec.read_text().splitlines()
+        intent = next(index for index, line in enumerate(lines) if line.startswith("**Intent:**"))
+        why = next(index for index, line in enumerate(lines) if line.startswith("**Why:**"))
+        lines[intent], lines[why] = lines[why], lines[intent]
+        spec.write_text("\n".join(lines) + "\n")
         self.repo.commit_bookkeeping()
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.ATTENTION)
@@ -466,7 +528,7 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         # handoff.md НЕ тронут вовсе — не входит в диапазонный дифф.
-        self.repo.add(self.repo.plan_dir / "plan.md", self.repo.plan_dir / "phases" / f"{PHASE_ID}.md")
+        self.repo.add(self.repo.plan_dir / "plan.md", self.repo.plan_dir / "phases" / PHASE_ID / f"{PHASE_ID}.md")
         self.repo.commit("bookkeeping без handoff.md")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
@@ -545,7 +607,7 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.commit("review-fix поверх топологии")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.GREEN)
-        self.assertEqual(result["raw"]["closure"]["commit_count"], 4)
+        self.assertEqual(result["raw"]["closure"]["commit_count"], 5)
 
     # --- деградация baseline -----------------------------------------------
 

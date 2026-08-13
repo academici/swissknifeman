@@ -133,9 +133,13 @@ class TestPlanCitationsCheck(unittest.TestCase):
         self.repo.mkdir()
         _init_repo(self.repo)
         plan_dir = self.repo / "plans" / "TESTPLAN"
-        (plan_dir / "phases").mkdir(parents=True)
-        (plan_dir / "plan.md").write_text("# TESTPLAN\n")
-        (plan_dir / "phases" / "P1.md").write_text("Cite `plans/TESTPLAN/plan.md:1` here.\n")
+        (plan_dir / "phases" / "P1").mkdir(parents=True)
+        (plan_dir / "plan.md").write_text(
+            "# TESTPLAN\n\n## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n"
+        )
+        (plan_dir / "phases" / "P1" / "P1.md").write_text(
+            "Cite `plans/TESTPLAN/plan.md:1` here.\n"
+        )
         (self.repo / "packages" / "task" / "scripts").mkdir(parents=True)
         shutil.copy(VC_SRC, self.repo / "packages" / "task" / "scripts" / "verify-plan-citations.py")
         runtime_dst = self.repo / "packages" / "task" / "lib" / "task"
@@ -152,7 +156,7 @@ class TestPlanCitationsCheck(unittest.TestCase):
         self._td.cleanup()
 
     def test_broken_citation_caught(self):
-        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1.md").write_text(
+        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1" / "P1.md").write_text(
             "Cite `plans/TESTPLAN/nonexistent-file.py:1` here.\n"
         )
         rc, out, err = _run_hook(self.hookdir, self.repo, self.state_dir, "sess-vc-a", "agent-vc-a")
@@ -161,7 +165,7 @@ class TestPlanCitationsCheck(unittest.TestCase):
         self.assertIn("nonexistent-file.py", err)
 
     def test_clean_citation_passes(self):
-        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1.md").write_text(
+        (self.repo / "plans" / "TESTPLAN" / "phases" / "P1" / "P1.md").write_text(
             "Cite `plans/TESTPLAN/plan.md:1` here (updated).\n"
         )
         rc, out, err = _run_hook(self.hookdir, self.repo, self.state_dir, "sess-vc-b", "agent-vc-b")

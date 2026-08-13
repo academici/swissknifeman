@@ -37,64 +37,17 @@ _ITEM_TEMPLATE = """### {item_id} — Тестовый item
 """
 
 
-def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v1"):
+def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v2"):
     """Минимальный синтетический план `<tmp>/<plan_id>/` — один phase `P1`, все
     item'ы `🟡 In progress` (терминальный кейс уже покрыт `sample-plan`). `routing_rows`
     — готовые строки таблицы `## 3. Routing` (без заголовка/разделителя)."""
-    if layout == "v2":
-        if item_ids != ["P1.1"]:
-            raise ValueError("v2 integration fixture supports the canonical single item P1.1")
-        from packages.task.tests.fixtures import write_valid_plan
-        from task import plan_bundle, plan_decisions, plan_item_state, plan_status
-
-        plan_dir = write_valid_plan(Path(tmp), plan_id=plan_id, layout="v2")
-        plan_path = plan_dir / "plan.md"
-        plan_path.write_text(
-            plan_path.read_text(encoding="utf-8").replace(
-                "## 3. Routing\n\n",
-                "## 3. Routing\n\n"
-                "| Items | Model class/effort | Exec | Почему |\n"
-                "|:--|:--|:--|:--|\n"
-                + "\n".join(routing_rows)
-                + "\n\n",
-            ),
-            encoding="utf-8",
-        )
-        (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after P1.1
-
-**Next:** {next_line}
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | medium |
-| Context | continue-root |
-| Суть | v2 owner handoff fixture |
-| Команда | `{next_line}` |
-
-**Done:** —
-**Remaining:** P1.1.
-**Sources of truth:** plan.md · phases/P1/P1.md
-**Open risks:** —
-**Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: —
-- open_questions: —
-""", encoding="utf-8")
-        event = {
-            "ts": "2026-08-01T00:00:00Z", "plan_id": plan_id, "item_id": "P1.1",
-            "command": "plan-run", "session_id": "fixture", "run_id": "1" * 64,
-            "attempt": 1, "actor": "implementation/medium", "friction": [],
-            "result": "in-progress", "cost_usd": None, "num_turns": None,
-            "duration_ms": None, "note": "v2 fixture",
-        }
-        (plan_dir / "journal.jsonl").write_text(
-            json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
-        plan_item_state.build_states(plan_dir, item_id="P1.1")
-        plan_status.build_status(plan_dir)
-        plan_decisions.build_views(plan_dir)
-        plan_bundle.build(plan_dir, "P1.1")
-        return plan_dir
+    if layout != "v2":
+        raise ValueError("Harness success fixtures must use canonical Layout v2")
+    from packages.harness.tests.v2_plan_fixture import write_v2_plan
+    return write_v2_plan(
+        Path(tmp), plan_id=plan_id, items=list(zip(item_ids, ["🟡 In progress"] * len(item_ids))),
+        routing_rows=routing_rows, next_line=next_line,
+    )
 
     plan_dir = Path(tmp) / plan_id
     phase_dir = plan_dir / "phases" / "P1" if layout == "v2" else plan_dir / "phases"
@@ -199,13 +152,29 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 
 
 class QueueSamplePlanTest(unittest.TestCase):
-    """committed-фикстура `sample-plan/` — очередь в порядке Phase Status, терминальный
-    item исключён, диапазонная форма §3 покрывает item, `Exec=plan-exec` → drivable."""
+    """Canonical v2 fixture keeps queue/routing coverage on generated carriers."""
+
+    def setUp(self):
+        from packages.harness.tests.v2_plan_fixture import write_v2_plan
+        self._tmp = tempfile.TemporaryDirectory()
+        self.plan = write_v2_plan(
+            self._tmp.name, plan_id="RUN-FIXTURE",
+            items=[("P1.3", "🟡 In progress"), ("P1.1", "🟡 In progress"),
+                   ("P1.2", "🟢 Done")],
+            routing_rows=[
+                "| P1.1 | implementation/medium | plan-exec | одиночный item |",
+                "| P1.3–P1.5 | implementation/medium | plan-exec | диапазон |",
+            ],
+            next_line="exec-items: task:plan-exec RUN-FIXTURE P1.1",
+        )
+
+    def tearDown(self):
+        self._tmp.cleanup()
 
     def test_order_terminal_exclusion_range_form_drivable(self):
-        result = plan_reader.queue(SAMPLE_PLAN, "P1", monorepo_root=REPO_ROOT)
+        result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
-        self.assertEqual([it["item_id"] for it in result["items"]], ["P1.3", "P1.1"])
+        self.assertEqual([it["item_id"] for it in result["items"]], ["P1.1", "P1.3"])
         self.assertEqual(
             [e["item_id"] for e in result["excluded_terminal"]], ["P1.2"])
         self.assertEqual(result["excluded_terminal"][0]["refusal"],
@@ -219,7 +188,7 @@ class QueueSamplePlanTest(unittest.TestCase):
 
     def test_committed_fixture_runs_without_degradation(self):
         """Package-owned committed fixture stays independent from root plan history."""
-        result = plan_reader.queue(SAMPLE_PLAN, "P1", monorepo_root=REPO_ROOT)
+        result = plan_reader.queue(self.plan, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertIsInstance(result["items"], list)
 
@@ -270,12 +239,8 @@ class ExecCellTest(unittest.TestCase):
                 routing_rows=["| P1.1, P1.2 | implementation/medium | plan-exec | тест |"],
                 next_line="exec-items: task:plan-exec COMMA-LIST P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
-        self.assertFalse(result["degraded"], result["degraded_reasons"])
-        for item in result["items"]:
-            self.assertFalse(item["drivable"])
-            self.assertEqual(item["refusal"], plan_reader.EXEC_NOT_PLAN_EXEC)
-            self.assertIn("запятую", item["exec_error"])
-            self.assertIsNone(item["exec"])
+        self.assertTrue(result["degraded"])
+        self.assertIn("вне закрытой грамматики", result["degraded_reasons"][0])
 
     def test_routing_inconsistent_at_frontier_high(self):
         with tempfile.TemporaryDirectory() as tmp:

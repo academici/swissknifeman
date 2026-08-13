@@ -177,11 +177,16 @@ def _init_repo(root):
     run(["init", "-q"])
     run(["config", "user.email", "cli-test@example.com"])
     run(["config", "user.name", "cli-test"])
-    plan_dir = root / "plans" / PLAN_ID
-    (plan_dir / "phases").mkdir(parents=True)
-    (plan_dir / "plan.md").write_text(_plan_md())
-    (plan_dir / "phases" / f"{PHASE_ID}.md").write_text(_phase_md())
-    (plan_dir / "handoff.md").write_text(_handoff_md())
+    from packages.harness.tests.v2_plan_fixture import write_v2_plan
+    plan_dir = write_v2_plan(
+        root, plan_id=PLAN_ID,
+        items=[(DRIVABLE_ID, "🟡 In progress"), (MANUAL_ID, "🟡 In progress")],
+        routing_rows=[
+            f"| {DRIVABLE_ID} | implementation/medium | plan-exec | fixture cmd_run |",
+            f"| {MANUAL_ID} | frontier/high | manual | fixture cmd_run |",
+        ],
+        next_line=f"run-items: task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}",
+    )
     run(["add", "."])
     run(["commit", "-q", "-m", "initial"])
     return plan_dir

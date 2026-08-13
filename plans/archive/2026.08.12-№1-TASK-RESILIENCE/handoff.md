@@ -11,30 +11,24 @@
 | Thinking | low — архивная сверка носителей |
 | Capabilities | filesystem · git · plan-close |
 | Context | continue-root |
-| Суть | Все фазы терминальны; архивировать план отдельным протокольным шагом. |
-| Команда | `$ task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE` |
+| Суть | План архивирован; следующий план выбирает владелец. |
+| Команда | `план закрыт` |
 
 Provider-neutral launch:
 
 ```text
-$ task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE
-```
-
-Native Codex launch-block:
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE'
+план закрыт
 ```
 
 **Done:**
 
 - P6 закрыта через валидный owner direct-close D31; P6.1–P6.4 терминальны.
 - Exact candidate `b09ae7857e33794f722157c4a15110b3f899b112` и local annotated `v0.13.2` сохранены; старые теги immutable.
-- Docs: не требуется.
+- План перенесён в `plans/archive/2026.08.12-№1-TASK-RESILIENCE`.
 
 **Remaining:**
 
-- Архивировать терминальный план и перенести применимый `root/` материал в документацию по протоколу archive.
+- —
 
 **Sources of truth:**
 
@@ -49,3 +43,13 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 - workarounds: none.
 - deferred: push, GitHub release and registered-project rollout remain unauthorized.
 - open_questions: —
+
+## Archive migration checklist
+
+- Перенесено в docs: —; `root/contracts/read-budget-v1.md` уже опубликован как
+  `packages/task/docs/reference/read-budget-contract.md` (provenance: план
+  `2026.08.10-TASK-LEAN-AUTONOMY`), поэтому второй экземпляр не создавался.
+- Осталось в архиве: `root/contracts/read-budget-v1.md`; `artifacts/`, `findings/`,
+  `research/`, `brief/` и `decisions/` — как исторические доказательства.
+- Реестр активности: `plans/ACTIVE.md` уже содержит `**Active:** —`; живых ссылок на
+  прежний путь `plans/2026.08.12-№1-TASK-RESILIENCE` не найдено.

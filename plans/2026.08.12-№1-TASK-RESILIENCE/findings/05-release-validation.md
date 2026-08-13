@@ -20,9 +20,25 @@
 | `bash scripts/docs-sync.sh --check` | passed |
 | `git diff --check` | passed |
 
+## Audit correction — 2026-08-13
+
+The Task and Harness rows above are the original P6.1 claim and are not reproducible
+from the recorded release-tree anchor. A detached-worktree replay at
+`4efef7a33e4f82738fc138252db505471812a5db` produced:
+
+| Command | Observed result |
+|:--|:--|
+| `bash packages/task/scripts/validate.sh` | **failed** — 876 tests passed, 1 skipped, then aggregate plan validation reported a missing foreign bundle and stale `P6.1.json`; exit `1` |
+| `bash packages/harness/scripts/validate.sh` | **failed** — 644 tests ran with 10 failures and 23 errors against the then-current v1 fixtures; exit `1` |
+
+P6.2 later qualified a different candidate, `3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0`,
+with all five package gates green. That later result does not make the historical P6.1
+GREEN assertion true. The immutable P6.1 release manifest is retained as historical
+evidence and is not rewritten.
+
 ## Release boundary
 
-No tag, push, GitHub release, or channel rollout was performed. P6.2 alone may create and verify local annotated tag `v0.13.0`; P6.3 alone may roll out to registered channels.
+No tag, push, GitHub release, or channel rollout was performed by P6.1. The final phase split assigns requalification to P6.2, local annotated tag creation to P6.3, and registered-channel rollout to P6.4.
 
 ## Documentation decision
 

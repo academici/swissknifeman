@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: d172437b2639fa738c229ee7c1c87c6b19be60b45bc4eb7f651223f666062e24
+inputs_sha256: 80b0d59ca85f5f6f994c61a63153f365559ebc11f5757021046dce2110f48257
 generated_by: task plan-views status
 -->
 
@@ -368,6 +368,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · audit-red · audit-fixer, кандидат ec2e01d5100a9160c706c80c8a54ffb1a1380cb65b62926d099d6a35eb5ebe27, вердикт RED |
 | 2026-08-13 | owner | plan-run · in-progress · decision queue: P6-audit-v0131-validation-boundary-2026-08-13 |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
+| 2026-08-13 | implementation/high | plan-run · in-progress · D30: единственный AUDIT-CAP forward recovery P6.2 начат. |
 
 ## Owner Gates
 

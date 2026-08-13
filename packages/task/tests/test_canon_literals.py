@@ -541,5 +541,90 @@ class TestContinueFirstCommandFlow(unittest.TestCase):
                     self.assertIn(literal, text)
 
 
+class TestBlockConfirmationCommandFlow(unittest.TestCase):
+    """P4.2: five commands share one closed confirmation sequence."""
+
+    COMMANDS = ("plan-design.md", "plan-exec.md", "plan-run.md", "plan-audit.md",
+                "plan-close.md")
+    BEGIN = "<!-- block-confirmation:v1:begin -->"
+    END = "<!-- block-confirmation:v1:end -->"
+    REQUIRED_SEQUENCE = (
+        "nonterminal `local-repair` либо",
+        "immutable `block-candidate/v1` capsule и material fingerprint",
+        "rag:perplexity:sha256:<64 lowercase hex>",
+        "`rag-pending` и возвращает `gather-rag` без reviewer",
+        "ровно один fresh reviewer с actor/context, отличными",
+        "второй reviewer разрешён только после доказанного material fingerprint change",
+        "Reviewer получает только immutable capsule/evidence",
+        "`JUSTIFIED`, `AVOIDABLE`,",
+        "`INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE` или `MALFORMED`",
+        "task.plan_blocking.evaluate()",
+        "Только reducer action `terminal-block` после distinct `JUSTIFIED`",
+        "Прямой append terminal event без",
+        "reducer outcome запрещён",
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+
+    def _command_text(self, command):
+        return (self.repo_root / "packages/task/commands" / command).read_text(
+            encoding="utf-8")
+
+    def _block(self, text):
+        self.assertEqual(text.count(self.BEGIN), 1)
+        self.assertEqual(text.count(self.END), 1)
+        start = text.index(self.BEGIN)
+        end = text.index(self.END, start) + len(self.END)
+        return text[start:end]
+
+    def _sequence_errors(self, block):
+        errors = []
+        cursor = 0
+        for literal in self.REQUIRED_SEQUENCE:
+            position = block.find(literal, cursor)
+            if position < 0:
+                errors.append(literal)
+            else:
+                cursor = position + len(literal)
+        return errors
+
+    def test_all_commands_embed_the_same_closed_protocol(self):
+        blocks = [self._block(self._command_text(command)) for command in self.COMMANDS]
+        self.assertTrue(all(block == blocks[0] for block in blocks[1:]))
+        self.assertEqual(self._sequence_errors(blocks[0]), [])
+
+    def test_negative_fixtures_reject_rag_reviewer_and_terminal_bypasses(self):
+        block = self._block(self._command_text(self.COMMANDS[0]))
+        fixtures = (
+            block.replace("rag:perplexity:sha256:<64 lowercase hex>",
+                          "fallback:web:result", 1),
+            block.replace("ровно один fresh reviewer с actor/context, отличными",
+                          "reviewer may reuse executor context", 1),
+            block.replace("task.plan_blocking.evaluate()",
+                          "root writes blocked directly", 1),
+            block.replace("reducer outcome запрещён",
+                          "direct terminal append разрешён", 1),
+        )
+        for fixture in fixtures:
+            with self.subTest(fixture=fixture[:80]):
+                self.assertTrue(self._sequence_errors(fixture))
+
+    def test_rubric_is_immutable_closed_and_non_authorizing(self):
+        rubric_path = (
+            self.repo_root / "packages/task/prompts/block-confirmation-rubric-v1.md"
+        )
+        rubric = rubric_path.read_text(encoding="utf-8")
+        for literal in (
+                "capsule and its evidence are immutable",
+                "Review exactly one material",
+                "review is permitted only after",
+                "rag:perplexity:sha256:<64 lowercase hex>",
+                "reviewer_actor`, `context=isolated-child-return`, `verdict`, and",
+                "your verdict is evidence, never authorization"):
+            self.assertIn(literal, rubric)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -327,7 +327,12 @@
             "no-op",
             "audit-green",
             "audit-red",
-            "audit-attention"
+            "audit-attention",
+            "routing-rejected",
+            "decision-pending",
+            "local-repair",
+            "rag-pending",
+            "block-candidate"
           ]
         },
         "schema_valid": {

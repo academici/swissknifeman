@@ -67,11 +67,11 @@ class PlanReturnsTests(unittest.TestCase):
                                      shallow=False))
 
     def test_return_fingerprint_accepts_every_journal_friction_value(self):
-        schema_values = set(
-            plan_returns._schema()["$defs"]["valid_friction_class"]
-            ["properties"]["friction"]["items"]["enum"]
-        )
-        self.assertEqual(schema_values, set(journal.FRICTION_VALUES))
+        properties = plan_returns._schema()["$defs"]["valid_friction_class"]["properties"]
+        self.assertEqual(set(properties["friction"]["items"]["enum"]),
+                         set(journal.FRICTION_VALUES))
+        self.assertEqual(set(properties["result"]["enum"]),
+                         set(journal.RESULT_VALUES))
 
     def test_committed_fixture_emits_physical_return_event_ids_outside_fingerprint(self):
         fixture = Path(__file__).parent / "data" / "plan-v2"

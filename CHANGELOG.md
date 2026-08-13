@@ -6,7 +6,7 @@
   Generated projections запускают adapter-owned capture до первой journal-мутации и
   fail-closed запрещают подменять provider-written `turn_context` выводом `codex doctor`,
   config-файлом либо self-attestation; regression test покрывает все пять plan-команд.
-  Заодно lifted return-fingerprint contract принимает весь закрытый journal friction enum,
+  Заодно lifted return-fingerprint contract принимает весь закрытый journal friction/result enum,
   поэтому `local-repair` и другие штатные наблюдения больше не ломают return-loop lint.
 
 - **`task` / `plan-protocol`: lint проверяет bundle следующего запускаемого item.**

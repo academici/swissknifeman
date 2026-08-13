@@ -7,9 +7,9 @@ item or phase. Its digest indexes a canonical tuple; the tuple remains in output
 The reducer reads the lifted `return-fingerprint-v1.schema.json`, preserves invalid journal rows as
 `ungroupable`, and never turns an absent journal into a zero count: `durable_count()` returns
 `"unknown"`. The schema's valid friction enum is byte-for-byte aligned with the journal writer's
-closed `FRICTION_VALUES`, including nonterminal observations such as `local-repair`,
-`block-review`, and `external-evidence`. Seam metadata is additive frontmatter on item-scoped
-decisions/findings.
+closed `FRICTION_VALUES` and `RESULT_VALUES`, including nonterminal observations such as
+`local-repair`, `block-review`, `rag-pending`, and `external-evidence`. Seam metadata is additive
+frontmatter on item-scoped decisions/findings.
 
 Each history event also exposes a plan-local `return_event_id` in the exact form
 `journal.jsonl:<physical-line>`. It addresses one immutable return event for its judgement

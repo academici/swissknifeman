@@ -1,42 +1,41 @@
-# HANDOFF — 2026-08-13 — after P6.3
+# HANDOFF — 2026-08-13 — after P6.4
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.4
+**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model class | implementation |
+| Batch | n/a |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | filesystem · skiller registered-channel rollout · git · package-validation |
-| Context | continue-root |
-| Суть | Выполнить dry-run и registered-channel rollout P6.4, сохранив per-target ledger. |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.4` |
+| Capabilities | filesystem · git · skiller rollout evidence · independent phase audit |
+| Context | cold-start-root: whole-plan-independent-audit |
+| Суть | Независимо проверить terminal candidate P6 до phase close. |
+| Команда | `$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6'
 ```
 
 **Done:**
 
-- P6.2 requalified exact candidate `3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0`; five package validations and release drift checks passed.
-- P6.3 created local annotated `v0.13.0`; tag object `c3f116a87822f45e278d7acc23ade5f89502f3ef` peels to the P6.2 candidate.
-- No push or GitHub release occurred.
+- P6.4 dry-run, apply and post-list all exited `0`; 29 registered path/channel pairs applied, 3 vendor records were explicit no-ops, and none failed.
+- 30 physical Task carriers passed the effective-route and substitution-forbiddance probe.
+- P6 audit policy: `PHASE_AUDIT_REQUIRED_FULL_REVIEW`, candidate fingerprint `1a327cc4c8e05310d815d65e78feec085e3cf3b9ce8c2515f2d9aa3c64458451`.
 
 **Remaining:**
 
-- P6.4 registered-project/channel rollout and its per-target ledger.
+- Fresh full audit of the P6 candidate; only then phase close/archive routing may be selected.
 
 **Sources of truth:**
 
-- `artifacts/P6/release-candidate-v1.json`, `artifacts/P6/verified-tag-v1.json`.
-- `findings/19-P6.2-release-requalification.md`, `findings/20-P6.3-tag-verification.md`, `journal.jsonl`.
+- `artifacts/P6/rollout-ledger-v1.json`, `findings/21-registered-project-rollout.md`, `phases/P6/P6.closed.md`, `journal.jsonl`.
 
 **Open risks:**
 
-- P6.4 writes only existing registered project/channel targets; failures remain explicit and nonterminal.
+- P6.4 start journal row has a non-derived `run_id`; append-only reconciliation and the process-only deviation are recorded in the rollout finding and generated state.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: P6.4 rollout only.
+- deferred: push/GitHub release remain unauthorized.
 - open_questions: —

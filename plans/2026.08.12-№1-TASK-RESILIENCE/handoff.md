@@ -1,8 +1,6 @@
-# HANDOFF — 2026-08-13 — after P6 audit attempt 1
+# HANDOFF — 2026-08-13 — after P6
 
-**Next:** owner DecisionRequest `P6-audit-frozen-release-boundary-2026-08-13`;
-after `repair-and-patch-release` approval, run
-`task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2`.
+**Next:** ОЖИДАНИЕ: repository owner resolves `P6-audit-frozen-release-boundary-2026-08-13` with `repair-and-patch-release` → task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
 
 | Parameter | Value |
 |:--|:--|

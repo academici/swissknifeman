@@ -175,7 +175,7 @@ def _completed_user_prompt(payload: dict, turn_id: str | None) -> str | None:
 def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...]]:
     session_ids = []
     context = None
-    prompts_after_context = []
+    task_prompts = []
     try:
         with path.open(encoding="utf-8") as lines:
             for line_number, raw_line in enumerate(lines, 1):
@@ -194,17 +194,16 @@ def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...
                 if event.get("type") == "session_meta" and isinstance(payload.get("id"), str):
                     session_ids.append(payload["id"])
                 elif event.get("type") == "turn_context":
-                    preceding_turn_id = context.get("turn_id") if isinstance(context, dict) else None
                     context = payload
-                    if payload.get("turn_id") != preceding_turn_id:
-                        prompts_after_context = []
                 elif context is not None and event.get("type") == "response_item":
                     if (prompt := _user_prompt(payload)) is not None:
-                        prompts_after_context.append(prompt)
+                        if any(line.startswith("$ task:") for line in prompt.splitlines()):
+                            task_prompts = [prompt]
                 elif context is not None and event.get("type") == "event_msg":
                     if (prompt := _completed_user_prompt(
                             payload, context.get("turn_id"))) is not None:
-                        prompts_after_context.append(prompt)
+                        if any(line.startswith("$ task:") for line in prompt.splitlines()):
+                            task_prompts = [prompt]
     except OSError as error:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", f"Codex thread state не читается: {error}") from error
@@ -217,7 +216,7 @@ def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...
     if not isinstance(context, dict):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", "Codex thread state не содержит turn_context")
-    return context, tuple(prompts_after_context)
+    return context, tuple(task_prompts)
 
 
 def _capture_thread_state(*, thread_id: str, expected_invocation: str,

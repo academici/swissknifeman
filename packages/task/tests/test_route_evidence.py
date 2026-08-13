@@ -497,6 +497,41 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence["effort"], "medium")
         self.assertEqual(evidence["source"], "provider-thread-state")
 
+    def test_thread_state_keeps_the_latest_task_invocation_through_a_follow_up_turn(self):
+        from task import route_evidence_codex
+
+        prompt = "$ task:plan-run PLAN P0.3"
+        with tempfile.TemporaryDirectory() as directory:
+            state_root = Path(directory)
+            path = self._write_thread_state(
+                state_root, thread_id="thread-follow-up", model="gpt-5.6-terra",
+                effort="medium", prompt=prompt,
+            )
+            follow_up_context = {"type": "turn_context", "payload": {
+                "turn_id": "turn-follow-up-2", "model": "gpt-5.6-terra", "effort": "medium",
+                "cwd": "/workspace/repo", "approval_policy": "never",
+                "sandbox_policy": {"type": "danger-full-access"},
+            }}
+            follow_up_message = {"type": "event_msg", "payload": {
+                "type": "item_completed", "turn_id": "turn-follow-up-2",
+                "item": {"type": "UserMessage", "content": [
+                    {"type": "text", "text": "Продолжай выполнение."},
+                ]},
+            }}
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(follow_up_context, ensure_ascii=False) + "\n")
+                handle.write(json.dumps(follow_up_message, ensure_ascii=False) + "\n")
+
+            evidence = route_evidence_codex.capture_current(
+                expected_invocation=prompt,
+                expected_cwd="/workspace/repo",
+                thread_id="thread-follow-up",
+                state_root=state_root,
+            )
+
+        self.assertEqual(evidence["model_class"], "implementation")
+        self.assertEqual(evidence["effort"], "medium")
+
     def test_thread_state_rejects_a_prompt_from_an_older_turn(self):
         from task import route_evidence_codex
 

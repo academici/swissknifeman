@@ -27,8 +27,9 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 **Done:**
 
 - P5.3 product commit `4d03ff55` synchronizes audit-fixer provider locks, Codex projections, Claude golden fixtures, and Task aggregate docs.
-- Renderer, registry and docs-sync checks are byte-current; Task package validation passed 873 tests (1 skipped), Skiller checks passed 633 tests.
-- P5.3 durable state is terminal with `write-site: pre_mutation: allow · pre_final: allow`.
+- Repair commit `0305e1e6` makes provider-docs snapshot ignore only VCS and live maind runtime state.
+- All declared checks are green: provider docs, renderer, registry, docs sync, Task package validation and Skiller validation.
+- P5.3 durable state is `🟢 Done` with `write-site: pre_mutation: allow · pre_final: allow`.
 
 **Remaining:**
 
@@ -41,11 +42,10 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 
 **Open risks:**
 
-- `scripts/test-provider-docs.py` is not reliable in this live workspace: it snapshots ignored `packages/maind/data/state_store.db/mem%3Ahealth.bin`, which mutates during the read-only check. The provider docs themselves are current under their owning checks.
-- P5.3 is `🟠` because required aggregate docs-sync produced `docs/task/methodology.md`, a scoped aggregate output omitted from the item `Files` list.
+- —
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: audit should reproduce provider-docs with the mutable state-store excluded or in an isolated environment.
-- deferred: no product change is deferred.
+- workarounds: —
+- deferred: —
 - open_questions: —

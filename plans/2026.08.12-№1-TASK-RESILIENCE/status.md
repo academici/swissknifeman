@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 3150549fab067eb8b448dbd6ecb64e81e0c49005977b6be6be901109fd23c9e2
+inputs_sha256: e53f5a398f96ec621c0eae5c2166a5141d0f00cff2fa86479569b643ad29f66c
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 2/3 | 🟠 Done with deviations |
+| P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -77,7 +77,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
 | P5.2 | Make phase audit repair and verify in one root | 🟢 Done | 2026-08-13 |
-| P5.3 | Publish audit-fixer parity from canonical sources | 🟠 Done with deviations | 2026-08-13 |
+| P5.3 | Publish audit-fixer parity from canonical sources | 🟢 Done | 2026-08-13 |
 
 ## Phase P6
 
@@ -306,6 +306,9 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-deviations · Audit-fixer projections synchronized; aggregate methodology output was outside Files and provider-docs snapshot hit mutable live state. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · Owner-directed repair of P5.3 deviations before phase audit. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Provider-docs snapshot excludes live state; all P5.3 validation gates passed. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -321,4 +324,3 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P4.2: known deviation
 - P5.1: known deviation
 - P5.2: known deviation
-- P5.3: known deviation

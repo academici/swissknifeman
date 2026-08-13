@@ -24,7 +24,11 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
 
     (phase_dir / f"{phase_id}.md").write_text(phase_index_md(phase_id), encoding="utf-8")
     for item_id, _status in items:
-        (phase_dir / f"{item_id}.md").write_text(item_spec_md(item_id), encoding="utf-8")
+        spec = item_spec_md(item_id).replace(
+            f"### {item_id} — Валидация конфига",
+            f"### {item_id} — Harness fixture",
+        )
+        (phase_dir / f"{item_id}.md").write_text(spec, encoding="utf-8")
 
     routing = "\n".join(
         f"| solo | {row[2:]}" if row.startswith("| ") else row

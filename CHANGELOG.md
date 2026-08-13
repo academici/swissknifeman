@@ -2,12 +2,18 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-13
+
 - **`task`: все Codex plan-команды проверяют effective route по текущему thread state.**
   Generated projections запускают adapter-owned capture до первой journal-мутации и
   fail-closed запрещают подменять provider-written `turn_context` выводом `codex doctor`,
   config-файлом либо self-attestation; regression test покрывает все пять plan-команд.
   Заодно lifted return-fingerprint contract принимает весь закрытый journal friction/result enum,
   поэтому `local-repair` и другие штатные наблюдения больше не ломают return-loop lint.
+
+- **`harness`: test fixtures следуют Layout v2 carrier contract.**
+  Run-gate, plan-reader, CLI и citation scenarios строят state/status/bundle через canonical
+  Task v2 fixture API; отдельные legacy-rejection cases сохранены.
 
 - **`task` / `plan-protocol`: lint проверяет bundle следующего запускаемого item.**
   План с отсутствующим или устаревшим четвёртым execution-slot теперь отклоняется до dispatch;

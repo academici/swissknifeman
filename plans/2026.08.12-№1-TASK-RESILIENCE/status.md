@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 171eeb61259cd5bd83070b846ed7057eabed675fe2081819959c24613bab4ec6
+inputs_sha256: 7354cf0d7f5be283771aca60f16b1d749502931027bf13037c1c8bc43f7f738c
 generated_by: task plan-views status
 -->
 
@@ -286,6 +286,7 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Audit repair-forward: опубликовать committed-tree anchors и применить status-rule к dd9c098c. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-deviations · Commits: product 1ea10e74+3f73c26d+f4916db8, release dd9c098c, bookkeeping 52bf8e64. Exact committed-tree Validation: findings/P4-audit-repair-committed-tree-evidence.md#p42. Material deviation: dd9c098c changed CHANGELOG.md outside Files. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
 
 ## Owner Gates
 

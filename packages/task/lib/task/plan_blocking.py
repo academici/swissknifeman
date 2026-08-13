@@ -159,6 +159,16 @@ def evaluate(candidate: dict) -> dict:
     rag = candidate["rag"]
     if candidate["external"] and (rag["status"] != "verified" or not rag["evidence_ids"]):
         return _decision("gather-rag")
+    if candidate["signal_class"] in {
+        "procedural",
+        "transient",
+        "dependency-not-ready",
+        "unrelated-pre-existing",
+        "routing-rejection",
+        "tool-noise",
+        "local-reversible",
+    }:
+        return _decision("continue-local-repair")
     review = candidate["review"]
     if review is None:
         return _decision("request-isolated-review")

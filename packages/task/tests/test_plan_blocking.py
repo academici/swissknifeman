@@ -75,6 +75,25 @@ class PlanBlockingTests(unittest.TestCase):
     def test_insufficient_evidence_stays_nonterminal(self):
         self.assertDecision(candidate(review=review("INSUFFICIENT_EVIDENCE")), "gather-evidence")
 
+    def test_continue_first_signal_matrix_stays_nonterminal_at_acceptance_scope(self):
+        signal_classes = (
+            "procedural",
+            "transient",
+            "dependency-not-ready",
+            "unrelated-pre-existing",
+            "routing-rejection",
+            "tool-noise",
+            "local-reversible",
+        )
+        for signal_class in signal_classes:
+            with self.subTest(signal_class=signal_class):
+                value = candidate(
+                    signal_class=signal_class,
+                    scope_class="acceptance",
+                    review=review(),
+                )
+                self.assertDecision(value, "continue-local-repair")
+
     def test_only_justified_material_candidate_allows_terminal_block(self):
         self.assertDecision(candidate(review=review()), "terminal-block", terminal=True)
 

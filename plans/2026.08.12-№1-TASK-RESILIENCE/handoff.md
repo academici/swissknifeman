@@ -1,27 +1,31 @@
 # HANDOFF — 2026-08-13 — after P6.2
 
-**Next:** waiting: repository owner must resolve DecisionRequest `P6.2-harness-fixture-scope-2026-08-13`; after an `apply` outcome, resume `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2`.
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model class | n/a |
-| Effort | n/a |
-| Capabilities | repository-owner decision |
+| Batch | solo |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | filesystem · git · package-validation · owning-generators |
 | Context | continue-root |
-| Суть | Выбрать минимальный путь ремонта Harness Layout-v1 fixtures, затем повторить P6.2 gates. |
-| Команда | — |
+| Суть | Мигрировать Harness fixture builders как цельный v2 carrier set и повторить P6.2 gates. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2` |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.2'
+```
 
 **Done:**
 
 - P6.2 route evidence и pre-mutation Task Contract зелёные; release candidate gates начаты.
 - `task`, `skiller`, `maind`, `analyst`, registry, provider-command, docs-sync и diff gates прошли.
-- `packages/harness/scripts/validate.sh` воспроизводимо красный; finding 19 и owner DecisionRequest сохранены.
+- Owner применил `approve-p6.2-boundary`; finding 19 фиксирует, что Harness fixture repair должен мигрировать полный v2 carrier set.
 
 **Remaining:**
 
-- Owner выбирает `approve-p6.2-boundary`, `create-predecessor-fix`, `escalate` или `reject` для `P6.2-harness-fixture-scope-2026-08-13`.
-- После `apply` повторить весь P6.2 gate set в чистом candidate tree; до этого P6.3 tag и P6.4 rollout запрещены.
+- Мигрировать только approved `packages/harness/tests` fixtures/builders на coherent v2 carriers и повторить весь P6.2 gate set в чистом candidate tree.
+- До green sweep P6.3 tag и P6.4 rollout запрещены.
 
 **Sources of truth:**
 
@@ -30,10 +34,10 @@
 
 **Open risks:**
 
-- Harness committed run-gate/run-plan-reader fixtures still use retired Layout v1; release qualification cannot finish until the owner-selected repair path is terminal.
+- Harness committed run-gate/run-plan-reader fixtures still use retired Layout v1; the approved repair must preserve their black-box Task subprocess coverage with v2 carriers.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: release cut reverted; no unqualified candidate is sealed.
 - deferred: P6.3 annotated tag and P6.4 registered-project rollout.
-- open_questions: owner resolution of `P6.2-harness-fixture-scope-2026-08-13`.
+- open_questions: —

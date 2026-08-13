@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 741e1559bf01bdab9b5488c637792cc78ccb34371f29c64a0f9145ba23a29ca3
+inputs_sha256: d52d6ddf18f0d28052d429cfbb5eb2dedecc77a191509967ef2d3ccf989c9300
 generated_by: task plan-views status
 -->
 
@@ -338,6 +338,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 canonical derived run_id started after journal local repair. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
 | 2026-08-13 | owner | plan-run · in-progress · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 release requalification resumed in verified Codex session. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · Harness fixture repair requires coherent v2 carriers; partial conversion discarded. |
 
 ## Owner Gates
 

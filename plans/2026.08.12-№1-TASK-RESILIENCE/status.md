@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 7354cf0d7f5be283771aca60f16b1d749502931027bf13037c1c8bc43f7f738c
+inputs_sha256: b91940dfd90f43ed653658c9d0043bfa071b488f319ba35b1d4015c8e889911f
 generated_by: task plan-views status
 -->
 
@@ -75,7 +75,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P5.1 | Enforce byte-bound terminal delivery receipts | ⬜ Not started | — |
+| P5.1 | Enforce byte-bound terminal delivery receipts | ⬜ Not started | 2026-08-13 |
 | P5.2 | Stabilize candidate-first phase audit and closure | ⬜ Not started | — |
 | P5.3 | Regenerate providers, registry and docs from canonical sources | ⬜ Not started | — |
 
@@ -287,6 +287,7 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-deviations · Commits: product 1ea10e74+3f73c26d+f4916db8, release dd9c098c, bookkeeping 52bf8e64. Exact committed-tree Validation: findings/P4-audit-repair-committed-tree-evidence.md#p42. Material deviation: dd9c098c changed CHANGELOG.md outside Files. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/xhigh | plan-audit · audit-red · заход 2, вердикт RED |
+| 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: five-command receipt boundary, subject/refusal matrix и P4 predecessor gate |
 
 ## Owner Gates
 

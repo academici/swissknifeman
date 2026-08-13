@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D22
-inputs_sha256: 18919404f45a17a1eab5b21cb4a9e3274207960ce709a8af280be8f23cf003b2
+through: 2026-08-13/D23
+inputs_sha256: a2dff5c39cacfbf7ca8c966290e864ce82c276c654ca50f603d4f5da1dca7fbb
 generated_by: task plan-views decisions
 -->
 
@@ -33,3 +33,4 @@ generated_by: task plan-views decisions
 | D20 | 2026-08-13 | accepted | P3.1, P3.2, P3.3 | AUDIT-CAP: третьего Audit P3 нет; фаза закрывается штатным `task:plan-close` Владелец разрешает единственный repair-forward P3.3: повторить исходные Validation для P3.1, P3.2, P3.3 только в fresh native roots с provider-attested route; новых terminal attempts после закрытия фазы не допускается. |
 | D21 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 владеет immediate provider projections, locks, Claude golden fixtures и operator reference, которые детерминированно изменились из-за его canonical command edits. Проекции собираются owning renderer'ом, fixtures синхронизируются механически из canonical Claude surfaces, затем все checks обязаны быть no-op/GREEN. P5.3 сохраняет свой final aggregate parity, registry, marketplace и docs-sync scope, но не служит отложенным владельцем stale outputs более раннего canonical producer. RAG:— (owner-grounded: direct mandate 2026-08-13; repo-grounded: findings/P4.2-downstream-P5.3-376a63d44c4a-1ea10e742795.md). |
 | D22 | 2026-08-13 | accepted | P4.2, P5.3 | P4.2 дополнительно синхронизирует immediate umbrella projection `docs/task/reference/provider-commands.md` из уже обновлённого package reference только owning `scripts/docs-sync.sh`. P5.3 сохраняет final aggregate docs sweep для всего P0–P5.2 surface; его validation должна увидеть эту проекцию no-op. RAG:— (repo-grounded: root.docs-build, docs-maintenance closeout и observed `docs-sync.sh --check` drift). |
+| D23 | 2026-08-13 | accepted | P4.1, P4.2 | AUDIT-CAP: третьего Audit P4 нет; фаза закрывается штатным `task:plan-close`. Владелец разрешает точечный repair-forward P4.1 без нового audit: принять уже закоммиченный `168b576a` как реализацию exhaustive continue-first signal matrix и повторить только его focused validation. Новых terminal attempts после закрытия фазы не допускается. |

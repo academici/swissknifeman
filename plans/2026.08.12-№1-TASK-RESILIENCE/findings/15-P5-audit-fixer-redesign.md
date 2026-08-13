@@ -15,8 +15,9 @@ RAG:— (owner-grounded: `brief/01-refinements.md`, 2026-08-13 audit-fixer refin
    repair run between them, then an owner incident at the audit cap.
 3. `packages/task/commands/plan-audit.md:243-256` permits only one Markdown audit block plus one
    phase-level audit journal event; item states are left for another command.
-4. `packages/task/commands/plan-audit.md:310-321` routes ordinary non-GREEN findings to a fresh
-   `plan-exec`/`plan-run` root. This is the expensive chain the owner rejected.
+4. The pre-P5.2 revision of `packages/task/commands/plan-audit.md` routed ordinary non-GREEN
+   findings to a fresh `plan-exec`/`plan-run` root. The current replacement at
+   `packages/task/commands/plan-audit.md:307-312` forbids that chain.
 5. `packages/task/lib/task/plan_item_state.py:27-36,120-149` excludes `plan-design` from execution
    position and treats observations as status-neutral. Therefore a repaired spec cannot itself
    clear a historical `🔴 Blocked`; only a later execution event does. The current P5.2 carrier

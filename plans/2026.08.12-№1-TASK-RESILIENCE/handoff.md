@@ -1,46 +1,44 @@
-# HANDOFF — 2026-08-13 — after P5.3
+# HANDOFF — 2026-08-13 — after P5
 
-**Next:** close: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
+| Batch | solo |
 | Model class | implementation |
-| Effort | low |
-| Capabilities | filesystem · git · plan-close |
-| Context | cold-start-root: design-root-terminal |
-| Суть | Закрыть terminal P5 candidate `82192f13f14467223cd5771a0a3f922c7207242b1dea324beefe97a831b60655` по owner decision D25 без второго audit. |
-| Команда | `$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5` |
+| Effort | high |
+| Capabilities | filesystem · git · release-validation |
+| Context | continue-root |
+| Суть | Подготовить и проверить committed release tree v0.13.0 до создания тега. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P5'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P6.1'
 ```
 
 **Done:**
 
-- DecisionRequest `P5.3-files-boundary-2026-08-13` разрешён option `expand-p5.3-files`; durable owner response и D25 записаны.
-- Stable P5.3 `Files` дополнен четырьмя generated Codex `task-plan-exec`/`task-plan-run` carriers; P5.3 Intent/Scope/Validation и product bytes не менялись.
-- Exact P5.3 Validation зелёная; generated state/status/decisions/bundle byte-fresh, P5.3 — `🟢 Done`.
-- P5 candidate пересобран как `82192f13f14467223cd5771a0a3f922c7207242b1dea324beefe97a831b60655`; `phase_close_gate(..., owner_decision="D25")` разрешает close.
+- P5 terminal candidate закрыт по D25; `phase_close_gate` вернул `allow`.
+- Phase closure, status, decisions и bundles пересобраны owning generators; terminal phase journal event записан до commit.
 
 **Remaining:**
 
-- Закрыть P5 штатным `task:plan-close`; P6 не запускать до persisted phase closure.
+- Выполнить P6.1; P6.2/P6.3 остаются запрещены до terminal P6.1.
 
 **Sources of truth:**
 
-- `phases/P5/P5.md` → `## Resolution P5.3 — 2026-08-13`.
-- `phases/P5/P5.3.md`, `phases/P5/P5.3.state.md`, `bundles/P5.3.json`.
-- `decisions/D25-authorize-p5-3-files-boundary.md`, `decisions/queue.jsonl`, `journal.jsonl`.
+- `phases/P5/P5.md` → `## Phase Handoff` и `## Resolution P5.3 — 2026-08-13`.
+- `phases/P5/P5.closed.md`, `status.md`, `journal.jsonl`.
+- `decisions/D25-authorize-p5-3-files-boundary.md`.
 
 **Open risks:**
 
-- Optional P5 closure carrier не собирается до отдельного phase-close; это ожидаемый незакрытый lifecycle state, не green check текущего design root.
+- Historical P0.1 bundle remains a known out-of-scope freshness baseline; it is not P5 release evidence.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: P5 phase closure
+- deferred: P6 release/tag/rollout
 - open_questions: —

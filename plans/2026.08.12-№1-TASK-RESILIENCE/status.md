@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: beef8e0e3526c1e8dd2a043ec5013d32e3c8d14ff22cc13537b4386222882fa6
+inputs_sha256: 1bdae4a8d04e0c1ac983708780a4a04d2bed2a26300112f58fb4e36bad3f3dfb
 generated_by: task plan-views status
 -->
 
@@ -326,6 +326,7 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | frontier/high | plan-design · closed-green · note сокращена; полный текст: journal.jsonl:205 |
 | 2026-08-13 | frontier/high | plan-run · closed-green · D25 scope-resolution; bookkeeping continuation, not ordinary repair-run/second audit. Exact Validation GREEN: generators/docs no-op; provider 5+20; Task 873/1; Skiller test+validate 0; product bytes unchanged.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-terra/low | plan-close · closed-green · P5 закрыта по D25; candidate 82192f13, exact P5 matrix 243 tests GREEN. |
 
 ## Owner Gates
 

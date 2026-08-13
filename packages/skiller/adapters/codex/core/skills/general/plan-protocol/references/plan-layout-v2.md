@@ -49,6 +49,13 @@ Read exactly, in order:
 The bundle may route to named required reads; every entry is resolved and digest checked before
 mutation. Missing, unreadable, stale, or digest-mismatched input fails closed.
 
+`plan-lint` verifies that the first runnable item behind the terminal phase/item prefix has a
+byte-fresh bundle. This catches a plan that looks valid but cannot fill the executor's fourth
+mandatory slot. It intentionally does not require bundles for later predecessor-dependent items:
+those artifacts can become resolvable only after the preceding item commits its declared output.
+Build the eligible carrier with `plan-views.py bundle --plan-dir <plan> --item Pn.m`, then rerun
+the check; never hand-edit the JSON.
+
 ### Designer
 
 Read plan core, current status, current decisions, phase indexes/specs in design scope, roadmap,

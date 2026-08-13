@@ -334,7 +334,13 @@ class TestLint20Warnings(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         self._make_hollow_item(plan_dir)
         _, diag = _lint(plan_dir)
-        self.assertTrue(diag.ok, diag.errors)
+        bundle_errors = _errors_containing(diag, "обязательный bundle следующего запускаемого item P1.1 устарел")
+        self.assertTrue(bundle_errors, diag.errors)
+        self.assertEqual(
+            [error for error in diag.errors if error not in bundle_errors],
+            [],
+            diag.errors,
+        )
         self.assertTrue(self._warnings_containing(diag, "СКЕЛЕТ"), diag.warnings)
 
     def test_hollow_item_with_skeleton_marker_no_warning(self):

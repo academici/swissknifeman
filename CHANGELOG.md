@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: lint проверяет bundle следующего запускаемого item.**
+  План с отсутствующим или устаревшим четвёртым execution-slot теперь отклоняется до dispatch;
+  future predecessor-dependent bundles остаются отложенными до появления их входного артефакта.
+
 - **`task` / `plan-protocol`: phase audit стал одно-root audit-fixer.**
   Свежий независимый audit root сам исправляет safe in-scope отклонения, повторяет acceptance
   и привязывает финальный verdict к пересобранному candidate. Доказанная acceptance/authority/

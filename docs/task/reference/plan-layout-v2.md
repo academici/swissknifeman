@@ -121,3 +121,10 @@ drift. The producer reuses the declared-input resolver, validates the result
 against the lifted Bundle v1 schema, and refuses atomically when a declaration
 cannot resolve; the P3.4 gate later reports that condition as
 `unresolvable_entry`.
+
+`plan-lint` additionally requires a byte-fresh bundle for the next runnable v2
+item: the first nonterminal item after a terminal phase/item prefix. This keeps
+an apparently valid plan from failing only when an executor reaches its fourth
+mandatory slot. Later predecessor-dependent items are deliberately deferred
+until their producer commits the declared artifact. Repair this gate only with
+`plan-views.py bundle --plan-dir <plan> --item Pn.m`; never hand-edit a bundle.

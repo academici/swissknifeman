@@ -7,6 +7,9 @@ try:
 except ImportError:
     from test_plan_lint_support import *
 
+from task import plan_bundle
+from task.plan_lint_checks.engine import _next_runnable_item
+
 
 class TestV2ItemSplit(TmpPlanTestCase):
     def _v2_plan(self):
@@ -40,6 +43,42 @@ class TestV2ItemSplit(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "обязательный слепок состояния"), diag.errors)
 
+    def test_v2_requires_a_fresh_bundle_for_the_next_runnable_item(self):
+        plan_dir = self._v2_plan()
+        state = plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(
+            state.read_text(encoding="utf-8").replace(
+                "**Status:** 🟢 Done", "**Status:** ⬜ Not started"),
+            encoding="utf-8",
+        )
+        plan_bundle.build(plan_dir, "P1.1")
+        (plan_dir / "bundles" / "P1.1.json").unlink()
+
+        _, diag = _lint(plan_dir)
+
+        self.assertTrue(
+            _errors_containing(diag, "обязательный bundle следующего запускаемого item P1.1 отсутствует"),
+            diag.errors,
+        )
+
+    def test_v2_rejects_a_stale_bundle_for_the_next_runnable_item(self):
+        plan_dir = self._v2_plan()
+        state = plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(
+            state.read_text(encoding="utf-8").replace(
+                "**Status:** 🟢 Done", "**Status:** ⬜ Not started"),
+            encoding="utf-8",
+        )
+        target = plan_bundle.build(plan_dir, "P1.1")
+        target.write_bytes(target.read_bytes() + b" ")
+
+        _, diag = _lint(plan_dir)
+
+        self.assertTrue(
+            _errors_containing(diag, "обязательный bundle следующего запускаемого item P1.1 устарел"),
+            diag.errors,
+        )
+
     def test_v2_rejects_an_item_file_with_another_phase_prefix(self):
         plan_dir = self._v2_plan()
         foreign = plan_dir / "phases" / "P1" / "P2.1.md"
@@ -47,6 +86,22 @@ class TestV2ItemSplit(TmpPlanTestCase):
                            encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "имеет префикс P2"), diag.errors)
+
+
+class TestNextRunnableBundle(unittest.TestCase):
+    def test_next_runnable_item_uses_numeric_phase_order(self):
+        phases = {
+            "P1": {"items": {"P1.1": {}}},
+            "P10": {"items": {"P10.1": {}}},
+            "P2": {"items": {"P2.1": {}}},
+        }
+        all_items = {
+            "P1.1": {"status": "🟢 Done"},
+            "P2.1": {"status": "⬜ Not started"},
+            "P10.1": {"status": "⬜ Not started"},
+        }
+
+        self.assertEqual(_next_runnable_item(phases, all_items), "P2.1")
 
 
 class TestValidPlan(TmpPlanTestCase):

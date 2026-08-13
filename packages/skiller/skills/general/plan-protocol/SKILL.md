@@ -42,6 +42,9 @@ Rules common to layouts v1 and v2:
 - The authoring-model provenance has three carriers: Meta `Authoring Model`, Update Log role/model,
   and journal `actor`. Missing any carrier is a defect.
 - One fact has one owner. Generated carriers are regenerated through their owner and checked.
+- `plan-lint` verifies the generated bundle of the next runnable v2 item before it can dispatch;
+  generate that carrier with `plan-views.py bundle --item Pn.m`. Future predecessor-dependent
+  bundles remain deferred until their producer commits its declared artifact.
 - External claims use `RAG:✅`; repository-grounded claims use `RAG:—`; unresolved external claims
   use `[UNVERIFIED]`. Ambiguity that blocks readiness is `[NEEDS CLARIFICATION …]`.
 - A phase skeleton starts with `> СКЕЛЕТ — не детализирован`; execution requires a detailed item.

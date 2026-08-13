@@ -115,6 +115,68 @@ def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, 
                        f"Routing Batch {batch} не является adjacent-цепочкой")
 
 
+def _next_runnable_item(phases, all_items):
+    """Return the first item that may enter an execution dispatch.
+
+    Bundles are generated evidence, not authoring input.  A future item can
+    legitimately name an artifact produced by its predecessor, so requiring
+    its bundle while that predecessor is unfinished makes the plan impossible
+    to design.  The first non-terminal item behind a fully terminal prefix is
+    different: an executor must be able to read its five mandatory slots now.
+    """
+    for phase_id in sorted(phases, key=lambda value: int(value[1:])):
+        phase = phases[phase_id]
+        for item_id in phase.get("items", {}):
+            status = all_items.get(item_id, {}).get("status")
+            if status in TERMINAL_STATUSES:
+                continue
+            if status in ("⬜ Not started", STATUS_IN_PROGRESS):
+                return item_id
+            return None
+    return None
+
+
+def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
+    """Fail closed when the next executable Layout-v2 item lacks a fresh bundle."""
+    if layout != "v2":
+        return
+    item_id = _next_runnable_item(phases, all_items)
+    if item_id is None:
+        return
+
+    # Deferred import keeps the plan_lint ↔ plan_bundle public compatibility
+    # cycle out of module initialization while reusing the owning renderer.
+    from task import plan_bundle
+
+    phase_id = item_id.split(".", 1)[0]
+    item_path = Path(phases[phase_id]["path"])
+    try:
+        target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
+        expected = plan_bundle.render(plan_dir, item_id).encode("utf-8")
+    except (plan_layout.PlanLayoutError, plan_bundle.BundleError) as exc:
+        diag.error(
+            item_path, None,
+            f"item {item_id}: bundle следующего запускаемого item не собирается: {exc}; "
+            f"исправь ТЗ через task:plan-design и запусти plan-views.py bundle --item {item_id}",
+        )
+        return
+    try:
+        actual = target.read_bytes()
+    except OSError:
+        diag.error(
+            item_path, None,
+            f"обязательный bundle следующего запускаемого item {item_id} отсутствует: {target}; "
+            f"запусти plan-views.py bundle --item {item_id}",
+        )
+        return
+    if actual != expected:
+        diag.error(
+            target, None,
+            f"обязательный bundle следующего запускаемого item {item_id} устарел; "
+            f"запусти plan-views.py bundle --item {item_id}",
+        )
+
+
 def lint_plan(plan_dir, diag):
     """Проверяет один план (plans/<PLAN-ID>/…). Возвращает распарсенную модель (dict)."""
     plan_dir = Path(plan_dir)
@@ -255,6 +317,7 @@ def lint_plan(plan_dir, diag):
     # --- 2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
     # execution input, либо внешний путь в роли execution input) ----------------
     _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag)
+    _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag)
 
     # --- глобальная уникальность ID item ---------------------------------
     seen = {}

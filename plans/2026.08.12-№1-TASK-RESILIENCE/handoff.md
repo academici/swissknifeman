@@ -1,55 +1,51 @@
-# HANDOFF — 2026-08-13 — after P5.2
+# HANDOFF — 2026-08-13 — after P5.3
 
-**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3
+**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P5
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model | implementation (`gpt-5.6-terra`) |
-| Thinking | high — provider generation and cross-package parity |
-| Capabilities | filesystem · git · skiller canon · owning generators |
-| Context | cold-start-root: context-budget |
-| Суть | Сгенерировать и проверить provider/registry/docs parity из committed P5.2 seam |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3` |
+| Batch | n/a |
+| Model | frontier (`gpt-5.6-sol`) |
+| Thinking | xhigh — независимый audit-fixer P5 |
+| Capabilities | filesystem · git · isolated review |
+| Context | cold-start-root: whole-plan-independent-audit |
+| Суть | Независимо проверить terminal P5 candidate и исправить все safe in-scope findings в этом root. |
+| Команда | `$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P5` |
 
 Provider-neutral launch-block:
 
 ```text
-task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3
+task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P5
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P5.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P5'
 ```
 
 **Done:**
 
-- P5.2 product commit `82f5c597` adds one-root audit-fixer routing, candidate rebinding and D24-focused regressions.
-- Focused P5.2 matrix: 223 passed; plan lint: 0 errors / 0 warnings.
-- Journal/state/status/bundles were regenerated through their owners; terminal P5.2 event records `write-site: pre_mutation: allow · pre_final: allow`.
-- `plan-downstream --record` wrote a green P5.3 consumer finding for producer `82f5c597`.
+- P5.3 product commit `4d03ff55` synchronizes audit-fixer provider locks, Codex projections, Claude golden fixtures, and Task aggregate docs.
+- Renderer, registry and docs-sync checks are byte-current; Task package validation passed 873 tests (1 skipped), Skiller checks passed 633 tests.
+- P5.3 durable state is terminal with `write-site: pre_mutation: allow · pre_final: allow`.
 
 **Remaining:**
 
-- P5.3 owns EN-only canon plus Claude/Codex/registry/docs generated projections, their locks and aggregate validation.
-- Then audit P5 as an audit-fixer candidate, close P5, and proceed to P6.
+- Fresh P5 audit-fixer, then phase close; P6 remains blocked by phase-first sequencing.
 
 **Sources of truth:**
 
-- `plan.md`, `phases/P5/P5.md`, `phases/P5/P5.2.md`, `bundles/P5.2.json`, generated `P5.2.state.md`.
-- `findings/P5.2-downstream-P5.3-aff246f3875d-82f5c5974287.md`, D24 and `research/08-P5-audit-fixer-design.md`.
-- `packages/task/commands/plan-audit.md`, `packages/task/lib/task/review_policy.py`, `packages/task/lib/task/plan_gates.py`.
+- `plan.md`, `phases/P5/P5.md`, `phases/P5/P5.3.md`, `bundles/P5.3.json`, generated `P5.3.state.md`.
+- `status.md`, `journal.jsonl`, D24 and `research/08-P5-audit-fixer-design.md`.
 
 **Open risks:**
 
-- The P5.2 downstream runner executed P5.3's declared generator with `--write`; its P5.3-owned provider locks/adapters/docs are intentionally dirty and must be validated and committed only by P5.3.
-- `bash packages/task/scripts/validate.sh` therefore initially reported three stale provider-parity checks; do not call this a P5.2 product failure or hand-edit generated outputs.
-- Residual full spec→product→closure topology in `roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md` remains outside P5.2.
+- `scripts/test-provider-docs.py` is not reliable in this live workspace: it snapshots ignored `packages/maind/data/state_store.db/mem%3Ahealth.bin`, which mutates during the read-only check. The provider docs themselves are current under their owning checks.
+- P5.3 is `🟠` because required aggregate docs-sync produced `docs/task/methodology.md`, a scoped aggregate output omitted from the item `Files` list.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: P5.3 must re-run owning generators and their `--check` before staging generated outputs.
-- deferred: residual evidence-anchor topology remains roadmap work.
+- workarounds: audit should reproduce provider-docs with the mutable state-store excluded or in an isolated environment.
+- deferred: no product change is deferred.
 - open_questions: —

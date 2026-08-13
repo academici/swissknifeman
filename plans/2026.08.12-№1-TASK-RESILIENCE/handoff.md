@@ -1,38 +1,37 @@
-# HANDOFF — 2026-08-13 — after P3.3
+# HANDOFF — 2026-08-13 — after P3
 
-**Next:** close: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P3
+**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model class | implementation |
-| Model | `gpt-5.6-terra` |
-| Effort | low |
-| Thinking | low |
+| Batch | B-P4-BLOCK |
+| Model class | frontier |
+| Model | `gpt-5.6-sol` |
+| Effort | high |
+| Thinking | high |
 | Capabilities | filesystem · git |
 | Context | continue-root |
-| Суть | Закрыть P3 штатным phase-close gate с owner_decision D20; третий audit запрещён. |
-| Команда | `$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P3` |
+| Суть | Исполнить P4.1 после проверки и owning regeneration его отсутствующего bundle. |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2` |
 
 **Native Codex launch block**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.1-P4.2'
 ```
 
-**Done:** P3.3 repair `30c71218` limits Layout v2 orchestration detection to `Phase Context`.
-Focused plan-lint tests (81), downstream checks, provider renderer and docs-sync are green.
+**Done:** P3 закрыта `🟠 Done with deviations` owner-authorized gate D20 после repair
+P3.3 `30c71218`; третий Audit P3 не запускался.
 
-**Remaining:** Выполнить только `task:plan-close 2026.08.12-№1-TASK-RESILIENCE P3`
-с `owner_decision="D20"`; новый `task:plan-audit` запрещён.
+**Remaining:** P4.1–P4.2 — remaining suffix B-P4-BLOCK.
 
-**Sources of truth:** `plan.md` · `phases/P3/P3.md` · `phases/P3/P3.3.md` ·
-`phases/P3/P3.3.state.md` · `bundles/P3.3.json` · `decisions/D20-audit-cap-remediation.md` ·
-`journal.jsonl`.
+**Sources of truth:** `plan.md` · `phases/P3/P3.md` · `phases/P3/P3.3.state.md` ·
+`decisions/D20-audit-cap-remediation.md` · `journal.jsonl`.
 
 **Open risks:** P3.2 journal содержит append-only recovery trace от scope DecisionRequest.
 P5.2 pending risk: glob/brace fingerprint under-binding может не включить declared generated
-provider/runtime bytes в candidate fingerprint; runtime fix вне scope P3.
+provider/runtime bytes в candidate fingerprint. `bundles/P4.1.json` отсутствует и должен быть
+собран owning generator'ом до P4.1; P3 его не меняла.
 
 **Workarounds/Deferred/Open questions:**
 

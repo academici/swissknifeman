@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 686afd1465cad81bfd40cc5250d98de76af8cdac21d801aa3b23242993a87283
+inputs_sha256: 87ece834401c789944df3830bf2c4bac2e5a2845260d3c2f26d587cb1cb91d24
 generated_by: task plan-views status
 -->
 
@@ -257,6 +257,7 @@ Evidence anchor 381adc74; material five-carrier out-of-Files deviation in produc
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · AUDIT-CAP repair: restrict Layout v2 orchestration predicate to Phase Context. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-deviations · write-site: pre_mutation: allow · pre_final: allow
 Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs checks; historical material five-carrier deviation remains. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-close · closed-deviations · P3 закрыта штатным phase-close gate с owner_decision D20; третьего Audit P3 нет. |
 
 ## Owner Gates
 

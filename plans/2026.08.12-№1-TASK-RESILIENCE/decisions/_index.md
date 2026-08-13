@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D27
-inputs_sha256: 5497d01a2a547d7e01bf320e89ff88708693117105e0022429551b99f89841e4
+through: 2026-08-13/D28
+inputs_sha256: a6b15d4b9b09e37aea789c685ae6b091b4b63d5dbfc98096f1e3eeb97b46317a
 generated_by: task plan-views decisions
 -->
 
@@ -38,3 +38,4 @@ generated_by: task plan-views decisions
 | D25 | 2026-08-13 | accepted | P5.1, P5.2, P5.3 | Владелец применил option `expand-p5.3-files` из DecisionRequest `P5.3-files-boundary-2026-08-13`: stable `Files` P5.3 включает четыре generated Codex carrier `task-plan-exec`/`task-plan-run`, уже произведённые owning renderer в product commit `4d03ff55`. Разрешение не меняет Intent, Scope, Validation или generated product bytes и не распространяется на иные файлы. RAG:— (owner/repo-grounded: durable response в `decisions/queue.jsonl`, `findings/16-P5.3-files-boundary.md`, commit `4d03ff55`). |
 | D26 | 2026-08-13 | accepted | P6.2, P6.3, P6.4 | Post-P6.1 product fixes `33a7dbcf` и `0948381c` входят в `v0.13.0`. Старый release-tree anchor `4efef7a3` остаётся immutable evidence P6.1, но не становится tag target. P6.2 повторяе release gates, режет CHANGELOG и запечатывает exact candidate в compact capsule; P6.3 создаёт tag только из этого capsule; P6.4 rollout читает только compact verified-tag capsule. Push/GitHub release не авторизованы. RAG:— (repo-grounded: Git history, release-discipline, findings/18). |
 | D27 | 2026-08-13 | accepted | P6.2 | Выбран owner-option `repair-and-patch-release`: P6.2 реопенится как один recovery item, делает phase-candidate fingerprint детерминированным по Git tracked set, повторяет полные release gates и создаёт новый локальный annotated patch tag `v0.13.1`. `v0.13.0` не удаляется, не перезаписывается и не двигается; P6.3/P6.4 evidence не переписывается. Push/GitHub release остаются неавторизованными. RAG:— (owner-grounded: `decisions/queue.jsonl`; repo-grounded: `findings/22-P6-audit-2026-08-13.md`, `research/09-P6.2-tracked-tree-patch-release-design.md`). |
+| D28 | 2026-08-13 | accepted | P6.2 | `packages/task/adapters/codex/provider-artifacts.lock.json` входит в `Files` P6.2 как обязательный owning-generator output того же `render-provider-commands.py --write --repair-owned`, который обновляет `publication-lock.json` и Codex plugin manifest. RAG:— (repo-grounded: generated diff и `render-provider-commands.py --check`). |

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: ec1b07b038ed960741dd74a447fc42af3809a9336b880be348ccfed482562cfa
+inputs_sha256: 9607385e52a9f4a5a817324dcc3e75722c42bf1a063a4d920c85d8ad71206c6d
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 2/4 | 🟡 In progress |
+| P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -84,7 +84,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟠 Done with deviations | 2026-08-13 |
-| P6.2 | Repair tracked-tree fingerprints and issue v0.13.1 | 🟡 In progress | 2026-08-13 |
+| P6.2 | Repair tracked-tree fingerprints and issue v0.13.1 | 🟢 Done | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | 🟢 Done | 2026-08-13 |
 
@@ -360,6 +360,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · audit-red · audit-fixer; rebound candidate 38da9594; RED: declared Harness wildcard unhashed and frozen release boundary owner-gated. |
 | 2026-08-13 | owner | plan-run · in-progress · decision queue: P6-audit-frozen-release-boundary-2026-08-13 |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: tracked-tree fingerprint repair и forward v0.13.1 по D27 |
+| 2026-08-13 | frontier/high | plan-run · in-progress · — |
+| 2026-08-13 | frontier/high | plan-run · closed-green · Candidate 3e24951ec643: tracked Files repair, 0.13.1 gates and annotated tag green; owner overrode exact invocation, frontier/high overshot implementation/high. |
 
 ## Owner Gates
 

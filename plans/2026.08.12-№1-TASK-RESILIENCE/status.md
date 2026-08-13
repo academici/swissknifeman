@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 193a817c9700dc64ae4f6557dbe851480b9d21ec39fb3e669c4c5f0fb6f22ac1
+inputs_sha256: c18ee8d0abe979b034731c4e1a76fd3db87b237da5aaed51eb3db65d9e500118
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 2/4 | 🟡 In progress |
+| P6 | Release, new tag and registered-project rollout | 3/4 | 🟡 In progress |
 
 ## Phase P0
 
@@ -85,7 +85,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟢 Done | 2026-08-13 |
 | P6.2 | Requalify the v0.13.0 release candidate and seal tag input | 🟢 Done | 2026-08-13 |
-| P6.3 | Create and verify the annotated v0.13.0 tag | ⬜ Not started | — |
+| P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -347,6 +347,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 requalification started for exact candidate 3c5548f7 after route-evidence repair. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Requalified candidate 3c5548f7; five packages and release drift checks passed. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-exec · in-progress · P6.3 annotated tag verification started for candidate 3c5548f7. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-exec · closed-green · Created and verified annotated v0.13.0 on candidate 3c5548f7; no push. |
+| 2026-08-13 | gpt-5.6-terra/high | plan-exec · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

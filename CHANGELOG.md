@@ -7,6 +7,8 @@
   и привязывает финальный verdict к пересобранному candidate. Доказанная acceptance/authority/
   safety/public-frozen boundary остаётся fail-closed, а один candidate допускает не более одного
   isolated reviewer return; routine `audit → repair-run → second audit` больше не создаётся.
+  Неразрешённый `DecisionRequest` остаётся нетерминальным наблюдением `decision-pending` и не
+  подменяет живую execution position состоянием `blocked`.
 
 - **`task`: owner override фазы больше не зависит от номера decision.**
   Audit-cap remediation допускается только для accepted carrier с полным точным item-set

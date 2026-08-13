@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: b4bddda843ab0bd6a36280f2edee8a2e2daad884a1a1456cd4db951f16854fe5
+inputs_sha256: 741e1559bf01bdab9b5488c637792cc78ccb34371f29c64a0f9145ba23a29ca3
 generated_by: task plan-views status
 -->
 
@@ -337,6 +337,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · Correcting start record run_id before product work; canonical derived run follows. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · P6.2 canonical derived run_id started after journal local repair. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
+| 2026-08-13 | owner | plan-run · in-progress · decision queue: P6.2-harness-fixture-scope-2026-08-13 |
 
 ## Owner Gates
 

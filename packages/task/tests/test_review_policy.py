@@ -162,6 +162,8 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             audit_fixer_action(in_scope=True, repeated_fingerprint=3, reviewer_returns=1)["action"],
             "repair-inline",
         )
+        with self.assertRaisesRegex(ReviewPolicyError, "at most one reviewer return"):
+            audit_fixer_action(in_scope=True, repeated_fingerprint=3, reviewer_returns=2)
 
     def test_audit_fixer_preserves_non_gating_and_authority_boundaries(self):
         self.assertEqual(
@@ -169,6 +171,10 @@ class EvidenceFirstSignalTests(unittest.TestCase):
         self.assertEqual(
             audit_fixer_action(in_scope=True, boundary="authority"),
             {"action": "decision-request", "terminal": True, "reason": "authority-boundary"},
+        )
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, boundary="acceptance"),
+            {"action": "decision-request", "terminal": True, "reason": "acceptance-boundary"},
         )
 
     def test_phase_close_requires_matching_green_audit(self):

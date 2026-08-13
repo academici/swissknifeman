@@ -37,7 +37,7 @@ SIGNAL_CLASSES = (
     "acceptance", "safety", "authority",
 )
 TERMINAL_SIGNAL_CLASSES = frozenset({"acceptance", "safety", "authority"})
-AUDIT_FIXER_BOUNDARIES = frozenset({"authority", "safety", "public-frozen"})
+AUDIT_FIXER_BOUNDARIES = frozenset({"acceptance", "authority", "safety", "public-frozen"})
 
 # risk-review-loop-budget-v1.md §Loop budget and cadence.
 SAME_FINDING_MAX = 2
@@ -118,6 +118,9 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
     if not isinstance(material_risk, bool) or (isinstance(reviewer_returns, bool)
             or not isinstance(reviewer_returns, int) or reviewer_returns < 0):
         raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "review inputs are invalid")
+    if reviewer_returns > 1:
+        raise ReviewPolicyError(
+            "FINDING_IDENTITY_UNSTABLE", "audit-fixer permits at most one reviewer return")
     if boundary is not None and boundary not in AUDIT_FIXER_BOUNDARIES:
         raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", f"unknown audit boundary {boundary!r}")
     if boundary is not None:

@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-10
-inputs_sha256: 53b1a9b3ba48754fb993dc8ac06917812738f29708e1ebd4da4b726192b1e47a
+through: 2026-08-13
+inputs_sha256: 5108d7d5a89bb4b0a90f0bb5ee8a5b11a0d3fe31144c848fb3039cbd5c40f5a7
 generated_by: task plan-views status
 -->
 
@@ -16,8 +16,8 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.2 |
-| Status | ⬜ Not started |
-| Last Updated | 2026-08-10 |
+| Status | 🟡 In progress |
+| Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
 
@@ -40,9 +40,9 @@ generated_by: task plan-views status
 | P0.2 | Classify every legacy projection and local override | 🟢 Done | 2026-08-10 |
 | P0.3 | Freeze recovery gates and exact owner action inventory | 🟢 Done | 2026-08-10 |
 | P0.4 | Apply only approved urgent security containment | 🟢 Done | 2026-08-10 |
-| P0.5 | Rebuild the exact provider and skills baseline evidence | 🟢 Done | 2026-08-10 |
+| P0.5 | Rebuild the exact provider and skills baseline evidence | 🟢 Done | 2026-08-13 |
 | P0.6 | Patch recovery semantics and remove cyclic admission | 🟢 Done | 2026-08-10 |
-| P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-10 |
+| P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-13 |
 | P0.8 | Reconcile P0 execution provenance and requalify closure | 🟢 Done | 2026-08-10 |
 
 ## Phase P1
@@ -175,6 +175,11 @@ generated_by: task plan-views status
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=b9d71e6a; D69; process: post-close spec/read-graph repair; old_decl=bb10fea2e2e7538b8efaf494d767333cbc37a6d85bd969714ba0b9b777a9a4f2; new_decl=dc4f3432e25ba18e8ec887fec7ea1a2a6a67494b3bc9893f37dd4064e16a86a1 |
 | 2026-08-10 | gpt-5.6-sol/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow; item_commit=1e552dd4; D69 repair, compact P0.6 projection and P0 fan-in validated; process: route overshoot frontier/high over implementation/high. |
 | 2026-08-10 | gpt-5.6-sol/high | plan-close · closed-deviations · P0 closed after D64-D69 remediation; inherited P0.1 material and process deviations retained. |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-green · item_commit=c5467e55; audit-fixer: timeout and false-green capture repaired; trusted capture/check and copied mutations pass; process: frontier/xhigh over implementation/high.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-green · item_commit=39fe0ea6; audit correction: exact-set/privacy baseline validation remains green; process: frontier/high over implementation/high and deferred bookkeeping closure.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат dba2debbfe71a43fe10fc4a7e4d439d5a6ea69bf848f38b18d2e2974acb18225, вердикт RED; unresolved P0.2/P0.8 digest and P0.7 freshness acceptance boundaries |
 
 ## Owner Gates
 
@@ -182,6 +187,7 @@ generated_by: task plan-views status
 - P0.2: known deviation
 - P0.3: known deviation
 - P0.4: known deviation
+- P0.5: known deviation
 - P0.6: known deviation
 - P0.7: known deviation
 - P0.8: known deviation

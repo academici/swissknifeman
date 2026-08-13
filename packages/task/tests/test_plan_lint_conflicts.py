@@ -534,6 +534,26 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
 
+    def test_orchestration_only_in_phase_handoff_is_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p = phase_index_path(plan_dir)
+        p.write_text(p.read_text(encoding="utf-8").replace(
+            "Фаза сдана: всё зелёное.",
+            "Следующая фаза заявляет мультиагентную оркестрацию."), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+    def test_orchestration_in_phase_context_still_warns(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p = phase_index_path(plan_dir)
+        p.write_text(p.read_text(encoding="utf-8").replace(
+            "Демо-фаза.", "Мультиагентная оркестрация заявлена для этой фазы."),
+            encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, self._NEEDLE), diag.warnings)
+
     def test_p6_shaped_explicit_negation_is_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         p = phase_index_path(plan_dir)

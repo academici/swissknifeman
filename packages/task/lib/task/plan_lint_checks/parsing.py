@@ -649,7 +649,10 @@ def _parse_phase_v2(path, phase_id, diag):
     items = {}
     status_table = []
     gate_lines = _lines_before_audit(lines)
-    orchestration_lines = tuple(gate_lines)
+    # Phase Context is the sole carrier for this phase-level declaration.  Keep
+    # `gate_lines` broad for the structural checks below, but do not let a
+    # downstream handoff or item prose manufacture a workflow requirement.
+    orchestration_lines = tuple(ctx_body or ())
     try:
         owner_status = plan_status.status_model(path.parents[2])
         updated_by_id = {

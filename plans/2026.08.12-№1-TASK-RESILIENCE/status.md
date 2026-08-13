@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 32b46418a712999c499dc3b91d3188f6673773576c225a3d2c9c882071b3fb69
+inputs_sha256: 699adce9dc3817a7a4fe9c7a6a68bdb58fbdc99382defca34e824189c9741dee
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 2/2 | 🟢 Done |
+| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -69,7 +69,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
-| P4.2 | Require one isolated block confirmer in every plan command | 🟢 Done | 2026-08-13 |
+| P4.2 | Require one isolated block confirmer in every plan command | 🟡 In progress | 2026-08-13 |
 
 ## Phase P5
 
@@ -279,6 +279,11 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | frontier/high | plan-design · in-progress · D22 добавила immediate umbrella docs projection после docs-maintenance drift. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Closeout repair: owning docs-sync для immediate umbrella provider reference по D22. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · P4.2 closeout GREEN: renderer/registry/docs-sync no-op; 861 full tests GREEN; P5.2/P5.3 downstream GREEN. |
+| 2026-08-13 | frontier/xhigh | plan-audit · audit-red · заход 1, вердикт RED |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Audit repair-forward: закрыть external enum/flag bypass и опубликовать committed-tree anchors. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · Commits: product aefd1450+cc7a0523, audit repair 623b6395, bookkeeping 0c70c57c. Exact committed-tree Validation: findings/P4-audit-repair-committed-tree-evidence.md#p41. Route overshoot: frontier/high вместо implementation/high. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Audit repair-forward: опубликовать committed-tree anchors и применить status-rule к dd9c098c. |
 
 ## Owner Gates
 
@@ -290,3 +295,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P1.5: known deviation
 - P2.2: known deviation
 - P3.3: known deviation
+- P4.1: known deviation

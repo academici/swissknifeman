@@ -1,57 +1,58 @@
-# HANDOFF — 2026-08-13 — after P4.2
+# HANDOFF — 2026-08-13 — after P4.1
 
-**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4
+**Next:** /task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model | frontier |
-| Thinking | xhigh — independent full phase review |
-| Capabilities | read-only plan/product/git evidence |
-| Context | cold-start-root: context-budget |
-| Суть | Независимо проаудитить terminal P4 candidate перед phase close. |
-| Команда | `/task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4` |
+| Batch | B-P4-BLOCK |
+| Model | frontier (`gpt-5.6-sol`) |
+| Thinking | high — bounded audit repair |
+| Context | continue-root |
+| Суть | Исправить P4.2 evidence/status carriers по Audit P4 |
+| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2` |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4
+$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
+
+РЕЖИМ: bounded audit repair-forward под стабильным ТЗ P4.2; не детализировать и не реопенить фазу
+ВХОД: phases/P4/P4.md → Audit P4 — 2026-08-13; прочитать первым
+СКОУП: опубликовать exact committed-tree commits/Validation anchors; привести status P4.2 к material deviation за dd9c098c
+НЕ ТРОГАТЬ: stable Intent/Scope/Files/Validation; command integrations/rubric/provider projections; P0–P3, P5–P6; чужой roadmap-файл
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2\n\nРЕЖИМ: bounded audit repair-forward под стабильным ТЗ P4.2; не детализировать и не реопенить фазу\nВХОД: phases/P4/P4.md → Audit P4 — 2026-08-13; прочитать первым\nСКОУП: опубликовать exact committed-tree commits/Validation anchors; привести status P4.2 к material deviation за dd9c098c\nНЕ ТРОГАТЬ: stable Intent/Scope/Files/Validation; command integrations/rubric/provider projections; P0–P3, P5–P6; чужой roadmap-файл'
 ```
 
 **Done:**
 
-- P4.1 закрыт GREEN: `aefd1450`, repair-forward `cc7a0523`, bookkeeping `0c70c57c`.
-- P4.2 canonical isolated confirmer зафиксирован в `1ea10e74`; D21 repair-forward — `804bc5f8`.
-- Immediate provider projections, locks, five Claude golden fixtures и operator reference синхронизированы в `3f73c26d`; renderer `--check` no-op.
-- D22 закрыл immediate umbrella docs projection коммитом `f4916db8`; registry и docs-sync checks no-op.
-- Focused provider/canonical tests: 78/78 GREEN; full Task validation: 861 tests GREEN, 1 skipped; P5.2/P5.3 downstream gates GREEN.
-- Release-visible change зафиксировано в `[Unreleased]` коммитом `dd9c098c`.
+- P4.1 audit repair product commit: `623b6395`.
+- Exact P4.1 commit/Validation anchors: `findings/P4-audit-repair-committed-tree-evidence.md#p41`.
+- P4.1 remains `🟢 Done`; route overshoot is recorded as a process deviation.
 
 **Remaining:**
 
-- Выполнить mandatory full P4 audit по policy `PHASE_AUDIT_REQUIRED_FULL_REVIEW`, затем phase close по его вердикту.
-- P5 и P6 остаются вне текущего batch.
+- P4.2: publish committed-tree anchors and change status to `🟠 Done with deviations` for out-of-`Files` `dd9c098c`.
+- Recompute the P4 phase candidate and route it through the required phase audit policy.
 
 **Sources of truth:**
 
-- `decisions/D21-p4-2-owns-immediate-provider-projections.md` и `decisions/D22-p4-2-owns-immediate-umbrella-doc-projection.md`.
-- `phases/P4/P4.2.md`, `phases/P4/P4.2.state.md` и `phases/P4/P4.closed.md`.
-- `findings/P4.2-downstream-P5.2-b4206c9a99cd-3f73c26d256a.md`.
-- `findings/P4.2-downstream-P5.3-376a63d44c4a-3f73c26d256a.md`.
-- Product commits `1ea10e74`, `3f73c26d` и append-only `journal.jsonl`.
+- `plan.md` §§3 Routing/Execution Rules.
+- `phases/P4/P4.md` → `Audit P4 — 2026-08-13`.
+- `phases/P4/P4.2.md`, `bundles/P4.2.json`, `phases/P4/P4.2.state.md`.
+- `findings/P4-audit-repair-committed-tree-evidence.md`.
 
 **Open risks:**
 
-- P4 ещё не phase-closed: Routing требует independent full audit terminal candidate fingerprint `63f9395c1e2da5a9dc8984071156db42415a92d0191cd6a6018caa215e349b6d`.
+- P4 audit remains RED until P4.2 repair-forward is terminal and a new phase candidate is audited.
+- Harness hook dry-run crashes for relative `--target .`; absolute target is green/no-op. Defect is outside P4 scope.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: owner mandate 2026-08-13 явно разрешил same-session design→execution repair-forward; остальные authority boundaries не менялись.
-- Deferred: final registry/marketplace/aggregate docs parity остаётся в P5.3; package operator reference уже byte-current.
-- Open questions: —
+- workarounds: —
+- deferred: relative-target Harness preflight defect is not repaired in P4.
+- open_questions: —

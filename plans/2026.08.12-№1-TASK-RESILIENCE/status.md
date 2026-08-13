@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 699adce9dc3817a7a4fe9c7a6a68bdb58fbdc99382defca34e824189c9741dee
+inputs_sha256: 171eeb61259cd5bd83070b846ed7057eabed675fe2081819959c24613bab4ec6
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Active-plan migration and Layout v1 execution retirement | 3/5 | 🟠 Done with deviations |
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
-| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟡 In progress |
+| P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 0/3 | ⬜ Not started |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
@@ -69,7 +69,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Enforce a closed block candidate and fail-closed RAG gate | 🟢 Done | 2026-08-13 |
-| P4.2 | Require one isolated block confirmer in every plan command | 🟡 In progress | 2026-08-13 |
+| P4.2 | Require one isolated block confirmer in every plan command | 🟠 Done with deviations | 2026-08-13 |
 
 ## Phase P5
 
@@ -284,6 +284,8 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-green · Commits: product aefd1450+cc7a0523, audit repair 623b6395, bookkeeping 0c70c57c. Exact committed-tree Validation: findings/P4-audit-repair-committed-tree-evidence.md#p41. Route overshoot: frontier/high вместо implementation/high. |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | gpt-5.6-sol/high | plan-run · in-progress · Audit repair-forward: опубликовать committed-tree anchors и применить status-rule к dd9c098c. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · closed-deviations · Commits: product 1ea10e74+3f73c26d+f4916db8, release dd9c098c, bookkeeping 52bf8e64. Exact committed-tree Validation: findings/P4-audit-repair-committed-tree-evidence.md#p42. Material deviation: dd9c098c changed CHANGELOG.md outside Files. |
+| 2026-08-13 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -296,3 +298,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P2.2: known deviation
 - P3.3: known deviation
 - P4.1: known deviation
+- P4.2: known deviation

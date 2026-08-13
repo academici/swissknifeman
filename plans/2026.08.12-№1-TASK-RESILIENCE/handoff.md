@@ -1,54 +1,52 @@
-# HANDOFF — 2026-08-13 — after P4.1
+# HANDOFF — 2026-08-13 — after P4.2
 
-**Next:** /task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
+**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | B-P4-BLOCK |
+| Batch | audit-phase:P4 |
 | Model | frontier (`gpt-5.6-sol`) |
-| Thinking | high — bounded audit repair |
-| Context | continue-root |
-| Суть | Исправить P4.2 evidence/status carriers по Audit P4 |
-| Команда | `$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2` |
+| Thinking | xhigh — adversarial terminal audit |
+| Context | cold-start-root |
+| Суть | Повторно проаудировать P4 candidate после bounded repair |
+| Команда | `$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4` |
 
 Provider-neutral launch-block:
 
 ```text
-$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2
-
-РЕЖИМ: bounded audit repair-forward под стабильным ТЗ P4.2; не детализировать и не реопенить фазу
-ВХОД: phases/P4/P4.md → Audit P4 — 2026-08-13; прочитать первым
-СКОУП: опубликовать exact committed-tree commits/Validation anchors; привести status P4.2 к material deviation за dd9c098c
-НЕ ТРОГАТЬ: stable Intent/Scope/Files/Validation; command integrations/rubric/provider projections; P0–P3, P5–P6; чужой roadmap-файл
+$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4
 ```
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P4.2\n\nРЕЖИМ: bounded audit repair-forward под стабильным ТЗ P4.2; не детализировать и не реопенить фазу\nВХОД: phases/P4/P4.md → Audit P4 — 2026-08-13; прочитать первым\nСКОУП: опубликовать exact committed-tree commits/Validation anchors; привести status P4.2 к material deviation за dd9c098c\nНЕ ТРОГАТЬ: stable Intent/Scope/Files/Validation; command integrations/rubric/provider projections; P0–P3, P5–P6; чужой roadmap-файл'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P4'
 ```
 
 **Done:**
 
-- P4.1 audit repair product commit: `623b6395`.
-- Exact P4.1 commit/Validation anchors: `findings/P4-audit-repair-committed-tree-evidence.md#p41`.
-- P4.1 remains `🟢 Done`; route overshoot is recorded as a process deviation.
+- P4.1 product repair `623b6395`; bookkeeping `40e3efeb`; status `🟢 Done` with recorded route overshoot.
+- P4.2 exact committed-tree evidence published; status is `🟠 Done with deviations` because `dd9c098c` changed `CHANGELOG.md` outside `Files`.
+- Candidate fingerprint: `71269941fc828103e008b6c6aef3f255175ca34e8a092205514a926ea869b673`.
+- Audit policy: `PHASE_AUDIT_REQUIRED_NON_GREEN`; next_exact copied unchanged above.
 
 **Remaining:**
 
-- P4.2: publish committed-tree anchors and change status to `🟠 Done with deviations` for out-of-`Files` `dd9c098c`.
-- Recompute the P4 phase candidate and route it through the required phase audit policy.
+- Run the required fresh P4 phase audit.
+- Close P4 only after the audit policy returns the canonical close continuation.
 
 **Sources of truth:**
 
 - `plan.md` §§3 Routing/Execution Rules.
 - `phases/P4/P4.md` → `Audit P4 — 2026-08-13`.
-- `phases/P4/P4.2.md`, `bundles/P4.2.json`, `phases/P4/P4.2.state.md`.
+- `phases/P4/P4.1.state.md`, `phases/P4/P4.2.state.md`, `phases/P4/P4.closed.md`.
 - `findings/P4-audit-repair-committed-tree-evidence.md`.
+- `journal.jsonl` terminal repair events.
 
 **Open risks:**
 
-- P4 audit remains RED until P4.2 repair-forward is terminal and a new phase candidate is audited.
+- P4 remains unclosed until the required repeat audit evaluates the repaired candidate.
+- P4.2 intentionally remains non-green because its historical out-of-`Files` commit is material under status-rule.
 - Harness hook dry-run crashes for relative `--target .`; absolute target is green/no-op. Defect is outside P4 scope.
 
 **Workarounds/Deferred/Open questions:**

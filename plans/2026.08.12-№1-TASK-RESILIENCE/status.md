@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: e53f5a398f96ec621c0eae5c2166a5141d0f00cff2fa86479569b643ad29f66c
+inputs_sha256: 9d956027ade130972d15b8b093da40d3ce6a181ea19cf75cc0991cced3b1634c
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Numbered plan identity and collision-free references | 1/2 | 🟠 Done with deviations |
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
-| P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
+| P5 | Durable terminal delivery and provider parity | 2/3 | 🟠 Done with deviations |
 | P6 | Release, new tag and registered-project rollout | 0/3 | ⬜ Not started |
 
 ## Phase P0
@@ -77,7 +77,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P5.1 | Enforce byte-bound terminal delivery receipts | 🟢 Done | 2026-08-13 |
 | P5.2 | Make phase audit repair and verify in one root | 🟢 Done | 2026-08-13 |
-| P5.3 | Publish audit-fixer parity from canonical sources | 🟢 Done | 2026-08-13 |
+| P5.3 | Publish audit-fixer parity from canonical sources | 🟠 Done with deviations | 2026-08-13 |
 
 ## Phase P6
 
@@ -309,6 +309,19 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · in-progress · Owner-directed repair of P5.3 deviations before phase audit. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · closed-green · Provider-docs snapshot excludes live state; all P5.3 validation gates passed. |
 | 2026-08-13 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Audit-fixer P5.2: acceptance-boundary и reviewer-return cardinality требуют safe in-scope repair. |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-green · Product 6f32db45; focused 223 passed; Task validate 873 passed, 1 skipped; acceptance/reviewer caps fixed. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Audit-fixer P5.1: historical validate.sh claim reproduced red; current acceptance evidence repair starts. |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-green · HEAD c1d9d5e7: receipt 12 passed; CLI build/verify 0/0; Task validate 873 passed, 1 skipped, exit 0. Process deviation retained: e39956f8 preceded durable start. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Audit-fixer P5.3: committed generated projections outside Files require honest status correction. |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-deviations · HEAD c1d9d5e7: renderer/registry/docs no-op; provider 5+20, Task 873/1 skip, Skiller 633; all gates exit 0. Material: 4d03ff55 changed Codex plan-exec/run SKILL.md+command.md outside P5.3 Files. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-run · blocked · decision queue: P5.3-files-boundary-2026-08-13 |
+| 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Bounded incidental repair: decision-pending must not terminalize P5.3. |
+| 2026-08-13 | frontier/xhigh | plan-run · decision-pending · decision queue: P5.3-files-boundary-2026-08-13 |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-deviations · 008430d6: pending→decision-pending; focused 102; Task 873/1; P5.3 aggregate renderer/registry/docs 0, provider 5+20, Skiller 633. Material Files boundary at 4d03ff55 remains owner-gated. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · in-progress · Repair audit evidence projection after friction CLI misuse. |
+| 2026-08-13 | frontier/xhigh | plan-audit · closed-deviations · 008430d6: pending→decision-pending; focused 102; Task 873/1; aggregate renderer/registry/docs 0, provider 5+20, Skiller 633. Material: 4d03ff55 wrote four Codex plan-exec/run carriers outside P5.3 Files. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | frontier/xhigh | plan-audit · audit-attention · audit-fixer, кандидат 34e4f2dbcdfa163bd38c91e849fe068c2498b7830d9d96cc6efccfac15d4af44, вердикт ATTENTION |
 
 ## Owner Gates
 
@@ -323,4 +336,4 @@ Evidence anchor 30c71218; 81 focused tests, downstream GREEN, renderer/docs chec
 - P4.1: known deviation
 - P4.2: known deviation
 - P5.1: known deviation
-- P5.2: known deviation
+- P5.3: known deviation

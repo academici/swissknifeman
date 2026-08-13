@@ -12,7 +12,7 @@ import json
 import re
 import subprocess
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
                   plan_projection, plan_requests, plan_returns, plan_status, plan_weight)
@@ -34,6 +34,8 @@ _BACKTICK_PATH_RE = re.compile(r"`([^`]+)`")
 _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _REVIEW_ORDER = {"none": 0, "light": 1, "full": 2}
+_BRACE_EXPANSION_LIMIT = 64
+_GLOB_CHARS = frozenset("*?[")
 
 
 def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
@@ -58,8 +60,88 @@ def _declared_file_paths(value: str) -> tuple[str, ...]:
     return tuple(sorted(set(paths)))
 
 
+def _validate_declared_path(value: str) -> None:
+    """Reject paths whose meaning would depend on a shell or host filesystem."""
+    if not value or "\0" in value or "\\" in value:
+        raise ValueError(f"invalid declared Files path: {value!r}")
+    path = PurePosixPath(value)
+    if path.is_absolute() or value.startswith("~") or ".." in path.parts:
+        raise ValueError(f"declared Files path escapes repository: {value!r}")
+    if value.startswith("./") or "//" in value or "/./" in value or value.endswith("/."):
+        raise ValueError(f"declared Files path is not normalized POSIX: {value!r}")
+    if value.count("[") != value.count("]"):
+        raise ValueError(f"invalid Git glob character class: {value!r}")
+
+
+def _expand_braces(value: str, *, limit: int = _BRACE_EXPANSION_LIMIT) -> tuple[str, ...]:
+    """Expand bounded, non-nested ``{a,b}`` groups without shell semantics."""
+    _validate_declared_path(value)
+    expanded = [value]
+    while any("{" in item or "}" in item for item in expanded):
+        next_items = []
+        for item in expanded:
+            opening = item.find("{")
+            closing = item.find("}")
+            if opening < 0 or closing < 0 or closing < opening:
+                raise ValueError(f"unbalanced brace path: {value!r}")
+            body = item[opening + 1:closing]
+            if "{" in body or "}" in body or "{" in item[closing + 1:closing + 2]:
+                raise ValueError(f"nested brace path is not supported: {value!r}")
+            alternatives = body.split(",")
+            if len(alternatives) < 2 or any(not alternative for alternative in alternatives):
+                raise ValueError(f"brace path needs non-empty alternatives: {value!r}")
+            prefix, suffix = item[:opening], item[closing + 1:]
+            next_items.extend(f"{prefix}{alternative}{suffix}" for alternative in alternatives)
+            if len(next_items) > limit:
+                raise ValueError(f"brace expansion exceeds {limit}: {value!r}")
+        expanded = next_items
+    for item in expanded:
+        _validate_declared_path(item)
+    return tuple(sorted(set(expanded)))
+
+
+def _is_glob(value: str) -> bool:
+    return any(character in value for character in _GLOB_CHARS)
+
+
+def _tracked_members(repository_root: Path, patterns: tuple[str, ...]) -> tuple[str, ...]:
+    """Resolve one declaration through Git's tracked index, failing closed."""
+    pathspecs = [f":(glob){pattern}" if _is_glob(pattern) else f":(literal){pattern}"
+                 for pattern in patterns]
+    completed = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--", *pathspecs],
+        cwd=repository_root, capture_output=True, check=False,
+    )
+    if completed.returncode != 0:
+        message = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise ValueError(f"git ls-files rejected declared Files pathspec: {message}")
+    try:
+        decoded = completed.stdout.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError("git ls-files returned a non-UTF-8 tracked path") from exc
+    members = []
+    for raw in decoded.split("\0"):
+        if not raw:
+            continue
+        path = PurePosixPath(raw)
+        if path.is_absolute() or ".." in path.parts:
+            raise ValueError(f"git ls-files returned an escaping path: {raw!r}")
+        members.append(path.as_posix())
+    return tuple(sorted(set(members)))
+
+
+def _tracked_member_row(repository_root: Path, relative: str) -> dict:
+    path = repository_root / PurePosixPath(relative)
+    if path.is_symlink():
+        return {"path": relative, "state": "symlink", "target": str(path.readlink())}
+    if path.is_file():
+        return {"path": relative, "state": "file",
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+    return {"path": relative, "state": "deleted"}
+
+
 def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[dict]]:
-    """Hash declared product carriers while excluding plan/audit bookkeeping."""
+    """Hash current bytes of deterministic Git-tracked declared product members."""
     plan_dir = plan_dir.resolve()
     completed = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"], cwd=plan_dir, text=True,
@@ -67,41 +149,31 @@ def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[d
     )
     repository_root = (Path(completed.stdout.strip()).resolve() if completed.returncode == 0
                        and completed.stdout.strip() else plan_weight.repo_root_for(plan_dir))
+    try:
+        plan_prefix = plan_dir.relative_to(repository_root).as_posix()
+    except ValueError as exc:
+        raise ValueError("plan directory is outside the repository root") from exc
     rows = []
     for declared in sorted(declared_paths):
-        candidate = Path(declared)
-        if candidate.is_absolute() or declared.startswith(("~", "../")):
-            rows.append({"declared": declared, "state": "external"})
-            continue
-        path = next((root / candidate for root in (repository_root, plan_dir)
-                     if (root / candidate).exists() or (root / candidate).is_symlink()), None)
-        if path is None:
+        expanded = _expand_braces(declared)
+        candidates = (
+            expanded,
+            tuple(f"{plan_prefix}/{path}" for path in expanded),
+        )
+        patterns, members = candidates[-1], ()
+        for candidate_patterns in candidates:
+            candidate_members = _tracked_members(repository_root, candidate_patterns)
+            if candidate_members:
+                patterns, members = candidate_patterns, candidate_members
+                break
+        if not members:
             rows.append({"declared": declared, "state": "missing"})
             continue
-        relative_path = path.relative_to(repository_root).as_posix()
-        if path.is_symlink():
-            rows.append({"declared": declared, "path": relative_path,
-                         "state": "symlink", "target": str(path.readlink())})
-            continue
-        if path.is_file():
-            rows.append({"declared": declared, "path": relative_path, "state": "file",
-                         "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
-            continue
-        if path.is_dir():
-            members = []
-            for member in sorted(path.rglob("*")):
-                relative = member.relative_to(repository_root).as_posix()
-                if ".git" in member.relative_to(repository_root).parts:
-                    continue
-                if member.is_symlink():
-                    members.append({"path": relative, "state": "symlink",
-                                    "target": str(member.readlink())})
-                elif member.is_file():
-                    members.append({"path": relative, "state": "file",
-                                    "sha256": hashlib.sha256(member.read_bytes()).hexdigest()})
-            rows.append({"declared": declared, "state": "directory", "members": members})
-            continue
-        rows.append({"declared": declared, "path": relative_path, "state": "missing"})
+        member_rows = [_tracked_member_row(repository_root, relative) for relative in members]
+        if len(patterns) == 1 and not _is_glob(patterns[0]) and members == patterns:
+            rows.append({"declared": declared, **member_rows[0]})
+        else:
+            rows.append({"declared": declared, "state": "tracked-set", "members": member_rows})
     encoded = json.dumps(rows, ensure_ascii=False, sort_keys=True,
                          separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest(), rows

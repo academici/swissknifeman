@@ -4,6 +4,13 @@
 
 - —
 
+## [0.13.1] - 2026-08-13
+
+- **`task`: phase candidate fingerprint учитывает только Git-tracked Files.**
+  Exact-файлы, каталоги, recursive globs и bounded brace-наборы разрешаются через
+  `git ls-files`; tracked edits/deletions инвалидируют candidate, а ignored/untracked
+  runtime-байты больше не влияют на audit freshness.
+
 ## [0.13.0] - 2026-08-13
 
 - **`task`: Codex plan runtime передаёт один current-thread route record в contract gates.**

@@ -58,6 +58,10 @@ class TestReadBudgetGate(unittest.TestCase):
             repo_product.parent.mkdir(parents=True)
             plan_product.write_text("plan-v1\n", encoding="utf-8")
             repo_product.write_text("repo-v1\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "plans/DEMO-1/artifacts/result.txt", "packages/task/result.txt"],
+                cwd=root, check=True,
+            )
 
             before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             rows = {row["declared"]: row for row in before["snapshot"]["product_files"]}
@@ -76,6 +80,84 @@ class TestReadBudgetGate(unittest.TestCase):
             repo_product.write_text("repo-v2\n", encoding="utf-8")
             after_repo_change = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
             self.assertNotEqual(after_repo_change["fingerprint"], after_plan_change["fingerprint"])
+
+    def test_product_tree_uses_tracked_exact_directory_glob_and_brace_members(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            plan_dir = root / "plans" / "DEMO-1"
+            plan_dir.mkdir(parents=True)
+            tracked = {
+                "products/exact.txt": "exact-v1\n",
+                "products/tree/root.txt": "root-v1\n",
+                "products/tree/nested/leaf.txt": "leaf-v1\n",
+                "products/brace/left.txt": "left-v1\n",
+                "products/brace/right.txt": "right-v1\n",
+                "plans/DEMO-1/artifacts/result.txt": "plan-v1\n",
+            }
+            for relative, content in tracked.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            (root / "products" / "link.txt").symlink_to("exact.txt")
+            subprocess.run(["git", "add", "products", "plans/DEMO-1/artifacts/result.txt"],
+                           cwd=root, check=True)
+
+            declared = {
+                "products/exact.txt",
+                "products/tree",
+                "products/tree/**",
+                "products/brace/{left,right}.txt",
+                "products/link.txt",
+                "artifacts/result.txt",
+            }
+            before_digest, before_rows = plan_gates._product_tree(plan_dir, declared)
+            rows = {row["declared"]: row for row in before_rows}
+            self.assertEqual(rows["products/exact.txt"]["state"], "file")
+            self.assertEqual(rows["products/link.txt"]["state"], "symlink")
+            self.assertEqual(rows["artifacts/result.txt"]["path"],
+                             "plans/DEMO-1/artifacts/result.txt")
+            directory_members = rows["products/tree"]["members"]
+            self.assertEqual(directory_members, rows["products/tree/**"]["members"])
+            self.assertEqual(
+                [member["path"] for member in rows["products/brace/{left,right}.txt"]["members"]],
+                ["products/brace/left.txt", "products/brace/right.txt"],
+            )
+
+            ignored = root / "products" / "tree" / "__pycache__" / "cache.pyc"
+            ignored.parent.mkdir(parents=True)
+            ignored.write_bytes(b"ignored")
+            (root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
+            (root / "products" / "tree" / "untracked.txt").write_text(
+                "untracked\n", encoding="utf-8")
+            stable_digest, _rows = plan_gates._product_tree(plan_dir, declared)
+            self.assertEqual(stable_digest, before_digest)
+
+            (root / "products" / "tree" / "root.txt").write_text("root-v2\n", encoding="utf-8")
+            edited_digest, _rows = plan_gates._product_tree(plan_dir, declared)
+            self.assertNotEqual(edited_digest, before_digest)
+
+            (root / "products" / "exact.txt").unlink()
+            deleted_digest, deleted_rows = plan_gates._product_tree(plan_dir, declared)
+            self.assertNotEqual(deleted_digest, edited_digest)
+            deleted = {row["declared"]: row for row in deleted_rows}["products/exact.txt"]
+            self.assertEqual(deleted["state"], "deleted")
+
+    def test_product_tree_rejects_escaping_and_invalid_patterns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            plan_dir = root / "plans" / "DEMO-1"
+            plan_dir.mkdir(parents=True)
+            invalid = (
+                "../escape.txt", "/absolute.txt", "~/home.txt", "bad\\path.txt",
+                "bad/{left,right.txt", "bad/{left,{middle,right}}.txt", "bad/[abc.txt",
+                "bad/{" + ",".join(str(number) for number in range(65)) + "}.txt",
+            )
+            for declared in invalid:
+                with self.subTest(declared=declared):
+                    with self.assertRaises(ValueError):
+                        plan_gates._product_tree(plan_dir, {declared})
 
     def test_audit_fixer_rebind_distinguishes_product_change_from_bookkeeping(self):
         before = {

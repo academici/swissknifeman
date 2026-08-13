@@ -1,0 +1,55 @@
+{
+  "$schema": "urn:swissknifeman:patch-release:v1",
+  "schema_version": 1,
+  "item_id": "P6.2",
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "release_version": "0.13.2",
+  "tag": "v0.13.2",
+  "annotation": "v0.13.2 — exact-validation recovery",
+  "candidate_commit": "b09ae7857e33794f722157c4a15110b3f899b112",
+  "candidate_tree": "fb6729429e3be4ffba14062c5f34213f5f6ccd71",
+  "candidate_clean_detached_worktree": true,
+  "candidate_carrier_sha256": {
+    "bundles/P6.2.json": "718e87ea6d4e2206aee0ea1a073c607c0ef288337ec940b8625c3a4ffe1cd39e",
+    "phases/P6/P6.2.md": "b58329e614bb2d25e8d7ec80601246f307a3574c3172c2bb2a5c82c3d8fb1e26",
+    "phases/P6/P6.2.state.md": "25ebf198fb5b24b228a0f0fe55b7ff8aea1b573cb7bf56eae271944e5a39cb64"
+  },
+  "source_sha256": {
+    "CHANGELOG.md": "2498462f6bd54e1f81c69af35543f2f400cc51b6ff5ef4efbc857317ee77f1e2",
+    "packages/task/.claude-plugin/plugin.json": "6a1003cd699e67f6669d229d6be7df0d5c3347d4158b3e066bac2b90a418ce7c",
+    "packages/task/.codex-plugin/plugin.json": "08f573693c327de3e2bfce5d9a76d191a77167b201cfb8baf61320a8bda8f8a7",
+    "packages/task/adapters/codex/provider-artifacts.lock.json": "51dc334875f6d58ca44811d4b7b880876c9ed60401b61579ba600e5200a46ea9",
+    "packages/task/adapters/codex/publication-lock.json": "d17feda1500f0e345879b131296c8223863d295c12a936bc3fb12ad78f4f7858",
+    "packages/task/configs/command-routing.json": "4772250d0294843a7708510e1e12e3047a6ed33815c62a62482a284459446e94",
+    "packages/task/tests/fixtures_data/claude-command-golden/plugin.json": "6a1003cd699e67f6669d229d6be7df0d5c3347d4158b3e066bac2b90a418ce7c"
+  },
+  "command_exits": {
+    "analyst_validate": 0,
+    "docs_sync_check": 0,
+    "git_diff_check": 0,
+    "harness_validate": 0,
+    "maind_validate": 0,
+    "provider_render_check": 0,
+    "skiller_registry_check": 0,
+    "skiller_validate": 0,
+    "task_plan_delivery_tests": 0,
+    "task_plan_lint": 0,
+    "task_validate": 0
+  },
+  "tag_object": "25559ff95591b46fbb9f00b678c233869813f670",
+  "tag_object_type": "tag",
+  "tag_peeled_commit": "b09ae7857e33794f722157c4a15110b3f899b112",
+  "previous_releases": {
+    "v0.13.0": {
+      "tag_object": "c3f116a87822f45e278d7acc23ade5f89502f3ef",
+      "peeled_commit": "3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0"
+    },
+    "v0.13.1": {
+      "tag_object": "e5492ebcae1d36de735042a08f27a0c4f6a2fd6f",
+      "peeled_commit": "3e24951ec643ad8826cba3018883fc93acaba51f"
+    }
+  },
+  "push_status": "not-authorized",
+  "rollout_status": "preserved-not-repeated",
+  "post_candidate_evidence": true
+}

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 80b0d59ca85f5f6f994c61a63153f365559ebc11f5757021046dce2110f48257
+inputs_sha256: 6b9561c724209e3c71b272fb74fd57d9d4df47697834497f7ac253b54d4eac62
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-13 |
 
 ## 4. Phase Index & Status Board
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 2/4 | 🟡 In progress |
+| P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -84,7 +84,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟠 Done with deviations | 2026-08-13 |
-| P6.2 | Issue exact v0.13.2 from byte-fresh committed carriers | 🟡 In progress | 2026-08-13 |
+| P6.2 | Issue exact v0.13.2 from byte-fresh committed carriers | 🟢 Done | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | 🟢 Done | 2026-08-13 |
 
@@ -369,6 +369,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | owner | plan-run · in-progress · decision queue: P6-audit-v0131-validation-boundary-2026-08-13 |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
 | 2026-08-13 | implementation/high | plan-run · in-progress · D30: единственный AUDIT-CAP forward recovery P6.2 начат. |
+| 2026-08-13 | implementation/high | plan-run · closed-green · v0.13.2 exact candidate b09ae785 прошёл release matrix; local annotated tag создан. |
 
 ## Owner Gates
 

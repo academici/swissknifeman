@@ -19,8 +19,8 @@ class PlanDeliveryTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def _terminal_plan(self, *, layout="v2", result="closed-green"):
-        plan = write_valid_plan(self.root, "DEMO-DELIVERY", layout=layout)
+    def _terminal_plan(self, *, layout="v2", result="closed-green", root=None):
+        plan = write_valid_plan(root or self.root, "DEMO-DELIVERY", layout=layout)
         (plan / "journal.jsonl").write_text("", encoding="utf-8")
         journal.append(plan, journal.new_entry(
             plan_id=plan.name,
@@ -118,12 +118,80 @@ class PlanDeliveryTests(unittest.TestCase):
         state = plan / "phases" / "P1" / "P1.1.state.md"
         self.assertEqual(receipt["digests"]["state"], plan_delivery.file_digest(state))
 
+    def test_terminal_phase_and_archive_receipts_are_supported(self):
+        phase_plan = self._terminal_plan()
+        journal.append(phase_plan, journal.new_entry(
+            plan_id=phase_plan.name, item_id="P1", command="plan-close",
+            actor="implementation/high", result="closed-green", session_id="session-phase",
+            run_id="run-phase", fingerprint="c" * 64,
+        ))
+        phase_receipt = plan_delivery.build_terminal_receipt(phase_plan, "P1")
+        self.assertEqual(phase_receipt["status"], "🟢 Done")
+        self.assertEqual(phase_receipt["journal"]["run_id"], "run-phase")
+
+        archive_plan = write_valid_plan(self.root, "DEMO-ARCHIVE")
+        archived_path = archive_plan.parent / "archive" / archive_plan.name
+        archived_path.parent.mkdir()
+        archive_plan.rename(archived_path)
+        archive_plan = archived_path
+        journal.append(archive_plan, journal.new_entry(
+            plan_id=archive_plan.name, item_id="archive", command="plan-close",
+            actor="implementation/high", result="closed-green", session_id="session-archive",
+            run_id="run-archive", fingerprint="d" * 64,
+        ))
+        archive_receipt = plan_delivery.build_terminal_receipt(archive_plan, "archive")
+        self.assertEqual(archive_receipt["status"], "archived")
+        self.assertEqual(archive_receipt["journal"]["run_id"], "run-archive")
+
+    def test_terminal_receipt_refuses_missing_carrier_and_run_id(self):
+        plan = self._terminal_plan(root=self.root / "missing-carrier")
+        (plan / "phases" / "P1" / "P1.1.state.md").unlink()
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "DELIVERY_CARRIER_MISSING"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+        plan = self._terminal_plan(root=self.root / "missing-run-id-terminal")
+        journal_path = plan / "journal.jsonl"
+        entry = json.loads(journal_path.read_text(encoding="utf-8"))
+        entry.pop("run_id")
+        journal_path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "TERMINAL_RUN_ID_MISSING"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+    def test_terminal_receipt_refuses_journal_state_result_mismatch(self):
+        plan = self._terminal_plan(result="closed-deviations")
+        state = plan / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(
+            state.read_text(encoding="utf-8").replace("🟠 Done with deviations", "🟢 Done"),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "STALE_TERMINAL_RECEIPT"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
     def test_atomic_write_round_trips_receipt(self):
         plan = self._terminal_plan()
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
         target = plan / "artifacts" / "receipt.json"
         plan_delivery.write_receipt(target, receipt)
         self.assertEqual(json.loads(target.read_text(encoding="utf-8")), receipt)
+        self.assertEqual(list(target.parent.glob(".receipt.json.*.tmp")), [])
+
+    def test_all_canonical_commands_require_a_delivery_receipt(self):
+        command_dir = Path(__file__).resolve().parents[1] / "commands"
+        expected_kinds = {
+            "plan-design.md": "--kind handoff",
+            "plan-exec.md": "--kind terminal",
+            "plan-audit.md": "--kind handoff",
+            "plan-close.md": "--kind terminal",
+        }
+        for name, kind in expected_kinds.items():
+            source = (command_dir / name).read_text(encoding="utf-8")
+            self.assertIn("plan-delivery.py", source, name)
+            self.assertIn(kind, source, name)
+            self.assertIn("Рекомендация следующего шага:", source, name)
+
+        plan_run = (command_dir / "plan-run.md").read_text(encoding="utf-8")
+        self.assertIn("packages/task/commands/plan-exec.md", plan_run)
+        self.assertIn("Всё остальное", plan_run)
 
 
 if __name__ == "__main__":

@@ -184,6 +184,9 @@ def _handoff(plan_dir: Path) -> dict:
 def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     phase_id = item_id.split(".", 1)[0]
     plan_layout.layout_version(plan_dir)
+    state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+    if not state_path.is_file():
+        raise DeliveryError("DELIVERY_CARRIER_MISSING", f"state carrier не читается: {state_path}")
     phase_path = plan_layout.phase_path(plan_dir, phase_id)
     diagnostics = plan_lint.Diagnostics()
     phase = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics, layout="v2")
@@ -193,7 +196,6 @@ def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     if diagnostics.errors:
         raise DeliveryError("DELIVERY_STATE_INVALID", diagnostics.errors[0])
     status = occurrences[0]["fields"].get("Status", (None, None))[0]
-    state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
     return status, state_path
 
 
@@ -209,12 +211,18 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
             continue
         try:
             event = json.loads(raw)
-            journal.validate_entry(event)
-        except (json.JSONDecodeError, journal.JournalValidationError):
+        except json.JSONDecodeError:
             continue
         subject_matches = event.get("item_id") == subject
         if subject == "archive":
             subject_matches = event.get("item_id") == "archive" and event.get("command") == "plan-close"
+        if (subject_matches and event.get("result") in journal.TERMINAL_CLOSE_RESULTS
+                and not event.get("run_id")):
+            raise DeliveryError("TERMINAL_RUN_ID_MISSING", f"journal.jsonl:{line_number} не несёт run_id")
+        try:
+            journal.validate_entry(event)
+        except journal.JournalValidationError:
+            continue
         if subject_matches and event.get("result") in journal.TERMINAL_CLOSE_RESULTS:
             candidates.append((line_number, raw, event))
     if not candidates:

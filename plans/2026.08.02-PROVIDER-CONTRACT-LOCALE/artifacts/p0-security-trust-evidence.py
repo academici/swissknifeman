@@ -13,6 +13,7 @@ from pathlib import Path
 
 SCHEMA = "p0-security-trust-evidence/v2"
 DETECTOR_VERSION = "allowlist-v1"
+COMMAND_TIMEOUT_SECONDS = 60
 SECRET = re.compile(r"(?:sk-[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{12,}|gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|AKIA[A-Z0-9]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)")
 ABSOLUTE = re.compile(r"(?:^|[\"'\s])/(?:home|tmp|private|var)/|[A-Za-z]:\\Users\\")
 
@@ -51,7 +52,7 @@ def plan_paths(plan_dir: Path, manifest: Path) -> dict[str, Path]:
 def command(command_id: str, argv: list[str], *, cwd: Path) -> dict:
     try:
         completed = subprocess.run(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL, timeout=20, check=False)
+                                   stderr=subprocess.DEVNULL, timeout=COMMAND_TIMEOUT_SECONDS, check=False)
         exit_code = completed.returncode
     except (OSError, subprocess.TimeoutExpired):
         exit_code = None
@@ -165,7 +166,10 @@ def main() -> int:
     args = parser.parse_args()
     try:
         if args.command == "capture":
-            write(Path(args.output), capture(args))
+            evidence = capture(args)
+            write(Path(args.output), evidence)
+            if evidence["action_set"]:
+                raise ValueError("capture no-op predicate rejected")
         else:
             write(Path(args.branch_output), verify(args))
         print("allow")

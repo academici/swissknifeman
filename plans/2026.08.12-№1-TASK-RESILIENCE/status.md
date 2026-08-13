@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 9607385e52a9f4a5a817324dcc3e75722c42bf1a063a4d920c85d8ad71206c6d
+inputs_sha256: 5b050753a7504337641a4a321867df0886f163f971da88dae8fb630ec0533a7f
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Nonterminal observations and inline local repair | 2/3 | 🟠 Done with deviations |
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
-| P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
+| P6 | Release, new tag and registered-project rollout | 2/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -84,7 +84,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Prepare and validate the v0.13.0 release tree | 🟠 Done with deviations | 2026-08-13 |
-| P6.2 | Repair tracked-tree fingerprints and issue v0.13.1 | 🟢 Done | 2026-08-13 |
+| P6.2 | Repair tracked-tree fingerprints and issue v0.13.1 | 🟠 Done with deviations | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | 🟢 Done | 2026-08-13 |
 
@@ -362,6 +362,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: tracked-tree fingerprint repair и forward v0.13.1 по D27 |
 | 2026-08-13 | frontier/high | plan-run · in-progress · — |
 | 2026-08-13 | frontier/high | plan-run · closed-green · Candidate 3e24951ec643: tracked Files repair, 0.13.1 gates and annotated tag green; owner overrode exact invocation, frontier/high overshot implementation/high. |
+| 2026-08-13 | frontier/xhigh | plan-run · decision-pending · decision queue: P6-audit-v0131-validation-boundary-2026-08-13 |
+| 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · Exact tagged candidate 3e24951ec643: Task aggregate exit 1 (stale P6.2 bundle); other release gates green. Post-terminal 8775852 changes product bytes outside stable Files. Owner-gated forward patch required.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-13 | gpt-5.6-sol/xhigh | plan-audit · audit-red · audit-fixer, кандидат ec2e01d5100a9160c706c80c8a54ffb1a1380cb65b62926d099d6a35eb5ebe27, вердикт RED |
 
 ## Owner Gates
 
@@ -377,4 +381,5 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.2: known deviation
 - P5.1: known deviation
 - P6.1: known deviation
+- P6.2: known deviation
 - P6.4: known deviation

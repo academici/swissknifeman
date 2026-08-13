@@ -1,62 +1,64 @@
-# HANDOFF — 2026-08-13 — after P6.2
+# HANDOFF — 2026-08-13 — after P6
 
-**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6
+**Next:** design-item: task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model | frontier |
-| Thinking | xhigh — independent terminal phase audit |
-| Context | cold-start-root: independent-audit-required |
-| Суть | Проверить P6 candidate `de59b8d450c8ba27478037fcaac8f9791d4665a5789a3bee20dc85d6801bbce8` после tracked-tree patch release и delivery-gate repair. |
-| Команда | `$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6` |
+| Batch | owner-gate P6 |
+| Model | frontier (`gpt-5.6-sol`) |
+| Thinking | high |
+| Context | cold-start-root: audit-root-terminal |
+| Суть | Разрешить RED-границу `v0.13.1`; рекомендован exact forward candidate и новый immutable `v0.13.2`. |
+| Команда | `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2` |
 
-Provider-neutral launch:
+Provider-neutral SCOPE-PAYLOAD:
 
 ```text
-$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6
+$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2
+
+РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
+ВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13 (attempt 2)`; прочитать ПЕРВЫМ
+СКОУП: 1) разрешить DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` 2) при approve спроектировать exact committed release candidate с byte-fresh plan carriers 3) выпустить новый v0.13.2, не двигая v0.13.0/v0.13.1 4) повторить все release gates на exact commit
+НЕ ТРОГАТЬ: не удалять/не двигать/не перезаписывать v0.13.0/v0.13.1; P6.3/P6.4 evidence; push/GitHub release/registered rollout; P0–P5
 ```
 
 Native Codex launch:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P6'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access $'$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2\n\nРЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit\nВХОД: plans/2026.08.12-№1-TASK-RESILIENCE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-13 (attempt 2)`; прочитать ПЕРВЫМ\nСКОУП: 1) разрешить DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13` 2) при approve спроектировать exact committed release candidate с byte-fresh plan carriers 3) выпустить новый v0.13.2, не двигая v0.13.0/v0.13.1 4) повторить все release gates на exact commit\nНЕ ТРОГАТЬ: не удалять/не двигать/не перезаписывать v0.13.0/v0.13.1; P6.3/P6.4 evidence; push/GitHub release/registered rollout; P0–P5'
 ```
 
 **Done:**
 
-- Product commit `3e24951ec643ad8826cba3018883fc93acaba51f` implements Git-tracked
-  exact/directory/glob/brace membership, explicit symlink/deleted states and fail-closed paths.
-- Task `0.13.1`, generated provider carriers and root CHANGELOG are synchronized; all five
-  package validators plus registry/provider/docs/diff gates exited 0.
-- Local annotated `v0.13.1` object `e5492ebcae1d36de735042a08f27a0c4f6a2fd6f` peels to the exact
-  product candidate; `v0.13.0` remains unchanged and no push/rollout was performed.
-- P6.2 is terminal GREEN; D28 records the generator-owned provider lock carrier.
-- Follow-up commit `8775852dc38f32109371b13da7dfae54dc93a2b5` repairs the receipt gate against
-  historical malformed terminals; it is `[Unreleased]` and does not move `v0.13.1`.
+- Audit attempt 2 reproduced Task aggregate exit `1` on exact tagged candidate
+  `3e24951ec643ad8826cba3018883fc93acaba51f` and returned verdict RED.
+- Capsule `patch-release-v1.json` now records `task_validate: 1`; P6.2 is
+  `🟠 Done with deviations`; candidate rebound is
+  `ec2e01d5100a9160c706c80c8a54ffb1a1380cb65b62926d099d6a35eb5ebe27`.
+- Fresh isolated reviewer returned schema-valid `JUSTIFIED`.
+- Resolver returned `approval_required / P5_DECISION_ESCALATED`; request
+  `P6-audit-v0131-validation-boundary-2026-08-13` is durable and unresolved.
+- `v0.13.0` and `v0.13.1` remain unchanged; no push, GitHub release or rollout repeat ran.
 
 **Remaining:**
 
-- Run the policy-required P6 audit-fixer. Policy code:
-  `PHASE_AUDIT_REQUIRED_NON_GREEN` (`routing-review=full`; historical P6 deviations remain).
-- Close P6 only after a candidate-bound audit verdict permits it.
+- Repository owner chooses the DecisionRequest outcome.
+- Recommended on approval: design an exact byte-fresh candidate, run every release gate on
+  that commit, then issue `v0.13.2` without changing older tags.
 
 **Sources of truth:**
 
-- `phases/P6/P6.2.state.md`, `findings/24-P6.2-patch-release.md`.
-- `artifacts/P6/patch-release-v1.json`, `decisions/D27-repair-fingerprint-and-patch-release.md`,
-  `decisions/D28-provider-lock-is-owned-release-output.md`.
-- Git refs `3e24951ec643ad8826cba3018883fc93acaba51f`, `v0.13.1`, `v0.13.0`.
+- `phases/P6/P6.md` final audit block; `findings/25-P6-v0131-exact-validation-audit.md`.
+- `findings/24-P6.2-patch-release.md`; `artifacts/P6/patch-release-v1.json`.
+- `decisions/queue.jsonl`; `decisions/_gates.md`; `phases/P6/P6.2.state.md`.
 
 **Open risks:**
 
-- Phase status remains `🟠 Done with deviations` because historical P6.1/P6.4 evidence is non-green;
-  the adaptive policy therefore requires an independent audit before close.
-- Exact Task invocation was owner-overridden in this run; route was provider-attested
-  `gpt-5.6-sol/frontier/high`, above P6.2 `implementation/high`.
+- `v0.13.1` exists locally but does not satisfy its declared aggregate Task release gate.
+- Current plan lint intentionally reports one error until the owner resolves the request.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none.
-- deferred: push, GitHub release, registered-project rollout repeat.
-- open_questions: none.
+- workarounds: none; overlaying later plan carriers is explicitly forbidden.
+- deferred: `v0.13.2`, push, GitHub release, registered-project rollout repeat.
+- open_questions: owner choice for the durable DecisionRequest.

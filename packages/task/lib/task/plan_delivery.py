@@ -206,6 +206,7 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
     except (OSError, UnicodeDecodeError) as exc:
         raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"journal не читается: {exc}") from exc
     candidates = []
+    missing_run_id_lines = []
     for line_number, raw in enumerate(lines, 1):
         if not raw.strip():
             continue
@@ -218,7 +219,8 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
             subject_matches = event.get("item_id") == "archive" and event.get("command") == "plan-close"
         if (subject_matches and event.get("result") in journal.TERMINAL_CLOSE_RESULTS
                 and not event.get("run_id")):
-            raise DeliveryError("TERMINAL_RUN_ID_MISSING", f"journal.jsonl:{line_number} не несёт run_id")
+            missing_run_id_lines.append(line_number)
+            continue
         try:
             journal.validate_entry(event)
         except journal.JournalValidationError:
@@ -226,6 +228,11 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
         if subject_matches and event.get("result") in journal.TERMINAL_CLOSE_RESULTS:
             candidates.append((line_number, raw, event))
     if not candidates:
+        if missing_run_id_lines:
+            raise DeliveryError(
+                "TERMINAL_RUN_ID_MISSING",
+                f"journal.jsonl:{missing_run_id_lines[-1]} не несёт run_id",
+            )
         raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"для {subject} нет terminal journal event")
     line_number, raw, event = candidates[-1]
     if not event.get("run_id"):

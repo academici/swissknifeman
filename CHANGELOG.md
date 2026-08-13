@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: terminal block проходит один isolated confirmer.**
+  Design, exec, run, audit и close теперь используют одну closed sequence:
+  immutable capsule, distinct fresh-context reviewer и deterministic reducer. External block
+  остаётся nonterminal до verified digest-qualified Perplexity evidence; Codex projections,
+  Claude golden fixtures и operator reference пересобраны из canonical sources.
+
 - **`task` / `plan-protocol`: workflow lint теперь различает явный запрет и требование.**
   Только positive declaration в `Phase Context` требует canonical workflow asset; negation той же
   строки не маскирует отдельный `scriptPath` или multi-agent declaration. Codex и Claude

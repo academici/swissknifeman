@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-13
-inputs_sha256: 6b9561c724209e3c71b272fb74fd57d9d4df47697834497f7ac253b54d4eac62
+inputs_sha256: 653c53e0bf600e5ed71d2afbbf44024271c6070634550855debc499b18384f15
 generated_by: task plan-views status
 -->
 
@@ -370,6 +370,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
 | 2026-08-13 | implementation/high | plan-run · in-progress · D30: единственный AUDIT-CAP forward recovery P6.2 начат. |
 | 2026-08-13 | implementation/high | plan-run · closed-green · v0.13.2 exact candidate b09ae785 прошёл release matrix; local annotated tag создан. |
+| 2026-08-13 | gpt-5.6-terra/low | plan-close · closed-deviations · P6 закрыта по owner direct-close D31; terminal items сверены, docs не требуются. |
 
 ## Owner Gates
 

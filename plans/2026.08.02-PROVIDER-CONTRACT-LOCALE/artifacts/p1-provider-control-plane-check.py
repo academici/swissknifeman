@@ -29,6 +29,42 @@ _AGGREGATE_STATUSES = {
     "ready", "unknown", "drifted", "blocked", "error", "no-providers-selected",
 }
 _SEVERITY = {"error": 0, "warning": 1, "info": 2}
+_MIGRATION_SOURCE_CLASSES = {"legacy-absent-config", "provider-config-v1"}
+_MIGRATION_CLASSIFICATIONS = {
+    "canonical-equivalent", "stale-managed-copy", "broken-link",
+    "local-override", "ambiguous",
+}
+_MIGRATION_NO_WRITE_MODES = {"plan", "check", "dry-run"}
+_MIGRATION_WRITE_ORDER = ["provider-targets", "provider-lock", "provider-status"]
+_MIGRATION_NEGATIVE_CODES = {
+    "MIG_SOURCE_CLASS_UNKNOWN",
+    "MIG_SOURCE_NEWER_MAJOR",
+    "MIG_SOURCE_VERSION_UNSUPPORTED",
+    "MIG_SOURCE_CORRUPT",
+    "MIG_CLASSIFICATION_INCOMPLETE",
+    "MIG_CLASSIFICATION_AMBIGUOUS",
+    "MIG_LOCAL_OVERRIDE",
+    "MIG_OWNERSHIP_UNPROVEN",
+    "MIG_PREIMAGE_CHANGED",
+    "MIG_TARGET_SNAPSHOT_INCOMPLETE",
+    "MIG_TARGET_SNAPSHOT_INVALID",
+    "MIG_PROVIDER_SET_MISMATCH",
+    "MIG_WRITE_FORBIDDEN",
+    "MIG_AUTHORITY_REQUIRED",
+    "MIG_BACKUP_SET_MISMATCH",
+    "MIG_PROVIDER_PARTIAL",
+    "MIG_ROLLBACK_FAILED",
+    "MIG_READBACK_FAILED",
+    "MIG_SECOND_RECONCILE_NONEMPTY",
+}
+_PREDECESSOR_GATES = tuple(f"G{number:02d}" for number in range(1, 12))
+_PREDECESSOR_GATE_HEADERS = (
+    "Gate", "Transition", "Exact producer item / verifier", "Evidence path", "Owner",
+    "Pass rule", "failure action",
+)
+_CROSSWALK_HEADERS = (
+    "Gate", "Source row SHA-256", "Preserved obligation", "P1.3 enforcement",
+)
 
 
 class ContractError(ValueError):
@@ -1866,11 +1902,317 @@ def _self_test_ownership(contract: Path, skill_core: Path, skill_adapters: Path,
     _exercise_negative_fixtures(fixtures, pattern)
 
 
+def _migration_record(value: object, fields: set[str], code: str = "MIG_SOURCE_CORRUPT") -> dict[str, object]:
+    if not isinstance(value, dict) or set(value) != fields:
+        _raise(code)
+    return value
+
+
+def _migration_version(source_class: str, version: object) -> None:
+    if source_class == "legacy-absent-config":
+        if version != "0":
+            _raise("MIG_SOURCE_VERSION_UNSUPPORTED")
+        return
+    if not isinstance(version, str) or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None:
+        _raise("MIG_SOURCE_VERSION_UNSUPPORTED")
+    major, minor, _ = (int(part) for part in version.split("."))
+    if major > 1:
+        _raise("MIG_SOURCE_NEWER_MAJOR")
+    if major != 1 or minor != 0:
+        _raise("MIG_SOURCE_VERSION_UNSUPPORTED")
+
+
+def _migration_refusal(code: str, providers: dict[str, str], rollback: str) -> dict[str, object]:
+    return {
+        "outcome": "refused",
+        "action_code": code,
+        "writes": [],
+        "rollback": rollback,
+        "providers": providers,
+    }
+
+
+def validate_migration_case(value: object, *, check_expected: bool = True) -> dict[str, object]:
+    case = _migration_record(value, {"id", "source", "target_snapshot", "operation", "expected"})
+    if not _stable_id(case["id"]):
+        _raise("MIG_SOURCE_CORRUPT")
+    source = _migration_record(case["source"], {
+        "class", "version", "config_state", "corrupt", "classification_complete", "artifacts",
+    })
+    source_class = source["class"]
+    if source_class not in _MIGRATION_SOURCE_CLASSES:
+        _raise("MIG_SOURCE_CLASS_UNKNOWN")
+    _migration_version(source_class, source["version"])
+    if source["corrupt"] is not False:
+        _raise("MIG_SOURCE_CORRUPT")
+    if not isinstance(source["classification_complete"], bool):
+        _raise("MIG_SOURCE_CORRUPT")
+    if not source["classification_complete"]:
+        _raise("MIG_CLASSIFICATION_INCOMPLETE")
+    artifacts = source["artifacts"]
+    if not isinstance(artifacts, list):
+        _raise("MIG_SOURCE_CORRUPT")
+    artifact_ids: list[str] = []
+    provider_ids: list[str] = []
+    for item in artifacts:
+        artifact = _migration_record(item, {
+            "artifact_id", "provider_id", "classification", "ownership", "ownership_evidence",
+            "target_path", "expected_preimage", "observed_preimage", "backup_path",
+            "expected_postimage",
+        })
+        if (not _stable_id(artifact["artifact_id"])
+                or not _provider_id(artifact["provider_id"])
+                or artifact["classification"] not in _MIGRATION_CLASSIFICATIONS
+                or not _digest(artifact["ownership_evidence"])
+                or not isinstance(artifact["target_path"], str)
+                or artifact["target_path"].startswith("/")
+                or ".." in Path(artifact["target_path"]).parts
+                or not isinstance(artifact["backup_path"], str)
+                or artifact["backup_path"].startswith("/")
+                or ".." in Path(artifact["backup_path"]).parts
+                or not _digest(artifact["expected_preimage"])
+                or not _digest(artifact["observed_preimage"])
+                or not _digest(artifact["expected_postimage"])):
+            _raise("MIG_SOURCE_CORRUPT")
+        if artifact["classification"] == "ambiguous":
+            _raise("MIG_CLASSIFICATION_AMBIGUOUS")
+        if artifact["classification"] == "local-override":
+            _raise("MIG_LOCAL_OVERRIDE")
+        if artifact["ownership"] != "managed":
+            _raise("MIG_OWNERSHIP_UNPROVEN")
+        if artifact["observed_preimage"] != artifact["expected_preimage"]:
+            _raise("MIG_PREIMAGE_CHANGED")
+        artifact_ids.append(artifact["artifact_id"])
+        provider_ids.append(artifact["provider_id"])
+    if artifact_ids != sorted(artifact_ids) or len(artifact_ids) != len(set(artifact_ids)):
+        _raise("MIG_SOURCE_CORRUPT")
+
+    snapshot = _migration_record(case["target_snapshot"], {
+        "complete", "valid", "desired_digest", "providers",
+    })
+    if snapshot["complete"] is not True:
+        _raise("MIG_TARGET_SNAPSHOT_INCOMPLETE")
+    if snapshot["valid"] is not True or not _digest(snapshot["desired_digest"]):
+        _raise("MIG_TARGET_SNAPSHOT_INVALID")
+    selected = snapshot["providers"]
+    if (not isinstance(selected, list) or selected != sorted(selected)
+            or len(selected) != len(set(selected))
+            or not all(_provider_id(provider_id) for provider_id in selected)):
+        _raise("MIG_PROVIDER_SET_MISMATCH")
+    if source_class == "legacy-absent-config":
+        if source["config_state"] != "absent" or artifacts or selected != ["claude-code", "codex"]:
+            _raise("MIG_SOURCE_CORRUPT")
+    elif source["config_state"] != "present" or set(selected) != set(provider_ids):
+        _raise("MIG_PROVIDER_SET_MISMATCH")
+
+    operation = _migration_record(case["operation"], {
+        "mode", "authorization", "writes", "backup_artifact_ids", "provider_results",
+        "rollback", "readback", "second_reconcile_actions",
+    })
+    mode = operation["mode"]
+    if mode not in _MIGRATION_NO_WRITE_MODES | {"apply"}:
+        _raise("MIG_SOURCE_CORRUPT")
+    if (not isinstance(operation["writes"], list)
+            or not isinstance(operation["backup_artifact_ids"], list)
+            or not isinstance(operation["provider_results"], dict)
+            or not isinstance(operation["second_reconcile_actions"], list)):
+        _raise("MIG_SOURCE_CORRUPT")
+    if mode in _MIGRATION_NO_WRITE_MODES:
+        if operation["writes"] or operation["backup_artifact_ids"]:
+            _raise("MIG_WRITE_FORBIDDEN")
+        if (operation["authorization"] is not None or operation["provider_results"]
+                or operation["rollback"] != "not-required"
+                or operation["readback"] != "not-run"
+                or operation["second_reconcile_actions"]):
+            _raise("MIG_WRITE_FORBIDDEN")
+        if source_class == "legacy-absent-config":
+            result = {
+                "outcome": "compatibility-noop",
+                "action_code": "MIG_COMPATIBILITY_NOOP",
+                "writes": [],
+                "rollback": "not-required",
+                "providers": {"claude-code": "ready", "codex": "not-selected"},
+            }
+        else:
+            result = {
+                "outcome": "plan-ready",
+                "action_code": "MIG_PLAN_READY",
+                "writes": [],
+                "rollback": "not-required",
+                "providers": {provider_id: "planned" for provider_id in selected},
+            }
+    else:
+        authorization = operation["authorization"]
+        if not isinstance(authorization, dict):
+            _raise("MIG_AUTHORITY_REQUIRED")
+        authorization = _migration_record(authorization, {"decision_id", "action_digest", "status"},
+                                          "MIG_AUTHORITY_REQUIRED")
+        if (not _stable_id(authorization["decision_id"])
+                or not _digest(authorization["action_digest"])
+                or authorization["status"] != "accepted"):
+            _raise("MIG_AUTHORITY_REQUIRED")
+        if operation["writes"] != _MIGRATION_WRITE_ORDER:
+            _raise("MIG_SOURCE_CORRUPT")
+        if operation["backup_artifact_ids"] != artifact_ids:
+            _raise("MIG_BACKUP_SET_MISMATCH")
+        results = operation["provider_results"]
+        if set(results) != set(selected) or not all(
+                outcome in {"success", "failure"} for outcome in results.values()):
+            _raise("MIG_PROVIDER_SET_MISMATCH")
+        if "failure" in results.values():
+            if operation["rollback"] != "restored":
+                result = _migration_refusal("MIG_ROLLBACK_FAILED", results, operation["rollback"])
+            else:
+                result = _migration_refusal("MIG_PROVIDER_PARTIAL", results, "restored")
+        elif operation["readback"] != "match":
+            result = _migration_refusal("MIG_READBACK_FAILED", results, operation["rollback"])
+        elif operation["second_reconcile_actions"]:
+            result = _migration_refusal(
+                "MIG_SECOND_RECONCILE_NONEMPTY", results, operation["rollback"])
+        elif operation["rollback"] != "not-required":
+            result = _migration_refusal("MIG_ROLLBACK_FAILED", results, operation["rollback"])
+        else:
+            result = {
+                "outcome": "applied",
+                "action_code": "MIG_APPLIED",
+                "writes": list(_MIGRATION_WRITE_ORDER),
+                "rollback": "not-required",
+                "providers": results,
+            }
+    if check_expected and case["expected"] != result:
+        raise ValueError(f"{case['id']}: migration outcome mismatch: {result!r}")
+    return result
+
+
+def _markdown_table(text: str, heading: str, headers: tuple[str, ...]) -> list[dict[str, str]]:
+    marker = f"## {heading}"
+    if marker not in text:
+        raise ValueError(f"missing section: {heading}")
+    section = text.split(marker, 1)[1].split("\n## ", 1)[0]
+    lines = [line for line in section.splitlines() if line.startswith("|")]
+    if len(lines) < 3:
+        raise ValueError(f"missing table: {heading}")
+    observed = tuple(cell.strip() for cell in lines[0].strip("|").split("|"))
+    if observed != headers:
+        raise ValueError(f"table schema mismatch: {heading}")
+    rows = []
+    for line in lines[2:]:
+        cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
+        if len(cells) != len(headers):
+            raise ValueError(f"table row width mismatch: {heading}")
+        rows.append(dict(zip(headers, cells)))
+    return rows
+
+
+def _row_digest(row: dict[str, str]) -> str:
+    return _canonical_digest(row)
+
+
+def _verify_predecessor_crosswalk(contract: Path) -> None:
+    predecessor = contract.parents[3] / "archive/2026.07.19-DUAL-PROVIDER/root/contracts/provider-migration-gates.md"
+    predecessor_rows = _markdown_table(
+        predecessor.read_text(encoding="utf-8"), "Preconditions", _PREDECESSOR_GATE_HEADERS)
+    if [row["Gate"] for row in predecessor_rows] != list(_PREDECESSOR_GATES):
+        raise ValueError("predecessor G01-G11 order or exact set mismatch")
+    source_digests = {row["Gate"]: _row_digest(row) for row in predecessor_rows}
+    contract_text = contract.read_text(encoding="utf-8")
+    crosswalk = _markdown_table(contract_text, "Exact G01-G11 predecessor crosswalk",
+                                _CROSSWALK_HEADERS)
+    if [row["Gate"] for row in crosswalk] != list(_PREDECESSOR_GATES):
+        raise ValueError("G01-G11 crosswalk order or exact set mismatch")
+    for row in crosswalk:
+        if row["Source row SHA-256"] != source_digests[row["Gate"]]:
+            raise ValueError(f"predecessor obligation weakened or changed: {row['Gate']}")
+        if not row["Preserved obligation"] or not row["P1.3 enforcement"]:
+            raise ValueError(f"empty predecessor crosswalk field: {row['Gate']}")
+    if "G01–G11 MUST NOT be weakened" not in contract_text:
+        raise ValueError("explicit G01-G11 no-weaken rule missing")
+
+
+def _verify_migration_contract_inventory(contract: Path) -> None:
+    text = contract.read_text(encoding="utf-8")
+    required = {
+        "## Legacy source classes and admission",
+        "## Migration transaction",
+        "## Rollback and convergence",
+        "## Exact G01-G11 predecessor crosswalk",
+        "## Approved Owner decision set C1-C6",
+        "APPROVE P1.3 PROVIDER-CONTROL-PLANE C1-C6 AS WRITTEN",
+        "MIG_COMPATIBILITY_NOOP", "MIG_PLAN_READY", "MIG_APPLIED",
+        *_MIGRATION_NEGATIVE_CODES,
+    }
+    missing = sorted(literal for literal in required if literal not in text)
+    if missing:
+        raise ValueError("migration contract inventory missing: " + ", ".join(missing))
+
+
+def _run_migration(contract: Path, fixtures: Path) -> None:
+    _verify_migration_contract_inventory(contract)
+    _verify_predecessor_crosswalk(contract)
+    positive = _load_json(fixtures / "migration-positive.json")
+    negative = _load_json(fixtures / "migration-negative.json")
+    if positive.get("contract_version") != "1.0.0" or negative.get("contract_version") != "1.0.0":
+        raise ValueError("migration fixture contract version mismatch")
+    bases = _case_map(positive, "cases", "MIG_SOURCE_CORRUPT")
+    for case in bases.values():
+        validate_migration_case(case)
+    negatives = _require_list(negative.get("cases"), "MIG_SOURCE_CORRUPT", nonempty=True)
+    seen_ids: set[str] = set()
+    covered_codes: set[str] = set()
+    for value in negatives:
+        row = _migration_record(value, {"id", "base", "mutation", "expected_code"})
+        if (not _stable_id(row["id"]) or row["id"] in seen_ids or row["base"] not in bases
+                or row["expected_code"] not in _MIGRATION_NEGATIVE_CODES):
+            _raise("MIG_SOURCE_CORRUPT")
+        seen_ids.add(row["id"])
+        covered_codes.add(row["expected_code"])
+        mutated = _apply_mutation(bases[row["base"]], row["mutation"])
+        try:
+            result = validate_migration_case(mutated, check_expected=False)
+        except ContractError as error:
+            actual = error.code
+        else:
+            actual = result["action_code"]
+        if actual != row["expected_code"]:
+            raise ValueError(f"{row['id']}: expected {row['expected_code']}, got {actual}")
+    if covered_codes != _MIGRATION_NEGATIVE_CODES:
+        missing = sorted(_MIGRATION_NEGATIVE_CODES - covered_codes)
+        raise ValueError("migration negative-code coverage missing: " + ", ".join(missing))
+
+
+def _contract_metadata(text: str, field: str) -> str:
+    match = re.search(rf"^\*\*{re.escape(field)}:\*\*\s*(.+)$", text, re.MULTILINE)
+    if not match:
+        raise ValueError(f"missing contract metadata: {field}")
+    return match.group(1).strip()
+
+
+def _verify_owner_freeze(contract: Path) -> None:
+    text = contract.read_text(encoding="utf-8")
+    if _contract_metadata(text, "Version") != "v1.0.0" or _contract_metadata(text, "Status") != "frozen":
+        raise ValueError("P1.3 contract is not frozen v1.0.0")
+    approval = _contract_metadata(text, "Approval")
+    match = re.fullmatch(r"(D[0-9]+), [0-9]{4}-[0-9]{2}-[0-9]{2}", approval)
+    if match is None:
+        raise ValueError("exact Owner D# is required")
+    decision_id = match.group(1)
+    decisions_dir = contract.parents[2] / "decisions"
+    paths = [path for path in decisions_dir.glob(f"{decision_id}-*.md")
+             if not path.name.startswith("_")]
+    if len(paths) != 1:
+        raise ValueError("exact immutable Owner decision record is required")
+    decision_text = paths[0].read_text(encoding="utf-8")
+    if ("status: accepted" not in decision_text
+            or "item: P1.3" not in decision_text
+            or "APPROVE P1.3 PROVIDER-CONTROL-PLANE C1-C6 AS WRITTEN" not in decision_text):
+        raise ValueError("accepted atomic C1-C6 Owner reply is required")
+
+
 def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--stage", choices=("schema", "ownership"))
-    mode.add_argument("--self-test", choices=("schema", "ownership"))
+    mode.add_argument("--stage", choices=("schema", "ownership", "migration", "final"))
+    mode.add_argument("--self-test", choices=("schema", "ownership", "migration", "all"))
     mode.add_argument("--generate-matrix-md", action="store_true")
     parser.add_argument("--contract", type=Path)
     parser.add_argument("--skill-core", type=Path)
@@ -1894,12 +2236,15 @@ def main() -> int:
         matrix.with_suffix(".md").write_text(render_matrix_markdown(value), encoding="utf-8")
         print(f"generated: {matrix.with_suffix('.md')}")
         return 0
-    if args.stage == "schema" and (args.contract is None or args.fixtures is None):
-        raise ValueError("--stage schema requires --contract and --fixtures")
+    if args.stage in {"schema", "migration", "final"} and (
+            args.contract is None or args.fixtures is None):
+        raise ValueError(f"--stage {args.stage} requires --contract and --fixtures")
     if args.stage == "ownership" and any(value is None for value in (
             args.contract, args.skill_core, args.skill_adapters, args.matrix, args.fixtures)):
         raise ValueError(
             "--stage ownership requires --contract, --skill-core, --skill-adapters, --matrix and --fixtures")
+    if args.stage == "final" and args.matrix is None:
+        raise ValueError("--stage final requires --matrix")
     if args.stage == "schema" or args.self_test == "schema":
         _run(contract, fixtures)
         print("schema: pass" if args.stage else "self-test schema: pass")
@@ -1909,6 +2254,28 @@ def main() -> int:
                                 capability_manifest)
         print("ownership: pass")
         print("ownership inventory: " + json.dumps(report, sort_keys=True, separators=(",", ":")))
+        return 0
+    if args.stage == "migration" or args.self_test == "migration":
+        _run_migration(contract, fixtures)
+        print("migration: pass" if args.stage else "self-test migration: pass")
+        return 0
+    if args.stage == "final":
+        _run(contract, fixtures)
+        print("schema: pass")
+        _run_ownership(contract, skill_core, skill_adapters, matrix, fixtures,
+                       capability_manifest)
+        print("ownership: pass")
+        _run_migration(contract, fixtures)
+        print("migration: pass")
+        print("predecessor-crosswalk: pass")
+        _verify_owner_freeze(contract)
+        return 0
+    if args.self_test == "all":
+        _run(contract, fixtures)
+        _self_test_ownership(contract, skill_core, skill_adapters, matrix, fixtures,
+                             capability_manifest)
+        _run_migration(contract, fixtures)
+        print("self-test all: pass")
         return 0
     _self_test_ownership(contract, skill_core, skill_adapters, matrix, fixtures,
                          capability_manifest)

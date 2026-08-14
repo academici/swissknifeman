@@ -1,8 +1,9 @@
 # Provider control-plane contract
 
-**Version:** v1.0.0-draft
-**Status:** draft
+**Version:** v1.0.0
+**Status:** frozen
 **Owner:** repository owner
+**Approval:** D73, 2026-08-14
 **Predecessors:** frozen provider configuration v1.0.0, capability v1.0.0, and artifact v1.3.0 contracts
 
 ## Purpose
@@ -316,6 +317,143 @@ An upgrade is keyed by the exact recognized source version, produces one complet
 snapshot, and commits it only with no error diagnostics. Unknown/ambiguous source versions,
 incomplete target snapshots, or upgrade errors preserve the prior record and return no partial
 new result. Backup/rollback authorization remains outside this read contract.
+
+## Legacy source classes and admission
+
+Migration is a closed consumer of the desired/status model; it does not become a new source of
+provider intent. A source is admitted only when its class, version, complete P0 classification,
+ownership evidence, artifact set, provider set and preimages are all explicit. Shape inference,
+mtime ordering, basename matching, rendered-output adoption and best-effort partial plans are
+forbidden.
+
+| Source class | Accepted version | Required evidence | Outcome |
+|:--|:--|:--|:--|
+| `legacy-absent-config` | exact synthetic `0` | provider config is absent; no candidate artifact or override exists | in-memory Claude-only compatibility: Claude Code selected, Codex not selected, no carrier/target/lock/status/backup write |
+| `provider-config-v1` | `1.0.x` only | complete current desired snapshot; every artifact has one P0 classification, managed ownership proof, target/preimage/postimage and backup identity | a complete `plan`/`check`/`dry-run`, or an Owner-authorized atomic `apply` |
+
+`canonical-equivalent`, `stale-managed-copy`, and `broken-link` are the only recognized
+actionable P0 classifications. A broken link remains actionable only when the recorded artifact
+identity and ownership evidence prove its exact managed target; absence alone proves nothing.
+`local-override` and `ambiguous` always refuse. An unowned target, incomplete classification,
+corrupt source, missing/duplicate provider row, changed preimage, unknown class/version or
+newer major refuses before backup or write. A refusal never falls back to legacy, strips unknown
+fields, adopts bytes, or silently enables Codex.
+
+The complete target snapshot is validated before an apply is authorized. It contains the exact
+desired digest and every selected provider row; partial provider snapshots are invalid. Missing
+provider config is compatibility input, not an implicit migration request.
+
+## Migration transaction
+
+`plan`, `check`, and `dry-run` are byte-preserving. They may return `MIG_PLAN_READY` or
+`MIG_COMPATIBILITY_NOOP`, but MUST NOT create a backup, target, lock, status record, config key or
+approval. The checker is also no-write and proves contract/fixture shape only; it never performs a
+provider or fleet operation.
+
+`apply` requires a separate accepted immutable decision bound to the exact action digest. The
+P1.3 contract-freeze decision approves contract bytes only and is never apply authority. After
+authorization, one transaction executes in this order:
+
+1. revalidate class/version, complete classification and ownership, exact provider/action sets,
+   target snapshot, decision digest, every current preimage and the exact backup inventory;
+2. capture recoverable source bytes for every declared managed artifact before its first write;
+3. stage and validate every selected provider result without publishing partial success;
+4. publish provider targets, then the provider artifact lock, then provider-qualified status;
+5. read back the exact target/lock/status snapshot and run the same reconcile a second time;
+6. report `MIG_APPLIED` only when readback matches and the second reconcile action set is empty.
+
+The write order is closed: `provider-targets` → `provider-lock` → `provider-status`. A status row
+cannot precede its lock/target commit. One provider's success never masks a failed, missing,
+unsupported, untrusted or stale peer. An uncommitted or partially published snapshot is failure,
+not last-applied evidence and not health evidence.
+
+## Rollback and convergence
+
+Any provider failure, write interruption, readback mismatch or non-empty second reconcile keeps
+the aggregate non-green. Rollback restores only the transaction's declared managed targets,
+lock and status from the captured preimage set; it neither deletes nor overwrites unowned bytes,
+local overrides, ambiguous targets, provider config, credentials, Brain state, fleet roots or
+other provider outputs. Rollback revalidates the same ownership and backup identities before each
+restore. Incomplete rollback reports `MIG_ROLLBACK_FAILED` and preserves all recoverable evidence.
+
+A restored partial-provider transaction reports `MIG_PROVIDER_PARTIAL`; a readback mismatch
+reports `MIG_READBACK_FAILED`; a non-empty second reconcile reports
+`MIG_SECOND_RECONCILE_NONEMPTY`. None may be downgraded to a warning or `ready`. Health may become
+green only after a committed complete snapshot, matching readback and an empty second reconcile.
+
+### Stable migration action and refusal codes
+
+| Code | Closed meaning |
+|:--|:--|
+| `MIG_COMPATIBILITY_NOOP` | Provider config is absent; preserve the in-memory Claude-only default and write nothing. |
+| `MIG_PLAN_READY` | A recognized, complete no-write plan/check/dry-run candidate is ready for separate apply authorization. |
+| `MIG_APPLIED` | Exact authorized transaction committed, read back and reconciled to an empty second action set. |
+| `MIG_SOURCE_CLASS_UNKNOWN` | Source class is not recognized. |
+| `MIG_SOURCE_NEWER_MAJOR` | Source declares a newer major and has no compatibility fallback. |
+| `MIG_SOURCE_VERSION_UNSUPPORTED` | Source version is malformed or outside the exact supported class. |
+| `MIG_SOURCE_CORRUPT` | Source or transaction shape is malformed/inconsistent. |
+| `MIG_CLASSIFICATION_INCOMPLETE` | P0 classification is not complete for the exact artifact set. |
+| `MIG_CLASSIFICATION_AMBIGUOUS` | At least one target remains ambiguous. |
+| `MIG_LOCAL_OVERRIDE` | A project-owned local override blocks automatic migration. |
+| `MIG_OWNERSHIP_UNPROVEN` | Managed ownership evidence is absent or does not bind the target. |
+| `MIG_PREIMAGE_CHANGED` | A target changed after planning; refuse before backup/write. |
+| `MIG_TARGET_SNAPSHOT_INCOMPLETE` | The proposed current snapshot is partial. |
+| `MIG_TARGET_SNAPSHOT_INVALID` | The complete proposed snapshot fails validation. |
+| `MIG_PROVIDER_SET_MISMATCH` | Desired, artifact and provider result sets are not exact. |
+| `MIG_WRITE_FORBIDDEN` | A plan/check/dry-run attempted to write or claim authority. |
+| `MIG_AUTHORITY_REQUIRED` | Apply lacks an accepted exact action decision. |
+| `MIG_BACKUP_SET_MISMATCH` | Recoverable backup inventory is not the exact managed artifact set. |
+| `MIG_PROVIDER_PARTIAL` | A provider failed; the declared transaction was restored. |
+| `MIG_ROLLBACK_FAILED` | Exact rollback did not restore the declared preimage. |
+| `MIG_READBACK_FAILED` | Published target/lock/status bytes do not match the committed plan. |
+| `MIG_SECOND_RECONCILE_NONEMPTY` | Idempotence proof found another action after apply. |
+
+## Exact G01-G11 predecessor crosswalk
+
+The source-row digest is SHA-256 of compact sorted-key UTF-8 JSON containing every cell of the
+corresponding frozen predecessor `## Preconditions` row. The checker recomputes it from archived
+bytes. G01–G11 MUST NOT be weakened, skipped, reordered or inferred from a later green result.
+
+| Gate | Source row SHA-256 | Preserved obligation | P1.3 enforcement |
+|:--|:--|:--|:--|
+| G01 | sha256:192d725d992b7aa0565766c7994a42b8d139228970515a72bb2ab2d9c7317c8c | frozen P0 contracts, accepted ADR, terminal items, independent GREEN and protected delta | P1.3 admits only terminal P0 evidence and never repairs or rewrites P0 |
+| G02 | sha256:08c041ad682a0715f2a43597c4684377506df8adadd0c025a107884ac937c178 | frozen provider config, compatibility/no-write evidence and independent P1 audit | P1.3 supplies migration/rollback evidence; P2 remains closed until the P1 audit |
+| G03 | sha256:861f5f9314ec57eff3ad987c0ed3c0ab4e0631dbbddce933b9e8638ccbc81070 | provider publication parity and independent verification | migration never treats rendered publication output as canonical source |
+| G04 | sha256:75114032944a0621ecf6fa028c11d45c6b23fc47236d4440cc94cc58550b844b | stable command identity, provider-native invocation and fail-closed routing | migration carries no command downgrade or cross-provider invocation fallback |
+| G05 | sha256:c12459f83ba54a7cccb0394442c17a5ce65d76bfdb041dc8e98db926daa2934c | harness/instruction compatibility, security-axis separation and protected delta | apply authority remains separate from trust, approval policy and sandbox |
+| G06 | sha256:691033e9c9d031a0973c9bf243e526aa34c13e87c9c4b8cd933e3a3e170e56ec | committed cold checkpoint and both-provider evidence | partial/uncommitted provider state cannot satisfy readback or convergence |
+| G07 | sha256:9a13a25b9727678c49e3b3d86df4c28b86d42725bde6b0afc51054cf238f5c72 | exact provider docs/catalog hashes and explicit full access | this contract adds no default access and no documentation shortcut |
+| G08 | sha256:1a3fa32120bc8125ba5a0361930261a0e09856d5b2fe86f6a0c63d3059864930 | isolated proof, exact live approval, rollback and idempotence | exact decision digest, backup, readback and second-noop are mandatory |
+| G09 | sha256:5c31b4059dceb9a281323c10b7cd41e109c9939612caa8d6ec330abdddebdc8b | ownership/replacement/rollback evidence before cleanup | unowned, local-override and ambiguous assets refuse; no cleanup is authorized |
+| G10 | sha256:660c4b43df91adfa40d6f4ffab04be028f964242297a0a9abce7c33cb37b800e | final GREEN, Owner approval, clean release scope and FOREMAN no-write | P1.3 has no FOREMAN mutation or release-opening authority |
+| G11 | sha256:60cdaff8993cdd7f82fb6903804f96e0d86e7ba1aee76c62969f2751ead28233 | fleet no-write and separate future rollout-plan authority | contract fixtures are plan-local; no fleet/project operation is performed |
+
+## Approved Owner decision set C1-C6
+
+The Owner decision is atomic and freezes the exact candidate together:
+
+- **C1 — identity/schema:** v1.0.0 envelope, desired/last-applied/observed identities,
+  deterministic digests and no-partial result;
+- **C2 — SSOT composition/ownership:** provider config, capability manifest, artifact lock,
+  canonical Skill Core and provider-scoped adapter evidence retain their existing owners;
+- **C3 — negotiation/parity:** ordered fail-closed capability negotiation, provider-qualified
+  support labels and third-provider additive registration;
+- **C4 — status/diagnostics:** provider/aggregate precedence, independent provider rows and stable
+  schema/migration diagnostics;
+- **C5 — migration/rollback:** recognized source table, exact transaction/write order, ownership,
+  preimage, backup, rollback, readback, second-noop and G01–G11 no-weaken crosswalk;
+- **C6 — compatibility/authority:** absent config remains no-write Claude-only compatibility;
+  contract freeze does not authorize apply, provider, package, Brain, credential or fleet writes.
+
+Exact approval reply:
+
+```text
+APPROVE P1.3 PROVIDER-CONTROL-PLANE C1-C6 AS WRITTEN
+```
+
+Any C1–C6 change is a revision request, not partial approval. Only the accepted immutable Owner
+reply may replace `pending exact Owner decision`, set `Status: frozen` and complete the v1.0.0
+freeze bookkeeping.
 
 ## Normative fixtures and validation
 

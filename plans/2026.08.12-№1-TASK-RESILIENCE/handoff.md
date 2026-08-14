@@ -1,34 +1,35 @@
 # HANDOFF — 2026-08-14 — after P7
 
-**Next:** close: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7
+**Next:** план закрыт
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | n/a |
 | Model | implementation |
-| Thinking | high — phase close |
+| Thinking | low — archive carrier reconciliation |
 | Context | cold-start-root: audit-root-terminal |
-| Суть | Закрыть GREEN-кандидат P7 и собрать phase closure перед отдельным archive. |
-| Команда | `task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7` |
+| Суть | Архивировать терминальный план отдельным протокольным шагом. |
+| Команда | `$ task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE'
 ```
 
 **Done:**
 
-- Audit P7 attempt 1 repaired the false active/archive codename warning in `105aa8c5` and returned GREEN on candidate `40d3e00465abde87776861b31f2dc2f9dd83ea93df540f39b60e4a062364c7c1`.
-- Superseding item evidence names every P7 product chain; Task `919`, Skiller `633`, provider/registry/docs and both docs builds are green.
+- P7 закрыта: все шесть items имеют `🟢 Done`; fresh GREEN audit совпадает с candidate `58c0c795289bb07e83ee46b20f40e15b5c68341a2d4b0ffcbec7592df153a021`.
+- Task `922 passed, 1 skipped`, Skiller `633`, provider/registry/docs и оба docs build зелёные по terminal/audit evidence.
+- Docs: не требуется.
 
 **Remaining:**
 
-- Close P7 → archive `2026.08.12-№1-TASK-RESILIENCE`; no tag, push, release or rollout.
+- Архивировать `2026.08.12-№1-TASK-RESILIENCE`; no tag, push, release or rollout.
 
 **Sources of truth:**
 
-- `plan.md`; `phases/P7/P7.md` latest audit block; P7 item states; `journal.jsonl`; `artifacts/roadmap-snapshots/`; `roadmap/README.md`.
+- `phases/P7/P7.md`; `phases/P7/P7.closed.md`; `status.md`; `journal.jsonl`; `artifacts/roadmap-snapshots/`; `roadmap/README.md`.
 
 **Open risks:**
 

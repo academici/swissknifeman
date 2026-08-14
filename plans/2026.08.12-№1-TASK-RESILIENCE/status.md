@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: a984204eb7b5879db94e5c0f6345f2307dde1e72c5de1f5a5544ea0ba91c0fa0
+inputs_sha256: 29fd554f1ce9a6c08a7b7ce2d90e09def43fcd3cdc63af8a33c1207e686e08d8
 generated_by: task plan-views status
 -->
 
@@ -428,6 +428,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair rebound: package gates on 5aa1af2; concurrent roadmap candidate revalidated on 7341575d. |
 | 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on c5e289b2: 922 Task tests, final roadmap and provider/docs/plan gates are green. |
 | 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 58c0c795289bb07e83ee46b20f40e15b5c68341a2d4b0ffcbec7592df153a021, вердикт GREEN |
+| 2026-08-14 | gpt-5.6-terra/low | plan-close · closed-green · P7 закрыта: terminal items и GREEN-аудит сверены; docs не требуются. |
 
 ## Owner Gates
 

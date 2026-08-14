@@ -1,10 +1,10 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, acceleration redesign after P1.2 · **Статус:** P1.2 closed; P1.3 starts in a new session, then remaining execution uses large flat batches and one final independent review.
+**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, flat/fast routing · **Статус:** P1 terminal GREEN audit complete; mechanical close remains, then P2.1–P2.3 run as one batch with no intermediate review.
 
 ## Fast execution carrier
 
-Sequence: `P1.3 → P2.1–P2.3 → P3.1–P3.3 → P4.1–P4.2 → P4.3–P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. After the new P1.3 session, a batch keeps one root coordinator and advances without cold-start handoffs between green adjacent items. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized at batch boundaries. P7.4 is the only planned independent review and permits at most one targeted repair/recheck.
+Sequence: `P1 close → P2.1–P2.3 → P3.1–P3.3 → P4.1–P4.2 → P4.3–P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. Each range keeps one root coordinator and advances without cold-start handoffs between green adjacent items. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized at batch boundaries. P7.4 is the only planned independent review and permits at most one targeted repair/recheck.
 
 Every remaining item has the same hard circuit-breaker: one initial candidate, one declared Validation pass, at most one grouped repair and one targeted recheck; a second RED returns the exact failing gate without a third loop. Green receipts whose inputs did not change are reused. Extra fixtures/checkers/reviewers/fuzz/mutation/adversarial probes are forbidden unless they are an explicit Deliverable or the minimum regression for an observed acceptance failure.
 
@@ -214,9 +214,9 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P1.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1` | frontier/high | schema freeze | desired/status public contract |
 | P1.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` | frontier/high | ownership/capability freeze | freezes minimum Skill Core, additive provider adapters and third-provider registration seam |
 | P1.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3` | frontier/high | C1–C6 Owner approval | migration/rollback freeze after P0/P1 evidence |
-| P2.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.1` | frontier/high | locale contract/registry identity approval | freezes independent surfaces/precedence plus exact IANA bytes/provenance |
-| P2.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.2` | frontier/high | source/overlay approval | consumes P2.1, freezes canonical direction |
-| P2.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.3` | frontier/high | review/policy approval | freezes compact authoring plus official-doc/real-provider/ablation evidence contract |
+| P2.1 | p2-contracts | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.1-P2.3` | frontier/high | locale contract/registry identity approval | first batch slice; freezes independent surfaces/precedence plus exact IANA bytes/provenance |
+| P2.2 | p2-contracts | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.1-P2.3` | frontier/high | source/overlay approval | same root consumes P2.1 and freezes canonical direction; no intermediate review |
+| P2.3 | p2-contracts | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P2.1-P2.3` | frontier/high | review/policy approval | same root closes compact authoring/evidence contract; bookkeeping and lint at batch boundary |
 | P3.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.1` | implementation/high | — | public resolver against frozen P1/P2 contracts |
 | P3.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.2` | implementation/high | — | root coordinator + four required package-cwd slices; owns relative-target public hook CLI fix and consumes P3.1 |
 | P3.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P3.3` | implementation/high | — | multi-label audit evidence, typed batch failures, provider-qualified measurements and deduplicated diagnostics |

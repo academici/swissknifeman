@@ -429,7 +429,10 @@ def lint_plan(plan_dir, diag):
     # coordinator; the gate delegates graph/weight/admission semantics to their
     # respective shared owners and contributes diagnostics at this one boundary.
     plan_gates.lint_read_budget(plan_dir, layout, diag)
-    plan_gates.lint_bundle_freshness(plan_dir, layout, diag)
+    # Bundle freshness is checked above for the single next runnable item.  A
+    # future item may legitimately require an artifact produced by its
+    # predecessor, so validating every ready-looking item here would turn that
+    # dependency into a false stop.
     plan_gates.lint_read_path_boundaries(plan_dir, layout, diag)
     plan_gates.lint_return_loop(plan_dir, layout, diag)
 

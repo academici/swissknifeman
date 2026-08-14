@@ -16,9 +16,9 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
-| Design Passes | 4/4 — semantic design remains accepted; D64 records a post-execution P0 RED-audit reopen through P0.5–P0.8 without adding a fifth whole-plan design pass or ninth whole-plan audit |
+| Design Passes | 4/4 — whole-plan semantic design remains accepted; D70 adds only the bounded post-audit P0.9–P0.10 final requalification chain, not a fifth whole-plan design pass or another whole-plan audit |
 | Layout | v2 |
-<!-- migration-version: 1.1.2 -->
+<!-- migration-version: 1.1.3 -->
 
 ## 1. Context
 
@@ -67,39 +67,43 @@ and does not duplicate a supervisor runtime.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Why |
-|:--|:--|:--|:--|
-| P0.1 | implementation/high | manual | prescribed read-only fleet plus current skill/audit/profile baseline with typed uncertainty and provider availability; high effort is mandatory, frontier tier is not |
-| P0.2–P0.3 | frontier/high | manual | ambiguous ownership classification and a recovery contract that freezes fleet/security boundaries |
-| P0.4 | implementation/high | manual | execute only the exact owner-approved external containment transaction and verify rollback |
-| P0.5 | implementation/high | manual | prescribed exact-set/privacy evidence repair against audit F1–F2; high effort is mandatory, frontier tier is not |
-| P0.6 | frontier/high | manual | corrective frozen-contract topology and exact new owner freeze remain decision-bearing |
-| P0.7 | implementation/high | manual | prescribed executable redacted security-evidence producer against D64–D65; high effort and full review required |
-| P0.8 | implementation/high | manual | append-only provenance reconciliation and committed-tree phase requalification; high effort and full review required |
-| P1.1 | frontier/high | manual | freezes the desired/status schema and diagnostics with open contract decisions |
-| P1.2 | frontier/high | manual | freezes the minimum Skill Core, capability negotiation, additive provider adapters, invocation intent and third-provider seam |
-| P1.3 | frontier/high | manual | freezes migration/rollback authority and compatibility after Owner approval |
-| P2.1–P2.3 | frontier/high | manual | locale plus current-model compact authoring, progressive disclosure and eval/ablation contracts are still open |
-| P3.1 | implementation/high | manual | public shared-core resolver against frozen P1/P2 contracts; high effort is mandatory while implementation tier remains sufficient |
-| P3.2 | implementation/high | manual | multi-package additive skill/provider adapter boundary, provider registration and ownership-preserving reconciliation against frozen contracts |
-| P3.3 | implementation/high | manual | multi-label audit graph, typed batch failures and provider-qualified measurement/status feed later migration and fleet gates; full review is mandatory |
-| P4.1 | implementation/high | manual | public locale runtime and provider render boundary against frozen contracts; full review required |
-| P4.2 | implementation/high | manual | one canonical lean template plus semantic/provider-adapter admission and rollback validation becomes the write gate for repository canon |
-| P4.3 | implementation/high | manual | evidence-admitted skill consolidation/thinning/reclassification changes canon consumed by every project; full review required |
-| P4.4 | implementation/high | manual | command/plugin/diagnostic migration must preserve parser literals and provider parity |
-| P4.5 | implementation/high | manual | broad code-prose migration requires behavior/literal preservation and full review |
-| P4.6 | implementation/high | manual | terminal docs/corpus migration and protected generated-artifact regeneration/readback |
-| P5.1 | frontier/high | manual | freezes the exact fleet action manifest and Owner authority while classifications/actions remain decision-bearing |
-| P5.2 | implementation/high | manual | live project-owned override registration is external-state work against a frozen action set; full review required |
-| P5.3 | implementation/high | manual | cross-project provider repair applies frozen adapters with per-project rollback; full review required |
-| P5.4 | implementation/high | manual | destructive-boundary quarantine and final fleet convergence require high-effort verification and full review |
-| P6.1 | implementation/high | manual | protected external Brain security/profile transaction with Owner gate and rollback; full review required |
-| P6.2 | frontier/high | manual | freezes provider-qualified discovery/context health, uncertainty/drift probes and accepted degradation; full review required |
-| P6.3 | implementation/high | manual | final exact-set external fleet evidence and non-masking release gate; high effort and full review required |
-| P7.1 | implementation/high | manual | exact-set real Claude/Codex no-skill/minimal/provider-tuned replay and instruction ablation compose frozen evidence; full review required |
-| P7.2 | implementation/high | manual | deterministic cross-package regressions harden P7.1 outcomes without substituting synthetic evidence for provider behavior |
-| P7.3 | implementation/high | manual | generated docs, full validation and release-candidate assembly; no tag/push/publish |
-| P7.4 | frontier/xhigh | manual | cold adversarial parity/release audit with an Owner-facing verdict |
+| Batch | Items | Model class/effort | Exec | Review | Почему |
+|:--|:--|:--|:--|:--|:--|
+| solo | P0.1 | implementation/high | manual | full | sealed fleet baseline is a hard producer boundary before classification; high effort is mandatory, frontier tier is not |
+| solo | P0.2 | frontier/high | manual | full | ownership classification is a decision boundary and consumes the sealed P0.1 baseline |
+| solo | P0.3 | frontier/high | manual | full | recovery-contract freeze is isolated by exact owner authority and immutable bytes |
+| solo | P0.4 | implementation/high | manual | full | exact owner-gated containment/no-op transaction is isolated by external security authority and rollback |
+| solo | P0.5 | implementation/high | manual | full | exact-set/privacy baseline rebuild is a sealed producer before corrective contract work |
+| solo | P0.6 | frontier/high | manual | full | frozen-contract topology and exact owner freeze form an irreversible authority boundary |
+| solo | P0.7 | implementation/high | manual | full | executable security evidence is isolated by live trust observations and containment authority |
+| solo | P0.8 | implementation/high | manual | full | provenance fan-in is isolated by append-only history and committed-tree reconciliation |
+| p0-final-requalification | P0.9–P0.10 | implementation/high | manual | full | adjacent digest rebinding and live-admission requalification share the same audit candidate, pins and full P0 validation |
+| solo | P1.1 | frontier/high | manual | full | desired/status public contract ends in an exact schema freeze |
+| solo | P1.2 | frontier/high | manual | full | Skill Core/adapter ownership freeze is a distinct public contract boundary |
+| solo | P1.3 | frontier/high | manual | full | migration/rollback freeze requires separate Owner approval after P1.1/P1.2 |
+| solo | P2.1 | frontier/high | manual | full | locale/registry identity freeze is an irreversible contract boundary |
+| solo | P2.2 | frontier/high | manual | full | source/overlay freeze consumes P2.1 and has independent Owner approval |
+| solo | P2.3 | frontier/high | manual | full | review/evidence contract freeze consumes P2.1/P2.2 and has separate acceptance |
+| solo | P3.1 | implementation/high | manual | full | public shared-core resolver ends at a committed public API boundary |
+| solo | P3.2 | implementation/high | manual | full | multi-package adapter work has a distinct per-cwd integration/ownership boundary |
+| solo | P3.3 | implementation/high | manual | full | audit/status graph feeds later phases and has a separate public evidence boundary |
+| solo | P4.1 | implementation/high | manual | full | locale runtime/public render boundary precedes every migration ledger write |
+| solo | P4.2 | implementation/high | manual | full | admission tooling and template form the write gate for the later corpus |
+| solo | P4.3 | implementation/high | manual | full | skill migration has bounded per-cwd checkpoints and independent review gates |
+| solo | P4.4 | implementation/high | manual | full | command/plugin migration has distinct parser-literal and package boundaries |
+| solo | P4.5 | implementation/high | manual | full | broad code-prose migration is isolated by AST/behavior and bounded review checkpoints |
+| solo | P4.6 | implementation/high | manual | full | docs and terminal regeneration form the phase's derived-artifact boundary |
+| solo | P5.1 | frontier/high | manual | full | exact external action-set freeze is an owner/irreversible boundary before any fleet write |
+| solo | P5.2 | implementation/high | manual | full | project-owned override registration has a distinct external ownership gate |
+| solo | P5.3 | implementation/high | manual | full | managed repair has per-project rollback and convergence boundaries |
+| solo | P5.4 | implementation/high | manual | full | quarantine is isolated by destructive authority and terminal convergence |
+| solo | P6.1 | implementation/high | manual | full | protected Brain transaction is isolated by exact owner authority and rollback |
+| solo | P6.2 | frontier/high | manual | full | provider-health contract freeze remains a decision-bearing boundary |
+| solo | P6.3 | implementation/high | manual | full | exact-set external fleet evidence is isolated by live-state/context budget and non-masking release gates |
+| solo | P7.1 | implementation/high | manual | full | live provider replay/ablation is isolated from synthetic regression hardening |
+| solo | P7.2 | implementation/high | manual | full | cross-package regression implementation has a distinct per-cwd boundary |
+| solo | P7.3 | implementation/high | manual | full | release-candidate/docs assembly is isolated by no-publish and generated-artifact gates |
+| solo | P7.4 | frontier/xhigh | manual | full | cold adversarial release audit requires independent context and Owner-facing verdict |
 
 ## 5. Decision Log
 

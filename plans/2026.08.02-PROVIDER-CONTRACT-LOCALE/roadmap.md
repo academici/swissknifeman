@@ -1,13 +1,13 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-10 · **Соответствует plan.md:** v1.1.2, design pass 4/4 · **Статус:** D64 reopens P0 after its independent RED audit through four sequential forward-remediation items; P1–P7 remain unchanged and closed to execution until P0 re-closes and passes audit 2.
+**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, design pass 4/4 · **Статус:** D70 reopens only the two proven P0 audit-attempt-2 boundaries through adjacent batch P0.9–P0.10; P1–P7 remain unchanged and closed until P0 re-closes and its last planned audit is GREEN.
 
 ## Evidence-led skill modernization carrier
 
 The audit does not create a second plan or pre-authorize its proposed rewrites. Its verified work
 flows through the existing sequence:
 
-`P0.5 corrected baseline → P0.6 semantic recovery gates → P0.7 executable security evidence → P0.8 provenance/fan-in → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
+`P0.5 corrected baseline → P0.6 semantic recovery gates → P0.7 executable security evidence → P0.8 provenance/fan-in → P0.9 semantic digest rebind → P0.10 live admission/final fan-in → final P0 audit → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
 
 Official current provider documentation defines the intended interface. P7.1 proves behavior with
 real Claude Code and Codex no-skill/minimum/provider-tuned workflows and instruction ablation;
@@ -201,6 +201,8 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P0.6 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.6` | frontier/high | new typed `contract_freeze_decision` for exact successor bytes | semantic G01–G11 non-weakening and acyclic phase-local verifier topology; D63 is not reusable |
 | P0.7 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.7` | implementation/high | mutation branch only: exact typed `containment_mutation_decision` | executable redacted producer replaces hand-authored green booleans; no-op remains deterministic |
 | P0.8 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.8` | implementation/high | — | append-only provenance ledger/correction events and committed-tree P0 fan-in; historical bytes stay immutable |
+| P0.9 | p0-final-requalification | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.9-P0.10` | implementation/high | — | first adjacent batch item: semantic-identity proof and complete current digest/pin rebind; no reclassification |
+| P0.10 | p0-final-requalification | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.9-P0.10` | implementation/high | mutation branch only: exact typed `containment_mutation_decision` | remaining batch suffix: live non-persisted admission, static fan-in, close candidate and last planned P0 audit handoff |
 | P1.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1` | frontier/high | schema freeze | desired/status public contract |
 | P1.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` | frontier/high | ownership/capability freeze | freezes minimum Skill Core, additive provider adapters and third-provider registration seam |
 | P1.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3` | frontier/high | C1–C6 Owner approval | migration/rollback freeze after P0/P1 evidence |
@@ -233,6 +235,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | Где | Predicate/evidence | Результат |
 |:--|:--|:--|
 | P0.7 evidenced no-op | The P0.7 executable producer recomputes the owner-frozen P0.6 predicate over committed P0.5 manifest/classification plus fresh redacted detector, provider/trust and protected pre/post evidence; the evidence record has `action_set=[]`, plaintext-secret findings 0 and protected-target delta 0. | Close P0.7 through ordinary Validation; no D# authorizes an empty mutation. If the predicate is false, mutation remains waiting until an exact containment D# exists. |
+| P0.10 live admission | Stored observation proves only integrity. The non-persisted `admit` command recomputes provider/trust/detector/protected-delta facts at use time and emits one redacted stdout receipt. | Final P0 audit runs it last; after GREEN, P1 reruns it immediately before mutation. No persisted TTL or old receipt grants admission. |
 | P4.3–P4.6 source checkpoint | The checkpoint verifier recomputes either `clean` or the exact ordered `deferred-derived-only` rows and proves zero other errors. | Accept/resume the source checkpoint; this is technical deferred state, not owner authority. P4.6 closure still requires terminal all-green. |
 | P4.6 terminal regeneration | Complete terminal source ledger + exact cumulative deferred set + frozen helper-plan hash; Harness writable targets are passed in its exact alphabetic order through `--authorize`. | Ordinary item-scoped generated write; no P0 contract/containment D# applies. Any plan-hash/target/order drift refuses before write. |
 
@@ -249,7 +252,9 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes from P0.7. D64 supersedes D55/D62 only where their 30-item/Next clauses became
-obsolete after the independent P0 RED audit; it preserves the accepted P1–P7 design and the ban on
-a ninth whole-plan audit. `handoff.md` is the sole current Next carrier and points to P0.7 under
-the route and owner gates above.
+Execution resumes with adjacent batch P0.9–P0.10. D70 supersedes only D64's terminal-remediation
+clause and makes D69's literal digest a historical P0.8 anchor; immutable history, accepted P1–P7 design, frozen contract
+v1.0.1 and all external no-write gates remain. `handoff.md` is the sole current Next carrier. After
+batch close and phase close it must point to one final P0 audit invocation; that audit repairs all
+reversible in-scope findings in-root and returns to design only for a reproduced owner/frozen-contract
+boundary.

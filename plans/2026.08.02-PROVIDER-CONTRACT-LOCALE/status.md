@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-13
-inputs_sha256: 5108d7d5a89bb4b0a90f0bb5ee8a5b11a0d3fe31144c848fb3039cbd5c40f5a7
+through: 2026-08-14
+inputs_sha256: efd255e588c4699cbb1543bc439513a4b649fecd20a9c9552bfe42c35cf987e9
 generated_by: task plan-views status
 -->
 
@@ -15,15 +15,15 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.1.2 |
+| Version | 1.1.3 |
 | Status | 🟡 In progress |
-| Last Updated | 2026-08-13 |
+| Last Updated | 2026-08-14 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 7/8 | 🟠 Done with deviations |
+| P0 | Evidence, safety, and full fleet inventory | 8/10 | 🟡 In progress |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -44,6 +44,8 @@ generated_by: task plan-views status
 | P0.6 | Patch recovery semantics and remove cyclic admission | 🟢 Done | 2026-08-10 |
 | P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-13 |
 | P0.8 | Reconcile P0 execution provenance and requalify closure | 🟢 Done | 2026-08-10 |
+| P0.9 | Rebind the classification digest graph without reclassification | 🟢 Done | 2026-08-14 |
+| P0.10 | Make P0 freshness executable at admission and requalify once | ⬜ Not started | — |
 
 ## Phase P1
 
@@ -180,6 +182,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/xhigh | plan-audit · closed-green · item_commit=39fe0ea6; audit correction: exact-set/privacy baseline validation remains green; process: frontier/high over implementation/high and deferred bookkeeping closure.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат dba2debbfe71a43fe10fc4a7e4d439d5a6ea69bf848f38b18d2e2974acb18225, вердикт RED; unresolved P0.2/P0.8 digest and P0.7 freshness acceptance boundaries |
+| 2026-08-14 | frontier/high | plan-design · in-progress · фаза детализирована до DoR |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P0.9 rebounded the checker-green classification digest graph without semantic reclassification. |
 
 ## Owner Gates
 

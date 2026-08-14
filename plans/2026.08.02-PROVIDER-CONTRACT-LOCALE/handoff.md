@@ -1,46 +1,36 @@
-# HANDOFF — 2026-08-13 — after P0
+# HANDOFF — 2026-08-14 — after P0.9
 
-**Next:** design-phase: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0
+**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.10
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model | frontier |
-| Thinking | high |
-| Capabilities | plan design · decision contract |
-| Context | cold-start-root: audit-root-terminal |
-| Суть | Reopen only the proven P0 classification/freshness acceptance boundary. |
-| Команда | `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0` |
+| Batch | p0-final-requalification |
+| Model class | implementation |
+| Effort | high — live admission and final fan-in |
+| Capabilities | — |
+| Context | continue-root |
+| Суть | Replace persisted freshness authority with live P0 admission and produce the final phase candidate. |
 
-```
-$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0
-
-РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
-ВХОД: plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.md → блок `## Audit P0 — 2026-08-13`; прочитать ПЕРВЫМ
-СКОУП: 1) forward-repair P0.2 evidence digests без смены exact set/classes 2) через новый D# согласовать P0.6/P0.8 SHA и compact-projection acceptance 3) определить исполнимую freshness/refresh границу P0.7→audit→close, затем перепроизвести evidence 4) сохранить c5467e55 и append-only correction history
-НЕ ТРОГАТЬ: P0.1–P0.8 historical commits/journal rows; P1–P7; classification dispositions; внешние fleet/Brain/provider/credential/trust targets; frozen recovery semantics без нового exact owner decision
+```bash
+$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.10
 ```
 
 #### Native Codex launch-block
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P0'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P0.10'
 ```
 
-**Done:** Audit attempt 2 repaired P0.7 false-green capture/timeout in `c5467e55`, restored
-P0.5/P0.7 write-site state evidence, and rebound candidate `dba2debb…`; verdict remains RED.
+**Done:** P0.9 item commit `f3cd5a85` regenerated the P0.2 classification from the P0.5 baseline, proved digest-only semantic equivalence, rebound current P0.6/P0.8 consumers, and closed through the route-bound Task Contract.
 
-**Remaining:** forward-repair the stale P0.2→P0.8 digest chain and define an executable P0.7
-freshness/refresh boundary before another phase-close candidate. P1 remains closed.
+**Remaining:** P0.10 live admission and static final fan-in; then phase close and one final independent P0 audit.
 
-**Sources of truth:** `phases/P0/P0.md` → `## Audit P0 — 2026-08-13` ·
-`artifacts/P0.8/execution-provenance-v1.json` · D69 · `phases/P0/P0.7.state.md`.
+**Sources of truth:** `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P0/P0.10.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P0.9/classification-rebind-v1.json`
 
-**Open risks:** P0.2 production check rejects the committed classification as stale; P0.7 evidence
-expires after ten minutes and no persisted refresh action bridges audit-root-terminal to close.
+**Open risks:** P0.10 must preserve D67/frozen recovery-contract bytes and treat only its immediate live `admit` receipt as admission authority.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; audit-fixer changes are committed and journaled.
-- deferred: P1 remains closed pending P0 redesign and requalification.
+- workarounds: —
+- deferred: —
 - open_questions: —

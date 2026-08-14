@@ -15,7 +15,7 @@
 | Target Operator Classes | implementation (exec) · economy (mechanical checks) · frontier (design/audit) |
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
-| Design Passes | 2/2 — pass 2 устранил системную потерю Batch/solo и включил negation-lint roadmap после repo-grounded анализа |
+| Design Passes | 3/3 — pass 3 оформил owner-authorized постархивное P7-продолжение по pinned working-tree и roadmap snapshots |
 | visibility | private |
 | Paused By | — |
 
@@ -24,7 +24,7 @@
 Task слишком рано превращает route/tool/projection/local repair signal в terminal
 `Blocked`, escalation, новый design pass или преждевременный `final`. Это создаёт петлю:
 задача не началась, но уже терминальна, поэтому её нельзя безопасно продолжить.
-План строит continue-first контур из семи отдельных фаз: evidence baseline, cutover v1→v2,
+План построил continue-first контур P0–P6: evidence baseline, cutover v1→v2,
 идентичность плана, nonterminal observations/local repair, подтверждение
 реальной блокировки, terminal delivery и release/rollout. Уже написанный код
 считается лишь release candidate: каждая фаза отдельно сверяет его с ТЗ и
@@ -33,13 +33,23 @@ Task слишком рано превращает route/tool/projection/local re
 Microsoft Durable Functions; synthesis и URLs —
 `findings/02-rag-resilience-and-schema-cutover-2026-08-12.md`).
 
+После архивирования владелец авторизовал P7 как узкое постархивное продолжение: принять уже
+существующий working-tree candidate, сохранить использованные roadmap-источники с проверяемой
+диспозицией, довести Task runtime/canon/projections до зелёных package gates и снова вернуть план
+в архив. P0–P6, локальные `v0.13.0`/`v0.13.1`/`v0.13.2`, release evidence и rollout immutable;
+P7 не получает authority на новый tag, push, GitHub release или повторный rollout. RAG:—
+(repo-grounded: D32, `findings/29-P7-postarchive-working-tree-inventory.md`,
+`research/11-P7-postarchive-continuation-design.md`).
+
 ## 2. Execution Rules
 
-- Исполнять строго P0 → P1 → P2 → P3 → P4 → P5 → P6; статус берётся только из generated state.
+- P0–P6 терминальны и не переисполняются; единственный live execution scope — P7.0 → P7.5, статус берётся только из generated state.
+- Каждый P7 item запускается отдельной свежей owner-сессией; после terminal handoff текущий root не продолжает следующий item молча.
 - Внутри фазы запускать stable Batch из §3 целиком; каждый item всё равно проходит собственные validation/commit/state/receipt. Phase audit/close — жёсткая граница группы.
 - P1 сначала мигрирует все active v1 plans, затем удаляет v1 execution schema/path; обратный порядок запрещён.
 - Любой failure signal проходит `observe → minimal reproduce → classify → act → verify`.
 - Procedural/transient/dependency/tool-noise/stale projection и bounded local reversible defect чинятся inline; это nonterminal `local-repair`.
+- Missing, untracked or wrongly assigned source file referenced by the current item is a deterministic local repair: assign it to the earliest compatible current item, update its exact Files/Validation and rerun the isolated candidate. It is never `Blocked`/`Done with deviations` merely because the prior decomposition omitted an owner.
 - Route rejection, pending decision, local repair и block candidate не меняют item status/attempt.
 - Внешний block candidate обязан иметь verified RAG; покрытие external-класса — 100%.
 - Если план требует Perplexity Web, пустой/недоступный ответ после bounded retry пишет
@@ -54,6 +64,7 @@ Microsoft Durable Functions; synthesis и URLs —
 - Каждый item получает product commit и отдельный bookkeeping commit; посторонний дифф не стейджить.
 - Tag `v0.13.0` создаётся только после terminal P6.1; rollout — только по уже зарегистрированным project/channel.
 - Push/GitHub release без отдельного owner instruction не выполнять.
+- После terminal P7, GREEN phase audit и `task:plan-close P7` выполнить отдельный `task:plan-close archive 2026.08.12-№1-TASK-RESILIENCE`; до этого active-path сохраняется.
 
 ## 3. Routing
 
@@ -81,6 +92,12 @@ Microsoft Durable Functions; synthesis и URLs —
 | solo | P6.2 | implementation/high | manual | full | owner-authorized frozen-release recovery требует нового exact v0.13.2 candidate с byte-fresh carriers; старые tags immutable |
 | solo | P6.3 | implementation/medium | plan-exec | full | irreversible annotated-tag boundary отделена от release requalification |
 | solo | P6.4 | implementation/high | manual | full | external registered-project rollout после verified tag capsule |
+| solo | P7.0 | implementation/high | manual | full | bootstrap hard boundary: current candidate linter applies new terminal/audit rules to immutable historical rows, so repair must precede ordinary Task dispatch |
+| solo | P7.1 | implementation/high | manual | full | отдельный fresh-root/commit boundary для route, journal и terminal-state runtime core; owner запретил смешивать с последующими срезами |
+| solo | P7.2 | implementation/high | manual | full | delivery/lint потребляют уже запечатанный P7.1 state contract и имеют собственный fail-closed regression surface |
+| solo | P7.3 | implementation/high | manual | full | schema/rubric/reducer и material phase fingerprint образуют отдельную audit/block safety boundary |
+| solo | P7.4 | implementation/high | manual | full | canonical commands и owning generators меняются только после стабилизации runtime; cross-package generated-output boundary |
+| solo | P7.5 | implementation/high | manual | full | aggregate package/docs/roadmap closeout и staged deletion set проверяются в отдельном fresh root перед phase audit |
 
 ## 5. Decision Log
 
@@ -108,3 +125,5 @@ Microsoft Durable Functions; synthesis и URLs —
   а не WebSearch fallback.
 - Обходки/[POSSIBLE-DEFECT]: нет; временная DOM-диагностика удалена, bridge regression покрыт
   51 passed + 1 skipped package tests и тремя живыми MCP-вызовами.
+- P7: execution ещё не начиналось; DoR опирается только на pinned working-tree/snapshot evidence,
+  а зелёные runtime/package/docs verdicts обязаны появиться в terminal evidence P7.1–P7.5.

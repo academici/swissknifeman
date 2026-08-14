@@ -4,8 +4,8 @@
 |:--|:--|
 | `brief/` | исходное намерение и уточнения владельца |
 | `findings/` | roadmap/runtime/RAG и будущие execution verdicts |
-| `research/` | target design, phase topology, execution batching, migration/audit synthesis и P6.2 tracked-tree patch-release recovery |
-| `decisions/` | D1–D27, authoritative design choices |
+| `research/` | target design, phase topology, execution batching, migration/audit synthesis, P6.2 recovery и P7 postarchive decomposition |
+| `decisions/` | D1–D32, authoritative design choices |
 | `phases/P0` | evidence and acceptance freeze |
 | `phases/P1` | active v1 migration and retirement |
 | `phases/P2` | identity and qualified references |
@@ -13,6 +13,7 @@
 | `phases/P4` | confirmed block and mandatory RAG |
 | `phases/P5` | terminal receipt and provider parity |
 | `phases/P6` | release/tag/rollout |
+| `phases/P7` | postarchive Task runtime/canon/roadmap closeout |
 
 Провенанс: brief → research/decisions → phase specs; generated state/status/bundles/decision views
 материализуются только `packages/task/scripts/plan-views.py`.

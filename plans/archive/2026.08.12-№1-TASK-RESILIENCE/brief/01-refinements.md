@@ -1,5 +1,32 @@
 # Уточнения владельца
 
+## 2026-08-14 — continue-first при tree drift и terminal recovery
+
+- Новый, изменённый или случайно появившийся файл/commit не является основанием для `Blocked`,
+  `Done with deviations` либо преждевременного `final`: исполнитель локально атрибутирует его,
+  применяет минимальный совместимый repair и продолжает declared acceptance.
+- Отсутствующий source owner исправляется amendment текущего совместимого item и повторной
+  изолированной validation; это нормальный технический repair, не owner gate.
+- `Blocked` допустим только когда после таких попыток остаётся доказанная authority/safety/
+  public/frozen/external граница. Сложность, грязное дерево, число файлов и новый commit сами по
+  себе такой границей не являются.
+- Явное «продолжать» владельца возобновляет item новым attempt. Historical terminal/final
+  evidence сохраняется, но не может препятствовать execution или вынуждать новый owner loop.
+- `roadmap/2026.08.11-terminal-final-continuity-receipt.md` добавлен во входы P7.3: его пробел
+  закрывается тестами на incidental tree observation и terminal-to-resume state transition.
+
+## 2026-08-13 — постархивное P7-продолжение
+
+- Владелец вызвал `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P7` и тем самым
+  авторизовал вернуть архивный план в active-path только для текущего working-tree candidate и
+  `artifacts/roadmap-snapshots`.
+- Требуется подготовить исполнимые items для отдельных свежих сессий; текущий design root ничего
+  из product scope не исполняет.
+- После terminal P7, phase audit и close план должен быть снова перенесён в `plans/archive/`;
+  до полного закрытия он остаётся активным.
+- P0–P6, теги `v0.13.0`/`v0.13.1`/`v0.13.2`, push/GitHub release и completed rollout не
+  переоткрываются и не получают новую authorization.
+
 ## 2026-08-13 — owner response: exact v0.13.2 after v0.13.1 validation RED
 
 - Владелец запустил exact action-ref `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P6.2`

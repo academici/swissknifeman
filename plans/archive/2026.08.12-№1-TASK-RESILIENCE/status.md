@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-13
-inputs_sha256: 653c53e0bf600e5ed71d2afbbf44024271c6070634550855debc499b18384f15
+through: 2026-08-14
+inputs_sha256: 29fd554f1ce9a6c08a7b7ce2d90e09def43fcd3cdc63af8a33c1207e686e08d8
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | — |
 | Status | 🟠 Done with deviations |
-| Last Updated | 2026-08-13 |
+| Last Updated | 2026-08-14 |
 
 ## 4. Phase Index & Status Board
 
@@ -30,6 +30,7 @@ generated_by: task plan-views status
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
+| P7 | Postarchive Task runtime and roadmap closeout | 6/6 | 🟢 Done |
 
 ## Phase P0
 
@@ -87,6 +88,17 @@ generated_by: task plan-views status
 | P6.2 | Issue exact v0.13.2 from byte-fresh committed carriers | 🟢 Done | 2026-08-13 |
 | P6.3 | Create and verify the annotated v0.13.0 tag | 🟢 Done | 2026-08-13 |
 | P6.4 | Roll out to every registered project/channel and verify | 🟢 Done | 2026-08-13 |
+
+## Phase P7
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P7.0 | Restore backward-compatible lint admission | 🟢 Done | 2026-08-14 |
+| P7.1 | Seal route/run and terminal-state runtime core | 🟢 Done | 2026-08-14 |
+| P7.2 | Make terminal delivery and lint fail closed | 🟢 Done | 2026-08-14 |
+| P7.3 | Enforce scope-aware audit/block terminal policy | 🟢 Done | 2026-08-14 |
+| P7.4 | Reconcile canon, provider projections and package docs | 🟢 Done | 2026-08-14 |
+| P7.5 | Close roadmap disposition and aggregate release gates | 🟢 Done | 2026-08-14 |
 
 ## 6. Update Log
 
@@ -371,6 +383,52 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-13 | implementation/high | plan-run · in-progress · D30: единственный AUDIT-CAP forward recovery P6.2 начат. |
 | 2026-08-13 | implementation/high | plan-run · closed-green · v0.13.2 exact candidate b09ae785 прошёл release matrix; local annotated tag создан. |
 | 2026-08-13 | gpt-5.6-terra/low | plan-close · closed-deviations · P6 закрыта по owner direct-close D31; terminal items сверены, docs не требуются. |
+| 2026-08-13 | gpt-5.6-terra/low | plan-close · closed-green · План перемещён в archive; docs-дубликат не создан; ACTIVE уже сброшен. |
+| 2026-08-13 | frontier/high | plan-design · in-progress · фаза P7 детализирована до DoR по pinned working-tree и roadmap snapshots; пять отдельных fresh-session items |
+| 2026-08-14 | implementation/high | plan-run · closed-green · P7.0 закрыт: lint activation отделяет исторические journal/audit carriers по точной временной границе. |
+| 2026-08-14 | implementation/high | plan-run · local-repair · Bookkeeping repair: terminal note must carry the required write-site boundary codes. |
+| 2026-08-14 | implementation/high | plan-run · closed-green · P7.0 closed: timestamp-gated lint preserves historical carriers. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | implementation/high | plan-run · local-repair · Bookkeeping repair: write-site must occupy its own Completion Notes line. |
+| 2026-08-14 | implementation/high | plan-run · closed-green · P7.0 closed: timestamp-gated lint preserves historical carriers.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.1: route/run receipt, terminal admission and focused regressions sealed. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · Bookkeeping repair: materialize write-site carrier. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+P7.1 bookkeeping carrier repaired; product commit remains 5a7e9ee8. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · block-candidate · P7.2 has an undeclared terminal_policy.py dependency absent from committed P7.1. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Corrected a nonterminal block-candidate event written with a mismatched run_id. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · block-candidate · P7.2 has an undeclared terminal_policy.py dependency absent from committed P7.1. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · escalated · P7.2 cannot reproducibly close: terminal_policy.py has no declared committed owner. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-design · in-progress · D33 owner-directed recovery: terminal_policy ownership is assigned to P7.2; historical escalation is preserved, but this new attempt continues declared validation. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P7.2 attempt 2: D33 local ownership repair and resumable state projection. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.2 closed: ownership repair, resumable state and terminal delivery are committed. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.3 product commit a0451580; scope-aware block reducer, terminal decision bridge and material-only candidate fingerprint passed 150 focused tests. Package validate has 4 P7.4-owned canon/provider registry failures.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns omitted provider/admission and parity-test carriers after reproducing their declared validation failures. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns the omitted audit terminal-policy disposition registry after the full Task validation reproduced its missing check. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns registry-generated Skiller budget and docs-sync Task projections to the current item before staging only owned outputs. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.4 closed: canonical commands, provider projections, docs and owned generators are synchronized. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Починен identity lint для active/archive копии одного Plan ID по D32. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.5: roadmap closeout и aggregate matrix зелёные; identity lint repaired по D32. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commits 9c163d57 + 23fddc8a; final committed candidate 105aa8c5: 79 passed, plan-lint 0 ERROR / 6 historical WARN, conflicts 0. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commit 5a7e9ee8; original a3bc38cc replay exposed future-tree contamination, final committed candidate 105aa8c5 passes 194 focused tests. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commits 5237b645 + 4e4e956c; terminal tree 36be9e0d passes 30 delivery/state and 119 journal/lint tests. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commit e3dc1d66; terminal tree 46d1e1de passes 76 focused tests and generator checks; final candidate 105aa8c5 passes Task 919 and Skiller 633. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on 105aa8c5 (product chain 57dba5d6 + 105aa8c5): active/archive identity, roadmap, package, provider and docs gates are green. |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 40d3e00465abde87776861b31f2dc2f9dd83ea93df540f39b60e4a062364c7c1, вердикт GREEN |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair: corrected snapshot regex; current roadmap and aggregate gates revalidated on 5aa1af2. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair rebound: package gates on 5aa1af2; concurrent roadmap candidate revalidated on 7341575d. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on c5e289b2: 922 Task tests, final roadmap and provider/docs/plan gates are green. |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 58c0c795289bb07e83ee46b20f40e15b5c68341a2d4b0ffcbec7592df153a021, вердикт GREEN |
+| 2026-08-14 | gpt-5.6-terra/low | plan-close · closed-green · P7 закрыта: terminal items и GREEN-аудит сверены; docs не требуются. |
 
 ## Owner Gates
 

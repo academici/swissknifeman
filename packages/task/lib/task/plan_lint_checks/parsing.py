@@ -415,6 +415,11 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
         for peer in peers:
             if peer == plan_dir:
                 continue
+            # A post-archive continuation temporarily lives beside its archived
+            # copy under the same Plan ID. It is one plan in two lifecycle
+            # locations, not a second plan claiming the ordinal.
+            if peer.name == plan_id:
+                continue
             match = PLAN_ID_NUMBERED_RE.match(peer.name)
             if (match and match.group("date") == numbered.group("date")
                     and match.group("ordinal") == ordinal):

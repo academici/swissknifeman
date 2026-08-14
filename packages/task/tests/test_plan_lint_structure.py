@@ -160,6 +160,13 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
 
+    def test_active_reactivation_and_archived_copy_share_one_plan_identity(self):
+        plan_dir = self._numbered()
+        archived = self.root / "plans" / "archive" / plan_dir.name
+        shutil.copytree(plan_dir, archived)
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
+
     def test_numbered_plan_codename_excludes_ordinal(self):
         from task.plan_lint import _plan_codename
         self.assertEqual(_plan_codename("2026.08.12-№12-TASK-RESILIENCE"), "task-resilience")

@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+- **`task` / `plan-protocol`: terminal outcome теперь следует единому acceptance/reducer contract.**
+  Красная обязательная Validation оставляет item в progress; `closed-deviations` требует зелёных
+  carriers и `repair_exhausted`, а `blocked`/phase RED допускаются только после authority/safety
+  reducer evidence. Scope-aware block gate не принимает широкий in-scope inventory за границу.
+
+- **`task`: `plan-run` получил provider-neutral route provenance и durable run receipt.**
+  Claude Code session JSONL и Codex adapter проецируются в один record; unknown отделён от
+  реального undershoot. Receipt связывает route с run/session и повторно проверяется pre-final.
+  Installed canonical command резолвится package-relative, а delivery receipt аттестует version,
+  command digest и exact terminal subject.
+
+- **`task`: локальные Validation prerequisites repair-forward до terminal close.**
+  `validation-admission/v1` распознаёт доказанно отсутствующий literal Make target как
+  nonterminal local repair; material-only phase fingerprint исключает audit-owned bookkeeping,
+  сохраняя stale на изменённом terminal evidence.
+
+- **`roadmap`: завершённые Task-спеки удалены из активной очереди.**
+  Использованные исходники и disposition-карта сохранены в артефактах архивного плана
+  `2026.08.12-№1-TASK-RESILIENCE`; частичные записи оставлены только с точным остатком.
+
 ## [0.13.2] - 2026-08-13
 
 - **`task`: terminal delivery игнорирует только исторический malformed terminal при наличии свежего валидного.**

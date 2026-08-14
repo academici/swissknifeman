@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 4de496df9a92694ac78e9d8c1a2fe83a4aa333d8f330c9c1ef062780c21bbc90
+inputs_sha256: 165f23a2516159e5c885bca8fca7f853841ded244064d8d1c931ebde0e9a9ae0
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
-| P7 | Postarchive Task runtime and roadmap closeout | 4/6 | 🟡 In progress |
+| P7 | Postarchive Task runtime and roadmap closeout | 5/6 | 🟡 In progress |
 
 ## Phase P0
 
@@ -97,7 +97,7 @@ generated_by: task plan-views status
 | P7.1 | Seal route/run and terminal-state runtime core | 🟢 Done | 2026-08-14 |
 | P7.2 | Make terminal delivery and lint fail closed | 🟢 Done | 2026-08-14 |
 | P7.3 | Enforce scope-aware audit/block terminal policy | 🟢 Done | 2026-08-14 |
-| P7.4 | Reconcile canon, provider projections and package docs | ⬜ Not started | — |
+| P7.4 | Reconcile canon, provider projections and package docs | 🟢 Done | 2026-08-14 |
 | P7.5 | Close roadmap disposition and aggregate release gates | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -408,6 +408,12 @@ P7.1 bookkeeping carrier repaired; product commit remains 5a7e9ee8. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.3 product commit a0451580; scope-aware block reducer, terminal decision bridge and material-only candidate fingerprint passed 150 focused tests. Package validate has 4 P7.4-owned canon/provider registry failures.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns omitted provider/admission and parity-test carriers after reproducing their declared validation failures. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns the omitted audit terminal-policy disposition registry after the full Task validation reproduced its missing check. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns registry-generated Skiller budget and docs-sync Task projections to the current item before staging only owned outputs. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.4 closed: canonical commands, provider projections, docs and owned generators are synchronized. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

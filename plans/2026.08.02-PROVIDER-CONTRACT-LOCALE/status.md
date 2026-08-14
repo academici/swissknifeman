@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 60f85ecb7e1c4c4fea654b95307caff7020a26531be49be4746e653fbcbc4f80
+inputs_sha256: 19999ecba1412e84a3ddadf2b1c8732ba8bb816d070dd69e618e34b5887da2a0
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
-| P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
+| P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 1/3 | 🟡 In progress |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
@@ -67,9 +67,9 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P3.1 | Implement versioned canonical configuration and resolver | ⬜ Not started | — |
-| P3.2 | Implement adapter observe-diff-apply-readback boundary | ⬜ Not started | — |
-| P3.3 | Implement status, ownership, drift, and migration diagnostics | ⬜ Not started | — |
+| P3.1 | Implement versioned canonical configuration and resolver | 🟢 Done | 2026-08-14 |
+| P3.2 | Implement adapter observe-diff-apply-readback boundary | ⬜ Not started | 2026-08-14 |
+| P3.3 | Implement status, ownership, drift, and migration diagnostics | ⬜ Not started | 2026-08-14 |
 
 ## Phase P4
 
@@ -224,6 +224,15 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.2 закрыт: English source, Russian sparse overlay и authoring carrier matrix v1.0.0 заморожены D77. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · P2.3 начат: минимальный review/evidence contract без расширения scope. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.3 закрыт: review и skill-evidence v1.0.0 заморожены D77; реальная обкатка оставлена P7. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.1 immutable resolver started |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Устранена линейная деградация dense-ASCII token estimate; обязательный lint остаётся красным по baseline P2/P3. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR; read topology rebound by D78 |
+| 2026-08-14 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR; raw fleet corpus retained for P5 |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.1 resumed for validation and closure from committed resolver slice. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.1 closed: immutable canonical provider resolver validated with no-write integrations. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

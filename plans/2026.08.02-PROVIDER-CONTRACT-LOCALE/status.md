@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: b182fbdf3b4d14dea7a35afe6b76967580bab6e7a208d6e4e2206eeaab1e1220
+inputs_sha256: bff52bc19f35070cfe778888aad781ebe7e6d9c3c3c4f3c3422e601b4e4133c8
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
-| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
+| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 1/3 | 🟡 In progress |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
@@ -51,7 +51,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Define canonical desired state and status schema | ⬜ Not started | — |
+| P1.1 | Define canonical desired state and status schema | 🟢 Done | 2026-08-14 |
 | P1.2 | Define capability negotiation and provider ownership | ⬜ Not started | — |
 | P1.3 | Define explicit legacy upgrade and rollback contract | ⬜ Not started | — |
 
@@ -191,6 +191,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат 1c56ad159f1895a806c239fb69d9dc19f84b85085cab582b910b16d4c547741e, вердикт RED |
 | 2026-08-14 | gpt-5.6-terra/low | plan-close · closed-deviations · P0 закрыта через D71 direct-green-validation; полный baseline переиспользован, P0.1 deviation сохранён. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · block-candidate · P1.1 whole-plan lint acceptance fails only on future P1.2/P1.3 inputs outside declared Files; isolated review required. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · escalated · P1.1 validation is green locally but whole-plan lint is red on future P1.2/P1.3 inputs outside declared Files; isolated review JUSTIFIED terminal redesign. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · Owner-directed same-root continuation reopens the false terminal block for bounded P1 readiness repair. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · Ложная terminal-блокировка исправлена в том же root-run; P1.1 закрыт по зелёной Validation. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

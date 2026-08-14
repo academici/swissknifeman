@@ -66,5 +66,7 @@
 | `research/11-p1-control-plane-design.md` | research | P1.1–P7 | Desired/last-applied/observed split, deterministic provider/aggregate status, field-owner trace, and 2026-08-14 verification. |
 | `root/contracts/provider-control-plane-v1.md` | contract | P1.1–P7 | Draft provider-neutral v1 result envelope, exact status/diagnostic/versioning rules, and no-partial/no-write boundary. |
 | `artifacts/p1-provider-control-plane-check.py` | artifact | P1.1 | Stdlib schema/digest/status checker with positive and single-mutation negative fixtures. |
+| `findings/22-p1.1-false-terminal-block-2026-08-14.md` | findings | P1.1–P1.3, Task repair policy | Reproduction and root cause of the false terminal block, plus measured same-root P1 readiness repair. |
+| `decisions/D72-p1-continue-first-readiness-repair.md` | decision | P1.1–P1.3 | Owner-directed attempt-2 continuation, compact read graph, and exact P1.2→P1.3 producer edge. |
 | `artifacts/P0.5/fixtures/test_negative_fixtures.py` | artifact | P0.5, P0.6 | One-mutation copied fixtures for the repaired exact-set/privacy verifier. |
 | `artifacts/P0.8/execution-provenance-v1.json` | artifact | P0 closure, audit pass 2 | Deterministic Git/Task-Contract reconstruction of P0.1–P0.4, consumed by append-only correction events and regenerated state views. |

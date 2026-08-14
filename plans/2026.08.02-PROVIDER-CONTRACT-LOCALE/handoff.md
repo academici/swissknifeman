@@ -1,42 +1,45 @@
-# HANDOFF — 2026-08-14 — after P0
+# HANDOFF — 2026-08-14 — after P1.1
 
-**Next:** manual: `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1`
-
-**Provider-neutral plan-protocol launch block**
+**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | solo |
-| Model class | frontier |
-| Effort | high |
-| Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Model | frontier |
+| Thinking | high — public ownership-contract boundary |
 | Context | continue-root |
-| Суть | Начать P1 с provider-neutral desired/status contract; перед первой mutation выполнить только P0.10 live admission. |
-| Команда | `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1` |
+| Суть | Зафиксировать Skill Core/provider-adapter ownership и capability matrix поверх терминального P1.1 contract. |
+| Команда | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2` |
 
-**Native Codex launch block**
+Native Codex launch-block:
 
-| Model | Thinking | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|
-| gpt-5.6-sol | high | continue-root | P1.1 provider-control contract | `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.1'` |
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.2'
+```
 
-**Done:** P0.1–P0.10 терминальны; P0.9/P0.10 закрыли последний material delta. D71 разрешил
-`phase-close: direct-green-validation` и переиспользование уже выполненного полного baseline без
-четвёртого full audit. P0 закрыта как `🟠 Done with deviations` из-за сохранённого P0.1 deviation.
+**Done:** P1.1 закрыт green в attempt 2. Product commit `0aa0d665` добавил draft
+`provider-control-plane-v1`, независимый stdlib checker, positive/negative fixtures и design
+synthesis. Schema, schema self-test, 37 focused provider tests и whole-plan lint прошли; downstream
+gate не обнаружил red. Ошибочная attempt-1 terminal-блокировка сохранена как история и
+опровергнута `findings/22-p1.1-false-terminal-block-2026-08-14.md`.
 
-**Remaining:** Выполнить P1.1–P7.4. P1.1 перед первой mutation повторяет только P0.10 live
-admission; unchanged P0 item validations не запускаются заново.
+**Remaining:** выполнить P1.2 по его текущему ТЗ и создать
+`artifacts/P1-provider-ownership-capability-matrix.json`; после этого P1.3 автоматически выйдет
+из `pending-producer` и сможет заморозить финальный v1 contract.
 
-**Sources of truth:** `decisions/D71-p0-owner-direct-close.md` · `phases/P0/P0.md` ·
-`phases/P0/P0.closed.md` · `artifacts/P0.10/final-requalification-v1.json` ·
-`phases/P1/P1.1.md` · `bundles/P1.1.json`.
+**Sources of truth:** `journal.jsonl` · `phases/P1/P1.1.state.md` ·
+`phases/P1/P1.2.md` · `bundles/P1.2.json` ·
+`root/contracts/provider-control-plane-v1.md` ·
+`artifacts/p1-provider-control-plane-check.py` ·
+`decisions/D72-p1-continue-first-readiness-repair.md` ·
+`findings/22-p1.1-false-terminal-block-2026-08-14.md`.
 
-**Open risks:** Shared Task phase-audit subject/fingerprint repair и mode-aware
-`full|delta|gate-rebind` остаются в roadmap. Они не блокируют P1, но до внедрения повторный full
-audit не запускается без нового wide-material justification или owner decision.
+**Open risks:** P1.2 имеет 97,971 estimated tokens из 100,000 и поэтому требует соблюдать
+объявленный compact read graph. P1.3 корректно остаётся `pending-producer`, пока P1.2 не создаст
+матрицу; это зависимость, а не блокировка или новая design-сессия.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: D71 owner direct close for current P0 only.
-- deferred: Task audit-economy runtime from `roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md`.
+- workarounds: —
+- deferred: структурированный runtime-классификатор repair-vs-terminal boundary остаётся отдельным owning Task package change; текущий инцидент исправлен forward в плане.
 - open_questions: —

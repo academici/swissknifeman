@@ -1,0 +1,492 @@
+{
+  "schema_version": 1,
+  "contract_version": "1.0.0",
+  "families": [
+    "adapter-registry",
+    "analytics",
+    "canonical-source",
+    "capability-manifest",
+    "diagnostics",
+    "lock",
+    "provider-config",
+    "provider-status-evidence",
+    "rendered-target",
+    "skill-publication"
+  ],
+  "rows": [
+    {
+      "carrier_id": "analytics.event.normalized",
+      "family": "analytics",
+      "owner": "analyst.normalizer",
+      "read": [
+        "analytics.run-report",
+        "analytics.store.project"
+      ],
+      "write": [
+        "analytics.reader:{provider_id}"
+      ],
+      "derived_from": [
+        "analytics.reader:{provider_id}",
+        "analytics.semantic-allowlist"
+      ],
+      "forbidden_use": [
+        "persist-prompt-body",
+        "persist-provider-event-name",
+        "persist-provider-payload-shape",
+        "persist-provider-raw-path",
+        "persist-raw-event-body",
+        "persist-resolved-secret",
+        "persist-transcript"
+      ]
+    },
+    {
+      "carrier_id": "analytics.reader:{provider_id}",
+      "family": "analytics",
+      "owner": "analyst.reader:{provider_id}",
+      "read": [
+        "analyst.normalizer"
+      ],
+      "write": [
+        "analyst.reader:{provider_id}"
+      ],
+      "derived_from": [
+        "provider.raw-analytics:{provider_id}"
+      ],
+      "forbidden_use": [
+        "cross-provider-raw-read",
+        "invent-raw-field",
+        "leak-provider-payload",
+        "unknown-schema-fallback",
+        "unredacted-write"
+      ]
+    },
+    {
+      "carrier_id": "analytics.run-report",
+      "family": "analytics",
+      "owner": "analyst.run-report",
+      "read": [
+        "analytics.consumer",
+        "human-analyst"
+      ],
+      "write": [
+        "analyst.run-report"
+      ],
+      "derived_from": [
+        "analytics.event.normalized",
+        "analytics.store.project"
+      ],
+      "forbidden_use": [
+        "dereference-raw-evidence",
+        "fabricate-missing-zero",
+        "global-telemetry",
+        "omit-contributing-provenance",
+        "provider-payload-branch"
+      ]
+    },
+    {
+      "carrier_id": "analytics.store.project",
+      "family": "analytics",
+      "owner": "packages.analyst",
+      "read": [
+        "analytics.consumer",
+        "analytics.run-report"
+      ],
+      "write": [
+        "analyst.normalizer"
+      ],
+      "derived_from": [
+        "analytics.event.normalized"
+      ],
+      "forbidden_use": [
+        "cross-project-raw-aggregation",
+        "global-telemetry",
+        "overwrite-append-only-event",
+        "provider-owned-analytics-home",
+        "promote-without-human"
+      ]
+    },
+    {
+      "carrier_id": "adapter.descriptor:{provider_id}",
+      "family": "adapter-registry",
+      "owner": "adapter-package:{provider_id}",
+      "read": [
+        "core.provider.registry",
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "adapter-package:{provider_id}"
+      ],
+      "derived_from": [
+        "canonical-source",
+        "capability.manifest"
+      ],
+      "forbidden_use": [
+        "provider-enum-ceiling",
+        "replace-skill-core-meaning",
+        "read-other-provider-output"
+      ]
+    },
+    {
+      "carrier_id": "adapter.registry",
+      "family": "adapter-registry",
+      "owner": "core.provider.registry",
+      "read": [
+        "control-plane",
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "owning-package-registration"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "filesystem-discovery",
+        "global-mutable-registration",
+        "output-to-output-conversion"
+      ]
+    },
+    {
+      "carrier_id": "canonical.command-source",
+      "family": "canonical-source",
+      "owner": "packages.task",
+      "read": [
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.task"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-write",
+        "rendered-command-as-source"
+      ]
+    },
+    {
+      "carrier_id": "canonical.harness-catalog",
+      "family": "canonical-source",
+      "owner": "packages.harness",
+      "read": [
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.harness"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-write",
+        "provider-target-as-source"
+      ]
+    },
+    {
+      "carrier_id": "canonical.instruction-source",
+      "family": "canonical-source",
+      "owner": "packages.harness",
+      "read": [
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.harness"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-write",
+        "provider-instruction-output-as-source"
+      ]
+    },
+    {
+      "carrier_id": "canonical.skill-core",
+      "family": "canonical-source",
+      "owner": "packages.skiller",
+      "read": [
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.skiller"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-write",
+        "provider-control-field",
+        "rendered-skill-as-source"
+      ]
+    },
+    {
+      "carrier_id": "capability.manifest",
+      "family": "capability-manifest",
+      "owner": "core.provider.manifest",
+      "read": [
+        "control-plane",
+        "core.provider.registry"
+      ],
+      "write": [
+        "capability-catalog-owner"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-support-override",
+        "hidden-support-level",
+        "provider-result-as-support"
+      ]
+    },
+    {
+      "carrier_id": "diagnostic.human",
+      "family": "diagnostics",
+      "owner": "control-plane.presenter",
+      "read": [
+        "human-operator"
+      ],
+      "write": [
+        "control-plane.presenter"
+      ],
+      "derived_from": [
+        "provider.status:{provider_id}",
+        "status.aggregate"
+      ],
+      "forbidden_use": [
+        "semantic-input",
+        "support-level-source",
+        "write-authorization"
+      ]
+    },
+    {
+      "carrier_id": "lock.provider-artifacts:{provider_id}",
+      "family": "lock",
+      "owner": "core.provider.lock",
+      "read": [
+        "adapter:{provider_id}",
+        "artifact-audit:{provider_id}"
+      ],
+      "write": [
+        "provider-apply-transaction:{provider_id}"
+      ],
+      "derived_from": [
+        "provider.projection-plan:{provider_id}",
+        "provider.target:{provider_id}"
+      ],
+      "forbidden_use": [
+        "other-provider-semantic-input",
+        "stale-lock-as-intent",
+        "unowned-target-adoption"
+      ]
+    },
+    {
+      "carrier_id": "provider-config.carriers",
+      "family": "provider-config",
+      "owner": "provider-config.owner",
+      "read": [
+        "core.provider.config"
+      ],
+      "write": [
+        "explicit-config-operation"
+      ],
+      "derived_from": [],
+      "forbidden_use": [
+        "adapter-write",
+        "provider-output-as-config",
+        "status-as-config"
+      ]
+    },
+    {
+      "carrier_id": "provider-config.effective-selection",
+      "family": "provider-config",
+      "owner": "core.provider.config",
+      "read": [
+        "control-plane",
+        "core.provider.registry"
+      ],
+      "write": [
+        "core.provider.config"
+      ],
+      "derived_from": [
+        "provider-config.carriers"
+      ],
+      "forbidden_use": [
+        "adapter-reresolve-carriers",
+        "implicit-peer-selection",
+        "persist-derived-selection"
+      ]
+    },
+    {
+      "carrier_id": "provider.evidence.last-applied:{provider_id}",
+      "family": "provider-status-evidence",
+      "owner": "adapter:{provider_id}",
+      "read": [
+        "control-plane",
+        "provider-audit:{provider_id}"
+      ],
+      "write": [
+        "provider-apply-transaction:{provider_id}"
+      ],
+      "derived_from": [
+        "lock.provider-artifacts:{provider_id}",
+        "provider-config.effective-selection"
+      ],
+      "forbidden_use": [
+        "other-provider-read",
+        "other-provider-write",
+        "semantic-intent-source"
+      ]
+    },
+    {
+      "carrier_id": "provider.evidence.observed:{provider_id}",
+      "family": "provider-status-evidence",
+      "owner": "adapter:{provider_id}",
+      "read": [
+        "control-plane",
+        "provider-audit:{provider_id}"
+      ],
+      "write": [
+        "provider-observer:{provider_id}"
+      ],
+      "derived_from": [
+        "provider.target:{provider_id}"
+      ],
+      "forbidden_use": [
+        "other-provider-read",
+        "other-provider-write",
+        "raw-provider-payload-storage"
+      ]
+    },
+    {
+      "carrier_id": "provider.projection-plan:{provider_id}",
+      "family": "rendered-target",
+      "owner": "adapter:{provider_id}",
+      "read": [
+        "artifact-manager",
+        "provider-audit:{provider_id}"
+      ],
+      "write": [
+        "adapter:{provider_id}"
+      ],
+      "derived_from": [
+        "adapter.descriptor:{provider_id}",
+        "canonical-source",
+        "capability.manifest",
+        "provider-config.effective-selection"
+      ],
+      "forbidden_use": [
+        "other-provider-output-input",
+        "replace-canonical-meaning",
+        "write-before-negotiation"
+      ]
+    },
+    {
+      "carrier_id": "provider.status:{provider_id}",
+      "family": "provider-status-evidence",
+      "owner": "adapter:{provider_id}",
+      "read": [
+        "control-plane.reducer",
+        "human-diagnostic-presenter"
+      ],
+      "write": [
+        "adapter:{provider_id}"
+      ],
+      "derived_from": [
+        "provider-config.effective-selection",
+        "provider.evidence.last-applied:{provider_id}",
+        "provider.evidence.observed:{provider_id}"
+      ],
+      "forbidden_use": [
+        "other-provider-mask",
+        "support-level-source",
+        "user-authored-status"
+      ]
+    },
+    {
+      "carrier_id": "provider.target:{provider_id}",
+      "family": "rendered-target",
+      "owner": "adapter:{provider_id}",
+      "read": [
+        "artifact-audit:{provider_id}",
+        "provider-observer:{provider_id}"
+      ],
+      "write": [
+        "provider-apply-transaction:{provider_id}"
+      ],
+      "derived_from": [
+        "provider.projection-plan:{provider_id}"
+      ],
+      "forbidden_use": [
+        "canonical-source",
+        "other-provider-read",
+        "other-provider-write"
+      ]
+    },
+    {
+      "carrier_id": "skill.publication-unit:{publication_unit_id}",
+      "family": "skill-publication",
+      "owner": "packages.skiller",
+      "read": [
+        "artifact-manager",
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.skiller"
+      ],
+      "derived_from": [
+        "packages.skiller.package-version",
+        "skill.semantic-catalog"
+      ],
+      "forbidden_use": [
+        "implicit-native-install",
+        "output-as-membership-source",
+        "provider-specific-member-identity",
+        "rendered-manifest-as-unit"
+      ]
+    },
+    {
+      "carrier_id": "skill.semantic-catalog",
+      "family": "skill-publication",
+      "owner": "packages.skiller",
+      "read": [
+        "provider-renderer:{provider_id}"
+      ],
+      "write": [
+        "packages.skiller"
+      ],
+      "derived_from": [
+        "packages.skiller.core-policy",
+        "packages.skiller.skill-registry"
+      ],
+      "forbidden_use": [
+        "filesystem-discovery",
+        "provider-path-as-skill-id",
+        "rendered-manifest-as-catalog",
+        "translate-semantic-skill-id"
+      ]
+    },
+    {
+      "carrier_id": "status.aggregate",
+      "family": "provider-status-evidence",
+      "owner": "control-plane.reducer",
+      "read": [
+        "human-diagnostic-presenter",
+        "provider-health-consumer"
+      ],
+      "write": [
+        "control-plane.reducer"
+      ],
+      "derived_from": [
+        "provider-config.effective-selection",
+        "provider.status:{provider_id}"
+      ],
+      "forbidden_use": [
+        "hide-selected-provider-failure",
+        "rewrite-provider-status",
+        "support-level-source"
+      ]
+    }
+  ],
+  "adapter_registration": {
+    "provider_id_pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$",
+    "provider_enum": null,
+    "required_seams": [
+      "discovery",
+      "renderer",
+      "invocation",
+      "measurement",
+      "replay"
+    ],
+    "semantic_source": "canonical.skill-core",
+    "provider_output_as_input": false
+  }
+}

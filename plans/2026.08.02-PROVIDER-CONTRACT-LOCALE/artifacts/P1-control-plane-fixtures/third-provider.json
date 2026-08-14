@@ -1,0 +1,156 @@
+{
+  "contract_version": "1.0.0",
+  "provider": {
+    "id": "orbit",
+    "display_name": "Orbit"
+  },
+  "manifest": {
+    "contract_version": "1.0.0",
+    "catalog_version": "1.0.0",
+    "providers": [
+      {
+        "id": "orbit",
+        "display_name": "Orbit"
+      }
+    ],
+    "capabilities": [
+      {
+        "id": "skills.repository",
+        "intent": "Load repository-owned skills through the synthetic provider projection.",
+        "support": {
+          "orbit": {
+            "level": "native",
+            "binding": {
+              "surface": "orbit repository projection"
+            },
+            "limitations": [],
+            "evidence": [
+              {
+                "source": "fixture:third-provider",
+                "verified_at": "2026-08-14",
+                "scope": "orbit skills.repository",
+                "claim": "synthetic manifest binds Orbit repository publication"
+              }
+            ],
+            "diagnostic": "native synthetic Orbit repository projection is available"
+          }
+        }
+      },
+      {
+        "id": "workflows.status",
+        "intent": "Read synthetic provider-qualified workflow status.",
+        "support": {
+          "orbit": {
+            "level": "unsupported",
+            "limitations": [
+              "synthetic Orbit fixture has no workflow status store"
+            ],
+            "evidence": [
+              {
+                "source": "fixture:third-provider",
+                "verified_at": "2026-08-14",
+                "scope": "orbit workflows.status",
+                "claim": "synthetic manifest declares workflow status unsupported"
+              }
+            ],
+            "diagnostic": "unsupported: synthetic Orbit workflow status store is absent"
+          }
+        }
+      }
+    ],
+    "native_extensions": [
+      {
+        "id": "orbit.skill-palette",
+        "provider_id": "orbit",
+        "intent": "Expose the synthetic Orbit-native skill palette.",
+        "binding": {
+          "surface": "orbit skill palette"
+        },
+        "evidence": [
+          {
+            "source": "fixture:third-provider",
+            "verified_at": "2026-08-14",
+            "scope": "orbit native extension",
+            "claim": "synthetic manifest owns the Orbit skill palette extension"
+          }
+        ],
+        "diagnostic": "synthetic Orbit skill palette is declared"
+      }
+    ]
+  },
+  "descriptor": {
+    "contract_version": "1.0.0",
+    "adapter_id": "skiller.orbit.skill",
+    "adapter_version": "1.0.0",
+    "provider_id": "orbit",
+    "skill_id": "general/repository-audit",
+    "required_capabilities": [
+      {
+        "id": "skills.repository",
+        "accepted_levels": [
+          "adapted",
+          "native"
+        ]
+      }
+    ],
+    "optional_capabilities": [],
+    "native_extensions": [
+      "orbit.skill-palette"
+    ],
+    "discovery": {
+      "unit": "orbit-skill-card",
+      "budget_unit": "characters",
+      "degradation": "provider-qualified"
+    },
+    "renderer": {
+      "id": "skiller.orbit.renderer",
+      "version": "1.0.0",
+      "target_roots": [
+        ".orbit/skills"
+      ]
+    },
+    "invocation": {
+      "mode": "explicit-or-model",
+      "unsupported": false
+    },
+    "measurement": {
+      "unit": "characters",
+      "method": "orbit-listing",
+      "bounds": "exact",
+      "version": "1.0.0"
+    },
+    "replay": {
+      "fixture_set": "orbit-skill-replay-v1",
+      "unavailable": "non-green"
+    },
+    "status_namespace": "provider:orbit"
+  },
+  "registration": {
+    "additions": [
+      {
+        "kind": "descriptor",
+        "path": "adapters/orbit/descriptor.json"
+      },
+      {
+        "kind": "discovery",
+        "path": "adapters/orbit/discovery.json"
+      },
+      {
+        "kind": "renderer",
+        "path": "adapters/orbit/renderer.json"
+      },
+      {
+        "kind": "invocation",
+        "path": "adapters/orbit/invocation.json"
+      },
+      {
+        "kind": "measurement",
+        "path": "adapters/orbit/measurement.json"
+      },
+      {
+        "kind": "replay",
+        "path": "adapters/orbit/replay.json"
+      }
+    ]
+  }
+}

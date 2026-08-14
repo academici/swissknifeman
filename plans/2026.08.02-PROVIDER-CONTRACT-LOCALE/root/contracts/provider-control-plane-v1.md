@@ -183,6 +183,88 @@ or `no-providers-selected`, using the first matching rule:
 
 Success of one selected provider never masks a non-ready selected peer.
 
+## Capability negotiation
+
+Negotiation is a pure, deterministic pre-render operation. It consumes the complete frozen
+capability-manifest record (`providers` carry `id` and `display_name`; capabilities carry `id`,
+`intent`, and provider support with evidence/diagnostic plus level-specific `binding` or
+`adapter_id`; adapted support requires `adapter_id` and MAY additionally carry predecessor-valid
+non-empty `binding`, and requires non-empty unique limitations and evidence), the complete frozen
+P1.1 `DesiredSnapshot` selection map and leaf provenance, and
+one explicit adapter descriptor. It MUST NOT discover adapters from the filesystem, reread config carriers,
+inspect rendered output, or use another provider's result as support.
+
+Ownership conformance additionally runs its frozen declared probes against the repository's actual
+`configs/provider-capabilities.json` and the complete `mixed-freshness` producer result from the
+P1.1 `schema-positive.json`. Fixture-local manifests are supplementary. A valid catalog support
+change that alters a probe outcome is drift and fails the stage; incomplete producer provenance is
+an input failure rather than a fixture fallback.
+
+The descriptor provider, selection provider, and manifest provider row MUST match. Explicit
+capability decisions win over catalog support: explicit `false` is denied even when the manifest
+level is `native`; explicit `true` or a missing decision continues to the manifest record. Required
+requirements are evaluated by capability ID and block render in this exact code order:
+
+1. `NEG_PROVIDER_DISABLED`;
+2. `NEG_PROVIDER_MISMATCH`;
+3. `NEG_REQUIRED_DENIED`;
+4. `NEG_REQUIRED_MISSING`;
+5. `NEG_REQUIRED_UNSUPPORTED`;
+6. `NEG_REQUIRED_LEVEL_REJECTED`;
+7. `NEG_NATIVE_EXTENSION_INVALID`.
+
+Within one code, subject IDs sort lexicographically. Every result carries the exact `provider_id`,
+including blocked results, so diagnostics, labels, limitations, and extensions stay qualified.
+The result is complete: `blocked` returns the
+ordered required diagnostics and no partial render plan; `ready` returns every satisfied required
+requirement, every provider-qualified optional limitation, and every enabled descriptor-owned
+Native Extension. Optional denied, missing, unsupported, or level-rejected requirements remain
+explicit limitations and never borrow a peer provider's support.
+
+Native Extensions are checked only after common required capabilities. They remain separate from
+the common capability matrix, use the exact provider namespace, and cannot satisfy a common
+Capability requirement.
+
+## Provider-qualified support presentation
+
+`native`, `adapted`, and `unsupported` remain the only Support Levels. The words `supported`,
+`degraded`, and `exclusive` are derived presentation labels, never stored support values:
+
+- `supported`: the provider's required common capabilities negotiated without a blocker;
+- `degraded`: additionally present when satisfied support is adapted, a satisfied support record
+  has limitations, or an optional limitation exists;
+- `exclusive`: additionally present only when an enabled provider-owned Native Extension exists.
+
+The underlying levels, limitations, extensions, and provider identity remain visible. Aggregate
+presentation is `blocked` whenever any selected provider negotiation is blocked; a ready selected
+peer never masks it. A missing selected provider row is invalid rather than `not-selected`.
+Aggregate selected Provider IDs use the provider grammar, are unique and lexicographically sorted,
+and equal the provider-outcome key set exactly.
+
+## Ownership and provider isolation
+
+`artifacts/P1-provider-ownership-capability-matrix.json` is the exhaustive machine source for the
+declared carrier families: provider config, capability manifest, adapter registry, canonical
+sources, skill publication, normalized analytics, rendered targets, locks, status/evidence, and
+human diagnostics. Every carrier pattern has
+exactly one owner plus explicit read, write, derived-from, and forbidden-use sets. Its Markdown
+counterpart is generated deterministically and is not independently editable.
+
+Provider-parameterized carrier patterns use `{provider_id}`. The pattern is intentionally open to
+any stable manifest Provider ID; there is no shared Claude/Codex enum ceiling. An adapter may read
+canonical sources, the capability manifest, effective selection, its own descriptor, and its own
+managed evidence. It may write only its matching projection plan, managed target boundary,
+provider-scoped evidence/status, and matching lock through the artifact transaction.
+
+Cross-provider target/lock/evidence/status read or write, output-to-output conversion, stale lock as
+intent, diagnostic as authorization, and rendered output as canonical source are all invalid.
+Check, negotiate, audit, schema validation, and fixture self-test are strictly no-write.
+
+The provider-neutral Skill Core is frozen separately in `skill-core-v1.md`; additive registration,
+projection, negotiation, and third-provider seams are frozen in
+`provider-skill-adapter-v1.md`. Provider adapters add native mechanics without replacing shared
+meaning.
+
 ## Diagnostics
 
 Every diagnostic has exactly:
@@ -246,3 +328,8 @@ status is re-derived, and the contract carries every closed literal above.
 The checker and fixtures are authored from this contract. They MUST NOT import package runtime
 objects, regenerate expectations from current serializers, special-case a fixture digest, write
 outside their paths, or mutate provider/config/artifact carriers.
+
+The ownership stage additionally validates the exact carrier inventory, Skill Core neutrality,
+additive adapter boundary, deterministic negotiation order, selected-provider aggregation, and the
+synthetic third-provider registration. Its negative cases change one invariant each. The generated
+ownership Markdown MUST be byte-identical to a fresh projection from the JSON matrix.

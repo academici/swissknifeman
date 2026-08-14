@@ -1,0 +1,578 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    {
+      "id": "native-required-optional-unsupported",
+      "provider_id": "claude-code",
+      "manifest": {
+        "contract_version": "1.0.0",
+        "catalog_version": "1.0.0",
+        "providers": [
+          {
+            "display_name": "Claude Code",
+            "id": "claude-code"
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "skills.repository",
+            "intent": "Load repository-owned skills through the provider-native projection.",
+            "support": {
+              "claude-code": {
+                "binding": {
+                  "surface": ".claude-plugin/marketplace.json"
+                },
+                "diagnostic": "native repository skill projection is available",
+                "evidence": [
+                  {
+                    "claim": "fixture binds the native repository skill surface",
+                    "scope": "claude-code skills.repository",
+                    "source": "fixture:skills-repository",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "native",
+                "limitations": []
+              }
+            }
+          },
+          {
+            "id": "workflows.status",
+            "intent": "Read and report provider-qualified workflow run status.",
+            "support": {
+              "claude-code": {
+                "diagnostic": "unsupported: workflow store is unavailable in this fixture",
+                "evidence": [
+                  {
+                    "claim": "fixture has no workflow status carrier",
+                    "scope": "claude-code workflows.status",
+                    "source": "fixture:workflows-status",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "unsupported",
+                "limitations": [
+                  "workflow store unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "native_extensions": []
+      },
+      "desired": {
+        "provider_config_contract_version": "1.0.0",
+        "capability_catalog_version": "1.0.0",
+        "selection": {
+          "claude-code": {
+            "enabled": true,
+            "capabilities": {},
+            "native_extensions": {}
+          }
+        },
+        "provenance": [
+          {
+            "effective_path": "/selection/claude-code/enabled",
+            "source": {
+              "kind": "project",
+              "id": "project:fixture",
+              "carrier": ".swissknife.json",
+              "path": "/providers"
+            },
+            "source_path": "/providers/selection/claude-code/enabled",
+            "explicit": true
+          }
+        ],
+        "semantic_digest": "sha256:94a06b2faec9ec4a892e81210b72acdb5d7f63d838bb0517a04ce516e96c996a"
+      },
+      "descriptor": {
+        "provider_id": "claude-code",
+        "adapter_id": "skiller.claude-code.skill",
+        "required_capabilities": [
+          {
+            "id": "skills.repository",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          }
+        ],
+        "optional_capabilities": [
+          {
+            "id": "workflows.status",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          }
+        ],
+        "native_extensions": []
+      },
+      "expected": {
+        "provider_id": "claude-code",
+        "outcome": "ready",
+        "required": [
+          {
+            "id": "skills.repository",
+            "level": "native",
+            "state": "satisfied",
+            "limitations": []
+          }
+        ],
+        "limitations": [
+          {
+            "id": "workflows.status",
+            "level": "unsupported",
+            "state": "unsupported",
+            "limitations": [
+              "workflow store unavailable"
+            ]
+          }
+        ],
+        "native_extensions": [],
+        "labels": [
+          "supported",
+          "degraded"
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "explicit-denial-precedes-native",
+      "provider_id": "codex",
+      "manifest": {
+        "contract_version": "1.0.0",
+        "catalog_version": "1.0.0",
+        "providers": [
+          {
+            "display_name": "Codex",
+            "id": "codex"
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "skills.repository",
+            "intent": "Load repository-owned skills through the provider-native projection.",
+            "support": {
+              "codex": {
+                "binding": {
+                  "surface": ".agents/plugins/marketplace.json"
+                },
+                "diagnostic": "native repository skill projection is available",
+                "evidence": [
+                  {
+                    "claim": "fixture binds the native repository skill surface",
+                    "scope": "codex skills.repository",
+                    "source": "fixture:skills-repository",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "native",
+                "limitations": []
+              }
+            }
+          }
+        ],
+        "native_extensions": []
+      },
+      "desired": {
+        "provider_config_contract_version": "1.0.0",
+        "capability_catalog_version": "1.0.0",
+        "selection": {
+          "codex": {
+            "enabled": true,
+            "capabilities": {
+              "skills.repository": false
+            },
+            "native_extensions": {}
+          }
+        },
+        "provenance": [
+          {
+            "effective_path": "/selection/codex/capabilities/skills.repository",
+            "source": {
+              "kind": "operation",
+              "id": "operation:fixture",
+              "carrier": "operation",
+              "path": "/"
+            },
+            "source_path": "/selection/codex/capabilities/skills.repository",
+            "explicit": true
+          },
+          {
+            "effective_path": "/selection/codex/enabled",
+            "source": {
+              "kind": "operation",
+              "id": "operation:fixture",
+              "carrier": "operation",
+              "path": "/"
+            },
+            "source_path": "/selection/codex/enabled",
+            "explicit": true
+          }
+        ],
+        "semantic_digest": "sha256:55649f0e92dbcc5456fb12ed1021eb0cb1e326fce40e3351aa24f29a586e0250"
+      },
+      "descriptor": {
+        "provider_id": "codex",
+        "adapter_id": "skiller.codex.skill",
+        "required_capabilities": [
+          {
+            "id": "skills.repository",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          }
+        ],
+        "optional_capabilities": [],
+        "native_extensions": []
+      },
+      "expected": {
+        "provider_id": "codex",
+        "outcome": "blocked",
+        "required": [],
+        "limitations": [],
+        "native_extensions": [],
+        "labels": [],
+        "diagnostics": [
+          {
+            "code": "NEG_REQUIRED_DENIED",
+            "subject_id": "skills.repository"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adapted-with-native-extension",
+      "provider_id": "orbit",
+      "manifest": {
+        "contract_version": "1.0.0",
+        "catalog_version": "1.0.0",
+        "providers": [
+          {
+            "display_name": "Orbit",
+            "id": "orbit"
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "skills.repository",
+            "intent": "Load repository-owned skills through the provider-native projection.",
+            "support": {
+              "orbit": {
+                "adapter_id": "skiller.orbit.repository",
+                "diagnostic": "deterministic bundle adapter is available",
+                "evidence": [
+                  {
+                    "claim": "fixture binds an adapted repository skill surface",
+                    "scope": "orbit skills.repository",
+                    "source": "fixture:skills-repository",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "adapted",
+                "limitations": [
+                  "requires deterministic bundle"
+                ]
+              }
+            }
+          }
+        ],
+        "native_extensions": [
+          {
+            "id": "orbit.skill-palette",
+            "provider_id": "orbit",
+            "intent": "Expose the provider-native skill palette without a common parity claim.",
+            "binding": {
+              "surface": "orbit-skill-palette"
+            },
+            "evidence": [
+              {
+                "claim": "fixture binds the provider-native palette",
+                "scope": "orbit native extension",
+                "source": "fixture:orbit-extension",
+                "verified_at": "2026-08-14"
+              }
+            ],
+            "diagnostic": "provider-native extension is available"
+          }
+        ]
+      },
+      "desired": {
+        "provider_config_contract_version": "1.0.0",
+        "capability_catalog_version": "1.0.0",
+        "selection": {
+          "orbit": {
+            "enabled": true,
+            "capabilities": {},
+            "native_extensions": {
+              "orbit.skill-palette": true
+            }
+          }
+        },
+        "provenance": [
+          {
+            "effective_path": "/selection/orbit/enabled",
+            "source": {
+              "kind": "project",
+              "id": "project:fixture",
+              "carrier": ".swissknife.json",
+              "path": "/providers"
+            },
+            "source_path": "/providers/selection/orbit/enabled",
+            "explicit": true
+          },
+          {
+            "effective_path": "/selection/orbit/native_extensions/orbit.skill-palette",
+            "source": {
+              "kind": "project",
+              "id": "project:fixture",
+              "carrier": ".swissknife.json",
+              "path": "/providers"
+            },
+            "source_path": "/providers/selection/orbit/native_extensions/orbit.skill-palette",
+            "explicit": true
+          }
+        ],
+        "semantic_digest": "sha256:8e6bcd1c52dc3feab8b2daec4c02f0618e3fb98c4d432ee1c676918f2cc73298"
+      },
+      "descriptor": {
+        "provider_id": "orbit",
+        "adapter_id": "skiller.orbit.skill",
+        "required_capabilities": [
+          {
+            "id": "skills.repository",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          }
+        ],
+        "optional_capabilities": [],
+        "native_extensions": [
+          "orbit.skill-palette"
+        ]
+      },
+      "expected": {
+        "provider_id": "orbit",
+        "outcome": "ready",
+        "required": [
+          {
+            "id": "skills.repository",
+            "level": "adapted",
+            "state": "satisfied",
+            "limitations": [
+              "requires deterministic bundle"
+            ]
+          }
+        ],
+        "limitations": [],
+        "native_extensions": [
+          "orbit.skill-palette"
+        ],
+        "labels": [
+          "supported",
+          "degraded",
+          "exclusive"
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "ordered-required-failures",
+      "provider_id": "orbit",
+      "manifest": {
+        "contract_version": "1.0.0",
+        "catalog_version": "1.0.0",
+        "providers": [
+          {
+            "display_name": "Orbit",
+            "id": "orbit"
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "cap.adapted",
+            "intent": "Exercise an adapted support row.",
+            "support": {
+              "orbit": {
+                "adapter_id": "fixture.orbit.adapted",
+                "diagnostic": "adapted support is available",
+                "evidence": [
+                  {
+                    "claim": "fixture supplies adapted support",
+                    "scope": "orbit cap.adapted",
+                    "source": "fixture:ordered-failures",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "adapted",
+                "limitations": [
+                  "adapter required"
+                ]
+              }
+            }
+          },
+          {
+            "id": "cap.denied",
+            "intent": "Exercise explicit decision precedence.",
+            "support": {
+              "orbit": {
+                "binding": {
+                  "surface": "native-denied"
+                },
+                "diagnostic": "native support exists but explicit denial wins",
+                "evidence": [
+                  {
+                    "claim": "fixture supplies native support",
+                    "scope": "orbit cap.denied",
+                    "source": "fixture:ordered-failures",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "native",
+                "limitations": []
+              }
+            }
+          },
+          {
+            "id": "cap.unsupported",
+            "intent": "Exercise unsupported required capability refusal.",
+            "support": {
+              "orbit": {
+                "diagnostic": "unsupported: semantic equivalent is unavailable",
+                "evidence": [
+                  {
+                    "claim": "fixture has no equivalent capability",
+                    "scope": "orbit cap.unsupported",
+                    "source": "fixture:ordered-failures",
+                    "verified_at": "2026-08-14"
+                  }
+                ],
+                "level": "unsupported",
+                "limitations": [
+                  "semantic equivalent unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "native_extensions": []
+      },
+      "desired": {
+        "provider_config_contract_version": "1.0.0",
+        "capability_catalog_version": "1.0.0",
+        "selection": {
+          "orbit": {
+            "enabled": true,
+            "capabilities": {
+              "cap.denied": false
+            },
+            "native_extensions": {}
+          }
+        },
+        "provenance": [
+          {
+            "effective_path": "/selection/orbit/capabilities/cap.denied",
+            "source": {
+              "kind": "operation",
+              "id": "operation:fixture",
+              "carrier": "operation",
+              "path": "/"
+            },
+            "source_path": "/selection/orbit/capabilities/cap.denied",
+            "explicit": true
+          },
+          {
+            "effective_path": "/selection/orbit/enabled",
+            "source": {
+              "kind": "operation",
+              "id": "operation:fixture",
+              "carrier": "operation",
+              "path": "/"
+            },
+            "source_path": "/selection/orbit/enabled",
+            "explicit": true
+          }
+        ],
+        "semantic_digest": "sha256:70ea35507885ae4cf4105dc171150f05b231e2e3f35bf77b48cf1a3778c40c3f"
+      },
+      "descriptor": {
+        "provider_id": "orbit",
+        "adapter_id": "skiller.orbit.ordered-failures",
+        "required_capabilities": [
+          {
+            "id": "cap.adapted",
+            "accepted_levels": [
+              "native"
+            ]
+          },
+          {
+            "id": "cap.denied",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          },
+          {
+            "id": "cap.missing",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          },
+          {
+            "id": "cap.unsupported",
+            "accepted_levels": [
+              "adapted",
+              "native"
+            ]
+          }
+        ],
+        "optional_capabilities": [],
+        "native_extensions": []
+      },
+      "expected": {
+        "provider_id": "orbit",
+        "outcome": "blocked",
+        "required": [],
+        "limitations": [],
+        "native_extensions": [],
+        "labels": [],
+        "diagnostics": [
+          {
+            "code": "NEG_REQUIRED_DENIED",
+            "subject_id": "cap.denied"
+          },
+          {
+            "code": "NEG_REQUIRED_MISSING",
+            "subject_id": "cap.missing"
+          },
+          {
+            "code": "NEG_REQUIRED_UNSUPPORTED",
+            "subject_id": "cap.unsupported"
+          },
+          {
+            "code": "NEG_REQUIRED_LEVEL_REJECTED",
+            "subject_id": "cap.adapted"
+          }
+        ]
+      }
+    }
+  ],
+  "aggregate_cases": [
+    {
+      "id": "selected-peer-blocks-aggregate",
+      "selected_provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "provider_outcomes": {
+        "claude-code": "ready",
+        "codex": "blocked"
+      },
+      "expected": "blocked"
+    }
+  ]
+}

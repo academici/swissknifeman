@@ -1,0 +1,44 @@
+{
+  "contract_version": "1.0.0",
+  "base": "repository-skill-audit",
+  "cases": [
+    {
+      "id": "provider-control-field",
+      "mutation": {
+        "op": "add",
+        "path": "/model",
+        "value": "provider-frontier"
+      },
+      "expected_code": "SKILL_CORE_PROVIDER_CONTROL"
+    },
+    {
+      "id": "provider-path-leak",
+      "mutation": {
+        "op": "replace",
+        "path": "/resources/0/ref",
+        "value": ".agents/skills/repository-audit/SKILL.md"
+      },
+      "expected_code": "SKILL_CORE_PROVIDER_CONTROL"
+    },
+    {
+      "id": "missing-negative-trigger",
+      "mutation": {
+        "op": "replace",
+        "path": "/trigger/negative",
+        "value": []
+      },
+      "expected_code": "SKILL_CORE_TRIGGER_INVALID"
+    },
+    {
+      "id": "unsupported-accepted-level",
+      "mutation": {
+        "op": "replace",
+        "path": "/capabilities/0/accepted_levels",
+        "value": [
+          "unsupported"
+        ]
+      },
+      "expected_code": "SKILL_CORE_CAPABILITY_INVALID"
+    }
+  ]
+}

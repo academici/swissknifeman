@@ -1,0 +1,43 @@
+{
+  "contract_version": "1.0.0",
+  "base": "native-required-optional-unsupported",
+  "cases": [
+    {
+      "id": "support-record-missing-diagnostic",
+      "mutation": {
+        "op": "remove",
+        "path": "/manifest/capabilities/0/support/claude-code/diagnostic"
+      },
+      "expected_code": "NEG_MANIFEST_INVALID"
+    },
+    {
+      "id": "missing-required-capability",
+      "mutation": {
+        "op": "replace",
+        "path": "/descriptor/required_capabilities/0/id",
+        "value": "skills.missing"
+      },
+      "expected_code": "NEG_REQUIRED_MISSING"
+    },
+    {
+      "id": "required-level-rejected",
+      "mutation": {
+        "op": "replace",
+        "path": "/descriptor/required_capabilities/0/accepted_levels",
+        "value": [
+          "adapted"
+        ]
+      },
+      "expected_code": "NEG_REQUIRED_LEVEL_REJECTED"
+    },
+    {
+      "id": "descriptor-provider-mismatch",
+      "mutation": {
+        "op": "replace",
+        "path": "/descriptor/provider_id",
+        "value": "codex"
+      },
+      "expected_code": "NEG_PROVIDER_MISMATCH"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "return-judgement/v1",
+  "reviewer_actor": "codex:/root/p72_scope_review",
+  "context": "isolated-child-return",
+  "verdict": "JUSTIFIED",
+  "evidence_ids": [
+    "E1:P7.2-Files:terminal_policy.py-excluded",
+    "E2:P7.3-Files:terminal_policy.py-excluded",
+    "E3:HEAD-a3bc38cc:terminal_policy.py-absent",
+    "E4:P7.2-diff:imports-terminal_policy",
+    "E5:focused-tests:shared-only",
+    "E6:P7.1-committed-code:imports-terminal_policy"
+  ],
+  "conclusion": "P7.2 requires a plan-design contract repair before a reproducible product commit."
+}

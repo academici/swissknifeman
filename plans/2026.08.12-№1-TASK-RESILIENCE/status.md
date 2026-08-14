@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 5223b8af2448dabd36d0c007d98738a054d311800c6b6c3b8b721697e214c31b
+inputs_sha256: 5c9c9ed0f9ce39e5efadd37a7ca902d609bad5843ca95a41dafa143778a5da2a
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
-| P7 | Postarchive Task runtime and roadmap closeout | 2/6 | 🟡 In progress |
+| P7 | Postarchive Task runtime and roadmap closeout | 3/6 | 🟡 In progress |
 
 ## Phase P0
 
@@ -95,7 +95,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P7.0 | Restore backward-compatible lint admission | 🟢 Done | 2026-08-14 |
 | P7.1 | Seal route/run and terminal-state runtime core | 🟢 Done | 2026-08-14 |
-| P7.2 | Make terminal delivery and lint fail closed | ⬜ Not started | — |
+| P7.2 | Make terminal delivery and lint fail closed | 🟢 Done | 2026-08-14 |
 | P7.3 | Enforce scope-aware audit/block terminal policy | ⬜ Not started | — |
 | P7.4 | Reconcile canon, provider projections and package docs | ⬜ Not started | — |
 | P7.5 | Close roadmap disposition and aggregate release gates | ⬜ Not started | — |
@@ -396,6 +396,15 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · Bookkeeping repair: materialize write-site carrier. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
 P7.1 bookkeeping carrier repaired; product commit remains 5a7e9ee8. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · block-candidate · P7.2 has an undeclared terminal_policy.py dependency absent from committed P7.1. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Corrected a nonterminal block-candidate event written with a mismatched run_id. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · block-candidate · P7.2 has an undeclared terminal_policy.py dependency absent from committed P7.1. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · escalated · P7.2 cannot reproducibly close: terminal_policy.py has no declared committed owner. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-design · in-progress · D33 owner-directed recovery: terminal_policy ownership is assigned to P7.2; historical escalation is preserved, but this new attempt continues declared validation. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P7.2 attempt 2: D33 local ownership repair and resumable state projection. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.2 closed: ownership repair, resumable state and terminal delivery are committed. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

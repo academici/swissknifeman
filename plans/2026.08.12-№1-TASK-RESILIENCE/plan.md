@@ -49,6 +49,7 @@ P7 не получает authority на новый tag, push, GitHub release и�
 - P1 сначала мигрирует все active v1 plans, затем удаляет v1 execution schema/path; обратный порядок запрещён.
 - Любой failure signal проходит `observe → minimal reproduce → classify → act → verify`.
 - Procedural/transient/dependency/tool-noise/stale projection и bounded local reversible defect чинятся inline; это nonterminal `local-repair`.
+- Missing, untracked or wrongly assigned source file referenced by the current item is a deterministic local repair: assign it to the earliest compatible current item, update its exact Files/Validation and rerun the isolated candidate. It is never `Blocked`/`Done with deviations` merely because the prior decomposition omitted an owner.
 - Route rejection, pending decision, local repair и block candidate не меняют item status/attempt.
 - Внешний block candidate обязан иметь verified RAG; покрытие external-класса — 100%.
 - Если план требует Perplexity Web, пустой/недоступный ответ после bounded retry пишет

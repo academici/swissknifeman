@@ -1,5 +1,20 @@
 # Уточнения владельца
 
+## 2026-08-14 — continue-first при tree drift и terminal recovery
+
+- Новый, изменённый или случайно появившийся файл/commit не является основанием для `Blocked`,
+  `Done with deviations` либо преждевременного `final`: исполнитель локально атрибутирует его,
+  применяет минимальный совместимый repair и продолжает declared acceptance.
+- Отсутствующий source owner исправляется amendment текущего совместимого item и повторной
+  изолированной validation; это нормальный технический repair, не owner gate.
+- `Blocked` допустим только когда после таких попыток остаётся доказанная authority/safety/
+  public/frozen/external граница. Сложность, грязное дерево, число файлов и новый commit сами по
+  себе такой границей не являются.
+- Явное «продолжать» владельца возобновляет item новым attempt. Historical terminal/final
+  evidence сохраняется, но не может препятствовать execution или вынуждать новый owner loop.
+- `roadmap/2026.08.11-terminal-final-continuity-receipt.md` добавлен во входы P7.3: его пробел
+  закрывается тестами на incidental tree observation и terminal-to-resume state transition.
+
 ## 2026-08-13 — постархивное P7-продолжение
 
 - Владелец вызвал `$ task:plan-design 2026.08.12-№1-TASK-RESILIENCE P7` и тем самым

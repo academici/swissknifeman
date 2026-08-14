@@ -2,8 +2,8 @@
 projection: decision-current
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-13/D32
-inputs_sha256: a7686262683e25f3feb1a7ae597abeec4e4bdc5ae691803fa761f22b2ff5abae
+through: 2026-08-14/D33
+inputs_sha256: 793d74b673e670235d39ae032c6562767ebbcf4f80146c2aa5e1472258458df2
 generated_by: task plan-views decisions
 -->
 
@@ -41,3 +41,4 @@ generated_by: task plan-views decisions
 | D29 | 2026-08-13 | accepted | P6.2 | Применён owner-option `repair-and-patch-release-v0.13.2` из DecisionRequest `P6-audit-v0131-validation-boundary-2026-08-13`. P6.2 строит новый exact committed candidate с byte-fresh plan carriers, повторяет полную release-gate matrix в clean detached worktree без overlay и только после зелёного результата создаёт новый локальный annotated `v0.13.2`. `v0.13.0` и `v0.13.1` остаются на прежних tag object/peeled commit. RAG:— (owner/repo-grounded: `decisions/queue.jsonl`, `findings/25-P6-v0131-exact-validation-audit.md`, `research/10-P6.2-v0132-exact-candidate-design.md`). |
 | D31 | 2026-08-13 | accepted | P6.1, P6.2, P6.3, P6.4 | AUDIT-CAP: третьего Audit P6 нет; фаза закрывается штатным `task:plan-close`. Владелец разрешает direct-close P6 после terminal P6.2: exact `v0.13.2` candidate уже прошёл полную matrix, новый local annotated tag создан, а D30 не расширяется на новый audit или release attempt. |
 | D32 | 2026-08-13 | accepted | P7, P7.0, P7.1, P7.2, P7.3, P7.4, P7.5 | Возобновить архивный план в active-path только для P7: принять pinned working-tree candidate и `artifacts/roadmap-snapshots`, исполнить шесть отдельных fresh-session items, затем провести phase audit/close и снова архивировать план. |
+| D33 | 2026-08-14 | accepted | P7.2, P7.3, P7.5 | Отсутствующий или untracked source-файл, на который уже ссылается текущий item, считается детерминированным local repair: исполнитель сам назначает его самому раннему совместимому item, уточняет `Files` и `Validation`, затем повторяет изолированную проверку. Он не терминализирует работу и не ждёт owner approval. Новый/изменённый файл либо commit вне текущего scope — это наблюдение для snapshot/attribution, а не stop-сигнал. Явная последующая команда владельца продолжить работу создаёт новый in-progress attempt и перевешивает прежнюю terminal-проекцию. Предыдущий `final`, `Blocked` или `Done` остаётся историческим evidence, но не может сам по себе отклонить возобновлённое выполнение. |

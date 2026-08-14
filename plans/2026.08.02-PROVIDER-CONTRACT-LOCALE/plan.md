@@ -10,7 +10,7 @@
 | Authoring Model | gpt-5.6-sol/high |
 | Repository | swissknifeman |
 | Related Packages | skiller · harness · maind · task · core |
-| Execution Mode | phase-first, contract-first, evidence-led |
+| Execution Mode | flat/fast, batch-first, evidence-led |
 | Target Operator Models | implementation (execution) · economy (recon) · frontier (design/audit) |
 | Approval Owner | repository owner |
 | Home | repo:swissknifeman |
@@ -64,6 +64,10 @@ and does not duplicate a supervisor runtime.
 - Secret rotation/revocation requires an owner-authorized security step; secrets never appear in reports.
 - Generated artifacts are regenerated through their owner and checked, never hand-edited.
 - **Переходное правило Layout v2 (до P6):** закрытие пункта фиксируется записью в `journal.jsonl`, находкой или решением при необходимости и регенерацией видов; поля исхода в файле ТЗ запрещены и ловятся линтером.
+- **Flat/fast по умолчанию:** соседние ready items с совместимыми входами исполняются одним root-сеансом и одним batch-handoff; отдельный cold start нужен только при смене route, cwd, authority или внешнего состояния.
+- **Validation economy:** сначала affected-suite и как можно раньше реальный provider/project probe; новые synthetic fixtures/checkers добавляются только для воспроизведённого дефекта и не задерживают доступное live evidence.
+- **Один bounded review:** до P7.4 отдельные review-проходы не планируются. Допускается один repair + один targeted recheck конкретного blocker/major; затем риск фиксируется без нового цикла.
+- **Batch continuation:** зелёный item сразу передаёт следующий item тому же coordinator; общий bookkeeping, generated views и lint собираются на границе batch, если item contract не требует раньше.
 
 ## 3. Routing
 
@@ -80,30 +84,15 @@ and does not duplicate a supervisor runtime.
 | p0-final-requalification | P0.9–P0.10 | implementation/high | manual | full | adjacent digest rebinding and live-admission requalification share the same audit candidate, pins and full P0 validation |
 | solo | P1.1 | frontier/high | manual | full | desired/status public contract ends in an exact schema freeze |
 | solo | P1.2 | frontier/high | manual | full | Skill Core/adapter ownership freeze is a distinct public contract boundary |
-| solo | P1.3 | frontier/high | manual | full | migration/rollback freeze requires separate Owner approval after P1.1/P1.2 |
-| solo | P2.1 | frontier/high | manual | full | locale/registry identity freeze is an irreversible contract boundary |
-| solo | P2.2 | frontier/high | manual | full | source/overlay freeze consumes P2.1 and has independent Owner approval |
-| solo | P2.3 | frontier/high | manual | full | review/evidence contract freeze consumes P2.1/P2.2 and has separate acceptance |
-| solo | P3.1 | implementation/high | manual | full | public shared-core resolver ends at a committed public API boundary |
-| solo | P3.2 | implementation/high | manual | full | multi-package adapter work has a distinct per-cwd integration/ownership boundary |
-| solo | P3.3 | implementation/high | manual | full | audit/status graph feeds later phases and has a separate public evidence boundary |
-| solo | P4.1 | implementation/high | manual | full | locale runtime/public render boundary precedes every migration ledger write |
-| solo | P4.2 | implementation/high | manual | full | admission tooling and template form the write gate for the later corpus |
-| solo | P4.3 | implementation/high | manual | full | skill migration has bounded per-cwd checkpoints and independent review gates |
-| solo | P4.4 | implementation/high | manual | full | command/plugin migration has distinct parser-literal and package boundaries |
-| solo | P4.5 | implementation/high | manual | full | broad code-prose migration is isolated by AST/behavior and bounded review checkpoints |
-| solo | P4.6 | implementation/high | manual | full | docs and terminal regeneration form the phase's derived-artifact boundary |
-| solo | P5.1 | frontier/high | manual | full | exact external action-set freeze is an owner/irreversible boundary before any fleet write |
-| solo | P5.2 | implementation/high | manual | full | project-owned override registration has a distinct external ownership gate |
-| solo | P5.3 | implementation/high | manual | full | managed repair has per-project rollback and convergence boundaries |
-| solo | P5.4 | implementation/high | manual | full | quarantine is isolated by destructive authority and terminal convergence |
-| solo | P6.1 | implementation/high | manual | full | protected Brain transaction is isolated by exact owner authority and rollback |
-| solo | P6.2 | frontier/high | manual | full | provider-health contract freeze remains a decision-bearing boundary |
-| solo | P6.3 | implementation/high | manual | full | exact-set external fleet evidence is isolated by live-state/context budget and non-masking release gates |
-| solo | P7.1 | implementation/high | manual | full | live provider replay/ablation is isolated from synthetic regression hardening |
-| solo | P7.2 | implementation/high | manual | full | cross-package regression implementation has a distinct per-cwd boundary |
-| solo | P7.3 | implementation/high | manual | full | release-candidate/docs assembly is isolated by no-publish and generated-artifact gates |
-| solo | P7.4 | frontier/xhigh | manual | full | cold adversarial release audit requires independent context and Owner-facing verdict |
+| p1-close | P1.3 | frontier/high | manual | none | new session; finish the open provider contract, stopping only for its Owner gate |
+| p2-contracts | P2.1–P2.3 | frontier/high | manual | none | adjacent locale/authoring freezes share one source set |
+| p3-runtime | P3.1–P3.3 | implementation/high | manual | none | resolver, adapters and status graph form one vertical result |
+| p4-admission | P4.1–P4.2 | implementation/high | manual | none | locale runtime and corpus admission are one pre-migration gate |
+| p4-migration | P4.3–P4.6 | implementation/high | manual | none | ledger checkpoints remain inside one migration batch |
+| p5-fleet | P5.1–P5.4 | frontier/high | manual | none | freeze and authorized project actions keep one coordinator |
+| p6-health | P6.1–P6.3 | frontier/high | manual | none | Brain transaction, health contract and live evidence close one slice |
+| p7-real-first | P7.1–P7.3 | implementation/high | manual | none | real replay first, then demonstrated regressions and release assembly |
+| p7-final | P7.4 | frontier/xhigh | manual | full | sole independent review; at most one bounded repair/recheck |
 
 ## 5. Decision Log
 

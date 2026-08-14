@@ -1,6 +1,12 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, design pass 4/4 · **Статус:** D70 reopens only the two proven P0 audit-attempt-2 boundaries through adjacent batch P0.9–P0.10; P1–P7 remain unchanged and closed until P0 re-closes and its last planned audit is GREEN.
+**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, acceleration redesign after P1.2 · **Статус:** P1.2 closed; P1.3 starts in a new session, then remaining execution uses large flat batches and one final independent review.
+
+## Fast execution carrier
+
+Sequence: `P1.3 → P2.1–P2.3 → P3.1–P3.3 → P4.1–P4.2 → P4.3–P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. After the new P1.3 session, a batch keeps one root coordinator and advances without cold-start handoffs between green adjacent items. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized at batch boundaries. P7.4 is the only planned independent review and permits at most one targeted repair/recheck.
+
+Real provider/project evidence runs as soon as prerequisites exist. Synthetic checks lock reproduced behavior but do not create extra fixture/reviewer loops. The historical red P1.2→P1.3 probe is provenance, not an admission gate: P1.3 owns production and acceptance of `--stage final`.
 
 ## Evidence-led skill modernization carrier
 

@@ -1,46 +1,31 @@
-# HANDOFF — 2026-08-14 — after P1.2
+# HANDOFF — 2026-08-14 — accelerated after P1.2
 
-**Next:** redesign-plan: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE roadmap
+**Next:** execute-item: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | plan-acceleration-redesign |
+| Batch | p1-close |
 | Model | frontier |
-| Thinking | high — упростить routing и batches |
-| Context | cold-start-root: route-change |
-| Суть | Зафиксировать owner directive на flat/fast execution, сгруппировать совместимые remaining items и пересобрать roadmap. |
+| Thinking | high |
+| Context | cold-start-root: new owner-requested session |
+| Суть | Закрыть provider migration/rollback contract P1.3; исторический future-stage probe P1.2 не является readiness gate. |
 
-Native Codex launch-block:
+**Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE roadmap'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3'
 ```
 
 **Done:**
 
-- P1.2 закрыт: Skill Core, additive provider adapter seam, negotiation contract и exhaustive ownership/capability matrix зафиксированы в item-коммите `9d27e819`.
-- Exact item Validation зелёна; route write-sites зафиксированы как `allow`.
-- `skill-core-v1` и `provider-skill-adapter-v1` переведены в `v1.0.0 / frozen` с уведомлением P1.2.
+- P1.2 закрыт в item-коммите `9d27e819`; contracts, ownership matrix and exact acceptance are green.
+- Корневой `plan.md` переведён в flat/fast execution: P1.3 отдельно в новой сессии, затем восемь крупных batches.
+- До финального P7.4 запрещены отдельные review-циклы; real provider/project evidence имеет приоритет над расширением synthetic checks.
 
-**Remaining:**
+**Remaining:** P1.3 и P2–P7.
 
-- P1.3 и P2–P7 не исполнены.
-- Корневой `plan.md` нужно пересобрать по owner directive: flat/fast by default, fewer boundaries, larger adjacent batches, bounded review/repair and earlier real-project evidence.
+**Sources of truth:** `plan.md` §2–§3; `roadmap.md` Fast execution carrier; `phases/P1/P1.3.md`; P1.1/P1.2 state and frozen contracts.
 
-**Sources of truth:**
+**Open risks:** P1.3 still requires its explicit Owner C1–C6 approval. The historical P1.2→P1.3 `--stage final` RED is provenance only because P1.3 produces that stage.
 
-- `plan.md` — identity, Execution Rules, Routing и contracts registry.
-- `phases/P1/P1.2.md` и `phases/P1/P1.2.state.md` — ТЗ и terminal state.
-- `root/contracts/{provider-control-plane-v1,skill-core-v1,provider-skill-adapter-v1}.md`.
-- `artifacts/P1-provider-ownership-capability-matrix.json` и `artifacts/p1-provider-control-plane-check.py`.
-
-**Open risks:**
-
-- Downstream probe P1.3 сейчас RED, потому что consumer-ТЗ вызывает будущий `--stage final`, который должен реализовать сам P1.3; acceleration redesign должен убрать этот self-invalidating producer gate.
-- Synthetic contract checks не заменяют live provider/project evidence; remaining plan должен дойти до него без новых unbounded checker loops.
-
-**Workarounds/Deferred/Open questions:**
-
-- Workarounds: —.
-- Deferred: live provider/project replay остаётся product evidence boundary; redesign должен ускорить его достижение.
-- Open questions: —.
+**Workarounds/Deferred/Open questions:** Workarounds: —. Deferred: live provider/project replay to earliest ready batch. Open questions: —.

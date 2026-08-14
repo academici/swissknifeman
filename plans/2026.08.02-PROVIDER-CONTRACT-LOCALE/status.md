@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 32e53b73ae42b7424147316fda021b39e8d551518d2501d3340cd08b2808c971
+inputs_sha256: 2ce5a0b4a8709a015521f40eacb20cf62fd038bd62b20492945a868e8597a0d5
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
-| P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
+| P2 | Freeze locale and lean current-model skill authoring contracts | 1/3 | 🟡 In progress |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
@@ -59,7 +59,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Specify locale surfaces, precedence, normalization, and fallback | ⬜ Not started | — |
+| P2.1 | Specify locale surfaces, precedence, normalization, and fallback | 🟢 Done | 2026-08-14 |
 | P2.2 | Specify English canonical source and localized overlay format | ⬜ Not started | — |
 | P2.3 | Specify compactness, translation review, and comment policy | ⬜ Not started | — |
 
@@ -212,6 +212,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 7ce1e79c9c9ed40e325b7489ea01cf5dc0ee607f3425b91f674f7ac853c40b92, вердикт GREEN |
 | 2026-08-14 | gpt-5.6-terra/medium | plan-close · closed-green · фаза P1 закрыта: legacy phase-mode audit subject и candidate fingerprint совпали |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P2.1-locale-resolution-freeze |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · decision-pending · Owner freeze required for candidate 07c0ffd8; durable request P2.1-locale-resolution-freeze. |
+| 2026-08-14 | owner | plan-run · in-progress · decision queue: P2.1-locale-resolution-freeze |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.1 закрыт: locale-resolution v1.0.0 и pinned IANA snapshot заморожены D74; D75 исправил stage-aware plan metadata. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -223,3 +229,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P0.6: known deviation
 - P0.7: known deviation
 - P0.8: known deviation
+- P2.1: known deviation

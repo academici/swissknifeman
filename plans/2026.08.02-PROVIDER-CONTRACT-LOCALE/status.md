@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: bff52bc19f35070cfe778888aad781ebe7e6d9c3c3c4f3c3422e601b4e4133c8
+inputs_sha256: ca3bba3e456376555bfcd8bc4da5c04fa67bdbb5f87ea3f04717e19043ec355d
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
-| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 1/3 | 🟡 In progress |
+| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 2/3 | 🟡 In progress |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
@@ -52,7 +52,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P1.1 | Define canonical desired state and status schema | 🟢 Done | 2026-08-14 |
-| P1.2 | Define capability negotiation and provider ownership | ⬜ Not started | — |
+| P1.2 | Define capability negotiation and provider ownership | 🟢 Done | 2026-08-14 |
 | P1.3 | Define explicit legacy upgrade and rollback contract | ⬜ Not started | — |
 
 ## Phase P2
@@ -196,6 +196,14 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · escalated · P1.1 validation is green locally but whole-plan lint is red on future P1.2/P1.3 inputs outside declared Files; isolated review JUSTIFIED terminal redesign. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · Owner-directed same-root continuation reopens the false terminal block for bounded P1 readiness repair. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · Ложная terminal-блокировка исправлена в том же root-run; P1.1 закрыт по зелёной Validation. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Full review exposed in-scope false greens in manifest/selection negotiation, exact matrix semantics, adapter registration, and provider-qualified output. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Second full review found real-input negotiation not bound to stage acceptance and shallow structural validation of third-provider adapter seams. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Third full review found descriptor/Core capability mismatch, valid adapted binding rejection, weak Skill Core ID/version/duplicate checks, and whitespace-vacuous seam values. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Fourth full review found broad semantic-ID grammar, whitespace-vacuous Skill Core fields, incomplete adapted-support invariants, and unsorted/invalid aggregate provider identities. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Fifth review found Skill ID publication incompatibility, incomplete third-provider closure, empty aggregate/schema false greens, and omitted publication/analytics ownership carriers. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P1.2 закрыт: Skill Core, provider adapter seam и ownership/capability matrix зафиксированы с реальными producer probes. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

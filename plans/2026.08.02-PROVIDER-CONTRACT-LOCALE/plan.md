@@ -121,8 +121,8 @@ and does not duplicate a supervisor runtime.
 | root/contracts/locale-authoring-review-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 | root/contracts/provider-recovery-gates-v1.md | v1.0.0 | frozen | P0.4–P7 | P0.3/D63 |
 | root/contracts/provider-health-v1.md | v1.0.0-draft | draft | P6–P7 | — |
-| root/contracts/skill-core-v1.md | v1.0.0-draft | draft | P2–P7 | — |
-| root/contracts/provider-skill-adapter-v1.md | v1.0.0-draft | draft | P3–P7 | — |
+| root/contracts/skill-core-v1.md | v1.0.0 | frozen | P2–P7 | P1.2 |
+| root/contracts/provider-skill-adapter-v1.md | v1.0.0 | frozen | P3–P7 | P1.2 |
 | root/contracts/skill-evidence-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 
 ### Consumed

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: active/archive зеркало одного Plan ID больше не считается новой волной.**
+  `plan-lint` не требует `supersedes` у временной postarchive-копии того же плана, сохраняя
+  проверки дубликатов ordinal и совпадающих кодовых имён для действительно разных планов.
+
 - **`task` / `plan-protocol`: terminal outcome теперь следует единому acceptance/reducer contract.**
   Красная обязательная Validation оставляет item в progress; `closed-deviations` требует зелёных
   carriers и `repair_exhausted`, а `blocked`/phase RED допускаются только после authority/safety

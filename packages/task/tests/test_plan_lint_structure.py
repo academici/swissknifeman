@@ -166,6 +166,10 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
         shutil.copytree(plan_dir, archived)
         _, diag = _lint(plan_dir)
         self.assertFalse(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
+        self.assertFalse(
+            [warning for warning in diag.warnings if "повторяет кодовое имя" in warning],
+            diag.warnings,
+        )
 
     def test_numbered_plan_codename_excludes_ordinal(self):
         from task.plan_lint import _plan_codename

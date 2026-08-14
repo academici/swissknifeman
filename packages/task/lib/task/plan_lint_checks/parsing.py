@@ -462,7 +462,12 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     # (3) supersedes: совпадение кодового имени с архивным планом без Meta supersedes
     archive_dir = plan_dir.parent / "archive"
     if archive_dir.is_dir():
-        archived = {_plan_codename(p.name) for p in archive_dir.iterdir() if p.is_dir()}
+        archived = {
+            _plan_codename(p.name)
+            for p in archive_dir.iterdir()
+            if p.is_dir()
+            and not (p.name == plan_id and (p / "plan.md").is_file())
+        }
         supersedes_val = (meta.get("supersedes", ("", None))[0] or "").strip()
         if codename in archived and _is_empty(supersedes_val):
             diag.warning(plan_md, None,

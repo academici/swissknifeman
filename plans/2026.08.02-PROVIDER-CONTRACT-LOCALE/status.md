@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: efd255e588c4699cbb1543bc439513a4b649fecd20a9c9552bfe42c35cf987e9
+inputs_sha256: f00fa12d8fc348bb6f17b7417bcec5aaf615b0a64de9fcd56b22bfd2a4bae97d
 generated_by: task plan-views status
 -->
 
@@ -23,7 +23,7 @@ generated_by: task plan-views status
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, safety, and full fleet inventory | 8/10 | 🟡 In progress |
+| P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 0/3 | ⬜ Not started |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
@@ -45,7 +45,7 @@ generated_by: task plan-views status
 | P0.7 | Produce fresh security and trust evidence executably | 🟢 Done | 2026-08-13 |
 | P0.8 | Reconcile P0 execution provenance and requalify closure | 🟢 Done | 2026-08-10 |
 | P0.9 | Rebind the classification digest graph without reclassification | 🟢 Done | 2026-08-14 |
-| P0.10 | Make P0 freshness executable at admission and requalify once | ⬜ Not started | — |
+| P0.10 | Make P0 freshness executable at admission and requalify once | 🟢 Done | 2026-08-14 |
 
 ## Phase P1
 
@@ -185,6 +185,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | frontier/high | plan-design · in-progress · фаза детализирована до DoR |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P0.9 rebounded the checker-green classification digest graph without semantic reclassification. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P0.10 replaced persisted freshness authority with integrity-only evidence and one-shot live admission. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

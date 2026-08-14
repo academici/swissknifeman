@@ -1,0 +1,101 @@
+{
+  "schema_version": "working-tree-baseline/v1",
+  "observed_at": "2026-08-13T19:16:01Z",
+  "repository": "/home/vostrikov/projects/packages/swissknifeman",
+  "branch": "main",
+  "head": "7472ace86bc227639de430d8cff576d9d6d7fd02",
+  "staged": {
+    "path_count": 249,
+    "binary_diff_sha256": "94ceb5091b59063a84b2997da71ac19cbef206259b1b9bccd61a760e0dd43193",
+    "name_status_sha256": "a41b26552e083db74e338f1b32bfb53a7b21b2480d792d9761028ee00fc3b793",
+    "declared_role": "owner-prepared archive-to-active plan move plus roadmap disposition deletions"
+  },
+  "unstaged": {
+    "path_count": 54,
+    "binary_diff_sha256": "5baf1cf4072df3359a4b9313235b5d06e18de7bab296d0e6a0997080e076c0de",
+    "name_status_sha256": "e02b151535d290e5403714bbe6dafa52e4a490283f0fdfe69e30a5fef731342e",
+    "groups": {
+      "runtime_core": [
+        "packages/task/lib/task/command_catalog.py",
+        "packages/task/lib/task/journal.py",
+        "packages/task/lib/task/plan_item_state.py",
+        "packages/task/lib/task/route_evidence.py",
+        "packages/task/lib/task/task_contract.py"
+      ],
+      "delivery_and_lint": [
+        "packages/task/lib/task/plan_delivery.py"
+      ],
+      "lint_bootstrap": [
+        "packages/task/lib/task/plan_lint_checks/common.py",
+        "packages/task/lib/task/plan_lint_checks/engine.py",
+        "packages/task/lib/task/plan_lint_checks/parsing.py"
+      ],
+      "audit_and_blocking": [
+        "packages/task/configs/block-candidate-v1.schema.json",
+        "packages/task/lib/task/plan_blocking.py",
+        "packages/task/lib/task/plan_gates.py",
+        "packages/task/lib/task/review_policy.py",
+        "packages/task/prompts/block-confirmation-rubric-v1.md"
+      ],
+      "canonical_and_generated": [
+        "packages/skiller/skills/general/plan-protocol/SKILL.md",
+        "packages/task/commands/plan-audit.md",
+        "packages/task/commands/plan-close.md",
+        "packages/task/commands/plan-design.md",
+        "packages/task/commands/plan-exec.md",
+        "packages/task/commands/plan-run.md",
+        "packages/task/adapters/codex/provider-artifacts.lock.json",
+        "packages/task/adapters/codex/publication-lock.json",
+        "packages/task/adapters/codex/skills/task-plan-audit/SKILL.md",
+        "packages/task/adapters/codex/skills/task-plan-audit/command.md",
+        "packages/task/adapters/codex/skills/task-plan-close/SKILL.md",
+        "packages/task/adapters/codex/skills/task-plan-close/command.md",
+        "packages/task/adapters/codex/skills/task-plan-design/SKILL.md",
+        "packages/task/adapters/codex/skills/task-plan-design/command.md",
+        "packages/task/adapters/codex/skills/task-plan-exec/SKILL.md",
+        "packages/task/adapters/codex/skills/task-plan-exec/command.md",
+        "packages/task/adapters/codex/skills/task-plan-run/SKILL.md",
+        "packages/task/adapters/codex/skills/task-plan-run/command.md",
+        "packages/task/docs/methodology.md",
+        "packages/task/docs/reference/provider-commands.md",
+        "packages/task/runtime/plan-protocol/SKILL.md",
+        "packages/task/runtime/plan-protocol/provenance.json"
+      ],
+      "tests": [
+        "packages/task/tests/test_canon_literals.py",
+        "packages/task/tests/test_codex_command_adapter.py",
+        "packages/task/tests/test_command_catalog.py",
+        "packages/task/tests/test_journal.py",
+        "packages/task/tests/test_plan_blocking.py",
+        "packages/task/tests/test_plan_delivery.py",
+        "packages/task/tests/test_plan_gates.py",
+        "packages/task/tests/test_plan_item_state.py",
+        "packages/task/tests/test_plan_lint_policy.py",
+        "packages/task/tests/test_review_policy.py",
+        "packages/task/tests/test_route_evidence.py",
+        "packages/task/tests/test_task_contract.py"
+      ],
+      "closeout": [
+        "CHANGELOG.md",
+        "roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md",
+        "roadmap/2026.08.11-local-repair-vs-escalation-classifier.md",
+        "roadmap/2026.08.11-terminal-final-continuity-receipt.md",
+        "roadmap/2026.08.11-terminal-handoff-recommendation-receipt.md",
+        "roadmap/README.md"
+      ]
+    }
+  },
+  "roadmap_snapshots": {
+    "markdown_file_count": 22,
+    "filename_set_sha256": "b134601459702f34e3fd93f4ebdc97c741bf8cf87cc8d1f03a36f5ec2b210482",
+    "hash_manifest": "artifacts/roadmap-snapshots/README.md",
+    "catalog_snapshot": "artifacts/roadmap-snapshots/catalog-at-follow-up.md"
+  },
+  "constraints": [
+    "preserve unrelated staged and unstaged changes",
+    "never use git add -A",
+    "commit each P7 product slice with explicit paths",
+    "P0-P6 and v0.13.0/v0.13.1/v0.13.2 remain immutable",
+    "no tag, push, GitHub release or rollout authority"
+  ]
+}

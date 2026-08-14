@@ -1,0 +1,495 @@
+{
+  "$schema": "urn:swissknifeman:task:layout-v1-migration-policy:v1",
+  "version": "1.0.0",
+  "generated_at": "2026-08-12",
+  "inventory_sha256": "91ea661346ac24d5f7247e98a5a4066b6e6de3f41c7b1cd02211e5b972fd9b3d",
+  "read_budget_contract": "# Layout v2 read-budget contract\n\n**Version:** `1.1.0`\n\n```text\npass_item(i) = estimated_required_read_tokens(i) <= 100000\n```\n",
+  "rows": [
+    {
+      "target": "/home/vostrikov/Vaults/Brain/plans/2026.07.17-AXIOMA-ORCHESTRA",
+      "source_digest": "4d756aeb7f985a2568219172cce9a0ba7794eaa5e9d186ee77cb507926799160",
+      "source_plan_sha256": "52a8e4d1623857d9219e7d74038b252ab60f492188396417bef24d93dda2c734",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/Vaults/Brain/plans/2026.07.17-AXIOMA-ORCHESTRA",
+      "source_digest": "4d756aeb7f985a2568219172cce9a0ba7794eaa5e9d186ee77cb507926799160",
+      "source_plan_sha256": "52a8e4d1623857d9219e7d74038b252ab60f492188396417bef24d93dda2c734",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/Vaults/Brain/plans/2026.07.17-AXIOMA-ORCHESTRA",
+      "source_digest": "4d756aeb7f985a2568219172cce9a0ba7794eaa5e9d186ee77cb507926799160",
+      "source_plan_sha256": "52a8e4d1623857d9219e7d74038b252ab60f492188396417bef24d93dda2c734",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/Vaults/Brain/plans/2026.07.17-AXIOMA-ORCHESTRA",
+      "source_digest": "4d756aeb7f985a2568219172cce9a0ba7794eaa5e9d186ee77cb507926799160",
+      "source_plan_sha256": "52a8e4d1623857d9219e7d74038b252ab60f492188396417bef24d93dda2c734",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/diabox/plans/2026.08.04-ROCKET-PRODUCTION-HARDENING",
+      "source_digest": "63c3aff2445d66367d450b95b785850e6e6abe44edfb911ddc8375149cbf082d",
+      "source_plan_sha256": "f1775ad56df0b9c5128b47d773b9b23d39bcd04a36f675fff7bdffc2b92ece69",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/diabox/plans/2026.08.04-ROCKET-PRODUCTION-HARDENING",
+      "source_digest": "63c3aff2445d66367d450b95b785850e6e6abe44edfb911ddc8375149cbf082d",
+      "source_plan_sha256": "f1775ad56df0b9c5128b47d773b9b23d39bcd04a36f675fff7bdffc2b92ece69",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/diabox/plans/2026.08.04-ROCKET-PRODUCTION-HARDENING",
+      "source_digest": "63c3aff2445d66367d450b95b785850e6e6abe44edfb911ddc8375149cbf082d",
+      "source_plan_sha256": "f1775ad56df0b9c5128b47d773b9b23d39bcd04a36f675fff7bdffc2b92ece69",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX",
+      "source_digest": "30e963ea4fd4a7147f70ab0421ece27fa527137b7a66be7c31cc830fa634038b",
+      "source_plan_sha256": "1d005c93068f4828c0a356aab072c17aaf88e26b0598c35fe5c106a9cfe3b1da",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX",
+      "source_digest": "30e963ea4fd4a7147f70ab0421ece27fa527137b7a66be7c31cc830fa634038b",
+      "source_plan_sha256": "1d005c93068f4828c0a356aab072c17aaf88e26b0598c35fe5c106a9cfe3b1da",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.17-DTEREMA-UX",
+      "source_digest": "30e963ea4fd4a7147f70ab0421ece27fa527137b7a66be7c31cc830fa634038b",
+      "source_plan_sha256": "1d005c93068f4828c0a356aab072c17aaf88e26b0598c35fe5c106a9cfe3b1da",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.23-DTEREMA-PROD-P0",
+      "source_digest": "61d7802649c66ec4c0f4e7e6a160a0f176e780d18b19b8c1248c214a85ad814f",
+      "source_plan_sha256": "97a49f146abb12f23abbef0da0ebb87620a86c59e132943e229e1bbf5326b720",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.23-DTEREMA-PROD-P0",
+      "source_digest": "61d7802649c66ec4c0f4e7e6a160a0f176e780d18b19b8c1248c214a85ad814f",
+      "source_plan_sha256": "97a49f146abb12f23abbef0da0ebb87620a86c59e132943e229e1bbf5326b720",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/dterema/dterema/plans/2026.07.23-DTEREMA-PROD-P0",
+      "source_digest": "61d7802649c66ec4c0f4e7e6a160a0f176e780d18b19b8c1248c214a85ad814f",
+      "source_plan_sha256": "97a49f146abb12f23abbef0da0ebb87620a86c59e132943e229e1bbf5326b720",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/edufy/plans/2026.08.06-EDUFY-BUILD",
+      "source_digest": "d0fa47ac6dd49d3ac7aa14c220640324cd91de28f63867a751d5696ed23863c7",
+      "source_plan_sha256": "23e1f458f39baae69e9e25b3a0360426119c551c9eda3e597646fcfbb709a622",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/edufy/plans/2026.08.06-EDUFY-BUILD",
+      "source_digest": "d0fa47ac6dd49d3ac7aa14c220640324cd91de28f63867a751d5696ed23863c7",
+      "source_plan_sha256": "23e1f458f39baae69e9e25b3a0360426119c551c9eda3e597646fcfbb709a622",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/edufy/plans/2026.08.06-EDUFY-BUILD",
+      "source_digest": "d0fa47ac6dd49d3ac7aa14c220640324cd91de28f63867a751d5696ed23863c7",
+      "source_plan_sha256": "23e1f458f39baae69e9e25b3a0360426119c551c9eda3e597646fcfbb709a622",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/flexcrm/plans/FLEX-2",
+      "source_digest": "3902c6a5898b01d2e39e2c97d4844c3d9f835b72789176cf606c0b24a0180104",
+      "source_plan_sha256": "b83484681c40e0ee91932ab1cd22b1e426dc7fac149e394f0f8eaff4e9714ec5",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/flexcrm/plans/FLEX-2",
+      "source_digest": "3902c6a5898b01d2e39e2c97d4844c3d9f835b72789176cf606c0b24a0180104",
+      "source_plan_sha256": "b83484681c40e0ee91932ab1cd22b1e426dc7fac149e394f0f8eaff4e9714ec5",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/flexcrm/plans/FLEX-2",
+      "source_digest": "3902c6a5898b01d2e39e2c97d4844c3d9f835b72789176cf606c0b24a0180104",
+      "source_plan_sha256": "b83484681c40e0ee91932ab1cd22b1e426dc7fac149e394f0f8eaff4e9714ec5",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/flexcrm/plans/FLEX-2",
+      "source_digest": "3902c6a5898b01d2e39e2c97d4844c3d9f835b72789176cf606c0b24a0180104",
+      "source_plan_sha256": "b83484681c40e0ee91932ab1cd22b1e426dc7fac149e394f0f8eaff4e9714ec5",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/memster/plans/2026.07.12-SEMANTIC-CORE",
+      "source_digest": "2a46e8145bf5be0ff16f2c7a02cf57bb14d6182d59ee5f75cd18f687327bb0a6",
+      "source_plan_sha256": "cb2494b2129d12fd7ad2f3ec89b980c0a67ad8e40e01d426d55151043655a2b9",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/memster/plans/2026.07.12-SEMANTIC-CORE",
+      "source_digest": "2a46e8145bf5be0ff16f2c7a02cf57bb14d6182d59ee5f75cd18f687327bb0a6",
+      "source_plan_sha256": "cb2494b2129d12fd7ad2f3ec89b980c0a67ad8e40e01d426d55151043655a2b9",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/memster/plans/2026.07.12-SEMANTIC-CORE",
+      "source_digest": "2a46e8145bf5be0ff16f2c7a02cf57bb14d6182d59ee5f75cd18f687327bb0a6",
+      "source_plan_sha256": "cb2494b2129d12fd7ad2f3ec89b980c0a67ad8e40e01d426d55151043655a2b9",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/memster/plans/2026.07.12-SEMANTIC-CORE",
+      "source_digest": "2a46e8145bf5be0ff16f2c7a02cf57bb14d6182d59ee5f75cd18f687327bb0a6",
+      "source_plan_sha256": "cb2494b2129d12fd7ad2f3ec89b980c0a67ad8e40e01d426d55151043655a2b9",
+      "defect_class": "decision-id-map",
+      "transform": "Map noncanonical source decision rows to ordered Dn files and record the reversible ID map; preserve zero rows as zero.",
+      "semantic_invariant": "Decision text is archived byte-exact and no decision is invented.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/agentools/plans/AGENTOOLS",
+      "source_digest": "9a31d8f8c5b5b68d82505444291eec26e49aaa0f1fc51d95f71863e2eefe2dbd",
+      "source_plan_sha256": "e30c732195d633be5f6d3157b159a923433a4453acda9d2a7280bd6e9d1db5cb",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/agentools/plans/AGENTOOLS",
+      "source_digest": "9a31d8f8c5b5b68d82505444291eec26e49aaa0f1fc51d95f71863e2eefe2dbd",
+      "source_plan_sha256": "e30c732195d633be5f6d3157b159a923433a4453acda9d2a7280bd6e9d1db5cb",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/agentools/plans/AGENTOOLS",
+      "source_digest": "9a31d8f8c5b5b68d82505444291eec26e49aaa0f1fc51d95f71863e2eefe2dbd",
+      "source_plan_sha256": "e30c732195d633be5f6d3157b159a923433a4453acda9d2a7280bd6e9d1db5cb",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/erp-sdk/plans/ERP-IMPL",
+      "source_digest": "d2146e24dddd0481383bc7100a860b3376f9b922fa93a1e40585cf64d31a7082",
+      "source_plan_sha256": "6db91036f3a0b2bec4c8334da1a03d8390ac287f0f32ae19b048254da4900e0d",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/erp-sdk/plans/ERP-IMPL",
+      "source_digest": "d2146e24dddd0481383bc7100a860b3376f9b922fa93a1e40585cf64d31a7082",
+      "source_plan_sha256": "6db91036f3a0b2bec4c8334da1a03d8390ac287f0f32ae19b048254da4900e0d",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/erp-sdk/plans/ERP-IMPL",
+      "source_digest": "d2146e24dddd0481383bc7100a860b3376f9b922fa93a1e40585cf64d31a7082",
+      "source_plan_sha256": "6db91036f3a0b2bec4c8334da1a03d8390ac287f0f32ae19b048254da4900e0d",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/loqum/plans/LOQUM-DEV",
+      "source_digest": "cd48d55ef9a6e2c685f9186e1541452569887a70acd9db934cb68238cd0100bd",
+      "source_plan_sha256": "0a25f2cfff040230297409f26865c34bbc2bf60c76924a29e55782d701bc2ae5",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/loqum/plans/LOQUM-DEV",
+      "source_digest": "cd48d55ef9a6e2c685f9186e1541452569887a70acd9db934cb68238cd0100bd",
+      "source_plan_sha256": "0a25f2cfff040230297409f26865c34bbc2bf60c76924a29e55782d701bc2ae5",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/loqum/plans/LOQUM-DEV",
+      "source_digest": "cd48d55ef9a6e2c685f9186e1541452569887a70acd9db934cb68238cd0100bd",
+      "source_plan_sha256": "0a25f2cfff040230297409f26865c34bbc2bf60c76924a29e55782d701bc2ae5",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/AUDIT-VLT",
+      "source_digest": "b0a074000d813e87cccf9734a6127ac71934710714482fa0cf6a0cbc8cd22c83",
+      "source_plan_sha256": "efb45fd69159d79676d7f4c8148d314fdebf713b6589040fff4b84ee721baa03",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/AUDIT-VLT",
+      "source_digest": "b0a074000d813e87cccf9734a6127ac71934710714482fa0cf6a0cbc8cd22c83",
+      "source_plan_sha256": "efb45fd69159d79676d7f4c8148d314fdebf713b6589040fff4b84ee721baa03",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/AUDIT-VLT",
+      "source_digest": "b0a074000d813e87cccf9734a6127ac71934710714482fa0cf6a0cbc8cd22c83",
+      "source_plan_sha256": "efb45fd69159d79676d7f4c8148d314fdebf713b6589040fff4b84ee721baa03",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/AUDIT-VLT",
+      "source_digest": "b0a074000d813e87cccf9734a6127ac71934710714482fa0cf6a0cbc8cd22c83",
+      "source_plan_sha256": "efb45fd69159d79676d7f4c8148d314fdebf713b6589040fff4b84ee721baa03",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-HSEAM",
+      "source_digest": "b53e110715009c9c4b78c520780211203fd8098a7803cc66dab46d013bfa679a",
+      "source_plan_sha256": "d0fe06f4b51b227ba812496164e22401fd728116c03988aeb3bbf2605fd8b542",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-HSEAM",
+      "source_digest": "b53e110715009c9c4b78c520780211203fd8098a7803cc66dab46d013bfa679a",
+      "source_plan_sha256": "d0fe06f4b51b227ba812496164e22401fd728116c03988aeb3bbf2605fd8b542",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-HSEAM",
+      "source_digest": "b53e110715009c9c4b78c520780211203fd8098a7803cc66dab46d013bfa679a",
+      "source_plan_sha256": "d0fe06f4b51b227ba812496164e22401fd728116c03988aeb3bbf2605fd8b542",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-HSEAM",
+      "source_digest": "b53e110715009c9c4b78c520780211203fd8098a7803cc66dab46d013bfa679a",
+      "source_plan_sha256": "d0fe06f4b51b227ba812496164e22401fd728116c03988aeb3bbf2605fd8b542",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-LOAD",
+      "source_digest": "fb79604710c633b11e0b462c6c30f5a5b911eed7c3b931dedda3ed527a529786",
+      "source_plan_sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-LOAD",
+      "source_digest": "fb79604710c633b11e0b462c6c30f5a5b911eed7c3b931dedda3ed527a529786",
+      "source_plan_sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-LOAD",
+      "source_digest": "fb79604710c633b11e0b462c6c30f5a5b911eed7c3b931dedda3ed527a529786",
+      "source_plan_sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-LOAD",
+      "source_digest": "fb79604710c633b11e0b462c6c30f5a5b911eed7c3b931dedda3ed527a529786",
+      "source_plan_sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-LOAD",
+      "source_digest": "fb79604710c633b11e0b462c6c30f5a5b911eed7c3b931dedda3ed527a529786",
+      "source_plan_sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802",
+      "defect_class": "decision-id-map",
+      "transform": "Map noncanonical source decision rows to ordered Dn files and record the reversible ID map; preserve zero rows as zero.",
+      "semantic_invariant": "Decision text is archived byte-exact and no decision is invented.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ",
+      "source_digest": "5013686b19e3a3bb0c8f0ac5dbdb4d12f2135683ee3d7342e4321f0cf0204e71",
+      "source_plan_sha256": "1e499d689e531a587385a67c5ed8ae555e49bc5eb52de37ee41ed45f7df0242e",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ",
+      "source_digest": "5013686b19e3a3bb0c8f0ac5dbdb4d12f2135683ee3d7342e4321f0cf0204e71",
+      "source_plan_sha256": "1e499d689e531a587385a67c5ed8ae555e49bc5eb52de37ee41ed45f7df0242e",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ",
+      "source_digest": "5013686b19e3a3bb0c8f0ac5dbdb4d12f2135683ee3d7342e4321f0cf0204e71",
+      "source_plan_sha256": "1e499d689e531a587385a67c5ed8ae555e49bc5eb52de37ee41ed45f7df0242e",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.27-RESP-CHTZ",
+      "source_digest": "5013686b19e3a3bb0c8f0ac5dbdb4d12f2135683ee3d7342e4321f0cf0204e71",
+      "source_plan_sha256": "1e499d689e531a587385a67c5ed8ae555e49bc5eb52de37ee41ed45f7df0242e",
+      "defect_class": "routing-normalization",
+      "transform": "Keep legal item/range tokens as ordered single-token Routing rows; omit only policy-recorded non-item metadata.",
+      "semantic_invariant": "Every active Routing Items cell matches the closed v2 item/range grammar.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING",
+      "source_digest": "7451bbf64b902c2d603193a468d0d47e5fd4ed007e0a3438baa257eda3de5b86",
+      "source_plan_sha256": "987f289e40fc3112964f2d3e2c6343a835daa90847a8df0fd6658ae80ffb3559",
+      "defect_class": "current-state-import",
+      "transform": "Archive legacy journal bytes, emit one canonical row per terminal item, and reset unproven legacy in-progress flags to resumable not-started.",
+      "semantic_invariant": "Terminal position and every source status remain explicit without fabricating an active attempt or chronology.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING",
+      "source_digest": "7451bbf64b902c2d603193a468d0d47e5fd4ed007e0a3438baa257eda3de5b86",
+      "source_plan_sha256": "987f289e40fc3112964f2d3e2c6343a835daa90847a8df0fd6658ae80ffb3559",
+      "defect_class": "read-budget-carrier",
+      "transform": "Install the frozen policy read-budget contract verbatim.",
+      "semantic_invariant": "Every preview evaluates the same stage-aware D2 threshold.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING",
+      "source_digest": "7451bbf64b902c2d603193a468d0d47e5fd4ed007e0a3438baa257eda3de5b86",
+      "source_plan_sha256": "987f289e40fc3112964f2d3e2c6343a835daa90847a8df0fd6658ae80ffb3559",
+      "defect_class": "semantic-handoff",
+      "transform": "Recompute Next from projected current state: first runnable item, first skeleton, or terminal archive.",
+      "semantic_invariant": "Handoff never claims terminal state while work remains.",
+      "rollback": "Restore the byte-exact preimage from artifacts/migration-source-v1 before advancing."
+    },
+    {
+      "target": "/home/vostrikov/sibintek/projects/insiders/plans/2026.07.30-SITE-HARDENING",
+      "source_digest": "7451bbf64b902c2d603193a468d0d47e5fd4ed007e0a3438baa257eda3de5b86",
+      "source_plan_sha256": "987f289e40fc3112964f2d3e2c6343a835daa90847a8df0fd6658ae80ffb3559",
+      "defect_class": "already-v2-admission",
+      "transform": "Rebuild a preview-only current-state projection from the archived v1 preimage and move legacy volatile Meta rows to v2 carriers; keep the source tree byte-identical.",
+      "semantic_invariant": "The preview satisfies v2 Meta ownership and no apply write is proposed for a target already converted by its owning repository.",
+      "rollback": "No write: verify the frozen source digest and return already-v2 no-op."
+    }
+  ]
+}

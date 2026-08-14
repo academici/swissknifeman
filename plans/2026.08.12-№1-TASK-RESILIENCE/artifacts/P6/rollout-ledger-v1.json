@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:rollout-ledger:v1",
+  "schema_version": 1,
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "item_id": "P6.4",
+  "release": {
+    "tag": "v0.13.0",
+    "tag_object": "c3f116a87822f45e278d7acc23ade5f89502f3ef",
+    "peeled_commit": "3c5548f7d15100e3b992e62e08f7e8ef2a92b0d0"
+  },
+  "command_evidence": {
+    "before_list": {"exit_code": 0, "sha256": "99233aca461006792f17c591cea8f95bb3c1fac298f4dc77bd6616eb38b4f719"},
+    "dry_run": {"exit_code": 0, "sha256": "d833c1623bb5d9dab7f01d4d3febad9b14a505310eaf9a39240f2ff081760de9"},
+    "apply": {"exit_code": 0, "sha256": "48a7f864601614b52042f26560bb48a241433d2d45eeb1c78ebf0e42dec7bf55"},
+    "after_list": {"exit_code": 0, "sha256": "ec1590fa78b7b6ac4b52c1690a56ab760dc623ef21c1627e8f1ae925b952a731"}
+  },
+  "summary": {
+    "registry_records": 57,
+    "unique_path_channel": 32,
+    "unique_paths": 23,
+    "applied": 29,
+    "no_op": 3,
+    "failed": 0,
+    "physical_task_carriers": 30,
+    "semantic_probes_green": 30
+  },
+  "target_results": {
+    "marketplace_applied": [
+      "Brain|24:claude-code,54:codex", "agelto/agelto|14:claude-code,48:codex", "axioma-studio|26:claude-code,56:codex", "diabox|36:claude-code,47:codex", "dterema/app|11:claude-code,46:codex", "dterema/dterema|22:claude-code,45:codex", "edufy|8:claude-code,44:codex", "flexcrm|29:claude-code,39:codex", "memster|6:claude-code,42:codex", "packages/agentools|35:claude-code,57:codex", "packages/azguard|17:claude-code,32:codex", "packages/botkit|27:claude-code,33:codex", "packages/chatom|15:claude-code,49:codex", "packages/corex|5:claude-code,41:codex", "packages/erp-sdk|25:claude-code,55:codex", "packages/loqum|23:claude-code,53:codex", "packages/perplexity-web-mcp|16:claude-code,50:codex", "packages/swissknifeman|19:claude-code,51:codex", "packages/vaulter|1:claude-code,38:codex", "vintera/cms|7:claude-code,43:codex", "vintera/vintera|28:claude-code,52:codex", "sibintek/projects/insiders|13:claude-code,37:codex", "sibintek/projects/sova|30:claude-code,40:codex"
+    ],
+    "vendor_applied": [
+      "dterema/app|10:claude-code", "dterema/dterema|9:claude-code", "packages/azguard|4:claude-code,31:codex", "packages/botkit|18:claude-code,34:codex", "vintera/cms|20:claude-code", "vintera/vintera|21:claude-code"
+    ],
+    "vendor_no_op": [
+      "diabox|12:claude-code", "flexcrm|2:claude-code", "sibintek/projects/sova|3:claude-code"
+    ]
+  },
+  "semantic_probe": {
+    "carrier": ".agents/plugins/bundles/task",
+    "required_plan_command_projections": 5,
+    "checks": ["task.route_evidence_codex capture", "config/doctor/self-attestation substitution forbidden"],
+    "projection_sha256": "c01ccb1025b71df2cf304a77cb9d441c4ff8c808d1d8fcfb19e5475fe744983d",
+    "not_applicable": ["agelto/agelto", "packages/swissknifeman"]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "adapter_attestation": {
+    "canonical_command_sha256": "sha256:128990b1688a079d35e4aca5cfa7b44f0ffe5a89cb64a64252cf6374ccc4057f",
+    "command_id": "task:plan-run",
+    "package": "task",
+    "version": "0.13.2"
+  },
+  "commit_sha": "a0451580a671b0d2f2e76c6c0d5869582e171272",
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:da695d2f82951f011f926ea92bb78ff87032703d9aa031fee3c332dca278bfa0",
+    "plan": "sha256:f2f8de59bcc8933e231a2cc2250863604d5f772e85e3ec984c709eed11bfb861",
+    "state": "sha256:d0296f548a60eacc502d0d235b2ab5ebf1b18d245762d8e74a863de622761985"
+  },
+  "journal": {
+    "command": "plan-run",
+    "line": 270,
+    "result": "closed-green",
+    "run_id": "3a7be025e7aef9ce9c6a293377443d5610cd252fb6066ae7f1daa961787b16fb",
+    "sha256": "sha256:ef95bd86ae7f86d1f0130e93529fe349b3cb88f5d1e265841b0da24a42fe0fa4"
+  },
+  "next_exact": "run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P7.4",
+  "plan_id": "2026.08.12-№1-TASK-RESILIENCE",
+  "rationale": {
+    "open_risks": "",
+    "remaining": ""
+  },
+  "recommendation": "**Next:** run-items: task:plan-run 2026.08.12-№1-TASK-RESILIENCE P7.4\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model | implementation |\n| Thinking | high — canonical/provider regeneration boundary |\n| Context | cold-start-root: context-budget |\n| Суть | Свести семантику P7.1–P7.3 в канонических командах и регенерировать только принадлежащие провайдерные, runtime, registry и docs-проекции. |\n| Команда | `task:plan-run 2026.08.12-№1-TASK-RESILIENCE P7.4` |\n\nNative Codex launch-block:\n\n```bash\ncodex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort=\"high\"' -a never -s danger-full-access '$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P7.4'\n```",
+  "route": {
+    "batch": "solo",
+    "command": "task:plan-run 2026.08.12-№1-TASK-RESILIENCE P7.4",
+    "context": "cold-start-root: context-budget",
+    "model": "implementation",
+    "thinking": "high — canonical/provider regeneration boundary"
+  },
+  "schema_version": "terminal-delivery-receipt/v1",
+  "status": "🟢 Done",
+  "subject": "P7.3"
+}

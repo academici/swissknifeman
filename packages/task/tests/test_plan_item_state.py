@@ -58,6 +58,23 @@ class PlanItemStateTests(unittest.TestCase):
             "status": "⬜ Not started", "attempt": 0, "last_result": None,
         })
 
+    def test_explicit_design_continuation_reopens_terminal_item(self):
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="blocked",
+            decision={"signal_class": "authority-boundary", "scope_class": "authority",
+                      "action": "approval-required", "recovered": False, "terminal": True},
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="DEMO-V2", item_id="P1.1", command="plan-design",
+            actor="frontier/high", result="in-progress", attempt=2,
+        ))
+
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(model["state"]["position"], {
+            "status": "🟡 In progress", "attempt": 2, "last_result": "in-progress",
+        })
+
     def test_no_op_does_not_erase_a_closed_execution_position(self):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",

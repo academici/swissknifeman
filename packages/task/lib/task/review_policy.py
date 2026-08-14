@@ -38,6 +38,10 @@ SIGNAL_CLASSES = (
 )
 TERMINAL_SIGNAL_CLASSES = frozenset({"acceptance", "safety", "authority"})
 AUDIT_FIXER_BOUNDARIES = frozenset({"acceptance", "authority", "safety", "public-frozen"})
+PHASE_AUDIT_TERMINAL_ACTIONS = frozenset({
+    "approval-required", "authority-denied", "terminal-block",
+})
+_PHASE_AUDIT_SUBJECT_RE = re.compile(r"^(P[0-9]+)(?:\s+—\s+режим фазы)?$")
 
 # risk-review-loop-budget-v1.md §Loop budget and cadence.
 SAME_FINDING_MAX = 2
@@ -142,6 +146,59 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
         return {"action": "repair-inline", "terminal": False,
                 "reason": "bounded-incidental"}
     return {"action": "repair-inline", "terminal": False, "reason": "safe-in-scope"}
+
+
+def phase_audit_subject(item_id: object) -> str | None:
+    """Return canonical ``Pn`` for a phase-audit journal subject."""
+    match = _PHASE_AUDIT_SUBJECT_RE.fullmatch(item_id) if isinstance(item_id, str) else None
+    return match.group(1) if match else None
+
+
+def phase_audit_terminal_policy(entry: dict) -> dict:
+    """Validate the terminal delivery shape of one owning phase-audit root."""
+    if not isinstance(entry, dict) or entry.get("command") != "plan-audit":
+        raise ReviewPolicyError("AUDIT_TERMINAL_EVENT_INVALID", "entry is not plan-audit")
+    phase_id = phase_audit_subject(entry.get("item_id"))
+    if phase_id is None:
+        raise ReviewPolicyError("AUDIT_TERMINAL_EVENT_INVALID", "subject is not phase mode")
+    result = entry.get("result")
+    if result == "audit-green":
+        return {"allow": True, "phase_id": phase_id, "action": "close",
+                "continuation": None, "terminal": True}
+    if result == "audit-attention":
+        raise ReviewPolicyError("AUDIT_ATTENTION_NONTERMINAL", "phase ATTENTION must continue repair")
+    if result != "audit-red":
+        raise ReviewPolicyError("AUDIT_TERMINAL_EVENT_INVALID", f"unsupported phase audit result {result!r}")
+    evidence = entry.get("decision")
+    required = {"signal_class", "scope_class", "action", "recovered", "terminal",
+                "reason_code", "evidence_ids", "continuation"}
+    if not isinstance(evidence, dict) or not required <= set(evidence):
+        raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED", "audit-red requires reducer evidence")
+    action, continuation = evidence.get("action"), evidence.get("continuation")
+    evidence_ids = evidence.get("evidence_ids")
+    if (action not in PHASE_AUDIT_TERMINAL_ACTIONS or evidence.get("terminal") is not True
+            or evidence.get("recovered") is not False or not isinstance(evidence.get("reason_code"), str)
+            or not evidence["reason_code"] or not isinstance(evidence_ids, list) or not evidence_ids
+            or len(evidence_ids) != len(set(evidence_ids))
+            or not all(isinstance(value, str) and value for value in evidence_ids)
+            or not isinstance(continuation, str) or not continuation):
+        raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED", "audit-red reducer evidence is incomplete")
+    prefix = "waiting:" if action == "approval-required" else "terminal:"
+    if not continuation.startswith(prefix):
+        raise ReviewPolicyError("AUDIT_TERMINAL_CONTINUATION_INVALID", f"{action} requires continuation form {prefix}")
+    return {"allow": True, "phase_id": phase_id, "action": action,
+            "continuation": continuation, "terminal": True}
+
+
+def validate_phase_audit_continuation(entry: dict, *, plan_id: str, next_exact: str) -> dict:
+    """Bind a persisted audit outcome to the only successor its reducer permits."""
+    policy = phase_audit_terminal_policy(entry)
+    expected = (f"close: task:plan-close {plan_id} {policy['phase_id']}"
+                if entry.get("result") == "audit-green" else policy["continuation"])
+    if next_exact != expected:
+        raise ReviewPolicyError("AUDIT_TERMINAL_CONTINUATION_INVALID",
+                                f"audit outcome requires exact continuation {expected!r}, got {next_exact!r}")
+    return policy
 
 
 def _audit_blocks(phase_lines, phase_id: str):

@@ -25,6 +25,7 @@ _ITEM = re.compile(r"^P\d+\.\d+$")
 _WRITE_SITE = re.compile(
     r"^write-site: pre_mutation: \S+ · pre_final: \S+$")
 _EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
+_TERMINAL_RESULTS = frozenset(("closed-green", "closed-deviations", "blocked", "escalated", "audit-red"))
 OBSERVATION_RESULTS = frozenset((
     "no-op", "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",
 ))
@@ -91,6 +92,28 @@ def _latest_write_site(event_rows):
     return None
 
 
+def _execution_events(events):
+    """Return position-changing events, including explicit terminal recovery.
+
+    ``plan-design`` ordinarily records only design provenance for an item.  Once
+    a prior execution position is terminal, however, an explicit design command
+    with ``in-progress`` starts the owner-directed recovery attempt.  Keeping
+    that row history-only would make a terminal projection irreversible and
+    reject the very continuation the plan protocol records.
+    """
+    result = []
+    for event in events:
+        if event.get("command") in _EXECUTION_COMMANDS and event.get("result") not in OBSERVATION_RESULTS:
+            result.append(event)
+            continue
+        if (event.get("command") == "plan-design"
+                and event.get("result") == "in-progress"
+                and result
+                and result[-1].get("result") in _TERMINAL_RESULTS):
+            result.append(event)
+    return result
+
+
 def material_terminal_evidence(plan_dir, item_id):
     """Return only semantics that may invalidate a phase candidate.
 
@@ -100,9 +123,7 @@ def material_terminal_evidence(plan_dir, item_id):
     audit while normal view regeneration cannot stale itself.
     """
     rows = _event_rows(plan_dir, item_id)
-    execution = [event for _number, _raw, event in rows
-                 if event.get("command") in _EXECUTION_COMMANDS
-                 and event.get("result") not in OBSERVATION_RESULTS]
+    execution = _execution_events([event for _number, _raw, event in rows])
     if not execution:
         raise ItemStateError(f"{item_id}: нет execution evidence")
     event = execution[-1]
@@ -141,9 +162,7 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     event_rows = _event_rows(plan_dir, item_id)
     events = [event for _number, _raw, event in event_rows]
-    execution_events = [event for event in events
-                        if event.get("command") in _EXECUTION_COMMANDS
-                        and event.get("result") not in OBSERVATION_RESULTS]
+    execution_events = _execution_events(events)
     # Observation rows remain durable provenance and freshness inputs, but do
     # not become an execution position or consume an attempt.
     last = execution_events[-1] if execution_events else {}

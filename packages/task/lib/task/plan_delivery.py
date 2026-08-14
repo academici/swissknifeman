@@ -9,7 +9,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from task import journal, plan_layout, plan_lint
+from task import (command_catalog, journal, plan_layout, plan_lint, review_policy,
+                  terminal_policy)
 
 
 class DeliveryError(ValueError):
@@ -34,6 +35,8 @@ _STATUS_BY_RESULT = {
     "blocked": "🔴 Blocked",
     "escalated": "🔴 Blocked",
 }
+_AUDIT_VERDICT_RE = re.compile(r"\*\*Вердикт:\s*(GREEN|ATTENTION|RED)\*\*")
+_SEMANTIC_NEXT_LINE_RE = re.compile(r"^(?:Semantic Next:\s*)?`?([^`]+?)`?\.?$")
 
 
 def file_digest(path) -> str:
@@ -99,13 +102,42 @@ def _latest_event(plan_dir: Path) -> dict | None:
     return latest
 
 
+def _latest_phase_audit_event(plan_dir: Path, subject: str) -> dict | None:
+    path = plan_layout.carrier_path(plan_dir, "journal")
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return None
+    latest = None
+    for raw in rows:
+        if not raw.strip():
+            continue
+        try:
+            event = json.loads(raw)
+            journal.validate_entry(event)
+        except (json.JSONDecodeError, journal.JournalValidationError):
+            continue
+        if (event.get("command") == "plan-audit"
+                and review_policy.phase_audit_subject(event.get("item_id")) == subject
+                and event.get("result") in {"audit-green", "audit-attention", "audit-red"}):
+            latest = event
+    return latest
+
+
+def _semantic_next(lines: list[str]) -> str | None:
+    for line in lines:
+        stripped = line.strip()
+        if not stripped.startswith(("Semantic Next:", "**Next:**")):
+            continue
+        raw = stripped.split(":", 1)[1].strip()
+        match = _SEMANTIC_NEXT_LINE_RE.fullmatch(raw)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
 def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
     if not _PHASE_RE.fullmatch(subject):
-        return None
-    event = _latest_event(plan_dir)
-    if not event or (event.get("item_id") != subject
-                     or event.get("command") != "plan-audit"
-                     or event.get("result") not in {"audit-green", "audit-attention", "audit-red"}):
         return None
     path = plan_layout.phase_path(plan_dir, subject)
     try:
@@ -114,7 +146,11 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"audit carrier не читается: {exc}") from exc
     starts = [index for index, line in enumerate(lines) if line.startswith(f"## Audit {subject} ")]
     if not starts:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"для {subject} нет audit block")
+        return None
+    event = _latest_phase_audit_event(plan_dir, subject)
+    if event is None:
+        raise DeliveryError(
+            "AUDIT_TERMINAL_EVENT_MISSING", f"для latest Audit {subject} нет journal event")
     start = starts[-1]
     end = next((index for index in range(start + 1, len(lines))
                 if lines[index].startswith("## Audit ")), len(lines))
@@ -123,8 +159,19 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
     if launch is None:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "в latest audit block нет «Что запускать»")
     body = lines[launch + 1:end]
+    block_text = "\n".join(lines[start:end])
+    verdict_match = _AUDIT_VERDICT_RE.search(block_text)
+    verdict = verdict_match.group(1) if verdict_match else None
+    expected_result = {
+        "GREEN": "audit-green", "ATTENTION": "audit-attention", "RED": "audit-red",
+    }.get(verdict)
+    if expected_result != event.get("result"):
+        raise DeliveryError(
+            "AUDIT_VERDICT_EVENT_MISMATCH",
+            f"latest audit verdict {verdict!r} != journal {event.get('result')!r}",
+        )
     route = _route_from_lines(body)
-    next_exact = route.get("command")
+    next_exact = _semantic_next(body) or route.get("command")
     if not next_exact or next_exact == "—":
         in_fence = False
         for line in body:
@@ -136,6 +183,11 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
                 break
     if not next_exact or next_exact == "—":
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "latest audit launch block не несёт команду")
+    try:
+        review_policy.validate_phase_audit_continuation(
+            event, plan_id=plan_dir.name, next_exact=next_exact)
+    except review_policy.ReviewPolicyError as exc:
+        raise DeliveryError(exc.code, str(exc)) from exc
     recommendation = f"**Next:** {next_exact}\n\n" + "\n".join(body).strip()
     return {
         "next_exact": next_exact,
@@ -146,12 +198,20 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
     }
 
 
-def _handoff(plan_dir: Path) -> dict:
+def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
     path = plan_dir / "handoff.md"
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"handoff.md не читается: {exc}") from exc
+    if closed_subject is not None:
+        expected = re.compile(
+            rf"^# HANDOFF\s+—\s+.+\s+—\s+after\s+{re.escape(closed_subject)}\s*$")
+        if not lines or not expected.fullmatch(lines[0].strip()):
+            raise DeliveryError(
+                "FINAL_BEFORE_TERMINAL_FORBIDDEN",
+                f"handoff title не коррелирует с terminal subject {closed_subject}",
+            )
     start = next((index for index, line in enumerate(lines)
                   if line.strip().startswith("**Next:**")), None)
     if start is None:
@@ -159,6 +219,14 @@ def _handoff(plan_dir: Path) -> dict:
     next_exact = lines[start].split("**Next:**", 1)[1].strip()
     if not next_exact:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next пуст")
+    if (closed_subject is not None and _ITEM_RE.fullmatch(closed_subject)
+            and re.search(
+                rf"(?:task:plan-exec|task:plan-run)\s+\S+\s+{re.escape(closed_subject)}(?:\s|$)",
+                next_exact)):
+        raise DeliveryError(
+            "FINAL_BEFORE_TERMINAL_FORBIDDEN",
+            f"Next повторно запускает terminal subject {closed_subject}",
+        )
     end = next((index for index in range(start + 1, len(lines))
                 if lines[index].strip().startswith("**Done:**")), len(lines))
     recommendation = "\n".join(lines[start:end]).strip()
@@ -226,6 +294,10 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
         except journal.JournalValidationError:
             continue
         if subject_matches and event.get("result") in journal.TERMINAL_CLOSE_RESULTS:
+            try:
+                terminal_policy.validate_entry(event, plan_dir=plan_dir)
+            except terminal_policy.TerminalPolicyError as exc:
+                raise DeliveryError(exc.code, str(exc)) from exc
             candidates.append((line_number, raw, event))
     if not candidates:
         if missing_run_id_lines:
@@ -242,6 +314,28 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
         "sha256": "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         "run_id": event["run_id"],
         "result": event["result"],
+        "command": event["command"],
+    }
+
+
+def _adapter_attestation(terminal: dict | None) -> dict | None:
+    if terminal is None:
+        return None
+    command = terminal.get("command")
+    # Journal commands already use the canonical basename (`plan-run`, `plan-exec`, …).
+    command_id = f"task:{command}"
+    try:
+        path = command_catalog.package_command_path(command_id)
+        metadata = command_catalog.load_routing_metadata(
+            command_catalog.package_root() / "configs" / "command-routing.json")
+    except (OSError, ValueError, command_catalog.CommandCatalogError) as exc:
+        raise DeliveryError(
+            "ADAPTER_ATTESTATION_MISSING", f"Task adapter identity не читается: {exc}") from exc
+    return {
+        "package": "task",
+        "version": metadata["plugin_version"],
+        "command_id": command_id,
+        "canonical_command_sha256": file_digest(path),
     }
 
 
@@ -263,7 +357,11 @@ def _closure_digest(plan_dir: Path, phase_id: str) -> str | None:
 def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: str,
                   state_digest: str | None, closure_digest: str | None,
                   terminal: dict | None, prefer_audit: bool = False) -> dict:
-    handoff = (_audit_handoff(plan_dir, subject) if prefer_audit else None) or _handoff(plan_dir)
+    handoff = ((_audit_handoff(plan_dir, subject) if prefer_audit else None)
+               or _handoff(
+                   plan_dir,
+                   closed_subject=(subject if terminal is not None and _ITEM_RE.fullmatch(subject)
+                                   else None)))
     return {
         "schema_version": schema_version,
         "plan_id": plan_dir.name,
@@ -275,6 +373,7 @@ def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: 
         "rationale": handoff["rationale"],
         "commit_sha": _git_commit(plan_dir),
         "journal": terminal,
+        "adapter_attestation": _adapter_attestation(terminal),
         "digests": {
             "plan": file_digest(plan_dir / "plan.md"),
             "handoff": handoff["digest"],

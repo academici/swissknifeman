@@ -2,8 +2,8 @@
 projection: owner-gate-view
 projection_version: v1
 source_scope: decisions/queue.jsonl
-through: 9
-inputs_sha256: 0ba3e160d10ecf4fe480299cc40a8c20d2bba8e763bbfc3a28dd24d7c62136dd
+through: 12
+inputs_sha256: da9d1c0895971c076f3b423596bc8f5544428674f9701f5b0655d7b2d147f9ba
 generated_by: task plan-decisions render
 -->
 

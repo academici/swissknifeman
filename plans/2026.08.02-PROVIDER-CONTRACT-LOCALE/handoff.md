@@ -1,32 +1,38 @@
-# HANDOFF — 2026-08-14 — accelerated after P1.2
+# HANDOFF — 2026-08-14 — after P1.3
 
-**Next:** execute-item: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3
+**Next:** audit-phase: task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P1
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | p1-close |
+| Batch | P1 phase audit |
 | Model | frontier |
-| Thinking | high |
-| Context | cold-start-root: new owner-requested session |
-| Суть | Закрыть provider migration/rollback contract P1.3; исторический future-stage probe P1.2 не является readiness gate. |
+| Thinking | xhigh — frozen-contract phase audit |
+| Context | cold-start-root: independent terminal phase audit |
+| Суть | Независимо проверить terminal candidate P1 перед закрытием фазы; policy `PHASE_AUDIT_REQUIRED_FULL_REVIEW`. |
+
+**Provider-neutral plan-protocol command:**
+
+```text
+task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P1
+```
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P1.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P1'
 ```
 
 **Done:**
 
-- P1.2 закрыт в item-коммите `9d27e819`; contracts, ownership matrix and exact acceptance are green.
-- Корневой `plan.md` переведён в flat/fast execution: P1.3 отдельно в новой сессии, затем восемь крупных batches.
-- Для каждого P1.3–P7.4 действует hard cap: initial candidate → один declared Validation pass → максимум один grouped repair + targeted recheck; второй RED завершает item exact failure report без третьего цикла.
-- До финального P7.4 запрещены отдельные reviewers и дополнительные synthetic suites; real provider/project evidence имеет приоритет.
+- P1.3 закрыт item-коммитом `1919024b`; provider control-plane v1.0.0 и C1-C6 заморожены точным Owner-решением D73.
+- Final checker подтвердил schema, ownership, migration и неизменность predecessor G01–G11 crosswalk.
+- Durable decision response, terminal journal, v2 state/status/decision/closure/bundle views и downstream findings материализованы.
+- P1 terminal candidate fingerprint: `7ce1e79c9c9ed40e325b7489ea01cf5dc0ee607f3425b91f674f7ac853c40b92`.
 
-**Remaining:** P1.3 и P2–P7.
+**Remaining:** независимый audit P1, затем закрытие фазы P1 и P2–P7.
 
-**Sources of truth:** `plan.md` §2–§3; `roadmap.md` Fast execution carrier; `phases/P1/P1.3.md`; P1.1/P1.2 state and frozen contracts.
+**Sources of truth:** `plan.md` §2–§3 and Contracts; `phases/P1/P1.md`; `phases/P1/P1.1.state.md`–`P1.3.state.md`; `root/contracts/provider-control-plane-v1.md`; `decisions/D73-provider-control-plane-v1.md`; `artifacts/P1-provider-control-plane-conformance.md`.
 
-**Open risks:** P1.3 still requires its explicit Owner C1–C6 approval. The historical P1.2→P1.3 `--stage final` RED is provenance only because P1.3 produces that stage.
+**Open risks:** downstream records with `unknown` are future consumer validations whose declared inputs do not exist yet; the recorded P1.3 downstream gate itself is green. The phase policy requires a full independent audit before close.
 
-**Workarounds/Deferred/Open questions:** Workarounds: —. Deferred: live provider/project replay to earliest ready batch. Open questions: —.
+**Workarounds/Deferred/Open questions:** Workarounds: —. Deferred: future consumer execution remains with P2–P7. Open questions: —.

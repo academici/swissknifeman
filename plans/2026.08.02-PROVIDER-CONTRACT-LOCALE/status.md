@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: ca3bba3e456376555bfcd8bc4da5c04fa67bdbb5f87ea3f04717e19043ec355d
+inputs_sha256: 047fc459210db612c8db814758ac92d02f125dc4c26c8af7986dccdfe4c8a012
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
-| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 2/3 | 🟡 In progress |
+| P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 0/3 | ⬜ Not started |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
@@ -53,7 +53,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1.1 | Define canonical desired state and status schema | 🟢 Done | 2026-08-14 |
 | P1.2 | Define capability negotiation and provider ownership | 🟢 Done | 2026-08-14 |
-| P1.3 | Define explicit legacy upgrade and rollback contract | ⬜ Not started | — |
+| P1.3 | Define explicit legacy upgrade and rollback contract | 🟢 Done | 2026-08-14 |
 
 ## Phase P2
 
@@ -204,6 +204,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Fourth full review found broad semantic-ID grammar, whitespace-vacuous Skill Core fields, incomplete adapted-support invariants, and unsorted/invalid aggregate provider identities. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · Fifth review found Skill ID publication incompatibility, incomplete third-provider closure, empty aggregate/schema false greens, and omitted publication/analytics ownership carriers. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P1.2 закрыт: Skill Core, provider adapter seam и ownership/capability matrix зафиксированы с реальными producer probes. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P1.3-provider-control-plane-freeze-v1.0.0-2026-08-14 |
+| 2026-08-14 | repository_owner | plan-run · in-progress · decision queue: P1.3-provider-control-plane-freeze-v1.0.0-2026-08-14 |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P1.3 закрыт: provider control-plane v1.0.0, C1-C6 и legacy migration/rollback contract заморожены решением D73. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

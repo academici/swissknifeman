@@ -106,7 +106,7 @@ and does not duplicate a supervisor runtime.
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| root/contracts/provider-control-plane-v1.md | v1.0.0-draft | draft | P2–P7 | — |
+| root/contracts/provider-control-plane-v1.md | v1.0.0 | frozen | P2–P7 | D73 |
 | root/contracts/locale-resolution-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 | root/contracts/english-authoring-overlay-v1.md | v1.0.0-draft | draft | P3–P7 | — |
 | root/contracts/locale-authoring-review-v1.md | v1.0.0-draft | draft | P3–P7 | — |

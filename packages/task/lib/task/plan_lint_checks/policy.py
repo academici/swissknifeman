@@ -606,7 +606,7 @@ CANON_LITERALS = (
                                                                # регистрация решением, T1 её не ловит
     RESUME_LITERAL,                                           # §6, 2026.07.25-ECO-OPT P8.3/D44: кириллица — обязательна
                                                                # i18n-директива в EN-only SKILL.md
-    "Команда",                                                # строка таблицы launch-block'а (§8, P5.8/LAUNCH_COMMAND_ROW_RE)
+    "Команда",                                                # legacy reader compatibility (LAUNCH_COMMAND_ROW_RE)
 )
 # --- 2026.07.15-PLANFLOW-UX P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы

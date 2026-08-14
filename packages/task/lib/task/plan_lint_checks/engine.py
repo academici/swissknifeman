@@ -569,7 +569,7 @@ def lint_plan(plan_dir, diag):
         # --- 2.0: launch-block в handoff.Next (SKILL §8) --------------------------
         # Severity как у brief-гейта: датовые планы от BRIEF_CANON_DATE — ERROR
         # (владелец не должен переспрашивать модель/настройки), старее/legacy — WARNING.
-        # Таблица `| Model | …`, строка `| Команда |` и code-block грепаются по всему
+        # Таблица `| Model | …`, legacy-строка `| Команда |` и code-block грепаются по всему
         # файлу: шаблон кладёт launch-block продолжением Next, но точное место не гейтим
         # (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
@@ -578,13 +578,9 @@ def lint_plan(plan_dir, diag):
         # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
         # целиком», и lint-ссылку `/task:plan-exec` → резолвится как exec) — back-compat §2.
         #
-        # P5.8: команда теперь либо строка `| Команда |` В ТОЙ ЖЕ таблице, либо
-        # code-block ниже — «ровно один из двух» = ХОТЯ БЫ ОДИН, не «строго не оба»:
-        # план, несущий и строку, и code-block (back-compat старой формы, либо
-        # manual/scope-payload/ОЖИДАНИЕ item, которому code-block нужен по канону §8
-        # независимо от строки), гейтом не наказывается — «ровно один из двух» описывает
-        # МИНИМУМ носителя команды, а не запрет на оба сразу (SKILL §8, snippets/
-        # launch-block-template.md). Решение зафиксировано тестом (test_plan_lint.py).
+        # Новая canonical форма всегда использует fenced command block вне таблицы. Старую
+        # строку `| Команда |` продолжаем принимать reader-side, чтобы правка формата не
+        # инвалидировала уже закрытые handoff'ы флота.
         if LITERAL_PLAN_CLOSED not in next_val.lower():
             has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
             has_command_row = any(LAUNCH_COMMAND_ROW_RE.match(ln) for ln in handoff["lines"])
@@ -594,7 +590,7 @@ def lint_plan(plan_dir, diag):
                 if not has_table:
                     missing.append("таблицы `| Model | …`")
                 if not (has_command_row or has_fence):
-                    missing.append("строки `| Команда |` в таблице или code-block'а с командой")
+                    missing.append("fenced command block (legacy: строки `| Команда |`)")
                 _lb_msg = ("Next без launch-block: нет " + " и ".join(missing) +
                            " (форма — snippets/launch-block-template.md)")
                 if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:

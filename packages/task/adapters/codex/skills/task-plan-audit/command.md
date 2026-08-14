@@ -1,17 +1,30 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:3f1a6d90d624d0322fbac4c45a3ae042e69eaf0eb2a10be3f27b3c7ba0be6162
-Adapter: task.codex-command/1.0.10
+Canonical SHA-256: sha256:ee52b49ebb34a2589da09de4151d99cf4fcdba122216f5f67303557f77b3c960
+Adapter: task.codex-command/1.0.11
 -->
-## Native Codex launch-block — mandatory for every handoff
+## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
@@ -336,12 +349,11 @@ non-gating observations перечислены) либо `RED` (только red
 `ATTENTION` остаётся только у read-only design-режима. Далее: **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
 failure_scenario) + rebound candidate fingerprint. Затем launch-block (форма канона §8): таблица `| Batch |
-Model | Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
-чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
-`RED` (а в design-режиме также `ATTENTION`) несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
-(четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:
-`Model`/`Thinking` из Routing, строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт ГОЛЫЙ ПРОМПТ
-item'а, не slash-команда, копипаст без правок. Тот же launch-block дословно — подсекцией
+Model | Thinking | Context | Суть |` БЕЗ команды, затем ОБЯЗАТЕЛЬНЫЙ отдельный fenced block
+с provider-native командой активного адаптера. `RED` (а в design-режиме также `ATTENTION`) несёт
+в том же command block SCOPE-PAYLOAD (ниже). Следующий item с `Exec = manual` — форма
+«ЗАПУСК ВРУЧНУЮ»: `Model`/`Thinking` из Routing, code-block несёт ГОЛЫЙ ПРОМПТ item'а,
+не slash-команду, копипаст без правок. Тот же launch-block дословно — подсекцией
 `### Что запускать` в конце твоего audit-блока (п. 5).
 
 **Phase `RED` → SCOPE-PAYLOAD только для reducer-confirmed границы.** Safe finding не получает

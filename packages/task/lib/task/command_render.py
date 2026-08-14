@@ -22,7 +22,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.10"
+ADAPTER_VERSION = "1.0.11"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1024,15 +1024,28 @@ def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
         f"{name}={classes[name][0]}" for name in MODEL_CLASSES)
     effort_routes = ", ".join(
         f"{name}={efforts[name][0]}" for name in EFFORTS)
-    return f'''## Native Codex launch-block — mandatory for every handoff
+    return f'''## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: {class_routes};

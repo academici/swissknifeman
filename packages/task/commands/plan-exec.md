@@ -363,8 +363,9 @@ evidence конфигом, актором или свободным тексто
    на закоммиченном дереве = **ложное утверждение**, даже если в момент написания было верным.
 
    **Схема `handoff.md`** (шаг 3): `# HANDOFF — <ISO-дата> — after Pn.m`, затем **Next:** (launch-block
-   п. 8 — таблица `Batch / Model / Thinking / Context / Суть` + голая команда ИЛИ голый промпт отдельным
-   code-block'ом, копипаст без правок; самодостаточен из холодной сессии: plan-ID + cold-start reads;
+   п. 8 — таблица `Batch / Model / Thinking / Context / Суть` БЕЗ команды + provider-native
+   команда ИЛИ голый промпт обязательным отдельным code-block'ом, копипаст без правок;
+   самодостаточен из холодной сессии: plan-ID + cold-start reads;
    скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of
    truth:** / **Open risks:** / **Workarounds/Deferred/Open questions:** (workarounds · deferred ·
    open_questions; «—» если нет).
@@ -399,12 +400,10 @@ evidence конфигом, актором или свободным тексто
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
-   | Команда | `<голая команда>` — ТОЛЬКО сама команда, без повторного `/model`/`/effort` |
 
-   <опционально, ТОЛЬКО когда следующий шаг реально отличается от того, что строка `Команда`
-   способна выразить (Exec = manual — нет single-command эквивалента, scope-payload
-   находок/реопена, форма ОЖИДАНИЕ — guard-строка): голый промпт ИЛИ полная команда с
-   scope-payload — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
+   <ОБЯЗАТЕЛЬНЫЙ отдельный fenced code-block: provider-native команда активного адаптера;
+   для Exec = manual — голый prompt; для scope-payload/ОЖИДАНИЕ — команда вместе с payload/guard.
+   Команда предпочтительно в одну физическую строку; shell-переносы только с `\`.>
    ```
    При `ROUTING-BLOCKED` / `ROUTING-INCONSISTENT` (п. 2) блок несёт ТОЛЬКО эту строку + launch-block:
    работа не начиналась, статуса/коммитов/lint'а нет.
@@ -421,12 +420,11 @@ evidence конфигом, актором или свободным тексто
    launch-block несёт КОМАНДУ ГРУППЫ (`/task:plan-run <ID> Pn.a-Pn.b` / `Workflow({scriptPath})`),
    а не одиночный item. После закрытия item команда сохраняет тот же Batch и адресует только
    оставшийся adjacent-суффикс; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
-   - Следующий item, `Exec = plan-exec` → строка `Команда` = `/task:plan-exec <PLAN-ID> Pn.k`
-     (весь ответ, code-block не заводится); Model/Thinking — из Routing (дефолт `sonnet/medium`).
+   - Следующий item, `Exec = plan-exec` → отдельный provider-native command block для
+     `/task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking — из Routing (дефолт `sonnet/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
      `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
-     sonnet/medium; строка `Команда` = `—` (нет single-command эквивалента); code-block
-     ОБЯЗАТЕЛЕН (не опционален для этого случая) и несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
+     sonnet/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
      правок), а НЕ slash-команду (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан
      такой item отклонить — команда в code-block'е была бы инструкцией нарушить гейт); `Context` =
      `continue-root`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID>

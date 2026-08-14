@@ -290,12 +290,11 @@ non-gating observations перечислены) либо `RED` (только red
 `ATTENTION` остаётся только у read-only design-режима. Далее: **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
 failure_scenario) + rebound candidate fingerprint. Затем launch-block (форма канона §8): таблица `| Batch |
-Model | Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
-чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
-`RED` (а в design-режиме также `ATTENTION`) несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
-(четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:
-`Model`/`Thinking` из Routing, строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт ГОЛЫЙ ПРОМПТ
-item'а, не slash-команда, копипаст без правок. Тот же launch-block дословно — подсекцией
+Model | Thinking | Context | Суть |` БЕЗ команды, затем ОБЯЗАТЕЛЬНЫЙ отдельный fenced block
+с provider-native командой активного адаптера. `RED` (а в design-режиме также `ATTENTION`) несёт
+в том же command block SCOPE-PAYLOAD (ниже). Следующий item с `Exec = manual` — форма
+«ЗАПУСК ВРУЧНУЮ»: `Model`/`Thinking` из Routing, code-block несёт ГОЛЫЙ ПРОМПТ item'а,
+не slash-команду, копипаст без правок. Тот же launch-block дословно — подсекцией
 `### Что запускать` в конце твоего audit-блока (п. 5).
 
 **Phase `RED` → SCOPE-PAYLOAD только для reducer-confirmed границы.** Safe finding не получает

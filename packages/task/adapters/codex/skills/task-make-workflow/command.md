@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/make-workflow.md
 Canonical SHA-256: sha256:de0cb9534e602a48e13fc01c64a62d031f60d1e9a7245b4fbe1566d485090170
-Adapter: task.codex-command/1.0.10
+Adapter: task.codex-command/1.0.11
 -->
 Это АВТОРИНГ workflow-скрипта через управляемый контур, а НЕ свободная формулировка. Ввод
 пользователя: «$ARGUMENTS». Модель/effort запинены (implementation/high) — не переключай вручную.

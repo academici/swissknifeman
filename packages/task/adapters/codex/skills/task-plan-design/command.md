@@ -1,17 +1,30 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:ad0ab66bde5a96cac6bc63b287dd0d50451a98dc47da323f2565bdf81d63587e
-Adapter: task.codex-command/1.0.10
+Canonical SHA-256: sha256:a5061af5a8e5aa981cf50b83d006bc40a80315e6d1f7b85da56eb4306ababd0e
+Adapter: task.codex-command/1.0.11
 -->
-## Native Codex launch-block — mandatory for every handoff
+## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
@@ -444,13 +457,11 @@ D-записью; **roadmap.md собран/обновлён**, если это�
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
 DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего
 шага** (SKILL §8, форма `snippets/launch-block-template.md`): таблица
-`| Параметр | Значение |` с рядом строк `Batch / Model / Thinking / Context / Суть /` `| Команда |`
-(последней) — строка `| Команда |` несёт голую команду и, когда она выражает следующий шаг
-целиком, является всем ответом;
-отдельный code-block ОПЦИОНАЛЕН (появляется, когда шаг реально отличается от строки —
-напр. Workflow-оркестрация ниже с NEW SESSION). Строка «Готово к: …» без таблицы и
-(строки `Команда` либо code-block'а) = дефект (владелец не должен переспрашивать
-модель/настройки). Какая команда в блоке —
+`| Параметр | Значение |` со строками `Batch / Model / Thinking / Context / Суть`, БЕЗ команды
+в таблице. Сразу после таблицы ОБЯЗАТЕЛЕН отдельный fenced code-block с provider-native
+командой активного адаптера (либо prompt/workflow payload). Строка «Готово к: …» без таблицы
+и command block = дефект. Команда предпочтительно занимает одну физическую строку; намеренный
+shell-перенос использует `\` на каждой продолжаемой строке. Какая команда в блоке —
 зависит от DoR-пункта «заявленная оркестрация» (SKILL §7 критерий: N≥3 items с
 независимым scope и детерминированной Validation, либо длинная автономная цепочка с
 внешним состоянием): фаза БЕЗ оркестрации → `$ task:plan-exec <ID> Pn.m` (Model/Thinking —

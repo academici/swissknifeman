@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: launch-команды стали provider-native и безопасными для копирования.**
+  Metadata-таблица больше не содержит команду: Claude Code и Codex выводят только native-форму
+  активного адаптера отдельным fenced-блоком. Codex дополнительно запрещает завершать handoff без
+  команды при наличии исполнимого Next; длинные shell-команды используют явные `\`.
+
 - **`task` / `skiller`: внутренняя философия разработки стала обязательным plan-authoring контекстом.**
   Новый root-bootstrap skill `task-development-philosophy` закрепляет пропорциональную
   декомпозицию, evidence reuse, один full audit на material baseline, delta/gate-rebind для

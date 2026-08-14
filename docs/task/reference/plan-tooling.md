@@ -2,6 +2,16 @@
 
 ## Codex launch-block для handoff
 
+Launch-block выбирает native-синтаксис по активному provider adapter: Claude Code получает
+slash-команду, Codex — полный `codex ...` запуск. Эти native-формы не смешиваются. Таблица хранит
+только Batch/Model/Thinking/Context/Суть; команда всегда идёт после неё отдельным fenced-блоком,
+чтобы Markdown-переносы ячейки не ломали копирование. Предпочтительна одна физическая строка;
+если shell-команда разбита намеренно, каждая продолжаемая строка заканчивается `\`.
+
+Для Codex наличие блока — terminal guard: при исполнимом Next финал не может закончиться на
+«готово», delivery receipt или `PHASE-CLOSED` без отдельной native-команды. Только действительно
+терминальный Next без successor позволяет её опустить.
+
 `plan-run` поддерживает два равноправных входа. В уже открытой CLI-сессии оператор может выполнить
 `/clear`, выбрать требуемые Routing модель/effort и вставить provider-neutral `$ task:…` command.
 Либо можно открыть новый процесс нативной командой с явными cwd, моделью, effort, approval и
@@ -188,8 +198,9 @@ python3 packages/task/scripts/plan-lint.py --conflicts
 4. три значения layout-v2 `Context` (`CONTEXT_VALUES`) ↔ SKILL.md §6;
 5. литералы `i18n-keep` (`CANON_LITERALS`) ↔ директивы `<!-- i18n-keep: … -->` в SKILL.md (тот
    же предикат, что T2 `packages/task/tests/test_canon_literals.py`, доступный из CLI без unittest);
-6. регекс-носители формы launch-block'а (`LAUNCH_TABLE_ROW_RE`/`LAUNCH_COMMAND_ROW_RE`) ↔ строки
-   канон-таблицы `| Параметр | Значение |` в SKILL.md §6;
+6. форма launch-block'а: `LAUNCH_TABLE_ROW_RE` ↔ metadata-таблица без команды,
+   provider-native fenced command block обязателен, а `LAUNCH_COMMAND_ROW_RE` остаётся только
+   reader-side совместимостью старых планов;
 7. обязательные carrier literals блока `Layout v2 carrier contract`.
 
 Если монорепо должно нести canon, но `SKILL.md` исчез, сверка fail-closed. Только настоящий

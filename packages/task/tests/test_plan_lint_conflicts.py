@@ -119,19 +119,28 @@ class TestConflictsFlagUnits(unittest.TestCase):
     # --- регекс-носители формы launch-block'а -------------------------------
     def test_launch_table_regex_matches_canon_rows_is_silent(self):
         lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
-                 "| Effort | ... |", "| Context | ... |", "| Суть | ... |",
-                 "| Команда | `...` |"]
+                 "| Effort | ... |", "| Context | ... |", "| Суть | ... |", "",
+                 "**Provider-native command:**", "", "```text", "/task:plan-exec X P1.1", "```"]
         diag = self._diag()
         _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
 
-    def test_launch_table_missing_command_row_is_error(self):
+    def test_launch_table_missing_command_block_is_error(self):
         lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
                  "| Effort | ... |"]
         diag = self._diag()
         _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "LAUNCH_COMMAND_ROW_RE"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "fenced command block"), diag.errors)
+
+    def test_launch_table_command_row_is_rejected_by_canon_conflict(self):
+        lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
+                 "| Команда | `...` |", "", "**Provider-native command:**", "",
+                 "```text", "/task:plan-exec X P1.1", "```"]
+        diag = self._diag()
+        _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "reader-side compatibility"), diag.errors)
 
     # --- layout v2 carrier anchor ------------------------------------------
     def test_layout_v2_carriers_consistent_is_silent(self):

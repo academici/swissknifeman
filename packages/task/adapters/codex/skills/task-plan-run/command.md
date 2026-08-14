@@ -1,17 +1,30 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
 Canonical SHA-256: sha256:128990b1688a079d35e4aca5cfa7b44f0ffe5a89cb64a64252cf6374ccc4057f
-Adapter: task.codex-command/1.0.10
+Adapter: task.codex-command/1.0.11
 -->
-## Native Codex launch-block — mandatory for every handoff
+## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;

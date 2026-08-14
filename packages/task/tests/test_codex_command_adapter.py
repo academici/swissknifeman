@@ -79,14 +79,30 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 
     def test_plan_runtime_requires_a_full_native_codex_launch_block(self):
-        codex_runtime = next(
-            artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
-            if artifact.path.endswith("/task-plan-run/command.md"))
-        self.assertIn("Native Codex launch-block — mandatory for every handoff", codex_runtime)
-        self.assertIn("codex -C <repo-cwd> -m <model-selector>", codex_runtime)
-        self.assertIn("model_reasoning_effort=\"<effort-selector>\"", codex_runtime)
-        self.assertIn("-a never -s danger-full-access", codex_runtime)
-        self.assertIn("do not reuse the preceding session's route", codex_runtime)
+        plan_commands = {
+            "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
+        }
+        runtimes = {
+            artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
+            artifact.managed_bytes.decode("utf-8")
+            for artifact in self.render().artifacts
+            if "/task-plan-" in artifact.path and artifact.path.endswith("/command.md")
+        }
+        self.assertEqual(set(runtimes), plan_commands)
+        for command, codex_runtime in runtimes.items():
+            with self.subTest(command=command):
+                self.assertIn(
+                    "Native Codex launch-block — mandatory for every executable handoff",
+                    codex_runtime)
+                self.assertIn("codex -C <repo-cwd> -m <model-selector>", codex_runtime)
+                self.assertIn("model_reasoning_effort=\"<effort-selector>\"", codex_runtime)
+                self.assertIn("-a never -s danger-full-access", codex_runtime)
+                self.assertIn("This generated runtime is the Codex provider projection", codex_runtime)
+                self.assertIn("never put the command in a table", codex_runtime)
+                self.assertIn("**Native Codex command:**", codex_runtime)
+                self.assertIn("Final-response guard", codex_runtime)
+                self.assertIn("do not stop after a completion summary", codex_runtime)
+        self.assertIn("do not reuse the preceding session's route", runtimes["plan-run"])
 
     def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")

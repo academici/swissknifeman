@@ -1,17 +1,30 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:e5b4046edd1b6af5e4d429d79ede008e1b4d4b82b28c02f832c6be7a6d5395f5
-Adapter: task.codex-command/1.0.10
+Canonical SHA-256: sha256:0b6fcf4de85cf6312a809825e831c6f32ebaa4e23b6b0c431321e1f8e2570670
+Adapter: task.codex-command/1.0.11
 -->
-## Native Codex launch-block — mandatory for every handoff
+## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
@@ -156,11 +169,11 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
   предписанную модель и голый промпт item'а отдельным code-block (либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) |
-- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Batch / Model / Thinking / Context / Суть / Команда` — строка
-  `Команда` несёт голую команду и, когда она полностью выражает следующий шаг, является всем
-  ответом; отдельный code-block ОПЦИОНАЛЕН и появляется, только когда шаг реально отличается от
-  строки (у `Exec = manual` — строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт голый промпт
-  item'а либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18; копипаст без правок);
+- **Launch-block ОБЯЗАТЕЛЕН**: таблица `Batch / Model / Thinking / Context / Суть` не несёт
+  команду. Сразу после неё ОБЯЗАТЕЛЕН отдельный fenced code-block с provider-native командой
+  активного адаптера; у `Exec = manual` он несёт голый промпт item'а либо
+  `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18. Команда предпочтительно занимает одну
+  физическую строку; намеренный shell-перенос использует `\` на каждой продолжаемой строке;
   самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
   только как дополнение. Скелет — `snippets/launch-block-template.md` скилла `plan-protocol`.
 - **`Context` — РОВНО одно из трёх layout-v2 значений** (§6): `continue-root` ·
@@ -452,7 +465,7 @@ launch-block не требуется, следующий план выбирае
 `Pn`, шаг 3 — обязательная, не опускай) + финальная строка «PHASE-CLOSED: Pn» (фаза
 закрыта) либо список блокеров, почему фаза не закрыта. В ЛЮБОМ исходе финал сообщения —
 полный launch-block следующего шага (SKILL §8): режим `Pn.m` / фаза НЕ закрыта → блок
-следующего item'а (копия свежеперезаписанного handoff.Next: таблица + голая команда;
+следующего item'а (копия свежеперезаписанного handoff.Next: таблица + отдельный command block;
 проза «выполните команду X» без Model/Thinking = дефект). При наличии
 `plans/<PLAN-ID>/roadmap.md` следующий шаг сверяется с ним: шаг в batch/workflow-группе →
 команда ГРУППЫ, не одиночный item; закрытие фазы/re-design → обнови roadmap (живой
@@ -466,14 +479,9 @@ launch-block не требуется, следующий план выбирае
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |
 | Суть | <1 строка: что делает следующий шаг> |
-| Команда | `<голая команда>` — phase close уже означает свежий GREEN candidate audit:
-  следующая детализированная фаза → `$ task:plan-exec <PLAN-ID> P(n+1).1`; следующая
-  manual-фаза → `$ task:plan-run ...`; план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
-  `$ task:plan-close archive <PLAN-ID>` либо вне протокола; команда не должна
-  противоречить Execution Rules плана — правила в шапке; у `Exec = manual` — `—`
-  (нет single-command эквивалента) |
 
-<опционально — ТОЛЬКО у `Exec = manual` (голый промпт item'а либо
-  `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) ИЛИ когда строка `Команда` не
-  выражает следующий шаг целиком — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
+<ОБЯЗАТЕЛЬНЫЙ отдельный fenced code-block: provider-native команда; следующая детализированная
+  фаза → `$ task:plan-exec <PLAN-ID> P(n+1).1`; manual-фаза → prompt либо `$ task:plan-run ...`;
+  терминальный план → `$ task:plan-close archive <PLAN-ID>` либо команды нет. Команда не должна
+  противоречить Execution Rules; копипаст без правок.>
 ```

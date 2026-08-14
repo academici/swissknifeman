@@ -195,9 +195,8 @@ AUDIT_SEMANTIC_NEXT_RE = re.compile(r"^\s*(?:Semantic Next:|\*\*Next:\*\*)\s*`?(
 # D-логу. `RAG:—` (repo-grounded) пишется через em dash, как EMPTY_PLACEHOLDER;
 # ASCII-дефис не канонизирован.
 RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED\]")
-# launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + (строка `| Команда |`
-# В ТОЙ ЖЕ таблице ИЛИ code-block ниже — P5.8, аддитивно: обе формы валидны, back-compat
-# 26+ живых планов флота, писавших только code-block, не ломается).
+# launch-block в handoff.Next (SKILL §6): canonical output = metadata table + fenced command
+# block. `| Команда |` остаётся только reader-side back-compat для старых планов.
 LAUNCH_TABLE_ROW_RE = re.compile(
     r"^\|\s*(?:Model(?:\s+class)?\s*\||Batch\s*\|\s*Model\s*\|)"
 )

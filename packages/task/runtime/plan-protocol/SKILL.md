@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.31.0
+version: 2.31.1
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -217,10 +217,18 @@ A terminal-item handoff never probes `plan-close` to discover that audit is miss
 `next_kind=close` renders `task:plan-close`. Handoff copies the returned `next_exact`; the close
 gate consumes the same snapshot and policy.
 
-Every runnable execution Next has Batch, Model class, Effort, Capabilities, Context, Суть, and
-Команда; non-execution Next uses `Batch: n/a`. Manual has `Команда: —`. `Batch` is copied from
-Routing and an execution handoff names the whole remaining batch, never silently one item from it.
-The launch snippet is the copyable form.
+Every runnable execution Next has a metadata table with Batch, Model class, Effort, Capabilities,
+Context, and Суть; the table never carries the invocation. Immediately after it, render exactly one
+copyable provider-native command block for the active provider adapter. Claude Code emits its native
+slash form; Codex emits a `bash` block that launches `codex` with pinned cwd, model, effort, approval,
+and sandbox. Never infer the provider from an example and never print both native providers. Prefer
+one physical command line. If a shell command is intentionally wrapped, every continued line except
+the last ends with `\`. Markdown visual wrapping is never command syntax. A runnable Next without
+this fenced command block is incomplete; a final response must not stop at a completion statement
+while an executable successor exists. Manual carries a fenced bare prompt instead. Legacy table rows
+named `Команда` remain readable for old plans but are never emitted. Non-execution Next uses
+`Batch: n/a`. `Batch` is copied from Routing and an execution handoff names the whole remaining batch,
+never silently one item from it. The launch snippet is the copyable form.
 
 For layout v2 the Context field carries EXACTLY one of three values:
 

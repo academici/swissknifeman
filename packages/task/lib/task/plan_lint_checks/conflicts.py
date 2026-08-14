@@ -244,8 +244,7 @@ def _conflicts_i18n_literals(skill_text, skill_lines, skill_path, diag):
 
 
 def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
-    """Class 6/7: launch-block regex carriers (LAUNCH_TABLE_ROW_RE/
-    LAUNCH_COMMAND_ROW_RE) — обязаны матчить строки канон-таблицы SKILL.md §8."""
+    """Class 6/7: canonical launch metadata stays tabular; command stays fenced."""
     header_idx = _find_line(skill_lines, CONFLICTS_ANCHOR_LAUNCH_TABLE)
     if header_idx is None:
         snippet = skill_path.parent / "snippets" / "launch-block-template.md"
@@ -267,17 +266,31 @@ def _conflicts_launch_table_regex(skill_lines, skill_path, diag):
     while i < len(skill_lines) and skill_lines[i].strip().startswith("|"):
         rows.append((skill_lines[i], i + 1))
         i += 1
-    checks = (("LAUNCH_TABLE_ROW_RE", LAUNCH_TABLE_ROW_RE, "Model class"),
-             ("LAUNCH_COMMAND_ROW_RE", LAUNCH_COMMAND_ROW_RE, "Команда"))
-    for const_name, pattern, label in checks:
-        matched = any(pattern.match(row) for row, _ln in rows)
-        if not matched:
-            code_lineno = _own_const_lineno(const_name)
-            diag.error(PLAN_LINT_PUBLIC_PATH, code_lineno,
-                       f"--conflicts launch-block регекс: {const_name} не матчит ни одну "
-                       f"строку канон-таблицы {skill_path.name}:{header_idx + 2}-{i} "
-                       f"(ожидалась строка «{label}») → реализация "
-                       f"plan_lint.py:{code_lineno}")
+    if not any(LAUNCH_TABLE_ROW_RE.match(row) for row, _ln in rows):
+        code_lineno = _own_const_lineno("LAUNCH_TABLE_ROW_RE")
+        diag.error(PLAN_LINT_PUBLIC_PATH, code_lineno,
+                   f"--conflicts launch-block регекс: LAUNCH_TABLE_ROW_RE не матчит ни одну "
+                   f"строку канон-таблицы {skill_path.name}:{header_idx + 2}-{i} "
+                   f"(ожидалась строка «Model class») → реализация "
+                   f"plan_lint.py:{code_lineno}")
+    command_rows = [(row, lineno) for row, lineno in rows if LAUNCH_COMMAND_ROW_RE.match(row)]
+    if command_rows:
+        code_lineno = _own_const_lineno("LAUNCH_COMMAND_ROW_RE")
+        diag.error(PLAN_LINT_PUBLIC_PATH, code_lineno,
+                   f"--conflicts launch-block форма: канон {skill_path.name}:"
+                   f"{command_rows[0][1]} снова несёт `| Команда |` в metadata table; "
+                   f"LAUNCH_COMMAND_ROW_RE остаётся только reader-side compatibility → "
+                   f"реализация plan_lint.py:{code_lineno}")
+    label_idx = _find_line(skill_lines, "**Provider-native command:**", start=i)
+    fence_idx = None if label_idx is None else next(
+        (index for index in range(label_idx + 1, len(skill_lines))
+         if re.fullmatch(r"\s*```(?:bash|text|sh|shell)\s*", skill_lines[index])), None)
+    if fence_idx is None:
+        code_lineno = _own_const_lineno("CODE_FENCE_RE")
+        diag.error(PLAN_LINT_PUBLIC_PATH, code_lineno,
+                   f"--conflicts launch-block форма: canonical snippet {skill_path.name} "
+                   f"не несёт `**Provider-native command:**` + fenced command block → "
+                   f"реализация plan_lint.py:{code_lineno}")
 
 
 def _conflicts_layout_v2(skill_lines, skill_path, diag):

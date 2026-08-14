@@ -1,17 +1,30 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:202522ee2c88975fe2cb7a927416f488689c4da522aa333ad36e21cf5a19c730
-Adapter: task.codex-command/1.0.10
+Canonical SHA-256: sha256:771d43f8169c7c83803df538c30d3fdad13b3db674f3c1bdf5850f485a4d0eef
+Adapter: task.codex-command/1.0.11
 -->
-## Native Codex launch-block — mandatory for every handoff
+## Native Codex launch-block — mandatory for every executable handoff
 
+This generated runtime is the Codex provider projection. Render only the Codex-native launch;
+never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When handing off a plan step, print a separate `Native Codex launch-block` which explicitly
-pins the repository cwd, the mapped model, reasoning effort, approval policy, and sandbox:
+
+Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
+block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
+and sandbox:
 
 ```bash
 codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-selector>"' -a never -s danger-full-access '$ task:<command> <arguments>'
 ```
+
+Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
+every continued line except the last with `\`; never rely on Markdown visual wrapping.
+
+**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
+`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
+block is present after the metadata table. Only a genuinely terminal Next with no executable
+successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
@@ -408,8 +421,9 @@ evidence конфигом, актором или свободным тексто
    на закоммиченном дереве = **ложное утверждение**, даже если в момент написания было верным.
 
    **Схема `handoff.md`** (шаг 3): `# HANDOFF — <ISO-дата> — after Pn.m`, затем **Next:** (launch-block
-   п. 8 — таблица `Batch / Model / Thinking / Context / Суть` + голая команда ИЛИ голый промпт отдельным
-   code-block'ом, копипаст без правок; самодостаточен из холодной сессии: plan-ID + cold-start reads;
+   п. 8 — таблица `Batch / Model / Thinking / Context / Суть` БЕЗ команды + provider-native
+   команда ИЛИ голый промпт обязательным отдельным code-block'ом, копипаст без правок;
+   самодостаточен из холодной сессии: plan-ID + cold-start reads;
    скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of
    truth:** / **Open risks:** / **Workarounds/Deferred/Open questions:** (workarounds · deferred ·
    open_questions; «—» если нет).
@@ -444,12 +458,10 @@ evidence конфигом, актором или свободным тексто
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
-   | Команда | `<голая команда>` — ТОЛЬКО сама команда, без повторного `select the session model class`/`select the session effort` |
 
-   <опционально, ТОЛЬКО когда следующий шаг реально отличается от того, что строка `Команда`
-   способна выразить (Exec = manual — нет single-command эквивалента, scope-payload
-   находок/реопена, форма ОЖИДАНИЕ — guard-строка): голый промпт ИЛИ полная команда с
-   scope-payload — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
+   <ОБЯЗАТЕЛЬНЫЙ отдельный fenced code-block: provider-native команда активного адаптера;
+   для Exec = manual — голый prompt; для scope-payload/ОЖИДАНИЕ — команда вместе с payload/guard.
+   Команда предпочтительно в одну физическую строку; shell-переносы только с `\`.>
    ```
    При `ROUTING-BLOCKED` / `ROUTING-INCONSISTENT` (п. 2) блок несёт ТОЛЬКО эту строку + launch-block:
    работа не начиналась, статуса/коммитов/lint'а нет.
@@ -466,12 +478,11 @@ evidence конфигом, актором или свободным тексто
    launch-block несёт КОМАНДУ ГРУППЫ (`$ task:plan-run <ID> Pn.a-Pn.b` / `native orchestration carrier for the referenced plan-owned workflow script`),
    а не одиночный item. После закрытия item команда сохраняет тот же Batch и адресует только
    оставшийся adjacent-суффикс; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
-   - Следующий item, `Exec = plan-exec` → строка `Команда` = `$ task:plan-exec <PLAN-ID> Pn.k`
-     (весь ответ, code-block не заводится); Model/Thinking — из Routing (дефолт `implementation/medium`).
+   - Следующий item, `Exec = plan-exec` → отдельный provider-native command block для
+     `$ task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking — из Routing (дефолт `implementation/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
      `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
-     implementation/medium; строка `Команда` = `—` (нет single-command эквивалента); code-block
-     ОБЯЗАТЕЛЕН (не опционален для этого случая) и несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
+     implementation/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без
      правок), а НЕ slash-команду (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан
      такой item отклонить — команда в code-block'е была бы инструкцией нарушить гейт); `Context` =
      `continue-root`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID>

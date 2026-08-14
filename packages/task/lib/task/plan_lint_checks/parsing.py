@@ -3,6 +3,7 @@ from .common import *
 from .policy import *
 from task import journal as plan_journal
 from task import plan_decisions
+from task import terminal_policy
 
 
 def _lint_plan_md_20(lines, path, diag):
@@ -346,6 +347,12 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         if errors and i + 1 not in exceptions:
             message = "; ".join(error for _, error in errors)
             report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
+            continue
+        if _terminal_policy_is_active(entry):
+            try:
+                terminal_policy.validate_entry(entry, plan_dir=plan_dir)
+            except terminal_policy.TerminalPolicyError as exc:
+                report(jf, i + 1, str(exc))
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):

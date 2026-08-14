@@ -456,6 +456,116 @@ class TestAuditScopePayload(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
 
 
+class TestAuditTerminalPolicy(TmpPlanTestCase):
+    """D24 runtime seam: audit prose cannot manufacture a repair/design successor."""
+
+    def _append_block(self, plan_dir, *, verdict, semantic_next, audit_date="2026-08-14"):
+        phase = phase_index_path(plan_dir)
+        phase.write_text(
+            phase.read_text(encoding="utf-8")
+            + f"\n## Audit P1 — {audit_date}\n\n**Вердикт: {verdict}**\n\n"
+            "### Что запускать\n\n"
+            f"Semantic Next: `{semantic_next}`.\n",
+            encoding="utf-8",
+        )
+
+    def _append_raw_event(self, plan_dir, event):
+        journal_path = plan_dir / "journal.jsonl"
+        with journal_path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def test_audit_red_to_plan_design_without_reducer_evidence_is_error(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-POLICY")
+        self._append_block(
+            plan, verdict="RED",
+            semantic_next="design-phase: task:plan-design 2026.08.14-AUDIT-POLICY P1")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1 — режим фазы", command="plan-audit",
+            actor="frontier/xhigh", result="audit-red", fingerprint="a" * 64))
+
+        _, diag = _lint(plan)
+
+        self.assertTrue(
+            _errors_containing(diag, "AUDIT_TERMINAL_EVIDENCE_REQUIRED"), diag.errors)
+
+    def test_audit_green_requires_exact_close_successor(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-GREEN")
+        self._append_block(
+            plan, verdict="GREEN",
+            semantic_next="design-phase: task:plan-design 2026.08.14-AUDIT-GREEN P1")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1", command="plan-audit",
+            actor="frontier/xhigh", result="audit-green", fingerprint="a" * 64))
+
+        _, diag = _lint(plan)
+
+        self.assertTrue(
+            _errors_containing(diag, "AUDIT_TERMINAL_CONTINUATION_INVALID"), diag.errors)
+
+    def test_audit_green_with_exact_close_successor_is_clean(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-CLOSE")
+        self._append_block(
+            plan, verdict="GREEN",
+            semantic_next="close: task:plan-close 2026.08.14-AUDIT-CLOSE P1")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1", command="plan-audit",
+            actor="frontier/xhigh", result="audit-green", fingerprint="a" * 64))
+
+        _, diag = _lint(plan)
+
+        self.assertFalse(
+            [error for error in diag.errors if "AUDIT_TERMINAL_" in error], diag.errors)
+
+    def test_historical_audit_without_new_terminal_policy_is_readable(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-HISTORICAL-AUDIT")
+        self._append_block(
+            plan, verdict="RED",
+            semantic_next="design-phase: task:plan-design 2026.08.14-HISTORICAL-AUDIT P1",
+            audit_date="2026-08-13")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1", command="plan-audit",
+            actor="frontier/xhigh", result="audit-red", fingerprint="a" * 64,
+            ts="2026-08-13T23:59:59Z"))
+
+        _, diag = _lint(plan)
+
+        self.assertEqual(
+            _errors_containing(diag, "AUDIT_TERMINAL_EVIDENCE_REQUIRED"), [], diag.errors)
+        self.assertTrue(
+            [warning for warning in diag.warnings if "AUDIT_TERMINAL_EVIDENCE_REQUIRED" in warning],
+            diag.warnings)
+
+    def test_new_terminal_item_without_validation_evidence_is_error(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-TERMINAL-EVIDENCE")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-deviations",
+            ts="2026-08-14T00:00:00Z"))
+
+        _, diag = _lint(plan)
+
+        self.assertTrue(
+            _errors_containing(diag, "TERMINAL_EVIDENCE_REQUIRED"), diag.errors)
+
+    def test_historical_terminal_item_without_validation_evidence_is_readable(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-HISTORICAL-TERMINAL")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-deviations",
+            ts="2026-08-13T23:59:59Z"))
+
+        _, diag = _lint(plan)
+
+        self.assertEqual(
+            _errors_containing(diag, "TERMINAL_EVIDENCE_REQUIRED"), [], diag.errors)
+
+
 class TestTieredPortability(TmpPlanTestCase):
     """P2.2/D26/D47: план с `handoff.md` (tier=committed-bundle по конструкции) обязан
     нести ≥1 committed execution input и не содержать внешний (host/chat/mAInd/tmp/foreign)

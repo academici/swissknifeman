@@ -241,6 +241,8 @@ def lint_plan(plan_dir, diag):
         phase_lines = _read_lines(path)
         if phase_lines:
             _lint_audit_scope_payload(phase_lines, path, plan_id, diag)
+            _lint_audit_terminal_policy(
+                phase_lines, path, plan_dir, plan_id, pid, diag)
         # --- консистентность Phase Status(таблица) vs item.Status -----------
         table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
         for item_id, occurrences in parsed["items"].items():

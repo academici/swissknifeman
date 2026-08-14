@@ -41,6 +41,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
 from task import plan_layout
+from task import review_policy as _review_policy
 from task import plan_status
 # task.task_contract — единственный владелец строкового теста «внешности» execution
 # input'а (task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2); tiered-portability lint (2026.07.24-AGENT-RELIABILITY P2.2)
@@ -184,6 +185,12 @@ NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
 # гейт собственной строкой). Регион гейтов кончается на ПЕРВОМ `## Audit` — ниже него живого
 # ТЗ фазы нет (блок append-only, дописывается ПОСЛЕ items и Phase Handoff).
 AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\b")
+AUDIT_PHASE_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\s+—\s+(\d{4}-\d{2}-\d{2})\s*$")
+# Terminal reducer evidence became mandatory only after the historical P0–P6
+# journal/audit carriers were sealed.  Keep the boundary timestamp-precise: a
+# date-only cutoff would retroactively reject records written earlier that day.
+TERMINAL_POLICY_ACTIVATED_AT = "2026-08-14T00:00:00Z"
+AUDIT_SEMANTIC_NEXT_RE = re.compile(r"^\s*(?:Semantic Next:|\*\*Next:\*\*)\s*`?([^`]+?)`?\.?\s*$")
 # RAG-маркеры несущих фактов (SKILL §7, enum из трёх значений — D29) — эвристика по
 # D-логу. `RAG:—` (repo-grounded) пишется через em dash, как EMPTY_PLACEHOLDER;
 # ASCII-дефис не канонизирован.
@@ -443,6 +450,18 @@ def _is_empty(value):
     return v == "" or v == EMPTY_PLACEHOLDER
 
 
+def _terminal_policy_is_active(entry):
+    """Whether an append-only event was authored after policy activation.
+
+    The journal timestamp is the carrier for an audit block as well: its heading
+    intentionally contains only a date and cannot distinguish two writes on the
+    activation day.
+    """
+    return (isinstance(entry, dict)
+            and isinstance(entry.get("ts"), str)
+            and entry["ts"] >= TERMINAL_POLICY_ACTIVATED_AT)
+
+
 # --- низкоуровневый парсинг markdown -----------------------------------------
 
 def _read_lines(path):
@@ -534,6 +553,79 @@ def _lint_audit_scope_payload(lines, path, plan_id, diag):
             diag.error(path, idx + 1, msg)
         else:
             diag.warning(path, idx + 1, msg)
+
+
+def _lint_audit_terminal_policy(lines, path, plan_dir, plan_id, phase_id, diag):
+    """Bind the latest phase audit block to reducer evidence and its exact Next.
+
+    This is the machine seam D24 previously lacked: prose can no longer turn an
+    ordinary repair into ``audit-red → plan-design``.  Historical blocks remain
+    warnings; new blocks are errors.  Delivery and journal append enforce the same
+    policy without a date carve-out.
+    """
+    header_idxs = _section_header_indexes(lines)
+    matching = []
+    for idx in header_idxs:
+        match = AUDIT_PHASE_HEADER_RE.fullmatch(lines[idx].strip())
+        if match and match.group(1) == phase_id:
+            matching.append((idx, match.group(2)))
+    if not matching:
+        return
+    idx, audit_date = matching[-1]
+    body, _ = _section_body(lines, idx, header_idxs)
+    body_text = "\n".join(body)
+    verdict_match = AUDIT_VERDICT_RE.search(body_text)
+    if not verdict_match:
+        return
+
+    latest = None
+    journal_path = Path(plan_dir) / _journal.FILENAME
+    if journal_path.is_file():
+        try:
+            rows = journal_path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            rows = []
+        for raw in rows:
+            if not raw.strip():
+                continue
+            try:
+                event = json.loads(raw)
+                _journal.validate_entry(event)
+            except (json.JSONDecodeError, _journal.JournalValidationError):
+                continue
+            if (event.get("command") == "plan-audit"
+                    and _review_policy.phase_audit_subject(event.get("item_id")) == phase_id
+                    and event.get("result") in {"audit-green", "audit-attention", "audit-red"}):
+                latest = event
+    report = diag.error if _terminal_policy_is_active(latest) else diag.warning
+    if latest is None:
+        report(path, idx + 1,
+               f"latest Audit {phase_id}: нет phase-audit journal event для terminal policy")
+        return
+
+    expected_result = {
+        "GREEN": "audit-green", "ATTENTION": "audit-attention", "RED": "audit-red",
+    }[verdict_match.group(1)]
+    if latest.get("result") != expected_result:
+        report(path, idx + 1,
+               f"latest Audit {phase_id}: verdict {verdict_match.group(1)} не совпадает "
+               f"с journal result {latest.get('result')!r}")
+        return
+    next_exact = None
+    for line in body:
+        match = AUDIT_SEMANTIC_NEXT_RE.fullmatch(line)
+        if match:
+            next_exact = match.group(1).strip()
+            break
+    if not next_exact:
+        report(path, idx + 1,
+               f"latest Audit {phase_id}: нет provider-neutral Semantic Next")
+        return
+    try:
+        _review_policy.validate_phase_audit_continuation(
+            latest, plan_id=plan_id, next_exact=next_exact)
+    except _review_policy.ReviewPolicyError as exc:
+        report(path, idx + 1, str(exc))
 
 
 def _parse_table(body_lines, body_start_lineno):

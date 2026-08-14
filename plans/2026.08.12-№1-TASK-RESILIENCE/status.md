@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 292e13a1bd84d92b373fa7c4abb95f9dae818c001627946df82a6fbd48368459
+inputs_sha256: a984204eb7b5879db94e5c0f6345f2307dde1e72c5de1f5a5544ea0ba91c0fa0
 generated_by: task plan-views status
 -->
 
@@ -424,6 +424,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commit e3dc1d66; terminal tree 46d1e1de passes 76 focused tests and generator checks; final candidate 105aa8c5 passes Task 919 and Skiller 633. |
 | 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on 105aa8c5 (product chain 57dba5d6 + 105aa8c5): active/archive identity, roadmap, package, provider and docs gates are green. |
 | 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 40d3e00465abde87776861b31f2dc2f9dd83ea93df540f39b60e4a062364c7c1, вердикт GREEN |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair: corrected snapshot regex; current roadmap and aggregate gates revalidated on 5aa1af2. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair rebound: package gates on 5aa1af2; concurrent roadmap candidate revalidated on 7341575d. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on c5e289b2: 922 Task tests, final roadmap and provider/docs/plan gates are green. |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 58c0c795289bb07e83ee46b20f40e15b5c68341a2d4b0ffcbec7592df153a021, вердикт GREEN |
 
 ## Owner Gates
 

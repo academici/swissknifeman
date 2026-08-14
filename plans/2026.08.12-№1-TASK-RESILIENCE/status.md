@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 165f23a2516159e5c885bca8fca7f853841ded244064d8d1c931ebde0e9a9ae0
+inputs_sha256: d086836d2ff736f1175f4be0c5b7015bcef56ac16072c382bf04b33e51df785e
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-14 |
 
 ## 4. Phase Index & Status Board
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
-| P7 | Postarchive Task runtime and roadmap closeout | 5/6 | 🟡 In progress |
+| P7 | Postarchive Task runtime and roadmap closeout | 6/6 | 🟢 Done |
 
 ## Phase P0
 
@@ -98,7 +98,7 @@ generated_by: task plan-views status
 | P7.2 | Make terminal delivery and lint fail closed | 🟢 Done | 2026-08-14 |
 | P7.3 | Enforce scope-aware audit/block terminal policy | 🟢 Done | 2026-08-14 |
 | P7.4 | Reconcile canon, provider projections and package docs | 🟢 Done | 2026-08-14 |
-| P7.5 | Close roadmap disposition and aggregate release gates | ⬜ Not started | — |
+| P7.5 | Close roadmap disposition and aggregate release gates | 🟢 Done | 2026-08-14 |
 
 ## 6. Update Log
 
@@ -413,6 +413,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns the omitted audit terminal-policy disposition registry after the full Task validation reproduced its missing check. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · P7.4 assigns registry-generated Skiller budget and docs-sync Task projections to the current item before staging only owned outputs. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.4 closed: canonical commands, provider projections, docs and owned generators are synchronized. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Починен identity lint для active/archive копии одного Plan ID по D32. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.5: roadmap closeout и aggregate matrix зелёные; identity lint repaired по D32. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

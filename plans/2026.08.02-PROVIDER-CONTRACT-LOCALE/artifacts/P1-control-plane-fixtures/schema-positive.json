@@ -1,0 +1,240 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    {
+      "id": "mixed-freshness",
+      "envelope": {
+        "contract_version": "1.0.0",
+        "result": {
+          "project_id": "swissknifeman",
+          "desired": {
+            "provider_config_contract_version": "1.0.0",
+            "capability_catalog_version": "1.0.0",
+            "selection": {
+              "claude-code": {
+                "enabled": true,
+                "capabilities": {
+                  "instructions.project": true
+                },
+                "native_extensions": {}
+              },
+              "codex": {
+                "enabled": true,
+                "capabilities": {},
+                "native_extensions": {}
+              }
+            },
+            "provenance": [
+              {
+                "effective_path": "/selection/claude-code/capabilities/instructions.project",
+                "source": {
+                  "kind": "project",
+                  "id": "project:swissknifeman",
+                  "carrier": ".swissknife.json",
+                  "path": "/providers"
+                },
+                "source_path": "/providers/selection/claude-code/capabilities/instructions.project",
+                "explicit": true
+              },
+              {
+                "effective_path": "/selection/claude-code/enabled",
+                "source": {
+                  "kind": "project",
+                  "id": "project:swissknifeman",
+                  "carrier": ".swissknife.json",
+                  "path": "/providers"
+                },
+                "source_path": "/providers/selection/claude-code/enabled",
+                "explicit": true
+              },
+              {
+                "effective_path": "/selection/codex/enabled",
+                "source": {
+                  "kind": "project",
+                  "id": "project:swissknifeman",
+                  "carrier": ".swissknife.json",
+                  "path": "/providers"
+                },
+                "source_path": "/providers/selection/codex/enabled",
+                "explicit": true
+              }
+            ],
+            "semantic_digest": "sha256:c8e2412e21e95d94f453cd1059cd374c4d432d6e7779adbc46495bc6e30a1864"
+          },
+          "providers": [
+            {
+              "provider_id": "claude-code",
+              "selected": true,
+              "desired_digest": "sha256:c8e2412e21e95d94f453cd1059cd374c4d432d6e7779adbc46495bc6e30a1864",
+              "last_applied": {
+                "apply_id": "apply-claude-001",
+                "desired_digest": "sha256:c8e2412e21e95d94f453cd1059cd374c4d432d6e7779adbc46495bc6e30a1864",
+                "capability_catalog_version": "1.0.0",
+                "artifact_set_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "artifacts": [
+                  {
+                    "artifact_id": "harness.claude-code.instructions.project",
+                    "adapter_id": "harness.claude-code.instructions.project",
+                    "adapter_version": "1.0.0",
+                    "target_path": "CLAUDE.md",
+                    "source_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    "rendered_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                  }
+                ],
+                "recorded_at": "2026-08-14T09:00:00Z"
+              },
+              "observed": {
+                "observation_id": "observe-claude-001",
+                "provider_version": "Claude Code 2.1.228",
+                "observed_at": "2026-08-14T09:30:00Z",
+                "fresh_until": "2026-08-14T10:30:00Z",
+                "freshness": "fresh",
+                "trust": "trusted",
+                "capability": "satisfied",
+                "artifacts": "clean",
+                "evidence_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "status": "ready",
+              "diagnostics": []
+            },
+            {
+              "provider_id": "codex",
+              "selected": true,
+              "desired_digest": "sha256:c8e2412e21e95d94f453cd1059cd374c4d432d6e7779adbc46495bc6e30a1864",
+              "last_applied": {
+                "apply_id": "apply-codex-001",
+                "desired_digest": "sha256:c8e2412e21e95d94f453cd1059cd374c4d432d6e7779adbc46495bc6e30a1864",
+                "capability_catalog_version": "1.0.0",
+                "artifact_set_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "artifacts": [
+                  {
+                    "artifact_id": "harness.codex.instructions.project",
+                    "adapter_id": "harness.codex.instructions.project",
+                    "adapter_version": "1.0.0",
+                    "target_path": "AGENTS.md",
+                    "source_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                    "rendered_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+                  }
+                ],
+                "recorded_at": "2026-08-14T09:00:00Z"
+              },
+              "observed": {
+                "observation_id": "observe-codex-001",
+                "provider_version": "codex-cli 0.147.0",
+                "observed_at": "2026-08-14T08:00:00Z",
+                "fresh_until": "2026-08-14T09:00:00Z",
+                "freshness": "stale",
+                "trust": "trusted",
+                "capability": "satisfied",
+                "artifacts": "clean",
+                "evidence_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              "status": "observation-stale",
+              "diagnostics": [
+                {
+                  "severity": "warning",
+                  "code": "PCP_OBSERVATION_STALE",
+                  "message": "Codex observation is outside its declared freshness window",
+                  "source_ref": "provider:codex"
+                }
+              ]
+            }
+          ],
+          "aggregate": {
+            "status": "unknown",
+            "selected_provider_ids": [
+              "claude-code",
+              "codex"
+            ],
+            "provider_statuses": {
+              "claude-code": "ready",
+              "codex": "observation-stale"
+            }
+          },
+          "evaluated_at": "2026-08-14T09:30:00Z"
+        },
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "no-provider-selected",
+      "envelope": {
+        "contract_version": "1.0.0",
+        "result": {
+          "project_id": "swissknifeman",
+          "desired": {
+            "provider_config_contract_version": "1.0.0",
+            "capability_catalog_version": "1.0.0",
+            "selection": {
+              "claude-code": {
+                "enabled": false,
+                "capabilities": {},
+                "native_extensions": {}
+              },
+              "codex": {
+                "enabled": false,
+                "capabilities": {},
+                "native_extensions": {}
+              }
+            },
+            "provenance": [
+              {
+                "effective_path": "/selection/claude-code/enabled",
+                "source": {
+                  "kind": "operation",
+                  "id": "operation:disable-all",
+                  "carrier": "operation",
+                  "path": "/"
+                },
+                "source_path": "/selection/claude-code/enabled",
+                "explicit": true
+              },
+              {
+                "effective_path": "/selection/codex/enabled",
+                "source": {
+                  "kind": "operation",
+                  "id": "operation:disable-all",
+                  "carrier": "operation",
+                  "path": "/"
+                },
+                "source_path": "/selection/codex/enabled",
+                "explicit": true
+              }
+            ],
+            "semantic_digest": "sha256:aa1204cda7fa3bdc0e0a93a602009818032c30a6a240c75804edb52114513541"
+          },
+          "providers": [
+            {
+              "provider_id": "claude-code",
+              "selected": false,
+              "desired_digest": "sha256:aa1204cda7fa3bdc0e0a93a602009818032c30a6a240c75804edb52114513541",
+              "last_applied": null,
+              "observed": null,
+              "status": "not-selected",
+              "diagnostics": []
+            },
+            {
+              "provider_id": "codex",
+              "selected": false,
+              "desired_digest": "sha256:aa1204cda7fa3bdc0e0a93a602009818032c30a6a240c75804edb52114513541",
+              "last_applied": null,
+              "observed": null,
+              "status": "not-selected",
+              "diagnostics": []
+            }
+          ],
+          "aggregate": {
+            "status": "no-providers-selected",
+            "selected_provider_ids": [],
+            "provider_statuses": {
+              "claude-code": "not-selected",
+              "codex": "not-selected"
+            }
+          },
+          "evaluated_at": "2026-08-14T09:30:00Z"
+        },
+        "diagnostics": []
+      }
+    }
+  ]
+}

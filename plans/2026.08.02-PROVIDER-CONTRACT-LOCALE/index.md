@@ -63,5 +63,8 @@
 | `decisions/D69-p0.8-validation-recovery.md` | decision | P0.6, P0.8 | Forward repair authority for the v2 core, stale projections and post-close P0.6 read-graph correction. |
 | `research/13-p0-final-requalification-design.md` | research | P0.9–P0.10, final P0 audit, P1 admission | Semantic digest-rebind proof, integrity/live-admission split, final-audit contract and pre-mortem. |
 | `decisions/D70-p0-final-requalification.md` | decision | P0.9–P0.10 | Final bounded P0 remediation, unchanged frozen contract/classifications and one last planned audit invocation. |
+| `research/11-p1-control-plane-design.md` | research | P1.1–P7 | Desired/last-applied/observed split, deterministic provider/aggregate status, field-owner trace, and 2026-08-14 verification. |
+| `root/contracts/provider-control-plane-v1.md` | contract | P1.1–P7 | Draft provider-neutral v1 result envelope, exact status/diagnostic/versioning rules, and no-partial/no-write boundary. |
+| `artifacts/p1-provider-control-plane-check.py` | artifact | P1.1 | Stdlib schema/digest/status checker with positive and single-mutation negative fixtures. |
 | `artifacts/P0.5/fixtures/test_negative_fixtures.py` | artifact | P0.5, P0.6 | One-mutation copied fixtures for the repaired exact-set/privacy verifier. |
 | `artifacts/P0.8/execution-provenance-v1.json` | artifact | P0 closure, audit pass 2 | Deterministic Git/Task-Contract reconstruction of P0.1–P0.4, consumed by append-only correction events and regenerated state views. |

@@ -1,0 +1,101 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    {
+      "id": "unknown-contract-major",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/contract_version", "value": "2.0.0"},
+      "expected_code": "PCP_VERSION_UNSUPPORTED"
+    },
+    {
+      "id": "unknown-result-field",
+      "base": "mixed-freshness",
+      "mutation": {"op": "add", "path": "/result/raw_payload", "value": {}},
+      "expected_code": "PCP_SCHEMA_UNKNOWN"
+    },
+    {
+      "id": "desired-digest-mismatch",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/desired/semantic_digest", "value": "sha256:9999999999999999999999999999999999999999999999999999999999999999"},
+      "expected_code": "PCP_DIGEST_INVALID"
+    },
+    {
+      "id": "missing-leaf-provenance",
+      "base": "mixed-freshness",
+      "mutation": {"op": "remove", "path": "/result/desired/provenance/0"},
+      "expected_code": "PCP_PROVENANCE_INVALID"
+    },
+    {
+      "id": "missing-provider-row",
+      "base": "mixed-freshness",
+      "mutation": {"op": "remove", "path": "/result/providers/1"},
+      "expected_code": "PCP_PROVIDER_SET_MISMATCH"
+    },
+    {
+      "id": "unknown-provider-status",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/1/status", "value": "warm"},
+      "expected_code": "PCP_STATUS_UNKNOWN"
+    },
+    {
+      "id": "stale-reported-ready",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/1/status", "value": "ready"},
+      "expected_code": "PCP_STATUS_INCONSISTENT"
+    },
+    {
+      "id": "aggregate-masks-stale",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/aggregate/status", "value": "ready"},
+      "expected_code": "PCP_AGGREGATE_MISMATCH"
+    },
+    {
+      "id": "collapsed-trust-axis",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/1/observed/trust", "value": "permissive"},
+      "expected_code": "PCP_OBSERVATION_INVALID"
+    },
+    {
+      "id": "partial-result-with-error",
+      "base": "mixed-freshness",
+      "mutation": {"op": "add", "path": "/diagnostics/0", "value": {"severity": "error", "code": "PCP_SCHEMA_INVALID", "message": "injected fixture error", "source_ref": "checker:fixture"}},
+      "expected_code": "PCP_PARTIAL_RESULT"
+    },
+    {
+      "id": "provider-raw-payload",
+      "base": "mixed-freshness",
+      "mutation": {"op": "add", "path": "/result/providers/0/raw_payload", "value": "forbidden"},
+      "expected_code": "PCP_SCHEMA_UNKNOWN"
+    },
+    {
+      "id": "last-applied-desired-mismatch",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/0/last_applied/desired_digest", "value": "sha256:8888888888888888888888888888888888888888888888888888888888888888"},
+      "expected_code": "PCP_APPLY_INVALID"
+    },
+    {
+      "id": "duplicate-provider-row",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/1/provider_id", "value": "claude-code"},
+      "expected_code": "PCP_PROVIDER_SET_MISMATCH"
+    },
+    {
+      "id": "localized-machine-code",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/providers/1/diagnostics/0/code", "value": "наблюдение"},
+      "expected_code": "PCP_DIAGNOSTIC_INVALID"
+    },
+    {
+      "id": "non-boolean-provenance",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/desired/provenance/0/explicit", "value": "true"},
+      "expected_code": "PCP_PROVENANCE_INVALID"
+    },
+    {
+      "id": "absolute-project-id",
+      "base": "mixed-freshness",
+      "mutation": {"op": "replace", "path": "/result/project_id", "value": "/tmp/project"},
+      "expected_code": "PCP_IDENTITY_INVALID"
+    }
+  ]
+}

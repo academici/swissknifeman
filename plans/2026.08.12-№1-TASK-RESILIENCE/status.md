@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: d086836d2ff736f1175f4be0c5b7015bcef56ac16072c382bf04b33e51df785e
+inputs_sha256: 281d7d4f232425f0a94bffe339693ee6a43ed44b7ca3b3399883e8722a219363
 generated_by: task plan-views status
 -->
 
@@ -418,6 +418,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · Починен identity lint для active/archive копии одного Plan ID по D32. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.5: roadmap closeout и aggregate matrix зелёные; identity lint repaired по D32. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commits 9c163d57 + 23fddc8a; final committed candidate 105aa8c5: 79 passed, plan-lint 0 ERROR / 6 historical WARN, conflicts 0. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commit 5a7e9ee8; original a3bc38cc replay exposed future-tree contamination, final committed candidate 105aa8c5 passes 194 focused tests. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commits 5237b645 + 4e4e956c; terminal tree 36be9e0d passes 30 delivery/state and 119 journal/lint tests. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit evidence repair: product commit e3dc1d66; terminal tree 46d1e1de passes 76 focused tests and generator checks; final candidate 105aa8c5 passes Task 919 and Skiller 633. |
+| 2026-08-14 | frontier/xhigh | plan-audit · closed-green · Audit repair closed on 105aa8c5 (product chain 57dba5d6 + 105aa8c5): active/archive identity, roadmap, package, provider and docs gates are green. |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 40d3e00465abde87776861b31f2dc2f9dd83ea93df540f39b60e4a062364c7c1, вердикт GREEN |
 
 ## Owner Gates
 

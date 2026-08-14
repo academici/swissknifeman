@@ -1,38 +1,40 @@
-# HANDOFF — 2026-08-14 — after P7.5
+# HANDOFF — 2026-08-14 — after P7
 
-**Next:** audit-phase: task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P7
+**Next:** close: task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | n/a |
-| Model | frontier |
-| Thinking | xhigh — independent full phase audit |
-| Context | cold-start-root: whole-plan-independent-audit |
-| Суть | Независимо проверить terminal P7 candidate перед phase close и повторным архивированием. |
-| Команда | `task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P7` |
+| Model | implementation |
+| Thinking | high — phase close |
+| Context | cold-start-root: audit-root-terminal |
+| Суть | Закрыть GREEN-кандидат P7 и собрать phase closure перед отдельным archive. |
+| Команда | `task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7` |
 
 Native Codex launch-block:
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.12-№1-TASK-RESILIENCE P7'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-close 2026.08.12-№1-TASK-RESILIENCE P7'
 ```
 
 **Done:**
 
-- P7.5 product commit `57dba5d6` finalized the roadmap dispositions, preserved active and partial residues, restored the history CLI roadmap row, and recorded the Russian `[Unreleased]` summary.
-- The aggregate Task/Skiller/provider/docs/plan matrix is green; the active/archive reactivation mirror now retains one plan identity without weakening different-plan ordinal checks.
+- Audit P7 attempt 1 repaired the false active/archive codename warning in `105aa8c5` and returned GREEN on candidate `40d3e00465abde87776861b31f2dc2f9dd83ea93df540f39b60e4a062364c7c1`.
+- Superseding item evidence names every P7 product chain; Task `919`, Skiller `633`, provider/registry/docs and both docs builds are green.
 
 **Remaining:**
 
-- Audit P7 → close P7 → archive `2026.08.12-№1-TASK-RESILIENCE`; no tag, push, release or rollout.
+- Close P7 → archive `2026.08.12-№1-TASK-RESILIENCE`; no tag, push, release or rollout.
 
 **Sources of truth:**
 
-- `plan.md`; `phases/P7/P7.5.md`; `phases/P7/P7.5.state.md`; `journal.jsonl`; `artifacts/roadmap-snapshots/`; `roadmap/README.md`.
+- `plan.md`; `phases/P7/P7.md` latest audit block; P7 item states; `journal.jsonl`; `artifacts/roadmap-snapshots/`; `roadmap/README.md`.
 
 **Open risks:**
 
-- Full plan lint remains green with historical warnings only; the audit must judge P7 evidence, not treat those historical warnings as new P7 defects.
+- Full plan lint is `0 ERROR / 6 WARN`; all WARN belong to historical P0–P5 audit blocks.
+- Global bundle sweep still reports the immutable P0.1 reference to the roadmap file intentionally
+  snapshotted/deleted by P7.5; every P7 bundle is byte-fresh and green.
 - Untracked path `Preparing worktree (detached HEAD a3bc38cc)\n/` is unrelated and remains untouched pending owner identification.
 
 **Workarounds/Deferred/Open questions:**

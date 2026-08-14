@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 231 скиллов в 49 бакетах.
+Всего: 232 скиллов в 49 бакетах.
 
 ## Скиллы по бакетам
 
@@ -420,7 +420,7 @@
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
-### repository-bootstrap — P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 13 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections. (13)
+### repository-bootstrap — P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections. (14)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -437,6 +437,7 @@
 | `project-tooling-runbook` | Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor … | `runbook`, `skills`, `docs-sync`, `root-bootstrap` |
 | `release-discipline` | Closing out any substantive change in this repository: validate.sh → skiller registry → C… | `release`, `changelog`, `validate`, `root-bootstrap` |
 | `skill-authoring` | Rules for creating or editing EN-only registry skills, references, snippets, metadata, pr… | `skill-authoring`, `en-only`, `upstream`, `root-bootstrap` |
+| `task-development-philosophy` | Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before … | `task`, `philosophy`, `planning`, `proportionality`, `evidence-reuse`, `anti-loop`, `root-bootstrap` |
 
 ### research — Research and knowledge management (2)
 
@@ -505,6 +506,7 @@
 | `ai-context` | `skills-ssot` |
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
+| `anti-loop` | `task-development-philosophy` |
 | `api` | `api-design`, `dart-package-development`, `dx-design`, `laravel-data`, `version-gotchas` |
 | `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `package-architecture`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `async` | `transactional-outbox-relay` |
@@ -616,6 +618,7 @@
 | `erd` | `data-schema` |
 | `eslint` | `eslint-flat-config`, `wayfinder` |
 | `evidence` | `model-verification` |
+| `evidence-reuse` | `task-development-philosophy` |
 | `fdm` | `build-loop`, `config-conventions`, `model-verification`, `parametric-config`, `threading` |
 | `feature-flags` | `pennant-development` |
 | `feedback-loop` | `diagnosing-bugs` |
@@ -737,11 +740,12 @@
 | `perplexity` | `query-craft` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
+| `philosophy` | `task-development-philosophy` |
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `config-driven-abstraction`, `cursor-pagination-design`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `namespace-refactor-safety`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `transactional-outbox-relay` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `plan` | `artifact-review` |
-| `planning` | `plan-protocol`, `to-issues`, `verify-claims` |
+| `planning` | `plan-protocol`, `task-development-philosophy`, `to-issues`, `verify-claims` |
 | `plans` | `ecosystem-map` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
@@ -752,6 +756,7 @@
 | `privacy` | `legal-compliance`, `security-design` |
 | `production` | `production-readiness-checklist` |
 | `prompt-engineering` | `ai-agents` |
+| `proportionality` | `task-development-philosophy` |
 | `pub` | `dart-package-development` |
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
@@ -785,7 +790,7 @@
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `artifact-review`, `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
-| `root-bootstrap` | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring` |
+| `root-bootstrap` | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring`, `task-development-philosophy` |
 | `router` | `docker` |
 | `routes` | `wayfinder` |
 | `routing` | `plan-protocol`, `project-map`, `vue-router-best-practices` |
@@ -833,6 +838,7 @@
 | `swissknifeman` | `swissknifeman-locator` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
+| `task` | `task-development-philosophy` |
 | `taxonomy` | `artifact-review` |
 | `tdd` | `implement`, `tdd-discipline` |
 | `tech-radar` | `axioma-stack` |

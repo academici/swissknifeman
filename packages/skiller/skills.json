@@ -215,8 +215,8 @@
       "status": "active"
     },
     "repository-bootstrap": {
-      "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 13 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
-      "count": 13,
+      "description": "P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections.",
+      "count": 14,
       "status": "active"
     },
     "research": {
@@ -4336,8 +4336,8 @@
       "path": "skills/repository-bootstrap/package-architecture/SKILL.md",
       "version": "0.1.0",
       "description": "Full map of the swissknifeman package: distribution channels, CLI, scripts, configs, generated artifacts and what regenerates them. Activate at the start of any task in this repository touching skills/, bin/, scripts/, configs/, profiles/, the registry, or manifests.",
-      "sha256": "4a85776e3e9599adf965b68b3304bd08d3ef429fab295510e4499f8b4009bce6",
-      "content_sha256": "0983b99451b5576ff781b6c18ea78655308e54492ce848b6892fbd3944a351e3",
+      "sha256": "6dab20d1f98ccf99d9a681472bfcdcfe2e866b226a58f5d6e0c16e3da6b28d1b",
+      "content_sha256": "04e810d6bb44361a2514d21d3326a93836c6975de810371ffde774a245272e72",
       "tags": [
         "skiller",
         "architecture",
@@ -4390,6 +4390,25 @@
         "skill-authoring",
         "en-only",
         "upstream",
+        "root-bootstrap"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "task-development-philosophy",
+      "bucket": "repository-bootstrap",
+      "path": "skills/repository-bootstrap/task-development-philosophy/SKILL.md",
+      "version": "0.1.0",
+      "description": "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy.",
+      "sha256": "15b1b127da00663380b0b56d610210edd6061df21edb9ebe4ae127c2aa9bd075",
+      "content_sha256": "8c67fde0ee8405de12a27cb80a7f08c254bacbb11f96d4d0e23b59c0cbc93395",
+      "tags": [
+        "task",
+        "philosophy",
+        "planning",
+        "proportionality",
+        "evidence-reuse",
+        "anti-loop",
         "root-bootstrap"
       ],
       "source": "local"

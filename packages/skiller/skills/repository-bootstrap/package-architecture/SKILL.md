@@ -57,7 +57,7 @@ Internal skill (not exported). Facts only — the package map. Procedures: creat
    without blind overwrites.
 
 **Class-A private/source-only exception (P1.2, D31).** The `repository-bootstrap` bucket exists
-ONLY as a source for 13 root-bootstrap identities (13 canonical `SKILL.md` carriers, 26
+ONLY as a source for 14 root-bootstrap identities (14 canonical `SKILL.md` carriers, 28
 thin projections `.claude/skills/<id>/`+`.agents/skills/<id>/`). `build_registry` indexes it for
 owner/hash lookup, but `build_publication_catalog` excludes it from ordinary Claude/Codex bucket
 units, from `core` membership, and from both marketplaces; consumer vendor/connect rejects
@@ -132,7 +132,7 @@ removed: brain is an ordinary consuming project.
 | `skills.json` (registry v5: sha256 + content_sha256, provenance, requires/produces_for, optional `level`) | `skiller registry` |
 | `skills/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | `skiller registry` |
 | `docs/guide/graph.md` (Mermaid dependency graph) | `skiller registry` → `scripts/generate-graph.sh` |
-| 26 thin root-bootstrap projections (`.claude/skills/<id>/`+`.agents/skills/<id>/`) + `adapters/repository-bootstrap/publication-lock.json` | `skiller registry` → `publication.py`'s root-bootstrap renderer |
+| 28 thin root-bootstrap projections (`.claude/skills/<id>/`+`.agents/skills/<id>/`) + `adapters/repository-bootstrap/publication-lock.json` | `skiller registry` → `publication.py`'s root-bootstrap renderer |
 | Project hub (managed CLAUDE.md block or `.ai/guidelines/swissknifeman-hub.md`) | `scripts/generate-hub.sh` |
 | Permissions/MCP/hooks in a project | package **`harness`** (`harness permissions\|mcp\|hooks`); skiller delegates via subprocess |
 

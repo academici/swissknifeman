@@ -3,7 +3,7 @@ name: workflow-craft
 description: "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README."
 bucket: repository-bootstrap
 source_class: public-bucket
-version: 0.2.0
+version: 0.3.0
 canonical: packages/skiller/skills/general/workflow-craft/SKILL.md
 canonical_sha256: f13015576ef9b67a9624693c22f5b2a6cdb527e3c6c97173398d3c18e62a165e
 generator: packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py

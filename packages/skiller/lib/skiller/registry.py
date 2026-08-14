@@ -440,7 +440,7 @@ def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
 
 
 def build_repository_bootstrap_publication(env):
-    """Render the 26 thin root-bootstrap projections + combined lock (2026.07.24-AGENT-RELIABILITY P1.2, D31)."""
+    """Render configured thin root-bootstrap projections + their combined lock."""
     root = env.root
     repo_root = _repo_root(root)
     return render_repository_bootstrap_projections(repo_root=repo_root, package_root=root)

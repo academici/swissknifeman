@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: f00fa12d8fc348bb6f17b7417bcec5aaf615b0a64de9fcd56b22bfd2a4bae97d
+inputs_sha256: 5335d0024ec71113860bcc59c2910449455313ab0b32041614e37fec10f3b0c3
 generated_by: task plan-views status
 -->
 
@@ -189,6 +189,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P0.10 replaced persisted freshness authority with integrity-only evidence and one-shot live admission. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат 1c56ad159f1895a806c239fb69d9dc19f84b85085cab582b910b16d4c547741e, вердикт RED |
 
 ## Owner Gates
 

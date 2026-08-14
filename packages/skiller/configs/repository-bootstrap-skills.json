@@ -1,12 +1,12 @@
 {
-  "_doc": "P1.2/D31/D38, updated by P6.5/D93: private/source-only class-A root-bootstrap identities. One canonical EN-only SKILL.md and two thin provider projections are derived formulaically from identity. Sole producer: registry.py -> publication.py root-bootstrap renderer. Canonical: packages/skiller/skills/repository-bootstrap/<identity>/SKILL.md. Projections: .claude/skills/<identity>/SKILL.md and .agents/skills/<identity>/SKILL.md.",
+  "_doc": "P1.2/D31/D38, updated by P6.5/D93 and 2026-08-14 owner direction: private/source-only class-A root-bootstrap identities. One canonical EN-only SKILL.md and two thin provider projections are derived formulaically from identity. Sole producer: registry.py -> publication.py root-bootstrap renderer. Canonical: packages/skiller/skills/repository-bootstrap/<identity>/SKILL.md. Projections: .claude/skills/<identity>/SKILL.md and .agents/skills/<identity>/SKILL.md.",
   "schema_version": 1,
   "bucket": "repository-bootstrap",
   "publication_unit": "repository-bootstrap",
   "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
   "lock_path": "packages/skiller/adapters/repository-bootstrap/publication-lock.json",
   "class_a_content_version": "0.1.0",
-  "_class_a_content_version_doc": "D38-frozen per-record `canonical_content_version`/`publication_unit` literal for the 13 class-A identities (`repository-bootstrap-map.json`) — embedded into every class-A projection body and NEVER moves, even when `configs/publication-versions.json` units.repository-bootstrap (the umbrella/lock version, currently bumped by P1.5 to 0.2.0) advances. Decoupling this from the umbrella version is what keeps the 26 class-A projection BYTES byte-identical across an owner bump (generated-artifact-version-v1.md byte-identical guard) — only the combined lock's own top-level `publication_unit` and the class-B projections track the umbrella version.",
+  "_class_a_content_version_doc": "D38-frozen per-record `canonical_content_version`/`publication_unit` literal for the class-A identities (`repository-bootstrap-map.json`) — embedded into every class-A projection body and NEVER moves, even when `configs/publication-versions.json` units.repository-bootstrap (the umbrella/lock version) advances. Decoupling this from the umbrella version keeps existing class-A projection BYTES byte-identical across an owner bump; only the new identity, combined lock and class-B projections track the expanded inventory.",
   "identities": [
     "cross-project-optimizer",
     "decision-verification",
@@ -20,7 +20,8 @@
     "package-architecture",
     "project-tooling-runbook",
     "release-discipline",
-    "skill-authoring"
+    "skill-authoring",
+    "task-development-philosophy"
   ],
   "class_b": [
     {

@@ -946,10 +946,10 @@ def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
 
 # 2026.07.24-AGENT-RELIABILITY P1.2 (D31/D38): the sole root-bootstrap producer. Class-A private/source-only identities
 # never reach an ordinary bucket/core/marketplace unit (`build_publication_catalog` excludes the
-# `repository-bootstrap` bucket outright); their generated surface is exactly 26 thin provider
-# projections (13 Claude + 13 Codex root `SKILL.md` pointers, no copied body) plus one combined
-# version/tree lock. `skillset.py` only implements the mirror-image consumer exclusion — it is
-# never called from here and never produces a root projection.
+# `repository-bootstrap` bucket outright); their generated surface is exactly two thin provider
+# projections per configured identity (Claude + Codex root `SKILL.md` pointers, no copied body)
+# plus one combined version/tree lock. `skillset.py` only implements the mirror-image consumer
+# exclusion — it is never called from here and never produces a root projection.
 @dataclass(frozen=True)
 class RootBootstrapArtifact:
     """One generated root-bootstrap projection or its combined lock; never a canonical source."""
@@ -1113,7 +1113,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
                                             manifest_path=None,
                                             donor_enabled: Mapping[str, bool] | None = None
                                             ) -> tuple[RootBootstrapArtifact, ...]:
-    """Render the exact 26 class-A thin root-bootstrap projections plus the class-B (2026.07.24-AGENT-RELIABILITY P1.5,
+    """Render two class-A projections per configured identity plus the class-B (2026.07.24-AGENT-RELIABILITY P1.5,
     D43) public-bucket projections, and their one combined lock.
 
     Reads ONLY the private/source-only canonical EN-only carriers named by
@@ -1138,7 +1138,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     unit_version = _repository_bootstrap_unit_version(package_root)
     # D38-frozen: class-A's OWN embedded version/publication_unit literal never tracks the
     # umbrella `unit_version` bump (2026.07.24-AGENT-RELIABILITY P1.5 moves 0.1.0->0.2.0) — that decoupling is what keeps
-    # the 26 class-A projection bytes byte-identical across the P1.5 owner bump.
+    # the existing class-A projection bytes byte-identical across the P1.5 owner bump.
     class_a_version = config["class_a_content_version"]
 
     from .common import parse_frontmatter

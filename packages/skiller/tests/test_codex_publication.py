@@ -171,11 +171,11 @@ class TestCodexPublication(unittest.TestCase):
 
     def test_repository_bootstrap_bucket_never_leaks_into_normal_codex_publication(self):
         """P1.2 (D31): the private/source-only bucket must never surface as an ordinary
-        Codex unit/plugin/marketplace entry, even though `build_registry` indexes its 13
+        Codex unit/plugin/marketplace entry, even though `build_registry` indexes its 14
         members for ownership/hash lookup."""
         member_ids = {skill["path"] for skill in self.registry["skills"]
                       if skill["bucket"] == "repository-bootstrap"}
-        self.assertEqual(len(member_ids), 13)
+        self.assertEqual(len(member_ids), 14)
         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         marketplace = json.loads(next(item.managed_bytes for item in first
                                       if item.target.name == "marketplace.json"))
@@ -259,7 +259,7 @@ class ClassBCanonDriftCase(unittest.TestCase):
 
 
 class TestRepositoryBootstrapPublication(unittest.TestCase):
-    """P1.2 (D31/D38): the sole root-bootstrap producer — 26 thin projections + 1 lock."""
+    """P1.2 (D31/D38): the sole root-bootstrap producer — thin projections + 1 lock."""
 
     def setUp(self):
         self.repo_root = Path(__file__).resolve().parents[3]
@@ -267,15 +267,15 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.env = Env(self.package_root)
         self.config = load_repository_bootstrap_config(self.package_root)
 
-    def test_config_names_exactly_thirteen_sorted_unique_identities(self):
+    def test_config_names_exactly_fourteen_sorted_unique_identities(self):
         identities = self.config["identities"]
-        self.assertEqual(len(identities), 13)
+        self.assertEqual(len(identities), 14)
         self.assertEqual(identities, sorted(identities))
-        self.assertEqual(len(set(identities)), 13)
+        self.assertEqual(len(set(identities)), 14)
 
-    def test_renders_exactly_26_class_a_projections_byte_identical_shape(self):
+    def test_renders_exactly_28_class_a_projections_byte_identical_shape(self):
         artifacts = build_repository_bootstrap_publication(self.env)
-        self.assertEqual(len(artifacts), 28)  # 26 class-A + 1 class-B + 1 lock
+        self.assertEqual(len(artifacts), 30)  # 28 class-A + 1 class-B + 1 lock
         by_provider = {}
         lock_artifact = None
         for artifact in artifacts:
@@ -291,7 +291,7 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.assertIsNotNone(lock_artifact)
         self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
         lock_data = json.loads(lock_artifact.managed_bytes)
-        self.assertEqual(len(lock_data["records"]), 27)  # 26 class-A + 1 class-B
+        self.assertEqual(len(lock_data["records"]), 29)  # 28 class-A + 1 class-B
         for artifact in artifacts:
             if artifact.provider == "lock" or artifact.identity == "workflow-craft":
                 continue
@@ -306,11 +306,11 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
                           f"{artifact.identity}/SKILL.md", body)
             self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
 
-    def test_targets_are_exactly_the_declared_27_and_globally_unique(self):
+    def test_targets_are_exactly_the_declared_29_and_globally_unique(self):
         artifacts = build_repository_bootstrap_publication(self.env)
         targets = [item.target for item in artifacts if item.provider != "lock"]
-        self.assertEqual(len(targets), 27)  # 26 class-A + 1 class-B
-        self.assertEqual(len(set(targets)), 27)
+        self.assertEqual(len(targets), 29)  # 28 class-A + 1 class-B
+        self.assertEqual(len(set(targets)), 29)
         expected = set()
         for identity in self.config["identities"]:
             expected.add(self.repo_root / ".claude" / "skills" / identity / "SKILL.md")

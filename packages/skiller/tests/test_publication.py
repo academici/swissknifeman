@@ -70,10 +70,10 @@ class TestClaudePublicationGolden(unittest.TestCase):
 
 
 class TestRepositoryBootstrapExclusion(unittest.TestCase):
-    """P1.2 (D31): build_registry indexes the 13 class-A identities for ownership/hash lookup,
+    """P1.2 (D31): build_registry indexes the class-A identities for ownership/hash lookup,
     but normal Claude bucket/core/marketplace publication carries zero of them."""
 
-    def test_registry_indexes_13_but_claude_publication_carries_zero(self):
+    def test_registry_indexes_14_but_claude_publication_carries_zero(self):
         repo_root = Path(__file__).resolve().parents[3]
         package_root = repo_root / "packages" / "skiller"
         from skiller.common import Env
@@ -81,7 +81,7 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
         registry, metadata, buckets = build_registry(env)
         private_members = [item for item in registry["skills"]
                            if item["bucket"] == "repository-bootstrap"]
-        self.assertEqual(len(private_members), 13)
+        self.assertEqual(len(private_members), 14)
         self.assertIn("repository-bootstrap", buckets)  # a real dir, indexed — but never a unit
 
         artifacts = build_claude_publication(env, metadata, buckets, registry)

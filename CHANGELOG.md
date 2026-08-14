@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+- **`task` / `skiller`: внутренняя философия разработки стала обязательным plan-authoring контекстом.**
+  Новый root-bootstrap skill `task-development-philosophy` закрепляет пропорциональную
+  декомпозицию, evidence reuse, один full audit на material baseline, delta/gate-rebind для
+  повторных проходов и запрет бесконечных audit/repair loops; он доступен обоим provider roots и
+  срабатывает при создании планов и изменении Task workflow policy.
+
+- **`roadmap`: измерена стоимость повторных full-аудитов и спроектирован экономный режим.**
+  Полевой P0 дошёл до третьего full audit и повторил минимум 2 557 package tests; новая спека
+  вводит digest-bound Validation receipts, режимы `full|delta|gate-rebind`, строгие основания для
+  второго full и owner gate для третьего.
+
 - **`task`: audit-repair перепривязывает terminal evidence к текущему ТЗ.**
   Append-only история сохраняет прежние terminal-записи, но `plan-lint` сверяет digest
   текущего spec только с последним execution event; `plan-audit` и `plan-close` проходят

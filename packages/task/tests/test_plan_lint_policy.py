@@ -459,6 +459,18 @@ class TestAuditScopePayload(TmpPlanTestCase):
 class TestAuditTerminalPolicy(TmpPlanTestCase):
     """D24 runtime seam: audit prose cannot manufacture a repair/design successor."""
 
+    @staticmethod
+    def _terminal_decision(plan_dir):
+        from task import terminal_policy
+        return terminal_policy.build_decision(
+            plan_dir, "P1.1", result="closed-green",
+            validation=[{
+                "carrier": "python3 -m unittest",
+                "status": "green",
+                "evidence_ids": ["unittest:green"],
+            }],
+        )
+
     def _append_block(self, plan_dir, *, verdict, semantic_next, audit_date="2026-08-14"):
         phase = phase_index_path(plan_dir)
         phase.write_text(
@@ -564,6 +576,40 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
         self.assertEqual(
             _errors_containing(diag, "TERMINAL_EVIDENCE_REQUIRED"), [], diag.errors)
+
+    def test_current_spec_requires_fresh_terminal_evidence(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-SPEC-STALE")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green",
+            decision=self._terminal_decision(plan), ts="2026-08-14T01:00:00Z"))
+        spec = item_spec_path(plan)
+        spec.write_text(spec.read_text(encoding="utf-8") + "\nChanged acceptance.\n",
+                        encoding="utf-8")
+
+        _, diag = _lint(plan)
+
+        self.assertTrue(_errors_containing(diag, "TERMINAL_SPEC_STALE"), diag.errors)
+
+    def test_audit_repair_supersedes_old_spec_digest_without_rewriting_history(self):
+        from task import journal
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-SPEC-REBOUND")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green",
+            decision=self._terminal_decision(plan), ts="2026-08-14T01:00:00Z"))
+        spec = item_spec_path(plan)
+        spec.write_text(spec.read_text(encoding="utf-8") + "\nChanged acceptance.\n",
+                        encoding="utf-8")
+        self._append_raw_event(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-audit",
+            actor="frontier/xhigh", result="closed-green",
+            decision=self._terminal_decision(plan), ts="2026-08-14T02:00:00Z"))
+
+        _, diag = _lint(plan)
+
+        self.assertEqual(_errors_containing(diag, "TERMINAL_SPEC_STALE"), [], diag.errors)
 
 
 class TestTieredPortability(TmpPlanTestCase):

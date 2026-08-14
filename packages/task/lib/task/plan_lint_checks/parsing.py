@@ -3,6 +3,7 @@ from .common import *
 from .policy import *
 from task import journal as plan_journal
 from task import plan_decisions
+from task import plan_item_state
 from task import terminal_policy
 
 
@@ -328,6 +329,7 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
 
     exceptions = _lint_journal_exceptions_20(plan_dir, plan_id, report)
 
+    parsed_entries = []
     for i, ln in enumerate(lines):
         if not ln.strip():
             continue
@@ -348,11 +350,31 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
             message = "; ".join(error for _, error in errors)
             report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
             continue
+        parsed_entries.append((i + 1, entry))
+
+    current_entries = set()
+    by_item = {}
+    for _line_number, entry in parsed_entries:
+        if not isinstance(entry, dict):
+            continue
+        item_id = entry.get("item_id")
+        if not isinstance(item_id, str):
+            continue
+        by_item.setdefault(item_id, []).append(entry)
+    for entries in by_item.values():
+        current = plan_item_state.latest_execution_event(entries)
+        if current is not None:
+            current_entries.add(id(current))
+
+    for line_number, entry in parsed_entries:
         if _terminal_policy_is_active(entry):
             try:
-                terminal_policy.validate_entry(entry, plan_dir=plan_dir)
+                terminal_policy.validate_entry(
+                    entry,
+                    plan_dir=plan_dir if id(entry) in current_entries else None,
+                )
             except terminal_policy.TerminalPolicyError as exc:
-                report(jf, i + 1, str(exc))
+                report(jf, line_number, str(exc))
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):

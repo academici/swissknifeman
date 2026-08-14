@@ -234,6 +234,17 @@ class TestAppend(TmpDirTestCase):
         with self.assertRaisesRegex(JournalValidationError, "TERMINAL_VALIDATION_RED"):
             append(self.plan_dir, entry)
 
+    def test_audit_item_close_checks_current_spec_digest(self):
+        decision = _validation_decision(self.plan_dir)
+        spec = self.plan_dir / "phases" / "P1" / "P1.3.md"
+        spec.write_text("# changed after decision\n", encoding="utf-8")
+        entry = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-audit",
+            actor="frontier/xhigh", result="closed-green", decision=decision)
+
+        with self.assertRaisesRegex(JournalValidationError, "TERMINAL_SPEC_STALE"):
+            append(self.plan_dir, entry)
+
     def test_deviation_requires_repair_exhausted_evidence(self):
         decision = _validation_decision(self.plan_dir)
         decision["action"] = "close-deviations"

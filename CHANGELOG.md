@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: audit-repair перепривязывает terminal evidence к текущему ТЗ.**
+  Append-only история сохраняет прежние terminal-записи, но `plan-lint` сверяет digest
+  текущего spec только с последним execution event; `plan-audit` и `plan-close` проходят
+  тот же fail-closed terminal policy, что `plan-exec` и `plan-run`.
+
 - **`task`: active/archive зеркало одного Plan ID больше не считается новой волной.**
   `plan-lint` не требует `supersedes` у временной postarchive-копии того же плана, сохраняя
   проверки дубликатов ordinal и совпадающих кодовых имён для действительно разных планов.

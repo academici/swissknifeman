@@ -114,6 +114,12 @@ def _execution_events(events):
     return result
 
 
+def latest_execution_event(events):
+    """Return the current position-changing event from append-only history."""
+    execution = _execution_events(events)
+    return execution[-1] if execution else None
+
+
 def material_terminal_evidence(plan_dir, item_id):
     """Return only semantics that may invalidate a phase candidate.
 

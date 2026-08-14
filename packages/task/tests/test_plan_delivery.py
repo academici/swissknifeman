@@ -280,7 +280,7 @@ class PlanDeliveryTests(unittest.TestCase):
             self.assertIn("Рекомендация следующего шага:", source, name)
 
         plan_run = (command_dir / "plan-run.md").read_text(encoding="utf-8")
-        self.assertIn("packages/task/commands/plan-exec.md", plan_run)
+        self.assertIn('task.command_catalog.package_command_path("task:plan-exec")', plan_run)
         self.assertIn("Всё остальное", plan_run)
 
 

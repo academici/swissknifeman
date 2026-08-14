@@ -37,7 +37,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
    `block-candidate`; observation не меняет status/attempt.
-2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. До review он
+   сопоставляет finding с `Scope Included`/Implementation Rules и заполняет
+   `scope_coverage=in-scope|outside-scope|unknown` плюс concrete `boundary_evidence`. Broad
+   inventory, число файлов/errors и длительность не являются boundary. `acceptance-failure` с
+   `scope_coverage=in-scope` всегда возвращается в decomposition/local repair в том же attempt,
+   даже если reviewer считает объём большим. Для external
    candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
    `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
    `rag-pending` и возвращает `gather-rag` без reviewer.
@@ -74,42 +79,44 @@ evidence конфигом, актором или свободным тексто
 В v2 `handoff.md` НЕ входит в обязательный путь: состояние выбранного item берётся только из
 fresh item state. Повторное чтение запрещено.
 
-Прочти `packages/task/commands/plan-exec.md` ЦЕЛИКОМ и исполни его пункты 1–8 ДОСЛОВНО,
+Разреши источник через
+`task.command_catalog.package_command_path("task:plan-exec")`, прочти возвращённый canonical
+`plan-exec.md` ЦЕЛИКОМ и исполни его пункты 1–8 ДОСЛОВНО,
 с ТРЕМЯ отличиями:
 
 - Модель/effort НЕ запинены: действуют настройки сессии владельца.
-- **Pre-mutation/Pre-final write-site (D24).** `plan-run` принимается только в свежем Codex
-  thread, созданном ровно native launch-block из текущего handoff: `-m <model-selector>` и
-  `-c 'model_reasoning_effort="<effort-selector>"'` обязаны покрывать минимум §3 Routing.
-  В оба вызова НЕ переписывай selector/effort из памяти или handoff: получи один typed record
-  через `task.route_evidence_codex.capture_current(expected_invocation="$ task:plan-run
-  <arguments>", expected_cwd="<repo-cwd>")`. Adapter идёт по ancestor process chain до
-  owning Codex process, читает его исходный argv, сверяет exact Task prompt/cwd/`-a never`/
-  `-s danger-full-access`, резолвит `-m`/`model_reasoning_effort` через committed
-  `command-routing.json` и связывает запись с provider session identity; его record уже несёт concrete
-  selector как `model` и `source="cli-flag"`. Ошибка `ROUTE_LAUNCH_UNAVAILABLE|MISMATCH` —
-  nonterminal route-evidence gap до product journal start, а не повод подставить config/doctor
-  либо фабриковать undershoot. Это **launch provenance**, а не thread telemetry: не называй его
-  provider-attested actual route, не читай private rollout и не подставляй `config.toml`, actor
-  или свободную самоаттестацию. После `/model` или иной смены маршрута thread нельзя продолжать
-  item: запусти новый native block до journal start.
-  Шаг остаётся обязательным в обеих точках `plan-exec.md`; `plan-run` меняет только разрешённый
-  источник для fresh-session launch provenance, не условия предиката.
+- **Pre-mutation/Pre-final write-site (D24).** `plan-run` принимается только при provider-bound
+  evidence текущего Task invocation. В обеих точках вызови provider-neutral
+  `task.route_evidence.capture_launch(expected_invocation="task:plan-run <arguments>",
+  expected_cwd="<repo-cwd>")`; provider выбирается из session identity, а raw state читает только
+  additive adapter. Codex adapter проверяет native argv (`-C`, `-m`, effort, `-a never`,
+  `-s danger-full-access`) и связывает `cli-flag` provenance с owning thread. Claude Code adapter
+  выбирает ровно JSONL текущего `CLAUDE_CODE_SESSION_ID`, находит exact `<command-name>` +
+  `<command-args>` и берёт concrete model/effort/cwd из route-bearing assistant event после него.
+  Ни один adapter не имеет fallback на config, actor, handoff prose или самоаттестацию.
+  Ошибка `ROUTE_LAUNCH_UNAVAILABLE|ROUTE_LAUNCH_MISMATCH` и любой unknown axis означают
+  `ROUTE-UNVERIFIABLE`: это nonterminal route-evidence gap до product journal start, а не
+  undershoot и не `blocked`.
+
+  Перед start построй `route-run-receipt/v1` через `task.route_evidence.build_run_receipt(...)`,
+  передай `task.route_evidence.start_decision(receipt)` как decision той же `in-progress` записи.
+  Перед terminal append заново загрузи receipt из journal по `run_id`, повтори `capture_launch()`
+  и вызови `verify_run_receipt(..., current_evidence=<fresh>)`. Несовпавшие model/effort/thread/
+  cwd/invocation либо истёкший receipt запрещают terminal append и требуют fresh dispatch; смена
+  маршрута внутри run никогда не маскируется новым receipt.
 - Routing-гейт п.2 сверяет launch-provenance модель/effort с §3 Routing item'а (тир-порядок —
   plan-protocol §9). Недобор → ДО product journal start допиши provenance-event
   `--result routing-rejected --friction routing-blocked` (он не state transition и не attempt),
-  напечатай exact native launch-block и останови только текущий dispatch; product status
+  напечатай exact provider launch-block и останови только текущий dispatch; product status
   не меняется. Перебор → исполнять, запись в
   Known Deviations (§6 `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
   Routing reject до product work никогда не создаёт `blocked|escalated`: route correction —
   durable dispatch evidence, а не исход продукта.
 
-**Граница честности.** `cli-flag` доказывает выбранные параметры свежего native запуска, а не
-наблюдает фактический runtime thread. Документированного programmatic current-thread API с обеими
-осями в Codex нет; поэтому `plan-run` не требует несуществующий provider probe и не выдаёт
-launch provenance за telemetry. Если требуется independently observed runtime route, используй
-строгий `plan-exec` с provider-attested source. `plan-run` не принимает config, actor, текст
-прошлого handoff или самоаттестацию как substitute для текущего fresh native launch.
+**Граница честности.** Codex `cli-flag` доказывает параметры свежего native запуска, Claude Code
+`provider-thread-state` — route-bearing event текущей provider-сессии. Оба являются provenance
+с явно названной силой, а не взаимозаменяемой telemetry. Canonical команда принимает только общий
+record contract и не читает provider-private формат напрямую.
 
 Всё остальное (D24 same-root audit-fixer, эскалация, validation, топология закрытия, status-rule, якорь дерева,
 launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторно здесь не транскрибируется

@@ -77,11 +77,23 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 всегда показывает `Batch`; batch выполняется последовательно в одной сессии, после каждого
 item проходят его собственные acceptance/commit/close gates, а следующий carrier сохраняет
 весь оставшийся смежный suffix группы. Audit/close фазы запускается уже отдельным carrier.
+Для `plan-run` canonical `plan-exec` резолвится через установленный `task.command_catalog`, а
+маршрут снимается provider-neutral функцией `task.route_evidence.capture_launch()`: Codex argv и
+Claude Code session JSONL остаются additive adapters одного record. Missing/ambiguous evidence —
+`ROUTE-UNVERIFIABLE`, не undershoot. Start event хранит `route-run-receipt/v1`; pre-final обязан
+перечитать его, повторно снять route и отказать при смене session/model/effort/cwd/invocation.
 
 Ошибка в ходе exec проходит continue-first gate: малый обратимый дефект чинится в том же attempt,
-а Blocked появляется только после isolated `JUSTIFIED` и verified RAG для внешнего класса. Перед
-final terminal-команды собирают delivery receipt, связанный с terminal state и exact persisted
-handoff. См. [Continue-first](./continue-first).
+а Blocked появляется только после isolated `JUSTIFIED`, concrete `boundary_evidence` и verified RAG
+для внешнего класса. Масштаб диагностики не является границей: `scope_coverage=in-scope` всегда
+декомпозируется и чинится в том же attempt. Terminal item event несёт `terminal-evidence/v1`,
+привязанное к digest текущего ТЗ и всем Validation carriers; любой red оставляет item в progress.
+`closed-deviations` требует той же зелёной Validation и отдельного закрытого
+`recoverable-validation-gap/v1`, а не заменяет ремонт. Перед final terminal-команды собирают
+delivery receipt, связанный с terminal state и exact persisted handoff. См. [Continue-first](./continue-first).
+После journal start `validation-admission/v1` проверяет literal `make <target>` из Validation:
+доказанно отсутствующий локальный target создаёт `local-repair` того же attempt, после чего
+исходный carrier повторяется; dynamic Makefile остаётся `unknown`, а не ложным блоком.
 
 ## review (по material trigger)
 
@@ -96,9 +108,12 @@ Audit-fixer остаётся независимым при старте, но п
 повторяет точную Validation, регенерирует owner views и пересобирает candidate в том же root.
 Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет
 tactic; лишь повтор или новый material risk допускает один isolated reviewer return в этот же root.
-Только доказанная authority/safety/public-frozen/acceptance boundary выходит к владельцу.
-`plan-design` нужен только когда меняются стабильные Intent/Scope/Files/Validation, public/frozen
-semantics или authority.
+Acceptance failure остаётся работой owning root. Authority/public-frozen сигнал проходит
+`plan_authority`: delegated продолжает repair, `approval_required`/`denied` создаёт exact
+waiting/terminal continuation. Safety проходит `plan_blocking`, и только `terminal-block` после
+distinct `JUSTIFIED` терминален. В phase-режиме `ATTENTION` не завершает root: non-gating остаток
+репортится под GREEN, исправимый — чинится. `plan-design` не является successor phase RED;
+одобренное изменение stable Intent/Scope/Files/Validation выполняет возобновлённый owning root.
 
 Исключение возможно лишь как явное owner decision: `phase_close_gate(..., owner_decision="D#")`.
 Direct-green-validation требует один accepted, phase-scoped и superseding decision carrier с
@@ -109,12 +124,13 @@ carrier должен покрывать точный полный набор ite
 обычный audit GREEN путь.
 
 **Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
-вердикт (`GREEN`/`ATTENTION`/`RED`) говорит «запись фазы сходится с кодом и git-фактами»,
+вердикт phase audit (`GREEN`/reducer-confirmed `RED`) говорит «запись фазы сходится с кодом и git-фактами»,
 а приёмка — что ИЗМЕРЕННЫЕ величины плана взяли объявленные пороги (floors). План с
-безупречной записью может остаться с невыполненной приёмкой; тогда честный исход —
-`🟠 Done with deviations` с названным долгом, а не повышение недостающего измерения до
-зелёного. Повышение `not-met`/`unknown` до met, пересчёт порога под результат и «зелёный по
-умолчанию» на неизмеренном — запрещены; неизмеренная величина публикуется как `unknown` со
+безупречной записью может остаться с невыполненной приёмкой; тогда item остаётся в progress и
+owning root продолжает repair. `🟠 Done with deviations` допустим только после зелёной обязательной
+Validation и отдельного reducer evidence о неремонтируемом residual; он не повышает недостающее
+измерение до зелёного. Повышение `not-met`/`unknown` до met, пересчёт порога под результат и «зелёный
+по умолчанию» на неизмеренном — запрещены; неизмеренная величина публикуется как `unknown` со
 скоупом, датой и названной причиной, а не округляется. Число, стоящее на классе
 `pinned-not-recomputable`/`unknown`, не может обосновывать приёмочный предикат
 ([структура плана](./plan-structure) → «Портируемость»).

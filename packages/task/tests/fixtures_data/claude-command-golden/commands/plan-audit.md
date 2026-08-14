@@ -41,7 +41,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
    `block-candidate`; observation не меняет status/attempt.
-2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. До review он
+   сопоставляет finding с `Scope Included`/Implementation Rules и заполняет
+   `scope_coverage=in-scope|outside-scope|unknown` плюс concrete `boundary_evidence`. Broad
+   inventory, число файлов/errors и длительность не являются boundary. `acceptance-failure` с
+   `scope_coverage=in-scope` всегда возвращается в decomposition/local repair в том же attempt,
+   даже если reviewer считает объём большим. Для external
    candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
    `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
    `rag-pending` и возвращает `gather-rag` без reviewer.
@@ -164,8 +169,9 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
      правило/код, ломающие потребителей; no-op под 🟢; невоспроизводимая Validation; ложное утверждение о
      факте. Детерминированный non-material дефект бухгалтерии плана исправь inline текущим root,
      регенерируй owner-carrier и один раз повтори узкий gate в том же attempt. Только неустранимый
-     или out-of-scope остаток → `ATTENTION`, НЕ реопен. «При сомнении ставь ВЫШЕ» (п. 4) — про
-     severity НАХОДКИ, не про ВЕРДИКТ.
+     либо out-of-scope остаток не красит phase verdict. В phase-режиме `ATTENTION` не terminal
+     escape: исправимый остаток чинится, non-gating остаток репортится под `GREEN`. «При сомнении
+     ставь ВЫШЕ» (п. 4) — про severity НАХОДКИ, не про ВЕРДИКТ.
    - **Один owning root.** Номер захода = число блоков `## Audit Pn` в `phases/Pn.md` + 1 и
      печатается всегда, но routine `audit → repair-run → second audit → AUDIT-CAP` запрещён.
      Safe in-scope finding, включая material `🟠`, немедленно чинится в этом root; после каждого
@@ -174,9 +180,11 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
      candidate. Первый same fingerprint меняет tactic; лишь повтор или новый material risk
      разрешает один `isolated-child-return`, который возвращается в этот же root.
    - **Настоящая граница.** Out-of-scope non-product observation записывается как non-gating и не
-     красит verdict. Только reproduced authority/safety/public-frozen/acceptance boundary создаёт
-     DecisionRequest или continue-first block evidence; ни сложность, ни длительность тестов,
-     ни stale P5.3/provider projection не являются остановкой.
+     красит verdict. Acceptance failure — работа owning root, а не terminal label. Authority/
+     public-frozen сигнал сначала проходит `plan_authority`; delegated продолжает repair, и только
+     `approval_required`/`denied` дают exact waiting/terminal continuation. Safety сигнал сначала
+     проходит `plan_blocking`; только action `terminal-block` после distinct `JUSTIFIED` терминален.
+     Ни сложность, ни длительность тестов, ни stale provider projection не являются остановкой.
 
 3. **Чеклист** (по каждому пункту — вердикт с доказательством: `file:line` + прогон):
    - каждая `🟢`/`🟠` сверяется с git/кодом: правки реально существуют и делают заявленное
@@ -253,9 +261,12 @@ material scope/SHA/risk change, а не из-за bookkeeping-правки.
    candidate append одну запись — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
    --item <Pn — режим фазы|design — режим design> --command plan-audit --actor opus/xhigh
    --session-id "$(python3 packages/task/scripts/plan-session.py current --id)"
-   --result <audit-green|audit-attention|audit-red — три verdict'а не смешиваются>
-   --fingerprint <SHA-256 candidate scope + terminal item heads + material risk>
-   --note "audit-fixer, кандидат <fingerprint>, вердикт <вердикт>"`.
+   --result <audit-green|audit-red> --fingerprint <SHA-256 candidate scope + terminal item heads +
+   material risk> --note "audit-fixer, кандидат <fingerprint>, вердикт <вердикт>"`.
+   В phase-режиме writer отклоняет `audit-attention`. `audit-red` дополнительно требует
+   `--decision-json` с exact reducer action, reason/evidence IDs и continuation; без него append
+   обязан вернуть `AUDIT_TERMINAL_EVIDENCE_REQUIRED`. Design-режим сохраняет собственную
+   read-only шкалу GREEN/ATTENTION/RED.
 
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
    протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.
@@ -274,25 +285,27 @@ carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполн�
 просьба переключить модель внутри audit session. Граница не ограничивает автономность внутри
 совместимого execution route и не меняет семантику routing overshoot.
 
-**Expected output:** вердикт `GREEN` (расхождений нет после inline repairs) / `ATTENTION` (Minor/Nit либо дефект бухгалтерии
-плана) / `RED` (сломан ПРОДУКТ фазы — п. 2) + **номер захода** + фактический счёт линтера с якорем дерева
+**Expected output:** в phase-режиме вердикт `GREEN` (acceptance сходится после inline repairs;
+non-gating observations перечислены) либо `RED` (только reducer-confirmed authority/block boundary).
+`ATTENTION` остаётся только у read-only design-режима. Далее: **номер захода** + фактический счёт линтера с якорем дерева
 (`N ERROR / M WARN (на <git-ref>)`) + findings (severity · confidence · item · `file:line` ·
 failure_scenario) + rebound candidate fingerprint. Затем launch-block (форма канона §8): таблица `| Batch |
 Model | Thinking | Context | Суть | Команда |` — строка `Команда` несёт голую команду; `GREEN` без находок,
 чей следующий шаг выражается ОДНОЙ командой, — строка есть весь ответ, code-block не заводится.
-`RED`/`ATTENTION` несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
+`RED` (а в design-режиме также `ATTENTION`) несёт SCOPE-PAYLOAD (ниже) — там code-block ОБЯЗАТЕЛЕН дословно как раньше
 (четыре строки не умещаются в ячейку). Следующий item с `Exec = manual` — форма «ЗАПУСК ВРУЧНУЮ»:
 `Model`/`Thinking` из Routing, строка `Команда` = `—`, code-block ОБЯЗАТЕЛЕН и несёт ГОЛЫЙ ПРОМПТ
 item'а, не slash-команда, копипаст без правок. Тот же launch-block дословно — подсекцией
 `### Что запускать` в конце твоего audit-блока (п. 5).
 
-**`RED`/`ATTENTION` → SCOPE-PAYLOAD только для доказанной границы.** Safe finding не получает
-repair successor: audit-fixer исчерпывает classifier и чинит его в текущем root. Когда остаётся
-authority/safety/public-frozen/acceptance boundary, payload передаёт именно эту границу следующей
-сессии. Под командой, в том же code-block'е, четыре строки фиксированного порядка:
+**Phase `RED` → SCOPE-PAYLOAD только для reducer-confirmed границы.** Safe finding не получает
+repair successor: audit-fixer исчерпывает classifier и чинит его в текущем root. Acceptance
+failure сам по себе не boundary. Payload разрешён только для exact waiting/terminal continuation,
+который вернул `plan_authority` либо `plan_blocking`, и обязан совпасть с `decision.continuation`
+journal event. Под continuation, в том же code-block'е, четыре строки фиксированного порядка:
 
 ```
-<exact DecisionRequest/block continuation>
+<exact waiting:/terminal: continuation из reducer evidence>
 
 РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
 ВХОД: plans/<PLAN-ID>/phases/Pn.md → блок `## Audit Pn — <дата>`; прочитать ПЕРВЫМ
@@ -306,10 +319,10 @@ safe findings. `plan-lint` гейтит присутствие четырёх с
 
 Команду выбрать по вердикту:
 - `GREEN` → `/task:plan-close <PLAN-ID> Pn`; close сам проверяет rebound candidate fingerprint;
-- `ATTENTION` / `RED` после исчерпанного safe classifier → exact DecisionRequest или confirmed
-  block continuation. `plan-design` допустим только если boundary требует изменить stable
-  `Intent/Scope/Files/Validation` либо public/frozen semantics; ordinary Next никогда не создаёт
-  repair-run или second audit.
+- phase `RED` → exact `waiting:`/`terminal:` continuation из reducer evidence. Прямой
+  `design-phase`, `design-item`, `exec-items` либо `run-items` после phase RED запрещён: после
+  authority response исходный owning root возобновляется и сам заканчивает repair. Ordinary Next
+  никогда не создаёт repair-run, design-pass или second audit.
 
 Model/Thinking — из §3 Routing плана (канон §9). В terminal audit successor Context всегда
 `cold-start-root: audit-root-terminal` по AUDIT-ROOT-TERMINAL выше; вне этого случая действуют

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:119eb163331fa401d36848c5f8ad06da6c07f23cb8cae22c9abf6e82648b9571
+Canonical SHA-256: sha256:e5b4046edd1b6af5e4d429d79ede008e1b4d4b82b28c02f832c6be7a6d5395f5
 Adapter: task.codex-command/1.0.10
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -86,7 +86,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
    `block-candidate`; observation не меняет status/attempt.
-2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. До review он
+   сопоставляет finding с `Scope Included`/Implementation Rules и заполняет
+   `scope_coverage=in-scope|outside-scope|unknown` плюс concrete `boundary_evidence`. Broad
+   inventory, число файлов/errors и длительность не являются boundary. `acceptance-failure` с
+   `scope_coverage=in-scope` всегда возвращается в decomposition/local repair в том же attempt,
+   даже если reviewer считает объём большим. Для external
    candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
    `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
    `rag-pending` и возвращает `gather-rag` без reviewer.

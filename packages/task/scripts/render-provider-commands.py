@@ -35,6 +35,7 @@ from task.command_render import (  # noqa: E402
 
 _PARITY_FIXTURE = Path("packages/task/tests/fixtures_data/provider-command-parity.json")
 _OPERATOR_REFERENCE = Path("packages/task/docs/reference/provider-commands.md")
+_CLAUDE_GOLDEN_ROOT = Path("packages/task/tests/fixtures_data/claude-command-golden")
 _PLAN_PROTOCOL_SOURCE = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
 _PLAN_PROTOCOL_RUNTIME = Path("packages/task/runtime/plan-protocol/SKILL.md")
 _PLAN_PROTOCOL_PROVENANCE = Path("packages/task/runtime/plan-protocol/provenance.json")
@@ -73,6 +74,20 @@ def _plan_protocol_projection(root: Path) -> tuple[bytes, bytes]:
     return runtime, provenance
 
 
+def _claude_golden_projection(claude_plan) -> dict[Path, bytes]:
+    """Mirror the Claude command surface into its byte-exact test fixture."""
+    projection = {}
+    for artifact in claude_plan.artifacts:
+        if artifact.path == "packages/task/.claude-plugin/plugin.json":
+            target = _CLAUDE_GOLDEN_ROOT / "plugin.json"
+        elif artifact.path.startswith("packages/task/commands/"):
+            target = _CLAUDE_GOLDEN_ROOT / "commands" / Path(artifact.path).name
+        else:  # pragma: no cover - the renderer owns this exact projection surface
+            raise ValueError(f"unexpected Claude artifact: {artifact.path}")
+        projection[target] = artifact.managed_bytes
+    return projection
+
+
 def _print_diagnostics(label: str, plan) -> None:
     for diagnostic in plan.diagnostics:
         print(f"{label}: {diagnostic.severity} {diagnostic.code} "
@@ -90,13 +105,17 @@ def cmd_check(root: Path, claude_plan, codex_plan, reference_bytes: bytes) -> in
     reference_path = root / _OPERATOR_REFERENCE
     reference_drift = (not reference_path.is_file()
                        or reference_path.read_bytes() != reference_bytes)
+    golden_drift = tuple(
+        path for path, expected in _claude_golden_projection(claude_plan).items()
+        if not (root / path).is_file() or (root / path).read_bytes() != expected
+    )
     runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
     runtime_drift = tuple(
         path for path, expected in ((root / _PLAN_PROTOCOL_RUNTIME, runtime_bytes),
                                     (root / _PLAN_PROTOCOL_PROVENANCE, provenance_bytes))
         if not path.is_file() or path.read_bytes() != expected
     )
-    if not claude_drift and not codex_drift and not reference_drift and not runtime_drift:
+    if not claude_drift and not codex_drift and not reference_drift and not golden_drift and not runtime_drift:
         print("render-provider-commands: check OK (no-op)")
         return 0
     for path in claude_drift:
@@ -105,6 +124,8 @@ def cmd_check(root: Path, claude_plan, codex_plan, reference_bytes: bytes) -> in
         print(f"drift: codex {action.artifact_id} {action.action.value}", file=sys.stderr)
     if reference_drift:
         print(f"drift: operator-reference {_OPERATOR_REFERENCE}", file=sys.stderr)
+    for path in golden_drift:
+        print(f"drift: claude-golden {path}", file=sys.stderr)
     for path in runtime_drift:
         print(f"drift: plan-protocol-runtime {path.relative_to(root)}", file=sys.stderr)
     return 1
@@ -131,6 +152,10 @@ def cmd_write(root: Path, claude_plan, codex_plan, reference_bytes: bytes, *, re
     reference_path = root / _OPERATOR_REFERENCE
     reference_path.parent.mkdir(parents=True, exist_ok=True)
     reference_path.write_bytes(reference_bytes)
+    for path, contents in _claude_golden_projection(claude_plan).items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(contents)
     runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
     runtime_path = root / _PLAN_PROTOCOL_RUNTIME
     provenance_path = root / _PLAN_PROTOCOL_PROVENANCE

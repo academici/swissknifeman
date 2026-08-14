@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:cb20a036e5dcadfe27008da4302e6b9085003a00f42f7b4ba88e52e534f16e54
+Canonical SHA-256: sha256:202522ee2c88975fe2cb7a927416f488689c4da522aa333ad36e21cf5a19c730
 Adapter: task.codex-command/1.0.10
 -->
 ## Native Codex launch-block — mandatory for every handoff
@@ -90,7 +90,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
    `block-candidate`; observation не меняет status/attempt.
-2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. До review он
+   сопоставляет finding с `Scope Included`/Implementation Rules и заполняет
+   `scope_coverage=in-scope|outside-scope|unknown` плюс concrete `boundary_evidence`. Broad
+   inventory, число файлов/errors и длительность не являются boundary. `acceptance-failure` с
+   `scope_coverage=in-scope` всегда возвращается в decomposition/local repair в том же attempt,
+   даже если reviewer считает объём большим. Для external
    candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
    `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
    `rag-pending` и возвращает `gather-rag` без reviewer.
@@ -196,6 +201,7 @@ evidence конфигом, актором или свободным тексто
    | Код | Класс | Действие |
    |:--|:--|:--|
    | `ROUTE_UNDERSHOOT` | реальный (route ниже required) | СТОП: гейт п. 2 уже обязан был это поймать раньше — расхождение прозы и компилятора = D#-запись + `ROUTING-INCONSISTENT` |
+   | `ROUTE-UNVERIFIABLE` | evidence отсутствует | nonterminal `routing-rejected`; получить provider-bound evidence и повторить тот же dispatch, не создавать block |
    | `AUTHORITY_BOUNDARY` | реальный (owner-gate не выдан) | СТОП: эскалация п. 5 (owner-gate) |
    | `LOOP_BUDGET_EXCEEDED` | реальный (финальный разрешённый аудит уже состоялся) | СТОП: `AUDIT-CAP`-путь, решение владельца; третий repair/audit не запускать |
    | `PORTABILITY_EXTERNAL_INPUT` / `PORTABILITY_INPUT_MISSING` | реальный (item несёт внешний/недостающий execution input) | СТОП: эскалация п. 5 (дефект спеки item'а), правит `plan-design` |
@@ -219,6 +225,15 @@ evidence конфигом, актором или свободным тексто
    ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
    (не блокер, как `plan-lint`).
+
+   **Admission локальных Validation prerequisites.** Сразу после start выполни
+   `python3 -m task.validation_admission --plan-dir plans/<PLAN-ID> --item <Pn.m>`.
+   Exit `2`/`disposition=local-repair` означает не terminal failure, а обязательный repair того же
+   attempt: append `local-repair` с decision из
+   `task.validation_admission.local_repair_decision(report)`, добавь отсутствующий literal
+   `make <target>` безопасным project-local способом и повтори admission. Dynamic/неразрешимый
+   Makefile получает `unknown`, не ложный missing. К п.4 переходи только после `allow`; этот гейт
+   не меняет acceptance и не разрешает внешний service/privilege/contract expansion.
 
 4. **Исполнение — СТРОГО в Scope Included.** Implementation Rules и Code Guidance item'а —
    жёсткие рамки, не рекомендации. Заметил «улучшить бы заодно» — запиши в **Pending Work**
@@ -246,9 +261,15 @@ evidence конфигом, актором или свободным тексто
      --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
      что старт-запись п. 3).
 
-6. **Validation.** Прогони КАЖДУЮ команду из поля **Validation** item'а; зафиксируй результат
-   (команда → passed/failed + суть вывода). Красное — чини в рамках Scope; не чинится в рамках —
-   это `🟠 Done with deviations` с Known Deviations либо эскалация, НЕ молчаливый пропуск.
+6. **Validation.** Прогони КАЖДУЮ команду из поля **Validation** item'а; зафиксируй result как
+   closed `terminal-evidence/v1`: exact carrier, `green|red`, evidence IDs и digest текущего item
+   spec. Пока хотя бы один обязательный carrier красный, item остаётся `🟡 In progress`: выполни
+   безопасный local repair (включая project container/generator для permission/generated defect)
+   и повтори ИМЕННО исходный carrier. `🟠 Done with deviations` не отменяет acceptance и допустим
+   только при зелёной Validation; он дополнительно требует `repair_exhausted` capsule
+   (`recoverable-validation-gap/v1`, failed carrier, material/outside-scope/unsafe reason,
+   evidence и concrete continuation). Смена/снятие acceptance требует owner D# + обновлённого ТЗ,
+   после чего Validation нового ТЗ всё равно должна стать зелёной.
    **Всплывшая ошибка → фикс-предложение СРАЗУ (plan-protocol §8, C3/D6).** Material-остаток
    (Validation красная вне Scope, lint N−K>0, посторонний дифф, найденный дефект) — отчёт несёт
    конкретное remediation-предложение (что + launch-block под фикс + 1 строка «почему») ПОВЕРХ
@@ -312,7 +333,10 @@ evidence конфигом, актором или свободным тексто
       `--result <closed-green|closed-deviations — по статусу выше> --attempt <N — 1-based счётчик
       попыток ЭТОГО item'а> --friction <из закрытого списка §2.1: deviation при непустых Known
       Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
-      "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
+      "<1 строка сути закрытия>" --decision-json '<result-bound decision из
+      task.terminal_policy.build_decision(...)>'` — writer сверяет digest текущего ТЗ, все
+      Validation carriers и обязательный `repair_exhausted` для 🟠 до записи. Файл
+      `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
       (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
       Terminal append идемпотентен: повтор с тем же run/fingerprint возвращает существующий
       `journal.jsonl:<line>` и не добавляет вторую terminal строку.

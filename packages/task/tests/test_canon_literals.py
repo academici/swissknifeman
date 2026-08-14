@@ -417,10 +417,12 @@ class TestAuditFixerContract(unittest.TestCase):
     def test_safe_findings_are_repaired_by_the_audit_root(self):
         self.assertIn("safe in-scope ремонтом", self.plan_audit)
         self.assertIn("audit_fixer_rebind(before, after)", self.plan_audit)
-        self.assertIn("repair-run или second audit", self.plan_audit)
+        self.assertIn("routine `audit → repair-run → second audit", self.plan_audit)
 
     def test_audit_fixer_only_escalates_a_proven_boundary(self):
-        self.assertIn("authority/safety/public-frozen/acceptance boundary", self.plan_audit)
+        self.assertIn("Acceptance failure — работа owning root", self.plan_audit)
+        self.assertIn("`approval_required`/`denied` дают exact waiting/terminal", self.plan_audit)
+        self.assertIn("только action `terminal-block` после distinct `JUSTIFIED`", self.plan_audit)
         self.assertIn("кроме accepted D24 recovery", self.plan_exec)
         self.assertNotIn("Потолок — два аудита и один repair между ними", self.plan_audit)
 

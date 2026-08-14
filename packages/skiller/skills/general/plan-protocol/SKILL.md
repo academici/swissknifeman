@@ -122,6 +122,17 @@ RAG evidence, and one fresh non-executor reviewer in `isolated-child-return` ret
 `block-confirmation-rubric-v1`. The deterministic root reducer alone chooses the action. Only
 `JUSTIFIED` may become a terminal block; `AVOIDABLE`, `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, and
 `MALFORMED` continue repair/evidence without opening a new design pass.
+Every block capsule declares `scope_coverage` and concrete `boundary_evidence`. Broad failure size,
+file count, elapsed time, or a large diagnostic set never proves a boundary. An in-scope acceptance
+failure always decomposes and continues local repair in the same attempt; `JUSTIFIED` without a
+concrete authority, capability, safety, or declared-scope boundary is reduced to evidence gathering.
+
+Phase audit uses the same reducer as its machine terminal policy. Acceptance failure is work for
+the owning audit root, not a terminal label. Phase `ATTENTION` is nonterminal. Phase `RED` requires
+persisted reducer evidence: `approval_required`/`denied` from authority or `terminal-block` from
+block confirmation, plus its exact `waiting:`/`terminal:` continuation. The journal writer,
+plan-lint, and delivery receipt reject a non-GREEN phase audit without that evidence. A phase RED
+never points directly to design/exec/run; resolution resumes the owning root, which finishes repair.
 
 Routing correction happens before journal start and never turns the current producer red. A future
 carrier is `dependency-not-ready`, not a failure of its producer. Compare inherited red against its
@@ -132,8 +143,16 @@ non-material plan-bookkeeping defect is repaired inline by its owner, followed b
 and gate rerun in the same attempt.
 
 Close with two commits: scope implementation, then plan bookkeeping. Append, never rewrite journal
-events; `[v2]` regenerates views and runs downstream before handoff. Completion Notes carry exact
-evidence; a cancelling/superseding decision adds `**Consequences:**`.
+events; `[v2]` regenerates views and runs downstream before handoff. An executable item terminal
+event carries reducer-owned `terminal-evidence/v1`, bound to the current item-spec digest and every
+declared Validation carrier. Any red carrier keeps the item in progress. `closed-deviations` is not
+an escape hatch: it still requires green Validation plus a closed `recoverable-validation-gap/v1`
+record proving why a material/outside-scope/unsafe residual cannot be repaired in this attempt.
+`blocked`/`escalated` requires an authority or block reducer terminal action. Completion Notes carry
+exact evidence; a cancelling/superseding decision adds `**Consequences:**`.
+Before product work, `validation-admission/v1` checks deterministic local command prerequisites.
+A definitely absent literal Make target creates a nonterminal repair-inline observation in the same
+attempt; dynamic Make definitions remain unknown rather than manufacturing a missing-target block.
 
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
@@ -153,6 +172,13 @@ open design or irreversible choices. Routing rows are
 or `plan-design`, and default/doubt Review is `full`. A batch inherits its highest review depth.
 `plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
 class/effort as evidence.
+
+`plan-run` resolves the installed canonical command through `task.command_catalog`, then captures
+the current route only through provider-neutral `task.route_evidence.capture_launch()`. Codex argv
+and Claude Code session JSONL are additive adapters over one normalized record; missing or ambiguous
+evidence is `ROUTE-UNVERIFIABLE`, not an undershoot and never a product block. The start journal event
+binds this record to a `route-run-receipt/v1`; pre-final reloads that receipt, recaptures the current
+provider route, and rejects a changed, stale, or cross-session run.
 
 For every new layout-v2 plan, `Batch` and `Review` are mandatory and Routing covers every item.
 `Batch=solo` means one independently launched item and its `Почему` must name the concrete boundary

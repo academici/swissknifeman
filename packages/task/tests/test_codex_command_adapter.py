@@ -90,8 +90,10 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
-        self.assertIn('source="cli-flag"', canonical)
-        self.assertIn("route_evidence_codex.capture_current", canonical)
+        self.assertIn("task.route_evidence.capture_launch", canonical)
+        self.assertIn("Codex adapter", canonical)
+        self.assertIn("Claude Code adapter", canonical)
+        self.assertNotIn("task.route_evidence_codex.capture_current", canonical)
 
         runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts

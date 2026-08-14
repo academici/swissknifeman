@@ -40,7 +40,12 @@ Raw provider flags допустимы только в additive adapter/projectio
 
 1. Root минимально воспроизводит signal и пишет nonterminal `local-repair` либо
    `block-candidate`; observation не меняет status/attempt.
-2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. Для external
+2. Root строит immutable `block-candidate/v1` capsule и material fingerprint. До review он
+   сопоставляет finding с `Scope Included`/Implementation Rules и заполняет
+   `scope_coverage=in-scope|outside-scope|unknown` плюс concrete `boundary_evidence`. Broad
+   inventory, число файлов/errors и длительность не являются boundary. `acceptance-failure` с
+   `scope_coverage=in-scope` всегда возвращается в decomposition/local repair в том же attempt,
+   даже если reviewer считает объём большим. Для external
    candidate до review обязательны `rag.status=verified` и непустые evidence IDs формы
    `rag:perplexity:sha256:<64 lowercase hex>`; empty/unavailable/pending/fallback-only пишет
    `rag-pending` и возвращает `gather-rag` без reviewer.

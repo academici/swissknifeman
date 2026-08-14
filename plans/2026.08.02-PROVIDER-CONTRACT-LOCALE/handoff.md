@@ -20,7 +20,8 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 
 - P1.2 закрыт в item-коммите `9d27e819`; contracts, ownership matrix and exact acceptance are green.
 - Корневой `plan.md` переведён в flat/fast execution: P1.3 отдельно в новой сессии, затем восемь крупных batches.
-- До финального P7.4 запрещены отдельные review-циклы; real provider/project evidence имеет приоритет над расширением synthetic checks.
+- Для каждого P1.3–P7.4 действует hard cap: initial candidate → один declared Validation pass → максимум один grouped repair + targeted recheck; второй RED завершает item exact failure report без третьего цикла.
+- До финального P7.4 запрещены отдельные reviewers и дополнительные synthetic suites; real provider/project evidence имеет приоритет.
 
 **Remaining:** P1.3 и P2–P7.
 

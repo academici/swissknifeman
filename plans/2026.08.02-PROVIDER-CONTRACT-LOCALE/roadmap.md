@@ -6,7 +6,9 @@
 
 Sequence: `P1.3 → P2.1–P2.3 → P3.1–P3.3 → P4.1–P4.2 → P4.3–P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. After the new P1.3 session, a batch keeps one root coordinator and advances without cold-start handoffs between green adjacent items. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized at batch boundaries. P7.4 is the only planned independent review and permits at most one targeted repair/recheck.
 
-Real provider/project evidence runs as soon as prerequisites exist. Synthetic checks lock reproduced behavior but do not create extra fixture/reviewer loops. The historical red P1.2→P1.3 probe is provenance, not an admission gate: P1.3 owns production and acceptance of `--stage final`.
+Every remaining item has the same hard circuit-breaker: one initial candidate, one declared Validation pass, at most one grouped repair and one targeted recheck; a second RED returns the exact failing gate without a third loop. Green receipts whose inputs did not change are reused. Extra fixtures/checkers/reviewers/fuzz/mutation/adversarial probes are forbidden unless they are an explicit Deliverable or the minimum regression for an observed acceptance failure.
+
+Real provider/project evidence runs as soon as prerequisites exist and once per candidate. Synthetic checks lock reproduced behavior but do not create extra fixture/reviewer loops. The historical red P1.2→P1.3 probe is provenance, not an admission gate: P1.3 owns production and acceptance of `--stage final`.
 
 ## Evidence-led skill modernization carrier
 

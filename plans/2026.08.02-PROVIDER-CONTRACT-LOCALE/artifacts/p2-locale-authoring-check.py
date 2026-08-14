@@ -41,6 +41,36 @@ PROVENANCE_FIELDS = (
     "diagnostic",
 )
 VARIANT_RE = re.compile(r"^(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3})$")
+OVERLAY_KEY_RE = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9][a-z0-9_-]*)+$")
+OVERLAY_CLASSES = {
+    "semantic-source",
+    "render-resource",
+    "english-only",
+    "machine-identity",
+    "generated-target",
+    "legacy-input",
+}
+OVERLAY_LOCALIZATION = {
+    "sparse-overlay",
+    "forbidden",
+    "immutable-token",
+    "renderer-only",
+    "input-only",
+}
+OVERLAY_CARRIERS = (
+    "code.comments",
+    "code.docstrings",
+    "development.docs",
+    "diagnostic.message",
+    "generated.provider-target",
+    "legacy.skill-ru",
+    "machine.identity",
+    "plan.human-text",
+    "plugin.human-metadata",
+    "provider.human-message",
+    "semantic.command",
+    "semantic.skill",
+)
 
 
 class Refusal(ValueError):
@@ -489,6 +519,294 @@ def run_self_test(registry: Registry) -> None:
         raise Refusal("LOCALE_SCHEMA_INVALID")
 
 
+def canonical_digest(value: object) -> str:
+    encoded = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def source_digest(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def matrix_markdown(matrix: dict[str, object]) -> str:
+    def cell(value: object, *, code: bool = False) -> str:
+        if value is None:
+            return "—"
+        rendered = str(value).replace("|", "\\|")
+        return f"`{rendered}`" if code else rendered
+
+    lines = [
+        "# P2 authoring carrier matrix",
+        "",
+        "Generated from `P2-authoring-carrier-matrix.json`. Do not edit manually.",
+        "",
+        f"Contract: `{matrix['contract_version']}` · source: `{matrix['source_language']}` "
+        f"· overlays: `{', '.join(matrix['overlay_locales'])}`",
+        "",
+        "| Carrier | Pattern | Class | Canonical owner | Localization | Overlay namespace | Generated owner | Migration admission | Rollback |",
+        "|:--|:--|:--|:--|:--|:--|:--|:--|:--|",
+    ]
+    for row in matrix["rows"]:
+        lines.append(
+            "| "
+            + " | ".join(
+                (
+                    cell(row["carrier_id"], code=True),
+                    cell(row["pattern"], code=True),
+                    cell(row["class"], code=True),
+                    cell(row["canonical_owner"]),
+                    cell(row["localization"], code=True),
+                    cell(row["overlay_namespace"], code=row["overlay_namespace"] is not None),
+                    cell(row["generated_owner"]),
+                    cell(row["migration_admission"]),
+                    cell(row["rollback"]),
+                )
+            )
+            + " |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def verify_overlay_contract(contract_path: Path, locale_contract_path: Path) -> None:
+    contract = contract_path.read_text(encoding="utf-8")
+    locale_contract = locale_contract_path.read_text(encoding="utf-8")
+    required = (
+        "**Version:** v1.0.0-candidate",
+        "**Status:** candidate",
+        "`en`; the only rendered overlay locale is `ru`",
+        "`source_catalog_sha256`",
+        "`immutable_tokens`",
+        "`OVERLAY_IMMUTABLE_TOKEN_MISMATCH`",
+        "`OVERLAY_CROSS_PROVIDER_TARGET`",
+        "`OVERLAY_OVERRIDE_ADOPTION_FORBIDDEN`",
+        "APPROVE P2.2 ENGLISH-OVERLAY E1-E7 AS WRITTEN",
+    )
+    frozen_required = (
+        "**Version:** v1.0.0\n",
+        "**Status:** frozen",
+        "APPROVE P2.2 ENGLISH-OVERLAY E1-E7 AS WRITTEN",
+    )
+    candidate = all(fragment in contract for fragment in required)
+    frozen = all(fragment in contract for fragment in frozen_required) and bool(
+        re.search(r"^\*\*Approval:\*\* D[0-9]+ · 2026-[0-9]{2}-[0-9]{2}$", contract, re.MULTILINE)
+    )
+    if not candidate and not frozen:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    if (
+        "**Version:** v1.0.0" not in locale_contract
+        or "**Status:** frozen" not in locale_contract
+        or "The rendered catalog set is exactly `en` and `ru`." not in locale_contract
+    ):
+        raise Refusal("OVERLAY_FALLBACK_MISSING")
+
+
+def verify_matrix(matrix_path: Path) -> dict[str, object]:
+    matrix = load_json(matrix_path)
+    if not isinstance(matrix, dict) or set(matrix) != {
+        "$schema", "contract_version", "source_language", "overlay_locales", "rows"
+    }:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    if (
+        matrix.get("$schema") != "urn:swissknifeman:authoring-carrier-matrix:v1"
+        or matrix.get("contract_version") != "1.0.0"
+        or matrix.get("source_language") != "en"
+        or matrix.get("overlay_locales") != ["ru"]
+    ):
+        raise Refusal("OVERLAY_VERSION_UNSUPPORTED")
+    rows = matrix.get("rows")
+    if not isinstance(rows, list):
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    expected_fields = {
+        "carrier_id", "pattern", "class", "canonical_owner", "localization",
+        "overlay_namespace", "generated_owner", "migration_admission", "rollback",
+    }
+    ids = []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != expected_fields:
+            raise Refusal("OVERLAY_UNKNOWN_FIELD")
+        if any(
+            not isinstance(row[field], str) or not row[field]
+            for field in ("carrier_id", "pattern", "canonical_owner", "migration_admission", "rollback")
+        ):
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        if row["class"] not in OVERLAY_CLASSES or row["localization"] not in OVERLAY_LOCALIZATION:
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        if row["overlay_namespace"] is not None and not isinstance(row["overlay_namespace"], str):
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        if row["generated_owner"] is not None and not isinstance(row["generated_owner"], str):
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        ids.append(row["carrier_id"])
+    if tuple(ids) != OVERLAY_CARRIERS or len(ids) != len(set(ids)):
+        raise Refusal("OVERLAY_SOURCE_DUPLICATE")
+    return matrix
+
+
+def token_parity(source: str, rendered: str, tokens: list[str]) -> bool:
+    if not all(isinstance(token, str) and token for token in tokens):
+        return False
+    for token in set(tokens):
+        declared = tokens.count(token)
+        if source.count(token) != declared or rendered.count(token) != declared:
+            return False
+    source_positions = [source.find(token) for token in tokens]
+    rendered_positions = [rendered.find(token) for token in tokens]
+    return source_positions == sorted(source_positions) and rendered_positions == sorted(rendered_positions)
+
+
+def validate_overlay_fixture(data: object) -> dict[str, object]:
+    if not isinstance(data, dict) or set(data) != {
+        "$schema", "contract_version", "source_locale", "english_units", "overlay", "migration", "expected"
+    }:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    if data.get("source_locale") != "en":
+        raise Refusal("OVERLAY_LOCALIZED_SEMANTIC_SOURCE")
+    english = data.get("english_units")
+    if not isinstance(english, dict) or not english:
+        raise Refusal("OVERLAY_FALLBACK_MISSING")
+    source_identities = []
+    for key, unit in english.items():
+        if not OVERLAY_KEY_RE.fullmatch(key):
+            raise Refusal("OVERLAY_KEY_INVALID")
+        if not isinstance(unit, dict) or set(unit) != {"source_identity", "text", "immutable_tokens"}:
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        if unit.get("source_identity") != key:
+            source_identities.append(unit.get("source_identity"))
+        else:
+            source_identities.append(key)
+        if not isinstance(unit.get("text"), str) or not isinstance(unit.get("immutable_tokens"), list):
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+    if len(source_identities) != len(set(source_identities)):
+        raise Refusal("OVERLAY_SOURCE_DUPLICATE")
+
+    migration = data.get("migration")
+    if migration == {"source_class": "local-override", "action": "adopt"}:
+        raise Refusal("OVERLAY_OVERRIDE_ADOPTION_FORBIDDEN")
+    if migration != {"source_class": "owned", "action": "preserve"}:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+
+    overlay = data.get("overlay")
+    if not isinstance(overlay, dict) or set(overlay) != {
+        "$schema", "contract_version", "locale", "source_catalog_sha256", "units"
+    }:
+        raise Refusal("OVERLAY_UNKNOWN_FIELD")
+    if overlay.get("$schema") != "urn:swissknifeman:localized-overlay:v1" or overlay.get("contract_version") != "1.0.0":
+        raise Refusal("OVERLAY_VERSION_UNSUPPORTED")
+    if overlay.get("locale") != "ru":
+        raise Refusal("OVERLAY_LOCALIZED_SEMANTIC_SOURCE")
+    if overlay.get("source_catalog_sha256") != canonical_digest(english):
+        raise Refusal("OVERLAY_SOURCE_DIGEST_MISMATCH")
+    units = overlay.get("units")
+    if not isinstance(units, dict):
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    for key, unit in units.items():
+        if not OVERLAY_KEY_RE.fullmatch(key) or key not in english:
+            raise Refusal("OVERLAY_KEY_INVALID")
+        if not isinstance(unit, dict) or set(unit) != {"source_sha256", "immutable_tokens", "text"}:
+            raise Refusal("OVERLAY_UNKNOWN_FIELD")
+        source = english[key]
+        if unit.get("source_sha256") != source_digest(source["text"]):
+            raise Refusal("OVERLAY_SOURCE_DIGEST_MISMATCH")
+        if unit.get("immutable_tokens") != source["immutable_tokens"] or not token_parity(
+            source["text"], unit.get("text", ""), source["immutable_tokens"]
+        ):
+            raise Refusal("OVERLAY_IMMUTABLE_TOKEN_MISMATCH")
+
+    expected = data.get("expected")
+    if not isinstance(expected, dict) or set(expected) != {"resolved_locales", "fallback_keys", "provider_requests"}:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    resolved = expected.get("resolved_locales")
+    if not isinstance(resolved, dict):
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    for key, locale in resolved.items():
+        if key not in english:
+            raise Refusal("OVERLAY_FALLBACK_MISSING")
+        actual = "ru" if key in units else "en"
+        if locale != actual:
+            raise Refusal("OVERLAY_FALLBACK_MISSING")
+    fallback = sorted(key for key in english if key not in units)
+    if expected.get("fallback_keys") != fallback:
+        raise Refusal("OVERLAY_FALLBACK_MISSING")
+    requests = expected.get("provider_requests")
+    if not isinstance(requests, list) or not requests:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    for request in requests:
+        if not isinstance(request, dict) or set(request) != {"provider_id", "target_owner", "source"}:
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        if request["provider_id"] != request["target_owner"]:
+            raise Refusal("OVERLAY_CROSS_PROVIDER_TARGET")
+        if request["source"] == "generated-target":
+            raise Refusal("OVERLAY_GENERATED_EDIT_FORBIDDEN")
+        if request["source"] != "resolved-semantic-request":
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+    return data
+
+
+def mutate_overlay_fixture(base: dict[str, object], mutation: str) -> dict[str, object]:
+    candidate = copy.deepcopy(base)
+    keys = list(candidate["english_units"])
+    if mutation == "duplicate-source":
+        candidate["english_units"][keys[1]]["source_identity"] = keys[0]
+    elif mutation == "invalid-key":
+        unit = candidate["overlay"]["units"].pop(keys[0])
+        candidate["overlay"]["units"]["Invalid Key"] = unit
+    elif mutation == "localized-semantic-source":
+        candidate["source_locale"] = "ru"
+    elif mutation == "generated-edit":
+        candidate["expected"]["provider_requests"][0]["source"] = "generated-target"
+    elif mutation == "missing-fallback":
+        candidate["english_units"].pop(keys[-1])
+    elif mutation == "immutable-token":
+        candidate["overlay"]["units"][keys[1]]["text"] = "Проверяй внешние утверждения через context7 до ВебПоиска."
+    elif mutation == "cross-provider-target":
+        candidate["expected"]["provider_requests"][0]["target_owner"] = "codex"
+    elif mutation == "override-adoption":
+        candidate["migration"] = {"source_class": "local-override", "action": "adopt"}
+    else:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    candidate["overlay"]["source_catalog_sha256"] = canonical_digest(candidate["english_units"])
+    return candidate
+
+
+def run_overlay_validation(
+    locale_contract: Path,
+    contract: Path,
+    matrix_path: Path,
+    fixtures: Path,
+) -> None:
+    verify_overlay_contract(contract, locale_contract)
+    matrix = verify_matrix(matrix_path)
+    projection = matrix_path.with_suffix(".md")
+    if projection.read_text(encoding="utf-8") != matrix_markdown(matrix):
+        raise Refusal("OVERLAY_GENERATED_EDIT_FORBIDDEN")
+    positive = load_json(fixtures / "overlay-positive.json")
+    negative = load_json(fixtures / "overlay-negative.json")
+    validate_overlay_fixture(positive)
+    if not isinstance(negative, dict) or set(negative) != {"$schema", "contract_version", "cases"}:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    cases = negative.get("cases")
+    if not isinstance(cases, list) or not cases:
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+    observed = []
+    for case in cases:
+        if not isinstance(case, dict) or set(case) != {"id", "mutation", "code"}:
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        code = None
+        try:
+            validate_overlay_fixture(mutate_overlay_fixture(positive, case["mutation"]))
+        except Refusal as exc:
+            code = exc.code
+        if code != case["code"]:
+            raise Refusal("OVERLAY_SCHEMA_INVALID")
+        observed.append(case["id"])
+    if tuple(observed) != (
+        "duplicate-source", "invalid-key", "localized-semantic-source", "generated-edit",
+        "missing-fallback", "immutable-token", "cross-provider-target", "override-adoption",
+    ):
+        raise Refusal("OVERLAY_SCHEMA_INVALID")
+
+
 def defaults() -> tuple[Path, Path, Path, Path]:
     script = Path(__file__).resolve()
     plan_dir = script.parents[1]
@@ -504,16 +822,31 @@ def defaults() -> tuple[Path, Path, Path, Path]:
 def main(argv: list[str] | None = None) -> int:
     default_contract, default_registry, default_upstream, default_fixtures = defaults()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stage", choices=("resolution",))
-    parser.add_argument("--self-test", choices=("resolution",))
+    parser.add_argument("--stage", choices=("resolution", "overlay"))
+    parser.add_argument("--self-test", choices=("resolution", "overlay"))
     parser.add_argument("--contract", type=Path, default=default_contract)
+    parser.add_argument("--locale-contract", type=Path, default=default_contract)
+    parser.add_argument("--matrix", type=Path, default=default_contract.parents[1] / "P2-authoring-carrier-matrix.json")
     parser.add_argument("--registry", type=Path, default=default_registry)
     parser.add_argument("--registry-upstream", type=Path, default=default_upstream)
     parser.add_argument("--fixtures", type=Path, default=default_fixtures)
     args = parser.parse_args(argv)
     if not args.stage and not args.self_test:
-        parser.error("one of --stage resolution or --self-test resolution is required")
+        parser.error("one of --stage/--self-test resolution|overlay is required")
     try:
+        if args.stage == "overlay" or args.self_test == "overlay":
+            run_overlay_validation(
+                args.locale_contract,
+                args.contract,
+                args.matrix,
+                args.fixtures,
+            )
+            if args.self_test:
+                print("overlay self-test: pass (duplicate source, immutable token, localized source, generated edit, fallback, provider target, override)")
+            else:
+                print("overlay: pass")
+                print("matrix: pass")
+            return 0
         registry = run_validation(
             args.contract,
             args.registry,
@@ -527,7 +860,8 @@ def main(argv: list[str] | None = None) -> int:
             print("resolution: pass")
     except (OSError, UnicodeError, Refusal) as exc:
         code = exc.code if isinstance(exc, Refusal) else "LOCALE_SCHEMA_INVALID"
-        print(f"resolution: fail: {code}", file=sys.stderr)
+        stage = args.stage or args.self_test or "resolution"
+        print(f"{stage}: fail: {code}", file=sys.stderr)
         return 1
     return 0
 

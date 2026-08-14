@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:localized-overlay-fixture:positive:v1",
+  "contract_version": "1.0.0",
+  "source_locale": "en",
+  "english_units": {
+    "diagnostic.skiller.overlay_key_invalid.message": {
+      "source_identity": "diagnostic.skiller.overlay_key_invalid.message",
+      "text": "Overlay key is invalid: OVERLAY_KEY_INVALID",
+      "immutable_tokens": ["OVERLAY_KEY_INVALID"]
+    },
+    "skill.core.verify-claims.body.purpose": {
+      "source_identity": "skill.core.verify-claims.body.purpose",
+      "text": "Verify external claims with context7 before WebSearch.",
+      "immutable_tokens": ["context7", "WebSearch"]
+    },
+    "skill.core.verify-claims.body.scope": {
+      "source_identity": "skill.core.verify-claims.body.scope",
+      "text": "Keep schema key provider_id unchanged.",
+      "immutable_tokens": ["provider_id"]
+    }
+  },
+  "overlay": {
+    "$schema": "urn:swissknifeman:localized-overlay:v1",
+    "contract_version": "1.0.0",
+    "locale": "ru",
+    "source_catalog_sha256": "sha256:ed6c3e8678a373ea61fc7adb293522a39915402a0b163c0bfd47bf69a1412fae",
+    "units": {
+      "diagnostic.skiller.overlay_key_invalid.message": {
+        "source_sha256": "sha256:51564ba306a32a4cc3741a810f93d8c1441a0441adbb45f6fa407996fb70d413",
+        "immutable_tokens": ["OVERLAY_KEY_INVALID"],
+        "text": "Ключ overlay недопустим: OVERLAY_KEY_INVALID"
+      },
+      "skill.core.verify-claims.body.purpose": {
+        "source_sha256": "sha256:8385c0892cf32f211353d28a266f765fcf90df7f92f89144bb457f2de0a23159",
+        "immutable_tokens": ["context7", "WebSearch"],
+        "text": "Проверяй внешние утверждения через context7 до WebSearch."
+      }
+    }
+  },
+  "migration": {"source_class": "owned", "action": "preserve"},
+  "expected": {
+    "resolved_locales": {
+      "diagnostic.skiller.overlay_key_invalid.message": "ru",
+      "skill.core.verify-claims.body.purpose": "ru",
+      "skill.core.verify-claims.body.scope": "en"
+    },
+    "fallback_keys": ["skill.core.verify-claims.body.scope"],
+    "provider_requests": [
+      {"provider_id": "claude-code", "target_owner": "claude-code", "source": "resolved-semantic-request"},
+      {"provider_id": "codex", "target_owner": "codex", "source": "resolved-semantic-request"}
+    ]
+  }
+}

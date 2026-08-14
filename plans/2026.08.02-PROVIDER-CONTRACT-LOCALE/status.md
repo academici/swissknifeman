@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 19999ecba1412e84a3ddadf2b1c8732ba8bb816d070dd69e618e34b5887da2a0
+inputs_sha256: fe58f5493b1b1347783265427f428e7cb76d3a00ecdee4844c107b0a72faf4a3
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
-| P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 1/3 | 🟡 In progress |
+| P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
@@ -68,8 +68,8 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Implement versioned canonical configuration and resolver | 🟢 Done | 2026-08-14 |
-| P3.2 | Implement adapter observe-diff-apply-readback boundary | ⬜ Not started | 2026-08-14 |
-| P3.3 | Implement status, ownership, drift, and migration diagnostics | ⬜ Not started | 2026-08-14 |
+| P3.2 | Implement adapter observe-diff-apply-readback boundary | 🟢 Done | 2026-08-14 |
+| P3.3 | Implement status, ownership, drift, and migration diagnostics | 🟢 Done | 2026-08-14 |
 
 ## Phase P4
 
@@ -233,6 +233,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.1 resumed for validation and closure from committed resolver slice. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.1 closed: immutable canonical provider resolver validated with no-write integrations. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.2 started: provider-neutral reconciliation boundary and package façades. |
+| 2026-08-14 | gpt-5.6-terra/medium | plan-run · routing-rejected · Routing rejected: implementation/medium is below P3 runtime implementation/high. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.2 resumed: current implementation/high route bound to reconciliation slice. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 closed: provider-neutral reconciliation and additive adapter boundary validated. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.3 started: adapter-scoped redacted status and diagnostics. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.3 closed: deterministic redacted provider status aggregation and atomic writer validated. |
 
 ## Owner Gates
 

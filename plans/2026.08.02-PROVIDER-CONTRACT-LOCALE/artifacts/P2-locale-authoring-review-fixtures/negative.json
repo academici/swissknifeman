@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:locale-authoring-review-fixture:negative:v1",
+  "contract_version": "1.0.0",
+  "cases": [
+    {"id": "source-language", "mutation": "source-language", "code": "AUTHORING_SOURCE_NOT_ENGLISH"},
+    {"id": "missing-review", "mutation": "missing-review", "code": "AUTHORING_REVIEW_MISSING"},
+    {"id": "self-review", "mutation": "self-review", "code": "AUTHORING_SELF_REVIEW"},
+    {"id": "changed-literal", "mutation": "changed-literal", "code": "AUTHORING_LITERAL_CHANGED"},
+    {"id": "missing-russian", "mutation": "missing-russian", "code": "AUTHORING_RUSSIAN_RENDER_MISSING"},
+    {"id": "unsupported-fallback", "mutation": "unsupported-fallback", "code": "AUTHORING_FALLBACK_UNSUPPORTED"},
+    {"id": "invariant-deletion", "mutation": "invariant-deletion", "code": "AUTHORING_INVARIANT_DELETED"},
+    {"id": "stale-projection", "mutation": "stale-projection", "code": "AUTHORING_PROJECTION_STALE"}
+  ]
+}

@@ -807,6 +807,230 @@ def run_overlay_validation(
         raise Refusal("OVERLAY_SCHEMA_INVALID")
 
 
+def verify_review_contracts(review_path: Path, skill_path: Path) -> None:
+    review = review_path.read_text(encoding="utf-8")
+    skill = skill_path.read_text(encoding="utf-8")
+    review_required = (
+        "**Version:** v1.0.0", "**Status:** frozen", "**Approval:** D77 · 2026-08-14",
+        "English is the sole semantic source", "Russian is a sparse rendered overlay",
+        "AUTHORING_SELF_REVIEW", "AUTHORING_PROJECTION_STALE",
+        "real-project/provider acceptance deferred to P7",
+    )
+    skill_required = (
+        "**Version:** v1.0.0", "**Status:** frozen", "**Approval:** D77 · 2026-08-14",
+        "at least three representative real workflows", "`no-skill`, `minimum-core`, and `provider-tuned`",
+        "SKILL_EVIDENCE_SYNTHETIC_ONLY", "structure-only",
+    )
+    if not all(fragment in review for fragment in review_required):
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    if not all(fragment in skill for fragment in skill_required):
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+
+
+def validate_review_fixture(data: object) -> None:
+    fields = {
+        "$schema", "contract_version", "unit", "render", "diagnostic", "review",
+        "projection", "compactness_exception",
+    }
+    if not isinstance(data, dict) or set(data) != fields:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    if data.get("contract_version") != "1.0.0":
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    unit = data.get("unit")
+    if not isinstance(unit, dict) or set(unit) != {
+        "id", "source_locale", "text", "invariants", "immutable_tokens"
+    }:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    if unit.get("source_locale") != "en":
+        raise Refusal("AUTHORING_SOURCE_NOT_ENGLISH")
+    required_invariants = {"preserve-path", "preserve-diagnostic-code", "require-russian-render"}
+    if set(unit.get("invariants", [])) != required_invariants:
+        raise Refusal("AUTHORING_INVARIANT_DELETED")
+    tokens = unit.get("immutable_tokens")
+    if not isinstance(tokens, list) or not tokens or not all(isinstance(token, str) and token for token in tokens):
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+
+    render = data.get("render")
+    if not isinstance(render, dict) or set(render) != {"locale", "text", "fallback"}:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    if render.get("locale") != "ru" or not render.get("text"):
+        raise Refusal("AUTHORING_RUSSIAN_RENDER_MISSING")
+    if render.get("fallback") != "none":
+        raise Refusal("AUTHORING_FALLBACK_UNSUPPORTED")
+
+    diagnostic = data.get("diagnostic")
+    if not isinstance(diagnostic, dict) or set(diagnostic) != {
+        "code", "action", "context", "message", "interpolations"
+    }:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    texts = (str(unit.get("text", "")), str(render.get("text", "")), str(diagnostic.get("message", "")))
+    if any(token not in texts[0] or token not in texts[1] for token in tokens):
+        raise Refusal("AUTHORING_LITERAL_CHANGED")
+    interpolations = diagnostic.get("interpolations")
+    if not isinstance(interpolations, list) or any(token not in texts[2] for token in interpolations):
+        raise Refusal("AUTHORING_LITERAL_CHANGED")
+    if diagnostic.get("code") not in texts[0] or diagnostic.get("code") not in texts[1]:
+        raise Refusal("AUTHORING_LITERAL_CHANGED")
+
+    review = data.get("review")
+    review_fields = {
+        "author_id", "renderer_id", "english_reviewer_id", "russian_reviewer_id",
+        "english_outcome", "russian_outcome",
+    }
+    if not isinstance(review, dict) or set(review) != review_fields:
+        raise Refusal("AUTHORING_REVIEW_MISSING")
+    if not all(isinstance(review.get(field), str) and review[field] for field in review_fields):
+        raise Refusal("AUTHORING_REVIEW_MISSING")
+    if review["english_outcome"] != "pass" or review["russian_outcome"] != "pass":
+        raise Refusal("AUTHORING_REVIEW_MISSING")
+    producers = {review["author_id"], review["renderer_id"]}
+    if review["english_reviewer_id"] in producers or review["russian_reviewer_id"] in producers:
+        raise Refusal("AUTHORING_SELF_REVIEW")
+
+    projection = data.get("projection")
+    digest = source_digest(unit["text"])
+    if not isinstance(projection, dict) or set(projection) != {"source_sha256", "current_source_sha256"}:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    if projection.get("source_sha256") != digest or projection.get("current_source_sha256") != digest:
+        raise Refusal("AUTHORING_PROJECTION_STALE")
+
+
+def mutate_review_fixture(base: dict[str, object], mutation: str) -> dict[str, object]:
+    candidate = copy.deepcopy(base)
+    if mutation == "source-language":
+        candidate["unit"]["source_locale"] = "ru"
+    elif mutation == "missing-review":
+        candidate["review"]["russian_outcome"] = ""
+    elif mutation == "self-review":
+        candidate["review"]["english_reviewer_id"] = candidate["review"]["author_id"]
+    elif mutation == "changed-literal":
+        candidate["render"]["text"] = candidate["render"]["text"].replace("{path}", "{путь}")
+    elif mutation == "missing-russian":
+        candidate["render"]["locale"] = "en"
+    elif mutation == "unsupported-fallback":
+        candidate["render"]["fallback"] = "best-effort"
+    elif mutation == "invariant-deletion":
+        candidate["unit"]["invariants"].pop()
+    elif mutation == "stale-projection":
+        candidate["projection"]["current_source_sha256"] = "sha256:stale"
+    else:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+    return candidate
+
+
+def validate_skill_fixture(data: object) -> None:
+    fields = {
+        "$schema", "contract_version", "capability_id", "evidence_scope",
+        "deterministic_evidence", "skill_core", "official_expectations", "workflows",
+        "runs", "non_core_instructions",
+    }
+    if not isinstance(data, dict) or set(data) != fields or data.get("contract_version") != "1.0.0":
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    if data.get("evidence_scope") == "synthetic" or data.get("deterministic_evidence") != "structure-only":
+        raise Refusal("SKILL_EVIDENCE_SYNTHETIC_ONLY")
+    core = data.get("skill_core")
+    if not isinstance(core, dict) or set(core) != {"instructions", "provider_tuning"}:
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    if core.get("provider_tuning") is not False:
+        raise Refusal("SKILL_EVIDENCE_PROVIDER_TUNING_SHARED")
+    workflows = data.get("workflows")
+    if not isinstance(workflows, list) or len(workflows) < 3:
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    expected_kinds = {"positive", "negative", "boundary"}
+    if {row.get("kind") for row in workflows if isinstance(row, dict)} != expected_kinds:
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    required_variants = {"no-skill", "minimum-core", "provider-tuned"}
+    for workflow in workflows:
+        if not isinstance(workflow, dict) or set(workflow) != {"id", "kind", "variants"}:
+            raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+        if set(workflow.get("variants", [])) != required_variants:
+            raise Refusal("SKILL_EVIDENCE_BASELINE_MISSING")
+    runs = data.get("runs")
+    identity_fields = {"workflow_id", "variant", "provider", "model", "date", "tool", "outcome", "evidence_ref"}
+    if not isinstance(runs, list) or not runs:
+        raise Refusal("SKILL_EVIDENCE_IDENTITY_MISSING")
+    for run in runs:
+        if not isinstance(run, dict) or set(run) != identity_fields:
+            raise Refusal("SKILL_EVIDENCE_IDENTITY_MISSING")
+        if not all(isinstance(run.get(field), str) and run[field] for field in identity_fields):
+            raise Refusal("SKILL_EVIDENCE_IDENTITY_MISSING")
+    instructions = data.get("non_core_instructions")
+    if not isinstance(instructions, list):
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    for instruction in instructions:
+        if not isinstance(instruction, dict) or set(instruction) != {"id", "owner", "observed_failure", "ablation"}:
+            raise Refusal("SKILL_EVIDENCE_ABLATION_MISSING")
+        if not instruction.get("observed_failure") and not instruction.get("ablation"):
+            raise Refusal("SKILL_EVIDENCE_ABLATION_MISSING")
+
+
+def mutate_skill_fixture(base: dict[str, object], mutation: str) -> dict[str, object]:
+    candidate = copy.deepcopy(base)
+    if mutation == "synthetic-only":
+        candidate["evidence_scope"] = "synthetic"
+    elif mutation == "missing-baseline":
+        candidate["workflows"][0]["variants"].remove("no-skill")
+    elif mutation == "missing-identity":
+        candidate["runs"][0]["model"] = ""
+    elif mutation == "missing-ablation":
+        candidate["non_core_instructions"][0]["observed_failure"] = ""
+        candidate["non_core_instructions"][0]["ablation"] = ""
+    elif mutation == "provider-tuning-shared":
+        candidate["skill_core"]["provider_tuning"] = True
+    else:
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+    return candidate
+
+
+def run_review_validation(
+    locale_contract: Path,
+    overlay_contract: Path,
+    review_contract: Path,
+    skill_contract: Path,
+    fixtures: Path,
+    skill_fixtures: Path,
+) -> None:
+    verify_overlay_contract(overlay_contract, locale_contract)
+    verify_review_contracts(review_contract, skill_contract)
+    positive = load_json(fixtures / "positive.json")
+    negative = load_json(fixtures / "negative.json")
+    validate_review_fixture(positive)
+    observed = []
+    for case in negative.get("cases", []) if isinstance(negative, dict) else []:
+        code = None
+        try:
+            validate_review_fixture(mutate_review_fixture(positive, case["mutation"]))
+        except Refusal as exc:
+            code = exc.code
+        if code != case.get("code"):
+            raise Refusal("AUTHORING_SCHEMA_INVALID")
+        observed.append(case.get("id"))
+    if observed != [
+        "source-language", "missing-review", "self-review", "changed-literal",
+        "missing-russian", "unsupported-fallback", "invariant-deletion", "stale-projection",
+    ]:
+        raise Refusal("AUTHORING_SCHEMA_INVALID")
+
+    skill_positive = load_json(skill_fixtures / "positive.json")
+    skill_negative = load_json(skill_fixtures / "negative.json")
+    validate_skill_fixture(skill_positive)
+    observed = []
+    for case in skill_negative.get("cases", []) if isinstance(skill_negative, dict) else []:
+        code = None
+        try:
+            validate_skill_fixture(mutate_skill_fixture(skill_positive, case["mutation"]))
+        except Refusal as exc:
+            code = exc.code
+        if code != case.get("code"):
+            raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+        observed.append(case.get("id"))
+    if observed != [
+        "synthetic-only", "missing-baseline", "missing-identity", "missing-ablation",
+        "provider-tuning-shared",
+    ]:
+        raise Refusal("SKILL_EVIDENCE_SCHEMA_INVALID")
+
+
 def defaults() -> tuple[Path, Path, Path, Path]:
     script = Path(__file__).resolve()
     plan_dir = script.parents[1]
@@ -822,18 +1046,32 @@ def defaults() -> tuple[Path, Path, Path, Path]:
 def main(argv: list[str] | None = None) -> int:
     default_contract, default_registry, default_upstream, default_fixtures = defaults()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stage", choices=("resolution", "overlay"))
+    parser.add_argument("--stage", choices=("resolution", "overlay", "review"))
     parser.add_argument("--self-test", choices=("resolution", "overlay"))
     parser.add_argument("--contract", type=Path, default=default_contract)
     parser.add_argument("--locale-contract", type=Path, default=default_contract)
+    parser.add_argument("--overlay-contract", type=Path, default=default_contract.parents[1] / "english-authoring-overlay-v1.md")
+    parser.add_argument("--skill-evidence", type=Path, default=default_contract.parents[1] / "skill-evidence-v1.md")
     parser.add_argument("--matrix", type=Path, default=default_contract.parents[1] / "P2-authoring-carrier-matrix.json")
     parser.add_argument("--registry", type=Path, default=default_registry)
     parser.add_argument("--registry-upstream", type=Path, default=default_upstream)
     parser.add_argument("--fixtures", type=Path, default=default_fixtures)
+    parser.add_argument("--skill-fixtures", type=Path, default=default_contract.parents[2] / "P2-skill-evidence-fixtures")
     args = parser.parse_args(argv)
     if not args.stage and not args.self_test:
         parser.error("one of --stage/--self-test resolution|overlay is required")
     try:
+        if args.stage == "review":
+            run_review_validation(
+                args.locale_contract,
+                args.overlay_contract,
+                args.contract,
+                args.skill_evidence,
+                args.fixtures,
+                args.skill_fixtures,
+            )
+            print("review: pass")
+            return 0
         if args.stage == "overlay" or args.self_test == "overlay":
             run_overlay_validation(
                 args.locale_contract,

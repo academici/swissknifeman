@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:locale-authoring-review-fixture:positive:v1",
+  "contract_version": "1.0.0",
+  "unit": {
+    "id": "skill.core.locale-review.example",
+    "source_locale": "en",
+    "text": "Preserve {path} and diagnostic code LOCALE_REVIEW_REQUIRED.",
+    "invariants": ["preserve-path", "preserve-diagnostic-code", "require-russian-render"],
+    "immutable_tokens": ["{path}", "LOCALE_REVIEW_REQUIRED"]
+  },
+  "render": {
+    "locale": "ru",
+    "text": "Сохрани {path} и код диагностики LOCALE_REVIEW_REQUIRED.",
+    "fallback": "none"
+  },
+  "diagnostic": {
+    "code": "LOCALE_REVIEW_REQUIRED",
+    "action": "review",
+    "context": "skill.core.locale-review.example",
+    "message": "Проверь {path}: LOCALE_REVIEW_REQUIRED",
+    "interpolations": ["{path}"]
+  },
+  "review": {
+    "author_id": "author-a",
+    "renderer_id": "renderer-a",
+    "english_reviewer_id": "reviewer-en",
+    "russian_reviewer_id": "reviewer-ru",
+    "english_outcome": "pass",
+    "russian_outcome": "pass"
+  },
+  "projection": {
+    "source_sha256": "sha256:6ecb5b4f672aec1e41144d6eb9fade1919a706b7799d5117fc7eae472cf90e89",
+    "current_source_sha256": "sha256:6ecb5b4f672aec1e41144d6eb9fade1919a706b7799d5117fc7eae472cf90e89"
+  },
+  "compactness_exception": null
+}

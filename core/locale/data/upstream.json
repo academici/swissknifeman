@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:upstream-provenance:v1",
+  "name": "IANA Language Subtag Registry",
+  "url": "https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry",
+  "retrieval_url": "https://raw.githubusercontent.com/jcari-dev/pyworldatlas/9c61d166a353390977a21155796b4092bb796e50/build_data/raw/iana/2026-07-22/language-subtag-registry.txt",
+  "retrieved_at": "2026-08-14",
+  "file_date": "2026-06-14",
+  "sha256": "be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a",
+  "bytes": 731605,
+  "retrieval_note": "The live IANA URL served File-Date 2026-08-08 at execution time. The approved 2026-06-14 bytes were recovered from the immutable mirror commit above and verified against the plan-pinned SHA-256 and byte length.",
+  "vendoring_policy": "Faithful byte-for-byte pinned copy. Do not edit in place; P4.1 owns an explicit update producer that must verify the official source, record new provenance, and obtain contract authority before replacing this snapshot."
+}

@@ -34,6 +34,15 @@ catalog stage refuses with `unsupported-private-use` and no fallback; it is neve
 output. The proposed user carrier is `~/.swissknifeman/locale.json` and project intent is
 additive at `.swissknife.json#/locale`; neither is created by design.
 
+P2.1 binds canonicalization to the faithfully vendored `File-Date: 2026-06-14` registry
+snapshot, SHA-256 `be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a`,
+731605 bytes. The canonical source identity remains the official IANA URL. During execution on
+2026-08-14 that live URL had advanced to `File-Date: 2026-08-08`; the approved historical bytes
+were therefore recovered from immutable mirror commit `9c61d166a353390977a21155796b4092bb796e50`
+and independently matched against all three frozen identity fields. `upstream.json` records both
+the canonical URL and actual retrieval URL so provenance does not imply that the current IANA
+response still has the approved bytes.
+
 ## Authoring and review model
 
 English is the semantic source. Localized prose is a resource/key overlay and missing keys
@@ -53,7 +62,22 @@ P1 and P2 gates; P2 itself mutates no content.
 RAG: the P2 finding validates external syntax, private-use and canonicalization boundaries
 against RFC 5646, last rechecked 2026-08-03; repo claims were read from
 `core/provider/config.py` and `packages/skiller/scripts/check-translations.sh`.
-Непроверено → ПОВТОРНЫЙ ПРОХОД: no runtime library/API is selected; P2.1 must pin
-the IANA registry snapshot used by canonicalization. Обходки/[POSSIBLE-DEFECT]: some
+Execution verification on 2026-08-14: Perplexity Web failed before retrieval because its Chromium
+profile was locked; WebSearch found the IANA/FTP carrier and GitHub code search found the exact
+historical digest. The immutable mirror download was verified locally by `sha256sum`, first-line
+read and byte count. Confidence is high for byte identity and medium for mirror provenance; the
+original official retrieval remains documented in `findings/12-design-audit-remediation-2026-08-03.md`.
+Непроверено → ПОВТОРНЫЙ ПРОХОД: Perplexity synthesis of historical archive availability did not run;
+the byte-level acceptance fact is nevertheless closed by the pre-approved digest and independent
+immutable download. Обходки/[POSSIBLE-DEFECT]: the historical recovery uses an immutable third-party
+mirror because IANA's live/FTP endpoints no longer serve the approved snapshot; some
 legacy long-form skills may need complete localized rendering resources; record those as
 overlays in the matrix, never as a second semantic source.
+
+## Execution protocol observation
+
+The durable P2.1 DecisionRequest completed as `approve`, but the Task queue helper also emitted
+derived journal transition rows with null `session_id`/`run_id` and independently counted
+attempts. The explicit P2.1 execution events retain the original verified route receipt and
+run identity. The helper defect is recorded as a process deviation for repair in Task; it does
+not change the locale contract, its evidence, or the terminal item binding.

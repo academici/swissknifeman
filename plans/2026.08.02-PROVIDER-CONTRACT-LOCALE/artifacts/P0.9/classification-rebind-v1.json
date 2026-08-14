@@ -1,0 +1,26 @@
+{
+  "classification": {
+    "new_bytes": 11724457,
+    "new_sha256": "a4b047e37f8b455bdb6abea14423967fa51b9e9e448cb32c3419db9883c93a30",
+    "old_bytes": 11724457,
+    "old_sha256": "0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
+    "policy": {
+      "broken_link": "recorded symlink target_state=broken -> broken-link/report/P5.1",
+      "otherwise": "missing named canonical source, stale-source identity, or semantic delta -> ambiguous/no-op",
+      "writes": "forbidden"
+    },
+    "semantic_projection_sha256": "a8ae4baa7d247de0d5d82ff801099edcb7cfc9a081f0fd49b89930db01bb6f4b",
+    "semantic_rows": 13421,
+    "summary": {
+      "ambiguous": 13319,
+      "broken-link": 102
+    }
+  },
+  "consumer_pins": {
+    "artifacts/P0.3/recovery-gates-check.json": "a4b047e37f8b455bdb6abea14423967fa51b9e9e448cb32c3419db9883c93a30",
+    "artifacts/p0-execution-provenance.py": "a4b047e37f8b455bdb6abea14423967fa51b9e9e448cb32c3419db9883c93a30",
+    "research/12-p0.8-validation-recovery-design.md": "a4b047e37f8b455bdb6abea14423967fa51b9e9e448cb32c3419db9883c93a30"
+  },
+  "historical_commit": "1e552dd4",
+  "schema_version": "p0-classification-rebind/v1"
+}

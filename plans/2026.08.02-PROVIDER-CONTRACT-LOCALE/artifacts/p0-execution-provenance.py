@@ -26,7 +26,7 @@ WRITE_SITE = "write-site: pre_mutation: allow · pre_final: allow"
 P0_6_ITEM_COMMIT = "b9d71e6aad4fc13df48ec19501503e5d36596005"
 CLASSIFICATION_RELATIVE = PLAN_RELATIVE / "artifacts/P0-provider-fleet-classification.json"
 COMPACT_PROJECTION = {
-    "source_sha256": "0933be014b972f31ec5957fb8c4358cffea4a406ec234a91f6240a61f2f8b957",
+    "source_sha256": "a4b047e37f8b455bdb6abea14423967fa51b9e9e448cb32c3419db9883c93a30",
     "source_bytes": 11724457,
     "schema_version": 1,
     "classification_rows": 13421,
@@ -100,7 +100,7 @@ def historical_contract(repo: Path, item: dict[str, object]) -> dict[str, str]:
     """Use the real compiler against a temporary checkout of the exact commit."""
     package_root = Path(__file__).resolve().parents[3] / "packages/task/lib"
     sys.path.insert(0, str(package_root))
-    from task import route_evidence, task_contract  # imported only in repository execution
+    from task import task_contract  # imported only in repository execution
 
     archive = subprocess.run(
         ["git", "archive", "--format=tar", str(item["commit"])], cwd=repo,
@@ -115,9 +115,10 @@ def historical_contract(repo: Path, item: dict[str, object]) -> dict[str, str]:
         route = item["historical_executor_route"]
         contract = task_contract.build(
             root / PLAN_RELATIVE, str(item["item_id"]),
-            actual_route=route_evidence.capture_actual(
-                route["model_class"], route["effort"], source="self-attested", model=route["model"],
-            ),
+            # This is a deterministic reconstruction over a sealed Git object, not a
+            # current provider observation. The compiler consumes only these two
+            # route axes; assigning a live-source label here would be false provenance.
+            actual_route={"model_class": route["model_class"], "effort": route["effort"]},
         )
         result = task_contract.evaluate(contract)
     if result["pre_mutation"] != "allow" or result["pre_final"] != "allow":

@@ -237,6 +237,40 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt["journal"]["line"], 2)
         self.assertEqual(receipt["journal"]["run_id"], "run-1")
 
+    def test_terminal_receipt_skips_historical_invalid_terminal_when_recovered_close_is_valid(self):
+        plan = self._terminal_plan(root=self.root / "historical-invalid-terminal")
+        journal_path = plan / "journal.jsonl"
+        latest = json.loads(journal_path.read_text(encoding="utf-8"))
+        historical = {
+            **latest,
+            "result": "blocked",
+            "decision": None,
+            "ts": "2026-08-12T00:00:00Z",
+        }
+        journal_path.write_text(
+            json.dumps(historical, ensure_ascii=False) + "\n"
+            + json.dumps(latest, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        plan_item_state.build_states(plan, item_id="P1.1")
+
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+        self.assertEqual(receipt["journal"]["line"], 2)
+        self.assertEqual(receipt["journal"]["run_id"], "run-1")
+
+    def test_terminal_receipt_still_refuses_only_invalid_terminal(self):
+        plan = self._terminal_plan(root=self.root / "only-invalid-terminal")
+        path = plan / "journal.jsonl"
+        event = json.loads(path.read_text(encoding="utf-8"))
+        event["result"] = "blocked"
+        event["decision"] = None
+        path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+        plan_item_state.build_states(plan, item_id="P1.1")
+
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "TERMINAL_EVIDENCE_REQUIRED"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
     def test_terminal_receipt_refuses_journal_state_result_mismatch(self):
         plan = self._terminal_plan(result="closed-deviations")
         state = plan / "phases" / "P1" / "P1.1.state.md"

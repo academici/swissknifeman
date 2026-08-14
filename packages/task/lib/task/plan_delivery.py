@@ -275,6 +275,7 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
         raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"journal не читается: {exc}") from exc
     candidates = []
     missing_run_id_lines = []
+    invalid_terminal_errors = []
     for line_number, raw in enumerate(lines, 1):
         if not raw.strip():
             continue
@@ -297,7 +298,11 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
             try:
                 terminal_policy.validate_entry(event, plan_dir=plan_dir)
             except terminal_policy.TerminalPolicyError as exc:
-                raise DeliveryError(exc.code, str(exc)) from exc
+                # A later, valid reducer close is authoritative.  Historical
+                # malformed terminal attempts must remain visible to linting,
+                # but cannot poison delivery of the recovered run.
+                invalid_terminal_errors.append(exc)
+                continue
             candidates.append((line_number, raw, event))
     if not candidates:
         if missing_run_id_lines:
@@ -305,6 +310,9 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
                 "TERMINAL_RUN_ID_MISSING",
                 f"journal.jsonl:{missing_run_id_lines[-1]} не несёт run_id",
             )
+        if invalid_terminal_errors:
+            error = invalid_terminal_errors[-1]
+            raise DeliveryError(error.code, str(error)) from error
         raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"для {subject} нет terminal journal event")
     line_number, raw, event = candidates[-1]
     if not event.get("run_id"):

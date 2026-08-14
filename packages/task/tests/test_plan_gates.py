@@ -175,6 +175,24 @@ class TestReadBudgetGate(unittest.TestCase):
         self.assertTrue(rebound["rebound"])
         self.assertEqual(rebound["reason"], "product-or-terminal-evidence-changed")
 
+    def test_phase_candidate_ignores_generated_state_bookkeeping_but_tracks_terminal_semantics(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            plan_dir = write_valid_plan(root, layout="v2")
+            before = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            state = plan_dir / "phases" / "P1" / "P1.1.state.md"
+            state.write_text(state.read_text(encoding="utf-8") + "\nbookkeeping\n", encoding="utf-8")
+            after_bookkeeping = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertEqual(after_bookkeeping["fingerprint"], before["fingerprint"])
+
+            journal_path = plan_dir / "journal.jsonl"
+            event = json.loads(journal_path.read_text(encoding="utf-8"))
+            event["note"] = "material deviation changed"
+            journal_path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            after_material = plan_gates.phase_candidate_fingerprint(plan_dir, "P1")
+            self.assertNotEqual(after_material["fingerprint"], before["fingerprint"])
+
     def test_overweight_v2_item_names_item_weight_threshold_and_unit(self):
         diag = lint(self.copied_fixture("plan-v2-overweight"))
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]
@@ -331,8 +349,8 @@ class TestReadBudgetGate(unittest.TestCase):
         self.assertFalse(consumer["admission_pass"])
 
         diag = lint(plan_dir)
-        rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
-        self.assertTrue(any("P1.2" in row and "bundle" in row for row in rows), rows)
+        rows = [row for row in diag.errors if plan_gates.GATE_ID in row]
+        self.assertTrue(any("P1.2" in row and "D2(b)" in row for row in rows), rows)
 
     def test_future_phase_is_outside_bundle_materialization_scope(self):
         plan_dir = self.copied_fixture("plan-v2")
@@ -344,17 +362,13 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(plan_dir)
         self.assertFalse(any("P1.1: missing_entry" in row for row in diag.errors), diag.errors)
 
-    def test_stale_fixture_reports_every_frozen_bundle_code(self):
+    def test_stale_fixture_checks_only_the_next_runnable_bundle(self):
         diag = lint(self.copied_fixture("plan-v2-stale"))
         messages = "\n".join((*diag.errors, *diag.warnings))
-        for code in ("missing_entry", "stale_vs_spec", "hash_mismatch",
-                     "unresolvable_entry", "extraneous_entry"):
-            with self.subTest(code=code):
-                self.assertIn(code, messages)
-        self.assertTrue(any("extraneous_entry" in row for row in diag.warnings), diag.warnings)
-        self.assertFalse(any("extraneous_entry" in row for row in diag.errors), diag.errors)
+        self.assertIn("следующего запускаемого item P1.1 устарел", messages)
+        self.assertNotIn("P1.5: extraneous_entry", messages)
 
-    def test_unilateral_decision_link_names_both_records(self):
+    def test_unilateral_decision_link_does_not_reopen_future_bundle_scope(self):
         plan_dir = self.copied_fixture("plan-v2")
         old = plan_dir / "decisions" / "D1-fixture.md"
         old.write_text(old.read_text(encoding="utf-8").replace(
@@ -366,7 +380,7 @@ class TestReadBudgetGate(unittest.TestCase):
             "## Решение\n\nFixture.\n\n## Почему\n\nFixture.\n", encoding="utf-8")
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
-        self.assertTrue(any("D1" in row and "D2" in row for row in rows), rows)
+        self.assertFalse(any("D1" in row and "D2" in row for row in rows), rows)
 
     def test_path_order_and_history_boundary_use_declared_registry(self):
         plan_dir = self.copied_fixture("plan-v2")

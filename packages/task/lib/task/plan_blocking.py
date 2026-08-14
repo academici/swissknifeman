@@ -40,12 +40,17 @@ ACTION_OBSERVATION_RESULTS = {
 
 _ROOT_FIELDS = frozenset((
     "schema_version", "plan_id", "item_id", "signal_class", "scope_class", "external",
-    "executor_actor", "evidence_ids", "resolutions_tried", "rag", "review",
+    "scope_coverage", "boundary_evidence", "executor_actor", "evidence_ids",
+    "resolutions_tried", "rag", "review",
 ))
 _RAG_FIELDS = frozenset(("required", "status", "evidence_ids"))
 _REVIEW_FIELDS = frozenset(("reviewer_actor", "context", "verdict", "evidence_ids"))
 _ITEM_RE = re.compile(r"^P[0-9]+\.[0-9]+$")
 _PERPLEXITY_EVIDENCE_RE = re.compile(r"^rag:perplexity:sha256:[0-9a-f]{64}$")
+_GENERIC_BOUNDARY_EVIDENCE_RE = re.compile(
+    r"^(?:boundary(?:-evidence)?|generic|unknown|n/?a|none|spec:declared-boundary)$",
+    re.IGNORECASE,
+)
 _SCHEMA_PATH = Path(__file__).resolve().parents[2] / "configs" / "block-candidate-v1.schema.json"
 
 
@@ -61,6 +66,11 @@ def _string_list(value, *, field: str, allow_empty: bool) -> bool:
         return False
     return (len(value) == len(set(value))
             and all(isinstance(item, str) and item for item in value))
+
+
+def _boundary_evidence(value) -> bool:
+    return (_string_list(value, field="boundary_evidence", allow_empty=True)
+            and all(not _GENERIC_BOUNDARY_EVIDENCE_RE.fullmatch(item.strip()) for item in value))
 
 
 def _closed_fields(value, expected, *, field):
@@ -93,6 +103,11 @@ def validate(candidate: dict) -> None:
     for field in ("signal_class", "scope_class"):
         if candidate[field] not in source[field]["enum"]:
             raise BlockCandidateError(f"{field}: значение вне закрытого enum")
+    if candidate["scope_coverage"] not in source["scope_coverage"]["enum"]:
+        raise BlockCandidateError("scope_coverage: значение вне закрытого enum")
+    if not _boundary_evidence(candidate["boundary_evidence"]):
+        raise BlockCandidateError(
+            "boundary_evidence: ожидаются конкретные unique evidence IDs")
     if not isinstance(candidate["external"], bool):
         raise BlockCandidateError("external: ожидается boolean")
     if _has_external_class(candidate) and not candidate["external"]:
@@ -156,6 +171,12 @@ def evaluate(candidate: dict) -> dict:
         return _decision("repair-candidate")
     if candidate["scope_class"] == "local":
         return _decision("continue-local-repair")
+    if (candidate["signal_class"] == "acceptance-failure"
+            and candidate["scope_coverage"] == "in-scope"):
+        # More files, errors or elapsed time are work, not a boundary.  An
+        # acceptance failure already covered by the item is decomposed and repaired
+        # in the same attempt even when a reviewer calls its size material.
+        return _decision("continue-local-repair")
     rag = candidate["rag"]
     if candidate["external"] and (rag["status"] != "verified" or not rag["evidence_ids"]):
         return _decision("gather-rag")
@@ -177,6 +198,8 @@ def evaluate(candidate: dict) -> dict:
         return _decision("repair-review")
     verdict = review["verdict"]
     if verdict == "JUSTIFIED":
+        if not candidate["boundary_evidence"]:
+            return _decision("gather-evidence")
         return _decision("terminal-block")
     if verdict == "AVOIDABLE":
         return _decision("continue-local-repair")

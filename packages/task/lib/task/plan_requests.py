@@ -442,12 +442,34 @@ def request_return_loop_gate(plan_dir, gate: dict, *, continuation: dict, expire
     return event
 
 
-def _journal_transition(plan_dir, request: dict, *, actor: str, result: str) -> None:
+def _terminal_decision(request: dict, outcome: str) -> dict | None:
+    if outcome == "apply":
+        return None
+    decision_id = request["decision_id"]
+    action = "authority-denied" if outcome == "reject" else "approval-required"
+    continuation = (f"terminal: decision:{decision_id}"
+                    if action == "authority-denied"
+                    else f"waiting: decision:{decision_id}")
+    return {
+        "signal_class": "authority-boundary",
+        "scope_class": "authority",
+        "action": action,
+        "recovered": False,
+        "terminal": True,
+        "reason_code": f"P5_DECISION_{outcome.upper()}",
+        "evidence_ids": [f"decision:{decision_id}"],
+        "continuation": continuation,
+    }
+
+
+def _journal_transition(plan_dir, request: dict, *, actor: str, outcome: str) -> None:
     item_id = request["subject"]["item_id"]
     prior = [event for event in journal_path_events(plan_dir, item_id)]
+    result = _transition_result(outcome)
     entry = journal.new_entry(plan_id=Path(plan_dir).name, item_id=item_id, command="plan-run",
                               actor=actor, result=result, attempt=len(prior) + 1,
-                              note=f"decision queue: {request['decision_id']}")
+                              note=f"decision queue: {request['decision_id']}",
+                              decision=_terminal_decision(request, outcome))
     journal.append(plan_dir, entry)
 
 
@@ -476,7 +498,7 @@ def _repair_transition(plan_dir, request: dict, *, actor: str, outcome: str) -> 
             # The durable event is authoritative; regenerate below rather than accepting stale views.
             pass
     try:
-        _journal_transition(plan_dir, request, actor=actor, result=result)
+        _journal_transition(plan_dir, request, actor=actor, outcome=outcome)
         _refresh_views(plan_dir, request["subject"]["item_id"], check=False)
         _refresh_views(plan_dir, request["subject"]["item_id"], check=True)
     except Exception as exc:

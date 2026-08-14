@@ -18,6 +18,8 @@ def candidate(**overrides):
         "signal_class": "acceptance-failure",
         "scope_class": "acceptance",
         "external": False,
+        "scope_coverage": "outside-scope",
+        "boundary_evidence": ["decision:D42-approved-boundary"],
         "executor_actor": "root-executor",
         "evidence_ids": ["test:validation-red"],
         "resolutions_tried": ["minimal reproduction"],
@@ -54,6 +56,26 @@ class PlanBlockingTests(unittest.TestCase):
 
     def test_material_candidate_requires_isolated_review(self):
         self.assertDecision(candidate(), "request-isolated-review")
+
+    def test_broad_in_scope_acceptance_failure_repairs_even_after_justified_review(self):
+        value = candidate(
+            scope_coverage="in-scope",
+            boundary_evidence=[],
+            evidence_ids=["phpstan:max:no-baseline:1591-errors:266-paths"],
+            resolutions_tried=["partition inventory by owning namespace"],
+            review=review("JUSTIFIED"),
+        )
+        self.assertDecision(value, "continue-local-repair")
+
+    def test_justified_without_concrete_boundary_evidence_stays_nonterminal(self):
+        self.assertDecision(
+            candidate(boundary_evidence=[], review=review("JUSTIFIED")),
+            "gather-evidence",
+        )
+
+    def test_generic_boundary_evidence_is_rejected(self):
+        with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "конкретные"):
+            plan_blocking.validate(candidate(boundary_evidence=["generic"]))
 
     def test_external_candidate_requires_verified_rag_before_review(self):
         value = candidate(

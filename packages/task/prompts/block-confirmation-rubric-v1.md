@@ -18,6 +18,12 @@ the executor as the reviewer and never use a continuation of the executor's cont
 - `OUT_OF_SCOPE` — the capsule asks you to judge a different item or boundary.
 - `MALFORMED` — the capsule is not reviewable as `block-candidate/v1`.
 
+Check `scope_coverage` before judging size. `in-scope` means the declared item already owns the
+remediation: hundreds of files/errors, elapsed time, or decomposition work are not a terminal
+boundary. `JUSTIFIED` requires at least one concrete `boundary_evidence` ID proving authority,
+public/frozen contract, security/data, irreversible, unsafe rollback, or external dependency.
+"Need more work", fear of scope creep, and blast radius alone are `AVOIDABLE`.
+
 For an external candidate, `rag.status=verified` and at least one evidence ID matching
 `rag:perplexity:sha256:<64 lowercase hex>` are mandatory. Empty, unavailable, pending, or
 fallback-only evidence returns `INSUFFICIENT_EVIDENCE`. Do not infer external facts from memory.

@@ -170,12 +170,66 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             audit_fixer_action(in_scope=False)["action"], "record-non-gating")
         self.assertEqual(
             audit_fixer_action(in_scope=True, boundary="authority"),
-            {"action": "decision-request", "terminal": True, "reason": "authority-boundary"},
+            {"action": "request-authority", "terminal": False,
+             "reason": "authority-boundary-unresolved"},
         )
         self.assertEqual(
             audit_fixer_action(in_scope=True, boundary="acceptance"),
-            {"action": "decision-request", "terminal": True, "reason": "acceptance-boundary"},
+            {"action": "repair-inline", "terminal": False,
+             "reason": "acceptance-failure-is-work"},
         )
+
+    def test_audit_fixer_terminalizes_only_a_reducer_confirmed_boundary(self):
+        self.assertEqual(
+            audit_fixer_action(
+                in_scope=True, boundary="authority", authority_verdict="delegated"),
+            {"action": "repair-inline", "terminal": False,
+             "reason": "authority-delegated"},
+        )
+        self.assertEqual(
+            audit_fixer_action(
+                in_scope=True, boundary="authority", authority_verdict="approval_required"),
+            {"action": "approval-required", "terminal": True,
+             "reason": "authority-approval-required"},
+        )
+        self.assertEqual(
+            audit_fixer_action(in_scope=True, boundary="safety"),
+            {"action": "confirm-block", "terminal": False,
+             "reason": "safety-boundary-unconfirmed"},
+        )
+        self.assertEqual(
+            audit_fixer_action(
+                in_scope=True, boundary="safety", block_action="terminal-block"),
+            {"action": "terminal-block", "terminal": True,
+             "reason": "safety-block-confirmed"},
+        )
+
+    def test_phase_audit_red_requires_exact_terminal_continuation(self):
+        entry = journal.new_entry(
+            plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+            actor="model/high", result="audit-red",
+            decision={
+                "signal_class": "authority", "scope_class": "phase",
+                "action": "approval-required", "recovered": False, "terminal": True,
+                "reason_code": "P5_DECISION_OWNER_REQUIRED",
+                "evidence_ids": ["decision:Q1"],
+                "continuation": "waiting: decision:Q1",
+            },
+        )
+        policy = review_policy.phase_audit_terminal_policy(entry)
+        self.assertEqual(policy["phase_id"], "P1")
+        self.assertEqual(policy["continuation"], "waiting: decision:Q1")
+
+        entry["decision"] = None
+        with self.assertRaisesRegex(ReviewPolicyError, "AUDIT_TERMINAL_EVIDENCE_REQUIRED"):
+            review_policy.phase_audit_terminal_policy(entry)
+
+    def test_phase_audit_attention_is_not_a_terminal_escape(self):
+        entry = journal.new_entry(
+            plan_id="P", item_id="P1", command="plan-audit",
+            actor="model/high", result="audit-attention")
+        with self.assertRaisesRegex(ReviewPolicyError, "AUDIT_ATTENTION_NONTERMINAL"):
+            review_policy.phase_audit_terminal_policy(entry)
 
     def test_phase_close_requires_matching_green_audit(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -197,9 +251,11 @@ class EvidenceFirstSignalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan = Path(tmp) / "P"
             plan.mkdir()
-            journal.append(plan, journal.new_entry(
+            entry = journal.new_entry(
                 plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
-                result="audit-attention", fingerprint="a" * 64))
+                result="audit-attention", fingerprint="a" * 64)
+            (plan / "journal.jsonl").write_text(
+                json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
             gate = plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint="a" * 64)
             self.assertEqual(gate["code"], "PHASE_AUDIT_ATTENTION")

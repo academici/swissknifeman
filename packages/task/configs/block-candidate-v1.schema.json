@@ -11,6 +11,8 @@
     "signal_class",
     "scope_class",
     "external",
+    "scope_coverage",
+    "boundary_evidence",
     "executor_actor",
     "evidence_ids",
     "resolutions_tried",
@@ -58,6 +60,14 @@
       ]
     },
     "external": {"type": "boolean"},
+    "scope_coverage": {
+      "enum": ["in-scope", "outside-scope", "unknown"]
+    },
+    "boundary_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
     "executor_actor": {"type": "string", "minLength": 1},
     "evidence_ids": {
       "type": "array",

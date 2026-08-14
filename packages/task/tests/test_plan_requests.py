@@ -197,6 +197,20 @@ class PlanRequestsTests(unittest.TestCase):
                 plan_item_state.build_states(self.plan, item_id="P0.1", check=True)
                 plan_status.build_status(self.plan, check=True)
 
+    def test_terminal_decision_transition_carries_reducer_evidence(self):
+        value = request_value(decision_id="Q-terminal-decision")
+        plan_requests.request(self.plan, value)
+        plan_requests.claim(self.plan, value["decision_id"], resolver_id="owner:1",
+                            lease_expires_at="2099-01-01T00:00:00Z")
+        plan_requests.resolve(
+            self.plan, value["decision_id"], self._response(value, option="reject"),
+            resolver_id="owner:1",
+        )
+        entry = json.loads((self.plan / "journal.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(entry["result"], "blocked")
+        self.assertEqual(entry["decision"]["action"], "authority-denied")
+        self.assertEqual(entry["decision"]["evidence_ids"], ["decision:Q-terminal-decision"])
+
     def test_auto_answer_requires_contract_pair_and_reclassification(self):
         value = request_value(decision_id="Q-auto", kind="clarification")
         plan_requests.request(self.plan, value)

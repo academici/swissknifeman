@@ -210,12 +210,16 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
                 plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
                 plan_status.STATUS_BLOCKED}:
             raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
-        state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
+        material_evidence = plan_item_state.material_terminal_evidence(plan_dir, item_id)
+        material_bytes = json.dumps(
+            material_evidence, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
         items.append({
             "item_id": item_id,
             "status": status,
             "spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
-            "state_sha256": hashlib.sha256(state_path.read_bytes()).hexdigest(),
+            "terminal_evidence_sha256": hashlib.sha256(material_bytes).hexdigest(),
         })
     if not items:
         raise ValueError(f"{phase_id} не содержит items")
@@ -777,11 +781,42 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
             _bundle_error(diag, plan_dir, f"generated view stale: {exc}")
 
 
+def lint_static_bundle_evidence(plan_dir, layout: str, diag) -> None:
+    """Validate terminal bundle schemas without reopening ready scope.
+
+    The next-runnable bundle gate intentionally avoids rendering future consumers,
+    but terminal bundles are historical safety evidence.  Their schema checks
+    must therefore remain active independently of which item is currently
+    runnable.  Generated views stay owned by their dedicated materializers: lint
+    fixtures may deliberately omit them while testing an earlier structural gate.
+    """
+    if layout != "v2":
+        return
+    plan_dir = Path(plan_dir)
+    try:
+        measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
+    except plan_weight.PlanWeightError as exc:
+        _bundle_error(diag, plan_dir / "plan.md", f"не удалось загрузить terminal evidence: {exc}")
+        return
+    for item in measured["items"]:
+        if item.get("status") not in TERMINAL_ITEM_STATUSES:
+            continue
+        target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"])
+        if not target.is_file():
+            continue
+        try:
+            plan_bundle.validate(json.loads(target.read_text(encoding="utf-8")))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, plan_bundle.BundleError) as exc:
+            _bundle_error(diag, target,
+                          f"пункт {item['item_id']}: terminal evidence schema invalid: {exc}")
+
+
 def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
     """Check frozen carrier declarations and item inputs without inspecting prose."""
     if layout != "v2":
         return
     plan_dir = Path(plan_dir)
+    lint_static_bundle_evidence(plan_dir, layout, diag)
     try:
         spec = plan_layout.read_path_spec()
         registry = plan_layout.registry()
@@ -867,5 +902,5 @@ def _lint_downstream_records(plan_dir, layout: str, diag) -> None:
 
 
 __all__ = ("BUNDLE_GATE_ID", "DECISION_QUEUE_GATE_ID", "GATE_ID", "PATH_GATE_ID", "RETURN_LOOP_GATE_ID",
-           "lint_bundle_freshness", "lint_read_budget", "lint_read_path_boundaries",
+           "lint_bundle_freshness", "lint_static_bundle_evidence", "lint_read_budget", "lint_read_path_boundaries",
            "lint_return_loop")

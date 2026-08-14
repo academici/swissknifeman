@@ -39,6 +39,7 @@ def validate() -> list[dict]:
         run("P0.9 rebind", sys.executable, str(PLAN / "artifacts/test-p0-classification-rebind.py")),
         run("P0.10 live admit", sys.executable, str(PLAN / "artifacts/p0-security-trust-evidence.py"), "admit", "--plan-dir", plan, "--manifest", str(PLAN / "artifacts/P0.1/evidence/manifest.json"), "--stdout"),
         run("task package suite", "bash", "-c", "cd packages/task && PYTHONPATH=lib:../.. python3 -m unittest discover -s tests -p 'test_*.py'"),
+        run("plan lint", sys.executable, "packages/task/scripts/plan-lint.py", plan, "--baseline", "HEAD"),
         run("scoped diff", "git", "diff", "--check"),
     ]
     for view in ("status", "decisions"):

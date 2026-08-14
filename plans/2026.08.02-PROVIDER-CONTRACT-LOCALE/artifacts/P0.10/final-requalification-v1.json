@@ -36,6 +36,10 @@
       "status": "green"
     },
     {
+      "carrier": "plan lint",
+      "status": "green"
+    },
+    {
       "carrier": "scoped diff",
       "status": "green"
     },

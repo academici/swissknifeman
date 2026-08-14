@@ -446,6 +446,12 @@ def verify_receipt(plan_dir, receipt: dict) -> bool:
     for field in ("next_exact", "recommendation"):
         if receipt.get(field) != current[field]:
             raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"{field} не совпадает с handoff.md")
+    # The product commit is provenance for the delivery moment.  A separate
+    # bookkeeping commit necessarily advances HEAD after the receipt is written;
+    # treating that unrelated movement as stale would turn every clean close into
+    # a false terminal failure.  Semantic carriers below stay byte-bound.
+    if schema == "terminal-delivery-receipt/v1":
+        current["commit_sha"] = receipt.get("commit_sha")
     if receipt != current:
         raise DeliveryError("STALE_TERMINAL_RECEIPT", "receipt digests/state устарели")
     return True

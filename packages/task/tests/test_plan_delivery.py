@@ -171,6 +171,16 @@ class PlanDeliveryTests(unittest.TestCase):
         state = plan / "phases" / "P1" / "P1.1.state.md"
         self.assertEqual(receipt["digests"]["state"], plan_delivery.file_digest(state))
 
+    def test_terminal_receipt_survives_bookkeeping_head_change(self):
+        plan = self._terminal_plan()
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+        original = plan_delivery._git_commit
+        plan_delivery._git_commit = lambda _plan: "f" * 40
+        try:
+            self.assertTrue(plan_delivery.verify_receipt(plan, receipt))
+        finally:
+            plan_delivery._git_commit = original
+
     def test_terminal_phase_and_archive_receipts_are_supported(self):
         phase_plan = self._terminal_plan()
         journal.append(phase_plan, journal.new_entry(

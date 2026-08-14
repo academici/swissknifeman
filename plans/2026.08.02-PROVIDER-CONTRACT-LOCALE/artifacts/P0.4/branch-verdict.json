@@ -1,12 +1,12 @@
 {
   "action_set": [],
+  "admission_authority": false,
   "authority_reference": null,
   "branch": "no-op",
-  "fresh_evidence_sha256": "sha256:f33a182b1e3ad8cd1af8f5650c73a54be1afdffa581a9c0e701882f8c0b5879f",
   "plaintext_secret_findings": 0,
-  "producer_sha256": "sha256:644a62dd1a701b9039c7e5c26e922d2d830fd141bc316df291bc2b318f4a61a8",
+  "producer_sha256": "sha256:831754235bdf59100ecfd623bee8bd91cdcb265f40328e8f19550ea30bb9e687",
   "protected_target_delta": 0,
-  "recovery_checker_sha256": "sha256:a8c9fd72ace2a7355263b89111a757422f42e7e40644462bdd777619f33a960b",
-  "result": "pass",
-  "schema_version": "p0-branch-verdict/v2"
+  "recorded_evidence_sha256": "sha256:37c9d527ada7a2db6517f0420af5599e7a2d8e997e56e06f31b5bcebe6831332",
+  "result": "integrity-only",
+  "schema_version": "p0-branch-verdict/v3"
 }

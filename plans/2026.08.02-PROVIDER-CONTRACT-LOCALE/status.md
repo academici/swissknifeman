@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 047fc459210db612c8db814758ac92d02f125dc4c26c8af7986dccdfe4c8a012
+inputs_sha256: e588b54e6d74e58b9437ba09f50a9efb8a4e0eeb4360fa921cf780af8d55219e
 generated_by: task plan-views status
 -->
 
@@ -210,6 +210,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | repository_owner | plan-run · in-progress · decision queue: P1.3-provider-control-plane-freeze-v1.0.0-2026-08-14 |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P1.3 закрыт: provider control-plane v1.0.0, C1-C6 и legacy migration/rollback contract заморожены решением D73. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат 7ce1e79c9c9ed40e325b7489ea01cf5dc0ee607f3425b91f674f7ac853c40b92, вердикт GREEN |
 
 ## Owner Gates
 

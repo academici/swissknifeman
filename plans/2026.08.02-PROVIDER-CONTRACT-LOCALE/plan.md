@@ -68,6 +68,8 @@ and does not duplicate a supervisor runtime.
 - **Жёсткий бюджет каждого item P1.3–P7.4:** один initial implementation candidate, один проход объявленной item Validation и, только если он красный, один сгруппированный repair candidate + один targeted recheck. После второго RED исполнитель останавливается с точной failing-командой/риском/owner gate; третий ремонт, новый review или расширение scope запрещены.
 - **Validation economy:** Validation item'а — закрытый acceptance inventory, а не приглашение расширять тестирование. Каждая обязательная команда запускается не более одного раза на material candidate; после repair повторяются только проверки, инвалидированные изменёнными файлами, а неизменённые green receipts переиспользуются. Full suite допустим только когда он буквально объявлен item'ом и ещё не запускался для candidate.
 - **Запрет синтетического разрастания:** никакие дополнительные fixtures, self-tests, fuzz/mutation/adversarial probes, checker branches или «полезные на будущее» cases не создаются, кроме прямо перечисленного Deliverable либо минимального regression case для уже воспроизведённого acceptance failure. Доступный real provider/project probe выполняется раньше дополнительной синтетики и ровно один раз на candidate.
+- **Минимальный acceptance без redesign-циклов:** если объявленный Validation carrier отсутствует и не проверяет ни один изменяемый `Files`/инвариант item'а, executor удаляет только эту stale-команду в текущем attempt, сохраняет остальные проверки и продолжает; отдельные `plan-design`, Owner gate, новый item или дополнительный test layer для такой локальной коррекции запрещены.
+- **Конечное состояние локализации:** legacy-параллели `SKILL.ru.md` после подтверждённого EN-переноса удаляются назначенным migration item'ом; английский `SKILL.md` остаётся единственным semantic source, а русский доступен только как sparse key-addressed render overlay, не как второе дерево.
 - **Review cap:** P1.3–P7.3 имеют `Review: none`: запрещены subagents/reviewers и независимые повторные чтения ради поиска новых замечаний. P7.4 — единственный независимый audit всего остатка плана; он также имеет максимум один repair + один targeted recheck и не запускает второй audit.
 - **Batch continuation:** зелёный item сразу передаёт следующий item тому же coordinator; общий bookkeeping, generated views и lint собираются на границе batch, если item contract не требует раньше.
 
@@ -108,13 +110,13 @@ and does not duplicate a supervisor runtime.
 |:--|:--|:--|:--|:--|
 | root/contracts/provider-control-plane-v1.md | v1.0.0 | frozen | P2–P7 | D73 |
 | root/contracts/locale-resolution-v1.md | v1.0.0 | frozen | P3–P7 | D74 |
-| root/contracts/english-authoring-overlay-v1.md | v1.0.0-draft | draft | P3–P7 | — |
-| root/contracts/locale-authoring-review-v1.md | v1.0.0-draft | draft | P3–P7 | — |
+| root/contracts/english-authoring-overlay-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
+| root/contracts/locale-authoring-review-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
 | root/contracts/provider-recovery-gates-v1.md | v1.0.0 | frozen | P0.4–P7 | P0.3/D63 |
 | root/contracts/provider-health-v1.md | v1.0.0-draft | draft | P6–P7 | — |
 | root/contracts/skill-core-v1.md | v1.0.0 | frozen | P2–P7 | P1.2 |
 | root/contracts/provider-skill-adapter-v1.md | v1.0.0 | frozen | P3–P7 | P1.2 |
-| root/contracts/skill-evidence-v1.md | v1.0.0-draft | draft | P3–P7 | — |
+| root/contracts/skill-evidence-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
 
 ### Consumed
 

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: 2ce5a0b4a8709a015521f40eacb20cf62fd038bd62b20492945a868e8597a0d5
+inputs_sha256: 60f85ecb7e1c4c4fea654b95307caff7020a26531be49be4746e653fbcbc4f80
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Evidence, safety, and full fleet inventory | 9/10 | 🟠 Done with deviations |
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
-| P2 | Freeze locale and lean current-model skill authoring contracts | 1/3 | 🟡 In progress |
+| P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 0/3 | ⬜ Not started |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
@@ -60,8 +60,8 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P2.1 | Specify locale surfaces, precedence, normalization, and fallback | 🟢 Done | 2026-08-14 |
-| P2.2 | Specify English canonical source and localized overlay format | ⬜ Not started | — |
-| P2.3 | Specify compactness, translation review, and comment policy | ⬜ Not started | — |
+| P2.2 | Specify English canonical source and localized overlay format | 🟢 Done | 2026-08-14 |
+| P2.3 | Specify compactness, translation review, and comment policy | 🟢 Done | 2026-08-14 |
 
 ## Phase P3
 
@@ -218,6 +218,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | owner | plan-run · in-progress · decision queue: P2.1-locale-resolution-freeze |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.1 закрыт: locale-resolution v1.0.0 и pinned IANA snapshot заморожены D74; D75 исправил stage-aware plan metadata. |
 | 2026-08-14 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · P2.2 начал заморозку overlay-контракта и authoring carrier matrix. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P2.2-validation-carrier-redesign-v1 |
+| 2026-08-14 | repository_owner | plan-run · in-progress · decision queue: P2.2-validation-carrier-redesign-v1 |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.2 закрыт: English source, Russian sparse overlay и authoring carrier matrix v1.0.0 заморожены D77. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · in-progress · P2.3 начат: минимальный review/evidence contract без расширения scope. |
+| 2026-08-14 | gpt-5.6-sol/high | plan-run · closed-green · P2.3 закрыт: review и skill-evidence v1.0.0 заморожены D77; реальная обкатка оставлена P7. |
 
 ## Owner Gates
 
@@ -230,3 +236,5 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P0.7: known deviation
 - P0.8: known deviation
 - P2.1: known deviation
+- P2.2: known deviation
+- P2.3: known deviation

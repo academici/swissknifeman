@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-14
-inputs_sha256: d3b82afeed538dd614ff848c76c64f24461c3c2df614c994a4cf099806ae3d50
+inputs_sha256: 5223b8af2448dabd36d0c007d98738a054d311800c6b6c3b8b721697e214c31b
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Confirmed blocking and mandatory external RAG | 1/2 | 🟠 Done with deviations |
 | P5 | Durable terminal delivery and provider parity | 3/3 | 🟢 Done |
 | P6 | Release, new tag and registered-project rollout | 3/4 | 🟠 Done with deviations |
-| P7 | Postarchive Task runtime and roadmap closeout | 1/6 | 🟡 In progress |
+| P7 | Postarchive Task runtime and roadmap closeout | 2/6 | 🟡 In progress |
 
 ## Phase P0
 
@@ -94,7 +94,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P7.0 | Restore backward-compatible lint admission | 🟢 Done | 2026-08-14 |
-| P7.1 | Seal route/run and terminal-state runtime core | ⬜ Not started | — |
+| P7.1 | Seal route/run and terminal-state runtime core | 🟢 Done | 2026-08-14 |
 | P7.2 | Make terminal delivery and lint fail closed | ⬜ Not started | — |
 | P7.3 | Enforce scope-aware audit/block terminal policy | ⬜ Not started | — |
 | P7.4 | Reconcile canon, provider projections and package docs | ⬜ Not started | — |
@@ -391,6 +391,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | implementation/high | plan-run · local-repair · Bookkeeping repair: write-site must occupy its own Completion Notes line. |
 | 2026-08-14 | implementation/high | plan-run · closed-green · P7.0 closed: timestamp-gated lint preserves historical carriers.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P7.1: route/run receipt, terminal admission and focused regressions sealed. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · Bookkeeping repair: materialize write-site carrier. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · write-site: pre_mutation: allow · pre_final: allow
+P7.1 bookkeeping carrier repaired; product commit remains 5a7e9ee8. |
 
 ## Owner Gates
 

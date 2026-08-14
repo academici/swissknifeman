@@ -15,7 +15,7 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
-                  plan_projection, plan_requests, plan_returns, plan_status, plan_weight)
+                  plan_projection, plan_requests, plan_returns, plan_status, plan_weight, review_policy)
 
 
 GATE_ID = "read-budget-v1"
@@ -460,7 +460,8 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
                 event = json.loads(raw)
             except json.JSONDecodeError:
                 continue
-            if event.get("command") == "plan-audit" and event.get("item_id") == phase_id:
+            if (event.get("command") == "plan-audit"
+                    and review_policy.phase_audit_subject(event.get("item_id")) == phase_id):
                 latest = (line_number, event)
     if latest is None:
         return {"allow": False, "code": "PHASE_AUDIT_MISSING", "journal_line": None,

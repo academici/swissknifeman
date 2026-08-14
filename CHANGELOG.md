@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: phase-close принимает legacy subject audit-фазы.**
+  Gate нормализует `P1 — режим фазы` через общий `review_policy.phase_audit_subject`, поэтому
+  matching GREEN audit с тем же candidate fingerprint больше не ошибочно считается отсутствующим.
+
 - **`task`: launch-команды стали provider-native и безопасными для копирования.**
   Metadata-таблица больше не содержит команду: Claude Code и Codex выводят только native-форму
   активного адаптера отдельным fenced-блоком. Codex дополнительно запрещает завершать handoff без

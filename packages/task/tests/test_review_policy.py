@@ -247,6 +247,19 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             self.assertEqual(plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint="b" * 64)["code"], "PHASE_AUDIT_STALE")
 
+    def test_phase_close_accepts_legacy_phase_mode_audit_subject(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            plan.mkdir()
+            fingerprint = "a" * 64
+            journal.append(plan, journal.new_entry(
+                plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+                actor="model/high", result="audit-green", fingerprint=fingerprint))
+            gate = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=fingerprint)
+            self.assertTrue(gate["allow"])
+            self.assertEqual(gate["journal_line"], 1)
+
     def test_attention_is_a_distinct_close_refusal(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = Path(tmp) / "P"

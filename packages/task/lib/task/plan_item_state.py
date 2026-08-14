@@ -90,6 +90,30 @@ def _latest_write_site(event_rows):
                 return line
     return None
 
+
+def material_terminal_evidence(plan_dir, item_id):
+    """Return only semantics that may invalidate a phase candidate.
+
+    Generated projection metadata, journal line numbers, timestamps and actors are
+    deliberately excluded.  The latest execution result, declared deviations and
+    reducer decision remain included, so product/acceptance changes still stale an
+    audit while normal view regeneration cannot stale itself.
+    """
+    rows = _event_rows(plan_dir, item_id)
+    execution = [event for _number, _raw, event in rows
+                 if event.get("command") in _EXECUTION_COMMANDS
+                 and event.get("result") not in OBSERVATION_RESULTS]
+    if not execution:
+        raise ItemStateError(f"{item_id}: нет execution evidence")
+    event = execution[-1]
+    return {
+        "result": event.get("result"),
+        "friction": sorted(event.get("friction") or []),
+        "note": event.get("note"),
+        "fingerprint": event.get("fingerprint"),
+        "decision": event.get("decision"),
+    }
+
 def _validate(model):
     schema = Path(__file__).resolve().parents[2] / "configs" / "item-state-projection-v1.schema.json"
     try:

@@ -30,6 +30,21 @@ _ROOT_KEYS = frozenset({
 })
 
 
+def package_root() -> Path:
+    """Task package root in both source checkout and installed plugin layouts."""
+    return Path(__file__).resolve().parents[2]
+
+
+def package_command_path(command_id: str) -> Path:
+    """Resolve a canonical command without assuming the monorepo directory shape."""
+    if not isinstance(command_id, str) or not _COMMAND_ID_RE.fullmatch(command_id):
+        raise ValueError("CMD_ID_UNKNOWN")
+    path = package_root() / "commands" / f"{command_id.removeprefix('task:')}.md"
+    if not path.is_file():
+        raise ValueError(f"CMD_SOURCE_MISSING: {path}")
+    return path
+
+
 @dataclass(frozen=True, order=True)
 class CommandSource:
     source_id: str

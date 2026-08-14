@@ -250,14 +250,14 @@ class RouteAndCapabilityTests(unittest.TestCase):
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "CAPABILITY_UNSUPPORTED")
 
-    def test_unresolved_actual_route_blocks_as_route_undershoot_not_crash(self):
+    def test_unresolved_actual_route_is_distinct_from_measured_undershoot(self):
         # D74/D78 root: `_rank(MODEL_CLASS_ORDER, None)` used to raise
         # `ValueError: tuple.index(x): x not in tuple` instead of a typed code.
         base = _load_base_contract()
         base["route"]["actual"]["model_class"] = None
         base["route"]["actual"]["effort"] = None
         contract = _rehashed(base)
-        self.assertEqual(task_contract.pre_mutation(contract), "ROUTE_UNDERSHOOT")
+        self.assertEqual(task_contract.pre_mutation(contract), "ROUTE-UNVERIFIABLE")
 
     def test_out_of_ladder_required_model_class_blocks_as_route_undershoot_not_crash(self):
         # D78 М4: an unresolved §3 Routing cell used to fabricate `required = ""` and
@@ -513,7 +513,8 @@ class AuthorityCommandBoundaryTests(unittest.TestCase):
         self.assertEqual(exec_text.count("task_contract.build("), 2)
         self.assertNotIn("authority_granted", exec_text)
         self.assertNotIn("authority_granted_by", exec_text)
-        self.assertIn("Прочти `packages/task/commands/plan-exec.md` ЦЕЛИКОМ", run_text)
+        self.assertIn(
+            'task.command_catalog.package_command_path("task:plan-exec")', run_text)
 
 
 class SliceTests(unittest.TestCase):
@@ -666,7 +667,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
         required, actual = contract["route"]["required"], contract["route"]["actual"]
         self.assertIsNone(actual["model_class"])
         self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
-                         "ROUTE_UNDERSHOOT")
+                         "ROUTE-UNVERIFIABLE")
 
     def test_live_actual_route_matching_required_allows_both_predicates(self):
         from task import route_evidence as re_

@@ -26,6 +26,10 @@ stdlib-only.
 """
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
 from task.command_catalog import CommandRecord
 from task.task_contract import EFFORT_ORDER, MODEL_CLASS_ORDER
 
@@ -59,6 +63,7 @@ CLASSIFICATIONS = ("exact", "over", "under", "unknown")
 # execution-state-machine-v1.md §Declared sets — the `route` deny class partitions
 # exactly these two frozen 2026.07.24-AGENT-RELIABILITY P0.2 pre-mutation codes (never re-minted here).
 ROUTE_UNDERSHOOT = "ROUTE_UNDERSHOOT"
+ROUTE_UNVERIFIABLE = "ROUTE-UNVERIFIABLE"
 CAPABILITY_UNSUPPORTED = "CAPABILITY_UNSUPPORTED"
 
 
@@ -166,18 +171,155 @@ def capability_support(capability_requirements, capability_bindings) -> tuple:
 
 def dispatch_guard(required: dict, actual: dict, capabilities) -> str | None:
     """Fail-closed BEFORE any Task Contract compiles. Reuses the two frozen 2026.07.24-AGENT-RELIABILITY P0.2
-    `route` deny codes verbatim (`execution-state-machine-v1.md` §Declared sets,
-    never re-minted): `ROUTE_UNDERSHOOT` for an under OR unknown axis — "Missing
-    actual effort is unknown and fails a route-required dispatch" (Implementation
-    Rules) — `CAPABILITY_UNSUPPORTED` for any capability the acting provider does not
-    bind as `native`/`adapted`. Route is checked first (task_contract.pre_mutation's
-    own declared order: route before capability, both before authority)."""
-    if classify(required, actual) in ("under", "unknown"):
+    route boundary.  A measured lower route is `ROUTE_UNDERSHOOT`; absent provider
+    evidence is the distinct nonterminal `ROUTE-UNVERIFIABLE`.  Conflating these two
+    cases used to manufacture false routing blocks for Claude sessions.  Capability
+    support remains the next ordered check."""
+    classification = classify(required, actual)
+    if classification == "unknown":
+        return ROUTE_UNVERIFIABLE
+    if classification == "under":
         return ROUTE_UNDERSHOOT
     for capability in capabilities:
         if capability["support"] not in ("native", "adapted"):
             return CAPABILITY_UNSUPPORTED
     return None
+
+
+def capture_launch(*, expected_invocation: str, expected_cwd: str | Path,
+                   provider: str | None = None, **adapter_options) -> dict:
+    """Provider-neutral entry point for current launch provenance.
+
+    Provider selection is bound to the current session identity unless a provider is
+    injected explicitly by a test.  Canonical Task commands call only this function;
+    provider-specific state formats stay inside their additive adapters.
+    """
+    if provider is None:
+        from task.session_context import SessionContextError, resolve
+        try:
+            provider = resolve().provider
+        except SessionContextError as exc:
+            raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", str(exc)) from exc
+    semantic = expected_invocation.strip()
+    if semantic.startswith("$ "):
+        semantic = semantic[2:]
+    if semantic.startswith("/"):
+        semantic = semantic[1:]
+    if not semantic.startswith("task:"):
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH", "expected invocation must use semantic task:<command> form")
+    if provider == "codex":
+        from task.route_evidence_codex import capture_current
+        native_invocation = "$ " + semantic
+    elif provider == "claude-code":
+        from task.route_evidence_claude import capture_current
+        native_invocation = "/" + semantic
+    else:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", f"provider {provider!r} has no route adapter")
+    return capture_current(
+        expected_invocation=native_invocation,
+        expected_cwd=expected_cwd,
+        **adapter_options,
+    )
+
+
+def build_run_receipt(*, plan_id: str, item_id: str, attempt: int, session_id: str,
+                      run_id: str, evidence: dict) -> dict:
+    """Bind validated route evidence to one immutable item run."""
+    for field, value in (("plan_id", plan_id), ("item_id", item_id),
+                         ("session_id", session_id), ("run_id", run_id)):
+        if not isinstance(value, str) or not value:
+            raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", f"{field} is required")
+    if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "attempt must be int >= 1")
+    required = {"model_class", "effort", "source", "ts", "model", "thread_id",
+                "source_version", "cwd", "invocation"}
+    if not isinstance(evidence, dict) or not required <= set(evidence):
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "route evidence is incomplete")
+    if evidence.get("thread_id") != session_id:
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "route thread/session mismatch")
+    return {
+        "schema_version": "route-run-receipt/v1",
+        "plan_id": plan_id,
+        "item_id": item_id,
+        "attempt": attempt,
+        "session_id": session_id,
+        "run_id": run_id,
+        "evidence": {key: evidence[key] for key in sorted(required)},
+    }
+
+
+def start_decision(receipt: dict) -> dict:
+    verify_run_receipt(receipt)
+    return {
+        "signal_class": "route",
+        "scope_class": "run",
+        "action": "route-bound",
+        "recovered": True,
+        "terminal": False,
+        "route_receipt": receipt,
+    }
+
+
+def verify_run_receipt(receipt: dict, *, plan_id: str | None = None,
+                       item_id: str | None = None, attempt: int | None = None,
+                       session_id: str | None = None, run_id: str | None = None,
+                       current_evidence: dict | None = None,
+                       max_age_seconds: int = 86400,
+                       now: datetime | None = None) -> bool:
+    expected = {"schema_version", "plan_id", "item_id", "attempt", "session_id", "run_id",
+                "evidence"}
+    if not isinstance(receipt, dict) or set(receipt) != expected \
+            or receipt.get("schema_version") != "route-run-receipt/v1":
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "unsupported run receipt")
+    for field, value in (("plan_id", plan_id), ("item_id", item_id), ("attempt", attempt),
+                         ("session_id", session_id), ("run_id", run_id)):
+        if value is not None and receipt.get(field) != value:
+            raise RouteEvidenceError("ROUTE_RECEIPT_MISMATCH", f"{field} changed")
+    evidence = receipt.get("evidence")
+    if not isinstance(evidence, dict):
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "evidence is absent")
+    try:
+        captured = datetime.strptime(evidence["ts"], "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=timezone.utc)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "capture timestamp is invalid") from exc
+    observed_now = now or datetime.now(timezone.utc)
+    age_seconds = (observed_now - captured).total_seconds()
+    if age_seconds < 0:
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", "capture timestamp is in the future")
+    if max_age_seconds < 1 or age_seconds > max_age_seconds:
+        raise RouteEvidenceError("ROUTE_RECEIPT_EXPIRED", "route receipt expired")
+    if current_evidence is not None:
+        axes = ("model", "model_class", "effort", "thread_id", "cwd", "invocation")
+        if any(current_evidence.get(axis) != evidence.get(axis) for axis in axes):
+            raise RouteEvidenceError("ROUTE_RECEIPT_MISMATCH", "current route changed")
+    return True
+
+
+def run_receipt_from_journal(plan_dir, run_id: str) -> dict:
+    """Load the unique route receipt persisted on this run's start event."""
+    path = Path(plan_dir) / "journal.jsonl"
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise RouteEvidenceError("ROUTE_RECEIPT_INVALID", str(exc)) from exc
+    matches = []
+    for raw in rows:
+        try:
+            event = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        decision = event.get("decision") if isinstance(event, dict) else None
+        if (event.get("run_id") == run_id and event.get("result") == "in-progress"
+                and isinstance(decision, dict) and isinstance(decision.get("route_receipt"), dict)):
+            matches.append(decision["route_receipt"])
+    if len(matches) != 1:
+        raise RouteEvidenceError(
+            "ROUTE_RECEIPT_INVALID", f"run {run_id!r} has {len(matches)} start receipts")
+    verify_run_receipt(matches[0], run_id=run_id)
+    return matches[0]
 
 
 def route_change_boundary(before: dict, after: dict) -> dict:

@@ -1,12 +1,14 @@
 """Focused contract tests for the immutable semantic command catalog."""
 from dataclasses import FrozenInstanceError
+import importlib.util
 import json
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 
-from task.command_catalog import CommandCatalogError, build_command_catalog
+from task.command_catalog import CommandCatalogError, build_command_catalog, package_command_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -44,6 +46,26 @@ class CommandCatalogTests(unittest.TestCase):
                 os.chdir(previous)
         self.assertEqual([record.command_id for record in catalog.records],
                          self.expected["command_ids"])
+
+    def test_parent_command_resolves_in_source_and_installed_package_layouts(self):
+        self.assertEqual(package_command_path("task:plan-exec"), COMMAND_ROOT / "plan-exec.md")
+        with tempfile.TemporaryDirectory() as temporary:
+            installed = Path(temporary) / "task" / "0.14.0"
+            (installed / "lib" / "task").mkdir(parents=True)
+            shutil.copy2(
+                REPO_ROOT / "packages/task/lib/task/command_catalog.py",
+                installed / "lib" / "task" / "command_catalog.py")
+            shutil.copytree(COMMAND_ROOT, installed / "commands")
+            spec = importlib.util.spec_from_file_location(
+                "installed_task_command_catalog",
+                installed / "lib" / "task" / "command_catalog.py")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
+            self.addCleanup(sys.modules.pop, spec.name, None)
+            spec.loader.exec_module(module)
+            self.assertEqual(
+                module.package_command_path("task:plan-exec"),
+                installed / "commands" / "plan-exec.md")
 
     def test_missing_extra_and_duplicate_fail_closed(self):
         cases = ("missing", "extra", "duplicate")

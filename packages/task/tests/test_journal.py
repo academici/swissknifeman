@@ -14,6 +14,32 @@ from task.journal import (  # noqa: E402
     derive_run_id, line_sha256, main,
     new_entry, new_exception, validate_entry, validate_exception, validate_exception_target,
 )
+from task import terminal_policy
+
+
+def _validation_decision(plan_dir, item_id="P1.3", result="closed-green"):
+    plan_dir = Path(plan_dir)
+    if not (plan_dir / "plan.md").exists():
+        (plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+    phase = plan_dir / "phases" / "P1"
+    phase.mkdir(parents=True, exist_ok=True)
+    (phase / "P1.md").write_text("# P1\n", encoding="utf-8")
+    spec = phase / f"{item_id}.md"
+    if not spec.exists():
+        spec.write_text(f"# {item_id}\n", encoding="utf-8")
+    return terminal_policy.build_decision(
+        plan_dir, item_id, result=result,
+        validation=[{"carrier": "bash test.sh", "status": "green",
+                     "evidence_ids": ["test:exit-0"]}],
+        repair_exhausted=(
+            {"classifier": "recoverable-validation-gap/v1",
+             "failed_carrier": "bash test.sh", "verdict": "outside-scope",
+             "reason": "fixture deviation", "continuation": "follow-up: fixture",
+             "evidence_ids": ["test:deviation"]}
+            if result == "closed-deviations" else None),
+    )
 
 
 class TmpDirTestCase(unittest.TestCase):
@@ -159,7 +185,7 @@ class TestAppend(TmpDirTestCase):
         terminal = new_entry(
             plan_id="P", item_id="P1.3", command="plan-run", actor="model/high",
             result="closed-green", session_id="session-1", run_id=run_id,
-            fingerprint="a" * 64)
+            fingerprint="a" * 64, decision=_validation_decision(self.plan_dir))
         append(self.plan_dir, start)
         first = append_idempotent_terminal(self.plan_dir, terminal)
         before = (self.plan_dir / "journal.jsonl").read_bytes()
@@ -175,6 +201,48 @@ class TestAppend(TmpDirTestCase):
         validate_entry(entry)
         self.assertEqual(entry["result"], "audit-attention")
 
+    def test_phase_audit_non_green_cannot_be_appended_without_reducer_evidence(self):
+        for result in ("audit-attention", "audit-red"):
+            with self.subTest(result=result):
+                entry = new_entry(
+                    plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+                    actor="model/high", result=result, fingerprint="b" * 64)
+                with self.assertRaisesRegex(
+                        JournalValidationError,
+                        "AUDIT_(ATTENTION_NONTERMINAL|TERMINAL_EVIDENCE_REQUIRED)"):
+                    append(self.plan_dir, entry)
+
+    def test_phase_audit_confirmed_boundary_can_be_appended(self):
+        entry = new_entry(
+            plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
+            result="audit-red", fingerprint="b" * 64,
+            decision={
+                "signal_class": "safety", "scope_class": "phase",
+                "action": "terminal-block", "recovered": False, "terminal": True,
+                "reason_code": "BLOCK_CONFIRMED", "evidence_ids": ["block:fixture"],
+                "continuation": "terminal: confirmed-block block:fixture",
+            })
+        path = append(self.plan_dir, entry)
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["result"], "audit-red")
+
+    def test_red_validation_cannot_be_terminalized(self):
+        decision = _validation_decision(self.plan_dir)
+        decision["terminal_evidence"]["validation"][0]["status"] = "red"
+        entry = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/high",
+            result="closed-green", decision=decision)
+        with self.assertRaisesRegex(JournalValidationError, "TERMINAL_VALIDATION_RED"):
+            append(self.plan_dir, entry)
+
+    def test_deviation_requires_repair_exhausted_evidence(self):
+        decision = _validation_decision(self.plan_dir)
+        decision["action"] = "close-deviations"
+        entry = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/high",
+            result="closed-deviations", decision=decision)
+        with self.assertRaisesRegex(JournalValidationError, "REPAIR_EXHAUSTED_REQUIRED"):
+            append(self.plan_dir, entry)
+
     def test_append_writes_one_valid_json_line(self):
         entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
                            actor="sonnet/high", result="in-progress")
@@ -188,7 +256,8 @@ class TestAppend(TmpDirTestCase):
         first = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
                            actor="sonnet/high", result="in-progress")
         second = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
-                            actor="sonnet/high", result="closed-green")
+                            actor="sonnet/high", result="closed-green",
+                            decision=_validation_decision(self.plan_dir))
         append(self.plan_dir, first)
         append(self.plan_dir, second)
         lines = (self.plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
@@ -223,9 +292,17 @@ class TestAppend(TmpDirTestCase):
 
     def test_every_line_is_parseable_ndjson(self):
         for result in ("in-progress", "closed-deviations", "escalated"):
+            decision = None
+            if result == "closed-deviations":
+                decision = _validation_decision(self.plan_dir, result=result)
+            elif result == "escalated":
+                decision = {
+                    "signal_class": "authority-boundary", "scope_class": "authority",
+                    "action": "approval-required", "recovered": False, "terminal": True,
+                }
             append(self.plan_dir, new_entry(
                 plan_id="P", item_id="P1.3", command="plan-exec",
-                actor="sonnet/high", result=result))
+                actor="sonnet/high", result=result, decision=decision))
         path = self.plan_dir / "journal.jsonl"
         for ln in path.read_text(encoding="utf-8").splitlines():
             json.loads(ln)  # не бросает — валидный NDJSON построчно
@@ -326,11 +403,16 @@ class TestCli(TmpDirTestCase):
     def test_main_append_writes_entry(self):
         plan_dir = self.root / "2026.07.18-FOREMAN"
         plan_dir.mkdir()
+        (plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+        (plan_dir / "phases" / "P1").mkdir(parents=True)
+        (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
+        decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
         rc = main([
             "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
             "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "closed-green", "--friction", "deviation,retry",
-            "--attempt", "2", "--note", "test stub",
+            "--attempt", "2", "--note", "test stub", "--decision-json", decision,
         ])
         self.assertEqual(rc, 0)
         lines = (plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
@@ -345,10 +427,16 @@ class TestCli(TmpDirTestCase):
     def test_main_append_with_trace_ref_writes_it(self):
         plan_dir = self.root / "2026.07.18-FOREMAN"
         plan_dir.mkdir()
+        (plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+        (plan_dir / "phases" / "P1").mkdir(parents=True)
+        (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
+        decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
         rc = main([
             "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
             "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "closed-green", "--trace-ref", "b" * 64,
+            "--decision-json", decision,
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()[0])

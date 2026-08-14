@@ -18,6 +18,7 @@ assembles — proven end to end against the real committed P0.2 example contract
 Run: cd packages/task && python3 -m unittest discover -s tests
 """
 import copy
+from datetime import datetime, timedelta, timezone
 import json
 import sys
 import tempfile
@@ -193,15 +194,15 @@ class DispatchGuardTests(unittest.TestCase):
         under = {"model_class": "economy", "effort": "high"}
         self.assertEqual(re.dispatch_guard(self.REQUIRED, under, self.CAPS_OK), "ROUTE_UNDERSHOOT")
 
-    def test_unknown_actual_denies_as_undershoot_not_a_new_code(self):
-        # Implementation Rules: "Missing actual effort is unknown and fails a
-        # route-required dispatch" — reuses ROUTE_UNDERSHOOT, never mints a third code.
+    def test_unknown_actual_is_distinct_from_measured_undershoot(self):
         unknown = {"model_class": "implementation", "effort": None}
-        self.assertEqual(re.dispatch_guard(self.REQUIRED, unknown, self.CAPS_OK), "ROUTE_UNDERSHOOT")
+        self.assertEqual(
+            re.dispatch_guard(self.REQUIRED, unknown, self.CAPS_OK), "ROUTE-UNVERIFIABLE")
 
     def test_unknown_actual_is_a_waiting_gate_not_config_recovery(self):
         actual = re.capture_actual(None, None, source="self-attested")
-        self.assertEqual(re.dispatch_guard(self.REQUIRED, actual, self.CAPS_OK), "ROUTE_UNDERSHOOT")
+        self.assertEqual(
+            re.dispatch_guard(self.REQUIRED, actual, self.CAPS_OK), "ROUTE-UNVERIFIABLE")
 
     def test_route_checked_before_capability(self):
         under = {"model_class": "economy", "effort": "high"}
@@ -302,7 +303,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         # `dispatch_guard` denies EARLY, before a `None` axis ever reaches a compiled
         # contract. `task_contract.pre_mutation` itself also guards the same axis as
         # defense in depth (P2.10/D78): a caller that skips the guard and feeds
-        # `pre_mutation` an out-of-ladder value gets the same typed `ROUTE_UNDERSHOOT`,
+        # `pre_mutation` an unresolved actual gets the distinct nonterminal code,
         # never the raw `.index()` crash this predicate used to raise.
         contract = _load_base_contract()
         required = contract["route"]["required"]
@@ -310,11 +311,62 @@ class BuildTaskContractRouteTests(unittest.TestCase):
         caps = re.capability_support(
             [c["id"] for c in contract["route"]["capabilities"]],
             {c["id"]: c["support"] for c in contract["route"]["capabilities"]})
-        self.assertEqual(re.dispatch_guard(required, unknown_actual, caps), "ROUTE_UNDERSHOOT")
+        self.assertEqual(
+            re.dispatch_guard(required, unknown_actual, caps), "ROUTE-UNVERIFIABLE")
         broken = copy.deepcopy(contract)
         broken["route"]["actual"]["effort"] = None
         broken["version"]["content_hash"] = task_contract.content_hash(broken)
-        self.assertEqual(task_contract.pre_mutation(broken), "ROUTE_UNDERSHOOT")
+        self.assertEqual(task_contract.pre_mutation(broken), "ROUTE-UNVERIFIABLE")
+
+    def test_run_receipt_survives_dialogue_and_rejects_route_change(self):
+        evidence = re.capture_actual(
+            "implementation", "high", source="provider-thread-state",
+            model="gpt-5.6-terra")
+        evidence.update({
+            "thread_id": "session-1", "source_version": "fixture-v1",
+            "cwd": "/workspace/repo", "invocation": "$ task:plan-run PLAN P1.1",
+        })
+        receipt = re.build_run_receipt(
+            plan_id="PLAN", item_id="P1.1", attempt=1, session_id="session-1",
+            run_id="run-1", evidence=evidence)
+        self.assertTrue(re.verify_run_receipt(
+            receipt, plan_id="PLAN", item_id="P1.1", run_id="run-1",
+            current_evidence=dict(evidence)))
+        changed = {**evidence, "effort": "medium"}
+        with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_RECEIPT_MISMATCH"):
+            re.verify_run_receipt(receipt, current_evidence=changed)
+
+    def test_run_receipt_ttl_is_fail_closed(self):
+        captured = datetime(2026, 8, 13, tzinfo=timezone.utc)
+        evidence = re.capture_actual(
+            "implementation", "high", source="provider-thread-state",
+            model="gpt-5.6-terra", ts=captured.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        evidence.update({
+            "thread_id": "session-1", "source_version": "fixture-v1",
+            "cwd": "/workspace/repo", "invocation": "$ task:plan-run PLAN P1.1",
+        })
+        receipt = re.build_run_receipt(
+            plan_id="PLAN", item_id="P1.1", attempt=1, session_id="session-1",
+            run_id="run-1", evidence=evidence)
+        with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_RECEIPT_EXPIRED"):
+            re.verify_run_receipt(
+                receipt, now=captured + timedelta(days=2), max_age_seconds=86400)
+
+    def test_run_receipt_rejects_future_capture(self):
+        captured = datetime(2026, 8, 13, 0, 0, 1, tzinfo=timezone.utc)
+        evidence = re.capture_actual(
+            "implementation", "high", source="provider-thread-state",
+            model="gpt-5.6-terra", ts=captured.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        evidence.update({
+            "thread_id": "session-1", "source_version": "fixture-v1",
+            "cwd": "/workspace/repo", "invocation": "$ task:plan-run PLAN P1.1",
+        })
+        receipt = re.build_run_receipt(
+            plan_id="PLAN", item_id="P1.1", attempt=1, session_id="session-1",
+            run_id="run-1", evidence=evidence)
+        with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_RECEIPT_INVALID"):
+            re.verify_run_receipt(
+                receipt, now=datetime(2026, 8, 13, tzinfo=timezone.utc))
 
 
 class JournalActorIntegrationTests(unittest.TestCase):
@@ -343,7 +395,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
-            "--result", "closed-green",
+            "--result", "in-progress",
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
@@ -356,7 +408,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
-            "--result", "closed-green",
+            "--result", "in-progress",
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
@@ -393,7 +445,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         rc = journal.main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P2.4", "--command", "plan-run", "--route-evidence", str(evidence_path),
-            "--result", "blocked",
+            "--result", "in-progress",
         ])
         self.assertEqual(rc, 0)
         entry = json.loads((self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"))

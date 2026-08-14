@@ -862,12 +862,8 @@ def _rank_or_none(order: tuple, value) -> int | None:
     `value` is outside `order`. Used ONLY by `pre_mutation`'s route check below — the
     `CARRIER_PRECEDENCE` conflict-resolution use of `_rank` above is unrelated scope
     (D78/`findings/14` measured the route axes specifically) and stays untouched. An
-    out-of-ladder value on EITHER axis and EITHER side of the route (required or
-    actual) is treated the same way `route_evidence.classify` already treats an
-    unresolved actual — as an undershoot, never a crash — reusing the frozen
-    `ROUTE_UNDERSHOOT` code rather than minting a new one (2026.07.24-AGENT-RELIABILITY P0.2 pre-mutation codes are
-    frozen; D74 already established this precedent one layer up, in
-    `route_evidence.dispatch_guard`)."""
+    out-of-ladder value never crashes the predicate.  The caller distinguishes a
+    malformed required route from missing actual provider evidence below."""
     return order.index(value) if value in order else None
 
 
@@ -954,13 +950,19 @@ def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
     route = contract["route"]
     required_class_rank = _rank_or_none(MODEL_CLASS_ORDER, route["required"]["model_class"])
     actual_class_rank = _rank_or_none(MODEL_CLASS_ORDER, route["actual"]["model_class"])
-    if (required_class_rank is None or actual_class_rank is None
-            or actual_class_rank < required_class_rank):
+    if required_class_rank is None:
+        return "ROUTE_UNDERSHOOT"
+    if actual_class_rank is None:
+        return "ROUTE-UNVERIFIABLE"
+    if actual_class_rank < required_class_rank:
         return "ROUTE_UNDERSHOOT"
     required_effort_rank = _rank_or_none(EFFORT_ORDER, route["required"]["effort"])
     actual_effort_rank = _rank_or_none(EFFORT_ORDER, route["actual"]["effort"])
-    if (required_effort_rank is None or actual_effort_rank is None
-            or actual_effort_rank < required_effort_rank):
+    if required_effort_rank is None:
+        return "ROUTE_UNDERSHOOT"
+    if actual_effort_rank is None:
+        return "ROUTE-UNVERIFIABLE"
+    if actual_effort_rank < required_effort_rank:
         return "ROUTE_UNDERSHOOT"
     for capability in route["capabilities"]:
         if capability["support"] not in ("native", "adapted"):

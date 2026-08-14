@@ -142,7 +142,7 @@ def validate_entry(entry):
         raise JournalValidationError("; ".join(message for _, message in errors))
 
 
-def validate_append_policy(entry):
+def validate_append_policy(entry, *, plan_dir=None):
     """Validate forward-only writer policy outside the sealed event schema.
 
     Historical rows with longer notes remain schema-valid and readable.  Only a
@@ -153,6 +153,21 @@ def validate_append_policy(entry):
         raise JournalValidationError(
             f"note: {len(note)} символов > {NOTE_MAX_CHARS}; "
             "детали вынесите в Completion Notes/findings")
+    if (isinstance(entry, dict) and entry.get("command") == "plan-audit"
+            and entry.get("result") in {"audit-green", "audit-attention", "audit-red"}):
+        from task import review_policy
+        if review_policy.phase_audit_subject(entry.get("item_id")) is not None:
+            try:
+                review_policy.phase_audit_terminal_policy(entry)
+            except review_policy.ReviewPolicyError as exc:
+                raise JournalValidationError(str(exc)) from exc
+    if isinstance(entry, dict):
+        from task import terminal_policy
+        try:
+            terminal_policy.validate_entry(
+                entry, plan_dir=Path(plan_dir) if plan_dir is not None else None)
+        except terminal_policy.TerminalPolicyError as exc:
+            raise JournalValidationError(str(exc)) from exc
 
 
 def project_update_log_what(entry, line_number):
@@ -357,8 +372,8 @@ def append(plan_dir, entry):
     (§2) — битая запись не попадает в durable-историю плана (§1). Возвращает путь
     файла. Файла нет — создаётся (append-режим сам создаёт)."""
     validate_entry(entry)
-    validate_append_policy(entry)
     plan_dir = Path(plan_dir)
+    validate_append_policy(entry, plan_dir=plan_dir)
     canonical_plan_id = plan_dir.name
     if entry["plan_id"] != canonical_plan_id:
         raise JournalValidationError(
@@ -374,7 +389,7 @@ def append(plan_dir, entry):
 def append_idempotent_terminal(plan_dir, entry):
     """Append one terminal, or return its existing line without changing bytes."""
     validate_entry(entry)
-    validate_append_policy(entry)
+    validate_append_policy(entry, plan_dir=plan_dir)
     if entry.get("result") not in TERMINAL_CLOSE_RESULTS or not entry.get("run_id"):
         return append(plan_dir, entry), None, True
     plan_dir = Path(plan_dir)

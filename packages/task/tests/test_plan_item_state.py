@@ -6,7 +6,7 @@ try:
     from .fixtures import write_valid_plan
 except ImportError:
     from fixtures import write_valid_plan
-from task import journal, plan_item_state
+from task import journal, plan_item_state, terminal_policy
 
 class PlanItemStateTests(unittest.TestCase):
     def setUp(self):
@@ -14,6 +14,18 @@ class PlanItemStateTests(unittest.TestCase):
         self.plan = write_valid_plan(Path(self.tmp.name), "DEMO-V2", layout="v2")
         (self.plan / "journal.jsonl").write_text("", encoding="utf-8")
     def tearDown(self): self.tmp.cleanup()
+    def decision(self, result="closed-green"):
+        return terminal_policy.build_decision(
+            self.plan, "P1.1", result=result,
+            validation=[{"carrier": "bash test.sh", "status": "green",
+                         "evidence_ids": ["test:exit-0"]}],
+            repair_exhausted=(
+                {"classifier": "recoverable-validation-gap/v1",
+                 "failed_carrier": "bash test.sh", "verdict": "outside-scope",
+                 "reason": "fixture deviation", "continuation": "follow-up: fixture",
+                 "evidence_ids": ["test:deviation"]}
+                if result == "closed-deviations" else None),
+        )
     def test_result_mapping_covers_sealed_enum(self):
         self.assertEqual(set(plan_item_state.RESULT_STATUS), set(journal.RESULT_VALUES))
     def test_generate_and_drift_check(self):
@@ -29,6 +41,8 @@ class PlanItemStateTests(unittest.TestCase):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
             actor="implementation/high", result="blocked",
+            decision={"signal_class": "authority-boundary", "scope_class": "authority",
+                      "action": "approval-required", "recovered": False, "terminal": True},
         ))
         text = plan_item_state.render_state(self.plan, "P1.1")
         self.assertIn("**Status:** 🔴 Blocked", text)
@@ -47,7 +61,7 @@ class PlanItemStateTests(unittest.TestCase):
     def test_no_op_does_not_erase_a_closed_execution_position(self):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
-            actor="implementation/high", result="closed-green",
+            actor="implementation/high", result="closed-green", decision=self.decision(),
         ))
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
@@ -120,6 +134,7 @@ class PlanItemStateTests(unittest.TestCase):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-green", note="summary",
+            decision=self.decision(),
         ))
         before, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
         journal.append(self.plan, journal.new_entry(

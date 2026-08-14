@@ -20,7 +20,10 @@ from skiller.registry import build_registry
 from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
 from skiller.update import cmd_update, replay_opts, update_one
-import tests.fixtures as fx
+try:
+    from . import fixtures as fx
+except ImportError:  # unittest discover loads this module without a package.
+    import tests.fixtures as fx
 
 
 def silently(fn, *a, **kw):

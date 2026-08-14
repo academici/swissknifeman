@@ -1155,7 +1155,9 @@ def cmd_hooks(env, argv):
         return
     if not opts["target"]:
         die("нужен --target P (или --global)")
-    target = Path(opts["target"]).expanduser()
+    # Public CLI accepts a convenient relative target, while the shared
+    # artifact lock deliberately accepts only an explicit absolute root.
+    target = Path(opts["target"]).expanduser().resolve()
     if opts["provider"]:
         if opts["provider"] != "codex":
             die("поддерживается только --provider codex")

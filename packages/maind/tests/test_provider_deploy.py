@@ -22,7 +22,10 @@ from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_trans
                                    apply_project_carrier, apply_d108_operation,
                                    rollback_d108_operation, _d108_planned_projections)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
-from tests.fixtures import make_repo
+try:
+    from .fixtures import make_repo
+except ImportError:  # unittest discover loads this module without a package.
+    from tests.fixtures import make_repo
 from maind.config import merge_defaults
 import tempfile
 import subprocess

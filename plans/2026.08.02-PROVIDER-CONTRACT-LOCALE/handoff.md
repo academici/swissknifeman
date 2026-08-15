@@ -1,23 +1,29 @@
-# HANDOFF — 2026.08.02-PROVIDER-CONTRACT-LOCALE — after P5.1
+# HANDOFF — 2026-08-15 — after P5.2
 
-**Next:** task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.2
+**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.3-P5.4
 
-| Batch | Model | Thinking | Context | Суть | Команда |
-|:--|:--|:--|:--|:--|:--|
-| p5-fleet | frontier | high | continue-root | Execute the approved empty P5.2 action set and emit durable no-write results. | task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.2 |
-
-**Provider-neutral command:** `$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.2`
+| Параметр | Значение |
+|:--|:--|
+| Batch | p5-fleet |
+| Model class | frontier |
+| Model | gpt-5.6-sol |
+| Effort | high |
+| Thinking | high |
+| Capabilities | — |
+| Context | continue-root |
+| Суть | Выполнить оставшийся no-write suffix P5.3–P5.4: managed repair, quarantine и convergence только по пустым owner-approved action sets. |
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.2'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.3 P5.4'
 ```
 
-**Done:** P5.1 closed green. D83 freezes manifest `sha256:8c134c75214cff8dc4193f3b251e1afaf5c3041135a942976571068ad527bae4`, 13,421 unresolved rows, 23 protected projects and zero consumer/provider writes.
-
-**Remaining:** P5.2–P5.4 must materialize their result/convergence carriers from the approved empty action sets; P6/P7 remain downstream.
-
-**Sources of truth:** commits `77ffc845` and `3b929ef1`; decision D83; `bundles/P5.2.json`; `artifacts/P5/fleet-action-approval.md`; terminal P5.1 journal/state carriers.
-
-**Open risks:** P5.2 result does not exist yet. The runner must preserve the empty action set, append no consumer mutation and fail closed on any manifest/source/approval drift.
+**Done:** P5.2 закрыт GREEN: product commit `822767d3`; текущий bookkeeping commit фиксирует journal/state/downstream/handoff. Утверждённый пустой action set сохранил 13,421 unresolved rows, создал derived result и оставил consumer/provider writes и WAL events равными нулю.
+**Remaining:** P5.3 и P5.4; затем terminal candidate P5 проходит policy-selected audit/close boundary перед P6.
+**Sources of truth:** `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P5/P5.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P5/P5.3.md` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P5.3.json` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P5/fleet-action-manifest.json` · `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P5/fleet-transaction-log.jsonl`
+**Open risks:** Все 13,421 consumer rows остаются `no-op-unresolved`; это честный non-green fleet disposition, а не разрешение вывести action из live drift.
+**Workarounds/Deferred/Open questions:**
+- workarounds: —
+- deferred: managed repair, quarantine and two-pass convergence are owned by P5.3–P5.4 and remain bound to their empty D83 action sets.
+- open_questions: —

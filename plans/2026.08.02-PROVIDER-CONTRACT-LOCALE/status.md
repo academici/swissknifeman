@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: cc4add1fca4aaad37f53fdfb7e292ebc31544ef09e24222f1c39aaa91678adab
+inputs_sha256: ada7e53a1d07543a0883ceb07fbc84067e2bb18cb80d253682d160ede2812abc
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
-| P5 | Classify and migrate all consumer projects safely | 1/4 | 🟡 In progress |
+| P5 | Classify and migrate all consumer projects safely | 2/4 | 🟡 In progress |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
@@ -87,7 +87,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P5.1 | Freeze exact consumer action manifest and rollback domains | 🟢 Done | 2026-08-15 |
-| P5.2 | Preserve and explicitly register approved local overrides | ⬜ Not started | — |
+| P5.2 | Preserve and explicitly register approved local overrides | 🟢 Done | 2026-08-15 |
 | P5.3 | Reconcile approved equivalent, broken, and stale-managed projections | ⬜ Not started | — |
 | P5.4 | Quarantine obsolete owned projections and prove convergence | ⬜ Not started | — |
 
@@ -288,6 +288,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P5.1-fleet-action-manifest-owner-approval |
 | 2026-08-15 | owner | plan-run · in-progress · decision queue: P5.1-fleet-action-manifest-owner-approval |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · D83: frozen no-write manifest approved; 11 tests, production check and Task validation green. |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.2: approved action set empty; 13,421 unresolved rows preserved with zero consumer writes. |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

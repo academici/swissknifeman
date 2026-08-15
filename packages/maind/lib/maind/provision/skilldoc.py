@@ -1,13 +1,8 @@
-"""maind ecosystem-skill — провиженер управляемого скилла `ecosystem-mcp` в проекты.
+"""Provision managed ecosystem-mcp and ecosystem-setup skills into projects.
 
-Раскатывает <project>/.claude/skills/ecosystem-mcp/SKILL.md — инструкцию агенту о том, что за
-MCP-инструменты доступны в проекте (agent-memory/код-граф), когда их вызывать, с какими проектами
-экосистемы он связан и как чинить связь при сбое. Источник истины — templates/skills/ecosystem-mcp/
-SKILL.md в самом maind; файл целиком управляем (идемпотентность по content-hash, как у hook-скрипта).
-
-Подстановки на проект (PROJECT/SCOPE/NAMESPACES/LINKS) считаются из конфига и derive-графа —
-LINKS переиспользует seed.linked_projects (DRY с seed-памятью). mode install/update/auto задаёт
-область синка, как у health-провиженеров."""
+Templates are fully managed by content hash. Project substitutions derive from
+configuration and graph facts; install/update/auto follows health provisioners.
+"""
 import os
 from pathlib import Path
 
@@ -42,7 +37,7 @@ def _subst(env, config, project):
 
 
 def _apply_managed_skill(env, config, project, mode, dry, *, label, template, skill_paths):
-    """Общий провиженер управляемого скилла (целиком управляем, идемпотентность по content-hash)."""
+    """Apply a fully managed, content-hash-idempotent skill."""
     pid = project["id"]
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
@@ -66,15 +61,14 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
 
 
 def apply_ecosystem_skill(env, config, project, mode, dry):
-    """Управляемый скилл ecosystem-mcp в <project>/.claude/skills/ecosystem-mcp/SKILL.md."""
+    """Apply ecosystem-mcp at its managed project path."""
     return _apply_managed_skill(env, config, project, mode, dry,
                                 label="ecosystem-skill", template=TEMPLATE,
                                 skill_paths=SKILL_PATHS)
 
 
 def apply_setup_skill(env, config, project, mode, dry):
-    """Управляемый скилл ecosystem-setup (дерево решений тулинга) в
-    <project>/.claude/skills/ecosystem-setup/SKILL.md — доезжает до внешних репо."""
+    """Apply ecosystem-setup at its managed project path."""
     return _apply_managed_skill(env, config, project, mode, dry,
                                 label="setup-skill", template=SETUP_TEMPLATE,
                                 skill_paths=SETUP_SKILL_PATHS)

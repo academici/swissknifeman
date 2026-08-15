@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
-# Режим federation — истина = свои memory/ участников + общий store. recall
-# читает по всем, ранжирует по совпадениям. remember пишет в общий store.
-# Источается memory.sh.
 
-# Каталоги памяти участника: <member>/.claude/memory + нативная память Claude
-# Code (~/.claude/projects/<slug>/memory, slug = путь со слэшами → дефисами).
 _member_dirs() {
   local p slug
   p="$(resolve_member_path "$1")"; [ -n "$p" ] || return
@@ -13,14 +8,13 @@ _member_dirs() {
   [ -d "$HOME/.claude/projects/$slug/memory" ] && echo "$HOME/.claude/projects/$slug/memory"
 }
 
-# Все каталоги brain: общий store + каталоги всех участников.
 _all_dirs() {
   local b="$1" store m
   store="$(brain_store "$b")"; [ -n "$store" ] && [ -d "$store" ] && echo "$store"
   while IFS= read -r m; do [ -n "$m" ] && _member_dirs "$m"; done < <(brain_members "$b")
 }
 
-mode_remember() { # brain type text → в общий store (свои каталоги участников — их источник истины)
+mode_remember() { # Store in the shared directory; member stores remain authoritative.
   local store; store="$(brain_store "$1")"
   [ -n "$store" ] || MEM_die "у brain '$1' не задан store"
   local f; f="$(store_remember "$store" "$2" "$1" "${CLAUDE_PROJECT_DIR:-$PWD}" "$3")" \

@@ -1,20 +1,10 @@
 #!/usr/bin/env bash
-# install.sh — устанавливает CLI harness (настройка окружения Claude Code).
 #
-# Создаёт симлинк <bin-dir>/harness -> <repo>/bin/harness. Пакет stateless —
-# собственного каталога состояния нет (пишет в .claude/ целевых проектов и
-# ~/.claude/hooks/ при `harness hooks --global`).
 #
-# Использование:
 #   ./install.sh [--bin-dir DIR] [--force]
 #
-#   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
-#   --force         заменить чужой файл/симлинк без вопроса
 #
-# Дальше — из любого потребляющего проекта:
-#   harness permissions --target .   # пресеты прав в .claude/settings.local.json
 #   harness mcp --target . --mcp context7
-#   harness hooks --global           # поставить файлы хуков один раз на машину
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,9 +33,9 @@ LINK="$BIN_DIR/harness"
 if [[ -e "$LINK" || -L "$LINK" ]]; then
   current="$(readlink -f "$LINK" 2>/dev/null || true)"
   if [[ "$current" == */bin/harness ]]; then
-    : # наш симлинк (возможно, из старого клона) — молча заменяем
+    : # Managed symlink; replace it silently.
   elif [[ "$FORCE" == true ]]; then
-    : # явное разрешение
+    : # Explicit override.
   elif [[ -t 0 ]]; then
     read -r -p "$LINK уже существует и не похож на harness. Заменить? [y/N] " answer
     [[ "$answer" =~ ^[yY] ]] || { echo "Отменено."; exit 1; }

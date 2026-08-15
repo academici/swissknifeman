@@ -1,15 +1,9 @@
-"""maind PAO — Laravel PAO (agent-optimized вывод PHP-инструментов) как инвариант онбординга.
+"""Laravel PAO onboarding invariant for compact PHP tool output.
 
-Первопричина (SKM-AUDIT-004 P6.1, findings/P6-pao.md): онбординг доставлял `pao` ТОЛЬКО как
-скилл (инструкцию агенту), установку никогда не исполнял — «доставить скилл» ≠ «поставить и
-верифицировать зависимость». Для php/laravel-проекта (PHP≥8.3) PAO — прямая токен-экономия
-(тесты/анализ схлопываются в ~20-токенный JSON вместо тысяч строк вывода), поэтому баз-лайн:
-инвариант «php-проект (≥8.3) ⇒ `laravel/pao` установлен ИЛИ зафиксирован opt-out».
-
-stdlib-only; composer/php — только через subprocess (никакой pip/JS-зависимости в рантайме).
-Установка НЕ выполняется молча вне интерактивной сессии — на `--yes`/неинтерактиве только
-громкий `warn` (autodetect-fallback-стиль): изменение composer.json/lock — outward-facing
-шаг, ставим за подтверждением человека."""
+For PHP/Laravel projects on PHP 8.3+, `laravel/pao` must be installed or the
+project must record an opt-out. Composer is invoked only through subprocess;
+dependency changes require interactive approval.
+"""
 import re
 import subprocess
 
@@ -24,7 +18,7 @@ def applies(project):
 
 
 def _php_version(path):
-    """(major, minor) из `php -v`; None — нет `php` в PATH или вывод не распарсился."""
+    """Return (major, minor) from `php -v`, or None when unavailable/unparseable."""
     try:
         out = subprocess.run(["php", "-v"], cwd=str(path), capture_output=True,
                              text=True, timeout=10).stdout
@@ -42,8 +36,7 @@ def _installed(path):
 
 
 def status(project, path):
-    """'n-a' (не php-тип) | 'opt-out' | 'php-too-old' | 'installed' | 'missing'.
-    Файловые факты (composer.lock/vendor) + `php -v` — ничего не запускается вслепую."""
+    """Return PAO status from filesystem facts and `php -v` without blind execution."""
     if not applies(project):
         return "n-a"
     if project.get("pao_opt_out"):
@@ -59,9 +52,7 @@ _SKIP_DETAIL = {"n-a": "не PHP-проект", "opt-out": "opt-out зафикс
 
 
 def apply_pao(project, path, *, interactive, dry):
-    """Провиженер PAO для онбординга: детект → (интерактивно, без --yes) предложить install,
-    иначе громкий warn с рекомендацией — не ставит зависимость молча. Возвращает step-dict
-    (формат как остальные шаги `onboard()`: name/status/detail)."""
+    """Provision PAO interactively; noninteractive mode warns without installing."""
     pid = project.get("id", "?")
     st = status(project, path)
     if st in _SKIP_DETAIL:

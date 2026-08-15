@@ -1,6 +1,4 @@
-"""intent-router: block_router (env.ini + регистрация пары хуков), cmd_router --generate
-(каталог из агентов + локальных скиллов + /task:*), и поведенческие тесты самих Python-хуков
-(subprocess: task-like → подсказка, вопрос/escape/битый stdin → тишина, SessionStart → политика)."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -30,7 +28,7 @@ def run(fn, *a, **kw):
 
 
 def hook(script, payload, cwd=None):
-    """Прогнать Python-хук через subprocess: stdin=JSON → stdout (str)."""
+    """Internal documentation."""
     p = subprocess.run([sys.executable, str(script)],
                        input=json.dumps(payload).encode() if isinstance(payload, dict)
                        else payload.encode(),
@@ -38,7 +36,7 @@ def hook(script, payload, cwd=None):
     return p.stdout.decode("utf-8", "replace"), p.returncode
 
 
-# ── block_router: env.ini + регистрация пары хуков ───────────────────────────
+
 class BlockRouterCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -55,7 +53,7 @@ class BlockRouterCase(unittest.TestCase):
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertIn("UserPromptSubmit", s["hooks"])
         self.assertIn("SessionStart", s["hooks"])
-        # matcher-less записи (UserPromptSubmit/SessionStart без matcher)
+
         self.assertNotIn("matcher", s["hooks"]["UserPromptSubmit"][0])
         self.assertIn("router.py", s["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"])
         self.assertIn("session-policy.py", s["hooks"]["SessionStart"][0]["hooks"][0]["command"])
@@ -79,7 +77,7 @@ class BlockRouterCase(unittest.TestCase):
             run(block_router, self.proj, "bogus", "settings.json", False)
 
 
-# ── cmd_router --generate: каталог из агентов + локальных скиллов + /task:* ───
+
 class GenerateCatalogCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -106,11 +104,11 @@ class GenerateCatalogCase(unittest.TestCase):
         self.assertIn("/task:dev", cmd_names)
         self.assertEqual([a["name"] for a in cat["agents"]], ["@acme-reviewer"])
         self.assertEqual([s["name"] for s in cat["skills"]], ["skill:sales-report"])
-        # ключевые слова агента извлечены из блок-скалярного description
+
         self.assertIn("ревью", cat["agents"][0]["keywords"])
 
 
-# ── поведенческие: реальные Python-хуки через subprocess ─────────────────────
+
 class HookBehaviorCase(unittest.TestCase):
     def _ac(self, out):
         return json.loads(out)["hookSpecificOutput"]["additionalContext"]

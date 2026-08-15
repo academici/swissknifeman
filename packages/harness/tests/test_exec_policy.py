@@ -1,16 +1,4 @@
-"""Тесты валидатора политики исполнения (harness.execpolicy) — изоляция в tmpdir.
-
-Позитив (pending): состояние, которое ЗАПЕЧАТЫВАЕТ P4.3 — обе точки принуждения
-`pending` с `pending_until: 2026.07.29-HARNESS-AGNOSTIC P4.4`, блоки физически
-отсутствуют в носителях, `--check` зелёный. Позитив (enforced): состояние,
-которое ЗАПЕЧАТЫВАЕТ P4.4 — блок физически лёг в ОБА носителя, точки переведены
-`enforced`, `--check` зелёный своим ходом (D58). Негативные фикстуры — по одному
-классу нарушения на пункт чек-листа §10 контракта: неизвестный ключ (#1) ·
-отсутствующее обязательное поле (#3) · число без provenance (#10) · роль вне
-канона (#12) · enforced-точка с несуществующим адресом (#19) · pending-точка без
-pending_until (#18) · enforced-точка с резолвящимся адресом, но отсутствующим
-физически маркером — по одному на каждое из пяти полей плюс grammar_marker
-(Deliverables P4.4: «тест на удаление любого из пяти полей»)."""
+"""Internal documentation."""
 import copy
 import json
 import tempfile
@@ -209,7 +197,7 @@ class ExecPolicyTestCase(unittest.TestCase):
         self.assertTrue(violations)
 
     def _landed_policy(self):
-        """Оба носителя физически несут блок (P4.4), обе точки — status: enforced."""
+        """Internal documentation."""
         (self.root / "roles.json").write_text(
             json.dumps({"catalog_version": "1.0.0", "roles": [
                 {"pack_id": "_common", "role_id": "orchestrator", "content": _LANDED_ROLE_CONTENT},

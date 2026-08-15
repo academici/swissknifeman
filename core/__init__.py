@@ -1,18 +1,8 @@
-"""core — общий stdlib-only фундамент пакетов монорепо.
+"""Shared stdlib-only monorepo primitives.
 
-Здесь живут дословные дубли, которые исторически копировались между
-swissknifeman/maind/brain байт-в-байт: вывод (die/warn/now_iso/confirm), slug
-(sanitize) и базовый Env (общее ядро root/cmd/home). Плюс примитивы, которые оба
-пакета успели скопировать независимо с расходящимся поведением и которые сведены
-сюда к одному источнику истины: атомарная запись (atomic_write_text/json), поиск
-корня репо/монорепо (find_repo_root/find_monorepo_root), разбор флагов/аргументов
-(parse_flags/parse_args) и защищённый запуск подпроцесса (run_cmd), а также единый
-разбор YAML-frontmatter (parse_frontmatter/parse_inline_list — superset четырёх
-разошедшихся копий skiller/harness/maind). Доменные надстройки — path-property Env,
-HTTP — остаются в common.py каждого пакета (они расходятся по контракту и не дословны).
-
-Импортируется как пакет `core` (PYTHONPATH = корень монорепо; см. bin-лаунчеры).
-Без сторонних зависимостей."""
+The package centralizes common terminal, filesystem, process, parsing, and provider
+helpers while domain-specific extensions remain in their owning packages.
+"""
 from .block import content_hash, managed_block, upsert_block
 from .cli import parse_args, parse_flags, run_cmd
 from .http import http_get_json, http_post_json, ping

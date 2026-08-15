@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
-# Observer capture-хук — ЭКСПЕРИМЕНТАЛЬНО, per-project.
-# Лёгкий project-local лог намерений/результатов + алерт LOOP для post-hoc
-# разбора скиллом `system/session-observer`. Дополняет сырой session-JSONL
-# вычисленными алертами и компактной project-local записью.
 #
-# Висит на PreToolUse / PostToolUse / Stop (см. settings.observer.json — opt-in
-# пресет, не глобально). Включается флагом проекта:
-#   .claude/observer.env.ini → ENABLED=true   (дефолт false = no-op)
 #
-# НИКОГДА не блокирует (это наблюдатель, не гейт; гейт = review-gate) — exit 0.
 
 set -uo pipefail
 input=$(cat 2>/dev/null) || exit 0
@@ -16,7 +8,6 @@ command -v jq >/dev/null 2>&1 || exit 0
 
 cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null); [ -n "$cwd" ] || cwd="$PWD"
 
-# Toggle (per-project) — выключено по умолчанию.
 EN=$(grep -E '^[[:space:]]*ENABLED' "$cwd/.claude/observer.env.ini" 2>/dev/null \
       | head -1 | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*//' | tr -d "\"'")
 [ "$EN" = "true" ] || exit 0

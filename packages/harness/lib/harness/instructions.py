@@ -112,33 +112,33 @@ OBSERVATION_CODES = frozenset({
     "managed-drift", "boundary-invalid", "provenance-invalid", "ownership-conflict",
     "write-forbidden",
 })
-# --- потолок размера канона (2026.07.31-SKM-LEAN P2.1, D86) -------------------
-# Потолок СТРОК — не наше изобретение: апстрим прямо рекомендует держать `CLAUDE.md`
-# под 200 строк и уводить справочный материал в скиллы, которые грузятся по
-# требованию (RAG:✅ 2026-07-31 https://code.claude.com/docs/en/features-overview
-# §«Understand how features load → CLAUDE.md»; то же основание у рекомендации
-# разносить файл по `.claude/rules/` https://code.claude.com/docs/en/claude-directory).
-# Потолок НЕ подгонялся под текущий размер: на момент ввода гейта корневые проекции
-# 88 (`CLAUDE.md`) и 92 (`AGENTS.md`) строки — запас ~2,2×.
+
+
+
+
+
+
+
+
 ROOT_CANON_LINE_LIMIT = 200
-# Токенный потолок корневого класса выведен из наблюдаемой плотности ЭТОГО канона на
-# потолке строк: 2 387 ток / 88 строк и 2 584 / 92 ⇒ ~27–28 ток на строку, 200 × 28 ≈
-# 5 600, округлено вверх до 6 000. Второе, независимое основание того же числа: 6 000 —
-# 37 % target'а первого хода 16 000 (2026.07.31-SKM-LEAN D83), то есть один только
-# корневой канон никогда не съедает больше трети цели бюджета.
+
+
+
+
+
 ROOT_CANON_TOKEN_LIMIT = 6_000
-# Пакетные проекции грузятся В ДОПОЛНЕНИЕ к корневой, когда агент заходит в пакет,
-# поэтому их класс вдвое строже: пара «корень + пакет» остаётся в порядке одного
-# корневого потолка. Запас к факту тот же ~2× (максимум по дереву — 52 строки /
-# 1 326 ток у `packages/harness/CLAUDE.md`).
+
+
+
+
 PACKAGE_CANON_LINE_LIMIT = 100
 PACKAGE_CANON_TOKEN_LIMIT = 3_000
-# Оценка токенов ОБЯЗАНА совпадать с измерителем `skiller budget`, иначе два счёта
-# одного файла разойдутся и заспорят. Первоисточник формулы и обеих констант —
+
+
 # `packages/skiller/lib/skiller/budget.py:48–64` (`estimate_tokens`,
-# `CHARS_PER_TOKEN_CYR`/`CHARS_PER_TOKEN_LAT`). Импортировать его отсюда нельзя:
-# harness не зависит от skiller (`root.package-boundaries`), поэтому формула
-# продублирована ЯВНО, а равенство двух реализаций на общем входе пинится тестом
+
+
+
 # `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
 CHARS_PER_TOKEN_CYR = 2.9
 CHARS_PER_TOKEN_LAT = 3.4
@@ -246,16 +246,7 @@ class InstructionTargetResult:
 
 @dataclass(frozen=True)
 class CanonSizeFinding:
-    """Одна превышенная граница размера канона (P2.1).
-
-    НЕ `InstructionDiagnostic`: таблица кодов диагностик заморожена контрактом
-    `provider-instruction-contract` v1.0.0 («Unknown codes or observation values fail
-    closed for a writer»), а размер — новый класс наблюдения, которого в ней нет.
-    Заводить семнадцатый код значило бы бампнуть замороженный контракт (это P5.7),
-    а переиспользовать чужой — соврать в машинно-читаемом поле. Поэтому гейт
-    аддитивен: собственный канал находок поверх неизменных диагностик, ровно как
-    `validate_literal_coverage` — только `check`, никогда `apply`/`repair`.
-    """
+    """Internal documentation."""
     scope_id: str
     provider_id: str
     target_path: str
@@ -450,11 +441,7 @@ def plan_instructions(request: InstructionRequest, *,
 
 
 def estimate_tokens(text: str) -> int:
-    """Языко-зависимая оценка токенов: кириллица ~2.9 chars/tok, остальное ~3.4.
-
-    Осознанный дубль `skiller.budget.estimate_tokens` (см. комментарий у констант
-    `CHARS_PER_TOKEN_*`): harness не зависит от skiller, а два РАЗНЫХ счёта одного
-    файла спорили бы цифрами. Равенство пинится тестом на общем входе."""
+    """Internal documentation."""
     if not text:
         return 0
     cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
@@ -462,7 +449,7 @@ def estimate_tokens(text: str) -> int:
 
 
 def canon_size_limits(scope_id: str) -> tuple[int, int]:
-    """(потолок строк, потолок токенов) класса артефакта: корневой vs пакетный."""
+    """Internal documentation."""
     if scope_id == "root":
         return ROOT_CANON_LINE_LIMIT, ROOT_CANON_TOKEN_LIMIT
     return PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT
@@ -470,13 +457,7 @@ def canon_size_limits(scope_id: str) -> tuple[int, int]:
 
 def validate_canon_size(root: Path, *, scope_ids: tuple[str, ...] = SCOPES,
                         provider_ids: tuple[str, ...] = PROVIDERS) -> tuple[CanonSizeFinding, ...]:
-    """Гейт размера канона (P2.1): каждая существующая проекция обязана уместиться
-    в потолок своего класса — по строкам И по оценке токенов.
-
-    Меряется ФАЙЛ ЦЕЛИКОМ, а не только управляемые блоки: сессия платит за весь
-    `CLAUDE.md`, включая байты вне маркеров, и апстрим-рекомендация «под 200 строк»
-    тоже про файл. Отсутствующая цель пропускается — её ловит `INSTRUCTION_TARGET_MISSING`,
-    и дублировать этот сигнал вторым классом находок нечестно."""
+    """Internal documentation."""
     findings: list[CanonSizeFinding] = []
     for scope_id in scope_ids:
         line_limit, token_limit = canon_size_limits(scope_id)

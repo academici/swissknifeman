@@ -1,8 +1,4 @@
-"""changelog-gate: поведенческий прогон PreToolUse-хука через subprocess (off/warn/strict,
-docs/skip-маркер/staged-CHANGELOG/repo-без-CHANGELOG → no-op) и block_changelog_gate
-(env.ini + регистрация). Git — PATH-shim (фейковый исполняемый `git`), НЕ реальный репозиторий:
-хук вызывает `git -C <cwd> ls-files` / `git -C <cwd> diff --cached --name-only`, шим отвечает
-заранее заданными списками файлов через env-переменные — детерминированно и без git-состояния."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -50,7 +46,7 @@ def run(fn, *a, **kw):
 
 
 class HookBehaviorCase(unittest.TestCase):
-    """PATH-shim: фейковый `git` первым в PATH — хук git не отличает от реального."""
+    """Internal documentation."""
 
     @classmethod
     def setUpClass(cls):
@@ -86,8 +82,7 @@ class HookBehaviorCase(unittest.TestCase):
         (d / "changelog-gate.env.ini").write_text(f"MODE={mode}\n")
 
     def hook(self, command, ls_files="CHANGELOG.md\nsrc/x.py", diff_cached=""):
-        """Прогнать хук через subprocess: PreToolUse Bash payload → (returncode, stdout, stderr).
-        ls_files/diff_cached — канонический ответ фейкового git на ls-files/diff --cached."""
+        """Internal documentation."""
         payload = {"cwd": str(self.proj), "tool_name": "Bash",
                    "tool_input": {"command": command}}
         env = dict(os.environ)
@@ -100,7 +95,7 @@ class HookBehaviorCase(unittest.TestCase):
                            env=env, timeout=20)
         return p.returncode, p.stdout.decode(), p.stderr.decode()
 
-    # (а) feat: без CHANGELOG staged, mode=warn → warning в stdout (additionalContext), exit 0
+
     def test_warn_feat_without_changelog_warns_not_block(self):
         self._set_mode("warn")
         rc, out, err = self.hook('git commit -m "feat: X"')
@@ -111,35 +106,35 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertIn("feat:", ctx)
         self.assertEqual(data["hookSpecificOutput"]["permissionDecision"], "allow")
 
-    # (б) docs: → тихо exit 0, без warning
+
     def test_warn_docs_silent(self):
         self._set_mode("warn")
         rc, out, err = self.hook('git commit -m "docs: X"')
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
 
-    # (в) feat: + [changelog-skip] → тихо exit 0
+
     def test_warn_skip_marker_silent(self):
         self._set_mode("warn")
         rc, out, err = self.hook('git commit -m "feat: X [changelog-skip]"')
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
 
-    # (г) feat: + CHANGELOG среди staged → тихо exit 0
+
     def test_warn_changelog_staged_silent(self):
         self._set_mode("warn")
         rc, out, err = self.hook('git commit -m "feat: X"', diff_cached="CHANGELOG.md")
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
 
-    # (д) mode=strict + feat: без CHANGELOG → exit 2
+
     def test_strict_blocks(self):
         self._set_mode("strict")
         rc, out, err = self.hook('git commit -m "feat: X"')
         self.assertEqual(rc, 2)
         self.assertIn("changelog-gate", err)
 
-    # (е.1) битый JSON → exit 0
+
     def test_malformed_stdin_no_crash(self):
         env = dict(os.environ)
         env["PATH"] = self._bindir + os.pathsep + env.get("PATH", "")
@@ -147,14 +142,14 @@ class HookBehaviorCase(unittest.TestCase):
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=20)
         self.assertEqual(p.returncode, 0)
 
-    # (е.2) нет -m → exit 0 (editor-сообщение не парсится)
+
     def test_no_dash_m_noop(self):
         self._set_mode("warn")
         rc, out, err = self.hook("git commit")
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
 
-    # (е.3) не-git Bash → exit 0
+
     def test_non_git_bash_noop(self):
         self._set_mode("warn")
         rc, out, err = self.hook("ls -la")
@@ -162,7 +157,7 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertEqual(out, "")
 
     def test_off_by_default_no_envini(self):
-        # нет changelog-gate.env.ini вообще → дефолт off
+
         rc, out, err = self.hook('git commit -m "feat: X"')
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
@@ -193,8 +188,8 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertNotEqual(out, "")
 
     def test_git_subprocess_failure_is_noop(self):
-        # git всегда падает (returncode!=0 на КАЖДЫЙ вызов) → _git() возвращает None →
-        # трактуем как «нет CHANGELOG в дереве» → безопасный no-op, не трейсбек
+
+
         self._set_mode("warn")
         env = dict(os.environ)
         env["PATH"] = self._failbindir + os.pathsep + env.get("PATH", "")
@@ -207,7 +202,7 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertEqual(p.stdout.decode(), "")
 
 
-# ── block_changelog_gate: env.ini + регистрация PreToolUse ──────────────────
+
 class BlockChangelogGateCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -237,7 +232,7 @@ class BlockChangelogGateCase(unittest.TestCase):
         run(block_changelog_gate, self.proj, "warn", "settings.json", False)
         run(block_changelog_gate, self.proj, "warn", "settings.json", False)
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
-        self.assertEqual(len(s["hooks"]["PreToolUse"]), 1)  # не задублировалось
+        self.assertEqual(len(s["hooks"]["PreToolUse"]), 1)
 
     def test_unknown_mode_exits(self):
         with self.assertRaises(SystemExit):

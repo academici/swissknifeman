@@ -1,8 +1,4 @@
-"""Тесты `harness.run.gate` (P4.4). Git-топология тестируется на ИЗОЛИРОВАННОМ временном
-git-репозитории (не на репозитории проекта) — `plan-lint.py`/`git` вызываются как
-РЕАЛЬНЫЕ подпроцессы (Code Guidance «запрет второго прибора»: сам гейт линт не
-пересчитывает), но дерево, которое они видят, — синтетическая фикстура, создаваемая и
-коммитящаяся заново в каждом тесте (`_Repo`)."""
+"""Internal documentation."""
 import json
 import subprocess
 import sys
@@ -76,8 +72,8 @@ def _phase_md(*, status, completion_notes="—", pending_work="—", known_devia
              escalation_needed="no", escalation_blockquote=False):
     blockquote = (f"> 🔴 ESCALATION {ITEM_ID}: тестовый блок | trigger: contradictory evidence "
                  f"| нужен: plan-design\n\n") if escalation_blockquote else ""
-    # D88/P10.1: закрытие 🟢/🟠 требует напечатанных кодов границ Task Contract в
-    # Completion Notes — иначе `plan-lint` заводит НОВУЮ ERROR на каждом закрытии.
+
+
     if status in ("🟢 Done", "🟠 Done with deviations"):
         completion_notes = f"{completion_notes}\n\nwrite-site: pre_mutation: allow · pre_final: allow"
     return f"""# {PHASE_ID} — Фаза раз
@@ -118,9 +114,7 @@ def _phase_md(*, status, completion_notes="—", pending_work="—", known_devia
 
 
 def _bootstrap_handoff_md():
-    """Форма-заглушка (D37, `HANDOFF_TITLE_BOOTSTRAP`) — план ещё не тронут. Отличается
-    от `_handoff_md()` содержательно, чтобы «закрывающая» перезапись `handoff.md`
-    гарантированно давала РЕАЛЬНЫЙ git-дифф (иначе git не считает файл «тронутым»)."""
+    """Internal documentation."""
     return f"""# HANDOFF — 2026-08-01 — after P0.0
 
 **Next:** exec-items: task:plan-exec {PLAN_ID} {ITEM_ID}
@@ -181,7 +175,7 @@ def _ok_outcome(**overrides):
 
 
 class _Repo:
-    """Временный git-репозиторий с фикстурным планом `plans/GATE-FIXTURE/`."""
+    """Internal documentation."""
 
     def __init__(self, tmp):
         self.root = Path(tmp)
@@ -189,11 +183,11 @@ class _Repo:
         self._run(["init", "-q"])
         self._run(["config", "user.email", "gate-test@example.com"])
         self._run(["config", "user.name", "gate-test"])
-        # Коммит ДО того, как каталог плана вообще появился — валидный git-ref (git
-        # log/show по нему работают), но `plan-lint --baseline` на нём легитимно
-        # деградирует («путь отсутствует в ref — новый план?»): используется тестом
-        # деградации вместо синтетического несуществующего SHA (тот ломает уже git log,
-        # не только линтер).
+
+
+
+
+
         (self.root / ".gitkeep").write_text("")
         self._run(["add", ".gitkeep"])
         self.pre_plan_sha = self.commit("до появления каталога плана")
@@ -206,9 +200,9 @@ class _Repo:
         return proc
 
     def write_plan(self, *, done=0, phase_status="🟡 In progress"):
-        # Маркер-счётчик гарантирует РЕАЛЬНЫЙ git-дифф даже когда `done`/`phase_status`
-        # совпадают со значениями по умолчанию (git не считает файл «тронутым» коммитом
-        # без фактического изменения содержимого).
+
+
+
         self._plan_writes = getattr(self, "_plan_writes", 0) + 1
         text = (self.plan_dir / "plan.md").read_text()
         text += f"\n<!-- write #{self._plan_writes}: {done}/{phase_status} -->\n"
@@ -409,8 +403,7 @@ class GateVerdictTest(unittest.TestCase):
         self.assertIn("known-deviations", result["signals_matched"])
 
     def test_bundle_is_attention_not_red(self):
-        """D103/§5: закрытие ЗАКОММИЧЕНО, но бухгалтерия внутри коммита со Scope-путями —
-        process-отклонение, не блокер."""
+        """Internal documentation."""
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
@@ -468,7 +461,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_new_error_is_red(self):
         self.repo.write_plan(done=0, phase_status="🟡 In progress")
-        # Статус — мусорная строка вне канонического enum → НОВАЯ ERROR схемы.
+
         self.repo.write_phase(status="🟢 СЛОМАНО")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
@@ -506,18 +499,17 @@ class GateVerdictTest(unittest.TestCase):
         self.assertIn("escalation-in-report", result["signals_matched"])
 
     def test_no_commits_at_all_is_red(self):
-        # Воркер «прогнан», но диапазон before..HEAD пуст — ничего не закоммичено вовсе.
+
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("no-commits", result["signals_matched"])
 
     def test_closure_not_committed_at_all_is_red(self):
-        """Субслучай α/β (research/13 §2): item-коммит есть (Scope), бухгалтерия плана
-        написана, но НЕ закоммичена — D103, не ATTENTION."""
+        """Internal documentation."""
         scope = self.repo.write_scope_file()
         self.repo.add(scope)
         self.repo.commit("item-коммит: только Scope")
-        # Бухгалтерия правится в РАБОЧЕМ дереве, но не коммитится.
+
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         result = self._verdict()
@@ -527,7 +519,7 @@ class GateVerdictTest(unittest.TestCase):
     def test_closure_partial_handoff_missing_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
-        # handoff.md НЕ тронут вовсе — не входит в диапазонный дифф.
+
         self.repo.add(self.repo.plan_dir / "plan.md", self.repo.plan_dir / "phases" / PHASE_ID / f"{PHASE_ID}.md")
         self.repo.commit("bookkeeping без handoff.md")
         result = self._verdict()
@@ -536,13 +528,12 @@ class GateVerdictTest(unittest.TestCase):
         self.assertFalse(result["raw"]["closure"]["signature_complete"])
 
     def test_dirty_remainder_after_clean_close_is_red(self):
-        """D106: незакоммиченный остаток, которого не было «до», портит следующий item —
-        RED, даже когда закрытие ЭТОГО item'а само по себе безупречно."""
+        """Internal documentation."""
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
-        # Остаток: чужая правка plan.md, оставленная НЕЗАКОММИЧЕННОЙ поверх закрытия.
+
         plan_path = self.repo.plan_dir / "plan.md"
         plan_path.write_text(plan_path.read_text() + "\n<!-- незакоммиченный хвост -->\n")
         result = self._verdict()
@@ -550,10 +541,10 @@ class GateVerdictTest(unittest.TestCase):
         self.assertIn("dirty-remainder", result["signals_matched"])
 
     def test_preexisting_foreign_diff_does_not_cause_false_red(self):
-        """D106: чужой дифф, БЫВШИЙ в снимке «до», не портит вердикт закрытия."""
+        """Internal documentation."""
         foreign = self.repo.plan_dir / "foreign-owner-edit.md"
         foreign.write_text("владелец правит параллельно\n")
-        before = self.repo.snapshot()  # «до» снят ПОСЛЕ появления чужого файла — он учтён
+        before = self.repo.snapshot()
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
@@ -565,7 +556,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_no_op_status_not_terminal_is_red(self):
         self.repo.write_plan(done=0, phase_status="🟡 In progress")
-        self.repo.write_phase(status="🟡 In progress")  # статус не сдвинулся
+        self.repo.write_phase(status="🟡 In progress")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping("no-op: коммит есть, статус не сдвинулся")
         result = self._verdict()
@@ -573,13 +564,13 @@ class GateVerdictTest(unittest.TestCase):
         self.assertIn("no-op", result["signals_matched"])
 
     def test_totality_default_is_red(self):
-        """D105: не сматчилась НИ ОДНА строка таблицы → дефолт RED, а не тихий else."""
+        """Internal documentation."""
         signals = {
             "outcome_class": "ok", "permission_denials": [], "result_text": "",
             "lint_clean": True, "lint_new_error_suspected": False, "lint_new_warning_only": False,
             "commit_count": 1, "signature_complete": True, "bundle": False,
             "dirty_remainder": [], "item_fields_available": True,
-            "item_status": "⛔ Skipped by decision",  # ни GREEN, ни ATTENTION, ни известный RED
+            "item_status": "⛔ Skipped by decision",
             "pending_work_nonempty": False, "known_deviations_nonempty": False,
             "escalation_needed_yes": False,
         }
@@ -587,13 +578,13 @@ class GateVerdictTest(unittest.TestCase):
         self.assertEqual(klass, gate.RED)
         self.assertEqual(matched, ["no-signal-matched-default"])
 
-    # --- D104: число/порядок коммитов не судятся -------------------------------
+
 
     def test_commit_count_and_order_are_not_judged(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
         self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
         self.repo.write_handoff()
-        # Три коммита: два «атомарных» Scope + закрывающий bookkeeping.
+
         scope1 = self.repo.write_scope_file("x = 1\n")
         self.repo.add(scope1)
         self.repo.commit("scope-коммит 1/2")
@@ -601,7 +592,7 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.add(scope1)
         self.repo.commit("scope-коммит 2/2 (item-коммит)")
         self.repo.commit_bookkeeping("bookkeeping-коммит")
-        # Review-fix ПОСЛЕ закрывающего — легален (канон §6).
+
         scope1.write_text("x = 3\n")
         self.repo.add(scope1)
         self.repo.commit("review-fix поверх топологии")
@@ -609,7 +600,7 @@ class GateVerdictTest(unittest.TestCase):
         self.assertEqual(result["verdict"], gate.GREEN)
         self.assertEqual(result["raw"]["closure"]["commit_count"], 5)
 
-    # --- деградация baseline -----------------------------------------------
+
 
     def test_degraded_baseline_is_not_green(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")

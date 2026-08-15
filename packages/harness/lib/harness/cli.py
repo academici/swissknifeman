@@ -1,8 +1,4 @@
-"""Диспетчер команд harness. Точка входа: main(argv) → cmd_*(env, args).
-
-COMMANDS отображает имя команды на обработчик cmd_*(env, argv). Окружение
-строится из argv ([repo_root, cmd, *args], которые передаёт bin/harness) и
-пробрасывается явно (тестируемо в tmpdir)."""
+"""Internal documentation."""
 import sys
 
 from .agentpacks import cmd_agent_packs
@@ -33,8 +29,7 @@ COMMANDS = {
 
 
 def main(argv=None):
-    """argv: [repo_root, cmd, *args]. bin/harness передаёт root и команду явно —
-    тесты вызывают main([...]) без подмены argv процесса."""
+    """Internal documentation."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) < 2:
         print("usage: python3 -m harness <repo_root> <command> [args...]",

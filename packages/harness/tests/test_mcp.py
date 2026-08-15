@@ -1,4 +1,4 @@
-"""MCP-блок: .mcp.json merge-only, доступные пресеты, парсинг флага."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -45,9 +45,9 @@ class McpCase(unittest.TestCase):
         data = json.loads((self.proj / ".mcp.json").read_text())
         self.assertEqual(data["mcpServers"]["context7"],
                          {"type": "http", "url": "https://mcp.context7.com/mcp"})
-        self.assertIn("maind", data["mcpServers"])          # чужой сервер цел
+        self.assertIn("maind", data["mcpServers"])
         self.assertTrue((self.proj / ".mcp.json.bak").exists())
-        # повтор идемпотентен (merge-only)
+
         run(block_mcp, self.env, self.proj, ["context7"], False)
         data2 = json.loads((self.proj / ".mcp.json").read_text())
         self.assertEqual(list(data2["mcpServers"]), list(data["mcpServers"]))

@@ -1,1 +1,1 @@
-"""Провижининг проектов: онбординг, деплой, синк артефактов, миграция, воркспейс, сервисы."""
+"""Project provisioning: onboarding, deployment, sync, migration, workspaces, and services."""

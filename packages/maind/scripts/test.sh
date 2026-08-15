@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Прогон тестов пакета lib/maind (stdlib unittest, без зависимостей).
-# Запуск: scripts/test.sh [-v]   (-v — подробный вывод unittest)
-# Тесты гоняют логику против синтетического узла в tmpdir (tests/fixtures.py) и
-# фейкового демона памяти (FakeMemoryServer) — настоящий демон/узел не нужны.
+# Run lib/maind tests with stdlib unittest and no external dependencies.
+# Usage: scripts/test.sh [-v] (`-v` enables verbose unittest output).
+# Tests use a synthetic tmpdir hub and FakeMemoryServer; no live daemon is needed.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,9 +11,9 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# lib/ — пакет maind; REPO_ROOT — чтобы импортировался tests.fixtures.
-# MONOREPO_ROOT (на два уровня выше пакета) — чтобы импортировался пакет `core`;
-# опционально: в standalone-раскладке каталога core нет, путь не добавляется.
+# lib/ contains maind and REPO_ROOT exposes tests.fixtures.
+# MONOREPO_ROOT exposes core when this package runs inside the monorepo; standalone
+# layouts do not add a nonexistent core path.
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"

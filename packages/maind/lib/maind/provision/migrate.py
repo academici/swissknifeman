@@ -1,8 +1,8 @@
-"""Миграция в maind: from-brain (.projects.json) и from-agentmemory (.agentmemory).
+"""Migrate into maind from Brain projects or agent-memory configuration.
 
-from-brain   — собирает config.json из brain-кэша проектов + материализует граф.
-from-agentmemory (alias from-skm) — переносит iii-config.yaml в config/memory/
-               с service_name: maind. Перенос НЕдеструктивный — источник не трогаем."""
+from-brain builds config.json and materializes the graph. from-agentmemory
+copies iii-config.yaml with service_name maind without modifying its source.
+"""
 import re
 from pathlib import Path
 
@@ -41,7 +41,7 @@ def _from_brain(env, argv):
                                    "path": str(Path(pos[0]).expanduser())}},
     })
     write_config(env, config)
-    # материализуем граф из источников истины (derive → стор на проект + индекс)
+    # Materialize graph stores and index from sources of truth.
     from ..derive import derive_all
     stats = derive_all(env, config)
     nodes = sum(s["nodes"] for s in stats)

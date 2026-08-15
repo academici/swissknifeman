@@ -1,5 +1,4 @@
-"""block_output_style: копирует lean-стиль в проект + ставит top-level outputStyle в
-settings.local.json (merge-only); off → ничего не ставит; неизвестный стиль → die; dry — без записи."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -24,7 +23,7 @@ def run(fn, *a, **kw):
 class OutputStyleCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        # real_env → настоящий configs_dir с output-styles/lean.md; tmp-home изолирует ~/.claude
+
         self.env = fx.real_env(Path(self._tmp.name))
         self.proj = fx.make_project(Path(self._tmp.name))
 
@@ -60,7 +59,7 @@ class OutputStyleCase(unittest.TestCase):
         run(block_output_style, self.env, self.proj, "lean", False)
         s = json.loads((claude / "settings.local.json").read_text())
         self.assertEqual(s["outputStyle"], "lean")
-        self.assertEqual(s["permissions"]["allow"], ["Bash(ls)"])  # существующее сохранено
+        self.assertEqual(s["permissions"]["allow"], ["Bash(ls)"])
 
 
 if __name__ == "__main__":

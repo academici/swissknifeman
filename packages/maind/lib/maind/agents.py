@@ -1,8 +1,7 @@
-"""Реестр агентов узла: register/heartbeat/list/kill/reap (~/.maind/agents.json).
+"""Hub agent registry: register/heartbeat/list/kill/reap (~/.maind/agents.json).
 
-Состояние (alive/stale/dead) НЕ хранится — оно выводится при чтении из возраста
-последнего heartbeat (относительно heartbeat_interval_ms из конфига) и живости pid.
-Файл хранит только факты, поэтому остаётся компактным."""
+State is derived at read time from heartbeat age, configured interval, and PID
+liveness. The persisted file therefore contains facts only."""
 import json
 import os
 import signal
@@ -23,7 +22,7 @@ def save(env, db):
     atomic_write_json(env.agents_db, db, version=1)
 
 
-# ── деривация состояния (парс времени/pid — единые core-примитивы) ───────────
+# ── State derivation (shared time/PID primitives from core) ──────────────────
 def _age_ms(last, now):
     a, b = parse_iso(last), parse_iso(now)
     if a is None or b is None:
@@ -45,9 +44,9 @@ def _interval(config):
         "heartbeat_interval_ms", HEARTBEAT_DEFAULT_MS))
 
 
-# ── операции ─────────────────────────────────────────────────────────────────
+# ── Operations ──────────────────────────────────────────────────────────────
 def register(env, agent_id, *, pid=None, project=None, kind="generic", now=None):
-    """Upsert агента по id. registered_at выставляется один раз; heartbeat обновляется."""
+    """Upsert an agent by ID; preserve registered_at and refresh heartbeat."""
     now = now or now_iso()
     db = load(env)
     for a in db["agents"]:
@@ -80,7 +79,7 @@ def heartbeat(env, agent_id, now=None):
 
 
 def listing(env, config, now=None):
-    """Все агенты с вычисленным полем state ∈ {alive, stale, dead}."""
+    """Return all agents with derived state ∈ {alive, stale, dead}."""
     now = now or now_iso()
     interval = _interval(config)
     out = []
@@ -92,7 +91,7 @@ def listing(env, config, now=None):
 
 
 def kill(env, agent_id, *, force=False):
-    """Сигналит процессу агента (если есть живой pid) и снимает запись с реестра."""
+    """Signal a live agent process when present, then remove its registry record."""
     db = load(env)
     for i, a in enumerate(db["agents"]):
         if a["id"] == agent_id:
@@ -110,7 +109,7 @@ def kill(env, agent_id, *, force=False):
 
 
 def reap(env, config, now=None):
-    """Удаляет dead/stale агентов. Возвращает число удалённых."""
+    """Remove dead and stale agents; return the number removed."""
     now = now or now_iso()
     interval = _interval(config)
     db = load(env)

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Режим off — память выключена (база для A/B). Источается memory.sh.
 
 mode_remember() { echo "memory(off): режим выключен — ничего не сохранено"; }
 mode_recall()   { echo "memory(off): режим выключен"; }

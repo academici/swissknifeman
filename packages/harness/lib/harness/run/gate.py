@@ -1,56 +1,4 @@
-"""gate — вердикт по item'у волны: GREEN/ATTENTION/RED из ЧЕТЫРЁХ источников признаков.
-
-Актуальная семантика вердикта описана в `packages/harness/docs/reference/exec-wave.md`;
-исторические D103–D106 остаются provenance, но не runtime authority.
-
-Источники: (1) класс исхода прогона — приходит от `worker` (P4.3), готовым словарём,
-здесь не переразбирается; (2) `plan-lint --baseline <SHA до прогона> --gate new` — S1
-(§2 контракта), два процессных вызова, второй парсер плана НЕ заводится; (3)
-git-топология закрытия item'а в диапазоне `<SHA>..HEAD` (§5 контракта) — подпись
-закрытия, состав коммитов (бандл), чистота каталога плана относительно снимка «до»;
-(4) статус и поля item'а ПОСЛЕ прогона — тоже S1 (`--json`), поле `fields` уже отдаёт
-готовый читатель, собственного разбора item-тела здесь нет.
-
-Таблица «признак → вердикт» (`TABLE`) — единственный носитель соответствия (Implementation
-Rule 1): она ТОТАЛЬНА (D105) — `_classify` добавляет дефолтную строку RED, если не
-сматчилась ни одна строка данных. «Любой RED побеждает» и «сомнение → строгий вердикт»
-(IR 5/6) реализованы ОДНОЙ функцией приоритета рангов (`_RANK`), а не рассыпанными
-`if`: RED хуже ATTENTION хуже GREEN, `_classify` берёт минимальный ранг среди сматчившихся
-строк — свойство «любой RED побеждает» и «GREEN требует явного all-clear» следуют из
-самого ранжирования, а не из порядка проверки.
-
-**Разбор поля `Files` item'а НЕ производится** (Scope Excluded, P4.4) — это была бы
-ТРЕТЬЯ собственная точка разбора; состав коммитов судится ТОЛЬКО бинарным делением
-путей на «плановую бухгалтерию» (`plan.md`/`phases/**`/`handoff.md`/`index.md`/
-`open-questions.md`/`journal.jsonl`/`closure/**`/`roadmap.md`/`plans/ACTIVE.md`) и
-«остальное» (`plan.md` §2, D75) — деление читается как ДАННЫЕ (`_is_bookkeeping`), не
-как второй парсер плана.
-
-**Раскрытая находка: новую ERROR-диагностику от новой WARNING линтер отдаёт ТОЛЬКО
-комбинированным счётом** (`plan_lint.py --baseline --gate new` считает мультимножество
-`(kind, path, msg)` разом, `:2386`); CLI не отдаёт раздельный счёт по `kind`, а заводить
-третий разбор diff'а диагностик, дублирующий `Diagnostics.normalized_keys`, здесь
-запрещено тем же правилом, что и разбор `Files`. Разрешение — ПРИМЕНЕНИЕ уже названного
-правила IR6 «сомнение → строгий вердикт»: если комбинированный счёт нового > 0, а
-ТЕКУЩЕЕ дерево (без baseline, `--gate all`) несёт хотя бы одну ERROR где-либо — новое НЕ
-отделяется от преэкзистентного без второго носителя правды, значит вердикт обязан
-предположить худшее (`new_error_suspected`, RED); если текущих ERROR нет вовсе (`--gate
-all` зелёный), новое может быть только WARNING (`new_warning_only`, ATTENTION) — это
-не догадка, а логический вывод (не может быть новой ERROR там, где ERROR нет вообще).
-
-**Раскрытая находка: `has_escalation` (сырой блок `> 🔴 ESCALATION Pn.m:` в теле item'а)
-не входит в модель `--json`** (`plan_lint.py:2178–2179` отдаёт только `title`/`fields`,
-не сырые флаги построчного скана) — читать его отдельно означало бы третий разбор тела
-item'а. Не нужно: `lint_plan` САМ гейтит согласованность `is_blocked == en_yes ==
-has_escalation` (`plan_lint.py:1866–1870`) как ERROR схемы — расхождение всплывает
-источником (2) (новая ERROR), а согласованный случай уже покрыт источниками `Status:
-🔴 Blocked` и `Escalation Needed: yes` (обе — самостоятельные строки таблицы). Строка
-`ESCALATION-REQUIRED:` читается из ОТЧЁТА ВОРКЕРА (`outcome["result_text"]`, приходит
-готовым от P4.3) — это не разбор плана, а подстрока в чужом уже-полученном тексте.
-
-Функции чистые, кроме подпроцессных вызовов git/`plan-lint.py`; исключение
-`GateUnavailable` — ТОЛЬКО на структурной невозможности вынести вердикт (git/CLI не
-запустились), не бизнес-исход. stdlib-only."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import json
@@ -70,13 +18,10 @@ _BOOKKEEPING_ROOT_FILE = "plans/ACTIVE.md"
 
 
 class GateUnavailable(RuntimeError):
-    """git или `plan-lint.py` структурно недоступны (не репозиторий, бинарь не найден,
-    таймаут) — вердикт вынести нечем, это отказ ДО оценки, не RED-исход (fail-loud,
-    тот же класс, что `WorkerUnavailable` у P4.3 и `degraded` у P4.2 на полном отказе
-    источника)."""
+    """Internal documentation."""
 
 
-# --- git: снимок «до» и топология закрытия (§5 контракта) --------------------
+
 
 def _git(args, cwd, *, timeout=30):
     try:
@@ -102,11 +47,7 @@ def _porcelain_lines(git_root, plan_rel, *, timeout=30):
 
 
 def snapshot_before(plan_dir, *, timeout=30):
-    """Снимок ОДНИМ шагом ДО спавна воркера (Implementation Rule 2, D106): `HEAD` —
-    baseline линтера item'а; `git status --porcelain` каталога плана — эталон «что уже
-    было грязным», чтобы законный чужой дифф владельца не дал ложный RED. Обязателен
-    ИМЕННО до — `--baseline HEAD`, взятый ПОСЛЕ прогона, сравнивал бы дерево с самим
-    собой."""
+    """Internal documentation."""
     plan_dir = Path(plan_dir)
     git_root = _resolve_git_root(plan_dir, timeout=timeout)
     plan_rel = str(plan_dir.resolve().relative_to(git_root))
@@ -188,10 +129,7 @@ def _call_plan_layout(plan_dir, phase_id, monorepo_root, *, timeout=30):
 
 
 def _read_closure(before, phase_id, monorepo_root, *, timeout=30):
-    """Git-проверка закрытия (§5 контракта): подпись (все три файла — `plan.md`,
-    `phases/P<n>.md` фазы item'а, `handoff.md` — закоммичены где-то в диапазоне),
-    состав (бандл — бухгалтерия и Scope в одном коммите, D104: число/порядок коммитов
-    НЕ проверяются), чистота каталога плана относительно снимка «до» (D106)."""
+    """Internal documentation."""
     git_root = Path(before["git_root"])
     plan_rel = before["plan_rel"]
     layout = _call_plan_layout(git_root / plan_rel, phase_id, monorepo_root, timeout=timeout)
@@ -230,7 +168,7 @@ def _read_closure(before, phase_id, monorepo_root, *, timeout=30):
     }
 
 
-# --- S1: plan-lint.py — счёт новых диагностик + поля item'а после прогона ----
+
 
 def _run_plan_lint(plan_dir, monorepo_root, extra_args, *, timeout=60):
     script = Path(monorepo_root) / "packages" / "task" / "scripts" / "plan-lint.py"
@@ -242,10 +180,7 @@ def _run_plan_lint(plan_dir, monorepo_root, extra_args, *, timeout=60):
 
 
 def _read_lint_signals(plan_dir, monorepo_root, baseline_sha, *, timeout=60):
-    """S1 — `--baseline <SHA до прогона> --gate new` (§2 контракта). Деградация baseline
-    (недоступен git-ref) распознаётся по собственному WARNING линтера (`недоступен` в
-    stderr, `plan_lint.py:2382-2384`) — GREEN на деградации не выдаётся (Implementation
-    Rule 3). Разделение новая-ERROR/новая-WARNING — см. докстринг модуля (IR6, doubt→strict)."""
+    """Internal documentation."""
     baseline = _run_plan_lint(plan_dir, monorepo_root,
                               ["--baseline", baseline_sha, "--gate", "new"], timeout=timeout)
     if "недоступен" in (baseline.stderr or ""):
@@ -256,12 +191,12 @@ def _read_lint_signals(plan_dir, monorepo_root, baseline_sha, *, timeout=60):
         return {"degraded": False, "clean": True, "new_error_suspected": False,
                 "new_warning_only": False, "lint_class": "clean", "reason": None}
 
-    # Что-то новое есть (сумма ERROR+WARN, см. докстринг). Дизамбигуация: текущее
-    # дерево БЕЗ baseline (`--gate all`) красно ⇔ где-то в плане есть ХОТЯ БЫ одна
-    # ERROR (не обязательно новая) — если ERROR нет вовсе, новое может быть только
-    # WARNING (логический вывод, не догадка); если ERROR есть — новое от преэкзистентного
-    # не отделить без normalized_keys (второй носитель правды запрещён), IR6 велит
-    # предположить худшее.
+
+
+
+
+
+
     current = _run_plan_lint(plan_dir, monorepo_root, ["--gate", "all"], timeout=timeout)
     if current.returncode != 0:
         return {"degraded": False, "clean": False, "new_error_suspected": True,
@@ -278,11 +213,7 @@ def _empty_field(value):
 
 
 def _read_item_fields_after(plan_dir, phase_id, item_id, monorepo_root, *, timeout=60):
-    """S1 — `--json`, поля item'а ПОСЛЕ прогона (§2 контракта: «Любое из 16 полей
-    item'а | S1»). Возвращаемые поля флэттит сам `plan_lint.py` (`:2179`); собственного
-    разбора item-тела здесь нет. `available=False` — S1 недоступен (в т.ч. ERROR где-то
-    в плане делает `--json` ненулевым по коду, `plan_lint.py:2404`) или item не найден —
-    fail-loud факт, не тихая пустая запись."""
+    """Internal documentation."""
     try:
         proc = _run_plan_lint(plan_dir, monorepo_root, ["--json"], timeout=timeout)
     except GateUnavailable as exc:
@@ -313,42 +244,42 @@ def _read_item_fields_after(plan_dir, phase_id, item_id, monorepo_root, *, timeo
     }
 
 
-# --- таблица «признак → вердикт» (D105, ТОТАЛЬНА) -----------------------------
+
 
 TABLE = (
-    # RED — воркер не дал успешный конверт (timeout/transport/quota/error, §6.3 контракта)
+
     ("outcome-not-ok", RED, lambda s: s["outcome_class"] != "ok"),
-    # RED — новая ERROR линтера (в т.ч. подозреваемая, IR6)
+
     ("lint-new-error", RED, lambda s: s["lint_new_error_suspected"]),
-    # RED — коммитов в диапазоне нет вовсе
+
     ("no-commits", RED, lambda s: s["commit_count"] == 0),
-    # RED — подпись закрытия не закоммичена (полностью или частично), D103
+
     ("closure-signature-incomplete", RED, lambda s: not s["signature_complete"]),
-    # RED — незакоммиченный остаток в каталоге плана, которого не было «до», D106
+
     ("dirty-remainder", RED, lambda s: bool(s["dirty_remainder"])),
-    # RED — статус 🔴 Blocked
+
     ("status-blocked", RED, lambda s: s["item_status"] == "🔴 Blocked"),
     # RED — Escalation Needed: yes
     ("escalation-needed-yes", RED, lambda s: s["escalation_needed_yes"]),
-    # RED — маркер ESCALATION-REQUIRED: в отчёте воркера
+
     ("escalation-in-report", RED, lambda s: "ESCALATION-REQUIRED:" in (s["result_text"] or "")),
-    # RED — статус после прогона не терминален (no-op), D105
+
     ("no-op", RED, lambda s: s["item_status"] in ("🟡 In progress", "⬜ Not started")),
-    # RED — поля item'а после прогона не читаются вовсе (S1 недоступен)
+
     ("item-fields-unavailable", RED, lambda s: not s["item_fields_available"]),
-    # ATTENTION — статус 🟠 Done with deviations
+
     ("status-deviations", ATTENTION, lambda s: s["item_status"] == "🟠 Done with deviations"),
-    # ATTENTION — непустой permission_denials
+
     ("permission-denials", ATTENTION, lambda s: bool(s["permission_denials"])),
-    # ATTENTION — непустой Pending Work
+
     ("pending-work", ATTENTION, lambda s: s["pending_work_nonempty"]),
-    # ATTENTION — непустой Known Deviations
+
     ("known-deviations", ATTENTION, lambda s: s["known_deviations_nonempty"]),
-    # ATTENTION — бандл (закрытие закоммичено, состав нарушен), §5 контракта
+
     ("bundle", ATTENTION, lambda s: s["bundle"]),
-    # ATTENTION — только новые WARNING линтера
+
     ("lint-new-warning-only", ATTENTION, lambda s: s["lint_new_warning_only"]),
-    # GREEN — все четыре источника чисты одновременно (правило полноты, §7 контракта)
+
     ("all-clear", GREEN, lambda s: (
         s["outcome_class"] == "ok" and s["lint_clean"] and s["signature_complete"]
         and not s["dirty_remainder"] and s["commit_count"] > 0
@@ -357,10 +288,7 @@ TABLE = (
 
 
 def _classify(signals):
-    """Ранжирование `_RANK` (RED=0 < ATTENTION=1 < GREEN=2) реализует ОБА правила поверх
-    таблицы разом: «любой RED побеждает» и «сомнение → строгий вердикт» — минимальный
-    ранг среди СМАТЧИВШИХСЯ строк, никогда не смягчается остальными. Не сматчилась ни
-    одна строка → дефолт `RED` (D105, тотальность), а не молчаливый `else`."""
+    """Internal documentation."""
     matched = [(name, klass) for name, klass, predicate in TABLE if predicate(signals)]
     if not matched:
         matched = [("no-signal-matched-default", RED)]
@@ -368,13 +296,10 @@ def _classify(signals):
     return worst_klass, [name for name, _ in matched]
 
 
-# --- публичный API -------------------------------------------------------------
+
 
 def pre_launch_verdict(queue_item):
-    """Ветка «отказ до запуска» (Scope Included P4.4): item НЕ drivable по очереди
-    `plan_reader` (P4.2) — `Exec != plan-exec` / `ROUTING-INCONSISTENT` / форма `Next`
-    вне enum — RED без спавна воркера. Причина берётся ГОТОВОЙ у P4.2, здесь право
-    вождения не переразбирается (D31 — деривация не в компетенции этого модуля)."""
+    """Internal documentation."""
     if queue_item.get("drivable"):
         raise ValueError("pre_launch_verdict вызывается только для НЕ-drivable item'а")
     return {
@@ -387,12 +312,7 @@ def pre_launch_verdict(queue_item):
 
 def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, monorepo_root=None,
            timeout=60):
-    """Вердикт ПОСЛЕ прогона воркера, из четырёх источников (§7 контракта, порядок
-    вычисления — Implementation Rule 10): класс исхода прогона (`outcome`, от P4.3) →
-    линтер (S1) → git-топология закрытия (§5) → статус/поля item'а после прогона (S1).
-    `before` — снимок `snapshot_before()`, взятый ДО спавна воркера. Возвращает
-    структуру: класс + поимённый перечень сработавших признаков + класс оценки линтера
-    + сырые данные источников (Deliverables P4.4) — одна буква без перечня не результат."""
+    """Internal documentation."""
     plan_dir = Path(plan_dir)
     if monorepo_root is None:
         monorepo_root = find_monorepo_root(plan_dir.resolve())

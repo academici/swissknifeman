@@ -1,9 +1,4 @@
-"""agent-router · общие примитивы для router.py (UserPromptSubmit) и session-policy.py
-(SessionStart). Stdlib-only. Хуки автономны в ~/.claude/hooks — маленький дубль тут
-осознан (импорт пакета harness в момент работы хука недоступен).
-
-Никогда не бросай наружу: вызывающий хук оборачивает всё в try/except → exit 0.
-"""
+"""Internal documentation."""
 import json
 from pathlib import Path
 
@@ -11,8 +6,7 @@ _DEFAULTS = {"POLICY": "propose", "THRESHOLD": "2", "ESCAPE_PREFIX": "~"}
 
 
 def read_env(cfg_dir, cwd):
-    """POLICY/THRESHOLD/ESCAPE_PREFIX. Порядок: глобальный env.ini рядом с хуком, затем
-    project-local <cwd>/.claude/agent-router.env.ini (project перебивает по ключу)."""
+    """Internal documentation."""
     vals = dict(_DEFAULTS)
     files = [Path(cfg_dir) / "env.ini"]
     if cwd:
@@ -34,8 +28,7 @@ def read_env(cfg_dir, cwd):
 
 
 def load_catalog(cfg_dir, cwd):
-    """Per-project <cwd>/.claude/agent-router.config.json если валиден, иначе глобальный
-    config.json рядом с хуком (fallback: политика + 5 /task:*)."""
+    """Internal documentation."""
     if cwd:
         p = Path(cwd) / ".claude" / "agent-router.config.json"
         try:
@@ -49,8 +42,7 @@ def load_catalog(cfg_dir, cwd):
 
 
 def score_entries(text, entries):
-    """Сумма весов по вхождению ключевых слов (lowercase substring). Возвращает
-    [(name, score), …] со score>0 по убыванию. Детерминированно (idempotent)."""
+    """Internal documentation."""
     low = text.lower()
     scored = []
     for e in entries:

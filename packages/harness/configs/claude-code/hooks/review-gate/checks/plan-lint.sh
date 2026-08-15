@@ -1,23 +1,15 @@
 #!/usr/bin/env bash
-# plan-lint.sh — G2 (strict-класс). Изменения задели `plans/<ID>/` → прогон
-# `packages/task/scripts/plan-lint.py` по КАЖДОМУ задетому плану; ненулевой
-# exit лаунчера (ERROR-гейт, default `--gate all`) → нарушение.
-# exit 0 = чисто, ≠0 = нарушение; stdout = plans/<ID>: первая строка ERROR.
 set -uo pipefail
 
 changed="$( { git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u | grep -v '^$')"
 [ -n "$changed" ] || exit 0
 
-# Требуем ХВОСТОВОЙ слэш: только реальные подкаталоги plans/<ID>/..., а не
-# корневые файлы (plans/README.md, plans/ACTIVE.md) — иначе `grep` без слэша
-# принимал их за ID плана и plan-lint.py падал «путь не найден» (найдено
-# live-прогоном P9.1).
 plan_ids="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#^plans/##; s#/$##' | sort -u)"
 [ -n "$plan_ids" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 lint_py="$repo_root/packages/task/scripts/plan-lint.py"
-[ -f "$lint_py" ] || exit 0   # плана-протокола нет в этом дереве — не наш случай
+[ -f "$lint_py" ] || exit 0   # No plan protocol in this tree.
 
 violations=0
 while IFS= read -r pid; do

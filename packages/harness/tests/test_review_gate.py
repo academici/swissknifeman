@@ -1,9 +1,4 @@
-"""review-gate: поведенческий прогон SubagentStop-хука через subprocess (tmp
-git-репо + tmp копия HOOK_DIR — конфиг/состояние изолированы от машины). Ровно
-три кейса (P9.1 Validation §2): синтетическое нарушение (`generated-assets`)
-ловится с `file:line` в `strict`; чистый дифф проходит без вывода; третье
-подряд strict-срабатывание ТОЙ ЖЕ проверки в одной сессии+агенте понижает
-режим до `warn` (счётчик диспетчера `checks/run-checks.sh`)."""
+"""Internal documentation."""
 import json
 import os
 import shutil
@@ -32,8 +27,7 @@ def _init_repo(root):
 
 
 def _hookdir(tmp, state_dir, mode="strict"):
-    """Tmp-копия HOOK_DIR (review-gate.sh резолвит его от собственного пути) —
-    правки config.json/env.ini не трогают реальный ~/.claude/hooks машины."""
+    """Internal documentation."""
     dst = tmp / "hookdir"
     shutil.copytree(RG_SRC, dst)
     (dst / "env.ini").write_text("MODE=strict\n")
@@ -100,13 +94,12 @@ class TestReviewGate(unittest.TestCase):
         rc3, out3, err3 = _run_hook(self.hookdir, self.repo, self.state_dir, session, agent)
         self.assertEqual(rc1, 2)
         self.assertEqual(rc2, 2)
-        self.assertEqual(rc3, 0)   # понижено до warn — review-gate.sh не блокирует
+        self.assertEqual(rc3, 0)
         self.assertIn("DOWNGRADE", out3)
 
 
 def _hookdir_citations(tmp):
-    """Tmp-копия HOOK_DIR с ЕДИНСТВЕННОЙ проверкой `plan-citations` — образец
-    `_hookdir` выше, но набор/режим свои (P11.7, третья точка принуждения)."""
+    """Internal documentation."""
     dst = tmp / "hookdir"
     shutil.copytree(RG_SRC, dst)
     (dst / "env.ini").write_text("MODE=strict\n")
@@ -122,9 +115,7 @@ def _hookdir_citations(tmp):
 
 
 class TestPlanCitationsCheck(unittest.TestCase):
-    """P11.7: `plan-citations` — прогон РЕАЛЬНОГО `packages/task/scripts/verify-plan-citations.py`
-    (не стаб) по задетому плану. Скрипт резолвит свой `REPO_ROOT` от
-    собственного пути, поэтому копия в tmp-репо работает автономно."""
+    """Internal documentation."""
 
     def setUp(self):
         self._td = tempfile.TemporaryDirectory()

@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-# Notification hook: ОС-уведомление, когда Claude Code ждёт человека —
-# запрос разрешения на инструмент или утверждение плана (ExitPlanMode),
-# а также простой промпта дольше ~60 сек.
 #
-# Регистрируется на событие "Notification". Никогда не блокирует — exit 0.
-# Кросс-платформенно: Linux (notify-send), macOS (osascript/terminal-notifier),
-# WSL/Windows (powershell toast / msg.exe). Если бэкенда нет — тихо выходит.
 
 input=$(cat)
 
-# .message — текст уведомления от Claude Code (напр. "Claude needs your
-# permission to use Bash"). cwd — каталог проекта для контекста заголовка.
 msg=$(printf '%s' "$input" | jq -r '.message // "Claude Code ждёт ввода"' 2>/dev/null)
 cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null)
 [[ -n "$msg" ]] || msg="Claude Code ждёт ввода"
@@ -22,7 +14,6 @@ title="Claude Code"
 
 notify_linux() {
   command -v notify-send >/dev/null 2>&1 || return 1
-  # -a имя приложения, -u critical чтобы не авто-исчезало мгновенно
   notify-send -a "Claude Code" -u critical "$title" "$msg" >/dev/null 2>&1
 }
 
@@ -32,13 +23,11 @@ notify_macos() {
     return 0
   fi
   command -v osascript >/dev/null 2>&1 || return 1
-  # экранируем двойные кавычки для AppleScript-строки
   local m="${msg//\"/\\\"}" t="${title//\"/\\\"}"
   osascript -e "display notification \"$m\" with title \"$t\" sound name \"Submarine\"" >/dev/null 2>&1
 }
 
 notify_windows() {
-  # WSL/Git-Bash: пробуем toast через PowerShell, иначе msg.exe
   local ps
   ps=$(command -v powershell.exe || command -v pwsh.exe) || ps=""
   if [[ -n "$ps" ]]; then
@@ -61,7 +50,6 @@ notify_windows() {
 
 case "$(uname -s)" in
   Linux*)
-    # WSL опознаём по микроядру; иначе обычный Linux desktop
     if grep -qi microsoft /proc/version 2>/dev/null; then
       notify_windows || notify_linux
     else

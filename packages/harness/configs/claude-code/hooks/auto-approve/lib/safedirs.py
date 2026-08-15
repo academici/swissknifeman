@@ -1,30 +1,5 @@
 #!/usr/bin/env python3
-"""safe-dirs · вердикт для auto-approve — можно ли пропустить rm/rmdir мимо deny_hard.
-
-Allowlist доверенных директорий — MACHINE-OWNED конфиг, лестница поиска:
-  1. $SKM_SAFE_DIRS_CONFIG — явный override (эксклюзивный: задан → только он);
-  2. <монорепо swissknifeman>/safe-dirs.json — ОСНОВНОЕ место (gitignored, шаблон
-     safe-dirs.example.json рядом); корень репо резолвится через realpath лаунчера
-     из PATH (swissknifeman/skiller/harness/maind — паттерн memory-хука);
-  3. ~/.swissknifeman/safe-dirs.json — legacy-fallback (home оставлен памяти/реестру).
-Плюс авто-включение путей проектов из ~/.swissknifeman/projects.json. Project-override
-конфига хука (.claude/auto-approve.config.json) сюда НЕ влияет — враждебный репозиторий
-не должен уметь разрешить себе rm вне своих папок.
-
-Контракт: stdin — JSON события PreToolUse; stdout — строка "safe", если ВСЕ rm/rmdir
-в команде валидированы против allowlist, иначе пусто. Любая ошибка/сомнение → пусто
-(fail-closed: вызывающий lib/safedirs.sh без вердикта оставляет deny_hard как есть).
-
-Дисциплина анализа (не эмулируем shell — отвергаем непонятое):
-  · argv через shlex (кавычки честно), сегменты по операторам ; | & && || ( ) < >
-  · rm/rmdir НЕ в голове сегмента (xargs rm, sudo rm, env-prefix) → unsafe;
-    исключение — `git rm` (обратим, его маскирует сам analyze.sh)
-  · флаги строго из белого списка; `--` учитывается; без аргументов → unsafe
-  · пути: $ ` { } → unsafe; `..` как компонент → unsafe (лексически, до realpath);
-    глоб → containment статического префикса; относительные — от cwd с cd-трекингом
-  · containment по компонентам после realpath (symlink escape закрыт); корень
-    safe-dir не удаляем (глоб по детям — можно); exclude; protect_git
-Вердикт all-or-nothing на всю команду. Stdlib-only."""
+"""Internal documentation."""
 import json
 import os
 import shlex
@@ -44,9 +19,7 @@ _RMDIR_SHORT = set("v")
 # ---------------------------------------------------------------- allowlist
 
 def _repo_root():
-    """Корень монорепо swissknifeman через realpath лаунчера из PATH (маркер —
-    .claude-plugin/marketplace.json). Автономный мини-резолвер: хук живёт копией
-    в ~/.claude/hooks без PYTHONPATH монорепо (осознанный дубль, как pack-guard)."""
+    """Internal documentation."""
     for name in ("swissknifeman", "skiller", "harness", "maind"):
         exe = shutil.which(name)
         if not exe:
@@ -63,8 +36,7 @@ def _repo_root():
 
 
 def _config_path(home):
-    """Лестница из докстринга модуля. env-override эксклюзивен (нет файла → off,
-    без фолбэков) — детерминизм для тестов и ручного пина."""
+    """Internal documentation."""
     env = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if env:
         return env
@@ -75,8 +47,7 @@ def _config_path(home):
 
 
 def load_allowlist(home, path=None):
-    """roots/excludes (realpath) + cfg из safe-dirs.json (_config_path).
-    Нет файла / битый JSON / version != 1 → None (фича выключена)."""
+    """Internal documentation."""
     try:
         with open(path or _config_path(home), encoding="utf-8") as f:
             cfg = json.load(f)
@@ -105,7 +76,7 @@ def load_allowlist(home, path=None):
 
 
 def _registered_projects(home):
-    """projects[].path из реестра skiller; сбой реестра лишь сужает allowlist."""
+    """Internal documentation."""
     try:
         with open(os.path.join(home, ".swissknifeman", "projects.json"),
                   encoding="utf-8") as f:
@@ -117,7 +88,7 @@ def _registered_projects(home):
 
 
 def _expand_tilde(path, home):
-    """'~'/'~/x' → от переданного home (не от env); '~user' → None (не разрешаем)."""
+    """Internal documentation."""
     if path == "~":
         return home
     if path.startswith("~/"):
@@ -128,7 +99,7 @@ def _expand_tilde(path, home):
 
 
 def _abs_real(path, home):
-    """tilde-экспансия + realpath; относительный/неразрешимый путь → None."""
+    """Internal documentation."""
     p = _expand_tilde(path, home)
     if not p or not os.path.isabs(p):
         return None
@@ -136,8 +107,7 @@ def _abs_real(path, home):
 
 
 def _norm_root(path, home, home_real):
-    """Корень allowlist. Не доверяем даже своему конфигу: '/', $HOME и предки
-    $HOME игнорируются — safe-dir обязан быть УЖЕ дома или сбоку, не над ним."""
+    """Internal documentation."""
     r = _abs_real(path, home)
     if not r or r == os.sep:
         return None
@@ -146,10 +116,10 @@ def _norm_root(path, home, home_real):
     return r
 
 
-# ---------------------------------------------------------------- разбор команды
+
 
 def _tokenize(cmd):
-    """Список сегментов [(sep_before, [tokens])]; None — shlex не смог (unsafe)."""
+    """Internal documentation."""
     lex = shlex.shlex(cmd, posix=True, punctuation_chars=_PUNCT)
     lex.whitespace_split = True
     try:
@@ -171,15 +141,14 @@ def _tokenize(cmd):
 
 
 def _is_branch_op(op):
-    """Ветвление/фон/сабшелл — статически непредсказуемый cwd. Редиректы — нет."""
+    """Internal documentation."""
     if op in ("&&", ";") or all(ch in "<>" for ch in op):
         return False
     return True
 
 
 def _cd_arg_resolvable(arg):
-    """cd <literal>: только статически разрешимый аргумент ('cd -', глоб, $VAR,
-    '..'-компоненты — нет: логический cd bash ≠ физический realpath)."""
+    """Internal documentation."""
     if arg.startswith("-"):
         return False
     if any(ch in arg for ch in _FORBIDDEN) or any(ch in arg for ch in _GLOB_CHARS):
@@ -190,8 +159,7 @@ def _cd_arg_resolvable(arg):
 
 
 def _track_candidates(segs, cwd, home):
-    """candidates-cwd ДО исполнения каждого сегмента (множество, т.к. `cd X; …`
-    неоднозначен). Ветвление вместе с cd → ∅ всюду (v1, консервативно)."""
+    """Internal documentation."""
     base = {os.path.realpath(cwd)} if cwd else set()
     has_cd = any(t and t[0] in ("cd", "pushd", "popd") for _, t in segs)
     if has_cd and any(_is_branch_op(sep) for sep, _ in segs if sep):
@@ -217,41 +185,41 @@ def _track_candidates(segs, cwd, home):
             else:
                 new = set()
             if not new:
-                cands = set()          # cd в неизвестное место → cwd неизвестен
+                cands = set()
             elif i + 1 < len(segs) and segs[i + 1][0] == "&&":
-                cands = new            # после && rm исполнится только при успехе cd
+                cands = new
             else:
-                cands = cands | new    # `cd X; rm` — cd мог упасть, проверяем оба
+                cands = cands | new
     return result
 
 
-# ---------------------------------------------------------------- пути
+
 
 def _contained(p, allow, allow_root=False):
-    """p (realpath) строго внутри одного из roots, вне exclude, вне .git."""
+    """Internal documentation."""
     root = next((r for r in allow["roots"]
                  if p == r or p.startswith(r + os.sep)), None)
     if root is None:
         return False
     if p == root and not allow_root:
-        return False                   # сам корень safe-dir не удаляем
+        return False
     for ex in allow["excludes"]:
         if p == ex or p.startswith(ex + os.sep):
             return False
     if allow["protect_git"] and ".git" in os.path.relpath(p, root).split(os.sep):
-        return False                   # git — та самая страховка, её не сносим
+        return False
     return True
 
 
 def _path_safe(tok, candidates, allow, home):
-    """Один операнд rm/rmdir. Fail-closed: непонятое → False."""
+    """Internal documentation."""
     if not tok or any(ch in tok for ch in _FORBIDDEN):
         return False
     if ".." in tok.split("/"):
         return False
     if tok.startswith("~"):
         if tok == "~" or not tok.startswith("~/"):
-            return False               # '~' целиком / '~user' — не разрешаем
+            return False
         tok = os.path.join(home, tok[2:])
     allow_root = False
     if any(ch in tok for ch in _GLOB_CHARS):
@@ -259,12 +227,12 @@ def _path_safe(tok, candidates, allow, home):
             return False
         if allow["protect_git"] and not _glob_git_safe(tok):
             return False
-        # containment по статическому dir-префиксу: раскрытие глоба даёт только
-        # его детей ('..' отвергнут выше; rm по симлинку-матчу удалит линк, не цель)
+
+
         idx = min(tok.index(ch) for ch in _GLOB_CHARS if ch in tok)
         cut = tok.rfind("/", 0, idx)
         tok = tok[:cut + 1] if cut >= 0 else "."
-        allow_root = True              # `root/*` удаляет детей, не корень — можно
+        allow_root = True
     if os.path.isabs(tok):
         paths = [os.path.realpath(tok)]
     else:
@@ -275,9 +243,7 @@ def _path_safe(tok, candidates, allow, home):
 
 
 def _glob_git_safe(pattern):
-    """Глоб не должен уметь дотянуться до .git: bash-глоб матчит ведущую точку
-    только литеральной '.', поэтому dot-компонент с метасимволами ('.git*', '.*')
-    и литеральный '.git' в любом месте паттерна — отказ."""
+    """Internal documentation."""
     for comp in pattern.split("/"):
         if comp == ".git":
             return False
@@ -287,7 +253,7 @@ def _glob_git_safe(pattern):
     return True
 
 
-# ---------------------------------------------------------------- сегменты
+
 
 def _flag_ok(name, tok):
     if name == "rm":
@@ -295,7 +261,7 @@ def _flag_ok(name, tok):
             return tok in _RM_LONG
         return len(tok) > 1 and all(ch in _RM_SHORT for ch in tok[1:])
     if tok.startswith("--"):
-        return tok in _RMDIR_LONG      # -p/--parents лезет к предкам — отказ
+        return tok in _RMDIR_LONG
     return len(tok) > 1 and all(ch in _RMDIR_SHORT for ch in tok[1:])
 
 
@@ -315,9 +281,9 @@ def _segment_safe(toks, candidates, allow, home):
 
 
 def command_is_safe(cmd, cwd, allow, home):
-    """True ⇔ каждая rm/rmdir-команда в cmd валидирована против allowlist."""
+    """Internal documentation."""
     if not cmd or "\n" in cmd or "\r" in cmd:
-        return False                   # многострочность → сегментация ненадёжна
+        return False
     segs = _tokenize(cmd)
     if not segs:
         return False
@@ -326,12 +292,12 @@ def command_is_safe(cmd, cwd, allow, home):
         for j, t in enumerate(toks):
             if t in ("rm", "rmdir") and j > 0:
                 if toks[0] == "git" and j == 1:
-                    continue           # git rm обслуживает маскирование analyze.sh
-                return False           # xargs rm / sudo rm / FOO=x rm / rm как арг
+                    continue
+                return False
         if toks and toks[0] in ("rm", "rmdir"):
             heads.append(True)
     if not heads:
-        return False                   # нечего разрешать — не маскируем
+        return False
     cands = _track_candidates(segs, cwd, home)
     return all(_segment_safe(toks, cands[i], allow, home)
                for i, (_, toks) in enumerate(segs)
@@ -348,7 +314,7 @@ def main():
         if allow and command_is_safe(cmd, cwd, allow, home):
             print("safe")
     except Exception:
-        pass  # fail-closed: вердикта нет — deny_hard остаётся в силе
+        pass
 
 
 if __name__ == "__main__":

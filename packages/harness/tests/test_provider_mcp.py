@@ -120,8 +120,8 @@ class ProviderMcpCase(unittest.TestCase):
             self.assertEqual(repaired.actions[0].action, ArtifactActionKind.REPAIR)
 
     def test_playwright_output_dir_and_pinned_version_consistent_across_carriers(self):
-        # P5.3/P5.6: `--output-dir .playwright-mcp` + пинованная версия обязаны совпадать во
-        # всех трёх носителях (не только зайти в один и молча разъехаться с остальными).
+
+
         preset = json.loads(CLAUDE_PLAYWRIGHT_PRESET.read_text(encoding="utf-8"))
         claude_bindings = json.loads(CLAUDE_BINDINGS.read_text(encoding="utf-8"))
         codex_bindings = json.loads(CODEX_BINDINGS.read_text(encoding="utf-8"))

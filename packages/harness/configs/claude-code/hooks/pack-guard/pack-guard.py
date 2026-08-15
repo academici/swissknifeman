@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""pack-guard · PreToolUse — слой 2 mutation-защиты generated-ассетов agent-packs: ловит
-правку ДО того, как она случилась (слой 1 — lock_drift()/`doctor --drift`, постфактум).
-Опциональный, по умолчанию НЕ устанавливается: включается явно `harness hooks --target .
---pack-guard warn|strict`. Режимы: off (не ставится) / warn (стерr-предупреждение, не блок) /
-strict (блокирует Edit/Write/MultiEdit/NotebookEdit по generated-файлу).
-
-Решение — по `.claude/agent-pack.lock.json` проекта: тот же разбор `packs[].files[].target`
-(без `user_owned`), что `_protected_sets()` в ../run-report/_lib.py (осознанный маленький
-дубль — автономность хука, PYTHONPATH монорепо в ~/.claude/hooks недоступен).
-
-Дисциплина: хук никогда не роняет сессию — любая ошибка/битый JSON/отсутствие lock →
-exit 0 (эквивалент off), НИКОГДА не блокирует из-за внутренней ошибки. Stdlib-only."""
+"""Internal documentation."""
 import json
 import os
 import sys
@@ -22,8 +11,7 @@ _EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
 
 
 def _read_mode(cwd):
-    """MODE из <cwd>/.claude/pack-guard.env.ini (файл пишет `harness hooks --pack-guard`).
-    Нет файла / битый / неизвестное значение → off (безопасный дефолт)."""
+    """Internal documentation."""
     if not cwd:
         return _DEFAULT_MODE
     f = Path(cwd) / ".claude" / "pack-guard.env.ini"
@@ -44,8 +32,7 @@ def _read_mode(cwd):
 
 
 def _managed_files(cwd):
-    """abs-путь → имя пака, по `.claude/agent-pack.lock.json`, БЕЗ `user_owned` (их
-    редактировать можно свободно — это и есть точка расширения base+overlay, D11)."""
+    """Internal documentation."""
     result = {}
     if not cwd:
         return result
@@ -67,7 +54,7 @@ def _managed_files(cwd):
 
 
 def _target_path(tool_name, tool_input):
-    """file_path редактируемого файла по типу инструмента; нерелевантный tool → None."""
+    """Internal documentation."""
     if not isinstance(tool_input, dict):
         return None
     if tool_name in _EDIT_TOOLS:
@@ -99,21 +86,21 @@ def main():
 
     managed = _managed_files(cwd)
     if not managed:
-        sys.exit(0)  # нет lock'а / паков в проекте — нечего защищать
+        sys.exit(0)
 
     abs_fp = fp if os.path.isabs(fp) else str(Path(cwd) / fp)
     pack = managed.get(abs_fp)
     if pack is None:
-        sys.exit(0)  # файл не под управлением пака (или user_owned) — правь свободно
+        sys.exit(0)
 
     msg = (f"pack-guard: файл сгенерирован паком '{pack}' (swissknifeman:generated) — "
            f"не редактируй ядро напрямую: правь оверлей пака или прими изменение через "
            f"'harness agent-packs upgrade': {fp}")
     if mode == "strict":
         sys.stderr.write(msg + "\n")
-        sys.exit(2)  # PreToolUse: exit 2 блокирует вызов, stderr — причина
+        sys.exit(2)
     sys.stderr.write("[warn] " + msg + "\n")
-    sys.exit(0)  # warn: предупреждение, не блок
+    sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -122,4 +109,4 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception:
-        sys.exit(0)  # хук никогда не ломает сессию
+        sys.exit(0)

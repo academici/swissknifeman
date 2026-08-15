@@ -1,9 +1,4 @@
-"""Тесты валидатора реестра ролей ревью (harness.reviewroles) — изоляция в tmpdir.
-
-Позитив: синтетический реестр+пак+канон проходит все восемь проверок чисто. Пять
-негативных фикстур — по одной на класс отказа, названный Implementation Rules
-P9.2: отсутствующая проекция · заголовок вне канона · роль вне реестра · измерение
-вне словаря · неизменённый `review_version`."""
+"""Internal documentation."""
 import json
 import tempfile
 import unittest
@@ -114,7 +109,7 @@ class ReviewRolesTestCase(unittest.TestCase):
         self.assertTrue(any(v.check == "sections-present" for v in violations))
 
     def test_negative_role_outside_registry(self):
-        # Второй пак несёт agents/reviewer.md на диске, но НЕ упомянут в реестре.
+
         pack2 = self.agent_packs_dir / "second-pack" / "agents"
         pack2.mkdir(parents=True)
         (pack2 / "reviewer.md").write_text(_CARRIER_TEXT, encoding="utf-8")
@@ -124,7 +119,7 @@ class ReviewRolesTestCase(unittest.TestCase):
                             for v in violations))
 
     def test_negative_canon_role_outside_registry(self):
-        # roles.json несёт reviewer-роль третьего пака, которого нет в review-roles.json.
+
         self.roles_json.write_text(json.dumps({
             "catalog_version": "1.0.0",
             "roles": [
@@ -149,7 +144,7 @@ class ReviewRolesTestCase(unittest.TestCase):
         data = self._registry()
         path = self.root / "review-roles.json"
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        # Отпечаток НЕ зарегистрирован для текущего состава — версия "не сдвинута".
+
         orig = dict(rr._VERSION_FINGERPRINTS)
         rr._VERSION_FINGERPRINTS = {"1.0.0": "0" * 64}
         try:
@@ -165,8 +160,8 @@ class ReviewRolesTestCase(unittest.TestCase):
         self.assertTrue(violations)
 
     def test_missing_skills_json_gives_one_diagnostic_violation(self):
-        # Standalone-раскладка пакета (skiller-сосед отсутствует) — ОДНА диагностичная
-        # находка, не N ложных «skill не найден» (P11.8, реконсиляция аудита P9, находка 7).
+
+
         rr._SKILLS_JSON = self.root / "does-not-exist" / "skills.json"
         violations, code = self._run(self._registry())
         self.assertEqual(code, 1)

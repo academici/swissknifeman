@@ -1,7 +1,7 @@
-"""Мониторинг экосистемы: состояние проектов и демонов (read-only, fail-soft).
+"""Read-only, fail-soft ecosystem monitoring for projects and daemons.
 
-JSON-first — это контракт для будущей GUI-панели. Все пробы устойчивы: нет файла/демона/
-systemctl → безопасные поля, без исключений."""
+The JSON-first report is safe when files, daemons, or systemctl are unavailable.
+"""
 import json
 import os
 import subprocess
@@ -27,7 +27,7 @@ def _read_skills_lock(project_path):
 
 
 def _read_agent_pack_lock(project_path):
-    """`.claude/agent-pack.lock.json` (harness agent-packs) или None. Структура:
+    """Return `.claude/agent-pack.lock.json` or None. Structure:
     {schema, packs: {<name>: {version, files:[{local_modified}], …}}}."""
     f = project_path / ".claude" / "agent-pack.lock.json"
     if not f.is_file():
@@ -40,10 +40,10 @@ def _read_agent_pack_lock(project_path):
 
 def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
                   provider_context=None):
-    """Состояние одного проекта (read-only). status ∈ connected|partial|standalone|missing-path.
+    """Return one read-only project status report.
 
-    trusted: множество доверенных каталогов (из hub-настроек). None → читаем один раз тут;
-    в цикле передавайте заранее вычисленное (как memory_reachable)."""
+    Pass precomputed trusted paths in loops to avoid repeated configuration reads.
+    """
     pid = project["id"]
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
@@ -67,7 +67,7 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
             skills["total"] += 1
             skills[_SKILL_KEY.get(e.get("source", "local"), "local")] += 1
 
-    # Слой ролей/агентов (harness agent-packs): какие паки установлены + есть ли локальные правки.
+    # Harness agent-pack layer: installed packs and local modifications.
     ap_lock = _read_agent_pack_lock(path)
     ap_names = sorted((ap_lock.get("packs") or {}).keys()) if ap_lock else []
     ap_modified = bool(ap_lock and any(
@@ -77,10 +77,10 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
     agent_packs = {"installed": ap_names, "count": len(ap_names),
                    "lock": ap_lock is not None, "modified": ap_modified}
 
-    mem_mcp = any_has("maind")       # сервер памяти проекта = maind (raw agentmemory выведен)
+    mem_mcp = any_has("maind")       # maind replaces the raw agentmemory server.
     code_server = codegraph.server_name(project, codegraph.settings(config))
     configured = {
-        "agentmemory_mcp": any_has("agentmemory"),   # info: остался ли raw-сервер (footgun)
+        "agentmemory_mcp": any_has("agentmemory"),   # Informational: raw-server footgun.
         "maind_mcp": mem_mcp,
         "code_mcp": any_has(code_server), "mcp_files": files,
         "skills_lock": lock is not None, "skills_count": skills["total"],
@@ -95,7 +95,7 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
     if mem_mcp and memory_reachable:
         status = "connected"
     elif mem_mcp or configured["deployed_flag"]:
-        status = "partial"   # сервер без живого демона, или флаг без сервера (drift)
+        status = "partial"   # Server without daemon, or deployment flag without server.
     else:
         status = "standalone"
 
@@ -112,13 +112,14 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
 
 
 def drift_hints(env, config, report):
-    """Рассинхроны слоёв проекта с точной командой починки (read-only). Единый источник
-    для `projects status`, `health` и зонтичного `swissknifeman status`. Каждый элемент —
-    {layer, issue, fix}. Пусто = всё консистентно (по тому, что видно из файлов)."""
+    """Return read-only project-layer drift with an exact repair command.
+
+    This is the shared source for projects status, health, and umbrella status.
+    """
     pid = report.get("id")
     c = report.get("configured", {})
     hints = []
-    # MCP / память: сервер настроен, но демон молчит — ИЛИ флаг без сервера (drift провижининга).
+    # MCP/memory: configured server without daemon, or deployment drift.
     if report.get("status") == "partial":
         if c.get("maind_mcp") and not report.get("daemons", {}).get("memory_reachable"):
             hints.append({"layer": "memory",
@@ -130,12 +131,12 @@ def drift_hints(env, config, report):
                                    "(починка не сработает, если провайдерский план проекта "
                                    "отказал unmanaged-target)",
                           "fix": f"maind sync --only mcp --project {pid}"})
-    # Роли/агенты: профиль типа проекта ожидает паки, которых нет в lock.
+    # Roles/agents: project profile expects packs absent from the lock.
     try:
         from .projects import get as _get
         from .provision.sync import _resolve_agent_pack
         expected = _resolve_agent_pack(config, _get(config, pid) or {})
-    except (SystemExit, Exception):       # fail-soft: профиль не найден → без подсказки
+    except (SystemExit, Exception):       # Fail soft when a profile is unavailable.
         expected = []
     installed = set((report.get("agent_packs") or {}).get("installed") or [])
     missing = [p for p in expected if p not in installed]
@@ -155,19 +156,19 @@ def detect_docs_watcher(env):
             os.kill(pid, 0)
             return {"running": True, "via": "pidfile", "pid": pid}
         except (ValueError, ProcessLookupError, PermissionError, OSError):
-            pass  # pidfile битый/процесс мёртв — падаем в проверку через systemd ниже
+            pass  # Invalid PID file or dead process; check systemd below.
     try:
         r = subprocess.run(["systemctl", "--user", "is-active", "docs-watcher.service"],
                            capture_output=True, text=True, check=False, timeout=3)
         if r.stdout.strip() == "active":
             return {"running": True, "via": "systemd", "pid": None}
     except (FileNotFoundError, OSError, subprocess.SubprocessError):
-        pass  # нет systemctl / таймаут — считаем watcher не запущенным
+        pass  # Missing systemctl or timeout means watcher is not running.
     return {"running": False, "via": None, "pid": None}
 
 
 def probe_hub(env, config):
-    """Состояние хаба: память, граф, docs-watcher (read-only)."""
+    """Return read-only hub status for memory, graph, and docs watcher."""
     mem = memory_status(env, config)
     adapter = (config.get("graph") or {}).get("adapter", "federation")
     try:

@@ -1,11 +1,4 @@
-"""Интегрирующий тест settings-doctor: воспроизводит целиком field-case §Проблема
-из спеки `roadmap/settings-doctor.md` (закрыта и удалена 2026-07-25, текст в git-истории)
-в tmpdir и требует, чтобы doctor ловил его СРАЗУ,
-одним прогоном (критерий закрытия фазы P1, Implementation Rules P1.5).
-
-Анти-самообман: не мокаем `run_checks`/эффективную конфигурацию — реальные файлы
-`.claude/settings*.json`, реальный `build_context`/`run_checks`. Если тест красный —
-чинится код doctor'а, а не ассерты."""
+"""Internal documentation."""
 import sys
 import tempfile
 import unittest
@@ -20,18 +13,7 @@ from tests.test_settings_audit import _write
 
 
 class SettingsDoctorFieldCase(unittest.TestCase):
-    """Пункты §Проблема, воспроизведённые одновременно:
-
-    1. `defaultMode` объявлен и в `user`, и в `local` (расхождение слоёв — id=3).
-    2. Хук `PreToolUse`, объявленный в проекте, указывает на script, которого
-       физически нет (владелец считал, что хук установлен — id=5).
-    3. ~400 одноразовых точных `Bash(...)`-правил в `user` (id=6).
-    4. Неканонический `permissions.autoApprove` в проекте (id=2).
-    5. Плейнтекстовый API-ключ в `env` локальных настроек (id=9).
-    6. `additionalDirectories`, объявленный вместо Bash-правил (ложное ожидание,
-       что он решает матчинг Bash — не отдельный числовой id, но не должен
-       уронить прогон; путь реальный, без лишнего шума).
-    """
+    """Internal documentation."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -46,12 +28,12 @@ class SettingsDoctorFieldCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_full_field_case_caught_in_one_pass(self):
-        # 1) defaultMode в user И local — расхождение слоёв (id=3).
+
         _write(self.home / ".claude" / "settings.json",
                {"permissions": {"defaultMode": "default"}})
 
-        # 2) PreToolUse-хук объявлен, но command-файл физически отсутствует (id=5).
-        # 3) ~400 точных Bash(...)-правил в user (id=6) — дописываем в тот же слой.
+
+
         dead_allow = [f"Bash(echo {i})" for i in range(400)]
         _write(self.home / ".claude" / "settings.json", {
             "permissions": {"defaultMode": "default", "allow": dead_allow},
@@ -60,8 +42,8 @@ class SettingsDoctorFieldCase(unittest.TestCase):
         real_dir = self.tmp / "trusted"
         real_dir.mkdir()
 
-        # 4) permissions.autoApprove — неканонический ключ (id=2).
-        # 6) additionalDirectories вместо Bash-правил — путь реальный (не создаёт шум id=8).
+
+
         _write(self.target / ".claude" / "settings.json", {
             "permissions": {
                 "defaultMode": "bypassPermissions",
@@ -75,7 +57,7 @@ class SettingsDoctorFieldCase(unittest.TestCase):
             ]},
         })
 
-        # 5) плейнтекстовый API-ключ в env локальных настроек (id=9).
+
         _write(self.target / ".claude" / "settings.local.json",
                {"env": {"ANTHROPIC_API_KEY": "sk-ant-0123456789abcdef"}})
 
@@ -90,7 +72,7 @@ class SettingsDoctorFieldCase(unittest.TestCase):
                            f"ожидалась находка id={expected_id}, получены id: "
                            f"{sorted(by_id.keys())}")
 
-        # id=8 (additionalDirectories) НЕ должна сработать — путь реальный.
+
         self.assertNotIn(8, by_id)
 
         self.assertGreater(exit_code(findings), 0)

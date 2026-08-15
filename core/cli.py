@@ -1,9 +1,4 @@
-"""CLI-примитивы монорепо: разбор флагов/аргументов + защищённый запуск подпроцесса.
-
-`parse_flags` исторически копировался в swissknifeman и harness байт-в-байт;
-`parse_args` (надмножество с позиционными, стиль brain) жил в maind. Сведены сюда
-к одному источнику истины — пакеты реэкспортируют их из своих `common.py`. Доменные
-надстройки (frontmatter, path-property Env) остаются в пакетах. stdlib-only."""
+"""Shared CLI parsing and safe subprocess execution primitives. stdlib-only."""
 import subprocess
 from pathlib import Path
 
@@ -13,7 +8,7 @@ from .term import die
 def parse_flags(args: list[str], spec: dict[str, str]) -> dict[str, object]:
     """spec: {'--flag': 'str'|'bool'}; returns dict keyed by flag name sans --.
 
-    Любой аргумент вне spec (включая позиционные) → die. -h/--help → out['help']."""
+    Any argument outside ``spec`` fails; ``-h``/``--help`` sets ``out['help']``."""
     out: dict[str, object] = {
         k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
         for k, t in spec.items()
@@ -42,10 +37,10 @@ def parse_flags(args: list[str], spec: dict[str, str]) -> dict[str, object]:
 
 def parse_args(args: list[str], spec: dict[str, str],
                max_pos: int = 0) -> tuple[dict[str, object], list[str]]:
-    """spec: {'--flag': 'str'|'bool'}; возвращает (opts, positionals).
+    """Parse flags and positional arguments, returning ``(options, positionals)``.
 
-    opts ключуются по имени флага без '--', с '-'→'_'. -h/--help → opts['help'].
-    Неизвестный флаг, нехватка значения или перебор позиционных → die."""
+    Unknown flags, missing values, and excess positionals fail.
+    """
     opts: dict[str, object] = {
         k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
         for k, t in spec.items()
@@ -83,14 +78,10 @@ def run_cmd(argv: list[str], *, cwd: "str | Path | None" = None,
             capture: bool = False, text: bool = True,
             timeout: "float | None" = None,
             check: bool = True) -> subprocess.CompletedProcess:
-    """Защищённый запуск подпроцесса: ТОЛЬКО argv-список (никогда shell=True).
+    """Run an argv-only subprocess, never ``shell=True``.
 
-    - команда не найдена → die («команда не найдена: …»);
-    - истёк timeout (сек) → die;
-    - check=True и код возврата ≠ 0 → die (с текстом и захваченным stderr, если был).
-
-    capture=True захватывает stdout/stderr (текстом при text=True). Возвращает
-    CompletedProcess — вызывающий читает .returncode/.stdout при check=False."""
+    Missing commands, timeouts, and checked nonzero exits call ``die``.
+    """
     try:
         result = subprocess.run(
             argv, cwd=str(cwd) if cwd is not None else None,

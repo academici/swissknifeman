@@ -1,19 +1,14 @@
-"""maind perplexity-web — резолвер политики hub-managed MCP-сервера perplexity-web.
+"""Resolve policy for the hub-managed perplexity-web MCP server.
 
-perplexity-web (keyless-мост через браузерный профиль, отдельный Node-пакет) раздаётся в
-проекты единым источником истины — секцией `mcp.perplexity_web` конфига, а не вписывается
-вручную хардкод-путём в каждый .mcp.json (как было: swissknifeman/edufy/botkit). Здесь —
-только резолвер: enabled (с per-project override), модель пулов и сборка MCP-entry.
-
-Пул = демон + профиль + окно браузера (см. README пакета): один общий пул переиспользует
-текущий логин, изолированный пул требует своего логина. Команда обёрнута индирекцией
-`${PERPLEXITY_WEB_MCP_BIN:-<bin>}` — переносимо, без захардкоженного /home/... в .mcp.json.
-stdlib-only; внешний пакет — через свой start.sh (subprocess на стороне клиента MCP)."""
+`mcp.perplexity_web` is the single source of truth for deployment, overrides,
+pool selection, and portable `${PERPLEXITY_WEB_MCP_BIN:-<bin>}` commands.
+The external Node package is launched by the MCP client, so this module remains
+stdlib-only."""
 from .constants import PERPLEXITY_WEB_DEFAULTS
 
 
 def settings(config):
-    """Слитая политика perplexity-web: mcp.perplexity_web поверх PERPLEXITY_WEB_DEFAULTS."""
+    """Merge mcp.perplexity_web over PERPLEXITY_WEB_DEFAULTS."""
     raw = (config.get("mcp") or {}).get("perplexity_web") or {}
     st = dict(PERPLEXITY_WEB_DEFAULTS)
     st.update(raw)
@@ -25,8 +20,7 @@ def server_name(st):
 
 
 def enabled(project, st):
-    """Включён ли perplexity-web для проекта: per-project override `perplexity_web`
-    (true|false) имеет приоритет над глобальным `enabled`."""
+    """Use the per-project perplexity_web override before global enabled."""
     override = project.get("perplexity_web")
     if override is not None:
         return bool(override)
@@ -34,8 +28,7 @@ def enabled(project, st):
 
 
 def resolve_pool(project, st):
-    """Имя пула браузера для проекта. Приоритет: per-project `perplexity_web_pool` →
-    модель `pool` (per-project → id, per-namespace → ns-<имя>, иначе литерал)."""
+    """Resolve the project browser pool: override, configured model, or literal."""
     override = project.get("perplexity_web_pool")
     if override:
         return str(override)
@@ -45,12 +38,11 @@ def resolve_pool(project, st):
     if model == "per-namespace":
         ns = next(iter(project.get("namespaces") or []), None)
         return f"ns-{ns}" if ns else "default"
-    return model  # литеральное имя пула (напр. "default") — общий пул для всех
+    return model  # Literal pool name, for example "default".
 
 
 def entry(project, st):
-    """MCP-entry perplexity-web: команда через индирекцию `${ENV:-bin}` (bin — fallback из
-    конфига; без bin — bare `${ENV}`, требует выставленного env), пул в --pool."""
+    """Build an MCP entry with portable command indirection and --pool."""
     pool = resolve_pool(project, st)
     bin_path = st.get("bin") or ""
     env_var = st.get("env_var") or "PERPLEXITY_WEB_MCP_BIN"

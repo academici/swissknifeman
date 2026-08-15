@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# validate-python — PostToolUse-валидатор (advisory, НИКОГДА не блокирует).
 #
-# После Edit/Write по *.py гоняет VALIDATE_CMD (ruff) и при падении ВОЗВРАЩАЕТ находки в
-# additionalContext (агент видит и сам чинит). Не exit 2.
 #
-# Конфиг: .claude/review-gate.env.ini → VALIDATE_MODE (off|warn), VALIDATE_CMD.
 set -uo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"

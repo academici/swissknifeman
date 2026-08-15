@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
-"""agent-router · UserPromptSubmit — дешёвый keyword-прескор → крошечная idempotent-подсказка.
-
-Пара к session-policy.py (SessionStart несёт статическую политику). Здесь per-turn: если
-keyword-score лучшего кандидата ≥ THRESHOLD — эмитим ОДНУ строку [intent-router] bias в
-hookSpecificOutput.additionalContext; иначе МОЛЧИМ (exit 0, чистый pass-through).
-
-Дисциплина (проверено perplexity-web по офиц. докам Claude Code):
-- хук НЕ барьер: любая ошибка / нет данных / битый stdin → exit 0 без вывода;
-- idempotent (тот же промпт → тот же вывод) → stale-replay на --continue/--resume безвреден;
-- никакой сети/подпроцессов — латентность микросекунды (горячий путь каждого промпта);
-- модель делает финальную классификацию (вопрос vs задача) по политике из SessionStart;
-  эта подсказка — лишь bias, помечена non-authoritative.
-"""
+"""Internal documentation."""
 import json
 import sys
 from pathlib import Path
@@ -44,7 +32,7 @@ def main():
 
     esc = env.get("ESCAPE_PREFIX", "~")
     if esc and text.lstrip().startswith(esc):
-        sys.exit(0)  # escape-hatch: пользователь явно просит обычный режим
+        sys.exit(0)
 
     try:
         threshold = int(env.get("THRESHOLD", "2"))
@@ -60,7 +48,7 @@ def main():
         sys.exit(0)
 
     if not scored or scored[0][1] < threshold:
-        sys.exit(0)  # ниже порога → молчим
+        sys.exit(0)
 
     top_name, top_score = scored[0]
     runners = ", ".join(f"{n} ({s})" for n, s in scored[1:3])
@@ -85,4 +73,4 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception:
-        sys.exit(0)  # хук никогда не ломает отправку промпта
+        sys.exit(0)

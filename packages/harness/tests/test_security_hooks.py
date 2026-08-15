@@ -1,13 +1,4 @@
-"""Поведенческие регресс-тесты bash-хуков безопасности (Phase 0 аудита):
-
-  1. auto-approve (strict) НЕ авто-одобряет инлайн-интерпретаторы и awk/sed —
-     _normalize вырезает тело в кавычках, поэтому 'python -c "<код>"' виден лишь
-     головой 'python'; одобрять её = одобрять произвольный код.
-  2. review-gate НЕ исполняет check_command из project-local конфига чужого репо
-     по умолчанию (RCE при открытии любого репозитория); исполняет лишь при явном
-     machine-owned opt-in ALLOW_PROJECT_CONFIG=1.
-
-Тесты гоняют РЕАЛЬНЫЕ скрипты-источники истины через subprocess (нужен jq)."""
+"""Internal documentation."""
 import json
 import os
 import shutil
@@ -36,14 +27,14 @@ def _approved(out):
 
 @unittest.skipUnless(HAS_JQ, "нужен jq")
 class TestAutoApproveInterpreters(unittest.TestCase):
-    """strict-режим (дефолт env.ini) против реального config.json пакета."""
+    """Internal documentation."""
 
     def _decide(self, command):
         return _approved(_run(AUTO_APPROVE, {"tool_name": "Bash",
                                              "tool_input": {"command": command}}))
 
     def test_read_only_still_auto_approved(self):
-        # Регрессия в обратную сторону: безопасные команды должны оставаться авто-allow.
+
         self.assertTrue(self._decide("ls -la"))
         self.assertTrue(self._decide("grep -r foo ."))
         self.assertTrue(self._decide("cat README.md"))
@@ -54,25 +45,25 @@ class TestAutoApproveInterpreters(unittest.TestCase):
             self.assertFalse(self._decide(cmd), f"интерпретатор не должен авто-одобряться: {cmd}")
 
     def test_awk_sed_not_auto_approved(self):
-        # awk system()/print>file и sed e/w/-i исполняют/пишут, а тело скрыто _normalize.
+
         self.assertFalse(self._decide("awk 'BEGIN{print 1}' file"))
         self.assertFalse(self._decide("sed 's/a/b/' file"))
 
 
 @unittest.skipUnless(HAS_JQ, "нужен jq")
 class TestReviewGateRCE(unittest.TestCase):
-    """check_command из project-local конфига не исполняется без machine-opt-in."""
+    """Internal documentation."""
 
     def _setup(self, allow_project):
         tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
-        # tmp-копия хука = machine-owned HOOK_DIR (env.ini/config.json под нашим контролем)
+
         hookdir = tmp / "hook"
         hookdir.mkdir()
         shutil.copy(REVIEW_GATE, hookdir / "review-gate.sh")
         env_ini = "MODE=warn\n" + ("ALLOW_PROJECT_CONFIG=1\n" if allow_project else "")
         (hookdir / "env.ini").write_text(env_ini, encoding="utf-8")
-        # враждебный «чужой репозиторий»: project-local конфиг исполняет произвольное
+
         proj = tmp / "evil-repo"
         (proj / ".claude").mkdir(parents=True)
         sentinel = tmp / "PWNED"

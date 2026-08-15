@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
-# Кэширует BRAIN-документы проекта в память maind (agent-memory), чтобы их можно было
-# поднять через `maind memory recall`, не перечитывая файлы с диска при каждом запросе.
+# Cache project BRAIN documents in maind memory for `maind memory recall`.
 #
-# ВАЖНО: команды `maind memory store` / флагов --key/--file НЕ существует (это выдумка
-# из внешнего аудита) — реальная CLI-подкоманда записи это `maind memory remember` с
-# флагами --project|--scope, --share, --type, --json (см. packages/maind/lib/maind/memory.py
-# _cmd_remember). Ключ-топик документа (docs:brd, docs:architecture, ...) передаём через
-# --type — единственный флаг, который несёт «тип факта» в текущей CLI.
+# `maind memory store` and --key/--file do not exist. The write command is
+# `maind memory remember`; it accepts --project|--scope, --share, --type, and --json.
+# Pass the document topic (for example docs:brd) through --type.
 #
-# Использование:
+# Usage:
 #   scripts/cache-brain-docs.sh --scope project:<ns> <topic>=<path/to/file.md> [<topic>=<path> ...]
 #
-# Пример:
+# Example:
 #   scripts/cache-brain-docs.sh --scope project:loqum \
 #     docs:brd=docs-private/dev/BRD.md \
 #     docs:architecture=docs-private/dev/Architecture_Loqum.md
 #
-# Вспомнить потом:
+# Recall later:
 #   maind memory recall --scope project:loqum "docs:brd"
 set -euo pipefail
 

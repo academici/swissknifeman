@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Режим file — один общий store на brain. Источается memory.sh.
 
 mode_remember() { # brain type text
   local store; store="$(brain_store "$1")"

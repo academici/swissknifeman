@@ -1,14 +1,4 @@
-"""Валидатор реестра ролей ревью (`configs/common/agent-packs/review-roles.json`) — L2.
-
-Extension-таблица по ключу `(pack_id, role_id)` рядом с каноном тел ролей
-`configs/common/agent-packs/roles.json` (D126, research/26-P9.2-registry-carrier.md):
-`role-bindings.json`/`agentpacks.py` НЕ трогаются, реестр их не расширяет. Восемь
-проверок research/18-P9-target-design.md §3.3 (входы 1/2/4/7/8 изменены research/26
-§3); каждая несёт в докстринге, какой из семи режимов отказа policy-as-data
-(findings/P9-review-stability-facts.md §3, FC-3) она закрывает. Реестр ИНДЕКСИРУЕТ
-канон (`projection` — путь к compatibility-asset `agents/reviewer.md`, не носитель
-текста правил) — валидатор сверяет форму и наличие, а не содержание правил ревью
-(то остаётся треком 1 OQ-4). stdlib-only, без сети."""
+"""Internal documentation."""
 import hashlib
 import json
 import sys
@@ -24,10 +14,10 @@ _SKILLS_JSON = _PACKAGE_ROOT.parent / "skiller" / "skills.json"
 
 REQUIRED_SECTIONS = ("criteria", "verdict_gates", "project_overrides", "output")
 
-# Закрытый словарь измерений (research/18 §3.2) — собран из уже написанного в пяти
-# `agent-packs/*/agents/reviewer.md` и в `packages/task/commands/review.md` Stage B.
-# Новое измерение сюда добавляется ТОЛЬКО синхронно с находкой в реальном паке —
-# см. Implementation Rules P9.2 (if-then эскалация).
+
+
+
+
 DIMENSIONS = frozenset({
     "access-layer", "layering", "n-plus-one", "validation", "authorization",
     "migrations-vs-models", "model-conventions", "glossary", "config-honesty",
@@ -41,7 +31,7 @@ DIMENSIONS = frozenset({
 
 
 class Violation:
-    """Одно нарушение: имя проверки + человекочитаемое сообщение."""
+    """Internal documentation."""
 
     def __init__(self, check, message):
         self.check = check
@@ -63,7 +53,7 @@ def _canon_reviewer_pack_ids(roles_canon):
 
 
 def check_schema(data):
-    """#1 unvalidated schema (FC-3 #5): реестр — dict с review_version(str), pack_root(str) и roles(list)."""
+    """Internal documentation."""
     if not isinstance(data, dict):
         return [Violation("schema", "review-roles.json: корень не dict")]
     v = []
@@ -77,10 +67,7 @@ def check_schema(data):
 
 
 def check_default_deny(data, roles_canon=None):
-    """#2 default-allow gaps (FC-3 #4): двусторонне. (а) каждый `*/agents/reviewer.md`
-    на диске имеет запись в реестре; (б) каждая роль role_id=reviewer из канона
-    `roles.json` имеет запись — раньше проверялась только ветка (а), канон не
-    участвовал."""
+    """Internal documentation."""
     v = []
     pack_root = data.get("pack_root") or ""
     agent_packs_dir = _PACKAGE_ROOT / "configs" / pack_root
@@ -104,8 +91,7 @@ def check_default_deny(data, roles_canon=None):
 
 
 def check_carrier_paths(data):
-    """#3 policy drift from actual behavior (FC-3 #1): projection/overrides
-    существуют на диске."""
+    """Internal documentation."""
     v = []
     pack_root = data.get("pack_root") or ""
     agent_packs_dir = _PACKAGE_ROOT / "configs" / pack_root
@@ -119,10 +105,7 @@ def check_carrier_paths(data):
 
 
 def check_sections_present(data, roles_canon=None):
-    """#4 policy drift from actual behavior (FC-3 #1): каждый заголовок из `sections`
-    реально встречается в каноне `roles.json` `content` (не в проекции); дополнительно
-    проверяется, что `projection` несёт те же заголовки — расхождение канона и
-    проекции есть отдельное нарушение."""
+    """Internal documentation."""
     v = []
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
@@ -157,8 +140,7 @@ def check_sections_present(data, roles_canon=None):
 
 
 def check_required_sections(data):
-    """#5 unvalidated schema (FC-3 #5): required_sections — ровно четыре канонических
-    ключа, и каждый из них объявлен в sections."""
+    """Internal documentation."""
     v = []
     for r in data.get("roles", []):
         pack_id = r.get("pack_id")
@@ -176,7 +158,7 @@ def check_required_sections(data):
 
 
 def check_dimensions(data):
-    """#6 over-granular roles (FC-3 #7): dimensions ⊆ закрытого словаря, без дублей."""
+    """Internal documentation."""
     v = []
     for r in data.get("roles", []):
         pack_id = r.get("pack_id")
@@ -190,9 +172,7 @@ def check_dimensions(data):
 
 
 def check_skills(data, roles_canon=None, skills_index=None):
-    """#7 duplicate sources of truth (FC-3 #6): вход — `roles.json.skills` (канон),
-    не копия в реестре ролей ревью — реестр `skills` не несёт вовсе. Сверка с
-    `packages/skiller/skills.json` — канон против канона."""
+    """Internal documentation."""
     v = []
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
@@ -224,19 +204,17 @@ def _composition_fingerprint(data):
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-# Отпечаток состава `roles`, зафиксированный на каждую известную review_version —
-# вписывается вручную при осознанном бампе (не выводится из даты/времени, ниже
-# нарочно нет автогенерации). Смена состава без правки этой карты + review_version
-# краснит проверку #8 на самой себе.
+
+
+
+
 _VERSION_FINGERPRINTS = {
     "1.0.0": "acf0b20936e11c64970fa9354350f000c55be4efaccff7f04b34424b1ffbbd76",
 }
 
 
 def check_version_bump(data):
-    """#8 unversioned policy (FC-3 #2): review_version сверяется с ЗАФИКСИРОВАННЫМ
-    отпечатком состава `roles` (не с датой изменения файла) — состав разошёлся, а
-    версия/карта отпечатков не обновлены ⇒ ERROR."""
+    """Internal documentation."""
     version = data.get("review_version")
     fingerprint = _composition_fingerprint(data)
     if version not in _VERSION_FINGERPRINTS:
@@ -259,8 +237,7 @@ CHECKS = (
 
 
 def run_checks(review_roles_path=None):
-    """Прогоняет все восемь проверок. Возвращает (violations, exit_code):
-    0 — чисто, 1 — есть нарушения, 2 — битый/нечитаемый вход."""
+    """Internal documentation."""
     path = review_roles_path or _REVIEW_ROLES
     data = safe_load_json(path)
     if data is None:

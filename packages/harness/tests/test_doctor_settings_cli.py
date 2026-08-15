@@ -1,6 +1,4 @@
-"""doctor (диагностика), settings (merge-only writer'ы) и cli (диспетчер).
-
-Покрывает модули, остававшиеся без тестов: doctor.py, settings.py, cli.py."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -46,19 +44,19 @@ class DoctorCase(unittest.TestCase):
         _out, text = run(cmd_doctor, env, [])
         self.assertIn("harness doctor:", text)
         self.assertIn("MCP-пресеты", text)
-        # реальный пакет содержит и permissions-пресеты, и apply-скрипт
+
         self.assertIn("permissions-пресеты", text)
 
     def test_runs_when_script_missing_no_crash(self):
-        # make_root даёт только mcp/ — нет settings.*.json и scripts/ → ✗, но без падения
+
         _root, env = fx.make_root(self.tmp)
         out, text = run(cmd_doctor, env, [])
         self.assertNotIsInstance(out, SystemExit)
         self.assertIn("harness doctor:", text)
 
     def test_run_report_hook_stale_when_not_installed(self):
-        # SCHEMA=2 (B-5): tmp-home пуст — хук run-report не установлен ⇒ warn, не ошибка (ok
-        # остаётся True — это не ✗, только «·»-подсказка).
+
+
         env = fx.real_env(self.tmp)
         out, text = run(cmd_doctor, env, [])
         self.assertNotIsInstance(out, SystemExit)
@@ -66,15 +64,15 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("harness hooks --global", text)
 
     def test_route_evidence_guidance_line_present(self):
-        # P2.4: doctor всегда честно называет источник model/effort (live model,
-        # effort self-attested), а не молчит про отсутствие живого effort-сигнала.
+
+
         env = fx.real_env(self.tmp)
         _out, text = run(cmd_doctor, env, [])
         self.assertIn("route evidence", text)
         self.assertIn("self-attested", text)
 
     def test_run_report_hook_fresh_no_warn(self):
-        # копия файлов хука из репо в tmp-home 1-в-1 ⇒ freshness-гейт молчит.
+
         env = fx.real_env(self.tmp)
         src = fx.PACKAGE_ROOT / "configs" / "claude-code" / "hooks" / "run-report"
         dst = env.home / ".claude" / "hooks" / "run-report"
@@ -107,7 +105,7 @@ class SettingsCase(unittest.TestCase):
         f = self.tmp / "x.json"
         run(write_json, f, {"a": 1}, False)
         self.assertEqual(json.loads(f.read_text())["a"], 1)
-        # повторная запись поверх существующего → бэкап .bak
+
         run(write_json, f, {"a": 2}, False)
         self.assertTrue(Path(f"{f}.bak").exists())
         self.assertEqual(json.loads(f.read_text())["a"], 2)

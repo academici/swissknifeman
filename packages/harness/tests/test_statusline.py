@@ -1,7 +1,4 @@
-"""statusline context-notify: block_statusline (merge-only, уважение чужого ключа, off,
-dry-run) + поведение самого скрипта — null-контракт, полосы порога, кулдаун, атомарное
-состояние, отсутствие сирот. Скрипт гоняется офлайн на синтетическом JSON, доставка
-подменяется фейковым NOTIFY_CMD (пишет строку в лог) — сети и desktop-бэкенда не нужно."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -23,7 +20,7 @@ SCRIPT = (Path(__file__).resolve().parent.parent
 
 
 def run(fn, *a, **kw):
-    """stdout + stderr вместе: warn() пишет в stderr, а тесты проверяют именно его текст."""
+    """Internal documentation."""
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
         fn(*a, **kw)
@@ -31,8 +28,7 @@ def run(fn, *a, **kw):
 
 
 def sample(pct, session="s1", model="Opus 5", cwd="/home/u/proj"):
-    """Образец stdin statusline; pct=None → used_percentage: null (начало сессии/после
-    /compact) — контракт доки, который скрипт обязан переживать, не считая его нулём."""
+    """Internal documentation."""
     return json.dumps({
         "session_id": session,
         "cwd": cwd,
@@ -47,7 +43,7 @@ def sample(pct, session="s1", model="Opus 5", cwd="/home/u/proj"):
 
 
 class StatuslineSettingCase(unittest.TestCase):
-    """block_statusline — только ключ в settings.local.json, файлы ставит --global."""
+    """Internal documentation."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -61,7 +57,7 @@ class StatuslineSettingCase(unittest.TestCase):
         run(block_statusline, self.proj, "context", False)
         s = json.loads(self.local.read_text())
         self.assertEqual(s["statusLine"], STATUSLINE_VALUE)
-        # шаримый settings.json не трогается: это машинно-локальная преференция
+
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_merge_preserves_existing_keys(self):
@@ -106,7 +102,7 @@ class StatuslineSettingCase(unittest.TestCase):
 
 
 class StatuslineScriptCase(unittest.TestCase):
-    """Сам скрипт: рендер, null-контракт, полосы, кулдаун, состояние."""
+    """Internal documentation."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -143,7 +139,7 @@ class StatuslineScriptCase(unittest.TestCase):
         return p.stdout
 
     def notifications(self, expected, timeout=5.0):
-        """Доставка ОТСОЕДИНЕНА — ждём появления ожидаемого числа строк, а не спим вслепую."""
+        """Internal documentation."""
         deadline = time.time() + timeout
         while time.time() < deadline:
             lines = [ln for ln in self.notify_log.read_text().splitlines() if ln.strip()] \
@@ -151,7 +147,7 @@ class StatuslineScriptCase(unittest.TestCase):
             if len(lines) >= expected:
                 break
             time.sleep(0.05)
-        time.sleep(0.2)  # даём шанс лишней (незапланированной) нотификации проявиться
+        time.sleep(0.2)
         if not self.notify_log.exists():
             return []
         return [ln for ln in self.notify_log.read_text().splitlines() if ln.strip()]
@@ -171,7 +167,7 @@ class StatuslineScriptCase(unittest.TestCase):
         self.assertIn("Opus 5", out)
         self.assertNotIn("%", out)
         self.assertNotIn("[", out)
-        # null — не 0%: решение о пороге не принимается, состояния сессии ещё нет
+
         self.assertFalse(self.state_file().exists())
         self.assertEqual(self.notifications(0, timeout=0.5), [])
 
@@ -199,9 +195,7 @@ class StatuslineScriptCase(unittest.TestCase):
         self.assertLessEqual(len(out), 20)
 
     def test_band_sequence_without_cooldown(self):
-        """Офлайн-последовательность null→5→79→81→85→91→30→95 при COOLDOWN_MIN=0.
-        Ожидание ЗАФИКСИРОВАНО: уведомление ровно на пересечении полосы вверх —
-        81 (0→1), 91 (1→2), 95 (0→2 после падения). 85 — та же полоса, 30 — падение."""
+        """Internal documentation."""
         for pct in (None, 5, 79, 81, 85, 91, 30, 95):
             self.render(pct)
         lines = self.notifications(3)
@@ -213,15 +207,14 @@ class StatuslineScriptCase(unittest.TestCase):
         self.assertIn("95%", lines[2])
 
     def test_cooldown_suppresses_and_does_not_lose_alert(self):
-        """При кулдауне подавленный переход НЕ теряется: полоса в состоянии не растёт,
-        и после обнуления кулдауна тот же процент уведомляет."""
+        """Internal documentation."""
         self.write_env(cooldown=15)
         for pct in (81, 85, 91, 95):
             self.render(pct)
         lines = self.notifications(1)
         self.assertEqual(len(lines), 1, f"кулдаун обязан подавить остальные: {lines}")
         self.assertIn("81%", lines[0])
-        self.assertEqual(self.read_state()["BAND"], "1")  # полоса не «съедена»
+        self.assertEqual(self.read_state()["BAND"], "1")
         self.write_env(cooldown=0)
         self.render(91)
         lines = self.notifications(2)
@@ -238,13 +231,13 @@ class StatuslineScriptCase(unittest.TestCase):
         self.assertTrue(self.state_file("a").is_file())
         self.assertTrue(self.state_file("b").is_file())
         lines = self.notifications(2)
-        self.assertEqual(len(lines), 2)  # разные сессии — независимые полосы
-        # временных файлов записи не осталось
+        self.assertEqual(len(lines), 2)
+
         leftovers = list((self.runtime / "claude-statusline").glob("*.tmp"))
         self.assertEqual(leftovers, [], f"частично записанное состояние: {leftovers}")
 
     def test_fresh_session_cleans_old_state_and_tmp_files(self):
-        """Старт сессии убирает только устаревшие state/tmp, не свежие файлы."""
+        """Internal documentation."""
         state_dir = self.runtime / "claude-statusline"
         state_dir.mkdir()
         old_state = state_dir / "old.state"

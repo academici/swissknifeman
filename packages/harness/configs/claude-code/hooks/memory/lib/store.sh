@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# Markdown-факты: файлы фактов + индекс MEMORY.md. Схема frontmatter совместима
-# с нативной памятью Claude Code (name/description/metadata.type), поэтому один
-# парсер читает и общий store, и свои memory/ участников. Источать, не запускать.
 
 slugify() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' \
     | sed -E 's/-+/-/g; s/^-//; s/-$//' | cut -c1-48
 }
 
-# store_remember <dir> <type> <brain> <origin> <text> → печатает путь файла.
 store_remember() {
   local dir="$1" type="$2" brain="$3" origin="$4" text="$5"
   mkdir -p "$dir" || return 1
@@ -36,15 +32,12 @@ store_remember() {
   printf '%s\n' "$file"
 }
 
-# store_count <dir> → число файлов фактов (без MEMORY.md).
 store_count() {
   local d="$1"
   [ -d "$d" ] || { echo 0; return; }
   find "$d" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' 2>/dev/null | wc -l | tr -d ' '
 }
 
-# rank_dirs <query> <dir>... → "score<TAB>file" по убыванию score (fixed-string,
-# термы ≥3 символов; считаем число вхождений каждого терма по файлу).
 rank_dirs() {
   local query="$1"; shift
   local terms; terms="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' ' ')"
@@ -64,7 +57,6 @@ rank_dirs() {
   done | sort -rn
 }
 
-# recall_print <query> <topN> <dir>... → топ-N фактов с кратким телом.
 recall_print() {
   local query="$1" top="$2"; shift 2
   local out; out="$(rank_dirs "$query" "$@")"

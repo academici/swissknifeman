@@ -1,12 +1,4 @@
-"""wf_status.parse_run/parse_script_meta/summarize_result (P2.1).
-
-Рукотворная мини-директория в tmp, повторяющая реальную раскладку (findings
-`plans/SKM-ROADMAP-005/findings/P2-workflow-transcript-format.md`):
-
-    <session>/workflows/scripts/<name>-wf_<id>.js
-    <session>/subagents/workflows/wf_<id>/{journal.jsonl,agent-*.meta.json}
-
-Никаких моков ФС — реальные файлы в tempdir (единый паттерн с test_settings_audit.py)."""
+"""Internal documentation."""
 import io
 import json
 import os
@@ -37,8 +29,7 @@ export const meta = {
 
 def _make_run(base, run_id="wf_demo123", journal_lines=None, script_text=_SCRIPT_META,
               agent_metas=None):
-    """Собирает `<base>/session/subagents/workflows/<run_id>/` + sibling-скрипт
-    (D19) под `<base>/session/workflows/scripts/`. Возвращает путь run_dir."""
+    """Internal documentation."""
     session = Path(base) / "session"
     run_dir = session / "subagents" / "workflows" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -57,8 +48,7 @@ def _make_run(base, run_id="wf_demo123", journal_lines=None, script_text=_SCRIPT
 
 
 class ParseRunHappyPathCase(unittest.TestCase):
-    """(а) Validation P2.1: мини-директория (journal: 2×started + 1×result, meta-скрипт
-    с 2 фазами) → dict с agents_total=2, done=1, inflight=1, phases длины 2, 1 выжимка."""
+    """Internal documentation."""
 
     def test_two_started_one_result_two_phases(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,12 +79,11 @@ class ParseRunHappyPathCase(unittest.TestCase):
 
 
 class ParseRunDegradedCase(unittest.TestCase):
-    """(б) Validation P2.1: битый journal (мусорная строка + отсутствующий файл) →
-    degraded=True без исключения."""
+    """Internal documentation."""
 
     def test_missing_journal_is_degraded_not_raise(self):
         with tempfile.TemporaryDirectory() as tmp:
-            run_dir = _make_run(tmp, journal_lines=None)  # journal.jsonl вообще не создан
+            run_dir = _make_run(tmp, journal_lines=None)
 
             status = parse_run(run_dir)
 
@@ -114,8 +103,7 @@ class ParseRunDegradedCase(unittest.TestCase):
             self.assertTrue(status["degraded_reasons"])
 
     def test_mixed_garbage_and_valid_lines_not_degraded(self):
-        """Одна мусорная строка среди валидных — `continue`, НЕ деградация (findings:
-        «строки читать по одной; битую строку — continue, не падать»)."""
+        """Internal documentation."""
         with tempfile.TemporaryDirectory() as tmp:
             lines = [
                 json.dumps({"type": "started", "key": "v2:aaa", "agentId": "a1"}),
@@ -129,8 +117,8 @@ class ParseRunDegradedCase(unittest.TestCase):
 
             self.assertFalse(status["degraded"], status["degraded_reasons"])
             self.assertEqual(status["done"], 1)
-            # скрипта нет вообще (D19 sibling не создан) — meta честно не распознана,
-            # но это НЕ top-level degraded (Implementation Rules: отдельный флаг meta).
+
+
             self.assertFalse(status["meta"]["recognized"])
             self.assertEqual(status["meta"]["phases"], [])
 
@@ -180,9 +168,7 @@ class SummarizeResultCase(unittest.TestCase):
 
 
 def _make_discoverable_run(config_dir, proj_slug, session, run_id, mtime=None):
-    """Собирает `<config_dir>/projects/<proj_slug>/<session>/subagents/workflows/<run_id>/
-    journal.jsonl` (P2.2 раскладка discovery) и, если задан, выставляет `mtime` через
-    `os.utime` — детерминированный контроль порядка сортировки в тестах."""
+    """Internal documentation."""
     run_dir = Path(config_dir) / "projects" / proj_slug / session / "subagents" / "workflows" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     journal = run_dir / "journal.jsonl"
@@ -196,9 +182,7 @@ def _make_discoverable_run(config_dir, proj_slug, session, run_id, mtime=None):
 
 
 class DiscoverRunsCase(unittest.TestCase):
-    """P2.2 Validation: tmp-дерево с 2 фейковыми прогонами (разный mtime) → свежайший
-    первым; `--project` фильтрует по слагу; `--run` возвращает ровно его; пустая база →
-    `[]` без падения."""
+    """Internal documentation."""
 
     def test_newest_by_mtime_first(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -261,8 +245,7 @@ class ProjectSlugCase(unittest.TestCase):
 
 
 class RenderTextCase(unittest.TestCase):
-    """(а) Validation P2.3: фикс-словарь результата → текст содержит run id,
-    заголовки фаз, строку «%»."""
+    """Internal documentation."""
 
     def _status(self, **overrides):
         status = {
@@ -321,8 +304,7 @@ class RenderTextCase(unittest.TestCase):
 
 
 class RenderJsonCase(unittest.TestCase):
-    """(б) Validation P2.3: `--json` round-trip
-    (`json.loads(render_json(x)) == x`)."""
+    """Internal documentation."""
 
     def test_round_trip_equals_original(self):
         status = parse_run(_make_run(tempfile.mkdtemp(), journal_lines=[
@@ -336,12 +318,11 @@ class RenderJsonCase(unittest.TestCase):
         status = {"run_id": "wf_x", "degraded": False, "meta": {"name": "имя"}}
         dumped = render_json(status)
         self.assertEqual(json.loads(dumped), status)
-        self.assertIn("имя", dumped)  # ensure_ascii=False — кириллица не эскейпится
+        self.assertIn("имя", dumped)
 
 
 class WatchLoopCase(unittest.TestCase):
-    """`--watch`: перепечатка кадром, останов при inflight==0 либо max_iterations,
-    KeyboardInterrupt → чистый выход."""
+    """Internal documentation."""
 
     def test_stops_when_inflight_reaches_zero(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -358,7 +339,7 @@ class WatchLoopCase(unittest.TestCase):
                                     max_iterations=5)
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(sleeps, [])  # inflight==0 сразу — цикл не спит
+            self.assertEqual(sleeps, [])
             self.assertIn("wf_demo123", buf.getvalue())
 
     def test_respects_max_iterations_when_still_inflight(self):
@@ -372,7 +353,7 @@ class WatchLoopCase(unittest.TestCase):
                                     max_iterations=3)
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(len(sleeps), 2)  # 3 итерации → 2 сна между ними
+            self.assertEqual(len(sleeps), 2)
             self.assertEqual(buf.getvalue().count("run: wf_demo123"), 3)
 
     def test_keyboard_interrupt_gives_clean_exit(self):

@@ -1,33 +1,4 @@
-"""worker — запуск ОДНОГО item'а плана процессом клиента `-p` под таймаутом.
-
-Актуальный контракт последовательной волны и timeout/outcome границы живёт в
-`packages/harness/docs/reference/exec-wave.md`, а не в архивном plan contract.
-
-Процессный запуск, не Agent tool (`findings/rag-2026-07-31-native-skill-fields.md` §5 —
-подавление AgentTool приходит инъецированной системной инструкцией, не версией API) и
-СТРОГО один воркер за раз (D8 — CooperBench, там же §6): публичная функция принимает
-ровно один item, пула/списка в модуле нет.
-
-argv, селекторы модели/effort и шаблон инвокации ЧИТАЮТСЯ из committed-носителя
-`packages/task/configs/command-routing.json` (`mappings.claude-code.class_selectors` /
-`effort_selectors` / `invocation_binding.template`) — конкретные имена моделей в этом
-модуле не хардкодятся (Implementation Rule 2). Способ запуска и разбора JSON-конверта
-взят по образцу `skiller/lib/skiller/quality/eval.py:377-445` (`claude_bin`,
-`build_run_cmd`, `_parse_claude_json`) — свой второй носитель правды о вызове клиента
-здесь не заводится, включая имя env-override бинаря (тот же `SKM_CLAUDE_BIN`).
-
-Классификация — исход ПРОГОНА, не вердикт по item'у (вердикт выносит `gate`, P4.4, по
-четырём источникам): `ok` / `transport` / `timeout` / `quota` / `error`. Успех = дословно
-`type=="result"` И `is_error==false` И exit code 0 — НИКОГДА «stdout непустой» (единственное
-правило, унаследованное от историчного донора дословно, §6.3 контракта). Любое
-неизвестное сочетание полей конверта → `transport` с честной причиной — догадка о классе
-запрещена (Implementation Rule 9); `[UNVERIFIED]`-пункты контракта (U1-U3) закрываются
-этим модулем НАБЛЮДЕНИЕМ, а не подгонкой парсера под предположение.
-
-Функции чистые (аргументы → dict), кроме `WorkerUnavailable` — она бросается ТОЛЬКО на
-предусловии (носитель routing недоступен, бинарь `claude` не найден), до спавна процесса,
-и это fail-loud, не тихий дефолт (Implementation Rule 2). Сам прогон исключений наружу не
-бросает: таймаут и битый конверт — структурные классы исхода, не падение. stdlib-only."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import json
@@ -38,44 +9,42 @@ from pathlib import Path
 
 from core import find_monorepo_root
 
-# --- закрытый enum исходов прогона (не вердикт по item'у — Code Guidance, анти-самообман) --
+
 OUTCOME_OK = "ok"
 OUTCOME_TRANSPORT = "transport"
 OUTCOME_TIMEOUT = "timeout"
 OUTCOME_QUOTA = "quota"
 OUTCOME_ERROR = "error"
 
-# Тот же рычаг подмены бинаря, что уже живёт в skiller (quality/eval.py) — один env-override
-# на весь зонтик, не второй с другим именем (Code Guidance «запрет второго прибора»).
+
+
 CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
 
-# Провайдер и command_id — из command-routing.json (P4.1 §10: граница провайдера v2 — ровно
-# `claude -p`); command_id называет РЕАЛЬНО закрываемую этим воркером команду плана.
+
+
 PROVIDER_ID = "claude-code"
 WORKER_COMMAND_ID = "task:plan-exec"
 
-# Таймаут — предохранитель волны, не среднее время прогона: реальный item несёт
-# реализацию + доведение тестов до зелёного + два коммита, поэтому граница взята с большим
-# запасом над «служебным» вызовом (0.08-0.17 USD / считанные секунды из
-# `findings/P4-headless-envelope-2026-07-31.md`), а не по нему. Флага `--max-turns` у
-# клиента нет (§1 того же файла) — ограничение длины прогона обязано быть таймаутом
-# процесса, переопределяется параметром `run(..., timeout=...)`.
-DEFAULT_TIMEOUT = 1800  # сек (30 минут) на один item волны
 
-# Донорский литерал (D18, единственные два маркера, которые контракт называет по имени;
-# `[UNVERIFIED]` U1 — боевая квота не воспроизводилась, наблюдение первого боевого
-# исчерпания бампает контракт и, при новом машинном признаке, этот список).
+
+
+
+
+
+DEFAULT_TIMEOUT = 1800
+
+
+
+
 _QUOTA_TEXT_MARKERS = ("session limit", "weekly limit")
 
 
 class WorkerUnavailable(RuntimeError):
-    """Носитель `command-routing.json` недоступен, селектор/шаблон в нём не назван, либо
-    бинарь клиента не найден — предусловие прогона, не исход прогона (fail-loud перед
-    спавном процесса, Implementation Rule 2)."""
+    """Internal documentation."""
 
 
 def resolve_claude_bin():
-    """Путь к CLI клиента: env-override → PATH. `None`, если не найден ни там, ни там."""
+    """Internal documentation."""
     override = os.environ.get(CLAUDE_BIN_ENV)
     if override:
         p = Path(os.path.expanduser(override))
@@ -100,10 +69,7 @@ def _first(selectors):
 
 
 def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root, claude_bin):
-    """Argv ОДНОГО прогона — единственная функция сборки (Implementation Rule 1): тест
-    сверяет список дословно, строковая конкатенация и `shell=True` не применяются. Селекторы
-    и шаблон инвокации берутся ТОЛЬКО из `command-routing.json`; носитель неполон/недоступен
-    → `WorkerUnavailable` (fail-loud, не дефолт «наугад»)."""
+    """Internal documentation."""
     routing, reason = _load_routing_config(monorepo_root)
     if routing is None:
         raise WorkerUnavailable(f"носитель маршрутизации недоступен: {reason}")
@@ -129,9 +95,7 @@ def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root, claude_b
 
 
 def _capture_client_version(claude_bin_path, *, timeout=10):
-    """`claude --version` ДО прогона — вердикт без версии клиента недействителен (правило
-    унаследовано от донора и от `plan.md` §2). Best-effort: сбой снятия версии саму попытку
-    прогона item'а не блокирует, `None` — честный признак «не снята»."""
+    """Internal documentation."""
     try:
         proc = subprocess.run([claude_bin_path, "--version"], capture_output=True, text=True,
                               timeout=timeout, check=False)
@@ -169,10 +133,7 @@ def _outcome(kind, *, argv, client_version, reason=None, raw_stdout=None, exit_c
 
 
 def _classify_envelope(proc, argv, client_version):
-    """Дефенсивный разбор (§6.3 контракта): успех РОВНО `type=="result"` И `is_error==false`
-    И exit code 0. Битый/пустой/не-`result` JSON и любое ДРУГОЕ неизвестное сочетание полей
-    → `transport` с честной причиной (Implementation Rule 5/9) — сырой stdout сохраняется
-    усечённо, трейсбек наружу не летит."""
+    """Internal documentation."""
     raw = proc.stdout or ""
     try:
         envelope = json.loads(raw) if raw.strip() else None
@@ -193,8 +154,8 @@ def _classify_envelope(proc, argv, client_version):
         return _outcome(kind, argv=argv, client_version=client_version,
                         exit_code=proc.returncode, envelope=envelope)
 
-    # `is_error` отсутствует / не булев, либо расходится с exit code — неизвестное
-    # сочетание, догадка о классе запрещена (Implementation Rule 9).
+
+
     return _outcome(OUTCOME_TRANSPORT, argv=argv, client_version=client_version,
                     reason=f"неизвестное сочетание is_error={is_error!r} / exit={proc.returncode}",
                     raw_stdout=raw[:2000], exit_code=proc.returncode, envelope=envelope)
@@ -202,15 +163,7 @@ def _classify_envelope(proc, argv, client_version):
 
 def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin=None,
         timeout=DEFAULT_TIMEOUT):
-    """Один прогон `-p "/task:plan-exec <plan_id> <item_id>" --output-format json` под
-    таймаутом. `--permission-mode` НЕ выставляется (Scope Excluded — политика прогона
-    остаётся окружением владельца; отказ разрешения наблюдается штатно через
-    `permission_denials`), `--bare` не применяется (отключил бы хуки/скиллы/`CLAUDE.md`,
-    ради которых волна и запускается). Ретрая нет ни одного тира (D9).
-
-    Предусловия (носитель routing, бинарь клиента) недоступны → `WorkerUnavailable`, ДО
-    спавна процесса. Сам прогон исключений не бросает: таймаут/битый конверт — структурные
-    классы исхода в возвращаемом словаре, не падение вызывающего кода."""
+    """Internal documentation."""
     if monorepo_root is None:
         monorepo_root = find_monorepo_root(Path.cwd())
         if monorepo_root is None:

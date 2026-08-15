@@ -1,18 +1,4 @@
-"""Ядро settings-doctor: слои настроек Claude Code, эффективная конфигурация, Finding.
-
-Читает ЧЕТЫРЕ слоя настроек Claude Code (user → project → local → managed, по
-возрастанию приоритета) и строит из них ЭФФЕКТИВНУЮ конфигурацию с провенансом
-(из какого слоя пришло каждое итоговое значение). Каркас находки (`Finding`) — тоже
-здесь; сами проверки таксономии заводятся поверх этого модуля в 2026.07.10-SKM-ROADMAP-005 P1.2/P1.3/P1.5, CLI —
-в P1.4. reader-семантика **fail-soft**: битый слой — это ОТЧЁТ (проверка №1, P1.2), а
-не смерть doctor'а — намеренный дубль чтения `.claude/settings*.json` рядом с
-`harness.settings.load_settings` (тот `die()`-ает на битом JSON — writer-семантика,
-её нельзя чинить, не сломав `permissions`/`hooks`).
-
-Несущие внешние факты (precedence слоёв, merge-режимы, managed-пути) сверены RAG —
-см. находки плана 2026.07.10-SKM-ROADMAP-005 (`findings/P1-cc-settings-facts.md`, дата сверки
-зафиксирована там; при регрессии — пере-сверить, доки Claude Code меняются между версиями CLI).
-stdlib-only."""
+"""Internal documentation."""
 import json
 import os
 import re
@@ -25,20 +11,20 @@ from typing import Optional
 
 from core import safe_load_json
 
-# Снапшот канонических ключей рядом с пресетами (не апстрим-схема — выжимка, D13):
+
 # lib/harness/settings_audit.py → <package>/configs/claude-code/settings-keys.json.
-# Тот же паттерн, что `router._HOOK_CONFIG` — путь module-relative, НЕ env-relative
-# (снапшот один на пакет, а не per-target).
+
+
 _SETTINGS_KEYS_PATH = (Path(__file__).resolve().parents[2]
                         / "configs" / "claude-code" / "settings-keys.json")
 
-# Эвристика проверки №9 (секреты в env.*): имя ключа матчит один из паттернов
-# И значение длиннее 8 символов И не похоже на плейсхолдер.
+
+
 _SECRET_KEY_RE = re.compile(r"(API_?KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL)", re.IGNORECASE)
 _PLACEHOLDER_RE = re.compile(r"^(\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|<.*>|changeme)$", re.IGNORECASE)
 
-# Порядок слоёв по ВОЗРАСТАНИЮ приоритета (RAG:✅ 2026-07-10 settings.md, 5-tier scope
-# system). Пятый scope — CLI-аргументы — файлом не представлен, doctor'у не виден.
+
+
 LAYER_ORDER = ("user", "project", "local", "managed")
 
 CLI_ARGS_NOTE = (
@@ -46,30 +32,29 @@ CLI_ARGS_NOTE = (
     "doctor'у не видны и в эффективную конфигурацию не входят."
 )
 
-# Ключи, которые СЛИВАЮТСЯ across слоёв, а не переопределяются целиком высшим слоем
+
 # (D4, RAG:✅ 2026-07-10 settings.md: «Exception: Permission rules merge across scopes
-# rather than override» + hooks.md merge-по-событию). `env` — тоже не «override целиком»,
-# а пер-ключевой override (см. `effective_config`).
+
+
 MERGE_KEYS = ("permissions.allow", "permissions.deny", "permissions.ask", "hooks", "env")
 
-# Семантика слияния НЕ ПОДТВЕРЖДЕНА (D15, findings §«Не подтверждено»): ядро хранит обе
-# проекции (per-layer + union) и НЕ выбирает режим — решение остаётся на совести проверки,
-# которая когда-нибудь эту величину использует (2026.07.10-SKM-ROADMAP-005 P1.5 №8 работает per-layer, не от union).
+
+
+
 UNVERIFIED_MERGE_KEYS = ("permissions.additionalDirectories",)
 
-# Подключи permissions.*, которые сливаются как union-массивы (не путать с
-# additionalDirectories выше и с прочими скалярными подключами вроде defaultMode).
+
+
 _PERMISSIONS_ARRAY_KEYS = ("allow", "deny", "ask")
 
-# Порог проверки №6 (мусорные точные allow-правила) — константа модуля, НЕ флаг
-# CLI (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5: вынос во флаг = scope creep).
+
+
 DEAD_ALLOW_THRESHOLD = 50
 
 
 @dataclass(frozen=True)
 class Layer(object):
-    """Один слой настроек: имя, путь файла, распарсенные данные (None — отсутствует
-    ИЛИ битый), текст ошибки парсинга (None — файла нет или он валиден)."""
+    """Internal documentation."""
 
     name: str
     path: Path
@@ -79,7 +64,7 @@ class Layer(object):
 
 @dataclass(frozen=True)
 class Finding(object):
-    """Находка проверки таксономии (2026.07.10-SKM-ROADMAP-005 P1.2+). Ядро P1.1 только объявляет форму."""
+    """Internal documentation."""
 
     id: int
     level: str  # "error" | "warn" | "info"
@@ -89,8 +74,7 @@ class Finding(object):
 
 
 def managed_settings_main_path():
-    """Путь к главному managed-файлу для текущей ОС (RAG:✅ 2026-07-10
-    server-managed-settings.md). Неизвестная ОС → None (managed-слой не читается)."""
+    """Internal documentation."""
     if sys.platform.startswith("linux"):
         return Path("/etc/claude-code/managed-settings.json")
     if sys.platform == "darwin":
@@ -101,8 +85,7 @@ def managed_settings_main_path():
 
 
 def _managed_paths():
-    """Главный managed-файл + отсортированные `managed-settings.d/*.json`, если каталог
-    существует. Отсутствие ВСЕГО managed-слоя — норма, не находка."""
+    """Internal documentation."""
     main = managed_settings_main_path()
     if main is None:
         return []
@@ -114,8 +97,7 @@ def _managed_paths():
 
 
 def _load_layer(name, path):
-    """Один файл слоя → `Layer`, fail-soft: несуществующий файл — норма (data=None,
-    error=None); битый/нечитаемый JSON — ОТЧЁТ (data=None, error=текст), но не die()."""
+    """Internal documentation."""
     if not path.exists():
         return Layer(name, path, data=None, error=None)
     errors = []
@@ -127,12 +109,7 @@ def _load_layer(name, path):
 
 
 def load_layers(env, target):
-    """Читает все слои настроек Claude Code для проекта `target`.
-
-    `home` берётся из `env.home` (никаких `Path.home()`/`os.environ["HOME"]` — иначе
-    тесты в tmpdir потекут в реальный `~/.claude`), `target` — явный параметр. Возвращает
-    список `Layer` в порядке `LAYER_ORDER` (managed может дать 0..N записей — главный
-    файл + `managed-settings.d/*.json`)."""
+    """Internal documentation."""
     target = Path(target)
     layers = [
         _load_layer("user", Path(env.home) / ".claude" / "settings.json"),
@@ -145,8 +122,7 @@ def load_layers(env, target):
 
 
 def _hook_entries(entries):
-    """Разворачивает сырые записи `hooks.<event>` (список `{matcher, hooks:[...]}`) в
-    плоские `(matcher, command)`-пары для дедупа/провенанса."""
+    """Internal documentation."""
     out = []
     if not isinstance(entries, list):
         return out
@@ -161,26 +137,12 @@ def _hook_entries(entries):
 
 
 def effective_config(layers):
-    """Строит эффективную конфигурацию из слоёв (по возрастанию приоритета, как из
-    `load_layers`). Возвращает `(values, provenance)`.
-
-    Режимы слияния (D4/D15, RAG:✅ см. модульный докстринг):
-    - большинство ключей — override высшим слоем, определившим ключ;
-    - `env` — пер-ключевой override (ключи низшего слоя выживают, если не переопределены);
-    - `hooks` — merge массивов по событию с дедупом по `(matcher, command)`;
-    - `permissions.allow|deny|ask` — union с дедупом, порядок стабильный по возрастанию
-      приоритета слоя; провенанс правила — самый приоритетный слой, где оно объявлено;
-    - `permissions.additionalDirectories` — семантика **[UNVERIFIED]** (D15): хранится
-      per-layer + union, режим слияния НЕ выбирается.
-    - прочие подключи `permissions.*` (напр. `defaultMode`) — override, как обычные ключи.
-
-    `provenance` — параллельная структура: для скаляров строка-имя слоя, для merge-ключей —
-    структура, специфичная ключу (см. код ниже)."""
+    """Internal documentation."""
     values = {}
     provenance = {}
 
-    # 1) Override-ключи верхнего уровня (всё, кроме permissions/env/hooks — у них своя
-    #    merge-семантика ниже).
+
+
     for layer in layers:
         if not layer.data:
             continue
@@ -190,7 +152,7 @@ def effective_config(layers):
             values[key] = val
             provenance[key] = layer.name
 
-    # 2) env — пер-ключевой override.
+
     env_present = any(isinstance(l.data, dict) and isinstance(l.data.get("env"), dict)
                        for l in layers)
     if env_present:
@@ -207,7 +169,7 @@ def effective_config(layers):
         values["env"] = env_values
         provenance["env"] = env_prov
 
-    # 3) hooks — merge массивов по событию, дедуп по (matcher, command).
+
     hooks_present = any(isinstance(l.data, dict) and isinstance(l.data.get("hooks"), dict)
                          for l in layers)
     if hooks_present:
@@ -231,14 +193,14 @@ def effective_config(layers):
         values["hooks"] = hooks_values
         provenance["hooks"] = hooks_prov
 
-    # 4) permissions.* — смешанная семантика подключей.
+
     perms_present = any(isinstance(l.data, dict) and isinstance(l.data.get("permissions"), dict)
                          for l in layers)
     if perms_present:
         perm_values, perm_prov = {}, {}
 
-        # 4a) allow/deny/ask — union с дедупом, стабильный порядок (первое появление,
-        #     слои идут по возрастанию приоритета); провенанс — самый приоритетный слой.
+
+
         for sub in _PERMISSIONS_ARRAY_KEYS:
             ordered, rule_layer = [], {}
             for layer in layers:
@@ -249,12 +211,12 @@ def effective_config(layers):
                 for rule in rules:
                     if rule not in rule_layer:
                         ordered.append(rule)
-                    rule_layer[rule] = layer.name  # самый приоритетный слой выигрывает
+                    rule_layer[rule] = layer.name
             if ordered:
                 perm_values[sub] = ordered
                 perm_prov[sub] = [(rule, rule_layer[rule]) for rule in ordered]
 
-        # 4b) additionalDirectories — [UNVERIFIED] (D15): per-layer + union, без выбора режима.
+
         by_layer = {}
         for layer in layers:
             perms = layer.data.get("permissions") if isinstance(layer.data, dict) else None
@@ -270,8 +232,8 @@ def effective_config(layers):
                         union.append(d)
             perm_values["additionalDirectories"] = {"by_layer": by_layer, "union": union}
 
-        # 4c) прочие подключи permissions.* (defaultMode, disableBypassPermissionsMode, …) —
-        #     обычный override высшим слоем, определившим подключ.
+
+
         for layer in layers:
             perms = layer.data.get("permissions") if isinstance(layer.data, dict) else None
             if not isinstance(perms, dict):
@@ -288,22 +250,19 @@ def effective_config(layers):
     return values, provenance
 
 
-# --- VSCode-слой (2026.07.10-SKM-ROADMAP-005 P1.5): claudeCode.* поверх user/project settings.json -------
-# Path юзер-слоя VSCode — **[UNVERIFIED]** (findings §«Не подтверждено» не покрывает
-# это отдельно, но это общее знание о VSCode, не Claude Code докой): linux
+
+
+
 # `~/.config/Code/User/settings.json`, darwin `~/Library/Application Support/Code/
-# User/settings.json`, win32 `~/AppData/Roaming/Code/User/settings.json` (эквивалент
-# `%APPDATA%`). Считаем от `env.home`, НЕ `Path.home()` — иначе тесты в tmpdir потекут
-# в реальный домашний каталог (тот же принцип, что `load_layers`).
+
+
+
 
 _JSONC_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 
 def _strip_jsonc_comments(text):
-    """Минимальный толерантный JSONC-препроцессор (stdlib-only, не полноценный
-    парсер): убирает `//`- и `/* */`-комментарии ВНЕ строковых литералов и висячие
-    запятые перед `}`/`]`. Строки, содержащие `//` (`"url": "https://..."`), не
-    ломаются — комментарии распознаются только за пределами `"..."`."""
+    """Internal documentation."""
     out = []
     i, n = 0, len(text)
     in_string = False
@@ -341,8 +300,7 @@ def _strip_jsonc_comments(text):
 
 
 def _vscode_user_path(env):
-    """Путь юзер-слоя VSCode для текущей ОС, от `env.home` (**[UNVERIFIED]**, см.
-    докстринг выше). Неизвестная ОС → None (слой не читается, не находка)."""
+    """Internal documentation."""
     home = Path(env.home)
     if sys.platform.startswith("linux"):
         return home / ".config" / "Code" / "User" / "settings.json"
@@ -354,9 +312,7 @@ def _vscode_user_path(env):
 
 
 def _load_vscode_layer(name, path):
-    """Файл VSCode → `Layer`, JSONC-толерантно. Отсутствующий файл — норма
-    (`data=None, error=None`), битый/нечитаемый — `data=None, error=текст` (fail-soft,
-    НИКОГДА не die/raise — вызывающая проверка обязана дать `info`, не `error`)."""
+    """Internal documentation."""
     if not path.exists():
         return Layer(name, path, data=None, error=None)
     try:
@@ -371,18 +327,14 @@ def _load_vscode_layer(name, path):
 
 @dataclass(frozen=True)
 class VscodeState(object):
-    """VSCode-слой (user + project), сведённый в эффективный dict (project
-    override user — обычная семантика VSCode workspace-настроек, здесь не
-    участвует permissions-merge Claude Code). `layers` несёт провенанс/ошибки
-    парсинга для info-находок проверок №12/№13."""
+    """Internal documentation."""
 
     layers: tuple
     effective: dict
 
 
 def load_vscode(env, target):
-    """Читает VSCode user+project `settings.json` (JSONC-толерантно) и строит
-    эффективный dict `claudeCode.*`-ключей (project побеждает user)."""
+    """Internal documentation."""
     layers = []
     user_path = _vscode_user_path(env)
     if user_path is not None:
@@ -397,11 +349,7 @@ def load_vscode(env, target):
 
 @dataclass(frozen=True)
 class ProfileState(object):
-    """Разрешённое состояние policy-профиля проекта (2026.07.10-SKM-ROADMAP-005 P1.3). Три случая:
-    - НЕ объявлен: `name=None`, `profile=None` → проверки №4/№11 дают один `info`;
-    - объявлено НЕИЗВЕСТНОЕ имя: `name="…"`, `profile=None` → №4 даёт `error`;
-    - объявлен и загружен: `name`+`profile` заполнены → №4/№11 сверяют факт с `expect`.
-    `available` — доступные имена профилей (для сообщения об ошибке)."""
+    """Internal documentation."""
 
     name: Optional[str] = None
     profile: Optional[dict] = None
@@ -410,12 +358,7 @@ class ProfileState(object):
 
 @dataclass(frozen=True)
 class Context(object):
-    """Контекст прогона проверок таксономии (2026.07.10-SKM-ROADMAP-005 P1.2+): слои + эффективная
-    конфигурация + окружение запуска. `profile` — `ProfileState` (P1.3): разрешён
-    из декларации `<target>/.swissknife.json:policy_profile` либо явного имени
-    (`--profile`, P1.4). До P1.3 был `None`; проверки №4/№11 читают его.
-    `vscode` (P1.5) — `VscodeState`; проверки №4 (секция `expect.vscode`)/№12/№13
-    читают его, до P1.5 был `None`."""
+    """Internal documentation."""
 
     layers: list
     values: dict
@@ -427,10 +370,7 @@ class Context(object):
 
 
 def build_context(env, target, profile_name=None):
-    """Читает слои, строит эффективную конфигурацию, разрешает policy-профиль и
-    VSCode-слой — удобный вход для CLI/тестов. `profile_name` (явное имя из
-    `--profile`, 2026.07.10-SKM-ROADMAP-005 P1.4) перекрывает декларацию `<target>/.swissknife.json:policy_profile`;
-    None → берётся декларация."""
+    """Internal documentation."""
     layers = load_layers(env, target)
     values, provenance = effective_config(layers)
     profile = resolve_profile_state(env, target, profile_name)
@@ -440,8 +380,7 @@ def build_context(env, target, profile_name=None):
 
 
 def _load_settings_keys():
-    """Снапшот канонических ключей (D13, выжимка не апстрим-схема). Отсутствие/битый
-    файл — doctor не падает, но проверки №2/№5 деградируют до пустых списков."""
+    """Internal documentation."""
     data = safe_load_json(_SETTINGS_KEYS_PATH, default=None)
     if not isinstance(data, dict):
         return {"top_level": [], "permissions": [], "hook_events": [],
@@ -449,28 +388,23 @@ def _load_settings_keys():
     return data
 
 
-# --- Policy-профили (2026.07.10-SKM-ROADMAP-005 P1.3): декларация проекта + сверка «ожидание vs факт» ----
-# Профили — пакетный ресурс рядом с пресетами, ПУТЬ module-relative (как снапшот
-# ключей выше), НЕ env-relative: снапшот/профили одни на пакет, а тесты гоняют с
-# tmp-корнем env (иначе искали бы профиль в tmp/configs и не нашли).
+
+
+
+
 _POLICY_DIR = (Path(__file__).resolve().parents[2]
                / "configs" / "claude-code" / "policy")
 
 
 def available_profiles():
-    """Имена доступных профилей (`configs/claude-code/policy/*.json`), отсортированы.
-    Нет каталога — пустой кортеж (не находка: сверка просто не сработает)."""
+    """Internal documentation."""
     if not _POLICY_DIR.is_dir():
         return ()
     return tuple(sorted(p.stem for p in _POLICY_DIR.glob("*.json")))
 
 
 def read_policy_declaration(target):
-    """Декларация ожидаемой политики: `<target>/.swissknife.json:policy_profile`
-    (D11 — дом декларации НЕ `.claude/settings.json`, иначе собственная проверка №2
-    пометит ключ как неканонический). harness читает файл САМ через `core.safe_load_json`,
-    НЕ импортируя skiller — пакеты независимы, общее живёт в `core`. Возвращает имя
-    профиля (строку) или None (нет файла / нет ключа / битый JSON — fail-soft)."""
+    """Internal documentation."""
     data = safe_load_json(Path(target) / ".swissknife.json", default=None)
     if not isinstance(data, dict):
         return None
@@ -479,9 +413,7 @@ def read_policy_declaration(target):
 
 
 def load_profile(env, name):
-    """Профиль `configs/claude-code/policy/<name>.json` → dict, или None (пустое имя /
-    нет файла / битый / не объект). `env` — для совместимости сигнатуры с 2026.07.10-SKM-ROADMAP-005 P1.4-вызовом
-    (`--profile`), путь профиля module-relative (пакетный ресурс, см. `_POLICY_DIR`)."""
+    """Internal documentation."""
     if not name:
         return None
     data = safe_load_json(_POLICY_DIR / f"{name}.json", default=None)
@@ -489,9 +421,7 @@ def load_profile(env, name):
 
 
 def resolve_profile_state(env, target, explicit_name=None):
-    """Разрешает `ProfileState` для проекта: явное имя (`--profile`, 2026.07.10-SKM-ROADMAP-005 P1.4) перекрывает
-    декларацию `<target>/.swissknife.json`. Имя не задано → состояние «не объявлен»;
-    задано, но файла нет → состояние «неизвестный профиль» (обе ветки — не die())."""
+    """Internal documentation."""
     name = explicit_name or read_policy_declaration(target)
     available = available_profiles()
     if not name:
@@ -499,11 +429,10 @@ def resolve_profile_state(env, target, explicit_name=None):
     return ProfileState(name=name, profile=load_profile(env, name), available=available)
 
 
-# --- Проверка №1 — валидность JSON слоя (error) -----------------------------
+
 
 def check_1_layer_json_valid(ctx):
-    """Один слой с битым JSON = одна находка error — Layer.error уже несёт текст
-    исключения (2026.07.10-SKM-ROADMAP-005 P1.1, fail-soft: слой исключён из merge, doctor не падает)."""
+    """Internal documentation."""
     findings = []
     for layer in ctx.layers:
         if layer.error:
@@ -517,12 +446,10 @@ def check_1_layer_json_valid(ctx):
     return findings
 
 
-# --- Проверка №2 — неканонические ключи (warn) -------------------------------
+
 
 def check_2_noncanonical_keys(ctx):
-    """Ключи верхнего уровня и подключи `permissions.*` каждого слоя сверяются со
-    снапшотом `settings-keys.json`. Эталонный кейс — `permissions.autoApprove` (D6:
-    ключа нет в доках, Claude Code молча его игнорирует)."""
+    """Internal documentation."""
     keys = _load_settings_keys()
     known_top = set(keys.get("top_level") or [])
     known_perm = set(keys.get("permissions") or [])
@@ -565,12 +492,10 @@ def check_2_noncanonical_keys(ctx):
     return findings
 
 
-# --- Проверка №3 — конфликт defaultMode между слоями (warn) ------------------
+
 
 def check_3_default_mode_conflict(ctx):
-    """`defaultMode`, объявленный больше чем в одном слое, — не сразу ошибка (нижний
-    слой может дублировать верхний намеренно), но это ровно тот конфликт, что дал
-    field-case: агент видит local, не зная, что project его уже переопределил."""
+    """Internal documentation."""
     declared = []
     for layer in ctx.layers:
         perms = layer.data.get("permissions") if isinstance(layer.data, dict) else None
@@ -589,16 +514,10 @@ def check_3_default_mode_conflict(ctx):
     )]
 
 
-# --- Проверка №4 — соответствие policy-профилю проекта (error) ---------------
+
 
 def check_4_policy_profile_conformance(ctx):
-    """Эффективная конфигурация vs `expect` объявленного профиля: `defaultMode`
-    (равенство), `permissions.deny` (надмножество — проект ВПРАВЕ добавить свои
-    guardrails, НЕ вправе урезать), `hooks.required` (событие+команда прописаны).
-    `permissions.ask` — не здесь (проверка №11). Секция `vscode` — читается в 2026.07.10-SKM-ROADMAP-005 P1.5
-    (в P1.3 объявлена, но молча пропускается). Профиль не объявлен → один `info`;
-    объявлено неизвестное имя → `error` (обе ветки несут единственный `info`/`error`
-    за пару №4/№11 — №11 в этих случаях молчит)."""
+    """Internal documentation."""
     state = ctx.profile
     if state is None or state.name is None:
         avail = ", ".join(state.available) if state and state.available else "—"
@@ -624,7 +543,7 @@ def check_4_policy_profile_conformance(ctx):
     expect = state.profile.get("expect") or {}
     perms = ctx.values.get("permissions") or {}
 
-    # defaultMode — равенство.
+
     if "permissions.defaultMode" in expect:
         exp_mode = expect["permissions.defaultMode"]
         act_mode = perms.get("defaultMode")
@@ -636,7 +555,7 @@ def check_4_policy_profile_conformance(ctx):
                 hint="Приведи permissions.defaultMode к профилю (writer: harness permissions).",
             ))
 
-    # deny — надмножество (⊇): проект вправе расширить guardrails, не урезать.
+
     deny_expect = expect.get("permissions.deny")
     if isinstance(deny_expect, dict) and isinstance(deny_expect.get("contains"), list):
         actual_deny = set(perms.get("deny") or [])
@@ -650,7 +569,7 @@ def check_4_policy_profile_conformance(ctx):
                      "режимах, включая bypassPermissions.",
             ))
 
-    # hooks.required — событие+команда присутствуют в эффективной конфигурации.
+
     hooks_expect = expect.get("hooks")
     if isinstance(hooks_expect, dict):
         eff_hooks = ctx.values.get("hooks") or {}
@@ -673,9 +592,9 @@ def check_4_policy_profile_conformance(ctx):
                     hint="Пропиши хук (writer: harness hooks) или сними требование из профиля.",
                 ))
 
-    # vscode — секция профиля (2026.07.10-SKM-ROADMAP-005 P1.3 объявлена, P1.5 читается и сверяется). Сверяем
-    # ТОЛЬКО если проект реально несёт VSCode-настройки (хотя бы один слой с данными) —
-    # иначе каждый проект без VSCode ловил бы шумный error за неиспользуемый редактор.
+
+
+
     vscode_expect = expect.get("vscode")
     if isinstance(vscode_expect, dict) and ctx.vscode is not None and ctx.vscode.effective:
         actual = ctx.vscode.effective
@@ -692,21 +611,14 @@ def check_4_policy_profile_conformance(ctx):
     return findings
 
 
-# --- Проверка №5 — хуки: command существует/исполняем; событие известно ------
 
-# Интерпретаторы: `bash script.sh` — проверять надо СКРИПТ, а не сам `bash`.
+
+
 _INTERPRETERS = {"bash", "sh", "zsh", "dash", "python", "python3", "node", "perl", "ruby"}
 
 
 def _resolve_hook_command_path(command, target, home):
-    """Токен command-строки → ``(путь, нужен_X_OK)``. Плейсхолдеры (`$VAR`/`${VAR}`)
-    НЕ резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`.
-
-    Два класса, которые наивный «первый токен» ломал ложным `error`:
-    - `~/.claude/hooks/x.sh` — тильда обязана раскрываться от явного `env.home`
-      (иначе результат зависит от HOME процесса либо клеится к target);
-    - `bash /path/x.sh` — первый токен интерпретатор, проверять надо аргумент-скрипт.
-    """
+    """Internal documentation."""
     try:
         tokens = shlex.split(command)
     except ValueError:
@@ -719,13 +631,13 @@ def _resolve_hook_command_path(command, target, home):
         return None
 
     requires_exec = True
-    # `bash script.sh` / `python3 hook.py` → цель проверки — скрипт (второй токен),
-    # но X_OK нужен интерпретатору, а не самому переданному ему файлу.
+
+
     if Path(first).name in _INTERPRETERS:
         requires_exec = False
         args = [t for t in tokens[1:] if not t.startswith("-")]
         if not args:
-            return None  # интерпретатор без скрипта (`bash -c …`) — не проверяем
+            return None
         first = args[0]
         if "$" in first:
             return None
@@ -742,8 +654,7 @@ def _resolve_hook_command_path(command, target, home):
 
 
 def check_5_hooks(ctx):
-    """Событие вне снапшота → `info` (список неполный, D15/findings [UNVERIFIED]).
-    Command-файл отсутствует/неисполняем → `error`. Плейсхолдер в команде → `info`."""
+    """Internal documentation."""
     keys = _load_settings_keys()
     known_events = set(keys.get("hook_events") or [])
     snapshot_date = keys.get("verified", "?")
@@ -785,11 +696,10 @@ def check_5_hooks(ctx):
     return findings
 
 
-# --- Проверка №9 — секреты в env.* + gitignore-статус local (error) ----------
+
 
 def check_9_secrets(ctx):
-    """Эвристика ТОЛЬКО по `env` (запрещено расширять на permissions.*/тела хуков —
-    ложняки взрывают доверие к doctor'у) + gitignore-статус settings.local.json."""
+    """Internal documentation."""
     findings = []
     env_values = ctx.values.get("env") or {}
     env_prov = ctx.provenance.get("env") or {}
@@ -818,9 +728,7 @@ def check_9_secrets(ctx):
 
 
 def _check_local_gitignored(target, local_path):
-    """`git check-ignore -q` — fail-soft: нет git/не репозиторий → `info`, НЕ
-    `error` (Implementation Rules). rc=0 игнорируется (норма, без находки),
-    rc=1 не игнорируется (error), иначе (напр. 128 «не репозиторий») → info."""
+    """Internal documentation."""
     try:
         result = subprocess.run(
             ["git", "-C", str(target), "check-ignore", "-q", str(local_path)],
@@ -851,21 +759,17 @@ def _check_local_gitignored(target, local_path):
     )
 
 
-# --- Проверка №11 — ask-правила при политике «не спрашивать» (error) ---------
+
 
 def check_11_ask_rules_when_expected_empty(ctx):
-    """Профиль объявил `permissions.ask: []` (семантика «никогда не спрашивать»), а
-    эффективный `ask` непуст → `error`: ask-правила форсируют промпт В ЛЮБОМ режиме,
-    включая `bypassPermissions` (RAG:✅ 2026-07-10 permissions.md — первопричина
-    field-case #2). Профиль не объявлен / неизвестен / не требует пустого ask →
-    молчим (первый случай уже отражён проверкой №4 одним `info`/`error`)."""
+    """Internal documentation."""
     state = ctx.profile
     if state is None or state.name is None or state.profile is None:
         return []
     expect = state.profile.get("expect") or {}
     if "permissions.ask" not in expect:
         return []
-    if expect["permissions.ask"]:  # профиль ждёт НЕпустой ask — не «не спрашивать»
+    if expect["permissions.ask"]:
         return []
     ask_rules = (ctx.values.get("permissions") or {}).get("ask") or []
     if not ask_rules:
@@ -881,19 +785,16 @@ def check_11_ask_rules_when_expected_empty(ctx):
     )]
 
 
-# --- Проверка №6 — мусорные точные allow-правила Bash(...) (info) ------------
+
 
 def _is_exact_bash_rule(rule):
-    """«Точное» правило (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5): `Bash(...)` БЕЗ `*` в теле —
-    одноразовый след кнопки «always allow», не покрывает ничего нового."""
+    """Internal documentation."""
     return (isinstance(rule, str) and rule.startswith("Bash(") and rule.endswith(")")
             and "*" not in rule)
 
 
 def check_6_dead_allow_rules(ctx):
-    """Порог `DEAD_ALLOW_THRESHOLD` точных `Bash(...)`-правил в эффективном
-    `permissions.allow` → `info` с числом и топ-5 примерами. Дубли уже сведены
-    union'ом эффективной конфигурации (2026.07.10-SKM-ROADMAP-005 P1.1) — здесь только объём мусора."""
+    """Internal documentation."""
     allow = (ctx.values.get("permissions") or {}).get("allow") or []
     exact = [r for r in allow if _is_exact_bash_rule(r)]
     if len(exact) < DEAD_ALLOW_THRESHOLD:
@@ -907,12 +808,10 @@ def check_6_dead_allow_rules(ctx):
     )]
 
 
-# --- Проверка №7 — противоречия allow/deny (warn) -----------------------------
+
 
 def check_7_allow_deny_overlap(ctx):
-    """Один и тот же ПАТТЕРН (сравнение строк, без семантического glob-матчера —
-    Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5) объявлен и в allow, и в deny → deny побеждает
-    молча (RAG:✅ 2026-07-10 permissions.md, deny-first)."""
+    """Internal documentation."""
     perms = ctx.values.get("permissions") or {}
     allow = {r for r in (perms.get("allow") or []) if isinstance(r, str)}
     deny = {r for r in (perms.get("deny") or []) if isinstance(r, str)}
@@ -927,12 +826,10 @@ def check_7_allow_deny_overlap(ctx):
     ]
 
 
-# --- Проверка №8 — несуществующие additionalDirectories (warn) ---------------
+
 
 def check_8_additional_directories_missing(ctx):
-    """`additionalDirectories` — per-layer (D15, семантика слияния [UNVERIFIED],
-    вердикт этой проверки от неё не зависит): путь, объявленный В КАКОМ-ТО слое,
-    не существует на диске → `warn` с именем слоя."""
+    """Internal documentation."""
     findings = []
     ad = (ctx.values.get("permissions") or {}).get("additionalDirectories")
     if not isinstance(ad, dict):
@@ -954,11 +851,10 @@ def check_8_additional_directories_missing(ctx):
     return findings
 
 
-# --- Проверка №10 — bypassPermissions без skipDangerousModePermissionPrompt (info) --
+
 
 def check_10_bypass_without_skip_dialog(ctx):
-    """**Ровно `info`, никогда `warn`/`error`**: documented permission key controls
-    the confirmation dialog, but its absence remains an operator choice."""
+    """Internal documentation."""
     perms = ctx.values.get("permissions") or {}
     if perms.get("defaultMode") != "bypassPermissions":
         return []
@@ -974,11 +870,10 @@ def check_10_bypass_without_skip_dialog(ctx):
     )]
 
 
-# --- VSCode-слой: проверки №12/№13 (warn) + info на битый/непарсящийся файл --
+
 
 def _vscode_parse_errors(ctx):
-    """Layer.error непустой (JSONC не распарсился) → `info` (никогда `error`,
-    Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.5). Отсутствующий файл — норма, без находки."""
+    """Internal documentation."""
     vscode = ctx.vscode
     if vscode is None:
         return []
@@ -996,9 +891,7 @@ def _vscode_parse_errors(ctx):
 
 
 def check_12_vscode_initial_mode_mismatch(ctx):
-    """`claudeCode.initialPermissionMode` расходится с эффективным
-    `permissions.defaultMode` слоёв Claude Code → `warn`: расширение может
-    проигнорировать `defaultMode` слоёв на старте сессии (field-case #2)."""
+    """Internal documentation."""
     parse_errors = _vscode_parse_errors(ctx)
     if parse_errors:
         return parse_errors
@@ -1021,12 +914,7 @@ def check_12_vscode_initial_mode_mismatch(ctx):
 
 
 def check_13_vscode_bypass_toggle_missing(ctx):
-    """Эффективный `bypassPermissions`, но `claudeCode.allowDangerouslySkipPermissions`
-    не включён в VSCode → `warn`: режим недоступен в селекторе расширения.
-
-    Сверяется ТОЛЬКО когда проект реально несёт VSCode-настройки (хотя бы один
-    слой с данными, как №4) — иначе шум на каждый non-VSCode/headless проект
-    с рекомендованным bypassPermissions."""
+    """Internal documentation."""
     perms = ctx.values.get("permissions") or {}
     if perms.get("defaultMode") != "bypassPermissions":
         return []
@@ -1048,10 +936,10 @@ def check_13_vscode_bypass_toggle_missing(ctx):
     )]
 
 
-# --- Реестр проверок ----------------------------------------------------------
 
-# Список пар (id, fn); добавление проверки = новая функция + строка здесь, не
-# ветвление в мега-функции (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P1.2). Порядок — по возрастанию id.
+
+
+
 CHECKS = (
     (1, check_1_layer_json_valid),
     (2, check_2_noncanonical_keys),
@@ -1070,7 +958,7 @@ CHECKS = (
 
 
 def run_checks(ctx, checks=CHECKS):
-    """Прогоняет реестр проверок над `Context`, возвращает плоский список `Finding`."""
+    """Internal documentation."""
     findings = []
     for _id, fn in checks:
         findings.extend(fn(ctx))
@@ -1078,26 +966,25 @@ def run_checks(ctx, checks=CHECKS):
 
 
 # --- Codex settings audit (P2.4, codex-parity-verdicts-v1.md §3.11, bounded closure) ---
-# Отдельный, МЕНЬШИЙ набор проверок над документированными слоями Codex
-# (learn.chatgpt.com/docs/config-file/config-reference, findings/03 Ф10):
-# ~/.codex/config.toml → .codex/config.toml → profile, плюс `projects.<path>.trust_level`
-# и `features.hooks`. НЕ обобщение 13 Claude-проверок выше — их таксономия
-# permission/settings-shape у Codex носителя не имеет. Читалка **fail-soft**, как и
-# Claude-сторона: битый/непрочитанный слой — Finding, никогда не «конформно».
-# `tomllib` — stdlib только с Python 3.11 (матрица CI 3.9…3.13, D89 п.2): на 3.9/3.10
-# слой репортится нечитаемым, второй TOML-парсер не заводится (вне скоупа, запрет
-# новых рантайм-зависимостей).
 
-# Ф10: «Project-scoped config can't override machine-local provider, auth,
+
+
+
+
+
+
+
+
+
+
 # host-owned app request metadata, notification, configuration profile selection,
-# or telemetry routing keys» — ключи верхнего уровня TOML, которые проектный слой
-# переопределять не вправе.
+
+
 CODEX_NON_OVERRIDABLE_PROJECT_KEYS = ("model_provider", "auth", "notify", "profile", "otel")
 
 
 def _load_codex_toml_layer(name, path):
-    """Слой Codex TOML: отсутствующий файл — норма; неразрешённый интерпретатор
-    (`tomllib` < 3.11) и битый TOML — ОТЧЁТ (fail-soft), не исключение."""
+    """Internal documentation."""
     if not path.exists():
         return Layer(name, path, data=None, error=None)
     try:
@@ -1115,9 +1002,7 @@ def _load_codex_toml_layer(name, path):
 
 
 def load_codex_layers(env, target):
-    """Два документированных слоя Codex (Ф10), по возрастанию приоритета —
-    `user` → `project`; профиль (`profile`) выбирается ВНУТРИ этих слоёв, не
-    отдельным файлом, и здесь не разворачивается (вне объёма bounded closure)."""
+    """Internal documentation."""
     target = Path(target)
     return [
         _load_codex_toml_layer("user", Path(env.home) / ".codex" / "config.toml"),
@@ -1126,8 +1011,7 @@ def load_codex_layers(env, target):
 
 
 def codex_check_1_layers_readable(layers):
-    """№1: каждый слой, который существует, обязан быть прочитан; иначе — warn,
-    никогда молчаливое "conformant"."""
+    """Internal documentation."""
     return [Finding(1, "warn", f"слой '{layer.name}' не прочитан",
                     detail=f"{layer.path}: {layer.error}",
                     hint="слой репортится нечитаемым, а не конформным")
@@ -1135,7 +1019,7 @@ def codex_check_1_layers_readable(layers):
 
 
 def codex_check_2_project_overrides_machine_local_key(layers):
-    """№2: проектный слой не вправе переопределять machine-local ключи (Ф10)."""
+    """Internal documentation."""
     project = next((layer for layer in layers if layer.name == "project" and layer.data), None)
     if project is None:
         return []
@@ -1150,8 +1034,7 @@ def codex_check_2_project_overrides_machine_local_key(layers):
 
 
 def codex_check_3_hooks_feature_disabled(layers):
-    """№3: `features.hooks=false` эффективно — задеплоенные `harness hooks
-    --provider codex` поверхности не активируются (не ошибка, info)."""
+    """Internal documentation."""
     effective = {}
     for layer in layers:
         if layer.data:
@@ -1173,8 +1056,7 @@ CODEX_CHECKS = (
 
 
 def run_codex_checks(layers, checks=CODEX_CHECKS):
-    """Прогоняет Codex-реестр проверок над списком `Layer`, тот же плоский
-    список `Finding`, что и Claude-сторона (общие `counts`/`exit_code` ниже)."""
+    """Internal documentation."""
     findings = []
     for _id, fn in checks:
         findings.extend(fn(layers))
@@ -1182,8 +1064,7 @@ def run_codex_checks(layers, checks=CODEX_CHECKS):
 
 
 def render_codex_text(target, findings):
-    """Человекочитаемый отчёт Codex-аудита — тот же формат, что `render_text`,
-    без policy-профиля (Codex-сторона его не резолвит в этом bounded closure)."""
+    """Internal documentation."""
     lines = [f"harness doctor --settings --provider codex (target: {target})"]
     if not findings:
         lines.append("  находок нет — эффективная конфигурация чистая.")
@@ -1199,17 +1080,17 @@ def render_codex_text(target, findings):
     return "\n".join(lines)
 
 
-# --- Рендер отчёта, счётчики, код возврата (2026.07.10-SKM-ROADMAP-005 P1.4) ----------------------------
-# Контракт CLI (`harness doctor --settings`): человекочитаемый отчёт ЛИБО единый
-# JSON-документ + exit-code 0/1/2. На `--json` стоит fleet-скан P1.6 — форма ниже
-# ЯВЛЯЕТСЯ контрактом, не стилем.
 
-# Порядок вывода уровней в человекочитаемом отчёте (сначала самое важное).
+
+
+
+
+
 _LEVEL_ORDER = ("error", "warn", "info")
 
 
 def counts(findings):
-    """Счётчики находок по уровням: `{"error": n, "warn": m, "info": k}`."""
+    """Internal documentation."""
     c = {"error": 0, "warn": 0, "info": 0}
     for f in findings:
         if f.level in c:
@@ -1218,8 +1099,7 @@ def counts(findings):
 
 
 def exit_code(findings):
-    """Код возврата по составу находок: `2` — есть error; `1` — есть warn (без
-    error); `0` — находок нет либо только `info`. `--json` кода не меняет."""
+    """Internal documentation."""
     c = counts(findings)
     if c["error"]:
         return 2
@@ -1229,14 +1109,13 @@ def exit_code(findings):
 
 
 def _profile_name(ctx):
-    """Имя разрешённого policy-профиля (из декларации или `--profile`) либо None."""
+    """Internal documentation."""
     prof = getattr(ctx, "profile", None)
     return prof.name if prof is not None else None
 
 
 def render_text(ctx, findings):
-    """Человекочитаемый отчёт: группировка по уровням, на каждую находку строка
-    `[level] #id <title>` → `    — <detail>` → `    → <hint>`; финальная сводка."""
+    """Internal documentation."""
     name = _profile_name(ctx)
     lines = [
         f"harness doctor --settings (target: {ctx.target})",
@@ -1258,8 +1137,7 @@ def render_text(ctx, findings):
 
 
 def render_json_obj(ctx, findings):
-    """Машинный вид (контракт для 2026.07.10-SKM-ROADMAP-005 P1.6): dict под `json.dumps(..., ensure_ascii=False)`.
-    Ровно один такой документ идёт в stdout при `--json`, ничего кроме него."""
+    """Internal documentation."""
     return {
         "target": str(ctx.target),
         "profile": _profile_name(ctx),

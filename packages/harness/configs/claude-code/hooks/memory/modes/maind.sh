@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
-# Режим maind — делегирует «единую память» в `maind memory` (демон :4111 + ИЗОЛЯЦИЯ
-# на стороне maind: scope-маркер в контенте, т.к. демон-пул один и namespace не фильтрует).
-# brain ИГНОРИРУЕТСЯ: scope берётся из проекта (CLAUDE_PROJECT_DIR → match_cwd внутри maind
-# по config.json) — приватный project:<id> + общие ns:<тег> + global. Источается memory.sh.
 #
-# Почему не agentmemory.sh: тот режим бил в неверные эндпоинты и в namespace демона,
-# который демон всё равно игнорирует. maind — единый клиент со scope-моделью и изоляцией.
 
 _maind_bin() {
   [ -n "${MAIND_BIN:-}" ] && [ -x "$MAIND_BIN" ] && { printf '%s' "$MAIND_BIN"; return; }
@@ -32,7 +26,7 @@ mode_recall() { # brain query
   ( cd "$(_maind_dir)" && "$bin" memory recall "$2" )
 }
 
-mode_members() { # brain — участники общей памяти = пиры проекта по namespace'ам
+mode_members() { # Shared-memory members are project peers by namespace.
   echo "режим maind: общее — по namespace'ам проекта (см. maind projects status / graph --project)"
 }
 

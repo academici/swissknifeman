@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# tests-touched.sh — W1 (warn-класс, всегда — легальные исключения существуют:
-# рефактор без смены поведения). Дифф трогает `packages/<pkg>/lib/**` без
-# изменений в `packages/<pkg>/tests/**` → нарушение (эвристика, ложный фон
-# ненулевой — blocking запрещён критерием FC-4). exit 0 = чисто, ≠0 = нарушение.
 set -uo pipefail
 
 changed="$( { git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u | grep -v '^$')"

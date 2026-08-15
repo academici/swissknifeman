@@ -1,5 +1,4 @@
-"""anti-rebloat-гейт config.json agent-router: policy остаётся терс (v2 ≤1700 симв),
-version бампнут, семантика меню сохранена (все 5 /task:* на месте), auto_suffix непуст."""
+"""Internal documentation."""
 import json
 import sys
 import unittest
@@ -24,7 +23,7 @@ class RouterConfigCase(unittest.TestCase):
         self.cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
 
     def test_policy_within_budget(self):
-        """анти-реблоат: policy ≤1700 симв (~≤400 ток) — держим always-on старт тощим."""
+        """Internal documentation."""
         policy = self.cfg["policy"]
         self.assertLessEqual(len(policy), 1700, f"policy раздулся: {len(policy)} симв")
 
@@ -32,7 +31,7 @@ class RouterConfigCase(unittest.TestCase):
         self.assertGreaterEqual(self.cfg["version"], 2)
 
     def test_all_task_commands_present(self):
-        """меню 5 команд сохранено — ни одну не выкинули при компрессии."""
+        """Internal documentation."""
         policy = self.cfg["policy"]
         for cmd in TASK_COMMANDS:
             self.assertIn(cmd, policy, f"в policy пропала команда {cmd}")

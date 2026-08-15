@@ -1,9 +1,4 @@
-"""Run-report'ы Claude Code — общий stdlib-only примитив монорепо.
-
-Поиск свежего run-report'а (<project>/.claude/runs/*.json) копировался в analyst
-(digest) и maind (analyze) с расхождением: analyst раскрывал `~` в пути
-(os.path.expanduser), maind — нет, и на `~`-пути молча возвращал None. Сведено сюда
-с единой нормализацией пути. stdlib-only."""
+"""Shared stdlib-only Claude Code run-report lookup helpers."""
 import json
 import os
 import re
@@ -113,10 +108,7 @@ def find_analytics_events(project_path, session=None):
 
 
 def find_run_report(project_path, session=None):
-    """Разобранный свежий (или по session) run-report из <project>/.claude/runs/*.json.
-
-    None если нет каталога/файла/битый JSON. Путь нормализуется через expanduser —
-    `~/...` раскрывается (иначе отчёт молча «не находится»)."""
+    """Return the newest or selected decoded run report, or ``None``."""
     runs = Path(os.path.expanduser(str(project_path))) / ".claude" / "runs"
     if not runs.is_dir():
         return None

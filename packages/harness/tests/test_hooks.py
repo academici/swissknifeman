@@ -1,4 +1,4 @@
-"""Хуки: auto-approve env.ini + регистрация (merge-only); memory membership."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -17,9 +17,7 @@ _HOOKS_ROOT = Path(__file__).resolve().parent.parent / "configs/claude-code/hook
 
 
 def _read_mode(common_sh, hookdir, project_dir=None):
-    """Зовёт `read_mode` реального `common.sh` (bash) в изолированном subprocess — та
-    же лестница приоритета (`$CLAUDE_PROJECT_DIR/.claude/<hook>.env.ini` → `<hookdir>/env.ini`),
-    что и в живом хуке; unit-тест на копии логики её бы не проверял (P5.3)."""
+    """Internal documentation."""
     env = {"PATH": "/usr/bin:/bin"}
     if project_dir is not None:
         env["CLAUDE_PROJECT_DIR"] = str(project_dir)
@@ -54,7 +52,7 @@ class HooksCase(unittest.TestCase):
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         matchers = [e.get("matcher") for e in s["hooks"]["PreToolUse"]]
         self.assertEqual(sorted(matchers), ["Bash", "ExitPlanMode"])
-        # повтор не плодит дубли (merge-only)
+
         run(block_autoapprove, self.proj, "strict", "settings.json", False)
         s2 = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertEqual(len(s2["hooks"]["PreToolUse"]), 2)
@@ -72,7 +70,7 @@ class HooksCase(unittest.TestCase):
             json.dumps({"permissions": {"allow": ["Bash(ls *)"]}}) + "\n")
         run(block_autoapprove, self.proj, "permissive", "settings.json", False)
         s = json.loads((cdir / "settings.json").read_text())
-        self.assertEqual(s["permissions"]["allow"], ["Bash(ls *)"])  # не затёрто
+        self.assertEqual(s["permissions"]["allow"], ["Bash(ls *)"])
         self.assertIn("PreToolUse", s["hooks"])
 
     def test_autoapprove_unknown_mode_exits(self):
@@ -98,7 +96,7 @@ class HooksCase(unittest.TestCase):
         run(block_plans_dir, self.proj, "plans", "settings.json", False)
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertEqual(s["plansDirectory"], "plans")
-        # НЕ settings.local.json
+
         self.assertFalse((self.proj / ".claude" / "settings.local.json").exists())
 
     def test_plans_dir_idempotent_no_dupe_write(self):
@@ -115,7 +113,7 @@ class HooksCase(unittest.TestCase):
             json.dumps({"plansDirectory": "my-custom-plans"}) + "\n")
         out = run(block_plans_dir, self.proj, "plans", "settings.json", False)
         s = json.loads((cdir / "settings.json").read_text())
-        self.assertEqual(s["plansDirectory"], "my-custom-plans")  # не перезаписано
+        self.assertEqual(s["plansDirectory"], "my-custom-plans")
         self.assertIn("уважаю", out)
 
     def test_plans_dir_off_removes_our_default(self):
@@ -130,7 +128,7 @@ class HooksCase(unittest.TestCase):
             json.dumps({"plansDirectory": "my-custom-plans"}) + "\n")
         out = run(block_plans_dir, self.proj, "off", "settings.json", False)
         s = json.loads((cdir / "settings.json").read_text())
-        self.assertEqual(s["plansDirectory"], "my-custom-plans")  # не снято
+        self.assertEqual(s["plansDirectory"], "my-custom-plans")
         self.assertIn("не наш дефолт", out)
 
     def test_plans_dir_off_noop_when_key_absent(self):
@@ -146,15 +144,15 @@ class HooksCase(unittest.TestCase):
         run(block_plans_dir, self.proj, "plans", "settings.json", True)
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
-    # --- *.env.ini лестница приоритета (P5.3) --------------------------------
+
     def test_autoapprove_read_mode_priority_ladder(self):
         common_sh = _HOOKS_ROOT / "auto-approve/lib/common.sh"
         hookdir = _HOOKS_ROOT / "auto-approve"
-        # оба отсутствуют → дефолт "off"
+
         self.assertEqual(_read_mode(common_sh, self.tmp / "no-such-hookdir", self.proj), "off")
-        # только <hookdir>/env.ini → используется он
+
         self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "strict")
-        # per-project .claude/auto-approve.env.ini перекрывает <hookdir>/env.ini
+
         cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
         (cdir / "auto-approve.env.ini").write_text("MODE=bypass\n")
         self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "bypass")
@@ -169,8 +167,8 @@ class HooksCase(unittest.TestCase):
         self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "off")
 
     def test_read_mode_ignores_unknown_key(self):
-        # Измеренное поведение (не предположение, D-«правило внешних фактов»): неизвестный
-        # ключ рядом с MODE не ломает разбор — reader просто его не видит.
+
+
         common_sh = _HOOKS_ROOT / "auto-approve/lib/common.sh"
         cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
         (cdir / "auto-approve.env.ini").write_text("FOO=bar\nMODE=permissive\n")

@@ -1,10 +1,4 @@
-"""doctor — диагностика окружения harness (пресеты, скрипт, файлы хуков) + аудит
-настроек Claude Code (`--settings`, settings-doctor).
-
-Две НЕсмешиваемые ветки: без флага — диагностика окружения самого harness (пресеты,
-apply-скрипт, файлы хуков); с `--settings` — аудит слоёв настроек Claude Code
-целевого проекта (движок `settings_audit`), с человекочитаемым отчётом или единым
-JSON-документом и exit-code 0/1/2. Ветки не пересекаются в выводе (ранний return)."""
+"""Internal documentation."""
 import hashlib
 import json
 import os
@@ -15,16 +9,15 @@ from .agentpacks import list_packs
 from .common import parse_flags
 from .mcp import available_mcp
 
-# run-report SCHEMA=2: файлы хука, чью свежесть сверяем против источника в репо.
+
 _RUN_REPORT_FILES = ("run-report.py", "_lib.py", "_usage.py")
 
-# 2026.07.25-ECO-OPT P9.1: коды проверок review-gate для компактной строки doctor'а (research/18 §2.4).
+
 _REVIEW_GATE_CHECK_CODES = {"generated-assets": "G1", "plan-lint": "G2", "tests-touched": "W1"}
 
 
 def _review_gate_mode(env_path):
-    """MODE из env.ini review-gate (off/warn/strict), дефолт warn — та же логика
-    read_ini/case, что в `review-gate.sh` (первое совпадение, дефолт при мусоре)."""
+    """Internal documentation."""
     if not env_path.exists():
         return "warn"
     for line in env_path.read_text(encoding="utf-8").splitlines():
@@ -36,8 +29,7 @@ def _review_gate_mode(env_path):
 
 
 def _review_gate_state(hooks_dir):
-    """Три различимых состояния (research/18 §2.4, вместо тихого no-op):
-    `disabled (MODE=off)` / `unconfigured (no-op)` / `configured: <коды по режиму>`."""
+    """Internal documentation."""
     rg = hooks_dir / "review-gate"
     if _review_gate_mode(rg / "env.ini") == "off":
         return "disabled (MODE=off)"
@@ -58,7 +50,7 @@ def _review_gate_state(hooks_dir):
 
 
 def _sha256(path):
-    """sha256 файла или None (нет файла/не читается) — для сравнения «свежести»."""
+    """Internal documentation."""
     try:
         return hashlib.sha256(Path(path).read_bytes()).hexdigest()
     except OSError:
@@ -66,17 +58,14 @@ def _sha256(path):
 
 
 def _cmd_doctor_settings(env, opts):
-    """Ветка `--settings`: аудит слоёв настроек Claude Code целевого проекта.
-    Отдельная от диагностики окружения harness (ранний return в `cmd_doctor`) —
-    два разных вывода не смешиваются. exit-code 0/1/2 по составу находок; `--json`
-    печатает РОВНО один JSON-документ (контракт для fleet-скана 2026.07.10-SKM-ROADMAP-005 P1.6)."""
+    """Internal documentation."""
     from .settings_audit import build_context, exit_code, render_json_obj, render_text, run_checks
     target = opts["target"] or os.getcwd()
     profile_name = opts["profile"] or None
     ctx = build_context(env, target, profile_name=profile_name)
     findings = run_checks(ctx)
     if opts["json"]:
-        # Единственный вывод в stdout — иначе fleet-скан 2026.07.10-SKM-ROADMAP-005 P1.6 (json.loads) падает.
+
         print(json.dumps(render_json_obj(ctx, findings), ensure_ascii=False))
     else:
         print(render_text(ctx, findings))
@@ -133,8 +122,8 @@ def cmd_doctor(env, argv):
         print(f"  · файлы хуков не установлены: {', '.join(missing)} "
               f"(поставить: harness hooks --global)")
 
-    # run-report SCHEMA=2: установленный хук может протухнуть (правки configs/ не долетели
-    # до ~/.claude/hooks — apply-permissions.sh --global копирует, а не симлинкует).
+
+
     rr_src = env.configs_dir / "hooks" / "run-report"
     rr_dst = hooks / "run-report"
     stale = [f for f in _RUN_REPORT_FILES if _sha256(rr_src / f) != _sha256(rr_dst / f)]
@@ -143,10 +132,10 @@ def cmd_doctor(env, argv):
 
     print(f"  · review-gate: {_review_gate_state(hooks)}")
 
-    # P2.4 (plans/2026.07.24-AGENT-RELIABILITY): SessionStart-пейлоад провайдера несёт
-    # `model` живым полем — `reasoning effort` он не экспонирует ни у одного провайдера
-    # (findings/02-telemetry-2026-07-20-24.md), поэтому actual effort остаётся
-    # self-attested и никогда не подставляется молча. Информационная строка, не ✗.
+
+
+
+
     print("  · route evidence: live model — из пейлоада хука/`codex doctor --json`; "
           "effort остаётся self-attested (`task.route_evidence capture --source self-attested`)")
 

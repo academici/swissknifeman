@@ -1,16 +1,17 @@
-"""HTTP-клиент на stdlib urllib (без сторонних зависимостей) — общий примитив монорепо.
+"""Shared stdlib-only urllib HTTP client for the monorepo.
 
-Перенесён из maind.http (общение с Node-демоном agent-memory: GET/POST JSON и
-healthcheck `ping`). Сетевые ошибки приводятся к понятному RuntimeError. stdlib-only."""
+Moved from maind.http for JSON GET/POST and health-check probes.
+"""
 import json
 import urllib.error
 import urllib.request
 
 
 class HTTPUnauthorizedError(RuntimeError):
-    """HTTP 401 — сервер ЖИВ, но запрос не авторизован (bearer отсутствует/неверен).
-    Подкласс RuntimeError: существующие `except RuntimeError` продолжают ловить и её,
-    вызывающий код, которому важно различие, ловит её отдельно ПЕРЕД RuntimeError."""
+    """HTTP 401: the server is alive but the request is unauthorized.
+
+    It remains a ``RuntimeError`` subclass for backward compatibility.
+    """
 
 
 def _request(url, *, method, data=None, headers=None, timeout):
@@ -27,15 +28,13 @@ def _request(url, *, method, data=None, headers=None, timeout):
 
 
 def http_get_json(url: str, *, timeout: float = 5, headers=None):
-    """GET → распарсенный JSON. Сетевые ошибки → RuntimeError; 401 → HTTPUnauthorizedError.
-    `headers` — опционально (напр. bearer-токен); без него поведение прежнее."""
+    """Return decoded JSON from GET; network failures raise ``RuntimeError``."""
     body = _request(url, method="GET", headers=headers, timeout=timeout)
     return json.loads(body or "null")
 
 
 def http_post_json(url: str, payload, *, timeout: float = 10, headers=None):
-    """POST JSON → распарсенный JSON-ответ (пустой ответ → {}). `headers` — опционально,
-    сливается поверх дефолтного Content-Type; без него поведение прежнее."""
+    """POST JSON and return decoded JSON; an empty response yields ``{}``."""
     data = json.dumps(payload).encode("utf-8")
     merged = {"Content-Type": "application/json", **(headers or {})}
     body = _request(url, method="POST", data=data, headers=merged, timeout=timeout)
@@ -43,10 +42,7 @@ def http_post_json(url: str, payload, *, timeout: float = 10, headers=None):
 
 
 def ping(url: str, *, timeout: float = 3, headers=None) -> bool:
-    """True, если по url вообще отвечает HTTP (даже 4xx/401). HTTPError = сервис жив
-    (как в brain healthcheck); URLError/OSError = недоступен. `headers` — опционально,
-    без него поведение прежнее (истину про авторизацию ping не даёт — см. HTTPUnauthorizedError
-    у http_get_json/http_post_json для протектед-эндпоинтов)."""
+    """Return whether an HTTP server responds, including 4xx and 401 responses."""
     try:
         urllib.request.urlopen(urllib.request.Request(url, method="GET", headers=headers or {}),
                                timeout=timeout)

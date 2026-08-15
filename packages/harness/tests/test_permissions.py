@@ -1,4 +1,4 @@
-"""permissions: graceful skip без скрипта; e2e реального apply-permissions.sh."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -30,7 +30,7 @@ class PermissionsCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_missing_script_graceful(self):
-        # мини-root без scripts/apply-permissions.sh → False + предупреждение, без падения
+
         _root, env = fx.make_root(self.tmp)
         proj = fx.make_project(self.tmp)
         ret, _out = run(apply_permissions, env, proj)
@@ -53,16 +53,16 @@ class PermissionsCase(unittest.TestCase):
         self.assertTrue(f.exists())
         data = json.loads(f.read_text())
         self.assertIn("permissions", data)
-        # base-пресет всегда вносит deny/allow — структура непустая
+
         self.assertTrue(data["permissions"])
 
     def test_global_preset_merges_enabled_mcpjson_servers(self):
-        # SKM-AUDIT-004 P4.3: settings.global.json одобряет perplexity-web
-        # (Класс B) top-level ключом enabledMcpjsonServers — merge-семантика
-        # apply-permissions.sh должна union'ить его, не только permissions.*.
+
+
+
         env = fx.real_env(self.tmp)
         proj = fx.make_project(self.tmp)
-        # существующая цель уже несёт свой сервер — фикс не должен его затирать
+
         settings_path = proj / ".claude" / "settings.local.json"
         settings_path.parent.mkdir(parents=True, exist_ok=True)
         settings_path.write_text(json.dumps({"enabledMcpjsonServers": ["github"]}))

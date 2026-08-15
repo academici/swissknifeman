@@ -1,14 +1,4 @@
-"""Upgrade сверяет ФАКТ файлов, а не только номер версии пака.
-
-Полевая раскатка 2026-07-11 (spec: удалённый `roadmap/agent-packs-upgrade-drift.md`,
-текст в git-истории) дала два тихих отказа при РАВНЫХ версиях: (A) правка контента
-источника без бампа `pack.json:version` не доехала ни в один из 11 проектов;
-(B) снос соседнего пака с пересекающимися targets унёс файлы, а `upgrade` ответил
-«уже актуален» и оставил проект с паком в локе и БЕЗ его файлов.
-
-Здесь фиксируется поведение после фикса: план строится всегда из сверки хэшей,
-локальные правки по-прежнему не затираются (conflict → `*.pack-new`), а совпадающее
-состояние честно репортится как «нечего делать». Изоляция в tmpdir, без сети."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -36,7 +26,7 @@ class UpgradeFactBase(unittest.TestCase):
         self.gate = self.proj / ".claude/hooks/gate.sh"
 
     def upgrade(self):
-        """upgrade без смены версии пака; возвращает (rc, stdout, stderr)."""
+        """Internal documentation."""
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             rc = ap.do_upgrade(self.env, self.pack, self.proj,
@@ -50,7 +40,7 @@ class UpgradeFactBase(unittest.TestCase):
 
 class TestUpgradeByFact(UpgradeFactBase):
     def test_source_drift_without_version_bump_applied(self):
-        """Кейс A: контент источника изменён, версия та же → изменение доезжает."""
+        """Internal documentation."""
         src = self.pack_src / "agents" / "reviewer.md"
         src.write_text(src.read_text() + "\nGlossary impact?\n")
         rc, out, err = self.upgrade()
@@ -58,21 +48,21 @@ class TestUpgradeByFact(UpgradeFactBase):
         self.assertIn("Glossary impact?", self.reviewer.read_text())
         self.assertIn("[safe-apply]", out)
         self.assertIn("версия та же", out)
-        self.assertIn("не менял версию", err)  # тихо игнорировать нельзя
+        self.assertIn("не менял версию", err)
 
     def test_deleted_target_restored_at_same_version(self):
-        """Кейс B: target удалён (снос соседнего пака), версия та же → восстановление."""
+        """Internal documentation."""
         self.gate.unlink()
         rc, out, _err = self.upgrade()
         self.assertEqual(rc, 0)
         self.assertTrue(self.gate.exists())
         restored = self.gate.read_text()
-        self.assertIn("echo gate", restored)              # контент источника
-        self.assertIn("swissknifeman:generated", restored)  # с provenance-header'ом
+        self.assertIn("echo gate", restored)
+        self.assertIn("swissknifeman:generated", restored)
         self.assertIn("[new]", out)
 
     def test_local_edit_plus_source_drift_is_conflict_not_overwrite(self):
-        """Локальная правка + дрейф источника при равной версии → conflict, не затирание."""
+        """Internal documentation."""
         self.reviewer.write_text(self.reviewer.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
         src = self.pack_src / "agents" / "reviewer.md"
         src.write_text(src.read_text() + "\nновая строка апстрима\n")
@@ -87,14 +77,14 @@ class TestUpgradeByFact(UpgradeFactBase):
         self.assertIn("conflict", err)
 
     def test_clean_state_reports_nothing_to_do(self):
-        """Ничего не менялось → честное «нечего делать», без ложного «уже актуален»."""
+        """Internal documentation."""
         rc, out, err = self.upgrade()
         self.assertEqual(rc, 0)
         self.assertIn("нечего делать", out)
         self.assertNotIn("не менял версию", err)
 
     def test_user_owned_never_touched_at_same_version(self):
-        """user_owned остаётся за пользователем и при сверке по факту."""
+        """Internal documentation."""
         overrides = self.proj / ".claude/agents/acme-overrides.md"
         overrides.write_text("моё содержимое\n")
         rc, _out, _err = self.upgrade()
@@ -102,7 +92,7 @@ class TestUpgradeByFact(UpgradeFactBase):
         self.assertEqual(overrides.read_text(), "моё содержимое\n")
 
     def test_lock_base_sha_follows_applied_source(self):
-        """После apply при равной версии lock хранит НОВЫЙ base_sha256 источника."""
+        """Internal documentation."""
         src = self.pack_src / "agents" / "reviewer.md"
         src.write_text(src.read_text() + "\nGlossary impact?\n")
         self.upgrade()
@@ -125,7 +115,7 @@ class TestUpgradeByFact(UpgradeFactBase):
 
 class TestDoctorSharedTargets(UpgradeFactBase):
     def test_two_packs_owning_one_target_warned(self):
-        """Правило 6: два установленных пака владеют одним файлом → warn в doctor."""
+        """Internal documentation."""
         second = make_pack(self.root, name="demo-pack-2")
         ap.do_render(self.env, second, self.proj, auto=True,
                      overrides={"PACK_PREFIX": "acme"}, dry=False,

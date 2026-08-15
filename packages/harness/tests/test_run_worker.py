@@ -1,9 +1,4 @@
-"""Тесты `harness.run.worker` (P4.3). `claude` реальный НЕ вызывается (Code Guidance —
-запрещённый shortcut «вызов настоящего claude в юнит-тестах»): подставляется фейковый
-бинарь `fixtures_data/run/fake-claude/<сценарий>`, читающий `--version` и печатающий
-фиксированный JSON-конверт. Носитель `command-routing.json` — РЕАЛЬНЫЙ committed файл
-репозитория (не мок): `build_argv` читает его как данные, не как код `task.*` (D29 —
-запрет касается импорта Python-пакета, не JSON-конфига)."""
+"""Internal documentation."""
 import os
 import sys
 import unittest
@@ -12,7 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FAKE_CLAUDE = Path(__file__).resolve().parent / "fixtures_data" / "run" / "fake-claude"
 
-from harness.run import worker  # noqa: E402 — после настройки REPO_ROOT/FAKE_CLAUDE
+from harness.run import worker
 
 
 class BuildArgvTest(unittest.TestCase):

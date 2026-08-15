@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# PreToolUse hook: логирует каждую Bash-команду Claude Code в JSONL.
-# Никогда не блокирует выполнение — всегда exit 0.
 
 LOG_DIR="$HOME/.claude/logs"
 LOG_FILE="$LOG_DIR/bash-commands.jsonl"

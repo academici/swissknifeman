@@ -1,7 +1,4 @@
-"""CLI harness safe-dirs: init/add/remove/list по machine-owned state (tmp,
-через эксклюзивный $SKM_SAFE_DIRS_CONFIG — иначе _state_file нашёл бы реальный
-монорепо), миграция legacy из home, гарды опасных корней, prune-ask снимает
-ровно «свои» ask-правила rm."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -34,7 +31,7 @@ class SafedirsCliCase(unittest.TestCase):
         self.home = self.tmp / "home"
         (self.home / ".swissknifeman").mkdir(parents=True)
         (self.home / "projects" / "demo").mkdir(parents=True)
-        # env указывает на реальный пакет (configs с хуком), но home — tmp
+
         self.env = Env(PKG, "safe-dirs", home=self.home)
         self.state = self.tmp / "state" / "safe-dirs.json"
         self.state.parent.mkdir()
@@ -54,13 +51,13 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertTrue(self.state.exists())
         self.assertEqual(self.cfg()["version"], 1)
         self.assertTrue(self.cfg()["include_registered_projects"])
-        # повторный init — no-op
+
         out = run(self.env, ["init"])
         self.assertIn("уже существует", out)
 
         run(self.env, ["add", str(self.home / "projects")])
         self.assertEqual(self.cfg()["dirs"], [str(self.home / "projects")])
-        # дубль по resolved-пути не плодится
+
         out = run(self.env, ["add", str(self.home / "projects")])
         self.assertIn("уже в dirs", out)
         self.assertEqual(len(self.cfg()["dirs"]), 1)
@@ -106,13 +103,13 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertEqual(after["permissions"]["deny"], ["Bash(sudo *)"])
         g = json.loads((self.home / ".claude" / "settings.json").read_text())
         self.assertNotIn("ask", g["permissions"])
-        # повторный прогон — чисто
+
         out = run(self.env, ["prune-ask", "--global", "--target", str(proj)])
         self.assertIn("не найдены", out)
 
     def test_init_migrates_legacy_home_config(self):
-        # env-override снят: фейковый монорепо (маркеры packages/+core/) — цель init,
-        # legacy-конфиг в home должен переехать туда с сохранением содержимого
+
+
         os.environ.pop("SKM_SAFE_DIRS_CONFIG")
         repo = self.tmp / "repo"
         (repo / "packages" / "fakepkg").mkdir(parents=True)

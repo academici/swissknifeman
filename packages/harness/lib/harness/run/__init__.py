@@ -1,31 +1,4 @@
-"""run — драйвер exec-волны.
-
-Живой public contract описан в `packages/harness/docs/reference/exec-wave.md`;
-plan-carrier semantics принадлежит plan-protocol, а не архивному плану-донору.
-
-Четыре модуля разделяют очередь (`plan_reader`), запуск (`worker`), вердикт
-(`gate`) и durable журнал/сводку (`journal`). CLI-склейка `cmd_run(env, argv)`:
-регистрируется в `cli.COMMANDS["run"]`, ничего из четырёх модулей не
-переразбирает — только вызывает их публичный API в порядке очередь → воркер →
-вердикт → журнал, последовательно (D8), с остановкой волны на первом RED
-(Implementation Rule 3 P4.6) и продолжением на ATTENTION.
-
-`--dry-run` не спавнит воркера и не пишет журнал (read-only, Implementation
-Rule 2): печатает очередь `plan_reader.queue()` как есть, плюс — для КАЖДОГО
-item'а — точный argv, который дал бы `worker.build_argv()` (или причину, по
-которой argv не собрать: клиент не найден / носитель маршрутизации неполон),
-без обращения к `worker.run()`.
-
-Межпакетная граница воспроизведена ЗДЕСЬ так же, как в trех модулях-донорах
-(D29): `plans_root` — где искать `<PLAN-ID>/plan.md` (по умолчанию
-`<монорепо>/plans`, флаг `--plans-root` — единственное переопределение, нужен
-приёмке P4.6 на изолированной фикстуре); `monorepo_root` — где искать сам
-пакет `task` (`packages/task/...`) — резолвится ОТ `env.root` (корень пакета
-`harness`, ВСЕГДА внутри монорепо-владельца), а не от `plan_dir`: фикстурный
-план физически лежит в другом git-репозитории, но инструментарий (`plan-lint.py`,
-`task.task_contract`, `task.journal`, `command-routing.json`) остаётся ОДНИМ —
-тем же паттерном уже пользуются тесты `test_run_gate.py`/`test_run_worker.py`
-(`monorepo_root=REPO_ROOT`, явно переданный поверх любого расположения фикстуры)."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import json
@@ -35,7 +8,7 @@ from pathlib import Path
 from core import find_monorepo_root
 
 from ..common import die, parse_args
-from . import plan_reader  # noqa: F401  (порядок важен — см. докстринг `journal`, D29)
+from . import plan_reader
 from . import worker
 from . import gate
 from . import journal
@@ -69,9 +42,7 @@ def _resolve_plan_dir(env, opts, plan_id):
 
 
 def _dry_run_argv(plan_id, item, *, monorepo_root, claude_bin):
-    """Точный argv одного item'а БЕЗ спавна (Implementation Rule 2) — та же сборка,
-    что `worker.build_argv`, здесь не переизобретается вторым носителем. Отсутствие
-    клиента/носителя маршрутизации — честная причина в `argv_error`, не тихий null."""
+    """Internal documentation."""
     if not item["drivable"]:
         return None, None
     if claude_bin is None:
@@ -198,10 +169,7 @@ def _print_wave(run_id, records, plan_id, phase_id, *, as_json):
 
 
 def cmd_run(env, argv):
-    """`harness run <PLAN-ID> <Pn> ...` (P4.6) — последовательная волна
-    `plan_reader.queue()` → (`worker.run()` → `gate.verdict()`) → `journal.maybe_write()`
-    по items фазы `Pn` плана `PLAN-ID`; печатает сводку (`journal.summarize_wave()`).
-    `--dry-run` — только чтение, см. `_print_dry_run`."""
+    """Internal documentation."""
     opts, positionals = parse_args(argv, {
         "--dry-run": "bool", "--limit": "str", "--timeout": "str",
         "--plans-root": "str", "--json": "bool",

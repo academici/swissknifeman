@@ -1,17 +1,12 @@
-"""Процессы — общий stdlib-only примитив монорепо.
-
-Проверка «жив ли pid» копировалась в maind (agents/memory) с расхождением: одна
-копия НЕ ловила OverflowError и падала на битом/огромном pid. Сведено сюда в
-устойчивой редакции. stdlib-only."""
+"""Shared stdlib-only process helpers."""
 import os
 
 
 def pid_alive(pid):
-    """True/False жив ли процесс; None если pid не задан (неизвестно).
+    """Return process liveness, or ``None`` when no PID is supplied.
 
-    PermissionError → жив (процесс чужой, но существует). Битый/огромный/нечисловой
-    pid (ValueError/OverflowError) трактуем как «жив» (не роняем вызывающего) —
-    консервативно: недоказанная смерть не выдаётся за смерть."""
+    Unreadable or malformed PIDs conservatively count as alive.
+    """
     if not pid:
         return None
     try:

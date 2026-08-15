@@ -1,10 +1,4 @@
-"""router — сгенерировать per-project каталог возможностей для intent-router-хука.
-
-`harness router --generate --target P` пишет `<P>/.claude/agent-router.config.json`:
-курируемый статический каталог `/task:*` (из fallback-config.json хука — единый источник)
-+ доставленные субагенты `<P>/.claude/agents/*.md` + локальные скиллы `<P>/.claude/skills/*/SKILL.md`
-(низкий вес — Claude авторутит скиллы нативно, это лишь бэкстоп). Каталог читает UserPromptSubmit-хук
-`router.py` для keyword-прескора. stdlib-only, merge-only запись (`settings.write_json`, бэкап .bak)."""
+"""Internal documentation."""
 import json
 import re
 from pathlib import Path
@@ -14,7 +8,7 @@ from core import parse_frontmatter
 from .common import parse_flags
 from .settings import write_json
 
-# fallback-конфиг хука рядом с самим хуком: lib/harness/router.py → <repo>/configs/...
+
 _HOOK_CONFIG = (Path(__file__).resolve().parents[2]
                 / "configs" / "claude-code" / "hooks" / "agent-router" / "config.json")
 
@@ -26,7 +20,7 @@ _STOPWORDS = {
 
 
 def _load_task_commands():
-    """Курируемый /task:*-каталог из fallback-config.json хука (единый источник истины)."""
+    """Internal documentation."""
     try:
         cfg = json.loads(_HOOK_CONFIG.read_text(encoding="utf-8"))
         cmds = cfg.get("commands")
@@ -34,7 +28,7 @@ def _load_task_commands():
             return [dict(c) for c in cmds]
     except Exception:
         pass
-    # минимальный резерв, если config.json недоступен
+
     return [{"name": f"/task:{k}", "weight": 1, "keywords": [k]}
             for k in ("design", "dev", "research", "review", "fix")]
 
@@ -53,7 +47,7 @@ def _keywords_from_description(desc, limit=12):
 
 
 def _frontmatter(path):
-    """Frontmatter файла (name + description) через единый core.parse_frontmatter."""
+    """Internal documentation."""
     try:
         text = path.read_text(encoding="utf-8")
     except Exception:
@@ -74,7 +68,7 @@ def _scan_agents(claude_dir):
 
 
 def _scan_local_skills(claude_dir):
-    """Локальные скиллы проекта (низкий вес — бэкстоп нативного авторутинга скиллов)."""
+    """Internal documentation."""
     out = []
     for d in sorted((claude_dir / "skills").glob("*")):
         f = d / "SKILL.md"

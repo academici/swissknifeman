@@ -1,7 +1,4 @@
-"""Вывод и завершение — дословный общий код swissknifeman/maind/brain.
-
-die() здесь — надмножество (с code) обоих исторических вариантов:
-swissknifeman вызывал die(msg) → code=1 по умолчанию, поведение не меняется."""
+"""Shared terminal output and termination helpers."""
 import re
 import sys
 from datetime import datetime, timezone
@@ -23,13 +20,10 @@ def now_iso():
 
 
 def parse_iso(s):
-    """ISO-8601 → aware datetime. None при неразборе (без raise).
+    """Parse ISO-8601 into an aware datetime, returning ``None`` on failure.
 
-    py39-safe: `datetime.fromisoformat` до Python 3.11 НЕ принимает суффикс `Z` и
-    произвольную дробную точность секунд. Нормализуем ДО парсинга: дробные секунды
-    усекаем/дополняем ровно до 6 знаков, хвостовой `Z` → `+00:00`. Naive-результат
-    (без offset) считаем UTC. Единый источник вместо расходившихся `strptime(...%SZ)`
-    (терял дроби) и `fromisoformat(...Z→+00:00)` (падал на нестандартной дробной части)."""
+    Normalize ``Z`` and fractional seconds for Python 3.9 compatibility.
+    """
     if not isinstance(s, str):
         return None
     t = s.strip()

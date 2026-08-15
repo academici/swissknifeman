@@ -1,8 +1,4 @@
-"""Тесты `harness.run.plan_reader` (P4.2). Реальные подпроцессы (`plan-lint.py`,
-`task.task_contract`) гоняются на committed-фикстуре `fixtures_data/run/sample-plan/`
-и на синтетических tmp-планах (`monorepo_root=REPO_ROOT` — DI, plan-lint принимает
-произвольный путь `path`, нестингом под репозиторием не ограничен). Никакого
-мокания подпроцессов: чёрный ящик по границе процесса (D29)."""
+"""Internal documentation."""
 import json
 import sys
 import tempfile
@@ -13,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures_data" / "run"
 SAMPLE_PLAN = FIXTURES_ROOT / "sample-plan"
 
-from harness.run import plan_reader  # noqa: E402 — после настройки REPO_ROOT/FIXTURES_ROOT
+from harness.run import plan_reader
 
 
 _ITEM_TEMPLATE = """### {item_id} — Тестовый item
@@ -38,9 +34,7 @@ _ITEM_TEMPLATE = """### {item_id} — Тестовый item
 
 
 def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v2"):
-    """Минимальный синтетический план `<tmp>/<plan_id>/` — один phase `P1`, все
-    item'ы `🟡 In progress` (терминальный кейс уже покрыт `sample-plan`). `routing_rows`
-    — готовые строки таблицы `## 3. Routing` (без заголовка/разделителя)."""
+    """Internal documentation."""
     if layout != "v2":
         raise ValueError("Harness success fixtures must use canonical Layout v2")
     from packages.harness.tests.v2_plan_fixture import write_v2_plan
@@ -294,7 +288,7 @@ class DegradedTest(unittest.TestCase):
             plan_dir = Path(tmp) / "STANDALONE"
             (plan_dir / "phases").mkdir(parents=True)
             (plan_dir / "plan.md").write_text("# STANDALONE\n", encoding="utf-8")
-            result = plan_reader.queue(plan_dir, "P1")  # без monorepo_root override
+            result = plan_reader.queue(plan_dir, "P1")
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
         self.assertTrue(result["degraded_reasons"])
@@ -303,9 +297,9 @@ class DegradedTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = Path(tmp) / "BROKEN"
             plan_dir.mkdir(parents=True)
-            # `plan.md` без обязательных Meta-полей (SKILL §6) — валидный источник ERROR
-            # у `plan-lint.py`, не сбой запуска: ровно тот класс, который §2 контракта
-            # обязывает трактовать как отказ источника, а не «нечего делать».
+
+
+
             (plan_dir / "plan.md").write_text("# BROKEN — план без Meta\n", encoding="utf-8")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
@@ -314,10 +308,7 @@ class DegradedTest(unittest.TestCase):
 
 
 class RoutingMatcherDriftTest(unittest.TestCase):
-    """Validation (2) P4.2: одна фикстура §3 Routing прогоняется через собственный
-    матчер `plan_reader` и через `task_contract._find_routing_row` — множества
-    ПОКРЫТЫХ item'ов (route резолвится / ячейка Exec резолвится) совпадают. Импорт
-    `task.*` — ТОЛЬКО здесь, в тесте (не в `lib/harness/run/`, Validation (5))."""
+    """Internal documentation."""
 
     @classmethod
     def setUpClass(cls):

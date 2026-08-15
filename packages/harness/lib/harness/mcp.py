@@ -1,7 +1,4 @@
-"""mcp — Claude-compatible merge helper plus provider-native MCP projections.
-
-Пресет сервера — configs/claude-code/mcp/<name>.json (голый объект конфига
-сервера). Существующие записи mcpServers не затираются, бэкап *.bak."""
+"""Internal documentation."""
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,18 +11,18 @@ from .settings import write_json
 
 
 def available_mcp(env):
-    """Имена доступных MCP-пресетов (configs/claude-code/mcp/<name>.json)."""
+    """Internal documentation."""
     d = env.mcp_dir
     return sorted(p.stem for p in d.glob("*.json")) if d.is_dir() else []
 
 
 def parse_mcp_flag(raw):
-    """'a,b,c' → ['a','b','c'] (trim, без пустых)."""
+    """Internal documentation."""
     return [s.strip() for s in raw.split(",") if s.strip()] if raw else []
 
 
 def block_mcp(env, target, servers, dry):
-    """Влить пресеты MCP-серверов в <project>/.mcp.json, merge-only."""
+    """Internal documentation."""
     servers = servers or []
     print(f"MCP-серверы: {', '.join(servers) if servers else 'пропуск'}")
     if not servers:

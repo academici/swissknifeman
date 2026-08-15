@@ -1,11 +1,4 @@
-"""safe-dirs: rm/rmdir внутри доверенных директорий проходят мимо deny_hard.
-
-Два слоя:
-  1. Юнит — ядро вердикта lib/safedirs.py (importlib по пути): containment,
-     fail-closed на глобах/подстановках/флагах, cd-трекинг, защита .git/корня.
-  2. Сценарный — РЕАЛЬНЫЙ auto-approve.sh через subprocess с HOME=tmp
-     (machine-owned фикстуры safe-dirs.json/projects.json), включая регрессию
-     «вне allowlist — deny как раньше» и иммунитет к project-override конфига."""
+"""Internal documentation."""
 import importlib.util
 import json
 import os
@@ -27,9 +20,7 @@ _spec.loader.exec_module(safedirs)
 
 
 class _Fixture(unittest.TestCase):
-    """tmp-«машина»: $HOME с .swissknifeman/safe-dirs.json и деревом проектов.
-    Конфиг передаётся хуку ЯВНО (path-аргумент / $SKM_SAFE_DIRS_CONFIG) — иначе
-    лестница поиска нашла бы реальный монорепо-конфиг машины через PATH."""
+    """Internal documentation."""
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="safedirs-test."))
@@ -54,7 +45,7 @@ class _Fixture(unittest.TestCase):
 
 
 class TestVerdictCore(_Fixture):
-    """Ядро command_is_safe: fail-closed везде, где анализ неоднозначен."""
+    """Internal documentation."""
 
     def safe(self, cmd, cwd=None):
         allow = self.load()
@@ -62,7 +53,7 @@ class TestVerdictCore(_Fixture):
         return safedirs.command_is_safe(
             cmd, str(self.demo) if cwd is None else cwd, allow, str(self.home))
 
-    # --- позитив: то, ради чего фича существует
+
     def test_inside_relative_and_absolute(self):
         self.assertTrue(self.safe("rm -rf build"))
         self.assertTrue(self.safe(f"rm -rf {self.demo}/build", cwd=str(self.home)))
@@ -75,18 +66,18 @@ class TestVerdictCore(_Fixture):
 
     def test_glob_static_prefix_inside(self):
         self.assertTrue(self.safe("rm -rf build/*"))
-        # глоб по детям корня safe-dir — можно (сам корень не удаляется)
+
         self.assertTrue(self.safe(f"rm -rf {self.home}/projects/*", cwd=str(self.home)))
 
     def test_cd_tracking(self):
         self.assertTrue(self.safe("cd projects/demo && rm -rf build", cwd=str(self.home)))
-        self.assertTrue(self.safe("cd build; rm -rf out"))  # оба candidate внутри
-        self.assertTrue(self.safe("rm -rf build && npm ci"))  # чужая голова — не наша забота
+        self.assertTrue(self.safe("cd build; rm -rf out"))
+        self.assertTrue(self.safe("rm -rf build && npm ci"))
 
     def test_tilde_path_inside(self):
         self.assertTrue(self.safe("rm -rf ~/projects/demo/build"))
 
-    # --- негатив: containment
+
     def test_outside_paths(self):
         self.assertFalse(self.safe("rm -rf /etc/passwd"))
         self.assertFalse(self.safe(f"rm -rf {self.tmp}/outside"))
@@ -120,7 +111,7 @@ class TestVerdictCore(_Fixture):
         self.assertFalse(self.safe("rm -rf build/x.o"))
         self.assertTrue(self.safe("rm -rf other.txt"))
 
-    # --- негатив: fail-closed на shell-магии и структуре
+
     def test_substitutions_and_vars(self):
         self.assertFalse(self.safe("rm -rf $DIR"))
         self.assertFalse(self.safe("rm -rf $(ls)"))
@@ -134,7 +125,7 @@ class TestVerdictCore(_Fixture):
         self.assertFalse(self.safe("time rm -rf build"))
 
     def test_git_rm_alone_is_not_ours(self):
-        # git rm обслуживает маскирование analyze.sh — нам нечего разрешать
+
         self.assertFalse(self.safe("git rm file.txt"))
 
     def test_unknown_flags_and_empty_args(self):
@@ -150,7 +141,7 @@ class TestVerdictCore(_Fixture):
     def test_multiline_and_no_cwd(self):
         self.assertFalse(self.safe("rm -rf build\nchmod -R 777 /"))
         self.assertFalse(self.safe("rm -rf build", cwd=""))
-        self.assertTrue(self.safe(f"rm -rf {self.demo}/build", cwd=""))  # абсолютный не страдает
+        self.assertTrue(self.safe(f"rm -rf {self.demo}/build", cwd=""))
 
     def test_cd_branching_or_unresolvable(self):
         self.assertFalse(self.safe("cd projects/demo || rm -rf build", cwd=str(self.home)))
@@ -160,7 +151,7 @@ class TestVerdictCore(_Fixture):
 
 
 class TestAllowlistLoading(_Fixture):
-    """Гарды machine-owned конфига: не доверяем даже своему JSON."""
+    """Internal documentation."""
 
     def roots(self):
         allow = self.load()
@@ -193,7 +184,7 @@ class TestAllowlistLoading(_Fixture):
 
 
 class TestConfigPathLadder(_Fixture):
-    """Лестница поиска конфига: env-override → корень монорепо (PATH) → legacy home."""
+    """Internal documentation."""
 
     def test_env_override_is_exclusive(self):
         with unittest.mock.patch.dict(os.environ,
@@ -201,7 +192,7 @@ class TestConfigPathLadder(_Fixture):
             self.assertEqual(safedirs._config_path(str(self.home)), "/x/y.json")
 
     def test_repo_root_via_launcher_realpath(self):
-        # фейковый монорепо: маркер .claude-plugin/marketplace.json + лаунчер в bin/
+
         repo = self.tmp / "repo"
         (repo / ".claude-plugin").mkdir(parents=True)
         (repo / ".claude-plugin" / "marketplace.json").write_text("{}", encoding="utf-8")
@@ -227,14 +218,14 @@ class TestConfigPathLadder(_Fixture):
 
 @unittest.skipUnless(HAS_JQ, "нужен jq")
 class TestHookEndToEnd(_Fixture):
-    """Реальный auto-approve.sh: allow внутри safe-dirs, deny вне (регрессия)."""
+    """Internal documentation."""
 
     def setUp(self):
         super().setUp()
-        # tmp-копия хука = machine-owned HOOK_DIR (env.ini под нашим контролем)
+
         self.hookdir = self.tmp / "hook"
         shutil.copytree(HOOK_DIR, self.hookdir)
-        # пустой «проект», чтобы CLAUDE_PROJECT_DIR сессии не влиял на тест
+
         self.proj = self.tmp / "proj"
         (self.proj / ".claude").mkdir(parents=True)
 
@@ -246,8 +237,8 @@ class TestHookEndToEnd(_Fixture):
             ["bash", str(self.hookdir / "auto-approve.sh")],
             input=json.dumps(ev).encode(), stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, timeout=20,
-            # env-override эксклюзивен: без него хук нашёл бы конфиг реального
-            # монорепо машины через PATH-лаунчеры
+
+
             env={**os.environ, "HOME": str(self.home),
                  "SKM_SAFE_DIRS_CONFIG": str(self.cfg_path),
                  "CLAUDE_PROJECT_DIR": str(self.proj)})
@@ -279,21 +270,21 @@ class TestHookEndToEnd(_Fixture):
         self.assertEqual(self.decide("rm -rf build"), "deny")
 
     def test_mixed_compound_falls_through(self):
-        # rm валиден, но npm — неизвестная голова: не allow и не deny, обычный промпт
+
         self.assertEqual(self.decide("rm -rf build && npm ci"), "fallthrough")
 
     def test_git_rm_unchanged(self):
-        # git rm — мутация (deny_block_approve): обычный промпт, как и раньше
+
         self.assertEqual(self.decide("git rm file.txt"), "fallthrough")
 
     def test_project_override_cannot_grant_safedirs(self):
-        # враждебный репозиторий подменяет config.json хука целиком — allowlist
-        # safe-dirs machine-owned и не читается из project-override
+
+
         evil_cfg = json.loads((HOOK_DIR / "config.json").read_text(encoding="utf-8"))
         (self.proj / ".claude" / "auto-approve.config.json").write_text(
             json.dumps(evil_cfg), encoding="utf-8")
         self.assertEqual(self.decide(f"rm -rf {self.tmp}/outside"), "deny")
-        # ...а легитимный rm внутри safe-dirs работает и при override
+
         self.assertEqual(self.decide("rm -rf build"), "allow")
 
     def test_read_only_still_auto_approved(self):

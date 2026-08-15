@@ -1,8 +1,4 @@
-"""hooks — включить хуки Claude Code по проекту / поставить файлы хуков глобально.
-
-per-project: пишет <project>/.claude/auto-approve.env.ini + memory.env.ini и
-регистрирует хук auto-approve в settings (merge-only). global: ставит файлы хуков
-в ~/.claude/hooks/ через scripts/apply-permissions.sh --global."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import json
@@ -31,7 +27,7 @@ PACKGUARD_MODES = ("off", "warn", "strict")
 CHANGELOGGATE_MODES = ("off", "warn", "strict")
 PLANSDIR_DEFAULT = "plans"
 STATUSLINE_MODES = ("context", "off")
-# Наш statusLine — ровно это значение; по нему же опознаём «свой» ключ при off.
+
 STATUSLINE_VALUE = {"type": "command",
                     "command": "~/.claude/statusline/context-notify.sh"}
 
@@ -173,12 +169,7 @@ _CODEX_EVENT_REQUIRED_FIELDS = {
 
 
 def adapt_codex_hook_payload(binding: LifecycleBinding, payload: dict) -> dict:
-    """Translate documented Codex payload fields to the portable handler envelope.
-
-    `permission_mode` is documented "for most events" without a named list (Ф9); only
-    `SessionStart` has it confirmed present, so every other event treats it as optional
-    rather than rejecting an otherwise-valid payload (`codex-parity-verdicts-v1.md` §3.3).
-    """
+    """Internal documentation."""
     if (not isinstance(binding, LifecycleBinding) or not isinstance(payload, dict)
             or binding.support_level != "hook-native"):
         raise TypeError("binding and payload are required")
@@ -832,7 +823,7 @@ def plan_codex_capture_artifact(*, bindings_path: Path):
 
 
 def block_autoapprove(target, mode, settings_file, dry):
-    """Записать auto-approve.env.ini + зарегистрировать хук (Bash/ExitPlanMode)."""
+    """Internal documentation."""
     print(f"auto-approve: {mode or 'пропуск'}")
     if not mode:
         return
@@ -853,7 +844,7 @@ def block_autoapprove(target, mode, settings_file, dry):
 
 
 def block_memory(target, brain, mode, dry):
-    """Присоединить проект к brain: .swissknife.json:memory_brain + memory.env.ini."""
+    """Internal documentation."""
     print(f"memory: {('brain=' + (brain or 'core') + ' mode=' + mode) if mode else 'пропуск'}")
     if not mode:
         return
@@ -867,8 +858,7 @@ def block_memory(target, brain, mode, dry):
 
 
 def block_router(target, mode, settings_file, dry):
-    """Записать agent-router.env.ini + зарегистрировать пару хуков intent-router:
-    UserPromptSubmit (per-turn bias) + SessionStart (статическая политика). off → без хуков."""
+    """Internal documentation."""
     print(f"agent-router: {mode or 'пропуск'}")
     if not mode:
         return
@@ -890,9 +880,7 @@ def block_router(target, mode, settings_file, dry):
 
 
 def block_run_report(target, mode, settings_file, dry):
-    """Записать run-report.env.ini + зарегистрировать SessionEnd-хук архивного захвата прогона.
-    on → пишет ENABLED=on + регистрирует хук; off → пишет ENABLED=off (kill-switch без снятия
-    хука — merge-only не удаляет чужие записи). Хук пишет <project>/.claude/runs/<sid>.json."""
+    """Internal documentation."""
     print(f"run-report: {mode or 'пропуск'}")
     if not mode:
         return
@@ -902,8 +890,8 @@ def block_run_report(target, mode, settings_file, dry):
                f"ENABLED={mode}\nRUNS_KEEP=30\n", dry)
     if mode == "off":
         return
-    # runs/ — эфемерные машинно-локальные артефакты: само-игнорируемый каталог, чтобы
-    # run-report'ы не засоряли git status (и не ломали 'dirty tree' в maind analyze).
+
+
     runs_gi = target / ".claude" / "runs" / ".gitignore"
     if not runs_gi.exists():
         if dry:
@@ -921,11 +909,7 @@ def block_run_report(target, mode, settings_file, dry):
 
 
 def block_pack_guard(target, mode, settings_file, dry):
-    """Записать pack-guard.env.ini + зарегистрировать PreToolUse-хук (Edit/Write/MultiEdit/
-    NotebookEdit). Опциональный слой 2 mutation-защиты (слой 1 — doctor --drift, постфактум):
-    по умолчанию НЕ устанавливается, включается явным --pack-guard. off → пишет MODE=off,
-    хук не регистрируется (kill-switch без снятия уже зарегистрированного — merge-only не
-    удаляет чужие записи)."""
+    """Internal documentation."""
     print(f"pack-guard: {mode or 'пропуск'}")
     if not mode:
         return
@@ -946,10 +930,7 @@ def block_pack_guard(target, mode, settings_file, dry):
 
 
 def block_changelog_gate(target, mode, settings_file, dry):
-    """Записать changelog-gate.env.ini + зарегистрировать PreToolUse-хук (matcher Bash).
-    Opt-in commit-гейт CHANGELOG-дисциплины (2026.07.10-SKM-ROADMAP-005 P5.2, D32/D33): по умолчанию НЕ устанавливается,
-    включается явным --changelog-gate. off → пишет MODE=off, хук не регистрируется
-    (kill-switch без снятия уже зарегистрированного — merge-only не удаляет чужие записи)."""
+    """Internal documentation."""
     print(f"changelog-gate: {mode or 'пропуск'}")
     if not mode:
         return
@@ -967,12 +948,7 @@ def block_changelog_gate(target, mode, settings_file, dry):
 
 
 def block_plans_dir(target, value, settings_file, dry):
-    """Записать top-level plansDirectory в .claude/<settings_file> (шаримый, коммитится —
-    НЕ settings.local.json: командная конвенция проекта, не машинно-локальная преференция).
-    Merge-only и НЕ перезаписывает чужой выбор (в отличие от block_output_style): ключ
-    отсутствует → поставить; уже = value → no-op (идемпотентность, печатает set_setting_key);
-    занят ДРУГИМ значением → skip + warn «уважаю локальный выбор». off → снять ключ, но
-    только если он сейчас равен нашему дефолту (PLANSDIR_DEFAULT); иначе warn и не трогать."""
+    """Internal documentation."""
     print(f"plans-dir: {value or 'пропуск'}")
     if not value:
         return
@@ -1000,9 +976,7 @@ def block_plans_dir(target, value, settings_file, dry):
 
 
 def block_output_style(env, target, name, dry):
-    """Скопировать output-style в проект + поставить top-level outputStyle в settings.local.json
-    (машинно-локальная преференция голоса). off → не ставить (снять вручную — kill-switch).
-    Активируется после /clear/новой сессии (стиль вшивается в system prompt на старте)."""
+    """Internal documentation."""
     print(f"output-style: {name or 'пропуск'}")
     if not name:
         return
@@ -1024,13 +998,7 @@ def block_output_style(env, target, name, dry):
 
 
 def block_statusline(target, mode, dry):
-    """Записать top-level statusLine в .claude/settings.local.json (машинно-локальная
-    преференция терминала — как outputStyle, НЕ как plansDirectory: statusline это
-    шрифт/ширина/desktop-нотификации конкретной машины, а не командная конвенция).
-    Merge-only и НЕ перезаписывает чужой выбор (правило block_plans_dir): ключа нет →
-    поставить; уже наш → no-op; занят ДРУГИМ значением → skip + warn. off → снять ключ,
-    только если он сейчас равен нашему; иначе warn и не трогать.
-    Сами файлы ставит `harness hooks --global` (ветка --global apply-permissions.sh)."""
+    """Internal documentation."""
     print(f"statusline: {mode or 'пропуск'}")
     if not mode:
         return
@@ -1058,7 +1026,7 @@ def block_statusline(target, mode, dry):
 
 
 def install_global(env, dry):
-    """Поставить файлы хуков (auto-approve/memory/notify/log) в ~/.claude/hooks/."""
+    """Internal documentation."""
     script = env.apply_script
     if not script.exists():
         die(f"не найден {script} — пакет harness повреждён")

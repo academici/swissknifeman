@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Ядро анализа Bash-команд. Источать после common.sh. Конструкции — из config.json,
-# здесь только логика. Требует глобал HOOK_DIR (каталог хука).
 
-# prepare_bash: вытаскивает команду и грузит конфиг. 1 если нечего анализировать.
 prepare_bash() {
   HOOK_CMD="$(hook_field '.tool_input.command')"
   [ -n "$HOOK_CMD" ] || return 1
@@ -17,7 +14,6 @@ prepare_bash() {
   load_config_vars "$cfg"
 }
 
-# load_config_vars <config-path>: читает конфиг в глобальные переменные/массивы.
 load_config_vars() {
   local cfg="$1"
   jq -e . "$cfg" >/dev/null 2>&1 || fallthrough
@@ -42,15 +38,12 @@ load_config_vars() {
   GH_NOUN_SET=" ${_GH_NOUNS[*]} "
 }
 
-# _normalize <cmd>: вырезаем кавычки (тела инлайн-скриптов не анализируем) и
-# безопасные редиректы stderr/stdout, чтобы не путать с записью в файл.
 _normalize() {
   printf '%s' "$1" \
     | sed -E "s/'[^']*'/ /g; s/\"[^\"]*\"/ /g" \
     | sed -E 's/[12]?>&[12]//g; s/&>[[:space:]]*\/dev\/null//g; s/[012]?>[[:space:]]*\/dev\/null//g'
 }
 
-# _match_any <text> <pattern...>: 0 если хоть один ERE-паттерн совпал.
 _match_any() {
   local text="$1"; shift
   local re
@@ -61,13 +54,11 @@ _match_any() {
   return 1
 }
 
-# _segments <scan>: режем на сегменты по разделителям/подстановкам.
 _segments() {
   printf '%s' "$1" | sed -E \
     -e 's/\$\(/\n/g' -e 's/`/\n/g' -e 's/&&/\n/g' -e 's/\|\|/\n/g' -e 's/[|;(){}<>&]/\n/g'
 }
 
-# _segment_ok <segment>: 0 если безопасен/нейтрален, 1 если неизвестная голова.
 _segment_ok() {
   local seg="$1"
   seg="${seg#"${seg%%[![:space:]]*}"}"; seg="${seg%"${seg##*[![:space:]]}"}"
@@ -93,7 +84,7 @@ _segment_ok() {
     if|for|while|until|case|esac|fi|done|function|'{'|'}'|'['|'[['|']'|']]'|return|break|continue|exit|local|export|declare|typeset|readonly|set|unset|read|shift|wait|true|false|:)
       return 0;;
     safe-rm|safe-rmdir)
-      return 0;;   # появляется только после вердикта safe-dirs (safedirs_mask)
+      return 0;;   # Added only after a safe-dirs verdict (safedirs_mask).
   esac
 
   case "$head" in
@@ -109,8 +100,6 @@ _segment_ok() {
   return 1
 }
 
-# _shfmt_heads <cmd>: головы команд через AST shfmt (пусто при любой ошибке).
-# Union-усиление: может только ДОБАВить проверок, не ослабить.
 _shfmt_heads() {
   command -v shfmt >/dev/null 2>&1 || return 0
   local js
@@ -121,23 +110,13 @@ _shfmt_heads() {
     '[.. | objects | select(.Type=="CallExpr") | .Args[0].Parts[0].Value? // empty] | .[]' 2>/dev/null
 }
 
-# run_bash_analysis <strict|permissive|bypass>: полный флоу, завершает процесс.
-# Использует HOOK_CMD. Денилисты — для всех режимов.
 run_bash_analysis() {
   local mode="$1"
   local scan; scan="$(_normalize "$HOOK_CMD")"
 
-  # git rm обратим (файлы в индексе/истории) — не катастрофа: маскируем "git rm",
-  # чтобы общий rm-паттерн deny_hard его не ловил. Голый rm / xargs rm / rm -rf
-  # остаются под deny_hard; git rm учитывается как мутация (deny_block_approve).
   local scan_dh; scan_dh="$(printf '%s' "$scan" \
     | sed -E 's/(^|[^[:alnum:]_/.-])git[[:space:]]+rm([[:space:]]|$)/\1git-rm\2/g')"
 
-  # safe-dirs: rm/rmdir с целями строго внутри доверенных директорий (machine-owned
-  # safe-dirs.json: $SKM_SAFE_DIRS_CONFIG → корень монорепо swissknifeman → legacy
-  # ~/.swissknifeman/) маскируем в safe-rm/safe-rmdir — deny_hard их не ловит, strict
-  # принимает головы. Вердикт по сырому HOOK_INPUT (lib/safedirs.py), fail-closed:
-  # любой сбой/сомнение => deny_hard как раньше.
   local SAFEDIRS_OK=0
   if safedirs_applicable "$scan_dh" && safedirs_verdict; then
     SAFEDIRS_OK=1
@@ -145,25 +124,20 @@ run_bash_analysis() {
     scan="$(safedirs_mask "$scan")"
   fi
 
-  # 1) deny_hard => активный DENY (катастрофично) — во всех режимах.
   _match_any "$scan_dh" "${DENY_HARD[@]}" \
     && emit_deny "Заблокировано: опасная операция (deny_hard). Выполните вручную при необходимости. rm в доверенных папках можно разрешить: harness safe-dirs (safe-dirs.json в корне репо swissknifeman)."
 
-  # bypass: одобряем всё, что не катастрофично.
   if [ "$mode" = "bypass" ]; then
     emit_allow "bypass: одобрено всё, кроме deny_hard"
   fi
 
-  # 2) deny_block_approve => fall-through на обычный промпт (мутация).
   _match_any "$scan" "${DENY_BLOCK[@]}" \
     && fallthrough_logged "мутация (deny_block_approve) — обычный промпт"
 
-  # permissive: всё, что не запрещено выше, — одобряем.
   if [ "$mode" = "permissive" ]; then
     emit_allow "permissive: не совпало ни одно правило денилиста"
   fi
 
-  # strict: каждая голова должна быть из безопасного набора.
   set -f
   local seg
   while IFS= read -r seg || [ -n "$seg" ]; do
@@ -175,7 +149,6 @@ run_bash_analysis() {
     while IFS= read -r h || [ -n "$h" ]; do
       [ -n "$h" ] || continue
       case "$h" in git|gh|docker) continue;; esac
-      # shfmt разбирает немаскированный HOOK_CMD — rm/rmdir легитимны после вердикта
       case "$h" in rm|rmdir) [ "$SAFEDIRS_OK" = 1 ] && continue;; esac
       case "$ALLOW_SET" in *" $h "*) continue;; esac
       fallthrough_logged "strict/shfmt: неизвестная голова '$h'"

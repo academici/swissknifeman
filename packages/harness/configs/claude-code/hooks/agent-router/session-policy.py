@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""agent-router · SessionStart — инжектит СТАТИЧЕСКУЮ политику роутинга один раз за сессию.
-
-Пара к router.py (UserPromptSubmit — per-turn keyword-подсказка). Политика кладётся в
-контекст МОДЕЛИ через hookSpecificOutput.additionalContext.
-
-ВАЖНО (проверено perplexity-web по офиц. докам Claude Code): для SessionStart модель видит
-именно `additionalContext` (и/или stdout при exit 0), а `systemMessage` — UI-only, модель
-его НЕ видит. Поэтому политику шлём через additionalContext. Доки прямо рекомендуют:
-статическая политика → SessionStart, per-turn augmentation → UserPromptSubmit.
-
-Хук никогда не барьер: любая ошибка → exit 0 без вывода.
-"""
+"""Internal documentation."""
 import json
 import sys
 from pathlib import Path

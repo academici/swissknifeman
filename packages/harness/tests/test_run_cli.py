@@ -1,11 +1,4 @@
-"""Тесты `harness.run.cmd_run` — CLI-склейка волны (P4.6). Модули-доноры
-(`plan_reader`/`worker`/`gate`/`journal`) уже покрыты СВОИМИ тестами
-(`test_run_plan_reader.py`/`test_run_worker.py`/`test_run_gate.py`/
-`test_run_journal.py`) — здесь проверяется ТОЛЬКО склейка: регистрация в
-`COMMANDS`, `--dry-run` не трогает воркер/гейт/журнал, волна останавливается на
-первом RED, ATTENTION её не останавливает. `--dry-run` дополнительно прогоняется
-на РЕАЛЬНОЙ (не мокнутой) фикстуре `plan_reader.queue()`, чтобы покрыть и
-формат печати."""
+"""Internal documentation."""
 import contextlib
 import io
 import subprocess
@@ -217,10 +210,7 @@ class RegistrationTest(unittest.TestCase):
 
 
 class DryRunTest(unittest.TestCase):
-    """Реальная (не мокнутая) `plan_reader.queue()` на фикстуре — покрывает и
-    формат печати, и «--dry-run не трогает воркер/гейт/журнал» (Implementation
-    Rule 2): методы, которые совершали бы запись/спавн, подменены на функции,
-    падающие AssertionError при вызове."""
+    """Internal documentation."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -287,8 +277,7 @@ def _canned_queue(*item_ids):
 
 
 class WaveOrchestrationTest(unittest.TestCase):
-    """Оркестрация волны — с мокнутыми `plan_reader`/`worker`/`gate`/`journal`
-    (их СОБСТВЕННАЯ логика — предмет своих тестов, не этого файла)."""
+    """Internal documentation."""
 
     def setUp(self):
         self.env = Env(REPO_ROOT / "packages" / "harness", "run")
@@ -312,7 +301,7 @@ class WaveOrchestrationTest(unittest.TestCase):
             out = self._run(["FIXTURE-WAVE", PHASE_ID, "--plans-root", "/irrelevant"])
         self.assertEqual(worker.run.call_count if hasattr(worker.run, "call_count") else 1, 1)
         self.assertIn("RED", out)
-        self.assertNotIn("P9.2", out)  # второй item НЕ дошёл до печати вердикта
+        self.assertNotIn("P9.2", out)
         self.assertEqual(jw.call_count, 1)
 
     def test_attention_does_not_stop_wave(self):
@@ -337,9 +326,9 @@ class WaveOrchestrationTest(unittest.TestCase):
         self.assertIn("GREEN", out)
         self.assertIn("P9.1", out)
         self.assertIn("P9.2", out)
-        # ok-исход с терминальным статусом item'а — воркер уже закрыл сам (D32),
-        # драйвер строку не пишет: `who == WORKER` → `maybe_write` вернул бы None
-        # в реальном коде; здесь важно, что маршрут ОБОИХ item'ов дошёл до journal.
+
+
+
         self.assertEqual(jw.call_count, 2)
 
 

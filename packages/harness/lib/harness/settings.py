@@ -1,7 +1,4 @@
-"""Запись в .claude/.mcp/.swissknife проекта — merge-only, dry-run aware, бэкап *.bak.
-
-Примитивы перенесены из skiller/integrate.py (общие writer'ы окружения): они
-не затирают чужое содержимое, делают *.bak и понимают dry-run."""
+"""Internal documentation."""
 import json
 
 from .common import atomic_write_text, backup_file, die
@@ -36,7 +33,7 @@ def load_settings(target, fname):
 
 
 def add_hook(settings, event, matcher, command):
-    """Добавить PreToolUse/Notification-хук, merge-only. True если добавлен."""
+    """Internal documentation."""
     entries = settings.setdefault("hooks", {}).setdefault(event, [])
     for e in entries:
         if e.get("matcher") == matcher and \
@@ -50,8 +47,7 @@ def add_hook(settings, event, matcher, command):
 
 
 def remove_permission_rules(settings, key, rules):
-    """Удалить ТОЧНЫЕ совпадения rules из permissions.<key> (семантика «снимаем
-    своё» — чужие правила не трогаем). Возвращает число удалённых."""
+    """Internal documentation."""
     perms = settings.get("permissions")
     if not isinstance(perms, dict) or not isinstance(perms.get(key), list):
         return 0
@@ -66,7 +62,7 @@ def remove_permission_rules(settings, key, rules):
 
 
 def set_setting_key(target, fname, key, value, dry):
-    """Merge-only writer одного top-level ключа в .claude/<fname> (напр. outputStyle). Бэкап *.bak."""
+    """Internal documentation."""
     settings, f = load_settings(target, fname)
     if settings.get(key) == value:
         print(f"  {fname}:{key} уже = {value}")

@@ -1,21 +1,5 @@
 #!/usr/bin/env python3
-"""run-report · SessionEnd — снять исход прогона из транскрипта и записать на диск.
-
-Универсальный (generic) захват: раз в конце сессии читает transcript_path СТРОЧНО (без
-слурпа), извлекает исход ЛЮБОЙ задачи (dev-loop-воркфлоу, тест/линт-прогоны, изменённые
-файлы, tool-провалы) и пишет `<cwd>/.claude/runs/<session_id>.json`. Отсюда `maind analyze`
-собирает пост-ран отчёт «всё ли сработало». Ничего в dev-loop.js/паках менять не нужно.
-
-После записи отчёта (если DIGEST=on в env.ini) тихо дёргает `analyst digest` subprocess'ом —
-замыкает петлю обучения (run-report → кандидат-уроки в ephemeral). Best-effort, не барьер:
-нет бинаря analyst / таймаут / любой сбой не мешают завершению сессии. Промоут в память —
-по-прежнему человек (инвариант analyst не нарушается: авто-запись только в LOCAL ephemeral).
-
-Дисциплина (verified perplexity-web по офиц. докам Claude Code hooks):
-- SessionEnd получает `transcript_path`/`session_id`/`cwd`, НЕ блокирует — идеален для архива;
-- транскрипт — first-class артефакт, строчный парс поддерживаем/стабилен к аддитивным правкам;
-- хук НЕ барьер: любая ошибка / нет данных / битый stdin → exit 0 без записи.
-"""
+"""Internal documentation."""
 import json
 import os
 import subprocess
@@ -29,11 +13,7 @@ _DEFAULT_KEEP = 30
 
 
 def _report_root(cwd):
-    """Git-root для новых отчётов; вне git сохраняем прежний cwd-path.
-
-    SessionEnd остаётся best-effort: отсутствие git, несуществующий cwd или сбой
-    subprocess не меняют его exit-код и не мешают завершению сессии.
-    """
+    """Internal documentation."""
     try:
         result = subprocess.run(
             ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
@@ -48,9 +28,7 @@ def _report_root(cwd):
 
 
 def _read_enabled(cwd):
-    """ENABLED/RUNS_KEEP/DIGEST из <cwd>/.claude/run-report.env.ini (default on: регистрация
-    хука = намерение). Kill-switch без правки settings.json. Возвращает (enabled, keep, digest).
-    DIGEST=on (дефолт) — после записи отчёта тихо дёрнуть `analyst digest` (петля обучения)."""
+    """Internal documentation."""
     enabled, keep, digest = True, _DEFAULT_KEEP, True
     if not cwd:
         return enabled, keep, digest
@@ -77,9 +55,7 @@ def _read_enabled(cwd):
 
 
 def _ensure_gitignore(runs_dir):
-    """runs/ — эфемерные машинно-локальные артефакты: делаем каталог само-игнорируемым
-    (`.gitignore` = `*`), чтобы run-report'ы не засоряли git status проекта (и не ломали
-    'dirty tree' в maind analyze). Идемпотентно, ошибки глотаем."""
+    """Internal documentation."""
     gi = runs_dir / ".gitignore"
     try:
         if not gi.exists():
@@ -89,7 +65,7 @@ def _ensure_gitignore(runs_dir):
 
 
 def _atomic_write_json(path, data):
-    """tmp рядом + os.replace — краш в момент записи не оставит полу-JSON."""
+    """Internal documentation."""
     path.parent.mkdir(parents=True, exist_ok=True)
     _ensure_gitignore(path.parent)
     tmp = path.with_name(path.name + ".tmp")
@@ -98,7 +74,7 @@ def _atomic_write_json(path, data):
 
 
 def _prune(runs_dir, keep):
-    """Оставить keep самых свежих run-*.json (ретеншн; ошибки глотаем)."""
+    """Internal documentation."""
     try:
         files = sorted(runs_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
         for p in files[keep:]:
@@ -112,9 +88,7 @@ _TREND_KEEP = 2000
 
 
 def _prune_trend(f):
-    """Ретеншн usage-trend.ndjson: >_TREND_LIMIT строк → атомарно оставить последние
-    _TREND_KEEP (tmp рядом + os.replace — не через core.io: хук копируется в ~/.claude/hooks
-    без PYTHONPATH монорепо, см. _atomic_write_json выше)."""
+    """Internal documentation."""
     try:
         lines = f.read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -127,9 +101,7 @@ def _prune_trend(f):
 
 
 def _append_trend(cwd, sid, report):
-    """Дописать одну компактную строку тренда токенов/инструментов прогона в
-    <cwd>/.claude/analyze/usage-trend.ndjson (SCHEMA=2). Не барьер: любая ошибка молча
-    проглатывается, как весь остальной хук — тренд best-effort, а не источник истины."""
+    """Internal documentation."""
     try:
         usage = report.get("usage") or {}
         totals = usage.get("totals") or {}
@@ -165,9 +137,7 @@ def _append_trend(cwd, sid, report):
 
 
 def _analyst_bin():
-    """Резолв бинаря analyst: ANALYST_BIN → PATH → топология swissknifeman → дефолт-путь.
-    Хук копируется в ~/.claude/hooks без PYTHONPATH монорепо, потому digest дёргаем subprocess'ом
-    (как memory-хук зовёт maind). None, если не найден — тогда digest тихо пропускается."""
+    """Internal documentation."""
     import shutil
     env_bin = os.environ.get("ANALYST_BIN")
     if env_bin and os.access(env_bin, os.X_OK):
@@ -194,9 +164,7 @@ def _analyst_bin():
 
 
 def _run_digest(cwd, sid):
-    """Тихо дёрнуть `analyst digest --session <sid>` в проекте после записи отчёта: извлечь
-    кандидат-уроки в ephemeral (промоут в память по-прежнему человек — инвариант не нарушается).
-    Best-effort, НЕ барьер: нет бинаря / таймаут / любой сбой → молча пропускаем (как весь хук)."""
+    """Internal documentation."""
     try:
         import subprocess
         bin_ = _analyst_bin()
@@ -235,8 +203,8 @@ def main():
 
     try:
         with open(tpath, encoding="utf-8", errors="replace") as fh:
-            # transcript_path/cwd — только для SCHEMA=2 (usage-субагенты, protected_writes);
-            # файловый объект = ленивый итератор строк, как и раньше
+
+
             report = parse_events(fh, transcript_path=tpath, cwd=cwd)
     except Exception:
         sys.exit(0)
@@ -256,9 +224,9 @@ def main():
         _prune(runs_dir, keep)
     except Exception:
         sys.exit(0)
-    _append_trend(cwd, sid, report)   # best-effort, глотает свои ошибки сама
+    _append_trend(cwd, sid, report)
     if digest:
-        _run_digest(cwd, sid)         # петля обучения: run-report → analyst digest → ephemeral
+        _run_digest(cwd, sid)
     sys.exit(0)
 
 
@@ -268,4 +236,4 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception:
-        sys.exit(0)  # хук никогда не ломает завершение сессии
+        sys.exit(0)

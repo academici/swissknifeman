@@ -1,23 +1,13 @@
-"""Namespaces: изоляция межпроектных связей внутри групп проектов.
+"""Namespace isolation for cross-project links.
 
-Проект объявляет принадлежность к namespace полем `namespaces: ["axioma", ...]` в
-.maind.json (maind-only поле, как `tags`). Межпроектное ребро A↔B строится, ТОЛЬКО
-если A и B делят хотя бы один namespace. Связи внутри namespace работают как раньше,
-между namespace — изолированы.
+Projects opt in through `.maind.json` `namespaces`. A cross-project edge is
+allowed only when both registered projects share a namespace; wildcard `*`
+matches every namespace. Missing namespaces retain the `default` legacy
+behavior, and unregistered targets remain linkable.
 
-Семантика:
-- нет поля / пусто  → неявный namespace `default` (= прежнее поведение: всё связано);
-- `["*"]` (wildcard) → связывается со ВСЕМИ namespace (escape для общей инфраструктуры:
-  azguard, vaulter, botkit, erp-sdk, swissknifeman);
-- незарегистрированный таргет (нет записи в projects[], напр. doc-алиас getchat) —
-  связь сохраняется: namespace внешнего узла неизвестен, не режем.
-
-Связи изолируются в ТОЧКЕ создания ребра (derive.*), поэтому сторы проектов физически
-не содержат меж-namespace мостов и всё ниже (union, index, query, seed) изолируется само.
-rebuild_index держит дублирующий гейт как defense-in-depth.
-
-Память следует той же модели через scope-бакеты (см. constants): приватный `project:<id>`,
-общий на группу `ns:<имя>`, экосистемный `global` (wildcard '*' → global)."""
+Isolation is enforced while deriving edges, so stored graphs contain no
+cross-namespace bridges. Memory uses the matching `project:`, `ns:`, and
+`global` scopes."""
 
 from .constants import GLOBAL_SCOPE, NS_SCOPE_PREFIX
 
@@ -26,19 +16,19 @@ WILDCARD = "*"
 
 
 def namespaces_of(project):
-    """Множество namespace проекта. Нет поля / пусто → {"default"}."""
+    """Return project namespaces; missing or empty means {"default"}."""
     ns = project.get("namespaces")
     return set(ns) if ns else {DEFAULT_NS}
 
 
 def shares(a, b):
-    """Делят ли две записи проектов namespace (с учётом wildcard '*')."""
+    """Whether two project records share a namespace, including wildcard `*`."""
     na, nb = namespaces_of(a), namespaces_of(b)
     return WILDCARD in na or WILDCARD in nb or bool(na & nb)
 
 
 def find(config, project_id):
-    """Запись проекта по id или None (без импорта projects.py — избегаем связности)."""
+    """Return a project record by ID without importing projects.py."""
     for p in config.get("projects") or []:
         if p.get("id") == project_id:
             return p
@@ -46,27 +36,25 @@ def find(config, project_id):
 
 
 def link_allowed(src_project, dst_id, config):
-    """Разрешено ли cross-ребро src_project → dst_id. Незарегистрированный dst → True
-    (внешний узел, namespace неизвестен). Иначе — делят ли стороны namespace."""
+    """Allow a cross-edge for unregistered targets or shared namespaces."""
     dst = find(config, dst_id)
     return True if dst is None else shares(src_project, dst)
 
 
 def in_namespace(project, namespace):
-    """Входит ли проект в namespace (учитывая wildcard '*' у проекта)."""
+    """Whether a project belongs to a namespace, including wildcard `*`."""
     ns = namespaces_of(project)
     return WILDCARD in ns or namespace in ns
 
 
-# ── память: scope-бакеты по namespace'ам (паритет с графом) ──────────────────
+# ── Memory scopes aligned with graph namespaces ──────────────────────────────
 def private_scope(project):
-    """Приватный бакет памяти проекта: memory_scope из конфига или project:<id>."""
+    """Return configured private memory scope or project:<id>."""
     return project.get("memory_scope") or f"project:{project['id']}"
 
 
 def group_scopes(project):
-    """Общие бакеты, в которые проект кладёт cross-ref о связях: ns:<имя> на каждый
-    namespace (wildcard '*' → global, т.к. инфраструктура видна всей экосистеме)."""
+    """Return shared link-reference scopes; wildcard projects use global."""
     out = []
     for n in sorted(namespaces_of(project)):
         scope = GLOBAL_SCOPE if n == WILDCARD else f"{NS_SCOPE_PREFIX}{n}"
@@ -76,8 +64,7 @@ def group_scopes(project):
 
 
 def recall_scopes(project):
-    """Бакеты, релевантные проекту при recall: приватный + общие группы + global
-    (global всегда — чтобы видеть инфраструктуру/экосистемные факты). Без дублей."""
+    """Return deduplicated private, group, and global recall scopes."""
     out = [private_scope(project)]
     for s in group_scopes(project) + [GLOBAL_SCOPE]:
         if s not in out:

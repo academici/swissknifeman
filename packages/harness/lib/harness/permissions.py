@@ -1,7 +1,4 @@
-"""permissions — влить permissions-пресеты в .claude/settings*.json проекта.
-
-Тонкая Python-обвязка над scripts/apply-permissions.sh (bash+python merge):
-сборка argv из флагов и запуск. Источник пресетов — configs/claude-code/."""
+"""Internal documentation."""
 import subprocess
 import sys
 
@@ -9,9 +6,7 @@ from .common import die, parse_flags, warn
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
-    """Влить permissions-пресеты в .claude цели через scripts/apply-permissions.sh.
-    presets="" → автодетект стека внутри скрипта. settings_file=None → дефолт
-    скрипта (settings.local.json). Возвращает True, если скрипт запущен."""
+    """Internal documentation."""
     script = env.apply_script
     if not script.exists():
         warn("scripts/apply-permissions.sh не найден — пропуск permissions")

@@ -1,27 +1,15 @@
 #!/usr/bin/env bash
-# plan-citations.sh — третья точка принуждения гейта цитат (P11.7); doctor
-# показывает её сырым именем (нет короткого кода в `_REVIEW_GATE_CHECK_CODES`
-# — fallback `doctor.py`, намеренно не тронутый этим item'ом). Режим — по
-# факту чистоты после P11.5 (см. `config.json`). Изменения задели
-# `plans/<ID>/` → прогон `packages/task/scripts/verify-plan-citations.py plans/<ID>
-# --strict` по КАЖДОМУ задетому плану; нарушением считаются ТОЛЬКО находки
-# сверх baseline-перечня (`packages/task/configs/verify-citations-known-exceptions.json`) —
-# скрипт сам вычитает known exceptions, гейт лишь читает его exit-код/вывод.
-# exit 0 = чисто, ≠0 = нарушение; stdout = plans/<ID>: <цитата> — <причина>.
 set -uo pipefail
 
 changed="$( { git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u | grep -v '^$')"
 [ -n "$changed" ] || exit 0
 
-# Требуем ХВОСТОВОЙ слэш: только реальные подкаталоги plans/<ID>/..., а не
-# корневые файлы (plans/README.md, plans/ACTIVE.md) — тот же баг, найденный
-# live-прогоном P9.1 на соседней проверке `plan-lint.sh`.
 plan_ids="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#^plans/##; s#/$##' | sort -u)"
 [ -n "$plan_ids" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 vc_py="$repo_root/packages/task/scripts/verify-plan-citations.py"
-[ -f "$vc_py" ] || exit 0   # гейт цитат не завезён в это дерево — не наш случай
+[ -f "$vc_py" ] || exit 0   # No citation gate in this tree.
 
 violations=0
 while IFS= read -r pid; do

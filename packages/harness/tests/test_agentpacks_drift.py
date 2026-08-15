@@ -1,5 +1,4 @@
-"""Тесты drift-детекта generated-файлов agent-packs (E-2): lock_drift + CLI
-`agent-packs doctor --drift [--strict]`. Изоляция в tmpdir, без сети."""
+"""Internal documentation."""
 import contextlib
 import io
 import tempfile
@@ -27,7 +26,7 @@ class TestLockDrift(unittest.TestCase):
         self.assertEqual(ap.lock_drift(empty_proj), [])
 
     def test_clean_render_no_drift(self):
-        # сразу после render diсk == base_sha256 у всех отслеживаемых файлов
+
         self.assertEqual(ap.lock_drift(self.proj), [])
 
     def test_locally_modified_template_reported(self):
@@ -48,14 +47,14 @@ class TestLockDrift(unittest.TestCase):
         self.assertEqual(drift[0]["status"], "missing")
 
     def test_user_owned_edit_not_reported(self):
-        # override.md — user_owned: правка ожидаема, это не «дрейф generated»
+
         overrides = self.proj / ".claude/agents/acme-overrides.md"
         overrides.write_text(overrides.read_text() + "\nмоя правка\n")
         self.assertEqual(ap.lock_drift(self.proj), [])
 
     def test_merge_kind_skipped_even_if_tampered(self):
-        # settings.json — kind=merge, свой sha не отслеживаем: тампер не должен
-        # породить дрейф (даже если формально base_sha256 в lock перестал совпадать)
+
+
         settings = self.proj / ".claude/settings.json"
         settings.write_text(settings.read_text() + "\n// tamper\n")
         self.assertEqual(ap.lock_drift(self.proj), [])
@@ -96,7 +95,7 @@ class TestDoctorDriftCli(unittest.TestCase):
         rendered = self.proj / ".claude/agents/acme-reviewer.md"
         rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
         rc, _out, err = self._run_cli(["doctor", "--target", str(self.proj), "--drift"])
-        self.assertEqual(rc, 0)  # без --strict rc=0, чисто информативно
+        self.assertEqual(rc, 0)
         self.assertIn("generated-файл правлен локально", err)
         self.assertIn("перенеси правку в override и восстанови render", err)
         self.assertIn(".claude/agents/acme-reviewer.md", err)

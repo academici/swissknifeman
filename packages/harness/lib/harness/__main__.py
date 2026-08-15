@@ -1,4 +1,4 @@
-"""Точка входа модуля: python3 -m harness <repo_root> <cmd> [args...]."""
+"""Internal documentation."""
 from .cli import main
 
 if __name__ == "__main__":

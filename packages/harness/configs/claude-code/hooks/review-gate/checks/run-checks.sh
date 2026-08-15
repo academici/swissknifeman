@@ -1,20 +1,6 @@
 #!/usr/bin/env bash
-# run-checks.sh — диспетчер review-gate: единственный `check_command` в
-# config.json. Прогоняет набор проверок из `config.json:checks[]`
-# (`{"name","mode"}`), применяет глобальный downgrade (`REVIEW_GATE_MODE=warn`
-# понижает strict→warn; апгрейд warn→strict запрещён — класс проверки знает
-# про свой ложный фон больше, чем машина) и защиту от петли (третий подряд
-# strict-отказ ТОЙ ЖЕ проверки в этой сессии+агенте → разовое понижение до
-# warn + systemMessage-строка `[DOWNGRADE]`).
 #
-# Контракт с review-gate.sh (единственный писатель CHECK/MODE/…):
-#   exit 0 — все проверки чисты.
-#   exit 1 — есть нарушения, но эффективно ВСЕ warn (никогда не блокирует).
-#   exit 2 — есть хотя бы одно эффективно strict-нарушение (блокирует).
-# stdout — по строке на нарушение: "[STRICT|WARN] <check>: <сообщение>";
-# понижение петлёй добавляет "[DOWNGRADE] <check>: <причина>".
 #
-# Требует REVIEW_GATE_DIR (свой каталог хука, экспортирует review-gate.sh).
 set -uo pipefail
 
 DIR="${REVIEW_GATE_DIR:?REVIEW_GATE_DIR не экспортирован review-gate.sh}"
@@ -23,8 +9,6 @@ CONFIG="$DIR/config.json"
 MODE="${REVIEW_GATE_MODE:-warn}"
 SESSION="${REVIEW_GATE_SESSION:-nosession}"
 AGENT="${REVIEW_GATE_AGENT_ID:-noagent}"
-# REVIEW_GATE_STATE_DIR — override для тестов (изоляция от реального /tmp машины);
-# продакшн-дефолт не меняется.
 STATE_DIR="${REVIEW_GATE_STATE_DIR:-${XDG_RUNTIME_DIR:-/tmp}/review-gate}"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -38,9 +22,9 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 mapfile -t NAMES < <(jq -r '.checks[]?.name // empty' "$CONFIG" 2>/dev/null)
-[ "${#NAMES[@]}" -gt 0 ] || exit 0   # пустой набор — чисто (unconfigured отдельно ловит doctor)
+[ "${#NAMES[@]}" -gt 0 ] || exit 0   # Empty set is clean; doctor reports unconfigured state.
 
-overall=0   # 0 чисто, 1 warn, 2 strict
+overall=0   # 0 clean, 1 warn, 2 strict
 for name in "${NAMES[@]}"; do
   script="$CHECKS_DIR/$name.sh"
   state_file="$STATE_DIR/${SESSION}.${AGENT}.${name}"

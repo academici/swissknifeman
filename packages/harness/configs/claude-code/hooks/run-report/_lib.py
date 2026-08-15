@@ -1,40 +1,21 @@
-"""run-report · защитный парсер транскрипта Claude Code → структурированный исход прогона.
-
-Stdlib-only, автономен в ~/.claude/hooks (импорт пакета harness в момент работы хука
-недоступен — маленький дубль осознан). Разбор СТРОЧНЫЙ (по одной JSONL-записи, без слурпа
-всего транскрипта в память — большие транскрипты рвут RAM) и ЗАЩИТНЫЙ: любая битая строка /
-неизвестный тип события / отсутствующее поле пропускается, парсер не падает. Схема транскрипта
-официально не заморожена (verified perplexity-web: стабильна к аддитивным изменениям, но не
-контракт) → берём только то, что стабильно, и деградируем молча.
-
-SCHEMA=2 (аддитивно к SCHEMA=1, старые читатели не ломаются — новые ключи просто добавлены):
-токен-usage (главный транскрипт + субагенты, через вендоренный _usage.py — см.
-scripts/sync-usage.sh), reads (re-read-хотспоты), error_loops (застревания на одном инструменте),
-retrieval (WebFetch/WebSearch/context7/perplexity-вызовы), protected_writes (пересечение
-files_changed с managed-путями skills-lock.json/agent-pack.lock.json), workflow_relaunch
-(P1.2, plans/2026.07.15-TELEMETRY-OPT: ≥_WF_RELAUNCH_MIN вызовов Workflow сгруппированных по
-runId — fallback на workflowName при его отсутствии — диагностический сигнал «скрипт воркфлоу
-дебажился на лету», не ошибка).
-
-Никогда не бросай наружу: вызывающий хук оборачивает всё в try/except → exit 0.
-"""
+"""Internal documentation."""
 import json
 import re
 from pathlib import Path
 
 SCHEMA = 2
 
-# _usage.py — вендоренная (scripts/sync-usage.sh) байт-в-байт копия core/usage.py, лежит
-# рядом физически: PYTHONPATH монорепо в ~/.claude/hooks недоступен. Отсутствие/битость
-# (старый хук до пересинка) не должно ронять отчёт — весь usage-блок деградирует в None,
-# остальные срезы (reads/error_loops/retrieval/protected_writes) от неё не зависят.
+
+
+
+
 try:
     import _usage
 except Exception:
     _usage = None
 
-# Паттерны «что гоняли» в Bash-командах — детект тест/линт-прогонов (грубо, но полезно
-# для форензики). Точный pass/fail даёт is_error на tool_result, здесь — классификация.
+
+
 TEST_PAT = re.compile(
     r"(?:\bpytest\b|\bphpunit\b|vendor/bin/pest|\bpest\b|\bjest\b|\bvitest\b|"
     r"go\s+test|cargo\s+test|npm\s+(?:run\s+)?test|yarn\s+test|pnpm\s+test|"
@@ -44,30 +25,27 @@ LINT_PAT = re.compile(
     r"\bphpstan\b|\bpsalm\b|(?<![\w/])pint\b|\bblack\b|\bisort\b|(?<![\w/])tsc\b|"
     r"\bprettier\b|py_compile)", re.I)
 
-# Ключи «богатого» сигнала dev-loop (SLICE_RESULT_SCHEMA и агрегат воркфлоу): если результат
-# воркфлоу/агента в транскрипте несёт их JSON'ом — извлекаем; иначе довольствуемся summary.
+
+
 DEVLOOP_KEYS = ("tool_failures", "workarounds", "deferred", "open_questions",
                 "results", "verify")
 
 _MAX_FAILURES = 25
 _MAX_FILES = 200
 _MAX_WORKFLOWS = 20
-_WF_RELAUNCH_MIN = 3  # D4 (plans/2026.07.15-TELEMETRY-OPT): ≥3 launches одной группы → flag
-_MAX_READS = 500             # верхняя граница числа различимых путей чтения (память)
+_WF_RELAUNCH_MIN = 3
+_MAX_READS = 500
 _MAX_ERROR_LOOPS = 20
-_MAX_RETRIEVAL_QUERIES = 20  # окно для O(n²) similar_ratio-сравнения запросов (дёшево)
+_MAX_RETRIEVAL_QUERIES = 20
 _MAX_SUBAGENTS = 50
 
-# WebFetch/WebSearch — retrieval всегда; mcp__<server>__<tool> — retrieval, если хвост
-# инструмента похож на поиск/доки, ИЛИ имя сервера явно RAG-провайдер (perplexity/context7).
+
+
 _RETRIEVAL_TAIL_PAT = re.compile(r"^(search|query-docs|resolve-library-id)", re.I)
 
 
 def similar_ratio(a, b):
-    """Похожесть двух текстов (Жаккар по словам lower len>=2) — та же формула, что в
-    core.usage.similar_ratio, переиспользуем при наличии вендоренного _usage.py; локальный
-    фолбэк на случай его отсутствия (error_loops/retrieval не должны терять сигнал только
-    из-за не довезённого/устаревшего вендора — в отличие от usage-блока, это не опционально)."""
+    """Internal documentation."""
     if _usage is not None:
         return _usage.similar_ratio(a, b)
 
@@ -80,8 +58,7 @@ def similar_ratio(a, b):
 
 
 def _retrieval_tool(name):
-    """Имя инструмента → само имя, если это retrieval-вызов (WebFetch/WebSearch/
-    mcp__server__search-ишный/context7/perplexity), иначе None."""
+    """Internal documentation."""
     if not isinstance(name, str):
         return None
     if name in ("WebFetch", "WebSearch"):
@@ -89,14 +66,14 @@ def _retrieval_tool(name):
     if not name.startswith("mcp__"):
         return None
     tail = name.rsplit("__", 1)[-1]
-    server = name[len("mcp__"):-(len(tail) + 2)]  # часть между 'mcp__' и последним '__'
+    server = name[len("mcp__"):-(len(tail) + 2)]
     if _RETRIEVAL_TAIL_PAT.match(tail) or "perplexity" in server.lower() or "context7" in server.lower():
         return name
     return None
 
 
 def _retrieval_query(inp):
-    """Текст запроса из input tool_use retrieval-вызова — best-effort по частым ключам."""
+    """Internal documentation."""
     if not isinstance(inp, dict):
         return None
     for k in ("query", "q", "url", "libraryName", "topic", "prompt"):
@@ -107,9 +84,7 @@ def _retrieval_query(inp):
 
 
 def _sidecar_dir(transcript_path):
-    """Каталог сайдкар-логов субагентов рядом с главным транскриптом:
-    <dir>/<session-id>/subagents/ — session-id тут ИМЯ ФАЙЛА транскрипта без расширения
-    (как их кладёт сама Claude Code), не санитайзированный session_id хука."""
+    """Internal documentation."""
     if not transcript_path:
         return None
     try:
@@ -120,10 +95,7 @@ def _sidecar_dir(transcript_path):
 
 
 def _collect_usage(main_acc, transcript_path):
-    """usage-блок отчёта: главный транскрипт (main_acc уже накоплен общим проходом
-    parse_events) + субагенты (сайдкар-файлы, читаются отдельно — вне основного потока
-    строк). None целиком, если _usage.py не довезли (старый хук до scripts/sync-usage.sh) —
-    деградация тихая, остальной отчёт как раньше."""
+    """Internal documentation."""
     if _usage is None or main_acc is None:
         return None
     agents = [_usage.finish(main_acc, label="main")]
@@ -146,7 +118,7 @@ def _collect_usage(main_acc, transcript_path):
         except Exception:
             skipped += 1
     summary = _usage.merge(agents)
-    main = agents[0]   # finish(main_acc, label="main") — всегда первый (см. выше)
+    main = agents[0]
     return {
         "totals": summary["totals"],
         "by_model": summary["by_model"],
@@ -154,20 +126,15 @@ def _collect_usage(main_acc, transcript_path):
         "agents": agents,
         "subagents_parsed": parsed,
         "subagents_skipped": skipped,
-        # first_turn_overhead/turns — ГЛАВНОГО транскрипта (не мёрж с субагентами):
-        # это про стартовый оверхед самой сессии (2026.07.12-CONTEXT-ECONOMY P5.3, ТЗ), не про сумму всех агентов.
+
+
         "first_turn_overhead": main.get("first_turn_overhead"),
         "turns": main.get("msgs"),
     }
 
 
 def _protected_sets(cwd):
-    """Managed-пути проекта, вторжение в которые стоит подсветить в отчёте:
-    - `<cwd>/skills-lock.json` (skiller vendor-канал) — managed=true записи несут каталог
-      скилла (`installed_path`), любая правка ВНУТРИ него — protected;
-    - `<cwd>/.claude/agent-pack.lock.json` (harness agent-packs) — конкретные файлы
-      (`files[].target`), КРОМЕ `user_owned` (те отданы пользователю навсегда).
-    Оба читаются защитно: нет файла / битый JSON / нет cwd → пустые множества, без исключений."""
+    """Internal documentation."""
     dirs, files = set(), set()
     if not cwd:
         return dirs, files
@@ -203,7 +170,7 @@ def _is_protected(fp, dirs, files):
 
 
 def _snippet(val, n=240):
-    """Однострочный срез значения (str или JSON-сериализуемое) до n символов."""
+    """Internal documentation."""
     try:
         s = val if isinstance(val, str) else json.dumps(val, ensure_ascii=False)
     except Exception:
@@ -212,7 +179,7 @@ def _snippet(val, n=240):
 
 
 def _blocks(event):
-    """content-блоки сообщения (assistant tool_use / user tool_result), защитно."""
+    """Internal documentation."""
     msg = event.get("message")
     if isinstance(msg, dict):
         c = msg.get("content")
@@ -222,7 +189,7 @@ def _blocks(event):
 
 
 def _result_text(content):
-    """Текст из tool_result.content (строка ИЛИ список блоков {type:text,text})."""
+    """Internal documentation."""
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -239,9 +206,7 @@ def _result_text(content):
 
 
 def _maind_tool(name):
-    """MCP-имя инструмента хаба → 'memory_<op>' / 'graph_<op>' / None. Матчим по ХВОСТУ после
-    последнего '__' — переживает и `mcp__maind__…`, и `mcp__plugin_core_maind__…` (лейбл сервера
-    меняется, имя инструмента — нет)."""
+    """Internal documentation."""
     if not isinstance(name, str):
         return None
     tail = name.rsplit("__", 1)[-1]
@@ -253,9 +218,7 @@ def _maind_tool(name):
 
 
 def _maind_result_count(result_text):
-    """Число «полезных» единиц в результате maind-вызова (найденные факты / соседи / узлы / длина
-    пути). best-effort JSON: список → len; dict с `count` → count; `neighbors`/`nodes` → len;
-    `path` → len|0. Непарсибельно / нет числа → None (тогда пишем только счётчик вызова, без found)."""
+    """Internal documentation."""
     text = (result_text or "").strip()
     if not text or ("{" not in text and "[" not in text):
         return None
@@ -278,8 +241,7 @@ def _maind_result_count(result_text):
 
 
 def _find_json_with_keys(text, keys):
-    """Первый {...}-фрагмент в text, парсящийся как dict с ≥1 ключом из keys. Best-effort:
-    сканирует кандидатов по позициям '{' с балансировкой скобок. None если не нашли."""
+    """Internal documentation."""
     if not isinstance(text, str) or "{" not in text:
         return None
     for start in range(len(text)):
@@ -306,16 +268,16 @@ def _find_json_with_keys(text, keys):
                     try:
                         obj = json.loads(text[start:i + 1])
                     except Exception:
-                        break  # невалидно — к следующему '{'
+                        break
                     if isinstance(obj, dict) and any(k in obj for k in keys):
                         return obj
                     break
-        # к следующему '{'
+
     return None
 
 
 def _merge_devloop(dst, obj):
-    """Слить извлечённый dev-loop-словарь в аккумулятор (списки — конкатенация, дедуп прост)."""
+    """Internal documentation."""
     for k in DEVLOOP_KEYS:
         v = obj.get(k)
         if v is None:
@@ -330,17 +292,11 @@ def _merge_devloop(dst, obj):
 
 
 def parse_events(lines, transcript_path=None, cwd=None):
-    """Разобрать итератор строк JSONL (файловый объект или список) в исход прогона.
-
-    Единый forward-проход: tool_use раньше своего tool_result, поэтому id→имя/команда
-    успевают заполниться. `transcript_path`/`cwd` опциональны (SCHEMA=2, только для
-    usage-субагентов и protected_writes) — без них парсер работает как раньше, просто
-    эти срезы деградируют (usage без субагентов/без transcript_path, protected_writes=[]
-    без cwd). Возвращает dict-срезы (см. ключи в конце)."""
-    counts = {}                 # имя инструмента → сколько вызовов
-    tool_name = {}              # tool_use_id → имя (для сопоставления с tool_result)
-    tool_input = {}             # tool_use_id → снимок input (для similar_ratio в error_loops)
-    bash_cmd = {}               # tool_use_id → команда (Bash)
+    """Internal documentation."""
+    counts = {}
+    tool_name = {}
+    tool_input = {}
+    bash_cmd = {}
     files, _files_seen = [], set()
     tool_failures = []
     workflows = []
@@ -348,9 +304,9 @@ def parse_events(lines, transcript_path=None, cwd=None):
     tests, lints, bash_failed = [], [], []
     devloop = {}
     total_tools = 0
-    maind = {}                  # op → {calls, results, found_total, found_max} (память/граф хаба)
-    reads = {}                  # file_path/path (Read/Grep/Glob) → сколько раз
-    error_loops = []            # серии ≥3 подряд ошибок ОДНОГО инструмента с похожим input
+    maind = {}
+    reads = {}
+    error_loops = []
     err_streak = {"tool": None, "input": None, "len": 0, "snippet": None, "entry": None}
     retr_calls = 0
     retr_by_tool = {}
@@ -365,7 +321,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
             _files_seen.add(fp)
             files.append(fp)
 
-    def maind_rec(op):          # запись метрики op (фикс. размер: 4 счётчика, не растёт с вызовами)
+    def maind_rec(op):
         r = maind.get(op)
         if r is None:
             r = maind[op] = {"calls": 0, "results": 0, "found_total": 0, "found_max": 0}
@@ -383,7 +339,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
             continue
 
         if main_acc is not None:
-            _usage.feed_event(main_acc, ev)      # тот же forward-проход — второго чтения файла нет
+            _usage.feed_event(main_acc, ev)
 
         for b in _blocks(ev):
             if not isinstance(b, dict):
@@ -393,7 +349,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                 name = b.get("name") or "?"
                 counts[name] = counts.get(name, 0) + 1
                 total_tools += 1
-                op = _maind_tool(name)          # память/граф хаба — агрегируем отдельно (для analyze)
+                op = _maind_tool(name)
                 if op:
                     maind_rec(op)["calls"] += 1
                 tid = b.get("id")
@@ -413,7 +369,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                     fp = inp.get("file_path") or inp.get("path")
                     if isinstance(fp, str) and fp and len(reads) < _MAX_READS:
                         reads[fp] = reads.get(fp, 0) + 1
-                rtool = _retrieval_tool(name)   # WebFetch/WebSearch/context7/perplexity — RAG-срез
+                rtool = _retrieval_tool(name)
                 if rtool:
                     retr_calls += 1
                     retr_by_tool[name] = retr_by_tool.get(name, 0) + 1
@@ -429,7 +385,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                 tid = b.get("tool_use_id")
                 name = tool_name.get(tid, "?")
                 is_err = bool(b.get("is_error"))
-                mop = _maind_tool(name)         # результат maind-вызова: сколько нашёл/соседей
+                mop = _maind_tool(name)
                 if mop and not is_err:
                     cnt = _maind_result_count(_result_text(b.get("content")))
                     if cnt is not None:
@@ -450,8 +406,8 @@ def parse_events(lines, transcript_path=None, cwd=None):
                 if is_err and len(tool_failures) < _MAX_FAILURES:
                     tool_failures.append({"tool": name,
                                           "snippet": _snippet(_result_text(b.get("content")))})
-                # error_loops: серия ≥3 подряд ошибок ОДНОГО инструмента с похожим input —
-                # застревание (retry без изменения подхода). Любой не-error tool_result рвёт серию.
+
+
                 if is_err:
                     ir = tool_input.get(tid, "")
                     if err_streak["tool"] == name and similar_ratio(err_streak["input"], ir) >= 0.6:
@@ -472,7 +428,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                                   "snippet": None, "entry": None}
                 if tid in retrieval_tids:
                     retr_result_chars += len(_result_text(b.get("content")))
-                # dev-loop-сигнал может прийти текстом результата воркфлоу/агента
+
                 if name in ("Task", "Workflow", "?"):
                     obj = _find_json_with_keys(_result_text(b.get("content")), DEVLOOP_KEYS)
                     if obj:
@@ -487,10 +443,10 @@ def parse_events(lines, transcript_path=None, cwd=None):
                         "status": tur.get("status") or "?",
                         "summary": _snippet(tur.get("summary") or "", 300),
                     })
-                # workflow_relaunch (2026.07.15-TELEMETRY-OPT P1.2, findings/P1-workflow-rootcause.md): группировка ПО
-                # runId (resume того же рана — dterema-кейс, 11× resumeFromRunId), не по имени —
-                # один workflowName у двух разных runId не должен схлопываться в одну группу.
-                # runId отсутствует (старые транскрипты/фикстуры) → деградация на workflowName.
+
+
+
+
                 wf_name = tur.get("workflowName") or "?"
                 wf_status = tur.get("status") or "?"
                 wf_key = tur.get("runId") or wf_name
@@ -508,7 +464,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
                         _merge_devloop(devloop, tur)
                         break
             add_file(tur.get("filePath"))
-            # MultiEdit toolUseResult может нести несколько правок
+
             for edit in (tur.get("edits") or []):
                 if isinstance(edit, dict):
                     add_file(edit.get("file_path"))
@@ -533,8 +489,8 @@ def parse_events(lines, transcript_path=None, cwd=None):
         "workflows": workflows,
         "workflow_relaunch": workflow_relaunch,
         "devloop": devloop or None,
-        "maind": maind or None,       # память/граф хаба: {op:{calls,results,found_total,found_max}}
-        "usage": _collect_usage(main_acc, transcript_path),   # None без _usage.py (SCHEMA=2)
+        "maind": maind or None,
+        "usage": _collect_usage(main_acc, transcript_path),
         "reads": {"total": sum(reads.values()), "unique": len(reads), "top_rereads": top_rereads},
         "error_loops": error_loops,
         "retrieval": {"calls": retr_calls, "by_tool": retr_by_tool, "result_chars": retr_result_chars,
@@ -544,5 +500,5 @@ def parse_events(lines, transcript_path=None, cwd=None):
 
 
 def parse_transcript(text, transcript_path=None, cwd=None):
-    """Обёртка над parse_events для строки/теста (строчный split, без слурпа структуры)."""
+    """Internal documentation."""
     return parse_events((text or "").splitlines(), transcript_path=transcript_path, cwd=cwd)

@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
-# Общая библиотека auto-approve хуков. Источать (source), не запускать.
-# Любая неожиданность => fallthrough (exit 0) => обычный permission-флоу.
 
 fallthrough() { exit 0; }
 
-# require <bin>...: нет бинарника => fallthrough.
 require() {
   local b
   for b in "$@"; do command -v "$b" >/dev/null 2>&1 || fallthrough; done
 }
 
-# read_input: stdin (JSON события) => HOOK_INPUT; вытаскивает tool_name/cwd.
 read_input() {
   HOOK_INPUT="$(cat 2>/dev/null)" || fallthrough
   [ -n "$HOOK_INPUT" ] || fallthrough
@@ -18,13 +14,10 @@ read_input() {
   HOOK_CWD="$(hook_field '.cwd')"
 }
 
-# hook_field <jq-path>: значение из HOOK_INPUT (пусто если нет).
 hook_field() {
   printf '%s' "$HOOK_INPUT" | jq -r "$1 // empty" 2>/dev/null
 }
 
-# read_mode <hookdir>: текущий режим из env.ini (strict|permissive|bypass|off).
-# Приоритет: $CLAUDE_PROJECT_DIR/.claude/auto-approve.env.ini, затем <hookdir>/env.ini.
 read_mode() {
   local dir="$1" f m
   for f in "${CLAUDE_PROJECT_DIR:+$CLAUDE_PROJECT_DIR/.claude/auto-approve.env.ini}" "$dir/env.ini"; do
@@ -36,7 +29,6 @@ read_mode() {
   printf 'off'
 }
 
-# log_decision <decision> <command> <reason>: дозапись решения в JSONL (для разбора).
 log_decision() {
   local dir="$HOME/.claude/logs"
   mkdir -p "$dir" 2>/dev/null || return 0
@@ -47,7 +39,6 @@ log_decision() {
     >> "$dir/auto-approve-decisions.jsonl" 2>/dev/null || true
 }
 
-# emit_allow <reason>: одобрить tool-call без промпта (+лог) и выйти.
 emit_allow() {
   log_decision allow "${HOOK_CMD:-}" "${1:-}"
   jq -cn --arg r "${1:-}" \
@@ -55,7 +46,6 @@ emit_allow() {
   exit 0
 }
 
-# emit_deny <reason>: заблокировать tool-call с сообщением (+лог) и выйти.
 emit_deny() {
   log_decision deny "${HOOK_CMD:-}" "${1:-}"
   jq -cn --arg r "${1:-}" \
@@ -63,7 +53,6 @@ emit_deny() {
   exit 0
 }
 
-# fallthrough_logged <reason>: залогировать «ask» и отдать обычному флоу.
 fallthrough_logged() {
   log_decision ask "${HOOK_CMD:-}" "${1:-}"
   exit 0

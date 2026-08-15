@@ -1,12 +1,4 @@
-"""Интеграционный тест `harness wf status` / `swissknifeman wf status` (P2.4).
-
-Гоняет РЕАЛЬНЫЙ бинарь (`subprocess`), не только импорт функций — Code Guidance
-P2.4: «интеграционный тест гоняет РЕАЛЬНЫЙ бинарь harness на фикстуре». Фикстура —
-урезанный реальный прогон (`tests/fixtures/wf_run/`, взят из loqum P1.4, см. её
-докстринг-комментарий в скрипте): journal.jsonl (2×started+1×result) + 2
-agent-*.meta.json + sibling-скрипт `export const meta` (2 фазы). Тест раскладывает
-фикстуру в синтетическое дерево `$CLAUDE_CONFIG_DIR/projects/<slug>/<session>/...`
-байт-в-байт по D19 (скрипт — sibling `workflows/scripts/`, НЕ внутри run_dir)."""
+"""Internal documentation."""
 import json
 import os
 import shutil
@@ -21,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from harness.wf_status import project_slug  # noqa: E402
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/harness
-MONOREPO_ROOT = PACKAGE_ROOT.parents[1]              # корень репо (swissknifeman)
+MONOREPO_ROOT = PACKAGE_ROOT.parents[1]
 HARNESS_BIN = PACKAGE_ROOT / "bin" / "harness"
 SWISSKNIFEMAN_BIN = MONOREPO_ROOT / "bin" / "swissknifeman"
 FIXTURE_DIR = PACKAGE_ROOT / "tests" / "fixtures" / "wf_run"
@@ -30,10 +22,7 @@ FAKE_PROJECT = "/tmp/fake-wf-status-project"
 
 
 def _build_config_tree(config_dir, project=FAKE_PROJECT, session="session-1"):
-    """`<config_dir>/projects/<slug>/<session>/...` — раскладка по D19: журнал+мета
-    агентов под `subagents/workflows/wf_run/`, скрипт — sibling `workflows/scripts/`.
-    Копирует ФАЙЛЫ фикстуры (не симлинкает — раскладка обязана быть реальными файлами,
-    как на диске у настоящего прогона)."""
+    """Internal documentation."""
     slug = project_slug(project)
     session_dir = Path(config_dir) / "projects" / slug / session
     run_dir = session_dir / "subagents" / "workflows" / RUN_ID
@@ -114,7 +103,7 @@ class HarnessWfStatusCliCase(unittest.TestCase):
         self.assertIn("wf", proc.stdout)
 
     def test_swissknifeman_env_doctor_still_works(self):
-        # риск среза: root-фасад passthrough не должен ломать соседние группы (env/maind).
+
         proc = _run([str(SWISSKNIFEMAN_BIN), "env", "doctor"], {})
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("harness doctor:", proc.stdout)

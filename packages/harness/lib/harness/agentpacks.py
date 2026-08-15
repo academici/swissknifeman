@@ -1,29 +1,4 @@
-"""agent-packs — детерминированный рендер/доставка паков субагентов в проект.
-
-Пак (`configs/claude-code/agent-packs/<pack>/`) — версионируемый бандл артефактов
-Claude Code (агенты/воркфлоу/хуки/фрагмент settings/rules/доки). Раньше его ставил
-ТОЛЬКО агент по скиллу `system/agent-packs`. Здесь — детерминированный stdlib-рендер
-БЕЗ агента в цикле: интервью резолвится из `detect:`-проб + дефолтов, плейсхолдеры
-подставляются, lock пишется БАЙТ-СОВМЕСТИМО со скиллом (та же схема/`source`/
-`base_sha256`=sha отрендеренного). Это позволяет `maind sync` раскатывать паки как
-обычный провиженер. Агент-driven путь остаётся фолбэком для `needs-agent`/`conflict`.
-
-Контракты: target-пути в pack.json — single-brace `{KEY}`; контент template-файлов —
-double-brace `{{KEY}}`; интервью `default` интерполируется single-brace. Записи —
-merge-only через settings.write_*, бэкап *.bak. stdlib-only, сообщения на русском.
-
-Provenance-header: каждый сгенерированный файл (template И verbatim, кроме merge)
-получает детерминированный блок «swissknifeman:generated» (без timestamp!) с паспортом
-(пак@версия, шаблон, edit-policy, extension-points, команда upgrade). Header вшивается
-ДО подсчёта sha → `base_sha256` в lock включает его, матрица решений
-_decide/categorize_file_change не меняется. Lock schema=1, поле `user_owned` в
-files[] — аддитивное (старые локи без него читаются через .get(..., False)).
-
-files[]-запись может нести опциональное `src_pack` — контент берётся из каталога
-ДРУГОГО пака (шаринг файлов между паками), владелец (Pack: в header, upgrade-команда)
-остаётся текущий пак (см. `src_file`). `remove` — обратная операция к render/upgrade:
-безопасно сносит только неправленные файлы (disk_sha == base_sha256), merge/user_owned
-не трогает (warn), снимает запись пака из lock (пустой lock — удаляется целиком)."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import hashlib
@@ -42,10 +17,10 @@ from .common import die, parse_flags, safe_load_json, sanitize, warn
 from .settings import add_hook, load_settings, write_json, write_text
 
 LOCK_REL = ".claude/agent-pack.lock.json"
-PROBE_TIMEOUT = 5  # сек на одну shell-пробу
+PROBE_TIMEOUT = 5
 
-# Read-only префиксы сегментов, разрешённые при --allow-shell safe (дефолт maind).
-# Проба, любой сегмент которой не отсюда, не исполняется (miss → default).
+
+
 _SAFE_PROBE_PREFIXES = (
     "pwd", "command -v", "git symbolic-ref", "git rev-parse", "git config --get",
     "test ", "cat ", "ls ", "grep ", "echo ", "php ", "composer ",
@@ -67,10 +42,7 @@ def pack_dir(env, pack):
 
 
 def src_file(env, pack, f):
-    """Путь исходника files[]-записи. Опциональное `src_pack` — контент берётся
-    из каталога ДРУГОГО пака (шаринг файлов между паками без копий); владелец
-    файла (Pack: в header, upgrade-команда) остаётся текущий `pack` — src_pack
-    влияет только на резолв ИСТОЧНИКА, не на провенанс."""
+    """Internal documentation."""
     return pack_dir(env, f.get("src_pack") or pack) / f["src"]
 
 
@@ -91,15 +63,14 @@ def load_manifest(env, pack):
     return data
 
 
-# ── interview resolution (без агента) ────────────────────────────────────────
+
 class _Defaulting(dict):
     def __missing__(self, key):
         return "{" + key + "}"
 
 
 def _interp(text, answers, target):
-    """Интерполяция single-brace в строке default: {KEY} из answers + синтетические
-    {project_dirname}/{pwd}. Неизвестные токены остаются литералами."""
+    """Internal documentation."""
     if not isinstance(text, str):
         return text
     m = _Defaulting({k: str(v) for k, v in answers.items()})
@@ -113,10 +84,10 @@ def _read_json(path):
 
 
 def _file_hint(probe, target):
-    """'composer.json:require-dev.pestphp/pest' → 'true' если ключ есть, иначе ''."""
+    """Internal documentation."""
     rel, _, dotted = probe.partition(":")
     if not rel.endswith(".json"):
-        return ""  # v1: только JSON-манифесты (yaml/toml → miss)
+        return ""
     data = _read_json(target / rel)
     if not isinstance(data, dict):
         return ""
@@ -140,7 +111,7 @@ def _probe_allowed(probe):
 
 
 def _run_detect(probe, target, shell_policy, report):
-    """Резолв одной detect-пробы → строка (или '' при промахе). Никогда не бросает."""
+    """Internal documentation."""
     probe = probe.strip()
     if not probe:
         return ""
@@ -172,8 +143,7 @@ def _coerce(value, kind):
 
 
 def resolve_interview(manifest, target, overrides, shell_policy="safe"):
-    """Резолв всех interview[]-ответов детерминированно. overrides (профиль/--answer)
-    всегда побеждают. Возвращает (answers, report)."""
+    """Internal documentation."""
     answers, report = {}, {"assumed": [], "unresolved": [], "skipped_probes": []}
     for e in manifest.get("interview", []):
         key, kind = e["id"], e.get("kind", "str")
@@ -200,20 +170,17 @@ def resolve_interview(manifest, target, overrides, shell_policy="safe"):
 
 
 # ── provenance header ────────────────────────────────────────────────────────
-# Синтаксис комментария по расширению target-файла. Расширения вне карты header
-# не получают (не знаем безопасный синтаксис комментария — лучше ничего, чем
-# сломать файл). kind=merge header не получает никогда (фрагмент вливается в
-# чужой JSON, свой заголовок там неуместен и невалиден).
+
+
+
+
 _COMMENT_STYLES = {".md": "html", ".js": "line//", ".mjs": "line//",
                    ".sh": "line#", ".ini": "line#"}
 
 
 def provenance_header(pack, version, src_rel, target_rel, edit_policy,
                       extension_points):
-    """Детерминированный provenance-блок для сгенерированного файла. НАМЕРЕННО без
-    timestamp: header участвует в base_sha256, и любая недетерминированность
-    ломала бы skip-nochange/idempotent re-render. Возвращает '' для расширений
-    вне _COMMENT_STYLES."""
+    """Internal documentation."""
     style = _COMMENT_STYLES.get(os.path.splitext(target_rel)[1])
     if not style:
         return ""
@@ -234,10 +201,7 @@ def provenance_header(pack, version, src_rel, target_rel, edit_policy,
 
 
 def inject_header(rendered, header, target_rel):
-    """Вставить header в отрендеренный текст, не ломая машинно-значимые прологи:
-    .md — ПОСЛЕ закрывающего '---' YAML-frontmatter (иначе Claude Code перестал бы
-    парсить метаданные агента), shebang-файлы — после первой строки (иначе ядро
-    не увидит интерпретатор). Пустой header → текст без изменений."""
+    """Internal documentation."""
     if not header:
         return rendered
     ext = os.path.splitext(target_rel)[1]
@@ -245,9 +209,9 @@ def inject_header(rendered, header, target_rel):
         lines = rendered.splitlines(keepends=True)
         if lines[0].rstrip("\n") == "---":
             for i, ln in enumerate(lines[1:], start=1):
-                if ln.rstrip("\n") == "---":  # закрывающий разделитель frontmatter
+                if ln.rstrip("\n") == "---":
                     return "".join(lines[:i + 1]) + header + "".join(lines[i + 1:])
-        return header + rendered  # frontmatter не закрыт/нет — в начало
+        return header + rendered
     if rendered.startswith("#!"):
         nl = rendered.find("\n")
         if nl != -1:
@@ -257,15 +221,13 @@ def inject_header(rendered, header, target_rel):
 
 
 def _edit_policy(f):
-    """Текст Edit-policy для header: user_owned-файлы отданы пользователю навсегда,
-    остальные перезаписываются паком при upgrade — редактировать их бессмысленно."""
+    """Internal documentation."""
     return ("user-owned — файл ваш, пак его не перезапишет" if f.get("user_owned")
             else "generated-core — НЕ редактируй; расширяй через extension-point")
 
 
 def _extension_points(manifest, answers):
-    """Точки расширения пака — target'ы файлов с role=override (новое поле формата,
-    может отсутствовать). Их и предлагаем править вместо generated-core."""
+    """Internal documentation."""
     return [_subst_single(x["target"], answers)
             for x in manifest.get("files", []) if x.get("role") == "override"]
 
@@ -284,11 +246,8 @@ def _subst_double(text, answers):
 
 
 def _apply_conditionals(text, answers):
-    """Условные блоки. <!-- pack:if KEY -->...<!-- pack:endif --> — оставить при truthy
-    answer; <!-- pack:ifnot KEY -->...<!-- pack:endif --> — при falsy/отсутствующем
-    (движок без логических операторов — «иначе»-ветка). Пары if/ifnot держи ПЛОСКО
-    (последовательно, не вложенно) — non-greedy парит каждый open с ближайшим endif."""
-    for _ in range(10):  # вложенность/множественность: повторяем, пока есть изменения
+    """Internal documentation."""
+    for _ in range(10):
         new = _IF_RE.sub(lambda m: m.group(2) if answers.get(m.group(1)) else "", text)
         new = _IFNOT_RE.sub(
             lambda m: m.group(2) if not answers.get(m.group(1)) else "", new)
@@ -303,12 +262,7 @@ def _render_template_text(src_text, answers):
 
 
 def validate_expect_globs(manifest, target, answers):
-    """Пост-рендер проверка: критичные пути пака (`expect_globs`, single-brace-глобы,
-    интерполируются `answers`) реально существуют в проекте. Возвращает список
-    не-совпавших глобов (пусто = ок). Детерминированно ловит layout-mismatch —
-    напр. хардкод `app/`-путей в монорепо (`packages/*/src`) → 0 совпадений →
-    иначе молчаливый ложно-зелёный access-layer. Сеть безопасности НЕЗАВИСИМО от
-    корректности detect-проб."""
+    """Internal documentation."""
     misses = []
     for pattern in manifest.get("expect_globs", []):
         pat = _subst_single(pattern, answers).strip()
@@ -329,7 +283,7 @@ def _chmod_x(path):
 
 
 def _decide(target_path, new_sha, owned, base_sha):
-    """Решение по одному файлу. owned — записан ли он прошлым lock этого пака."""
+    """Internal documentation."""
     if not target_path.exists():
         return "write"
     disk_sha = sha256_text(target_path.read_text(encoding="utf-8"))
@@ -341,10 +295,7 @@ def _decide(target_path, new_sha, owned, base_sha):
 
 
 def render_pack(env, pack, target, answers, *, dry=False, prior=None):
-    """Отрендерить и записать все files[] пака. Возвращает report c lock-структурой
-    файлов (src/target/kind/base_sha256/local_modified/user_owned) и changed-флагом.
-    Provenance-header вшивается ДО вычисления sha — база в lock включает header,
-    поэтому матрица _decide/categorize_file_change не меняется вообще."""
+    """Internal documentation."""
     manifest = load_manifest(env, pack)
     prior_files = {f["src"]: f for f in (prior or {}).get("files", [])}
     ext_points = _extension_points(manifest, answers)
@@ -400,7 +351,7 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
 
 
 def _merge_fragment(target, sfile, directive, answers, dry):
-    """JSON-фрагмент append-if-absent в .claude/settings.json (хуки по событиям)."""
+    """Internal documentation."""
     raw = _subst_double(sfile.read_text(encoding="utf-8"), answers)
     frag = json.loads(raw)
     settings, f = load_settings(target, "settings.json")
@@ -459,7 +410,7 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     if install_only and prior is not None:
         print(f"agent-pack '{pack}' уже установлен (v{prior.get('version')}) — пропуск")
         return 0
-    # ре-ролл предпочитает зафиксированные answers (стабильность), detect добивает новые
+
     base_overrides = dict((prior or {}).get("answers", {}))
     base_overrides.update(overrides)
     answers, rep = resolve_interview(manifest, target, base_overrides, shell_policy)
@@ -471,14 +422,14 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     report = render_pack(env, pack, target, answers, dry=dry, prior=prior)
     new_entry = _pack_lock_entry(env, pack, answers, report)
     lock.setdefault("packs", {})[pack] = new_entry
-    # report["changed"] отражает ТОЛЬКО запись на диск (write/merge) — но местное
-    # состояние lock'а (напр. local_modified per-file) может стать неактуальным и
-    # БЕЗ единой записи на диск: файл, который был skip-foreign/skip-local-modified,
-    # мог быть вручную приведён к базе между прогонами (см. F-7: разруливание
-    # коллизии после смены пака) — тогда decision внутри render_pack тихо перешёл в
-    # skip-nochange, а лежащий на диске lock всё ещё врёт "local_modified": true.
-    # Сравниваем entry целиком (не только changed), чтобы такой дрейф lock'а не
-    # застревал молча — иначе `doctor` (без --drift) годами репортил бы ложный modified.
+
+
+
+
+
+
+
+
     if report["changed"] or prior is None or new_entry != prior:
         write_lock(target, lock, dry)
     for pat in validate_expect_globs(manifest, target, answers):
@@ -486,33 +437,22 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
              f"(риск ложно-зелёного access-layer)")
     status = "needs-agent" if rep["unresolved"] else "ok"
     print(f"=== {status} (changed={report['changed']}) ===")
-    return 0 if status == "ok" else 0  # needs-agent не фейл: ставим что смогли
+    return 0 if status == "ok" else 0
 
 
 def categorize_file_change(f, pf, new_sha, tgt):
-    """Категория файла при upgrade agent-pack'а. Чистая логика решения (без записи на
-    диск) — выделена из do_upgrade ради юнит-тестов матрицы случаев.
-
-    f — описание файла из манифеста (флаги optional/user_owned); pf — запись файла из
-    прежнего lock (None, если файл новый); new_sha — sha отрендеренного нового содержимого;
-    tgt — путь файла на диске (для детекта локальной правки). Возврат:
-      new / new-optional — файла не было ИЛИ он пропал с диска; user-owned — отдан
-      пользователю, не трогаем; conflict — изменились и база, и локальная копия;
-      safe-apply — изменилась только база; nochange — база не менялась и файл на месте.
-
-    Категория считается ТОЛЬКО по факту (хэши источника/диска против lock), номер
-    версии пака сюда не входит вовсе — см. do_upgrade (версия не инвариант состояния)."""
+    """Internal documentation."""
     if pf is None:
         return "new-optional" if f.get("optional") else "new"
     if f.get("user_owned"):
         return "user-owned"
     if not tgt.exists():
-        # Файл пропал с диска (lock_drift: 'missing') — мержить нечего: это не
-        # конфликт локальной правки, а установка отсутствующего файла (ровно то,
-        # что советует doctor --drift: "восстанови render"). Восстанавливаем
-        # НЕЗАВИСИМО от смены версии — кейс B раскатки 2026-07-11 (botkit): снос
-        # соседнего пака унёс общие targets, а `upgrade` при равной версии отвечал
-        # «уже актуален» и оставлял проект с паком в локе и БЕЗ его файлов.
+
+
+
+
+
+
         return "new-optional" if f.get("optional") else "new"
     disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
     local_mod = disk_sha != pf.get("base_sha256")
@@ -525,16 +465,7 @@ def categorize_file_change(f, pf, new_sha, tgt):
 
 
 def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
-    """Накатить пак на цель по ФАКТУ файлов, а не по номеру версии.
-
-    Версия пака — не инвариант состояния: забытый бамп `pack.json:version` раньше
-    давал тихое «уже актуален» и НЕ доставлял изменение (кейс A раскатки 2026-07-11 —
-    пункт reviewer'а не доехал ни в один из 11 проектов), а снос соседнего пака с
-    пересекающимися targets оставлял проект без файлов (кейс B, botkit). Поэтому план
-    строится всегда — из сверки хэшей (источник против `base_sha256` лока, диск против
-    него же), а равные версии лишь меняют формулировку отчёта и добавляют warn о
-    дрейфе источника без бампа. Бамп версии для авторов паков остаётся обязательным —
-    он просто перестал быть ЕДИНСТВЕННОЙ защитой доставки."""
+    """Internal documentation."""
     manifest = load_manifest(env, pack)
     lock = load_lock(target)
     prior = lock.get("packs", {}).get(pack)
@@ -564,8 +495,8 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
             continue
         rendered = (_render_template_text(sfile.read_text(encoding="utf-8"), answers)
                     if kind == "template" else sfile.read_text(encoding="utf-8"))
-        # header — ДО sha: база сравнивается с прежней базой, тоже включавшей header
-        # (изменение только header'а, напр. bump версии пака, = обычный safe-apply)
+
+
         rendered = inject_header(
             rendered,
             provenance_header(pack, manifest["version"], src, tgt_rel,
@@ -573,9 +504,9 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
             tgt_rel)
         new_sha = sha256_text(rendered)
         cat = categorize_file_change(f, prior_files.get(src), new_sha, tgt)
-        # Новые файлы версии (напр. recon-агенты) ставим на upgrade так же, как render:
-        # цель не существует → запись безопасна (нечего затирать). Опциональные, которые
-        # пользователь ЯВНО удалил (removed_optional), не возвращаем.
+
+
+
         install_new = cat == "new" or (
             cat == "new-optional" and src not in prior.get("removed_optional", []))
         plan.append((cat, src, tgt_rel,
@@ -603,8 +534,8 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     if not acted:
         print("  нечего делать: файлы совпадают с lock'ом")
     elif same_version:
-        # Кейс A: контент источника уехал, а `pack.json:version` забыли бампнуть —
-        # молча игнорировать нельзя (тихая недоставка во весь флот).
+
+
         warn(f"  ⚠ пак '{pack}' не менял версию (v{v_new}), но {len(acted)} файл(ов) "
              f"разошлись с lock'ом — применено по факту; авторам пака: бампайте "
              f"pack.json:version, иначе апгрейд опирается только на хэши")
@@ -626,12 +557,7 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
 
 
 def do_remove(env, pack, target, *, dry):
-    """Удалить установленный agent-pack из target. Безопасно — удаляются только
-    файлы, которые не были локально изменены (disk_sha == base_sha256 из lock);
-    kind=merge (вливается фрагментом в чужой settings.json) и user_owned (отдан
-    пользователю навсегда) не трогаем никогда — только предупреждаем. Запись
-    пака в lock снимается в любом случае (даже если ни один файл не удалён —
-    иначе повторный remove видел бы призрак); опустевший lock удаляется целиком."""
+    """Internal documentation."""
     lock = load_lock(target)
     entry = lock.get("packs", {}).get(pack)
     if entry is None:
@@ -650,7 +576,7 @@ def do_remove(env, pack, target, *, dry):
             warn(f"  {tgt_rel}: user-owned — оставлен, удали вручную при желании")
             continue
         if not tgt.exists():
-            continue  # уже отсутствует — тихо пропускаем
+            continue
         try:
             disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
         except (OSError, UnicodeDecodeError):
@@ -680,16 +606,7 @@ def do_remove(env, pack, target, *, dry):
 
 
 def lock_drift(target):
-    """Детект дрейфа generated-файлов lock'а против диска (E-2). Для каждой
-    files[]-записи каждого установленного пака — кроме kind=merge (вливается в
-    чужой JSON, свой sha не отслеживаем) и user_owned (файл отдан пользователю
-    навсегда, «дрейф» там ожидаем и не проблема) — sha256 файла на диске
-    сравнивается с base_sha256 из lock. Защитная функция: lock читается через
-    load_lock (несуществующий/битый → {schema:1, packs:{}} → пустой дрейф),
-    отсутствующий/нечитаемый файл на диске — 'missing', а не исключение.
-
-    Возвращает список {pack, target, status: 'modified'|'missing'} — чистая,
-    без побочных эффектов и печати (тестируема напрямую)."""
+    """Internal documentation."""
     lock = load_lock(target)
     drift = []
     for pack, entry in (lock.get("packs") or {}).items():
@@ -712,10 +629,7 @@ def lock_drift(target):
 
 
 def do_doctor_drift(target, *, strict=False):
-    """Печать таблицы дрейфа generated-файлов (lock vs диск). rc=0 информативно
-    (для обычного doctor-прогона), но --strict превращает найденный дрейф в
-    негромкий провал (rc=1) — годится как CI-гейт «никто не правил generated
-    руками мимо override»."""
+    """Internal documentation."""
     drift = lock_drift(target)
     if not drift:
         print("[OK] дрейф generated-файлов не найден")
@@ -742,7 +656,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
         for f in manifest.get("files", []):
             if not src_file(env, pk, f).exists() and not f.get("optional"):
                 problems.append(f"нет {f['src']}")
-        # проверка: каждый {{TOKEN}} в template-исходниках имеет interview-id
+
         for f in manifest.get("files", []):
             if f.get("kind", "template") != "template":
                 continue
@@ -752,7 +666,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
             for tok in set(_DOUBLE_RE.findall(sfile.read_text(encoding="utf-8"))):
                 if tok not in ids:
                     problems.append(f"{f['src']}: {{{{{tok}}}}} нет в interview")
-        # сухой рендер с дефолтами: не должно остаться {{...}}
+
         defaults = {e["id"]: e.get("default", "") for e in manifest.get("interview", [])}
         for f in manifest.get("files", []):
             if f.get("kind", "template") != "template":
@@ -787,8 +701,8 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                 print("[BAD] lock: schema != 1")
         elif installed and not json_out:
             print(f"Установлено в {target.name}: {', '.join(sorted(installed))}")
-        # Пересечение targets: два установленных пака владеют одним файлом (прецедент
-        # botkit 2026-07-11 — remove первого унёс файлы второго, upgrade их не вернул).
+
+
         owners = {}
         for name, pk in (lock.get("packs") or {}).items():
             for f in pk.get("files") or []:
@@ -800,8 +714,8 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                  f"harness agent-packs upgrade --pack <второй> --target .)")
             for t in sorted(shared):
                 warn(f"  {t} ← {', '.join(shared[t])}")
-        # .bak-гигиена: локальные *.bak в .claude/agents/ — легальны (бэкап merge-only
-        # записи), но копятся мусором (прецедент: agelto — 9 файлов) — только warn, не error.
+
+
         bak_files = sorted(f.name for f in (target / ".claude" / "agents").glob("*.bak"))
         if bak_files and not json_out:
             warn(f".claude/agents: {len(bak_files)} .bak-файл(ов) — "
@@ -815,7 +729,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def _pop_answers(argv):
-    """Вытащить все повторяющиеся --answer K=V (parse_flags хранит лишь последний)."""
+    """Internal documentation."""
     rest, answers = [], {}
     it = iter(argv)
     for a in it:
@@ -1249,18 +1163,13 @@ def write_codex_roles_lock(target, lock, dry):
 
 
 def _codex_installed_pack_prefix(target, pack):
-    """`PACK_PREFIX` для codex-проекции пака — переиспользуется результат
-    интервью уже установленного Claude-пака; `None`, если пак под Claude не
-    установлен (второй интервью-проход этот item не заводит)."""
+    """Internal documentation."""
     entry = (load_lock(target).get("packs") or {}).get(pack)
     return None if entry is None else entry.get("answers", {}).get("PACK_PREFIX")
 
 
 def expected_codex_role_projections(env, target, catalog_path=None, *, pack=None):
-    """`(role, projection)`-пары для Codex, ограниченные паками, установленными
-    под Claude в `target`. Роли, отказанные замороженным рендерером
-    (`command.workflow-carrier`), возвращаются поимённо во втором элементе, не
-    молча. Чистая функция — диска не пишет."""
+    """Internal documentation."""
     catalog_path = catalog_path or (Path(env.root) / "configs" / "common" /
                                     "agent-packs" / "roles.json")
     roles = semantic_agent_roles(catalog_path)
@@ -1282,9 +1191,7 @@ def expected_codex_role_projections(env, target, catalog_path=None, *, pack=None
 
 
 def codex_role_state(target, projection):
-    """`classify_agent_projection`-состояние ОДНОЙ codex-проекции: managed
-    определяется по НАШЕМУ lock'у (`.codex/agent-roles.lock.json`), не по факту
-    существования файла — иначе любой сторонний файл читался бы как наш."""
+    """Internal documentation."""
     path = Path(target) / projection.target_path
     observed = path.read_bytes() if path.exists() else None
     managed = projection.target_path in (load_codex_roles_lock(target).get("roles") or {})
@@ -1292,10 +1199,7 @@ def codex_role_state(target, projection):
 
 
 def do_codex_role_render(env, target, *, pack=None, dry=False):
-    """render и upgrade объединены (декларативная пересборка, тот же приём, что
-    `harness hooks --provider codex`, D89): missing → create, managed-drift →
-    repair (запись у нас в lock'е — мы владеем файлом), ownership-conflict →
-    отказ (чужой файл не трогаем, никогда не перезаписываем молча)."""
+    """Internal documentation."""
     pairs, excluded = expected_codex_role_projections(env, target, pack=pack)
     lock = load_codex_roles_lock(target)
     roles_lock = lock.setdefault("roles", {})
@@ -1329,9 +1233,7 @@ def do_codex_role_render(env, target, *, pack=None, dry=False):
 
 
 def do_codex_role_remove(env, target, pack, *, dry=False):
-    """Обратная операция render'у — тот же консервативный приём, что
-    Claude-сторона (`do_remove`): сносятся ТОЛЬКО неправленные файлы
-    (`state == "clean"`); `managed-drift`/`ownership-conflict` — только warn."""
+    """Internal documentation."""
     pairs, _excluded = expected_codex_role_projections(env, target, pack=pack)
     if not pairs:
         print(f"agent-pack '{pack}' не спроецирован на Codex в {target} — нечего удалять")
@@ -1365,8 +1267,7 @@ def do_codex_role_remove(env, target, pack, *, dry=False):
 
 
 def do_codex_role_doctor(env, target, *, json_out=False, strict=False):
-    """Таблица «роль → состояние» + счётчик дрейфа; `--strict` — CI-гейт
-    (rc=1 при найденном дрейфе), тот же режим, что `do_doctor_drift`."""
+    """Internal documentation."""
     pairs, excluded = expected_codex_role_projections(env, target)
     rows = [{"pack_id": role.pack_id, "role_id": role.role_id,
              "target": projection.target_path, "state": codex_role_state(target, projection)}

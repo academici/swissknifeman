@@ -1,1 +1,1 @@
-"""Анализ и аудит: разбор прогонов, флот-обзор экосистемы, аудит окружения."""
+"""Analysis and audit: run analysis, ecosystem fleet views, and environment audits."""

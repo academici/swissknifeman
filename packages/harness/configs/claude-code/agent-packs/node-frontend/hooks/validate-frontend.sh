@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
-# validate-frontend — PostToolUse-валидатор (advisory, НИКОГДА не блокирует).
 #
-# После Edit/Write по *.ts|*.tsx|*.vue гоняет VALIDATE_CMD (typecheck+lint) и при
-# падении ВОЗВРАЩАЕТ находки в additionalContext (агент видит и сам чинит). Не exit 2.
 #
-# Конфиг: .claude/review-gate.env.ini → VALIDATE_MODE (off|warn), VALIDATE_CMD.
-# Семантика: всегда exit 0; при провале — JSON hookSpecificOutput.additionalContext.
 set -uo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 cd "$PROJECT_DIR" 2>/dev/null || exit 0
 
 STDIN="$(cat 2>/dev/null || true)"
-# реагируем только на правки исходников фронта
 if ! printf '%s' "$STDIN" | grep -Eq '\.(ts|tsx|vue)"'; then
   exit 0
 fi
@@ -41,7 +35,6 @@ TRIM="$(printf '%s' "$OUT" | tail -n 30)"
 MSG="validate-frontend: проверка упала после правки — почини (advisory).
 \$ $CMD
 $TRIM"
-# additionalContext через stdout JSON (PostToolUse), без блокировки.
 python3 - "$MSG" <<'PY' 2>/dev/null || true
 import json, sys
 print(json.dumps({"hookSpecificOutput": {

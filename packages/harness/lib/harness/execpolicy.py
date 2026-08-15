@@ -1,13 +1,4 @@
-"""Валидатор декларативной политики исполнения (`configs/common/agent-packs/execution-policy.json`).
-
-Носитель и гейт по запечатанной схеме `execution-policy-v1.md`
-(2026.07.29-HARNESS-AGNOSTIC P4.2/P4.3, D58): проверяет ФОРМУ данных — закрытые
-наборы ключей, обязательность `provenance` у числовых полей, резолв
-`allowed_agent_roles` против канона `roles.json`, и жизненный цикл точек
-принуждения `delegation_contract.enforcement_points` по их `status`
-(`pending`/`enforced`). Двадцать условий §10 контракта — построчный чек-лист,
-каждая проверка ниже несёт номер условия, которое закрывает. stdlib-only, без
-сети."""
+"""Internal documentation."""
 import json
 import re
 import sys
@@ -65,7 +56,7 @@ _PENDING_UNTIL_RE = re.compile(r"^\S+\s+P\d+(\.\d+)+$")
 
 
 class Violation:
-    """Одно нарушение: имя проверки + человекочитаемое сообщение (на русском)."""
+    """Internal documentation."""
 
     def __init__(self, check, message):
         self.check = check
@@ -76,7 +67,7 @@ class Violation:
 
 
 def check_top_level_keys(data):
-    """#1: ровно пять ключей верхнего уровня, неизвестный/пропущенный — нарушение."""
+    """Internal documentation."""
     v = []
     if not isinstance(data, dict):
         return [Violation("top-level", "корень execution-policy.json не dict")]
@@ -89,7 +80,7 @@ def check_top_level_keys(data):
 
 
 def check_policy_version(data):
-    """#2: policy_version формы major.minor, major поддерживается валидатором."""
+    """Internal documentation."""
     version = data.get("policy_version")
     if not isinstance(version, str) or not re.match(r"^\d+\.\d+$", version):
         return [Violation("policy-version", f"policy_version={version!r} не строка формы 'major.minor'")]
@@ -113,9 +104,7 @@ def _check_condition_rows(rows, section):
 
 
 def check_spawn_threshold(data):
-    """#3/#4/#5: decision_rule, непустые positive/negative_conditions с обязательной
-    строкой parent-reuses-raw-material, непустой scale_by_task_class, форма строк
-    условий и уникальность id по обоим спискам."""
+    """Internal documentation."""
     st = data.get("spawn_threshold")
     if not isinstance(st, dict):
         return [Violation("spawn-threshold", "spawn_threshold отсутствует или не object")]
@@ -153,9 +142,7 @@ def check_spawn_threshold(data):
 
 
 def check_max_parallel_agents(data):
-    """#7/#8/#9: объект (не скаляр) с subjects+fleet_cap; три субъекта ровно по
-    одному разу, provider/total_scope в enum; fleet_cap.applies_to существует и
-    value ≤ concurrent того субъекта."""
+    """Internal documentation."""
     mpa = data.get("max_parallel_agents")
     if not isinstance(mpa, dict):
         return [Violation("max-parallel-agents", "max_parallel_agents отсутствует или не object (не скаляр)")]
@@ -196,9 +183,7 @@ def check_max_parallel_agents(data):
 
 
 def _walk_provenance(node, path, violations):
-    """#10: рекурсивный обход — каждый dict, несущий хотя бы одно числовое
-    значение (int/float, не bool) среди СВОИХ ключей, обязан нести sibling-ключ
-    provenance."""
+    """Internal documentation."""
     if isinstance(node, dict):
         has_numeric = any(
             isinstance(val, (int, float)) and not isinstance(val, bool) and key != "provenance"
@@ -220,8 +205,7 @@ def check_provenance(data):
 
 
 def check_allowed_agent_roles(data, roles_canon=None):
-    """#11/#12: закрытый набор ключей (второй-список-бан); source существует;
-    exclusions резолвятся в реальные (pack_id, role_id) канона."""
+    """Internal documentation."""
     aar = data.get("allowed_agent_roles")
     if not isinstance(aar, dict):
         return [Violation("allowed-agent-roles", "allowed_agent_roles отсутствует или не object")]
@@ -250,7 +234,7 @@ def check_allowed_agent_roles(data, roles_canon=None):
 
 
 def _resolve_carrier_text(point, roles_canon):
-    """Возвращает текст носителя точки принуждения или None, если носитель/поле не резолвится."""
+    """Internal documentation."""
     carrier_path = _REPO_ROOT / point.get("carrier", "")
     if not carrier_path.is_file():
         return None
@@ -265,9 +249,7 @@ def _resolve_carrier_text(point, roles_canon):
 
 
 def check_delegation_contract(data, roles_canon=None):
-    """#13-#19: required_fields ровно пять id по порядку; refusal_rule непуст;
-    enforcement_points — закрытая форма, status-цикл (pending требует pending_until,
-    enforced его запрещает и требует физического наличия всех маркеров)."""
+    """Internal documentation."""
     dc = data.get("delegation_contract")
     if not isinstance(dc, dict):
         return [Violation("delegation-contract", "delegation_contract отсутствует или не object")]
@@ -314,8 +296,8 @@ def check_delegation_contract(data, roles_canon=None):
         actual = set(point)
         if point.get("status") == "enforced":
             expected_keys = expected_keys - {"pending_until"}
-        # selector/pending_until — condition-зависимые ключи, разбираются ниже, но
-        # неизвестный ключ вне полного объединения всё равно нарушение.
+
+
         for extra in sorted(actual - _POINT_KEYS):
             v.append(Violation("delegation-contract", f"{pid}: неизвестный ключ точки принуждения: {extra!r}"))
 
@@ -374,8 +356,7 @@ CHECKS = (
 
 
 def run_checks(execution_policy_path=None):
-    """Прогоняет все проверки §10 схемы. Возвращает (violations, exit_code):
-    0 — чисто, 1 — есть нарушения, 2 — битый/нечитаемый вход."""
+    """Internal documentation."""
     path = execution_policy_path or _EXECUTION_POLICY
     data = safe_load_json(path)
     if data is None:

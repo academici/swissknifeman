@@ -1,30 +1,4 @@
-"""safe-dirs — управление machine-owned allowlist'ом доверенных директорий,
-где auto-approve пропускает rm/rmdir мимо deny_hard (вердикт считает хук
-configs/.../auto-approve/lib/safedirs.py — у него та же лестница поиска конфига).
-
-Конфиг живёт В КОРНЕ МОНОРЕПО swissknifeman: <монорепо>/safe-dirs.json (gitignored,
-шаблон safe-dirs.example.json — как config.json узла maind). Так его видно и правится
-рядом с кодом, а не в скрытом ~/.swissknifeman/ (тот оставлен памяти/реестру).
-Лестница: $SKM_SAFE_DIRS_CONFIG (эксклюзивный override) → корень монорепо →
-legacy ~/.swissknifeman/safe-dirs.json (init мигрирует его в репо автоматически).
-
-Подкоманды:
-  init       создать конфиг с дефолтами (или мигрировать legacy из home)
-  list       эффективный allowlist глазами хука (dirs + реестр проектов − exclude)
-  add        добавить корень (или изъятие с --exclude); '/', $HOME и предки — отказ
-  remove     убрать корень/изъятие (сопоставление по resolved-пути)
-  prune-ask  снять статические ask-правила rm из settings (hook-allow их не
-             пробивает — без чистки rm в safe-dirs продолжает промптить)
-  delete     удалить путь(и) НАПРЯМУЮ (в обход shell rm/rmdir) — эскейп-хетч для
-             легитимных удалений, которые хук блокирует не по существу дела, а по
-             форме команды (rm/rmdir внутри for/while/if/xargs/sudo — токенайзер
-             хука не понимает управляющие конструкции, см. skill general/shell).
-             ПОЛНОСТЬЮ переиспользует containment-код хука (_hook_module) — не
-             второй source of truth «что безопасно». Именно поэтому названа НЕ
-             'rm' — deny_hard матчит слово 'rm' как substring ГДЕ УГОДНО в команде
-             (см. config.deny_hard), а не только в позиции команды.
-
-Файл — atomic write + *.bak (write_json)."""
+"""Internal documentation."""
 import importlib.util
 import json
 import os
@@ -37,8 +11,8 @@ from .settings import load_settings, remove_permission_rules, write_json
 
 SUBCOMMANDS = ("init", "list", "add", "remove", "prune-ask", "delete")
 
-# Ровно те правила, что пресеты settings.base/global исторически ставили в ask.
-# Снимаем только «своё» — чужие правила prune не трогает (семантика block_plans_dir).
+
+
 PRUNE_ASK_RULES = ("Bash(rm -r *)", "Bash(rm -rf *)")
 
 DEFAULT_CONFIG = {
@@ -52,9 +26,7 @@ DEFAULT_CONFIG = {
 
 
 def _state_file(env):
-    """Лестница как у хука: env-override → корень монорепо → legacy home.
-    В отличие от хука, при отсутствии файла в репо целимся ВСЁ РАВНО в репо
-    (init создаёт именно там; legacy — только когда монорепо не найден)."""
+    """Internal documentation."""
     override = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if override:
         return Path(override)
@@ -69,8 +41,7 @@ def _legacy_file(env):
 
 
 def _hook_module(env):
-    """Ядро вердикта хука (importlib по пути): list показывает allowlist ровно
-    теми глазами, какими его видит auto-approve — без второй реализации."""
+    """Internal documentation."""
     path = (env.configs_dir / "hooks" / "auto-approve" / "lib" / "safedirs.py")
     spec = importlib.util.spec_from_file_location("hook_safedirs", path)
     mod = importlib.util.module_from_spec(spec)
@@ -92,7 +63,7 @@ def _load_config(env):
 
 
 def _validate_root(env, raw):
-    """Тот же гард, что в хуке: '/', $HOME и предки $HOME — отказ."""
+    """Internal documentation."""
     mod = _hook_module(env)
     home = str(env.home)
     resolved = mod._norm_root(raw, home, str(Path(home).resolve()))
@@ -109,8 +80,8 @@ def cmd_init(env, opts):
         return
     legacy = _legacy_file(env)
     if legacy.exists() and legacy != f:
-        # конфиг переехал из home в корень монорепо — переносим содержимое,
-        # legacy оставляем как *.migrated (хук его больше не увидит: репо-файл выше)
+
+
         try:
             data = json.loads(legacy.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
@@ -183,7 +154,7 @@ def cmd_remove(env, opts, raw):
 
 
 def _prune_one(target_dir, fname, dry):
-    """Снять PRUNE_ASK_RULES из permissions.ask одного settings-файла."""
+    """Internal documentation."""
     f = Path(target_dir) / ".claude" / fname
     if not f.exists():
         return 0
@@ -222,7 +193,7 @@ _FORBIDDEN_CHARS = ("$", "`", "{", "}", "*", "?", "[")
 
 
 def _log_delete(log_file, raw, resolved, result, dry_run):
-    """Append-only JSONL аудит-трейл (никогда не усекается этой командой)."""
+    """Internal documentation."""
     entry = {
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "raw": raw, "resolved": resolved, "result": result, "dry_run": dry_run,
@@ -233,13 +204,7 @@ def _log_delete(log_file, raw, resolved, result, dry_run):
 
 
 def cmd_delete(env, opts, paths):
-    """Прямое удаление файлов/папок строго внутри safe-dirs allowlist —
-    БЕЗ прохождения через shell rm/rmdir (значит без сегмент-парсинга хука).
-    Единственный «источник истины» о том, что безопасно — containment-код
-    самого хука (`_hook_module`), вызванный напрямую в Python: не второй
-    реализацией, а переиспользованием. Никаких глобов/подстановок (`*`, `?`,
-    `[`, `$`, `` ` ``, `{`, `}`) — только конкретный путь на аргумент (не
-    Swiss-army-knife: только удаление, никакого произвольного exec)."""
+    """Internal documentation."""
     if not paths:
         die("нужен хотя бы один путь: harness safe-dirs delete <path> [<path> …] [--dry-run]")
     cfg, f = _load_config(env)

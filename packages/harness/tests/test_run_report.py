@@ -1,6 +1,4 @@
-"""run-report: защитный парсер транскрипта (_lib.parse_transcript), поведенческий прогон
-самого SessionEnd-хука через subprocess (валидный транскрипт → .claude/runs/<sid>.json;
-битый/пустой stdin → exit 0 без записи; ретеншн), и block_run_report (env.ini + регистрация)."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -24,7 +22,7 @@ HOOK_PY = RUN_REPORT / "run-report.py"
 sys.path.insert(0, str(RUN_REPORT))
 from _lib import parse_events, parse_transcript  # noqa: E402
 
-# синтетический транскрипт: тест (pass) + линт (fail) + Edit + dev-loop-воркфлоу + шум
+
 FIXTURE = "\n".join([
     json.dumps({"type": "assistant", "message": {"content": [
         {"type": "text", "text": "go"},
@@ -56,7 +54,7 @@ FIXTURE = "\n".join([
 
 
 def _wf_line(uid, name, status, run_id=None):
-    """assistant tool_use(Workflow) + user tool_result с toolUseResult.workflowName/status/runId."""
+    """Internal documentation."""
     tur = {"status": status, "workflowName": name, "summary": ""}
     if run_id is not None:
         tur["runId"] = run_id
@@ -70,7 +68,7 @@ def _wf_line(uid, name, status, run_id=None):
 
 
 def _mcp_line(uid, name, result_obj):
-    """assistant tool_use + user tool_result (result_obj → text блока, как в реальном транскрипте)."""
+    """Internal documentation."""
     return "\n".join([
         json.dumps({"type": "assistant", "message": {"content": [
             {"type": "tool_use", "id": uid, "name": name, "input": {"q": "x"}}]}}),
@@ -81,15 +79,15 @@ def _mcp_line(uid, name, result_obj):
     ])
 
 
-# память/граф хаба: обычный сервер + вариант лейбла plugin_core_ + is_error-деградация
+
 FIXTURE_MCP = "\n".join([
     _mcp_line("m1", "mcp__maind__maind_memory_recall",
               [{"score": 1, "text": "a"}, {"score": 2, "text": "b"}]),          # found=2
     _mcp_line("m2", "mcp__plugin_core_maind__maind_memory_recall",
-              [{"score": 1, "text": "c"}]),                                     # found=1, др. лейбл
+              [{"score": 1, "text": "c"}]),
     _mcp_line("g1", "mcp__maind__maind_graph_query",
               {"root": "project:x", "count": 3, "neighbors": [1, 2, 3]}),       # count=3
-    _mcp_line("s1", "mcp__maind__maind_memory_store", {"memory": {"id": "m_1"}}),  # count не извлечь
+    _mcp_line("s1", "mcp__maind__maind_memory_store", {"memory": {"id": "m_1"}}),
     json.dumps({"type": "assistant", "message": {"content": [
         {"type": "tool_use", "id": "m3", "name": "mcp__maind__maind_memory_recall",
          "input": {"q": "z"}}]}}),
@@ -99,7 +97,7 @@ FIXTURE_MCP = "\n".join([
 
 
 def _ev_assistant(content, model=None, usage=None):
-    """assistant-событие: content-блоки + опц. model/usage (для _usage-агрегации)."""
+    """Internal documentation."""
     m = {"content": content}
     if model:
         m["model"] = model
@@ -121,10 +119,7 @@ def _tr(tid, content, is_error=False):
 
 
 def build_schema2_fixture(proj):
-    """Транскрипт под все срезы SCHEMA=2: usage главного агента, re-read хотспот (3× один
-    файл), серия из 3 одинаковых ошибок Bash (error_loops), два похожих retrieval-запроса
-    (WebSearch + mcp perplexity — near-dup ⇒ repeated_queries), 4 Edit'а (managed-скилл,
-    managed agent-pack файл, user_owned agent-pack файл, обычный файл ⇒ protected_writes)."""
+    """Internal documentation."""
     lines = [
         _ev_assistant([{"type": "text", "text": "go"}], model="claude-opus-4-1",
                       usage={"input_tokens": 100, "output_tokens": 50,
@@ -144,10 +139,10 @@ def build_schema2_fixture(proj):
                                     {"query": "claude opus pricing 2026 update"})]))
     lines.append(_ev_user([_tr("pw1", "search result B" * 5)]))
     edits = [
-        ("e1", str(proj / ".claude" / "skills" / "foo-skill" / "SKILL.md")),   # managed-скилл
+        ("e1", str(proj / ".claude" / "skills" / "foo-skill" / "SKILL.md")),
         ("e2", str(proj / ".claude" / "agents" / "reviewer.md")),               # managed agent-pack
-        ("e3", str(proj / ".claude" / "agents" / "owned.md")),                  # user_owned — не protected
-        ("e4", str(proj / "src" / "app.py")),                                   # обычный файл
+        ("e3", str(proj / ".claude" / "agents" / "owned.md")),
+        ("e4", str(proj / "src" / "app.py")),
     ]
     for tid, fp in edits:
         lines.append(_ev_assistant([_tu(tid, "Edit", {"file_path": fp})]))
@@ -156,8 +151,7 @@ def build_schema2_fixture(proj):
 
 
 def write_protected_locks(proj):
-    """skills-lock.json (skiller vendor) + .claude/agent-pack.lock.json (harness) —
-    managed-наборы, пересечение с которыми даёт protected_writes."""
+    """Internal documentation."""
     (proj / "skills-lock.json").write_text(json.dumps({
         "version": 1,
         "skills": {"foo-skill": {"source": "swissknifeman", "managed": True, "bucket": "",
@@ -182,7 +176,7 @@ def run(fn, *a, **kw):
 
 
 def hook(payload):
-    """Прогнать SessionEnd-хук через subprocess: stdin=JSON → (returncode)."""
+    """Internal documentation."""
     p = subprocess.run([sys.executable, str(HOOK_PY)],
                        input=(json.dumps(payload) if isinstance(payload, dict)
                               else payload).encode(),
@@ -190,42 +184,42 @@ def hook(payload):
     return p.returncode
 
 
-# ── чистый парсер ─────────────────────────────────────────────────────────────
+
 class ParseCase(unittest.TestCase):
     def test_extracts_all_slices(self):
         r = parse_transcript(FIXTURE)
         self.assertEqual(r["tools"]["total"], 4)
         self.assertEqual(r["tools"]["by_name"]["Bash"], 2)
         self.assertEqual(r["files_changed"], ["/proj/a.py"])
-        # тест прошёл, линт упал
+
         self.assertEqual(r["bash"]["tests"], [{"command": "python3 -m pytest tests/", "ok": True}])
         self.assertEqual(r["bash"]["lints"], [{"command": "ruff check .", "ok": False}])
         self.assertEqual(r["bash"]["failed"], ["ruff check ."])
-        # tool_failure — по is_error
+
         self.assertEqual(len(r["tool_failures"]), 1)
         self.assertEqual(r["tool_failures"][0]["tool"], "Bash")
-        # воркфлоу + dev-loop-сигнал
+
         self.assertEqual(r["workflows"][0]["name"], "dev-loop")
         self.assertEqual(r["workflows"][0]["status"], "completed")
         self.assertEqual(r["devloop"]["tool_failures"], ["perplexity-web locked"])
         self.assertEqual(r["devloop"]["deferred"], ["e2e"])
-        self.assertIsNone(r["maind"])                          # в FIXTURE нет maind-вызовов
+        self.assertIsNone(r["maind"])
 
     def test_maind_mcp_metrics(self):
         r = parse_transcript(FIXTURE_MCP)
         m = r["maind"]
-        # recall: m1(2)+m2(1) успешных + m3(is_error) → calls=3, results=2, found_total=3, max=2
+
         self.assertEqual(m["memory_recall"]["calls"], 3)
         self.assertEqual(m["memory_recall"]["results"], 2)
         self.assertEqual(m["memory_recall"]["found_total"], 3)
         self.assertEqual(m["memory_recall"]["found_max"], 2)
-        # store: вызов есть, но count из результата не извлекаем (dict без count/neighbors/nodes/path)
+
         self.assertEqual(m["memory_store"]["calls"], 1)
         self.assertEqual(m["memory_store"]["results"], 0)
-        # graph_query: count из dict
+
         self.assertEqual(m["graph_query"]["calls"], 1)
         self.assertEqual(m["graph_query"]["found_total"], 3)
-        # back-compat: MCP-вызовы всё ещё видны в общем tools.by_name (2× обычный лейбл: m1,m3)
+
         self.assertEqual(r["tools"]["by_name"]["mcp__maind__maind_memory_recall"], 2)
 
     def test_empty_and_garbage(self):
@@ -235,7 +229,7 @@ class ParseCase(unittest.TestCase):
             self.assertIsNone(r["devloop"])
 
     def test_large_transcript_line_streaming(self):
-        # много Bash-строк — парс идёт построчно, без слурпа структуры
+
         big = "\n".join(
             json.dumps({"type": "assistant", "message": {"content": [
                 {"type": "tool_use", "id": f"b{i}", "name": "Bash",
@@ -268,8 +262,8 @@ class WorkflowRelaunchCase(unittest.TestCase):
         self.assertEqual(r["workflow_relaunch"], [])
 
     def test_groups_by_run_id_not_name(self):
-        # тот же workflowName, но ДВА разных runId (dterema-кейс: новый run + resume-цепочка) —
-        # каждая группа своя, ни одна не достигает порога сама по себе
+
+
         t = "\n".join([
             _wf_line("w1", "dterema-site-p3-api", "async_launched", run_id="wf_run_a"),
             _wf_line("w2", "dterema-site-p3-api", "async_launched", run_id="wf_run_a"),
@@ -287,7 +281,7 @@ class WorkflowRelaunchCase(unittest.TestCase):
         self.assertEqual(r["workflow_relaunch"][0]["count"], 3)
 
 
-# ── поведенческий: реальный хук через subprocess ─────────────────────────────
+
 class HookBehaviorCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -309,7 +303,7 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertEqual(data["cwd"], str(self.proj))
         self.assertEqual(data["bash"]["tests"][0]["ok"], True)
         self.assertEqual(data["devloop"]["deferred"], ["e2e"])
-        # runs/ само-игнорируется — не засоряет git status проекта
+
         self.assertEqual((self.proj / ".claude" / "runs" / ".gitignore").read_text().strip(), "*")
 
     def test_malformed_stdin_no_write(self):
@@ -357,7 +351,7 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertEqual(json.loads(output.read_text())["cwd"], str(nested))
 
 
-# ── block_run_report: env.ini + регистрация SessionEnd ───────────────────────
+
 class BlockRunReportCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -375,7 +369,7 @@ class BlockRunReportCase(unittest.TestCase):
         self.assertNotIn("matcher", s["hooks"]["SessionEnd"][0])
         self.assertIn("run-report.py",
                       s["hooks"]["SessionEnd"][0]["hooks"][0]["command"])
-        # само-игнорируемый runs/ создаётся уже при включении
+
         self.assertEqual((self.proj / ".claude" / "runs" / ".gitignore").read_text().strip(), "*")
 
     def test_off_no_hook(self):
@@ -397,8 +391,7 @@ class BlockRunReportCase(unittest.TestCase):
 
 # ── SCHEMA=2: usage/reads/error_loops/retrieval/protected_writes ────────────────
 class Schema2ParseCase(unittest.TestCase):
-    """parse_events напрямую (без subprocess) — точные числа по всем новым срезам,
-    плюс сайдкар-каталог субагента рядом с транскриптом."""
+    """Internal documentation."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -432,7 +425,7 @@ class Schema2ParseCase(unittest.TestCase):
     def test_usage_main_plus_subagent(self):
         u = self._parse()["usage"]
         self.assertIsNotNone(u)
-        self.assertEqual(u["totals"]["in"], 120)          # 100 (main) + 20 (субагент)
+        self.assertEqual(u["totals"]["in"], 120)
         self.assertEqual(u["totals"]["out"], 60)           # 50 + 10
         self.assertEqual(u["totals"]["cache_read"], 10)
         self.assertEqual(u["totals"]["cache_creation"], 5)
@@ -441,9 +434,9 @@ class Schema2ParseCase(unittest.TestCase):
         self.assertEqual(len(u["agents"]), 2)
         self.assertIn("claude-opus-4-1", u["by_model"])
         self.assertIn("claude-haiku-4", u["by_model"])
-        # first_turn_overhead/turns — ГЛАВНОГО транскрипта (100+5, не мёрж с субагентом);
-        # turns = число assistant-событий главного транскрипта (1 usage-запись + 3 reads +
-        # 3 bash + 1 websearch + 1 perplexity + 4 edits = 13, см. build_schema2_fixture)
+
+
+
         self.assertEqual(u["first_turn_overhead"], 105)
         self.assertEqual(u["turns"], 13)
 
@@ -466,14 +459,14 @@ class Schema2ParseCase(unittest.TestCase):
         self.assertIn("mcp__perplexity-web__search_advanced", retr["by_tool"])
         self.assertGreater(retr["result_chars"], 0)
         self.assertEqual(len(retr["queries"]), 2)
-        self.assertTrue(retr["repeated_queries"])         # запросы похожи (ratio ≥0.7)
+        self.assertTrue(retr["repeated_queries"])
 
     def test_protected_writes_intersects_locks(self):
         pw = set(self._parse()["protected_writes"])
         self.assertIn(str(self.proj / ".claude" / "skills" / "foo-skill" / "SKILL.md"), pw)
         self.assertIn(str(self.proj / ".claude" / "agents" / "reviewer.md"), pw)
         self.assertNotIn(str(self.proj / ".claude" / "agents" / "owned.md"), pw)  # user_owned
-        self.assertNotIn(str(self.proj / "src" / "app.py"), pw)                   # обычный файл
+        self.assertNotIn(str(self.proj / "src" / "app.py"), pw)
 
     def test_no_lock_files_empty_protected_writes(self):
         proj2 = Path(self._tmp.name) / "proj2"
@@ -488,19 +481,19 @@ class Schema2ParseCase(unittest.TestCase):
         sub_dir = Path(self._tmp.name) / "transcripts" / "sess-1" / "subagents"
         (sub_dir / "agent-bad.jsonl").write_bytes(b"\xff\xfe not really jsonl")
         u = self._parse()["usage"]
-        # битый файл читается защитно (iter_jsonl толерантен) — не считается «skipped»,
-        # просто даёт пустой аккумулятор; здесь важно, что парсер не падает.
+
+
         self.assertGreaterEqual(u["subagents_parsed"], 1)
 
 
-# ── деградация без вендоренного _usage.py (старый хук до scripts/sync-usage.sh) ─
+
 class NoUsageModuleCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         root = Path(self._tmp.name)
         self.hook_dir = root / "hook"
         self.hook_dir.mkdir()
-        for name in ("run-report.py", "_lib.py"):   # НЕТ _usage.py — умышленно
+        for name in ("run-report.py", "_lib.py"):
             (self.hook_dir / name).write_text((RUN_REPORT / name).read_text(encoding="utf-8"),
                                                encoding="utf-8")
         self.proj = root / "proj"
@@ -521,11 +514,11 @@ class NoUsageModuleCase(unittest.TestCase):
         out = json.loads((self.proj / ".claude" / "runs" / "nou.json").read_text())
         self.assertEqual(out["schema"], 2)
         self.assertIsNone(out["usage"])
-        # реестр/тренд по-прежнему пишутся — деградация только usage-блока
+
         self.assertTrue((self.proj / ".claude" / "analyze" / "usage-trend.ndjson").is_file())
 
 
-# ── тренд-файл usage-trend.ndjson (SCHEMA=2) ─────────────────────────────────────
+
 class TrendCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

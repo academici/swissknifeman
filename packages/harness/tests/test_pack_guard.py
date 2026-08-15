@@ -1,5 +1,4 @@
-"""pack-guard: поведенческий прогон PreToolUse-хука через subprocess (off/warn/strict,
-user_owned проходит всегда, нет lock'а → пропуск) и block_pack_guard (env.ini + регистрация)."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -27,7 +26,7 @@ def run(fn, *a, **kw):
 
 
 def hook(payload):
-    """Прогнать PreToolUse-хук через subprocess: stdin=JSON → (returncode, stderr)."""
+    """Internal documentation."""
     p = subprocess.run([sys.executable, str(HOOK_PY)],
                        input=json.dumps(payload).encode(),
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20)
@@ -58,7 +57,7 @@ def _edit_payload(proj, rel_target, tool="Edit"):
     return {"cwd": str(proj), "tool_name": tool, "tool_input": {key: fp}}
 
 
-# ── поведенческий: реальный хук через subprocess ─────────────────────────────
+
 class HookBehaviorCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -73,7 +72,7 @@ class HookBehaviorCase(unittest.TestCase):
         (d / "pack-guard.env.ini").write_text(f"MODE={mode}\n")
 
     def test_off_by_default_no_envini(self):
-        # нет pack-guard.env.ini вообще → дефолт off, даже если lock есть
+
         _write_lock(self.proj)
         rc, err = hook(_edit_payload(self.proj, ".claude/agents/x-reviewer.md"))
         self.assertEqual(rc, 0)
@@ -148,7 +147,7 @@ class HookBehaviorCase(unittest.TestCase):
         self.assertEqual(err, "")
 
 
-# ── block_pack_guard: env.ini + регистрация PreToolUse ───────────────────────
+
 class BlockPackGuardCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -177,7 +176,7 @@ class BlockPackGuardCase(unittest.TestCase):
         run(block_pack_guard, self.proj, "warn", "settings.json", False)
         run(block_pack_guard, self.proj, "warn", "settings.json", False)
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
-        self.assertEqual(len(s["hooks"]["PreToolUse"]), 4)  # не задублировалось
+        self.assertEqual(len(s["hooks"]["PreToolUse"]), 4)
 
     def test_unknown_mode_exits(self):
         with self.assertRaises(SystemExit):

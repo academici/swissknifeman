@@ -1,26 +1,11 @@
 #!/usr/bin/env bash
-# apply-permissions.sh — вливает пресеты permissions из configs/claude-code/
-# в .claude/settings.local.json целевого проекта.
 #
-# Использование:
-#   ./scripts/apply-permissions.sh --target ~/projects/my-app                 # base + автодетект стека
-#   ./scripts/apply-permissions.sh --target . --preset base,laravel,docker    # явный список
-#   ./scripts/apply-permissions.sh --target . --list                          # доступные пресеты
-#   ./scripts/apply-permissions.sh --target . --dry-run                       # показать без записи
-#   ./scripts/apply-permissions.sh --target . --file settings.json            # в шаримый settings.json
-#   ./scripts/apply-permissions.sh --global                                    # baseline + hook-логгер в ~/.claude
 #
-# Merge-семантика: allow/ask/deny объединяются и дедуплицируются, существующие
-# правила цели сохраняются. defaultMode берётся из пресета только если в цели
-# он ещё не задан. enabledMcpjsonServers (top-level) — union с дедупом.
-# Существующий файл сохраняется в *.bak.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRESETS_DIR="$SCRIPT_DIR/../configs/claude-code"
-# sha256 старой заглушки review-gate/config.json ({"version":1,"check_command":""}) —
-# byte-for-byte критерий миграции (P9.1): мигрируем ТОЛЬКО нетронутый файл.
 RG_OLD_STUB_SHA256="2ba2ef6564d8dcb5591b691667ce00d137510cc60c42b185f0ef5d3e1aeb22d2"
 
 TARGET=""
@@ -52,7 +37,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# --global: пресет global в ~/.claude/settings.json + установка hook-логгера
 if [[ "$GLOBAL" -eq 1 ]]; then
   TARGET="$HOME"
   SETTINGS_FILE="settings.json"
@@ -61,23 +45,12 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     mkdir -p "$HOME/.claude/hooks/auto-approve"
     cp "$PRESETS_DIR/hooks/log-bash-command.sh" "$HOME/.claude/hooks/"
     chmod +x "$HOME/.claude/hooks/log-bash-command.sh"
-    # notify: ОС-уведомления на запрос подтверждения / утверждения плана
     mkdir -p "$HOME/.claude/hooks/notify"
     cp "$PRESETS_DIR/hooks/notify/notify.sh" "$HOME/.claude/hooks/notify/"
     chmod +x "$HOME/.claude/hooks/notify/notify.sh"
-    # daemon-safety: PreToolUse-хук, блокирует опасные Bash-операции с демонами
-    # (kill -9 сервисов, systemctl stop критичных юнитов и т.п.). Всегда активен
-    # (зашит в settings.global.json), состояния нет — просто обновляем код.
     mkdir -p "$HOME/.claude/hooks/daemon-safety"
     cp "$PRESETS_DIR/hooks/daemon-safety/block-daemon-ops.sh" "$HOME/.claude/hooks/daemon-safety/"
     chmod +x "$HOME/.claude/hooks/daemon-safety/block-daemon-ops.sh"
-    # review-gate: гейт архитектуры на SubagentStop. Код и содержание checks/
-    # обновляем всегда; env.ini не перезатираем (там режим проекта). config.json
-    # мигрируется на новый шаблон ТОЛЬКО если он байт-в-байт равен старой
-    # заглушке {"version":1,"check_command":""} (владелец его не трогал) —
-    # иначе локальный выбор уважается (правило `plansDirectory`,
-    # `packages/harness/CLAUDE.md`): файл не трогается, печатается точная
-    # команда ручного обновления.
     RG_SRC="$PRESETS_DIR/hooks/review-gate"; RG_DST="$HOME/.claude/hooks/review-gate"
     mkdir -p "$RG_DST/checks"
     cp "$RG_SRC/review-gate.sh" "$RG_DST/"
@@ -96,27 +69,18 @@ if [[ "$GLOBAL" -eq 1 ]]; then
         echo "  Обновить вручную: cp \"$RG_SRC/config.json\" \"$RG_DST/config.json\""
       fi
     fi
-    # statusline: строка статуса + уведомление о пересечении полосы контекста.
-    # Не хук: ставится в ~/.claude/statusline/, включается opt-in per-project
-    # (`harness hooks --statusline context` пишет ключ statusLine). Код и README
-    # обновляем; env.ini не перезатираем (там пороги/кулдаун пользователя).
     SL_SRC="$PRESETS_DIR/statusline"; SL_DST="$HOME/.claude/statusline"
     mkdir -p "$SL_DST"
     cp "$SL_SRC/context-notify.sh" "$SL_DST/"
     cp "$SL_SRC/README.md" "$SL_DST/"
     chmod +x "$SL_DST/context-notify.sh"
     [[ -f "$SL_DST/env.ini" ]] || cp "$SL_SRC/env.ini" "$SL_DST/"
-    # observer: capture-слой (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО.
-    # Код обновляем; env.ini не перезатираем (там ENABLED проекта). Проводка —
-    # opt-in пресетом observer, не глобально.
     OB_SRC="$PRESETS_DIR/hooks/observer"; OB_DST="$HOME/.claude/hooks/observer"
     mkdir -p "$OB_DST"
     cp "$OB_SRC/observer.sh" "$OB_DST/"
     cp "$OB_SRC/README.md" "$OB_DST/"
     chmod +x "$OB_DST/observer.sh"
     [[ -f "$OB_DST/env.ini" ]] || cp "$OB_SRC/env.ini" "$OB_DST/"
-    # Папка auto-approve: код/lib/modes — обновляем; env.ini и config.json —
-    # не перезатираем (там выбор режима и кастомизация пользователя).
     AA_SRC="$PRESETS_DIR/hooks/auto-approve"; AA_DST="$HOME/.claude/hooks/auto-approve"
     mkdir -p "$AA_DST/lib" "$AA_DST/modes"
     cp "$AA_SRC/auto-approve.sh" "$AA_DST/"
@@ -126,8 +90,6 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$AA_DST/auto-approve.sh" "$AA_DST/modes/"*.sh
     [[ -f "$AA_DST/env.ini" ]]    || cp "$AA_SRC/env.ini" "$AA_DST/"
     [[ -f "$AA_DST/config.json" ]] || cp "$AA_SRC/config.json" "$AA_DST/"
-    # Папка memory (единая память): код/lib/modes — обновляем; env.ini и
-    # config.json — не перезатираем (там режим и состав групп пользователя).
     MM_SRC="$PRESETS_DIR/hooks/memory"; MM_DST="$HOME/.claude/hooks/memory"
     mkdir -p "$MM_DST/lib" "$MM_DST/modes"
     cp "$MM_SRC/memory.sh" "$MM_DST/"
@@ -137,45 +99,27 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$MM_DST/memory.sh" "$MM_DST/modes/"*.sh
     [[ -f "$MM_DST/env.ini" ]]    || cp "$MM_SRC/env.ini" "$MM_DST/"
     [[ -f "$MM_DST/config.json" ]] || cp "$MM_SRC/config.json" "$MM_DST/"
-    # agent-router: пара Python-хуков (UserPromptSubmit router + SessionStart policy).
-    # Код/_lib/config.json/README обновляем; env.ini не перезатираем (там режим проекта).
     AR_SRC="$PRESETS_DIR/hooks/agent-router"; AR_DST="$HOME/.claude/hooks/agent-router"
     mkdir -p "$AR_DST"
     cp "$AR_SRC/router.py" "$AR_SRC/session-policy.py" "$AR_SRC/_lib.py" "$AR_DST/"
     cp "$AR_SRC/config.json" "$AR_SRC/README.md" "$AR_DST/"
     chmod +x "$AR_DST/router.py" "$AR_DST/session-policy.py"
     [[ -f "$AR_DST/env.ini" ]] || cp "$AR_SRC/env.ini" "$AR_DST/"
-    # run-report: SessionEnd-хук архивного захвата исхода прогона (→ .claude/runs/).
-    # Код/_lib/_usage/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP
-    # проекта). _usage.py — вендоренная (scripts/sync-usage.sh) копия core/usage.py,
-    # нужна рядом физически: PYTHONPATH монорепо в ~/.claude/hooks недоступен.
     RR_SRC="$PRESETS_DIR/hooks/run-report"; RR_DST="$HOME/.claude/hooks/run-report"
     mkdir -p "$RR_DST"
     cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/_usage.py" "$RR_SRC/README.md" "$RR_DST/"
     chmod +x "$RR_DST/run-report.py"
     [[ -f "$RR_DST/env.ini" ]] || cp "$RR_SRC/env.ini" "$RR_DST/"
-    # pack-guard: опциональный PreToolUse-хук слоя 2 mutation-защиты generated-ассетов
-    # (блокирует/предупреждает ДО правки; слой 1 — doctor --drift, постфактум). По умолчанию
-    # НЕ устанавливается ни в одном проекте — файлы копируются сюда (неактивно), включение —
-    # per-project `harness hooks --target . --pack-guard off|warn|strict`. Код/README
-    # обновляем; env.ini не перезатираем (там режим проекта).
     PG_SRC="$PRESETS_DIR/hooks/pack-guard"; PG_DST="$HOME/.claude/hooks/pack-guard"
     mkdir -p "$PG_DST"
     cp "$PG_SRC/pack-guard.py" "$PG_SRC/README.md" "$PG_DST/"
     chmod +x "$PG_DST/pack-guard.py"
     [[ -f "$PG_DST/env.ini" ]] || cp "$PG_SRC/env.ini" "$PG_DST/"
-    # changelog-gate: опциональный PreToolUse-хук commit-гейта CHANGELOG-дисциплины (ловит
-    # `git commit` содержательного типа без правки CHANGELOG среди staged, D32/D33). По
-    # умолчанию НЕ устанавливается ни в одном проекте — файлы копируются сюда (неактивно),
-    # включение — per-project `harness hooks --target . --changelog-gate off|warn|strict`.
-    # Код/README обновляем; env.ini не перезатираем (там режим проекта).
     CG_SRC="$PRESETS_DIR/hooks/changelog-gate"; CG_DST="$HOME/.claude/hooks/changelog-gate"
     mkdir -p "$CG_DST"
     cp "$CG_SRC/changelog-gate.py" "$CG_SRC/README.md" "$CG_DST/"
     chmod +x "$CG_DST/changelog-gate.py"
     [[ -f "$CG_DST/env.ini" ]] || cp "$CG_SRC/env.ini" "$CG_DST/"
-    # output-styles: телеграфный «голос» вывода для токен-экономии (session-wide). Чистый
-    # контент (нет env-state) → всегда overwrite. Включается per-project: harness hooks --output-style.
     OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
     echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ + statusline/ (НЕ активны)."
@@ -200,10 +144,7 @@ fi
 [[ -d "$TARGET" ]] || { echo "Ошибка: каталог не найден: $TARGET" >&2; exit 1; }
 TARGET="$(cd "$TARGET" && pwd)"
 
-# Автодетект стека — та же логика маркеров, что в install.sh
 detect_presets() {
-  # yolo первым: задаёт defaultMode=bypassPermissions ДО base (порядок пресетов
-  # решает — первый источник defaultMode побеждает, см. merge-логику ниже).
   local detected="yolo,base"
   if [[ -f "$TARGET/artisan" && -f "$TARGET/composer.json" ]]; then
     detected+=",laravel"
@@ -263,12 +204,9 @@ for path in preset_paths:
             perms[key] = merged
     if "defaultMode" in preset and "defaultMode" not in perms:
         perms["defaultMode"] = preset["defaultMode"]
-    # hooks из пресета: добавляем записи, которых ещё нет в цели
     for event, entries in data.get("hooks", {}).items():
         existing = result.setdefault("hooks", {}).setdefault(event, [])
         existing.extend(e for e in entries if e not in existing)
-    # enabledMcpjsonServers (top-level, НЕ под permissions): union с дедупом —
-    # одобрение project-scoped .mcp.json-серверов по имени (Класс B, SKM-AUDIT-004 P4.3)
     incoming_mcp = data.get("enabledMcpjsonServers", [])
     if incoming_mcp:
         cur_mcp = result.setdefault("enabledMcpjsonServers", [])
@@ -286,7 +224,6 @@ fi
 
 mkdir -p "$DEST_DIR"
 [[ -f "$DEST" ]] && cp "$DEST" "$DEST.bak"
-# Атомарно: tmp рядом → mv -f (краш в момент записи не оставит полузаписанный settings).
 printf '%s\n' "$MERGED" > "$DEST.tmp" && mv -f "$DEST.tmp" "$DEST"
 echo "Записано: $DEST (пресеты: $PRESETS)"
 if [[ -f "$DEST.bak" ]]; then echo "Бэкап:    $DEST.bak"; fi

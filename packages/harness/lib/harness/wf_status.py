@@ -1,38 +1,4 @@
-"""wf_status — детерминированный парсер transcript-директории workflow-прогона Claude Code
-(2026.07.10-SKM-ROADMAP-005 P2.1: ядро парсинга; P2.2: discovery прогонов; рендер/CLI — P2.3-P2.4).
-
-Формат ВНУТРЕННИЙ и НЕДОКУМЕНТИРОВАННЫЙ (может меняться между версиями CLI) — источник
-истины НЕ доки Claude Code, а эмпирика на реальных прогонах: находки плана
-2026.07.10-SKM-ROADMAP-005 (`findings/P2-workflow-transcript-format.md`, дата сверки 2026-07-10;
-при регрессии формата — пере-сверить перед правкой, доки его не несут).
-
-Раскладка (см. findings §«Раскладка на диске»):
-    <session>/workflows/scripts/<name>-wf_<id>.js         скрипт прогона (export const meta)
-    <session>/subagents/workflows/wf_<id>/                 transcript-директория (run_dir)
-        journal.jsonl            построчные события {"type":"started"|"result","agentId":...}
-        agent-<hex>.meta.json    {"agentType":..., "spawnDepth":...} — метки/фазы НЕТ
-        agent-<hex>.jsonl        0600 транскрипт агента (НЕ читаем — Scope Excluded P2.1)
-
-D18 (owner-confirmed, см. Decision Log плана): привязка агент→фаза журналом/агент-метой НЕ
-выводится — журнал её физически не несёт, эвристику намеренно НЕ изобретаем (при соблазне
-«сопоставить агентов фазам» — это Scope Excluded). Отчёт несёт декларации фаз (из meta
-скрипта) ОТДЕЛЬНО от общего прогресса агентов (started/done/inflight).
-D19: скрипт прогона лежит в sibling-каталоге `../../workflows/scripts/`, НЕ внутри run_dir.
-
-Парсер ЗАЩИЩЁННЫЙ: несовпадение формата / битый journal.jsonl → `degraded=True` +
-честная причина в `degraded_reasons`. НИКОГДА трейсбек, НИКОГДА тихий пустой ответ.
-Запрещены `eval`/`exec`/импорт `.js` и любые внешние зависимости — meta скрипта (JS-объект,
-НЕ JSON) парсится регуляркой. Функции здесь ЧИСТЫЕ (path in → dict out), без печати и
-других побочных эффектов — рендер и вывод живут в P2.3/P2.4. stdlib-only.
-
-Discovery (P2.2, `discover_runs`/`project_slug`): база прогонов — `<config_dir>/projects/
-<proj-slug>/<session>/subagents/workflows/wf_*`. `<config_dir>` — `$CLAUDE_CONFIG_DIR`, если
-задан в окружении (RAG:✅ 2026-07-10 perplexity-web: официальный env-override корня конфига
-Claude Code, «all-or-nothing» — заменяет ~/.claude целиком), иначе дефолт `~/.claude`.
-`<proj-slug>` — абсолютный путь проекта с заменой `/`→`-`, ведущий `-` сохранён (findings
-§«Раскладка на диске»). Discovery обходит дерево вручную (НЕ `Path.glob` с широким `**`) и
-не разыменовывает симлинки вслепую — каждый уровень (проект/сессия/`subagents/workflows`/
-run-каталог) проверяется `is_symlink()` и пропускается, если это симлинк."""
+"""Internal documentation."""
 import json
 import os
 import re
@@ -43,14 +9,14 @@ from core import safe_load_json
 
 from .common import die, parse_flags
 
-# Типы событий journal.jsonl, которые парсер понимает (findings §journal.jsonl). Любой
-# другой type молча игнорируется (защита от будущих полей CC) — это НЕ считается поломкой
-# формата, деградация журнала определяется отдельно (см. _read_journal/parse_run).
+
+
+
 _KNOWN_EVENT_TYPES = ("started", "result")
 
-# `export const meta = {...}` — JS-объект, НЕ JSON (ключи без кавычек, висячие запятые,
-# см. findings §«export const meta»). Извлекаем регуляркой, НИКОГДА eval/exec/json.loads
-# целиком (Code Guidance P2.1 — жёсткий запрет).
+
+
+
 _NAME_RE = re.compile(r"\bname\s*:\s*(['\"])(?P<name>.*?)\1", re.DOTALL)
 _DESCRIPTION_RE = re.compile(r"\bdescription\s*:\s*(['\"])(?P<description>.*?)\1", re.DOTALL)
 _PHASES_BLOCK_RE = re.compile(r"\bphases\s*:\s*\[(?P<body>.*?)\]", re.DOTALL)
@@ -62,10 +28,7 @@ _PHASE_RE = re.compile(
 
 
 def summarize_result(result):
-    """Произвольный JSON `result` из `journal.jsonl` → 1-строчная выжимка по
-    УПОРЯДОЧЕННОМУ fallback (Implementation Rules): `summary` → `title` → первый ключ
-    dict-а → усечённый repr. Никогда не бросает — на любой неожиданный тип возвращает
-    честную заглушку, а не падает (парсер обязан быть защищённым)."""
+    """Internal documentation."""
     try:
         if isinstance(result, dict):
             for key in ("summary", "title"):
@@ -78,7 +41,7 @@ def summarize_result(result):
         if isinstance(result, str):
             return _truncate(result.strip()) if result.strip() else "(пустая строка)"
         return _truncate(repr(result))
-    except Exception:  # noqa: BLE001 — выжимка обязана быть безотказной, не источником трейсбека
+    except Exception:
         return "(результат не распознан)"
 
 
@@ -88,9 +51,7 @@ def _truncate(s, limit=160):
 
 
 def _read_journal(path):
-    """`journal.jsonl` → `(events, garbage_lines, exists)`. Читает построчно (findings:
-    «строки читать по одной; битую строку — continue, не падать»); не-dict записи и
-    строки, не являющиеся JSON, считаются в `garbage_lines`, но не роняют разбор."""
+    """Internal documentation."""
     path = Path(path)
     if not path.is_file():
         return [], 0, False
@@ -116,10 +77,7 @@ def _read_journal(path):
 
 
 def _read_agent_metas(run_dir):
-    """`agent-*.meta.json` → `{agent_id: {"agent_type": ...}}`. Метки/фазы в этих файлах
-    НЕТ (D18) — используются только для счёта агентов как fallback/пересечение с journal
-    (findings: `agentType`/`spawnDepth`, ничего больше). Битый/нечитаемый файл — пропуск
-    (fail-soft, единый паттерн с settings_audit: не роняет разбор всей директории)."""
+    """Internal documentation."""
     metas = {}
     for meta_path in sorted(Path(run_dir).glob("agent-*.meta.json")):
         data = safe_load_json(meta_path, default=None)
@@ -131,9 +89,7 @@ def _read_agent_metas(run_dir):
 
 
 def _locate_script(run_dir):
-    """Sibling-скрипт прогона (D19): `run_dir` = `<session>/subagents/workflows/wf_<id>/`,
-    скрипт — `<session>/workflows/scripts/*-<run_id>.js`. Раскладка иная / не найден →
-    `None`, честно (не исключение)."""
+    """Internal documentation."""
     run_dir = Path(run_dir)
     run_id = run_dir.name
     try:
@@ -155,11 +111,7 @@ def _read_script_text(script_path):
 
 
 def parse_script_meta(text):
-    """Текст скрипта прогона → `{"name","description","phases":[{"title","detail"}],
-    "recognized"}`. `export const meta = {...}` — JS-объект (ключи без кавычек, висячие
-    запятые), парсится РЕГУЛЯРКОЙ — НЕ `eval`/`exec`/`json.loads` целиком (запрет,
-    Code Guidance). Не распознан (нет `phases`/блок не найден) → `phases=[]` +
-    `recognized=False` (findings: «meta не распознан → phases=[] + флаг»)."""
+    """Internal documentation."""
     if not isinstance(text, str) or "phases" not in text:
         return {"name": None, "description": None, "phases": [], "recognized": False}
     name_m = _NAME_RE.search(text)
@@ -181,18 +133,7 @@ def parse_script_meta(text):
 
 
 def parse_run(run_dir):
-    """Одна transcript-директория `wf_<id>/` → dict-статус прогона. ЧИСТАЯ функция
-    (path in → dict out), без печати/побочных эффектов — рендер в 2026.07.10-SKM-ROADMAP-005 P2.3.
-
-    Возвращает:
-        run_id, run_dir, degraded, degraded_reasons (list[str]),
-        agents_total, started, done, inflight,
-        results (list[{"agent_id","summary"}]) — В ПОРЯДКЕ journal.jsonl,
-        meta ({"name","description","phases","recognized","script_path"}).
-
-    Несовпадение формата (нет `journal.jsonl` / журнал не распознан) → `degraded=True` +
-    честная причина, НИКОГДА трейсбек. Per-agent→phase attribution НЕ выводится (D18,
-    Scope Excluded) — `meta.phases` это ДЕКЛАРАЦИИ фаз из скрипта, не привязка к агентам."""
+    """Internal documentation."""
     run_dir = Path(run_dir)
     run_id = run_dir.name
     reasons = []
@@ -222,8 +163,8 @@ def parse_run(run_dir):
                 "agent_id": agent_id,
                 "summary": summarize_result(rec.get("result")),
             })
-        # rtype вне _KNOWN_EVENT_TYPES — молча игнорируем (unknown-поля игнорировать,
-        # Implementation Rules); НЕ считается поломкой формата.
+
+
 
     agent_metas = _read_agent_metas(run_dir)
     agents_total = len(started_ids | set(agent_metas))
@@ -252,19 +193,16 @@ def parse_run(run_dir):
 
 
 # ---------------------------------------------------------------------------
-# 2026.07.10-SKM-ROADMAP-005 P2.2 — discovery прогонов (свежие по mtime, --run, --project)
+
 # ---------------------------------------------------------------------------
 
-# Официальный env-override корня конфигурации Claude Code (RAG:✅ 2026-07-10 perplexity-web:
-# заменяет ~/.claude целиком, all-or-nothing). Уважаем, если задан в окружении; иначе — дефолт.
+
+
 _CONFIG_DIR_ENV = "CLAUDE_CONFIG_DIR"
 
 
 def _config_base_dir():
-    """Корень конфигурации Claude Code: `$CLAUDE_CONFIG_DIR`, если непустой в окружении,
-    иначе дефолт `~/.claude` (`os.path.expanduser`, никаких `Path.home()` — единый паттерн
-    с `settings_audit`: тестируемо без утечки в реальный домашний каталог, т.к. discovery
-    сам не имеет `env`-параметра пакета и полагается только на переменную окружения)."""
+    """Internal documentation."""
     override = os.environ.get(_CONFIG_DIR_ENV)
     if override:
         return Path(override)
@@ -272,18 +210,13 @@ def _config_base_dir():
 
 
 def project_slug(path):
-    """Абсолютный путь проекта → CC-слаг директории `~/.claude/projects/<slug>` (findings
-    §«Раскладка на диске»): `/` → `-`, ведущий `-` СОХРАНЯЕТСЯ (абсолютный путь и так
-    начинается с `/`, замена даёт ведущий `-` сама по себе — не «примерно», байт-в-байт
-    правило из findings, покрыто тестом)."""
+    """Internal documentation."""
     abs_path = os.path.abspath(os.path.expanduser(str(path)))
     return abs_path.replace("/", "-")
 
 
 def _run_mtime(run_dir):
-    """Время активности прогона — mtime `journal.jsonl` (findings: «время активности берём
-    из mtime journal.jsonl»), fallback — mtime самого каталога прогона (журнал ещё не
-    появился / уже удалён). Запрещено читать тела агентов ради mtime (Code Guidance)."""
+    """Internal documentation."""
     try:
         return (run_dir / "journal.jsonl").stat().st_mtime
     except OSError:
@@ -294,18 +227,7 @@ def _run_mtime(run_dir):
 
 
 def discover_runs(base_dir=None, run=None, project=None, limit=1):
-    """Найти прогоны-кандидаты под базой `<config_dir>/projects` (2026.07.10-SKM-ROADMAP-005 P2.2 Scope Included).
-
-    `base_dir` — переопределение для тестов (обычно `None` → `_config_base_dir()`).
-    `run` — точное имя `wf_<id>`, сужает по всем проектам. `project` — абсолютный путь
-    проекта, сужается по `project_slug(project)`. `limit` — сколько самых свежих вернуть
-    (`None` — все совпавшие); дефолт 1 (главный кейс «покажи, что идёт сейчас»).
-
-    Сортировка — по убыванию mtime `journal.jsonl`, tie-break по `run_id` (детерминизм,
-    тест на стабильность). Отсутствует база `<config_dir>/projects` (свежая машина без
-    прогонов) → `[]`, честно, БЕЗ исключения. Дерево обходится вручную по уровням
-    (проект → сессия → `subagents/workflows` → `wf_*`), каждый уровень — `is_symlink()`
-    отсекается ДО спуска (символические ссылки не разыменовываются вслепую, Code Guidance)."""
+    """Internal documentation."""
     base_dir = Path(base_dir) if base_dir is not None else _config_base_dir()
     projects_dir = base_dir / "projects"
     if not projects_dir.is_dir():
@@ -358,22 +280,16 @@ def discover_runs(base_dir=None, run=None, project=None, limit=1):
 
 
 # ---------------------------------------------------------------------------
-# 2026.07.10-SKM-ROADMAP-005 P2.3 — фиксированный шаблон отчёта, --json, --watch
+
 # ---------------------------------------------------------------------------
 #
-# Плоский рендер (Code Guidance P2.3): вся логика вычисления статуса живёт в `parse_run`
-# (P2.1) — здесь только форматирование готового dict-а. Если рендеру понадобилась бы
-# бизнес-логика (вычислить что-то ещё), это дефект слоёв — чинить в P2.1, не здесь.
+
+
+
 
 
 def render_text(status):
-    """ФИКСИРОВАННЫЙ человекочитаемый шаблон статуса прогона (Scope Included 2026.07.10-SKM-ROADMAP-005 P2.3) — один
-    и тот же байт-в-байт при равных входных данных (детерминизм рендера, без ветвления
-    бизнес-логики внутри f-строк). Печатает декларации фаз из `meta.phases` ОТДЕЛЬНО от
-    прогресса агентов, с явной пометкой недоступности привязки агент→фаза (D18 — журнал
-    её физически не несёт, парсер её не изобретает). `degraded` — честная причина без
-    трейсбека, никогда пустой тихий ответ. plain-текст без ANSI: обязан читаться в пайпах
-    (Scope Excluded — цвет как единственный носитель смысла)."""
+    """Internal documentation."""
     meta = status.get("meta") or {}
     lines = []
     lines.append(f"run: {status.get('run_id')}")
@@ -424,20 +340,12 @@ def render_text(status):
 
 
 def render_json(status):
-    """`--json`: та же структура 2026.07.10-SKM-ROADMAP-005 P2.1 (`parse_run`), сериализованная валидным JSON
-    (`ensure_ascii=False` — контракт для хуков/статуслайна, кириллица не эскейпится).
-    Round-trip: `json.loads(render_json(x)) == x` (Validation P2.3 (б)) — `status` уже
-    состоит из JSON-нативных типов (str/int/bool/list/dict), рендер их не меняет."""
+    """Internal documentation."""
     return json.dumps(status, ensure_ascii=False)
 
 
 def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterations=None):
-    """`--watch`: перепечатка `render_text(parse_run(run_dir))` кадром до Ctrl-C либо пока
-    `inflight == 0` (Implementation Rules 2026.07.10-SKM-ROADMAP-005 P2.3) — на каждой итерации `parse_run` читает
-    журнал заново (его пишет фоновый процесс). `KeyboardInterrupt` перехватывается —
-    чистый выход, возвращает 0 (Implementation Rules: не трейсбек на Ctrl-C).
-    `max_iterations`/`sleep_fn` — инъекция для тестируемости (иначе бесконечный цикл в
-    реальном использовании); `out` — куда печатать кадр (по умолчанию `sys.stdout`)."""
+    """Internal documentation."""
     if out is None:
         import sys as _sys
         out = _sys.stdout
@@ -458,12 +366,12 @@ def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterati
 
 
 # ---------------------------------------------------------------------------
-# 2026.07.10-SKM-ROADMAP-005 P2.4 — CLI: `harness wf status` (диспетч в bin/harness, регистрация в cli.py)
+
 # ---------------------------------------------------------------------------
 #
-# Тонкая обвязка над P2.1-P2.3 (парс/discovery/рендер) — сама CLI-функция НЕ несёт
-# бизнес-логики (Code Guidance: root-фасад `swissknifeman wf` строго passthrough,
-# здесь же — единственное место, где парс/discovery/рендер реально сводятся вместе).
+
+
+
 
 _WF_USAGE = (
     "harness wf status [--run WF_ID] [--project PATH] [--json] [--last N]\n"
@@ -480,8 +388,7 @@ _WF_USAGE = (
 
 
 def _cmd_wf_status(argv):
-    """`harness wf status [...]` — discovery (2026.07.10-SKM-ROADMAP-005 P2.2) → parse (P2.1) → render (P2.3).
-    Отсутствие прогонов — честное сообщение, exit 0 (это info, не ошибка использования)."""
+    """Internal documentation."""
     opts = parse_flags(argv, {
         "--run": "str", "--project": "str", "--json": "bool",
         "--watch": "bool", "--interval": "str", "--last": "str",
@@ -512,7 +419,7 @@ def _cmd_wf_status(argv):
         return
 
     if opts["watch"]:
-        # --watch имеет смысл ровно для одного прогона (свежайший из найденных).
+
         watch_loop(Path(candidates[0]["run_dir"]), interval=interval)
         return
 
@@ -521,10 +428,10 @@ def _cmd_wf_status(argv):
         print(render_json(status) if opts["json"] else render_text(status))
 
 
-def cmd_wf(env, argv):  # noqa: ARG001 — env не используется (discovery берёт базу
-    # из $CLAUDE_CONFIG_DIR/~/.claude напрямую, не из env пакета harness, см. модульный
-    # докстринг «Discovery»), сигнатура унифицирована с остальными cmd_*(env, argv).
-    """`harness wf status ...` — единственная подкоманда группы `wf`."""
+def cmd_wf(env, argv):
+
+
+    """Internal documentation."""
     if not argv or argv[0] in ("-h", "--help"):
         print(_WF_USAGE)
         return

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# validate.sh — структурные проверки узла maind (CI + локально).
-# Проверяет: компиляцию Python, синтаксис bash, валидность JSON-конфигов,
-# наличие ключевых файлов, frontmatter slash-команд, и гоняет тесты (scripts/test.sh).
+# Structural maind validation for CI and local use.
+# Checks Python compilation, Bash syntax, JSON, required files, command frontmatter,
+# and the package test suite.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -17,11 +17,11 @@ for f in bin/maind install.sh scripts/*.sh; do
 done
 
 echo "[3/6] JSON конфиги"
-# marketplace.json (единый) и config.example.json — в корне монорепо, не в пакете.
+# marketplace.json and config.example.json live at the monorepo root.
 for f in package.json .claude-plugin/plugin.json; do
   [[ -f "$f" ]] && { python3 -m json.tool "$f" >/dev/null || err "битый JSON: $f"; }
 done
-# config.example.json — шаблон конфига узла в корне монорепо (на 2 уровня выше).
+# config.example.json is the hub configuration template at the monorepo root.
 CFG_EXAMPLE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || echo "$REPO_ROOT")/config.example.json"
 [[ -f "$CFG_EXAMPLE" ]] && { python3 -m json.tool "$CFG_EXAMPLE" >/dev/null || err "битый JSON: config.example.json"; }
 
@@ -33,7 +33,7 @@ for f in bin/maind lib/maind/__init__.py lib/maind/cli.py \
          README.md LICENSE; do
   [[ -e "$f" ]] || err "нет файла: $f"
 done
-# config.example.json — обязателен, но в корне монорепо
+# config.example.json is required but lives at the monorepo root.
 [[ -e "$CFG_EXAMPLE" ]] || err "нет файла: config.example.json (корень монорепо)"
 grep -q '^workers:' config/memory/iii-config.yaml || err "iii-config.yaml без workers:"
 

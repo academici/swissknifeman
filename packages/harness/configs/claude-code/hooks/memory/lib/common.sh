@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Общая библиотека «единой памяти». Источать (source), не запускать.
-# Резолв brain/участников опирается на топологию (~/.swissknifeman/topology.json)
-# и реестр проектов (~/.swissknifeman/projects.json).
 
 MEM_die() { echo "memory: $*" >&2; exit 1; }
 
@@ -15,7 +12,6 @@ expandtilde() {
   esac
 }
 
-# --- режим и конфиг: приоритет per-project → hookdir ---------------------------
 read_mode() {
   local dir="$1" f m
   for f in "${CLAUDE_PROJECT_DIR:+$CLAUDE_PROJECT_DIR/.claude/memory.env.ini}" "$dir/env.ini"; do
@@ -34,7 +30,6 @@ config_file() {
   done
 }
 
-# cfg <jq-filter> — против активного config.json (MEM_CONFIG выставляет memory.sh).
 cfg() {
   [ -n "${MEM_CONFIG:-}" ] && [ -f "$MEM_CONFIG" ] || { printf ''; return; }
   jq -r "$1 // empty" "$MEM_CONFIG" 2>/dev/null
@@ -56,14 +51,11 @@ brain_store()   { expandtilde "$(cfg ".brains[\"$1\"].store")"; }
 brain_am_url()  { cfg ".brains[\"$1\"].agentmemory.url"; }
 brain_am_ns()   { local v; v="$(cfg ".brains[\"$1\"].agentmemory.namespace")"; printf '%s' "${v:-$1}"; }
 
-# --- топология / проекты ------------------------------------------------------
 MEM_TOPO="$HOME/.swissknifeman/topology.json"
 MEM_PROJDB="$HOME/.swissknifeman/projects.json"
 
 topo_node_path() { [ -f "$MEM_TOPO" ] && jq -r ".nodes[\"$1\"].path // empty" "$MEM_TOPO" 2>/dev/null; }
 
-# resolve_member_path <member>: имя узла топологии → путь; абсолютный путь / ~ →
-# как есть; иначе projects.json по суффиксу пути, иначе projects_base/<name>.
 resolve_member_path() {
   local m="$1" p base
   case "$m" in

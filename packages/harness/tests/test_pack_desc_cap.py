@@ -1,7 +1,4 @@
-"""Регрессионный cap-тест description'ов агентов всех agent-packs (P4.2): анти-реблоат
-после диеты P4.1 (reviewer.md рос 0b7fca8→4e3af7b без контроля размера). Парсер
-frontmatter — единый `core.parse_frontmatter` (тот же, что использует `router.py`),
-дубль не заводим."""
+"""Internal documentation."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -40,7 +37,7 @@ class TestPackDescCap(unittest.TestCase):
                                       for f, n in offenders))
 
     def test_cap_catches_bloated_description(self):
-        """Негативная проверка: раздутый description ловится (тест не тавтологичен)."""
+        """Internal documentation."""
         bloated = "x" * (CAP_BYTES + 1)
         text = f"---\nname: fake\ndescription: {bloated}\n---\nbody\n"
         tmp = Path(self._tmp.name) / "fake-agent.md"

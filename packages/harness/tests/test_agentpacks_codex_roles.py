@@ -1,8 +1,4 @@
-"""Codex role-projection lifecycle — bounded closure (P2.4, codex-parity-verdicts-v1.md §3.12).
-
-Реальный role-catalog пакета (`real_env`, тот же e2e-приём, что apply-permissions.sh
-тестам) + синтетический `.claude/agent-pack.lock.json`, объявляющий пак установленным —
-без сети и без записи вне tmpdir."""
+"""Internal documentation."""
 import json
 import tempfile
 import unittest
@@ -11,7 +7,7 @@ from pathlib import Path
 from harness import agentpacks as ap
 from tests.fixtures import make_project, real_env
 
-# role-maintainer — маленький пак без command.workflow-carrier ролей (проверено
+
 # repo-grounded: configs/common/agent-packs/roles.json).
 _PACK = "role-maintainer"
 
@@ -31,13 +27,13 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         self.env = real_env(self.tmp)
         self.proj = make_project(self.tmp, "p")
 
-    # (a) без установленного Claude-пака — пустая проекция, не ошибка.
+
     def test_no_installed_pack_yields_no_projections(self):
         pairs, excluded = ap.expected_codex_role_projections(self.env, self.proj)
         self.assertEqual(pairs, ())
         self.assertEqual(excluded, ())
 
-    # (b) роль, требующая command.workflow-carrier, исключается ПОИМЕННО, не молча.
+
     def test_workflow_carrier_role_is_named_excluded(self):
         _install_claude_pack(self.proj, "_common")
         pairs, excluded = ap.expected_codex_role_projections(self.env, self.proj)
@@ -47,7 +43,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         self.assertEqual((pack_id, role_id), ("_common", "orchestrator"))
         self.assertIn("command.workflow-carrier", reason)
 
-    # (c) render создаёт .codex/agents/*.toml + lock; идемпотентен (re-render — no-op).
+
     def test_render_creates_files_and_is_idempotent(self):
         _install_claude_pack(self.proj, _PACK)
         rc = ap.do_codex_role_render(self.env, self.proj)
@@ -65,7 +61,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         for f, content in before.items():
             self.assertEqual(f.read_bytes(), content)
 
-    # (d) foreign (untracked) файл на целевом пути — render его НЕ трогает.
+
     def test_render_refuses_foreign_file(self):
         _install_claude_pack(self.proj, _PACK)
         pairs, _ = ap.expected_codex_role_projections(self.env, self.proj)
@@ -77,7 +73,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         lock = ap.load_codex_roles_lock(self.proj)
         self.assertNotIn(pairs[0][1].target_path, lock.get("roles", {}))
 
-    # (e) managed-drift (мы владеем файлом, содержимое изменилось) — render чинит (repair).
+
     def test_render_repairs_managed_drift(self):
         _install_claude_pack(self.proj, _PACK)
         ap.do_codex_role_render(self.env, self.proj)
@@ -89,7 +85,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         ap.do_codex_role_render(self.env, self.proj)
         self.assertEqual(target_path.read_bytes(), pairs[0][1].rendered)
 
-    # (f) doctor репортит дрейф и, со --strict, отдаёт rc=1.
+
     def test_doctor_reports_drift_with_strict(self):
         _install_claude_pack(self.proj, _PACK)
         ap.do_codex_role_render(self.env, self.proj)
@@ -100,7 +96,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         rc_lenient = ap.do_codex_role_doctor(self.env, self.proj, json_out=True, strict=False)
         self.assertEqual(rc_lenient, 0)
 
-    # (g) remove сносит только неправленные файлы; локально изменённый — оставляет + warn.
+
     def test_remove_only_deletes_unmodified_files(self):
         _install_claude_pack(self.proj, _PACK)
         ap.do_codex_role_render(self.env, self.proj)
@@ -115,7 +111,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         lock = ap.load_codex_roles_lock(self.proj)
         self.assertIn(pairs[0][1].target_path, lock.get("roles", {}))
 
-    # (h) remove без local-modified записей полностью снимает пустой lock-файл.
+
     def test_remove_all_clean_drops_lock_file(self):
         _install_claude_pack(self.proj, _PACK)
         ap.do_codex_role_render(self.env, self.proj)
@@ -123,7 +119,7 @@ class CodexRoleLifecycleCase(unittest.TestCase):
         self.assertEqual(list((self.proj / ".codex" / "agents").glob("*.toml")), [])
         self.assertFalse(ap.codex_roles_lock_path(self.proj).exists())
 
-    # (i) render --pack фильтрует по конкретному паку (не трогает остальные).
+
     def test_render_pack_filter_scopes_to_one_pack(self):
         _install_claude_pack(self.proj, _PACK)
         rc = ap.do_codex_role_render(self.env, self.proj, pack="nonexistent-pack")

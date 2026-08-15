@@ -1,21 +1,4 @@
-"""plan_reader — очередь исполнения ОДНОЙ фазы плана для драйвера exec-волны.
-
-Живой контракт драйвера — `packages/harness/docs/reference/exec-wave.md`;
-раскладкой плана владеет plan-protocol `plan-layout-v2.md`.
-
-Три источника фактов читаются ПРОЦЕССОМ (D29 — межпакетная граница: Python-импорт
-пакета `task` из этого модуля и склейка `sys.path` к его `lib`-каталогу запрещены):
-    S1 — модель плана целиком:  `python3 packages/task/scripts/plan-lint.py <dir> --json`
-    S2 — маршрут item'а:        `python3 -m task.task_contract build --plan-dir <dir> --item <id>`
-Собственный разбор (S4/S5, §3.1/§3.2 контракта) заведён РОВНО на две точки, у которых
-готового читателя в репозитории нет ни одного:
-    S4 — ячейка `Exec` строки `## 3. Routing` (зеркалит `task_contract._find_routing_row`);
-    S5 — префиксный токен owner `handoff.fields.Next` (закрытый enum;
-         исторические `/task:…`-входы не резолвятся). Layout v2 не читает
-         orchestration из schema-pure item-state.
-
-Функции чистые (path in → dict out): ни `print`, ни `sys.exit`, ни записи на диск —
-печать и коды возврата принадлежат CLI (P4.6). stdlib-only."""
+"""Internal documentation."""
 from __future__ import annotations
 
 import json
@@ -26,7 +9,7 @@ from pathlib import Path
 
 from core import find_monorepo_root
 
-# --- закрытый набор причин отказа вождения (Deliverables P4.2) ----------------
+
 EXEC_NOT_PLAN_EXEC = "EXEC-NOT-PLAN-EXEC"
 ROUTING_INCONSISTENT = "ROUTING-INCONSISTENT"
 ROUTING_UNRESOLVED = "ROUTING-UNRESOLVED"
@@ -34,41 +17,39 @@ NEXT_FORM_UNSUPPORTED = "NEXT-FORM-UNSUPPORTED"
 PLAN_UNREADABLE = "PLAN-UNREADABLE"
 ITEM_TERMINAL = "ITEM-TERMINAL"
 
-# §4.1 контракта — шесть канонических статусов; терминальные для очереди драйвера —
-# ровно те три, что `plan_lint.TERMINAL_STATUSES` считает закрытием item'а.
+
+
 TERMINAL_STATUSES = ("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision")
 
-# §9 канона (frozen ladder) — используется РОВНО в одну сторону: не для деривации
-# права вождения (D31 запрещает), а для детекта ROUTING-INCONSISTENT (Exec=plan-exec
-# при паре, деривация которой даёт manual). Байт-в-байт `task_contract.MODEL_CLASS_ORDER`
-# / `EFFORT_ORDER` (task_contract.py:46-47) — свой второй носитель этих же литералов не
-# заводится, но и импорт `task.*` запрещён (D29), поэтому значения скопированы явно.
+
+
+
+
+
 MODEL_CLASS_ORDER = ("economy", "implementation", "frontier")
 EFFORT_ORDER = ("low", "medium", "high", "xhigh", "max")
 
-# --- §3.1 контракта — S4, зеркало `task_contract._find_routing_row` -----------
-# (task_contract.py:92-93, :177, :268-303): тот же заголовок секции, тот же матчер
-# ячейки `Items` (равенство `Pn.m` либо диапазон одной фазы), тот же диагностичный
-# (не route-дающий) отказ на списке через запятую.
+
+
+
+
 _SECTION_HEADER_RE = re.compile(r"^##\s+\S.*$")
 _ROUTING_HEADER_RE = re.compile(r"^##\s+3\.\s+Routing\s*$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _ROUTING_ITEMS_HEADER = "Items"
 _ROUTING_EXEC_HEADER = "Exec"
 
-# --- §3.2 контракта — S5, только префиксный токен `plan_lint.SEMANTIC_NEXT_RE`
-# (plan_lint.py:127-129). Легаси-входы совместимости (`/task:…`, «ЗАПУСК ВРУЧНУЮ»,
-# «ОЖИДАНИЕ:») НЕ резолвятся — граница разбора названа контрактом явно, догадка о
-# них здесь была бы третьей неоправданной точкой собственного парсинга.
+
+
+
+
 _NEXT_FORM_RE = re.compile(
     r"^(exec-items|run-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
     r"terminal|manual|waiting):")
 
 
 def _read_plan_lines(path):
-    """`plan.md` построчно (без `\\n`), как `plan_lint._read_lines`. `None` — файл
-    отсутствует/не читается (вызывающий обязан отнестись к этому как к отказу, не
-    как к пустой секции)."""
+    """Internal documentation."""
     try:
         text = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
@@ -86,11 +67,7 @@ def _split_row(line):
 
 
 def _routing_table(plan_lines):
-    """`## 3. Routing` → (headers, rows) с rows: `[(row_dict, lineno), ...]`; `(None,
-    None)` если секции или таблицы в ней нет. Тот же генерический разбор markdown-
-    таблицы, что `plan_lint._find_section`/`_parse_table` (не второй формат, тот же
-    самый — переписанный здесь байт-в-байт по алгоритму, потому что импорт запрещён,
-    D29)."""
+    """Internal documentation."""
     header_idxs = [i for i, ln in enumerate(plan_lines) if _SECTION_HEADER_RE.match(ln)]
     body = None
     for idx in header_idxs:
@@ -112,7 +89,7 @@ def _routing_table(plan_lines):
 
     headers = _split_row(body[table_start])
     rows = []
-    i = table_start + 2  # table_start+1 — строка-разделитель `---|---`
+    i = table_start + 2
     while i < len(body) and body[i].strip().startswith("|"):
         cells = _split_row(body[i])
         row = {headers[j]: (cells[j] if j < len(cells) else "") for j in range(len(headers))}
@@ -122,9 +99,7 @@ def _routing_table(plan_lines):
 
 
 def _row_covers_item(cell, item_id, phase_token, item_n):
-    """Ровно ДВЕ легальные формы ячейки `Items` (canon §9): равенство `Pn.m` либо
-    диапазон одной фазы `Pn.a–Pn.b` (оба вида тире). Список через запятую сюда не
-    попадает — он проверяется отдельно, только для ДИАГНОСТИКИ отказа."""
+    """Internal documentation."""
     if cell == item_id:
         return True
     m = _ROUTING_RANGE_RE.match(cell)
@@ -133,10 +108,7 @@ def _row_covers_item(cell, item_id, phase_token, item_n):
 
 
 def _resolve_exec_cell(plan_lines, item_id):
-    """S4 — ячейка `Exec` строки §3 Routing, покрывающей `item_id`. Возвращает
-    `(value, None)` на успехе либо `(None, причина)`. Значение НЕ дериватируется из
-    маршрута ни в одну сторону (D31) — это дословное чтение ячейки, право вождения
-    решает вызывающий."""
+    """Internal documentation."""
     headers, rows = _routing_table(plan_lines)
     if headers is None:
         return None, "в `plan.md` нет секции «## 3. Routing» с таблицей"
@@ -170,9 +142,7 @@ def _resolve_exec_cell(plan_lines, item_id):
 
 
 def _resolve_next_form(next_field_text):
-    """S5 — форма `**Next:**` из ПЕРВОЙ непустой строки поля (D40). Возвращает
-    `(kind, declaring_line)`; `kind=None`, если строка не начинается ни с одного из
-    11 закрытых префиксов (легаси-входы совместимости сюда не попадают, §3.2)."""
+    """Internal documentation."""
     declaring_line = next(
         (ln.strip() for ln in (next_field_text or "").splitlines() if ln.strip()), "")
     m = _NEXT_FORM_RE.match(declaring_line)
@@ -180,10 +150,7 @@ def _resolve_next_form(next_field_text):
 
 
 def _call_plan_lint(plan_dir, monorepo_root, *, timeout=60):
-    """S1: `python3 packages/task/scripts/plan-lint.py <plan_dir> --json` (§2 контракта,
-    команда воспроизведена дословно). Ненулевой код / битый JSON / сбой запуска —
-    отказ источника (fail-loud, §2: «не различаем «есть диагностики» и «сбой
-    парсера» — оба класса недоступности источника»), не пустая модель."""
+    """Internal documentation."""
     script = Path(monorepo_root) / "packages" / "task" / "scripts" / "plan-lint.py"
     try:
         proc = subprocess.run(
@@ -203,12 +170,7 @@ def _call_plan_lint(plan_dir, monorepo_root, *, timeout=60):
 
 
 def _call_task_contract_build(plan_dir, item_id, monorepo_root, *, timeout=60):
-    """S2: `python3 -m task.task_contract build --plan-dir <plan_dir> --item <item_id>`
-    (§2 контракта), с `PYTHONPATH`, указывающим на `lib`-каталог пакета `task`
-    (см. `task_lib` ниже). Возвращает
-    `({"model_class", "effort"}, None)` либо `(None, причина)` — item-specific отказ,
-    НЕ деградация всей очереди (S1 уже дала статус/порядок; недоступен только
-    маршрут этого item'а — `ROUTING-UNRESOLVED`)."""
+    """Internal documentation."""
     task_lib = str(Path(monorepo_root) / "packages" / "task" / "lib")
     env = dict(os.environ)
     existing = env.get("PYTHONPATH")
@@ -262,10 +224,7 @@ def _call_plan_layout(plan_dir, monorepo_root, *, timeout=60):
 
 
 def _classify_drivability(exec_value, exec_error, route, route_error):
-    """Право вождения — §7 таблицы «событие → класс» + §9 канона, РОВНО в порядке:
-    Exec дословно «plan-exec» (D31, деривация никогда не ДАЁТ права) → маршрут
-    резолвится (S2) → деривация §9 маршрута НЕ говорит «manual» (используется ТОЛЬКО
-    на отказ, ROUTING-INCONSISTENT). Любое сомнение — отказ (fail-safe)."""
+    """Internal documentation."""
     if exec_value != "plan-exec":
         detail = exec_error or f"Exec={exec_value!r} (ожидается дословно «plan-exec», D31)"
         return False, EXEC_NOT_PLAN_EXEC, detail
@@ -291,17 +250,7 @@ def _degraded(plan_dir, phase_id, reason):
 
 
 def queue(plan_dir, phase_id, *, monorepo_root=None):
-    """Очередь исполнения фазы `phase_id` плана `plan_dir` — item'ы в порядке
-    `## Phase Status`, терминальные исключены (`excluded_terminal` несёт их поимённо
-    с `ITEM-TERMINAL`, честный знаменатель для сводки волны P4.5/P4.6), по каждому
-    оставшемуся — маршрут, значение `Exec`, право вождения либо причина отказа из
-    закрытого набора. `degraded=True` — источник S1 недоступен: `items=[]` в этом
-    случае НЕ означает «фаза сделана», вызывающий обязан проверить сам флаг
-    (анти-самообман, Code Guidance P4.2).
-
-    `monorepo_root` — переопределение для тестов (иначе резолвится от `plan_dir`
-    через `find_monorepo_root`; standalone-раскладка без `packages/task` → degraded,
-    не тихий пропуск, D29)."""
+    """Internal documentation."""
     plan_dir = Path(plan_dir)
     if monorepo_root is None:
         monorepo_root = find_monorepo_root(plan_dir.resolve())

@@ -1,7 +1,4 @@
-"""Тесты `harness.run.journal` (P4.5). `task.journal append` вызывается РЕАЛЬНЫМ
-процессом против РЕАЛЬНОГО пакета-владельца этого монорепо (D29 — межпакетная граница
-процессная, а не импорт; тот же приём, что `test_run_gate.py` уже применяет к
-`plan-lint.py`) — фикстуре нужен только целевой каталог плана (файловая запись, без git)."""
+"""Internal documentation."""
 import json
 import subprocess
 import sys
@@ -27,8 +24,7 @@ def _outcome(kind, **extra):
 
 
 class _Plan:
-    """Временный каталог плана `plans/JOURNAL-FIXTURE/` — `task.journal append` только
-    дописывает файл, git не нужен (в отличие от `gate`)."""
+    """Internal documentation."""
 
     def __init__(self, tmp):
         self.plan_dir = Path(tmp) / PLAN_ID
@@ -61,7 +57,7 @@ class ClassifyTest(unittest.TestCase):
         self.assertEqual(who, journal.WORKER)
 
     def test_ok_outcome_with_blocked_escalation_status_is_worker(self):
-        # plan-exec.md шаг 5 (эскалация) сам пишет финал-запись `escalated` — не второй раз.
+
         category, who = journal.classify(
             pre_launch=False, outcome=_outcome(worker.OUTCOME_OK), item_status="🔴 Blocked")
         self.assertEqual(who, journal.WORKER)
@@ -163,8 +159,8 @@ class MaybeWriteTest(unittest.TestCase):
         self.assertEqual(self.plan.entries(), [])
 
     def test_nonzero_cli_exit_raises_and_stops_wave(self):
-        # plan_id несовпадающий с каталогом → `task.journal` сам отказывает (nonzero exit);
-        # ошибка обязана всплыть, а не проглотиться (Implementation Rule 4).
+
+
         with self.assertRaises(journal.JournalCallFailed):
             journal.maybe_write(
                 self.plan.plan_dir, "WRONG-PLAN-ID", "P9.6", run_id="wave-1", attempt=1,
@@ -179,8 +175,8 @@ class MaybeWriteTest(unittest.TestCase):
                 item_status="🟡 In progress", monorepo_root=REPO_ROOT)
 
     def test_no_two_driver_lines_for_one_item_in_one_wave(self):
-        # Один вызов `maybe_write` на item в волне → максимум одна строка (группировка по
-        # item_id внутри run_id не даёт дублей естественным ходом API, не отдельным гейтом).
+
+
         journal.maybe_write(
             self.plan.plan_dir, PLAN_ID, "P9.8", run_id="wave-1", attempt=1,
             actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="🟡 In progress",

@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
-# Режим agentmemory — прокси в сторонний AgentMemory (демон на Brain).
-# Источается memory.sh.
 #
-# ВНИМАНИЕ: точная форма HTTP-API AgentMemory (пути, поля) зависит от версии
-# (@agentmemory/agentmemory). Ниже — разумные дефолты; при первом реальном
-# прогоне сверь с `curl <url>` и поправь пути/jq-выборку под свой инстанс.
-# Любая недоступность демона → честное сообщение, без падения сессии.
 
-_am_up() { # brain → 0 если демон отвечает
+_am_up() { # Returns 0 when the daemon responds.
   local url; url="$(brain_am_url "$1")"; [ -n "$url" ] || return 1
   curl -fsS -m 2 "$url/health" >/dev/null 2>&1 || curl -fsS -m 2 "$url" >/dev/null 2>&1
 }

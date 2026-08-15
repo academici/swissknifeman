@@ -1,8 +1,4 @@
-"""Codex settings audit — bounded closure (P2.4, codex-parity-verdicts-v1.md §3.11).
-
-Отдельный, МЕНЬШИЙ набор проверок над документированными слоями Codex
-(~/.codex/config.toml -> .codex/config.toml -> profile). Реальные tmpdir-деревья,
-никаких моков ФС — то же правило, что у test_settings_audit.py."""
+"""Internal documentation."""
 import sys
 import tempfile
 import unittest
@@ -36,13 +32,13 @@ class CodexSettingsAuditCase(unittest.TestCase):
         cfg.mkdir(parents=True, exist_ok=True)
         (cfg / "config.toml").write_text(text, encoding="utf-8")
 
-    # (a) отсутствующие слои — норма, ни одной находки.
+
     def test_no_layers_present_is_clean(self):
         layers = load_codex_layers(self.env, self.target)
         self.assertEqual(run_codex_checks(layers), [])
         self.assertEqual(exit_code(run_codex_checks(layers)), 0)
 
-    # (b) проектный слой читается и парсится корректно.
+
     def test_project_layer_is_read(self):
         self._write_project_toml('trust_level = "trusted"\n')
         layers = load_codex_layers(self.env, self.target)
@@ -50,7 +46,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(project.data, {"trust_level": "trusted"})
         self.assertIsNone(project.error)
 
-    # (c) битый TOML — Finding (fail-soft), не исключение.
+
     def test_malformed_toml_is_reported_not_raised(self):
         self._write_project_toml("this is not = valid [[[ toml")
         layers = load_codex_layers(self.env, self.target)
@@ -58,7 +54,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0].level, "warn")
 
-    # (d) Ф10: проектный слой не вправе переопределять machine-local ключи.
+
     def test_project_override_of_notify_is_error(self):
         self._write_project_toml('notify = "custom-notify"\n')
         layers = load_codex_layers(self.env, self.target)
@@ -67,13 +63,13 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("notify", errors[0].detail)
 
-    # (e) легальный проектный ключ (не в списке machine-local) — без находки.
+
     def test_project_layer_with_legal_key_is_clean(self):
         self._write_project_toml('trust_level = "trusted"\n[features]\nhooks = true\n')
         layers = load_codex_layers(self.env, self.target)
         self.assertEqual(codex_check_2_project_overrides_machine_local_key(layers), [])
 
-    # (f) features.hooks=false — info, не error/warn.
+
     def test_hooks_feature_disabled_is_info(self):
         self._write_project_toml("[features]\nhooks = false\n")
         layers = load_codex_layers(self.env, self.target)
@@ -81,7 +77,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0].level, "info")
 
-    # (g) user-слой сливается с project (эффективная конфигурация), так же, как Claude-сторона.
+
     def test_user_layer_merges_with_project(self):
         (self.home / ".codex").mkdir()
         (self.home / ".codex" / "config.toml").write_text("[features]\nhooks = false\n",
@@ -91,7 +87,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         findings = codex_check_3_hooks_feature_disabled(layers)
         self.assertEqual(len(findings), 1)
 
-    # (h) render/counts/exit_code — общий контракт с Claude-стороной.
+
     def test_render_and_counts_share_claude_side_contract(self):
         self._write_project_toml('notify = "x"\n')
         layers = load_codex_layers(self.env, self.target)

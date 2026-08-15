@@ -1,11 +1,8 @@
-"""maind service — управление демоном памяти через systemd --user.
+"""Manage the memory daemon through systemd --user.
 
-Юнит живёт в ~/.config/systemd/user/maind-memory.service (без root): автостарт при
-логине, авто-рестарт при краше и консольное управление
-`maind service start|stop|restart|status|logs`. ExecStart запускает демон в переднем
-плане (`maind memory run` → exec node), поэтому systemd трекает его как MAINPID.
-
-По образцу Brain (lib/brain/service.py)."""
+The rootless user unit starts on login, restarts after failure, and tracks the
+foreground `maind memory run` process as MAINPID.
+"""
 import getpass
 import shutil
 import subprocess
@@ -24,7 +21,7 @@ def _unit_path(env):
 
 
 def _unit_text(env):
-    """Содержимое .service. Абсолютные пути из Env (юнит привязан к этой установке)."""
+    """Render .service content with absolute paths for this installation."""
     exec_start = env.root / "bin" / "maind"
     doc = env.root / "docs" / "guide" / "systemd.md"
     return f"""[Unit]
@@ -53,7 +50,7 @@ def _ensure_systemd():
             "поднимайте память вручную: maind start --only memory")
     r = subprocess.run(["systemctl", "--user", "is-system-running"],
                        text=True, capture_output=True)
-    # пустой вывод при ненулевом коде = нет user-инстанса (голый SSH без linger)
+    # Empty nonzero output means no user instance (for example bare SSH without linger).
     if r.returncode != 0 and not (r.stdout or "").strip():
         die("нет user-сессии systemd. По SSH: войдите в графическую сессию "
             "или выполните `loginctl enable-linger " + getpass.getuser() + "`")
@@ -74,7 +71,7 @@ def cmd_service(env, argv):
 
     if sub == "install":
         config, _source = load_config(env)
-        refuse_if_client_role(config)   # client не поднимает локальный демон (ADR-0001, D27)
+        refuse_if_client_role(config)   # A client role must not start a local daemon.
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_unit_text(env), encoding="utf-8")
         _sc("daemon-reload")
@@ -105,7 +102,7 @@ def cmd_service(env, argv):
         if not path.exists():
             die("юнит не установлен — сначала: maind service install")
         r = _sc(sub, UNIT)
-        # status у остановленного юнита возвращает 3 — это не ошибка
+        # A stopped unit returns 3 for status; that is not an error.
         if r.returncode != 0 and sub != "status":
             die(f"systemctl --user {sub} вернул {r.returncode}")
         return

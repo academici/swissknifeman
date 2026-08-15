@@ -28,9 +28,7 @@ def request(operation, root, **changes):
 
 
 def _skiller_budget():
-    """Первоисточник формулы оценки токенов; standalone-раскладка без skiller —
-    пропуск, а не красный тест (harness от skiller не зависит и в рантайме его
-    не импортирует — импорт живёт только здесь, в сверке двух реализаций)."""
+    """Internal documentation."""
     lib = REPO_ROOT / "packages/skiller/lib"
     if not (lib / "skiller/budget.py").is_file():
         return None
@@ -38,7 +36,7 @@ def _skiller_budget():
         sys.path.insert(0, str(lib))
     try:
         return importlib.import_module("skiller.budget")
-    except ImportError:  # pragma: no cover — чужой пакет недоступен целиком
+    except ImportError:
         return None
 
 
@@ -51,7 +49,7 @@ class CanonSizeLimitTests(unittest.TestCase):
                              (PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT))
 
     def test_root_line_ceiling_is_the_upstream_recommendation(self):
-        """200 строк — апстрим-рекомендация Claude Code, а не текущий размер файла."""
+        """Internal documentation."""
         self.assertEqual(ROOT_CANON_LINE_LIMIT, 200)
         self.assertLess(PACKAGE_CANON_LINE_LIMIT, ROOT_CANON_LINE_LIMIT)
         self.assertLess(PACKAGE_CANON_TOKEN_LIMIT, ROOT_CANON_TOKEN_LIMIT)
@@ -65,10 +63,9 @@ class CanonSizeTokenEstimateTests(unittest.TestCase):
                            estimate_tokens("hello worl" * 10))
 
     def test_token_estimate_matches_skiller_formula(self):
-        """Анти-спор цифр: две реализации одной формулы обязаны совпадать на общем
-        входе, иначе гейт размера и `skiller budget` начнут спорить о том же файле."""
+        """Internal documentation."""
         budget = _skiller_budget()
-        if budget is None:  # pragma: no cover — standalone-раскладка вне монорепо
+        if budget is None:
             self.skipTest("skiller.budget недоступен (standalone-раскладка)")
         samples = [
             "",
@@ -116,7 +113,7 @@ class CanonSizeValidatorTests(unittest.TestCase):
         self.assertGreater(findings[0].observed, ROOT_CANON_LINE_LIMIT)
 
     def test_oversized_tokens_alone_are_caught_under_the_line_ceiling(self):
-        """Длинные строки обходят счётчик строк — токенный потолок ловит их отдельно."""
+        """Internal documentation."""
         with tempfile.TemporaryDirectory() as temp:
             root = self._clean_root(temp)
             (root / TARGETS["root"]["codex"]).write_text(
@@ -127,7 +124,7 @@ class CanonSizeValidatorTests(unittest.TestCase):
         self.assertEqual(findings[0].limit, ROOT_CANON_TOKEN_LIMIT)
 
     def test_package_class_is_stricter_than_root_class(self):
-        """Файл, легальный в корневом классе, за пакетным потолком — красный."""
+        """Internal documentation."""
         body = "\n".join(f"## rule {index}" for index in range(PACKAGE_CANON_LINE_LIMIT + 5))
         self.assertLess(len(body.splitlines()), ROOT_CANON_LINE_LIMIT)
         with tempfile.TemporaryDirectory() as temp:
@@ -181,8 +178,7 @@ class CanonSizeWiringTests(unittest.TestCase):
         self.assertEqual(checked.size_findings, ())
 
     def test_size_findings_are_additive_in_the_machine_report(self):
-        """Аддитивность: ключи отчёта прежние плюс `size_findings`; коды диагностик
-        замороженного контракта не расширяются (D86)."""
+        """Internal documentation."""
         with tempfile.TemporaryDirectory() as temp:
             report = check_instructions(request("check", self._clean_root(temp))).as_dict()
         self.assertEqual(set(report),
@@ -190,8 +186,7 @@ class CanonSizeWiringTests(unittest.TestCase):
         self.assertEqual(report["size_findings"], [])
 
     def test_plan_and_apply_ignore_the_size_gate(self):
-        """Гейт живёт только в `check`: иначе `apply`, которым и чинят размер,
-        заклинило бы на собственном красном вердикте."""
+        """Internal documentation."""
         with tempfile.TemporaryDirectory() as temp:
             root = self._clean_root(temp)
             (root / TARGETS["root"]["claude-code"]).write_text(

@@ -1,8 +1,4 @@
 #!/bin/bash
-# git-guardrails — PreToolUse-хук Claude Code: блокирует опасные git-команды ДО исполнения.
-# Провенанс: производное от mattpocock/skills misc/git-guardrails-claude-code (MIT, © Matt Pocock);
-# расширен паттернами force-with-lease / rebase --onto. Раздаётся через harness (источник истины хуков).
-# Вход: JSON из stdin (.tool_input.command). Выход: exit 2 + сообщение в stderr → команда блокируется.
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')

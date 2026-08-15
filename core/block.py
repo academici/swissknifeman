@@ -1,19 +1,19 @@
-"""Управляемый markdown-блок: идемпотентная вставка/обновление с маркерами и хэшем.
+"""Managed Markdown blocks with idempotent marker- and hash-based updates.
 
-Общий примитив монорепо (перенесён из maind.blocks, где был единственный писатель
-таких блоков в CLAUDE.md/.ai целевых проектов). Чужой текст не трогается, дрейф
-детектится по короткому хэшу содержимого. stdlib-only."""
+Shared monorepo primitive, moved from maind.blocks. It preserves surrounding text
+and detects drift with a short content hash. stdlib-only.
+"""
 import hashlib
 import re
 
 
 def content_hash(text: str) -> str:
-    """Короткий стабильный хэш содержимого (для детекта дрейфа управляемых артефактов)."""
+    """Return a short, stable content hash for managed-artifact drift detection."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
 def managed_block(content: str, marker: str, *, owner: str = "maind") -> str:
-    """Управляемый блок с маркерами begin/end и хэшем: `owner` — единственный его писатель."""
+    """Build a managed begin/end-marker block; ``owner`` is its sole writer."""
     h = content_hash(content)
     return (f"<!-- {marker} hash={h} (managed by {owner} — не редактировать вручную) -->\n"
             f"{content.rstrip()}\n<!-- /{marker} -->")
@@ -21,9 +21,10 @@ def managed_block(content: str, marker: str, *, owner: str = "maind") -> str:
 
 def upsert_block(text: str, content: str, marker: str,
                  *, owner: str = "maind") -> "tuple[str, bool, str]":
-    """Вставить/обновить управляемый блок в text. Возвращает (new_text, changed, state),
-    state ∈ {absent→install, stale→update, fresh→skip}. Существующий блок ищется по маркерам,
-    чужой текст не трогается; отсутствует — добавляется в конец."""
+    """Insert or update a managed block and return ``(text, changed, state)``.
+
+    State is ``absent``, ``stale``, or ``fresh``; surrounding text remains intact.
+    """
     block = managed_block(content, marker, owner=owner)
     pat = re.compile(rf"<!-- {re.escape(marker)}\b.*?<!-- /{re.escape(marker)} -->",
                      re.DOTALL)

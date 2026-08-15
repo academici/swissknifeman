@@ -1,6 +1,4 @@
-"""Тесты доработок мигратора agent-packs: пост-рендер валидация путей (expect_globs),
-ACCESS_ROOT layout-детект (app/src/packages-monorepo), сводка conflict/.pack-new.
-Офлайн, изоляция в tmpdir, без сети."""
+"""Internal documentation."""
 import contextlib
 import io
 import json
@@ -13,7 +11,7 @@ from tests.fixtures import make_pack, make_project, make_root
 
 
 class TestExpectGlobs(unittest.TestCase):
-    """A — validate_expect_globs: WARN-глобы, интерполяция single-brace, поддержка *."""
+    """Internal documentation."""
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -36,7 +34,7 @@ class TestExpectGlobs(unittest.TestCase):
     def test_monorepo_star_glob(self):
         (self.proj / "packages/core/src/Http/Controllers").mkdir(parents=True)
         m = {"expect_globs": ["{ACCESS_ROOT}/Http/Controllers"]}
-        # packages/*/src → glob должен матчить packages/core/src/Http/Controllers
+
         self.assertEqual(
             ap.validate_expect_globs(m, self.proj, {"ACCESS_ROOT": "packages/*/src"}), [])
 
@@ -45,7 +43,7 @@ class TestExpectGlobs(unittest.TestCase):
 
 
 class TestAccessRootDetect(unittest.TestCase):
-    """C — ACCESS_ROOT детектится из раскладки проекта (app / src / packages/*/src)."""
+    """Internal documentation."""
 
     PROBE = ("test -d app/Http && echo app ; "
              "test ! -d app/Http && test -d src/Http && echo src ; "
@@ -53,7 +51,7 @@ class TestAccessRootDetect(unittest.TestCase):
              "ls -d packages/*/src/Http >/dev/null 2>&1 && echo 'packages/*/src' ; echo ''")
 
     def test_app_priority_with_local_packages(self):
-        # app + локальные packages/*/src → app выигрывает (не монорепо)
+
         proj = make_project(Path(tempfile.mkdtemp()), "applocal")
         (proj / "app/Http").mkdir(parents=True)
         (proj / "packages/x/src/Http").mkdir(parents=True)
@@ -86,7 +84,7 @@ class TestAccessRootDetect(unittest.TestCase):
 
 
 class TestConflictSummary(unittest.TestCase):
-    """B — do_upgrade печатает сводку conflict/.pack-new (видимость незаехавших правок)."""
+    """Internal documentation."""
 
     def test_conflict_summary_and_pack_new(self):
         tmp = Path(tempfile.mkdtemp())
@@ -96,10 +94,10 @@ class TestConflictSummary(unittest.TestCase):
         (proj / "composer.json").write_text('{"scripts": {"test": "pest"}}')
         ap.do_render(env, pack, proj, auto=True, overrides={"PACK_PREFIX": "acme"},
                      dry=False, install_only=False, shell_policy="safe")
-        # локально правим установленный файл → local_modified
+
         rendered = proj / ".claude/agents/acme-reviewer.md"
         rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
-        # меняем ИСТОЧНИК пака + версию → base_changed → conflict
+
         pdir = root / "configs/claude-code/agent-packs" / pack
         src = pdir / "agents/reviewer.md"
         src.write_text(src.read_text() + "\nНОВОЕ В ПАКЕ\n")

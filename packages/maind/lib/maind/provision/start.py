@@ -1,4 +1,4 @@
-"""Оркестрация узла: maind start (воркеры) + maind status (сводка)."""
+"""Hub orchestration: maind start workers and maind status summary."""
 import json
 
 from ..agents import listing as agents_listing
@@ -20,8 +20,7 @@ def cmd_start(env, argv):
     if only in ("", "memory"):
         memory_start(env, config)
     if only in ("", "graph"):
-        # граф — файлы; «запуск» = собрать связи из источников истины (derive →
-        # граф на проект + индекс). Единственная раскладка — федерация.
+        # Graph startup derives links from sources of truth and materializes the federation.
         from ..federation import Federation, graph_disabled
         if graph_disabled(config):
             print("граф отключён (graph.adapter = disabled)")

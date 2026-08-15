@@ -1,7 +1,5 @@
-"""core.provider — доменный кластер провайдерной модели (значения, конфиг, манифест,
-артефакты, lock, реестр адаптеров).
+"""Provider-model domain cluster.
 
-Здесь НЕТ ре-экспортов: единственный фасад пакета — `core/__init__.py`. Ре-экспорт
-символов кластера в этом файле создал бы второй носитель того же перечня имён
-(запрет второго носителя, `plan-protocol` §3). Публичные символы берутся
-`from core import …`; deep-импорт ходит прямо в подмодуль (`core.provider.lock`)."""
+``core.__init__`` is the sole public facade; import submodules directly for deep
+imports to avoid a duplicate export surface.
+"""

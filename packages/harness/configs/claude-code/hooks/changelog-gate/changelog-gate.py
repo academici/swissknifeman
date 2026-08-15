@@ -1,24 +1,5 @@
 #!/usr/bin/env python3
-"""changelog-gate · PreToolUse (matcher Bash) — ловит `git commit` содержательного типа
-(feat/fix/perf/refactor) без правки CHANGELOG среди застейдженных файлов. warning В КОНТЕКСТ
-модели (НЕ блок) — дефолт-режим warn; strict — блокирует (exit 2). Опциональный, по умолчанию
-НЕ устанавливается: включается явно `harness hooks --target . --changelog-gate warn|strict`.
-
-Детекция (D33, RAG:✅ 2026-07-11 code.claude.com/docs/en/hooks.md — PreToolUse non-blocking
-warning доставляется через stdout JSON `hookSpecificOutput.additionalContext` + exit 0, в паре
-с `permissionDecision:"allow"`; strict — exit 2 + stderr):
-- тип коммита и skip-маркер парсятся ТОЛЬКО из `-m`-сообщения команды (editor-сообщение без
-  `-m` не парсится — нет `-m` → exit 0, не угадываем);
-- содержательный тип — РОВНО feat/fix/perf/refactor; docs/chore/test/style/ci/build/иной
-  префикс → авто-skip (exit 0, без warning);
-- `[changelog-skip]` в сообщении → skip без warning (осознанное исключение);
-- «CHANGELOG затронут» = среди `git diff --cached --name-only` есть путь `(?i)changelog`
-  (любой CHANGELOG — корневой либо per-package, монорепо);
-- репо без ЕДИНОГО CHANGELOG в дереве (`git ls-files` не находит `(?i)changelog`) → exit 0
-  (проект не ведёт дисциплину — безопасный no-op, как pack-guard без lock).
-
-Дисциплина pack-guard ОБЯЗАТЕЛЬНА: любая ошибка / битый JSON / отсутствие полей / сбой
-subprocess → `sys.exit(0)`, НИКОГДА не блокирует из-за внутренней ошибки. Stdlib-only."""
+"""Internal documentation."""
 import json
 import os
 import re
@@ -37,9 +18,7 @@ _SEGMENT_RE = re.compile(r"&&|\|\||;|\|")
 
 
 def _read_mode(cwd):
-    """MODE из <cwd>/.claude/changelog-gate.env.ini (файл пишет `harness hooks
-    --changelog-gate`). Нет файла / битый / неизвестное значение → off (безопасный дефолт —
-    хук по умолчанию НЕ установлен ни в одном проекте)."""
+    """Internal documentation."""
     if not cwd:
         return _DEFAULT_MODE
     f = Path(cwd) / ".claude" / "changelog-gate.env.ini"
@@ -60,9 +39,7 @@ def _read_mode(cwd):
 
 
 def _commit_messages(command):
-    """Список значений `-m` из СЕГМЕНТА команды с `git commit` (сегменты разделены
-    `&&`/`;`/`|`/`||` — чтобы не подхватить `-m` соседней команды в цепочке). Пусто/ошибка
-    разбора (кривые кавычки) → []."""
+    """Internal documentation."""
     if not isinstance(command, str) or not command.strip():
         return []
     for segment in _SEGMENT_RE.split(command):
@@ -78,8 +55,7 @@ def _commit_messages(command):
 
 
 def _git(cwd, *args):
-    """`git <args>` в cwd → список строк stdout. Любой сбой (нет git / не репо / таймаут) →
-    None (вызывающий код трактует как «не знаю» → безопасный no-op)."""
+    """Internal documentation."""
     try:
         out = subprocess.run(["git", "-C", cwd, *args], stdout=subprocess.PIPE,
                               stderr=subprocess.DEVNULL, timeout=10, check=False)
@@ -138,21 +114,21 @@ def main():
 
     messages = _commit_messages(command)
     if not messages:
-        sys.exit(0)  # не git commit в команде, либо нет -m — не угадываем
+        sys.exit(0)
 
     full_text = "\n".join(messages)
     if _SKIP_MARKER in full_text:
-        sys.exit(0)  # осознанное исключение
+        sys.exit(0)
 
     m = _TYPE_RE.match(messages[0])
     if not m:
-        sys.exit(0)  # docs/chore/test/style/ci/build/иной префикс — авто-skip
+        sys.exit(0)
     commit_type = m.group(1)
 
     if not _has_changelog_in_tree(cwd):
-        sys.exit(0)  # проект не ведёт CHANGELOG-дисциплину — no-op
+        sys.exit(0)
     if _changelog_staged(cwd):
-        sys.exit(0)  # CHANGELOG уже среди застейдженных файлов
+        sys.exit(0)
 
     reason = (
         f"changelog-gate: коммит `{commit_type}:` содержательный, но `[Unreleased]` не "
@@ -162,9 +138,9 @@ def main():
     )
     if mode == "strict":
         sys.stderr.write(reason + "\n")
-        sys.exit(2)  # PreToolUse: exit 2 блокирует вызов, stderr — причина
+        sys.exit(2)
     _warn_json(reason)
-    sys.exit(0)  # warn: подсказка в контекст модели, не блок
+    sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -173,4 +149,4 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception:
-        sys.exit(0)  # хук никогда не ломает сессию
+        sys.exit(0)

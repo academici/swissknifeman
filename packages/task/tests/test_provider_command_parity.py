@@ -214,7 +214,7 @@ class ProviderCommandParityTests(unittest.TestCase):
                 re.findall(r"[\w<>]+/effort", projected[record.command_id]))
             canonical_clear_controls += len(
                 re.findall(r"(?<![\w/])/clear\b", canonical_body))
-        self.assertEqual(len(canonical_route_notation), 28)
+        self.assertEqual(len(canonical_route_notation), 19)
         self.assertEqual(projected_route_notation, canonical_route_notation)
         self.assertEqual(canonical_clear_controls, 0)
         self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))

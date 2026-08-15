@@ -311,11 +311,12 @@ class PlanDeliveryTests(unittest.TestCase):
             source = (command_dir / name).read_text(encoding="utf-8")
             self.assertIn("plan-delivery.py", source, name)
             self.assertIn(kind, source, name)
-            self.assertIn("Рекомендация следующего шага:", source, name)
+            self.assertTrue("exact recommendation" in source or
+                            "Рекомендация следующего шага:" in source, name)
 
         plan_run = (command_dir / "plan-run.md").read_text(encoding="utf-8")
         self.assertIn('task.command_catalog.package_command_path("task:plan-exec")', plan_run)
-        self.assertIn("Всё остальное", plan_run)
+        self.assertIn("with these three differences", plan_run)
 
 
 if __name__ == "__main__":

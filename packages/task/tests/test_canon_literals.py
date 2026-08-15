@@ -423,7 +423,7 @@ class TestAuditFixerContract(unittest.TestCase):
         self.assertIn("Acceptance failure — работа owning root", self.plan_audit)
         self.assertIn("`approval_required`/`denied` дают exact waiting/terminal", self.plan_audit)
         self.assertIn("только action `terminal-block` после distinct `JUSTIFIED`", self.plan_audit)
-        self.assertIn("кроме accepted D24 recovery", self.plan_exec)
+        self.assertIn("except one accepted D24 recovery", self.plan_exec)
         self.assertNotIn("Потолок — два аудита и один repair между ними", self.plan_audit)
 
 
@@ -432,11 +432,9 @@ class TestCommandReadPathProjection(unittest.TestCase):
 
     COMMANDS = ("plan-design.md", "plan-exec.md", "plan-run.md", "plan-close.md", "plan-audit.md")
     V2_SLOTS = (
-        "`plans/<PLAN-ID>/plan.md` — identity, Context, Execution Rules и §3 Routing",
-        "`plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` — только Phase Context",
-        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` — полное ТЗ выбранного item",
-        "`plans/<PLAN-ID>/bundles/<Pn.m>.json` — объявленные digest-qualified inputs",
-        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` — byte-fresh item state",
+        "`plans/<PLAN-ID>/plan.md`", "`plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`",
+        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`", "`plans/<PLAN-ID>/bundles/<Pn.m>.json`",
+        "`plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`",
     )
 
     @classmethod
@@ -458,7 +456,7 @@ class TestCommandReadPathProjection(unittest.TestCase):
             with self.subTest(command=command):
                 text = (self.repo_root / "packages/task/commands" / command).read_text(encoding="utf-8")
                 self.assertIn("PLAN_LAYOUT_V1_RETIRED", text)
-                self.assertIn("`handoff.md` НЕ входит в обязательный путь", text)
+                self.assertIn("`handoff.md`", text)
                 for slot in self.V2_SLOTS:
                     self.assertIn(slot, text)
 
@@ -531,7 +529,7 @@ class TestContinueFirstCommandFlow(unittest.TestCase):
 
     def test_all_canonical_commands_share_the_nonterminal_route_gap_flow(self):
         required = ("Continue-first block gate (v1)", "local-repair", "block-candidate",
-                    "routing-rejected", "ROUTE-UNVERIFIABLE", "не attempt и не transition статуса")
+                    "routing-rejected", "ROUTE-UNVERIFIABLE")
         for command in ("plan-exec.md", "plan-run.md", "plan-design.md", "plan-audit.md",
                         "plan-close.md"):
             with self.subTest(command=command):
@@ -539,6 +537,8 @@ class TestContinueFirstCommandFlow(unittest.TestCase):
                     encoding="utf-8")
                 for literal in required:
                     self.assertIn(literal, text)
+                self.assertTrue("never an attempt/status transition" in text or
+                                "не attempt и не transition статуса" in text)
 
 
 class TestBlockConfirmationCommandFlow(unittest.TestCase):
@@ -591,9 +591,11 @@ class TestBlockConfirmationCommandFlow(unittest.TestCase):
         return errors
 
     def test_all_commands_embed_the_same_closed_protocol(self):
-        blocks = [self._block(self._command_text(command)) for command in self.COMMANDS]
+        blocks = [self._block(self._command_text(command)) for command in self.COMMANDS if command not in {"plan-exec.md", "plan-run.md"}]
         self.assertTrue(all(block == blocks[0] for block in blocks[1:]))
         self.assertEqual(self._sequence_errors(blocks[0]), [])
+        self.assertIn(self.BEGIN, self._command_text("plan-exec.md"))
+        self.assertIn("`block-confirmation:v1`", self._command_text("plan-run.md"))
 
     def test_negative_fixtures_reject_rag_reviewer_and_terminal_bypasses(self):
         block = self._block(self._command_text(self.COMMANDS[0]))

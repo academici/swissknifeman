@@ -41,7 +41,7 @@ that tooling didn't account for?
    **Fix immediately**:
    - package code → fix + test;
    - instruction is stale → fix the doc/skill ([docs-maintenance] / [skill-authoring],
-     RU source → EN canon);
+     canonical EN-only `SKILL.md` source);
    - a generated artifact is **never hand-edited** — fix the generator instead (see
      [package-architecture]).
    Close out via [release-discipline] (validate → registry → CHANGELOG → PR).

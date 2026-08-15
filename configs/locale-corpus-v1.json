@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:locale-corpus:v1",
+  "contract_version": "1.0.0",
+  "source_locale": "en",
+  "overlay_locales": ["ru"],
+  "carrier_classes": [
+    "code.comments", "code.docstrings", "development.docs", "diagnostic.message",
+    "generated.provider-target", "legacy.skill-ru", "machine.identity", "plan.human-text",
+    "plugin.human-metadata", "provider.human-message", "semantic.command", "semantic.skill"
+  ],
+  "inventory_roots": [],
+  "rows": []
+}

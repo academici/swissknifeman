@@ -8,6 +8,89 @@
     "generated.provider-target", "legacy.skill-ru", "machine.identity", "plan.human-text",
     "plugin.human-metadata", "provider.human-message", "semantic.command", "semantic.skill"
   ],
-  "inventory_roots": [],
-  "rows": []
+    "inventory_roots": [
+        "packages/skiller/skills/repository-bootstrap/skill-authoring",
+        "packages/skiller/skills/repository-bootstrap/package-architecture",
+        "packages/skiller/skills/repository-bootstrap/field-feedback-loop"
+    ],
+    "rows": [
+        {
+            "id": "skill.repository-bootstrap.skill-authoring",
+            "carrier_id": "semantic.skill",
+            "owner": "skiller registry",
+            "cwd": "packages/skiller",
+            "source_path": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+            "source_locale": "en",
+            "source_preimage_sha256": "sha256:00709e9c9df47c24650a715dee1e679803a0fc3f00237b44f253c83c9546c072",
+            "english_postimage_sha256": "sha256:00709e9c9df47c24650a715dee1e679803a0fc3f00237b44f253c83c9546c072",
+            "overlay_path": null,
+            "overlay_sha256": null,
+            "overlay_mode": "english-fallback",
+            "immutable_tokens": ["SKILL.md", "skiller registry"],
+            "semantic_invariants": ["EN-only canonical source", "generated projections remain additive"],
+            "author": "p43-package-author",
+            "renderer": "skiller-registry",
+            "reviews": [
+                {"locale": "en", "reviewer": "p43_en_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.en.json"},
+                {"locale": "ru", "reviewer": "p43_ru_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.ru.json"}
+            ],
+            "semantic_review_evidence": ["p43_en_recheck", "p43_ru_recheck"],
+            "generated_owner": "skiller registry; deferred P4.6",
+            "target_preimages": [],
+            "status": "applied",
+            "rollback": {"id": "p4.3-root-bootstrap-1-skill-authoring", "backup": "git:86d52109^:packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md"}
+        },
+        {
+            "id": "skill.repository-bootstrap.package-architecture",
+            "carrier_id": "semantic.skill",
+            "owner": "skiller registry",
+            "cwd": "packages/skiller",
+            "source_path": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
+            "source_locale": "en",
+            "source_preimage_sha256": "sha256:6dab20d1f98ccf99d9a681472bfcdcfe2e866b226a58f5d6e0c16e3da6b28d1b",
+            "english_postimage_sha256": "sha256:6dab20d1f98ccf99d9a681472bfcdcfe2e866b226a58f5d6e0c16e3da6b28d1b",
+            "overlay_path": null,
+            "overlay_sha256": null,
+            "overlay_mode": "english-fallback",
+            "immutable_tokens": ["SKILL.md", "skiller registry"],
+            "semantic_invariants": ["EN-only canonical source", "generated projections remain additive"],
+            "author": "p43-package-author",
+            "renderer": "skiller-registry",
+            "reviews": [
+                {"locale": "en", "reviewer": "p43_en_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.en.json"},
+                {"locale": "ru", "reviewer": "p43_ru_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.ru.json"}
+            ],
+            "semantic_review_evidence": ["p43_en_recheck", "p43_ru_recheck"],
+            "generated_owner": "skiller registry; deferred P4.6",
+            "target_preimages": [],
+            "status": "applied",
+            "rollback": {"id": "p4.3-root-bootstrap-1-package-architecture", "backup": "git:86d52109^:packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md"}
+        },
+        {
+            "id": "skill.repository-bootstrap.field-feedback-loop",
+            "carrier_id": "semantic.skill",
+            "owner": "skiller registry",
+            "cwd": "packages/skiller",
+            "source_path": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+            "source_locale": "en",
+            "source_preimage_sha256": "sha256:235f366c0d6e5ae7e30cf889f2f014e51b1b46e33eb190342de663beaca6338e",
+            "english_postimage_sha256": "sha256:882433d8d69485887383712ac99a96f2c8c214906bd786192054b17968f71c11",
+            "overlay_path": null,
+            "overlay_sha256": null,
+            "overlay_mode": "english-fallback",
+            "immutable_tokens": ["[docs-maintenance]", "[skill-authoring]", "SKILL.md", "[package-architecture]", "[release-discipline]", "maind memory store", "roadmap/", "GitHub issue"],
+            "semantic_invariants": ["EN-only canonical source", "fix measured local defects now", "record uncertain work in roadmap"],
+            "author": "p43-package-author",
+            "renderer": "skiller-registry",
+            "reviews": [
+                {"locale": "en", "reviewer": "p43_en_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.en.json"},
+                {"locale": "ru", "reviewer": "p43_ru_recheck", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.ru.json"}
+            ],
+            "semantic_review_evidence": ["p43_en_recheck", "p43_ru_recheck"],
+            "generated_owner": "skiller registry; deferred P4.6",
+            "target_preimages": [],
+            "status": "applied",
+            "rollback": {"id": "p4.3-root-bootstrap-1-field-feedback-loop", "backup": "git:86d52109^:packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md"}
+        }
+    ]
 }

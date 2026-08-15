@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:locale-corpus-batch:v1",
+  "checkpoint_id": "p4.3-root-bootstrap-1",
+  "author": "p43-package-author",
+  "row_ids": [
+    "skill.repository-bootstrap.skill-authoring",
+    "skill.repository-bootstrap.package-architecture",
+    "skill.repository-bootstrap.field-feedback-loop"
+  ],
+  "base_commit": "82f145f4",
+  "commits": [
+    "86d52109"
+  ],
+  "commands": [
+    {"cwd": "packages/skiller", "command": "bash scripts/check-translations.sh --strict --direction en-source", "exit_code": 0},
+    {"cwd": "packages/skiller", "command": "bash scripts/test.sh", "exit_code": 0, "evidence": "638 tests"},
+    {"cwd": "packages/skiller", "command": "bash scripts/validate.sh", "exit_code": 1, "disposition": "deferred-derived-only", "deferred": ["packages/skiller/skills.json", ".claude/skills/field-feedback-loop/SKILL.md", ".agents/skills/field-feedback-loop/SKILL.md", "packages/skiller/adapters/repository-bootstrap/publication-lock.json", "packages/skiller/docs/guide/budget.md"]}
+  ],
+  "reviewer": {
+    "reviewer": "p43_en_recheck",
+    "verdict": "pass",
+    "record": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/reviews/p4.3-root-bootstrap-1.round-2.json"
+  },
+  "review_round": 2,
+  "rollback": {
+    "id": "p4.3-root-bootstrap-1",
+    "backup": "git:86d52109^:packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md"
+  },
+  "resume_cursor": null,
+  "next": null
+}

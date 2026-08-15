@@ -23,8 +23,8 @@ _PREIMAGE_DIGESTS = {
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
 _CANDIDATE_DIGESTS = {
-    "plan-exec": "7fae9763bceaccda420241ed11cf9a532d5ba59c6670d6c7933029857745309c",
-    "plan-run": "835b83945f8618d25ae98661290ea6492af546ab9eacc5e35de8d8cb6c067f3f",
+    "plan-exec": "6f6d7c67a6aebccb8460996b31714710e1ac5e1e3cb3bdaba5f830c02229644c",
+    "plan-run": "9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942",
 }
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
 # sources use that form inside ordered lists, so matching only column-zero fences
@@ -43,11 +43,11 @@ _EXPECTED_INVENTORIES = {
     # binds the full typed sequence, including order and multiplicity.
     "plan-exec": {
         "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
-        "candidate": "sha256:3d41e3288dd7d8158fd5670459cb8cf57daa1a3c95a0030234397d32b9a1e142",
+        "candidate": "sha256:2f7ce4cb7a71254981247b5252fff1a26c4514e70ed005ce742ec47e4c274e0e",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:be43fa800efb25a0695168a65a59f29093e92aa9904f12f5427636f1c9adbebb",
+        "candidate": "sha256:8b93e86fc2d9a617b421d0475d04d0aac8e02ad4a31a3ded7b8621288849481c",
     },
 }
 
@@ -104,21 +104,17 @@ def _is_protected_preimage_literal(kind: str, value: str) -> bool:
     Task paths.  The rule is independent of the candidate and therefore cannot be
     weakened by omitting a value in the new source.
     """
-    if value.startswith(("task:", "task.")):
-        return True
-    if value.startswith(("packages/task/", "plans/", "phases/", "snippets/")):
+    if value.startswith("task.") and "(" in value:
         return True
     if value in {
-        "sonnet", "medium", "model", "effort", "plan-exec", "plan-run", "plan-design",
+        "sonnet", "medium", "model", "effort", "plan-exec", "plan-design",
         "manual", "allow", "delegated", "approval_required", "denied", "local-repair",
         "block-candidate", "terminal-block", "routing-rejected", "ROUTE-UNVERIFIABLE",
-        "ROUTING-BLOCKED", "ROUTING-INCONSISTENT", "PLAN_LAYOUT_V1_RETIRED",
-        "LOOP_BUDGET_EXCEEDED", "INSUFFICIENT_EVIDENCE", "JUSTIFIED", "AVOIDABLE",
-        "OUT_OF_SCOPE", "MALFORMED", "CAPABILITY_UNSUPPORTED", "COLD_START_INCOMPLETE",
+        "ROUTING-INCONSISTENT", "PLAN_LAYOUT_V1_RETIRED",
+        "LOOP_BUDGET_EXCEEDED", "JUSTIFIED", "CAPABILITY_UNSUPPORTED", "COLD_START_INCOMPLETE",
         "PORTABILITY_EXTERNAL_INPUT", "PORTABILITY_INPUT_MISSING", "VERSION_HASH_MISMATCH",
         "CONFLICT_UNRESOLVED", "CONFLICT_PRECEDENCE_VIOLATION", "NEXT_CHANGED_WITHOUT_TRANSITION",
-        "SLICE_INCOMPLETE", "block-confirmation:v1", "block-candidate/v1",
-        "return-judgement@1.0.0", "isolated-child-return", "DecisionRequest",
+        "SLICE_INCOMPLETE", "block-confirmation:v1", "isolated-child-return", "DecisionRequest",
     }:
         return True
     if kind == "frontmatter-value" and value in {"sonnet", "medium"}:

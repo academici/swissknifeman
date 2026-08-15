@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 7cfb2ffe27d38108fa61db472b548a5d95ec56e649fb84b371ff2ff9f5f076d8
+inputs_sha256: 60fc1c0c43b12fb12328023bbe08fcb247d348c980f5bc204428c1016761ff1d
 generated_by: task plan-views status
 -->
 
@@ -302,6 +302,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.4: two stable full-fleet no-write passes; 13,421 unresolved rows hold rollout. Process deviation: missing plan-local convergence carrier repaired forward. |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow; invalid standalone task CLI path replaced by owning plan-lint.py script |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.1: plan/check/plan byte-identical; 12 runner tests and lint delta green; historical false-green package-validate claim corrected (5 inherited P4 errors). |
+| 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.4: frozen convergence/aggregate CLI repaired; P0 exact-set bound; 12 tests and declared validation green; rollout remains held. |
+| 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.2: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
+| 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.3: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
 
 ## Owner Gates
 
@@ -319,5 +323,3 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.4: known deviation
 - P4.5: known deviation
 - P4.6: known deviation
-- P5.3: known deviation
-- P5.4: known deviation

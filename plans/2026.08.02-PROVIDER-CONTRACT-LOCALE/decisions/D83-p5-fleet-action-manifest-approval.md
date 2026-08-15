@@ -27,6 +27,7 @@ Manifest содержит 13 421 строку `no-op-unresolved` для 23 prote
 Terminal P0 classification не доказала ни одной строки, которую допустимо автоматически
 перевести в preserve/relink/refresh/quarantine. Замороженный no-write manifest сохраняет exact-set
 coverage и честно оставляет все строки unresolved, не выводя authority из live drift.
+RAG:— (repo-grounded: P0 classification, frozen manifest and owner response carrier).
 
 ## Consequences
 

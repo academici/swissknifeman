@@ -15,6 +15,8 @@ carrier is `../artifacts/P5/fleet-convergence.json`; it records complete P0 cove
 `rollout_authorized: false`.
 
 The P5 runner originally lacked the `convergence` command and aggregate
-`verify-results --all-action-sets --convergence` carrier named by P5.4 validation.
-A bounded plan-local repair added those fail-closed checks and one positive/negative
-acceptance test. No package runtime, provider projection or consumer root was changed.
+`verify-results --all-action-sets --convergence` carrier named by P5.4 validation. Its first
+repair still rejected the frozen `--p0-manifest` and aggregate CLI forms. The audit-fixer repaired
+those exact commands, bound both observations to the sealed P0 23-project/13,421-artifact set,
+and added positive plus tamper-negative acceptance coverage. No package runtime, provider
+projection or consumer root was changed.

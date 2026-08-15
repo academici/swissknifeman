@@ -25,7 +25,8 @@ explicit and cannot contribute a green fleet-health claim.
 ## Validation and environment evidence
 
 - The complete stdlib runner carrier passed all 11 tests.
-- Plan lint against `HEAD` returned 0 with no newly introduced errors.
+- Plan lint `--gate new` returned 0 with no newly introduced errors; full lint retained five
+  inherited P4 write-site errors and was not reported green.
 - `codex doctor --json` and worktree-local `maind health --cwd` were green.
 - Preflight found stale global Claude `run-report` hook files. The worktree-local
   `packages/harness/bin/harness hooks --global` regenerated the effective registration, and the
@@ -35,4 +36,3 @@ explicit and cannot contribute a green fleet-health claim.
   result instead of rerunning validation; neither defect changed product bytes or route evidence.
 - Foreign changes in `packages/task`, unrelated generated bundles, and `roadmap/` were preserved
   and excluded from P5.2 commits.
-

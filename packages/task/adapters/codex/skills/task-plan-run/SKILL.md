@@ -1,6 +1,6 @@
 ---
 name: task-plan-run
-description: "План-протокол: исполнить item Pn.m под моделью/effort ТЕКУЩЕЙ СЕССИИ (модель НЕ пинится) — для серии Exec=manual item'ов без ритуала select the session model class+select the session effort на каждом."
+description: "Plan protocol: execute plan item Pn.m using the current session model/effort; use for Exec=manual series without repeated session selection."
 ---
 
 # Task plan-run
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-run`.
 - Invocation: `$ task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:128990b1688a079d35e4aca5cfa7b44f0ffe5a89cb64a64252cf6374ccc4057f`
+- Canonical SHA-256: `sha256:9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

@@ -9,6 +9,7 @@
   "base_commit": "980ee79d",
   "commits": [
     "660e9955",
+    "e4310efe",
     "81eb2946"
   ],
   "commands": [
@@ -42,11 +43,11 @@
     ]
   },
   "reviewer": {
-    "reviewer": "p44-task-checkpoint-review",
-    "verdict": "pass",
-    "record": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.round-1.json"
+    "reviewer": "p44-task-checkpoint-review-2",
+    "verdict": "pending",
+    "record": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.round-2.json"
   },
-  "review_round": 1,
+  "review_round": 2,
   "rollback": {
     "id": "p4.4-task-plan-1",
     "backup": "git:980ee79d:packages/task/commands/{plan-exec,plan-run}.md"

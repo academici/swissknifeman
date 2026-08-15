@@ -1,0 +1,21 @@
+{
+  "schema_version": "p5-crash-boundaries/v1",
+  "append_boundaries": [
+    "append-before",
+    "append-applied",
+    "append-readback-passed",
+    "append-readback-failed",
+    "append-accepted",
+    "append-rollback-started",
+    "append-rolled-back"
+  ],
+  "public_boundaries": [
+    "public-apply",
+    "public-readback",
+    "public-rollback"
+  ],
+  "terminal_states": [
+    "accepted",
+    "rolled-back"
+  ]
+}

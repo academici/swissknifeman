@@ -1,0 +1,17 @@
+{
+  "schema_version": "p5-reconcile-states/v1",
+  "cases": [
+    {
+      "observed": "exact-planned-postimage",
+      "result": "fresh-readback-then-accepted"
+    },
+    {
+      "observed": "exact-sealed-preimage",
+      "result": "rolled-back"
+    },
+    {
+      "observed": "third-state",
+      "result": "refuse-remaining-actions"
+    }
+  ]
+}

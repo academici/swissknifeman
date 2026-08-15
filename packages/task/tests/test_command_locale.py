@@ -4,7 +4,8 @@ from pathlib import Path
 import unittest
 
 from task.command_locale import (command_locale_key, english_catalog, literal_inventory,
-                                 verify_literal_inventory, resolve_command)
+                                 verify_literal_inventory, resolve_command,
+                                 _preserves_protected_literals)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -65,6 +66,14 @@ class CommandLocaleTests(unittest.TestCase):
         ):
             with self.subTest(label=label), self.assertRaisesRegex(ValueError, "CMD_LOCALE_LITERAL_INVENTORY_MISMATCH"):
                 verify_literal_inventory(candidate, command_id="plan-run")
+
+    def test_preimage_protection_rejects_a_removed_contract_atom(self):
+        text = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
+        inventory = literal_inventory(text, command_id="plan-run")
+        protected = ("inline-code", "delegated")
+        self.assertIn(protected, inventory["protected_preimage_literals"])
+        candidate = tuple(literal for literal in inventory["candidate_literals"] if literal != protected)
+        self.assertFalse(_preserves_protected_literals(inventory["protected_preimage_literals"], candidate))
 
 
 if __name__ == "__main__":  # pragma: no cover

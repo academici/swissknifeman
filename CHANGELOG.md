@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **`core` / `skiller`: добавлен evidence-admitted locale corpus gate.**
+  Единый JSON ledger и stdlib-only validator проверяют English source ownership, независимые
+  EN/RU reviews, immutable tokens, preimages, rollback и bounded checkpoints; новые
+  `check-locale-corpus.py` и `check-translations.sh --strict` отказывают generated, foreign,
+  stale и ambiguous строки до записи. Canonical Skill template теперь EN-only и генерирует
+  байт-стабильную distribution copy.
+
 - **`core`: добавлен общий stdlib-only runtime локализации.**
   Pinned IANA registry разрешает независимые `response`/`plan`/`diagnostics` контексты,
   fail-closed BCP 47 canonicalization и sparse Russian overlay с защитой machine literals;

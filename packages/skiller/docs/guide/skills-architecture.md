@@ -31,16 +31,19 @@ skiller — это **реестр готовых, иерархически ор�
 Каждый `SKILL.md` несёт фронтматтер (`SKILL_TEMPLATE.md` — каноническая схема):
 
 ```yaml
-name· bucket· version· description· risk· persona· tags·
-requires· produces_for· outputs· snippets· adapters· sha256·
-level   # опц.: core|foundation|extension — слой иерархии (см. §4)
+name · bucket · version · description · risk · invocation_intent · capabilities ·
+inputs · outputs · resources · provenance · sha256
 ```
 
-- **`requires`** — скиллы, которые этот тянет (транзитивно резолвится в vendor).
-- **`produces_for`** — скиллы, которым этот полезен (граф/документация).
-- **`level`** — *необязательное* само-документирование слоя; пишется в `skills.json`
-  при наличии, валидируется enum'ом в `validate.sh`. Opt-in: проставляется по
-  желанию авторов, не обязателен. Дополняет `requires`/`produces_for`, **не заменяет**.
+- **`invocation_intent`** — semantic policy `automatic|explicit`; для `write` и
+  `external` обязателен explicit intent.
+- **`capabilities`, `inputs`, `outputs`, `resources`** — provider-neutral Skill Core;
+  provider-native controls не входят в shared frontmatter.
+- **`provenance`** — local/upstream source and refresh ownership.
+
+`scripts/generate-skill-template.py --check` verifies the generated template copy, while
+`scripts/check-translations.sh --strict` enforces the EN canonical source and forbids provider
+controls in the shared carrier. Both checks are included in `validate.sh`.
 
 Источник истины метаданных — `skills.json` (генерируется `skiller registry`).
 

@@ -18,6 +18,8 @@ from harness.instructions import (
     adopt_instructions, apply_instructions, check_instructions, load_catalog,
     plan_instructions, repair_instructions,
 )
+from harness.provider_render import render_locale_context
+from core.locale import resolve_locale
 
 
 def request(operation, root, **changes):
@@ -65,6 +67,10 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
+    def test_locale_context_keeps_provider_output_ownership(self):
+        registry = Path(__file__).resolve().parents[3] / "core/locale/data/language-subtag-registry.txt"
+        result = resolve_locale(({"contract_version": "1.0.0", "rank": 5, "kind": "built-in", "locale": {"response": "en", "plan": "en", "diagnostics": "en"}},), registry_path=registry)
+        self.assertEqual(render_locale_context(result)["provider_boundary"], "harness")
     def test_exact_62_common_22_extension_84_total_and_fourteen_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]

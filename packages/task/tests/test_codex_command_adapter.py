@@ -14,7 +14,8 @@ from core.provider.lock import ArtifactActionKind
 from task.command_catalog import build_command_catalog
 from task.command_render import (PROVIDER_LOCK_PATH, apply_codex_command_plan,
                                  mapping_from_catalog, plan_codex_command_apply,
-                                 plan_codex_command_render, render_invocation)
+                                 plan_codex_command_render, render_invocation, render_locale_context)
+from core.locale import resolve_locale
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -24,6 +25,9 @@ FIXTURE = REPO_ROOT / "packages/task/tests/fixtures_data/codex-command-cases.jso
 
 
 class CodexCommandAdapterTests(unittest.TestCase):
+    def test_locale_context_remains_semantic_input_not_adapter_state(self):
+        result = resolve_locale(({"contract_version": "1.0.0", "rank": 5, "kind": "built-in", "locale": {"response": "en", "plan": "en", "diagnostics": "en"}},), registry_path=REPO_ROOT / "core/locale/data/language-subtag-registry.txt")
+        self.assertEqual(render_locale_context(result)["provider_boundary"], "task")
     @classmethod
     def setUpClass(cls):
         cls.expected = json.loads(FIXTURE.read_text(encoding="utf-8"))

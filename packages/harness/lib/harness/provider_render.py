@@ -14,6 +14,17 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
 from .profiles import ProfileResolution
 
 
+def render_locale_context(locale_result) -> dict[str, object]:
+    """Return provider-owned output metadata from an already resolved locale context.
+
+    The locale resolver remains the sole owner of precedence and catalog choice; this
+    adapter merely names its output boundary and never persists locale intent.
+    """
+    if getattr(locale_result, "surfaces", None) is None:
+        raise ValueError("HARNESS_LOCALE_CONTEXT_REFUSED")
+    return {"provider_boundary": "harness", "surfaces": [row.as_dict() for row in locale_result.surfaces]}
+
+
 _ADAPTER_VERSION = "1.0.0"
 
 

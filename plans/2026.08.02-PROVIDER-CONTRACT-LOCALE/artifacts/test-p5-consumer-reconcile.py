@@ -277,12 +277,14 @@ class ManifestTests(unittest.TestCase):
             self.assertEqual(p5.execute(args, mode="apply"), 0)
             results.append(str(path))
         convergence = self.fixture.base / "fleet-convergence.json"
-        args = argparse.Namespace(
-            manifest=str(self.fixture.manifest), approval=str(approval),
-            recovery_contract=str(self.fixture.recovery_contract),
-            journal=str(self.fixture.journal), passes=2, output=str(convergence),
-        )
-        self.assertEqual(p5.build_convergence(args), 0)
+        convergence_command = [
+            "convergence", "--manifest", str(self.fixture.manifest),
+            "--approval", str(approval), "--recovery-contract",
+            str(self.fixture.recovery_contract), "--p0-manifest",
+            str(self.fixture.p0_manifest), "--journal", str(self.fixture.journal),
+            "--passes", "2", "--output", str(convergence),
+        ]
+        self.assertEqual(p5.main(convergence_command), 0)
         value = json.loads(convergence.read_text())
         self.assertTrue(value["stable"])
         self.assertTrue(value["complete_p0_coverage"])
@@ -295,6 +297,25 @@ class ManifestTests(unittest.TestCase):
             convergence=str(convergence),
         )
         self.assertEqual(p5.verify_results(verify), 0)
+        exact = [
+            "verify-results", "--manifest", str(self.fixture.manifest),
+            "--approval", str(approval), "--recovery-contract",
+            str(self.fixture.recovery_contract), "--all-action-sets",
+            "--journal", str(self.fixture.journal), "--results",
+            str(self.fixture.base / "P5.4-results.json"),
+            "--convergence", str(convergence),
+        ]
+        self.assertEqual(p5.main(exact), 0)
+        value["approval_decision"] = "D98"
+        value["convergence_sha256"] = p5.digest_value({
+            key: nested for key, nested in value.items()
+            if key != "convergence_sha256"
+        })
+        write_json(convergence, value)
+        with self.assertRaisesRegex(p5.Refusal, "P5_CONVERGENCE_MISMATCH"):
+            p5.verify_results(verify)
+        self.assertEqual(p5.main(convergence_command), 0)
+        value = json.loads(convergence.read_text())
         value["observations"][1]["observation"]["unresolved_rows"] = 0
         write_json(convergence, value)
         with self.assertRaisesRegex(p5.Refusal, "P5_CONVERGENCE_MISMATCH"):

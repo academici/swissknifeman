@@ -1,7 +1,7 @@
 {
   "approval_decision": "D83",
   "complete_p0_coverage": true,
-  "convergence_sha256": "sha256:b887e43ab198c44aad9728bacb9090471143a7d1dfdaab28132e5786c06bfc1d",
+  "convergence_sha256": "sha256:04f7c40fa0f24d8d2bb23d79857c77634a0b8a56e64d57de3176cc4754ba3ae1",
   "manifest_sha256": "sha256:8c134c75214cff8dc4193f3b251e1afaf5c3041135a942976571068ad527bae4",
   "migration_readiness": "held-unresolved",
   "observations": [
@@ -17,6 +17,14 @@
         "consumer_writes": 0,
         "journal_events": 0,
         "manifest_sha256": "sha256:8c134c75214cff8dc4193f3b251e1afaf5c3041135a942976571068ad527bae4",
+        "p0_coverage": {
+          "artifact_count": 13421,
+          "artifact_ids_sha256": "sha256:1bd1664fbda9a11f15c08450f5bdd57f5728cd0802505a69a9f9e94f4442bab2",
+          "manifest_sha256": "sha256:b01ddffa1bea00191a16bdb2e0de274328b856d2fbcb8d2a12fb2e3461936cfb",
+          "project_count": 23,
+          "project_ids_sha256": "sha256:0b12c81eee7def5e6a7521c0f0a4a7b296e1540247a60a8f8d30b3443546798a",
+          "snapshot_sha256": "sha256:4ac3805f9bf767e95641566e24bcad784d298b07bc67de197c3f92b2d3509cb6"
+        },
         "project_count": 23,
         "rolled_back_transactions": 0,
         "row_count": 13421,
@@ -24,7 +32,7 @@
         "unresolved_action_ids_sha256": "sha256:442472f90aa9770c159eecdfa494cc1daced870f462274e1986fcb9d2d6faf0b",
         "unresolved_rows": 13421
       },
-      "observation_sha256": "sha256:b97632d86b3d84994d5807615baf7fdb3988d30ab0c6f262f346693c90388602",
+      "observation_sha256": "sha256:561cb289a8b24dcedc1860dcc6b0d876252ba75e5b792853e23689cefb0c7f15",
       "pass": 1
     },
     {
@@ -39,6 +47,14 @@
         "consumer_writes": 0,
         "journal_events": 0,
         "manifest_sha256": "sha256:8c134c75214cff8dc4193f3b251e1afaf5c3041135a942976571068ad527bae4",
+        "p0_coverage": {
+          "artifact_count": 13421,
+          "artifact_ids_sha256": "sha256:1bd1664fbda9a11f15c08450f5bdd57f5728cd0802505a69a9f9e94f4442bab2",
+          "manifest_sha256": "sha256:b01ddffa1bea00191a16bdb2e0de274328b856d2fbcb8d2a12fb2e3461936cfb",
+          "project_count": 23,
+          "project_ids_sha256": "sha256:0b12c81eee7def5e6a7521c0f0a4a7b296e1540247a60a8f8d30b3443546798a",
+          "snapshot_sha256": "sha256:4ac3805f9bf767e95641566e24bcad784d298b07bc67de197c3f92b2d3509cb6"
+        },
         "project_count": 23,
         "rolled_back_transactions": 0,
         "row_count": 13421,
@@ -46,7 +62,7 @@
         "unresolved_action_ids_sha256": "sha256:442472f90aa9770c159eecdfa494cc1daced870f462274e1986fcb9d2d6faf0b",
         "unresolved_rows": 13421
       },
-      "observation_sha256": "sha256:b97632d86b3d84994d5807615baf7fdb3988d30ab0c6f262f346693c90388602",
+      "observation_sha256": "sha256:561cb289a8b24dcedc1860dcc6b0d876252ba75e5b792853e23689cefb0c7f15",
       "pass": 2
     }
   ],

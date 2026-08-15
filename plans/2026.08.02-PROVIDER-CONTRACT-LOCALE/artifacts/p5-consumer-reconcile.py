@@ -782,8 +782,61 @@ def _verify_result(
         raise Refusal("P5_RESULTS_MISMATCH")
 
 
+def p0_coverage_identity(p0_manifest: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    p0 = load_json(p0_manifest)
+    required = {"provider-fleet-inventory.json", "provider-source-snapshot.json"}
+    if not isinstance(p0, dict) or not required.issubset(set(p0.get("files", []))):
+        raise Refusal("P5_P0_MANIFEST_INCOMPLETE")
+    sources = manifest.get("source_identities")
+    if not isinstance(sources, dict):
+        raise Refusal("P5_P0_COVERAGE_MISMATCH")
+    snapshot_path = p0_manifest.parent / "provider-source-snapshot.json"
+    manifest_sha256 = digest_file(p0_manifest)
+    snapshot_sha256 = digest_file(snapshot_path)
+    if (
+        manifest_sha256 != sources.get("p0_manifest", {}).get("sha256")
+        or snapshot_sha256 != sources.get("p0_snapshot", {}).get("sha256")
+    ):
+        raise Refusal("P5_P0_COVERAGE_MISMATCH")
+    snapshot = load_json(snapshot_path)
+    projects = snapshot.get("projects")
+    if snapshot.get("schema_version") != 2 or not isinstance(projects, list):
+        raise Refusal("P5_P0_COVERAGE_MISMATCH")
+    project_ids = [project.get("project_id") for project in projects]
+    if any(
+        not isinstance(project, dict)
+        or not isinstance(project.get("provider_paths"), list)
+        for project in projects
+    ):
+        raise Refusal("P5_P0_COVERAGE_MISMATCH")
+    artifact_ids = [
+        node.get("artifact_id")
+        for project in projects
+        for node in project["provider_paths"]
+        if isinstance(node, dict)
+    ]
+    manifest_artifact_ids = [row.get("sealed_artifact_id") for row in manifest["rows"]]
+    if (
+        not all(isinstance(value, str) for value in project_ids + artifact_ids)
+        or len(project_ids) != len(set(project_ids))
+        or len(artifact_ids) != len(set(artifact_ids))
+        or sorted(project_ids) != manifest["project_ids"]
+        or sorted(artifact_ids) != sorted(manifest_artifact_ids)
+        or len(artifact_ids) != len(manifest_artifact_ids)
+    ):
+        raise Refusal("P5_P0_COVERAGE_MISMATCH")
+    return {
+        "manifest_sha256": manifest_sha256,
+        "snapshot_sha256": snapshot_sha256,
+        "project_count": len(project_ids),
+        "artifact_count": len(artifact_ids),
+        "project_ids_sha256": digest_value(sorted(project_ids)),
+        "artifact_ids_sha256": digest_value(sorted(artifact_ids)),
+    }
+
+
 def convergence_observation(
-    manifest: dict[str, Any], events: list[dict[str, Any]]
+    manifest: dict[str, Any], events: list[dict[str, Any]], p0_coverage: dict[str, Any]
 ) -> dict[str, Any]:
     latest = _latest_by_transaction(events)
     if any(event["event"] not in {"accepted", "rolled-back"} for event in latest.values()):
@@ -798,6 +851,7 @@ def convergence_observation(
     ]
     return {
         "manifest_sha256": manifest["manifest_sha256"],
+        "p0_coverage": p0_coverage,
         "project_count": len(manifest["project_ids"]),
         "row_count": len(manifest["rows"]),
         "action_set_counts": action_counts,
@@ -826,7 +880,8 @@ def build_convergence(args: argparse.Namespace) -> int:
         decision = parse_approval(Path(args.approval), manifest)
         recovery = contract_identity(Path(args.recovery_contract))
         events = validate_journal(Path(args.journal))
-        observation = convergence_observation(manifest, events)
+        p0_coverage = p0_coverage_identity(Path(args.p0_manifest), manifest)
+        observation = convergence_observation(manifest, events, p0_coverage)
         observations.append({
             "pass": index,
             "observation_sha256": digest_value(observation),
@@ -844,10 +899,7 @@ def build_convergence(args: argparse.Namespace) -> int:
         "passes": args.passes,
         "observations": observations,
         "stable": True,
-        "complete_p0_coverage": (
-            observation["row_count"] == manifest["summary"]["rows"]
-            and observation["project_count"] == manifest["summary"]["projects"]
-        ),
+        "complete_p0_coverage": True,
         "migration_readiness": "held-unresolved",
         "rollout_authorized": False,
     }
@@ -861,6 +913,13 @@ def build_convergence(args: argparse.Namespace) -> int:
 
 
 def _result_mapping(args: argparse.Namespace) -> dict[str, Path]:
+    if args.all_action_sets == [] and args.convergence:
+        base = Path(args.convergence).parent
+        expected = {item: base / f"{item}-results.json" for item in ACTION_SETS}
+        supplied = [Path(value) for value in args.results or []]
+        if supplied not in ([], [expected["P5.4"]], list(expected.values())):
+            raise Refusal("P5_RESULTS_ARGUMENT")
+        return expected
     values = list(args.all_action_sets or []) + list(args.results or [])
     mapping: dict[str, Path] = {}
     for raw in values:
@@ -890,15 +949,33 @@ def _result_mapping(args: argparse.Namespace) -> dict[str, Path]:
 
 
 def _verify_convergence(
-    manifest: dict[str, Any], events: list[dict[str, Any]], path: Path
+    manifest: dict[str, Any], events: list[dict[str, Any]], path: Path,
+    decision: str, recovery: dict[str, str],
 ) -> None:
     value = load_json(path)
     recorded_hash = value.pop("convergence_sha256", None)
-    expected = convergence_observation(manifest, events)
     observations = value.get("observations")
+    p0_coverage = (
+        observations[0].get("observation", {}).get("p0_coverage")
+        if isinstance(observations, list) and observations
+        and isinstance(observations[0], dict)
+        else None
+    )
+    expected = convergence_observation(manifest, events, p0_coverage)
     if (
         value.get("schema_version") != CONVERGENCE_VERSION
         or value.get("manifest_sha256") != manifest["manifest_sha256"]
+        or value.get("approval_decision") != decision
+        or value.get("recovery_contract") != recovery
+        or not isinstance(p0_coverage, dict)
+        or p0_coverage.get("manifest_sha256") != manifest["source_identities"]["p0_manifest"]["sha256"]
+        or p0_coverage.get("snapshot_sha256") != manifest["source_identities"]["p0_snapshot"]["sha256"]
+        or p0_coverage.get("project_count") != len(manifest["project_ids"])
+        or p0_coverage.get("artifact_count") != len(manifest["rows"])
+        or p0_coverage.get("project_ids_sha256") != digest_value(sorted(manifest["project_ids"]))
+        or p0_coverage.get("artifact_ids_sha256") != digest_value(sorted(
+            row["sealed_artifact_id"] for row in manifest["rows"]
+        ))
         or value.get("passes") != 2
         or value.get("stable") is not True
         or value.get("complete_p0_coverage") is not True
@@ -918,8 +995,8 @@ def _verify_convergence(
 def verify_results(args: argparse.Namespace) -> int:
     manifest = load_json(Path(args.manifest))
     validate_manifest(manifest)
-    parse_approval(Path(args.approval), manifest)
-    contract_identity(Path(args.recovery_contract))
+    decision = parse_approval(Path(args.approval), manifest)
+    recovery = contract_identity(Path(args.recovery_contract))
     events = validate_journal(Path(args.journal))
     latest = _latest_by_transaction(events)
     if any(event["event"] not in {"accepted", "rolled-back"} for event in latest.values()):
@@ -930,7 +1007,9 @@ def verify_results(args: argparse.Namespace) -> int:
             raise Refusal("P5_RESULTS_EXACT_SET")
         for item in sorted(mapping):
             _verify_result(manifest, events, item, mapping[item])
-        _verify_convergence(manifest, events, Path(args.convergence))
+        _verify_convergence(
+            manifest, events, Path(args.convergence), decision, recovery
+        )
         print(
             f"P5 fleet results verified: {len(mapping)} action sets; "
             f"{len(events)} durable events"
@@ -982,6 +1061,7 @@ def add_convergence_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--approval", required=True)
     parser.add_argument("--recovery-contract", required=True)
+    parser.add_argument("--p0-manifest", required=True)
     parser.add_argument("--journal", required=True)
     parser.add_argument("--passes", required=True, type=int)
     parser.add_argument("--output", required=True)

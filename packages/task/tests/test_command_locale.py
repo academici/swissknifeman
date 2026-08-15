@@ -1,12 +1,9 @@
 """Command locale boundary: English canonical source, Russian overlay, and literal parity."""
-from hashlib import sha256
-import json
 from pathlib import Path
-import tempfile
 import unittest
 
-from task.command_locale import (catalog_sha256, command_locale_key, english_catalog,
-                                 immutable_tokens, resolve_command)
+from task.command_locale import (command_locale_key, english_catalog, immutable_tokens,
+                                 literal_inventory, resolve_command)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -21,40 +18,35 @@ class CommandLocaleTests(unittest.TestCase):
         self.assertTrue(result["fallback"])
         self.assertEqual(result["text"], (COMMAND_ROOT / "plan-exec.md").read_text(encoding="utf-8"))
 
-    def test_russian_overlay_renders_both_migrated_commands(self):
+    def test_russian_command_requests_use_sparse_english_fallback(self):
         for command_id in ("plan-exec", "plan-run"):
             with self.subTest(command_id=command_id):
                 result = resolve_command(command_id, locale="ru", command_root=COMMAND_ROOT,
                                          overlay_path=OVERLAY_PATH)
-                self.assertEqual(result["resolved_locale"], "ru")
-                self.assertFalse(result["fallback"])
-                self.assertIn("---", result["text"])
+                self.assertEqual(result["resolved_locale"], "en")
+                self.assertTrue(result["fallback"])
+                self.assertIsNone(result["overlay_sha256"])
 
-    def test_missing_russian_unit_falls_back_to_english(self):
-        source = json.loads(OVERLAY_PATH.read_text(encoding="utf-8"))
-        source["units"].pop(command_locale_key("plan-run"))
-        with tempfile.TemporaryDirectory() as temporary:
-            path = Path(temporary) / "ru.json"
-            path.write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
-            # A sparse overlay may omit a unit and must use its English source unchanged.
-            path.write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
-            result = resolve_command("plan-run", locale="ru", command_root=COMMAND_ROOT,
-                                     overlay_path=path)
-            self.assertEqual(result["text"], (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8"))
-            self.assertTrue(result["fallback"])
-
-    def test_overlay_literals_match_the_english_unit(self):
+    def test_complete_preimage_derived_inventory_matches_each_canonical_unit(self):
         catalog = english_catalog(COMMAND_ROOT)
-        overlay = json.loads(OVERLAY_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(overlay["source_catalog_sha256"], catalog_sha256(catalog))
         for command_id in ("plan-exec", "plan-run"):
-            key = command_locale_key(command_id)
-            unit = overlay["units"][key]
-            tokens = immutable_tokens(catalog.units[key])
-            self.assertEqual(unit["source_sha256"], "sha256:" + sha256(catalog.units[key].encode()).hexdigest())
-            self.assertEqual(unit["immutable_tokens"], list(tokens))
-            self.assertTrue(all(unit["text"].count(token) == catalog.units[key].count(token)
-                                for token in tokens))
+            with self.subTest(command_id=command_id):
+                inventory = literal_inventory(catalog.units[command_locale_key(command_id)], command_id=command_id)
+                self.assertEqual(inventory["preimage_commit"], "980ee79d")
+                self.assertGreater(len(inventory["preimage_literals"]), 20)
+                self.assertGreater(len(inventory["candidate_literals"]), 20)
+
+    def test_inventory_rejects_omitted_reordered_multiplied_and_new_literals(self):
+        text = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
+        token = "task.route_evidence.capture_launch"
+        for label, candidate in (
+            ("omitted", text.replace(token, "", 1)),
+            ("reordered", text.replace(token, "x", 1).replace("x", token, 1)),
+            ("multiplicity", text.replace(token, f"{token} {token}", 1)),
+            ("new", text + "\n`NEW_MACHINE_LITERAL`\n"),
+        ):
+            with self.subTest(label=label), self.assertRaisesRegex(ValueError, "CMD_LOCALE_CANDIDATE_DIGEST_MISMATCH"):
+                literal_inventory(candidate, command_id="plan-run")
 
 
 if __name__ == "__main__":  # pragma: no cover

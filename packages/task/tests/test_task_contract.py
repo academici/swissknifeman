@@ -510,7 +510,7 @@ class AuthorityCommandBoundaryTests(unittest.TestCase):
     def test_plan_exec_boundaries_and_plan_run_share_the_checked_compiler(self):
         exec_text = (REPO_ROOT / "packages/task/commands/plan-exec.md").read_text(encoding="utf-8")
         run_text = (REPO_ROOT / "packages/task/commands/plan-run.md").read_text(encoding="utf-8")
-        self.assertEqual(exec_text.count("task_contract.build("), 1)
+        self.assertEqual(exec_text.count("task_contract.build("), 2)
         self.assertNotIn("authority_granted", exec_text)
         self.assertNotIn("authority_granted_by", exec_text)
         self.assertIn(

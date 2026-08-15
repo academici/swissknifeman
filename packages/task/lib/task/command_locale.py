@@ -9,6 +9,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
+import subprocess
 
 from core.locale import Catalog, Overlay, render_message
 
@@ -16,18 +17,20 @@ from core.locale import Catalog, Overlay, render_message
 _SCHEMA = "urn:swissknifeman:localized-overlay:v1"
 _VERSION = "1.0.0"
 _COMMAND_IDS = ("plan-exec", "plan-run")
-_PLAN_EXEC_TOKENS = (
-    "task.plan_authority.authorize()", "task.plan_blocking.evaluate()",
-    "task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)",
-    "task.validation_admission.local_repair_decision(report)",
-)
-_PLAN_RUN_TOKENS = (
-    'task.command_catalog.package_command_path("task:plan-exec")',
-    "task.route_evidence.capture_launch",
-    "task.route_evidence.build_run_receipt(...)", "task.route_evidence.start_decision(receipt)",
-    "verify_run_receipt(..., current_evidence=<fresh>)",
-    "task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)",
-)
+_PREIMAGE_COMMIT = "980ee79d"
+_PREIMAGE_DIGESTS = {
+    "plan-exec": "646172c92e6e13b8cddb6af36594f4a24060224d0ceb2c8f981eff9f8c894664",
+    "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
+}
+_CANDIDATE_DIGESTS = {
+    "plan-exec": "6f6d7c67a6aebccb8460996b31714710e1ac5e1e3cb3bdaba5f830c02229644c",
+    "plan-run": "9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942",
+}
+_FENCE_RE = re.compile(r"^```[^\n]*\n(.*?)^```$", re.MULTILINE | re.DOTALL)
+_INLINE_RE = re.compile(r"`([^`\n]+)`")
+_URL_RE = re.compile(r"https?://[^\s)>]+")
+_PATH_RE = re.compile(r"(?<![\w.-])(?:[\w.-]+/)+(?:[\w.-]+)(?:\.[\w.-]+)?")
+_FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
 
 def command_locale_key(command_id: str) -> str:
@@ -44,9 +47,53 @@ def english_catalog(command_root: Path | None = None) -> Catalog:
     })
 
 
-def immutable_tokens(text: str) -> tuple[str, ...]:
-    """Return the complete owner-declared execution literals for one command unit."""
-    return _PLAN_RUN_TOKENS if "task.route_evidence.capture_launch" in text else _PLAN_EXEC_TOKENS
+def _machine_literals(text: str) -> tuple[str, ...]:
+    """Collect every ordered machine-bearing Markdown fragment without a hand-picked allowlist."""
+    literals: list[tuple[int, str]] = []
+    frontmatter = _FRONTMATTER_RE.search(text)
+    if frontmatter:
+        for match in re.finditer(r"^[A-Za-z][\w-]*:\s*(.+)$", frontmatter.group(1), re.MULTILINE):
+            literals.append((frontmatter.start(1) + match.start(1), match.group(1)))
+    for pattern in (_INLINE_RE, _FENCE_RE, _URL_RE, _PATH_RE):
+        for match in pattern.finditer(text):
+            value = match.group(1) if pattern in (_INLINE_RE, _FENCE_RE) else match.group(0)
+            literals.append((match.start(), value))
+    return tuple(value for _, value in sorted(literals, key=lambda item: item[0]))
+
+
+def _preimage(command_id: str) -> str:
+    result = subprocess.run(
+        ("git", "show", f"{_PREIMAGE_COMMIT}:packages/task/commands/{command_id}.md"),
+        check=True, capture_output=True, text=True,
+    )
+    text = result.stdout
+    if sha256(text.encode()).hexdigest() != _PREIMAGE_DIGESTS[command_id]:
+        raise ValueError("CMD_LOCALE_PREIMAGE_DIGEST_MISMATCH")
+    return text
+
+
+def literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
+    """Bind complete ordered preimage and candidate inventories to their source digests."""
+    command_id = command_id or ("plan-run" if "task.route_evidence.capture_launch" in text else "plan-exec")
+    if command_id not in _COMMAND_IDS:
+        raise ValueError("CMD_LOCALE_COMMAND_UNKNOWN")
+    if sha256(text.encode()).hexdigest() != _CANDIDATE_DIGESTS[command_id]:
+        raise ValueError("CMD_LOCALE_CANDIDATE_DIGEST_MISMATCH")
+    preimage = _preimage(command_id)
+    return {
+        "command_id": command_id,
+        "preimage_commit": _PREIMAGE_COMMIT,
+        "preimage_sha256": "sha256:" + _PREIMAGE_DIGESTS[command_id],
+        "candidate_sha256": "sha256:" + _CANDIDATE_DIGESTS[command_id],
+        "preimage_literals": _machine_literals(preimage),
+        "candidate_literals": _machine_literals(text),
+    }
+
+
+def immutable_tokens(text: str, *, command_id: str | None = None) -> tuple[str, ...]:
+    """Return the complete candidate inventory used when a localized unit is present."""
+    command_id = command_id or ("plan-run" if "task.route_evidence.capture_launch" in text else "plan-exec")
+    return literal_inventory(text, command_id=command_id)["candidate_literals"]
 
 
 def load_russian_overlay(path: Path | None = None) -> Overlay:

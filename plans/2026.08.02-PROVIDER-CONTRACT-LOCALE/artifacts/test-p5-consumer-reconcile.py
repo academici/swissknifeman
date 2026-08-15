@@ -251,6 +251,55 @@ class ManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(p5.Refusal, "P5_DESTRUCTIVE_OWNERSHIP"):
             p5.validate_manifest(manifest)
 
+    def test_two_pass_convergence_and_exact_aggregate_results(self):
+        manifest = self.fixture.build()
+        write_json(self.fixture.manifest, manifest)
+        self.fixture.journal.write_bytes(b"")
+        approval = self.fixture.base / "approval.md"
+        approval.write_text(
+            "# Approval\n\nStatus: frozen\n"
+            f"Manifest SHA-256: {manifest['manifest_sha256']}\n"
+            "Owner decision: D99\n" + "".join(
+                f"{item}: {value['action_set_id']}\n"
+                for item, value in manifest["action_sets"].items()
+            ),
+            encoding="utf-8",
+        )
+        results = []
+        for item in p5.ACTION_SETS:
+            path = self.fixture.base / f"{item}-results.json"
+            args = argparse.Namespace(
+                manifest=str(self.fixture.manifest), approval=str(approval),
+                recovery_contract=str(self.fixture.recovery_contract),
+                action_set=item, journal=str(self.fixture.journal),
+                results=str(path), adapter_state=None,
+            )
+            self.assertEqual(p5.execute(args, mode="apply"), 0)
+            results.append(str(path))
+        convergence = self.fixture.base / "fleet-convergence.json"
+        args = argparse.Namespace(
+            manifest=str(self.fixture.manifest), approval=str(approval),
+            recovery_contract=str(self.fixture.recovery_contract),
+            journal=str(self.fixture.journal), passes=2, output=str(convergence),
+        )
+        self.assertEqual(p5.build_convergence(args), 0)
+        value = json.loads(convergence.read_text())
+        self.assertTrue(value["stable"])
+        self.assertTrue(value["complete_p0_coverage"])
+        self.assertEqual(value["migration_readiness"], "held-unresolved")
+        verify = argparse.Namespace(
+            manifest=str(self.fixture.manifest), approval=str(approval),
+            recovery_contract=str(self.fixture.recovery_contract),
+            journal=str(self.fixture.journal), action_set=None,
+            all_action_sets=[], results=results,
+            convergence=str(convergence),
+        )
+        self.assertEqual(p5.verify_results(verify), 0)
+        value["observations"][1]["observation"]["unresolved_rows"] = 0
+        write_json(convergence, value)
+        with self.assertRaisesRegex(p5.Refusal, "P5_CONVERGENCE_MISMATCH"):
+            p5.verify_results(verify)
+
 
 class JournalTests(unittest.TestCase):
     def setUp(self):

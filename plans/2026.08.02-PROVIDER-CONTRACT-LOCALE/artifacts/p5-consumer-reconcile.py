@@ -26,6 +26,7 @@ PLAN_ID = "2026.08.02-PROVIDER-CONTRACT-LOCALE"
 MANIFEST_VERSION = "p5-fleet-action-manifest/v1"
 EVENT_VERSION = "p5-fleet-transaction-event/v1"
 RESULT_VERSION = "p5-fleet-results/v1"
+CONVERGENCE_VERSION = "p5-fleet-convergence/v1"
 ZERO_HASH = "0" * 64
 ACTION_SETS = {
     "P5.2": frozenset({"preserve", "register-override"}),
@@ -739,18 +740,205 @@ def execute(args: argparse.Namespace, *, mode: str) -> int:
     return 0
 
 
+def _expected_outcomes(
+    manifest: dict[str, Any], events: list[dict[str, Any]], item: str
+) -> dict[str, str]:
+    wanted = set(manifest["action_sets"][item]["action_ids"])
+    rows = [row for row in manifest["rows"] if row["action_id"] in wanted]
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        groups[row["project_id"]].append(row)
+    latest = _latest_by_transaction(events)
+    outcomes = {}
+    for project_id, actions in sorted(groups.items()):
+        txid = transaction_id(
+            manifest, item, project_id,
+            sorted(actions, key=lambda row: row["action_id"]),
+        )
+        event = latest.get(txid)
+        if event is None or event["event"] not in {"accepted", "rolled-back"}:
+            raise Refusal("P5_RESULTS_NONTERMINAL")
+        outcomes[project_id] = event["event"]
+    return outcomes
+
+
+def _verify_result(
+    manifest: dict[str, Any], events: list[dict[str, Any]], item: str, path: Path
+) -> None:
+    result = load_json(path)
+    unresolved = [
+        row["action_id"] for row in manifest["rows"]
+        if row["action"] == "no-op-unresolved"
+    ]
+    if (
+        result.get("schema_version") != RESULT_VERSION
+        or result.get("manifest_sha256") != manifest["manifest_sha256"]
+        or result.get("action_set") != item
+        or result.get("action_set_id") != manifest["action_sets"][item]["action_set_id"]
+        or result.get("project_outcomes") != _expected_outcomes(manifest, events, item)
+        or result.get("unresolved_action_ids") != unresolved
+        or result.get("journal_events") != len(events)
+    ):
+        raise Refusal("P5_RESULTS_MISMATCH")
+
+
+def convergence_observation(
+    manifest: dict[str, Any], events: list[dict[str, Any]]
+) -> dict[str, Any]:
+    latest = _latest_by_transaction(events)
+    if any(event["event"] not in {"accepted", "rolled-back"} for event in latest.values()):
+        raise Refusal("P5_CONVERGENCE_NONTERMINAL")
+    action_counts = {
+        item: len(manifest["action_sets"][item]["action_ids"])
+        for item in sorted(ACTION_SETS)
+    }
+    unresolved = [
+        row["action_id"] for row in manifest["rows"]
+        if row["action"] == "no-op-unresolved"
+    ]
+    return {
+        "manifest_sha256": manifest["manifest_sha256"],
+        "project_count": len(manifest["project_ids"]),
+        "row_count": len(manifest["rows"]),
+        "action_set_counts": action_counts,
+        "approved_action_rows": sum(action_counts.values()),
+        "unresolved_rows": len(unresolved),
+        "unresolved_action_ids_sha256": digest_value(unresolved),
+        "journal_events": len(events),
+        "terminal_transactions": len(latest),
+        "accepted_transactions": sum(
+            event["event"] == "accepted" for event in latest.values()
+        ),
+        "rolled_back_transactions": sum(
+            event["event"] == "rolled-back" for event in latest.values()
+        ),
+        "consumer_writes": manifest["summary"]["consumer_writes"],
+    }
+
+
+def build_convergence(args: argparse.Namespace) -> int:
+    if args.passes < 2:
+        raise Refusal("P5_CONVERGENCE_PASSES")
+    observations = []
+    for index in range(1, args.passes + 1):
+        manifest = load_json(Path(args.manifest))
+        validate_manifest(manifest)
+        decision = parse_approval(Path(args.approval), manifest)
+        recovery = contract_identity(Path(args.recovery_contract))
+        events = validate_journal(Path(args.journal))
+        observation = convergence_observation(manifest, events)
+        observations.append({
+            "pass": index,
+            "observation_sha256": digest_value(observation),
+            "observation": observation,
+        })
+    fingerprints = {value["observation_sha256"] for value in observations}
+    if len(fingerprints) != 1:
+        raise Refusal("P5_CONVERGENCE_UNSTABLE")
+    observation = observations[0]["observation"]
+    output = {
+        "schema_version": CONVERGENCE_VERSION,
+        "manifest_sha256": manifest["manifest_sha256"],
+        "approval_decision": decision,
+        "recovery_contract": recovery,
+        "passes": args.passes,
+        "observations": observations,
+        "stable": True,
+        "complete_p0_coverage": (
+            observation["row_count"] == manifest["summary"]["rows"]
+            and observation["project_count"] == manifest["summary"]["projects"]
+        ),
+        "migration_readiness": "held-unresolved",
+        "rollout_authorized": False,
+    }
+    output["convergence_sha256"] = digest_value(output)
+    atomic_write(Path(args.output), pretty_bytes(output))
+    print(
+        "P5 fleet convergence: "
+        f"{args.passes} stable passes; {observation['unresolved_rows']} unresolved rows"
+    )
+    return 0
+
+
+def _result_mapping(args: argparse.Namespace) -> dict[str, Path]:
+    values = list(args.all_action_sets or []) + list(args.results or [])
+    mapping: dict[str, Path] = {}
+    for raw in values:
+        for value in raw.split(","):
+            if not value:
+                continue
+            if "=" in value:
+                item, path = value.split("=", 1)
+            elif ":" in value and value.split(":", 1)[0] in ACTION_SETS:
+                item, path = value.split(":", 1)
+            elif value in ACTION_SETS:
+                item = value
+                path = str(Path(args.convergence).with_name(f"{item}-results.json"))
+            else:
+                path = value
+                match = re.search(r"(P5\.[234])-results\.json$", value)
+                if match is None:
+                    raise Refusal("P5_RESULTS_ARGUMENT")
+                item = match.group(1)
+            if item in mapping or item not in ACTION_SETS:
+                raise Refusal("P5_RESULTS_ARGUMENT")
+            mapping[item] = Path(path)
+    if not mapping and args.convergence:
+        base = Path(args.convergence).parent
+        mapping = {item: base / f"{item}-results.json" for item in ACTION_SETS}
+    return mapping
+
+
+def _verify_convergence(
+    manifest: dict[str, Any], events: list[dict[str, Any]], path: Path
+) -> None:
+    value = load_json(path)
+    recorded_hash = value.pop("convergence_sha256", None)
+    expected = convergence_observation(manifest, events)
+    observations = value.get("observations")
+    if (
+        value.get("schema_version") != CONVERGENCE_VERSION
+        or value.get("manifest_sha256") != manifest["manifest_sha256"]
+        or value.get("passes") != 2
+        or value.get("stable") is not True
+        or value.get("complete_p0_coverage") is not True
+        or value.get("migration_readiness") != "held-unresolved"
+        or value.get("rollout_authorized") is not False
+        or not isinstance(observations, list)
+        or len(observations) != 2
+        or any(row.get("pass") != index for index, row in enumerate(observations, 1))
+        or any(row.get("observation") != expected for row in observations)
+        or len({row.get("observation_sha256") for row in observations}) != 1
+        or any(row.get("observation_sha256") != digest_value(expected) for row in observations)
+        or recorded_hash != digest_value(value)
+    ):
+        raise Refusal("P5_CONVERGENCE_MISMATCH")
+
+
 def verify_results(args: argparse.Namespace) -> int:
     manifest = load_json(Path(args.manifest))
     validate_manifest(manifest)
     parse_approval(Path(args.approval), manifest)
     contract_identity(Path(args.recovery_contract))
     events = validate_journal(Path(args.journal))
-    result = load_json(Path(args.results))
-    if result.get("schema_version") != RESULT_VERSION or result.get("manifest_sha256") != manifest["manifest_sha256"]:
-        raise Refusal("P5_RESULTS_MISMATCH")
     latest = _latest_by_transaction(events)
     if any(event["event"] not in {"accepted", "rolled-back"} for event in latest.values()):
         raise Refusal("P5_RESULTS_NONTERMINAL")
+    if args.all_action_sets is not None:
+        mapping = _result_mapping(args)
+        if set(mapping) != set(ACTION_SETS) or not args.convergence:
+            raise Refusal("P5_RESULTS_EXACT_SET")
+        for item in sorted(mapping):
+            _verify_result(manifest, events, item, mapping[item])
+        _verify_convergence(manifest, events, Path(args.convergence))
+        print(
+            f"P5 fleet results verified: {len(mapping)} action sets; "
+            f"{len(events)} durable events"
+        )
+        return 0
+    if not args.action_set or len(args.results or []) != 1 or args.convergence:
+        raise Refusal("P5_RESULTS_ARGUMENT")
+    _verify_result(manifest, events, args.action_set, Path(args.results[0]))
     print(f"P5 results verified: {len(events)} durable events")
     return 0
 
@@ -779,6 +967,26 @@ def add_transaction_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--adapter-state")
 
 
+def add_verify_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--manifest", required=True)
+    parser.add_argument("--approval", required=True)
+    parser.add_argument("--recovery-contract", required=True)
+    parser.add_argument("--action-set")
+    parser.add_argument("--all-action-sets", nargs="*")
+    parser.add_argument("--journal", required=True)
+    parser.add_argument("--results", action="append")
+    parser.add_argument("--convergence")
+
+
+def add_convergence_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--manifest", required=True)
+    parser.add_argument("--approval", required=True)
+    parser.add_argument("--recovery-contract", required=True)
+    parser.add_argument("--journal", required=True)
+    parser.add_argument("--passes", required=True, type=int)
+    parser.add_argument("--output", required=True)
+
+
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
@@ -786,7 +994,8 @@ def parser() -> argparse.ArgumentParser:
     add_plan_arguments(commands.add_parser("check"), check=True)
     for name in ("apply", "resume", "rollback"):
         add_transaction_arguments(commands.add_parser(name))
-    add_transaction_arguments(commands.add_parser("verify-results"))
+    add_verify_arguments(commands.add_parser("verify-results"))
+    add_convergence_arguments(commands.add_parser("convergence"))
     return root
 
 
@@ -819,6 +1028,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command in {"apply", "resume", "rollback"}:
             return execute(args, mode=args.command)
+        if args.command == "convergence":
+            return build_convergence(args)
         return verify_results(args)
     except InjectedCrash as exc:
         print(f"P5_INJECTED_CRASH:{exc}", file=sys.stderr)

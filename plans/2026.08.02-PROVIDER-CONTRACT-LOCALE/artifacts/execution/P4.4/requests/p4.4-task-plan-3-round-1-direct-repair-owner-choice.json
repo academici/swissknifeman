@@ -1,0 +1,41 @@
+{
+  "decision_id": "P4.4-task-plan-3-round-1-direct-repair-owner-choice",
+  "action_version": 1,
+  "kind": "authorization",
+  "decision_class": "scope_change",
+  "subject": {"plan_id": "2026.08.02-PROVIDER-CONTRACT-LOCALE", "phase_id": "P4", "item_id": "P4.4"},
+  "action": {
+    "type": "p4.4-final-checkpoint-direct-repair",
+    "requires_authorization": true,
+    "affected_surfaces": ["packages/task/commands", "packages/task/locales", "locale-corpus-ledger", "p4.4-checkpoint"],
+    "declared_scope": ["packages/task/commands", "packages/task/locales", "locale-corpus-ledger", "p4.4-checkpoint"],
+    "frozen_contract_change": false,
+    "closed_set_extension": false,
+    "reversible": true,
+    "decision_recorded": true,
+    "review": "p4.4-task-plan-3.round-1",
+    "candidate": "443fa0aca255eedc60d2418a375e2ae45873cd15"
+  },
+  "options": [
+    {"id": "repair-in-current-item", "outcome": "apply", "action_ref": "P4.4/direct-repair", "evidence_refs": ["p4.4-task-plan-3.round-1", "owner-chat:2026-08-15-owner-selects-bounded-p4.4-repair-without-redesign"]},
+    {"id": "rollback", "outcome": "apply", "action_ref": "git:e3555fd6e90c78eb60d05cb252fa505fe21c0176", "evidence_refs": ["D81", "p4.4-task-plan-3.round-1"]},
+    {"id": "defer", "outcome": "park", "action_ref": "P4.4-deferred", "evidence_refs": ["D81", "p4.4-task-plan-3.round-1"]},
+    {"id": "escalate", "outcome": "escalate", "action_ref": null, "evidence_refs": []},
+    {"id": "reject", "outcome": "reject", "action_ref": null, "evidence_refs": []}
+  ],
+  "default_option": null,
+  "on_timeout": "park",
+  "expires_at": "2026-08-16T18:00:00Z",
+  "evidence": [
+    {"carrier": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-3.round-1.json", "anchor": "FIX_REQUIRED", "digest": "a5f88b3b2140ecd0d72a44fd359f4039ce349060cf23f9380ad6a8ca254d4258"},
+    {"carrier": "roadmap/2026.08.15-checkpoint-repair-without-redesign.md", "anchor": "design-justification/v1", "digest": "e6379897c7410f4569b24b746364272bf6286351a8d360c41127b2bd3cd06243"}
+  ],
+  "attempted": ["journal.jsonl:159", "p4.4-task-plan-3.round-1"],
+  "continuation": {
+    "root_session_id": "01a00475-8f1d-7d71-9724-99d4c5155dbb",
+    "root_run_id": "c0a805529854dc5ce5fcfb4d75cb789e1c8e1e1e3b9760f8234169f1244c5146",
+    "target": {"plan_id": "2026.08.02-PROVIDER-CONTRACT-LOCALE", "item_id": "P4.4", "resume_command": "task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4"},
+    "capabilities": {"snapshot_id": "codex-implementation-high-2026-08-15", "digest": "1849b2b299451bc3e6ea6ffaba638ace3dfdc48bc9ada1aaa092abbb940086c1", "available": ["route-evidence", "task-contract", "locale-corpus"]},
+    "preferred_mode": "resume-root"
+  }
+}

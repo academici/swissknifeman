@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 3d3191edbd758ab9ed107bed621472862970b0fa03f79ee528b42ea13aa3aac8
+inputs_sha256: e645a07c3b1421259616c1189f7ef1675a070cf7529b0ff3a24bd6e8ba204b0d
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
-| P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟡 In progress |
+| P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
@@ -78,9 +78,9 @@ generated_by: task plan-views status
 | P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-15 |
 | P4.2 | Implement English-source, overlay, admission, and rollback validators | 🟢 Done | 2026-08-15 |
 | P4.3 | Migrate canonical skill ownership and localized overlays | 🟢 Done | 2026-08-15 |
-| P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | ⬜ Not started | — |
-| P4.5 | Migrate code comments, docstrings, and test descriptions | ⬜ Not started | — |
-| P4.6 | Migrate development docs and regenerate the admitted corpus | ⬜ Not started | — |
+| P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | 🟠 Done with deviations | 2026-08-15 |
+| P4.5 | Migrate code comments, docstrings, and test descriptions | 🟠 Done with deviations | 2026-08-15 |
+| P4.6 | Migrate development docs and regenerate the admitted corpus | 🟠 Done with deviations | 2026-08-15 |
 
 ## Phase P5
 
@@ -261,6 +261,27 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · blocked · P4.3 blocked: P4.2 ledger has no admitted skill rows for the observed corpus; plan design must restore admission evidence. |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · Owner-directed same-root continuation reopens the false terminal block for bounded P4.3 producer inventory repair. |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.3 corrected the false block; one reviewed root-bootstrap batch is terminal with P4.6-only generated drift. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · P4.4 corpus probe found no command, plugin, or diagnostic ledger rows; prepare the first bounded admitted checkpoint. |
+| 2026-08-15 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · P4.4 Task EN/RU source batch is committed; ledger admission and independent checkpoint review remain before acceptance. |
+| 2026-08-15 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D80 material replacement checkpoint |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · D80 material replacement run: retire p4.4-task-plan-1 and execute the sole p4.4-task-plan-2 checkpoint. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P4.4-task-plan-2-round-2-owner-choice |
+| 2026-08-15 | codex | plan-run · blocked · decision queue: P4.4-task-plan-2-round-2-owner-choice |
+| 2026-08-15 | owner | plan-run · routing-rejected · ROUTE-UNVERIFIABLE: current Codex turn lacks exact Task invocation line |
+| 2026-08-15 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D81 final checkpoint revision |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · D81 final-checkpoint run: seal p4.4-task-plan-3 and request its sole zero-mutation review. |
+| 2026-08-15 | codex | plan-run · decision-pending · decision queue: P4.4-task-plan-3-round-1-owner-choice |
+| 2026-08-15 | owner | plan-run · blocked · decision queue: P4.4-task-plan-3-round-1-owner-choice |
+| 2026-08-15 | owner | plan-run · decision-pending · decision queue: P4.4-task-plan-3-round-1-direct-repair-owner-choice |
+| 2026-08-15 | owner | plan-run · in-progress · decision queue: P4.4-task-plan-3-round-1-direct-repair-owner-choice |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-deviations · D82 compact field cut: Task locale fallback and renderer readback green; full corpus checkpoint chain moved to roadmap. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-deviations · D82 compact field cut: 139 core/Harness/mAInd source-prose files committed; core tests and compile green; remaining corpus moved to roadmap. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-deviations · D82 compact field cut: registry regenerated and Claude/Codex instruction plus Task renderer readback green; bulk development docs moved to roadmap. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-close · closed-deviations · Фаза P4 закрыта по D82: compact field cut готов; полная corpus/docs migration вынесена в roadmap. |
 
 ## Owner Gates
 
@@ -275,3 +296,6 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P2.1: known deviation
 - P2.2: known deviation
 - P2.3: known deviation
+- P4.4: known deviation
+- P4.5: known deviation
+- P4.6: known deviation

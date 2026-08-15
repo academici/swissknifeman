@@ -1,0 +1,16 @@
+{
+  "schema_version": "p4-compact-field-acceptance/v1",
+  "decision": "D82",
+  "scope": "repository-local field cut",
+  "accepted": [
+    "skiller registry projections are regenerated and check-clean",
+    "Claude Code and Codex instruction projections are check-clean",
+    "Task provider command renderer is check-clean",
+    "repository and two read-only project health probes report provider trust"
+  ],
+  "deviations": [
+    "full development-documentation corpus migration is deferred to roadmap/2026.08.15-locale-corpus-after-field-validation.md",
+    "no consumer-project rollout was performed because the observed target worktrees were already dirty"
+  ],
+  "generated_at": "2026-08-15"
+}

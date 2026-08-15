@@ -1,0 +1,17 @@
+{
+  "decision_id": "P4.4-task-plan-3-round-1-direct-repair-owner-choice",
+  "action_version": 1,
+  "selected_option": "repair-in-current-item",
+  "resolver": "owner",
+  "resolver_id": "repository_owner",
+  "policy_digest": "1849b2b299451bc3e6ea6ffaba638ace3dfdc48bc9ada1aaa092abbb940086c1",
+  "action_digest": "b6ed0514bc6d306890f84caba0b002577d21b929c8243d6fd560aa273432b9c6",
+  "reason_code": "P5_DECISION_OWNER_APPROVED",
+  "provenance": {
+    "source_system": "owner-chat",
+    "record_id": "2026-08-15-owner-selects-bounded-p4.4-repair-without-redesign",
+    "record_version": "1",
+    "verified": true
+  },
+  "at": "2026-08-15T10:00:00Z"
+}

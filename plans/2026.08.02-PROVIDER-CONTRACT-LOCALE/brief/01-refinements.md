@@ -18,3 +18,22 @@ stage-aware producer-edge дефекты, сохранить frozen P1/P2/P3 sem
 evidence, затем вернуть владельцу отдельный routed resume только P4.1. Product
 implementation, consumer/fleet writes и пересмотр frozen locale/authoring contracts в этот
 design-заход не входят.
+
+## 2026-08-15 — P4.4 round-2 recovery refinement
+
+Владелец явно запустил `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4`
+после второго committed `FIX_REQUIRED` checkpoint `p4.4-task-plan-1`. Заход ограничен
+восстановлением исполняемости того же P4.4 scope: не продолжать запрещённый третий review,
+сохранить failed evidence append-only, закрыть complete-literal / authoring-review /
+false-RU-overlay gaps новым material checkpoint и вернуть владельцу отдельный routed resume.
+Frozen locale/authoring contracts, semantic command IDs, helper API, generated targets и
+consumer/fleet/trust/credential writes в этот design-заход не входят.
+
+## 2026-08-15 — P4.4 owner-approved post-round-2 contract revision
+
+Durable response `P4.4-task-plan-2-round-2-owner-choice` выбрал `contract-revision` после
+второго `FIX_REQUIRED` replacement checkpoint. Заход должен учесть уже committed fixes и
+pass content-review evidence, не запускать новый product-repair loop и не считать ранний
+handoff на P4.5 доказательством закрытия P4.4. Разрешён один immutable closure-checkpoint
+для exact committed P4.4 delta; его `FIX_REQUIRED` снова требует явного решения владельца.
+Frozen contracts, generated-target ownership и оставшиеся package-cwd rows не ослабляются.

@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.3 closed after an append-only same-root repair, P4.4 is next under D79 solo routing.
+**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.3 closed, P4.4 resumes under D81 final-checkpoint revision before remaining package rows.
 
 ## Fast execution carrier
 
@@ -197,6 +197,26 @@ runs round 2 against the new candidate SHA. `FIX_REQUIRED` round 2 stops the ite
 records and escalates with `task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE <P4.x>` plus the
 checkpoint paths; no third round, next batch, ledger acceptance or item closure is permitted.
 
+### P4.4 round-2 recovery
+
+D80 applies the stop rule rather than weakening it. `p4.4-task-plan-1` remains rejected after its
+committed round-2 `FIX_REQUIRED`; no later record may call itself round 3 or accept that fingerprint.
+The one material replacement is `p4.4-task-plan-2`, based on committed `e3555fd6`, after complete
+preimage-derived literal coverage and honest sparse fallback change its fingerprint. It receives
+fresh distinct EN/RU evidence and at most rounds 1–2. A second replacement-round `FIX_REQUIRED`
+creates the exact owner DecisionRequest declared by D80; it does not recurse into another
+automatic redesign. Exact recovery reads and acceptance commands live in `phases/P4/P4.4.md`.
+
+### P4.4 final checkpoint
+
+D81 consumes the durable owner choice `contract-revision` after the replacement stop. One
+product-no-write `p4.4-task-plan-3` binds base `e3555fd6e90c78eb60d05cb252fa505fe21c0176`
+and candidate `443fa0aca255eedc60d2418a375e2ae45873cd15`, the exact repaired Task manifest, final
+EN/RU content reviews, rollback and next P4.4 cursor. It receives one fresh frontier/high
+zero-mutation checkpoint review, round 1 only. `APPROVE` resumes remaining package rows;
+`FIX_REQUIRED` creates an owner DecisionRequest and permits no product fix, round 2, plan 4 or
+automatic redesign. P4.5 remains dependency-not-ready until all P4.4 rows are terminal.
+
 ## Карта исполнения
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
@@ -223,7 +243,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P4.1 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.1` | implementation/high | — | root coordinator owns stdlib runtime + pinned-registry reader/update producer; Harness/Task cwd slices consume the shared locale boundary |
 | P4.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2` | implementation/high | admission ledger approval | one canonical minimum-core template generates its distributed copy; cross-field risk/invocation and trigger boundaries are checked |
 | P4.3 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3` | implementation/high | admitted skill rows | evidence-admitted lean corpus changes only; no pre-approved Vue merge, universal Gotchas or heuristic-only retirement |
-| P4.4 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4` | implementation/high | admitted command/plugin rows | ≤10 rows, one package cwd per checkpoint; parser literals release-sensitive |
+| P4.4 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4` | implementation/high | D81 final checkpoint, then admitted command/plugin rows | product-no-write `p4.4-task-plan-3` first; then ≤10 rows, one package cwd per checkpoint; parser literals release-sensitive |
 | P4.5 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.5` | implementation/high | admitted code-prose rows | ≤12 files/≤40 prose spans, one package cwd; concrete runners + independent review |
 | P4.6 | solo/per-cwd-ledger | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.6` | implementation/high | terminal ledger | ≤10 docs files per checkpoint; terminal regeneration is a separate final integration stage |
 | P5.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.1` | frontier/high | exact fleet action D# | freezes target/action/rollback set and initializes the D47 durable hash-chained journal before any consumer write |
@@ -260,7 +280,8 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes with solo P4.4. The historical P4.3 false terminal block remains evidence, while
-its accepted same-root repair supplies the current ledger/checkpoint carrier. D79 changes no P1/P2/P3
-frozen semantics, P4 content admission, external no-write gate or consumer/fleet authority.
+Execution resumes with solo P4.4 at D81's product-no-write final checkpoint. Rejected plan-1/plan-2
+reviews and the historical P4.3 false terminal block remain evidence; none is rewritten or silently
+accepted. D79–D81 change no P1/P2/P3 frozen semantics, P4 content admission, external no-write gate
+or consumer/fleet authority.
 `handoff.md` is the sole current Next carrier.

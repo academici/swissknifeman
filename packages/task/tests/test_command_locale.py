@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 from task.command_locale import (command_locale_key, english_catalog, immutable_tokens,
-                                 literal_inventory, resolve_command)
+                                 verify_literal_inventory, resolve_command)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -31,10 +31,14 @@ class CommandLocaleTests(unittest.TestCase):
         catalog = english_catalog(COMMAND_ROOT)
         for command_id in ("plan-exec", "plan-run"):
             with self.subTest(command_id=command_id):
-                inventory = literal_inventory(catalog.units[command_locale_key(command_id)], command_id=command_id)
+                inventory = verify_literal_inventory(catalog.units[command_locale_key(command_id)], command_id=command_id)
                 self.assertEqual(inventory["preimage_commit"], "980ee79d")
                 self.assertGreater(len(inventory["preimage_literals"]), 20)
                 self.assertGreater(len(inventory["candidate_literals"]), 20)
+                self.assertEqual({kind for kind, _ in inventory["candidate_literals"]}, {
+                    "command", "frontmatter-value", "identifier", "inline-code", "key", "path",
+                    "placeholder",
+                })
 
     def test_inventory_rejects_omitted_reordered_multiplied_and_new_literals(self):
         text = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
@@ -45,8 +49,8 @@ class CommandLocaleTests(unittest.TestCase):
             ("multiplicity", text.replace(token, f"{token} {token}", 1)),
             ("new", text + "\n`NEW_MACHINE_LITERAL`\n"),
         ):
-            with self.subTest(label=label), self.assertRaisesRegex(ValueError, "CMD_LOCALE_CANDIDATE_DIGEST_MISMATCH"):
-                literal_inventory(candidate, command_id="plan-run")
+            with self.subTest(label=label), self.assertRaisesRegex(ValueError, "CMD_LOCALE_LITERAL_INVENTORY_MISMATCH"):
+                verify_literal_inventory(candidate, command_id="plan-run")
 
 
 if __name__ == "__main__":  # pragma: no cover

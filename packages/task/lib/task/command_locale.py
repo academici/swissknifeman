@@ -31,6 +31,22 @@ _INLINE_RE = re.compile(r"`([^`\n]+)`")
 _URL_RE = re.compile(r"https?://[^\s)>]+")
 _PATH_RE = re.compile(r"(?<![\w.-])(?:[\w.-]+/)+(?:[\w.-]+)(?:\.[\w.-]+)?")
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+_COMMAND_RE = re.compile(r"(?<![\w.-])(?:PYTHONPATH=\S+\s+)?(?:python3|codex|git|bash|make|npm)\b[^\n`]*")
+_ID_RE = re.compile(r"\b(?:task:[\w:-]+|P\d+\.\d+|D\d+|[A-Z][A-Z0-9_]{2,}|v\d+(?:\.\d+){0,2})\b")
+_KEY_RE = re.compile(r"\b[a-z][a-z0-9_]*(?==)")
+_PLACEHOLDER_RE = re.compile(r"<[^>\n]+>")
+_EXPECTED_INVENTORIES = {
+    # Generated from git:980ee79d plus the D80 replacement source.  Each digest
+    # binds the full typed sequence, including order and multiplicity.
+    "plan-exec": {
+        "preimage": "sha256:30a0828c90ed55084cf43e52985eae11792f17b3fe5a6d3c6a0edad003778b09",
+        "candidate": "sha256:93ac3a64f388e8bc29968db5e8dea2b25b8e0d5e1c866a92b272cf2970574baf",
+    },
+    "plan-run": {
+        "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
+        "candidate": "sha256:8b93e86fc2d9a617b421d0475d04d0aac8e02ad4a31a3ded7b8621288849481c",
+    },
+}
 
 
 def command_locale_key(command_id: str) -> str:
@@ -47,18 +63,32 @@ def english_catalog(command_root: Path | None = None) -> Catalog:
     })
 
 
-def _machine_literals(text: str) -> tuple[str, ...]:
-    """Collect every ordered machine-bearing Markdown fragment without a hand-picked allowlist."""
-    literals: list[tuple[int, str]] = []
+def _machine_literals(text: str) -> tuple[tuple[str, str], ...]:
+    """Collect the complete ordered, typed machine-bearing Markdown inventory."""
+    literals: list[tuple[int, int, str, str]] = []
+
+    def collect(kind: str, pattern: re.Pattern[str], group: int = 0, priority: int = 10):
+        for match in pattern.finditer(text):
+            literals.append((match.start(), priority, kind, match.group(group)))
+
     frontmatter = _FRONTMATTER_RE.search(text)
     if frontmatter:
         for match in re.finditer(r"^[A-Za-z][\w-]*:\s*(.+)$", frontmatter.group(1), re.MULTILINE):
-            literals.append((frontmatter.start(1) + match.start(1), match.group(1)))
-    for pattern in (_INLINE_RE, _FENCE_RE, _URL_RE, _PATH_RE):
-        for match in pattern.finditer(text):
-            value = match.group(1) if pattern in (_INLINE_RE, _FENCE_RE) else match.group(0)
-            literals.append((match.start(), value))
-    return tuple(value for _, value in sorted(literals, key=lambda item: item[0]))
+            literals.append((frontmatter.start(1) + match.start(1), 0, "frontmatter-value", match.group(1)))
+    collect("inline-code", _INLINE_RE, group=1, priority=1)
+    collect("fenced-code", _FENCE_RE, group=1, priority=2)
+    collect("url", _URL_RE, priority=3)
+    collect("path", _PATH_RE, priority=4)
+    collect("command", _COMMAND_RE, priority=5)
+    collect("identifier", _ID_RE, priority=6)
+    collect("key", _KEY_RE, priority=7)
+    collect("placeholder", _PLACEHOLDER_RE, priority=8)
+    return tuple((kind, value) for _, _, kind, value in sorted(literals))
+
+
+def _inventory_sha256(entries: tuple[tuple[str, str], ...]) -> str:
+    encoded = json.dumps(entries, ensure_ascii=False, separators=(",", ":")).encode()
+    return "sha256:" + sha256(encoded).hexdigest()
 
 
 def _preimage(command_id: str) -> str:
@@ -77,23 +107,35 @@ def literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
     command_id = command_id or ("plan-run" if "task.route_evidence.capture_launch" in text else "plan-exec")
     if command_id not in _COMMAND_IDS:
         raise ValueError("CMD_LOCALE_COMMAND_UNKNOWN")
-    if sha256(text.encode()).hexdigest() != _CANDIDATE_DIGESTS[command_id]:
-        raise ValueError("CMD_LOCALE_CANDIDATE_DIGEST_MISMATCH")
     preimage = _preimage(command_id)
-    return {
+    inventory = {
         "command_id": command_id,
         "preimage_commit": _PREIMAGE_COMMIT,
         "preimage_sha256": "sha256:" + _PREIMAGE_DIGESTS[command_id],
-        "candidate_sha256": "sha256:" + _CANDIDATE_DIGESTS[command_id],
+        "candidate_sha256": "sha256:" + sha256(text.encode()).hexdigest(),
         "preimage_literals": _machine_literals(preimage),
         "candidate_literals": _machine_literals(text),
     }
+    inventory["preimage_inventory_sha256"] = _inventory_sha256(inventory["preimage_literals"])
+    inventory["candidate_inventory_sha256"] = _inventory_sha256(inventory["candidate_literals"])
+    return inventory
+
+
+def verify_literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
+    """Reject any omitted, reordered, multiplied, or unclassified literal sequence."""
+    inventory = literal_inventory(text, command_id=command_id)
+    expected = _EXPECTED_INVENTORIES[command_id]
+    if (inventory["candidate_sha256"] != "sha256:" + _CANDIDATE_DIGESTS[command_id]
+            or inventory["preimage_inventory_sha256"] != expected["preimage"]
+            or inventory["candidate_inventory_sha256"] != expected["candidate"]):
+        raise ValueError("CMD_LOCALE_LITERAL_INVENTORY_MISMATCH")
+    return inventory
 
 
 def immutable_tokens(text: str, *, command_id: str | None = None) -> tuple[str, ...]:
     """Return the complete candidate inventory used when a localized unit is present."""
     command_id = command_id or ("plan-run" if "task.route_evidence.capture_launch" in text else "plan-exec")
-    return literal_inventory(text, command_id=command_id)["candidate_literals"]
+    return tuple(value for _, value in verify_literal_inventory(text, command_id=command_id)["candidate_literals"])
 
 
 def load_russian_overlay(path: Path | None = None) -> Overlay:

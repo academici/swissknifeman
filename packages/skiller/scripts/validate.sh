@@ -6,6 +6,15 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# P4.2: the generate-skill snippet is a generated projection of the EN canonical
+# template. Keep this as integration-only composition: ownership of both predicates
+# stays in their dedicated scripts. Isolated legacy validator fixtures intentionally
+# copy only this script, so they retain their narrower checks without a false failure.
+if [ -f "$REPO_ROOT/scripts/generate-skill-template.py" ] && [ -f "$REPO_ROOT/scripts/check-translations.sh" ]; then
+  python3 "$REPO_ROOT/scripts/generate-skill-template.py" --check
+  bash "$REPO_ROOT/scripts/check-translations.sh" --strict
+fi
+
 python3 - "$REPO_ROOT" <<'PY'
 import json, re, sys
 from pathlib import Path

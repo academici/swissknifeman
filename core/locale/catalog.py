@@ -18,7 +18,7 @@ class Overlay:
     units: Mapping[str, Mapping[str, object]]
 
 
-def resolve_catalog(english: Catalog, overlay: Overlay | None, key: str, *, immutable_tokens: tuple[str, ...] = ()): 
+def resolve_catalog(english: Catalog, overlay: Overlay | None, key: str, *, immutable_tokens: tuple[str, ...] = ()):
     if key not in english.units: raise ValueError("OVERLAY_FALLBACK_MISSING")
     text, fallback, digest = english.units[key], True, None
     expected = "sha256:" + sha256(json.dumps(dict(sorted(english.units.items())), ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()

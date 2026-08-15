@@ -61,10 +61,17 @@ route gate; do not substitute config, actor, or prose.
 2. **Preconditions and routing.** `Home: repo:<path>` is the only execution home. A mirror/Brain
    launch stops with the bare restart command. Accept only `⬜ Not started` or `🟡 In progress`,
    except one accepted D24 recovery with unchanged spec and `allow`; honor `LOOP_BUDGET_EXCEEDED`.
-   Enforce phase-first ordering. Read §3 Routing manually: default `plan-exec` is `sonnet/medium`;
-   `manual` returns `ROUTING-BLOCKED`, contradictory `plan-exec` returns
-   `ROUTING-INCONSISTENT`, and `plan-design` returns for redesign. Ambiguous design/contract routing
-   fails safe. Chat approval never overrides §3.
+   Enforce phase-first ordering. Read §3 Routing manually, never with regex. Its default matrix is
+   `plan-exec = sonnet/medium`. `Exec` is `plan-exec` | `manual` | `plan-design`; an empty Exec is
+   derived from `haiku < sonnet < opus ≈ fable` and `low < medium < high < xhigh < max`:
+   `model ≤ sonnet` and `effort ≤ medium` means `plan-exec`, otherwise `manual`.
+   `Exec = manual` (declared or derived) stops with
+   `ROUTING-BLOCKED: Pn.m — required <model/effort>, command pins sonnet/medium`; it changes no
+   status. Lower Routing for `Exec = plan-exec` is safe overshoot and is recorded in Known
+   Deviations. An explicit `Exec = plan-exec` that contradicts model/effort stops with
+   `ROUTING-INCONSISTENT: Pn.m — Exec=plan-exec at <model/effort>` and changes no status.
+   `Exec = plan-design` returns for redesign. Ambiguous design/contract routing fails safe; chat
+   approval never overrides §3.
 
    Run the mandatory pre-mutation Task Contract before every mutation:
 
@@ -81,7 +88,10 @@ route gate; do not substitute config, actor, or prose.
    PY
    ```
 
-   Actual route comes only from the provider-attested API; unknown route evidence stops. `ROUTE_UNDERSHOOT`,
+   Actual route comes only from the provider-attested API. The command selector/actor is not actual
+   evidence. Unknown evidence stops before mutation. `ROUTE_UNDERSHOOT` is a real route deficit and
+   must have been caught by routing; report `ROUTING-INCONSISTENT`. `ROUTE-UNVERIFIABLE` records
+   nonterminal `routing-rejected` and refreshes provider evidence without creating a block. `AUTHORITY_BOUNDARY`,
    `ROUTE-UNVERIFIABLE`, `AUTHORITY_BOUNDARY`, `LOOP_BUDGET_EXCEEDED`,
    `PORTABILITY_EXTERNAL_INPUT`, `PORTABILITY_INPUT_MISSING`, `VERSION_HASH_MISMATCH`,
    `CONFLICT_UNRESOLVED`, `CONFLICT_PRECEDENCE_VIOLATION`, `NEXT_CHANGED_WITHOUT_TRANSITION`,
@@ -124,7 +134,15 @@ route gate; do not substitute config, actor, or prose.
    validation plus `recoverable-validation-gap/v1`/`repair_exhausted`. Report a concrete fix and
    launch block for every residual `N−K>0`, foreign diff, defect, or material gap.
 
-7. **Close with two commits.** Re-run Task Contract for both predicates using the same route API;
+7. **Close with two commits.** Re-run Task Contract for both predicates using the same route API:
+
+   ```
+   contract = task_contract.build("plans/<PLAN-ID>", "<Pn.m>", actual_route=route_evidence.capture_actual(
+       "<provider-attested model_class>", "<provider-attested effort>",
+       source="provider-doctor", model="<provider-attested model>"))
+   result = task_contract.evaluate(contract)
+   ```
+
    `result["pre_mutation"] == "allow" and result["pre_final"] == "allow"` are required.
    First commit only `Files` paths,
    green package `validate.sh`, and Russian Conventional Commit subject. Then update status,
@@ -137,10 +155,12 @@ route gate; do not substitute config, actor, or prose.
 
 8. **Delivery.** Before final, run
    `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-delivery.py" --plan-dir plans/<PLAN-ID> --subject <Pn.m> --kind terminal`.
-   `FINAL_BEFORE_TERMINAL_FORBIDDEN`, stale journal/state/handoff, or a nonzero exit returns to repair.
+   `FINAL_BEFORE_TERMINAL_FORBIDDEN`, stale journal/state/handoff, or a nonzero exit returns to repair;
+   do not issue `final` first.
    Final output contains `Delivery receipt: <compact JSON>`, the exact recommendation, status,
    files, commits, validation, lint, foreign diff, deviations/escalation, `Batch`, and a Routing-derived
    launch block. Manual Next uses the bare item prompt or `/model <M>` + `/effort <E>` +
-   `/task:plan-run <ID> Pn.m`; terminal phase selection uses `phase_audit_policy`:
+   `/task:plan-run <ID> Pn.m`; terminal phase selection uses
+   `task.plan_gates.phase_audit_policy(..., candidate_snapshot=candidate["snapshot"])`:
    `audit-phase: task:plan-audit <PLAN-ID> Pn` or `close: task:plan-close <PLAN-ID> Pn`.
    Context is exactly `continue-root`, `isolated-child-return`, or `cold-start-root`.

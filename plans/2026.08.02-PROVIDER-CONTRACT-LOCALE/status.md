@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 3ba6732a4a89e2f9651b92c82a5069db0d90bdb28bd9176f843ca8aa5f35a9bb
+inputs_sha256: b3d4c7f74d1d904c16705b9f5fa9ad909f495b73b425db8cb06358cebb1393df
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.4 |
-| Status | 🟡 In progress |
+| Status | 🔴 Blocked |
 | Last Updated | 2026-08-15 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
-| P4 | Implement locale rendering and evidence-admitted lean skill migration | 2/6 | 🟡 In progress |
+| P4 | Implement locale rendering and evidence-admitted lean skill migration | 2/6 | 🔴 Blocked |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
@@ -77,7 +77,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-15 |
 | P4.2 | Implement English-source, overlay, admission, and rollback validators | 🟢 Done | 2026-08-15 |
-| P4.3 | Migrate canonical skill ownership and localized overlays | ⬜ Not started | — |
+| P4.3 | Migrate canonical skill ownership and localized overlays | 🔴 Blocked | 2026-08-15 |
 | P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | ⬜ Not started | — |
 | P4.5 | Migrate code comments, docstrings, and test descriptions | ⬜ Not started | — |
 | P4.6 | Migrate development docs and regenerate the admitted corpus | ⬜ Not started | — |
@@ -257,6 +257,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 ledger, class carriers, EN template and bounded downstream gate are green.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · block-candidate · P4.3 has no ledger-admitted skill row; independent boundary review required. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · blocked · P4.3 blocked: P4.2 ledger has no admitted skill rows for the observed corpus; plan design must restore admission evidence. |
 
 ## Owner Gates
 
@@ -271,3 +273,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P2.1: known deviation
 - P2.2: known deviation
 - P2.3: known deviation
+- P4.3: escalation

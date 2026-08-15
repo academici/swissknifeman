@@ -109,13 +109,13 @@
             "author": "p44-task-author",
             "renderer": "task-command-locale",
             "reviews": [
-                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
-                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
+                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "fix_required", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
+                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "fix_required", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
             ],
             "semantic_review_evidence": ["p44-task-en-review", "p44-task-ru-review"],
             "generated_owner": "task render-provider-commands; deferred P4.6",
             "target_preimages": ["sha256:574fe70d8ca8ce4d4b42aaaec98ea7e8810923146882c39799985e06358784f4"],
-            "status": "applied",
+            "status": "planned",
             "rollback": {"id": "p4.4-task-plan-1-plan-exec", "backup": "git:980ee79d:packages/task/commands/plan-exec.md"}
         },
         {
@@ -135,13 +135,13 @@
             "author": "p44-task-author",
             "renderer": "task-command-locale",
             "reviews": [
-                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
-                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
+                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "fix_required", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
+                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "fix_required", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
             ],
             "semantic_review_evidence": ["p44-task-en-review", "p44-task-ru-review"],
             "generated_owner": "task render-provider-commands; deferred P4.6",
             "target_preimages": ["sha256:574fe70d8ca8ce4d4b42aaaec98ea7e8810923146882c39799985e06358784f4"],
-            "status": "applied",
+            "status": "planned",
             "rollback": {"id": "p4.4-task-plan-1-plan-run", "backup": "git:980ee79d:packages/task/commands/plan-run.md"}
         }
     ]

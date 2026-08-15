@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:p4.4-execution:v1",
+  "item": "P4.4",
+  "contract_version": "1.0.0",
+  "carrier_classes": [
+    "semantic.command",
+    "plugin.human-metadata",
+    "diagnostic.message"
+  ],
+  "slices": [
+    "root/core",
+    "packages/harness",
+    "packages/maind",
+    "packages/skiller",
+    "packages/task"
+  ],
+  "base_commit": "5d0a26de4e9a11fb66dc3f4dbde454677767f63c",
+  "foreign_diff": {
+    "status_sha256": "422e12d2f7835cd1bf8d7f78c9fb1596015873ab43d1783a4b8bd0529cda9690",
+    "paths": [
+      "packages/task/lib/task/token_estimate.py",
+      "packages/task/tests/test_token_estimate.py",
+      "roadmap/README.md"
+    ]
+  },
+  "next_slice": "packages/task",
+  "status": "prepared"
+}

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Прогон тестов пакета lib/skiller (stdlib unittest, без зависимостей).
-# Запуск: scripts/test.sh [-v]   (-v — подробный вывод unittest)
-# Тесты гоняют CLI против синтетического реестра в tmpdir (tests/fixtures.py),
-# настоящий реестр не трогается. Используется локально и из validate.sh.
+# Run the dependency-free lib/skiller unittest suite.
+# Usage: scripts/test.sh [-v] (`-v` enables detailed unittest output).
+# Tests use the synthetic tmpdir registry from tests/fixtures.py and never alter
+# the real registry. This runner is also called by validate.sh.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,9 +12,9 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# lib/ — пакет skiller; REPO_ROOT — чтобы импортировался tests.fixtures.
-# MONOREPO_ROOT (на два уровня выше пакета) — чтобы импортировался пакет `core`;
-# опционально: в standalone-раскладке каталога core нет, путь не добавляется.
+# lib/ contains skiller; REPO_ROOT makes tests.fixtures importable.
+# MONOREPO_ROOT makes core importable when this package is in the monorepo;
+# standalone layouts do not add a nonexistent core directory.
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
@@ -22,10 +22,9 @@ export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${P
 verbose=""
 [[ "${1:-}" == "-v" ]] && verbose="-v"
 
-# Тесты гоняют реальные CLI-команды, поэтому stdout/stderr забиты их штатными
-# отчётами и ожидаемыми WARN/ERROR (проверяется поведение, не вывод). В обычном
-# режиме копим весь вывод и показываем его ТОЛЬКО при падении — иначе печатаем
-# одну строку. С -v отдаём вывод как есть (для отладки конкретных тестов).
+# Tests exercise the real CLI, including expected reports and WARN/ERROR output.
+# Capture that output by default and print it only when a test fails; `-v` keeps
+# the raw output for focused debugging.
 cd "$REPO_ROOT"
 if [[ -n "$verbose" ]]; then
   python3 -m unittest discover -s tests -p "test_*.py" -v

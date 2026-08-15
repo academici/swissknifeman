@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
-# install.sh — устанавливает CLI skiller (бывш. swissknifeman).
+# install.sh installs the skiller CLI (formerly swissknifeman).
 #
-# Создаёт симлинк <bin-dir>/skiller -> <repo>/bin/skiller и каталог состояния
-# ~/.swissknifeman (projects.json — карта подключённых проектов, пополняется
-# автоматически командами connect/vendor/update).
+# It creates <bin-dir>/skiller -> <repo>/bin/skiller and the ~/.swissknifeman
+# state directory. connect/vendor/update maintain projects.json.
 #
-# Алиас `swissknifeman` ставит ЗОНТИЧНЫЙ install.sh (корневой router-слой), а не
-# этот пакет — чтобы re-run skiller install не затирал router. При standalone-
-# установке только skiller алиаса `swissknifeman` не будет (используйте `skiller`).
+# The umbrella install.sh owns the `swissknifeman` alias, so rerunning this
+# installer never replaces the root router. Standalone installs expose `skiller` only.
 #
-# Использование:
+# Usage:
 #   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME] [--no-codex-plugins]
 #
-#   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
-#   --force         заменить чужой файл/симлинк без вопроса
-#   --codex-plugin  установить дополнительный Codex-плагин NAME (можно повторять)
-#   --no-codex-plugins  не устанавливать базовые Codex-плагины core + task
+#   --bin-dir DIR   link destination (default: ~/.local/bin)
+#   --force         replace a foreign file or link without prompting
+#   --codex-plugin  install additional Codex plugin NAME (repeatable)
+#   --no-codex-plugins  skip the base core and task Codex plugins
 #
 # Дальше — из любого потребляющего проекта:
 #   skiller connect    # Claude Code (plugin marketplace)

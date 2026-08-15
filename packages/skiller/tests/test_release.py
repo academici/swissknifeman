@@ -1,9 +1,8 @@
-"""Тесты `skiller release` (P5.3) — сборка предложения релиза монорепо.
+"""Tests for monorepo release proposal assembly.
 
-Юнит-уровень (classify_bump/bump_version/секция Unreleased) — без git, чистые
-функции на синтетических данных. Интеграционный уровень (cmd_release,
-`bin/swissknifeman release`) — на СИНТЕТИЧЕСКОМ tmp-git-репо (никогда не касается
-реального корневого CHANGELOG.md — он permission-deny этой среды, прецедент P2.4)."""
+Unit tests use synthetic data without Git. Integration tests run against a
+synthetic temporary Git repository and never modify the root CHANGELOG.md.
+"""
 import subprocess
 import tempfile
 import unittest
@@ -14,7 +13,7 @@ from skiller.release import (bump_version, classify_bump, cmd_release,
                              read_unreleased_section, unreleased_is_empty)
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/skiller
-MONOREPO_ROOT = PACKAGE_ROOT.parents[1]              # корень репо (swissknifeman)
+MONOREPO_ROOT = PACKAGE_ROOT.parents[1]              # Swissknifeman repository root.
 SKILLER_BIN = PACKAGE_ROOT / "bin" / "skiller"
 SWISSKNIFEMAN_BIN = MONOREPO_ROOT / "bin" / "swissknifeman"
 
@@ -42,7 +41,7 @@ class ClassifyBumpCase(unittest.TestCase):
         self.assertEqual(bump, "breaking")
 
     def test_breaking_short_circuits_even_with_earlier_feat(self):
-        # breaking где-то в диапазоне — отказ независимо от порядка коммитов
+        # A breaking change wins regardless of commit order.
         commits = [("feat: A", ""), ("fix!: B", "")]
         bump, _ = classify_bump(commits)
         self.assertEqual(bump, "breaking")
@@ -108,8 +107,7 @@ class UnreleasedSectionCase(unittest.TestCase):
 
 
 def _init_repo(root):
-    """Мини git-репо: init + первый коммит + CHANGELOG.md с заполненным
-    [Unreleased], stdlib subprocess (без сети, без реальных remote)."""
+    """Create a local Git repository with a populated Unreleased section."""
     for cmd in (["git", "init", "-q"],
                 ["git", "config", "user.email", "test@example.com"],
                 ["git", "config", "user.name", "Test"]):
@@ -147,15 +145,14 @@ def _run_cli(fn, env, argv):
 
 
 @unittest.skipIf(subprocess.run(["git", "--version"], capture_output=True).returncode != 0,
-                 "git недоступен в окружении")
+                 "Git is unavailable in this environment")
 class CmdReleaseCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         _init_repo(self.root)
-        # env.root = каталог пакета (как в реальном запуске skiller <root=пакет> release);
-        # find_monorepo_root в release.py обязан подняться к self.root по маркеру `packages/`
-        # либо `core/` — здесь просто указываем root = сам git-репо (monorepo-корень).
+        # Mirror `skiller <package-root> release`: find_monorepo_root climbs via
+        # `packages/` or `core/`; here root is the temporary monorepo root.
         self.env = Env(self.root, home=self.root / "home")
 
     def tearDown(self):
@@ -167,7 +164,7 @@ class CmdReleaseCase(unittest.TestCase):
         self.assertIsNone(exc)
         self.assertIn("v0.7.1 -> v0.8.0", out)
         self.assertIn("[dry-run]", out)
-        # CHANGELOG не тронут
+        # The CHANGELOG remains unchanged.
         text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("## [Unreleased]\n### Added\n- заглушка", text)
 
@@ -197,7 +194,7 @@ class CmdReleaseCase(unittest.TestCase):
         text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("## [v0.8.0] -", text)
         self.assertIn("- заглушка", text)
-        # старая секция [Unreleased] освобождена
+        # The old Unreleased section is now empty.
         section = text.split("## [Unreleased]", 1)[1].split("## [v0.8.0]", 1)[0]
         self.assertNotIn("- заглушка", section)
 
@@ -208,12 +205,11 @@ class CmdReleaseCase(unittest.TestCase):
         self.assertIn("git tag -a v0.8.0", out)
         tags = subprocess.run(["git", "tag", "-l"], cwd=self.root, check=True,
                               capture_output=True, text=True).stdout
-        self.assertNotIn("v0.8.0", tags)  # тег НЕ создан автоматом
+        self.assertNotIn("v0.8.0", tags)  # Tags are never created automatically.
 
 
 class SwissknifemanReleaseFacadeCase(unittest.TestCase):
-    """Root-фасад `bin/swissknifeman release` → skiller (тестируем через реальный
-    репозиторий swissknifeman, --dry-run: read-only, ничего не пишет)."""
+    """Root `bin/swissknifeman release` facade delegates to skiller read-only."""
 
     def test_help_mentions_release(self):
         proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "--help"],
@@ -228,7 +224,7 @@ class SwissknifemanReleaseFacadeCase(unittest.TestCase):
         self.assertNotIn("Traceback", proc.stdout + proc.stderr)
 
     def test_env_doctor_still_works(self):
-        # риск среза: добавление группы release не должно ломать соседние (env).
+        # Adding release must not regress sibling root groups.
         proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "env", "doctor"],
                               capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)

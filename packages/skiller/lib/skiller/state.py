@@ -1,4 +1,4 @@
-"""~/.swissknifeman/projects.json и git-состояние реестра."""
+"""Registry project database and Git state."""
 import json
 import subprocess
 from pathlib import Path
@@ -9,8 +9,7 @@ from .common import DB_VERSION, now_iso
 
 
 def load_db(env):
-    """projects.json с восстановлением битого файла — общий core.load_json_db
-    (бэкап .corrupt.<date> + warn; version > DB_VERSION → die)."""
+    """Load the project database with shared corrupt-file recovery."""
     return load_json_db(env.db_file, {"version": DB_VERSION, "projects": []},
                         max_version=DB_VERSION)
 
@@ -28,7 +27,7 @@ def upsert_project(env, record):
     of creating a duplicate record.
     """
     db = load_db(env)
-    # нормализуем путь: иначе разные repr одного каталога (симлинк, ./, ..) → дубли
+    # Canonicalize paths to avoid duplicate records for one directory.
     record["path"] = str(Path(record["path"]).resolve())
     record["updated_at"] = now_iso()
     provider = record.get("provider", "claude-code")
@@ -48,7 +47,7 @@ def upsert_project(env, record):
 
 
 def db_records(env, path):
-    target = str(Path(path).resolve())  # симметрично upsert_project — иначе lookup мимо
+    target = str(Path(path).resolve())  # Match upsert_project canonicalization.
     return [p for p in load_db(env)["projects"] if p["path"] == target]
 
 

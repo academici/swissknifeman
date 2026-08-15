@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# sync.sh — DEPRECATED: используйте `skiller registry`.
+# sync.sh — DEPRECATED: use `skiller registry`.
 #
-# Тонкий wrapper на один релиз. Brain-sync удалён: brain — обычный
-# потребляющий проект (cd <brain> && skiller vendor, далее
-# skiller update).
+# One-release compatibility wrapper. Brain-sync was removed; brain is an
+# ordinary consumer project (`cd <brain> && skiller vendor`, then `skiller update`).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

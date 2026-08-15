@@ -1,39 +1,41 @@
 # HANDOFF — 2026-08-15 — after P4.3
 
-**Next:** design-item: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3
+**Next:** `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4`
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model | gpt-5.6-sol (frontier) |
-| Thinking | high |
-| Model class | frontier |
-| Effort | high |
-| Capabilities | — |
+| Batch | solo/per-cwd-ledger |
+| Model | implementation |
+| Thinking | high — package-cwd catalog migration |
 | Context | continue-root |
-| Суть | Re-design P4.3 admission producer and append-only fingerprint reconciliation before corpus migration. |
+| Суть | Migrate only admitted command, plugin and diagnostic carrier rows with bounded package-cwd checkpoints. |
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4'
 ```
 
 **Provider-neutral plan-protocol command:**
 
 ```text
-task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3
+task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.4
 ```
 
-**Done:** P4.3 route and task-contract gates passed. The coordinator verified P4.2's generated state and current ledger bytes, recorded a block-candidate, and received one distinct `JUSTIFIED` isolated review. No skill, overlay, generated projection, provider, or consumer file was changed.
+**Done:** P4.3 repaired its false terminal classification append-only, admitted the scoped local
+root-bootstrap skill batch with distinct EN/RU evidence and rollback, and closed with the exact
+P4.6 derived-target set deferred to its generator owner.
 
-**Remaining:** Re-design and resume P4.3; then P4.4–P7.4.
+**Remaining:** P4.4–P4.6, then P5–P7.
 
-**Sources of truth:** `phases/P4/P4.3.md`; `bundles/P4.3.json`; `phases/P4/P4.3.state.md`; `configs/locale-corpus-v1.json`; `journal.jsonl`; `phases/P4/P4.md`.
+**Sources of truth:** `phases/P4/P4.3.md`; `phases/P4/P4.3.state.md`;
+`configs/locale-corpus-v1.json`; `artifacts/execution/P4.3/`; `journal.jsonl`;
+`phases/P4/P4.4.md`; `roadmap.md`.
 
-**Open risks:** P4.2's ledger has `inventory_roots=[]` and `rows=[]`, but the observed local corpus contains 232 canonical skills; no row has admission, preimage, independent review, or rollback evidence. The terminal journal event's top-level fingerprint is `79b0e7eb1682f220e6f2b9f84e9023985ab762d7be42909050db0f1cb772f6fd`; the exact block-candidate fingerprint is preserved in its decision as `79b0e7eb1682f220e6f2a9f84e9023985ab762d7be42909050db0f1cb772f6fd` and must be reconciled append-only by the design owner.
+**Open risks:** `packages/skiller/scripts/validate.sh` is nonzero only for the checkpoint-enumerated
+P4.6 generated targets. P4.4 must preserve that exact deferred set and may not regenerate it.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: no-op closure is forbidden; do not synthesize ledger rows or self-review units.
-- deferred: package-cwd Skiller work and generated registry/projection updates await admitted rows.
-- open_questions: what evidence-producing item/contract owns the corpus inventory and admission records for the 232 current skills?
+- workarounds: the historical P4.3 terminal-block and fingerprint mismatch remain append-only journal evidence.
+- deferred: P4.6 owns regeneration of the exact Skiller registry/bootstrap/budget targets.
+- open_questions: —

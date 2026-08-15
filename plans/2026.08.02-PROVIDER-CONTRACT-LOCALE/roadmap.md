@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.1 nonterminal attempt reconciled for a solo resume under D79.
+**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.3 closed after an append-only same-root repair, P4.4 is next under D79 solo routing.
 
 ## Fast execution carrier
 
@@ -260,8 +260,7 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes with solo P4.1. Its historical attempt/block-candidate and pending manifest remain
-evidence; the fresh root reconciles them and starts product mutation only after the compact bundle and
-route gates pass. D79 changes no P1/P2/P3 frozen semantics, P4 content admission, external no-write gate
-or consumer/fleet authority. `handoff.md` is the sole current Next carrier; P4.2 is generated only after
-P4.1 terminal evidence names its runtime fixtures.
+Execution resumes with solo P4.4. The historical P4.3 false terminal block remains evidence, while
+its accepted same-root repair supplies the current ledger/checkpoint carrier. D79 changes no P1/P2/P3
+frozen semantics, P4 content admission, external no-write gate or consumer/fleet authority.
+`handoff.md` is the sole current Next carrier.

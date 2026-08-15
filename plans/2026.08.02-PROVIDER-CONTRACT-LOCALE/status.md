@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: ac572fc0405ad0456442f1db8721c00204c7b94cb8983013bc8ac686b91cfadf
+inputs_sha256: 3987cc4316012f847d99ec19af7769bcd95348409bea143ab11ffae269046c4c
 generated_by: task plan-views status
 -->
 
@@ -307,6 +307,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.2: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.3: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
 | 2026-08-15 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат c3f82b63d0836bf7c64b3da2fd15eabab06e4de172263bab4ed861c94b55c780, вердикт GREEN |
+| 2026-08-15 | gpt-5.6-terra/low | plan-close · closed-green · P5 direct-close: four green items, current phase candidate admitted by gate; P5 no-write result is not fleet health. |
 
 ## Owner Gates
 

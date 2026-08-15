@@ -171,7 +171,7 @@ evidence конфигом, актором или свободным тексто
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
    сначала один раз получи observed `session_id` через `plan-session.py current --id` и вычисли
-   `run_id = task.journal.derive_run_id(plan_id, item_id, attempt, session_id)`; затем
+   `run_id = task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)`; затем
    `PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib" python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
    команда> --actor <model>/<effort>

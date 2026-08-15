@@ -126,6 +126,6 @@ launch-block) — БЕЗ ИЗМЕНЕНИЙ из `plan-exec.md`; повторн�
 `--session-id "$(python3 packages/task/scripts/plan-session.py current --id)"`; resolver обязан
 найти ровно один provider adapter, иначе append не выполняется. Это provider-neutral правило:
 raw runtime identity принадлежит только adapter'у, а не canonical command. Перед start вычисли
-`run_id = task.journal.derive_run_id(plan_id, item_id, attempt, session_id)` и передай тот же
+`run_id = task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)` и передай тот же
 непустой `--run-id` в start и terminal; повторный terminal close возвращает существующий pointer
 и не дописывает journal.

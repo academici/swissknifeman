@@ -23,10 +23,13 @@ _PREIMAGE_DIGESTS = {
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
 _CANDIDATE_DIGESTS = {
-    "plan-exec": "6f6d7c67a6aebccb8460996b31714710e1ac5e1e3cb3bdaba5f830c02229644c",
-    "plan-run": "9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942",
+    "plan-exec": "7fae9763bceaccda420241ed11cf9a532d5ba59c6670d6c7933029857745309c",
+    "plan-run": "835b83945f8618d25ae98661290ea6492af546ab9eacc5e35de8d8cb6c067f3f",
 }
-_FENCE_RE = re.compile(r"^```[^\n]*\n(.*?)^```$", re.MULTILINE | re.DOTALL)
+# Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
+# sources use that form inside ordered lists, so matching only column-zero fences
+# silently discarded executable fragments from the inventory.
+_FENCE_RE = re.compile(r"^[ \t]*```[^\n]*\n(.*?)^[ \t]*```[ \t]*$", re.MULTILINE | re.DOTALL)
 _INLINE_RE = re.compile(r"`([^`\n]+)`")
 _URL_RE = re.compile(r"https?://[^\s)>]+")
 _PATH_RE = re.compile(r"(?<![\w.-])(?:[\w.-]+/)+(?:[\w.-]+)(?:\.[\w.-]+)?")
@@ -39,12 +42,12 @@ _EXPECTED_INVENTORIES = {
     # Generated from git:980ee79d plus the D80 replacement source.  Each digest
     # binds the full typed sequence, including order and multiplicity.
     "plan-exec": {
-        "preimage": "sha256:30a0828c90ed55084cf43e52985eae11792f17b3fe5a6d3c6a0edad003778b09",
-        "candidate": "sha256:93ac3a64f388e8bc29968db5e8dea2b25b8e0d5e1c866a92b272cf2970574baf",
+        "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
+        "candidate": "sha256:3d41e3288dd7d8158fd5670459cb8cf57daa1a3c95a0030234397d32b9a1e142",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:8b93e86fc2d9a617b421d0475d04d0aac8e02ad4a31a3ded7b8621288849481c",
+        "candidate": "sha256:be43fa800efb25a0695168a65a59f29093e92aa9904f12f5427636f1c9adbebb",
     },
 }
 
@@ -91,6 +94,50 @@ def _inventory_sha256(entries: tuple[tuple[str, str], ...]) -> str:
     return "sha256:" + sha256(encoded).hexdigest()
 
 
+def _is_protected_preimage_literal(kind: str, value: str) -> bool:
+    """Select immutable command-contract atoms from the frozen preimage.
+
+    The complete inventory intentionally also records prose-adjacent code spans so
+    that a source rewrite is auditable.  Only this narrower, source-derived subset
+    is required to survive the compact-English rewrite: command identities,
+    provider/route identifiers, parser and action/diagnostic codes, and canonical
+    Task paths.  The rule is independent of the candidate and therefore cannot be
+    weakened by omitting a value in the new source.
+    """
+    if value.startswith(("task:", "task.")):
+        return True
+    if value.startswith(("packages/task/", "plans/", "phases/", "snippets/")):
+        return True
+    if value in {
+        "sonnet", "medium", "model", "effort", "plan-exec", "plan-run", "plan-design",
+        "manual", "allow", "delegated", "approval_required", "denied", "local-repair",
+        "block-candidate", "terminal-block", "routing-rejected", "ROUTE-UNVERIFIABLE",
+        "ROUTING-BLOCKED", "ROUTING-INCONSISTENT", "PLAN_LAYOUT_V1_RETIRED",
+        "LOOP_BUDGET_EXCEEDED", "INSUFFICIENT_EVIDENCE", "JUSTIFIED", "AVOIDABLE",
+        "OUT_OF_SCOPE", "MALFORMED", "CAPABILITY_UNSUPPORTED", "COLD_START_INCOMPLETE",
+        "PORTABILITY_EXTERNAL_INPUT", "PORTABILITY_INPUT_MISSING", "VERSION_HASH_MISMATCH",
+        "CONFLICT_UNRESOLVED", "CONFLICT_PRECEDENCE_VIOLATION", "NEXT_CHANGED_WITHOUT_TRANSITION",
+        "SLICE_INCOMPLETE", "block-confirmation:v1", "block-candidate/v1",
+        "return-judgement@1.0.0", "isolated-child-return", "DecisionRequest",
+    }:
+        return True
+    if kind == "frontmatter-value" and value in {"sonnet", "medium"}:
+        return True
+    return False
+
+
+def _preserves_protected_literals(
+        expected: tuple[tuple[str, str], ...], actual: tuple[tuple[str, str], ...],
+) -> bool:
+    """Require every immutable atom from the preimage to remain in the candidate.
+
+    Order and multiplicity of the complete inventories are pinned separately by
+    their source hashes.  The semantic compacting step may move an atom, but may
+    not drop it or invent a replacement spelling.
+    """
+    return set(expected).issubset(set(actual))
+
+
 def _preimage(command_id: str) -> str:
     result = subprocess.run(
         ("git", "show", f"{_PREIMAGE_COMMIT}:packages/task/commands/{command_id}.md"),
@@ -116,6 +163,10 @@ def literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
         "preimage_literals": _machine_literals(preimage),
         "candidate_literals": _machine_literals(text),
     }
+    inventory["protected_preimage_literals"] = tuple(
+        literal for literal in inventory["preimage_literals"]
+        if _is_protected_preimage_literal(*literal)
+    )
     inventory["preimage_inventory_sha256"] = _inventory_sha256(inventory["preimage_literals"])
     inventory["candidate_inventory_sha256"] = _inventory_sha256(inventory["candidate_literals"])
     return inventory
@@ -127,7 +178,10 @@ def verify_literal_inventory(text: str, *, command_id: str) -> dict[str, object]
     expected = _EXPECTED_INVENTORIES[command_id]
     if (inventory["candidate_sha256"] != "sha256:" + _CANDIDATE_DIGESTS[command_id]
             or inventory["preimage_inventory_sha256"] != expected["preimage"]
-            or inventory["candidate_inventory_sha256"] != expected["candidate"]):
+            or inventory["candidate_inventory_sha256"] != expected["candidate"]
+            or not _preserves_protected_literals(
+                inventory["protected_preimage_literals"], inventory["candidate_literals"],
+            )):
         raise ValueError("CMD_LOCALE_LITERAL_INVENTORY_MISMATCH")
     return inventory
 

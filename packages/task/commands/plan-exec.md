@@ -26,6 +26,12 @@ Missing capability is `cold-start-root: capability-missing`. Use immutable
 (`SHA-256 63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e`). An uncalibrated
 `model_id × rubric_sha256` pair or order-sensitive swap is `INSUFFICIENT_EVIDENCE`.
 
+Compatibility remains explicit: `task:plan-exec`, `task:plan-design`, `plan-run`,
+`task:plan-close Pn.m`, and `task.plan_blocking` retain their existing meanings. The canonical
+Task modules are `packages/task/lib/task/task_contract.py`; required plan carriers include
+`plans/`, `plans/<PLAN-ID>/**`, `plans/ACTIVE.md`, `plans/<PLAN-ID>/roadmap.md`, `phases/Pn.md`,
+and `snippets/launch-block-template.md`. A route failure remains `ROUTING-BLOCKED`.
+
 ## Continue-first block gate (v1)
 
 <!-- block-confirmation:v1:begin -->

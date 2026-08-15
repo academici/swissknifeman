@@ -15,6 +15,10 @@ lead through `task.plan_blocking.evaluate()` to `terminal-block`.
 
 The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-candidate`,
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
+Its immutable forms are `block-candidate/v1`, `return-judgement@1.0.0`, and
+`packages/task/prompts/return-judgement-rubric-v1.md`; reviewer verdicts remain `JUSTIFIED`,
+`AVOIDABLE`, `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, and `MALFORMED`. The command identity is
+`plan-run`.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

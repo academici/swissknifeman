@@ -1,8 +1,9 @@
 """Command locale boundary: English canonical source, Russian overlay, and literal parity."""
+from collections import Counter
 from pathlib import Path
 import unittest
 
-from task.command_locale import (command_locale_key, english_catalog, immutable_tokens,
+from task.command_locale import (command_locale_key, english_catalog, literal_inventory,
                                  verify_literal_inventory, resolve_command)
 
 
@@ -35,17 +36,30 @@ class CommandLocaleTests(unittest.TestCase):
                 self.assertEqual(inventory["preimage_commit"], "980ee79d")
                 self.assertGreater(len(inventory["preimage_literals"]), 20)
                 self.assertGreater(len(inventory["candidate_literals"]), 20)
-                self.assertEqual({kind for kind, _ in inventory["candidate_literals"]}, {
+                kinds = {
                     "command", "frontmatter-value", "identifier", "inline-code", "key", "path",
                     "placeholder",
-                })
+                }
+                if command_id == "plan-exec":
+                    kinds.add("fenced-code")
+                self.assertEqual({kind for kind, _ in inventory["candidate_literals"]}, kinds)
+                self.assertTrue(inventory["protected_preimage_literals"])
 
     def test_inventory_rejects_omitted_reordered_multiplied_and_new_literals(self):
         text = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
         token = "task.route_evidence.capture_launch"
+        reordered = text.replace(
+            "`delegated`/`approval_required`/`denied`",
+            "`denied`/`approval_required`/`delegated`",
+            1,
+        )
+        self.assertEqual(
+            Counter(literal_inventory(text, command_id="plan-run")["candidate_literals"]),
+            Counter(literal_inventory(reordered, command_id="plan-run")["candidate_literals"]),
+        )
         for label, candidate in (
             ("omitted", text.replace(token, "", 1)),
-            ("reordered", text.replace(token, "x", 1).replace("x", token, 1)),
+            ("reordered", reordered),
             ("multiplicity", text.replace(token, f"{token} {token}", 1)),
             ("new", text + "\n`NEW_MACHINE_LITERAL`\n"),
         ):

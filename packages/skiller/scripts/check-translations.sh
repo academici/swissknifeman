@@ -4,12 +4,18 @@ set -euo pipefail
 
 PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 strict="false"
+direction=""
 
-if [[ "${1:-}" == "--strict" ]]; then
-  strict="true"
-  shift
-fi
-if [[ $# -ne 0 ]]; then
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --strict) strict="true"; shift ;;
+    --direction)
+      [[ "${2:-}" == "en-source" ]] || { echo "ERROR: --direction accepts only en-source" >&2; exit 2; }
+      direction="$2"; shift 2 ;;
+    *) echo "usage: $0 [--strict] [--direction en-source]" >&2; exit 2 ;;
+  esac
+done
+if [[ -n "$direction" && "$direction" != "en-source" ]]; then
   echo "usage: $0 [--strict]" >&2
   exit 2
 fi

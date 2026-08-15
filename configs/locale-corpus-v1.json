@@ -91,6 +91,58 @@
             "target_preimages": [],
             "status": "applied",
             "rollback": {"id": "p4.3-root-bootstrap-1-field-feedback-loop", "backup": "git:86d52109^:packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md"}
+        },
+        {
+            "id": "command.task.plan-exec",
+            "carrier_id": "semantic.command",
+            "owner": "task command renderer",
+            "cwd": "packages/task",
+            "source_path": "packages/task/commands/plan-exec.md",
+            "source_locale": "en",
+            "source_preimage_sha256": "sha256:646172c92e6e13b8cddb6af36594f4a24060224d0ceb2c8f981eff9f8c894664",
+            "english_postimage_sha256": "sha256:ddf6a813f4c36feabef6512dcaeaada6ccc2f998136cf91cedf7dcfca62b92d6",
+            "overlay_path": "packages/task/locales/ru.json",
+            "overlay_sha256": "sha256:8d73ff4e807a50406bfbcc41e2946b432c478a0e947927c547600412d9d20b15",
+            "overlay_mode": "sparse-overlay",
+            "immutable_tokens": ["task.plan_authority.authorize()", "task.plan_blocking.evaluate()", "task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)", "task.validation_admission.local_repair_decision(report)"],
+            "semantic_invariants": ["English canonical source", "Russian overlay preserves execution literals", "provider projections remain generated"],
+            "author": "p44-task-author",
+            "renderer": "task-command-locale",
+            "reviews": [
+                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
+                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
+            ],
+            "semantic_review_evidence": ["p44-task-en-review", "p44-task-ru-review"],
+            "generated_owner": "task render-provider-commands; deferred P4.6",
+            "target_preimages": ["sha256:574fe70d8ca8ce4d4b42aaaec98ea7e8810923146882c39799985e06358784f4"],
+            "status": "applied",
+            "rollback": {"id": "p4.4-task-plan-1-plan-exec", "backup": "git:980ee79d:packages/task/commands/plan-exec.md"}
+        },
+        {
+            "id": "command.task.plan-run",
+            "carrier_id": "semantic.command",
+            "owner": "task command renderer",
+            "cwd": "packages/task",
+            "source_path": "packages/task/commands/plan-run.md",
+            "source_locale": "en",
+            "source_preimage_sha256": "sha256:29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
+            "english_postimage_sha256": "sha256:9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942",
+            "overlay_path": "packages/task/locales/ru.json",
+            "overlay_sha256": "sha256:8d73ff4e807a50406bfbcc41e2946b432c478a0e947927c547600412d9d20b15",
+            "overlay_mode": "sparse-overlay",
+            "immutable_tokens": ["task.command_catalog.package_command_path(\"task:plan-exec\")", "task.route_evidence.capture_launch", "task.route_evidence.build_run_receipt(...)", "task.route_evidence.start_decision(receipt)", "verify_run_receipt(..., current_evidence=<fresh>)", "task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)"],
+            "semantic_invariants": ["English canonical source", "Russian overlay preserves routing literals", "provider projections remain generated"],
+            "author": "p44-task-author",
+            "renderer": "task-command-locale",
+            "reviews": [
+                {"locale": "en", "reviewer": "p44-task-en-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.en.json"},
+                {"locale": "ru", "reviewer": "p44-task-ru-review", "outcome": "pass", "evidence": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.ru.json"}
+            ],
+            "semantic_review_evidence": ["p44-task-en-review", "p44-task-ru-review"],
+            "generated_owner": "task render-provider-commands; deferred P4.6",
+            "target_preimages": ["sha256:574fe70d8ca8ce4d4b42aaaec98ea7e8810923146882c39799985e06358784f4"],
+            "status": "applied",
+            "rollback": {"id": "p4.4-task-plan-1-plan-run", "backup": "git:980ee79d:packages/task/commands/plan-run.md"}
         }
     ]
 }

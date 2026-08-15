@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 4b43e3767b534c9abd6de80599be652ba0791266fca0c5065d880e53a4ffd02b
+inputs_sha256: 7cfb2ffe27d38108fa61db472b548a5d95ec56e649fb84b371ff2ff9f5f076d8
 generated_by: task plan-views status
 -->
 
@@ -301,6 +301,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · acceptance RED: declared convergence subcommand and aggregate verify flags are absent from the plan-local P5 runner; bounded carrier repair required |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.4: two stable full-fleet no-write passes; 13,421 unresolved rows hold rollout. Process deviation: missing plan-local convergence carrier repaired forward. |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow; invalid standalone task CLI path replaced by owning plan-lint.py script |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

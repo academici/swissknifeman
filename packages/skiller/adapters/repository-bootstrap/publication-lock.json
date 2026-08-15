@@ -104,16 +104,16 @@
       "provider": "claude",
       "target": ".claude/skills/field-feedback-loop/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
-      "canonical_sha256": "235f366c0d6e5ae7e30cf889f2f014e51b1b46e33eb190342de663beaca6338e",
-      "rendered_sha256": "d2832fe248216b21564a3e66d5dc36a8c37bb7691a73a4cafad55de5bdbf24a4"
+      "canonical_sha256": "882433d8d69485887383712ac99a96f2c8c214906bd786192054b17968f71c11",
+      "rendered_sha256": "f26c079bb9987a3beb8569ce74f207ec71b4ed0d0fbf83ea9e7e48b4f84ff47e"
     },
     {
       "identity": "field-feedback-loop",
       "provider": "codex",
       "target": ".agents/skills/field-feedback-loop/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
-      "canonical_sha256": "235f366c0d6e5ae7e30cf889f2f014e51b1b46e33eb190342de663beaca6338e",
-      "rendered_sha256": "d2832fe248216b21564a3e66d5dc36a8c37bb7691a73a4cafad55de5bdbf24a4"
+      "canonical_sha256": "882433d8d69485887383712ac99a96f2c8c214906bd786192054b17968f71c11",
+      "rendered_sha256": "f26c079bb9987a3beb8569ce74f207ec71b4ed0d0fbf83ea9e7e48b4f84ff47e"
     },
     {
       "identity": "harness-operations",

@@ -306,7 +306,7 @@ flowchart LR
     ecosystem_integration["ecosystem-integration<br/>⊕77 ↻1965"]:::mild
     ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1619"]:::warm
     ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1114"]:::warm
-    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1343"]:::warm
+    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1347"]:::warm
     harness_operations["harness-operations<br/>⊕87 ↻2105"]:::warm
     maind_overview["maind-overview<br/>⊕80 ↻1626"]:::mild
     package_architecture["package-architecture<br/>⊕85 ↻3740"]:::warm
@@ -447,14 +447,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **16184** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 336646 ток · ⌥ on-demand 836984 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **16184** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 336650 ток · ⌥ on-demand 836984 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 22 | 1366 | 36158 | 25997 |
-| `repository-bootstrap` | 14 | 1150 | 29150 | 0 |
+| `repository-bootstrap` | 14 | 1150 | 29154 | 0 |
 | `php` | 17 | 1065 | 18886 | 54837 |
 | `architect` | 15 | 1005 | 23164 | 33458 |
 | `quality` | 11 | 835 | 20319 | 7447 |

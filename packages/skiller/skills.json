@@ -4287,8 +4287,8 @@
       "path": "skills/repository-bootstrap/field-feedback-loop/SKILL.md",
       "version": "0.1.0",
       "description": "Feedback loop from field work: implementing/integrating/syncing a project (skiller connect|vendor, maind onboard|sync, harness, setup) and reality diverges from promised behavior - route it, don't swallow it. Obvious bug -> fix now; new/uncertain -> propose, don't implement speculatively.",
-      "sha256": "235f366c0d6e5ae7e30cf889f2f014e51b1b46e33eb190342de663beaca6338e",
-      "content_sha256": "59661fee9c0ec52536cab7ca091e0eb0965417bc4650899473a3bc227443c59c",
+      "sha256": "882433d8d69485887383712ac99a96f2c8c214906bd786192054b17968f71c11",
+      "content_sha256": "46c425be335de2b36d26da504962caf3f7bdfcf5cf2a577ed08cb3075a086ba0",
       "tags": [
         "field-feedback",
         "improvement-loop",

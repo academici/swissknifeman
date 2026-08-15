@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {"name": "reversed-source", "expected": "AUTHORING_SOURCE_NOT_ENGLISH"},
+    {"name": "self-review", "expected": "AUTHORING_SELF_REVIEW"},
+    {"name": "review-cap", "expected": "LOCALE_BATCH_REVIEW_CAP_EXCEEDED"},
+    {"name": "batch-cap", "expected": "LOCALE_BATCH_CAP_EXCEEDED"},
+    {"name": "cross-cwd", "expected": "LOCALE_BATCH_CROSS_CWD"},
+    {"name": "overlap", "expected": "LOCALE_BATCH_OVERLAP"},
+    {"name": "out-of-order", "expected": "LOCALE_BATCH_OUT_OF_ORDER"},
+    {"name": "resume-skip", "expected": "LOCALE_BATCH_RESUME_SKIP"},
+    {"name": "missing-english-fallback", "expected": "OVERLAY_FALLBACK_MISSING"},
+    {"name": "immutable-token-drift", "expected": "OVERLAY_IMMUTABLE_TOKEN_MISMATCH"},
+    {"name": "duplicate-source", "expected": "LOCALE_CORPUS_SOURCE_AMBIGUOUS"},
+    {"name": "generated-edit", "expected": "OVERLAY_GENERATED_EDIT_FORBIDDEN"},
+    {"name": "external-upstream", "expected": "LOCALE_CORPUS_EXTERNAL_UPSTREAM"},
+    {"name": "preimage-mismatch", "expected": "LOCALE_CORPUS_PREIMAGE_CHANGED"},
+    {"name": "rollback-missing", "expected": "OVERLAY_ROLLBACK_INCOMPLETE"}
+    ,{"name": "late-or-ambiguous-trigger", "expected": "SKILL_EVIDENCE_SCHEMA_INVALID"}
+    ,{"name": "provider-control-in-shared-content", "expected": "SKILL_EVIDENCE_PROVIDER_TUNING_SHARED"}
+    ,{"name": "cross-provider-target", "expected": "OVERLAY_CROSS_PROVIDER_TARGET"}
+  ]
+}

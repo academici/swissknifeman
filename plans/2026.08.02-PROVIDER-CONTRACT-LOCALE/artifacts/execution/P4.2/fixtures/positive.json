@@ -1,0 +1,9 @@
+{
+  "case": "admitted-local-semantic-skill",
+  "source_locale": "en",
+  "overlay_locale": "ru",
+  "owner": "skiller",
+  "reviews": ["independent-en-pass", "independent-ru-pass"],
+  "rollback": "exact-preimage",
+  "expected": "allow"
+}

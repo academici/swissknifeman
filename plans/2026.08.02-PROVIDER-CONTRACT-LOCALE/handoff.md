@@ -1,6 +1,6 @@
-# HANDOFF — 2026-08-15 — after P4.1
+# HANDOFF — 2026-08-15 — after P4.2
 
-**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2
+**Next:** run-items: task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3
 
 | Параметр | Значение |
 |:--|:--|
@@ -11,29 +11,29 @@
 | Effort | high |
 | Capabilities | — |
 | Context | continue-root |
-| Суть | Реализовать ledger/admission/rollback P4.2; Skiller slice выполняется из свежего package cwd. |
+| Суть | Выполнить первый evidence-admitted batch миграции с bounded review и rollback. |
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3'
 ```
 
 **Provider-neutral plan-protocol command:**
 
 ```text
-task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.2
+task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3
 ```
 
-**Done:** P4.1 delivered shared stdlib-only locale resolution, sparse-overlay rendering, deterministic registry update validation and provider-owned Harness/Task context seams. The declared tests and affected package validators are green. The global core discovery collision with stdlib `locale` was repaired; the current P4.1 downstream record is green.
+**Done:** P4.2 delivered the EN-source corpus ledger, no-write inventory/check/plan interfaces, guarded preimage apply/rollback helpers, bounded checkpoint validation, deterministic review projection, and the byte-stable EN Skill template/projection. Root, Skiller, Task downstream, and documentation builds are green.
 
-**Remaining:** P4.2–P7.4. P4.2 has a fresh producer bundle and is the next runnable item.
+**Remaining:** P4.3–P7.4. P4.3 is the next sequential ledger consumer.
 
-**Sources of truth:** `plan.md`; `phases/P4/P4.md`; `phases/P4/P4.2.md`; `bundles/P4.2.json`; `phases/P4/P4.1.state.md`; `artifacts/execution/P4.1/manifest.json`.
+**Sources of truth:** `plan.md`; `phases/P4/P4.md`; `phases/P4/P4.3.md`; `bundles/P4.3.json`; `phases/P4/P4.2.state.md`; `artifacts/execution/P4.2/manifest.json`; `configs/locale-corpus-v1.json`.
 
-**Open risks:** Foreign worktree changes remain outside P4.1. P4.2 must preserve them and start its Skiller-owned mutation only through a fresh `packages/skiller` cwd session.
+**Open risks:** Future P4.3–P4.6 validation templates remain `unknown` until their consumer-owned checkpoints exist; they are explicitly deferred rather than treated as failures. Preserve existing unrelated worktree changes.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: consumer checks not yet runnable are recorded as downstream `unknown`; P7.2 current producer record is green.
+- deferred: downstream records for P4.3–P7.1 await their declared producer paths/checkpoints.
 - open_questions: —

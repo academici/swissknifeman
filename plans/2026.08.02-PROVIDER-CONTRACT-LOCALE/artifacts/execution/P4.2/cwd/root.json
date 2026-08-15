@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:p4.2-cwd-validation:v1",
+  "cwd": ".",
+  "commands": [
+    {"command": "PYTHONPATH=. python3 -m unittest core.tests.locale.test_corpus", "exit_code": 0},
+    {"command": "python3 scripts/test-check-locale-corpus.py", "exit_code": 0},
+    {"command": "python3 scripts/check-locale-corpus.py --inventory --check --ledger configs/locale-corpus-v1.json", "exit_code": 0},
+    {"command": "python3 scripts/check-locale-corpus.py --check --class command --class plugin --class diagnostic --batch p4.2-dry-run --ledger configs/locale-corpus-v1.json", "exit_code": 0}
+  ]
+}

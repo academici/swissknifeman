@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 69a9719314a5afa0cbf2294990693916952de8330ec8e34afaf196ec71476d94
+inputs_sha256: 88cfcc78ddd27f44c28823f9e7f32005121af0c4a46ccb770f34a2b1dcbf8f1e
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
-| P4 | Implement locale rendering and evidence-admitted lean skill migration | 1/6 | 🟡 In progress |
+| P4 | Implement locale rendering and evidence-admitted lean skill migration | 2/6 | 🟡 In progress |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
@@ -76,7 +76,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-15 |
-| P4.2 | Implement English-source, overlay, admission, and rollback validators | ⬜ Not started | — |
+| P4.2 | Implement English-source, overlay, admission, and rollback validators | 🟢 Done | 2026-08-15 |
 | P4.3 | Migrate canonical skill ownership and localized overlays | ⬜ Not started | — |
 | P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | ⬜ Not started | — |
 | P4.5 | Migrate code comments, docstrings, and test descriptions | ⬜ Not started | — |
@@ -246,6 +246,13 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | frontier/high | plan-design · in-progress · фаза P4 перепроектирована до DoR: D79 solo routes, compact reads, producer edges; P4.1 evidence preserved |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.1 locale runtime, provider seams and declared validation are green. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · route receipt run_id mismatch detected before terminal close; no product write affected |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 ledger, guarded corpus tooling, EN template, and validations are green. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · downstream future-validation placeholders were executed as shell syntax; repaired in task gate and locale carriers |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 ledger, class carriers, EN template and bounded downstream gate are green. |
 
 ## Owner Gates
 

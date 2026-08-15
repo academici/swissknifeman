@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 6b0b4fa262b8e4b7d72569fdd76ab76fcb7a184c26da7b097006564ec788cde7
+inputs_sha256: 4b43e3767b534c9abd6de80599be652ba0791266fca0c5065d880e53a4ffd02b
 generated_by: task plan-views status
 -->
 
@@ -28,7 +28,7 @@ generated_by: task plan-views status
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
-| P5 | Classify and migrate all consumer projects safely | 3/4 | 🟡 In progress |
+| P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
@@ -89,7 +89,7 @@ generated_by: task plan-views status
 | P5.1 | Freeze exact consumer action manifest and rollback domains | 🟢 Done | 2026-08-15 |
 | P5.2 | Preserve and explicitly register approved local overrides | 🟢 Done | 2026-08-15 |
 | P5.3 | Reconcile approved equivalent, broken, and stale-managed projections | 🟢 Done | 2026-08-15 |
-| P5.4 | Quarantine obsolete owned projections and prove convergence | ⬜ Not started | — |
+| P5.4 | Quarantine obsolete owned projections and prove convergence | 🟢 Done | 2026-08-15 |
 
 ## Phase P6
 
@@ -297,6 +297,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · P5.4 read budget repaired; targeted lint remains red only because generated P5.4.state.md is stale; third repair/recheck prohibited by item budget |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.3: empty approved action set; 13,421 unresolved rows preserved, zero consumer writes. Process deviation: bounded continuation repaired P5.4 read-budget projections. |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · acceptance RED: declared convergence subcommand and aggregate verify flags are absent from the plan-local P5 runner; bounded carrier repair required |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.4: two stable full-fleet no-write passes; 13,421 unresolved rows hold rollout. Process deviation: missing plan-local convergence carrier repaired forward. |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow; invalid standalone task CLI path replaced by owning plan-lint.py script |
 
 ## Owner Gates
 
@@ -315,3 +319,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.5: known deviation
 - P4.6: known deviation
 - P5.3: known deviation
+- P5.4: known deviation

@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-14
-inputs_sha256: fe58f5493b1b1347783265427f428e7cb76d3a00ecdee4844c107b0a72faf4a3
+through: 2026-08-15
+inputs_sha256: 69a9719314a5afa0cbf2294990693916952de8330ec8e34afaf196ec71476d94
 generated_by: task plan-views status
 -->
 
@@ -15,9 +15,9 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.1.3 |
+| Version | 1.1.4 |
 | Status | 🟡 In progress |
-| Last Updated | 2026-08-14 |
+| Last Updated | 2026-08-15 |
 
 ## 4. Phase Index & Status Board
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P1 | Freeze provider-neutral control-plane, Skill Core, and adapter contracts | 3/3 | 🟢 Done |
 | P2 | Freeze locale and lean current-model skill authoring contracts | 3/3 | 🟢 Done |
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
-| P4 | Implement locale rendering and evidence-admitted lean skill migration | 0/6 | ⬜ Not started |
+| P4 | Implement locale rendering and evidence-admitted lean skill migration | 1/6 | 🟡 In progress |
 | P5 | Classify and migrate all consumer projects safely | 0/4 | ⬜ Not started |
 | P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
@@ -75,7 +75,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Implement shared locale resolution and rendered surfaces | ⬜ Not started | — |
+| P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-15 |
 | P4.2 | Implement English-source, overlay, admission, and rollback validators | ⬜ Not started | — |
 | P4.3 | Migrate canonical skill ownership and localized overlays | ⬜ Not started | — |
 | P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | ⬜ Not started | — |
@@ -239,6 +239,13 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 closed: provider-neutral reconciliation and additive adapter boundary validated. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · in-progress · P3.3 started: adapter-scoped redacted status and diagnostics. |
 | 2026-08-14 | gpt-5.6-terra/high | plan-run · closed-green · P3.3 closed: deterministic redacted provider status aggregation and atomic writer validated. |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-14 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · block-candidate · Routing batch conflicts with roadmap solo/per-cwd rows; P4.2 bundle is absent. |
+| 2026-08-15 | frontier/high | plan-design · in-progress · фаза P4 перепроектирована до DoR: D79 solo routes, compact reads, producer edges; P4.1 evidence preserved |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.1 locale runtime, provider seams and declared validation are green. |
 
 ## Owner Gates
 

@@ -70,10 +70,11 @@ package/docs validation green and a byte-stable second run.
 
 ## Review and stop conditions
 
-All six items route to `implementation/high`, `manual`, `Review=full`: runtime/API and validator
-changes are public-contract work, while every content checkpoint changes canon followed by the
-fleet. Author/renderer self-approval is invalid. A reviewer is read-only and records a distinct
-identity; `FIX_REQUIRED` yields a separate fix commit and fresh review, with two rounds maximum.
+All six items route as separate `solo`, `implementation/high`, `manual`, `Review=none` launches
+under D79. `Review=none` removes additional Task-level review; it does not waive the frozen product
+evidence for content checkpoints that change canon before the fleet. Author/renderer self-approval
+is invalid. The contract reviewer is read-only and records a distinct identity; `FIX_REQUIRED`
+yields a separate fix commit and fresh review, with two rounds maximum.
 Missing frozen P2/P3 input, preimage drift, unknown owner, changed parser literal, missing
 independent review, cross-provider target access or a non-green readback stops the current batch
 and preserves its resume pointer; it is never converted into an inferred translation or bulk

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`core`: добавлен общий stdlib-only runtime локализации.**
+  Pinned IANA registry разрешает независимые `response`/`plan`/`diagnostics` контексты,
+  fail-closed BCP 47 canonicalization и sparse Russian overlay с защитой machine literals;
+  Harness и Task получают один semantic context, сохраняя provider-owned rendering.
+
 - **`task`: phase-close принимает legacy subject audit-фазы.**
   Gate нормализует `P1 — режим фазы` через общий `review_policy.phase_audit_subject`, поэтому
   matching GREEN audit с тем же candidate fingerprint больше не ошибочно считается отсутствующим.

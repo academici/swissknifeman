@@ -18,7 +18,7 @@
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
 | Design Passes | 4/4 — whole-plan semantic design remains accepted; D70 adds only the bounded post-audit P0.9–P0.10 final requalification chain, not a fifth whole-plan design pass or another whole-plan audit |
 | Layout | v2 |
-<!-- migration-version: 1.1.3 -->
+<!-- migration-version: 1.1.4 -->
 
 ## 1. Context
 
@@ -70,7 +70,7 @@ and does not duplicate a supervisor runtime.
 - **Запрет синтетического разрастания:** никакие дополнительные fixtures, self-tests, fuzz/mutation/adversarial probes, checker branches или «полезные на будущее» cases не создаются, кроме прямо перечисленного Deliverable либо минимального regression case для уже воспроизведённого acceptance failure. Доступный real provider/project probe выполняется раньше дополнительной синтетики и ровно один раз на candidate.
 - **Минимальный acceptance без redesign-циклов:** если объявленный Validation carrier отсутствует и не проверяет ни один изменяемый `Files`/инвариант item'а, executor удаляет только эту stale-команду в текущем attempt, сохраняет остальные проверки и продолжает; отдельные `plan-design`, Owner gate, новый item или дополнительный test layer для такой локальной коррекции запрещены.
 - **Конечное состояние локализации:** legacy-параллели `SKILL.ru.md` после подтверждённого EN-переноса удаляются назначенным migration item'ом; английский `SKILL.md` остаётся единственным semantic source, а русский доступен только как sparse key-addressed render overlay, не как второе дерево.
-- **Review cap:** P1.3–P7.3 имеют `Review: none`: запрещены subagents/reviewers и независимые повторные чтения ради поиска новых замечаний. P7.4 — единственный независимый audit всего остатка плана; он также имеет максимум один repair + один targeted recheck и не запускает второй audit.
+- **Review cap:** P1.3–P7.3 имеют `Review: none`: не запускаются дополнительный Task-level reviewer, exploratory reread или discretionary review loop. Это не отменяет product evidence, буквально требуемый frozen-контрактом: P4.3–P4.6 сохраняют bounded independent English/Russian content-review carrier из `locale-authoring-review-v1.md`, D40 и D45, без третьего раунда или дополнительного general review. P7.4 — единственный независимый audit всего остатка плана; он также имеет максимум один repair + один targeted recheck и не запускает второй audit.
 - **Batch continuation:** зелёный item сразу передаёт следующий item тому же coordinator; общий bookkeeping, generated views и lint собираются на границе batch, если item contract не требует раньше.
 
 ## 3. Routing
@@ -91,8 +91,12 @@ and does not duplicate a supervisor runtime.
 | p1-close | P1.3 | frontier/high | manual | none | new session; finish the open provider contract, stopping only for its Owner gate |
 | p2-contracts | P2.1–P2.3 | frontier/high | manual | none | adjacent locale/authoring freezes share one source set |
 | p3-runtime | P3.1–P3.3 | implementation/high | manual | none | resolver, adapters and status graph form one vertical result |
-| p4-admission | P4.1–P4.2 | implementation/high | manual | none | locale runtime and corpus admission are one pre-migration gate |
-| p4-migration | P4.3–P4.6 | implementation/high | manual | none | ledger checkpoints remain inside one migration batch |
+| solo | P4.1 | implementation/high | manual | none | open per-cwd runtime attempt is a producer boundary; terminal runtime/fixture evidence must exist before P4.2 can materialize |
+| solo | P4.2 | implementation/high | manual | none | root + Skiller admission tooling freezes the ledger/checkpoint seam before any corpus row can migrate |
+| solo | P4.3 | implementation/high | manual | none | skill migration has its own bounded ledger, frozen content-review evidence and rollback boundary; no extra Task review |
+| solo | P4.4 | implementation/high | manual | none | command/plugin/diagnostic migration crosses package cwd slices and parser-literal gates, so context is not reused safely |
+| solo | P4.5 | implementation/high | manual | none | code-prose checkpoints span package-specific AST/runner evidence and retain an independent rollback cursor |
+| solo | P4.6 | implementation/high | manual | none | docs migration ends at the unique terminal-regeneration and all-green integration boundary |
 | p5-fleet | P5.1–P5.4 | frontier/high | manual | none | freeze and authorized project actions keep one coordinator |
 | p6-health | P6.1–P6.3 | frontier/high | manual | none | Brain transaction, health contract and live evidence close one slice |
 | p7-real-first | P7.1–P7.3 | implementation/high | manual | none | real replay first, then demonstrated regressions and release assembly |

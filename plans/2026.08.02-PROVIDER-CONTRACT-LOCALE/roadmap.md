@@ -1,10 +1,10 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-14 · **Соответствует plan.md:** v1.1.3, flat/fast routing · **Статус:** P1 terminal GREEN audit complete; mechanical close remains, then P2.1–P2.3 run as one batch with no intermediate review.
+**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.1 nonterminal attempt reconciled for a solo resume under D79.
 
 ## Fast execution carrier
 
-Sequence: `P1 close → P2.1–P2.3 → P3.1–P3.3 → P4.1–P4.2 → P4.3–P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. Each range keeps one root coordinator and advances without cold-start handoffs between green adjacent items. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized at batch boundaries. P7.4 is the only planned independent review and permits at most one targeted repair/recheck.
+Sequence: `P1 close → P2.1–P2.3 → P3.1–P3.3 → P4.1 → P4.2 → P4.3 → P4.4 → P4.5 → P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. D79 makes every P4 item a separate routed root because each closes a producer, rollback, package-cwd or terminal-regeneration boundary; no P4 future bundle is required before its producer becomes terminal. Other stable ranges keep one root coordinator where Routing still groups them. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized only inside an actual Routing batch. P7.4 is the only planned independent whole-plan review and permits at most one targeted repair/recheck; frozen P4 content-review records remain product evidence, not Task Review.
 
 Every remaining item has the same hard circuit-breaker: one initial candidate, one declared Validation pass, at most one grouped repair and one targeted recheck; a second RED returns the exact failing gate without a third loop. Green receipts whose inputs did not change are reused. Extra fixtures/checkers/reviewers/fuzz/mutation/adversarial probes are forbidden unless they are an explicit Deliverable or the minimum regression for an observed acceptance failure.
 
@@ -260,9 +260,8 @@ checkpoint paths; no third round, next batch, ledger acceptance or item closure 
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes with adjacent batch P0.9–P0.10. D70 supersedes only D64's terminal-remediation
-clause and makes D69's literal digest a historical P0.8 anchor; immutable history, accepted P1–P7 design, frozen contract
-v1.0.1 and all external no-write gates remain. `handoff.md` is the sole current Next carrier. After
-batch close and phase close it must point to one final P0 audit invocation; that audit repairs all
-reversible in-scope findings in-root and returns to design only for a reproduced owner/frozen-contract
-boundary.
+Execution resumes with solo P4.1. Its historical attempt/block-candidate and pending manifest remain
+evidence; the fresh root reconciles them and starts product mutation only after the compact bundle and
+route gates pass. D79 changes no P1/P2/P3 frozen semantics, P4 content admission, external no-write gate
+or consumer/fleet authority. `handoff.md` is the sole current Next carrier; P4.2 is generated only after
+P4.1 terminal evidence names its runtime fixtures.

@@ -1,0 +1,17 @@
+{
+  "decision_id": "P4.4-task-plan-2-round-2-owner-choice",
+  "action_version": 1,
+  "selected_option": "contract-revision",
+  "resolver": "owner",
+  "resolver_id": "repository_owner",
+  "policy_digest": "1849b2b299451bc3e6ea6ffaba638ace3dfdc48bc9ada1aaa092abbb940086c1",
+  "action_digest": "50ebaeb92cb7a8843c48a68a57afdb5d847f86aa97ffa006afdb0337e6615c8d",
+  "reason_code": "P5_DECISION_OWNER_APPROVED",
+  "provenance": {
+    "source_system": "owner-chat",
+    "record_id": "2026-08-15-owner-authorizes-completion",
+    "record_version": "1",
+    "verified": true
+  },
+  "at": "2026-08-15T07:23:52Z"
+}

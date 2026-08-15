@@ -1,0 +1,51 @@
+{
+  "item": "P4.1",
+  "slices": [
+    {
+      "item": "P4.1",
+      "slice": "core",
+      "cwd": "/home/vostrikov/projects/packages/swissknifeman",
+      "route": "implementation/high",
+      "input_commits": ["52095c1bda6db1cdec2059c4c46be61bc1e453ab"],
+      "files": ["core/locale/**", "core/provider/{control_plane,diagnostics}.py", "core/tests/locale/**", "core/tests/provider/{test_control_plane,test_diagnostics}.py", "scripts/{update-iana-language-subtag-registry.py,test-update-iana-language-subtag-registry.py}", "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P4-locale-runtime-fixtures/**"],
+      "preimage_sha256": "sha256:3debdcc167bf7cf2a30f535dfee57144e53d937a97f8abbd9b8bc27588812834",
+      "commits": ["f8a50b3d", "6c3a5cef"],
+      "validation": {"state": "green", "commands": ["python3 scripts/test-update-iana-language-subtag-registry.py", "PYTHONPATH=. python3 -m unittest core.tests.locale.test_values core.tests.locale.test_resolution core.tests.locale.test_catalog core.tests.locale.test_render core.tests.provider.test_control_plane core.tests.provider.test_diagnostics"], "deferred_derived": []},
+      "readback": "green",
+      "foreign_diff": ["packages/task/lib/task/token_estimate.py", "packages/task/tests/test_token_estimate.py", "roadmap/README.md", "roadmap/2026.08.14-agelto-p11-false-terminal-block.md", "roadmap/2026.08.14-insiders-p6-routing-candidate-repro.md", "roadmap/2026.08.14-laravel-parallel-isolation-lifecycle.md", "roadmap/2026.08.14-phase-assurance-contract.md", "roadmap/2026.08.14-phase-close-impact-broker.md", "roadmap/2026.08.14-task-phase-close-fast-path.md"],
+      "result": "green",
+      "next": "packages/harness"
+    },
+    {
+      "item": "P4.1",
+      "slice": "packages/harness",
+      "cwd": "/home/vostrikov/projects/packages/swissknifeman/packages/harness",
+      "route": "implementation/high",
+      "input_commits": ["52095c1bda6db1cdec2059c4c46be61bc1e453ab"],
+      "files": ["packages/harness/lib/harness/{instructions,provider_render}.py", "packages/harness/tests/{test_provider_instructions,test_provider_conformance}.py"],
+      "preimage_sha256": "sha256:e240172ec459dafcffcb66ee68dd02dead7855882c5b1ade7852a09ad73b612f",
+      "commits": ["f8a50b3d"],
+      "validation": {"state": "green", "commands": ["PYTHONPATH=packages/harness/lib:packages/task/lib:. python3 -m unittest packages.harness.tests.test_provider_instructions packages.harness.tests.test_provider_conformance"], "deferred_derived": []},
+      "readback": "green",
+      "foreign_diff": ["packages/task/lib/task/token_estimate.py", "packages/task/tests/test_token_estimate.py", "roadmap/README.md", "roadmap/2026.08.14-agelto-p11-false-terminal-block.md", "roadmap/2026.08.14-insiders-p6-routing-candidate-repro.md", "roadmap/2026.08.14-laravel-parallel-isolation-lifecycle.md", "roadmap/2026.08.14-phase-assurance-contract.md", "roadmap/2026.08.14-phase-close-impact-broker.md", "roadmap/2026.08.14-task-phase-close-fast-path.md"],
+      "result": "green",
+      "next": "packages/task"
+    },
+    {
+      "item": "P4.1",
+      "slice": "packages/task",
+      "cwd": "/home/vostrikov/projects/packages/swissknifeman/packages/task",
+      "route": "implementation/high",
+      "input_commits": ["52095c1bda6db1cdec2059c4c46be61bc1e453ab"],
+      "files": ["packages/task/lib/task/{command_catalog,command_render}.py", "packages/task/tests/{test_provider_command_parity,test_codex_command_adapter}.py"],
+      "preimage_sha256": "sha256:5b4cfc8889b301582da93b3bf76918cfcc5a3d5f3ed0bdd5a9034fb417df8d7e",
+      "commits": ["f8a50b3d"],
+      "validation": {"state": "green", "commands": ["PYTHONPATH=packages/harness/lib:packages/task/lib:. python3 -m unittest packages.task.tests.test_provider_command_parity packages.task.tests.test_codex_command_adapter"], "deferred_derived": []},
+      "readback": "green",
+      "foreign_diff": ["packages/task/lib/task/token_estimate.py", "packages/task/tests/test_token_estimate.py", "roadmap/README.md", "roadmap/2026.08.14-agelto-p11-false-terminal-block.md", "roadmap/2026.08.14-insiders-p6-routing-candidate-repro.md", "roadmap/2026.08.14-laravel-parallel-isolation-lifecycle.md", "roadmap/2026.08.14-phase-assurance-contract.md", "roadmap/2026.08.14-phase-close-impact-broker.md", "roadmap/2026.08.14-task-phase-close-fast-path.md"],
+      "result": "green",
+      "next": "integration"
+    }
+  ],
+  "next": "P4.2"
+}

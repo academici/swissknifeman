@@ -277,6 +277,10 @@ def evaluate(plan_dir, producer_item: str, *, producer_commit: str = "HEAD", run
         if len(selected) > 1 and not any("docker/tests/p5." in command for command in selected):
             selected = []
         for command in selected:
+            if "<" in command or ">" in command:
+                commands.append({"command": command, "addressed_paths": [], "applicable": False,
+                                 "missing_paths": [], "deferred": "future-validation-placeholder"})
+                continue
             if consumer["owns_git_ref"] and _GIT_REF_POSTCONDITION.fullmatch(command):
                 commands.append({"command": command, "addressed_paths": [], "applicable": False,
                                  "missing_paths": [], "deferred": "consumer-owned-git-ref"})

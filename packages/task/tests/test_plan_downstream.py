@@ -81,6 +81,14 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertEqual(result["outcome"], "unknown")
         self.assertEqual(result["consumers"][0]["commands"], [])
 
+    def test_future_validation_placeholder_is_deferred_without_shell_execution(self):
+        self._commit_consumer("`python3 checker.py --batch <checkpoint-id>`")
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+        command = result["consumers"][0]["commands"][0]
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertFalse(command["applicable"])
+        self.assertEqual(command["deferred"], "future-validation-placeholder")
+
     def test_consumer_owned_git_ref_postcondition_is_deferred(self):
         self._consumer(validation="git cat-file -t v0.13.0")
         text = self.consumer.read_text(encoding="utf-8").replace(

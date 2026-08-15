@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 60fc1c0c43b12fb12328023bbe08fcb247d348c980f5bc204428c1016761ff1d
+inputs_sha256: ac572fc0405ad0456442f1db8721c00204c7b94cb8983013bc8ac686b91cfadf
 generated_by: task plan-views status
 -->
 
@@ -306,6 +306,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.4: frozen convergence/aggregate CLI repaired; P0 exact-set bound; 12 tests and declared validation green; rollout remains held. |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.2: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.3: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
+| 2026-08-15 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат c3f82b63d0836bf7c64b3da2fd15eabab06e4de172263bab4ed861c94b55c780, вердикт GREEN |
 
 ## Owner Gates
 

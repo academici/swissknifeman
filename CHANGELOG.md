@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`core` / `harness` / `maind`: compacted internal source prose for field testing.**
+  The P4.5 working cut translates 139 implementation files without changing provider settings,
+  consumer files, credentials, or runtime contracts.
+
 - **`core` / `skiller`: добавлен evidence-admitted locale corpus gate.**
   Единый JSON ledger и stdlib-only validator проверяют English source ownership, независимые
   EN/RU reviews, immutable tokens, preimages, rollback и bounded checkpoints; новые

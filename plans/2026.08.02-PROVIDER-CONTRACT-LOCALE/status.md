@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: ada7e53a1d07543a0883ceb07fbc84067e2bb18cb80d253682d160ede2812abc
+inputs_sha256: 6b511725f5e7cdb47ebaa3eabacb701d66c23f5b2de4fe6b6d13f0d575d6a4d2
 generated_by: task plan-views status
 -->
 
@@ -292,6 +292,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · in-progress · — |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · closed-green · P5.2: approved action set empty; 13,421 unresolved rows preserved with zero consumer writes. |
 | 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-15 | gpt-5.6-sol/high | plan-run · local-repair · bundle repair: P5.3 reads compact P5.2 disposition; full unresolved set stays opaque. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -31,7 +31,7 @@ task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P4.3
 
 **Sources of truth:** `plan.md`; `phases/P4/P4.md`; `phases/P4/P4.3.md`; `bundles/P4.3.json`; `phases/P4/P4.2.state.md`; `artifacts/execution/P4.2/manifest.json`; `configs/locale-corpus-v1.json`.
 
-**Open risks:** Future P4.3–P4.6 validation templates remain `unknown` until their consumer-owned checkpoints exist; they are explicitly deferred rather than treated as failures. Preserve existing unrelated worktree changes.
+**Open risks:** Future P4.3–P4.6 validation templates remain `unknown` until their consumer-owned checkpoints exist; they are explicitly deferred rather than treated as failures. Current plan lint retains two pre-existing errors outside P4.2: P4.1 lacks its write-site carrier and P4.3 exceeds the read-budget threshold. Preserve existing unrelated worktree changes.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-15
-inputs_sha256: 88cfcc78ddd27f44c28823f9e7f32005121af0c4a46ccb770f34a2b1dcbf8f1e
+inputs_sha256: 3ba6732a4a89e2f9651b92c82a5069db0d90bdb28bd9176f843ca8aa5f35a9bb
 generated_by: task plan-views status
 -->
 
@@ -253,6 +253,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · downstream future-validation placeholders were executed as shell syntax; repaired in task gate and locale carriers |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 ledger, class carriers, EN template and bounded downstream gate are green. |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · local-repair · plan-lint required a canonical write-site carrier in the generated Completion Notes |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-15 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 ledger, class carriers, EN template and bounded downstream gate are green.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

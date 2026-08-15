@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:locale-corpus-batch:v1",
+  "checkpoint_id": "p4.4-task-plan-1",
+  "author": "p44-task-author",
+  "row_ids": [
+    "command.task.plan-exec",
+    "command.task.plan-run"
+  ],
+  "base_commit": "980ee79d",
+  "commits": [
+    "660e9955",
+    "81eb2946"
+  ],
+  "commands": [
+    {
+      "cwd": "packages/task",
+      "command": "PYTHONPATH=lib:../.. python3 -m unittest discover -s tests -p 'test_command_locale.py'",
+      "exit_code": 0,
+      "evidence": "4 tests"
+    },
+    {
+      "cwd": "packages/task",
+      "command": "bash scripts/validate.sh",
+      "exit_code": 1,
+      "disposition": "deferred-derived-only",
+      "deferred": [
+        "packages/task/docs/reference/provider-commands.md"
+      ]
+    }
+  ],
+  "validation": {
+    "state": "deferred-derived-only",
+    "deferred_derived": [
+      {
+        "cwd": "packages/task",
+        "command_id": "task-provider-command-reference",
+        "diagnostic_code": "DERIVED_TARGET_STALE",
+        "target_path": "packages/task/docs/reference/provider-commands.md",
+        "owner_generator": "python3 packages/task/scripts/render-provider-commands.py --root . --write",
+        "preimage_sha256": "sha256:574fe70d8ca8ce4d4b42aaaec98ea7e8810923146882c39799985e06358784f4"
+      }
+    ]
+  },
+  "reviewer": {
+    "reviewer": "p44-task-checkpoint-review",
+    "verdict": "pass",
+    "record": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.4/reviews/p4.4-task-plan-1.round-1.json"
+  },
+  "review_round": 1,
+  "rollback": {
+    "id": "p4.4-task-plan-1",
+    "backup": "git:980ee79d:packages/task/commands/{plan-exec,plan-run}.md"
+  },
+  "resume_cursor": null,
+  "next": null
+}

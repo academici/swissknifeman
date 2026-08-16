@@ -1,0 +1,69 @@
+{
+  "fixture_root": ".",
+  "observations": {
+    "budget": {
+      "claude-code": {
+        "dependency_warning": true,
+        "method": "skiller:first-turn",
+        "status": "green",
+        "total": 13647,
+        "uncertainty": "provider-reported estimate",
+        "unit": "estimated_tokens"
+      },
+      "codex": {
+        "dependency_warning": true,
+        "method": "skiller:first-turn",
+        "status": "green",
+        "total": 13647,
+        "uncertainty": "provider-reported estimate",
+        "unit": "estimated_tokens"
+      }
+    },
+    "channels": {
+      "extra_count": 2,
+      "missing_count": 0,
+      "registered": [
+        "marketplace"
+      ]
+    },
+    "dependency_closure": {
+      "diagnostic_id": "SKILL_REQUIRED_EXCLUDED",
+      "status": "non-green"
+    },
+    "operations": {
+      "code_mcp": false,
+      "maind_mcp": true,
+      "memory_roundtrip": true
+    },
+    "provider_trust": [
+      {
+        "diagnostic_ids": [
+          "HARNESS_TRUST_REQUIRED"
+        ],
+        "provider_id": "claude-code",
+        "status": "non-green"
+      },
+      {
+        "diagnostic_ids": [
+          "HARNESS_TRUST_REQUIRED"
+        ],
+        "provider_id": "codex",
+        "status": "non-green"
+      }
+    ],
+    "settings": {
+      "counts": {
+        "error": 1,
+        "info": 3,
+        "warn": 17
+      },
+      "finding_rows": [
+        {
+          "id": 9,
+          "level": "error"
+        }
+      ],
+      "status": "non-green"
+    }
+  }
+}

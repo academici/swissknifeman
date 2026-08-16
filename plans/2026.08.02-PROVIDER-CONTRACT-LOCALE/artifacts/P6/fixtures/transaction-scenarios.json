@@ -1,0 +1,25 @@
+{
+  "crash_boundaries": [
+    "append-before-apply",
+    "public-apply",
+    "append-after-apply",
+    "append-before-readback",
+    "public-readback",
+    "append-after-readback",
+    "append-accepted"
+  ],
+  "corruptions": [
+    "torn",
+    "truncated",
+    "reordered",
+    "duplicate",
+    "bad-hash"
+  ],
+  "reconcile_images": [
+    "exact-preimage",
+    "exact-postimage",
+    "recognized-partial",
+    "third-state"
+  ],
+  "schema_version": "p6-brain-fixture-scenarios/v1"
+}

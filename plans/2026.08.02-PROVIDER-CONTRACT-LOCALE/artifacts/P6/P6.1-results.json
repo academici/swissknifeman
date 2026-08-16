@@ -1,0 +1,194 @@
+{
+  "action_set_id": "action-set-4f53cda18c2baa0c0354bb5f",
+  "aggregate": "non-green",
+  "approval_decision": "D84",
+  "budget": {
+    "claude-code": {
+      "dependency_warning": true,
+      "method": "skiller:first-turn",
+      "status": "green",
+      "total": 13647,
+      "uncertainty": "provider-reported estimate",
+      "unit": "estimated_tokens"
+    },
+    "codex": {
+      "dependency_warning": true,
+      "method": "skiller:first-turn",
+      "status": "green",
+      "total": 13647,
+      "uncertainty": "provider-reported estimate",
+      "unit": "estimated_tokens"
+    }
+  },
+  "dependency_closure": {
+    "diagnostic_id": "SKILL_REQUIRED_EXCLUDED",
+    "status": "non-green"
+  },
+  "journal_events": 5,
+  "journal_terminal_sha256": "b6369afd9f10f189d11d1e0132fbb609fbf4d5a66542b0ae09968a34a42db12a",
+  "plan_sha256": "sha256:7390e46109c27cf8a2e48c7935a761726356a2bd74f3088cc53eae8f4457ce70",
+  "project_id": "brain",
+  "provider_readback": [
+    {
+      "diagnostic_ids": [
+        "HARNESS_TRUST_REQUIRED"
+      ],
+      "provider_id": "claude-code",
+      "status": "non-green"
+    },
+    {
+      "diagnostic_ids": [
+        "HARNESS_TRUST_REQUIRED"
+      ],
+      "provider_id": "codex",
+      "status": "non-green"
+    }
+  ],
+  "results_sha256": "sha256:6a78afce95053b62a73b8cffb05ff7015625282324f311cfaa8481592859447c",
+  "schema_version": "p6-brain-repair-results/v1",
+  "sealed_project_id": "project-6fe9a81f902e79a2",
+  "security_disposition": "unresolved-p0.4-owner-gate",
+  "settings": {
+    "counts": {
+      "error": 1,
+      "info": 3,
+      "warn": 17
+    },
+    "finding_rows": [
+      {
+        "id": 9,
+        "level": "error"
+      },
+      {
+        "id": 10,
+        "level": "info"
+      },
+      {
+        "id": 4,
+        "level": "info"
+      },
+      {
+        "id": 6,
+        "level": "info"
+      },
+      {
+        "id": 2,
+        "level": "warn"
+      },
+      {
+        "id": 2,
+        "level": "warn"
+      },
+      {
+        "id": 2,
+        "level": "warn"
+      },
+      {
+        "id": 2,
+        "level": "warn"
+      },
+      {
+        "id": 3,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      },
+      {
+        "id": 8,
+        "level": "warn"
+      }
+    ],
+    "status": "non-green"
+  },
+  "terminal_state": "accepted",
+  "unresolved": [
+    {
+      "axis": "channel-profile",
+      "owner": "skiller",
+      "reason": "no exact public owner-qualified normalization action",
+      "status": "unresolved"
+    },
+    {
+      "axis": "credential-containment",
+      "owner": "P0.4",
+      "reason": "no mutation authority",
+      "status": "unresolved"
+    },
+    {
+      "action_ids_sha256": "sha256:3ed4a613e605ecec8609ac9bfd8bc30b8083b12a6f78c89ea17635b7be523d76",
+      "axis": "p5-unresolved",
+      "count": 420,
+      "owner": "P5",
+      "reason": "P6.1 excludes P5 unresolved repair",
+      "status": "unresolved"
+    },
+    {
+      "axis": "provider-trust",
+      "owner": "harness",
+      "provider_id": "claude-code",
+      "reason": "explicit trusted operation required",
+      "status": "unresolved"
+    },
+    {
+      "axis": "provider-trust",
+      "owner": "harness",
+      "provider_id": "codex",
+      "reason": "explicit trusted operation required",
+      "status": "unresolved"
+    },
+    {
+      "axis": "settings-security",
+      "owner": "harness",
+      "reason": "credential action remains P0.4 owner-gated",
+      "status": "unresolved"
+    },
+    {
+      "axis": "skill-dependency",
+      "owner": "skiller",
+      "reason": "owner must choose requester removal or dependency inclusion",
+      "status": "unresolved"
+    }
+  ]
+}

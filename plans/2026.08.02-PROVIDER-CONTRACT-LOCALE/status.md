@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: fdd22ba9c2800f54da45a12ec36b8376e2964ba3feb63351ad172f87e6131349
+inputs_sha256: 5bf309206dc3ff6ac47105a76fa8b900ace898569e414de953de78e201202005
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 2/3 | 🟠 Done with deviations |
+| P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟠 Done with deviations |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -96,7 +96,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
-| P6.2 | Add provider parity and capability-health checks | 🟢 Done | 2026-08-16 |
+| P6.2 | Add provider parity and capability-health checks | 🟠 Done with deviations | 2026-08-16 |
 | P6.3 | Run and publish per-project Claude/Codex health evidence | 🟢 Done | 2026-08-16 |
 
 ## Phase P7
@@ -337,6 +337,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · Terminal bookkeeping recovery for canonical write-site and forward plan carriers. |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.3 terminal bookkeeping reconciled without changing product evidence.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | frontier/xhigh | plan-audit · closed-deviations · Audit correction: Harness commits 3b8efbb3/51a99b11 are outside P6.2 Files; product suites stay green and the material topology deviation is explicit.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | frontier/xhigh | plan-audit · closed-green · Audit-fixer added all listing/loaded-body/runtime measurement axes; two fresh 23-project scans now contain 460 rows each and remain explicitly non-green.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -355,3 +359,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.5: known deviation
 - P4.6: known deviation
 - P6.1: known deviation
+- P6.2: known deviation

@@ -1,0 +1,62 @@
+{
+  "schema_version": "p6.2-closure-evidence/v1",
+  "item_id": "P6.2",
+  "attempt": 2,
+  "session_continuity": "continue-root",
+  "false_block_recovery": {
+    "original_signal_class": "acceptance-failure",
+    "corrected_signal_class": "unrelated-pre-existing",
+    "clean_head_reproduction": "20 tests / 5 errors",
+    "repair": "Harness worker outcomes are nonterminal block candidates until the Task reducer decides the boundary",
+    "repair_commits": [
+      "3b8efbb3",
+      "51a99b11"
+    ]
+  },
+  "product_commits": [
+    "3f461639",
+    "65cf90a5"
+  ],
+  "validation": [
+    {
+      "carrier": "core provider tests",
+      "command": "PYTHONPATH=. python3 -m unittest discover -s core/tests -p 'test_*.py'",
+      "status": "green",
+      "tests": 275
+    },
+    {
+      "carrier": "Skiller package validation",
+      "command": "bash packages/skiller/scripts/validate.sh",
+      "status": "green",
+      "tests": 645
+    },
+    {
+      "carrier": "Harness package validation",
+      "command": "bash packages/harness/scripts/validate.sh",
+      "status": "green",
+      "tests": 651
+    },
+    {
+      "carrier": "mAInd package validation",
+      "command": "bash packages/maind/scripts/validate.sh",
+      "status": "green",
+      "tests": 557
+    }
+  ],
+  "docs_decision": "Documented the new public commands in root and mAInd guides and added a root CHANGELOG [Unreleased] entry.",
+  "downstream": {
+    "gate": "downstream-gate-v1",
+    "outcome": "green",
+    "producer_commit": "3f461639a23a677f19b195b694d3f5d454cc4ff7",
+    "executable_consumer_checks": [
+      "P7.2 core provider tests: green",
+      "P7.3 provider docs write: green"
+    ],
+    "not_yet_applicable": [
+      "P6.3",
+      "P7.1",
+      "P7.4"
+    ]
+  },
+  "release_action": "none"
+}

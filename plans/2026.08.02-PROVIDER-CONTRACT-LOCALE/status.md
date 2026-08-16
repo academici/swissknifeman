@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 3ef8646bd8c0a8b3669c6e7dbf3d7e7882dd2d4e4114ecb6fde62f068e5c5772
+inputs_sha256: 3d4e554ffabc520d5726d014d447acaa569546001627d6aabbe03159c0ce8e0d
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 0/3 | 🟡 In progress |
+| P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟡 In progress |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -96,7 +96,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
-| P6.2 | Add provider parity and capability-health checks | ⬜ Not started | — |
+| P6.2 | Add provider parity and capability-health checks | 🟢 Done | 2026-08-16 |
 | P6.3 | Run and publish per-project Claude/Codex health evidence | ⬜ Not started | — |
 
 ## Phase P7
@@ -319,6 +319,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.1 accepted the exact empty Brain transaction: durable WAL/readback is green, target bytes are unchanged, and residual owner-gated health findings remain explicit.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · block-candidate · Harness validate RED on clean HEAD: 5 terminal-policy fixture errors outside P6.2 Files. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · escalated · P6.2 validation blocked by pre-existing Harness journal fixtures outside declared Files. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · Owner-directed same-root continuation reopens the false terminal block for bounded Harness journal compatibility repair. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.2 provider-health v1 closed green after owner-directed same-root bounded Harness journal repair; all four declared package carriers and plan lint are green.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

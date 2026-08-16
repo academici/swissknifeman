@@ -43,6 +43,9 @@ PROVIDER_AXES = (
     ("registry.selection", "sealed"),
     ("settings.integrity", "harness"),
     ("skill.dependency", "skiller"),
+    ("skill.measurement.listing", "skiller"),
+    ("skill.measurement.loaded-body", "skiller"),
+    ("skill.measurement.runtime", "skiller"),
 )
 SHARED_AXES = (
     "graph.federation",
@@ -961,6 +964,16 @@ def expect_error(code: str, action) -> None:
 
 def self_test(args: argparse.Namespace) -> int:
     validate_schema_carrier(Path(args.evidence_set_schema))
+    measurement_axes = {
+        axis_id for axis_id, producer in PROVIDER_AXES
+        if producer == "skiller" and axis_id.startswith("skill.measurement.")
+    }
+    if measurement_axes != {
+        "skill.measurement.listing",
+        "skill.measurement.loaded-body",
+        "skill.measurement.runtime",
+    }:
+        raise EvidenceError("P63_MEASUREMENT_AXIS_SET_INVALID")
     now = utc_now()
     shared = [sealed_observation("shared", axis, "pass", "p6.3.test", now, axis)
               for axis in SHARED_AXES]

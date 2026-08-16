@@ -7,19 +7,19 @@
       "sha256": "00e044366a263e315007378b7f58e0c9812e6752601285a59fc5aaeaee4bac2b"
     },
     {
-      "bytes": 160778,
+      "bytes": 241094,
       "path": "provider-health-run-1.json",
-      "sha256": "f05e6351c8e4c0ff2d1f879210790ed1c56860bab981fbb567eff97abea56d03"
+      "sha256": "665f8dcf3e6a562bd99852572d52ccc4dbf947aa1a1d02954be66c69e9bc55e6"
     },
     {
-      "bytes": 160778,
+      "bytes": 241094,
       "path": "provider-health-run-2.json",
-      "sha256": "30d385c688947bf468104a6869cfa3996301bb5169db0f58d403c9fd33b1f72b"
+      "sha256": "182ec56d67f87931b934346044f86bae5d6f8682402f29f9d837c689f0827dba"
     },
     {
       "bytes": 1802,
       "path": "fleet-health-verdict.json",
-      "sha256": "2663e835f3442f9d71c10ae8ecd586e1f39be43d2465eefbbd527c6a3547a287"
+      "sha256": "93e783460c3c62147ab375e96cb9cb887f9ebe11daec36d0bb4143d3459ed9e8"
     },
     {
       "bytes": 71163,

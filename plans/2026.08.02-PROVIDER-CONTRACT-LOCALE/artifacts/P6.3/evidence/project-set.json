@@ -1,5 +1,6 @@
 {
   "binding_fingerprint": "sha256:3990b82f17455cc1f8bbb8007c6d3269e35329f35dd46aa945386a86252a9ea4",
+  "membership_sha256": "sha256:082d7564a7e802bfb80a4ef0921daee6c62b697fc6e5b38bfddfb2ea94b97a37",
   "p5": {
     "migration_readiness": "held-unresolved",
     "rollout_authorized": false,

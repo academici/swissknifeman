@@ -16,10 +16,21 @@ provider or available project masks a required peer.
 One sealed project is absent from the current public mAInd registry and is therefore represented by
 explicit unavailable rows: `project-1bb1c2eba307e990`. This is evidence, not repair authority.
 
+## Optional integration evidence
+
+Optional non-green projects remain in the exact health scans but are excluded only from
+project-scoped release blockers: `project-6fe9a81f902e79a2`.
+Required and global blockers remain release-gating.
+
 ## Release blockers
 
-- `MEMORY_CLEANUP_NON_GREEN:project-1bb1c2eba307e990`
+### Global
+
 - `P5_ROLLOUT_NOT_AUTHORIZED`
+
+### Required projects
+
+- `MEMORY_CLEANUP_NON_GREEN:project-1bb1c2eba307e990`
 - `PROJECT_NON_GREEN:project-014a1283da270bd6`
 - `PROJECT_NON_GREEN:project-034bc815af5bcfbb`
 - `PROJECT_NON_GREEN:project-1bb1c2eba307e990`
@@ -30,7 +41,6 @@ explicit unavailable rows: `project-1bb1c2eba307e990`. This is evidence, not rep
 - `PROJECT_NON_GREEN:project-4f583bba1e3d6be8`
 - `PROJECT_NON_GREEN:project-62eb4ffd9db923d9`
 - `PROJECT_NON_GREEN:project-6fcbd71ebeedc92c`
-- `PROJECT_NON_GREEN:project-6fe9a81f902e79a2`
 - `PROJECT_NON_GREEN:project-7ff99b78a82ce1bf`
 - `PROJECT_NON_GREEN:project-83c5b3c93ffe31c0`
 - `PROJECT_NON_GREEN:project-8c234a131487ede5`

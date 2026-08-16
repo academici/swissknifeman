@@ -1,0 +1,131 @@
+{
+  "authority": {
+    "action_digest": "abae8218d0bbc27dd17dd97f85c555866a9e669f2726d68d8fb5faf31ee8d1a9",
+    "decision_id": "DR-P6-BRAIN-OPTIONALITY-1",
+    "optional_identity_source_sha256": "sha256:f470c9661b3cd09065f3536e3df73fa099c16fd6a5e474de0b682291eedfa00d",
+    "response_digest": "sha256:f7c58a701f403a5d68c8018fbf3528537bfb144253c36293db2e3c924288a592"
+  },
+  "contract_version": "1.0.0",
+  "membership_id": "p6.3-release-membership",
+  "project_memberships": [
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-014a1283da270bd6"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-034bc815af5bcfbb"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-1bb1c2eba307e990"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-1cf3a711c12e6a9b"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-2f270a6fe5f0bbcc"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-383351c63aaf37ac"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-48590a32ed307abd"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-4f583bba1e3d6be8"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-62eb4ffd9db923d9"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-6fcbd71ebeedc92c"
+    },
+    {
+      "authority_ref": "owner:DR-P6-BRAIN-OPTIONALITY-1",
+      "membership": "optional",
+      "project_id": "project-6fe9a81f902e79a2"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-7ff99b78a82ce1bf"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-83c5b3c93ffe31c0"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-8c234a131487ede5"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-ab471cd0f1c85b97"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-ae6cf52cbe90f84b"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-b06bcd38ed385da6"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-b1b34c916a75d8c9"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-b90c0f619b100582"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-c9e6c8c25f188930"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-cf305f1c831a36e2"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-d12b43a6d74056cf"
+    },
+    {
+      "authority_ref": "D32",
+      "membership": "required",
+      "project_id": "project-ffddc862898a8984"
+    }
+  ],
+  "schema_version": "provider-health-release-membership/v1",
+  "seal": {
+    "sha256": "sha256:aaeb64693ce7d5dd6862a699d33466b5317e10ab127feca9bece60326b2dfead"
+  }
+}

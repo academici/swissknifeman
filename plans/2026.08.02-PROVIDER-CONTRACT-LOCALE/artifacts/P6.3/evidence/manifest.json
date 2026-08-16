@@ -2,24 +2,29 @@
   "bundle_id": "P6.3-provider-fleet-health",
   "files": [
     {
-      "bytes": 2817,
+      "bytes": 3481,
+      "path": "project-membership.json",
+      "sha256": "7a6c3d66570d745705a8b9d995e1f120582f915a8ce023199f8fcc4fbc2b5cea"
+    },
+    {
+      "bytes": 2915,
       "path": "project-set.json",
-      "sha256": "00e044366a263e315007378b7f58e0c9812e6752601285a59fc5aaeaee4bac2b"
+      "sha256": "905cc9c721f15c7e9362f0e96d61e514447d7b82430b85de57f665b7b0738d16"
     },
     {
-      "bytes": 241094,
+      "bytes": 241299,
       "path": "provider-health-run-1.json",
-      "sha256": "665f8dcf3e6a562bd99852572d52ccc4dbf947aa1a1d02954be66c69e9bc55e6"
+      "sha256": "7029b1a6eeebaaf82dc7941fb882ba824b44a05596726c59dc4cb5ad6fc070f0"
     },
     {
-      "bytes": 241094,
+      "bytes": 241299,
       "path": "provider-health-run-2.json",
-      "sha256": "182ec56d67f87931b934346044f86bae5d6f8682402f29f9d837c689f0827dba"
+      "sha256": "8592fd8e3e9f526df20368cac3e77ece6c26bbacb717efdb62bc844228e44922"
     },
     {
-      "bytes": 1802,
+      "bytes": 3136,
       "path": "fleet-health-verdict.json",
-      "sha256": "93e783460c3c62147ab375e96cb9cb887f9ebe11daec36d0bb4143d3459ed9e8"
+      "sha256": "77a41df7f856df6b41e96845ada32e45f80aa4d692de37a18751937e94367b95"
     },
     {
       "bytes": 71163,

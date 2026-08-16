@@ -36,6 +36,19 @@ def main() -> int:
     if verdict.get("aggregate") != "non-green" or verdict.get("semantic_match") is not True:
         print("P63_VERDICT_INVALID", file=sys.stderr)
         return 1
+    membership = json.loads((root / "project-membership.json").read_text(encoding="utf-8"))
+    rows = membership.get("project_memberships")
+    if not isinstance(rows, list) or len(rows) != len({row.get("project_id") for row in rows if isinstance(row, dict)}):
+        print("P63_MEMBERSHIP_INVALID", file=sys.stderr)
+        return 1
+    optional_ids = {row.get("project_id") for row in rows if row.get("membership") == "optional"}
+    if len(optional_ids) != 1 or not set(verdict.get("optional_non_green", [])).issubset(optional_ids):
+        print("P63_OPTIONAL_MEMBERSHIP_INVALID", file=sys.stderr)
+        return 1
+    if any(blocker.rsplit(":", 1)[-1] in optional_ids
+           for blocker in verdict.get("release_blockers", []) if ":" in blocker):
+        print("P63_OPTIONAL_RELEASE_MASKING", file=sys.stderr)
+        return 1
     print("P6.3 evidence bundle: allow")
     return 0
 

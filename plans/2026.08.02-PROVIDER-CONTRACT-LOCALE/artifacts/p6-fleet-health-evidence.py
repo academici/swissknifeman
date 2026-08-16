@@ -31,6 +31,7 @@ P0_MEMBERS = (
     "command-results-redacted.json",
 )
 DATA_MEMBERS = (
+    "project-membership.json",
     "project-set.json",
     "provider-health-run-1.json",
     "provider-health-run-2.json",
@@ -65,6 +66,8 @@ FORBIDDEN = re.compile(
     r"(?:secret|password|api[-_.]?key)[\"']?\s*[:=])",
     re.IGNORECASE,
 )
+PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+ACTION_DIGEST = re.compile(r"^[0-9a-f]{64}$")
 PRIVACY = {
     "minimized": True,
     "excluded_classes": [
@@ -186,6 +189,131 @@ def validate_schema_carrier(path: Path) -> dict[str, Any]:
     return schema
 
 
+def validate_membership_schema(path: Path) -> dict[str, Any]:
+    schema = read_json(path)
+    try:
+        version = schema["properties"]["schema_version"]["const"]
+        contract_version = schema["properties"]["contract_version"]["const"]
+        provenance = schema["x-provenance"]
+    except (KeyError, TypeError) as error:
+        raise EvidenceError("P63_MEMBERSHIP_SCHEMA_INVALID") from error
+    if version != "provider-health-release-membership/v1" or contract_version != "1.0.0":
+        raise EvidenceError("P63_MEMBERSHIP_SCHEMA_VERSION_DRIFT")
+    if provenance.get("decision") != "D86" or provenance.get("scope") != "P6.3":
+        raise EvidenceError("P63_MEMBERSHIP_SCHEMA_PROVENANCE_INVALID")
+    return schema
+
+
+def _walk_records(value: Any):
+    if isinstance(value, dict):
+        yield value
+        for nested in value.values():
+            yield from _walk_records(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from _walk_records(nested)
+
+
+def load_authority(queue_path: Path, decision_id: str) -> dict[str, str]:
+    if not isinstance(decision_id, str) or not decision_id:
+        raise EvidenceError("P63_AUTHORITY_DECISION_INVALID")
+    try:
+        entries = [json.loads(line) for line in queue_path.read_text(encoding="utf-8").splitlines()
+                   if line.strip()]
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise EvidenceError("P63_AUTHORITY_QUEUE_INVALID") from error
+    matches = []
+    for record in _walk_records(entries):
+        if record.get("decision_id") != decision_id:
+            continue
+        if record.get("selected_option") != "define_optional_project_membership":
+            continue
+        action_digest = record.get("action_digest")
+        if not isinstance(action_digest, str) or not ACTION_DIGEST.fullmatch(action_digest):
+            continue
+        provenance = record.get("provenance")
+        if not isinstance(provenance, dict) or provenance.get("verified") is not True:
+            continue
+        matches.append(record)
+    if len(matches) != 1:
+        raise EvidenceError("P63_AUTHORITY_RESPONSE_INVALID")
+    response = matches[0]
+    return {
+        "decision_id": decision_id,
+        "action_digest": response["action_digest"],
+        "response_digest": digest(response),
+    }
+
+
+def load_optional_identity(path: Path) -> tuple[str, str]:
+    payload = read_json(path)
+    project_id = payload.get("sealed_project_id") if isinstance(payload, dict) else None
+    if not isinstance(project_id, str) or not PROJECT_ID.fullmatch(project_id):
+        raise EvidenceError("P63_OPTIONAL_IDENTITY_INVALID")
+    return project_id, "sha256:" + sha256_file(path)
+
+
+def validate_membership(document: dict[str, Any], *, sealed_ids: list[str],
+                        optional_project_id: str, authority: dict[str, str]) -> None:
+    if set(document) != {"schema_version", "contract_version", "membership_id",
+                         "project_memberships", "authority", "seal"}:
+        raise EvidenceError("P63_MEMBERSHIP_DOCUMENT_INVALID")
+    if document.get("schema_version") != "provider-health-release-membership/v1" \
+            or document.get("contract_version") != "1.0.0":
+        raise EvidenceError("P63_MEMBERSHIP_DOCUMENT_INVALID")
+    rows = document.get("project_memberships")
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise EvidenceError("P63_MEMBERSHIP_DOCUMENT_INVALID")
+    if rows != sorted(rows, key=lambda row: row.get("project_id", "")):
+        raise EvidenceError("P63_MEMBERSHIP_ORDER_INVALID")
+    actual_ids = [row.get("project_id") for row in rows]
+    if any(not isinstance(project_id, str) or not PROJECT_ID.fullmatch(project_id)
+           for project_id in actual_ids) or set(actual_ids) != set(sealed_ids) \
+            or len(actual_ids) != len(set(actual_ids)):
+        raise EvidenceError("P63_MEMBERSHIP_SET_MISMATCH")
+    optional_rows = [row for row in rows if row.get("membership") == "optional"]
+    if len(optional_rows) != 1 or optional_rows[0].get("project_id") != optional_project_id:
+        raise EvidenceError("P63_OPTIONAL_MEMBERSHIP_INVALID")
+    for row in rows:
+        if set(row) != {"project_id", "membership", "authority_ref"} \
+                or row.get("membership") not in {"required", "optional"}:
+            raise EvidenceError("P63_MEMBERSHIP_PROVENANCE_INVALID")
+        expected_ref = f"owner:{authority['decision_id']}" if row["membership"] == "optional" else "D32"
+        if row.get("authority_ref") != expected_ref:
+            raise EvidenceError("P63_MEMBERSHIP_PROVENANCE_INVALID")
+    expected_authority = dict(authority)
+    if document.get("authority") != expected_authority:
+        raise EvidenceError("P63_AUTHORITY_PROVENANCE_INVALID")
+    unsigned = {key: value for key, value in document.items() if key != "seal"}
+    if document.get("seal") != {"sha256": digest(unsigned)}:
+        raise EvidenceError("P63_MEMBERSHIP_SEAL_INVALID")
+
+
+def build_membership(context: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    optional_project_id, identity_digest = load_optional_identity(Path(args.optional_identity_source))
+    if optional_project_id not in context["sealed_ids"]:
+        raise EvidenceError("P63_OPTIONAL_IDENTITY_OUTSIDE_P0")
+    authority = load_authority(Path(args.authority_queue), args.authority_decision)
+    authority["optional_identity_source_sha256"] = identity_digest
+    rows = [{
+        "project_id": project_id,
+        "membership": "optional" if project_id == optional_project_id else "required",
+        "authority_ref": f"owner:{authority['decision_id']}"
+        if project_id == optional_project_id else "D32",
+    } for project_id in context["sealed_ids"]]
+    unsigned = {
+        "schema_version": "provider-health-release-membership/v1",
+        "contract_version": "1.0.0",
+        "membership_id": "p6.3-release-membership",
+        "project_memberships": rows,
+        "authority": authority,
+    }
+    document = {**unsigned, "seal": {"sha256": digest(unsigned)}}
+    validate_membership(document, sealed_ids=context["sealed_ids"],
+                        optional_project_id=optional_project_id, authority=authority)
+    return document
+
+
 def validate_p5(convergence: dict[str, Any], journal_path: Path,
                 sealed_project_ids: list[str]) -> dict[str, Any]:
     if (
@@ -247,6 +375,7 @@ def validate_p5(convergence: dict[str, Any], journal_path: Path,
 
 def load_context(args: argparse.Namespace) -> dict[str, Any]:
     schema = validate_schema_carrier(Path(args.evidence_set_schema))
+    membership_schema = validate_membership_schema(Path(args.membership_schema))
     health_contract = Path(args.health_contract)
     provider_manifest = Path(args.provider_manifest)
     p0_manifest_path = Path(args.p0_manifest)
@@ -280,7 +409,9 @@ def load_context(args: argparse.Namespace) -> dict[str, Any]:
     p5 = validate_p5(read_json(Path(args.p5_convergence)), Path(args.p5_journal), sealed_ids)
     return {
         "schema": schema,
+        "membership_schema": membership_schema,
         "schema_sha256": "sha256:" + sha256_file(Path(args.evidence_set_schema)),
+        "membership_schema_sha256": "sha256:" + sha256_file(Path(args.membership_schema)),
         "health_contract_sha256": "sha256:" + sha256_file(health_contract),
         "provider_manifest_sha256": "sha256:" + sha256_file(provider_manifest),
         "p0_manifest_sha256": "sha256:" + sha256_file(p0_manifest_path),
@@ -624,7 +755,8 @@ def validate_project_result(project: dict[str, Any]) -> None:
         raise EvidenceError("P63_PROJECT_AGGREGATE_MASKED")
 
 
-def run_scan(run: int, context: dict[str, Any], bindings: dict[str, dict[str, Any] | None],
+def run_scan(run: int, context: dict[str, Any], membership: dict[str, Any],
+             bindings: dict[str, dict[str, Any] | None],
              binding_fingerprint: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     started_at = utc_now()
     projects: dict[str, dict[str, Any]] = {}
@@ -668,9 +800,10 @@ def run_scan(run: int, context: dict[str, Any], bindings: dict[str, dict[str, An
             key: context[key] for key in (
                 "schema_sha256", "health_contract_sha256", "provider_manifest_sha256",
                 "p0_manifest_sha256", "p5_convergence_sha256", "p5_journal_sha256",
-                "source_sha256",
+                "source_sha256", "membership_schema_sha256",
             )
         },
+        "membership_sha256": digest(membership),
         "required_project_ids": context["sealed_ids"],
         "projects": ordered,
         "aggregate": "non-green",
@@ -727,7 +860,8 @@ def assert_redacted(value: Any) -> None:
     walk(value)
 
 
-def project_set_document(context: dict[str, Any], bindings: dict[str, dict[str, Any] | None],
+def project_set_document(context: dict[str, Any], membership: dict[str, Any],
+                         bindings: dict[str, dict[str, Any] | None],
                          binding_fingerprint: str) -> dict[str, Any]:
     projects = [{
         "project_id": project_id,
@@ -738,6 +872,7 @@ def project_set_document(context: dict[str, Any], bindings: dict[str, dict[str, 
         "project_count": len(projects),
         "project_ids_sha256": digest(context["sealed_ids"]),
         "binding_fingerprint": binding_fingerprint,
+        "membership_sha256": digest(membership),
         "projects": projects,
         "providers": list(PROVIDERS),
         "shared_plane": True,
@@ -752,19 +887,29 @@ def project_set_document(context: dict[str, Any], bindings: dict[str, dict[str, 
     }
 
 
-def verdict_document(context: dict[str, Any], project_set: dict[str, Any],
+def verdict_document(context: dict[str, Any], membership: dict[str, Any], project_set: dict[str, Any],
                      first: dict[str, Any], second: dict[str, Any]) -> dict[str, Any]:
-    blockers = {"P5_ROLLOUT_NOT_AUTHORIZED"}
+    membership_by_project = {
+        row["project_id"]: row["membership"] for row in membership["project_memberships"]
+    }
+    global_blockers = {"P5_ROLLOUT_NOT_AUTHORIZED"}
+    required_project_blockers: set[str] = set()
+    optional_non_green: list[str] = []
     for project in second["projects"]:
-        if any(row.get("required") is True and row.get("selected") is True
-               and row.get("status") != "pass" for row in project["rows"]):
-            blockers.add(f"PROJECT_NON_GREEN:{project['project_id']}")
-        if not project.get("cleanup_green"):
-            blockers.add(f"MEMORY_CLEANUP_NON_GREEN:{project['project_id']}")
+        project_id = project["project_id"]
+        is_optional = membership_by_project[project_id] == "optional"
+        if project.get("aggregate") != "green" and is_optional:
+            optional_non_green.append(project_id)
+        if not is_optional and any(row.get("required") is True and row.get("selected") is True
+                                   and row.get("status") != "pass" for row in project["rows"]):
+            required_project_blockers.add(f"PROJECT_NON_GREEN:{project_id}")
+        if not is_optional and not project.get("cleanup_green"):
+            required_project_blockers.add(f"MEMORY_CLEANUP_NON_GREEN:{project_id}")
     unavailable = [row["project_id"] for row in project_set["projects"]
                    if row["binding_status"] != "bound"]
     for project_id in unavailable:
-        blockers.add(f"PROJECT_UNAVAILABLE:{project_id}")
+        if membership_by_project[project_id] == "required":
+            required_project_blockers.add(f"PROJECT_UNAVAILABLE:{project_id}")
     return {
         "schema_version": "p6.3-fleet-health-verdict/v1",
         "aggregate": "non-green",
@@ -774,8 +919,11 @@ def verdict_document(context: dict[str, Any], project_set: dict[str, Any],
         "shared_plane": True,
         "bound_projects": len(context["sealed_ids"]) - len(unavailable),
         "unavailable_projects": unavailable,
+        "optional_non_green": sorted(optional_non_green),
+        "global_release_blockers": sorted(global_blockers),
+        "required_project_release_blockers": sorted(required_project_blockers),
         "run_digests": [first["result_digest"], second["result_digest"]],
-        "release_blockers": sorted(blockers),
+        "release_blockers": sorted(global_blockers | required_project_blockers),
         "p7_release_authorized": False,
     }
 
@@ -818,6 +966,19 @@ def main() -> int:
     if verdict.get("aggregate") != "non-green" or verdict.get("semantic_match") is not True:
         print("P63_VERDICT_INVALID", file=sys.stderr)
         return 1
+    membership = json.loads((root / "project-membership.json").read_text(encoding="utf-8"))
+    rows = membership.get("project_memberships")
+    if not isinstance(rows, list) or len(rows) != len({row.get("project_id") for row in rows if isinstance(row, dict)}):
+        print("P63_MEMBERSHIP_INVALID", file=sys.stderr)
+        return 1
+    optional_ids = {row.get("project_id") for row in rows if row.get("membership") == "optional"}
+    if len(optional_ids) != 1 or not set(verdict.get("optional_non_green", [])).issubset(optional_ids):
+        print("P63_OPTIONAL_MEMBERSHIP_INVALID", file=sys.stderr)
+        return 1
+    if any(blocker.rsplit(":", 1)[-1] in optional_ids
+           for blocker in verdict.get("release_blockers", []) if ":" in blocker):
+        print("P63_OPTIONAL_RELEASE_MASKING", file=sys.stderr)
+        return 1
     print("P6.3 evidence bundle: allow")
     return 0
 
@@ -847,9 +1008,20 @@ provider or available project masks a required peer.
 One sealed project is absent from the current public mAInd registry and is therefore represented by
 explicit unavailable rows: {unavailable_text}. This is evidence, not repair authority.
 
+## Optional integration evidence
+
+Optional non-green projects remain in the exact health scans but are excluded only from
+project-scoped release blockers: {", ".join(f'`{item}`' for item in verdict['optional_non_green']) or "—"}.
+Required and global blockers remain release-gating.
+
 ## Release blockers
 
-""" + "".join(f"- `{blocker}`\n" for blocker in verdict["release_blockers"]) + f"""
+### Global
+
+""" + "".join(f"- `{blocker}`\n" for blocker in verdict["global_release_blockers"]) + f"""
+### Required projects
+
+""" + "".join(f"- `{blocker}`\n" for blocker in verdict["required_project_release_blockers"]) + f"""
 
 ## Privacy and cleanup
 
@@ -863,14 +1035,15 @@ P5 action rows remain unresolved.
 
 def write_bundle(args: argparse.Namespace) -> int:
     context = load_context(args)
+    membership = build_membership(context, args)
     bindings, binding_fingerprint = bind_live_projects(context["sealed_ids"])
-    project_set = project_set_document(context, bindings, binding_fingerprint)
+    project_set = project_set_document(context, membership, bindings, binding_fingerprint)
     print(f"P6.3 live scan 1/2: {sum(value is not None for value in bindings.values())} bound projects")
-    first, commands_first = run_scan(1, context, bindings, binding_fingerprint)
+    first, commands_first = run_scan(1, context, membership, bindings, binding_fingerprint)
     print("P6.3 live scan 2/2")
-    second, commands_second = run_scan(2, context, bindings, binding_fingerprint)
+    second, commands_second = run_scan(2, context, membership, bindings, binding_fingerprint)
     validate_two_runs(first, second)
-    verdict = verdict_document(context, project_set, first, second)
+    verdict = verdict_document(context, membership, project_set, first, second)
     command_results = {
         "schema_version": "p6.3-command-results-redacted/v1",
         "commands": sorted(commands_first + commands_second, key=lambda row: (
@@ -882,6 +1055,7 @@ def write_bundle(args: argparse.Namespace) -> int:
         assert_redacted(document)
     output = Path(args.output_dir)
     documents = {
+        "project-membership.json": membership,
         "project-set.json": project_set,
         "provider-health-run-1.json": first,
         "provider-health-run-2.json": second,
@@ -912,6 +1086,7 @@ def write_bundle(args: argparse.Namespace) -> int:
 
 def check_bundle(args: argparse.Namespace) -> int:
     context = load_context(args)
+    membership = build_membership(context, args)
     bindings, binding_fingerprint = bind_live_projects(context["sealed_ids"])
     output = Path(args.output_dir)
     required = {"manifest.json", "verify.py", *DATA_MEMBERS}
@@ -926,8 +1101,10 @@ def check_bundle(args: argparse.Namespace) -> int:
         data = (output / str(entry["path"])).read_bytes()
         if entry.get("sha256") != sha256_bytes(data) or entry.get("bytes") != len(data):
             raise EvidenceError("P63_BUNDLE_DIGEST_MISMATCH")
+    if read_json(output / "project-membership.json") != membership:
+        raise EvidenceError("P63_MEMBERSHIP_STALE")
     project_set = read_json(output / "project-set.json")
-    expected_set = project_set_document(context, bindings, binding_fingerprint)
+    expected_set = project_set_document(context, membership, bindings, binding_fingerprint)
     if project_set != expected_set:
         raise EvidenceError("P63_PROJECT_SET_STALE")
     first = read_json(output / "provider-health-run-1.json")
@@ -940,7 +1117,7 @@ def check_bundle(args: argparse.Namespace) -> int:
     for project in second.get("projects", []):
         validate_project_result(project)
     verdict = read_json(output / "fleet-health-verdict.json")
-    if verdict != verdict_document(context, project_set, first, second):
+    if verdict != verdict_document(context, membership, project_set, first, second):
         raise EvidenceError("P63_VERDICT_STALE")
     command_results = read_json(output / "command-results-redacted.json")
     for document in (project_set, first, second, verdict, command_results):
@@ -964,6 +1141,44 @@ def expect_error(code: str, action) -> None:
 
 def self_test(args: argparse.Namespace) -> int:
     validate_schema_carrier(Path(args.evidence_set_schema))
+    validate_membership_schema(Path(args.membership_schema))
+    authority = {
+        "decision_id": "DR-test",
+        "action_digest": "a" * 64,
+        "response_digest": "sha256:" + "b" * 64,
+        "optional_identity_source_sha256": "sha256:" + "c" * 64,
+    }
+    unsigned_membership = {
+        "schema_version": "provider-health-release-membership/v1",
+        "contract_version": "1.0.0",
+        "membership_id": "test-membership",
+        "project_memberships": [
+            {"project_id": "project-alpha", "membership": "required", "authority_ref": "D32"},
+            {"project_id": "project-beta", "membership": "optional", "authority_ref": "owner:DR-test"},
+        ],
+        "authority": authority,
+    }
+    membership = {**unsigned_membership, "seal": {"sha256": digest(unsigned_membership)}}
+    validate_membership(membership, sealed_ids=["project-alpha", "project-beta"],
+                        optional_project_id="project-beta", authority=authority)
+    missing_membership = json.loads(json.dumps(membership))
+    missing_membership["project_memberships"] = missing_membership["project_memberships"][:-1]
+    expect_error("P63_MEMBERSHIP_SET_MISMATCH", lambda: validate_membership(
+        missing_membership, sealed_ids=["project-alpha", "project-beta"],
+        optional_project_id="project-beta", authority=authority,
+    ))
+    duplicate_membership = json.loads(json.dumps(membership))
+    duplicate_membership["project_memberships"].append(dict(duplicate_membership["project_memberships"][0]))
+    expect_error("P63_MEMBERSHIP_ORDER_INVALID", lambda: validate_membership(
+        duplicate_membership, sealed_ids=["project-alpha", "project-beta"],
+        optional_project_id="project-beta", authority=authority,
+    ))
+    implicit_membership = json.loads(json.dumps(membership))
+    implicit_membership["project_memberships"][1]["membership"] = "required"
+    expect_error("P63_OPTIONAL_MEMBERSHIP_INVALID", lambda: validate_membership(
+        implicit_membership, sealed_ids=["project-alpha", "project-beta"],
+        optional_project_id="project-beta", authority=authority,
+    ))
     measurement_axes = {
         axis_id for axis_id, producer in PROVIDER_AXES
         if producer == "skiller" and axis_id.startswith("skill.measurement.")
@@ -1009,6 +1224,25 @@ def self_test(args: argparse.Namespace) -> int:
     validate_two_runs(first, second)
     second["projects"][0]["rows"][0]["status"] = "error"
     expect_error("P63_TWO_RUN_SEMANTIC_MISMATCH", lambda: validate_two_runs(first, second))
+    project_set = {"projects": [
+        {"project_id": "project-alpha", "binding_status": "bound"},
+        {"project_id": "project-beta", "binding_status": "unavailable"},
+    ]}
+    release_projects = [
+        {"project_id": "project-alpha", "aggregate": "non-green", "cleanup_green": False,
+         "rows": [{"required": True, "selected": True, "status": "error"}]},
+        {"project_id": "project-beta", "aggregate": "non-green", "cleanup_green": False,
+         "rows": [{"required": True, "selected": True, "status": "error"}]},
+    ]
+    release_run = {"projects": release_projects, "result_digest": "sha256:test"}
+    release_verdict = verdict_document({"sealed_ids": ["project-alpha", "project-beta"]},
+                                       membership, project_set, release_run, release_run)
+    if "project-beta" not in release_verdict["optional_non_green"] \
+            or any("project-beta" in row for row in release_verdict["release_blockers"]):
+        raise EvidenceError("P63_OPTIONAL_RELEASE_MASKING")
+    if "PROJECT_NON_GREEN:project-alpha" not in release_verdict["release_blockers"] \
+            or "P5_ROLLOUT_NOT_AUTHORIZED" not in release_verdict["release_blockers"]:
+        raise EvidenceError("P63_REQUIRED_OR_GLOBAL_BLOCKER_MASKED")
     bad_p5 = {"schema_version": "p5-fleet-convergence/v1", "stable": False}
     with tempfile.NamedTemporaryFile("w", encoding="utf-8") as handle:
         expect_error("P63_P5_CONVERGENCE_INVALID", lambda: validate_p5(
@@ -1026,6 +1260,7 @@ def parser() -> argparse.ArgumentParser:
     self_parser = commands.add_parser("self-test")
     self_parser.add_argument("--health-contract", required=True)
     self_parser.add_argument("--evidence-set-schema", required=True)
+    self_parser.add_argument("--membership-schema", required=True)
     self_parser.add_argument("--fixtures", required=True)
     for name in ("write", "check"):
         command = commands.add_parser(name)
@@ -1034,6 +1269,10 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument("--p5-journal", required=True)
         command.add_argument("--health-contract", required=True)
         command.add_argument("--evidence-set-schema", required=True)
+        command.add_argument("--membership-schema", required=True)
+        command.add_argument("--authority-queue", required=True)
+        command.add_argument("--authority-decision", required=True)
+        command.add_argument("--optional-identity-source", required=True)
         command.add_argument("--provider-manifest", required=True)
         command.add_argument("--output-dir", required=True)
     return root

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 4e202594aa945821a7bebcc737e2a7e8ed2cd6c197ca40444aa790aee1b55938
+inputs_sha256: 19c58eda9eda97bb56b926da58d6d32ed66488550c390641df383f75340ac730
 generated_by: task plan-views status
 -->
 
@@ -352,6 +352,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-terra/high | plan-run · closed-green · P6.3 published D86-bound required/optional membership and two semantically matching exact-set scans; health stays non-green while the optional integration is not a project-scoped release blocker. write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | frontier/xhigh | plan-audit · local-repair · Audit-fixer committed the terminal D86/spec carriers and froze the exported membership contract; product evidence and candidate bytes are unchanged. |
 | 2026-08-16 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат f94a8b7125a696f2ddc0068211f8f757cd22fe6ae15aa0f9c7bcf12571b2f78f, вердикт GREEN |
+| 2026-08-16 | implementation/low | plan-close · closed-deviations · фаза P6 закрыта: GREEN audit candidate rebound; P6.1/P6.2 deviations retained |
 
 ## Owner Gates
 

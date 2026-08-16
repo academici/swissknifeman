@@ -1,25 +1,38 @@
-"""Internal documentation."""
+"""usage — единый транскрипт-парсер usage-метрик Claude Code (JSONL-транскрипты).
+
+САМОДОСТАТОЧНЫЙ модуль: импортирует ТОЛЬКО stdlib, ни одного «from core...»/«from .».
+Причина — файл копируется байт-в-байт в хук (~/.claude/hooks/run-report/_usage.py),
+где PYTHONPATH монорепо недоступен; любой относительный импорт сломает хук молча.
+Поэтому здесь осознанный дубль потоковой JSONL-дисциплины из core.io.read_ndjson_iter.
+
+СЕМАНТИКА СУММ: суммы input-токенов — это BILLABLE-объём (каждый API-вызов оплачивает
+свой вход заново, включая повтор истории), а НЕ размер контекста. Сумма по длинному
+диалогу многократно превышает контекст-окно — это нормально и ожидаемо.
+
+Все функции — чистые, потоковые и толерантные к битым/неожиданным событиям:
+исключений наружу не бросают (мусор в транскрипте не должен ронять отчёт)."""
 from datetime import datetime
 from pathlib import Path
 import json
 
-
+# Обрезка label — первая строка user-текста бывает целым промптом на экраны.
 LABEL_MAX = 80
 
 
 def _int(v):
-    """Internal documentation."""
+    """Токен-счётчик из события: только настоящие числа, иначе 0 — в транскриптах
+    попадаются null/строки, а += с ними уронил бы весь разбор."""
     return v if isinstance(v, (int, float)) and not isinstance(v, bool) else 0
 
 
 def _iter_content(msg):
-    """Internal documentation."""
+    """content бывает списком блоков, строкой или отсутствует — наружу только список."""
     c = msg.get("content") if isinstance(msg, dict) else None
     return c if isinstance(c, list) else []
 
 
 def _first_line(txt):
-    """Internal documentation."""
+    """Первая непустая строка текста, обрезанная до LABEL_MAX (человекочитаемая метка)."""
     if not isinstance(txt, str):
         return None
     for ln in txt.strip().splitlines():
@@ -30,7 +43,7 @@ def _first_line(txt):
 
 
 def new_acc():
-    """Internal documentation."""
+    """Пустой аккумулятор одного агента/транскрипта (мутируется feed_event)."""
     return {
         "model": None, "models": set(),
         "in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
@@ -41,12 +54,13 @@ def new_acc():
 
 
 def feed_event(acc, ev):
-    """Internal documentation."""
+    """Скормить одно распарсенное JSONL-событие в аккумулятор. Толерантна к любой
+    структуре: не-dict/битое событие молча пропускается (мусор не роняет отчёт)."""
     if not isinstance(ev, dict):
         return
     ts = ev.get("timestamp")
-
-
+    # ISO-таймстемпы Claude Code монотонны по алфавиту — сравниваем лексикографически,
+    # без парсинга дат на каждом событии (парсим один раз в finish).
     if isinstance(ts, str) and ts:
         if acc["ts_min"] is None or ts < acc["ts_min"]:
             acc["ts_min"] = ts
@@ -57,11 +71,11 @@ def feed_event(acc, ev):
         return
     etype = ev.get("type")
     if etype == "assistant":
-        is_first_turn = acc["msgs"] == 0
+        is_first_turn = acc["msgs"] == 0    # до инкремента — этот assistant-event первый
         acc["msgs"] += 1
         model = m.get("model")
         if isinstance(model, str) and model:
-            acc["model"] = model
+            acc["model"] = model          # последняя модель — «текущая» агента
             acc["models"].add(model)
         u = m.get("usage")
         if isinstance(u, dict):
@@ -72,8 +86,8 @@ def feed_event(acc, ev):
             acc["cache_read"] += _int(u.get("cache_read_input_tokens"))
             acc["cache_creation"] += cache_creation
             if is_first_turn:
-
-
+                # first_turn_overhead = input + cache_creation первой assistant-записи
+                # (выжимка scratchpad-разведки 4af788f3, RAG:✅ 2026-07-12 findings/P0)
                 acc["first_turn_overhead"] = in_ + cache_creation
         for b in _iter_content(m):
             if not isinstance(b, dict):
@@ -86,7 +100,7 @@ def feed_event(acc, ev):
                 t = b.get("text")
                 acc["text_chars"] += len(t) if isinstance(t, str) else 0
     elif etype == "user":
-
+        # tool_result с is_error приходят user-событиями — считаем отказы инструментов
         for b in _iter_content(m):
             if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error"):
                 acc["tool_errors"] += 1
@@ -104,7 +118,7 @@ def feed_event(acc, ev):
 
 
 def _parse_iso(s):
-    """Internal documentation."""
+    """datetime из ISO-строки; None при любом мусоре (защита — не роняем агрегат)."""
     try:
         return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
     except (ValueError, TypeError):
@@ -112,19 +126,20 @@ def _parse_iso(s):
 
 
 def _wall_seconds(ts_min, ts_max):
-    """Internal documentation."""
+    """Длительность агента по крайним таймстемпам; None, когда посчитать нельзя."""
     a, b = _parse_iso(ts_min), _parse_iso(ts_max)
     if a is None or b is None:
         return None
     try:
         return max(0.0, (b - a).total_seconds())
     except TypeError:
-
+        # naive и aware datetime не вычитаются — смешанные форматы в одном файле
         return None
 
 
 def finish(acc, label=None):
-    """Internal documentation."""
+    """Финализировать аккумулятор в агрегат агента. label: явный аргумент важнее
+    автоматической метки (первая строка первого user-текста)."""
     lbl = label if label is not None else acc.get("first_user_text")
     return {
         "label": lbl,
@@ -144,7 +159,9 @@ def finish(acc, label=None):
 
 
 def merge(agents):
-    """Internal documentation."""
+    """Слить агрегаты агентов (результаты finish) в сводку прогона:
+    totals + разбивка by_model + cache_hit (доля кэш-чтений во «свежем» входе;
+    None, когда входа не было — деление на ноль не маскируем нулём)."""
     totals = {"in": 0, "out": 0, "cache_read": 0, "cache_creation": 0}
     by_model = {}
     for a in agents:
@@ -163,7 +180,8 @@ def merge(agents):
 
 
 def similar_ratio(a, b):
-    """Internal documentation."""
+    """Похожесть двух текстов по множествам токенов (Жаккар): слова lower длиной >=2,
+    |A∩B|/|A∪B|. Пустые множества → 0.0 (а не 1.0 — «оба пустые» не значит «похожи»)."""
     def toks(s):
         return {w for w in str(s or "").lower().split() if len(w) >= 2}
     ta, tb = toks(a), toks(b)
@@ -174,7 +192,9 @@ def similar_ratio(a, b):
 
 
 def iter_jsonl(path):
-    """Internal documentation."""
+    """Потоковый JSONL-итератор: пустые/битые строки и не-dict записи пропускаются,
+    errors='replace' — битый байт не роняет чтение; нет файла → пустой генератор.
+    Осознанный дубль core.io.read_ndjson_iter (см. docstring модуля: без PYTHONPATH)."""
     p = Path(path)
     if not p.is_file():
         return

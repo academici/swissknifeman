@@ -1,52 +1,55 @@
 # HANDOFF — 2026-08-16 — after P6
 
-**Next:** waiting: decision:DR-P6-BRAIN-OPTIONALITY-1
+**Next:** design-phase: task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
 
-| Batch | Model | Thinking | Context | Суть |
-|:--|:--|:--|:--|:--|
-| owner-gate | repository-owner | n/a | `cold-start-root: audit-root-terminal` | Зафиксировать generic required/optional project membership без Brain hardcode. |
-
-**Provider-neutral plan-protocol continuation:**
+**Provider-neutral plan-protocol command:**
 
 ```text
-waiting: decision:DR-P6-BRAIN-OPTIONALITY-1
-
-РЕЖИМ: доказанная граница audit-fixer; НЕ ordinary repair-run и НЕ второй audit
-ВХОД: plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P6/P6.md → блок `## Audit P6 — 2026-08-16`; прочитать ПЕРВЫМ
-СКОУП: 1) разрешить DR-P6-BRAIN-OPTIONALITY-1 выбором generic optional membership 2) после owner response спроектировать required/optional project contract без special-case имени Brain 3) rebound P6.3 evidence и terminal candidate по новой frozen семантике
-НЕ ТРОГАТЬ: package runtime и credentials до owner response; исторические ТЗ/Files/Validation и journal P6.1–P6.3; чужие фазы; не добавлять hardcode `brain`
+task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
 ```
 
-**Done:** P6 audit attempt 1 reached a reducer-confirmed public-frozen authority boundary. The
-audit-fixer added the three omitted measurement axes, regenerated two 460-row public scans, and
-corrected P6.2 terminal topology evidence. Committed P6.3 product evidence remains green; the item
-is reopened only as the decision/design carrier. Audit candidate:
-`804b01abc23f385c0ee61a5798e3dab44376280f54645c57d26c17b9ae3087a3`.
+| Параметр | Значение |
+|:--|:--|
+| Batch | P6 optional-membership redesign |
+| Model | frontier |
+| Thinking | high |
+| Context | `cold-start-root: audit-root-terminal` |
+| Суть | Зафиксировать generic required/optional project membership и убрать release-gating связь optional Brain без special-case имени. |
 
-**Remaining:** resolve `DR-P6-BRAIN-OPTIONALITY-1` through the canonical owner response. The
-recommended option defines provider-neutral required/optional project membership: Brain remains
-optional, its absence cannot gate package runtime or fleet release, and runtime code must not
-special-case the Brain name. After the response, the owning root resumes plan design and rebounds
-P6.3 evidence; this handoff does not authorize implementation.
+**Native Codex command:**
 
-**Sources of truth:** plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P6/P6.md ·
-plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/queue.jsonl ·
-plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-brain-optionality-authority-boundary.md ·
-plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P6'
+```
 
-**Open risks:** frozen `provider-health-v1` still uses sealed exact-set release gating. Until the
-owner response is recorded and the contract is redesigned, an absent optional project can remain a
-false fleet blocker. The measured fleet is independently non-green because P5 rollout remains
-unauthorized; optionality must not mask those real blockers.
+**Done:** repository owner approved `DR-P6-BRAIN-OPTIONALITY-1` option
+`define_optional_project_membership`. The append-only response is provenance-qualified by the
+exact Codex owner-continuation turn and resumes the original P6 design target. No package runtime,
+provider adapter, frozen contract, or fleet evidence was changed in this response step.
+
+**Remaining:** redesign the provider-neutral membership contract so required projects remain
+release-gating while optional integrations do not gate package runtime or fleet release merely by
+being absent/non-participating. Brain may be one optional integration, but neither schema nor code
+may special-case its name. Rebound P6.3 evidence and terminal candidate only after the design is
+committed and validated.
+
+**Sources of truth:** plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/queue.jsonl ·
+plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P6/P6.md ·
+plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/root/contracts/provider-health-v1.md ·
+plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-brain-optionality-authority-boundary.md
+
+**Open risks:** the committed `provider-health-v1` exact-set aggregate remains unchanged until the
+design root defines membership, compatibility/versioning, and evidence semantics. The measured P5
+and shared-plane blockers remain real and must not be hidden by optionality.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; no Brain-name exception and no runtime coupling were introduced.
-- deferred: frozen contract redesign, evidence rebound, and terminal P6 close belong to the resumed
-  owning root after the canonical owner response.
-- open_questions: the generic membership carrier and its compatibility/versioning treatment are the
-  explicit scope of `DR-P6-BRAIN-OPTIONALITY-1`.
+- workarounds: none; no Brain-name exception or runtime coupling is authorized.
+- deferred: contract edits, D-record, brief/research traceability, evidence rebound, and terminal
+  closure belong to the fresh routed `plan-design P6` root.
+- open_questions: choose the smallest generic carrier and compatibility treatment that preserves
+  required-project exactness while representing optional participation explicitly.
 
-**AUDIT-ROOT-TERMINAL (routing/cost boundary).** This audit root stops at the durable owner gate.
-The response resumes the owning root from committed carriers; it does not start a second audit or
-an ordinary repair-run.
+**ROUTE-UNVERIFIABLE:** the current owner-response turn is not the exact Task invocation required
+by the Codex write-site contract. The native launch above is mandatory; this response root does not
+perform the redesign itself.

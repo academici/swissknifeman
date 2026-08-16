@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 468b50749b0c72d12dd36ee24d151af1ee8389e84a9135399ddbbe7dee0fe59b
+inputs_sha256: c351e738b2838f38418609834cc62a3cee7589919a4cd1fb6581fe287b551e58
 generated_by: task plan-views status
 -->
 
@@ -345,6 +345,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат 804b01abc23f385c0ee61a5798e3dab44376280f54645c57d26c17b9ae3087a3, вердикт RED; Brain optionality awaits DR-P6-BRAIN-OPTIONALITY-1 |
 | 2026-08-16 | frontier/xhigh | plan-design · in-progress · Audit authority boundary reopens P6.3 only as the generic optional-membership decision carrier; committed measurement evidence remains green. |
 | 2026-08-16 | frontier/xhigh | plan-run · decision-pending · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
+| 2026-08-16 | owner | plan-run · in-progress · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
 
 ## Owner Gates
 
@@ -364,4 +365,3 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.6: known deviation
 - P6.1: known deviation
 - P6.2: known deviation
-- P6.3: known deviation

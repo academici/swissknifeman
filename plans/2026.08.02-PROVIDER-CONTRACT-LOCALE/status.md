@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: d8a20641a5179f2044fad60c36de18cb9114e285214c5c496c888bde0422a31c
+inputs_sha256: fdd22ba9c2800f54da45a12ec36b8376e2964ba3feb63351ad172f87e6131349
 generated_by: task plan-views status
 -->
 
@@ -334,6 +334,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | owner | plan-run · in-progress · decision queue: DR-P6.3-PUBLIC-HEALTH-SCHEMA-1 |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · D85 reconciles the owner-approved public evidence-set schema carrier; the original routed run resumes. |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.3 published two semantically matching exact-set fleet scans; the evidence task is green while the measured fleet remains explicitly non-green. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · Terminal bookkeeping recovery for canonical write-site and forward plan carriers. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.3 terminal bookkeeping reconciled without changing product evidence.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 661ae59b268ec220c0870a6541e6643d191a54f28316e3ebffa5a6d98e400262
+inputs_sha256: 4e202594aa945821a7bebcc737e2a7e8ed2cd6c197ca40444aa790aee1b55938
 generated_by: task plan-views status
 -->
 
@@ -350,6 +350,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · Terminal evidence requires raw item-file SHA-256; replaced Task Contract content hash with the canonical terminal-policy spec digest. |
 | 2026-08-16 | gpt-5.6-terra/high | plan-run · closed-green · P6.3 published D86-bound required/optional membership and two semantically matching exact-set scans; health stays non-green while the optional integration is not a project-scoped release blocker. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | frontier/xhigh | plan-audit · local-repair · Audit-fixer committed the terminal D86/spec carriers and froze the exported membership contract; product evidence and candidate bytes are unchanged. |
+| 2026-08-16 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат f94a8b7125a696f2ddc0068211f8f757cd22fe6ae15aa0f9c7bcf12571b2f78f, вердикт GREEN |
 
 ## Owner Gates
 

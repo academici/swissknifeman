@@ -1,50 +1,48 @@
-# HANDOFF — 2026-08-16 — after P6.3
+# HANDOFF — 2026-08-16 — after P6
 
-**Next:** audit-phase: task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
+**Next:** close: task:plan-close 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
 
 **Provider-neutral plan-protocol command:**
 
 ```text
-task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
+task:plan-close 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
 ```
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | p6-phase-audit |
-| Model | frontier |
-| Thinking | xhigh |
-| Capabilities | filesystem · public-cli · git |
-| Context | `cold-start-root: terminal-phase-candidate` |
-| Суть | Независимо проверить terminal P6 candidate: P6.1/P6.2 имеют material deviations, а P6.3 добавил D86-bound membership/evidence rebound. |
+| Batch | n/a |
+| Model | implementation |
+| Thinking | low |
+| Capabilities | filesystem · git |
+| Context | `cold-start-root: audit-root-terminal` |
+| Суть | Закрыть P6 по GREEN audit candidate `f94a8b71…`; P7 остаётся за release blockers. |
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P6'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.08.02-PROVIDER-CONTRACT-LOCALE P6'
 ```
 
-**Done:** P6.3 sealed the exact 23-project `required|optional` release-membership carrier from
-D86 authority and P6.1 identity provenance, regenerated two semantically matching public health
-scans, and kept every optional non-green row visible. The health aggregate remains `non-green`;
-the optional row is excluded only from project-scoped release blockers. Required failures and the
-global P5 authorization blocker remain release-gating.
+**Done:** P6 audit attempt 2 is GREEN for candidate
+`f94a8b7125a696f2ddc0068211f8f757cd22fe6ae15aa0f9c7bcf12571b2f78f`. P6.3 terminal spec/D86
+carriers are committed, the release-membership contract is frozen, and clean-tree validation
+reproduced 12 rejection classes plus two matching 23-project scans without hiding the optional row.
 
-**Remaining:** perform the required P6 phase audit before phase close. The candidate fingerprint is
-`f94a8b7125a696f2ddc0068211f8f757cd22fe6ae15aa0f9c7bcf12571b2f78f` at product commit
-`363d3626f8bc73572fc411c69aae266716dd28e4`.
+**Remaining:** run the phase-close command above. It must rebind the same candidate and persist P6
+closure; this audit root terminates here and does not execute the successor.
 
 **Sources of truth:**
+`plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P6/P6.md` latest Audit P6 block ·
+`plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P6/P6.3.state.md` ·
 `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P6.3/evidence/manifest.json` ·
-`plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P6.3/evidence/project-membership.json` ·
-`plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P6.3/evidence/fleet-health-verdict.json` ·
 `plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D86-provider-health-release-membership.md`
 
-**Open risks:** P5 rollout remains unauthorized; the 22 required projects have explicit
-non-green evidence; P6.1/P6.2 material deviations require the phase audit. No provider/fleet
-repair or release action is authorized.
+**Open risks:** P5 rollout remains unauthorized; 22 required projects remain non-green and P7
+release is not authorized. No provider/fleet repair, release/tag/push or credential action is
+authorized by the GREEN audit.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: P7 stays behind a terminal P6 audit and phase-close decision.
+- deferred: P7 execution remains behind P6 phase close; release stays behind recorded blockers.
 - open_questions: —

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **`core` / `skiller` / `harness` / `maind`: добавлен provider-health v1.**
+  Чистый exact-set evaluator не позволяет зелёному provider/project скрыть missing, stale,
+  unsupported или unresolved peer; Skiller публикует dependency closure и типизированные
+  provider-qualified measurements, Harness — независимый settings audit Claude Code/Codex, а
+  `maind projects health` собирает redacted evidence только через публичные package CLI без repair.
+
 - **`core` / `harness` / `maind`: compacted internal source prose for field testing.**
   The P4.5 working cut translates 139 implementation files without changing provider settings,
   consumer files, credentials, or runtime contracts.

@@ -62,7 +62,9 @@ health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 |:--|:--|
 | `swissknifeman status --all --json` | весь флот: per-project 4 слоя + `fixes` |
 | `maind projects status --project <id> --json` | один проект, то же |
+| `maind projects health --all --evidence-set <file> --json` | exact-set provider/axis health по sealed redacted evidence; без repair |
 | `skiller status --json --target .` | детальный слой скиллов (каналы, профиль, бюджет, overlap) |
+| `harness doctor --settings --provider claude-code\|codex --target . --json` | provider-qualified settings audit |
 | `harness agent-packs doctor --target . --json` | слой ролей (каталог паков + установленные) |
 | `maind verify --json` | пруф-оф-лайф памяти/графа/код-графа (не «поднято», а «реально пишут») |
 

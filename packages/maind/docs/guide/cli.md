@@ -33,6 +33,7 @@ maind agents list [--all --json]
 maind agents kill <id> [--force]
 
 maind projects list [--namespace NS] [--json]
+maind projects health [--project ID | --namespace NS | --all] --evidence-set FILE --json
 maind projects sync --from brain [--path DIR]
 maind namespaces [--json]              # namespace-группы экосистемы и их проекты-члены
 

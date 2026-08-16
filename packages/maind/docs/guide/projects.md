@@ -22,6 +22,7 @@ config.json      (primary — в корне монорепо, если есть)
 
 ```bash
 maind projects list [--namespace NS] [--json]
+maind projects health [--project ID | --namespace NS | --all] --evidence-set FILE --json
 maind projects sync --from brain [--path ~/Vaults/Brain]
 maind namespaces [--json]            # namespace-группы и их проекты-члены
 ```
@@ -29,6 +30,22 @@ maind namespaces [--json]            # namespace-группы и их проек
 `sync` идемпотентен: мерджит по `id`, обновляет brain-источные поля
 (`name`/`local_path`/`vault_path`/`type`/`enabled`/`docs_folders`) и **сохраняет**
 maind-only поля (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`).
+
+## Provider health
+
+`projects health` — read-only exact-set проверка по frozen `provider-health-v1`. Файл
+`--evidence-set` фиксирует sealed project/provider/axis requirements и redacted evidence
+identities; mAInd дополняет package-owned наблюдения только через публичные worktree-local CLI с
+ограниченным timeout. Команда не читает provider targets как intent и ничего не исправляет.
+
+`aggregate=green` возможен только при точном совпадении project set и полном свежем покрытии всех
+required provider/axis rows. Missing/extra/duplicate project или provider, timeout, malformed JSON,
+stale/unknown evidence, required unsupported capability и успешный только один provider остаются
+явным `non-green`. Корректно построенный `non-green` отчёт означает, что проверка выполнена, но не
+является разрешением на rollout или repair.
+
+Durable JSON содержит только стабильные project/provider/axis/source/evidence identities и
+диагностики; absolute roots, secrets и raw subprocess output отклоняются.
 
 ## Namespaces
 

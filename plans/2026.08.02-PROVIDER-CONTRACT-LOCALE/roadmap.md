@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-15 · **Соответствует plan.md:** v1.1.4, flat/fast routing · **Статус:** P0–P3 terminal; P4.3 closed, P4.4 resumes under D81 final-checkpoint revision before remaining package rows.
+**Обновлён:** 2026-08-16 · **Соответствует plan.md:** v1.1.5, flat/fast routing · **Статус:** P0–P5 terminal; P6.1–P6.2 terminal, P6.3 resumes under D86 required/optional membership before P7.
 
 ## Fast execution carrier
 
@@ -250,9 +250,9 @@ automatic redesign. P4.5 remains dependency-not-ready until all P4.4 rows are te
 | P5.2 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.2` | implementation/high | approved override actions | live project-owned override preservation through exact apply/resume/verify carrier |
 | P5.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.3` | implementation/high | approved managed actions | exact managed repair with write-ahead project rollback and deterministic resume |
 | P5.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P5.4` | implementation/high | exact quarantine D# | destructive boundary plus journal reconciliation and two-run convergence |
-| P6.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.1` | implementation/high | exact Brain action D# | protected external transaction with D52 WAL/resume/reconcile; P0.4 owns credentials |
-| P6.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.2` | frontier/high | provider-health freeze | provider/model/surface/unit/method/uncertainty/freshness remain typed and independently visible |
-| P6.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.3` | implementation/high | — | exact-set two-run evidence; may complete non-green |
+| P6.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.1` | frontier/high | D84 exact Brain action | terminal protected transaction; D52 WAL/resume/reconcile and P0.4 credential ownership remain historical evidence |
+| P6.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.2` | frontier/high | provider-health freeze | terminal package-health baseline; provider/model/surface/unit/method/uncertainty/freshness remain independently visible |
+| P6.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.3` | implementation/high | D86 membership | exact-set health remains complete; sealed required/optional membership controls only project-scoped release blockers, then two-run evidence is rebound |
 | P7.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.1` | implementation/high | — | real Claude/Codex no-skill/minimum/provider-tuned replay and ablation precede exact-set release blockers |
 | P7.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.2` | implementation/high | — | supplementary deterministic regressions lock behaviors demonstrated by P7.1; they never replace live evidence |
 | P7.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.3` | implementation/high | — | owns exact external `docs/reference.md` entries and registry identity in the release manifest; blocker set must be empty; no publish |
@@ -278,10 +278,11 @@ automatic redesign. P4.5 remains dependency-not-ready until all P4.4 rows are te
 | P4.2–P4.6 | admitted corpus rows and terminal independent review | each next migration batch and P5 |
 | P5.1–P5.4 | exact consumer action and quarantine sets | every live fleet write and P6 |
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
+| P6.3 / D86 | exact required/optional release-membership semantics without project-name/ID hardcode | P6 delta closure and P7 admission |
 | P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes with solo P4.4 at D81's product-no-write final checkpoint. Rejected plan-1/plan-2
-reviews and the historical P4.3 false terminal block remain evidence; none is rewritten or silently
-accepted. D79–D81 change no P1/P2/P3 frozen semantics, P4 content admission, external no-write gate
-or consumer/fleet authority.
+Execution resumes with solo P6.3 under D86. The historical P6 audit remains the material baseline;
+P6.1/P6.2 receipts are reused and only the membership/exporter/evidence delta is revalidated. D86
+changes neither P6.2/public mAInd health semantics nor exact-set health coverage, and it cannot
+remove P5/global blockers or authorize provider/fleet repair.
 `handoff.md` is the sole current Next carrier.

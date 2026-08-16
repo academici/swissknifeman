@@ -18,7 +18,7 @@
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
 | Design Passes | 4/4 — whole-plan semantic design remains accepted; D70 adds only the bounded post-audit P0.9–P0.10 final requalification chain, not a fifth whole-plan design pass or another whole-plan audit |
 | Layout | v2 |
-<!-- migration-version: 1.1.4 -->
+<!-- migration-version: 1.1.5 -->
 
 ## 1. Context
 
@@ -98,7 +98,8 @@ and does not duplicate a supervisor runtime.
 | solo | P4.5 | implementation/high | manual | none | code-prose checkpoints span package-specific AST/runner evidence and retain an independent rollback cursor |
 | solo | P4.6 | implementation/high | manual | none | docs migration ends at the unique terminal-regeneration and all-green integration boundary |
 | p5-fleet | P5.1–P5.4 | frontier/high | manual | none | freeze and authorized project actions keep one coordinator |
-| p6-health | P6.1–P6.3 | frontier/high | manual | none | Brain transaction, health contract and live evidence close one slice |
+| p6-health | P6.1–P6.2 | frontier/high | manual | none | terminal Brain transaction and package-health contract share the protected composition boundary |
+| solo | P6.3 | implementation/high | manual | none | D86 freezes the remaining local membership/evidence delta; live two-run rebound and privacy cleanup form one external-state boundary |
 | p7-real-first | P7.1–P7.3 | implementation/high | manual | none | real replay first, then demonstrated regressions and release assembly |
 | p7-final | P7.4 | frontier/xhigh | manual | full | sole independent review; at most one bounded repair/recheck |
 
@@ -117,7 +118,8 @@ and does not duplicate a supervisor runtime.
 | root/contracts/english-authoring-overlay-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
 | root/contracts/locale-authoring-review-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
 | root/contracts/provider-recovery-gates-v1.md | v1.0.0 | frozen | P0.4–P7 | P0.3/D63 |
-| root/contracts/provider-health-v1.md | v1.0.0-draft | draft | P6–P7 | — |
+| root/contracts/provider-health-v1.md | v1.0.0 | frozen | P6–P7 | P6.2 |
+| root/contracts/provider-health-release-membership-v1.schema.json | v1.0.0-draft | draft | P6.3–P7 | D86 |
 | root/contracts/skill-core-v1.md | v1.0.0 | frozen | P2–P7 | P1.2 |
 | root/contracts/provider-skill-adapter-v1.md | v1.0.0 | frozen | P3–P7 | P1.2 |
 | root/contracts/skill-evidence-v1.md | v1.0.0 | frozen | P3–P7 | D77 |

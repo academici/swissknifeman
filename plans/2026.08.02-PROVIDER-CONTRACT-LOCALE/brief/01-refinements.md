@@ -46,3 +46,12 @@ Frozen contracts, generated-target ownership и оставшиеся package-cwd
 plan-local carrier: одно bounded чтение owning P6.2 interface разрешено только для его
 проектирования, а runtime-exporter продолжает работать исключительно через публичный mAInd
 CLI. Изменения mAInd, provider/fleet repair и ослабление non-green семантики не разрешены.
+
+## 2026-08-16 — P6 required/optional release membership
+
+После P6 audit владелец выбрал `define_optional_project_membership` для
+`DR-P6-BRAIN-OPTIONALITY-1`. Brain остаётся optional integration: его отсутствие или non-green
+состояние не должно блокировать package runtime/fleet release, но обязано оставаться видимым в
+exact-set health evidence. Решение реализуется generic sealed membership carrier без hardcode
+имени/ID и без изменения P6.2 package runtime или public mAInd evidence-set schema. Required
+projects и global P5/source/privacy/semantic blockers не ослабляются.

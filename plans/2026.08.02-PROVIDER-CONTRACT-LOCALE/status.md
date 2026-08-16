@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: c351e738b2838f38418609834cc62a3cee7589919a4cd1fb6581fe287b551e58
+inputs_sha256: 3f2732ece05f89a463fd464eddaf67d0c22e538a89751a61d50792cfe224cd7d
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.1.4 |
+| Version | 1.1.5 |
 | Status | 🟡 In progress |
 | Last Updated | 2026-08-16 |
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 0/3 | 🟡 In progress |
+| P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟠 Done with deviations |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -97,7 +97,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
 | P6.2 | Add provider parity and capability-health checks | 🟠 Done with deviations | 2026-08-16 |
-| P6.3 | Run and publish per-project Claude/Codex health evidence | 🟡 In progress | 2026-08-16 |
+| P6.3 | Run and publish per-project Claude/Codex health evidence | 🟢 Done | 2026-08-16 |
 
 ## Phase P7
 
@@ -346,6 +346,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | frontier/xhigh | plan-design · in-progress · Audit authority boundary reopens P6.3 only as the generic optional-membership decision carrier; committed measurement evidence remains green. |
 | 2026-08-16 | frontier/xhigh | plan-run · decision-pending · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
 | 2026-08-16 | owner | plan-run · in-progress · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
+| 2026-08-16 | frontier/high | plan-design · in-progress · фаза детализирована до DoR: D86 required/optional membership и P6.3 evidence rebound |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · Terminal evidence requires raw item-file SHA-256; replaced Task Contract content hash with the canonical terminal-policy spec digest. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · closed-green · P6.3 published D86-bound required/optional membership and two semantically matching exact-set scans; health stays non-green while the optional integration is not a project-scoped release blocker. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

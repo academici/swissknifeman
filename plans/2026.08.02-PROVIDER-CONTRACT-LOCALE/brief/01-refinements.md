@@ -37,3 +37,12 @@ pass content-review evidence, не запускать новый product-repair 
 handoff на P4.5 доказательством закрытия P4.4. Разрешён один immutable closure-checkpoint
 для exact committed P4.4 delta; его `FIX_REQUIRED` снова требует явного решения владельца.
 Frozen contracts, generated-target ownership и оставшиеся package-cwd rows не ослабляются.
+
+## 2026-08-16 — P6.3 public health schema carrier
+
+После доказанного отсутствия точной evidence-set wrapper-схемы в публичных CLI-документах
+владелец выбрал `admit_public_schema_carrier` для
+`DR-P6.3-PUBLIC-HEALTH-SCHEMA-1`. Исполняемость P6.3 восстанавливается отдельным frozen
+plan-local carrier: одно bounded чтение owning P6.2 interface разрешено только для его
+проектирования, а runtime-exporter продолжает работать исключительно через публичный mAInd
+CLI. Изменения mAInd, provider/fleet repair и ослабление non-green семантики не разрешены.

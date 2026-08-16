@@ -2,8 +2,8 @@
 projection: decision-index
 projection_version: v1
 source_scope: decisions/
-through: 2026-08-16/D84
-inputs_sha256: 5529a9feec96cd3ad06f183fc340daad1ddefbd7aca93db0b549ee96bc4d9d17
+through: 2026-08-16/D85
+inputs_sha256: d0e80462d1b8c1bb9314c98ba328e257399ecfd3dd4130e80f4a8c434f68c815
 generated_by: task plan-views decisions
 -->
 
@@ -91,3 +91,4 @@ generated_by: task plan-views decisions
 | D82 | 2026-08-15 | accepted | P4.1, P4.2, P4.3, P4.4, P4.5, P4.6 | Владелец зафиксировал компактный field cut P4: завершить пригодную к реальной обкатке repository-local версию, а не продолжать массовую миграцию и циклы checkpoint/review. P4.4 принимается как существующий canonical Task locale/fallback с честным отклонением по незавершённому immutable-checkpoint carrier; P4.5 — как source-only compact prose cut в `core`, Harness и mAInd; P4.6 — как штатная регенерация registry и provider projections с двухпровайдерным readback. Полная миграция оставшегося corpus и development docs не является частью field cut и перенесена в roadmap. Это phase-scoped owner override: `phase-close: direct-green-validation`. |
 | D83 | 2026-08-15 | accepted | P5.1, P5.2, P5.3, P5.4 | Владелец утверждает immutable fleet action manifest `sha256:8c134c75214cff8dc4193f3b251e1afaf5c3041135a942976571068ad527bae4` и связанные action-set IDs: - P5.2: `action-set-7fc7d9fa6332f7d4613a8408`; - P5.3: `action-set-ea341e09394d4234f5d8f5ab`; - P5.4: `action-set-09bca52acb3e6631c2b30907`. Manifest содержит 13 421 строку `no-op-unresolved` для 23 protected projects и разрешает ровно ноль consumer/provider writes. DecisionRequest `P5.1-fleet-action-manifest-owner-approval` закрыт выбором `approve`; response привязан к `action_digest=f24299dba95bf10c7bf5b038f779ba0086eb41bff425d892f122d6a13977640d`. |
 | D84 | 2026-08-16 | accepted | P6.1 | Владелец утверждает immutable Brain repair plan `sha256:7390e46109c27cf8a2e48c7935a761726356a2bd74f3088cc53eae8f4457ce70` с action set `action-set-4f53cda18c2baa0c0354bb5f`, exact preimage `sha256:533b051162af0568d7ad41d03608176817ce0ad94d6dd280b20ce6e7d5d83911` и rollback `rollback-whole-brain-exact-preimage`. Action set пуст и разрешает ровно ноль Brain/provider/credential/trust/dependency/profile/ channel/budget/P5 writes. DecisionRequest `P6.1-brain-empty-action-set` закрыт выбором `approve`; response привязан к `action_digest=f3434f64cdaf6a19ab7cdc3aa5a46a83a9996251a53364d47f68488a6c29dfae`. |
+| D85 | 2026-08-16 | accepted | P6.3 | Владелец выбирает `admit_public_schema_carrier` для DecisionRequest `DR-P6.3-PUBLIC-HEALTH-SCHEMA-1` с `action_digest=c05f33aa04306f666cc310067ad2cf2602ae3f91501ca9dca44edb38d9797be8`. P6.3 получает отдельный frozen plan-local carrier `root/contracts/provider-health-evidence-set-v1.schema.json`. Carrier точно описывает входной wrapper публичной команды `maind projects health --evidence-set`, имеет provenance к owning P6.2 source и является единственным schema-input для runtime-exporter. Для его проектирования разрешено одно bounded чтение owning interface `packages/maind/lib/maind/provider_health.py`; после материализации carrier этот source не входит в P6.3 execution bundle и не читается исполнителем. |

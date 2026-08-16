@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 3d4e554ffabc520d5726d014d447acaa569546001627d6aabbe03159c0ce8e0d
+inputs_sha256: d8a20641a5179f2044fad60c36de18cb9114e285214c5c496c888bde0422a31c
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟡 In progress |
+| P6 | Configure Brain and fleet health/parity gates | 2/3 | 🟠 Done with deviations |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -97,7 +97,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
 | P6.2 | Add provider parity and capability-health checks | 🟢 Done | 2026-08-16 |
-| P6.3 | Run and publish per-project Claude/Codex health evidence | ⬜ Not started | — |
+| P6.3 | Run and publish per-project Claude/Codex health evidence | 🟢 Done | 2026-08-16 |
 
 ## Phase P7
 
@@ -326,6 +326,14 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · Owner-directed same-root continuation reopens the false terminal block for bounded Harness journal compatibility repair. |
 | 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.2 provider-health v1 closed green after owner-directed same-root bounded Harness journal repair; all four declared package carriers and plan lint are green.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · P6.2 public CLI rejects 38 bounded documented-contract wrapper candidates; internal reads are forbidden by P6.3 |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · block-candidate · Public evidence-set schema is unavailable within P6.3 read/scope boundaries; isolated review requested |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: DR-P6.3-PUBLIC-HEALTH-SCHEMA-1 |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · decision-pending · DR-P6.3-PUBLIC-HEALTH-SCHEMA-1 awaits repository_owner scope-change decision |
+| 2026-08-16 | owner | plan-run · in-progress · decision queue: DR-P6.3-PUBLIC-HEALTH-SCHEMA-1 |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · D85 reconciles the owner-approved public evidence-set schema carrier; the original routed run resumes. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-green · P6.3 published two semantically matching exact-set fleet scans; the evidence task is green while the measured fleet remains explicitly non-green. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-15
-inputs_sha256: 3987cc4316012f847d99ec19af7769bcd95348409bea143ab11ffae269046c4c
+through: 2026-08-16
+inputs_sha256: 3ef8646bd8c0a8b3669c6e7dbf3d7e7882dd2d4e4114ecb6fde62f068e5c5772
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | 1.1.4 |
 | Status | 🟡 In progress |
-| Last Updated | 2026-08-15 |
+| Last Updated | 2026-08-16 |
 
 ## 4. Phase Index & Status Board
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 0/3 | ⬜ Not started |
+| P6 | Configure Brain and fleet health/parity gates | 0/3 | 🟡 In progress |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -75,12 +75,12 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-15 |
+| P4.1 | Implement shared locale resolution and rendered surfaces | 🟢 Done | 2026-08-16 |
 | P4.2 | Implement English-source, overlay, admission, and rollback validators | 🟢 Done | 2026-08-15 |
-| P4.3 | Migrate canonical skill ownership and localized overlays | 🟢 Done | 2026-08-15 |
-| P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | 🟠 Done with deviations | 2026-08-15 |
-| P4.5 | Migrate code comments, docstrings, and test descriptions | 🟠 Done with deviations | 2026-08-15 |
-| P4.6 | Migrate development docs and regenerate the admitted corpus | 🟠 Done with deviations | 2026-08-15 |
+| P4.3 | Migrate canonical skill ownership and localized overlays | 🟢 Done | 2026-08-16 |
+| P4.4 | Migrate task commands, plugin text, and diagnostic catalogs | 🟠 Done with deviations | 2026-08-16 |
+| P4.5 | Migrate code comments, docstrings, and test descriptions | 🟠 Done with deviations | 2026-08-16 |
+| P4.6 | Migrate development docs and regenerate the admitted corpus | 🟠 Done with deviations | 2026-08-16 |
 
 ## Phase P5
 
@@ -95,7 +95,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P6.1 | Repair Brain security, trust, dependency, and profile drift | ⬜ Not started | — |
+| P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
 | P6.2 | Add provider parity and capability-health checks | ⬜ Not started | — |
 | P6.3 | Run and publish per-project Claude/Codex health evidence | ⬜ Not started | — |
 
@@ -308,6 +308,18 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-15 | frontier/xhigh | plan-audit · closed-green · Audit-fixer P5.3: empty approved set reverified on final runner; apply/resume/verify green, 13,421 unresolved, zero writes/WAL; lint delta green. |
 | 2026-08-15 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат c3f82b63d0836bf7c64b3da2fd15eabab06e4de172263bab4ed861c94b55c780, вердикт GREEN |
 | 2026-08-15 | gpt-5.6-terra/low | plan-close · closed-green · P5 direct-close: four green items, current phase candidate admitted by gate; P5 no-write result is not fleet health. |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P6.1-brain-empty-action-set |
+| 2026-08-16 | owner | plan-run · in-progress · decision queue: P6.1-brain-empty-action-set |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · decision-pending · decision queue: P6.1-plan-lint-scope-repair |
+| 2026-08-16 | owner | plan-run · in-progress · decision queue: P6.1-plan-lint-scope-repair |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | gpt-5.6-sol/high | plan-run · closed-deviations · P6.1 accepted the exact empty Brain transaction: durable WAL/readback is green, target bytes are unchanged, and residual owner-gated health findings remain explicit.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
@@ -325,3 +337,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.4: known deviation
 - P4.5: known deviation
 - P4.6: known deviation
+- P6.1: known deviation

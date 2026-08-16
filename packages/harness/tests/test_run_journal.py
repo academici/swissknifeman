@@ -102,7 +102,7 @@ class MaybeWriteTest(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(self.plan.entries(), [])
 
-    def test_timeout_writes_exactly_one_line_with_run_id_and_enum_result(self):
+    def test_timeout_writes_exactly_one_nonterminal_candidate(self):
         result = journal.maybe_write(
             self.plan.plan_dir, PLAN_ID, "P9.1", run_id="wave-1", attempt=1,
             actor="sonnet/high", outcome=_outcome(worker.OUTCOME_TIMEOUT, reason="30min"),
@@ -114,18 +114,33 @@ class MaybeWriteTest(unittest.TestCase):
         self.assertEqual(entry["run_id"], "wave-1")
         self.assertEqual(entry["item_id"], "P9.1")
         self.assertEqual(entry["command"], "plan-exec")
-        self.assertEqual(entry["result"], "blocked")
+        self.assertEqual(entry["result"], "block-candidate")
+        self.assertNotIn(entry["result"], ("blocked", "escalated"))
         self.assertTrue(entry["note"].startswith("[wave wave-1]"))
 
-    def test_routing_blocked_writes_blocked_with_routing_blocked_friction(self):
+    def test_routing_blocked_writes_routing_rejected_with_friction(self):
         journal.maybe_write(
             self.plan.plan_dir, PLAN_ID, "P9.2", run_id="wave-1", attempt=1,
             actor="sonnet/high", pre_launch=True, refusal_detail="EXEC-NOT-PLAN-EXEC",
             monorepo_root=REPO_ROOT)
         entries = self.plan.entries()
         self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["result"], "blocked")
+        self.assertEqual(entries[0]["result"], "routing-rejected")
         self.assertEqual(entries[0]["friction"], ["routing-blocked"])
+
+    def test_worker_failures_are_nonterminal_candidates(self):
+        for index, kind in enumerate((
+                worker.OUTCOME_TIMEOUT, worker.OUTCOME_TRANSPORT,
+                worker.OUTCOME_QUOTA, worker.OUTCOME_ERROR), start=1):
+            with self.subTest(kind=kind):
+                item_id = f"P8.{index}"
+                journal.maybe_write(
+                    self.plan.plan_dir, PLAN_ID, item_id, run_id="wave-failures", attempt=1,
+                    actor="sonnet/high", outcome=_outcome(kind), item_status="🟡 In progress",
+                    monorepo_root=REPO_ROOT)
+                entry = self.plan.entries()[-1]
+                self.assertEqual(entry["result"], "block-candidate")
+                self.assertNotIn(entry["result"], ("blocked", "escalated"))
 
     def test_no_op_writes_no_op_result_and_friction(self):
         journal.maybe_write(

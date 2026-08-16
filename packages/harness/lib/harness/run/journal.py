@@ -40,11 +40,11 @@ _WHO_WRITES = dict(WHO_WRITES)
 
 
 _RESULT_FRICTION = {
-    CATEGORY_ROUTING_BLOCKED: ("blocked", ("routing-blocked",)),
-    worker.OUTCOME_TIMEOUT: ("blocked", ()),
-    worker.OUTCOME_TRANSPORT: ("blocked", ()),
-    worker.OUTCOME_QUOTA: ("blocked", ()),
-    worker.OUTCOME_ERROR: ("blocked", ()),
+    CATEGORY_ROUTING_BLOCKED: ("routing-rejected", ("routing-blocked",)),
+    worker.OUTCOME_TIMEOUT: ("block-candidate", ()),
+    worker.OUTCOME_TRANSPORT: ("block-candidate", ()),
+    worker.OUTCOME_QUOTA: ("block-candidate", ()),
+    worker.OUTCOME_ERROR: ("block-candidate", ()),
     CATEGORY_NO_OP: ("no-op", ("no-op",)),
 }
 

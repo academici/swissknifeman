@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-16
-inputs_sha256: 5bf309206dc3ff6ac47105a76fa8b900ace898569e414de953de78e201202005
+inputs_sha256: 468b50749b0c72d12dd36ee24d151af1ee8389e84a9135399ddbbe7dee0fe59b
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Implement control-plane, provider-skill adapters, and evidence boundaries | 3/3 | 🟢 Done |
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
-| P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟠 Done with deviations |
+| P6 | Configure Brain and fleet health/parity gates | 0/3 | 🟡 In progress |
 | P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
 
 ## Phase P0
@@ -97,7 +97,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P6.1 | Repair Brain security, trust, dependency, and profile drift | 🟠 Done with deviations | 2026-08-16 |
 | P6.2 | Add provider parity and capability-health checks | 🟠 Done with deviations | 2026-08-16 |
-| P6.3 | Run and publish per-project Claude/Codex health evidence | 🟢 Done | 2026-08-16 |
+| P6.3 | Run and publish per-project Claude/Codex health evidence | 🟡 In progress | 2026-08-16 |
 
 ## Phase P7
 
@@ -341,6 +341,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | frontier/xhigh | plan-audit · closed-green · Audit-fixer added all listing/loaded-body/runtime measurement axes; two fresh 23-project scans now contain 460 rows each and remain explicitly non-green.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-16 | frontier/xhigh | plan-run · decision-pending · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
+| 2026-08-16 | frontier/xhigh | plan-audit · audit-red · audit-fixer, кандидат 804b01abc23f385c0ee61a5798e3dab44376280f54645c57d26c17b9ae3087a3, вердикт RED; Brain optionality awaits DR-P6-BRAIN-OPTIONALITY-1 |
+| 2026-08-16 | frontier/xhigh | plan-design · in-progress · Audit authority boundary reopens P6.3 only as the generic optional-membership decision carrier; committed measurement evidence remains green. |
+| 2026-08-16 | frontier/xhigh | plan-run · decision-pending · decision queue: DR-P6-BRAIN-OPTIONALITY-1 |
 
 ## Owner Gates
 
@@ -360,3 +364,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.6: known deviation
 - P6.1: known deviation
 - P6.2: known deviation
+- P6.3: known deviation

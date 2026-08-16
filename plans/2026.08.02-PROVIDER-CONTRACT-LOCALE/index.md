@@ -36,6 +36,7 @@
 | `findings/08-p4-locale-migration-recon-2026-08-02.md` | findings | P4.1–P4.6, P0.1 | Current RU→EN source direction, corpus/generator surfaces and fresh preflight observations for locale migration. |
 | `findings/09-p5-consumer-migration-recon-2026-08-02.md` | findings | P5.1–P5.4, P0.1 | Existing fleet-loop semantics, locator/privacy mismatch and the boundary between P3 adapters and P5 rollout sequencing. |
 | `findings/10-p6-health-control-recon-2026-08-02.md` | findings | P6.1–P6.3, P7 | Current single-axis health surfaces, missing public Codex settings route, dependency-diagnostic gap and exact-set fleet boundary. |
+| `findings/P6-fleet-health-verdict.md` | findings | P6.3, P7 | Privacy-minimized two-run Claude/Codex/shared-plane fleet health verdict over the exact sealed P0 set; current non-green and release blockers remain explicit. |
 | `findings/11-p7-release-acceptance-recon-2026-08-02.md` | findings | P7.1–P7.4 | Existing provider acceptance, regression, generated-doc and release surfaces plus gaps the final phase must close. |
 | `findings/12-design-audit-remediation-2026-08-03.md` | findings | P0.1, P2.1, P3.2, P4.1, P5, P6, P7, design audit | Official pinned IANA/RFC/HashiCorp provenance, exact public hook CLI reproduction and repository-grounded F16–F18 carrier remediation. |
 | `brief/01-owner-refinement-2026-08-10.md` | brief | P0–P7 | Current-model lightweight skills, official-doc/real-provider evidence order, additive Claude/Codex adapters and third-provider extensibility. |

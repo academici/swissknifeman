@@ -1,0 +1,2796 @@
+{
+  "commands": [
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "unavailable",
+      "command_class": "provider-health",
+      "diagnostic": "PH_PROJECT_NOT_REGISTERED",
+      "exit_code": null,
+      "project_id": "project-1bb1c2eba307e990",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 1,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-014a1283da270bd6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-034bc815af5bcfbb",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "unavailable",
+      "command_class": "provider-health",
+      "diagnostic": "PH_PROJECT_NOT_REGISTERED",
+      "exit_code": null,
+      "project_id": "project-1bb1c2eba307e990",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-1cf3a711c12e6a9b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-383351c63aaf37ac",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-48590a32ed307abd",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-4f583bba1e3d6be8",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-62eb4ffd9db923d9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fcbd71ebeedc92c",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-6fe9a81f902e79a2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-7ff99b78a82ce1bf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-83c5b3c93ffe31c0",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-8c234a131487ede5",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ab471cd0f1c85b97",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ae6cf52cbe90f84b",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b06bcd38ed385da6",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b1b34c916a75d8c9",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-b90c0f619b100582",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-c9e6c8c25f188930",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-cf305f1c831a36e2",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-d12b43a6d74056cf",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "graph-view",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "maind-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-cleanup-check",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-forget",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "none"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-recall",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "memory-remember",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    },
+    {
+      "availability": "available",
+      "command_class": "provider-health",
+      "diagnostic": "",
+      "exit_code": 0,
+      "project_id": "project-ffddc862898a8984",
+      "run": 2,
+      "stdout_schema": "json"
+    }
+  ],
+  "raw_output_retained": false,
+  "schema_version": "p6.3-command-results-redacted/v1"
+}

@@ -1,0 +1,4824 @@
+{
+  "aggregate": "non-green",
+  "binding_fingerprint": "sha256:3990b82f17455cc1f8bbb8007c6d3269e35329f35dd46aa945386a86252a9ea4",
+  "contract_version": "1.0.0",
+  "observed_at": "2026-08-16T10:14:01Z",
+  "projects": [
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "memster:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "memster:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "memster:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "memster:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "memster:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-014a1283da270bd6",
+      "public_result_digest": "sha256:434c750c4e687cc3bd2c9a1595ec540375edf642854f3d23ee113566e4e582cb",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:6a8cb4b0cbd19e657b555b3f",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:34fa6309d721b60c06a29159",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:618ae83b928ee9201dd04d2a",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:a0cb99348c8bb70194fe8617",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:55ced97b2b8e8787e74956a8",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:41c02873b7499a643b886f1c",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:a36d63d21153fd84378e9eff",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:04dd42dd07b493d5cda8fc15",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:f71dff4334fbe98663a072e2",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:4f993783f692a2980ea114e3",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:ba97364863a8031b793314ac",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "cms:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "cms:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "cms:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "cms:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "cms:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-034bc815af5bcfbb",
+      "public_result_digest": "sha256:79aeafe392176bc3749282a32cb669578604e1d8de88c7455a69ef5dc6e701ab",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:b306ba6d862f81d9f5ea5650",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:8eb173d9b8755f6048474f6c",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:861d2bc16e15e01f690306e5",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:df8cf31ac4754e376fa3e145",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:3df4e2adbdf3b1c599791f0d",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:6c3f6f746483f4ac983f3bd8",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:4e5d0633324af43bb1355437",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:dfae99b2b79bd48cc78d6955",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:0c0915840876e7145b9f366b",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:1156c27f34385660654ca6f7",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:d6d41ce8a532a88db785f278",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": false,
+      "diagnostics": [
+        "PH_PROJECT_NOT_REGISTERED"
+      ],
+      "project_id": "project-1bb1c2eba307e990",
+      "public_result_digest": null,
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:761b1583baa4a1f1bbe1303a",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "registry.selection",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:23072b306c45767a42b2306e",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:bda40ab6243fbbf698be0f04",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:3d167be4d28a834e1f7789a3",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:761b1583baa4a1f1bbe1303a",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "registry.selection",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:23072b306c45767a42b2306e",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:bda40ab6243fbbf698be0f04",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:3d167be4d28a834e1f7789a3",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "graph.federation",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:36bd582543682168545327f2",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "mcp.code",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:6843f37176d2deec13e697c2",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:b3e30fcd76f387be53a1fd07",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "memory.forget",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:40c205f65ab72362d619c438",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "memory.recall",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:d13c96a7221d4af67896a151",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        },
+        {
+          "axis_id": "memory.store",
+          "diagnostics": [
+            "PH_PROJECT_NOT_REGISTERED"
+          ],
+          "evidence_id": "ev:847b1478566bad27b505907b",
+          "expires_at": "2026-08-16T10:24:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.registry-missing",
+          "status": "unavailable"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "botkit:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-1cf3a711c12e6a9b",
+      "public_result_digest": "sha256:653cd56b3640e952fb75975a7f0e882fe9603c744e04d13c3b084454e802767f",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:14fdf48cdbb6900c30988d64",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:f3acbcb8ce8b55bdf6288362",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:a39943fb122d29521baedc27",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:39be29a32a29889d4b1531aa",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:946ec502ea164ecd9c76a0e6",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:8012590c9e7b1357c7e329b9",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:97d7d60edede4711e4f1b71b",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:e3565812d2e97051a20d0cbb",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:223a9bde0383e70b424bcc16",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:f7684314ca261136d231161f",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:bba4d0deb9dfc609923a97be",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "edufy:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "edufy:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "edufy:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "edufy:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "edufy:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-2f270a6fe5f0bbcc",
+      "public_result_digest": "sha256:f9876b99f1403328d67090e1866ef27456156013c7a3df9e79013a5828c13740",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:4ae6957e4e24ece2e0df298b",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:a7395f89d4a5f5e375d1e4a6",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:e4fb57aa085a3055e0d3d695",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:91c669b01e41ed63de995eed",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:582120ba52cf86e0171d1932",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:38c38e5342bacdb29674e1e7",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:e2d5612cad666cd5ea646430",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:ad5ac93dfa971482d261f76c",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:47c9506cea024dcca55785a4",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:f5265683a665033e51a204dc",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:00f3cfc9225838526002c4bc",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema-app:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-383351c63aaf37ac",
+      "public_result_digest": "sha256:a5fbe35b5ff40910b84b705c598d8ad206fb01919339cc21261c83525f0cb0d1",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:b6ff68bd0502af3128f10a1d",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:840e6174aaea318c313e1f36",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:9fb5321635db40d32b5f0b3f",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:b9828fadf64e08b802018536",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:993ccf25aa815e3d5d1a3a0b",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:57fdf1831fab7f54b096a325",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:9db34f0b3f0a07396146fdf8",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:1d1c82fd4c5d361f12b37a05",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:c781cd8c6db1ec24e76ab368",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:fe9633693d559048a258c288",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:5c051abc52cf7939841fa3a1",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomaerpsdk:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-48590a32ed307abd",
+      "public_result_digest": "sha256:bd2e601d39fa0bd3a90c4561422bc84d58444e36e496c886a2bf83bded5f93ed",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:77090d8cf1e9da7b1fa1e939",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:d6c18cd046e71d2b16636f26",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:1c971bb8fd367a5d6856da25",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:31d3771a12263e19fd234e30",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:06ba20b71a26569ef3afa61f",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:eb826d34e8b9a6e9b244eb06",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:2fecb79bd15db2e21bb37187",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:e93e632cf0cb6839425769c7",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:87ccc85520a29ef677f911e4",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:04f147e0510b4719eb2fdf6e",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:41693916c3a4d65bc405bf79",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "chatom:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "chatom:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "chatom:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "chatom:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "chatom:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-4f583bba1e3d6be8",
+      "public_result_digest": "sha256:36b54776b9c16969f8521b1c4ffab98abeb7b851bc5c58647bddb2a1632eaea0",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:2a0743c2adc86602dbf2c010",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:0ba52b6957452243b4f5f2be",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:f1faaa152fe5d4f03ebaad9b",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:3e40642a588490232824232d",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:47ce4caa9e2228b86d39d27d",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:dcf74ab17f5ec2029c7680ce",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:040c8a305face48a01f96328",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:261d9d046277c3c4f3c66acb",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:df0dd25520286ef1edea0dd4",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:20c9438d595f8e54c9c9046b",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:fd2716aeaef2a8941daeb930",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "sibintek-insiders:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "sibintek-insiders:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "sibintek-insiders:codex:migration.convergence"
+        }
+      ],
+      "project_id": "project-62eb4ffd9db923d9",
+      "public_result_digest": "sha256:c14d94aede965e65988e5c31c408fda4fad8e62452776d4d169b4574f33e18be",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:1ac33afd14d5fe4476dd81d1",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:bd18c23e6feff0599437459f",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:b59ceb80fd4132218bd2b2f7",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:2a7ad36ab4bca86963c66a43",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:c7ebcac186bb25724ebd7848",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:e53499b664abb18f52735d7f",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:4e2eb460ddb78ea0b4fb2db7",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:8b3ec47008a558db4aa23bb9",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:0e861b3f35820e45951e5dc5",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:f3e538d66940248558588b83",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:d5c32dcb0b08ee64e58b9ed8",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agentools:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agentools:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agentools:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agentools:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-6fcbd71ebeedc92c",
+      "public_result_digest": "sha256:3b1651e791a6a8c638d66632f3eb59fd58bd0ed40495938879e81c726ed04d04",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:e66229451193ab8fe034b039",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:7d669f97c1269541c1956ba5",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:1c971bb8fd367a5d6856da25",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:f1ede5cf054938c6d74aa598",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:fe4ce378c77a01b7b6c32d58",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:efe54a1159d59be82144dac2",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:5ee655a04a1c2c89102cdb29",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:b3b2606c2f1491dd423dcb2d",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:da9e38f7398dbe1adb3bfd03",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:cfcfbf6a6c2885ad820b2610",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:3504d8704e716dc44f050b8d",
+          "expires_at": "2026-08-16T10:24:09Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:09Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "brain:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-6fe9a81f902e79a2",
+      "public_result_digest": "sha256:2d4de783bc94e9a07028d3af0210b30ac9d7d903df56c5a27cddbd3429fc59b1",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:b14853cb712bd5832094c34b",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:6c1c54a818603098b28ca47d",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:489a145e88028cf0e16bccb3",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "error"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:4553b6fb18ac43a3a57b5b2f",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:bab049bbf1e6cec369651e86",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:6ba17d40fa4f77619479c587",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:9b97b8df46a7cb977cfe4163",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:bf1507c6aba53aeb15c7876d",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:0ffbdf6c3367ff28d3590e71",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:de2f638bff0ffd998582f15a",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:900237b63f3f9bb3a92dabdd",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "flexcrm:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "flexcrm:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "flexcrm:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "flexcrm:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "flexcrm:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-7ff99b78a82ce1bf",
+      "public_result_digest": "sha256:8f5c5890167b7a2f0381771c324ae95bfa91b0b4eb96d68fe535011c009bb923",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:d4d964d0369f51cbd448ac68",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:f8f8d512c142c934afe94eab",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:b3d27754588acdadfec4a76b",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:65add7dad7ab50942a807256",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:f4f70960d3aaca413cbe37fa",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:ffc285ae7bd10669420d3cea",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:4ee8de67a6412029c0b9c9b8",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:58736e9771c8219eb92bc800",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:b4e2a314596bee61e7923d66",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:9473261bf62be7d6f0094d6c",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:364e5ef91e34a26d8c4c5437",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "diabox:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "diabox:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "diabox:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "diabox:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-83c5b3c93ffe31c0",
+      "public_result_digest": "sha256:47af878f0d7b16caa53971808d463b4b8daf6efcf200db64e65b833392e947b9",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:0f161c7946a3084279d039b2",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:e08b1c07e92e1a026f47f5fe",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:3895b1b1074d437b581be4ae",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:d3c626723e4d51a775e8519d",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:2667c926463ca2da07579a97",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:2706608e398b0e57983ff6cf",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:3e0ceb3153dafdc8a6ec31c3",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:40bf14f6f6b547b4d5957661",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:d94c6dfa7003b9863b05c636",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:64fea97b39458c8e778aeff8",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:57ef8c2a41618d7d956a7007",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agelto:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agelto:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "agelto:codex:migration.convergence"
+        }
+      ],
+      "project_id": "project-8c234a131487ede5",
+      "public_result_digest": "sha256:2130bf712c0bd07d75f921115beec778d97063574349dc0200860f6d78dac067",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:25ab0b7b703432cb40f85123",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:d298003723196d0ff018f625",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:bae89908594b819f8371b621",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:38bd373b59b609fe9d1c4614",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:a98bc36280372123e133290e",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:05Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:05Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:7a2bae62c56c0aa28627966c",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:cc48117f1912eec7fd19f8cb",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:7c01a4ece54317df0a1b3f45",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:1a02da66c2f8f2bd6137dcd9",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:0f8c6fd1b000835e86a0a91f",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:cce1a1569f0fb704f0466fdd",
+          "expires_at": "2026-08-16T10:24:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomastudio:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomastudio:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomastudio:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "axiomastudio:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-ab471cd0f1c85b97",
+      "public_result_digest": "sha256:761755830cef944464d38677ffe04f412cf63f1b83ba117053207c4dd8a8878b",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:a4b2e30d8ec43ccfc0914e2e",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:229e4ad0494959575505604e",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:038f7a2b2a47595d217a2510",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:7ddabb02bfebee6a8e24112a",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:8f332c12ef6c21cd351a1ab6",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:10Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:10Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:31f1b952e83dc595fd892828",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:8e91e4583e7fefb81ba79981",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:e1c8b61a6b85df41b7d0f1dd",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:a0c2d5ab36fe78c002c0529b",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:73c255164fb9ecea5a03f6dd",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:076f9c118229305425424028",
+          "expires_at": "2026-08-16T10:24:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "perplexity-web-mcp:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "perplexity-web-mcp:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "perplexity-web-mcp:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "perplexity-web-mcp:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "perplexity-web-mcp:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-ae6cf52cbe90f84b",
+      "public_result_digest": "sha256:b2fbed3fce02dd3eb8902de2abb37ac76aeaf0783991455af9c07b2568abec35",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:9d310db7761b840775b0efdb",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:9a362335233baea9a1cf5225",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:c085814163b716f27c13c543",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:35408feb422d393021f224ca",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:a119b3c3b1ce4f4b0cd4dbaf",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:ae66a24e5e059f500e54b6b2",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:36c776fee9d9e23487fddc8b",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:12f431823661081f6d2e9394",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:ddf9ce203edcdfd97f8516ac",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:8e172700f1c137c9a576315e",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:fe98220d7f550f084c505d25",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "dterema:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-b06bcd38ed385da6",
+      "public_result_digest": "sha256:6e41e9a0dd292af28db23859409f8c1f6e760621797150a03dbdc46fc0e73a94",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:8814ce9a57da7bb3e272a0ab",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:82165796befbbbd822a386d5",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:e4fb57aa085a3055e0d3d695",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:3a5276d2aa278b6eaddc54ce",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:e50c7b7876bc179154949e2d",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:04Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:04Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:9ef288fb8ddac49c7443c67d",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:bfa90b234c9501d86295dc64",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:b6db075feb222a7ea8539f15",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:23b1eec5e20dc54da4888481",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:604e9977a662db35b59c05e3",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:68b0ab2f5a814fe1860dd0e0",
+          "expires_at": "2026-08-16T10:24:03Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:03Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "corex:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "corex:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "corex:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "corex:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "corex:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-b1b34c916a75d8c9",
+      "public_result_digest": "sha256:474a61b4a04845da04b1b2928c33c2e04f43c39f74d655986a03f93d3137405d",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:8b0783f69b0d2e18959de964",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:52dd48d332a819f8ad491f57",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:8831b28a0c53ac929ad87627",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:8e175df47e76f570cb86b5f2",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:006328da9de328957d890c77",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:9d828a2d421d924af3c3564e",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:77408ffbe3249d87d1b03ea9",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:f675749e692914f0d3e5e732",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:41cc1aad6c698c9aff7fc93e",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:a8cd8813c95bac26735304cc",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:315ca6f1fd2fdba50b99c80e",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "loqum:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "loqum:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "loqum:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "loqum:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-b90c0f619b100582",
+      "public_result_digest": "sha256:269574c57e7946390643ba2c3b39f2006f8610456749cdb235479849545a855e",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:eea6146fe77e4c9745fa9acd",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:0b3b951e907c771bbcddb11d",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:c085814163b716f27c13c543",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:a102fe2e8b7458f5c2684614",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:59e55c38d1288caeebcbae1b",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:dd4a0628e4304628255b2a6b",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:ddbc49fa41e42304559ed604",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:afe3c3e37499b74c2e25b58e",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:180075ddb8e80cb1823ea7bb",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:6964a678b2b264baa70ae22c",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:faf98d0fb826d9dd6fe7b8ee",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "azguard:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-c9e6c8c25f188930",
+      "public_result_digest": "sha256:32d35213b5c728b648074bba1b684c92d18a4fc888864a41fea2dc3ae5eb4430",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:51395192cce46b188227b743",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:5b98a0b8879c263b40749555",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:f1faaa152fe5d4f03ebaad9b",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:9ad183c0b36b72015869c538",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:24e8979b0b9a7cc1dd0701b2",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:7b3fb50349c72c090056e46a",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:a0381f70eb6ca4c62f86c401",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:292e72cfc2f7b9f1253523cd",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:474693614af362844893b093",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:fc90d1f679d8df94ceb075b6",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:eb8135866c9180fb0b92f83c",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "swissknifeman:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "swissknifeman:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "swissknifeman:codex:migration.convergence"
+        }
+      ],
+      "project_id": "project-cf305f1c831a36e2",
+      "public_result_digest": "sha256:667d074fc93b5bf1818da3402adc00a6d495bf2db1adf7aa82bed08a6f924249",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:2ec35f672075c5a9205bebeb",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:65c24a7179b8cdb2d7215a6d",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:62f7c2f8e1142bfbe267ff42",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:c66667b6a854cca3f854dd03",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:a4fa2c613be90062c62fb340",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:02d3fd35b26319bcc0e17bcf",
+          "expires_at": "2026-08-16T10:19:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "pass"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:0b927ffab53c20ae0034bb10",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:7703f7663c30c6f64ec2c8bc",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:2cffd6a70e6420a6115f51cf",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:5f611174e5c363906091d285",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:afa9799818ae6bbabb94d927",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:c9aac446b5b9a31037f7a7ee",
+          "expires_at": "2026-08-16T10:24:06Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:06Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:codex:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vintera:shared:mcp.code"
+        }
+      ],
+      "project_id": "project-d12b43a6d74056cf",
+      "public_result_digest": "sha256:1e7512f68b716e4683cac4414a70a525e3f57aa691fdefa67ceaf8679dd3d738",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:947121c8b93787ff05e6be00",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:029bc97563e57fd716dfc32a",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:c21198f0e3420e5b2e0a8ab1",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:66d59a0291c49431b729305d",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:1e3329c455e90e67bf5eb282",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:08Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:08Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:05b77d35ae7eb7dfd55a9b4f",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:2757ab8daf73b6b6e76a5c8c",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "error"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:01f79d1c5b9dbb3764b29737",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:c70ee4010694b4ccc15e54e8",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:65919a169f4bc5a497b97027",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:d9b16f1d66371856b05faf19",
+          "expires_at": "2026-08-16T10:24:07Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:07Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "aggregate": "non-green",
+      "cleanup_green": true,
+      "diagnostics": [
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vaulter:claude-code:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vaulter:claude-code:settings.integrity"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vaulter:claude-code:skill.dependency"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vaulter:codex:migration.convergence"
+        },
+        {
+          "code": "PH_AXIS_NON_GREEN",
+          "message": "PH_AXIS_NON_GREEN",
+          "severity": "error",
+          "source_ref": "vaulter:codex:skill.dependency"
+        }
+      ],
+      "project_id": "project-ffddc862898a8984",
+      "public_result_digest": "sha256:bb0ff76f16d58cd25081235137e4a25c364cdecec61a9a69ecf3ff44cefdbd14",
+      "rows": [
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:a9614025a9d81b12c84ef553",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:0d66899eedfa513bc9b7bcf0",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:f1faaa152fe5d4f03ebaad9b",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "claude-code",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "migration.convergence",
+          "evidence_id": "ev:1a1df3651d11dba8383b0b58",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p5.convergence",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "registry.selection",
+          "evidence_id": "ev:caef9652ba24a807c78698bb",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "p0.registry",
+          "status": "pass"
+        },
+        {
+          "axis_id": "settings.integrity",
+          "evidence_id": "ev:5384908612907811faab2e28",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "harness.settings",
+          "status": "pass"
+        },
+        {
+          "axis_id": "skill.dependency",
+          "evidence_id": "ev:b21059c5f149843d7e33c9ba",
+          "expires_at": "2026-08-16T10:19:02Z",
+          "healthy": false,
+          "observed_at": "2026-08-16T10:14:02Z",
+          "provider_id": "codex",
+          "required": true,
+          "selected": true,
+          "source_id": "skiller.dependency-closure",
+          "status": "unresolved"
+        },
+        {
+          "axis_id": "graph.federation",
+          "evidence_id": "ev:671e7f2b1515c4cf987a3b98",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.graph",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.code",
+          "evidence_id": "ev:27e7418d9f481ed279eb7efe",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "mcp.maind",
+          "evidence_id": "ev:f6243f0dfec51ab7d9974689",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "maind.health",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.forget",
+          "evidence_id": "ev:82b6ecb47af8c08aff4636dd",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.recall",
+          "evidence_id": "ev:10e7b9fffe82449bb96bf146",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        },
+        {
+          "axis_id": "memory.store",
+          "evidence_id": "ev:3993bf9950cce6d613ee4c71",
+          "expires_at": "2026-08-16T10:24:01Z",
+          "healthy": true,
+          "observed_at": "2026-08-16T10:14:01Z",
+          "provider_id": "shared",
+          "required": true,
+          "selected": true,
+          "source_id": "p6.3.memory",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "required_project_ids": [
+    "project-014a1283da270bd6",
+    "project-034bc815af5bcfbb",
+    "project-1bb1c2eba307e990",
+    "project-1cf3a711c12e6a9b",
+    "project-2f270a6fe5f0bbcc",
+    "project-383351c63aaf37ac",
+    "project-48590a32ed307abd",
+    "project-4f583bba1e3d6be8",
+    "project-62eb4ffd9db923d9",
+    "project-6fcbd71ebeedc92c",
+    "project-6fe9a81f902e79a2",
+    "project-7ff99b78a82ce1bf",
+    "project-83c5b3c93ffe31c0",
+    "project-8c234a131487ede5",
+    "project-ab471cd0f1c85b97",
+    "project-ae6cf52cbe90f84b",
+    "project-b06bcd38ed385da6",
+    "project-b1b34c916a75d8c9",
+    "project-b90c0f619b100582",
+    "project-c9e6c8c25f188930",
+    "project-cf305f1c831a36e2",
+    "project-d12b43a6d74056cf",
+    "project-ffddc862898a8984"
+  ],
+  "result_digest": "sha256:4239267ace9ab0fbecb7a26c084182f8c95244a6c8bdc1c079bd5135673f6e7d",
+  "run": 2,
+  "schema_version": "p6.3-provider-health-run/v1",
+  "source_fingerprints": {
+    "health_contract_sha256": "sha256:09bef7896250d24f1a057e69b94936dd635be5c28c125ecace9e65038f5723ab",
+    "p0_manifest_sha256": "sha256:b01ddffa1bea00191a16bdb2e0de274328b856d2fbcb8d2a12fb2e3461936cfb",
+    "p5_convergence_sha256": "sha256:c1803026e21fa4c1f6a02d4461591e8963f4f88b1a8c3c4ca5061a494e95f542",
+    "p5_journal_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "provider_manifest_sha256": "sha256:2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d",
+    "schema_sha256": "sha256:a95bcc8aee19856a77a153d32ab50bce506f809054a91f8aef64d6efc1a92539",
+    "source_sha256": "sha256:c799b609f7817482a41f28a4fb553ec2ab7d9ab9c7e97b488ca9f3b6b4642ab1"
+  }
+}

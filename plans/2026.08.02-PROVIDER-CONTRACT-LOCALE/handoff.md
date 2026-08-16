@@ -1,4 +1,4 @@
-# HANDOFF — 2026-08-16 — P6 terminal candidate
+# HANDOFF — 2026-08-16 — after P6.3
 
 **Next:** audit-phase: task:plan-audit 2026.08.02-PROVIDER-CONTRACT-LOCALE P6
 

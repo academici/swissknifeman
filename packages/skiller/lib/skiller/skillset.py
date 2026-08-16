@@ -222,7 +222,7 @@ def load_skillset_config(target):
     return cfg
 
 
-def _pull_requires(selected, by_name, exclude):
+def _pull_requires(selected, by_name, exclude, *, diagnostics=None):
     """Транзитивно дотянуть `requires` выбранных скиллов в `selected` (name->entry).
     exclude ПОБЕЖДАЕТ зависимость (с warning), неизвестная зависимость — warning и
     пропуск. Без этого skill-granular include молча терял зависимости (64/195
@@ -242,11 +242,12 @@ def _pull_requires(selected, by_name, exclude):
         return {"key": entry["name"], "requires": entry.get("requires", []),
                 "exclude_tokens": tokens, "_payload": entry}
 
-    for node, _requester in resolve_requires_bfs(seed, lookup, selected_keys, exclude):
+    for node, _requester in resolve_requires_bfs(
+            seed, lookup, selected_keys, exclude, diagnostics=diagnostics):
         selected[node["key"]] = node["_payload"]
 
 
-def resolve_skillset(env, cfg, include_core=False):
+def resolve_skillset(env, cfg, include_core=False, *, diagnostics=None):
     """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude,
     затем транзитивно дотянуть `requires` (exclude по-прежнему побеждает).
 
@@ -312,7 +313,7 @@ def resolve_skillset(env, cfg, include_core=False):
 
     # транзитивные requires выбранных скиллов (после вычитания: тянем зависимости
     # только тех, что реально останутся). exclude по-прежнему побеждает зависимость.
-    _pull_requires(selected, by_name, exclude)
+    _pull_requires(selected, by_name, exclude, diagnostics=diagnostics)
 
     entries = sorted(selected.values(),
                      key=lambda e: (e["bucket"], e["name"]))

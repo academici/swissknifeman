@@ -184,3 +184,27 @@ def probe_hub(env, config):
         "graph": {"adapter": adapter, "nodes": gstats["nodes"], "edges": gstats["edges"]},
         "docs_watcher": detect_docs_watcher(env),
     }
+
+
+def provider_health_probe(env, config, project):
+    """Project-bound, redaction-safe mAInd evidence states for provider health.
+
+    This is deliberately a projection of mAInd-owned observations.  It returns
+    no path, URL, daemon PID, provider payload, hint, or repair command.
+    """
+    hub = probe_hub(env, config)
+    report = probe_project(
+        env, config, project, memory_reachable=hub["memory"]["running"],
+    )
+    configured = report.get("configured") or {}
+    if report.get("status") == "missing-path":
+        return {
+            "maind.memory": "unavailable",
+            "maind.mcp": "unavailable",
+            "maind.code-graph": "unavailable",
+        }
+    return {
+        "maind.memory": "pass" if hub["memory"]["running"] else "unavailable",
+        "maind.mcp": "pass" if configured.get("maind_mcp") else "unresolved",
+        "maind.code-graph": "pass" if configured.get("code_mcp") else "unresolved",
+    }

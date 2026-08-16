@@ -5,7 +5,7 @@ from pathlib import Path
 
 from core import find_repo_root
 
-from .budget import budget_for_set, resolve_active_set
+from .budget import budget_for_set, listing_measurements, resolve_active_set
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, parse_frontmatter
 from .config import ProjectConfig, find_project_root, load_config, resolve_selection
 from .registry import alias_migration_hints, load_bucket_aliases
@@ -132,7 +132,9 @@ def cmd_status(env, argv):
         f"{', '.join(sorted(registered)) if registered else 'не зарегистрирован'}")
     report = {"project": str(target), "via": via,
               "registered_channels": sorted(registered),
-              "connect": None, "vendor": None, "budget": None, "channel_overlap": []}
+              "connect": None, "vendor": None, "budget": None, "channel_overlap": [],
+              "dependency_closure": {"status": "unknown", "diagnostics": []},
+              "measurements": {"status": "non-green", "rows": []}}
 
     enabled = []
     vendored_buckets = set()
@@ -254,6 +256,12 @@ def cmd_status(env, argv):
         report["budget"] = {"tier0": b["tier0"], "tier1": b["tier1"], "count": b["count"],
                             "profile": meta["profile"],
                             "top": [{"name": i["name"], "tier0": i["tier0"]} for i in top]}
+        dependency_diagnostics = meta["dependency_diagnostics"]
+        report["dependency_closure"] = {
+            "status": "non-green" if dependency_diagnostics else "green",
+            "diagnostics": dependency_diagnostics,
+        }
+        report["measurements"] = listing_measurements(skills)
     except SystemExit:
         raise
     except Exception as e:  # бюджет не должен ронять status

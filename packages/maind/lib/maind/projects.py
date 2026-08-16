@@ -139,18 +139,61 @@ def brain_path(config):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_projects(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind projects <list|status|sync> [--json] [--project ID] "
-              "[--namespace NS] [--from brain] [--path DIR]")
+        print("maind projects <list|status|health|sync> [--json] [--project ID] "
+              "[--namespace NS] [--all] [--evidence-set FILE] "
+              "[--from brain] [--path DIR]")
         return
     sub, rest = argv[0], argv[1:]
     if sub == "list":
         _cmd_list(env, rest)
     elif sub == "status":
         _cmd_status(env, rest)
+    elif sub == "health":
+        _cmd_health(env, rest)
     elif sub == "sync":
         _cmd_sync(env, rest)
     else:
-        die(f"неизвестная подкоманда projects: {sub} (list|status|sync)")
+        die(f"неизвестная подкоманда projects: {sub} (list|status|health|sync)")
+
+
+def _cmd_health(env, argv):
+    """Exact-set, read-only provider health over one sealed evidence descriptor."""
+    from .provider_health import evaluate, load_evidence_set
+
+    opts, _ = parse_args(argv, {
+        "--json": "bool", "--project": "str", "--namespace": "str",
+        "--all": "bool", "--evidence-set": "str",
+    })
+    selectors = sum(bool(opts[name]) for name in ("project", "namespace", "all"))
+    if opts["help"]:
+        print("maind projects health [--project ID | --namespace NS | --all] "
+              "--evidence-set FILE --json")
+        return
+    if selectors != 1:
+        die("projects health: укажите ровно один scope: --project, --namespace или --all")
+    if not opts["evidence_set"]:
+        die("projects health: обязателен --evidence-set FILE")
+    config, _src = load_config(env)
+    selected = listing(env, config)
+    if opts["project"]:
+        selected = [item for item in selected if item.get("id") == opts["project"]]
+        if not selected:
+            die(f"projects health: проект не найден: {opts['project']}")
+    elif opts["namespace"]:
+        selected = [item for item in selected if in_namespace(item, opts["namespace"])]
+        if not selected:
+            die(f"projects health: namespace пуст или не найден: {opts['namespace']}")
+    try:
+        evidence_set = load_evidence_set(opts["evidence_set"])
+        result = evaluate(env, config, selected, evidence_set)
+    except (TypeError, ValueError) as error:
+        die(f"projects health: {error}")
+    if opts["json"]:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+    print(f"provider health: {result['aggregate']} · projects={len(result['projects'])}")
+    for project in result["projects"]:
+        print(f"  {project['project_id']}: {project['aggregate']}")
 
 
 def _cmd_status(env, argv):

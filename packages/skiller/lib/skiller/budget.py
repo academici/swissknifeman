@@ -21,6 +21,7 @@ import json
 import math
 import os
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from core import atomic_write_text
@@ -150,9 +151,12 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
                 skills.append(tup)
                 core_added.append(f"{tup[0]}/{tup[1]}")
     index = build_requires_index(env)
-    pulled = resolve_requires(skills, index, exclude)
+    dependency_diagnostics = []
+    pulled = resolve_requires(
+        skills, index, exclude, diagnostics=dependency_diagnostics)
     meta = {"buckets": list(buckets), "profile": profile_name, "source": source,
-            "exclude": sorted(exclude), "pulled": pulled, "core_added": core_added}
+            "exclude": sorted(exclude), "pulled": pulled, "core_added": core_added,
+            "dependency_diagnostics": dependency_diagnostics}
     return skills, meta
 
 
@@ -328,6 +332,13 @@ CODEX_LISTING_BUDGET_FRACTION = 0.02
 LISTING_PROVIDERS = ("claude-code", "codex")
 DEFAULT_LISTING_PROVIDER = "claude-code"
 
+MEASUREMENT_SURFACES = frozenset({"listing", "loaded-body", "runtime"})
+MEASUREMENT_CLASSES = frozenset({
+    "exact", "estimate", "lower-bound", "upper-bound", "unknown",
+})
+MEASUREMENT_STATUSES = frozenset({"pass", "over-budget", "stale", "unknown"})
+MEASUREMENT_TTL = timedelta(days=30)
+
 # --- какие записи в резидентный листинг НЕ входят (P3.2, D95/D96) --------------
 # Пере-издание модели по НАБЛЮДЕНИЮ стенда P3.1/P3.6 на живой 2.1.220, а не по
 # доку (`plan.md` §2 «Правило внешних фактов»). Оба поля сняли запись целиком,
@@ -462,6 +473,174 @@ def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
             "excluded": sum(len(ds) for ds in excluded.values()),
             "excluded_by": {f: len(ds) for f, ds in sorted(excluded.items())},
             "excluded_raw": excluded_raw}
+
+
+def _measurement_timestamp(value):
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID")
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as exc:
+        raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID") from exc
+    if parsed.tzinfo is None:
+        raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID")
+    return parsed.astimezone(timezone.utc)
+
+
+def _measurement_number(value, *, nullable=False):
+    if value is None and nullable:
+        return
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError("SKILL_MEASUREMENT_VALUE_INVALID")
+    if not math.isfinite(value):
+        raise ValueError("SKILL_MEASUREMENT_VALUE_INVALID")
+
+
+def make_measurement(*, provider, surface, value, unit, method, uncertainty,
+                     measurement_class, observed_at, expires_at, source_id,
+                     threshold, evaluated_at=None, model=None, model_family=None):
+    """Build one closed provider-qualified measurement row.
+
+    The row carries exactly one model identity and keeps its own unit/class and
+    provider/surface threshold.  No cross-row arithmetic is performed here.
+    ``unknown`` is the sole class permitted to use a null value.
+    """
+    for label, item in {
+            "provider": provider, "unit": unit, "method": method,
+            "uncertainty": uncertainty, "source_id": source_id}.items():
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError(f"SKILL_MEASUREMENT_{label.upper()}_INVALID")
+    if surface not in MEASUREMENT_SURFACES:
+        raise ValueError("SKILL_MEASUREMENT_SURFACE_INVALID")
+    if measurement_class not in MEASUREMENT_CLASSES:
+        raise ValueError("SKILL_MEASUREMENT_CLASS_INVALID")
+    identities = [item for item in (model, model_family) if item is not None]
+    if len(identities) != 1 or not isinstance(identities[0], str) or not identities[0].strip():
+        raise ValueError("SKILL_MEASUREMENT_MODEL_IDENTITY_INVALID")
+    _measurement_number(value, nullable=measurement_class == "unknown")
+    if (measurement_class == "unknown") != (value is None):
+        raise ValueError("SKILL_MEASUREMENT_CLASS_VALUE_MISMATCH")
+    _measurement_number(threshold)
+    observed = _measurement_timestamp(observed_at)
+    expires = _measurement_timestamp(expires_at)
+    if expires <= observed:
+        raise ValueError("SKILL_MEASUREMENT_FRESHNESS_INVALID")
+    evaluated = _measurement_timestamp(evaluated_at or observed_at)
+    if evaluated >= expires:
+        status = "stale"
+    elif measurement_class == "unknown":
+        status = "unknown"
+    elif value > threshold:
+        status = "over-budget"
+    else:
+        status = "pass"
+    row = {
+        "provider": provider,
+        "surface": surface,
+        "value": value,
+        "unit": unit,
+        "method": method,
+        "uncertainty": uncertainty,
+        "measurement_class": measurement_class,
+        "observed_at": observed_at,
+        "expires_at": expires_at,
+        "source_id": source_id,
+        "status": status,
+        "threshold": threshold,
+    }
+    row["model" if model is not None else "model_family"] = identities[0]
+    return row
+
+
+def aggregate_measurements(rows):
+    """Validate and deterministically order independent measurement rows.
+
+    Aggregation never sums rows.  A provider/model/surface may carry bounds as
+    separate observations, but exact and estimated values (or differing units)
+    cannot coexist under one identity because that would invite a mixed scalar.
+    Provider IDs are open: a third provider needs rows, not a schema change.
+    """
+    accepted = []
+    by_identity = {}
+    thresholds = {}
+    expected_base = {
+        "provider", "surface", "value", "unit", "method", "uncertainty",
+        "measurement_class", "observed_at", "expires_at", "source_id",
+        "status", "threshold",
+    }
+    for row in rows:
+        if not isinstance(row, dict):
+            raise TypeError("SKILL_MEASUREMENT_ROW_INVALID")
+        model_keys = {key for key in ("model", "model_family") if key in row}
+        if len(model_keys) != 1 or set(row) != expected_base | model_keys:
+            raise ValueError("SKILL_MEASUREMENT_SCHEMA_INVALID")
+        rebuilt = make_measurement(
+            provider=row["provider"], surface=row["surface"], value=row["value"],
+            unit=row["unit"], method=row["method"], uncertainty=row["uncertainty"],
+            measurement_class=row["measurement_class"], observed_at=row["observed_at"],
+            expires_at=row["expires_at"], source_id=row["source_id"],
+            threshold=row["threshold"], evaluated_at=(
+                row["expires_at"] if row["status"] == "stale" else row["observed_at"]),
+            **{key: row[key] for key in model_keys},
+        )
+        if rebuilt["status"] != row["status"] or row["status"] not in MEASUREMENT_STATUSES:
+            raise ValueError("SKILL_MEASUREMENT_STATUS_INVALID")
+        model_key = next(iter(model_keys))
+        identity = (row["provider"], model_key, row[model_key], row["surface"])
+        threshold_key = (row["provider"], row["surface"], row["unit"])
+        if (threshold_key in thresholds
+                and thresholds[threshold_key] != row["threshold"]):
+            raise ValueError("SKILL_MEASUREMENT_THRESHOLD_CONFLICT")
+        thresholds[threshold_key] = row["threshold"]
+        peers = by_identity.setdefault(identity, [])
+        if any(peer["measurement_class"] == row["measurement_class"] for peer in peers):
+            raise ValueError("SKILL_MEASUREMENT_DUPLICATE")
+        classes = {peer["measurement_class"] for peer in peers} | {row["measurement_class"]}
+        if {"exact", "estimate"} <= classes:
+            raise ValueError("SKILL_MEASUREMENT_CLASS_MIXED")
+        if any(peer["unit"] != row["unit"] for peer in peers):
+            raise ValueError("SKILL_MEASUREMENT_UNIT_MIXED")
+        peers.append(row)
+        accepted.append(dict(row))
+    ordered = sorted(accepted, key=lambda row: (
+        row["provider"], "model" not in row,
+        row.get("model", row.get("model_family", "")), row["surface"],
+        row["measurement_class"], row["source_id"],
+    ))
+    return {
+        "status": "green" if ordered and all(
+            row["status"] == "pass" for row in ordered) else "non-green",
+        "rows": ordered,
+    }
+
+
+def listing_measurements(skills, *, observed_at=None, evaluated_at=None):
+    """Current Claude/Codex listing estimates as typed independent rows."""
+    observed = (_measurement_timestamp(observed_at).strftime("%Y-%m-%dT%H:%M:%SZ")
+                if observed_at else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    expires = (_measurement_timestamp(observed) + MEASUREMENT_TTL).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+    rows = []
+    for provider in LISTING_PROVIDERS:
+        legacy = measure_listing_budget(skills, provider)
+        rows.append(make_measurement(
+            provider=provider,
+            model_family="unknown",
+            surface="listing",
+            value=legacy["raw"],
+            unit="characters" if provider == "codex" else "estimated_tokens",
+            method=("skiller:listing-characters-v1" if provider == "codex"
+                    else "skiller:listing-token-estimate-v1"),
+            uncertainty=("exact source characters; provider loading is estimated"
+                         if provider == "codex" else "heuristic token estimate"),
+            measurement_class="estimate",
+            observed_at=observed,
+            expires_at=expires,
+            source_id="skiller.budget.listing",
+            threshold=legacy["budget"],
+            evaluated_at=evaluated_at or observed,
+        ))
+    return aggregate_measurements(rows)
 
 
 def format_listing_report(report):

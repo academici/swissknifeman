@@ -85,6 +85,22 @@ class TestStatusOverlapReport(unittest.TestCase):
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
         self.assertNotIn("ДУБЛЬ КАНАЛОВ", out)
 
+    def test_json_exposes_dependency_closure_and_provider_measurements(self):
+        data = json.loads(run(
+            cmd_status, self.env, ["--target", str(self.proj), "--json"]))
+        self.assertEqual(data["dependency_closure"], {
+            "status": "green", "diagnostics": [],
+        })
+        rows = data["measurements"]["rows"]
+        self.assertEqual({row["provider"] for row in rows}, {"claude-code", "codex"})
+        for row in rows:
+            self.assertEqual(row["surface"], "listing")
+            self.assertEqual(len({"model", "model_family"} & set(row)), 1)
+            self.assertTrue({
+                "value", "unit", "method", "uncertainty", "measurement_class",
+                "observed_at", "expires_at", "source_id", "status", "threshold",
+            } <= set(row))
+
 
 class TestDetectRawVendorPath(unittest.TestCase):
     """P3.5 дельта а: канал без манифеста (репо-факт flexcrm — симлинки из

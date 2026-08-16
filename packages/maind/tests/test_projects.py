@@ -4,10 +4,11 @@ import io
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from maind.config import load_config
-from maind.projects import brain_path, get, listing, sync_from_brain, write_config
-from tests.fixtures import make_repo, write_brain_projects, write_maind_config
+from maind.projects import brain_path, cmd_projects, get, listing, sync_from_brain, write_config
+from tests.fixtures import capture, make_repo, write_brain_projects, write_maind_config
 
 
 class TestSync(unittest.TestCase):
@@ -82,6 +83,38 @@ class TestBrainPath(unittest.TestCase):
 
     def test_default_fallback(self):
         self.assertEqual(brain_path({}), os.path.expanduser("~/Vaults/Brain"))
+
+
+class TestProjectsHealth(unittest.TestCase):
+    def test_routes_exact_project_and_evidence_set_to_public_health(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            write_maind_config(root)
+            expected = {"aggregate": "non-green", "projects": [],
+                        "evidence_set_id": "set:alpha"}
+            with mock.patch("maind.provider_health.load_evidence_set",
+                            return_value=object()) as load, \
+                    mock.patch("maind.provider_health.evaluate",
+                               return_value=expected) as evaluate:
+                _, out = capture(cmd_projects, env, [
+                    "health", "--project", "alpha", "--evidence-set", "sealed.json",
+                    "--json",
+                ])
+            self.assertEqual(expected, __import__("json").loads(out))
+            load.assert_called_once_with("sealed.json")
+            self.assertEqual(["alpha"],
+                             [item["id"] for item in evaluate.call_args.args[2]])
+
+    def test_rejects_ambiguous_or_missing_scope_before_health(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            write_maind_config(root)
+            for argv in (
+                    ["health", "--evidence-set", "sealed.json", "--json"],
+                    ["health", "--project", "alpha", "--all",
+                     "--evidence-set", "sealed.json", "--json"]):
+                with self.subTest(argv=argv), self.assertRaises(SystemExit):
+                    cmd_projects(env, argv)
 
 
 if __name__ == "__main__":

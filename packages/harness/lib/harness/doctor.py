@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .agentpacks import list_packs
-from .common import parse_flags
+from .common import die, parse_flags
 from .mcp import available_mcp
 
 
@@ -59,13 +59,38 @@ def _sha256(path):
 
 def _cmd_doctor_settings(env, opts):
     """Internal documentation."""
-    from .settings_audit import build_context, exit_code, render_json_obj, render_text, run_checks
+    from .settings_audit import (
+        Context, build_context, exit_code, load_codex_layers, render_json_obj,
+        render_provider_json_obj, render_provider_text, render_text, run_checks,
+        run_codex_checks,
+    )
     target = opts["target"] or os.getcwd()
+    provider = opts["provider"] or None
+    if provider not in (None, "claude-code", "codex"):
+        die(f"--provider неизвестен: {provider} (claude-code|codex)")
+    if provider == "codex" and opts["profile"]:
+        die("--profile применим только к --provider claude-code")
+
+    if provider == "codex":
+        layers = load_codex_layers(env, target)
+        ctx = Context(layers=layers, values={}, provenance={}, target=Path(target), env=env)
+        findings = run_codex_checks(layers)
+        if opts["json"]:
+            print(json.dumps(render_provider_json_obj(provider, ctx, findings), ensure_ascii=False))
+        else:
+            print(render_provider_text(provider, ctx, findings))
+        sys.exit(exit_code(findings))
+
     profile_name = opts["profile"] or None
     ctx = build_context(env, target, profile_name=profile_name)
     findings = run_checks(ctx)
+    if provider == "claude-code":
+        if opts["json"]:
+            print(json.dumps(render_provider_json_obj(provider, ctx, findings), ensure_ascii=False))
+        else:
+            print(render_provider_text(provider, ctx, findings))
+        sys.exit(exit_code(findings))
     if opts["json"]:
-
         print(json.dumps(render_json_obj(ctx, findings), ensure_ascii=False))
     else:
         print(render_text(ctx, findings))
@@ -75,14 +100,18 @@ def _cmd_doctor_settings(env, opts):
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {
         "--settings": "bool", "--target": "str", "--json": "bool",
-        "--profile": "str", "--provider-audit": "bool",
+        "--profile": "str", "--provider": "str", "--provider-audit": "bool",
     })
     if opts["help"]:
-        print("harness doctor [--settings [--target P] [--json] [--profile NAME] | --provider-audit]\n"
+        print("harness doctor [--settings [--provider claude-code|codex] [--target P] "
+              "[--json] [--profile NAME] | --provider-audit]\n"
               "  без флага:  диагностика окружения harness (пресеты/скрипт/хуки).\n"
-              "  --settings: аудит слоёв настроек Claude Code целевого проекта\n"
+              "  --settings: аудит слоёв настроек выбранного провайдера\n"
+              "              (без --provider сохраняется legacy-отчёт Claude Code)\n"
               "              (отчёт, --json, exit-code 0 чисто / 1 warn / 2 error).")
         return
+    if opts["provider"] and not opts["settings"]:
+        die("--provider для doctor применим только вместе с --settings")
     if opts["provider_audit"]:
         from .provider_audit import audit_package
         report = audit_package(env.root)

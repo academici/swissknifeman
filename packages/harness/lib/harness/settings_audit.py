@@ -60,6 +60,7 @@ class Layer(object):
     path: Path
     data: Optional[dict] = None
     error: Optional[str] = None
+    error_kind: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -98,14 +99,20 @@ def _managed_paths():
 
 def _load_layer(name, path):
     """Internal documentation."""
-    if not path.exists():
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
         return Layer(name, path, data=None, error=None)
-    errors = []
-    data = safe_load_json(path, default=None, on_error=lambda e: errors.append(str(e)))
-    if data is not None and not isinstance(data, dict):
-        errors.append("верхний уровень JSON не объект")
-        data = None
-    return Layer(name, path, data=data, error=(errors[0] if errors else None))
+    except (OSError, UnicodeDecodeError) as error:
+        return Layer(name, path, data=None, error=str(error), error_kind="unreadable")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as error:
+        return Layer(name, path, data=None, error=str(error), error_kind="malformed")
+    if not isinstance(data, dict):
+        return Layer(name, path, data=None, error="верхний уровень JSON не объект",
+                     error_kind="malformed")
+    return Layer(name, path, data=data, error=None)
 
 
 def load_layers(env, target):
@@ -436,12 +443,18 @@ def check_1_layer_json_valid(ctx):
     findings = []
     for layer in ctx.layers:
         if layer.error:
+            unreadable = layer.error_kind == "unreadable"
             findings.append(Finding(
                 id=1, level="error",
-                title=f"Слой «{layer.name}» ({layer.path}) — битый JSON",
+                title=(f"Слой «{layer.name}» ({layer.path}) не читается"
+                       if unreadable else
+                       f"Слой «{layer.name}» ({layer.path}) — битый JSON"),
                 detail=layer.error,
-                hint="Почини JSON слоя (или удали файл, если он лишний) — весь слой "
-                     "сейчас исключён из эффективной конфигурации.",
+                hint=("Проверь путь и права доступа — нечитаемый слой "
+                      "исключён из эффективной конфигурации."
+                      if unreadable else
+                      "Почини JSON слоя (или удали файл, если он лишний) — весь слой "
+                      "сейчас исключён из эффективной конфигурации."),
             ))
     return findings
 
@@ -985,19 +998,25 @@ CODEX_NON_OVERRIDABLE_PROJECT_KEYS = ("model_provider", "auth", "notify", "profi
 
 def _load_codex_toml_layer(name, path):
     """Internal documentation."""
-    if not path.exists():
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
         return Layer(name, path, data=None, error=None)
+    except (OSError, UnicodeDecodeError) as error:
+        return Layer(name, path, data=None, error=str(error), error_kind="unreadable")
     try:
         import tomllib
     except ModuleNotFoundError:
         return Layer(name, path, data=None,
-                     error="интерпретатор < 3.11: tomllib недоступен, слой не читается")
+                     error="интерпретатор < 3.11: tomllib недоступен, слой не читается",
+                     error_kind="unreadable")
     try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
-        return Layer(name, path, data=None, error=str(error))
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as error:
+        return Layer(name, path, data=None, error=str(error), error_kind="malformed")
     if not isinstance(data, dict):
-        return Layer(name, path, data=None, error="верхний уровень TOML не таблица")
+        return Layer(name, path, data=None, error="верхний уровень TOML не таблица",
+                     error_kind="malformed")
     return Layer(name, path, data=data, error=None)
 
 
@@ -1012,7 +1031,9 @@ def load_codex_layers(env, target):
 
 def codex_check_1_layers_readable(layers):
     """Internal documentation."""
-    return [Finding(1, "warn", f"слой '{layer.name}' не прочитан",
+    return [Finding(1, "warn", f"слой '{layer.name}' "
+                    + ("не читается" if layer.error_kind == "unreadable"
+                       else "не распарсен"),
                     detail=f"{layer.path}: {layer.error}",
                     hint="слой репортится нечитаемым, а не конформным")
             for layer in layers if layer.error]
@@ -1080,6 +1101,30 @@ def render_codex_text(target, findings):
     return "\n".join(lines)
 
 
+def render_provider_text(provider_id, ctx, findings):
+    """Render the provider-qualified Claude Code settings report."""
+    if provider_id == "codex":
+        return render_codex_text(ctx.target, findings)
+    name = _profile_name(ctx)
+    lines = [
+        f"harness doctor --settings --provider {provider_id} (target: {ctx.target})",
+        f"policy-профиль: {name if name else 'не объявлен'}",
+    ]
+    if not findings:
+        lines.append("  находок нет — эффективная конфигурация чистая.")
+    for level in _LEVEL_ORDER:
+        for finding in (item for item in findings if item.level == level):
+            lines.append(f"[{level}] #{finding.id} {finding.title}")
+            if finding.detail:
+                lines.append(f"    — {finding.detail}")
+            if finding.hint:
+                lines.append(f"    → {finding.hint}")
+    summary = counts(findings)
+    lines.append(f"ошибок: {summary['error']}, предупреждений: {summary['warn']}, "
+                 f"заметок: {summary['info']}")
+    return "\n".join(lines)
+
+
 
 
 
@@ -1106,6 +1151,12 @@ def exit_code(findings):
     if c["warn"]:
         return 1
     return 0
+
+
+def settings_status(findings):
+    """Return the stable public status matching the settings-audit exit code."""
+    code = exit_code(findings)
+    return {0: "clean", 1: "warning", 2: "error"}[code]
 
 
 def _profile_name(ctx):
@@ -1146,6 +1197,23 @@ def render_json_obj(ctx, findings):
             {"id": f.id, "level": f.level, "title": f.title,
              "detail": f.detail, "hint": f.hint}
             for f in findings
+        ],
+        "exit": exit_code(findings),
+    }
+
+
+def render_provider_json_obj(provider_id, ctx, findings):
+    """Render the stable public provider-qualified settings envelope."""
+    return {
+        "provider": provider_id,
+        "target": str(ctx.target),
+        "profile": _profile_name(ctx),
+        "status": settings_status(findings),
+        "counts": counts(findings),
+        "findings": [
+            {"id": finding.id, "level": finding.level, "title": finding.title,
+             "detail": finding.detail, "hint": finding.hint}
+            for finding in findings
         ],
         "exit": exit_code(findings),
     }

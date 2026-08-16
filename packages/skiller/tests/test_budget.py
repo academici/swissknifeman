@@ -11,8 +11,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import (budget_for_set, cmd_budget, estimate_tokens,
-                            resolve_active_set, skill_budget, write_budget_map)
+from skiller.budget import (aggregate_measurements, budget_for_set, cmd_budget,
+                            estimate_tokens, make_measurement, resolve_active_set,
+                            skill_budget, write_budget_map)
 from skiller.registry import build_registry
 import tests.fixtures as fx
 from core import atomic_write_text
@@ -134,6 +135,66 @@ class ResolveActiveSetCase(unittest.TestCase):
         # docker учтён в бакете devops (его родной), а не в quality
         self.assertIn("devops", b["by_bucket"])
         self.assertEqual(b["transitive"], 1)
+
+
+class ProviderQualifiedMeasurementCase(unittest.TestCase):
+    BASE = {
+        "surface": "listing",
+        "value": 120,
+        "unit": "characters",
+        "method": "provider-counter:v1",
+        "uncertainty": "none",
+        "measurement_class": "exact",
+        "observed_at": "2026-08-16T10:00:00Z",
+        "expires_at": "2026-09-16T10:00:00Z",
+        "source_id": "skiller.test.measurement",
+        "threshold": 1000,
+    }
+
+    def row(self, provider="codex", **changes):
+        values = {**self.BASE, "provider": provider, "model": "model-v1", **changes}
+        return make_measurement(**values)
+
+    def test_required_fields_and_exactly_one_model_identity(self):
+        with self.assertRaisesRegex(ValueError, "MODEL_IDENTITY_INVALID"):
+            make_measurement(**{**self.BASE, "provider": "codex"})
+        with self.assertRaisesRegex(ValueError, "MODEL_IDENTITY_INVALID"):
+            make_measurement(**{
+                **self.BASE, "provider": "codex", "model": "model-v1",
+                "model_family": "family-v1",
+            })
+        complete = self.row()
+        for field in (set(complete) - {"model"}):
+            incomplete = dict(complete)
+            incomplete.pop(field)
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(ValueError, "SCHEMA_INVALID"):
+                    aggregate_measurements([incomplete])
+
+    def test_unknown_is_nullable_and_stale_is_visible(self):
+        unknown = self.row(
+            provider="provider-c", value=None, measurement_class="unknown")
+        self.assertEqual(unknown["status"], "unknown")
+        stale = self.row(evaluated_at="2026-10-01T00:00:00Z")
+        self.assertEqual(stale["status"], "stale")
+
+    def test_exact_and_estimate_cannot_be_mixed(self):
+        exact = self.row(source_id="source.exact")
+        estimated = self.row(
+            source_id="source.estimate", measurement_class="estimate",
+            uncertainty="estimated")
+        with self.assertRaisesRegex(ValueError, "CLASS_MIXED"):
+            aggregate_measurements([estimated, exact])
+
+    def test_third_provider_uses_same_schema_and_deterministic_order(self):
+        codex = self.row(provider="codex")
+        third = self.row(
+            provider="provider-c", model=None, model_family="family-v1",
+            unit="provider-c-units", threshold=500)
+        result = aggregate_measurements([third, codex])
+        self.assertEqual(
+            [row["provider"] for row in result["rows"]], ["codex", "provider-c"])
+        self.assertEqual(set(third) - {"model_family"}, set(codex) - {"model"})
 
 
 class WriteBudgetMapCase(unittest.TestCase):

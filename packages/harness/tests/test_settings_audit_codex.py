@@ -3,11 +3,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.common import Env
 from harness.settings_audit import (
+    _load_codex_toml_layer,
     codex_check_1_layers_readable, codex_check_2_project_overrides_machine_local_key,
     codex_check_3_hooks_feature_disabled, counts, exit_code, load_codex_layers,
     render_codex_text, run_codex_checks,
@@ -53,6 +55,21 @@ class CodexSettingsAuditCase(unittest.TestCase):
         findings = codex_check_1_layers_readable(layers)
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0].level, "warn")
+        self.assertEqual(next(layer for layer in layers if layer.name == "project").error_kind,
+                         "malformed")
+        self.assertIn("не распарсен", findings[0].title)
+
+
+    def test_unreadable_toml_is_distinct_from_malformed(self):
+        path = self.target / ".codex" / "config.toml"
+        path.parent.mkdir()
+        path.write_text('trust_level = "trusted"\n', encoding="utf-8")
+        with mock.patch.object(Path, "read_text", side_effect=PermissionError("denied")):
+            layer = _load_codex_toml_layer("project", path)
+        self.assertEqual(layer.error_kind, "unreadable")
+        findings = codex_check_1_layers_readable([layer])
+        self.assertEqual(len(findings), 1)
+        self.assertIn("не читается", findings[0].title)
 
 
     def test_project_override_of_notify_is_error(self):

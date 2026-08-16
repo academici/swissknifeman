@@ -243,7 +243,42 @@ def parse_frontmatter_fields(skill_md):
 
 
 # --- requires (transitive dependency BFS) --------------------------------------
-def resolve_requires_bfs(seed, lookup, selected_keys, exclude):
+DEPENDENCY_DIAGNOSTIC_CODES = frozenset({
+    "SKILL_REQUIRED_EXCLUDED",
+    "SKILL_REQUIRED_UNKNOWN",
+})
+
+
+def aggregate_dependency_diagnostics(diagnostics):
+    """Collapse dependency failures into stable machine-readable diagnostics.
+
+    Human warnings remain owned by :func:`resolve_requires_bfs`; this projection is
+    deliberately message-free so localization cannot change diagnostic identity.
+    Repeated observations of the same ``code``/required skill are represented once,
+    with the complete sorted requester set in ``affected_identities``.
+    """
+    grouped = {}
+    for item in diagnostics:
+        code = item.get("code")
+        required = item.get("required_skill")
+        requester = item.get("requester")
+        if (code not in DEPENDENCY_DIAGNOSTIC_CODES
+                or not isinstance(required, str) or not required
+                or not isinstance(requester, str) or not requester):
+            continue
+        grouped.setdefault((code, required), set()).add(requester)
+    return [
+        {
+            "code": code,
+            "severity": "warning",
+            "required_skill": required,
+            "affected_identities": sorted(requesters),
+        }
+        for (code, required), requesters in sorted(grouped.items())
+    ]
+
+
+def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=None):
     """Транзитивный BFS резолва frontmatter `requires` — ЕДИНЫЙ источник для
     vendor.resolve_requires (FS-кортежи) и skillset._pull_requires (registry-entry):
     раньше это были два независимых, уже разошедшихся тела (RU/EN тексты warn,
@@ -262,10 +297,14 @@ def resolve_requires_bfs(seed, lookup, selected_keys, exclude):
         зависимость с пересечением exclude_tokens пропускается с warning, даже если
         она нужна другому скиллу.
 
+    diagnostics: optional mutable list populated with stable dependency records.
+        It does not suppress or change the existing human warning text.
+
     Возвращает [(node, requester_key), ...] в порядке резолва — вызывающий сам
     решает, как класть узлы в свою структуру (список кортежей / dict по имени)."""
     queue = list(seed)
     resolved = []
+    observed_diagnostics = []
     while queue:
         dep, requester = queue.pop(0)
         if dep in selected_keys:
@@ -273,13 +312,35 @@ def resolve_requires_bfs(seed, lookup, selected_keys, exclude):
         node = lookup(dep)
         if node is None:
             warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            observed_diagnostics.append({
+                "code": "SKILL_REQUIRED_UNKNOWN",
+                "required_skill": dep,
+                "requester": requester,
+            })
             continue
         if node["exclude_tokens"] & exclude:
             warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            observed_diagnostics.append({
+                "code": "SKILL_REQUIRED_EXCLUDED",
+                "required_skill": dep,
+                "requester": requester,
+            })
             continue
         selected_keys.add(node["key"])
         resolved.append((node, requester))
         queue.extend((d, node["key"]) for d in node["requires"])
+    if diagnostics is not None:
+        prior = [
+            {
+                "code": item.get("code"),
+                "required_skill": item.get("required_skill"),
+                "requester": requester,
+            }
+            for item in diagnostics
+            for requester in item.get("affected_identities", [])
+        ]
+        diagnostics[:] = aggregate_dependency_diagnostics(
+            prior + observed_diagnostics)
     return resolved
 
 

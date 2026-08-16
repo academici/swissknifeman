@@ -51,7 +51,7 @@ def build_requires_index(env):
     return index
 
 
-def resolve_requires(skills, index, exclude):
+def resolve_requires(skills, index, exclude, *, diagnostics=None):
     """Транзитивно дотянуть `requires`. Мутирует skills, возвращает pulled
     (dep -> requester). --exclude побеждает зависимость (с warning). BFS — общий с
     skillset._pull_requires через common.resolve_requires_bfs (V-1: раньше два
@@ -69,7 +69,8 @@ def resolve_requires(skills, index, exclude):
                 "_payload": (bucket, rel, d, dep)}
 
     pulled = {}
-    for node, requester in resolve_requires_bfs(seed, lookup, selected, exclude):
+    for node, requester in resolve_requires_bfs(
+            seed, lookup, selected, exclude, diagnostics=diagnostics):
         skills.append(node["_payload"])
         pulled[node["key"]] = requester
     return pulled

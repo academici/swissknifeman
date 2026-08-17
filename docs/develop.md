@@ -270,6 +270,35 @@ context7 ──▶ perplexity-web ──▶ WebSearch
 | Окружение Claude Code (permissions/MCP/хуки) | `harness doctor` |
 | Всё сразу (fan-out) | `swissknifeman doctor` |
 
+### Provider operations, locale, and rollback
+
+Use the generated [provider support](./provider-support) page as the capability matrix. It is
+provider-qualified: `native`, `adapted`, and `unsupported` are different states, and one green
+provider never makes a missing or degraded peer green. Start with read-only evidence, then act
+only on an explicit, authorized target:
+
+```text
+select provider and operation
+→ help / plan / check / dry-run
+→ inspect provider-qualified diagnostics
+→ authorized apply or repair
+→ read back and reconcile
+→ roll back on a mismatch
+```
+
+`response`, `plan`, and `diagnostics` are independent locale surfaces. Each resolves from
+`command-session > environment > project > user > built-in en`; an unset value inherits only for
+that surface. Language-tag syntax, registry canonicalization, and the `en`/`ru` catalog choice
+are separate stages. Do not copy a provider state into locale preference, and never put raw
+environment values, credentials, absolute host paths, or provider payloads in a diagnostic.
+
+`plan`, `check`, and `--dry-run` are no-write operations. Apply or repair needs the exact managed
+target, an accepted action digest or owner authority where the command requires it, ownership and
+preimages/backups, readback, and an empty second reconcile. A mismatch remains non-green: restore
+only declared owned preimages, then re-run the no-write check. Generated provider docs are
+restored by their generator, not by editing the output. A release candidate is evidence only; it
+does not authorize a tag, push, publication, fleet rollout, or provider repair.
+
 **Гейт docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` останавливает
 change-set, который вводит/убирает/переименовывает файл поверхности пакета (`packages/<pkg>/
 {bin,lib,commands,configs}/**`, `core/*.py`, корневые `bin/**`/`install.sh`/`scripts/*.{sh,py}`)

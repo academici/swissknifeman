@@ -1,0 +1,21 @@
+{
+  "decision_id": "P7.3-maind-standalone-docs-scope",
+  "action_version": 1,
+  "selected_option": "authorize-one-line-link-repair",
+  "resolver": "owner",
+  "resolver_id": "repository_owner",
+  "reason_code": "P7.3_OWNER_AUTHORIZED_COMPLETE",
+  "scope": {
+    "path": "packages/maind/docs/guide/systemd.md",
+    "line": 65,
+    "allowed_change": "replace the root-site-relative deploy link with the canonical repository source URL",
+    "excluded": ["provider", "fleet", "Brain", "tag", "push", "publish", "other mAInd files"]
+  },
+  "provenance": {
+    "source_system": "owner-chat",
+    "record_id": "codex-thread-01a00dfd-b574-7ae0-86c8-31a4366bbdfe-owner-finish",
+    "record_version": "1",
+    "verified": true
+  },
+  "at": "2026-08-17T04:43:00Z"
+}

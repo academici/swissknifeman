@@ -1,0 +1,238 @@
+{
+  "$schema": "urn:swissknifeman:p7.1-skill-replay-admission:v1",
+  "contract_version": "1.0.0",
+  "status": "frozen",
+  "decision": "D87",
+  "selection": {
+    "policy": "exact-applied-semantic-skill-rows-from-p4.3-field-cut",
+    "locale_corpus": {
+      "path": "configs/locale-corpus-v1.json",
+      "sha256": "e988b28732d0b53eec43f67dd119bcd8c4bec8840229550eae0bc00a8a84f00f"
+    },
+    "p4_3_manifest": {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P4.3/manifest.json",
+      "sha256": "23dc15682ea7ae28be94f895c3c53fa4f0590b678ccf25194c6d4cca190b650f",
+      "package_commit": "86d52109",
+      "status": "accepted"
+    },
+    "capability_ids": [
+      "skill.repository-bootstrap.field-feedback-loop",
+      "skill.repository-bootstrap.package-architecture",
+      "skill.repository-bootstrap.skill-authoring"
+    ]
+  },
+  "providers": [
+    {
+      "provider_id": "claude-code",
+      "projection_pattern": ".claude/skills/{skill_name}/SKILL.md",
+      "projection_owner": "skiller registry",
+      "invocation_owner": "provider-skill-adapter-v1",
+      "unavailable_outcome": "release-blocker"
+    },
+    {
+      "provider_id": "codex",
+      "projection_pattern": ".agents/skills/{skill_name}/SKILL.md",
+      "projection_owner": "skiller registry",
+      "invocation_owner": "provider-skill-adapter-v1",
+      "unavailable_outcome": "release-blocker"
+    }
+  ],
+  "variants": {
+    "no-skill": "Selected skill absent from discovery; no Skill Core injection; paired repository snapshot, prompt, model route and tool policy remain equal.",
+    "minimum-core": "Inject only the capability's minimum_core instructions; expose no provider projection or ablation unit.",
+    "provider-tuned": "Use provider-native discovery/invocation plus the frozen bootstrap projection and same canonical skill; provider mechanics are additive and never fork meaning."
+  },
+  "run_matrix": {
+    "capabilities": 3,
+    "workflows_per_capability": 3,
+    "providers": 2,
+    "variants": 3,
+    "expected_runs": 54,
+    "required_identity_fields": [
+      "capability_id",
+      "workflow_id",
+      "provider_id",
+      "provider_version",
+      "model_id",
+      "observed_at",
+      "variant",
+      "tool_identity",
+      "source_snapshot_sha256",
+      "privacy_redactions",
+      "outcome",
+      "evidence_ref"
+    ],
+    "ordering": ["capability_id", "workflow_id", "provider_id", "variant"]
+  },
+  "capabilities": [
+    {
+      "capability_id": "skill.repository-bootstrap.skill-authoring",
+      "skill_name": "skill-authoring",
+      "skill_id": "repository-bootstrap/skill-authoring",
+      "source_path": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
+      "source_sha256": "00709e9c9df47c24650a715dee1e679803a0fc3f00237b44f253c83c9546c072",
+      "projection_sha256": "4391af2bae9485810396736c007607156191f9b002a2870a4979e420ecd46653",
+      "minimum_core": [
+        "Activate for changes under packages/skiller/skills or the skill generator and preserve public identity unless explicitly changed.",
+        "Edit canonical English SKILL.md and owned handwritten assets only; provider projections, registries, locks and marketplaces are generated.",
+        "Keep one provider-neutral meaning; adapters are additive and each provider needs its own replay/check.",
+        "Inspect target/assets/provenance, edit the owner, add focused tests or evals, regenerate/check registry, then run affected validation and release/docs gates."
+      ],
+      "ablation_units": [
+        {"id": "sa.canonical-layout-frontmatter", "sections": ["Canonical layout", "Frontmatter"], "regression": "non-canonical source or incomplete identity/provenance"},
+        {"id": "sa.focused-body", "sections": ["Body design"], "regression": "broad duplicated guidance in entry carrier"},
+        {"id": "sa.canon-literals", "sections": ["Canon literals"], "regression": "machine literal changed without canonical marker/test"},
+        {"id": "sa.provenance", "sections": ["Provenance (root-bootstrap, P1.2)"], "regression": "unprovenanced/proprietary copy or generated projection edit"},
+        {"id": "sa.overlap-dependencies", "sections": ["Overlap and dependencies"], "regression": "duplicate owner or manufactured/cyclic edge"},
+        {"id": "sa.provider-parity", "sections": ["Provider parity"], "regression": "byte equality or peer pass treated as provider verification"},
+        {"id": "sa.review-checklist", "sections": ["Review checklist"], "regression": "owned acceptance gate omitted"}
+      ],
+      "workflows": [
+        {
+          "id": "skill-authoring.positive.canonical-change",
+          "kind": "positive",
+          "invocation_intent": "implicit",
+          "prompt": "A measured failure requires changing an existing registry skill under packages/skiller/skills. Without editing files, return the canonical source/owned assets, forbidden generated targets, focused test or eval, regeneration command, freshness check and affected validation in execution order.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["canonical-source-first", "generated-targets-forbidden", "focused-test-or-eval", "registry-regenerate-then-check", "affected-validation"],
+          "forbidden_assertions": ["edit-generated-projection", "parallel-locale-canon", "provider-pass-implies-peer-pass"]
+        },
+        {
+          "id": "skill-authoring.negative.runtime-code",
+          "kind": "negative",
+          "invocation_intent": "implicit",
+          "prompt": "Diagnose a hypothetical off-by-one defect in a Python runtime module outside packages/skiller/skills and outside the skill generator. Do not edit files; name only the owning code/test surface and validation.",
+          "expected_skill_activation": "forbidden",
+          "required_assertions": ["runtime-owner-only", "focused-runtime-validation"],
+          "forbidden_assertions": ["skill-registry-workflow", "skill-projection-edit", "unrelated-skill-compaction"]
+        },
+        {
+          "id": "skill-authoring.boundary.generated-projection",
+          "kind": "boundary",
+          "invocation_intent": "explicit",
+          "prompt": "{{explicit_skill_selector}} Fix a Codex skill instruction by editing .agents/skills/skill-authoring/SKILL.md directly. Do not edit files; decide whether that target is writable and give the exact safe owner path and regeneration/check sequence.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["refuse-generated-edit", "canonical-skill-path", "skiller-registry", "registry-check"],
+          "forbidden_assertions": ["projection-as-source", "copy-provider-meaning", "skip-generator"]
+        }
+      ]
+    },
+    {
+      "capability_id": "skill.repository-bootstrap.package-architecture",
+      "skill_name": "package-architecture",
+      "skill_id": "repository-bootstrap/package-architecture",
+      "source_path": "packages/skiller/skills/repository-bootstrap/package-architecture/SKILL.md",
+      "source_sha256": "6dab20d1f98ccf99d9a681472bfcdcfe2e866b226a58f5d6e0c16e3da6b28d1b",
+      "projection_sha256": "c6f472ed4758231af14cd2963a161a7750d166a0ec72f8fb3326df682041e88e",
+      "minimum_core": [
+        "Activate before non-trivial repository work touching skills, CLIs, scripts, configs, profiles, registry or manifests.",
+        "Identify the single source owner, generated targets, package boundary and validation command before mutation.",
+        "Never hand-edit generated artifacts; repair and invoke their owning generator.",
+        "Keep skiller, harness, maind and umbrella routing responsibilities distinct; harness owns environment writes."
+      ],
+      "ablation_units": [
+        {"id": "pa.distribution-channels", "sections": ["Distribution channels"], "regression": "wrong channel or unmanaged overwrite"},
+        {"id": "pa.source-only-bootstrap", "sections": ["Distribution channels"], "regression": "repository-bootstrap published/vendored as consumer bucket"},
+        {"id": "pa.config-separation", "sections": ["Two project configs (don't confuse, don't merge)"], "regression": "config contracts merged or wrong owner writes key"},
+        {"id": "pa.runtime-consumption", "sections": ["Runtime skill consumption (anti-straw-man)"], "regression": "invented skiller runtime loader/cache"},
+        {"id": "pa.cli-routing-state", "sections": ["CLI bin/skiller"], "regression": "library command lacks launcher or duplicates package logic"},
+        {"id": "pa.generated-owner-map", "sections": ["Generated artifacts — never hand-edited"], "regression": "generated carrier patched directly"},
+        {"id": "pa.validation", "sections": ["Validation — scripts/validate.sh (== CI)"], "regression": "readiness claimed without owning validation/check"},
+        {"id": "pa.harness-delegation", "sections": ["integrate wizard"], "regression": "skiller duplicates harness environment writes"},
+        {"id": "pa.sync-matrix", "sections": ["Sync matrix (what pulls what)"], "regression": "owned generated/release carrier left stale"}
+      ],
+      "workflows": [
+        {
+          "id": "package-architecture.positive.cross-owner-change",
+          "kind": "positive",
+          "invocation_intent": "implicit",
+          "prompt": "A proposed feature changes skill selection policy and also installs provider hooks. Without editing files, map each responsibility to skiller or harness, name canonical sources/generators, and give the minimal validation chain without duplicating package logic.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["skiller-policy-owner", "harness-environment-owner", "no-duplicate-runtime", "generator-before-check", "package-validations"],
+          "forbidden_assertions": ["skiller-writes-hooks", "root-router-business-logic", "generated-file-edit"]
+        },
+        {
+          "id": "package-architecture.negative.application-feature",
+          "kind": "negative",
+          "invocation_intent": "implicit",
+          "prompt": "Design a hypothetical application-domain validation rule unrelated to swissknifeman skills, CLIs, configs, profiles, registries or manifests. Do not edit files; state the local application owner only.",
+          "expected_skill_activation": "forbidden",
+          "required_assertions": ["application-owner-only"],
+          "forbidden_assertions": ["swissknifeman-package-tour", "registry-regeneration", "unrelated-harness-route"]
+        },
+        {
+          "id": "package-architecture.boundary.generated-bootstrap",
+          "kind": "boundary",
+          "invocation_intent": "explicit",
+          "prompt": "{{explicit_skill_selector}} A root-bootstrap Codex projection is stale. Without editing files, identify whether .agents/skills is source or output, name its canonical source and generator, and state the freshness and package validation checks.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["projection-is-generated", "canonical-repository-bootstrap-source", "skiller-registry-owner", "registry-check", "skiller-validation"],
+          "forbidden_assertions": ["direct-projection-patch", "consumer-publication", "second-source"]
+        }
+      ]
+    },
+    {
+      "capability_id": "skill.repository-bootstrap.field-feedback-loop",
+      "skill_name": "field-feedback-loop",
+      "skill_id": "repository-bootstrap/field-feedback-loop",
+      "source_path": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
+      "source_sha256": "882433d8d69485887383712ac99a96f2c8c214906bd786192054b17968f71c11",
+      "projection_sha256": "f26c079bb9987a3beb8569ce74f207ec71b4ed0d0fbf83ea9e7e48b4f84ff47e",
+      "minimum_core": [
+        "Activate only when project integration/setup behavior diverges from promised tooling or instruction.",
+        "Classify the deviation as package code, generated artifact, stale instruction or project-specific behavior before choosing an owner.",
+        "Fix an unambiguous local defect at its owner with a focused test; repair generated drift at the generator.",
+        "For a new or uncertain case, verify the fact, preserve the observation and route measured follow-up instead of speculative implementation."
+      ],
+      "ablation_units": [
+        {"id": "ff.activation-examples", "sections": ["When to activate"], "regression": "improvement loop without concrete deviation"},
+        {"id": "ff.owner-classification", "sections": ["Rule (classify the deviation → route)"], "regression": "symptom patched without owner classification"},
+        {"id": "ff.obvious-bug-route", "sections": ["Rule (classify the deviation → route)"], "regression": "clear local defect deferred or generated output edited"},
+        {"id": "ff.fact-verification", "sections": ["Rule (classify the deviation → route)"], "regression": "unverified hypothesis treated as defect"},
+        {"id": "ff.durable-capture", "sections": ["Rule (classify the deviation → route)"], "regression": "field observation remains only in chat/workaround"},
+        {"id": "ff.follow-up-receiver", "sections": ["Rule (classify the deviation → route)"], "regression": "speculative feature or receiver without criterion"},
+        {"id": "ff.locality-boundary", "sections": ["Rule (classify the deviation → route)"], "regression": "shared tooling changed for one-project hypothesis"},
+        {"id": "ff.anti-patterns", "sections": ["Anti-patterns"], "regression": "silent workaround, overfit, speculation or generated edit"}
+      ],
+      "workflows": [
+        {
+          "id": "field-feedback-loop.positive.hook-path-defect",
+          "kind": "positive",
+          "invocation_intent": "implicit",
+          "prompt": "A project setup reports Codex hooks installed, but the registered hook exits 127 because its executable path is wrong. Without editing files or contacting external systems, classify the deviation, identify the owning source/generator/test, and state the bounded fix-and-validation path.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["concrete-deviation", "local-obvious-bug", "effective-registration-owner", "focused-hook-test", "generated-owner-check"],
+          "forbidden_assertions": ["silent-workaround", "edit-generated-registration", "speculative-redesign"]
+        },
+        {
+          "id": "field-feedback-loop.negative.successful-setup",
+          "kind": "negative",
+          "invocation_intent": "implicit",
+          "prompt": "A project setup and health check both match their documented outcomes. Without editing files, summarize the successful result and stop.",
+          "expected_skill_activation": "forbidden",
+          "required_assertions": ["no-deviation", "no-follow-up"],
+          "forbidden_assertions": ["roadmap", "issue", "shared-tooling-change", "memory-capture"]
+        },
+        {
+          "id": "field-feedback-loop.boundary.project-specific-layout",
+          "kind": "boundary",
+          "invocation_intent": "explicit",
+          "prompt": "{{explicit_skill_selector}} One project with an unusual symlink layout behaves differently during sync, but it is not yet clear whether the tool or project is wrong. Without editing files or creating external records, give the verification, durable-capture payload, receiver decision and condition that would authorize a shared fix.",
+          "expected_skill_activation": "required",
+          "required_assertions": ["uncertain-classification", "verify-before-fix", "durable-capture-payload", "roadmap-or-issue-criterion", "shared-fix-trigger"],
+          "forbidden_assertions": ["immediate-shared-patch", "project-overfit", "external-write"]
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "source_gate": "Every bound source/projection/corpus/manifest digest matches before the first provider call.",
+    "matrix_gate": "Exactly 54 base rows exist; missing, extra, duplicate, skipped or unavailable rows are release blockers.",
+    "grader_gate": "Every required/forbidden assertion is recorded per run; prose-only and aggregate-score-only verdicts are invalid.",
+    "non_masking_gate": "Provider/capability/workflow rows remain independent; no green peer masks another row.",
+    "discrimination_gate": "Per provider/capability, provider-tuned is no worse than no-skill on all workflows, has no negative false activation, and strictly improves at least one positive/boundary assertion.",
+    "ablation_gate": "Ablate one declared unit at a time on both providers; retain it only when its declared regression is observed, otherwise record a removal candidate and keep P7.1 non-green pending the human verdict.",
+    "privacy_gate": "Persist structured assertions, bounded trace summaries and redacted references only; hidden reasoning, secrets, roots, settings values and raw provider payloads are forbidden.",
+    "mutation_gate": "Replays are repository/fleet read-only; prompts forbid edits/external records and runner commands contain no fix/apply/repair/publish/push/mutation flag."
+  }
+}

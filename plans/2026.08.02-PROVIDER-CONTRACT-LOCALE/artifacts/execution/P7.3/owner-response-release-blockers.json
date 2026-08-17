@@ -1,0 +1,17 @@
+{
+  "decision_id": "P7.3-release-blocker-disposition",
+  "action_version": 1,
+  "selected_option": "revise-acceptance",
+  "resolver": "owner",
+  "resolver_id": "repository_owner",
+  "policy_digest": "1849b2b299451bc3e6ea6ffaba638ace3dfdc48bc9ada1aaa092abbb940086c1",
+  "action_digest": "b87c5b8eb3cc9f4cc492cf1972c56d9b1c24dbac0c511687256485d866ac3cf2",
+  "reason_code": "P5_DECISION_OWNER_APPROVED",
+  "provenance": {
+    "source_system": "owner-chat",
+    "record_id": "codex-thread-01a00dee-1a5f-7a73-90e9-a04a2adb4eb1-owner-do-it",
+    "record_version": "1",
+    "verified": true
+  },
+  "at": "2026-08-17T04:20:43Z"
+}

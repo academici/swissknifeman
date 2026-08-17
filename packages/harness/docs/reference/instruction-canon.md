@@ -84,6 +84,16 @@ harness instructions <plan|check|adopt|apply|repair> [--target P]
 `plan` и `check` — no-write; `apply`/`repair`/`adopt` пишут только после явной
 авторизации оператора.
 
+### Provider-safe operations
+
+Provider projections remain additive over this shared instruction contract. Before a change, run
+`harness instructions plan` or `check` for the exact target and inspect the provider-qualified
+result; an `unsupported`, missing, or non-clean result is not a fallback to another provider.
+`apply`, `repair`, and `adopt` each require their own explicit authority and preserve the preimage
+needed by the documented rollback path. A failed readback stays non-green: restore only the
+declared owned preimage, then repeat `check`. Do not treat a dry-run, generated reference, or this
+page as permission to mutate a project or publish a release.
+
 ## Adoption-режим: откат
 
 Каждое `adopt` перед мутацией пишет pre-image в `--preimage-dir` и записывает его

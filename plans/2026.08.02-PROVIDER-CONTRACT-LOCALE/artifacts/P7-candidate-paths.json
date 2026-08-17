@@ -1,0 +1,584 @@
+{
+  "schema_version": "p7-candidate-paths/v1",
+  "anchor": "519af66def68027738a0158142cf7a19050d3983",
+  "candidate_paths": [
+    {
+      "path": "CHANGELOG.md",
+      "preimage_sha256": "408d474ee7995387fcf6017e0fa2c3d25e1c0e9f75bed94b62367abf43205a61"
+    },
+    {
+      "path": "docs/develop.md",
+      "preimage_sha256": "9cfef1bbd276f26c185d977ffdac25e350de62db2da04bf25f500de91092ba1f"
+    },
+    {
+      "path": "docs/provider-support.md",
+      "preimage_sha256": "807e6cf2a10f7345aa91dbd289b4617c8efb1be28f71a239c4ce89af6f551395"
+    },
+    {
+      "path": "docs/reference.md",
+      "preimage_sha256": "554bd09270419fb623ef5fd90b869112b64fb5aa865e4fa12ec9ee92e9583aa8"
+    },
+    {
+      "path": "docs/status.md",
+      "preimage_sha256": "454869df7e338f4b2bffaf7ba133bc86a3a9685cbafa1efa892fd5abfde23522"
+    },
+    {
+      "path": "docs/task/reference/provider-commands.md",
+      "preimage_sha256": "507a434e3f42cf20ac4b31be782f8220cf14b7cd3f637ae4b5044c1fdbff292a"
+    },
+    {
+      "path": "packages/harness/docs/reference/instruction-canon.md",
+      "preimage_sha256": "ae0cf74535dc9ffee5f1a941ab458722884ceb0a3a1843d3a482360a7dfb84e7"
+    },
+    {
+      "path": "packages/skiller/docs/multi-provider-distribution.md",
+      "preimage_sha256": "0de5c4fafed0192a762011a10631f594ef9d1ce20c945f570cd3214b71866a4d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-candidate-paths.json",
+      "preimage_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-decision-crosswalk.json",
+      "preimage_sha256": "8a74dda5165bd4345aa5bf173ee9280172b5afdad4390aabc126c52ff6d663f7"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-final-release-audit.md",
+      "preimage_sha256": "5ad67ed7625a886e59adecdc8ac67cb132ae59bc897041378af59021dc48764b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-final-worktree-status.json",
+      "preimage_sha256": "4c7fca0e841f91dae4ec026b679e3ea79cc1881f95dfce618f56fed8cecc3785"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-operations-readback.md",
+      "preimage_sha256": "57b84aeda5d5689e4d9ce0f83150c49284b2fe1807921650d281eb3622960802"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-release-candidate-manifest.md",
+      "preimage_sha256": "70e31ea13e6e96520ae6bcdc876ab4715e9e1ea9767a6bea49db6b6791973fee"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7-remediation-manifest.json",
+      "preimage_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/acceptance-results.json",
+      "preimage_sha256": "be38fad99d76bc157efbe2d252633577ef3debb1c8be45cb151d7dbf3c76025c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/capability-expectations.json",
+      "preimage_sha256": "cc1559dd3e7f66a0db4bb8caeeaea2906d7aad7424bf34c90b42a3ac7bb68fe6"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/manifest.json",
+      "preimage_sha256": "a5d16651c9f24a6ed97a31bbfdcbb45eb9436c5c01731d6b41309d961036ec26"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/project-set.json",
+      "preimage_sha256": "ca774c15525960a6df3071ed5b5b51bbad308ebdba06e675e9d6dbe8fefc8987"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/release-blockers.json",
+      "preimage_sha256": "f23721271c91c236c0e256842fa5fbe92b4868fb948719978863381f423c12fa"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/skill-ablation-results.json",
+      "preimage_sha256": "bd7068142dcc0b8b79837dee7b9a51d0ebd27d69796ff68612cf3ba4ced86f7c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/skill-replay-results.json",
+      "preimage_sha256": "7a61521980d123915d824e984201fda06acb7c94fc7008d35e71e56916250d4a"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/evidence/verify.py",
+      "preimage_sha256": "339a6943c4a9b25477e82f73d0a3779969e3bf41ef7575fcec3aea04337b2e7f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/P7.1/replay-admission-v1.json",
+      "preimage_sha256": "08f97239b4a79b7542f6a256a1017a57bec5e6db30f77b1d657288c368612062"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.2/p7.1-evidence-precondition.md",
+      "preimage_sha256": "2e90443cc8f241e690dee18cf48322bb0fc03c1667faccd26536359a24d1f804"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.3/decision-request-read-budget.json",
+      "preimage_sha256": "145e15c6e50644a9a1c199f8c895b4eea070833279107227adca13abd6c90ec5"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.3/decision-request-release-blockers.json",
+      "preimage_sha256": "3b7d8b1b5e8f85111489a4eecd183ac2cb830b861996542f489b4851aab2574f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.3/owner-response-maind-docs-scope.json",
+      "preimage_sha256": "d06b14f6a949535fcee7448c408c0ac192e15a54f12ce2e203ed693eae4fa105"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.3/owner-response-read-budget.json",
+      "preimage_sha256": "bddbfc852099b7266e0f17370973e9eb80242063617c78ede0a61003d44fec9b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/execution/P7.3/owner-response-release-blockers.json",
+      "preimage_sha256": "33a75f8cf2d1e0c700dd8a39fcaf2352f45b34cffafd058cfd870647d5908413"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p7-provider-acceptance.py",
+      "preimage_sha256": "bc2b9357b44af40f28f11144442bea09b96d11a9670d1e1ee785f5de24676b12"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/artifacts/p7-skill-replay.py",
+      "preimage_sha256": "ca5d8c199b8895bd3f4af38f4a7fbdf5ba65b08030f094e098013a501365b444"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D87-p7.1-replay-admission.md",
+      "preimage_sha256": "eea742bb59a6ea0a4c4af28053eac81a9447c6f2c33f7f41db23d01198116c1b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D88-p7-package-boundary.md",
+      "preimage_sha256": "eeb530e01c5af19b154c18d1ef7b794f8c2bfd74230a99a0ce568bed306add52"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D89-p7.3-bounded-nonreleasable-candidate.md",
+      "preimage_sha256": "9a456ddcb8d9bd5ee6434528a66c45e1f3fff5f0b5d03f6cf7f7b3cdc91508cb"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D90-p7-red-audit-forward-recovery.md",
+      "preimage_sha256": "411ce7956f6b6b03193fb63d1becbe1841c1b3b05141fb4ebef484fa67d183bd"
+    },
+    {
+      "path": "scripts/provider-docs.py",
+      "preimage_sha256": "f2cab4382836a1724690d4dc1574fa0eeed8789b29c29d067287e063b1a6860a"
+    }
+  ],
+  "foreign_paths": [
+    {
+      "path": "packages/maind/docs/guide/systemd.md",
+      "preimage_sha256": "79b258888fcbe231d5b71ca6771f36dfb7c490a29333cbf539bf16d3756b933e"
+    },
+    {
+      "path": "packages/task/lib/task/token_estimate.py",
+      "preimage_sha256": "0cac9d374b0ba84be36b558a70e6a7eea35266a375c40af36f593d4515fcb8b7"
+    },
+    {
+      "path": "packages/task/tests/test_token_estimate.py",
+      "preimage_sha256": "b25d550808e3592bf36db44011582a3ae79faff2d392edce9c146fa1a9495e38"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/brief/01-refinements.md",
+      "preimage_sha256": "5abeb370cdc0f830163366977ed597da956ef2803ef8322cc9daeee9090c0938"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.10.json",
+      "preimage_sha256": "0954b2096dd6d9653cb686850814a7f2f47409a2d285367647dffe15024f6289"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.3.json",
+      "preimage_sha256": "e19ba52d9a42f1b543601ae2b85039c0fb0b718b490f56ae980879856263395e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.6.json",
+      "preimage_sha256": "4962f5a28c633c3c43a3cbf7e020b4bc317b246069a6ac7b5a26775732d9fa1d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P0.8.json",
+      "preimage_sha256": "292949d36ffddd6bfe5e4ab49a0a03a5c52acbc102676e82504dd8a19fbc1e78"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P1.1.json",
+      "preimage_sha256": "3119c1738f0cfcba2be024cb4cc2caf0486d09810d75af9c82748db1223f2e4a"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P1.3.json",
+      "preimage_sha256": "6672f1d6d750fa136ba187b8d6570a934b1ac3d04d608602af2cc95d76e50267"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P2.2.json",
+      "preimage_sha256": "d9ba15553f38cf2b8b35bcd0d0393dc6be1a0a51d3368ba7050c965c9f3e051c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P2.3.json",
+      "preimage_sha256": "a29e010299c43ab4a100daa5f97561f35cc8421070be5b1ffa5508c78fb82c71"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P3.2.json",
+      "preimage_sha256": "73a614c8a6b084ae987593c214059f797005691cbfc782dda2539aaf6212424d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P3.3.json",
+      "preimage_sha256": "907e9be8d55d51256ca1e601a8a1da34ccf6d90f81b28ecbda09cc080ae87a57"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P7.1.json",
+      "preimage_sha256": "a1561540b5e3e95057b75aae481bf4da7b3bccaf81d9a90c09199cb7d12a0c1c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P7.2.json",
+      "preimage_sha256": "700064ff8a04f989605e93a4bb9212475179dc6ca8c0d1abf5041ceb38c5494e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P7.3.json",
+      "preimage_sha256": "cc258ccf418ff6a1d6f7cb15a7edd67f88a8f2f6931cb6ba1c9c0a6580e5b248"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/bundles/P7.5.json",
+      "preimage_sha256": "4d03cb2c2a04b8898c61af529feb91418a8c04a771c98c4b58da0aa2743198fc"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_archive.md",
+      "preimage_sha256": "c01eb1a1b2f79ade4f914f4a67e9c0a1a4e2c073b65fb44eeca6bffb7a3806ec"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_current.md",
+      "preimage_sha256": "4b5361c43eaec2a17b6af79e833e47b7453dd777f87fd8a0be8be20dc3937851"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_gates.md",
+      "preimage_sha256": "46c93f501f993314edbffaf30b41cc96cef610f2f6c4b79662741587498f4e70"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/_index.md",
+      "preimage_sha256": "aa5aee3fb60e5cbcf1bb44a86155edcf30afa537b9578d34d31328a04a456452"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/queue.jsonl",
+      "preimage_sha256": "af655500bb124cd8dce7e14d95a48f3d27886ec4dc8bd0c68420d89fa95a2151"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P6.3-7dcc74680c01-336ae9798ec4.md",
+      "preimage_sha256": "2ab3fb8cba5a1bbdc52e9786ad89e8c1c7414ab86246962de37efc945b05cacc"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.1-20f3df9916e2-336ae9798ec4.md",
+      "preimage_sha256": "83de3d12298cb18300f8d18e04f26f824a9334845f5806a6e30c5eb8e3b11194"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.1-78d68ac22d6e-336ae9798ec4.md",
+      "preimage_sha256": "d04dc3e8115dbd0e0fd12e4b907171bbb4aab33d57144c540be0faf5b3c70fbd"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.1-e236aa576843-336ae9798ec4.md",
+      "preimage_sha256": "f397118c8e223326e0315f9267edb9e9f3e4f26f5cf876718423566608e7131e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.2-1149f3588a64-336ae9798ec4.md",
+      "preimage_sha256": "f21309dbf3d0d54eaf1387e22b3b7b3641fcefe3c5d5f7b3ddc68585515a882f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.2-824e104a01c4-336ae9798ec4.md",
+      "preimage_sha256": "b7340276346fefce500e9d0a59ca3f36c29cd67f34726c3223753448f8f1c0fb"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.3-b0570678c5b9-336ae9798ec4.md",
+      "preimage_sha256": "23d7edee48723fe25781d1bdb6a4ba4f59326fbce6f0998d67ebfa140188a47c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.2-downstream-P7.4-b1ea13d8b1c7-336ae9798ec4.md",
+      "preimage_sha256": "f4d58a1df5e02105a2d0c74c56a2427475be9904995311326a3192d123ac4743"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.1-20f3df9916e2-336ae9798ec4.md",
+      "preimage_sha256": "33c7dba7d2a1dc8718868e27bba6d5f8af85bc03f97ff4e3e80e32362f06839b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.1-78d68ac22d6e-336ae9798ec4.md",
+      "preimage_sha256": "454493e2127d464f5863e16702e5180a7620339eaac626d24990b18d6165a6f0"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.1-78d68ac22d6e-519af66def68.md",
+      "preimage_sha256": "7549a023cf2e8b36461c00878c306bcba1df1fd64ac4157341368174bd0760e1"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.1-e236aa576843-336ae9798ec4.md",
+      "preimage_sha256": "da7f087e1c46463eb87693170f00499a2e1c66c0ed4ee5fa61cee1e8293e7c9c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.3-2f8fe3b97878-519af66def68.md",
+      "preimage_sha256": "df347d575ec80e6a299731b5e22a963683e9a82a72a0e2a3460aca2b5c1323c4"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.3-b0570678c5b9-336ae9798ec4.md",
+      "preimage_sha256": "274ed0021abfd008e07246aabd4e09389e2bc4c89466caa3f610fb23ff80f3df"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.4-b1ea13d8b1c7-336ae9798ec4.md",
+      "preimage_sha256": "b2ad472c2f20073ee8ac3dc1b9141e0d7d9984f385ae22e5bc228c9b2b22fe4c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P6.3-downstream-P7.4-b1ea13d8b1c7-519af66def68.md",
+      "preimage_sha256": "17d34f31f8b634546ade7999196aff5fe6e1aefdc56ff3f8abeea7ae48db3304"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7-design-preflight-2026-08-17.md",
+      "preimage_sha256": "79590ebc6fc153bbd46d9c27ddecb2c530f687d1771b25b3a4402fc42287d72c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7-phase-red-recovery-return-qualification-2026-08-17.md",
+      "preimage_sha256": "27cb3d56946f54b58386d4a196d8a427201971a4f9a38d380b560ab5c65a849d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7-provider-acceptance.md",
+      "preimage_sha256": "ebfad40144dcc7bf836ccb199d6bd4c386a1ab2dfec2280d0d094cef971fa3c5"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7-release-verdict.md",
+      "preimage_sha256": "70e95eb867ce185749a157f77cf1ce6be3b9409c44d7985ebbb12c366115e02f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.2-1149f3588a64-336ae9798ec4.md",
+      "preimage_sha256": "87720b6ba977f2ebbd31a88050adc6f6d27481d99b64099c39e11ea18be2254e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.2-1149f3588a64-519af66def68.md",
+      "preimage_sha256": "0e600af0c8bf50fddc7e15e564b5a781ad133432116b8025c347ef9fa6cb2355"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.2-824e104a01c4-336ae9798ec4.md",
+      "preimage_sha256": "73d170975a7ee2e551dc8a232d74b73da5860decd54b49667dc5fbcbf851369f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.3-2f8fe3b97878-519af66def68.md",
+      "preimage_sha256": "089798352c85265134d948b6f62c6bd6b3084d066710cfa3e378730beb87f0c0"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.3-b0570678c5b9-336ae9798ec4.md",
+      "preimage_sha256": "694481b4655ebe0073ad8585ca3365b0c11b8cb299c322489d4e8a4f58be4d62"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.4-2b36799c3747-519af66def68.md",
+      "preimage_sha256": "ae827cca0b36e1b221493ab61cd682e00c7b776d9ecfbead56bfc125460f5969"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.4-b1ea13d8b1c7-336ae9798ec4.md",
+      "preimage_sha256": "9c730da076d7c4544d246b3ab82e0f4083e2ee1a8e8fde4453303e9357dc8a28"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.4-b1ea13d8b1c7-519af66def68.md",
+      "preimage_sha256": "b4f5b41749e725cce3642a2662a292c3212eeb9ccd9f1d97b3367ab86c505943"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.4-c10899f16257-519af66def68.md",
+      "preimage_sha256": "bb28610025b2dd34e9d181af5bf7be6df5bfb1e66e10e0d2e9200da56b623ee1"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.4-f73c1517fd37-519af66def68.md",
+      "preimage_sha256": "786ea6da3f4c79e0202f59eab99c14908367eab48ca7eed7d41c7ceeeb7a64c2"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.5-2aab2495fa33-519af66def68.md",
+      "preimage_sha256": "d861b31956af3f056ed14a8beed981ca7f4b24368034b38aa8e51815fed342d5"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.1-downstream-P7.5-3953e744f6ab-519af66def68.md",
+      "preimage_sha256": "38ee20021dfa6dcac8d4093e97a477a38d84a1a86d80fd8fd49f20ff3470f2f2"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.2-downstream-P7.3-2f8fe3b97878-519af66def68.md",
+      "preimage_sha256": "a0076d7504b96297b22877e2fd1c3b6f28a319ccecfce5e98e693b747a30dc81"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.2-downstream-P7.3-b0570678c5b9-519af66def68.md",
+      "preimage_sha256": "12a80b329fb33e6b5afc4fa4fce4d122342f62c94f003db5181b5c757afa0330"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.2-downstream-P7.4-b1ea13d8b1c7-519af66def68.md",
+      "preimage_sha256": "e01518af421156127075c7be58b7b7ab190f7c00ab176394094fc8dac405eb7d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-admission-2026-08-17.md",
+      "preimage_sha256": "f9477ddace695cbffbb96370aadac0464c1187e5b7988d1715831e854df1af20"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.4-2b36799c3747-519af66def68.md",
+      "preimage_sha256": "b096569fb4be120a8d39bc76c7686b2948829d1bb1e408fd670c2eb10473e753"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.4-b1ea13d8b1c7-519af66def68.md",
+      "preimage_sha256": "8513010e044ccc1eb780168b0b3ed1b32290ed7820d2f440aaecb700e13aa5e4"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.4-c10899f16257-519af66def68.md",
+      "preimage_sha256": "619174c74ec30ad7457cef1e788d38e287010d0485a7c8504ac7ecc67ac45d3e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.5-2aab2495fa33-519af66def68.md",
+      "preimage_sha256": "7fc7101ca31576cc3262aec699ce5aab8f07fd6556996a47773e76123495a62c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.5-3953e744f6ab-519af66def68.md",
+      "preimage_sha256": "4b4687875cd1ae68c017fcdb3139bac9a99e1835f215386045b36a414d6d71bf"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.6-41127c6e7388-519af66def68.md",
+      "preimage_sha256": "9ec427d54b19e69a595cf59adf71dfb719d9726d212cebccb762a9437e023205"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.6-91a95532d5e7-519af66def68.md",
+      "preimage_sha256": "fb3da187b5f60da5fddd381320b66a19b2db1f28c577c7f35c1bc08d7e679b26"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-downstream-P7.7-8e467df5ddf0-519af66def68.md",
+      "preimage_sha256": "59e3be069e05af19c13cfc9582b4d4d717d2fdb7d060b5b3cefbe927f2a5a80b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-maind-standalone-docs-build.md",
+      "preimage_sha256": "2cd34d10e432fe3dfab26460c95d13c66249dd5641d4d62aa0b0670373087d91"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-plan-design-return-qualification-2026-08-17.md",
+      "preimage_sha256": "0fde36f735b9ccaa4d1af3d0c0050f15f04c60d6dfe2a581ffdfde7ddfa09510"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.3-write-site-projection-return-qualification-2026-08-17.md",
+      "preimage_sha256": "95a3ce4621c274e9290fb91b5aaa882ab4edc25e03bab7dd641329f8fa3d118e"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/findings/P7.5-plan-design-return-review-2026-08-17.md",
+      "preimage_sha256": "1fd60a6559f6eb66b5d9c526e209a300626937ee5d7b1f2da9e999c773fd4c08"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/handoff.md",
+      "preimage_sha256": "0b2f134def6bc9e70ef1b016b816789878a5ed9b660241477d6c33c94f3f54f9"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/index.md",
+      "preimage_sha256": "c37134c837a5d79e65b33383c9872ec86213aa5b8ee5f2e15d3048581e9f43d1"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/journal.jsonl",
+      "preimage_sha256": "c2e05170ae09bd9deae876bece9d06aa17c67df9086c6da100d7142d08da8d60"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/open-questions.md",
+      "preimage_sha256": "edc4893a45c22500ae1851de6ab5372e02c4835bdfada337267e026c36d90541"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.1.md",
+      "preimage_sha256": "78d68ac22d6e4b913fec3e5beef55589d4b10ec9cfa0508c53ffb7c8d68481bd"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.1.state.md",
+      "preimage_sha256": "4f85a9b6ab21285105c82b55897ff608fc0454cb6f5191a38d6f819aeb240640"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.2.md",
+      "preimage_sha256": "1149f3588a6437c9ad4682ecd3457e3df4fac7ef64159e6c85fc697c73c5fbb5"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.2.state.md",
+      "preimage_sha256": "1e63fb26549aa596bfd69301e776a09f3fef2c84f51f3bc79cc9aed8e55c32e1"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.3.md",
+      "preimage_sha256": "2f8fe3b978785935a609c8183538be37ec60d725566d6b4da14d03ff66a890f2"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.3.state.md",
+      "preimage_sha256": "29ec2318cc218652b23897ac65bad53d28202f536ec09046cde2f283cbcdff59"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.4.md",
+      "preimage_sha256": "2b36799c3747aae4b82d6e7d338881c37c367134d9f34a8124c46113ed6312e2"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.4.state.md",
+      "preimage_sha256": "20d629f98bb413c9659154990fa29c9483048fa1b7d9a90c677d4f93d2eb2c96"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.5.md",
+      "preimage_sha256": "2aab2495fa33a0eea211e4633ca588045a8755498137a09fb8ef223df00e3a05"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.5.state.md",
+      "preimage_sha256": "2308c9c278e5c5aa019ecdff2432c7aee4ecab06bf9ec973929bd2864c3e594c"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.6.md",
+      "preimage_sha256": "91a95532d5e74427fe2a89c80185b967816e38f8c8b8639d40f9df933d36bbf8"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.6.state.md",
+      "preimage_sha256": "e1bc92932a0323749b89b1dea1e8fbfec84a93e236aa5153a92d12f72ac7d693"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.7.md",
+      "preimage_sha256": "8e467df5ddf0bdf60d7ee718d1c78cbdac3bdd11d13249746c67bc54560eb2d0"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.7.state.md",
+      "preimage_sha256": "bb3fc712ea46c72a9360be77ff0eba899d4c3002d3b3697f0b93f71ea533fd8d"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/phases/P7/P7.md",
+      "preimage_sha256": "4bd5a828271704513c9ed0e733e51844d76d6c86f75a99ccc946c29f3cf98965"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/plan.md",
+      "preimage_sha256": "e550bfb5b431b37954972b352737ab9d5e423f6cf9edf12da04984e0f1957b1f"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/00-user-intent.md",
+      "preimage_sha256": "96c8a318b21ebf81ae650f9fbfb0bd3565a507e889d368b15ae2b26accaffe3b"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/19-p7.1-replay-admission-design.md",
+      "preimage_sha256": "d05002f3695bcdb3173b9a97ff7e736b4008c9ad68a569db7c3dbda172c02d63"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/20-p7.3-bounded-operations-release-input.md",
+      "preimage_sha256": "4d474bedaa45f453588a8fdd35ef227ab499a7498c7c744ceb8b66a671ff41d7"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/research/21-p7-audit-red-recovery-design.md",
+      "preimage_sha256": "96de9baa09d038590668ee8ccc39087feda150759a1f2e9f0c189f811e8e52b9"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/roadmap.md",
+      "preimage_sha256": "2004887cde951cb5037e698a7708101173c76be825442d4e4b2803814d999681"
+    },
+    {
+      "path": "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/status.md",
+      "preimage_sha256": "6cd619531baca1a24fb8cf340a5c8cc573475a14cee47f27b93d7055eaba04f8"
+    },
+    {
+      "path": "roadmap/2026.08.14-agelto-p11-false-terminal-block.md",
+      "preimage_sha256": "325f570c2a45468f8412b2e3b9f8171d4c8e27955e3e164326785cf146905cc7"
+    },
+    {
+      "path": "roadmap/2026.08.14-insiders-p6-routing-candidate-repro.md",
+      "preimage_sha256": "5a6cb6967e0ce916ff9cfca5e74e5e78e5bd57e68a1c875aa4c9556f7cd3a7e9"
+    },
+    {
+      "path": "roadmap/2026.08.14-laravel-parallel-isolation-lifecycle.md",
+      "preimage_sha256": "537e826366549287e3b48979705a241fbb36da747cb3536cd44189adc737ced1"
+    },
+    {
+      "path": "roadmap/2026.08.14-phase-assurance-contract.md",
+      "preimage_sha256": "d419b7ce0b5762be77bfd159e5a476da60254b62f8d70e99e1fe0a1d80985cc7"
+    },
+    {
+      "path": "roadmap/2026.08.14-task-phase-close-fast-path.md",
+      "preimage_sha256": "6b4b1aad53bbd364aa36d001e03519906a9304c8882fc618d7e0cae9b0147fcd"
+    },
+    {
+      "path": "roadmap/2026.08.15-empty-producer-ledger-must-continue-first.md",
+      "preimage_sha256": "c9b86b459d692a2eb5b78a9dd228de5f953a5e953fbbcbe20b40d1470e9b12d3"
+    },
+    {
+      "path": "roadmap/2026.08.15-owner-decision-same-session-continuity.md",
+      "preimage_sha256": "fc0adfb0eebe891a477204ca738c2f18862060668ae52c731ab999ddc035531a"
+    },
+    {
+      "path": "roadmap/2026.08.16-terminal-phase-reentry-priority-fix-branch.md",
+      "preimage_sha256": "50885f2f27d48a77827113f743faeca9792bed7837738e6177db684f6feeab1f"
+    },
+    {
+      "path": "roadmap/2026.08.17-task-five-file-read-output-budget.md",
+      "preimage_sha256": "b28382ba04d17c2ca9cbdf07e130f393b8350d59286aaba40eb933f41c81fe25"
+    },
+    {
+      "path": "roadmap/README.md",
+      "preimage_sha256": "d54bc213e700b849f12a103ced9c5ba07682f58cbd048a3d8b25041119565058"
+    }
+  ]
+}

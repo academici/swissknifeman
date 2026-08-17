@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **Документация операций provider/locale и release-candidate.** Добавлены компактные границы
+  check-first/apply-with-authority/rollback, независимые поверхности locale и точный провенанс
+  RFC 5646, IANA Registry и HashiCorp. Текущий P7 candidate явно non-releasable: D88 blockers
+  не маскируются и не дают прав на tag/push/publish.
+
 - **`core` / `skiller` / `harness` / `maind`: добавлен provider-health v1.**
   Чистый exact-set evaluator не позволяет зелёному provider/project скрыть missing, stale,
   unsupported или unresolved peer; Skiller публикует dependency closure и типизированные

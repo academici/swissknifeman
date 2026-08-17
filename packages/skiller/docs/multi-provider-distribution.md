@@ -159,6 +159,24 @@ skip и GREEN различимы в выводе. Локально (где `code
 живым прогоном; в CI бинарь сегодня недоступен — гейт там SKIP, вопрос установки `codex`
 в CI-раннер вне скоупа этого item'а.
 
+## Current operator boundary
+
+The M1–M5 distribution design above remains a roadmap, not an instruction to delete or rewrite a
+consumer. For committed provider distribution, first inspect the generated root
+`docs/provider-support.md` matrix and run a no-write command:
+
+```bash
+packages/skiller/bin/skiller connect --dry-run
+packages/skiller/bin/skiller sync --target <project> --dry-run
+```
+
+`connect` updates the Claude Code marketplace projection; `sync` writes selected managed skill
+projections only when the project's config selects that channel. `sync --repair` is a separate
+managed-drift operation, not a general overwrite. Unsupported capabilities, missing provider
+evidence, and a skipped consumer-acceptance probe remain non-green. Apply only after the command's
+ownership/backup gate is satisfied; preserve the managed preimage and use the same declared target
+for readback or rollback. Neither command authorizes a release, tag, or publication.
+
 ## Связанное
 
 - [Совместимость с Laravel Boost](./boost-compatibility) — текущая модель сосуществования (Boost как

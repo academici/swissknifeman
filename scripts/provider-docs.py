@@ -231,7 +231,7 @@ def render_guide(manifest, report) -> bytes:
         "python3 scripts/provider-docs.py --check",
         "harness doctor --provider-audit --json",
         "skiller connect --dry-run        # Claude Code projection",
-        "skiller sync --dry-run           # Codex/vendor projection selected by project config",
+        "skiller sync --dry-run           # only inside a project with .swissknifeman/config.json (mode=vendor)",
         "maind sync --project <id> --dry-run --json",
         "```",
         "",

@@ -1,0 +1,1998 @@
+{
+  "schema_version": "p7-decision-crosswalk/v1",
+  "plan_id": "2026.08.02-PROVIDER-CONTRACT-LOCALE",
+  "audit_snapshot": "2026-08-17T09:00:00Z",
+  "decision_ids": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "D7",
+    "D8",
+    "D9",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15",
+    "D16",
+    "D17",
+    "D18",
+    "D19",
+    "D20",
+    "D21",
+    "D22",
+    "D23",
+    "D24",
+    "D25",
+    "D26",
+    "D27",
+    "D28",
+    "D29",
+    "D30",
+    "D31",
+    "D32",
+    "D33",
+    "D34",
+    "D35",
+    "D36",
+    "D37",
+    "D38",
+    "D39",
+    "D40",
+    "D41",
+    "D42",
+    "D43",
+    "D44",
+    "D45",
+    "D46",
+    "D47",
+    "D48",
+    "D49",
+    "D50",
+    "D51",
+    "D52",
+    "D53",
+    "D54",
+    "D55",
+    "D56",
+    "D57",
+    "D58",
+    "D59",
+    "D60",
+    "D61",
+    "D62",
+    "D63",
+    "D64",
+    "D65",
+    "D66",
+    "D67",
+    "D68",
+    "D69",
+    "D70",
+    "D71",
+    "D72",
+    "D73",
+    "D74",
+    "D75",
+    "D76",
+    "D77",
+    "D78",
+    "D79",
+    "D80",
+    "D81",
+    "D82",
+    "D83",
+    "D84",
+    "D85",
+    "D86",
+    "D87",
+    "D88",
+    "D89",
+    "D90"
+  ],
+  "rows": [
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D1-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D1-legacy.md"
+      ],
+      "decision_id": "D1",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D1-legacy.md"
+      ],
+      "results": [
+        "sha256:f8f51344690e8f799a09f36171de8776737d4e03da2d474526a5dd9bfd8da0e1",
+        "blob:2babfcb59c256b86e1bb43a5d963645c8ccf0c94",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "2babfcb59c256b86e1bb43a5d963645c8ccf0c94",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D2-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D2-legacy.md"
+      ],
+      "decision_id": "D2",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D2-legacy.md"
+      ],
+      "results": [
+        "sha256:91280673ccee8460d5d1eff41052f8e97da5f67ba89e84aab3dd194d0cdc4572",
+        "blob:b2851cf1487110ed609ab71fedcf0da00c0fba49",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "b2851cf1487110ed609ab71fedcf0da00c0fba49",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D3-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D3-legacy.md"
+      ],
+      "decision_id": "D3",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D3-legacy.md"
+      ],
+      "results": [
+        "sha256:bbe1b6e4bf072b86723b48e2befb9590dfb758eebd45b932f166bf6d29e2ac36",
+        "blob:43c1eee4a9cea3a5f4958ef71f3af625fca8ec89",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "43c1eee4a9cea3a5f4958ef71f3af625fca8ec89",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D4-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D4-legacy.md"
+      ],
+      "decision_id": "D4",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D4-legacy.md"
+      ],
+      "results": [
+        "sha256:6b4904cbcf4bedbb04765486afd07eb6fce7963a7e93c6dd99d0ebe6c917e142",
+        "blob:5097ccf741ee66f8f14799dd367b7ba7bb356ce1",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "5097ccf741ee66f8f14799dd367b7ba7bb356ce1",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D5-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D5-legacy.md"
+      ],
+      "decision_id": "D5",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D5-legacy.md"
+      ],
+      "results": [
+        "sha256:c83c4aa0ce3423156ea8be2e249f854b6f5023b4c43c2b68251f51110901f8ee",
+        "blob:cbb198def7f1a047f1ee80fb2e911bbdb4df4b60",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "cbb198def7f1a047f1ee80fb2e911bbdb4df4b60",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D6-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D6-legacy.md"
+      ],
+      "decision_id": "D6",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D6-legacy.md"
+      ],
+      "results": [
+        "sha256:8dee286707a35cea167cc5f2fefecad6315e9a73bf60420e430b5ac58adb7b14",
+        "blob:005a4b966931384b8920ce0d56d1ac22d68d7a78",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "005a4b966931384b8920ce0d56d1ac22d68d7a78",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D7-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D7-legacy.md"
+      ],
+      "decision_id": "D7",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D7-legacy.md"
+      ],
+      "results": [
+        "sha256:6701f18f120fc5ecf50b964b89c88056c70b76081038bac8409e83d602134fa0",
+        "blob:e21845f2ebec0b62bb30e7fd01e81ac207af0be0",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e21845f2ebec0b62bb30e7fd01e81ac207af0be0",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D8-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D8-legacy.md"
+      ],
+      "decision_id": "D8",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D8-legacy.md"
+      ],
+      "results": [
+        "sha256:6c2f1c79d9a9c9d795cdc7d6a6fb98a01259bb5fc782060c5be53fa58f4df014",
+        "blob:0af1df6dc8345fc53dad97e18de81c58f611a645",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "0af1df6dc8345fc53dad97e18de81c58f611a645",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D9-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D9-legacy.md"
+      ],
+      "decision_id": "D9",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D9-legacy.md"
+      ],
+      "results": [
+        "sha256:aa30a40623a4abe5a5c17f29eb1c41179e2e4dc9194b41c19d3e691ebd499cb9",
+        "blob:5f482631455a635c30956430be0c5fc2c7714f89",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "5f482631455a635c30956430be0c5fc2c7714f89",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D10-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D10-legacy.md"
+      ],
+      "decision_id": "D10",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D10-legacy.md"
+      ],
+      "results": [
+        "sha256:b4250bf76bc220c0bd14b00d18c1d6663b6055cb05128e7fa84faf8a1eabb96a",
+        "blob:753e515cba6c4deb681967a98da186263535d1d3",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "753e515cba6c4deb681967a98da186263535d1d3",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D11-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D11-legacy.md"
+      ],
+      "decision_id": "D11",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D11-legacy.md"
+      ],
+      "results": [
+        "sha256:59534db751d4bfb310bc2fe6c8443460a51eda5a98d7c6ca37ac976a70d406fd",
+        "blob:8a56b010ffda95e068d53d0bed66c44ce39b6f06",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "8a56b010ffda95e068d53d0bed66c44ce39b6f06",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D12-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D12-legacy.md"
+      ],
+      "decision_id": "D12",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D12-legacy.md"
+      ],
+      "results": [
+        "sha256:201f59ddd3cb9bd834e5205ea8f9bca0a15481863704022e2d121c1829b6d332",
+        "blob:41b94f3f2de208f7143958edc6d4a2abe4a33d2f",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "41b94f3f2de208f7143958edc6d4a2abe4a33d2f",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D13-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D13-legacy.md"
+      ],
+      "decision_id": "D13",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D13-legacy.md"
+      ],
+      "results": [
+        "sha256:435a8d18e15154b135180ca4ef061bab6ae8ebb48fa04b58fe2fb3ec2c7ca10b",
+        "blob:64f8ad69b761319470a7ec446413b0cb2508c121",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "64f8ad69b761319470a7ec446413b0cb2508c121",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D14-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D14-legacy.md"
+      ],
+      "decision_id": "D14",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D14-legacy.md"
+      ],
+      "results": [
+        "sha256:a78062b4eaf42e03896647a2443a096c16809e78576386370a36d5b7b0112fad",
+        "blob:261f0847e345a22aff35976c79c12e71a1340019",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "261f0847e345a22aff35976c79c12e71a1340019",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D15-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D15-legacy.md"
+      ],
+      "decision_id": "D15",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D15-legacy.md"
+      ],
+      "results": [
+        "sha256:c39db59da9ffc939a7cfe357c395e3ec2747f2d1bbe1c18b8a676dcc0aa1b893",
+        "blob:9a9138b4d1b2dc61ce886c5acdc9cc3e90f79f25",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "9a9138b4d1b2dc61ce886c5acdc9cc3e90f79f25",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D16-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D16-legacy.md"
+      ],
+      "decision_id": "D16",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D16-legacy.md"
+      ],
+      "results": [
+        "sha256:efa4f10ec6390fab2c5a8cff4164eac204008099449a62ff111db02316110781",
+        "blob:94f405687f275463603f1c1328310020c78a00eb",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "94f405687f275463603f1c1328310020c78a00eb",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D17-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D17-legacy.md"
+      ],
+      "decision_id": "D17",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D17-legacy.md"
+      ],
+      "results": [
+        "sha256:5da14f8d5d86c72c38d0edade9e96e511da876e71e906ac39bce7bcd00f1716e",
+        "blob:82070ce04c60f9581e8bdf485d65594a4f1a4a48",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "82070ce04c60f9581e8bdf485d65594a4f1a4a48",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D18-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D18-legacy.md"
+      ],
+      "decision_id": "D18",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D18-legacy.md"
+      ],
+      "results": [
+        "sha256:96cf8fe450d6dba48ba8ac1f54818d20287a77b6cc97facbe865d6f3fad48c69",
+        "blob:783179dcc14dea8a47ef86205d7a4d5e791d6d01",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "783179dcc14dea8a47ef86205d7a4d5e791d6d01",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D19-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D19-legacy.md"
+      ],
+      "decision_id": "D19",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D19-legacy.md"
+      ],
+      "results": [
+        "sha256:f3bd1ed01ed6ecfe5ab605c5be1bb6db4cfc0d8bbe0bf9e563526034099a294c",
+        "blob:d353e16c7e208a8272eb570ce384d59aa48659ba",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d353e16c7e208a8272eb570ce384d59aa48659ba",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D20-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D20-legacy.md"
+      ],
+      "decision_id": "D20",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D20-legacy.md"
+      ],
+      "results": [
+        "sha256:f1a76a7ffb32ffff3a10ac9f10adf89c5eb7924f603cf8c316b43df02c9f10ac",
+        "blob:d631a3b66f6c2b0f04664a2d0a1fb265beafc741",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d631a3b66f6c2b0f04664a2d0a1fb265beafc741",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D21-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D21-legacy.md"
+      ],
+      "decision_id": "D21",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D21-legacy.md"
+      ],
+      "results": [
+        "sha256:76f16204a7347b923e51bebf57943a36f822aecb360a45ac29fe1fd083391e61",
+        "blob:067d4eb4ae8293444a928232b32b8b6080a58d4d",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "067d4eb4ae8293444a928232b32b8b6080a58d4d",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D22-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D22-legacy.md"
+      ],
+      "decision_id": "D22",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D22-legacy.md"
+      ],
+      "results": [
+        "sha256:94781e359a536e69522433e7cda95e2ead56b6cc3222d11c299992f413fddc28",
+        "blob:a9887df25c08494103a78677a322bb89471a55df",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "a9887df25c08494103a78677a322bb89471a55df",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D23-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D23-legacy.md"
+      ],
+      "decision_id": "D23",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D23-legacy.md"
+      ],
+      "results": [
+        "sha256:89c9b663dc5223d42a51505af80450f36308b8b1232e0bf36672e7fd8a3b2696",
+        "blob:d356cd92d1f7d2af879187e32b77547f3f875dae",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d356cd92d1f7d2af879187e32b77547f3f875dae",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D24-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D24-legacy.md"
+      ],
+      "decision_id": "D24",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D24-legacy.md"
+      ],
+      "results": [
+        "sha256:5eb6ce7358b3192623c321e28fd4b55a24cc936586934782d85024c9194f7ec9",
+        "blob:5090e6c5bf2d6386d94db8b574dfc601d30114ad",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "5090e6c5bf2d6386d94db8b574dfc601d30114ad",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D25-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D25-legacy.md"
+      ],
+      "decision_id": "D25",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D25-legacy.md"
+      ],
+      "results": [
+        "sha256:56bbcd9852efc779925c7b8ddce921bccdf94ef1656c76523b38d19014e0c270",
+        "blob:579970b0a3e667c6e7e5419e7bd932e356fd93c5",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "579970b0a3e667c6e7e5419e7bd932e356fd93c5",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D26-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D26-legacy.md"
+      ],
+      "decision_id": "D26",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D26-legacy.md"
+      ],
+      "results": [
+        "sha256:4ad377f80c16a9582893d3304b9ed08531d9fbda396bcb03e873da9d62ed00fc",
+        "blob:075146757f4b115051978f368e91e728ff33da07",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "075146757f4b115051978f368e91e728ff33da07",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D27-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D27-legacy.md"
+      ],
+      "decision_id": "D27",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D27-legacy.md"
+      ],
+      "results": [
+        "sha256:0748c8bbd8ae0da04af777d5c56f3314254efaa54a0fb9571f7ef3570ced23b1",
+        "blob:056215fa4a5f71c2d60b6427ce66163dcff5806f",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "056215fa4a5f71c2d60b6427ce66163dcff5806f",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D28-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D28-legacy.md"
+      ],
+      "decision_id": "D28",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D28-legacy.md"
+      ],
+      "results": [
+        "sha256:8ab10481c774d004d74781ece273dec435ae1f272357c85cb73cab5f05095735",
+        "blob:dc25ab3abbb1e23a4911fbac02bf50790be3dadd",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "dc25ab3abbb1e23a4911fbac02bf50790be3dadd",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D29-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D29-legacy.md"
+      ],
+      "decision_id": "D29",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D29-legacy.md"
+      ],
+      "results": [
+        "sha256:ab93531941bbde725390451eccd1c4d9681e26f84e72d7e7ed720daee19e76e0",
+        "blob:a2ff827bfb544dbfd2790e54d350c4108a19e95f",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "a2ff827bfb544dbfd2790e54d350c4108a19e95f",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D30-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D30-legacy.md"
+      ],
+      "decision_id": "D30",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D30-legacy.md"
+      ],
+      "results": [
+        "sha256:4dae31f944ed971475c2da010cb2cfe021b992708b48ded0939c54859636212b",
+        "blob:8f83027ec1eeb470642358d8dd0929ca8e645260",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "8f83027ec1eeb470642358d8dd0929ca8e645260",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D31-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D31-legacy.md"
+      ],
+      "decision_id": "D31",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D31-legacy.md"
+      ],
+      "results": [
+        "sha256:dac5d3e48ff96585a21fe7d592e4ead417e81eaa8887a0538cfa3c61f7d2ef31",
+        "blob:a5073bdc536056b4384d519ff193452717656bc4",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "a5073bdc536056b4384d519ff193452717656bc4",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D32-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D32-legacy.md"
+      ],
+      "decision_id": "D32",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D32-legacy.md"
+      ],
+      "results": [
+        "sha256:3fa68c38d5e9457996e79d6ee97834649084c2356b0c9a0388523f38ce94a39f",
+        "blob:e119670b18309f41523d3dca73ed76b3eb0176c5",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e119670b18309f41523d3dca73ed76b3eb0176c5",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D33-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D33-legacy.md"
+      ],
+      "decision_id": "D33",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D33-legacy.md"
+      ],
+      "results": [
+        "sha256:9a4e28cb2b413686c2ba50fedb7c4057c1bf5ce69d89ada6b3eaabd547b6fcb3",
+        "blob:9ffa3ab3de712017faae554f4bae6bdcab89b2cb",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "9ffa3ab3de712017faae554f4bae6bdcab89b2cb",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D34-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D34-legacy.md"
+      ],
+      "decision_id": "D34",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D34-legacy.md"
+      ],
+      "results": [
+        "sha256:33955a62d1781cf2ff539bd3f951b8add69d6c87b0c2f96bb3dc0dc2cf6da3fe",
+        "blob:fd08909d118ef32be925e305c65cf9621d72b733",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "fd08909d118ef32be925e305c65cf9621d72b733",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D35-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D35-legacy.md"
+      ],
+      "decision_id": "D35",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D35-legacy.md"
+      ],
+      "results": [
+        "sha256:6bb8c19730519a1aa08c7867370b2b16bb0dc1094b8551e6bc6abd9aec0a4d3e",
+        "blob:630dee1b6e15aa67661cb0cd48b0fa4b7bd15cc8",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "630dee1b6e15aa67661cb0cd48b0fa4b7bd15cc8",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D36-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D36-legacy.md"
+      ],
+      "decision_id": "D36",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D36-legacy.md"
+      ],
+      "results": [
+        "sha256:8b148bdc2aad012a3bb7512d09b0e60ee74d8d0336d6c1e70c8ac4547893f94e",
+        "blob:9267887f6a79728c986405ca6f67e4b22a08e283",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "9267887f6a79728c986405ca6f67e4b22a08e283",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D37-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D37-legacy.md"
+      ],
+      "decision_id": "D37",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D37-legacy.md"
+      ],
+      "results": [
+        "sha256:62f0685cdbe29c66cba0e27a6706161d0a3cea913ece0e66e16cf16719d4da01",
+        "blob:943ddf1c49d8231393add27d5387651be961ca3e",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "943ddf1c49d8231393add27d5387651be961ca3e",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D38-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D38-legacy.md"
+      ],
+      "decision_id": "D38",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D38-legacy.md"
+      ],
+      "results": [
+        "sha256:c4090f558bc8773a592f6e6867c927d88815f854fcd24ee7fc27457f6c843211",
+        "blob:044de51e6b6c6b607a3a127fe37b58753210c81e",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "044de51e6b6c6b607a3a127fe37b58753210c81e",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D39-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D39-legacy.md"
+      ],
+      "decision_id": "D39",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D39-legacy.md"
+      ],
+      "results": [
+        "sha256:428f09fe07a9805518daae4b9001b8a36d05018e84e0e9622be72b4e17fa4b33",
+        "blob:4f43f80b2574e2650b115ba3c35961e569aa3af3",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "4f43f80b2574e2650b115ba3c35961e569aa3af3",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D40-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D40-legacy.md"
+      ],
+      "decision_id": "D40",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D40-legacy.md"
+      ],
+      "results": [
+        "sha256:6885082fb1667cfee6cb174f13a30f4ee1a063c0a0cb898c76888c7f746f8958",
+        "blob:469d1a330a7dca8c6f7426ed64231b6b90193761",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "469d1a330a7dca8c6f7426ed64231b6b90193761",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D41-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D41-legacy.md"
+      ],
+      "decision_id": "D41",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D41-legacy.md"
+      ],
+      "results": [
+        "sha256:6a1cd0d213e267fe9e02376924b21cd060c8c886b5eef225958f2b16107ac153",
+        "blob:a3f6d22b00567b999af0d2d08c6027312384af12",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "a3f6d22b00567b999af0d2d08c6027312384af12",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D42-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D42-legacy.md"
+      ],
+      "decision_id": "D42",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D42-legacy.md"
+      ],
+      "results": [
+        "sha256:fc0ba596b5e1fe72f3de7b6cd8f008582d06b68753b2834b597b061753b47e90",
+        "blob:aee1b3aa3bc97fcbb71c0d8bf9a9006b00e6c90d",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "aee1b3aa3bc97fcbb71c0d8bf9a9006b00e6c90d",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D43-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D43-legacy.md"
+      ],
+      "decision_id": "D43",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D43-legacy.md"
+      ],
+      "results": [
+        "sha256:ee0e7a9d19f1f1f6d4d91ab6f5e199d3e339cad404453dd4a2cb6db7f2227a74",
+        "blob:d004c49c1477e675e217dbb2236978b2e35d4e08",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d004c49c1477e675e217dbb2236978b2e35d4e08",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D44-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D44-legacy.md"
+      ],
+      "decision_id": "D44",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D44-legacy.md"
+      ],
+      "results": [
+        "sha256:e531be9a21b762f8a23e91297f2769e7b0651c759f470b68447211e45ac38447",
+        "blob:18ef8e0dfec5bdc629037847e52507dfd6690786",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "18ef8e0dfec5bdc629037847e52507dfd6690786",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D45-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D45-legacy.md"
+      ],
+      "decision_id": "D45",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D45-legacy.md"
+      ],
+      "results": [
+        "sha256:c38816201e3c7da603b6656d1e5dbaf8fe8a8a60bdd4bf2e355744930b9104c6",
+        "blob:7f580274a0fdab16f9bd2568e9c1a61b1ae0451d",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "7f580274a0fdab16f9bd2568e9c1a61b1ae0451d",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D46-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D46-legacy.md"
+      ],
+      "decision_id": "D46",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D46-legacy.md"
+      ],
+      "results": [
+        "sha256:1cb736c36fd2184ff49eeb0597a78dd876fa990af9096884f720f1e10e296051",
+        "blob:63885519d03e9ee9caa52e9b51ecb9c2236c5520",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "63885519d03e9ee9caa52e9b51ecb9c2236c5520",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D47-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D47-legacy.md"
+      ],
+      "decision_id": "D47",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D47-legacy.md"
+      ],
+      "results": [
+        "sha256:8abea559afb0b358b721bd4471295bfd7da23c62fcbe3837b09a5a240745ab1b",
+        "blob:b5c711b581c70719fd4d878f2c11d9ea6a036f44",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "b5c711b581c70719fd4d878f2c11d9ea6a036f44",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D48-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D48-legacy.md"
+      ],
+      "decision_id": "D48",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D48-legacy.md"
+      ],
+      "results": [
+        "sha256:904d1ef223c14753134a0f6d6ffd4ec4abe062b4ad865769ef5d2ae41d677604",
+        "blob:934e469e5c699fc68429152ed96d5a1562adb00b",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "934e469e5c699fc68429152ed96d5a1562adb00b",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D49-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D49-legacy.md"
+      ],
+      "decision_id": "D49",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D49-legacy.md"
+      ],
+      "results": [
+        "sha256:9a21e6c18d075d7b5056db447559a3abaf8ca3abe055c58b0c3baa52296334df",
+        "blob:ee95a6f6a8399618e85456deb5b600e9c78de4e9",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "ee95a6f6a8399618e85456deb5b600e9c78de4e9",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D50-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D50-legacy.md"
+      ],
+      "decision_id": "D50",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D50-legacy.md"
+      ],
+      "results": [
+        "sha256:4d342f4f8d9a28f8bc93f645701f47fa9c8b4e5ff7b1da701eab613bb3c6de84",
+        "blob:4b871eea26f22794962b6b828306d8335fab7e38",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "4b871eea26f22794962b6b828306d8335fab7e38",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D51-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D51-legacy.md"
+      ],
+      "decision_id": "D51",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D51-legacy.md"
+      ],
+      "results": [
+        "sha256:26ef280010f23c99a4ed7b4e60cc89d66c3b34937f6c02936d1a3d82d58e279f",
+        "blob:845232d77a3557ac85ae43f41875276e7fa806bc",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "845232d77a3557ac85ae43f41875276e7fa806bc",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D52-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D52-legacy.md"
+      ],
+      "decision_id": "D52",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D52-legacy.md"
+      ],
+      "results": [
+        "sha256:b0692aff61b0db07ff9cb77ab358f3f58c7a95989231c288c1a84d0bcab9a17c",
+        "blob:29675e542fb2625a4ebf01ccf4d0c59a7b44c32e",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "29675e542fb2625a4ebf01ccf4d0c59a7b44c32e",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D53-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D53-legacy.md"
+      ],
+      "decision_id": "D53",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D53-legacy.md"
+      ],
+      "results": [
+        "sha256:840e4fe09da986d16c62764c5709da92056f448b5c043fc4a0d2b4f0e58f130c",
+        "blob:98585f8cd7539e99f9484e7f587d64109a30b19b",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "98585f8cd7539e99f9484e7f587d64109a30b19b",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D54-legacy.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D54-legacy.md"
+      ],
+      "decision_id": "D54",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D54-legacy.md"
+      ],
+      "results": [
+        "sha256:989e371f6ee35dd7e3ab258b141ca443b9596682211659a6c260f9d1082d1145",
+        "blob:ce7b4377ae07d7e4c82c8be24d78d35b9700790b",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "ce7b4377ae07d7e4c82c8be24d78d35b9700790b",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D55-skills-audit-integration.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D55-skills-audit-integration.md"
+      ],
+      "decision_id": "D55",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D55-skills-audit-integration.md"
+      ],
+      "results": [
+        "sha256:ac6bafa2ea1cc12a32c217eb41d2dee282ad8a9a4971138c44d3ff6db6bebb55",
+        "blob:1c81e4a5fe6355eaf94f6b65a2e12d7b4ef0501d",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "1c81e4a5fe6355eaf94f6b65a2e12d7b4ef0501d",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D56-minimum-skill-core.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D56-minimum-skill-core.md"
+      ],
+      "decision_id": "D56",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D56-minimum-skill-core.md"
+      ],
+      "results": [
+        "sha256:271c02465c361d55730aa976fd9ee4b000fc0dc97a08f986798bd46b9183c965",
+        "blob:6241871e381d92347ecb2ac92ba8f4dbfc0c3526",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "6241871e381d92347ecb2ac92ba8f4dbfc0c3526",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D57-additive-provider-skill-adapters.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D57-additive-provider-skill-adapters.md"
+      ],
+      "decision_id": "D57",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D57-additive-provider-skill-adapters.md"
+      ],
+      "results": [
+        "sha256:c337ec5d98498d3273e7bfcda55403272d6c94cb13550e2d7bef1622ebeb17b1",
+        "blob:65c37693181ee0abe6a2a376b3782d432042b3db",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "65c37693181ee0abe6a2a376b3782d432042b3db",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D58-evidence-led-skill-development.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D58-evidence-led-skill-development.md"
+      ],
+      "decision_id": "D58",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D58-evidence-led-skill-development.md"
+      ],
+      "results": [
+        "sha256:54d6ea2c0ca49d4509a90593af46bd0f2d7534fcad4113e3d5ff9e6cbbda72ab",
+        "blob:8fc47d86d49dd883b642e2b05136cf86d74d35a9",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "8fc47d86d49dd883b642e2b05136cf86d74d35a9",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D59-multilabel-audit-evidence.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D59-multilabel-audit-evidence.md"
+      ],
+      "decision_id": "D59",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D59-multilabel-audit-evidence.md"
+      ],
+      "results": [
+        "sha256:96e3ecd2347541bd2f6a5bc4adb135f9b14ccc0ed8d81cf6fdd6be31262de986",
+        "blob:5c091f4f8152083c573ef0c1cd6a9facf3dd1f06",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "5c091f4f8152083c573ef0c1cd6a9facf3dd1f06",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D60-provider-qualified-measurement.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D60-provider-qualified-measurement.md"
+      ],
+      "decision_id": "D60",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D60-provider-qualified-measurement.md"
+      ],
+      "results": [
+        "sha256:acf1b8ad9fe055d29aee805d11000167f83828b5c1f3a18bca85392cbc0cda81",
+        "blob:6ea4bd9017df7be5c042dad345e80b73594ce034",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "6ea4bd9017df7be5c042dad345e80b73594ce034",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D61-evidence-admitted-corpus-topology.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D61-evidence-admitted-corpus-topology.md"
+      ],
+      "decision_id": "D61",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D61-evidence-admitted-corpus-topology.md"
+      ],
+      "results": [
+        "sha256:475e9e1a3e4b4efe9773886795c8e7220897e6a1b20f2bc398553832d32a9610",
+        "blob:dd90485ed1725ed1192c2a62299ef7aaa7f5a700",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "dd90485ed1725ed1192c2a62299ef7aaa7f5a700",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D62-execution-readiness-threshold.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D62-execution-readiness-threshold.md"
+      ],
+      "decision_id": "D62",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D62-execution-readiness-threshold.md"
+      ],
+      "results": [
+        "sha256:aff8ed2b89c6e169cd84d5ee246749886363497acc028162be11726250d85463",
+        "blob:6435cb9c3c2a99478f126a997cdb12c429eaa993",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "6435cb9c3c2a99478f126a997cdb12c429eaa993",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D63-p0-recovery-gates-freeze.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D63-p0-recovery-gates-freeze.md"
+      ],
+      "decision_id": "D63",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D63-p0-recovery-gates-freeze.md"
+      ],
+      "results": [
+        "sha256:6bfa325b3c6a91fa5bfa845d6b063a802e4103981a122757298e436da6ece9f7",
+        "blob:7f50cb2f04f749c555d5c5ca2fefe08a8871ccb5",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "7f50cb2f04f749c555d5c5ca2fefe08a8871ccb5",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D64-p0-audit-reopen.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D64-p0-audit-reopen.md"
+      ],
+      "decision_id": "D64",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D64-p0-audit-reopen.md"
+      ],
+      "results": [
+        "sha256:c1ec1ce714e0f33a4ccdd2370fbfd8927143d787e002f564efb0f9e8844c29c3",
+        "blob:4127cd8ee6a3afb22ab3c58902ed36097dc905fc",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "4127cd8ee6a3afb22ab3c58902ed36097dc905fc",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D65-p0-recovery-contract-patch.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D65-p0-recovery-contract-patch.md"
+      ],
+      "decision_id": "D65",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D65-p0-recovery-contract-patch.md"
+      ],
+      "results": [
+        "sha256:75374412d0de06e423eda1df70e636167961ecdf0acb9e67679fd68a468726be",
+        "blob:2d2cf538133564e0a17885b0c9eab275fe3dd550",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "2d2cf538133564e0a17885b0c9eab275fe3dd550",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D66-p0-provenance-forward-repair.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D66-p0-provenance-forward-repair.md"
+      ],
+      "decision_id": "D66",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D66-p0-provenance-forward-repair.md"
+      ],
+      "results": [
+        "sha256:f0177bc8199848d7f3901ac4983e79b29a6298fae71c5d237e26de3661550ebb",
+        "blob:71dff50d91ff5ea1db8221d794ed2c19a18f1fb9",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "71dff50d91ff5ea1db8221d794ed2c19a18f1fb9",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D67-p0-recovery-gates-v1.0.1-freeze.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D67-p0-recovery-gates-v1.0.1-freeze.md"
+      ],
+      "decision_id": "D67",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D67-p0-recovery-gates-v1.0.1-freeze.md"
+      ],
+      "results": [
+        "sha256:3d2235eb46ebf4adaea13fec8fbd3be9a9717bff24e845216e6739b405eb8108",
+        "blob:6a4056590674b75df0e8863f7ba051bc49b0b2b0",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "6a4056590674b75df0e8863f7ba051bc49b0b2b0",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D68-p0.7-branch-verifier-ownership.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D68-p0.7-branch-verifier-ownership.md"
+      ],
+      "decision_id": "D68",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D68-p0.7-branch-verifier-ownership.md"
+      ],
+      "results": [
+        "sha256:024df0ed9e183800604a73300a57ff9dac887e0accdea2b32e6368095e936dae",
+        "blob:2da2ba4a24a53e1849c6ee3dfaf138f0f558cdfe",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "2da2ba4a24a53e1849c6ee3dfaf138f0f558cdfe",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D69-p0.8-validation-recovery.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D69-p0.8-validation-recovery.md"
+      ],
+      "decision_id": "D69",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D69-p0.8-validation-recovery.md"
+      ],
+      "results": [
+        "sha256:cc636bfdd83959aa683a323c7a6097108afd66db2f9b30daf0409db22e74ae7c",
+        "blob:b85270e8a3f41a9d06c937562e5d0d564eb7a2df",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "b85270e8a3f41a9d06c937562e5d0d564eb7a2df",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D70-p0-final-requalification.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D70-p0-final-requalification.md"
+      ],
+      "decision_id": "D70",
+      "disposition": "superseded",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D70-p0-final-requalification.md"
+      ],
+      "results": [
+        "sha256:97cdf6cc343dd80912cafec834f1942b1fb80715b01cf9f5ff710e7e05e97a5f",
+        "blob:bfc8b56dc02c1cd0be79fb272089499c7b386316",
+        "status:superseded"
+      ],
+      "tree_anchor": {
+        "blob": "bfc8b56dc02c1cd0be79fb272089499c7b386316",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D71-p0-owner-direct-close.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D71-p0-owner-direct-close.md"
+      ],
+      "decision_id": "D71",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D71-p0-owner-direct-close.md"
+      ],
+      "results": [
+        "sha256:3aa0a7abffef9bd7ea4880f081d82cd58e1a56ed3e726037fd3c74f9e9203a33",
+        "blob:3a261a6c3d9dd972bdf96d25856497171ef15915",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "3a261a6c3d9dd972bdf96d25856497171ef15915",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D72-p1-continue-first-readiness-repair.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D72-p1-continue-first-readiness-repair.md"
+      ],
+      "decision_id": "D72",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D72-p1-continue-first-readiness-repair.md"
+      ],
+      "results": [
+        "sha256:e84a5fe2f63efc42ae679667aa281753a3bff1b86511c79a16920fa6ec1bc508",
+        "blob:e527d37ba5258ba04a7fc3743b8fc53ae8b7e2f0",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e527d37ba5258ba04a7fc3743b8fc53ae8b7e2f0",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D73-provider-control-plane-v1.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D73-provider-control-plane-v1.md"
+      ],
+      "decision_id": "D73",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D73-provider-control-plane-v1.md"
+      ],
+      "results": [
+        "sha256:271d8be20117230e90853ce9646d1a15c66a58aa9499b017cae9f07ddb26eb79",
+        "blob:1a7a5f9671ca8b25fb4b64ac4d6fd892e81014e4",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "1a7a5f9671ca8b25fb4b64ac4d6fd892e81014e4",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D74-locale-resolution-v1.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D74-locale-resolution-v1.md"
+      ],
+      "decision_id": "D74",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D74-locale-resolution-v1.md"
+      ],
+      "results": [
+        "sha256:870393cec9a39457bd8a9dfa2676f868c96efb5e15baca92afbba330e1783dee",
+        "blob:e5e2601d5fd679d0194881b086be7e18e337e15e",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e5e2601d5fd679d0194881b086be7e18e337e15e",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D75-p2-stage-aware-input-ownership.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D75-p2-stage-aware-input-ownership.md"
+      ],
+      "decision_id": "D75",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D75-p2-stage-aware-input-ownership.md"
+      ],
+      "results": [
+        "sha256:8eb5e9f277792d1eccc9c92a0888871c89045e21c06b7dfdd77caa06b6387a4c",
+        "blob:10ed46f64e5750b9e47a14af634c048eb1cc6ec5",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "10ed46f64e5750b9e47a14af634c048eb1cc6ec5",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D76-p4.2-validation-command-carriers.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D76-p4.2-validation-command-carriers.md"
+      ],
+      "decision_id": "D76",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D76-p4.2-validation-command-carriers.md"
+      ],
+      "results": [
+        "sha256:ddf8f9674da395bb2be464a034edd6d9d62ca2f8057214a1857a918ec17d6086",
+        "blob:0e9127ede7ed63e5b876aeb1aedeb910f9e908cc",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "0e9127ede7ed63e5b876aeb1aedeb910f9e908cc",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D77-english-overlay-and-minimal-execution.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D77-english-overlay-and-minimal-execution.md"
+      ],
+      "decision_id": "D77",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D77-english-overlay-and-minimal-execution.md"
+      ],
+      "results": [
+        "sha256:a18ade0968dfe4c823f530a25f5ca73516c6a04eb5d8e5d9e24061a6d5d3959a",
+        "blob:297082a805b32ddab49c57020193e02f9c9d1e9d",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "297082a805b32ddab49c57020193e02f9c9d1e9d",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D78-p3-runtime-read-topology.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D78-p3-runtime-read-topology.md"
+      ],
+      "decision_id": "D78",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D78-p3-runtime-read-topology.md"
+      ],
+      "results": [
+        "sha256:fa24fafc0d321575b2e0f6186269b932f86fbd7d2b2cde7a29e1611205aa7325",
+        "blob:5bde6d2fae2181fde0c3ff2471630be6c50fd115",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "5bde6d2fae2181fde0c3ff2471630be6c50fd115",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D79-p4-solo-readiness-reconciliation.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D79-p4-solo-readiness-reconciliation.md"
+      ],
+      "decision_id": "D79",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D79-p4-solo-readiness-reconciliation.md"
+      ],
+      "results": [
+        "sha256:9249c8e92a15b2e1e0e4d33ad1600d46bcde965df618f39d8ab3b22e9a319fd0",
+        "blob:cd77a2bf548796fdd3f1012aaaa02377f7941631",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "cd77a2bf548796fdd3f1012aaaa02377f7941631",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D80-p4.4-round2-recovery.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D80-p4.4-round2-recovery.md"
+      ],
+      "decision_id": "D80",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D80-p4.4-round2-recovery.md"
+      ],
+      "results": [
+        "sha256:b637b317463b004202eadf7cdc819deac1fbf60d08aac044149fecbd1d4eb035",
+        "blob:06a4207ccfd70aa7228acdbc9192e03e1b14c533",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "06a4207ccfd70aa7228acdbc9192e03e1b14c533",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D81-p4.4-final-checkpoint.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D81-p4.4-final-checkpoint.md"
+      ],
+      "decision_id": "D81",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D81-p4.4-final-checkpoint.md"
+      ],
+      "results": [
+        "sha256:8f9b2509eb3c5c70d273472b443b84e18b2884bef95f5ada35afdb8c87939381",
+        "blob:f2dbe7ce1e7d43b89c00d4dc99548e72e4db17fe",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "f2dbe7ce1e7d43b89c00d4dc99548e72e4db17fe",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D82-p4-compact-field-cut.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D82-p4-compact-field-cut.md"
+      ],
+      "decision_id": "D82",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D82-p4-compact-field-cut.md"
+      ],
+      "results": [
+        "sha256:052af3d3c87e8d860a62099262ac31d99ace33ba3c2e61d7540e34c97effb169",
+        "blob:45794bfeaf1f5f53888b3bc78d8a58c89fe8a955",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "45794bfeaf1f5f53888b3bc78d8a58c89fe8a955",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D83-p5-fleet-action-manifest-approval.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D83-p5-fleet-action-manifest-approval.md"
+      ],
+      "decision_id": "D83",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D83-p5-fleet-action-manifest-approval.md"
+      ],
+      "results": [
+        "sha256:8354070be89b6fce558d5382292ad212e746b77cd5f03494e19960c0273aa8dc",
+        "blob:6a6fd93305d0c3e69d9db6fae63e72d30f58e840",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "6a6fd93305d0c3e69d9db6fae63e72d30f58e840",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D84-p6-brain-transaction-approval.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D84-p6-brain-transaction-approval.md"
+      ],
+      "decision_id": "D84",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D84-p6-brain-transaction-approval.md"
+      ],
+      "results": [
+        "sha256:f1f48f7814b97db876e3c50fae627bd4f445ae208879039ed72295260c2e6132",
+        "blob:821ab3ddfe2b4a901697042b5c5183cb2080c0df",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "821ab3ddfe2b4a901697042b5c5183cb2080c0df",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D85-p6-public-health-schema-carrier.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D85-p6-public-health-schema-carrier.md"
+      ],
+      "decision_id": "D85",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D85-p6-public-health-schema-carrier.md"
+      ],
+      "results": [
+        "sha256:2f51fe92deebe6ceef73fda03173542a7d3a6cfd6a5ace19c21acf589e56b9ea",
+        "blob:d503bc634edbc8a04b865d81fef71bb1e41b232f",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d503bc634edbc8a04b865d81fef71bb1e41b232f",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D86-provider-health-release-membership.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D86-provider-health-release-membership.md"
+      ],
+      "decision_id": "D86",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D86-provider-health-release-membership.md"
+      ],
+      "results": [
+        "sha256:12881401cadf1bdd0b2b58b10bfe1042a39491463722c961d211862d8816b655",
+        "blob:d711aa17c4f6c8240947714a470db18214d13a14",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "d711aa17c4f6c8240947714a470db18214d13a14",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": true
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D87-p7.1-replay-admission.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D87-p7.1-replay-admission.md"
+      ],
+      "decision_id": "D87",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D87-p7.1-replay-admission.md"
+      ],
+      "results": [
+        "sha256:eea742bb59a6ea0a4c4af28053eac81a9447c6f2c33f7f41db23d01198116c1b",
+        "blob:52ef52017b0a2d631015ade0e02167ff8ab59572",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "52ef52017b0a2d631015ade0e02167ff8ab59572",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": false
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D88-p7-package-boundary.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D88-p7-package-boundary.md"
+      ],
+      "decision_id": "D88",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D88-p7-package-boundary.md"
+      ],
+      "results": [
+        "sha256:eeb530e01c5af19b154c18d1ef7b794f8c2bfd74230a99a0ce568bed306add52",
+        "blob:e042f64cfb07a3a6d5919d0b23274e83bb41d1f7",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e042f64cfb07a3a6d5919d0b23274e83bb41d1f7",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": false
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D89-p7.3-bounded-nonreleasable-candidate.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D89-p7.3-bounded-nonreleasable-candidate.md"
+      ],
+      "decision_id": "D89",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D89-p7.3-bounded-nonreleasable-candidate.md"
+      ],
+      "results": [
+        "sha256:9a456ddcb8d9bd5ee6434528a66c45e1f3fff5f0b5d03f6cf7f7b3cdc91508cb",
+        "blob:240ad972dd905d226d01bfed319fd93a50d23f09",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "240ad972dd905d226d01bfed319fd93a50d23f09",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": false
+      }
+    },
+    {
+      "commands": [
+        "sha256sum plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D90-p7-red-audit-forward-recovery.md",
+        "git hash-object plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D90-p7-red-audit-forward-recovery.md"
+      ],
+      "decision_id": "D90",
+      "disposition": "accepted",
+      "evidence_paths": [
+        "plans/2026.08.02-PROVIDER-CONTRACT-LOCALE/decisions/D90-p7-red-audit-forward-recovery.md"
+      ],
+      "results": [
+        "sha256:411ce7956f6b6b03193fb63d1becbe1841c1b3b05141fb4ebef484fa67d183bd",
+        "blob:e562c8d3440a6715123a8fb4efeaaf99b7489b83",
+        "status:accepted"
+      ],
+      "tree_anchor": {
+        "blob": "e562c8d3440a6715123a8fb4efeaaf99b7489b83",
+        "head": "519af66def68027738a0158142cf7a19050d3983",
+        "tracked": false
+      }
+    }
+  ],
+  "set_proof": {
+    "missing": [],
+    "extra": [],
+    "duplicates": [],
+    "post_snapshot": [],
+    "required_count": 90,
+    "row_count": 90
+  },
+  "tree_anchor": "519af66def68027738a0158142cf7a19050d3983"
+}

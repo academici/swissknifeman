@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-08-16
-inputs_sha256: 19c58eda9eda97bb56b926da58d6d32ed66488550c390641df383f75340ac730
+through: 2026-08-17
+inputs_sha256: 66f294b3058cd5692eec0e1665eee4e7ec1b608883188ad4b41d90cdd3be0214
 generated_by: task plan-views status
 -->
 
@@ -16,8 +16,8 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.5 |
-| Status | 🟡 In progress |
-| Last Updated | 2026-08-16 |
+| Status | 🔴 Blocked |
+| Last Updated | 2026-08-17 |
 
 ## 4. Phase Index & Status Board
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
 | P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟠 Done with deviations |
-| P7 | Validate provider strengths, release, and operationalize | 0/4 | ⬜ Not started |
+| P7 | Validate provider strengths, release, and operationalize | 4/7 | 🔴 Blocked |
 
 ## Phase P0
 
@@ -103,10 +103,13 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P7.1 | Test shared semantics and provider-specific strengths independently | ⬜ Not started | — |
-| P7.2 | Add regression, drift, locale, and isolation test suites | ⬜ Not started | — |
-| P7.3 | Document operations, migration, and rollback | ⬜ Not started | — |
-| P7.4 | Run adversarial final design and release audit | ⬜ Not started | — |
+| P7.1 | Test shared semantics and provider-specific strengths independently | 🟠 Done with deviations | 2026-08-16 |
+| P7.2 | Add regression, drift, locale, and isolation test suites | 🟢 Done | 2026-08-17 |
+| P7.3 | Document operations, migration, and rollback | 🟢 Done | 2026-08-17 |
+| P7.4 | Run adversarial final design and release audit | 🔴 Blocked | 2026-08-17 |
+| P7.5 | Repair final-audit verifiers and seal candidate membership | 🟢 Done | 2026-08-17 |
+| P7.6 | Integrate and prove the bounded package candidate | 🟢 Done | 2026-08-17 |
+| P7.7 | Run the bounded independent RED delta audit | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -353,6 +356,44 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-16 | frontier/xhigh | plan-audit · local-repair · Audit-fixer committed the terminal D86/spec carriers and froze the exported membership contract; product evidence and candidate bytes are unchanged. |
 | 2026-08-16 | frontier/xhigh | plan-audit · audit-green · audit-fixer, кандидат f94a8b7125a696f2ddc0068211f8f757cd22fe6ae15aa0f9c7bcf12571b2f78f, вердикт GREEN |
 | 2026-08-16 | implementation/low | plan-close · closed-deviations · фаза P6 закрыта: GREEN audit candidate rebound; P6.1/P6.2 deviations retained |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · P7.1 admission stopped: P5 transaction journal has zero records while P5.4 reports 13,421 unresolved action IDs; frozen Code Guidance requires plan redesign of the absent P5 producer. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · Correction: D83 freezes empty P5 action sets; zero-record WAL is the approved no-write result. Continue only after frozen P5 aggregate verification. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · P7.1 replay admission is underspecified: P4.3 sealed three migrated semantic.skill rows, but P2 has only unrelated structure-only verify-external-claims fixture; capability/workflow/grader/ablation mapping must be frozen by plan-design before live execution. |
+| 2026-08-16 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D87 заморозил replay admission |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · note сокращена; полный текст: journal.jsonl:240 |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · block-candidate · Candidate authority boundary: P7.1 cannot restore Claude subscription access or waive frozen P6 required release blockers; see findings/P7-provider-acceptance.md. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · escalated · P7.1 terminal authority boundary: Claude access and any P6 required-release-blocker exception require external/Owner authority. Independent reviewer p71_block_review: JUSTIFIED. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · in-progress · D88 owner decision reopens P7.1 at the package boundary; no provider calls are authorized. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · closed-deviations · P7.1 closed with D88: package evidence is green; Claude live efficacy and P5/P6 fleet rollout remain explicit deferred operations. |
+| 2026-08-16 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · local-repair · P7.2 prerequisite red: P7.1 evidence verifier rejects an undeclared route-p71-owner-decision.json member; owner P7.1 must restore exact-set bundle before regression work. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.2 resumed after exact-set repair; permanent locale and hook CLI regressions added. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · local-repair · Route receipt run_id mismatch in resumed attempt; no terminal claim made, fresh receipt required. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.2 resumed with corrected current-session route receipt. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · P7.2 regression matrix and permanent locale/hook CLI locks are green; P7.1 exact-set evidence restored. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P7.3-release-blocker-disposition |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · decision-pending · decision queue: P7.3-read-budget-disposition |
+| 2026-08-17 | repository_owner | plan-run · in-progress · decision queue: P7.3-read-budget-disposition |
+| 2026-08-17 | repository_owner | plan-run · in-progress · decision queue: P7.3-release-blocker-disposition |
+| 2026-08-17 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: D89, non-releasable manifest acceptance, read budget 55328/100000 |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.3 execution started after D89 owner resolutions; scope is documents, generated provider reference, non-mutating command readback, and non-releasable manifest only. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · local-repair · P7.3 required mAInd standalone docs build is red on the unchanged /deploy link in packages/maind/docs/guide/systemd.md:65; file is outside bound Files. Recorded owner scope gap; no out-of-scope repair applied. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:260 |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · in-progress · — |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · block-candidate · P7.4 frozen-contract block candidate; carrier appended after the single isolated review returned (ordering deviation), before deterministic reducer terminalization. |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · blocked · P7.4 RED audit complete; terminal frozen-contract boundary confirmed by one distinct JUSTIFIED reviewer. D89 forbids GREEN/release while blockers remain. |
+| 2026-08-17 | frontier/high | plan-design · local-repair · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-08-17 | frontier/high | plan-design · in-progress · фаза детализирована до DoR: D90, P7.5–P7.6 RED-recovery и bounded P7.4 delta continuation |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.5 exact verifier and candidate-membership recovery started under D90. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.5 started: route-bound exact verifier and candidate partition repair. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · local-repair · P7.5 exact crosswalk fails: P7-decision-crosswalk.json omits D90, but it is outside P7.5 Files and assigned to P7.7; frozen-interface ambiguity requires plan-design. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.6 candidate-only scope commit started. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · P7.5 verifier repair and sealed partition complete; candidate is committed by P7.6. |
+| 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · P7.6 committed the sealed candidate only; 107 foreign paths were retained unchanged. |
 
 ## Owner Gates
 
@@ -372,3 +413,5 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P4.6: known deviation
 - P6.1: known deviation
 - P6.2: known deviation
+- P7.1: known deviation
+- P7.4: escalation

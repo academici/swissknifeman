@@ -65,12 +65,12 @@ and does not duplicate a supervisor runtime.
 - Generated artifacts are regenerated through their owner and checked, never hand-edited.
 - **Переходное правило Layout v2 (до P6):** закрытие пункта фиксируется записью в `journal.jsonl`, находкой или решением при необходимости и регенерацией видов; поля исхода в файле ТЗ запрещены и ловятся линтером.
 - **Flat/fast по умолчанию:** соседние ready items с совместимыми входами исполняются одним root-сеансом и одним batch-handoff; отдельный cold start нужен только при смене route, cwd, authority или внешнего состояния.
-- **Жёсткий бюджет каждого item P1.3–P7.4:** один initial implementation candidate, один проход объявленной item Validation и, только если он красный, один сгруппированный repair candidate + один targeted recheck. После второго RED исполнитель останавливается с точной failing-командой/риском/owner gate; третий ремонт, новый review или расширение scope запрещены.
+- **Жёсткий бюджет каждого item P1.3–P7.7:** один initial implementation candidate, один проход объявленной item Validation и, только если он красный, один сгруппированный repair candidate + один targeted recheck. После второго RED исполнитель останавливается с точной failing-командой/риском/owner gate; третий ремонт, новый review или расширение scope запрещены.
 - **Validation economy:** Validation item'а — закрытый acceptance inventory, а не приглашение расширять тестирование. Каждая обязательная команда запускается не более одного раза на material candidate; после repair повторяются только проверки, инвалидированные изменёнными файлами, а неизменённые green receipts переиспользуются. Full suite допустим только когда он буквально объявлен item'ом и ещё не запускался для candidate.
 - **Запрет синтетического разрастания:** никакие дополнительные fixtures, self-tests, fuzz/mutation/adversarial probes, checker branches или «полезные на будущее» cases не создаются, кроме прямо перечисленного Deliverable либо минимального regression case для уже воспроизведённого acceptance failure. Доступный real provider/project probe выполняется раньше дополнительной синтетики и ровно один раз на candidate.
 - **Минимальный acceptance без redesign-циклов:** если объявленный Validation carrier отсутствует и не проверяет ни один изменяемый `Files`/инвариант item'а, executor удаляет только эту stale-команду в текущем attempt, сохраняет остальные проверки и продолжает; отдельные `plan-design`, Owner gate, новый item или дополнительный test layer для такой локальной коррекции запрещены.
 - **Конечное состояние локализации:** legacy-параллели `SKILL.ru.md` после подтверждённого EN-переноса удаляются назначенным migration item'ом; английский `SKILL.md` остаётся единственным semantic source, а русский доступен только как sparse key-addressed render overlay, не как второе дерево.
-- **Review cap:** P1.3–P7.3 имеют `Review: none`: не запускаются дополнительный Task-level reviewer, exploratory reread или discretionary review loop. Это не отменяет product evidence, буквально требуемый frozen-контрактом: P4.3–P4.6 сохраняют bounded independent English/Russian content-review carrier из `locale-authoring-review-v1.md`, D40 и D45, без третьего раунда или дополнительного general review. P7.4 — единственный независимый audit всего остатка плана; он также имеет максимум один repair + один targeted recheck и не запускает второй audit.
+- **Review cap:** P1.3–P7.3 и P7.5–P7.6 имеют `Review: none`: не запускаются дополнительный Task-level reviewer, exploratory reread или discretionary review loop. Это не отменяет product evidence, буквально требуемый frozen-контрактом: P4.3–P4.6 сохраняют bounded independent English/Russian content-review carrier из `locale-authoring-review-v1.md`, D40 и D45, без третьего раунда или дополнительного general review. P7.4 — immutable RED attempt-1 baseline; D90 разрешает ровно один independent successor P7.7, который reuses неизменённые receipts и rechecks только F2–F6, а не выполняет второй whole-plan audit.
 - **Batch continuation:** зелёный item сразу передаёт следующий item тому же coordinator; общий bookkeeping, generated views и lint собираются на границе batch, если item contract не требует раньше.
 
 ## 3. Routing
@@ -101,7 +101,9 @@ and does not duplicate a supervisor runtime.
 | p6-health | P6.1–P6.2 | frontier/high | manual | none | terminal Brain transaction and package-health contract share the protected composition boundary |
 | solo | P6.3 | implementation/high | manual | none | D86 freezes the remaining local membership/evidence delta; live two-run rebound and privacy cleanup form one external-state boundary |
 | p7-real-first | P7.1–P7.3 | implementation/high | manual | none | real replay first, then demonstrated regressions and release assembly |
-| p7-final | P7.4 | frontier/xhigh | manual | full | sole independent review; at most one bounded repair/recheck |
+| p7-final | P7.4 | frontier/xhigh | manual | full | immutable attempt-1 independent audit and RED evidence |
+| p7-red-recovery | P7.5–P7.6 | implementation/high | manual | none | adjacent verifier repair and candidate-only integration share the P7.4 findings, exact path partition and candidate-tree validation |
+| p7-final-delta | P7.7 | frontier/xhigh | manual | full | one cold successor audit reuses unchanged P7.4 receipts and rechecks only F2–F6 after terminal producers |
 
 ## 5. Decision Log
 
@@ -123,6 +125,7 @@ and does not duplicate a supervisor runtime.
 | root/contracts/skill-core-v1.md | v1.0.0 | frozen | P2–P7 | P1.2 |
 | root/contracts/provider-skill-adapter-v1.md | v1.0.0 | frozen | P3–P7 | P1.2 |
 | root/contracts/skill-evidence-v1.md | v1.0.0 | frozen | P3–P7 | D77 |
+| artifacts/P7.1/replay-admission-v1.json | v1.0.0 | frozen diagnostic denominator | P7.1, P7.4, P7.7 | D88 (supersedes D87 gate) |
 
 ### Consumed
 

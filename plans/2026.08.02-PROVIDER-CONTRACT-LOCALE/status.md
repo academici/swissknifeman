@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-17
-inputs_sha256: 66f294b3058cd5692eec0e1665eee4e7ec1b608883188ad4b41d90cdd3be0214
+inputs_sha256: 5b33a6a9115e81896269a67c7a815e692cb82866216347cd49203ca6d3d9fc89
 generated_by: task plan-views status
 -->
 
@@ -109,7 +109,7 @@ generated_by: task plan-views status
 | P7.4 | Run adversarial final design and release audit | 🔴 Blocked | 2026-08-17 |
 | P7.5 | Repair final-audit verifiers and seal candidate membership | 🟢 Done | 2026-08-17 |
 | P7.6 | Integrate and prove the bounded package candidate | 🟢 Done | 2026-08-17 |
-| P7.7 | Run the bounded independent RED delta audit | ⬜ Not started | — |
+| P7.7 | Run the bounded independent RED delta audit | 🔴 Blocked | 2026-08-17 |
 
 ## 6. Update Log
 
@@ -394,6 +394,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-17 | gpt-5.6-terra/high | plan-run · in-progress · P7.6 candidate-only scope commit started. |
 | 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · P7.5 verifier repair and sealed partition complete; candidate is committed by P7.6. |
 | 2026-08-17 | gpt-5.6-terra/high | plan-run · closed-green · P7.6 committed the sealed candidate only; 107 foreign paths were retained unchanged. |
+| 2026-08-17 | gpt-5.6-sol/high | plan-run · routing-rejected · required frontier/xhigh; actual frontier/high |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · local-repair · Generated missing P7.7 Bundle v1 through task.plan_bundle before start. |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · in-progress · — |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · audit-red · P7.7 delta audit RED; bounded fixes recorded, release unauthorized. |
 
 ## Owner Gates
 
@@ -415,3 +419,4 @@ write-site: pre_mutation: allow · pre_final: allow |
 - P6.2: known deviation
 - P7.1: known deviation
 - P7.4: escalation
+- P7.7: escalation

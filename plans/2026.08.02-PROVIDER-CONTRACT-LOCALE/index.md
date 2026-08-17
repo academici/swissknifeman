@@ -1,6 +1,6 @@
 # Индекс плана — `2026.08.02-PROVIDER-CONTRACT-LOCALE`
 
-**Обновлён:** 2026-08-14
+**Обновлён:** 2026-08-17
 
 ## Карта директорий
 
@@ -15,10 +15,12 @@
 | `bundles/<Pn.m>.json` | Генерируемые digest-qualified executor inputs; создаются JIT после terminal predecessors. |
 | `handoff.md` | Rolling-указатель следующего шага. |
 | `journal.jsonl` | Append-only история plan-protocol запусков. |
-| `roadmap.md` | 36-item карта исполнения, включая P0.5–P0.10 audit forward remediation, evidence-led skill modernization, per-cwd multi-package carrier, closed P4.4/P4.6 cwd→command matrix и P4 bounded-checkpoint/reviewer protocol. |
+| `roadmap.md` | 39-item карта исполнения, включая P0.5–P0.10 audit forward remediation, evidence-led skill modernization, per-cwd multi-package carrier, closed P4.4/P4.6 cwd→command matrix, P4 bounded-checkpoint/reviewer protocol и D90 P7 RED-recovery/delta chain. |
 | `brief/` | Слой 0: исходные требования владельца. |
 | `findings/` | Слой 1: RAG и наблюдаемые repository/fleet facts. |
 | `research/` | Слой 2: user-intent trace, target architecture, phase designs и finish reconcile. |
+| `artifacts/P7-operations-readback.md` + `artifacts/P7-release-candidate-manifest.md` | P7.3: redacted operator readback and a truthful, non-releasable release-candidate record. |
+| `artifacts/P7-remediation-manifest.json` + `artifacts/P7-candidate-paths.json` + `artifacts/P7-candidate-integration.json` | P7.5–P7.6: exact verifier recovery, candidate/foreign membership and candidate-only integration evidence. |
 
 ## Провенанс
 
@@ -37,7 +39,8 @@
 | `findings/09-p5-consumer-migration-recon-2026-08-02.md` | findings | P5.1–P5.4, P0.1 | Existing fleet-loop semantics, locator/privacy mismatch and the boundary between P3 adapters and P5 rollout sequencing. |
 | `findings/10-p6-health-control-recon-2026-08-02.md` | findings | P6.1–P6.3, P7 | Current single-axis health surfaces, missing public Codex settings route, dependency-diagnostic gap and exact-set fleet boundary. |
 | `findings/P6-fleet-health-verdict.md` | findings | P6.3, P7 | Privacy-minimized two-run Claude/Codex/shared-plane fleet health verdict over the exact sealed P0 set; current non-green and release blockers remain explicit. |
-| `findings/11-p7-release-acceptance-recon-2026-08-02.md` | findings | P7.1–P7.4 | Existing provider acceptance, regression, generated-doc and release surfaces plus gaps the final phase must close. |
+| `findings/11-p7-release-acceptance-recon-2026-08-02.md` | findings | P7.1–P7.7 | Existing provider acceptance, regression, generated-doc and release surfaces plus gaps the final phase must close. |
+| `findings/P7-design-preflight-2026-08-17.md` | findings | P7.5–P7.7 | Route/environment/hook/dirty-tree and initial plan-lint evidence for the RED recovery design. |
 | `findings/12-design-audit-remediation-2026-08-03.md` | findings | P0.1, P2.1, P3.2, P4.1, P5, P6, P7, design audit | Official pinned IANA/RFC/HashiCorp provenance, exact public hook CLI reproduction and repository-grounded F16–F18 carrier remediation. |
 | `brief/01-owner-refinement-2026-08-10.md` | brief | P0–P7 | Current-model lightweight skills, official-doc/real-provider evidence order, additive Claude/Codex adapters and third-provider extensibility. |
 | `brief/03-p0-audit-reopen-2026-08-10.md` | brief | P0.5–P0.8 | Exact owner invocation and bounded RED-audit reopen scope; P1–P7 and external targets remain anti-scope. |
@@ -49,7 +52,8 @@
 | `research/04-p4-locale-migration-implementation-design.md` | research | P4–P7 | Shared locale ownership, cumulative admission ledger, bounded per-cwd checkpoints, independent review/resume, terminal regeneration and P4 pre-mortem. |
 | `research/05-p5-consumer-migration-design.md` | research | P5–P7 | Exact-set action freeze, locator-only rebinding, preservation-first rollout, durable write-ahead transaction/resume carrier, recoverable cleanup and convergence evidence. |
 | `research/06-p6-health-parity-design.md` | research | P6–P7 | Owner-gated Brain transaction, package-owned health composition, exact-set aggregate, two-run evidence and P6 pre-mortem. |
-| `research/07-p7-release-operational-design.md` | research | P7.1–P7.4 | Exact-set acceptance, forward regressions, no-publish release candidate, dynamic D# crosswalk, cold audit and P7 pre-mortem. |
+| `research/07-p7-release-operational-design.md` | research | P7.1–P7.7 | Exact-set acceptance, forward regressions, no-publish release candidate, dynamic D# crosswalk, cold audit and P7 pre-mortem. |
+| `research/21-p7-audit-red-recovery-design.md` | research | P7.4–P7.7 | F1–F6 ownership, two-item local recovery chain, candidate/foreign boundary and evidence-reusing successor delta audit. |
 | `research/08-finish-reconcile.md` | research | design audit, P0–P7 | Сквозной producer/consumer, contract registry, coupling, routing/roadmap и DoR verdict design pass 3/3. |
 | `research/09-lean-multi-provider-skills-design.md` | research | P0–P7, design audit | Minimum Skill Core, additive provider/third-provider seams, real replay/ablation loop, multi-label audit architecture and mapping onto the unchanged 30 items. |
 | `findings/P0-provider-fleet-baseline.md` | findings | P0.2–P0.4, P5–P7 | Sealed P0.1 redacted registry/carrier/provider baseline; includes the relative Codex hook CLI defect and absolute-target observer control without repair authority. |

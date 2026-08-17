@@ -149,3 +149,58 @@ codex -C /home/vostrikov/projects/packages/swissknifeman \
   -a never -s danger-full-access \
   '$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P7'
 ```
+
+## P7.7 bounded F2–F6 delta audit
+
+**Delta snapshot:** `2026-08-17T10:32:29Z`
+**Repository HEAD:** `eaf5cc0e043e31a3e9edd562e98113010958976f`
+**P7.6 scope anchor/tree:** `072f806507c0b2672fb393c6fb15812bbb3cddd6` / `356fab8290bc578604371ec499d05cb93114f9ef`
+**Route:** `gpt-5.6-sol/frontier/xhigh`, session `01a00f2e-4e55-74b2-a141-8778962bc110`
+
+**Package-candidate verdict: RED — local recovery incomplete.**
+
+**Release verdict: RED — unchanged D89 blockers; `release_authorized=false`.**
+
+This is the single D90 successor delta audit. It does not rerun fleet/provider efficacy, rewrite
+the P7.4 baseline, or authorize tag, push, publish, rollout, provider repair, or release.
+
+### Delta findings
+
+| Surface | Result | Independent evidence |
+|:--|:--|:--|
+| F2 verifier interface | RED | `check` and `verify-decision-crosswalk --require-exact-set` now return 0, and the verifier self-test is GREEN. The exact frozen `verify-release-tree` command still returns 2 because it passes Markdown `P7-release-candidate-manifest.md` to a JSON-only `p7-candidate-paths/v1` interface. Substituting the actual `P7-candidate-paths.json` reaches the next predicate and returns 2 for unclassified `bundles/P7.7.json`. |
+| F3 committed candidate and partition | RED | The P7.6 scope commit and tree equal the integration receipt. Candidate/foreign and protected/foreign intersections are empty, and the sealed foreign-list digest still equals `61a1fd0ce056bd5699417cad152f0cc6b276303b66f6ce2b8073832e62c9bddd`. However, the required current-D# crosswalk differs from the P7.6 anchor, the generated P7.7 bundle is outside both sets, and six current foreign bytes differ from the sealed preimages. The verifier checks the manifest-list digest but does not compare current foreign bytes to those preimages. |
+| F4 validation/bookkeeping | RED | Targeted provider/crosswalk/self-test, remediation manifest, integration receipt, decision views, state views, bundle freshness, provider-doc check and strict citations are GREEN. Status projection was stale and was regenerated successfully. Plan lint remains RED with 11 diagnostics: P7.5/P7.6 terminal notes omit write-site codes, three downstream records are absent, and the committed handoff is schema-invalid. |
+| F5 live efficacy/blockers | unchanged RED | No live retry was performed. The blocker payload is byte-equal to the P7.3 manifest payload (`sha256:f23721271c91c236c0e256842fa5fbe92b4868fb948719978863381f423c12fa`), and D89 remains byte-identical (`sha256:9a456ddcb8d9bd5ee6434528a66c45e1f3fff5f0b5d03f6cf7f7b3cdc91508cb`). |
+| F6 cold-start carriers | RED | Decision views, all item-state views, P7.7 bundle and citations are fresh; status was repaired. The invalid handoff plus missing downstream records still make the cold-start entry point non-conformant. |
+
+The known F7 outer-output truncation reproduced while reading the declared bundle set. Only the
+hidden release-candidate carrier was reread; this remains a process deviation and does not change
+the F2–F6 verdict.
+
+### Receipt disposition
+
+No P7.4 GREEN command is claimed as reused because P7.4 did not record a command-level input hash.
+P7.7 reran only the declared F2–F6 commands. The current exact Decision Log has D1–D90 with
+`missing=[]`, `extra=[]`, `duplicates=[]`, and `post_snapshot=[]`; its generated carrier is
+`sha256:b8a6c4fc34a97fb7acb81d25ff8ea2b575f552d58e396eaac79bc98672ee3263`.
+
+### Fix recommendations required before phase close
+
+1. Bind the frozen release-tree validation to `artifacts/P7-candidate-paths.json`, or teach the
+   verifier to resolve the Markdown carrier to that schema explicitly; add one exact-argv
+   regression for the declared P7.7 command.
+2. Seal candidate/foreign membership after terminal bookkeeping, or define a deterministic
+   runtime-carrier class for journal/state/status/bundle/handoff outputs. The verifier must hash
+   current foreign bytes against their recorded preimages, with explicit generated-runtime
+   exemptions, instead of hashing only the static manifest list.
+3. Repair P7.5/P7.6 terminal write-site evidence and record downstream results for P7.6/P7.7
+   through the owning journal/downstream tools; regenerate status/index/handoff and rerun plan lint.
+4. Add command-level input hashes to future reusable audit receipts. Until then, mark prior
+   receipts unqualifiable rather than self-attesting reuse.
+5. Keep D89's external blocker and live-efficacy state unchanged. They need separately authorized
+   external execution and are not prerequisites for closing P7 as a truthful non-releasable phase.
+
+After recommendations 1–4, rerun only the three exact P7.7 commands, generated-view checks and
+plan lint, then execute `task:plan-close 2026.08.02-PROVIDER-CONTRACT-LOCALE P7`. Recommendation 5
+continues outside this phase and release remains forbidden.

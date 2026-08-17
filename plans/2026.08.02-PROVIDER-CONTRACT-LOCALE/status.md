@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-17
-inputs_sha256: 5b33a6a9115e81896269a67c7a815e692cb82866216347cd49203ca6d3d9fc89
+inputs_sha256: 6eed3a58d33bcb6d03e6e2e5f4b4149c1a6559b7a84247f2fc4c19f01d173fe5
 generated_by: task plan-views status
 -->
 
@@ -398,6 +398,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · local-repair · Generated missing P7.7 Bundle v1 through task.plan_bundle before start. |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · in-progress · — |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · audit-red · P7.7 delta audit RED; bounded fixes recorded, release unauthorized. |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · block-candidate · P7.7 frozen-contract mismatch requires isolated block confirmation. |
+| 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · blocked · Frozen release-tree/partition and predecessor closure defects; fixes recorded. |
 
 ## Owner Gates
 

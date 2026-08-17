@@ -3,7 +3,9 @@
 **Done:** P7.7 completed the sole D90 bounded F2–F6 successor audit. The terminal result is RED;
 the independent calibrated reviewer returned `JUSTIFIED`. Audit evidence is committed at
 `49e57f97197325fbca9afea2128199086d531603`. D89 and the external blocker payload are unchanged,
-and no release operation was authorized.
+and no release operation was authorized. A distinct block-confirmation reviewer returned
+`JUSTIFIED` for fingerprint `23d29e428d66d2fa44271f2a617d7bf529290341c8a5ec3d2a8199c654b09392`;
+the deterministic reducer emitted `terminal-block`/`BLOCK_CONFIRMED`.
 
 **Remaining:** Apply recommendations 1–4 from `artifacts/P7-final-release-audit.md`: bind the
 release-tree gate to its JSON manifest, make runtime carriers and current foreign-byte verification

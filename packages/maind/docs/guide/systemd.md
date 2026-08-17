@@ -62,7 +62,7 @@ WantedBy=default.target
 ОС и держался без входа в систему — включите **linger** (разовый шаг). Для роли `memory.role =
 "host"` (cross-machine память, ADR-0001) linger — **условие роли, не опция**: без него демон не
 переживёт перезагрузку хоста без интерактивного логина, и все клиенты теряют память одновременно
-(см. [deploy.md «Вторая машина»](/deploy#вторая-машина-cross-machine-память-host-client)):
+(см. [umbrella deploy.md «Вторая машина»](https://github.com/academici/swissknifeman/blob/main/docs/deploy.md)):
 
 ```bash
 loginctl enable-linger $USER

@@ -1,10 +1,10 @@
 # Roadmap исполнения — 2026.08.02-PROVIDER-CONTRACT-LOCALE
 
-**Обновлён:** 2026-08-16 · **Соответствует plan.md:** v1.1.5, flat/fast routing · **Статус:** P0–P5 terminal; P6.1–P6.2 terminal, P6.3 resumes under D86 required/optional membership before P7.
+**Обновлён:** 2026-08-17 · **Соответствует plan.md:** D90 flat/fast recovery routing · **Статус:** P0–P6 terminal; P7.1–P7.3 terminal, P7.4 RED baseline terminal, P7.5 ready, P7.6–P7.7 pending producers.
 
 ## Fast execution carrier
 
-Sequence: `P1 close → P2.1–P2.3 → P3.1–P3.3 → P4.1 → P4.2 → P4.3 → P4.4 → P4.5 → P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4`. D79 makes every P4 item a separate routed root because each closes a producer, rollback, package-cwd or terminal-regeneration boundary; no P4 future bundle is required before its producer becomes terminal. Other stable ranges keep one root coordinator where Routing still groups them. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized only inside an actual Routing batch. P7.4 is the only planned independent whole-plan review and permits at most one targeted repair/recheck; frozen P4 content-review records remain product evidence, not Task Review.
+Sequence: `P1 close → P2.1–P2.3 → P3.1–P3.3 → P4.1 → P4.2 → P4.3 → P4.4 → P4.5 → P4.6 → P5.1–P5.4 → P6.1–P6.3 → P7.1–P7.3 → P7.4 RED → P7.5–P7.6 → P7.7 delta`. D79 makes every P4 item a separate routed root because each closes a producer, rollback, package-cwd or terminal-regeneration boundary; no P4 future bundle is required before its producer becomes terminal. Other stable ranges keep one root coordinator where Routing still groups them. Item commits and owner/security gates remain exact; common bookkeeping and lint are amortized only inside an actual Routing batch. P7.4 is the material RED baseline and D90 permits one independent successor P7.7 after the local recovery batch, not a second whole-plan audit.
 
 Every remaining item has the same hard circuit-breaker: one initial candidate, one declared Validation pass, at most one grouped repair and one targeted recheck; a second RED returns the exact failing gate without a third loop. Green receipts whose inputs did not change are reused. Extra fixtures/checkers/reviewers/fuzz/mutation/adversarial probes are forbidden unless they are an explicit Deliverable or the minimum regression for an observed acceptance failure.
 
@@ -15,7 +15,7 @@ Real provider/project evidence runs as soon as prerequisites exist and once per 
 The audit does not create a second plan or pre-authorize its proposed rewrites. Its verified work
 flows through the existing sequence:
 
-`P0.5 corrected baseline → P0.6 semantic recovery gates → P0.7 executable security evidence → P0.8 provenance/fan-in → P0.9 semantic digest rebind → P0.10 live admission/final fan-in → final P0 audit → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 real replay/ablation → P7.2 regression locks → P7.4 cold audit`.
+`P0.5 corrected baseline → P0.6 semantic recovery gates → P0.7 executable security evidence → P0.8 provenance/fan-in → P0.9 semantic digest rebind → P0.10 live admission/final fan-in → final P0 audit → P1.2 Skill Core/adapters → P2.3 authoring/evidence → P3.2 adapter runtime → P3.3 multi-label audit → P4.2 template → P4.3 corpus → P6.2 health → P7.1 diagnostic replay → P7.2 regression locks → P7.4 RED baseline → P7.5 verifier/membership → P7.6 candidate integration → P7.7 delta`.
 
 Official current provider documentation defines the intended interface. P7.1 proves behavior with
 real Claude Code and Codex no-skill/minimum/provider-tuned workflows and instruction ablation;
@@ -255,8 +255,11 @@ automatic redesign. P4.5 remains dependency-not-ready until all P4.4 rows are te
 | P6.3 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P6.3` | implementation/high | D86 membership | exact-set health remains complete; sealed required/optional membership controls only project-scoped release blockers, then two-run evidence is rebound |
 | P7.1 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.1` | implementation/high | — | real Claude/Codex no-skill/minimum/provider-tuned replay and ablation precede exact-set release blockers |
 | P7.2 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.2` | implementation/high | — | supplementary deterministic regressions lock behaviors demonstrated by P7.1; they never replace live evidence |
-| P7.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.3` | implementation/high | — | owns exact external `docs/reference.md` entries and registry identity in the release manifest; blocker set must be empty; no publish |
-| P7.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.4` | frontier/xhigh | Owner GREEN/ATTENTION/RED D# | cold read-only adversarial audit; dynamic exact-set decision crosswalk; no self-fix |
+| P7.3 | solo/per-cwd | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.3` | implementation/high | D89 | owns exact external `docs/reference.md` entries and registry identity in the truthful non-releasable manifest; reproduces the non-empty blocker set; no publish |
+| P7.4 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.4` | frontier/xhigh | Owner GREEN/ATTENTION/RED D# | immutable attempt-1 RED audit baseline; never reopened or rewritten |
+| P7.5 | p7-red-recovery | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.5-P7.6` | implementation/high | — | implement exact audit verifier argv and seal candidate/foreign path membership; no staging |
+| P7.6 | p7-red-recovery | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.5-P7.6` | implementation/high | — | stage/commit only the sealed candidate set, preserve foreign bytes, prove candidate-scope HEAD equality, then hand off to P7.7 |
+| P7.7 | solo | `task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.7` | frontier/xhigh | Owner package/release delta verdict | one read-only F2–F6 successor audit with unchanged P7.4 receipt reuse; no whole-plan rerun |
 
 ## Deterministic Validation/Note (not owner gates)
 
@@ -279,10 +282,10 @@ automatic redesign. P4.5 remains dependency-not-ready until all P4.4 rows are te
 | P5.1–P5.4 | exact consumer action and quarantine sets | every live fleet write and P6 |
 | P6.1/P6.2 | Brain transaction and provider-health contract | P6.3/P7 |
 | P6.3 / D86 | exact required/optional release-membership semantics without project-name/ID hardcode | P6 delta closure and P7 admission |
-| P7.4 | final release verdict; exceptions name exact rows and consequences | any later tag/push/publish operation |
+| P7.4/P7.7 | attempt-1 and bounded delta release verdicts; exceptions name exact rows and consequences | any later tag/push/publish operation |
 
-Execution resumes with solo P6.3 under D86. The historical P6 audit remains the material baseline;
-P6.1/P6.2 receipts are reused and only the membership/exporter/evidence delta is revalidated. D86
-changes neither P6.2/public mAInd health semantics nor exact-set health coverage, and it cannot
-remove P5/global blockers or authorize provider/fleet repair.
+Execution resumes with batch `p7-red-recovery` at P7.5–P7.6. The historical P7.4 RED remains the
+material audit baseline; successor P7.7 reuses unchanged package/fleet/provider receipts and
+revalidates only F2–F6 plus live exact-set identities. D88–D90 cannot remove P5/P6/global blockers or authorize provider/fleet repair,
+live efficacy, tag, push or publication.
 `handoff.md` is the sole current Next carrier.

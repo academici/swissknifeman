@@ -61,15 +61,18 @@ def classify_char(ch):
 def count_classes(text):
     """Вектор посимвольных счётчиков по `CLASSES` — вход формулы D14 и калибровочной регрессии."""
     counts = {c: 0 for c in CLASSES}
-    dense_indexes = set()
+    offset = 0
     for match in DENSE_ASCII_RUN_RE.finditer(text):
-        dense_indexes.update(range(match.start(), match.end()))
-    for index, ch in enumerate(text):
-        if index in dense_indexes:
-            counts["dense_ascii"] += 1
-            continue
-        counts[classify_char(ch)] += 1
+        _count_non_dense(text[offset:match.start()], counts)
+        counts["dense_ascii"] += match.end() - match.start()
+        offset = match.end()
+    _count_non_dense(text[offset:], counts)
     return counts
+
+
+def _count_non_dense(text, counts):
+    for ch in text:
+        counts[classify_char(ch)] += 1
 
 
 def dense_ascii_share(text):

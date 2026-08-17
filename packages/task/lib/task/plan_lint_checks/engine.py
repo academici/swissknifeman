@@ -364,7 +364,10 @@ def lint_plan(plan_dir, diag):
 
         phase_status = row_dict.get("Status", "")
         item_statuses = [all_items[iid]["status"] for iid in phase_item_ids if iid in all_items]
-        if item_statuses and any(s == STATUS_BLOCKED for s in item_statuses) and phase_status != STATUS_BLOCKED:
+        terminal_block_override = plan_gates.terminal_blocked_phase_closure(plan_dir, pid)
+        if (item_statuses and any(s == STATUS_BLOCKED for s in item_statuses)
+                and phase_status != STATUS_BLOCKED
+                and not (terminal_block_override and phase_status == STATUS_DEVIATIONS)):
             diag.error(plan_md, row_lineno,
                        f"Status Board {pid}: есть 🔴 Blocked item, но статус фазы «{phase_status}» ≠ 🔴 Blocked")
         if (item_statuses and all(s == STATUS_DONE for s in item_statuses)

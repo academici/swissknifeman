@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.31.1
+version: 2.31.2
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -161,6 +161,11 @@ generated `[v2]` phase-closure view. A terminal phase is a candidate. Both hando
 non-green terminal state, or multi-item `light` requires a fresh GREEN audit; `none` and a
 single-item `light` phase with only green items and no material risk close directly. A process-only
 deviation does not manufacture an audit. RED or unresolved ATTENTION is repaired in its owning item.
+A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded
+phase-scoped owner D#: its `item` is `Pn`, `items` is exactly `Pn` plus every `Pn.*`, and it
+carries `` `phase-close: terminal-blocked-deviations` ``. That D# permits only a
+`closed-deviations` phase close and `🟠 Done with deviations` phase projection; it never
+rewrites the RED/blocked item history, audit evidence, or release authorization.
 
 ## 5. Routing
 

@@ -123,6 +123,13 @@ carrier должен покрывать точный полный набор ite
 повторного deterministic gate. Отсутствие или любое несовпадение остаётся fail-closed и использует
 обычный audit GREEN путь.
 
+Отдельное исключение для terminal blocked phase требует accepted, non-superseded D# с `item: Pn`,
+точным набором `Pn` и всех `Pn.*`, а также literal
+`phase-close: terminal-blocked-deviations`. Оно допускает только `closed-deviations` phase close:
+сама фаза проецируется как `🟠 Done with deviations`, тогда как RED/blocked item states, audit
+history и release authorization не меняются. Без такой D# blocked item по-прежнему закрывает фазу
+fail-closed.
+
 **Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
 вердикт phase audit (`GREEN`/reducer-confirmed `RED`) говорит «запись фазы сходится с кодом и git-фактами»,
 а приёмка — что ИЗМЕРЕННЫЕ величины плана взяли объявленные пороги (floors). План с

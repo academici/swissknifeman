@@ -431,6 +431,58 @@ def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: s
     return {"allow": True, "code": "allow", "owner_decision": decision.identifier}
 
 
+def _phase_terminal_blocked_owner_override(plan_dir: Path, phase_id: str,
+                                           owner_decision: str | None):
+    """Validate the explicit owner exception for a terminal blocked phase."""
+    if owner_decision is None or not isinstance(owner_decision, str):
+        return None
+    paths = sorted((plan_dir / "decisions").glob(f"{owner_decision}-*.md"))
+    if len(paths) != 1:
+        return None
+    try:
+        decision = plan_decisions.parse_decision(paths[0])
+    except plan_decisions.DecisionError:
+        return None
+    if "`phase-close: terminal-blocked-deviations`" not in decision.body:
+        return None
+    if decision.status != "accepted" or decision.superseded_by:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_NOT_ACCEPTED", "recognized": True}
+    try:
+        phase_items = {path.stem for path in plan_layout.item_spec_paths(plan_dir, phase_id)}
+    except plan_layout.PlanLayoutError:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_SCOPE_MISMATCH", "recognized": True}
+    if decision.item != phase_id or set(decision.items) != {phase_id, *phase_items}:
+        return {"allow": False, "code": "PHASE_OWNER_DECISION_TERMINAL_BLOCK_SCOPE_MISMATCH",
+                "recognized": True}
+    return {"allow": True, "code": "allow", "owner_decision": decision.identifier,
+            "recognized": True, "mode": "terminal-blocked-deviations"}
+
+
+def terminal_blocked_phase_closure(plan_dir, phase_id: str) -> bool:
+    """Whether a durable owner-gated close declares this phase as deviations."""
+    plan_dir = Path(plan_dir)
+    journal_path = plan_dir / "journal.jsonl"
+    if not journal_path.is_file():
+        return False
+    latest = None
+    for raw in journal_path.read_text(encoding="utf-8").splitlines():
+        try:
+            event = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if event.get("command") == "plan-close" and event.get("item_id") == phase_id:
+            latest = event
+    if latest is None or latest.get("result") != "closed-deviations":
+        return False
+    decision = latest.get("decision")
+    if (not isinstance(decision, dict)
+            or decision.get("action") != "phase-close-terminal-blocked-deviations"):
+        return False
+    override = _phase_terminal_blocked_owner_override(
+        plan_dir, phase_id, decision.get("owner_decision"))
+    return bool(override and override.get("allow"))
+
+
 def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_snapshot=None,
                      owner_decision=None):
     """Allow adaptive direct close, matching GREEN audit, or an owner override."""
@@ -443,6 +495,22 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
         if bound_fingerprint != candidate_fingerprint:
             return {"allow": False, "code": "PHASE_CANDIDATE_SNAPSHOT_MISMATCH",
                     "journal_line": None}
+    terminal_override = _phase_terminal_blocked_owner_override(
+        plan_dir, phase_id, owner_decision)
+    if terminal_override is not None and terminal_override.get("recognized"):
+        if not terminal_override["allow"]:
+            return terminal_override
+        heads = candidate_snapshot.get("terminal_item_heads") if isinstance(candidate_snapshot, dict) else None
+        statuses = [row.get("status") for row in heads if isinstance(row, dict)] if isinstance(heads, list) else []
+        terminal = {plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
+                    plan_status.STATUS_BLOCKED, plan_status.STATUS_SKIPPED}
+        if not heads or len(statuses) != len(heads):
+            return {"allow": False, "code": "PHASE_TERMINAL_BLOCKED_CANDIDATE_REQUIRED"}
+        if any(status not in terminal for status in statuses):
+            return {"allow": False, "code": "PHASE_TERMINAL_BLOCKED_NONTERMINAL_ITEM"}
+        if plan_status.STATUS_BLOCKED not in statuses:
+            return {"allow": False, "code": "PHASE_TERMINAL_BLOCKED_ITEMS_REQUIRED"}
+        return {**terminal_override, "phase_status": plan_status.STATUS_DEVIATIONS}
     override = _phase_close_owner_override(plan_dir, phase_id, owner_decision)
     if override is not None:
         return override

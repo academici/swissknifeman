@@ -1,6 +1,6 @@
 {
   "name": "general",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
   "skills": [
     "./anti-drift",

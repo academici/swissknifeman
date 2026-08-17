@@ -51,6 +51,55 @@ class PlanStatusTests(unittest.TestCase):
         self.assertEqual(plan_status.status_model(self.plan_dir)["phases"][0]["status"],
                          "🟠 Done with deviations")
 
+    def test_owner_gated_terminal_block_close_projects_phase_deviations_without_rewriting_item(self):
+        state = self.plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟢 Done", "**Status:** 🔴 Blocked").replace(
+            "**Escalation Needed:** no", "**Escalation Needed:** yes"), encoding="utf-8")
+        specification = self.plan_dir / "phases" / "P1" / "P1.1.md"
+        specification.write_text(specification.read_text(encoding="utf-8") +
+                                 "\n> 🔴 ESCALATION P1.1: historical terminal block retained.\n",
+                                 encoding="utf-8")
+        decisions = self.plan_dir / "decisions"
+        (decisions / "D2-terminal-blocked-close.md").write_text(
+            "---\n"
+            "id: D2\n"
+            "date: 2026-08-17\n"
+            "status: accepted\n"
+            "item: P1\n"
+            "items: [P1, P1.1]\n"
+            "supersedes: []\n"
+            "superseded_by: null\n"
+            "---\n\n"
+            "## Решение\n\n"
+            "`phase-close: terminal-blocked-deviations`\n\n"
+            "## Почему\n\n"
+            "test\n",
+            encoding="utf-8",
+        )
+        event = {
+            "ts": "2026-08-17T12:00:00Z", "plan_id": "DEMO-V2", "item_id": "P1",
+            "command": "plan-close", "session_id": None, "run_id": None, "attempt": 1,
+            "actor": "repository_owner", "friction": ["deviation"],
+            "result": "closed-deviations", "cost_usd": None, "num_turns": None,
+            "duration_ms": None, "note": "owner-gated terminal blocked phase closure",
+            "decision": {
+                "signal_class": "authority", "scope_class": "phase",
+                "action": "phase-close-terminal-blocked-deviations", "recovered": False,
+                "terminal": True, "owner_decision": "D2",
+            },
+        }
+        with (self.plan_dir / "journal.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+        model = plan_status.status_model(self.plan_dir)
+        self.assertEqual(model["phases"][0]["status"], "🟠 Done with deviations")
+        self.assertIn("**Status:** 🔴 Blocked", state.read_text(encoding="utf-8"))
+        plan_status.build_status(self.plan_dir)
+        diagnostics = Diagnostics()
+        lint_plan(self.plan_dir, diagnostics)
+        self.assertEqual(diagnostics.errors, [])
+
     def test_mixed_terminal_and_not_started_items_are_in_progress_for_phase_and_plan(self):
         source_phase = self.plan_dir / "phases" / "P1"
         phase = self.plan_dir / "phases" / "P2"

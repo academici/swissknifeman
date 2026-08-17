@@ -132,7 +132,7 @@ def _release_changelog(text, new_version):
     старая секция освобождается (пустая `## [Unreleased]`), её содержимое едет под
     новый заголовок версии. Не трогает остальные секции файла."""
     lines, start, end, body = read_unreleased_section(text)
-    new_heading = f"## [{new_version}] - {date.today().isoformat()}"
+    new_heading = f"## [{new_version.removeprefix('v')}] - {date.today().isoformat()}"
     new_lines = (lines[:start] + ["## [Unreleased]", "", new_heading]
                  + body + lines[end:])
     return "\n".join(new_lines) + "\n"
@@ -203,5 +203,5 @@ def cmd_release(env, argv):
 
     backup_file(changelog)
     atomic_write_text(changelog, _release_changelog(text, new_version))
-    print(f"CHANGELOG.md обновлён: [Unreleased] -> [{new_version}]. "
+    print(f"CHANGELOG.md обновлён: [Unreleased] -> [{new_version.removeprefix('v')}]. "
           f"Тег и push — вручную:\n  {tag_cmd}\n  git push origin {new_version}")

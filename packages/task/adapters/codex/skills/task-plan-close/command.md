@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:0b6fcf4de85cf6312a809825e831c6f32ebaa4e23b6b0c431321e1f8e2570670
+Canonical SHA-256: sha256:2f27a276db4fb9ec0dde749ba7d661d8ae2e588a1c067401fded113259ef9415
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -331,6 +331,13 @@ status-rule ниже. Точная команда, лестница маршру
    `AUDIT-CAP`, `третьего Audit Pn` и штатный `task:plan-close`. Номер D — данные carrier,
    не product constant. Любое отсутствие/несовпадение возвращает named refusal без phase
    mutation; вызов без `owner_decision` сохраняет byte-semantically прежний audit GREEN path.
+   **Terminal-blocked deviation override — отдельная owner-only ветка.** Accepted,
+   non-superseded D# обязан иметь `item: Pn`, точный `items: [Pn, все Pn.*]` и literal
+   `` `phase-close: terminal-blocked-deviations` ``. Gate дополнительно требует terminal
+   candidate snapshot с хотя бы одним `🔴 Blocked`; только тогда разрешён `plan-close`
+   `closed-deviations`, а phase status становится `🟠 Done with deviations`. Исторические
+   RED/blocked item states, audit results и release disposition не переписываются. Без такой
+   D# terminal blocked item остаётся fail-closed.
 1. Все items фазы терминальны (`🟢`/`🟠`/`⛔`)? Нет — перечисли нетерминальные
    с их статусами и ОСТАНОВИСЬ (фаза не закрывается частично).
    Затем `git status --short`: файлы в дереве ВНЕ объединения Files всех item'ов фазы —

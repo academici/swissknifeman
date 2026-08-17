@@ -281,7 +281,14 @@ def manifest_paths(manifest, key):
 
 def release_tree(args):
     root = Path.cwd().resolve()
-    release = load(args.release_manifest)
+    release_manifest = Path(args.release_manifest)
+    try:
+        release = load(release_manifest)
+    except json.JSONDecodeError:
+        if release_manifest.name != "P7-release-candidate-manifest.md":
+            raise
+        release_manifest = release_manifest.with_name("P7-candidate-paths.json")
+        release = load(release_manifest)
     acceptance_path = Path(args.acceptance_manifest)
     acceptance = load(acceptance_path)
     status = load(args.worktree_status)
@@ -289,7 +296,7 @@ def release_tree(args):
         raise ValueError("release manifest schema mismatch")
     candidates = manifest_paths(release, "candidate_paths")
     foreign = manifest_paths(release, "foreign_paths")
-    release_path = root_relative(str(Path(args.release_manifest).resolve().relative_to(root)), root)
+    release_path = root_relative(str(release_manifest.resolve().relative_to(root)), root)
     if candidates & foreign:
         raise ValueError("candidate/foreign overlap")
     if not candidates:
@@ -312,7 +319,7 @@ def release_tree(args):
     candidate_bytes = candidates - {
         release_path,
         root_relative(
-            str((Path(args.release_manifest).parent / "P7-release-candidate-manifest.md").resolve().relative_to(root)),
+            str((release_manifest.parent / "P7-release-candidate-manifest.md").resolve().relative_to(root)),
             root,
         ),
     }
@@ -351,12 +358,15 @@ def self_test(_args):
         foreign = [{"path": "foreign.txt", "preimage_sha256": sha(root / "foreign.txt")}]
         release = {"schema_version": "p7-candidate-paths/v1", "anchor": anchor, "candidate_paths": [{"path": "candidate.txt", "preimage_sha256": sha(root / "candidate.txt")}], "foreign_paths": foreign}
         (root / "release.json").write_text(canonical(release), encoding="utf-8")
-        subprocess.run(["git", "-C", str(root), "add", "release.json"], check=True)
+        (root / "P7-release-candidate-manifest.md").write_text("# candidate\n", encoding="utf-8")
+        (root / "P7-candidate-paths.json").write_text(canonical(release), encoding="utf-8")
+        subprocess.run(["git", "-C", str(root), "add", "release.json", "P7-release-candidate-manifest.md", "P7-candidate-paths.json"], check=True)
         subprocess.run(["git", "-C", str(root), "commit", "-qm", "release-manifest"], check=True)
         previous = Path.cwd()
         try:
             __import__("os").chdir(root)
             release_tree(SimpleNamespace(release_manifest="release.json", acceptance_manifest="acceptance.json", worktree_status="status.json"))
+            release_tree(SimpleNamespace(release_manifest="P7-release-candidate-manifest.md", acceptance_manifest="acceptance.json", worktree_status="status.json"))
             (root / "candidate.txt").write_text("dirty\n", encoding="utf-8")
             try:
                 release_tree(SimpleNamespace(release_manifest="release.json", acceptance_manifest="acceptance.json", worktree_status="status.json"))

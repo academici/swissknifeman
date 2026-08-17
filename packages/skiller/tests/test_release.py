@@ -192,10 +192,10 @@ class CmdReleaseCase(unittest.TestCase):
         exc, out = _run_cli(cmd_release, self.env, [])
         self.assertIsNone(exc)
         text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertIn("## [v0.8.0] -", text)
+        self.assertIn("## [0.8.0] -", text)
         self.assertIn("- заглушка", text)
         # The old Unreleased section is now empty.
-        section = text.split("## [Unreleased]", 1)[1].split("## [v0.8.0]", 1)[0]
+        section = text.split("## [Unreleased]", 1)[1].split("## [0.8.0]", 1)[0]
         self.assertNotIn("- заглушка", section)
 
     def test_git_tag_command_is_only_printed_never_executed(self):

@@ -81,8 +81,13 @@ def _item(path: Path) -> tuple[str, str, dict[str, str]]:
     return header.group(1), header.group(2), fields
 
 
-def _phase_status(statuses: list[str]) -> str:
+def _phase_status(statuses: list[str], *, plan_dir: Path | None = None,
+                  phase_id: str | None = None) -> str:
     if any(status == STATUS_BLOCKED for status in statuses):
+        if plan_dir is not None and phase_id is not None:
+            from task import plan_gates
+            if plan_gates.terminal_blocked_phase_closure(plan_dir, phase_id):
+                return STATUS_DEVIATIONS
         return STATUS_BLOCKED
     if statuses and all(status == STATUS_DONE for status in statuses):
         return STATUS_DONE
@@ -144,7 +149,8 @@ def status_model(plan_dir) -> dict:
                           "updated": "—", "state": state})
         phases.append({"id": phase_id, "title": phase_path.read_text(encoding="utf-8").splitlines()[0]
                        .split(" — ", 1)[-1], "items": items,
-                       "status": _phase_status([item["status"] for item in items])})
+                       "status": _phase_status([item["status"] for item in items],
+                                               plan_dir=plan_dir, phase_id=phase_id)})
     journal = plan_dir / "journal.jsonl"
     journal_rows, last_updated, item_updated = _journal_rows(journal)
     if journal.is_file():

@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:d185a0e0994e2f9fdbcbc370df9da9642db59f8c56158973fc3028cc6034b41c",
+      "source_hash": "sha256:fb1801fac83782d35391f90efe710d8c12c61d6eab62aca077b9b05a73695253",
       "rendered_hash": "sha256:7feb7d57fa227b1fdffa13744a50cd5ba490a1c7681dab193348e97dd843d56f"
     },
     {
@@ -120,82 +120,82 @@
     },
     {
       "path": "skills/general/plan-protocol/SKILL.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
-      "rendered_hash": "sha256:927d1a8736b973af4f3ecb19c1a1c297e4f98745c7620e5c10a857d19e602c6e"
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
+      "rendered_hash": "sha256:0327aa39b84f4335d5390703658eb37161e3508b2671c86f4ad768cbd670d3f5"
     },
     {
       "path": "skills/general/plan-protocol/snippets/active-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:5f055389e6db9583dfecf3b6fb2dad9c6e015a32ebc74d104b7e80f0d251017a"
     },
     {
       "path": "skills/general/plan-protocol/snippets/closure-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:c43edc9f58921085bc6a008311d364b13088c8598747a06c37276333092d701c"
     },
     {
       "path": "skills/general/plan-protocol/snippets/code-guidance-patterns.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:95a0c1615f56d38e516a7f38128a2cd6969082edb9f22281985b2a0f51a9904a"
     },
     {
       "path": "skills/general/plan-protocol/snippets/decision-record-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:f5bd43b5aa916ec5185e1e74eb30eaf8e2c48e547b658763ae8b06267b0c80e4"
     },
     {
       "path": "skills/general/plan-protocol/snippets/handoff-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:1b670c9042f363117847837e2e4d832e1da05bc4cad9ce00f15cddf8a8265674"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:669d1f97ea3cb0c2975cfdc7cf990db015a2e698f39b48c2bfaa7fe25b6e6763"
     },
     {
       "path": "skills/general/plan-protocol/snippets/index.json",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:23f5e8ed3360e98ec9c237a038c29b62c4770eb62fc282427e5b79959d1533f8"
     },
     {
       "path": "skills/general/plan-protocol/snippets/item-state-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:1ee331ca6b612bdea0731ea32b18ee433f7bd5ee5b05b8efa8aaf38ecd3e997e"
     },
     {
       "path": "skills/general/plan-protocol/snippets/journal-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:88327fc24847c3e0bc5c6a8d0291a2676d354c140977aba311282f4a79a4a98d"
     },
     {
       "path": "skills/general/plan-protocol/snippets/launch-block-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:b964991d507d728b294f5dcb387ff4b667f9647308d6618341a68fcc51b14ede"
     },
     {
       "path": "skills/general/plan-protocol/snippets/phase-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:e8003463024cf68b48ffdfd57ffc525c92698954aa60a87a51af38706fb172ef"
     },
     {
       "path": "skills/general/plan-protocol/snippets/plan-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:d36df5e23cd2e5d4ba67de57e69d6fefd376bb982693ec8e629f7d718d0ea2ae"
     },
     {
       "path": "skills/general/plan-protocol/snippets/roadmap-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:fc30c7ccd11705b8e5dd79723ea6ad72ce1666c9a1cd7d627abd65382a2b6344"
     },
     {
       "path": "skills/general/plan-protocol/snippets/source-evidence-template.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:c0594eff04fb0f2fe75b93fa7436c7a1dc8f10a51d44282e1f7fb3ad1218b9c5"
     },
     {
       "path": "skills/general/plan-protocol/references/plan-layout-v2.md",
-      "source_hash": "sha256:5ee5703e788e85562519dcac23a36a155a0566314e8ea7384432194ef83f5b36",
+      "source_hash": "sha256:f7d6c728d1fe11d92d848372bf5eceb5f142337cba4e94758850012229967099",
       "rendered_hash": "sha256:a70e5849b6c7810aabd9de83feae7ff4ca751a3b9acaaddb8ba9123a8f8d069c"
     }
   ]

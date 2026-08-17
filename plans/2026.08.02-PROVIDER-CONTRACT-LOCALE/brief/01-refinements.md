@@ -55,3 +55,43 @@ CLI. Изменения mAInd, provider/fleet repair и ослабление non
 exact-set health evidence. Решение реализуется generic sealed membership carrier без hardcode
 имени/ID и без изменения P6.2 package runtime или public mAInd evidence-set schema. Required
 projects и global P5/source/privacy/semantic blockers не ослабляются.
+
+## 2026-08-16 — P7.1 replay admission refinement
+
+Владелец явно запустил `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.1`
+после того, как первый execution корректно остановился до provider-вызова: три принятые P4.3
+`semantic.skill`-строки не были связаны с точным capability/workflow/grader/ablation набором, а
+P2 fixture является только `structure-only`. Заход ограничен одним frozen P7.1 admission carrier,
+D-записью и исполняемым рефайном того же item. P2/P4/P5/P6 не переоткрываются; одобренный пустой
+P5 WAL, provider/fleet state, product code и release authority не меняются.
+
+## 2026-08-17 — P7.3 owner-approved bounded redesign
+
+Владелец явно выбрал `redesign-bounded-inputs` и `revise-acceptance` для двух durable
+decision requests P7.3. Item сохраняет тот же operations/docs/release-manifest scope, но читает
+компактный contract synthesis вместо дублированных полных контрактов и больших generated/docs
+targets. Непустой точный blocker-set больше не делает корректную сборку manifest невозможной:
+manifest обязан воспроизвести blockers и иметь `releasable=false`; это не исключение, не release
+authority и не разрешение tag/push/publish, fleet rollout или provider repair.
+
+## 2026-08-17 — P7 RED-audit forward recovery
+
+Владелец явно запустил `$ task:plan-design 2026.08.02-PROVIDER-CONTRACT-LOCALE P7`
+из P7.4 RED handoff. Заход маршрутизирует F1–F6 через их реальных владельцев без ослабления D88
+или D89: локальный verifier/candidate seam получает adjacent chain P7.5–P7.6, generated
+bookkeeping чинится у владельцев в design-root, а fleet rollout и live provider efficacy остаются
+внешними deferred gates. Старый P7.4 RED не переписывается и не переоткрывается; после P7.6
+последовательный P7.7 выполняет один bounded delta audit, не второй whole-plan audit.
+
+## 2026-08-17 — P7.5 frozen-crosswalk return
+
+Владелец явно запустил `$ task:plan-design
+2026.08.02-PROVIDER-CONTRACT-LOCALE P7.5` после того, как execution воспроизвёл
+противоречие: immutable P7.4 crosswalk содержит D1–D89, current decisions
+содержат D1–D90, а P7.5 Validation требует текущий exact-set GREEN, хотя
+сам carrier не входит в P7.5 Files и назначен P7.7. Design-root не изменил
+ТЗ: обязательный isolated return reviewer вернул schema-invalid verdict,
+а deterministic reducer запретил продолжение. Точные evidence и условие
+возобновления зафиксированы в
+`findings/P7.5-plan-design-return-review-2026-08-17.md`; product implementation, audit
+baseline, contracts и release authority не менялись.

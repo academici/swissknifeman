@@ -1,0 +1,39 @@
+{
+  "adapter_attestation": {
+    "canonical_command_sha256": "sha256:2f27a276db4fb9ec0dde749ba7d661d8ae2e588a1c067401fded113259ef9415",
+    "command_id": "task:plan-close",
+    "package": "task",
+    "version": "0.13.2"
+  },
+  "commit_sha": "b695335e057854d7c6cd29a026c534f1cc20eef6",
+  "digests": {
+    "closure": "sha256:98338b4dfb3d047482a04252a52a1ccdd2dbdbe40b3ff13d876d41b70143854b",
+    "handoff": "sha256:7d8309004fe3c427cdb3c7335766238b51ac252ff5d68af0200a9afe31c1ace4",
+    "plan": "sha256:1716cc95fe64c3f4da8d082a661ed8b3fdda46231a8007bd22a78820b293475f",
+    "state": "sha256:d69a5d2b57aeeadf80ce9dd5d473b4b46de117a3ea2f80e545acb9d1c44ae068"
+  },
+  "journal": {
+    "command": "plan-close",
+    "line": 279,
+    "result": "closed-deviations",
+    "run_id": "f36b57a1dcb01b9f6a74a12e2eb503e1f228893c2d7b44d5827bf24674830432",
+    "sha256": "sha256:6a3fafd2a0ffcb9e737154f183f47c8ff3c5ae7d0b754275a9a08255046c9838"
+  },
+  "next_exact": "план закрыт.",
+  "plan_id": "2026.08.02-PROVIDER-CONTRACT-LOCALE",
+  "rationale": {
+    "open_risks": "external D89 blockers remain non-green outside this closed plan.",
+    "remaining": null
+  },
+  "recommendation": "**Next:** план закрыт.\n\nP7 is `🟠 Done with deviations` under D91. Its terminal `🔴 Blocked` P7.4/P7.7 records,\nRED audit evidence, and `BLOCK_CONFIRMED` reducer outcomes remain historical facts. D89 is\nunchanged: `release_authorized=false`, with no tag, push, publish, live-provider retry,\nfleet/Brain mutation, consumer repair, or destructive cleanup authorized.\n\n**Open risks:** external D89 blockers remain non-green outside this closed plan.",
+  "route": {
+    "batch": null,
+    "command": null,
+    "context": null,
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "terminal-delivery-receipt/v1",
+  "status": "🟠 Done with deviations",
+  "subject": "P7"
+}

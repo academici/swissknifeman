@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-08-17
-inputs_sha256: 6eed3a58d33bcb6d03e6e2e5f4b4149c1a6559b7a84247f2fc4c19f01d173fe5
+inputs_sha256: 9593d06359c1e2fda10f283436f6c3227eed5f1732c3c1ee0c342af9181979c4
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.1.5 |
-| Status | 🔴 Blocked |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-08-17 |
 
 ## 4. Phase Index & Status Board
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Implement locale rendering and evidence-admitted lean skill migration | 3/6 | 🟠 Done with deviations |
 | P5 | Classify and migrate all consumer projects safely | 4/4 | 🟢 Done |
 | P6 | Configure Brain and fleet health/parity gates | 1/3 | 🟠 Done with deviations |
-| P7 | Validate provider strengths, release, and operationalize | 4/7 | 🔴 Blocked |
+| P7 | Validate provider strengths, release, and operationalize | 4/7 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -400,6 +400,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · audit-red · P7.7 delta audit RED; bounded fixes recorded, release unauthorized. |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · block-candidate · P7.7 frozen-contract mismatch requires isolated block confirmation. |
 | 2026-08-17 | gpt-5.6-sol/xhigh | plan-run · blocked · Frozen release-tree/partition and predecessor closure defects; fixes recorded. |
+| 2026-08-17 | implementation/low | plan-close · blocked · Сверены terminal-block BLOCK_CONFIRMED, frontier/xhigh маршрут и RED-гейты; вне Scope P7.7. |
+| 2026-08-17 | gpt-5.6-terra/medium | plan-close · closed-deviations · P7 закрыта по D91: terminal blocked history сохранена; release не авторизован. |
 
 ## Owner Gates
 

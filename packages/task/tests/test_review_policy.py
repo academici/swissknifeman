@@ -397,6 +397,50 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 plan, "P3", candidate_fingerprint="a" * 64)
             self.assertEqual(default["code"], "PHASE_AUDIT_MISSING")
 
+    def test_terminal_blocked_phase_requires_exact_owner_override_and_preserves_default_gate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "P"
+            phase = plan / "phases" / "P1"
+            decisions = plan / "decisions"
+            phase.mkdir(parents=True)
+            decisions.mkdir()
+            (plan / "plan.md").write_text("| Layout | v2 |\n", encoding="utf-8")
+            (phase / "P1.md").write_text("# P1\n", encoding="utf-8")
+            for item_id in ("P1.1", "P1.2"):
+                (phase / f"{item_id}.md").write_text(f"### {item_id}\n", encoding="utf-8")
+            (decisions / "D92-terminal-blocked-close.md").write_text(
+                "---\n"
+                "id: D92\n"
+                "date: 2026-08-17\n"
+                "status: accepted\n"
+                "item: P1\n"
+                "items: [P1, P1.1, P1.2]\n"
+                "supersedes: []\n"
+                "superseded_by: null\n"
+                "---\n\n"
+                "## Решение\n\n"
+                "`phase-close: terminal-blocked-deviations`\n\n"
+                "## Почему\n\n"
+                "Owner accepts a non-releasable terminal record.\n",
+                encoding="utf-8",
+            )
+            snapshot = self._candidate(statuses=("🟢 Done", "🔴 Blocked"))
+            fingerprint = plan_gates._candidate_snapshot_fingerprint(snapshot)
+            refused = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=fingerprint, candidate_snapshot=snapshot)
+            self.assertEqual(refused["code"], "PHASE_AUDIT_MISSING")
+            allowed = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=fingerprint, candidate_snapshot=snapshot,
+                owner_decision="D92")
+            self.assertTrue(allowed["allow"])
+            self.assertEqual(allowed["phase_status"], "🟠 Done with deviations")
+
+            green_only = self._candidate(statuses=("🟢 Done", "🟢 Done"))
+            refused = plan_gates.phase_close_gate(
+                plan, "P1", candidate_fingerprint=plan_gates._candidate_snapshot_fingerprint(green_only),
+                candidate_snapshot=green_only, owner_decision="D92")
+            self.assertEqual(refused["code"], "PHASE_TERMINAL_BLOCKED_ITEMS_REQUIRED")
+
 
 class FindingIdentityTests(unittest.TestCase):
     def test_same_seam_gives_same_id(self):

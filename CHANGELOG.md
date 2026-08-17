@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-17
+
+- **`task`: owner-gated terminal blocked phase close.** An explicit, phase-scoped accepted D# can
+  record a terminal phase as `🟠 Done with deviations` while preserving its blocked item history,
+  RED audits, and release disposition; without that carrier phase close remains fail-closed.
+
 - **Документация операций provider/locale и release-candidate.** Добавлены компактные границы
   check-first/apply-with-authority/rollback, независимые поверхности locale и точный провенанс
   RFC 5646, IANA Registry и HashiCorp. Текущий P7 candidate явно non-releasable: D88 blockers

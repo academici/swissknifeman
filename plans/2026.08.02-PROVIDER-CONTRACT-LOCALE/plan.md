@@ -16,6 +16,8 @@
 | Home | repo:swissknifeman |
 | visibility | private |
 | Paused By | 2026.08.03-ARTIFEX-SUPERVISOR, 2026-08-03 |
+| Status | 🟠 Done with deviations |
+| Last Updated | 2026-08-17 |
 | Design Passes | 4/4 — whole-plan semantic design remains accepted; D70 adds only the bounded post-audit P0.9–P0.10 final requalification chain, not a fifth whole-plan design pass or another whole-plan audit |
 | Layout | v2 |
 <!-- migration-version: 1.1.5 -->

@@ -69,6 +69,15 @@ class TestClassifyAndCount(unittest.TestCase):
     def test_count_classes_closed_set(self):
         self.assertEqual(set(count_classes("")), set(CLASSES))
 
+    def test_count_classes_handles_a_large_dense_run_without_index_materialization(self):
+        self.assertEqual(count_classes("a" * 200_000 + "!"), {
+            "dense_ascii": 200_000,
+            "ascii_word": 0,
+            "ascii_other": 1,
+            "cyrillic": 0,
+            "other": 0,
+        })
+
 
 class TestLoadArtifact(TmpArtifactTestCase):
     def test_missing_file_raises(self):

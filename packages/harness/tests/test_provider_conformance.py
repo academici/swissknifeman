@@ -156,6 +156,26 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertIn("harness provider audit: OK", human.stdout)
         self.assertTrue(json.loads(machine.stdout)["green"])
 
+    def test_public_hook_dry_run_normalizes_relative_and_absolute_targets_without_writes(self):
+        repository = PACKAGE.parents[1]
+        protected = tuple(repository / relative for relative in (
+            ".codex/hooks.json", ".codex/hooks/lifecycle.py"))
+        before = {path: path.read_bytes() for path in protected}
+        command = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
+                   "--observer", "--trusted", "--dry-run", "--target"]
+
+        relative = subprocess.run(command + ["."], cwd=repository, text=True,
+                                  capture_output=True, check=False)
+        absolute = subprocess.run(command + [str(repository)], cwd=repository, text=True,
+                                  capture_output=True, check=False)
+
+        self.assertEqual(relative.returncode, 0, relative.stderr)
+        self.assertEqual(absolute.returncode, 0, absolute.stderr)
+        self.assertEqual(relative.stdout, absolute.stdout)
+        self.assertIn("План: sha256:", relative.stdout)
+        self.assertIn("Статус: green", relative.stdout)
+        self.assertEqual(before, {path: path.read_bytes() for path in protected})
+
     def test_provider_doctor_returns_error_exit_for_a_non_green_consumer(self):
         from harness.doctor import cmd_doctor
         from harness.common import Env

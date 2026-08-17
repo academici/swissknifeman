@@ -1,0 +1,10 @@
+{
+  "schema_version": "p7-candidate-integration/v1",
+  "scope_commit": "072f806507c0b2672fb393c6fb15812bbb3cddd6",
+  "scope_tree": "356fab8290bc578604371ec499d05cb93114f9ef",
+  "candidate_count": 37,
+  "foreign_count": 107,
+  "release_authorized": false,
+  "decision": "D89",
+  "continuation": "task:plan-run 2026.08.02-PROVIDER-CONTRACT-LOCALE P7.7"
+}

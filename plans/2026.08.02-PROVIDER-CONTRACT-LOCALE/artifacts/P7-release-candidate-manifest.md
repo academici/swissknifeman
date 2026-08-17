@@ -8,9 +8,9 @@
 
 | Field | Value |
 |:--|:--|
-| Repository HEAD | `519af66def68027738a0158142cf7a19050d3983` |
+| Repository HEAD | `072f806507c0b2672fb393c6fb15812bbb3cddd6` |
 | Dirty-worktree observation | `5df291d3a6f842f4278489d3d8f8bd912866b22cfcb4b3f91af0e096f7ef109a` immediately before P7.3 mutations; this is an observation, not a release tree or commit. |
-| Commit available for candidate provenance | `519af66def68027738a0158142cf7a19050d3983` only; P7.3 changes are deliberately uncommitted because this shared worktree already contained unrelated changes. |
+| Commit available for candidate provenance | `072f806507c0b2672fb393c6fb15812bbb3cddd6` (`feat(provider): закрепить контрактный кандидат P7`); only the sealed 37-path candidate was committed. |
 | Package versions | skiller `0.13.0`; harness `0.4.0`; maind `0.3.0`; analyst `0.2.0`; task publication adapter `0.13.2` |
 
 ## Contract, catalog, and generated renders

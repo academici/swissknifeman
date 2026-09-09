@@ -15,13 +15,8 @@ lead through `task.plan_blocking.evaluate()` to `terminal-block`.
 
 The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-candidate`,
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
-Before terminal/checkpoint/redesign routing, the repair reducer must run: qualified bounded repair
-continues this attempt and reruns its exact original carrier; only `design-required` with all four
-R&D fields may emit `plan-design`.
-Apply `task:plan-exec`'s single `<!-- carrier-repair:continue-first -->` rule verbatim. This
-command adds no second classifier: carrier/reference drift that preserves the current item's meaning
-continues in this batch; only its declared proof of a frozen/public/authority boundary may route to
-`plan-design`.
+Repair routing is governed solely by `task:plan-exec`'s single
+`<!-- carrier-repair:continue-first -->` rule. `plan-run` adds no second classifier.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

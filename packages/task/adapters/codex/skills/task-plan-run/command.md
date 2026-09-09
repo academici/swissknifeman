@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:e50b0437a6b4c04499fd73a3f3e1d1b6948c1f9a5ff0eb7080b9b45e758732b6
+Canonical SHA-256: sha256:3b62f8f6ba6c29ae25a969781ed0267882bb7a0c284b9f5bb0f319d079b841ae
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -88,13 +88,8 @@ lead through `task.plan_blocking.evaluate()` to `terminal-block`.
 
 The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-candidate`,
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
-Before terminal/checkpoint/redesign routing, the repair reducer must run: qualified bounded repair
-continues this attempt and reruns its exact original carrier; only `design-required` with all four
-R&D fields may emit `plan-design`.
-Apply `task:plan-exec`'s single `<!-- carrier-repair:continue-first -->` rule verbatim. This
-command adds no second classifier: carrier/reference drift that preserves the current item's meaning
-continues in this batch; only its declared proof of a frozen/public/authority boundary may route to
-`plan-design`.
+Repair routing is governed solely by `task:plan-exec`'s single
+`<!-- carrier-repair:continue-first -->` rule. `plan-run` adds no second classifier.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

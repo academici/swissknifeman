@@ -24,7 +24,7 @@ _PREIMAGE_DIGESTS = {
 }
 _CANDIDATE_DIGESTS = {
     "plan-exec": "e3597474f9674c7c4ecdae09050bd41bfd114d2932852692201fa8d09a43787f",
-    "plan-run": "e50b0437a6b4c04499fd73a3f3e1d1b6948c1f9a5ff0eb7080b9b45e758732b6",
+    "plan-run": "3b62f8f6ba6c29ae25a969781ed0267882bb7a0c284b9f5bb0f319d079b841ae",
 }
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
 # sources use that form inside ordered lists, so matching only column-zero fences
@@ -47,7 +47,7 @@ _EXPECTED_INVENTORIES = {
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:2b8a06c961f38e2a8228258f9047a58efb1698fde954836bb15687c1205eceb4",
+        "candidate": "sha256:e1dfcf2045440198fe58525603062e418bcbfd787361c99188fe2b9abfd724fe",
     },
 }
 

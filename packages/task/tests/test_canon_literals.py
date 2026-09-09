@@ -554,7 +554,7 @@ class TestCarrierRepairCommandFlow(unittest.TestCase):
         run_text = (self.repo_root / "packages/task/commands/plan-run.md").read_text(
             encoding="utf-8")
         self.assertEqual(exec_text.count("<!-- carrier-repair:continue-first -->"), 1)
-        self.assertIn("Apply `task:plan-exec`'s single", run_text)
+        self.assertIn("Repair routing is governed solely by `task:plan-exec`'s single", run_text)
         self.assertIn("<!-- carrier-repair:continue-first -->", run_text)
         self.assertNotIn("Missing, stale, or unresolvable declared plan carriers are", run_text)
 

@@ -52,10 +52,14 @@ route gate; do not substitute config, actor, or prose.
 
 ## Execution cycle
 
-1. **Read exactly five files, once.** Check `Layout | v2` in `## 0. Meta`; otherwise return
-   `PLAN_LAYOUT_V1_RETIRED`. Read only `plans/<PLAN-ID>/plan.md`,
+1. **Capture exactly five files, once.** Check `Layout | v2` in `## 0. Meta`; otherwise return
+   `PLAN_LAYOUT_V1_RETIRED`. Before exposing any input, capture only `plans/<PLAN-ID>/plan.md`,
    `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,
-   `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
+   `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` through
+   `task.plan_context.capture()`. Read chunks only from that immutable content-addressed snapshot;
+   retain the receipt, byte cursors, and terminal marker for every member. A transport truncation,
+   offset gap, absent terminal marker, or live/snapshot digest mismatch is
+   `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before product-journal mutation.
    `handoff.md` is not a v2 input and rereading/inventory is forbidden.
 
 2. **Preconditions and routing.** `Home: repo:<path>` is the only execution home. A mirror/Brain

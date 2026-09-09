@@ -107,6 +107,8 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("Final-response guard", codex_runtime)
                 self.assertIn("do not stop after a completion summary", codex_runtime)
         self.assertIn("do not reuse the preceding session's route", runtimes["plan-run"])
+        self.assertIn("Codex snapshot transport guard", runtimes["plan-run"])
+        self.assertIn("PLAN_CONTEXT_TRUNCATED", runtimes["plan-run"])
 
     def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")

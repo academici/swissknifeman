@@ -19,8 +19,11 @@ The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-ca
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,
 `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
-`Layout | v2` is mandatory; otherwise return `PLAN_LAYOUT_V1_RETIRED`. Do not use or reread
-`handoff.md`.
+`Layout | v2` is mandatory; otherwise return `PLAN_LAYOUT_V1_RETIRED`. Capture these five members
+once through `task.plan_context.capture()` before exposing their content; consume byte chunks only
+from its immutable snapshot and require its receipt, contiguous cursors, and terminal marker before
+product-journal mutation. `PLAN_CONTEXT_TRUNCATED` or `PLAN_CONTEXT_DIGEST_MISMATCH` stops before
+an attempt/status transition. Do not use or reread `handoff.md`.
 
 Resolve and read the canonical `task:plan-exec` source through
 `task.command_catalog.package_command_path("task:plan-exec")`; execute its steps 1–8 exactly,

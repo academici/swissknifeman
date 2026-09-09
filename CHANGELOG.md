@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: content-addressed five-carrier executor context.** Plan execution now captures immutable
+  v2 inputs before analysis, proves byte-cursor completion with terminal markers, and refuses
+  truncation or source drift before journal mutation; the generated history pointer now includes
+  its required `--plan-dir` argument.
+
 ## [0.14.0] - 2026-08-17
 
 - **`task`: owner-gated terminal blocked phase close.** An explicit, phase-scoped accepted D# can

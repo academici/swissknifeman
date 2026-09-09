@@ -197,7 +197,7 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
                       else "Continue item execution." if result in (None, "in-progress")
                       else "Proceed according to the plan."),
         "active_context": {"risks": [], "workarounds": [], "decisions": []},
-        "history_pointer": {"view": f".plan-cache/history/{item_id}.md", "command": f"python3 packages/task/scripts/plan-views.py history --item {item_id}"},
+        "history_pointer": {"view": f".plan-cache/history/{item_id}.md", "command": f"python3 packages/task/scripts/plan-views.py history --plan-dir <plan> --item {item_id}"},
     }}
     _validate(model)
     return model, note, friction

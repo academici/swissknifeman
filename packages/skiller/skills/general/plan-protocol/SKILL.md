@@ -66,7 +66,10 @@ Stable specifications, volatile state, append-only history, and generated views 
 4. `bundles/<Pn.m>.json` — ordered digest-qualified inputs.
 5. `phases/<Pn>/<Pn.m>.state.md` — byte-fresh generated state.
 
-The designer additionally reads current decisions/status; the auditor materializes history from
+The executor first captures these five carriers through `task.plan_context.capture()` before exposing
+content. It may paginate only immutable snapshot bytes by cursor; each member needs a matching
+digest and terminal marker, while a gap, transport truncation, or changed live source fails before
+journal mutation with `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH`. The designer additionally reads current decisions/status; the auditor materializes history from
 `journal.jsonl`; the owner reads status, gates, and handoff. `[v2]` `handoff.md` is not on the
 executor path. `[v2]` phase closure has two distinct carriers: optional judgement evidence in
 `closure/<Pn>.json`, and generated contract/result view `phases/<Pn>/<Pn>.closed.md`. Neither

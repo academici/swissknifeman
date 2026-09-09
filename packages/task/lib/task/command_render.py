@@ -1059,6 +1059,21 @@ def _codex_current_route_rule(record: CommandRecord) -> str:
     """Bind every plan command's route to Codex's current chat state."""
     invocation = f"$ {record.command_id} <arguments>"
     task_root = codex_task_plugin_root_expression()
+    context_rule = ""
+    if record.command_id in {"task:plan-exec", "task:plan-run"}:
+        context_rule = '''
+## Codex snapshot transport guard — provider-specific
+
+Capture the v2 five-carrier context before analysis with `task.plan_context.capture()`. Set both
+the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
+budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
+complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the
+terminal marker. A missing terminal marker, a cursor gap, visible transport truncation, or a
+live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before
+the product journal starts. Continue only from the same snapshot; never reread a live carrier to
+replace a lost chunk.
+
+'''
     return f'''## Codex current-route binding — provider-specific
 
 Before the first product-journal mutation, capture the effective route for this exact command:
@@ -1093,7 +1108,7 @@ its private-rollout prohibition forbids manual probing but not this validated ad
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
 
-'''
+''' + context_rule
 
 
 def _project_codex_runtime_tokens(text: str) -> str:

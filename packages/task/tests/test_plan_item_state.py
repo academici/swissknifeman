@@ -37,6 +37,13 @@ class PlanItemStateTests(unittest.TestCase):
         targets[0].write_text(text + "drift\n", encoding="utf-8")
         with self.assertRaises(plan_item_state.ItemStateError): plan_item_state.build_states(self.plan, check=True)
 
+    def test_history_pointer_has_a_complete_canonical_cli(self):
+        model, _note, _friction = plan_item_state.state_model(self.plan, "P1.1")
+        self.assertEqual(
+            model["state"]["history_pointer"]["command"],
+            "python3 packages/task/scripts/plan-views.py history --plan-dir <plan> --item P1.1",
+        )
+
     def test_blocked_event_projects_required_escalation(self):
         journal.append(self.plan, journal.new_entry(
             plan_id="DEMO-V2", item_id="P1.1", command="plan-run",

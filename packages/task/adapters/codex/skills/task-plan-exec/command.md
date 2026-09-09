@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:6f6d7c67a6aebccb8460996b31714710e1ac5e1e3cb3bdaba5f830c02229644c
+Canonical SHA-256: sha256:29dcf697ae4931a41751e14744ff19e62703c78caf818c89ce2bd3d4a15a161d
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -63,6 +63,18 @@ its private-rollout prohibition forbids manual probing but not this validated ad
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
 
+
+## Codex snapshot transport guard — provider-specific
+
+Capture the v2 five-carrier context before analysis with `task.plan_context.capture()`. Set both
+the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
+budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
+complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the
+terminal marker. A missing terminal marker, a cursor gap, visible transport truncation, or a
+live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before
+the product journal starts. Continue only from the same snapshot; never reread a live carrier to
+replace a lost chunk.
+
 Execute the requested master-plan item. The model/effort are pinned: do not switch them. This
 command is self-contained; read `plan-protocol` only when the plan explicitly links to it. Process
 multiple items sequentially through the complete cycle below. A Routing batch uses the maximum
@@ -111,10 +123,14 @@ route gate; do not substitute config, actor, or prose.
 
 ## Execution cycle
 
-1. **Read exactly five files, once.** Check `Layout | v2` in `## 0. Meta`; otherwise return
-   `PLAN_LAYOUT_V1_RETIRED`. Read only `plans/<PLAN-ID>/plan.md`,
+1. **Capture exactly five files, once.** Check `Layout | v2` in `## 0. Meta`; otherwise return
+   `PLAN_LAYOUT_V1_RETIRED`. Before exposing any input, capture only `plans/<PLAN-ID>/plan.md`,
    `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,
-   `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
+   `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md` through
+   `task.plan_context.capture()`. Read chunks only from that immutable content-addressed snapshot;
+   retain the receipt, byte cursors, and terminal marker for every member. A transport truncation,
+   offset gap, absent terminal marker, or live/snapshot digest mismatch is
+   `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before product-journal mutation.
    `handoff.md` is not a v2 input and rereading/inventory is forbidden.
 
 2. **Preconditions and routing.** `Home: repo:<path>` is the only execution home. A mirror/Brain

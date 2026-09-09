@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:9f344ebc808083ac4e8d5ee59f402515b71d95b7e5789e839ff8e81698e04942
+Canonical SHA-256: sha256:81ae64c11c1caf29530762cd1b7e1b883a5578b0dc56081b57031f9d118bf316
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -63,6 +63,18 @@ its private-rollout prohibition forbids manual probing but not this validated ad
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
 
+
+## Codex snapshot transport guard — provider-specific
+
+Capture the v2 five-carrier context before analysis with `task.plan_context.capture()`. Set both
+the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
+budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
+complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the
+terminal marker. A missing terminal marker, a cursor gap, visible transport truncation, or a
+live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before
+the product journal starts. Continue only from the same snapshot; never reread a live carrier to
+replace a lost chunk.
+
 Execute the master-plan item with the owner's current session route (D18); this is the third
 `plan-exec` mode and has no fixed `model`/`effort`. Input: `$ARGUMENTS`.
 
@@ -80,8 +92,11 @@ The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-ca
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,
 `plans/<PLAN-ID>/bundles/<Pn.m>.json`, and `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
-`Layout | v2` is mandatory; otherwise return `PLAN_LAYOUT_V1_RETIRED`. Do not use or reread
-`handoff.md`.
+`Layout | v2` is mandatory; otherwise return `PLAN_LAYOUT_V1_RETIRED`. Capture these five members
+once through `task.plan_context.capture()` before exposing their content; consume byte chunks only
+from its immutable snapshot and require its receipt, contiguous cursors, and terminal marker before
+product-journal mutation. `PLAN_CONTEXT_TRUNCATED` or `PLAN_CONTEXT_DIGEST_MISMATCH` stops before
+an attempt/status transition. Do not use or reread `handoff.md`.
 
 Resolve and read the canonical `task:plan-exec` source through
 `task.command_catalog.package_command_path("task:plan-exec")`; execute its steps 1–8 exactly,

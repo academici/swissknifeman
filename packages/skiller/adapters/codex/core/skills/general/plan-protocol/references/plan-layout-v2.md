@@ -46,8 +46,13 @@ Read exactly, in order:
 5. `phases/<Pn>/<Pn.m>.state.md` (fresh volatile state).
 
 `handoff.md`, full `status.md`, full decisions, and raw journal are excluded from this path.
-The bundle may route to named required reads; every entry is resolved and digest checked before
-mutation. Missing, unreadable, stale, or digest-mismatched input fails closed.
+Capture all five members before exposing one through `task.plan_context.capture()`. Chunk continuation
+uses only the immutable snapshot bytes and contiguous byte cursors; each member ends with its
+terminal marker and binds the snapshot digest. Missing terminal proof, output truncation, a cursor
+gap, or a changed live member fails before journal mutation with
+`PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH`. The bundle may route to named required
+reads; every entry is resolved and digest checked before mutation. Missing, unreadable, stale, or
+digest-mismatched input fails closed.
 
 `plan-lint` verifies that the first runnable item behind the terminal phase/item prefix has a
 byte-fresh bundle. This catches a plan that looks valid but cannot fill the executor's fourth

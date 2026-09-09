@@ -137,6 +137,23 @@ def entry_validation_errors(entry):
             validate_batch_receipt(entry["batch_receipt"])
         except (ImportError, ValueError) as exc:
             errors.append(("batch_receipt", f"batch_receipt: {exc}"))
+    if "repair_decision" in entry:
+        try:
+            from task import plan_repair
+            plan_repair.validate(entry["repair_decision"])
+            outcome = plan_repair.evaluate(entry["repair_decision"])
+            if entry.get("repair_digest") != outcome["repair_digest"]:
+                raise ValueError("repair_digest не совпадает с record")
+            if entry.get("repair_action") != outcome["action"]:
+                raise ValueError("repair_action не совпадает с reducer result")
+            if (outcome["action"] == "repair-in-current-attempt"
+                    and entry.get("result") in TERMINAL_CLOSE_RESULTS):
+                raise ValueError("qualified repair не может записать terminal result")
+            if (entry.get("command") == "plan-design"
+                    and outcome["action"] != "design-required"):
+                raise ValueError("plan-design требует repair action design-required")
+        except (ImportError, ValueError) as exc:
+            errors.append(("repair_decision", f"repair_decision: {exc}"))
 
     return errors
 
@@ -474,6 +491,11 @@ def _build_arg_parser():
                     help="compact D12 decision evidence как JSON object")
     ap.add_argument("--batch-receipt-json", default=None,
                     help="optional digest-bound batch receipt as JSON object")
+    ap.add_argument("--repair-decision-json", default=None,
+                    help="closed repair-decision/v1 JSON object for a forward repair event")
+    ap.add_argument("--repair-action", default=None,
+                    choices=("repair-in-current-attempt", "gather-evidence", "block-candidate", "design-required"),
+                    help="action returned by task.plan_repair.evaluate()")
     ep = sub.add_parser(
         "exception", help="дописать owner-gated exception для historical schema-invalid строки")
     ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
@@ -548,6 +570,21 @@ def main(argv=None):
         except json.JSONDecodeError as exc:
             print(f"ERROR: --batch-receipt-json невалиден: {exc}", file=sys.stderr)
             return 1
+    repair_decision = None
+    if args.repair_decision_json is not None:
+        try:
+            repair_decision = json.loads(args.repair_decision_json)
+            from task import plan_repair
+            outcome = plan_repair.evaluate(repair_decision)
+            if args.repair_action != outcome["action"]:
+                raise ValueError("--repair-action должен совпадать с reducer result")
+            repair_digest = outcome["repair_digest"]
+        except (json.JSONDecodeError, ImportError, ValueError) as exc:
+            print(f"ERROR: --repair-decision-json невалиден: {exc}", file=sys.stderr)
+            return 1
+    elif args.repair_action is not None:
+        print("ERROR: --repair-action требует --repair-decision-json", file=sys.stderr)
+        return 1
     entry = new_entry(
         plan_id=args.plan_id, item_id=args.item_id, command=args.command,
         actor=actor, result=args.result, session_id=args.session_id,
@@ -557,6 +594,9 @@ def main(argv=None):
         trace_ref=args.trace_ref, fingerprint=args.fingerprint, decision=decision,
         batch_receipt=batch_receipt,
     )
+    if repair_decision is not None:
+        entry.update({"repair_decision": repair_decision, "repair_digest": repair_digest,
+                      "repair_action": args.repair_action})
     try:
         path, line_number, appended = append_idempotent_terminal(args.plan_dir, entry)
     except JournalValidationError as e:

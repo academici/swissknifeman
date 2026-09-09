@@ -14,6 +14,21 @@ Task рассматривает ошибку инструмента, route rejec
 Малый обратимый дефект исправляется в текущем attempt, после чего повторяется исходная Validation.
 Новый design pass для этого не создаётся.
 
+## Repair evidence v1
+
+Перед checkpoint, block или redesign executor пишет закрытый `repair-decision/v1`. Он связывает
+точный исходный red carrier, baseline/candidate digest, affected paths с owner item, bounded diff,
+все material-surface оси и pre/post validation. `task.plan_repair.evaluate()` — единственный
+классификатор и возвращает `repair-in-current-attempt`, `gather-evidence`, `block-candidate` или
+`design-required`.
+
+Clean-baseline red без доказанного candidate delta и любой bounded reversible repair со всеми
+ложными material-surface осями продолжаются в том же attempt, в том числе если затронутый путь не
+в `Files`. Exact original carrier обязательно запускается после ремонта. Только material decision
+surface с непустыми `decision_question`, `evidence_gap`, `alternatives` и `expected_artifact`
+разрешает `design-required`; `FIX_REQUIRED` и мнение reviewer сами по себе не разрешают redesign.
+`block-candidate/v1` хранит digest repair record и потребляет его без собственной переклассификации.
+
 ## Когда допустим Blocked
 
 Material-кандидат сериализуется как закрытый `block-candidate/v1`. Для внешней проблемы RAG

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:0f06f27a0fc9f4987c63601aef07785da5b22945d205e6b5c2f7083058eff7b9
+Canonical SHA-256: sha256:6b1260557134e22ccb061f91de643d186204063697faedeadbec80ffc0e851eb
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -80,7 +80,7 @@ Execute the master-plan item with the owner's current session route (D18); this 
 
 ## Inherited execution contract
 
-Use the `DecisionRequest`, `isolated-child-return`, and `block-confirmation:v1` rules from
+Use the `DecisionRequest`, `isolated-child-return`, `repair-decision/v1`, and `block-confirmation:v1` rules from
 `task:plan-exec` unchanged. In particular, free prose is never authorization; only the closed
 `delegated`/`approval_required`/`denied` result from `task.plan_authority.authorize()` is valid;
 review is one fresh distinct `isolated-child-return`; and only a distinct `JUSTIFIED` result may
@@ -88,6 +88,9 @@ lead through `task.plan_blocking.evaluate()` to `terminal-block`.
 
 The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-candidate`,
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
+Before terminal/checkpoint/redesign routing, the repair reducer must run: qualified bounded repair
+continues this attempt and reruns its exact original carrier; only `design-required` with all four
+R&D fields may emit `plan-design`.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

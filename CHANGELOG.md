@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: единый continue-first repair reducer.** Закрытый `repair-decision/v1` связывает
+  исходный carrier, clean baseline/candidate delta, атрибуцию путей, bounded diff, material surface
+  и pre/post validation; qualified repair не может ложно terminalize или породить redesign,
+  а block confirmation потребляет digest этого evidence без переклассификации.
+
 - **`task`: continuation decisions keep compatible work in the current root session.** A small
   provider-neutral reducer now consumes versioned route/capability, context-health, remaining-batch,
   loaded-input and lifecycle evidence; cold starts require one canonical hard boundary and durable

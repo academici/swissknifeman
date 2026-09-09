@@ -118,13 +118,20 @@ not itself a product verdict:
 | external process result | reconcile PID, output, and state before terminalizing | acceptance/safety only |
 
 Journal results `routing-rejected`, `decision-pending`, `local-repair`, and `block-candidate` are
-durable observations: they do not change item status or consume an execution attempt. A bounded
-local reversible defect is repaired automatically in the owning attempt and the original carrier is
-rerun. A material block candidate uses `block-candidate/v1`; every external candidate has verified
-RAG evidence, and one fresh non-executor reviewer in `isolated-child-return` returns evidence under
-`block-confirmation-rubric-v1`. The deterministic root reducer alone chooses the action. Only
-`JUSTIFIED` may become a terminal block; `AVOIDABLE`, `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, and
-`MALFORMED` continue repair/evidence without opening a new design pass.
+durable observations: they do not change item status or consume an execution attempt. Before any
+block, checkpoint stop, or redesign, write a closed `repair-decision/v1`: exact red original
+carrier, baseline/candidate delta, affected-path ownership, bounded diff, material-surface matrix,
+and pre/post validation. `task.plan_repair.evaluate()` alone returns
+`repair-in-current-attempt`, `gather-evidence`, `block-candidate`, or `design-required`. A clean
+red baseline without a proved candidate delta, or a bounded reversible all-nonmaterial repair,
+continues in the owning attempt even for an attributed path outside `Files`; rerun the exact
+original carrier. `design-required` needs a decision question, evidence gap, alternatives, and
+expected decision artifact. A material block candidate uses `block-candidate/v1` bound to the repair
+digest; every external candidate has verified RAG evidence, and one fresh non-executor reviewer in
+`isolated-child-return` returns evidence under `block-confirmation-rubric-v1`. The block reducer
+consumes that upstream repair result without reclassification. Only `JUSTIFIED` may become a
+terminal block; `AVOIDABLE`, `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, and `MALFORMED` continue
+repair/evidence without opening a new design pass.
 Every block capsule declares `scope_coverage` and concrete `boundary_evidence`. Broad failure size,
 file count, elapsed time, or a large diagnostic set never proves a boundary. An in-scope acceptance
 failure always decomposes and continues local repair in the same attempt; `JUSTIFIED` without a

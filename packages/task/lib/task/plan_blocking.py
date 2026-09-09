@@ -43,6 +43,7 @@ _ROOT_FIELDS = frozenset((
     "scope_coverage", "boundary_evidence", "executor_actor", "evidence_ids",
     "resolutions_tried", "rag", "review",
 ))
+_OPTIONAL_ROOT_FIELDS = frozenset(("repair_decision", "repair_digest"))
 _RAG_FIELDS = frozenset(("required", "status", "evidence_ids"))
 _REVIEW_FIELDS = frozenset(("reviewer_actor", "context", "verdict", "evidence_ids"))
 _ITEM_RE = re.compile(r"^P[0-9]+\.[0-9]+$")
@@ -73,11 +74,11 @@ def _boundary_evidence(value) -> bool:
             and all(not _GENERIC_BOUNDARY_EVIDENCE_RE.fullmatch(item.strip()) for item in value))
 
 
-def _closed_fields(value, expected, *, field):
+def _closed_fields(value, expected, *, field, optional=frozenset()):
     if not isinstance(value, dict):
         raise BlockCandidateError(f"{field}: ожидается object")
     missing = sorted(expected - set(value))
-    unknown = sorted(set(value) - expected)
+    unknown = sorted(set(value) - expected - optional)
     if missing:
         raise BlockCandidateError(f"{field}: нет полей {missing}")
     if unknown:
@@ -91,7 +92,7 @@ def _has_external_class(candidate: dict) -> bool:
 
 def validate(candidate: dict) -> None:
     """Validate the closed schema without adding a runtime JSON-schema dependency."""
-    _closed_fields(candidate, _ROOT_FIELDS, field="candidate")
+    _closed_fields(candidate, _ROOT_FIELDS, field="candidate", optional=_OPTIONAL_ROOT_FIELDS)
     source = _schema()["properties"]
     if candidate["schema_version"] != "block-candidate/v1":
         raise BlockCandidateError("schema_version: ожидается block-candidate/v1")
@@ -150,6 +151,16 @@ def validate(candidate: dict) -> None:
             or review["verdict"] not in source["review"]["oneOf"][1]["properties"]["verdict"]["enum"]
             or not _string_list(review["evidence_ids"], field="review.evidence_ids", allow_empty=False)):
         raise BlockCandidateError("review: не проходит закрытую схему")
+    if ("repair_decision" in candidate) != ("repair_digest" in candidate):
+        raise BlockCandidateError("repair evidence требует record и digest вместе")
+    if "repair_decision" in candidate:
+        from task import plan_repair
+        try:
+            plan_repair.validate(candidate["repair_decision"])
+        except plan_repair.RepairDecisionError as exc:
+            raise BlockCandidateError(f"repair_decision: {exc}") from exc
+        if candidate["repair_digest"] != plan_repair.digest(candidate["repair_decision"]):
+            raise BlockCandidateError("repair_digest: не совпадает с repair_decision")
 
 
 def _decision(action: str) -> dict:
@@ -169,6 +180,13 @@ def evaluate(candidate: dict) -> dict:
         return _decision("gather-rag")
     except BlockCandidateError:
         return _decision("repair-candidate")
+    if "repair_decision" in candidate:
+        from task import plan_repair
+        repair = plan_repair.evaluate(candidate["repair_decision"])
+        if repair["action"] != "block-candidate":
+            # Block confirmation consumes the upstream result; it never gets to
+            # relabel a qualified repair as a terminal premise.
+            return {**repair, "journal_result": "local-repair" if repair["action"] == "repair-in-current-attempt" else "block-candidate"}
     if candidate["scope_class"] == "local":
         return _decision("continue-local-repair")
     if (candidate["signal_class"] == "acceptance-failure"

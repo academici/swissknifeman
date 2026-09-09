@@ -586,10 +586,24 @@ def returns(plan_dir) -> dict:
     entries = _journal_entries(journal_path)
     seams = _seams(plan_dir)
     fingerprints, executions, history = [], [], {}
+    repair_records = []
     non_item_subjects = 0
     schema_invalid_rows = sum(bool(row["errors"]) for row in entries)
     for row in entries:
         entry = row["entry"]
+        if isinstance(entry, dict) and isinstance(entry.get("repair_decision"), dict):
+            repair = entry["repair_decision"]
+            repair_records.append({
+                "origin": repair.get("origin"),
+                "paths": [path.get("path") for path in repair.get("affected_paths", [])
+                          if isinstance(path, dict)],
+                "pre": [carrier.get("digest") for carrier in repair.get("pre_validation", [])
+                        if isinstance(carrier, dict)],
+                "post": [carrier.get("digest") for carrier in repair.get("post_validation", [])
+                         if isinstance(carrier, dict)],
+                "material_surface": repair.get("material_surface"),
+                "action": entry.get("repair_action"),
+            })
         subject = entry.get("item_id") if isinstance(entry, dict) else None
         if not isinstance(subject, str) or not _ITEM.fullmatch(subject):
             non_item_subjects += 1
@@ -629,7 +643,8 @@ def returns(plan_dir) -> dict:
     return {"journals": 1, "entries": len(entries), "return_events": total, "metrics": metrics,
             "fingerprints": fingerprints, "counts": dict(sorted(counts.items())),
             "history": {digest: history[digest] for digest in sorted(history)},
-            "over_cap_subjects": sorted(digest for digest, count in counts.items() if count > cap)}
+            "over_cap_subjects": sorted(digest for digest, count in counts.items() if count > cap),
+            "repair_metrics": {"observed": len(repair_records), "first_ten": repair_records[:10]}}
 
 
 def durable_count(plan_dir, digest: str):

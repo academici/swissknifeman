@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:2aaafd6f53ed1c816b1286e835fa752e5333b0e83aad09e81bd266ac7bc6f348
+Canonical SHA-256: sha256:0fb20b9a1ebf73bd084f82c77b8ab3dfc096dec35f678def466e5e9d7fce2ae0
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -67,6 +67,12 @@ evidence.
 Модель/effort запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
+
+## Repair evidence
+
+For every forward repair record, preserve `repair-decision/v1`, its digest, affected paths and
+pre/post carriers in the append-only journal. A qualified `repair-in-current-attempt` record cannot
+close, block, escalate, or emit a redesign handoff until its exact original carrier is rerun.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 

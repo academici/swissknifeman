@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:4e2456178cfb1ab208b2fe01142cf15afee29f39f43b79aa6127767b948364f5
+Canonical SHA-256: sha256:b0c9b9ed85f844923bc13e0df5e3e95e377685e924e7bbe127f783d7f3682dc6
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -100,20 +100,31 @@ Missing capability is `cold-start-root: capability-missing`. Use immutable
 ## Continue-first block gate (v1)
 
 <!-- block-confirmation:v1:begin -->
-1. Reproduce the signal minimally and record nonterminal `local-repair` or `block-candidate`; this
-   does not change `status`/`attempt`.
-2. Build immutable `block-candidate/v1` with a material fingerprint, `scope_coverage` and concrete
+1. Reproduce the signal minimally and write one immutable `repair-decision/v1` before any block,
+   checkpoint stop or redesign. It binds the exact red original carrier, baseline/candidate digests,
+   path owner attribution, bounded diff, every material surface, and pre/post validation.
+2. `task.plan_repair.evaluate()` is the only repair-versus-design classifier. It returns only
+   `repair-in-current-attempt`, `gather-evidence`, `block-candidate`, or `design-required`. A red
+   clean baseline without a proved candidate delta, and every bounded all-false material surface,
+   is same-attempt repair even outside `Files`; rerun the exact original carrier. Such an action
+   cannot mutate terminal status or recommend `plan-design`.
+3. `design-required` needs a decision question, evidence gap, alternatives, and expected decision
+   artifact. `FIX_REQUIRED`, reviewer agreement, path count, or a red carrier are not a design gate.
+4. Only a record reduced to `block-candidate` enters this independent block gate; bind its digest
+   into `block-candidate/v1`. The block reducer consumes, and never reclassifies, that repair result.
+5. Record nonterminal `local-repair` or `block-candidate`; this does not change `status`/`attempt`.
+6. Build immutable `block-candidate/v1` with a material fingerprint, `scope_coverage` and concrete
    `boundary_evidence`. An in-scope `acceptance-failure` returns to local repair. An external
    candidate requires `rag.status=verified` and `rag:perplexity:sha256:<64 lowercase hex>` evidence;
    otherwise record `rag-pending` and gather RAG.
-3. One fresh fingerprint gets one distinct `isolated-child-return` reviewer. Reuse its review unless
+7. One fresh fingerprint gets one distinct `isolated-child-return` reviewer. Reuse its review unless
    the material fingerprint changes.
-4. The reviewer applies `block-confirmation-rubric-v1` and returns only
+8. The reviewer applies `block-confirmation-rubric-v1` and returns only
    `reviewer_actor/context/verdict/evidence_ids`; verdict is `JUSTIFIED`, `AVOIDABLE`,
    `INSUFFICIENT_EVIDENCE`, `OUT_OF_SCOPE`, or `MALFORMED`.
-5. Root validates it and calls `task.plan_blocking.evaluate()` once. Reviewer evidence is not
+9. Root validates it and calls `task.plan_blocking.evaluate()` once. Reviewer evidence is not
    authorization.
-6. Only `terminal-block` after distinct `JUSTIFIED` may produce `blocked`/`escalated`; all other
+10. Only `terminal-block` after distinct `JUSTIFIED` may produce `blocked`/`escalated`; all other
    outcomes continue repair or evidence collection. Never append a terminal event directly.
 <!-- block-confirmation:v1:end -->
 

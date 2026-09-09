@@ -9,6 +9,12 @@ effort: low
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
 
+## Repair evidence
+
+For every forward repair record, preserve `repair-decision/v1`, its digest, affected paths and
+pre/post carriers in the append-only journal. A qualified `repair-in-current-attempt` record cannot
+close, block, escalate, or emit a redesign handoff until its exact original carrier is rerun.
+
 ## DecisionRequest и isolated-child-return (P6.3)
 
 Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует

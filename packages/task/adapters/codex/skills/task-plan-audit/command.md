@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:ee52b49ebb34a2589da09de4151d99cf4fcdba122216f5f67303557f77b3c960
+Canonical SHA-256: sha256:851009a6fead28a088fea42d793302fb5e5f475eee2d0a8c937cd127c79fd6ca
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -343,6 +343,9 @@ carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполн�
 затем native fresh launch block с selector'ами маршрута successor. Это fresh routed root, а не
 просьба переключить модель внутри audit session. Граница не ограничивает автономность внутри
 совместимого execution route и не меняет семантику routing overshoot.
+Этот Context — результат одного `task.plan_continuity.reduce()` над attested work estimate с
+`lifecycle=audit-root-terminal` и durable checkpoint audit event; передай decision в renderer,
+а delivery/lint обязаны проверить его, не выбирать заново.
 
 **Expected output:** в phase-режиме вердикт `GREEN` (acceptance сходится после inline repairs;
 non-gating observations перечислены) либо `RED` (только reducer-confirmed authority/block boundary).

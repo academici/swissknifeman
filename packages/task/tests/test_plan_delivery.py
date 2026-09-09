@@ -86,6 +86,18 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt["schema_version"], "handoff-recommendation-receipt/v1")
         self.assertEqual(receipt["status"], "handoff-persisted")
         self.assertEqual(receipt["next_exact"], "/task:plan-exec DEMO-HANDOFF P1.1")
+        self.assertEqual(receipt["continuity"]["outcome"], "cold-start-root")
+        self.assertEqual(receipt["continuity"]["reason"], "owner-pause-no-resume")
+
+    def test_handoff_receipt_rejects_unknown_persisted_context(self):
+        plan = write_valid_plan(self.root, "DEMO-BAD-CONTEXT", layout="v2")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Context | fresh session |", "| Context | maybe-new-root |"),
+            encoding="utf-8")
+        with self.assertRaisesRegex(
+                plan_delivery.DeliveryError, "CONTINUITY_CONTEXT_INVALID"):
+            plan_delivery.build_handoff_receipt(plan, "design")
 
     def test_handoff_receipt_preserves_visible_batch(self):
         plan = write_valid_plan(self.root, "DEMO-BATCH-HANDOFF", layout="v2")
@@ -141,6 +153,7 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_handoff_receipt(plan, "P1")
         self.assertEqual(
             receipt["next_exact"], "close: task:plan-close DEMO-AUDIT-GREEN P1")
+        self.assertEqual(receipt["continuity"]["reason"], "audit-root-terminal")
         self.assertEqual(receipt["digests"]["handoff"], plan_delivery.file_digest(phase))
 
     def test_stale_handoff_recommendation_is_rejected(self):

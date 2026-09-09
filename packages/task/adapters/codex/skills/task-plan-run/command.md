@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:e3a0cbcf68bb567a661d729e2499cf8b921a2a4e37c3f63b16e131578dbe484a
+Canonical SHA-256: sha256:0f06f27a0fc9f4987c63601aef07785da5b22945d205e6b5c2f7083058eff7b9
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -101,6 +101,10 @@ an attempt/status transition. Do not use or reread `handoff.md`.
 Resolve and read the canonical `task:plan-exec` source through
 `task.command_catalog.package_command_path("task:plan-exec")`; execute its steps 1–8 exactly,
 with these three differences:
+
+The inherited delivery path also inherits the single `task.plan_continuity.reduce()` decision:
+preserve it across every item in the admitted batch and recompute only from a new attested work
+estimate. A turn or item boundary alone never changes `continue-root` to a cold start.
 
 - Current-session model/effort are inherited, never pinned.
 - At pre-mutation and pre-final use

@@ -8,7 +8,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-from task import journal, plan_authority, plan_layout, plan_projection
+from task import journal, plan_authority, plan_continuity, plan_layout, plan_projection
 
 QUEUE_NAME = "queue.jsonl"
 GATES_NAME = "_gates.md"
@@ -556,11 +556,26 @@ def _continuation(request: dict, *, current: dict | None, resume_available: bool
     if current is not None and current != expected:
         raise RequestError("continuation identity mismatch")
     if resume_available:
+        decision = plan_continuity.evaluate(
+            route_attested=True, context_attested=None, batch_receipt_valid=True)
         return {"mode": "resume-root", "target": expected["target"],
-                "root_session_id": expected["root_session_id"], "root_run_id": expected["root_run_id"]}
+                "root_session_id": expected["root_session_id"],
+                "root_run_id": expected["root_run_id"],
+                "decision": decision.as_dict()}
     if not fallback_reason:
         raise RequestError("cold-start-root requires exact fallback reason")
-    return {"mode": "cold-start-root", "target": expected["target"], "reason": fallback_reason}
+    try:
+        decision = plan_continuity.evaluate(
+            route_attested=True,
+            context_attested=False if fallback_reason == "context-budget" else None,
+            batch_receipt_valid=True,
+            boundary=fallback_reason,
+            checkpoint=f"decision:{request['action_digest']}",
+        )
+    except (KeyError, plan_continuity.ContinuityError) as exc:
+        raise RequestError("cold-start-root requires exact fallback reason") from exc
+    return {"mode": "cold-start-root", "target": expected["target"],
+            "reason": fallback_reason, "decision": decision.as_dict()}
 
 
 def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,

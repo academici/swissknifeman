@@ -231,6 +231,61 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
                          diag.errors)
 
 
+class TestContinuityHandoffGate(TmpPlanTestCase):
+    PLAN_ID = "2026.09.09-№1-CONTINUITY"
+
+    def _plan(self, context, suffix="BASE"):
+        from task import plan_bundle, plan_status
+
+        plan_dir = write_valid_plan(
+            self.root, f"{self.PLAN_ID}-{suffix}", layout="v2")
+        plan_path = plan_dir / "plan.md"
+        plan_path.write_text(
+            plan_path.read_text(encoding="utf-8")
+            .replace("| Title | Демо-план |", "| Title | План №1 — Continuity |")
+            .replace(
+                "## 3. Routing",
+                "## 3. Routing\n\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "|:--|:--|:--|:--|:--|:--|\n"
+                "| solo | P1.1 | implementation/medium | plan-exec | full | test |",
+            ),
+            encoding="utf-8",
+        )
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(
+            handoff.read_text(encoding="utf-8")
+            .replace("| Model | sonnet |", "| Batch | solo |\n| Model | sonnet |")
+            .replace("| Context | fresh session |", f"| Context | {context} |"),
+            encoding="utf-8",
+        )
+        plan_status.build_status(plan_dir)
+        plan_bundle.build(plan_dir, "P1.1")
+        return plan_dir
+
+    def test_canonical_context_is_live_linted(self):
+        _, diag = _lint(self._plan("continue-root"))
+        self.assertEqual(_errors_containing(diag, "CONTINUITY_CONTEXT_INVALID"), [],
+                         diag.errors)
+
+    def test_cold_start_requires_one_canonical_reason(self):
+        for index, context in enumerate(
+                ("cold-start-root", "cold-start-root: made-up", "fresh session")):
+            with self.subTest(context=context):
+                _, diag = _lint(self._plan(context, str(index)))
+                self.assertTrue(
+                    _errors_containing(diag, "CONTINUITY_CONTEXT_INVALID"), diag.errors)
+
+    def test_context_row_is_required_exactly_once(self):
+        plan_dir = self._plan("continue-root")
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Context | continue-root |", ""), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "ровно одну строку `| Context |"),
+                        diag.errors)
+
+
 class TestNextDeclarationLine(TmpPlanTestCase):
     """D40 — форма `Next` объявляется ПЕРВОЙ строкой поля; проза launch-block'а (в т.ч.
     ячейка «Суть») законно ЦИТИРУЕТ другие формы enum'а и резолвер не перехватывает."""

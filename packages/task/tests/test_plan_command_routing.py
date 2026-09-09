@@ -14,6 +14,7 @@ from task.command_catalog import EFFORTS, MODEL_CLASSES, build_command_catalog
 from task.command_render import (PlanNextCarrier, mapping_from_catalog,
                                  parse_next_carrier, plan_provider_invocation,
                                  render_codex_launch)
+from task.plan_continuity import ContinuityDecision
 from task.route_evidence import required_route
 
 
@@ -141,6 +142,31 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             self.assertTrue(plan.ok, plan.diagnostics)
             self.assertEqual(plan.invocation, invocation)
             self.assertIs(plan.carrier, carrier)
+
+    def test_renderer_verifies_precomputed_continuity_instead_of_rechoosing_it(self):
+        decision = ContinuityDecision(
+            "cold-start-root", "audit-root-terminal", ("checkpoint:journal:42",), True)
+        carrier = parse_next_carrier(
+            "audit-phase: task:plan-audit PLAN P4",
+            context_kind="cold-start-root",
+            continuity=decision,
+        )
+        self.assertEqual(carrier.as_dict()["continuity"]["reason"],
+                         "audit-root-terminal")
+        with self.assertRaisesRegex(ValueError, "continuity/context mismatch"):
+            parse_next_carrier(
+                "audit-phase: task:plan-audit PLAN P4",
+                context_kind="continue-root",
+                continuity=decision,
+            )
+        waiting = parse_next_carrier(
+            "waiting: gate D1 → exec-items: task:plan-exec PLAN P4.4",
+            context_kind="continue-root",
+            continuity=ContinuityDecision(
+                "waiting-owner", "owner-wait", ("request:Q1",), False),
+        )
+        self.assertEqual(waiting.continuity.outcome, "waiting-owner")
+        self.assertFalse(waiting.continuity.runnable)
 
     def test_codex_launch_pins_the_mapped_route_and_process_safety_flags(self):
         carrier = PlanNextCarrier(

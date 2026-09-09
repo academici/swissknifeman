@@ -563,6 +563,31 @@ def lint_plan(plan_dir, diag):
                                 f"handoff.Next: Batch {expected} должен адресовать весь оставшийся "
                                 f"adjacent-суффикс {members}, получено {command_items}")
 
+        # The continuity controller became a live write-site gate for plans
+        # authored on/after its activation date.  Older layout-v2 carriers keep
+        # their historical strings reader-side, but new handoffs must persist a
+        # canonical reducer outcome (and the sole cold-start reason).
+        if (layout == "v2" and PLAN_ID_DATED_RE.match(plan_id)
+                and plan_id[:10] >= CONTINUITY_GATE_DATE
+                and kind != "closed"):
+            context_rows = [LAUNCH_CONTEXT_ROW_RE.match(line)
+                            for line in next_val.splitlines()]
+            contexts = [match.group(1).strip().strip("`")
+                        for match in context_rows if match]
+            if len(contexts) != 1:
+                diag.error(
+                    handoff_path, next_lineno,
+                    "handoff.Next: continuity gate требует ровно одну строку `| Context | … |`",
+                )
+            else:
+                try:
+                    plan_continuity.parse_context(contexts[0])
+                except plan_continuity.ContinuityError as exc:
+                    diag.error(
+                        handoff_path, next_lineno,
+                        f"handoff.Next: CONTINUITY_CONTEXT_INVALID ({exc})",
+                    )
+
         # --- C2 (D8): прозаическая gate-оговорка при runnable-форме → WARNING ------
         # Автор вписал в объявление runnable slash-форму «команда есть, но не сейчас»
         # (стем «не раньше»/«делать нечего»/time-gate) вместо структурной формы «ОЖИДАНИЕ».

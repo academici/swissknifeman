@@ -284,6 +284,9 @@ carrier'ов этот audit root ЗАВЕРШАЕТСЯ: он не исполн�
 затем native fresh launch block с selector'ами маршрута successor. Это fresh routed root, а не
 просьба переключить модель внутри audit session. Граница не ограничивает автономность внутри
 совместимого execution route и не меняет семантику routing overshoot.
+Этот Context — результат одного `task.plan_continuity.reduce()` над attested work estimate с
+`lifecycle=audit-root-terminal` и durable checkpoint audit event; передай decision в renderer,
+а delivery/lint обязаны проверить его, не выбирать заново.
 
 **Expected output:** в phase-режиме вердикт `GREEN` (acceptance сходится после inline repairs;
 non-gating observations перечислены) либо `RED` (только reducer-confirmed authority/block boundary).

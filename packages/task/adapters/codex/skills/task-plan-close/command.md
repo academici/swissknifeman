@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:2f27a276db4fb9ec0dde749ba7d661d8ae2e588a1c067401fded113259ef9415
+Canonical SHA-256: sha256:2aaafd6f53ed1c816b1286e835fa752e5333b0e83aad09e81bd266ac7bc6f348
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -179,6 +179,9 @@ producer commit; `red` блокирует закрытие. Terminal escalation 
 - **`Context` — РОВНО одно из трёх layout-v2 значений** (§6): `continue-root` ·
   `isolated-child-return` · `cold-start-root` с одной declared reason. Обычная последовательность,
   локальная repair и phase close используют `continue-root`; имя команды не требует новой сессии.
+- **Один controller:** перед записью Context собери `task.plan_continuity.WorkEstimate`, вызови
+  `task.plan_continuity.reduce()` и передай тот же typed decision в renderer. Delivery receipt и
+  lint только проверяют сохранённый outcome/reason; они не выбирают новую сессию повторно.
 - **Сверка с Execution Rules плана**: команда в Next не должна противоречить
   `## 2. Execution Rules` — план запрещает `$ task:plan-exec` (программный план) →
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec

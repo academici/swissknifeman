@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:a5061af5a8e5aa981cf50b83d006bc40a80315e6d1f7b85da56eb4306ababd0e
+Canonical SHA-256: sha256:59d26fbecb05795afe81919bfd155b4f320174df093feb643f722dec856ce568
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -83,6 +83,8 @@ successor уже ready или исходный бриф упоминал пос�
 начинается только отдельным routed invocation после design-result. Любой runnable
 successor из design handoff несёт `Context: cold-start-root: design-root-terminal`
 и native launch с моделью и effort именно successor'а.
+Получи этот Context через `task.plan_continuity.reduce()` над attested work estimate с
+`lifecycle=design-root-terminal` и durable checkpoint; передай тот же typed decision renderer'у.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 

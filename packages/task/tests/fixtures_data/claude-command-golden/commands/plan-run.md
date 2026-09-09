@@ -29,6 +29,10 @@ Resolve and read the canonical `task:plan-exec` source through
 `task.command_catalog.package_command_path("task:plan-exec")`; execute its steps 1–8 exactly,
 with these three differences:
 
+The inherited delivery path also inherits the single `task.plan_continuity.reduce()` decision:
+preserve it across every item in the admitted batch and recompute only from a new attested work
+estimate. A turn or item boundary alone never changes `continue-root` to a cold start.
+
 - Current-session model/effort are inherited, never pinned.
 - At pre-mutation and pre-final use
   `task.route_evidence.capture_launch(expected_invocation="task:plan-run <arguments>", expected_cwd="<repo-cwd>")`.

@@ -1,1 +1,39 @@
-{"schema_version":"session-work-estimate/v1","required":["route_attested","context_attested","batch_receipt_valid"]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swissknifeman.local/task/session-work-estimate-v1.schema.json",
+  "schema_version": "session-work-estimate/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_attested",
+    "capabilities_attested",
+    "capabilities_sufficient",
+    "context_attested",
+    "context_health",
+    "batch_receipt_valid",
+    "remaining_batch_digest",
+    "loaded_inputs_reusable",
+    "cold_start_cost",
+    "lifecycle",
+    "isolated_review",
+    "reviewer_task",
+    "checkpoint"
+  ],
+  "properties": {
+    "schema_version": {"const": "session-work-estimate/v1"},
+    "route_attested": {"type": "boolean"},
+    "capabilities_attested": {"type": "boolean"},
+    "capabilities_sufficient": {"type": "boolean"},
+    "context_attested": {"type": "boolean"},
+    "context_health": {"enum": ["sufficient", "insufficient", "unavailable"]},
+    "batch_receipt_valid": {"type": "boolean"},
+    "remaining_batch_digest": {"type": "string", "pattern": "^(sha256:)?[0-9a-f]{64}$"},
+    "loaded_inputs_reusable": {"type": "boolean"},
+    "cold_start_cost": {"type": "integer", "minimum": 0},
+    "lifecycle": {"enum": ["active", "waiting-owner", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal", "audit-root-terminal"]},
+    "isolated_review": {"type": "boolean"},
+    "reviewer_task": {"type": ["string", "null"]},
+    "checkpoint": {"type": ["string", "null"]}
+  }
+}

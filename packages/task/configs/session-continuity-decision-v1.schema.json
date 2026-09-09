@@ -1,1 +1,16 @@
-{"schema_version":"session-continuity-decision/v1","outcomes":["continue-root","isolated-child-return","cold-start-root","waiting-owner"]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swissknifeman.local/task/session-continuity-decision-v1.schema.json",
+  "schema_version": "session-continuity-decision/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "outcome", "reason", "evidence", "runnable"],
+  "properties": {
+    "schema_version": {"const": "session-continuity-decision/v1"},
+    "outcome": {"enum": ["continue-root", "isolated-child-return", "cold-start-root", "waiting-owner"]},
+    "reason": {"type": "string", "minLength": 1},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "runnable": {"type": "boolean"}
+  },
+  "cold_start_reasons": ["context-budget", "capability-missing", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal", "audit-root-terminal"]
+}

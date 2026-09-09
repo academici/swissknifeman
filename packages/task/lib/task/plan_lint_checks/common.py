@@ -40,7 +40,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # журнала реюзает её вместо дубля правил (Code Guidance 2026.07.18-FOREMAN P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
-from task import plan_layout
+from task import plan_continuity, plan_layout
 from task import review_policy as _review_policy
 from task import plan_status
 # task.task_contract — единственный владелец строкового теста «внешности» execution
@@ -202,6 +202,7 @@ LAUNCH_TABLE_ROW_RE = re.compile(
 )
 LAUNCH_BATCH_ROW_RE = re.compile(r"^\|\s*Batch\s*\|\s*([^|]+?)\s*\|")
 LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
+LAUNCH_CONTEXT_ROW_RE = re.compile(r"^\|\s*Context\s*\|\s*([^|]+?)\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Layout-v2 `Context` launch-block'а (SKILL §6, D16/D30/D125) — РОВНО три
 # значения. Реестр НЕ используется НИГДЕ вне `--conflicts` (2026.07.31-SKM-LEAN P5.9): до этого
@@ -213,6 +214,7 @@ CONTEXT_VALUES = (
     "isolated-child-return",
     "cold-start-root",
 )
+CONTINUITY_GATE_DATE = "2026.09.09"
 # Директива канонического литерала (D28/D79) живёт в EN-only `SKILL.md`;
 # регексом владеет этот модуль, а `--conflicts` и тесты его переиспользуют.
 I18N_KEEP_RE = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")

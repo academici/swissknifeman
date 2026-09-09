@@ -24,6 +24,8 @@ successor уже ready или исходный бриф упоминал пос�
 начинается только отдельным routed invocation после design-result. Любой runnable
 successor из design handoff несёт `Context: cold-start-root: design-root-terminal`
 и native launch с моделью и effort именно successor'а.
+Получи этот Context через `task.plan_continuity.reduce()` над attested work estimate с
+`lifecycle=design-root-terminal` и durable checkpoint; передай тот же typed decision renderer'у.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 

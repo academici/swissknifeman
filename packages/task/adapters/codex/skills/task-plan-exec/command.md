@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:708f27add6f35c432af5e2bd07626dad5c2b9377fd53330a816d33c372384757
+Canonical SHA-256: sha256:4e2456178cfb1ab208b2fe01142cf15afee29f39f43b79aa6127767b948364f5
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -243,3 +243,8 @@ route gate; do not substitute config, actor, or prose.
    `task.plan_gates.phase_audit_policy(..., candidate_snapshot=candidate["snapshot"])`:
    `audit-phase: task:plan-audit <PLAN-ID> Pn` or `close: task:plan-close <PLAN-ID> Pn`.
    Context is exactly `continue-root`, `isolated-child-return`, or `cold-start-root`.
+   Before persisting it, build `task.plan_continuity.WorkEstimate` from provider-attested
+   route/capabilities, context health, the digest-bound remaining batch, loaded-input reuse,
+   cold-start cost, lifecycle, and checkpoint; call `task.plan_continuity.reduce()` once and pass
+   that same decision to `PlanNextCarrier`. Never let the renderer choose a different context;
+   `waiting-owner` emits no runnable successor.

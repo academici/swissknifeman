@@ -9,8 +9,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from task import (command_catalog, journal, plan_layout, plan_lint, review_policy,
-                  terminal_policy)
+from task import (command_catalog, journal, plan_continuity, plan_layout, plan_lint,
+                  review_policy, terminal_policy)
 
 
 class DeliveryError(ValueError):
@@ -37,6 +37,16 @@ _STATUS_BY_RESULT = {
 }
 _AUDIT_VERDICT_RE = re.compile(r"\*\*Вердикт:\s*(GREEN|ATTENTION|RED)\*\*")
 _SEMANTIC_NEXT_LINE_RE = re.compile(r"^(?:Semantic Next:\s*)?`?([^`]+?)`?\.?$")
+
+
+def _continuity(route: dict, *, allow_legacy: bool) -> dict:
+    try:
+        decision = plan_continuity.parse_context(
+            route.get("context"), allow_legacy=allow_legacy)
+    except plan_continuity.ContinuityError as exc:
+        raise DeliveryError(
+            "CONTINUITY_CONTEXT_INVALID", "handoff Context не прошёл continuity gate") from exc
+    return decision.as_dict()
 
 
 def file_digest(path) -> str:
@@ -193,6 +203,7 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
         "next_exact": next_exact,
         "recommendation": recommendation,
         "route": route,
+        "continuity": _continuity(route, allow_legacy=False),
         "rationale": {"remaining": None, "open_risks": None},
         "digest": file_digest(path),
     }
@@ -244,6 +255,7 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
         "next_exact": next_exact,
         "recommendation": recommendation,
         "route": route,
+        "continuity": _continuity(route, allow_legacy=True),
         "rationale": {"remaining": field("Remaining"), "open_risks": field("Open risks")},
         "digest": file_digest(path),
     }
@@ -381,6 +393,7 @@ def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: 
         "next_exact": handoff["next_exact"],
         "recommendation": handoff["recommendation"],
         "route": handoff["route"],
+        "continuity": handoff["continuity"],
         "rationale": handoff["rationale"],
         "commit_sha": _git_commit(plan_dir),
         "journal": terminal,

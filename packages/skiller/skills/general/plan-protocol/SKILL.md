@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.31.2
+version: 2.31.3
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -253,6 +253,14 @@ For layout v2 the Context field carries EXACTLY one of three values:
 `audit-root-terminal`. Command names
 do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
 provider-neutral form and the native launch block together.
+
+Before any runnable Context is written, build one `task.plan_continuity.WorkEstimate` from the
+provider-attested route/capabilities, context health, digest-bound remaining batch, loaded-input
+reuse, cold-start cost, lifecycle, and durable checkpoint, then call `task.plan_continuity.reduce`.
+Persist that decision's `context`; pass the same typed decision to `PlanNextCarrier`. Renderers,
+delivery receipts, and plan-lint validate this result and never choose continuity independently.
+Unavailable context telemetry defaults to `continue-root`; `waiting-owner` suppresses a runnable
+successor; DecisionRequest recovery preserves `resume-root` whenever that root still exists.
 
 Before a terminal response, `plan-exec`, `plan-run`, and `plan-close` build a
 `terminal-delivery-receipt/v1` from the terminal journal pointer/run ID, current state/closure,

@@ -85,6 +85,7 @@ class PlanRequestsTests(unittest.TestCase):
         resolved = plan_requests.resolve(self.plan, "Q1", self._response(value), resolver_id="owner:1",
                                          current_continuation=value["continuation"])
         self.assertEqual(resolved["continuation"]["mode"], "resume-root")
+        self.assertEqual(resolved["continuation"]["decision"]["outcome"], "continue-root")
         events = [json.loads(line) for line in (self.plan / "journal.jsonl").read_text(encoding="utf-8").splitlines()]
         self.assertEqual(events[-1]["item_id"], "P0.1")
         self.assertEqual(events[-1]["result"], "in-progress")
@@ -106,9 +107,15 @@ class PlanRequestsTests(unittest.TestCase):
         plan_requests.claim(self.plan, "Q1", resolver_id="owner:1", lease_expires_at="2099-01-01T00:00:00Z")
         with self.assertRaisesRegex(plan_requests.RequestError, "requires exact fallback reason"):
             plan_requests.resolve(self.plan, "Q1", self._response(value), resolver_id="owner:1", resume_available=False)
-        result = plan_requests.resolve(self.plan, "Q1", self._response(value), resolver_id="owner:1",
-                                       resume_available=False, fallback_reason="root session expired")
+        with self.assertRaisesRegex(plan_requests.RequestError, "exact fallback reason"):
+            plan_requests.resolve(self.plan, "Q1", self._response(value), resolver_id="owner:1",
+                                  resume_available=False, fallback_reason="root session expired")
+        result = plan_requests.resolve(
+            self.plan, "Q1", self._response(value), resolver_id="owner:1",
+            resume_available=False, fallback_reason="owner-pause-no-resume")
         self.assertEqual(result["continuation"]["mode"], "cold-start-root")
+        self.assertEqual(result["continuation"]["decision"]["reason"],
+                         "owner-pause-no-resume")
 
     def test_render_is_deterministic_and_join_is_opt_in(self):
         plan_requests.request(self.plan, request_value())

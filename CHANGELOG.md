@@ -3,8 +3,10 @@
 ## [Unreleased]
 
 - **`task`: continuation decisions keep compatible work in the current root session.** A small
-  provider-neutral reducer makes cold starts require a named hard boundary and durable checkpoint,
-  preserves owner-wait and isolated-review outcomes, and refuses missing route/batch evidence.
+  provider-neutral reducer now consumes versioned route/capability, context-health, remaining-batch,
+  loaded-input and lifecycle evidence; cold starts require one canonical hard boundary and durable
+  checkpoint. Renderer, DecisionRequest recovery, handoff delivery and live plan lint validate the
+  same typed decision while preserving owner-wait, same-root resume and isolated-review outcomes.
 
 - **`task`: Routing Batch is now pre-mutation authority.** One compiler derives batch membership,
   maximum route/review and digest-bound suffix receipts from `plan.md`; partial, ambiguous and stale

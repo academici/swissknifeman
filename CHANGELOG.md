@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: repairable carrier drift stays in the active execution batch.** `plan-exec` now
+  permits a smallest scope-preserving carrier/reference repair and reruns the original check;
+  `plan-run` inherits that one classifier, reserving redesign for actual frozen, public or
+  authority-boundary changes.
+
 - **`task`: единый continue-first repair reducer.** Закрытый `repair-decision/v1` связывает
   исходный carrier, clean baseline/candidate delta, атрибуцию путей, bounded diff, material surface
   и pre/post validation; qualified repair не может ложно terminalize или породить redesign,

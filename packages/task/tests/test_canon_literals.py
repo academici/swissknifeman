@@ -541,6 +541,24 @@ class TestContinueFirstCommandFlow(unittest.TestCase):
                                 "не attempt и не transition статуса" in text)
 
 
+class TestCarrierRepairCommandFlow(unittest.TestCase):
+    """Carrier drift has one continue-first classifier, inherited by plan-run."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = PLAN_LINT_PY.parents[4]
+
+    def test_plan_run_inherits_the_single_carrier_repair_rule(self):
+        exec_text = (self.repo_root / "packages/task/commands/plan-exec.md").read_text(
+            encoding="utf-8")
+        run_text = (self.repo_root / "packages/task/commands/plan-run.md").read_text(
+            encoding="utf-8")
+        self.assertEqual(exec_text.count("<!-- carrier-repair:continue-first -->"), 1)
+        self.assertIn("Apply `task:plan-exec`'s single", run_text)
+        self.assertIn("<!-- carrier-repair:continue-first -->", run_text)
+        self.assertNotIn("Missing, stale, or unresolvable declared plan carriers are", run_text)
+
+
 class TestBlockConfirmationCommandFlow(unittest.TestCase):
     """P4.2: five commands share one closed confirmation sequence."""
 

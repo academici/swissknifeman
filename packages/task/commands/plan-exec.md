@@ -37,8 +37,15 @@ Missing capability is `cold-start-root: capability-missing`. Use immutable
    clean baseline without a proved candidate delta, and every bounded all-false material surface,
    is same-attempt repair even outside `Files`; rerun the exact original carrier. Such an action
    cannot mutate terminal status or recommend `plan-design`.
-3. `design-required` needs a decision question, evidence gap, alternatives, and expected decision
+3. <!-- carrier-repair:continue-first --> `design-required` needs a decision question, evidence gap, alternatives, and expected decision
    artifact. `FIX_REQUIRED`, reviewer agreement, path count, or a red carrier are not a design gate.
+   A missing, stale, or unresolvable declared carrier is also not a design gate when its meaning is
+   already determined by the current item's Scope/Inputs/Deliverables: record `local-repair` or
+   `dependency-not-ready`, make the smallest scope-preserving source reference or regenerate the
+   owning projection, then rerun the exact original carrier. Item-spec immutability does not turn
+   that bounded clarification into redesign. `plan-design` is allowed only when no single
+   scope-preserving carrier can express the required meaning, or when the repair changes a
+   frozen/public/authority boundary.
 4. Only a record reduced to `block-candidate` enters this independent block gate; bind its digest
    into `block-candidate/v1`. The block reducer consumes, and never reclassifies, that repair result.
 5. Record nonterminal `local-repair` or `block-candidate`; this does not change `status`/`attempt`.

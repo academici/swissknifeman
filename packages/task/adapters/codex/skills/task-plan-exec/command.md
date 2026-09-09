@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:b0c9b9ed85f844923bc13e0df5e3e95e377685e924e7bbe127f783d7f3682dc6
+Canonical SHA-256: sha256:e3597474f9674c7c4ecdae09050bd41bfd114d2932852692201fa8d09a43787f
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -108,8 +108,15 @@ Missing capability is `cold-start-root: capability-missing`. Use immutable
    clean baseline without a proved candidate delta, and every bounded all-false material surface,
    is same-attempt repair even outside `Files`; rerun the exact original carrier. Such an action
    cannot mutate terminal status or recommend `plan-design`.
-3. `design-required` needs a decision question, evidence gap, alternatives, and expected decision
+3. <!-- carrier-repair:continue-first --> `design-required` needs a decision question, evidence gap, alternatives, and expected decision
    artifact. `FIX_REQUIRED`, reviewer agreement, path count, or a red carrier are not a design gate.
+   A missing, stale, or unresolvable declared carrier is also not a design gate when its meaning is
+   already determined by the current item's Scope/Inputs/Deliverables: record `local-repair` or
+   `dependency-not-ready`, make the smallest scope-preserving source reference or regenerate the
+   owning projection, then rerun the exact original carrier. Item-spec immutability does not turn
+   that bounded clarification into redesign. `plan-design` is allowed only when no single
+   scope-preserving carrier can express the required meaning, or when the repair changes a
+   frozen/public/authority boundary.
 4. Only a record reduced to `block-candidate` enters this independent block gate; bind its digest
    into `block-candidate/v1`. The block reducer consumes, and never reclassifies, that repair result.
 5. Record nonterminal `local-repair` or `block-candidate`; this does not change `status`/`attempt`.

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-09
-inputs_sha256: 48474082ecd74a69b3c690e365fffaea1c0ac2a6eb9cf9ff9355c3e68e74b523
+inputs_sha256: 1dcd09c3b9b9218d77add9fcfb81512c9ac0cef1a94eb79dd1ccf23b841b7356
 generated_by: task plan-views status
 -->
 
@@ -129,6 +129,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-09 | frontier/xhigh | plan-audit · closed-deviations · Audit rebind P1.3: product/focused gates green; full Task gate retains 12 foreign-plan lint errors.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-09 | frontier/xhigh | plan-audit · audit-green · audit-fixer; candidate rebound after product and terminal-evidence repair; verdict GREEN |
+| 2026-09-09 | implementation/low | plan-close · closed-deviations · фаза P1 закрыта |
 
 ## Owner Gates
 

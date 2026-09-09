@@ -163,5 +163,14 @@ class TestProducerAdmission(unittest.TestCase):
         self.assertIsNone(items[0]["admission_pass"])
 
 
+class TestBatchAdmissionFacade(unittest.TestCase):
+    def test_invalid_request_is_a_closed_pre_mutation_verdict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            (plan / "plan.md").write_text("# no routing\n", encoding="utf-8")
+            self.assertEqual(plan_admission.batch_admission(plan, "not-an-item")["verdict"],
+                             "BATCH_AMBIGUOUS")
+
+
 if __name__ == "__main__":
     unittest.main()

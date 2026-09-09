@@ -148,6 +148,18 @@ class TestNewEntryAndValidate(TmpDirTestCase):
             )
             validate_entry(entry)
 
+    def test_digest_bound_batch_receipt_is_additive_and_malformed_is_rejected(self):
+        from task import task_contract
+        batch = {"batch_id": "B1", "items": ("P1.1", "P1.2"),
+                 "routing_digest": "a" * 64, "spec_digest": "b" * 64}
+        receipt = task_contract.build_batch_receipt(batch, completed_prefix=("P1.1",))
+        entry = new_entry(plan_id="P", item_id="P1.2", command="plan-run",
+                          actor="model/high", result="in-progress", batch_receipt=receipt)
+        validate_entry(entry)
+        entry["batch_receipt"]["spec_digest"] = "not-a-digest"
+        with self.assertRaises(JournalValidationError):
+            validate_entry(entry)
+
 
 class TestTraceRef(TmpDirTestCase):
     """P3.1 (`root/contracts/unified-agent-trace-v1.md` § Journal reference):

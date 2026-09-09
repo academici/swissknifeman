@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:29dcf697ae4931a41751e14744ff19e62703c78caf818c89ce2bd3d4a15a161d
+Canonical SHA-256: sha256:708f27add6f35c432af5e2bd07626dad5c2b9377fd53330a816d33c372384757
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -173,6 +173,12 @@ route gate; do not substitute config, actor, or prose.
    `CAPABILITY_UNSUPPORTED`, `SLICE_INCOMPLETE`, and `COLD_START_INCOMPLETE` follow the contract's
    stop/escalation disposition. `ModuleNotFoundError` for `task.task_contract` or
    `task.route_evidence` is fail-closed.
+
+   Before that item contract and before any journal/status mutation, call
+   `task.plan_admission.batch_admission(plan_dir, requested_items, receipt=...)`. For a new
+   layout-v2 plan its closed allow set is the exact declared Routing Batch, declared `solo`, or
+   its digest-bound remaining suffix. `BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, and `BATCH_STALE` print
+   the canonical invocation and leave the item untouched; never infer a group from prose.
 
 3. **Start.** Set item and `## Phase Status` to `🟡 In progress`, obtain `session_id` with
    `plan-session.py current --id`, and append the start event with the same `run_id` for the whole

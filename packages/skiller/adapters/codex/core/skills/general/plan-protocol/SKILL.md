@@ -197,6 +197,9 @@ deliverables, or per-item close gates: those gates still run inside the batch. A
 a phase audit/close boundary, mixes `Exec` modes, hides an owner/irreversible gate, or exceeds the
 remaining context budget. Its launch route and review are the maxima of its rows and capabilities are
 the union. After each item, persist the same batch plus only its remaining adjacent suffix.
+Before the first journal/status mutation, the executor admits only the exact declared batch,
+`solo`, or a Routing/spec-digest-bound suffix receipt; partial, ambiguous, and stale requests stay
+non-mutating (`BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, `BATCH_STALE`).
 
 Workflow requirement is a line-scoped positive declaration in Phase Context, not a keyword grep:
 `scriptPath` or a positive orchestration/multi-agent statement requires a canonical workflow asset.

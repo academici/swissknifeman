@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:81ae64c11c1caf29530762cd1b7e1b883a5578b0dc56081b57031f9d118bf316
+Canonical SHA-256: sha256:e3a0cbcf68bb567a661d729e2499cf8b921a2a4e37c3f63b16e131578dbe484a
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -133,3 +133,8 @@ provider adapter or do not append. Before start compute
 `run_id = task.journal.derive_run_id(plan_id=plan_id, item_id=item_id, attempt=attempt, session_id=session_id)`;
 use that nonempty `--run-id` for start and terminal. A repeated terminal close returns its existing
 pointer and writes no second journal entry.
+
+For a multi-item invocation, run the inherited pre-journal batch admission once over the exact
+requested list. Persist `task.task_contract.build_batch_receipt(...)` as optional
+`--batch-receipt-json` evidence when a completed prefix leaves a suffix; its Routing/spec digests
+must still match before that suffix can resume.

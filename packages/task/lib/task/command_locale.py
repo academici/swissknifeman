@@ -23,8 +23,8 @@ _PREIMAGE_DIGESTS = {
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
 _CANDIDATE_DIGESTS = {
-    "plan-exec": "29dcf697ae4931a41751e14744ff19e62703c78caf818c89ce2bd3d4a15a161d",
-    "plan-run": "81ae64c11c1caf29530762cd1b7e1b883a5578b0dc56081b57031f9d118bf316",
+    "plan-exec": "708f27add6f35c432af5e2bd07626dad5c2b9377fd53330a816d33c372384757",
+    "plan-run": "e3a0cbcf68bb567a661d729e2499cf8b921a2a4e37c3f63b16e131578dbe484a",
 }
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
 # sources use that form inside ordered lists, so matching only column-zero fences
@@ -43,11 +43,11 @@ _EXPECTED_INVENTORIES = {
     # binds the full typed sequence, including order and multiplicity.
     "plan-exec": {
         "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
-        "candidate": "sha256:ba6a182cda96066227c4c2d249f714d48e4de4dfc0f207e245aba494c2ec3b91",
+        "candidate": "sha256:b8c5b9dafda705bed87bb59cf459e68bcdebcfbdd5b038931c7d577753b731d3",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:467638f8d0ed4bee027c7a2314b8c609000632fce0f4521ac6a327067854c53f",
+        "candidate": "sha256:0961e350e9d203d70085af9680d551191c785b91e17703c508236a775082fa4c",
     },
 }
 

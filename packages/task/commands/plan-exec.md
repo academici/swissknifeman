@@ -103,6 +103,12 @@ route gate; do not substitute config, actor, or prose.
    stop/escalation disposition. `ModuleNotFoundError` for `task.task_contract` or
    `task.route_evidence` is fail-closed.
 
+   Before that item contract and before any journal/status mutation, call
+   `task.plan_admission.batch_admission(plan_dir, requested_items, receipt=...)`. For a new
+   layout-v2 plan its closed allow set is the exact declared Routing Batch, declared `solo`, or
+   its digest-bound remaining suffix. `BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, and `BATCH_STALE` print
+   the canonical invocation and leave the item untouched; never infer a group from prose.
+
 3. **Start.** Set item and `## Phase Status` to `🟡 In progress`, obtain `session_id` with
    `plan-session.py current --id`, and append the start event with the same `run_id` for the whole
    attempt:

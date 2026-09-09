@@ -1015,6 +1015,51 @@ class BundleLintTests(unittest.TestCase):
             self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
             declared_privacy={"minimized": True, "excluded_classes": []}))
 
+class BatchRoutingAdmissionTests(unittest.TestCase):
+    """P1.2: batch authority is enforced before a caller can create an attempt."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.plan_dir = fixtures.write_valid_plan(Path(self.tmp.name), "BATCH-DEMO", layout="v2")
+        for item in ("P1.2", "P1.3"):
+            fixtures.write_v2_carriers(self.plan_dir, item_id=item, refresh_views=False)
+        routing = (
+            "\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |\n")
+        plan = fixtures.plan_md("BATCH-DEMO").replace("## 3. Routing\n\n", "## 3. Routing" + routing)
+        (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_direct_first_item_is_refused_and_exact_range_is_allowed(self):
+        partial = task_contract.admit_batch(self.plan_dir, "P1.1")
+        exact = task_contract.admit_batch(self.plan_dir, "P1.1–P1.3")
+        self.assertEqual(partial["verdict"], "BATCH_REQUIRED")
+        self.assertEqual(exact["verdict"], "ALLOW")
+        self.assertEqual(exact["batch"]["route"],
+                         {"model_class": "implementation", "effort": "high"})
+
+    def test_checkpoint_bound_suffix_and_stale_spec_refusal(self):
+        batch = task_contract.compile_batch_routing(self.plan_dir)["batches"]["B1"]
+        receipt = task_contract.build_batch_receipt(batch, completed_prefix=("P1.1",))
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.3"),
+                                                   receipt=receipt)["verdict"], "ALLOW")
+        spec = fixtures.item_spec_path(self.plan_dir, "P1.2")
+        spec.write_text(spec.read_text(encoding="utf-8") + "\nchanged\n", encoding="utf-8")
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.3"),
+                                                   receipt=receipt)["verdict"], "BATCH_STALE")
+
+    def test_request_across_groups_is_ambiguous(self):
+        plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(
+            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |",
+            "| solo | P1.1 | implementation/high | manual | full | test |\n"
+            "| B1 | P1.2–P1.3 | implementation/high | manual | full | test |")
+        (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.1", "P1.2"))["verdict"],
+                         "BATCH_AMBIGUOUS")
+
 
 if __name__ == "__main__":
     unittest.main()

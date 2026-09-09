@@ -391,6 +391,8 @@ _ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON, "Model/effort", "Model/Effo
 # (`Path(__file__).resolve().parents[N] / "configs/..."`) — never cwd/env discovery
 # (`command_catalog`'s own module docstring bans that for the loader this calls).
 _DEFAULT_ROUTING_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "command-routing.json"
+_REVIEW_ORDER = ("none", "light", "full")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _model_class_name_map(routing_metadata: dict) -> dict:
@@ -426,6 +428,194 @@ def _resolve_model_class(token: str, name_to_classes: dict, item_id: str, raw_ce
             f"{MODEL_CLASS_ORDER} nor an unambiguous name in command-routing.json "
             f"class_selectors (resolved classes: {sorted(classes) if classes else []})")
     return next(iter(classes))
+
+
+def _routing_digest(plan_dir: Path, items: tuple[str, ...]) -> tuple[str, str]:
+    """Return the two immutable inputs a batch receipt must bind.
+
+    The Routing table remains the only authority.  Item specs are included only
+    as an invalidation boundary: editing a member's contract invalidates an old
+    continuation receipt without manufacturing a second routing carrier.
+    """
+    from task import plan_layout
+
+    plan_bytes = (plan_dir / "plan.md").read_bytes()
+    spec_bytes = b"".join(
+        plan_layout.carrier_path(plan_dir, "item-spec", item_id=item).read_bytes()
+        for item in items
+    )
+    return hashlib.sha256(plan_bytes).hexdigest(), hashlib.sha256(spec_bytes).hexdigest()
+
+
+def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
+    """Compile Routing once into item and batch projections.
+
+    New layout-v2 plans must name a Batch.  Older plans retain their historical
+    item route semantics, but never acquire an inferred multi-item group: each
+    expanded legacy item is a declared ``solo`` unit.  The table parser and
+    closed range grammar are deliberately borrowed from plan-lint.
+    """
+    from task import command_catalog, plan_lint
+
+    plan_dir = Path(plan_dir)
+    lines = plan_lint._read_lines(plan_dir / "plan.md") or []
+    _index, body, start = plan_lint._find_section(lines, _ROUTING_HEADER_RE)
+    if body is None:
+        raise TaskContractBuildError("routing", "Routing", "no `## 3. Routing` section found in plan.md")
+    headers, rows, _header = plan_lint._parse_table(body, start)
+    if not headers or "Items" not in headers:
+        raise TaskContractBuildError("routing", "Routing", "`## 3. Routing` carries no Items table")
+    route_header = next((candidate for candidate in _ROUTING_HEADER_CANDIDATES
+                         if candidate in headers), None)
+    if route_header is None:
+        raise TaskContractBuildError("routing", "Routing", "no recognized route-column header")
+
+    metadata = command_catalog.load_routing_metadata(
+        routing_config_path or _DEFAULT_ROUTING_CONFIG_PATH)
+    names = _model_class_name_map(metadata)
+
+    def parse_route(raw: str, item: str) -> tuple[str, str]:
+        model, sep, effort = (raw or "").partition("/")
+        model, effort = model.strip(), effort.strip()
+        if not sep or not model or effort not in EFFORT_ORDER:
+            raise TaskContractBuildError(item, "Routing", f"route cell {raw!r} does not parse as '<model>/<effort>'")
+        return _resolve_model_class(model, names, item, raw), effort
+
+    strict = "Batch" in headers
+    item_rows: dict[str, dict] = {}
+    groups: dict[str, list[dict]] = {}
+    for row, line in rows:
+        items = plan_lint._routing_items((row.get("Items") or "").strip().strip("`"))
+        if not items:
+            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Items form")
+        batch = (row.get("Batch") or "solo").strip()
+        if strict and (not batch or not plan_lint._ROUTING_BATCH_RE.fullmatch(batch)):
+            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Batch {batch!r}")
+        if not strict:
+            # A legacy range describes routes, never an unstated execution group.
+            batches = ["solo"] * len(items)
+        else:
+            batches = [batch] * len(items)
+        for item, item_batch in zip(items, batches):
+            if item in item_rows:
+                raise TaskContractBuildError(item, "Routing", "item is assigned more than once")
+            model_class, effort = parse_route(row.get(route_header, ""), item)
+            batch_key = f"solo:{item}" if item_batch.lower() == "solo" else item_batch
+            entry = {"item_id": item, "batch": item_batch, "batch_key": batch_key, "route": {
+                "model_class": model_class, "effort": effort},
+                "exec": (row.get("Exec") or "").strip(),
+                "review": (row.get("Review") or "full").strip(), "line": line}
+            item_rows[item] = entry
+            groups.setdefault(batch_key, []).append(entry)
+
+    compiled = {}
+    for batch_key, members in groups.items():
+        batch = members[0]["batch"]
+        members.sort(key=lambda entry: (entry["item_id"].split(".")[0], int(entry["item_id"].split(".")[1])))
+        items = tuple(entry["item_id"] for entry in members)
+        phases = {item.split(".")[0] for item in items}
+        execs = {entry["exec"] for entry in members}
+        if batch.lower() == "solo":
+            if len(members) != 1:
+                # Legacy projections are split above, so this is a new-plan error.
+                raise TaskContractBuildError("routing", "Routing", "Batch solo may contain one item")
+        elif len(members) < 2 or len(phases) != 1 or len(execs) != 1:
+            raise TaskContractBuildError("routing", "Routing", f"Batch {batch!r} is not a phase-local execution unit")
+        numbers = [int(item.split(".")[1]) for item in items]
+        if batch.lower() != "solo" and numbers != list(range(numbers[0], numbers[-1] + 1)):
+            raise TaskContractBuildError("routing", "Routing", f"Batch {batch!r} is not adjacent")
+        route = {"model_class": max((entry["route"]["model_class"] for entry in members), key=MODEL_CLASS_ORDER.index),
+                 "effort": max((entry["route"]["effort"] for entry in members), key=EFFORT_ORDER.index)}
+        review = max((entry["review"] for entry in members), key=lambda value: _REVIEW_ORDER.index(value)
+                     if value in _REVIEW_ORDER else len(_REVIEW_ORDER))
+        routing_digest, spec_digest = _routing_digest(plan_dir, items)
+        compiled[batch_key] = {"batch_id": batch, "items": items, "route": route,
+                           "exec": next(iter(execs)), "review": review,
+                           "routing_digest": routing_digest, "spec_digest": spec_digest}
+    return {"items": item_rows, "batches": compiled}
+
+
+def normalize_batch_request(request) -> tuple[str, ...]:
+    """Normalize the closed item/range request grammar without accepting prose."""
+    from task import plan_lint
+
+    tokens = (request,) if isinstance(request, str) else tuple(request or ())
+    expanded = []
+    for token in tokens:
+        if not isinstance(token, str):
+            raise ValueError("BATCH_AMBIGUOUS: item request must contain strings")
+        items = plan_lint._routing_items(token.strip().strip("`"))
+        if not items:
+            raise ValueError(f"BATCH_AMBIGUOUS: invalid request {token!r}")
+        expanded.extend(items)
+    if not expanded or len(set(expanded)) != len(expanded):
+        raise ValueError("BATCH_AMBIGUOUS: request is empty or repeats an item")
+    return tuple(expanded)
+
+
+def build_batch_receipt(batch: dict, *, completed_prefix=(), handoff_digest=None) -> dict:
+    """Create the optional durable continuation checkpoint for one batch."""
+    prefix = tuple(completed_prefix)
+    items = tuple(batch["items"])
+    if items[:len(prefix)] != prefix:
+        raise ValueError("BATCH_STALE: completed prefix is not a batch prefix")
+    if handoff_digest is not None and not _SHA256_RE.fullmatch(handoff_digest):
+        raise ValueError("BATCH_STALE: handoff digest must be SHA-256")
+    return {"schema_version": "batch-receipt/v1", "batch_id": batch["batch_id"],
+            "membership": list(items),
+            "invocation_digest": hashlib.sha256("\n".join(items).encode()).hexdigest(),
+            "completed_prefix": list(prefix), "routing_digest": batch["routing_digest"],
+            "spec_digest": batch["spec_digest"], "handoff_digest": handoff_digest,
+            "stop_disposition": "continue"}
+
+
+def validate_batch_receipt(receipt: dict) -> None:
+    required = {"schema_version", "batch_id", "membership", "invocation_digest", "completed_prefix",
+                "routing_digest", "spec_digest", "handoff_digest", "stop_disposition"}
+    if not isinstance(receipt, dict) or set(receipt) != required or receipt.get("schema_version") != "batch-receipt/v1":
+        raise ValueError("BATCH_STALE: malformed receipt")
+    members, prefix = receipt["membership"], receipt["completed_prefix"]
+    if (not isinstance(receipt["batch_id"], str) or not members or not all(isinstance(item, str) for item in members)
+            or members[:len(prefix)] != prefix or receipt["stop_disposition"] != "continue"):
+        raise ValueError("BATCH_STALE: malformed receipt")
+    if receipt["invocation_digest"] != hashlib.sha256("\n".join(members).encode()).hexdigest():
+        raise ValueError("BATCH_STALE: invocation digest mismatch")
+    if any(not isinstance(receipt[key], str) or not _SHA256_RE.fullmatch(receipt[key])
+           for key in ("invocation_digest", "routing_digest", "spec_digest")):
+        raise ValueError("BATCH_STALE: malformed receipt digest")
+    if receipt["handoff_digest"] is not None and not _SHA256_RE.fullmatch(receipt["handoff_digest"]):
+        raise ValueError("BATCH_STALE: malformed handoff digest")
+
+
+def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) -> dict:
+    """Return the sole pre-mutation batch verdict; this function never mutates state."""
+    try:
+        requested = normalize_batch_request(request)
+    except ValueError:
+        return {"verdict": "BATCH_AMBIGUOUS", "batch": None, "requested": [], "canonical": None}
+    compiled = compile_batch_routing(plan_dir, routing_config_path=routing_config_path)
+    owners = [compiled["items"].get(item, {}).get("batch_key") for item in requested]
+    if not all(owners) or len(set(owners)) != 1:
+        return {"verdict": "BATCH_AMBIGUOUS", "batch": None, "requested": list(requested), "canonical": None}
+    batch = compiled["batches"][owners[0]]
+    exact = tuple(batch["items"])
+    if requested == exact:
+        return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(exact)}
+    if batch["batch_id"].lower() == "solo":
+        return {"verdict": "BATCH_REQUIRED", "batch": batch, "requested": list(requested), "canonical": list(exact)}
+    if receipt is None:
+        return {"verdict": "BATCH_REQUIRED", "batch": batch, "requested": list(requested), "canonical": list(exact)}
+    try:
+        validate_batch_receipt(receipt)
+    except ValueError:
+        return {"verdict": "BATCH_STALE", "batch": batch, "requested": list(requested), "canonical": list(exact)}
+    if (receipt["batch_id"] != batch["batch_id"] or receipt["membership"] != list(exact)
+            or receipt["routing_digest"] != batch["routing_digest"] or receipt["spec_digest"] != batch["spec_digest"]):
+        return {"verdict": "BATCH_STALE", "batch": batch, "requested": list(requested), "canonical": list(exact)}
+    suffix = exact[len(receipt["completed_prefix"]):]
+    if requested != suffix:
+        return {"verdict": "BATCH_REQUIRED", "batch": batch, "requested": list(requested), "canonical": list(suffix)}
+    return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(suffix)}
 
 
 def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata: dict):
@@ -653,7 +843,23 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     plan_lines = plan_lint._read_lines(plan_dir / "plan.md") or []
     routing_metadata = command_catalog.load_routing_metadata(
         routing_config_path or _DEFAULT_ROUTING_CONFIG_PATH)
-    routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
+    # Batch-bearing plans have one compiler for item route and execution unit.
+    # Keep the legacy resolver below for its deliberately precise historical
+    # diagnostics (notably comma-list migration guidance).
+    _routing_index, routing_body, routing_start = plan_lint._find_section(
+        plan_lines, _ROUTING_HEADER_RE)
+    routing_headers, _routing_rows, _routing_header = (
+        plan_lint._parse_table(routing_body, routing_start)
+        if routing_body is not None else (None, None, None))
+    if routing_headers and "Batch" in routing_headers:
+        compiled = compile_batch_routing(plan_dir, routing_config_path=routing_config_path)
+        try:
+            routing = compiled["items"][item_id]["route"]
+        except KeyError as exc:
+            raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item") from exc
+        routing = (routing["model_class"], routing["effort"])
+    else:
+        routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
     required_route = {"model_class": routing[0], "effort": routing[1]}
     if actual_route is None:
         actual_route = route_evidence.capture_actual(

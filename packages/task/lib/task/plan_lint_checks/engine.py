@@ -339,6 +339,14 @@ def lint_plan(plan_dir, diag):
             diag.warning(plan_dir, None, f"дубль Title «{title}» среди items: {sorted(ids)}")
 
     _lint_routing_coverage(plan_md, plan_id, layout, routing_rows, all_items, diag)
+    if layout == "v2" and PLAN_ID_NUMBERED_RE.match(plan_id) and routing_rows:
+        # Exercise the executor's only Batch compiler during lint too, so static
+        # authoring checks cannot diverge from pre-mutation admission.
+        from task import task_contract
+        try:
+            task_contract.compile_batch_routing(plan_dir)
+        except task_contract.TaskContractBuildError as exc:
+            diag.error(plan_md, None, f"Routing compiler: {exc}")
 
     # --- Status Board согласован с фазами: счётчик 🟢/всего и статус фазы --
     board_by_phase = {row.get("Phase"): (row, lineno) for row, lineno in status_board}

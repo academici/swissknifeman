@@ -317,13 +317,16 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
     line_number, raw, event = candidates[-1]
     if not event.get("run_id"):
         raise DeliveryError("TERMINAL_RUN_ID_MISSING", f"journal.jsonl:{line_number} не несёт run_id")
-    return {
+    receipt = {
         "line": line_number,
         "sha256": "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         "run_id": event["run_id"],
         "result": event["result"],
         "command": event["command"],
     }
+    if "batch_receipt" in event:
+        receipt["batch_receipt"] = event["batch_receipt"]
+    return receipt
 
 
 def _adapter_attestation(terminal: dict | None) -> dict | None:

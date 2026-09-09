@@ -131,6 +131,12 @@ def entry_validation_errors(entry):
         required = {"signal_class", "scope_class", "action", "recovered", "terminal"}
         if not isinstance(decision, dict) or not required <= set(decision):
             errors.append(("decision", "decision: отсутствуют обязательные поля evidence"))
+    if "batch_receipt" in entry:
+        try:
+            from task.task_contract import validate_batch_receipt
+            validate_batch_receipt(entry["batch_receipt"])
+        except (ImportError, ValueError) as exc:
+            errors.append(("batch_receipt", f"batch_receipt: {exc}"))
 
     return errors
 
@@ -333,7 +339,8 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
 
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
-              note=None, ts=None, trace_ref=None, fingerprint=None, decision=None):
+              note=None, ts=None, trace_ref=None, fingerprint=None, decision=None,
+              batch_receipt=None):
     """Собирает запись по схеме 2026.07.18-FOREMAN P1.1 с дефолтами контракта (§2) — единая точка сборки,
     чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
 
@@ -364,6 +371,8 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
         entry["fingerprint"] = fingerprint
     if decision is not None:
         entry["decision"] = dict(decision)
+    if batch_receipt is not None:
+        entry["batch_receipt"] = dict(batch_receipt)
     return entry
 
 
@@ -463,6 +472,8 @@ def _build_arg_parser():
                     help="SHA-256 material scope/SHA/risk или terminal evidence")
     ap.add_argument("--decision-json", default=None,
                     help="compact D12 decision evidence как JSON object")
+    ap.add_argument("--batch-receipt-json", default=None,
+                    help="optional digest-bound batch receipt as JSON object")
     ep = sub.add_parser(
         "exception", help="дописать owner-gated exception для historical schema-invalid строки")
     ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
@@ -530,6 +541,13 @@ def main(argv=None):
         except json.JSONDecodeError as exc:
             print(f"ERROR: --decision-json невалиден: {exc}", file=sys.stderr)
             return 1
+    batch_receipt = None
+    if args.batch_receipt_json is not None:
+        try:
+            batch_receipt = json.loads(args.batch_receipt_json)
+        except json.JSONDecodeError as exc:
+            print(f"ERROR: --batch-receipt-json невалиден: {exc}", file=sys.stderr)
+            return 1
     entry = new_entry(
         plan_id=args.plan_id, item_id=args.item_id, command=args.command,
         actor=actor, result=args.result, session_id=args.session_id,
@@ -537,6 +555,7 @@ def main(argv=None):
         friction=_parse_friction(args.friction), cost_usd=args.cost_usd,
         num_turns=args.num_turns, duration_ms=args.duration_ms, note=args.note,
         trace_ref=args.trace_ref, fingerprint=args.fingerprint, decision=decision,
+        batch_receipt=batch_receipt,
     )
     try:
         path, line_number, appended = append_idempotent_terminal(args.plan_dir, entry)

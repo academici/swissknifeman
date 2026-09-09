@@ -4,7 +4,7 @@
       "artifact_id": "task.codex.plugin",
       "path": "packages/task/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:ce93ccc690e1ea230d7bfd30ef2cd766bc914db53fd2027a3149095e8978a64b",
-      "source_hash": "sha256:2ff0359f09f9625c8e3fd3dd6df1d21e61a43ae5601c49a7010448212e2d263e"
+      "source_hash": "sha256:b7e3926172f7f19096989a95e294eef98c8ab3351db17a0eae134bdf2ab173a8"
     },
     {
       "artifact_id": "task.codex.design.skill",
@@ -93,26 +93,26 @@
     {
       "artifact_id": "task.codex.plan.exec.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-exec/SKILL.md",
-      "rendered_hash": "sha256:69a35de9e74589c2486624773e027d8f502e6950a3153cce9e9b7c9a6bcf3ca7",
-      "source_hash": "sha256:21c72a27777c780195a5488ec65f41fb1b0972b6299c65c8842df536729a1c1c"
+      "rendered_hash": "sha256:6c5a5cbd8ff0dca469af9a7ffbcbc66628369c1e7062e592e841c165fd0cba1d",
+      "source_hash": "sha256:04c76bdd5f2bb21d18b25bff525841c72cf74a7a058e157b8944339811b92571"
     },
     {
       "artifact_id": "task.codex.plan.exec.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-exec/command.md",
-      "rendered_hash": "sha256:fd01314aaa3eae1a6e54cd6bb5fba60f9f7e7886ae64ada2fb443f3a340dbe8d",
-      "source_hash": "sha256:99329744aa4dcd43fce680345fbbf42d7c08b0ac085b57d22f51bdcf7e73d101"
+      "rendered_hash": "sha256:c4292f2e73fdac11b66fd3b27c2071f19605b2c309f321a02fe05d8f9061977e",
+      "source_hash": "sha256:c330ab8af9be430c8acc934646a881e57280c2aa0fe1ffa2d29d0dca6752727d"
     },
     {
       "artifact_id": "task.codex.plan.run.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-run/SKILL.md",
-      "rendered_hash": "sha256:27a5061fec1bbd4c5e686573aacf9ef564d55a866c5b379ee55efb2e6d254a75",
-      "source_hash": "sha256:374b967017ab756b570efecfe87096999fcd9a180a00d56c417d498b506c31cb"
+      "rendered_hash": "sha256:f0d6089101bf8b05ff884d75c3e5eca923fb4fbc7e5a7c6a9194adae11a13ffe",
+      "source_hash": "sha256:f25c23bcbd32dc8404463318663f59c12fc5fc3acd8707cbcbc7b7cb55123238"
     },
     {
       "artifact_id": "task.codex.plan.run.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-run/command.md",
-      "rendered_hash": "sha256:feab2666de15af2b71fc6bfe6459f104bda03ca3f41a07e39d635caa7c20e486",
-      "source_hash": "sha256:3e5d517b108555846f246dfc363d56ff06f00e99048e3277f96ed9de0b2c896e"
+      "rendered_hash": "sha256:72cbe138fbe0770ff3261d471a8d362e0f07de718d803ddeeb83723184a5f71d",
+      "source_hash": "sha256:1a30bc6f360c52ceec339a1e3a09b832136aa5fccf69ae7e7a67b29c93dd8736"
     },
     {
       "artifact_id": "task.codex.research.skill",

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: Routing Batch is now pre-mutation authority.** One compiler derives batch membership,
+  maximum route/review and digest-bound suffix receipts from `plan.md`; partial, ambiguous and stale
+  executions are refused before journal or status mutation.
+
 - **`task`: content-addressed five-carrier executor context.** Plan execution now captures immutable
   v2 inputs before analysis, proves byte-cursor completion with terminal markers, and refuses
   truncation or source drift before journal mutation; the generated history pointer now includes

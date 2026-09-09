@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`task`: continuation decisions keep compatible work in the current root session.** A small
+  provider-neutral reducer makes cold starts require a named hard boundary and durable checkpoint,
+  preserves owner-wait and isolated-review outcomes, and refuses missing route/batch evidence.
+
 - **`task`: Routing Batch is now pre-mutation authority.** One compiler derives batch membership,
   maximum route/review and digest-bound suffix receipts from `plan.md`; partial, ambiguous and stale
   executions are refused before journal or status mutation.

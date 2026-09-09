@@ -1,0 +1,1 @@
+{"schema_version":"session-continuity-decision/v1","outcomes":["continue-root","isolated-child-return","cold-start-root","waiting-owner"]}

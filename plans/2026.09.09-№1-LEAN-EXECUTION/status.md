@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-09
-inputs_sha256: 1dcd09c3b9b9218d77add9fcfb81512c9ac0cef1a94eb79dd1ccf23b841b7356
+inputs_sha256: 6ec12a62e94015c4fda8579771d9088cdd440f08a18a71f91ef4cf4dfca2712b
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
-| P2 | Bounded repair, readiness, re-entry and archive | 0/3 | ⬜ Not started |
+| P2 | Bounded repair, readiness, re-entry and archive | 1/3 | 🟡 In progress |
 | P3 | Proportional phase assurance and evidence reuse | 0/4 | ⬜ Not started |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
@@ -43,8 +43,8 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Unified repair evidence and reducer | ⬜ Not started | — |
-| P2.2 | Producer readiness and priority-fix re-entry | ⬜ Not started | — |
+| P2.1 | Unified repair evidence and reducer | 🟢 Done | 2026-09-09 |
+| P2.2 | Producer readiness and priority-fix re-entry | ⬜ Not started | 2026-09-09 |
 | P2.3 | Brain-independent archive | ⬜ Not started | — |
 
 ## Phase P3
@@ -130,6 +130,17 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-09 | frontier/xhigh | plan-audit · audit-green · audit-fixer; candidate rebound after product and terminal-evidence repair; verdict GREEN |
 | 2026-09-09 | implementation/low | plan-close · closed-deviations · фаза P1 закрыта |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 repair evidence and reducer implementation |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · closed-green · P2.1 closed: repair-decision/v1 and deterministic same-attempt lifecycle integration. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 closure evidence rebind after required Completion Notes |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · closed-green · P2.1 closure rebind: current spec and green validation evidence match. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 closure evidence rebind after plan-lint repair |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · closed-green · P2.1 closure rebind: current spec and green validation evidence match.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 closure reopened: P2.2 immutable input "P2.1 repair schema/reducer" is unresolvable; task:plan-design must make it a digest-qualified file input before P2.1 package validation can be green. |
+| 2026-09-09 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: P2.1 schema/reducer закреплены exact digest-qualified paths |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 resumed after P2.2 producer-input correction; current route receipt bound. |
+| 2026-09-09 | gpt-5.6-terra/high | plan-run · closed-green · P2.1 closed after producer-input correction. write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

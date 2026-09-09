@@ -42,3 +42,13 @@ and terminal-phase re-entry consume that decision instead of defining another re
 `block-candidate/v1` as the downstream terminal-boundary proof. Represent readiness and re-entry as
 validated additive journal evidence, project the producer payload into the consumer bundle, and keep
 archive entirely repo-local. No external fact class or RAG retrieval is required for P2.
+
+## P2.2 item-design delivery observation — 2026-09-09
+
+The first design delivery probe accepted a handoff whose metadata table still declared
+`frontier/gpt-5.6-sol` while its native successor command correctly launched
+`implementation/gpt-5.6-terra`. The design root rejected that receipt, repaired the persisted
+handoff source before final delivery, and reran bundle/lint/delivery checks. This is retained as a
+validation-trust observation only; it does not add a second routing policy or widen P2.2 beyond its
+existing lint/delivery/provider-parity surface. RAG:— (repo-grounded: `handoff.md` design repair;
+`plan.md` §3 `B-P2-CONTINUE`).

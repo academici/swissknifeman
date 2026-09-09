@@ -94,12 +94,19 @@ class TestProducerAdmission(unittest.TestCase):
         self.assertTrue(items[0]["admission_pass"])
 
     def test_missing_public_contract_fails_ready_item_closed(self):
+        (self.plan_dir / "root").mkdir()
         items = [_record("P1.1")]
         summary = plan_admission.classify(self.plan_dir, items, {"P1.1": {}})
         self.assertFalse(items[0]["admission_pass"])
         self.assertEqual(items[0]["admission_gaps"][0]["code"],
                          "read_budget_contract_invalid")
         self.assertIsNone(summary["contract"])
+
+    def test_rootless_v2_plan_uses_the_frozen_task_contract(self):
+        items = [_record("P1.1")]
+        summary = plan_admission.classify(self.plan_dir, items, {"P1.1": {}})
+        self.assertEqual(summary["contract"]["version"], "1.1.0")
+        self.assertTrue(items[0]["admission_pass"])
 
     def test_migration_pending_hold_clears_on_first_post_activation_execution(self):
         artifacts = self.plan_dir / "artifacts"

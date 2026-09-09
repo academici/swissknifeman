@@ -5,7 +5,12 @@
 - **`task`: content-addressed five-carrier executor context.** Plan execution now captures immutable
   v2 inputs before analysis, proves byte-cursor completion with terminal markers, and refuses
   truncation or source drift before journal mutation; the generated history pointer now includes
-  its required `--plan-dir` argument.
+  its required `--plan-dir` argument. Rootless v2 plans consume the frozen Task read-budget
+  contract, while legacy plan-local contracts remain fail-closed.
+
+- **`skiller`: Codex consumer acceptance supports skill-root aliases.** The live publication gate
+  resolves current `rN/path` references through the emitted Skill roots table before checking
+  cache and repository provenance.
 
 ## [0.14.0] - 2026-08-17
 

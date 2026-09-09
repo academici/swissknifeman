@@ -75,6 +75,25 @@ def assert_codex_inventory_matches(expected_names, actual_names):
             f"unexpected in native marketplace: {sorted(extra)}")
 
 
+def resolve_skill_reference(instructions: str, value: str) -> str:
+    """Resolve current Codex ``rN/path`` display aliases to their filesystem path."""
+    roots = dict(re.findall(r"^- `(r\d+)` = `([^`]+)`$", instructions, re.MULTILINE))
+    match = re.fullmatch(r"(r\d+)(/.*)?", value)
+    if match is None:
+        return value
+    root = roots.get(match.group(1))
+    if root is None:
+        raise AssertionError(f"unknown Codex skill-root alias: {value}")
+    return str(Path(root) / (match.group(2) or "").lstrip("/"))
+
+
+def listed_skill_paths(instructions: str) -> set[str]:
+    return {
+        resolve_skill_reference(instructions, value)
+        for value in re.findall(r"\(file: (\S+)\)", instructions)
+    }
+
+
 class InventoryDriftDetectionCase(unittest.TestCase):
     """Negative fixture (Validation item 3): a live plugin absent from the actual
     marketplace listing, or an actual plugin absent from the expected inventory,
@@ -203,7 +222,7 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
             match = re.search(rf"- task:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
             self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex "
                                         f"session (codex {self.codex_version})")
-            self.assertTrue(match.group(1).startswith(str(self.codex_home)),
+            self.assertTrue(resolve_skill_reference(text, match.group(1)).startswith(str(self.codex_home)),
                             f"{skill_name} resolved outside the isolated cache: "
                             f"{match.group(1)}")
 
@@ -213,7 +232,7 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
             match = re.search(rf"- blender:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
             self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex session "
                                         f"(codex {self.codex_version})")
-            self.assertTrue(match.group(1).startswith(str(self.codex_home)),
+            self.assertTrue(resolve_skill_reference(text, match.group(1)).startswith(str(self.codex_home)),
                             f"{skill_name} resolved outside the isolated cache: "
                             f"{match.group(1)}")
 
@@ -229,7 +248,7 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
                             cwd=REPO_ROOT)
         self.assertEqual(result.returncode, 0, result.stderr)
         text = self._skills_instructions_text(json.loads(result.stdout))
-        self.assertIn(str(repo_local_marker), text)
+        self.assertIn(str(repo_local_marker), listed_skill_paths(text))
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ TERMINAL_STATUSES = frozenset(
 _PRODUCER_RE = re.compile(r"(?:^|[\s(;,])producer\s*[:=]\s*(P\d+\.\d+)\b", re.IGNORECASE)
 _MIGRATION_RE = re.compile(r"(?:layout[\s-]*v2|v1\s*(?:→|->|to)\s*v2)", re.IGNORECASE)
 _VERSION_RE = re.compile(
-    r"^\*\*Version:\*\*\s*`?([0-9]+\.[0-9]+\.[0-9]+)`?\s*$", re.MULTILINE)
+    r"^\*\*(?:Version|Версия):\*\*\s*`?([0-9]+\.[0-9]+\.[0-9]+)`?\s*$", re.MULTILINE)
 _THRESHOLD_RE = re.compile(r"estimated_required_read_tokens\(i\)\s*<=\s*(\d+)")
 
 
@@ -51,7 +51,14 @@ def load_contract(plan_dir) -> dict:
     No numeric fallback is legal: an absent or ambiguous contract is itself a
     fail-closed admission result.
     """
-    path = Path(plan_dir) / "root" / "contracts" / "read-budget-v1.md"
+    plan_dir = Path(plan_dir)
+    plan_path = plan_dir / "root" / "contracts" / "read-budget-v1.md"
+    # Layout-v2 plans created after the plan-local ``root/`` carrier was retired
+    # consume the one frozen Task contract. Legacy plans that still own ``root/``
+    # keep their explicit carrier and remain fail-closed when it is missing.
+    path = (plan_path if plan_path.is_file() or (plan_dir / "root").exists()
+            else Path(__file__).resolve().parents[2] / "docs" / "reference" /
+            "read-budget-contract.md")
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:

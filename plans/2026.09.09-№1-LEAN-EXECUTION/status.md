@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 51dd7763c3dcb73957c7ba5d79584e3598664634ae8d64337c14f80821c82f02
+inputs_sha256: 59f8fbece9ed9d6d54083852f938f2e431a5397baab58e0426bd8e69d9ee8641
 generated_by: task plan-views status
 -->
 
@@ -187,6 +187,16 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P5.3: lifecycle-aware Laravel isolation implementation started. |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P5.3 closed: serial DB guard remains at app boot; the parallel callback proves the exact selected worker DB before migration and process disks are local, contained and owned-only.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-green · P5 audit evidence re-anchor: focused audit suite green; broad execution receipts remain in the prior terminal event.
+44 tests (на d7d0d94e).
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-green · P5 audit carrier repair: removed the non-path `skiller registry` token from Files; focused suite green.
+27 tests (на d7d0d94e).
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-green · P5 audit carrier repair: corrected the focused-test import path and declared the ratchet file touched by the item.
+34 tests and 5 PHP syntax checks (на d7d0d94e).
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P5 minimal audit: one carrier-only repair; focused delta green; unchanged affected-package evidence reused. |
 
 ## Correction Routing
 

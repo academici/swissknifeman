@@ -157,3 +157,17 @@ concurrency/shared state and public API/schema changes retain deterministic wide
 review. Overlapping future machinery in P3.3, P6.1–P6.4 and the old P7.1 contract must be removed or
 superseded during design rather than executed in addition to the lean replacement. No new parallel
 `lean` protocol is authorized.
+
+## 2026-09-10 — P7 lean lifecycle design transcription
+
+The priority correction is now traced to one executable P7.1 contract. It consumes the measured P2
+audit baseline, centralizes only transient lifecycle selection over existing runtime owners, shrinks
+the five canonical plan commands plus plan-protocol by at least 40%, and proves low-risk and hard-
+boundary paths with deterministic fixtures. It does not introduce a persisted receipt/schema,
+another status/review kind, a provider-specific command family or an audit that edits product code.
+
+D14 records the real alternative decision: the parallel lean mode, the separate P3.3 validation-
+receipt programme and the four-item P6 context evaluator are retired instead of being executed in
+addition. P7 moves before P3; P3.1/P3.2/P3.4 remain because impact classification, routing
+consumption and evidence topology are distinct seams. No release, rollout, push or external write is
+authorized by this design session.

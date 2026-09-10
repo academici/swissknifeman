@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: e2b29090067a894c04925c19058a55afbb5e1b7919fd3c947fdd748c21a073a3
+inputs_sha256: 88919fbcbd8e0527c0a6166afb9dc41f2ecf2a650d2297a706250c52468490b1
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.0.2 |
+| Version | 1.0.3 |
 | Status | 🟡 In progress |
 | Last Updated | 2026-09-10 |
 
@@ -24,12 +24,11 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
-| P2 | Bounded repair, readiness, re-entry and archive | 3/3 | 🟢 Done |
-| P3 | Proportional phase assurance and evidence reuse | 0/4 | ⬜ Not started |
+| P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
+| P3 | Proportional phase assurance and evidence reuse | 0/3 | ⬜ Not started |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
-| P6 | Measured Codex instruction and skill economy | 0/4 | ⬜ Not started |
-| P7 | Whole-plan design completion circuit breaker | 0/1 | ⬜ Not started |
+| P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
 
 ## Phase P1
 
@@ -43,9 +42,9 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Unified repair evidence and reducer | 🟢 Done | 2026-09-09 |
-| P2.2 | Producer readiness and priority-fix re-entry | 🟢 Done | 2026-09-10 |
-| P2.3 | Brain-independent archive | 🟢 Done | 2026-09-10 |
+| P2.1 | Unified repair evidence and reducer | 🟠 Done with deviations | 2026-09-10 |
+| P2.2 | Producer readiness and priority-fix re-entry | 🟠 Done with deviations | 2026-09-10 |
+| P2.3 | Brain-independent archive | 🟠 Done with deviations | 2026-09-10 |
 
 ## Phase P3
 
@@ -53,7 +52,6 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Phase assurance and impact broker | ⬜ Not started | — |
 | P3.2 | Routing-table parser regression | ⬜ Not started | — |
-| P3.3 | Proportional validation evidence reuse | ⬜ Not started | — |
 | P3.4 | Evidence graph and closure continuity | ⬜ Not started | — |
 
 ## Phase P4
@@ -71,20 +69,11 @@ generated_by: task plan-views status
 | P5.2 | Analyst test-strategy fleet synthesis | ⬜ Not started | — |
 | P5.3 | Lifecycle-aware Laravel parallel isolation | ⬜ Not started | — |
 
-## Phase P6
-
-| ID | Title | Status | Updated |
-|:--|:--|:--|:--|
-| P6.1 | Cold-start source inventory and baseline | ⬜ Not started | — |
-| P6.2 | Deterministic Codex evaluation harness | ⬜ Not started | — |
-| P6.3 | Evidence-gated retain/change decision | ⬜ Not started | — |
-| P6.4 | Generator, package and docs qualification | ⬜ Not started | — |
-
 ## Phase P7
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P7.1 | Bounded design-remediation to execution continuation | ⬜ Not started | — |
+| P7.1 | Lean Task control loop consolidation | 🟢 Done | 2026-09-10 |
 
 ## 6. Update Log
 
@@ -149,9 +138,34 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P2.3 closed: archive is repository-local and does not invoke Brain.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · local-repair · Audit repaired P3.1 producer input and reran the exact plan-lint carrier green. |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · Audit rebind: 4bd328b9+a4c834f1+4b6bd8f0; 193 tests (на 4b6bd8f0). Historical paths outside Files and foreign-plan validation debt retained.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · Audit rebind: 2fee17b8+b721ba59+4b6bd8f0; 206 tests (на 4b6bd8f0). Historical terminal_policy.py outside Files and foreign-plan debt retained.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · closed-deviations · Audit rebind: b973df03+4b6bd8f0; 119 tests (на 4b6bd8f0). Historical test path outside Files retained; generated docs are now committed.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | frontier/high | plan-design · in-progress · фаза детализирована до DoR: lean Task lifecycle, P3.3/P6 overlap retired by D14 |
+| 2026-09-10 | frontier/high | plan-design · local-repair · D14 priority branch: P2.3 → P7.1 → P3.1; no product execution |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P7.1 lean lifecycle: 31,864 canonical command/canon bytes (at 8fd55046); 970 Task tests, provider, Skiller and docs gates green (at 8fd55046).
+write-site: pre_mutation: allow · pre_final: allow |
+
+## Correction Routing
+
+| Тип | Origin | Outcome | Target / resume |
+|:--|:--|:--|:--|
+| producer | P2.2 | empty-by-decision | P2.3 |
+| producer | P2.2 | empty-by-decision | P2.3 |
+| producer | P2.2 | empty-by-decision | P2.3 |
+| routing | P7.1 | contract-conflict → priority-fix | P3.1 |
+| priority-fix | P2.3 | priority | P7.1 / P3.1 |
 
 ## Owner Gates
 
 - P1.1: known deviation
 - P1.2: known deviation
 - P1.3: known deviation
+- P2.1: known deviation
+- P2.2: known deviation
+- P2.3: known deviation

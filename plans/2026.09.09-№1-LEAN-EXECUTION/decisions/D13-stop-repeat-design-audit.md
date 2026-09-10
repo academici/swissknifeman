@@ -1,11 +1,11 @@
 ---
 id: D13
 date: 2026-09-09
-status: accepted
+status: superseded
 item: P1.1
 items: [P1.1, P1.2, P1.3, P7.1]
 supersedes: []
-superseded_by: null
+superseded_by: D14
 ---
 # D13 — Stop the repeat whole-plan design audit and start grouped execution
 

@@ -1,11 +1,11 @@
 ---
 id: D8
 date: 2026-09-09
-status: accepted
+status: superseded
 item: P3.1
 items: [P3.1, P3.2, P3.3, P3.4]
 supersedes: []
-superseded_by: null
+superseded_by: D14
 ---
 # D8 — Use one phase-assurance and evidence lineage
 

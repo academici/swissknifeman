@@ -1,11 +1,11 @@
 ---
 id: D11
 date: 2026-09-09
-status: accepted
+status: superseded
 item: P6.1
 items: [P6.1, P6.2, P6.3, P6.4]
 supersedes: []
-superseded_by: null
+superseded_by: D14
 ---
 # D11 — Freeze one robust Codex context experiment
 

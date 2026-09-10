@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: df3249f64702d6b5722ed541e84221ea8ba2dd0925a8b62facedb128d5b04ad6
+inputs_sha256: 8b0eecd0c39e1c79cfd73b0c6fe8b4598c8f32148526ff8b0c8aaab6492988b9
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
-| P3 | Proportional phase assurance and evidence reuse | 0/3 | ⬜ Not started |
+| P3 | Proportional phase assurance and evidence reuse | 1/3 | 🟡 In progress |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
@@ -50,7 +50,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P3.1 | Phase assurance and impact broker | ⬜ Not started | — |
+| P3.1 | Phase assurance and impact broker | 🟢 Done | 2026-09-10 |
 | P3.2 | Routing-table parser regression | ⬜ Not started | — |
 | P3.4 | Evidence graph and closure continuity | ⬜ Not started | — |
 
@@ -151,6 +151,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P7.1 lean lifecycle: 31,864 canonical command/canon bytes (at 8fd55046); 970 Task tests, provider, Skiller and docs gates green (at 8fd55046).
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | implementation/low | plan-close · closed-green · фаза P7 закрыта |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P3.1 closed: phase assurance and impact broker delivered; focused/package/provider/Skiller/docs gates green.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P3.1 forward repair closed: legacy light assurance normalizes without rewriting P7 history; focused/package/provider/Skiller/docs gates green.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing
 

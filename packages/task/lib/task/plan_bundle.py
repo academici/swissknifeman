@@ -176,6 +176,47 @@ def _selected_bytes(raw: bytes, selector: dict, path: Path) -> bytes:
     return b"".join(lines[start:end])
 
 
+def producer_readiness(plan_dir, consumer_item: str) -> tuple[dict, ...]:
+    """Read the terminal, digest-bound readiness projections for one consumer.
+
+    This is intentionally a side-channel of Bundle v1: changing its frozen
+    manifest schema would invalidate historic bundles.  Consumers call this
+    owner API while their bundle supplies the immutable declared inputs.
+    """
+    from task import plan_readiness
+
+    plan_dir = Path(plan_dir)
+    producers = []
+    for phase_id in plan_layout.phase_paths(plan_dir):
+        for spec in plan_layout.item_spec_paths(plan_dir, phase_id):
+            item_id = spec.stem
+            declared = plan_readiness.directive(_fields(plan_dir, item_id).get("Deliverables", ""))
+            if declared and declared["consumer_item"] == consumer_item:
+                producers.append(item_id)
+    if not producers:
+        return ()
+    try:
+        journal_rows = (plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise BundleError(f"dependency-not-ready: journal unavailable: {exc}") from exc
+    result = []
+    for producer in producers:
+        terminal = None
+        for raw in journal_rows:
+            try:
+                event = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if event.get("item_id") == producer and str(event.get("result", "")).startswith("closed-"):
+                terminal = event
+        record = (terminal or {}).get("decision", {}).get("producer_readiness")
+        try:
+            result.append(plan_readiness.terminal_projection(record))
+        except plan_readiness.ReadinessError as exc:
+            raise BundleError(f"dependency-not-ready: {producer}: {exc}") from exc
+    return tuple(sorted(result, key=lambda row: row["producer_item"]))
+
+
 def model(plan_dir, item_id: str) -> dict:
     plan_dir = Path(plan_dir)
     if not _ITEM.fullmatch(item_id):

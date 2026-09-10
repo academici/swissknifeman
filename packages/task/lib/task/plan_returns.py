@@ -586,7 +586,7 @@ def returns(plan_dir) -> dict:
     entries = _journal_entries(journal_path)
     seams = _seams(plan_dir)
     fingerprints, executions, history = [], [], {}
-    repair_records = []
+    repair_records, readiness_records, reentry_records, fix_branches = [], [], [], []
     non_item_subjects = 0
     schema_invalid_rows = sum(bool(row["errors"]) for row in entries)
     for row in entries:
@@ -604,6 +604,14 @@ def returns(plan_dir) -> dict:
                 "material_surface": repair.get("material_surface"),
                 "action": entry.get("repair_action"),
             })
+        decision = entry.get("decision") if isinstance(entry, dict) else None
+        if isinstance(decision, dict):
+            if isinstance(decision.get("producer_readiness"), dict):
+                readiness_records.append(decision["producer_readiness"])
+            if isinstance(decision.get("phase_reentry"), dict):
+                reentry_records.append(decision["phase_reentry"])
+            if isinstance(decision.get("fix_branch"), dict):
+                fix_branches.append(decision["fix_branch"])
         subject = entry.get("item_id") if isinstance(entry, dict) else None
         if not isinstance(subject, str) or not _ITEM.fullmatch(subject):
             non_item_subjects += 1
@@ -644,7 +652,10 @@ def returns(plan_dir) -> dict:
             "fingerprints": fingerprints, "counts": dict(sorted(counts.items())),
             "history": {digest: history[digest] for digest in sorted(history)},
             "over_cap_subjects": sorted(digest for digest, count in counts.items() if count > cap),
-            "repair_metrics": {"observed": len(repair_records), "first_ten": repair_records[:10]}}
+            "repair_metrics": {"observed": len(repair_records), "first_ten": repair_records[:10]},
+            "readiness_metrics": {"producer_readiness": len(readiness_records),
+                                  "phase_reentry": len(reentry_records),
+                                  "priority_fix": len(fix_branches)}}
 
 
 def durable_count(plan_dir, digest: str):

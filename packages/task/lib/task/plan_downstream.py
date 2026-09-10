@@ -117,6 +117,8 @@ def discover_consumers(plan_dir, producer_item: str) -> list[dict]:
     for field in ("Files", "Deliverables"):
         outputs.update(_field_paths(producer.get(field, ""), plan_dir=plan_dir, repo_root=repo_root))
     consumers = []
+    from task import plan_readiness
+    declared = plan_readiness.directive(producer.get("Deliverables", ""))
     for item_id, fields in sorted(items.items()):
         # A downstream dependency is directional: an already earlier item cannot
         # consume an output that this producer has not produced yet.
@@ -130,7 +132,19 @@ def discover_consumers(plan_dir, producer_item: str) -> list[dict]:
             consumers.append({"item": item_id, "matched_paths": matched,
                               "validation": fields.get("Validation", ""),
                               "owns_git_ref": "git tag" in " ".join(fields.values())})
-    return consumers
+    if declared is not None:
+        consumer_id = declared["consumer_item"]
+        if consumer_id not in items:
+            raise DownstreamError(f"readiness consumer {consumer_id} не найден")
+        existing = next((row for row in consumers if row["item"] == consumer_id), None)
+        if existing is None:
+            fields = items[consumer_id]
+            existing = {"item": consumer_id, "matched_paths": [],
+                        "validation": fields.get("Validation", ""),
+                        "owns_git_ref": "git tag" in " ".join(fields.values())}
+            consumers.append(existing)
+        existing["readiness_modes"] = declared["modes"]
+    return sorted(consumers, key=lambda row: _item_key(row["item"]))
 
 
 def _validation_commands(value: str) -> list[str]:
@@ -302,12 +316,24 @@ def evaluate(plan_dir, producer_item: str, *, producer_commit: str = "HEAD", run
                     consumer_red = True
                     any_red = True
             commands.append(row)
-        outcome = "red" if consumer_red else ("green" if applicable_count else "unknown")
+        readiness = None
+        if "readiness_modes" in consumer:
+            try:
+                readiness = next(row for row in plan_bundle.producer_readiness(plan_dir, consumer["item"])
+                                 if row["producer_item"] == producer_item)
+            except (plan_bundle.BundleError, StopIteration):
+                consumer_red = True
+                any_red = True
+            else:
+                if readiness["mode"] not in consumer["readiness_modes"]:
+                    consumer_red = True
+                    any_red = True
+        outcome = "red" if consumer_red else ("green" if readiness is not None or applicable_count else "unknown")
         spec_sha = consumer_spec_sha256(plan_dir, consumer["item"])
         consumer_results.append({**consumer, "consumer_spec_sha256": spec_sha,
                                  "result_key": {"consumer_spec_sha256": spec_sha,
                                                 "producer_commit": commit},
-                                 "commands": commands, "outcome": outcome})
+                                 "commands": commands, "readiness": readiness, "outcome": outcome})
     outcome = "red" if any_red else ("green" if any_applicable else "unknown")
     return {"gate": GATE_ID, "version": VERSION, "producer_item": producer_item,
             "producer_commit": commit, "consumers": consumer_results, "outcome": outcome,

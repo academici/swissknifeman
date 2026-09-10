@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **`task`: явная готовность producer.** Добавлены закрытые `producer-readiness/v1`,
+  `phase-reentry-justification/v1` и `fix-branch/v1` reducers для readiness/re-entry evidence.
+
 - **`task`: repairable carrier drift stays in the active execution batch.** `plan-exec` now
   permits a smallest scope-preserving carrier/reference repair and reruns the original check;
   `plan-run` inherits that one classifier, reserving redesign for actual frozen, public or

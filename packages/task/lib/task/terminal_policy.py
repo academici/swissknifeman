@@ -87,6 +87,27 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
     if plan_dir is not None and item_id is not None:
         if evidence["spec_sha256"] != _spec_digest(plan_dir, item_id):
             raise TerminalPolicyError("TERMINAL_SPEC_STALE", "terminal evidence привязано к старому ТЗ")
+        # A producer that declares a semantic readiness edge cannot silently
+        # close with an empty or unqualified output.  The typed record remains
+        # additive to terminal-evidence so historic terminal rows stay readable.
+        from task import plan_bundle, plan_readiness
+        try:
+            declared = plan_readiness.directive(
+                plan_bundle._fields(plan_dir, item_id).get("Deliverables", ""))
+        except plan_bundle.BundleError:
+            # Minimal historic/unit fixtures can lack a complete phase item
+            # carrier. They have no declared readiness edge to enforce.
+            declared = None
+        if declared is not None:
+            record = decision.get("producer_readiness")
+            try:
+                plan_readiness.validate_readiness(record)
+            except plan_readiness.ReadinessError as exc:
+                raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", str(exc)) from exc
+            if (record["producer_item"] != item_id
+                    or record["consumer_item"] != declared["consumer_item"]
+                    or record["mode"] not in declared["modes"]):
+                raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", "readiness не совпадает с Deliverables")
     rows = evidence["validation"]
     if not isinstance(rows, list) or not rows:
         raise TerminalPolicyError(

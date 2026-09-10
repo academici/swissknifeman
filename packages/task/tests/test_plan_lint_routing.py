@@ -500,6 +500,17 @@ class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
 
         self.assertEqual([path.name for path in found], ["DEMO-1"])
 
+    def test_pre_cutover_v2_archive_is_inert_for_root_wide_validation(self):
+        write_valid_plan(self.root, "DEMO-1")
+        archived_dir = self._write_archived_plan("2026.08.02-OLD")
+        text = (archived_dir / "plan.md").read_text(encoding="utf-8")
+        (archived_dir / "plan.md").write_text(
+            text.replace("| Plan ID | 2026.08.02-OLD |\n", ""), encoding="utf-8")
+
+        found = discover_plan_dirs(self.root / "plans")
+
+        self.assertEqual([path.name for path in found], ["DEMO-1"])
+
 
 class TestGlobalUniqueness(TmpPlanTestCase):
     def test_duplicate_item_id_across_phases(self):

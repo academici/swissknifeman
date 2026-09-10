@@ -56,6 +56,9 @@ Rules common to layouts v1 and v2:
 
 `Layout | v2` is the only executable layout. Missing or `v1` declarations fail closed with
 `PLAN_LAYOUT_V1_RETIRED`; read their inert source archive or use the prior compatible tag.
+For root-wide lint, archived dated v2 plans before `2026.09.09` are likewise inert: later
+state, downstream and handoff rules must not require rewriting their historical evidence.
+Linting a named archive explicitly remains available for forensic verification.
 Stable specifications, volatile state, append-only history, and generated views are separate carriers.
 
 **Layout v2 carrier contract** — the executor path is exactly:

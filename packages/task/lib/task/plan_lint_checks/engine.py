@@ -853,6 +853,18 @@ def lint_plans_root(root, models, diag):
 # --- дискавери множества планов ----------------------------------------------
 
 ARCHIVE_DIR_NAME = "archive"  # N3/D14: контейнер архивных планов, сам планом не является
+ARCHIVED_V2_STRICT_CUTOFF = "2026.09.09"
+
+
+def _is_historical_archive(plan_id: str) -> bool:
+    """Keep pre-cutover archived v2 carriers out of the mutable root gate.
+
+    An archive preserves the protocol that produced it.  Root-wide validation
+    must not turn later rules (state projection, downstream receipt or handoff
+    shape) into a demand to rewrite append-only historical evidence.  Explicit
+    linting of a named plan remains available for forensic work.
+    """
+    return bool(PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] < ARCHIVED_V2_STRICT_CUTOFF)
 
 
 def discover_plan_dirs(root):
@@ -884,7 +896,8 @@ def discover_plan_dirs(root):
                     plan_text = (archived / "plan.md").read_text(encoding="utf-8")
                 except OSError:
                     continue
-                if re.search(r"^\|\s*Layout\s*\|\s*v2\s*\|", plan_text, re.MULTILINE):
+                if (re.search(r"^\|\s*Layout\s*\|\s*v2\s*\|", plan_text, re.MULTILINE)
+                        and not _is_historical_archive(archived.name)):
                     dirs.append(archived)
             continue
         dirs.append(p)

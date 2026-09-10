@@ -7,6 +7,9 @@ delivery owners retain their respective carriers.
 SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
 `references/plan-layout-v2.md`. Поле Meta `Layout | v2` обязательно; отсутствие или `v1`
 отклоняется диагностикой `PLAN_LAYOUT_V1_RETIRED`.
+При root-wide проверке архивный dated v2-план до `2026.09.09` inert: новые требования к
+state/downstream/handoff не переписывают его исторические свидетельства. Явный lint такого
+архива остаётся строгой forensic-проверкой.
 
 ```text
 plans/<PLAN-ID>/

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: компактный normal-path lifecycle.** Канонические plan-команды теперь делегируют
+  admission, риск-ориентированную validation, selective projection, continuity и delivery общим
+  runtime owners; обычный low-risk item выбирает focused check, один commit и один semantic Next,
+  а hard-risk границы детерминированно расширяют validation/review.
+
 - **`task`: явная готовность producer.** Закрытые `producer-readiness/v1`,
   `phase-reentry-justification/v1` и `fix-branch/v1` теперь проходят один correction reducer:
   accepted-empty и digest-bound downstream проверяются сквозным образом, priority fix привязан

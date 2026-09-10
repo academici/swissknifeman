@@ -1,5 +1,9 @@
 # Структура Task-плана — layout v2
 
+Normal execution does not add a lifecycle carrier: `task.plan_lifecycle` transiently selects
+focused or widened validation from declared impact, while existing route, projection, continuity and
+delivery owners retain their respective carriers.
+
 SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
 `references/plan-layout-v2.md`. Поле Meta `Layout | v2` обязательно; отсутствие или `v1`
 отклоняется диагностикой `PLAN_LAYOUT_V1_RETIRED`.

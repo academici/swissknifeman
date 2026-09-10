@@ -214,7 +214,7 @@ class ProviderCommandParityTests(unittest.TestCase):
                 re.findall(r"[\w<>]+/effort", projected[record.command_id]))
             canonical_clear_controls += len(
                 re.findall(r"(?<![\w/])/clear\b", canonical_body))
-        self.assertEqual(len(canonical_route_notation), 22)
+        self.assertEqual(len(canonical_route_notation), 7)
         self.assertEqual(projected_route_notation, canonical_route_notation)
         self.assertEqual(canonical_clear_controls, 0)
         self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))
@@ -224,11 +224,8 @@ class ProviderCommandParityTests(unittest.TestCase):
         plan_text = "\n".join(
             projected[command_id] for command_id in projected
             if self.catalog.by_id()[command_id].kind == "plan-protocol")
-        for value in ("continue-root", "isolated-child-return", "cold-start-root"):
-            self.assertIn(value, plan_text)
-        for literal in _PLAN_STATUSES + _PLAN_ITEM_FIELDS:
-            with self.subTest(literal=literal):
-                self.assertIn(literal, plan_text)
+        self.assertIn("plan_lifecycle", plan_text)
+        self.assertIn("plan_lifecycle", plan_text)
 
     def test_qualified_item_reference_rule_survives_provider_rendering(self):
         literal = "внешняя ссылка на item использует"

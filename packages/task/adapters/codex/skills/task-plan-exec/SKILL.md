@@ -1,6 +1,6 @@
 ---
 name: task-plan-exec
-description: "Plan protocol: execute plan item(s) Pn.m from plans/ exactly as specified; closure and handoff are mandatory. Pins implementation/medium."
+description: "Execute declared plan item(s) through the shared Task lifecycle."
 ---
 
 # Task plan-exec
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-exec`.
 - Invocation: `$ task:plan-exec <arguments>`
 - Routing: `implementation/medium -> gpt-5.6-terra/medium`
 - Canonical source: `packages/task/commands/plan-exec.md`
-- Canonical SHA-256: `sha256:9a850343dbe6611c51536c6237c4f2f11773f659c79189a88c2c50efd29e7d8a`
+- Canonical SHA-256: `sha256:ae0bea946fc21196c37e3dbe82fa3c8becf14a860551e0b6d0b44be7cc3b6efd`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

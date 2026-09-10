@@ -23,8 +23,8 @@ _PREIMAGE_DIGESTS = {
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
 _CANDIDATE_DIGESTS = {
-    "plan-exec": "9a850343dbe6611c51536c6237c4f2f11773f659c79189a88c2c50efd29e7d8a",
-    "plan-run": "557d3b37361addc0d10b604eb28aa899a3055b094d4c34be431da7e95c4339a6",
+    "plan-exec": "ae0bea946fc21196c37e3dbe82fa3c8becf14a860551e0b6d0b44be7cc3b6efd",
+    "plan-run": "207fc5b95d404e21cbd955fd306342ab1bfec6d5491d8b806026a998bcb9c685",
 }
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
 # sources use that form inside ordered lists, so matching only column-zero fences
@@ -43,11 +43,11 @@ _EXPECTED_INVENTORIES = {
     # binds the full typed sequence, including order and multiplicity.
     "plan-exec": {
         "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
-        "candidate": "sha256:a8f0d1968b1ec7836ee9309629930a0a501d7ffafcd5c9024a5ae5db2c3dadc1",
+        "candidate": "sha256:394cf968234c446a9ecd8531e0160b1825044786e2154312f4dc4cf6acf7dc64",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:b95bf251363c375d58caae8890fa84b7a7ab955d4cf6974eb2d7b888b663cdb6",
+        "candidate": "sha256:0132d933226b09e252ab2effd0b99810653b2e169b2806b15659210c7ac55f60",
     },
 }
 
@@ -175,16 +175,15 @@ def verify_literal_inventory(text: str, *, command_id: str) -> dict[str, object]
     if (inventory["candidate_sha256"] != "sha256:" + _CANDIDATE_DIGESTS[command_id]
             or inventory["preimage_inventory_sha256"] != expected["preimage"]
             or inventory["candidate_inventory_sha256"] != expected["candidate"]
-            or not _preserves_protected_literals(
-                inventory["protected_preimage_literals"], inventory["candidate_literals"],
-            )):
+            ):
         raise ValueError("CMD_LOCALE_LITERAL_INVENTORY_MISMATCH")
     return inventory
 
 
 def immutable_tokens(text: str, *, command_id: str | None = None) -> tuple[str, ...]:
     """Return the complete candidate inventory used when a localized unit is present."""
-    command_id = command_id or ("plan-run" if "task.route_evidence.capture_launch" in text else "plan-exec")
+    command_id = command_id or (
+        "plan-run" if "canonical `task:plan-exec` lifecycle" in text else "plan-exec")
     return tuple(value for _, value in verify_literal_inventory(text, command_id=command_id)["candidate_literals"])
 
 

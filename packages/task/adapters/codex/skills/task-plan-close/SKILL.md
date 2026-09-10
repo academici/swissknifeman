@@ -1,6 +1,6 @@
 ---
 name: task-plan-close
-description: "План-протокол: recovery-сверка item Pn.m, адаптивное закрытие phase candidate Pn либо архив терминального плана. Пинит implementation/low."
+description: "Close a green item or phase with changed-scope evidence and semantic delivery."
 ---
 
 # Task plan-close
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-close`.
 - Invocation: `$ task:plan-close <arguments>`
 - Routing: `implementation/low -> gpt-5.6-terra/low`
 - Canonical source: `packages/task/commands/plan-close.md`
-- Canonical SHA-256: `sha256:64ddbf414b12a291359b4cfc803d2b8e7e36136f353e16ccdac3758cd3ec6c7e`
+- Canonical SHA-256: `sha256:c07e15e984c1d35e11c39e421292551f8c27e9d16d6682e1a704acc07a272424`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

@@ -72,7 +72,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_task_runtime_paths_are_provider_specific_and_never_project_relative(self):
         canonical = self.catalog.content_for("task:plan-exec").decode("utf-8")
-        self.assertIn('PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/lib"', canonical)
+        self.assertIn("task.plan_lifecycle", canonical)
         self.assertNotIn("PYTHONPATH=packages/task/lib", canonical)
         codex_runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
@@ -112,9 +112,9 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_plan_run_prefers_current_thread_state_with_exact_native_fallback(self):
         canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
-        self.assertIn("task.route_evidence.capture_launch", canonical)
-        self.assertIn("Codex adapter", canonical)
-        self.assertIn("Claude Code adapter", canonical)
+        self.assertIn("route-run-receipt/v1", canonical)
+        self.assertIn("provider-attested route", canonical)
+        self.assertIn("plan_lifecycle", canonical)
         self.assertNotIn("task.route_evidence_codex.capture_current", canonical)
 
         runtime = next(

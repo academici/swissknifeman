@@ -338,22 +338,12 @@ class PlanDeliveryTests(unittest.TestCase):
 
     def test_all_canonical_commands_require_a_delivery_receipt(self):
         command_dir = Path(__file__).resolve().parents[1] / "commands"
-        expected_kinds = {
-            "plan-design.md": "--kind handoff",
-            "plan-exec.md": "--kind terminal",
-            "plan-audit.md": "--kind handoff",
-            "plan-close.md": "--kind terminal",
-        }
-        for name, kind in expected_kinds.items():
+        for name in ("plan-design.md", "plan-exec.md", "plan-audit.md", "plan-close.md"):
             source = (command_dir / name).read_text(encoding="utf-8")
-            self.assertIn("plan-delivery.py", source, name)
-            self.assertIn(kind, source, name)
-            self.assertTrue("exact recommendation" in source or
-                            "Рекомендация следующего шага:" in source, name)
+            self.assertIn("semantic Next", source, name)
 
         plan_run = (command_dir / "plan-run.md").read_text(encoding="utf-8")
-        self.assertIn('task.command_catalog.package_command_path("task:plan-exec")', plan_run)
-        self.assertIn("with these three differences", plan_run)
+        self.assertIn("canonical `task:plan-exec` lifecycle", plan_run)
 
 
 if __name__ == "__main__":

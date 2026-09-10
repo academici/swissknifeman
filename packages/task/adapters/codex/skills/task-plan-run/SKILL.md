@@ -1,6 +1,6 @@
 ---
 name: task-plan-run
-description: "Plan protocol: execute plan item Pn.m using the current session model/effort; use for Exec=manual series without repeated session selection."
+description: "Execute manual plan item(s) using the owner session route and shared lifecycle."
 ---
 
 # Task plan-run
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-run`.
 - Invocation: `$ task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:557d3b37361addc0d10b604eb28aa899a3055b094d4c34be431da7e95c4339a6`
+- Canonical SHA-256: `sha256:207fc5b95d404e21cbd955fd306342ab1bfec6d5491d8b806026a998bcb9c685`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

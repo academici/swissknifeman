@@ -1,5 +1,11 @@
 # Plan tooling: сверочные гейты `plans/`
 
+## Lean lifecycle selection
+
+`task.plan_lifecycle.select()` is transient orchestration, not a new plan schema. It selects the
+normal focused path or declared hard-risk widening; route evidence is reused until an actual route
+change, and only changed terminal projections are generated.
+
 ## Codex launch-block для handoff
 
 Launch-block выбирает native-синтаксис по активному provider adapter: Claude Code получает

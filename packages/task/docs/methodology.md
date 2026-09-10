@@ -1,5 +1,12 @@
 # Методология Task plan-protocol v2 — полный цикл
 
+## Compact normal path
+
+`task.plan_lifecycle` only composes existing runtime owners and persists no new carrier.  Low-risk
+items use focused validation, changed projections once, one semantic Next and one scoped commit.
+Declared hard risk widens validation and review; audits are read-only and return product findings to
+their owning item.
+
 Как план проживает жизнь от исследования до документации проекта. SSOT схем, гейтов и
 маркеров — компактный скилл `general/plan-protocol`; эта страница — карта цикла со ссылками
 на команды и секции скилла. Протокол фиксирует ТОЛЬКО Axioma-специфику — то, что plan mode

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 8b0eecd0c39e1c79cfd73b0c6fe8b4598c8f32148526ff8b0c8aaab6492988b9
+inputs_sha256: 9591921564c37d72a8edb8763331a94265b9aa211821953f3dd79f798c7ad1d6
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
-| P3 | Proportional phase assurance and evidence reuse | 1/3 | 🟡 In progress |
+| P3 | Proportional phase assurance and evidence reuse | 2/3 | 🟡 In progress |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
@@ -51,7 +51,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P3.1 | Phase assurance and impact broker | 🟢 Done | 2026-09-10 |
-| P3.2 | Routing-table parser regression | ⬜ Not started | — |
+| P3.2 | Routing-table parser regression | 🟢 Done | 2026-09-10 |
 | P3.4 | Evidence graph and closure continuity | ⬜ Not started | — |
 
 ## Phase P4
@@ -156,6 +156,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P3.1 forward repair closed: legacy light assurance normalizes without rewriting P7 history; focused/package/provider/Skiller/docs gates green.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 closed: one executable Routing compiler now governs contract, lint and phase policy; focused/package/provider gates green.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing

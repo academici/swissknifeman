@@ -216,8 +216,8 @@ D#-старый», старый D# не редактируется.
 
 `Context` — ровно `continue-root`, `isolated-child-return` или `cold-start-root`.
 Cold start допустим только с причиной `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, `whole-plan-independent-audit`, `design-root-terminal` или
-`audit-root-terminal`; имя команды само по себе не является причиной. Перед записью handoff
+`owner-pause-no-resume`, `whole-plan-independent-audit` или `design-root-terminal`; имя команды
+само по себе не является причиной. Перед записью handoff
 один `task.plan_continuity.reduce()` принимает versioned work estimate: attested route/capabilities,
 context health, digest оставшегося batch, loaded-input reuse, cold-start cost, lifecycle и durable
 checkpoint. Renderer, DecisionRequest, delivery receipt и live lint используют его typed decision,

@@ -140,7 +140,7 @@ class PlanDeliveryTests(unittest.TestCase):
             "### Что запускать\n\n"
             "| Batch | Model | Thinking | Context | Суть | Команда |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| repair | frontier | high | `cold-start-root: audit-root-terminal` | fix | "
+            "| repair | frontier | high | `continue-root` | fix | "
             "`$ task:plan-run DEMO-AUDIT P1.1` |\n\n"
             "```text\n$ task:plan-run DEMO-AUDIT P1.1\n\n"
             "РЕЖИМ: bounded audit repair-forward\nВХОД: audit\nСКОУП: fix\nНЕ ТРОГАТЬ: other\n```\n",
@@ -165,7 +165,7 @@ class PlanDeliveryTests(unittest.TestCase):
             "Semantic Next: `close: task:plan-close DEMO-AUDIT-GREEN P1`.\n\n"
             "| Batch | Model | Thinking | Context | Суть | Команда |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| n/a | implementation | high | `cold-start-root: audit-root-terminal` | close | "
+            "| n/a | implementation | high | `continue-root` | close | "
             "`$ task:plan-close DEMO-AUDIT-GREEN P1` |\n",
             encoding="utf-8",
         )
@@ -177,7 +177,7 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_handoff_receipt(plan, "P1")
         self.assertEqual(
             receipt["next_exact"], "close: task:plan-close DEMO-AUDIT-GREEN P1")
-        self.assertEqual(receipt["continuity"]["reason"], "audit-root-terminal")
+        self.assertEqual(receipt["continuity"]["reason"], "compatible-active-work")
         self.assertEqual(receipt["digests"]["handoff"], plan_delivery.file_digest(phase))
 
     def test_stale_handoff_recommendation_is_rejected(self):

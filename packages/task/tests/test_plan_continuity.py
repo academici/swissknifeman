@@ -43,7 +43,7 @@ class ContinuityTests(unittest.TestCase):
             evaluate(route_attested=True, context_attested=False, batch_receipt_valid=True,
                      boundary="context-budget")
         self.assertEqual(evaluate(route_attested=True, context_attested=False,
-                                  batch_receipt_valid=True, boundary="audit-root-terminal",
+                                  batch_receipt_valid=True, boundary="design-root-terminal",
                                   checkpoint="journal:22").outcome, "cold-start-root")
 
     def test_unattested_route_or_batch_is_refused(self):
@@ -62,8 +62,7 @@ class ContinuityTests(unittest.TestCase):
     def test_insufficient_context_and_terminal_lifecycle_require_checkpoint(self):
         for override, reason in (
                 ({"context_health": "insufficient"}, "context-budget"),
-                ({"lifecycle": "design-root-terminal"}, "design-root-terminal"),
-                ({"lifecycle": "audit-root-terminal"}, "audit-root-terminal")):
+                ({"lifecycle": "design-root-terminal"}, "design-root-terminal")):
             with self.subTest(reason=reason):
                 with self.assertRaisesRegex(ContinuityError, "checkpoint"):
                     reduce(estimate(**override))

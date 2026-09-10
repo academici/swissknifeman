@@ -288,8 +288,7 @@ For layout v2 the Context field carries EXACTLY one of three values:
 
 `[v1]` historical context strings remain readable but are not emitted for layout v2. A v2
 `cold-start-root` must give exactly one reason: `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, `whole-plan-independent-audit`, `design-root-terminal`, or
-`audit-root-terminal`. Command names
+`owner-pause-no-resume`, `whole-plan-independent-audit`, or `design-root-terminal`. Command names
 do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
 provider-neutral form and the native launch block together.
 
@@ -309,12 +308,11 @@ non-product `handoff-recommendation-receipt/v1`. Every final response labels
 `Рекомендация следующего шага:` and copies the receipt's exact recommendation; a bare item ID
 is not a delivery receipt.
 
-**AUDIT-ROOT-TERMINAL.** A completed `task:plan-audit` invocation is a hard boundary: its root
-must not execute the successor, even when the successor is compatible or ready. Its runnable
-successor has `cold-start-root: audit-root-terminal` and a provider-neutral semantic Next plus a
-native fresh routed root launch block that pins the successor's route. This boundary protects
-independent audit and routing cost; it does not weaken autonomous execution within a compatible
-route and does not alter overshoot semantics.
+**AUDIT CONTINUATION.** A completed `task:plan-audit` invocation does not itself select a new
+root. Build and persist the same `plan_continuity.WorkEstimate` used for every runnable successor;
+the reducer selects `continue-root`, `isolated-child-return`, or a supported cold-start reason
+from route, capability, context, owner-pause, and independence evidence. The audit root may
+continue when that evidence permits it; independent review and route evidence remain mandatory.
 
 **DESIGN-ROOT-TERMINAL.** A completed `task:plan-design` invocation is an authoring boundary:
 its root must not execute or spawn the successor, even when the successor is compatible, ready,

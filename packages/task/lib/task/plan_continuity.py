@@ -16,7 +16,6 @@ COLD_START_REASONS = (
     "owner-pause-no-resume",
     "whole-plan-independent-audit",
     "design-root-terminal",
-    "audit-root-terminal",
 )
 LIFECYCLES = (
     "active",
@@ -24,7 +23,6 @@ LIFECYCLES = (
     "owner-pause-no-resume",
     "whole-plan-independent-audit",
     "design-root-terminal",
-    "audit-root-terminal",
 )
 CONTEXT_HEALTH = ("sufficient", "insufficient", "unavailable")
 _WORK_KEYS = frozenset((

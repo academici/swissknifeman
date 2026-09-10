@@ -61,7 +61,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             encoding="utf-8")
         self.assertIn("task.plan_lifecycle.select", audit)
         self.assertIn("semantic Next", audit)
-        self.assertIn("AUDIT-ROOT-TERMINAL", protocol)
+        self.assertNotIn("AUDIT-ROOT-TERMINAL", protocol)
 
     def test_terminal_design_handoff_cannot_auto_execute_its_successor(self):
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
@@ -142,18 +142,18 @@ class ProviderPlanRoutingTests(unittest.TestCase):
 
     def test_renderer_verifies_precomputed_continuity_instead_of_rechoosing_it(self):
         decision = ContinuityDecision(
-            "cold-start-root", "audit-root-terminal", ("checkpoint:journal:42",), True)
+            "continue-root", "compatible-active-work", ("batch:" + "a" * 64,), True)
         carrier = parse_next_carrier(
             "audit-phase: task:plan-audit PLAN P4",
-            context_kind="cold-start-root",
+            context_kind="continue-root",
             continuity=decision,
         )
         self.assertEqual(carrier.as_dict()["continuity"]["reason"],
-                         "audit-root-terminal")
+                         "compatible-active-work")
         with self.assertRaisesRegex(ValueError, "continuity/context mismatch"):
             parse_next_carrier(
                 "audit-phase: task:plan-audit PLAN P4",
-                context_kind="continue-root",
+                context_kind="cold-start-root",
                 continuity=decision,
             )
         waiting = parse_next_carrier(

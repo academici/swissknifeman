@@ -97,12 +97,11 @@ Legacy-строка таблицы `Команда` остаётся читае�
   - `continue-root` — обычная последовательная работа и local repair;
   - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
   - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
-    `owner-pause-no-resume`, `whole-plan-independent-audit`, `design-root-terminal` или
-    `audit-root-terminal`.
+    `owner-pause-no-resume`, `whole-plan-independent-audit` или `design-root-terminal`.
     После terminal `task:plan-design` используется только `design-root-terminal`:
     текущий design root возвращает recommendation владельцу и не исполняет successor.
-    После terminal `task:plan-audit` используется только `audit-root-terminal`: текущий audit root
-    не исполняет successor.
+    Terminal `task:plan-audit` does not select Context by command name; use its persisted
+    `plan_continuity` decision.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
   (единственный SSOT), здесь только напоминание: `Model class` = предписанная Routing,
   fenced block ОБЯЗАТЕЛЕН и несёт **ГОЛЫЙ ПРОМПТ item'а** (либо последовательность

@@ -133,11 +133,10 @@ Context is chosen from the boundary predicate, not from command name:
 - `whole-plan-independent-audit` — adversarial audit of the whole plan requires independence.
 - `design-root-terminal` — a completed `task:plan-design` hands its recommendation to a separately
   routed root and never executes or spawns the successor itself;
-- `audit-root-terminal` — a completed `task:plan-audit` must hand its successor to a fresh routed root.
 
 Ordinary item sequencing, local repair, or plan close does not itself justify a cold start.
-Completed `task:plan-design` and `task:plan-audit` invocations are explicit terminal-root
-exceptions: neither root executes its successor, even when the successor is otherwise compatible.
+Only a completed `task:plan-design` invocation is an explicit terminal-root exception. Audit
+continuation uses the persisted `plan_continuity` decision and may remain in its authoritative root.
 Terminal producer phases use additive `producer-readiness/v1` evidence. Its consumer sees only a
 digest-bound projection; an empty set requires an accepted owner `D#`. Re-entering an already
 terminal phase is not inferred from prose or a design command: it requires the latest nonterminal

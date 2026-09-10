@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Исправлено: `task:plan-audit` больше не принудительно передаёт совместимое продолжение в новую сессию; контекст выбирает единый evidence-based reducer.
+
 - **`task`: evidence anchors prevent self-invalidating plan closure.** Новый derived
   `evidence-graph/v1` выявляет пересечение declared `Files` и digest inputs до journal/product
   mutation, разделяет product/closure anchor только при реальной коллизии, сохраняет

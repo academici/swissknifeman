@@ -74,8 +74,11 @@ events, поэтому durable count остаётся неполным до reco
 
 ### F3 · Major · confidence high · issue · P6 write/read boundary
 
-**Evidence:** `phases/P6/P6.3.md:8-9`; `phases/P6/P6.4.md:8-9`;
-plan-protocol `SKILL.md:79` (`Files bound writes`, Required Reads precede work).
+**Evidence:** `decisions/D14-lean-task-lifecycle-priority.md:24-27` (P6.1–P6.4 retired from
+the executable plan); plan-protocol `SKILL.md:79` (`Files bound writes`, Required Reads precede
+work).
+
+> УСТАРЕЛ — D14 retired the P6 carriers; this historical finding has no runnable subject.
 
 P6.3 и P6.4 оставляют в `Files` и `Required Reads` неразрешимые к старту классы:
 `owning Codex instruction fragments`, `canonical skill metadata`, `generated projections`,

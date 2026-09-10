@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 88919fbcbd8e0527c0a6166afb9dc41f2ecf2a650d2297a706250c52468490b1
+inputs_sha256: df3249f64702d6b5722ed541e84221ea8ba2dd0925a8b62facedb128d5b04ad6
 generated_by: task plan-views status
 -->
 
@@ -150,6 +150,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P7.1 lean lifecycle: 31,864 canonical command/canon bytes (at 8fd55046); 970 Task tests, provider, Skiller and docs gates green (at 8fd55046).
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | implementation/low | plan-close · closed-green · фаза P7 закрыта |
 
 ## Correction Routing
 

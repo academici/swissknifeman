@@ -4,7 +4,7 @@
      triggers остаются авторитетными; фактический handoff пересчитывает readiness и Context. -->
 
 **Обновлён:** 2026-09-10 · **Соответствует plan.md:** v1.0.3 · **Design:** pass 3/3 +
-D14 P7 redesign · **Статус:** P1/P2 terminal; P7.1 is the owner-prioritized next item before P3.
+D14 P7 redesign · **Статус:** P1/P2/P7 terminal; B-P3-ASSURANCE is next.
 
 ## Правило группировки
 
@@ -141,5 +141,5 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ## Current handoff
 
-The current action is exactly solo P7.1 in a fresh implementation/high root. D14 retires P3.3 and
-P6; no design audit or intermediate phase is scheduled before the priority fix.
+The current action is exactly B-P3-ASSURANCE (`P3.1–P3.2`) in a fresh implementation/high root.
+D14 retires P3.3 and P6; no intermediate design phase is scheduled before this batch.

@@ -90,6 +90,14 @@ Claude Code session JSONL остаются additive adapters одного record
 `ROUTE-UNVERIFIABLE`, не undershoot. Start event хранит `route-run-receipt/v1`; pre-final обязан
 перечитать его, повторно снять route и отказать при смене session/model/effort/cwd/invocation.
 
+Перед journal/product mutation executor компилирует `evidence-graph/v1` из immutable item-spec,
+digest-qualified bundle, declared `Files` и registry владельцев carriers. Реальное
+`Files ∩ digest_inputs` при требовании свежего closure carrier возвращает
+`SELF_INVALIDATING_EVIDENCE_ANCHOR`: сначала product anchor, затем closure anchor. Если
+пересечения нет, anchors схлопываются. В closure product paths обязаны быть byte-identical;
+volatile generated journal/view/handoff carriers не становятся product semantics без явного
+Deliverable declaration.
+
 Ошибка в ходе exec проходит continue-first gate: малый обратимый дефект чинится в том же attempt,
 а Blocked появляется только после isolated `JUSTIFIED`, concrete `boundary_evidence` и verified RAG
 для внешнего класса. Масштаб диагностики не является границей: `scope_coverage=in-scope` всегда
@@ -114,6 +122,9 @@ Legacy assurance идёт в named conservative baseline; isolated, green, seam-
 material-risk требуют `/task:plan-audit`. После GREEN расхождение получает typed
 `audit-impact/v1` continuation: gate-rebind, delta, justified full, gather evidence или owner review;
 неизвестное влияние не превращается в implicit full.
+GREEN audit регенерирует свои owned views ровно один раз, пересобирает candidate и сохраняет
+`audit-finalization/v1` с exact close admission. Поэтому следующий `plan-close` потребляет
+доказанно тот же candidate, а не обнаруживает self-invalidation повторным аудитом.
 Audit-fixer остаётся независимым при старте, но после обнаружения владеет safe in-scope ремонтом:
 повторяет точную Validation, регенерирует owner views и пересобирает candidate в том же root.
 Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет

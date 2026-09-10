@@ -13,6 +13,8 @@ only changed carriers once; `plan_continuity` owns context; and `plan_delivery` 
 and provider-native launch rendering. Do not use a command name, bookkeeping drift, Routing Review,
 item count, or historical deviation as a full-replay/fresh-root trigger. Unknown impact blocks close
 with its exact continuation; it never implicitly authorizes full replay.
+For a post-audit phase close, consume the persisted `audit-finalization/v1` bound to the rebuilt
+candidate; absence or a non-allow close admission refuses closure.
 
 Normal close is one scoped commit. A second commit requires a real ownership/session boundary. A red
 carrier remains owning repair work; an audit product finding returns its exact continuation.

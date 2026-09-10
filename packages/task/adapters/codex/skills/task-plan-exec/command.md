@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:104659d36c79f3e138a9ba727711db361dfc3cb6a5227ceabff711b9992610ce
+Canonical SHA-256: sha256:84a60b9857934e61750b5df3d0e25cf97cee9ab713e3e866fa47c7fc04c6bde4
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -94,6 +94,10 @@ Commands must not copy those algorithms.
    `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
 2. Capture provider route and call `batch_admission`; unknown route is `ROUTE-UNVERIFIABLE`, not an
    item attempt. Start one route-run receipt and reuse it until `route_change_boundary()` proves a change.
+   Before journal or product mutation, compile `task.plan_evidence.compile_graph()` from the item
+   spec and bundle, then pass it to `task_contract.pre_mutation()`. A real digest-input/write
+   collision is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split product and closure anchors; otherwise
+   collapse them into one anchor.
 3. Implement only Scope Included. Select focused validation by default; bounded integration adds
    affected-package validation; security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release

@@ -171,6 +171,15 @@ an escape hatch: it still requires green Validation plus a closed `recoverable-v
 record proving why a material/outside-scope/unsafe residual cannot be repaired in this attempt.
 `blocked`/`escalated` requires an authority or block reducer terminal action. Completion Notes carry
 exact evidence; a cancelling/superseding decision adds `**Consequences:**`.
+Before journal/product mutation, derive `evidence-graph/v1` from the committed item spec, bundle,
+decisions, producer-readiness and declared Files. A real `Files ∩ digest_inputs` collision with a
+fresh closure requirement is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split spec→product→closure;
+otherwise collapse the anchors. Registry-owned volatile journal/view/handoff carriers are
+bookkeeping unless the item explicitly declares their product semantics in Deliverables. Closure
+proves declared product bytes identical to the product anchor. Before `audit-green`, regenerate
+audit-owned projections once, rebuild the candidate and persist `audit-finalization/v1` with the
+exact `phase_close_gate` admission; `plan-close` consumes that admission rather than discovering a
+new audit cycle.
 Before product work, `validation-admission/v1` checks deterministic local command prerequisites.
 A definitely absent literal Make target creates a nonterminal repair-inline observation in the same
 attempt; dynamic Make definitions remain unknown rather than manufacturing a missing-target block.

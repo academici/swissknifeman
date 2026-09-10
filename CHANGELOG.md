@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- **`task`: evidence anchors prevent self-invalidating plan closure.** Новый derived
+  `evidence-graph/v1` выявляет пересечение declared `Files` и digest inputs до journal/product
+  mutation, разделяет product/closure anchor только при реальной коллизии, сохраняет
+  byte-identity product paths и исключает registry-owned volatile bookkeeping из material
+  candidate без явного Deliverable. `audit-finalization/v1` фиксирует rebuilt candidate и exact
+  close admission перед GREEN audit.
+
 - **`task`: единый исполнимый Routing compiler.** `Task Contract`, batch admission,
   phase audit/close и lint теперь потребляют одну exact six-column Routing table; соседние
   provider mapping-таблицы не меняют Review coverage, а duplicate executable table или item

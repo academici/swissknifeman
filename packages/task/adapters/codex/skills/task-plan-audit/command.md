@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:7ea345b9b076a6d186b02e2ab68549e2b02e0043519f591d81cf6532716c4e80
+Canonical SHA-256: sha256:3d2f15eea0217a13eebdb973045d983d4887cb07aa6f943f90f9bf0e4a0ec11a
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -68,6 +68,9 @@ sole exact executable Routing compiler result, and prior terminal evidence; comp
 Persist the runtime candidate snapshot with
 a GREEN verdict. A post-GREEN mismatch is `audit-impact/v1`: gate-rebind, delta, justified full,
 evidence gathering, or owner review—never bare stale/full. Fresh deterministic evidence is reused.
+Before GREEN, regenerate audit-owned carriers once, rebuild the candidate and persist
+`task.plan_evidence.audit_finalization()` with the exact `phase_close_gate` admission; product
+paths must remain byte-identical between the product and closure anchors.
 
 Use `task.plan_lifecycle.select(audit=True)`: at most one deterministic audit-owned bookkeeping
 repair is allowed. A product defect returns one exact owning continuation; it does not trigger a

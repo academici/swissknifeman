@@ -38,6 +38,18 @@ plans/<PLAN-ID>/
 свидетельства-суждения, а generated `phases/<Pn>/<Pn>.closed.md` — терминальный контракт и
 результат для дизайнера/владельца. Один не заменяет другой.
 
+## Evidence anchors
+
+`evidence-graph/v1` — derived runtime carrier, не handwritten карта. Он связывает spec,
+bundle digest inputs, declared product paths и closure. До мутации `Files ∩ digest_inputs`
+при required fresh closure check отклоняется как `SELF_INVALIDATING_EVIDENCE_ANCHOR` и требует
+минимальный product/closure split. При отсутствии коллизии используется один collapsed anchor.
+Closure доказывает byte identity product paths; registry-owned volatile projections, journal и
+handoff считаются bookkeeping, пока item явно не выводит их в Deliverables.
+
+Перед `audit-green` audit-finalization regenerates owned projections once, rebuilds candidate and
+records `audit-finalization/v1` with `close_admission=allow`. Phase close consumes that evidence.
+
 ## Phase Assurance | v1
 
 Каждая новая фаза фиксирует в `## Phase Context` один handwritten block с `Impact`, named

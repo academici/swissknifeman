@@ -23,6 +23,10 @@ Commands must not copy those algorithms.
    `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
 2. Capture provider route and call `batch_admission`; unknown route is `ROUTE-UNVERIFIABLE`, not an
    item attempt. Start one route-run receipt and reuse it until `route_change_boundary()` proves a change.
+   Before journal or product mutation, compile `task.plan_evidence.compile_graph()` from the item
+   spec and bundle, then pass it to `task_contract.pre_mutation()`. A real digest-input/write
+   collision is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split product and closure anchors; otherwise
+   collapse them into one anchor.
 3. Implement only Scope Included. Select focused validation by default; bounded integration adds
    affected-package validation; security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release

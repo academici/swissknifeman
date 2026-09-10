@@ -14,7 +14,7 @@ import subprocess
 from collections import Counter
 from pathlib import Path, PurePosixPath
 
-from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
+from task import (plan_bundle, plan_decisions, plan_downstream, plan_evidence, plan_gate_activation, plan_item_state, plan_layout,
                   plan_assurance, plan_projection, plan_requests, plan_returns, plan_status, plan_weight,
                   review_policy, task_contract)
 
@@ -204,7 +204,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         item_id = spec_path.stem
         files_value = next((match.group(1) for line in spec_path.read_text(
             encoding="utf-8").splitlines() if (match := _FILES_FIELD_RE.match(line))), "")
-        declared_paths.update(_declared_file_paths(files_value))
+        declared_paths.update(plan_evidence.material_product_paths(plan_dir, item_id))
         model, _note, _friction = plan_item_state.state_model(plan_dir, item_id)
         status = model["state"]["position"]["status"]
         if status not in {

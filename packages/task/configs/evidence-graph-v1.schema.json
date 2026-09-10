@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:evidence-graph:v1",
+  "type": "object",
+  "required": ["schema_version", "item_id", "product_paths", "digest_inputs", "collisions", "nodes", "edges", "sha256"],
+  "properties": {
+    "schema_version": {"const": "evidence-graph/v1"},
+    "item_id": {"type": "string", "pattern": "^P[0-9]+\\.[0-9]+$"},
+    "product_paths": {"type": "array", "items": {"type": "string"}},
+    "digest_inputs": {"type": "array", "items": {"type": "string"}},
+    "collisions": {"type": "array", "items": {"type": "string"}},
+    "nodes": {"type": "array"},
+    "edges": {"type": "array"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": false
+}

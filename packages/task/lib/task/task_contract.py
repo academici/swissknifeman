@@ -1200,7 +1200,9 @@ def portability_lint(portability: dict, *, work: dict | None = None) -> str | No
     return None
 
 
-def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
+def pre_mutation(contract: dict, *, work: dict | None = None,
+                 evidence_graph: dict | None = None,
+                 requires_closure_freshness: bool = False) -> str | None:
     """task-contract-v1.md §Pre-mutation predicate — ordered, first failure wins.
     Returns `None` (allow) or a typed reason code.
 
@@ -1282,6 +1284,16 @@ def pre_mutation(contract: dict, *, work: dict | None = None) -> str | None:
     if cold_start["carrier"] != nxt["carrier"]:
         return "COLD_START_INCOMPLETE"
 
+    if evidence_graph is not None:
+        from task import plan_evidence
+        try:
+            plan_evidence.admit_pre_mutation(
+                evidence_graph,
+                requires_closure_freshness=requires_closure_freshness,
+            )
+        except plan_evidence.EvidenceError as exc:
+            return exc.code
+
     return None
 
 
@@ -1308,12 +1320,17 @@ def pre_final(contract: dict) -> str | None:
     return None
 
 
-def evaluate(contract: dict, *, work: dict | None = None) -> dict:
+def evaluate(contract: dict, *, work: dict | None = None,
+             evidence_graph: dict | None = None,
+             requires_closure_freshness: bool = False) -> dict:
     """Run both boundaries in the canonical order and return a compact typed result —
     the shape a plan command reports verbatim (journal/handoff/subagent slice, 2026.07.24-AGENT-RELIABILITY P2.2
     Code Guidance): `{"pre_mutation": "allow"|"block:<CODE>", "pre_final":
     "allow"|"block:<CODE>"|"n/a", "content_hash": <sha256>}`."""
-    mutation_code = pre_mutation(contract, work=work)
+    mutation_code = pre_mutation(
+        contract, work=work, evidence_graph=evidence_graph,
+        requires_closure_freshness=requires_closure_freshness,
+    )
     if mutation_code is None:
         final_code = pre_final(contract)
         final = "allow" if final_code is None else f"block:{final_code}"

@@ -9,6 +9,9 @@ sole exact executable Routing compiler result, and prior terminal evidence; comp
 Persist the runtime candidate snapshot with
 a GREEN verdict. A post-GREEN mismatch is `audit-impact/v1`: gate-rebind, delta, justified full,
 evidence gathering, or owner review—never bare stale/full. Fresh deterministic evidence is reused.
+Before GREEN, regenerate audit-owned carriers once, rebuild the candidate and persist
+`task.plan_evidence.audit_finalization()` with the exact `phase_close_gate` admission; product
+paths must remain byte-identical between the product and closure anchors.
 
 Use `task.plan_lifecycle.select(audit=True)`: at most one deterministic audit-owned bookkeeping
 repair is allowed. A product defect returns one exact owning continuation; it does not trigger a

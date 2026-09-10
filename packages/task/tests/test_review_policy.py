@@ -55,7 +55,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             "product_tree_sha256": "b" * 64,
         }
 
-    def _plan_with_review(self, root, review, *, items="P1.1"):
+    def _plan_with_review(self, root, review, *, items="P1.1", assurance=None):
         plan = Path(root) / "P"
         plan.mkdir()
         (plan / "plan.md").write_text(
@@ -65,9 +65,25 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             f"| solo | {items} | implementation/high | manual | {review} | test |\n",
             encoding="utf-8",
         )
+        phase = plan / "phases" / "P1"
+        phase.mkdir(parents=True)
+        assurance = assurance or {
+            "impact": "isolated", "seams": "—", "live": "no",
+            "intent": "direct-close-eligible", "rationale": "fixture",
+        }
+        (phase / "P1.md").write_text(
+            "# P1\n\n"
+            "> **Phase Assurance | v1.**\n"
+            f"> Impact: {assurance['impact']}\n"
+            f"> Integration Seams: {assurance['seams']}\n"
+            f"> Live or Irreversible: {assurance['live']}\n"
+            f"> Audit Intent: {assurance['intent']}\n"
+            f"> Rationale: {assurance['rationale']}\n",
+            encoding="utf-8",
+        )
         return plan
 
-    def test_phase_audit_policy_skips_separate_audit_for_low_risk_none(self):
+    def test_phase_audit_policy_direct_closes_assured_isolated_candidate(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan_with_review(tmp, "none")
             policy = plan_gates.phase_audit_policy(
@@ -82,13 +98,13 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 candidate_fingerprint=plan_gates._candidate_snapshot_fingerprint(snapshot),
                 candidate_snapshot=snapshot)
             self.assertTrue(gate["allow"])
-            self.assertEqual(gate["audit_policy"]["code"], "PHASE_DIRECT_CLOSE_LOW_RISK")
+            self.assertEqual(gate["audit_policy"]["code"], "PHASE_DIRECT_CLOSE_ASSURED")
 
-    def test_phase_audit_policy_uses_review_risk_and_phase_volume(self):
+    def test_phase_audit_policy_ignores_review_and_item_count_but_refuses_risk(self):
         cases = (
-            ("full", ("🟢 Done",), (), True, "PHASE_AUDIT_REQUIRED_FULL_REVIEW"),
-            ("light", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_LOW_RISK"),
-            ("light", ("🟢 Done", "🟢 Done"), (), True, "PHASE_AUDIT_REQUIRED_MULTI_ITEM"),
+            ("full", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
+            ("light", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
+            ("light", ("🟢 Done", "🟢 Done"), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
             ("none", ("🟢 Done",), ("public contract",), True, "PHASE_AUDIT_REQUIRED_MATERIAL_RISK"),
             ("none", ("🟠 Done with deviations",), (), True, "PHASE_AUDIT_REQUIRED_NON_GREEN"),
         )
@@ -103,14 +119,15 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                     self.assertEqual(policy["audit_required"], required)
                     self.assertEqual(policy["code"], code)
 
-    def test_phase_audit_policy_fails_closed_when_routing_does_not_cover_candidate(self):
+    def test_phase_audit_policy_uses_named_legacy_baseline_when_assurance_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._plan_with_review(tmp, "none", items="P1.1")
+            (plan / "phases" / "P1" / "P1.md").unlink()
             policy = plan_gates.phase_audit_policy(
                 plan, "P1", candidate_snapshot=self._candidate(
                     statuses=("🟢 Done", "🟢 Done")))
             self.assertTrue(policy["audit_required"])
-            self.assertEqual(policy["code"], "PHASE_AUDIT_REQUIRED_UNASSESSED")
+            self.assertEqual(policy["code"], "PHASE_ASSURANCE_CARRIER_MISSING")
 
     def test_phase_close_binds_policy_snapshot_to_candidate_fingerprint(self):
         with tempfile.TemporaryDirectory() as tmp:

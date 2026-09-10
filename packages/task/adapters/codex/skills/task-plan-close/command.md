@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:c07e15e984c1d35e11c39e421292551f8c27e9d16d6682e1a704acc07a272424
+Canonical SHA-256: sha256:dd4c68f73e6782777b5dbccfdcc099c9252e673f8a88938fde5304e4d61095a2
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -64,10 +64,13 @@ read; neither rule prohibits a verified cleared chat or overrides current `turn_
 evidence.
 
 Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates;
-`plan_gates.phase_audit_policy` selects phase audit versus direct close; `plan_projection` regenerates
+`plan_assurance.evaluate()` is the sole assurance/impact reducer behind `phase_audit_policy`: it selects first audit/direct close
+and post-GREEN `gate-rebind|delta|full|gather-evidence|owner-review` from a runtime-built candidate;
+`plan_projection` regenerates
 only changed carriers once; `plan_continuity` owns context; and `plan_delivery` owns one semantic Next
-and provider-native launch rendering. Do not use a command name, bookkeeping drift, or historical
-deviation as a full-replay/fresh-root trigger.
+and provider-native launch rendering. Do not use a command name, bookkeeping drift, Routing Review,
+item count, or historical deviation as a full-replay/fresh-root trigger. Unknown impact blocks close
+with its exact continuation; it never implicitly authorizes full replay.
 
 Normal close is one scoped commit. A second commit requires a real ownership/session boundary. A red
 carrier remains owning repair work; an audit product finding returns its exact continuation.

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:3a6454f4a247569545bfb168fbd84dab6d274d97cc831f1c3fdf50a92cdde8c1
+Canonical SHA-256: sha256:e2b18b3ae821e007bab27b1c3460696cd3f28d30093126924c558248c1d4c95d
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -64,7 +64,8 @@ read; neither rule prohibits a verified cleared chat or overrides current `turn_
 evidence.
 
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
-declare Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
+declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
+audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
 owned views. Use `task.plan_lifecycle.select()` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 

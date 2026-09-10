@@ -15,7 +15,8 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
-                  plan_projection, plan_requests, plan_returns, plan_status, plan_weight, review_policy)
+                  plan_assurance, plan_projection, plan_requests, plan_returns, plan_status, plan_weight,
+                  review_policy)
 
 
 GATE_ID = "read-budget-v1"
@@ -340,58 +341,22 @@ def _audit_policy_decision(plan_dir: Path, phase_id: str, *, required: bool,
 
 
 def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
-    """Choose audit-phase vs direct close from committed risk and volume evidence.
+    """Compatibility facade over the sole phase-assurance policy owner.
 
-    ``Review`` is the plan author's risk decision. Runtime evidence may only raise
-    its depth: material risk or a non-green terminal item always requires audit;
-    a multi-item ``light`` phase requires integration audit. Process-only
-    deviations keep the item green and therefore do not manufacture an audit.
-    Missing evidence defaults to audit instead of guessing.
+    The historical signature is intentionally retained for callers and fixtures,
+    but Routing review and item count no longer participate in phase risk.
     """
     plan_dir = Path(plan_dir)
     if not re.fullmatch(r"P\d+", phase_id):
         raise ValueError("phase_id должен иметь форму Pn")
-    reviews = _phase_reviews(plan_dir, phase_id)
-    snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else {}
-    heads = snapshot.get("terminal_item_heads")
-    risks = snapshot.get("material_risks")
-    head_ids = [row.get("item_id") for row in heads if isinstance(row, dict)] \
-        if isinstance(heads, list) else []
-    if (snapshot.get("phase_id") != phase_id or not isinstance(heads, list)
-            or not heads or not isinstance(risks, list) or not reviews
-            or len(head_ids) != len(heads) or set(head_ids) != set(reviews)):
-        return _audit_policy_decision(
-            plan_dir, phase_id, required=True,
-            code="PHASE_AUDIT_REQUIRED_UNASSESSED", review="full",
-            reason="candidate-or-routing-unresolved")
-    statuses = [row.get("status") for row in heads if isinstance(row, dict)]
-    if len(statuses) != len(heads) or any(status != plan_status.STATUS_DONE for status in statuses):
-        return _audit_policy_decision(
-            plan_dir, phase_id, required=True,
-            code="PHASE_AUDIT_REQUIRED_NON_GREEN",
-            review=max(reviews.values(), key=_REVIEW_ORDER.__getitem__),
-            reason="non-green-terminal-item")
-    if risks:
-        return _audit_policy_decision(
-            plan_dir, phase_id, required=True,
-            code="PHASE_AUDIT_REQUIRED_MATERIAL_RISK",
-            review=max(reviews.values(), key=_REVIEW_ORDER.__getitem__),
-            reason="material-risk")
-    effective = max(reviews.values(), key=_REVIEW_ORDER.__getitem__)
-    if effective == "full":
-        return _audit_policy_decision(
-            plan_dir, phase_id, required=True,
-            code="PHASE_AUDIT_REQUIRED_FULL_REVIEW", review=effective,
-            reason="routing-review-full")
-    if effective == "light" and len(heads) > 1:
-        return _audit_policy_decision(
-            plan_dir, phase_id, required=True,
-            code="PHASE_AUDIT_REQUIRED_MULTI_ITEM", review=effective,
-            reason="multi-item-integration")
-    return _audit_policy_decision(
-        plan_dir, phase_id, required=False,
-        code="PHASE_DIRECT_CLOSE_LOW_RISK", review=effective,
-        reason="single-green-item" if effective == "light" else "routing-review-none")
+    snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else None
+    policy = plan_assurance.evaluate(plan_dir, phase_id, candidate=snapshot)
+    # Existing consumers expose these legacy keys; they carry no independent
+    # decision semantics and may be removed only in a separately versioned API.
+    return {
+        **policy,
+        "effective_review": "assurance",
+    }
 
 
 def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: str | None):
@@ -536,8 +501,26 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
                 "audit_policy": audit_policy}
     line_number, event = latest
     if event.get("fingerprint") != candidate_fingerprint:
-        return {"allow": False, "code": "PHASE_AUDIT_STALE", "journal_line": line_number,
-                "audit_policy": audit_policy}
+        # Historical minimal callers have no snapshot to classify.  Preserve
+        # their readable refusal while all runtime-built candidates receive a
+        # closed `audit-impact/v1` continuation instead of bare stale/full.
+        if candidate_snapshot is None:
+            return {"allow": False, "code": "PHASE_AUDIT_STALE", "journal_line": line_number,
+                    "audit_policy": audit_policy}
+        broker = plan_assurance.evaluate(
+            plan_dir, phase_id, candidate=candidate_snapshot,
+            baseline=event.get("candidate_snapshot"),
+            second_full_justification=event.get("second_full_justification"),
+        )
+        return {
+            "allow": False,
+            "code": broker["code"],
+            "journal_line": line_number,
+            "audit_policy": audit_policy,
+            "impact": broker.get("impact"),
+            "continuation": broker["action"],
+            "next_exact": broker["next_exact"],
+        }
     codes = {
         "audit-green": (True, "allow"),
         "audit-attention": (False, "PHASE_AUDIT_ATTENTION"),

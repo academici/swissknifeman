@@ -175,7 +175,9 @@ def _latest_phase_audit_event(plan_dir: Path, subject: str) -> dict | None:
         if (event.get("command") == "plan-audit"
                 and review_policy.phase_audit_subject(event.get("item_id")) == subject
                 and event.get("result") in {"audit-green", "audit-attention", "audit-red"}):
-            latest = event
+            # Consumers receive one canonical phase identity even when the
+            # immutable historical journal still spells `Pn — режим фазы`.
+            latest = {**event, "item_id": subject}
     return latest
 
 

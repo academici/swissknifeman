@@ -178,10 +178,15 @@ attempt; dynamic Make definitions remain unknown rather than manufacturing a mis
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
 generated `[v2]` phase-closure view. A terminal phase is a candidate. Both handoff and close call
-`task.plan_gates.phase_audit_policy` over the same candidate snapshot: `full`, material risk,
-non-green terminal state, or multi-item `light` requires a fresh GREEN audit; `none` and a
-single-item `light` phase with only green items and no material risk close directly. A process-only
-deviation does not manufacture an audit. RED or unresolved ATTENTION is repaired in its owning item.
+`task.plan_assurance.evaluate()` (through the compatibility facade
+`task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. Every new
+phase declares one handwritten `Phase Assurance | v1` block: Impact, Integration Seams, Live or
+Irreversible, Audit Intent, and Rationale. `Routing.Review` and item count are item-execution
+depth, never phase-risk triggers. Missing legacy assurance takes a named conservative audit baseline;
+isolated, green, seam-free `direct-close-eligible` candidates may close directly; public, security,
+live/irreversible, non-green, or material-risk candidates require audit. After a GREEN audit, every
+mismatch is `audit-impact/v1`: bookkeeping rebind, bounded delta, justified full, evidence gathering,
+or owner review—never bare stale/full. RED or unresolved ATTENTION is repaired in its owning item.
 A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded
 phase-scoped owner D#: its `item` is `Pn`, `items` is exactly `Pn` plus every `Pn.*`, and it
 carries `` `phase-close: terminal-blocked-deviations` ``. That D# permits only a

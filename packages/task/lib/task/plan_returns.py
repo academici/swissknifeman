@@ -8,7 +8,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-from task import journal, plan_decisions, plan_layout
+from task import journal, plan_decisions, plan_layout, review_policy
 
 
 class ReturnError(ValueError):
@@ -592,6 +592,14 @@ def returns(plan_dir) -> dict:
     schema_invalid_rows = sum(bool(row["errors"]) for row in entries)
     for row in entries:
         entry = row["entry"]
+        if isinstance(entry, dict) and entry.get("command") == "plan-audit":
+            canonical_phase = review_policy.phase_audit_subject(entry.get("item_id"))
+            if canonical_phase is not None:
+                # Return fingerprints are a reader projection.  Normalize the
+                # copied row only; the append-only historical journal remains
+                # byte-identical and new writers already emit canonical Pn.
+                entry = {**entry, "item_id": canonical_phase}
+                row = {**row, "entry": entry}
         if isinstance(entry, dict) and isinstance(entry.get("repair_decision"), dict):
             repair = entry["repair_decision"]
             repair_records.append({

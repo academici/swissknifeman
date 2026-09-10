@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: пропорциональная phase assurance.** Новый `Phase Assurance | v1` и единый
+  `plan_assurance` reducer отделяют semantic phase risk от Routing Review и числа items;
+  phase audit subject канонизируется, а post-GREEN diff получает field-level
+  `audit-impact/v1` continuation вместо bare stale/full fallback.
+
 - **`task`: компактный normal-path lifecycle.** Канонические plan-команды теперь делегируют
   admission, риск-ориентированную validation, selective projection, continuity и delivery общим
   runtime owners; обычный low-risk item выбирает focused check, один commit и один semantic Next,

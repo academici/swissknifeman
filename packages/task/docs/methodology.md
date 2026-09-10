@@ -20,7 +20,7 @@ flowchart TD
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
     A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
     E --> C[phase candidate<br>terminal items]
-    C --> AP{phase_audit_policy<br>Review · risk · status · volume}
+    C --> AP{phase-assurance/v1<br>candidate evidence · impact}
     AP -- audit required --> RV[первый pre-close audit<br>/task:plan-audit]
     AP -- direct close --> PC
     RV -- safe finding --> RE[inline audit-fixer repair<br>в том же root]
@@ -106,11 +106,14 @@ delivery receipt, связанный с terminal state и exact persisted handof
 
 Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict
 переиспользуется, пока не изменились material scope, SHA или risk. Терминальные items образуют
-кандидата фазы. Единый `phase_audit_policy` выбирает следующий исполняемый carrier без пробного
-`plan-close`: `Review=full`, material risk, non-green terminal item или несколько items при
-`Review=light` требуют `/task:plan-audit`; `Review=none` и один зелёный `light` item без material
-risk идут прямо в `/task:plan-close`. Process-only deviation при статусе 🟢 сам по себе аудит не
-включает. Если аудит требуется, только его fresh GREEN на rebound candidate разрешает `/task:plan-close`.
+runtime-built кандидата фазы. Единый `plan_assurance.evaluate()` выбирает следующий carrier без
+пробного `plan-close`: handwritten `Phase Assurance | v1` несёт impact, seams, live/irreversible
+и intent, а `Routing.Review` и число items остаются глубиной item review, не фазовым риском.
+Legacy assurance идёт в named conservative baseline; isolated, green, seam-free
+`direct-close-eligible` идёт прямо в `/task:plan-close`, а public/security/live, non-green и
+material-risk требуют `/task:plan-audit`. После GREEN расхождение получает typed
+`audit-impact/v1` continuation: gate-rebind, delta, justified full, gather evidence или owner review;
+неизвестное влияние не превращается в implicit full.
 Audit-fixer остаётся независимым при старте, но после обнаружения владеет safe in-scope ремонтом:
 повторяет точную Validation, регенерирует owner views и пересобирает candidate в том же root.
 Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет

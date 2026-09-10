@@ -23,7 +23,7 @@ _PREIMAGE_DIGESTS = {
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
 _CANDIDATE_DIGESTS = {
-    "plan-exec": "ae0bea946fc21196c37e3dbe82fa3c8becf14a860551e0b6d0b44be7cc3b6efd",
+    "plan-exec": "104659d36c79f3e138a9ba727711db361dfc3cb6a5227ceabff711b9992610ce",
     "plan-run": "207fc5b95d404e21cbd955fd306342ab1bfec6d5491d8b806026a998bcb9c685",
 }
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
@@ -43,7 +43,7 @@ _EXPECTED_INVENTORIES = {
     # binds the full typed sequence, including order and multiplicity.
     "plan-exec": {
         "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
-        "candidate": "sha256:394cf968234c446a9ecd8531e0160b1825044786e2154312f4dc4cf6acf7dc64",
+        "candidate": "sha256:fba95886d37a711d418db23606f91fb69c36990e9c6785b6599fbb83e75eddc7",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",

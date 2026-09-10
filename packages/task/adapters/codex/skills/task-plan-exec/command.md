@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:ae0bea946fc21196c37e3dbe82fa3c8becf14a860551e0b6d0b44be7cc3b6efd
+Canonical SHA-256: sha256:104659d36c79f3e138a9ba727711db361dfc3cb6a5227ceabff711b9992610ce
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -106,5 +106,6 @@ Commands must not copy those algorithms.
 
 Run every declared Validation carrier. Close only with green evidence, `task_contract` allow at both
 write sites, generated views/lint, and `plan-delivery --kind terminal`. For a terminal phase use
-`phase_audit_policy` to choose `audit-phase` or `close`; do not probe close. Batch handoff retains
+`plan_assurance.evaluate()` through `phase_audit_policy` to choose `audit-phase` or `close`; Routing
+Review and item count do not manufacture phase risk. Batch handoff retains
 its Batch, Context, and one provider-native launch block.

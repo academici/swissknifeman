@@ -5,7 +5,8 @@ model: opus
 effort: high
 ---
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
-declare Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
+declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
+audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
 owned views. Use `task.plan_lifecycle.select()` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 

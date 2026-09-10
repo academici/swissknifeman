@@ -2,7 +2,7 @@
 from .common import *
 from .policy import *
 from .parsing import *
-from task import plan_gates, plan_readiness, plan_repair
+from task import plan_assurance, plan_gates, plan_readiness, plan_repair
 
 
 _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
@@ -270,6 +270,14 @@ def lint_plan(plan_dir, diag):
         # Блоки `## Audit Pn` исключены из грепов фазы (_lines_before_audit) — свой гейт.
         phase_lines = _read_lines(path)
         if phase_lines:
+            # Assurance is forward-only: historical plans without the carrier
+            # retain their conservative runtime baseline, while any new block
+            # must be exact before it can influence close admission.
+            if "> **Phase Assurance | v1.**" in phase_lines:
+                try:
+                    plan_assurance.parse("\n".join(phase_lines))
+                except plan_assurance.AssuranceError as exc:
+                    diag.error(path, None, str(exc))
             _lint_audit_scope_payload(phase_lines, path, plan_id, diag)
             _lint_audit_terminal_policy(
                 phase_lines, path, plan_dir, plan_id, pid, diag)

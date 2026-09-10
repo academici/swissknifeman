@@ -38,6 +38,17 @@ plans/<PLAN-ID>/
 свидетельства-суждения, а generated `phases/<Pn>/<Pn>.closed.md` — терминальный контракт и
 результат для дизайнера/владельца. Один не заменяет другой.
 
+## Phase Assurance | v1
+
+Каждая новая фаза фиксирует в `## Phase Context` один handwritten block с `Impact`, named
+`Integration Seams`, `Live or Irreversible`, `Audit Intent` и непустым `Rationale`.
+`plan_assurance.evaluate()` — единственный reducer для первого audit/direct close и для
+post-GREEN impact. `direct-close-eligible` допустим только для isolated, seam-free, non-live
+green candidate; public/security/live/non-green/material risk остаются audit-required. Candidate
+строится runtime из plan-dir + phase-id. После GREEN runtime сохраняет snapshot и классифицирует
+расхождение по полям как `audit-impact/v1`, возвращая только `gate-rebind`, `delta`, justified
+`full`, `gather-evidence` или `owner-review`; bare stale/full запрещён.
+
 Рядом с каталогами планов живёт `plans/ACTIVE.md` — 4-строчный указатель активного плана
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
 разворачиваются `/task:plan-design from-draft <файл>`.

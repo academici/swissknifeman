@@ -154,6 +154,12 @@ def entry_validation_errors(entry):
                 raise ValueError("plan-design требует repair action design-required")
         except (ImportError, ValueError) as exc:
             errors.append(("repair_decision", f"repair_decision: {exc}"))
+    if "candidate_snapshot" in entry:
+        snapshot = entry["candidate_snapshot"]
+        required_snapshot = {"phase_id", "terminal_item_heads", "declared_files", "product_tree_sha256"}
+        if (entry.get("command") != "plan-audit" or not isinstance(snapshot, dict)
+                or not required_snapshot <= set(snapshot)):
+            errors.append(("candidate_snapshot", "candidate_snapshot допустим только как полный audit candidate"))
 
     return errors
 
@@ -357,7 +363,7 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
               note=None, ts=None, trace_ref=None, fingerprint=None, decision=None,
-              batch_receipt=None):
+              batch_receipt=None, candidate_snapshot=None, second_full_justification=None):
     """Собирает запись по схеме 2026.07.18-FOREMAN P1.1 с дефолтами контракта (§2) — единая точка сборки,
     чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
 
@@ -369,7 +375,7 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
     entry = {
         "ts": ts or _now_iso(),
         "plan_id": plan_id,
-        "item_id": item_id,
+        "item_id": _canonical_phase_audit_item_id(command, item_id),
         "command": command,
         "session_id": session_id,
         "run_id": run_id,
@@ -390,7 +396,19 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
         entry["decision"] = dict(decision)
     if batch_receipt is not None:
         entry["batch_receipt"] = dict(batch_receipt)
+    if candidate_snapshot is not None:
+        entry["candidate_snapshot"] = dict(candidate_snapshot)
+    if second_full_justification is not None:
+        entry["second_full_justification"] = dict(second_full_justification)
     return entry
+
+
+def _canonical_phase_audit_item_id(command, item_id):
+    """New audit writers emit only canonical Pn; historical rows remain readable."""
+    if command != "plan-audit":
+        return item_id
+    from task import review_policy
+    return review_policy.phase_audit_subject(item_id) or item_id
 
 
 def append(plan_dir, entry):

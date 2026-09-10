@@ -35,5 +35,6 @@ Commands must not copy those algorithms.
 
 Run every declared Validation carrier. Close only with green evidence, `task_contract` allow at both
 write sites, generated views/lint, and `plan-delivery --kind terminal`. For a terminal phase use
-`phase_audit_policy` to choose `audit-phase` or `close`; do not probe close. Batch handoff retains
+`plan_assurance.evaluate()` through `phase_audit_policy` to choose `audit-phase` or `close`; Routing
+Review and item count do not manufacture phase risk. Batch handoff retains
 its Batch, Context, and one provider-native launch block.

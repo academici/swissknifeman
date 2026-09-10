@@ -113,7 +113,7 @@ Fan-out на кодинге **не** используется (≈15× токе�
 **dev-loop** (`.claude/workflows/{prefix}-dev-loop.js`) раскатывает вертикальные срезы через
 субагентов (`slice-builder → test-writer → reviewer`) с **risk-адаптивным review-gate**: тривиальное —
 Haiku, impl — Sonnet, HIGH-риск review — Opus+xhigh. Подробнее: [harness](/harness/),
-[роли](/skiller/agent-framework/roles).
+[роли](./skiller/agent-framework/roles.md).
 
 ## 6. Токен-рычаги (лестница по ROI)
 

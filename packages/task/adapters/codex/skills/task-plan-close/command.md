@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:0fb20b9a1ebf73bd084f82c77b8ab3dfc096dec35f678def466e5e9d7fce2ae0
+Canonical SHA-256: sha256:ad3ec876015c2cdf590df1fd6285530fa16a9bcf35c45d69063ca28cbd6a4dcc
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -439,8 +439,9 @@ status-rule ниже. Точная команда, лестница маршру
 1. **Предусловия.** План терминален ЦЕЛИКОМ (каждая фаза `🟢`/`🟠`/`⛔` в
    `## 4. Phase Index & Status Board`) — нет: перечисли нетерминальные фазы и
    ОСТАНОВИСЬ (сначала режим `Pn`). `plans/ACTIVE.md` указывает на `<ID>` — сброс на
-   `—` входит в шаг 4. Meta несёт `Home: repo:<путь>` — работай в репо-доме; синк
-   зеркала в Brain (`brain sync`) — ДО переноса, чтобы архивировалась финальная версия.
+   `—` входит в шаг 4. Meta несёт `Home: repo:<путь>` — работай в репо-доме.
+   Archive не разрешает, не ищет и не вызывает Brain, vault или `brain sync`: это
+   независимая opt-in операция синхронизации документации вне lifecycle архива.
 2. **Перенос.** `git mv plans/<ID> plans/archive/<ID>` — ОТДЕЛЬНЫМ коммитом
    `chore(plan): archive <ID>`, без других правок в этом коммите.
 3. **Миграция root/ → docs** проекта по Diátaxis-типам: `architecture.md`/

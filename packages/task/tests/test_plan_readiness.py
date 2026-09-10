@@ -54,6 +54,13 @@ class PlanReadinessTest(unittest.TestCase):
             decision = terminal_policy.build_decision(plan, "P2.2", result="closed-green", validation=[{"carrier": "test", "status": "green", "evidence_ids": ["test:ok"]}], producer_readiness=self.readiness())
             self.assertEqual(decision["producer_readiness"]["consumer_item"], "P2.3")
 
+    def test_archive_contract_has_no_brain_precondition(self):
+        from pathlib import Path
+        source = (Path(__file__).resolve().parents[1] / "commands" / "plan-close.md").read_text(encoding="utf-8")
+        archive = source.split("## Режим `archive <ID>`", 1)[1].split("## Delivery receipt", 1)[0]
+        self.assertIn("не разрешает, не ищет и не вызывает Brain", archive)
+        self.assertNotIn("синк\n   зеркала в Brain", archive)
+
     def test_reentry_and_priority_fix_are_closed(self):
         plan_readiness.validate_reentry({
             "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",

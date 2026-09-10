@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 702ab3a2cfac48380078650eb832b2e68f5a3d2da6349d53a37b7ffb96eac8ad
+inputs_sha256: f12f2f0dbd36a2f5389aa9c30cc63aa9a4801e8caccd38bea7711b9883bf569c
 generated_by: task plan-views status
 -->
 
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
 | P3 | Proportional phase assurance and evidence reuse | 3/3 | 🟢 Done |
 | P4 | Terminal delivery and provider boundary | 2/2 | 🟢 Done |
-| P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
+| P5 | Narrow cross-package field gaps | 1/3 | 🟡 In progress |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
 
 ## Phase P1
@@ -65,7 +65,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P5.1 | Skill description quality contract | ⬜ Not started | 2026-09-10 |
+| P5.1 | Skill description quality contract | 🟢 Done | 2026-09-10 |
 | P5.2 | Analyst test-strategy fleet synthesis | ⬜ Not started | — |
 | P5.3 | Lifecycle-aware Laravel parallel isolation | ⬜ Not started | — |
 
@@ -178,6 +178,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P4 minimal audit: stable candidate; focused seam green; unrelated P5.1 bundle lint error remains non-gating. |
 | 2026-09-10 | implementation/low | plan-close · closed-green · фаза P4 закрыта |
 | 2026-09-10 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P5.1: local input-carrier repair closed; description-trigger priority implementation started. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P5.1 closed: bucket-audit now projects ratchet membership, exact tier0 share, direct/resident/unobserved evidence and a deterministic filtered debt queue without turning absent calls into a rewrite verdict.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing
 

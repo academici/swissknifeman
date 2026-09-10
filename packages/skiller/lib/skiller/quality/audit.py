@@ -50,6 +50,96 @@ TIER1_LARGE_TOKENS = 2000      # заметное тело + редкое исп
 LOW_USAGE_MAX_LOADS = 1        # ≤1 загрузка в окне — «редко» (retrieval-only), не dead
 SHINGLE_N = 5
 DEFAULT_SINCE_DAYS = 30
+DESCRIPTION_TRIGGER_PRIORITY_VERSION = "description-trigger-priority/v1"
+_DESCRIPTION_EVIDENCE_RANK = {
+    "observed-skill-call": 0,
+    "resident-only": 1,
+    "unobserved": 2,
+}
+
+
+class DescriptionDebtError(ValueError):
+    """The description-trigger debt ledger cannot safely be projected."""
+
+
+def _description_debt_path(env):
+    return env.root / "scripts" / "desc-trigger-burndown.txt"
+
+
+def read_description_debt(env, registry_keys):
+    """Read the ratchet as membership data, never as a second trigger policy."""
+    path = _description_debt_path(env)
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise DescriptionDebtError(f"DESCRIPTION_DEBT_FILE_MISSING: {path}") from exc
+
+    result, seen = [], set()
+    for line_number, raw in enumerate(lines, start=1):
+        key = raw.strip()
+        if not key or key.startswith("#"):
+            continue
+        parts = key.split("/")
+        if (len(parts) != 2 or not all(parts) or key != raw
+                or any(part in {".", ".."} for part in parts)):
+            raise DescriptionDebtError(
+                f"DESCRIPTION_DEBT_MALFORMED_ROW: {path}:{line_number}: {raw!r}")
+        if key in seen:
+            raise DescriptionDebtError(
+                f"DESCRIPTION_DEBT_DUPLICATE_KEY: {path}:{line_number}: {key}")
+        if key not in registry_keys:
+            raise DescriptionDebtError(
+                f"DESCRIPTION_DEBT_REGISTRY_STALE: {path}:{line_number}: {key}")
+        seen.add(key)
+        result.append(key)
+    return tuple(result)
+
+
+def _description_evidence(row):
+    if row["loaded_count"] > 0:
+        return "observed-skill-call"
+    if row["channel"] == "resident":
+        return "resident-only"
+    return "unobserved"
+
+
+def build_description_debt(env, since_days=DEFAULT_SINCE_DAYS):
+    """Join ratchet membership to existing audit data without inferring non-use."""
+    audit = build_audit(env, since_days=since_days)
+    by_key = {row["key"]: row for row in audit["items"]}
+    debt_keys = read_description_debt(env, set(by_key))
+    tier0_denominator = sum(row["tier0"] for row in audit["items"])
+    rows = []
+    for key in debt_keys:
+        source = by_key[key]
+        evidence = _description_evidence(source)
+        tier0 = source["tier0"]
+        rows.append({
+            "key": key,
+            "trigger_debt": True,
+            "tier0": tier0,
+            "loaded_count": source["loaded_count"],
+            "channel": source["channel"],
+            "evidence": evidence,
+            "listing_share": {"numerator": tier0, "denominator": tier0_denominator},
+            "priority_score": {
+                "numerator": source["loaded_count"] * tier0,
+                "denominator": tier0_denominator,
+            },
+        })
+    rows.sort(key=lambda row: (-row["priority_score"]["numerator"],
+                               _DESCRIPTION_EVIDENCE_RANK[row["evidence"]], row["key"]))
+    coverage = {evidence: sum(row["evidence"] == evidence for row in rows)
+                for evidence in _DESCRIPTION_EVIDENCE_RANK}
+    return {
+        "contract_version": DESCRIPTION_TRIGGER_PRIORITY_VERSION,
+        "since_days": audit["since_days"],
+        "scanned_projects": audit["scanned_projects"],
+        "tier0_denominator": tier0_denominator,
+        "debt_count": len(rows),
+        "signal_coverage": coverage,
+        "items": rows,
+    }
 
 
 # --- description-триггеры / body-shingles ---------------------------------------
@@ -353,11 +443,31 @@ def render_audit(report):
     return "\n".join(out)
 
 
+def render_description_debt(report):
+    out = ["", "━━━ DESCRIPTION-TRIGGER DEBT ━━━━━━━━━━━━━━━━━━━━━━━━━━━"]
+    out.append(f"Долг: {report['debt_count']}   ⊕tier0 denominator: {report['tier0_denominator']}   "
+               f"просканировано проектов: {report['scanned_projects']}")
+    coverage = report["signal_coverage"]
+    out.append("Сигнал: " + " · ".join(
+        f"{name}={coverage[name]}" for name in _DESCRIPTION_EVIDENCE_RANK))
+    if report["items"]:
+        out.append("")
+        out.append("  skill  priority  evidence  listing share")
+        for row in report["items"]:
+            score = row["priority_score"]
+            share = row["listing_share"]
+            out.append(f"  {row['key']}  {score['numerator']}/{score['denominator']}  "
+                       f"{row['evidence']}  {share['numerator']}/{share['denominator']}")
+    out.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    out.append("")
+    return "\n".join(out)
+
+
 # --- CLI -----------------------------------------------------------------------
 def cmd_bucket_audit(env, argv):
-    opts = parse_flags(argv, {"--since": "str", "--json": "bool"})
+    opts = parse_flags(argv, {"--since": "str", "--json": "bool", "--description-debt": "bool"})
     if opts["help"]:
-        print("skiller bucket-audit [--since N] [--json]")
+        print("skiller bucket-audit [--since N] [--json] [--description-debt]")
         print("  Метрики по всему реестру скиллов: размер (⊕tier0/↻tier1/⌥tier2, реюз\n"
               "  budget.skill_budget) · overlap (description-триггеры Jaccard≥0.4 / тело\n"
               "  5-gram shingle≥0.3) · usage — ДВА независимых источника видимости:\n"
@@ -374,6 +484,16 @@ def cmd_bucket_audit(env, argv):
         die(f"--since ждёт целое число дней, получено: {since_raw}")
     if since_days <= 0:
         die(f"--since ждёт положительное число дней, получено: {since_days}")
+    if opts.get("description_debt"):
+        try:
+            report = build_description_debt(env, since_days)
+        except DescriptionDebtError as exc:
+            die(str(exc))
+        if opts.get("json"):
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return
+        print(render_description_debt(report))
+        return
     report = build_audit(env, since_days)
     if opts.get("json"):
         print(json.dumps(report, ensure_ascii=False, indent=2))

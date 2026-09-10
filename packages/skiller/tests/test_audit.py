@@ -14,12 +14,17 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.quality.audit import (body_shingles, build_audit, cmd_bucket_audit,
-                           collect_usage, desc_triggers, find_overlaps,
-                           iter_registry_skills, jaccard, render_audit,
-                           resident_skill_names, usage_note, verdict)
+from skiller.quality.audit import (DescriptionDebtError, body_shingles, build_audit,
+                           build_description_debt, cmd_bucket_audit, collect_usage,
+                           desc_triggers, find_overlaps, iter_registry_skills, jaccard,
+                           read_description_debt, render_audit, resident_skill_names,
+                           usage_note, verdict)
 from skiller.state import upsert_project
-import tests.fixtures as fx
+
+try:
+    import tests.fixtures as fx
+except ImportError:
+    import fixtures as fx
 
 
 # --- примитивы -------------------------------------------------------------------
@@ -182,6 +187,94 @@ class RegistryAndOverlapCase(unittest.TestCase):
         row = next(r for r in report["items"] if r["key"] == "quality/monolith")
         self.assertEqual(row["verdict"], "thin")
         self.assertGreater(row["tier1"], 6000 * 0.9)
+
+
+class DescriptionDebtCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write_ledger(self, *keys):
+        path = self.root / "scripts" / "desc-trigger-burndown.txt"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(keys) + ("\n" if keys else ""), encoding="utf-8")
+
+    def test_priority_contract_uses_existing_usage_and_tier0(self):
+        self._write_ledger("devops/docker", "php/code-style")
+        with mock.patch("skiller.quality.audit.collect_usage", return_value=({"docker": 2}, 3)), \
+                mock.patch("skiller.quality.audit.resident_skill_names", return_value=set()):
+            report = build_description_debt(self.env)
+
+        self.assertEqual(report["contract_version"], "description-trigger-priority/v1")
+        self.assertEqual(report["debt_count"], 2)
+        self.assertGreater(report["tier0_denominator"], 0)
+        first = report["items"][0]
+        self.assertEqual(first["key"], "devops/docker")
+        self.assertEqual(first["evidence"], "observed-skill-call")
+        self.assertEqual(first["priority_score"]["numerator"], first["tier0"] * 2)
+        self.assertEqual(first["priority_score"]["denominator"], report["tier0_denominator"])
+        self.assertEqual(report["signal_coverage"]["unobserved"], 1)
+
+    def test_resident_and_unobserved_zero_calls_remain_distinct(self):
+        self._write_ledger("devops/docker", "php/code-style")
+        with mock.patch("skiller.quality.audit.collect_usage", return_value=({}, 3)), \
+                mock.patch("skiller.quality.audit.resident_skill_names", return_value={"docker"}):
+            report = build_description_debt(self.env)
+
+        evidence = {row["key"]: row["evidence"] for row in report["items"]}
+        self.assertEqual(evidence["devops/docker"], "resident-only")
+        self.assertEqual(evidence["php/code-style"], "unobserved")
+        self.assertEqual(report["items"][0]["key"], "devops/docker")
+
+    def test_equal_score_ties_are_key_stable(self):
+        fx.write_skill(self.root / "skills" / "quality" / "a", "a",
+                       description="Use when testing an audit", body="Body.")
+        fx.write_skill(self.root / "skills" / "quality" / "b", "b",
+                       description="Use when testing an audit", body="Body.")
+        self._write_ledger("quality/b", "quality/a")
+        with mock.patch("skiller.quality.audit.collect_usage", return_value=({}, 0)), \
+                mock.patch("skiller.quality.audit.resident_skill_names", return_value=set()):
+            report = build_description_debt(self.env)
+
+        self.assertEqual([row["key"] for row in report["items"]], ["quality/a", "quality/b"])
+
+    def test_invalid_ledger_fails_closed(self):
+        registry_keys = {"devops/docker"}
+        cases = {
+            "missing": None,
+            "malformed": "not a key\n",
+            "duplicate": "devops/docker\ndevops/docker\n",
+            "stale": "quality/missing\n",
+        }
+        for name, content in cases.items():
+            with self.subTest(name=name):
+                path = self.root / "scripts" / "desc-trigger-burndown.txt"
+                path.unlink(missing_ok=True)
+                if content is not None:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(content, encoding="utf-8")
+                with self.assertRaises(DescriptionDebtError):
+                    read_description_debt(self.env, registry_keys)
+
+    def test_empty_ledger_and_json_filter_are_deterministic(self):
+        self._write_ledger()
+        with mock.patch("skiller.quality.audit.collect_usage", return_value=({}, 0)), \
+                mock.patch("skiller.quality.audit.resident_skill_names", return_value=set()):
+            report = build_description_debt(self.env)
+            first = io.StringIO()
+            second = io.StringIO()
+            with contextlib.redirect_stdout(first):
+                cmd_bucket_audit(self.env, ["--description-debt", "--json"])
+            with contextlib.redirect_stdout(second):
+                cmd_bucket_audit(self.env, ["--description-debt", "--json"])
+
+        self.assertEqual(report["items"], [])
+        self.assertEqual(first.getvalue(), second.getvalue())
+        self.assertEqual(json.loads(first.getvalue())["contract_version"], "description-trigger-priority/v1")
 
 
 # --- usage: фан-аут по projects.json ---------------------------------------------

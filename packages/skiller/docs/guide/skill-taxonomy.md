@@ -140,8 +140,13 @@ skill listing», code.claude.com/docs/en/skills §Frontmatter reference). Пер
 перенос, потом когда-нибудь сожмём».
 
 Приоритизация бакета долга (`scripts/desc-trigger-burndown.txt`) — usage-сигнал
-`skiller bucket-audit` (loaded_count) × доля записи в общем листинге (`tier0`/сумма `tier0`),
-НЕ алфавит и НЕ размер бакета: `findings/P3-desc-burndown.md` несёт полный расчёт и порядок.
+`skiller bucket-audit --description-debt` (loaded_count) × доля записи в общем листинге
+(`tier0`/сумма `tier0`), НЕ алфавит и НЕ размер бакета. JSON-проекция
+`description-trigger-priority/v1` сохраняет знаменатель и различает
+`observed-skill-call`, `resident-only` и `unobserved`: отсутствие прямого вызова не является
+вердиктом о неиспользовании или поводом переписывать skill. Невалидный ratchet (отсутствующий,
+malformed, duplicate или stale ключ) fail-closed только для этой отфильтрованной проекции;
+обычный `bucket-audit` остаётся обратносуместимым.
 
 ## Тиры `model:`/`effort:` (ось B, стоимость активного хода)
 

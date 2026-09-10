@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`skiller`: description-trigger debt queue.** `bucket-audit --description-debt` now emits the
+  additive `description-trigger-priority/v1` contract with exact ratchet membership, tier-0 listing
+  share, direct-call/resident/unobserved evidence, deterministic ordering, and fail-closed ledger
+  diagnostics; it never rewrites canonical skills or turns missing telemetry into a usage verdict.
+
 - **`harness` / `task`: opt-in terminal-admission Stop adapters.** Codex and Claude Code
   lifecycle bindings now delegate applicable, trusted Stop attempts to the P4.1 Task reducer;
   inactive hooks and absent leases remain no-ops, while provider limits stay explicit.

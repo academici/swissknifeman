@@ -162,7 +162,7 @@ flowchart LR
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1097"]:::cool
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻911"]:::warm
-    implement["implement<br/>⊕88 ↻479"]:::warm
+    implement["implement<br/>⊕83 ↻595"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
@@ -388,7 +388,6 @@ flowchart LR
   grill_with_docs -->|requires| domain_modeling
   grill_with_docs -->|requires| spec_interview
   idea_audit -->|requires| idea_discovery
-  implement -->|requires| code_review
   implement -->|requires| tdd_discipline
   issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
@@ -447,13 +446,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **15916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 328776 ток · ⌥ on-demand 838953 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **15911** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 328892 ток · ⌥ on-demand 838953 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1268 | 32737 | 26358 |
+| `general` | 22 | 1263 | 32853 | 26358 |
 | `repository-bootstrap` | 14 | 1098 | 28209 | 0 |
 | `php` | 17 | 1065 | 18886 | 54837 |
 | `architect` | 15 | 1005 | 23164 | 33458 |

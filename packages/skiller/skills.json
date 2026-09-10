@@ -2231,9 +2231,9 @@
       "bucket": "general",
       "path": "skills/general/implement/SKILL.md",
       "version": "0.1.0",
-      "description": "Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on agreed seams, regular typecheck/tests, a full run at the end, code-review, commit to the current branch. Invoke EXPLICITLY (writes code) — the final step after spec-interview/grill-with-docs/to-issues.",
-      "sha256": "46630ef3310699f50b4f105bac973d5e954c804364d5d158789a15ba423df184",
-      "content_sha256": "ad7c0c2c6685e83ae26459bb6a5d8ae45a82e7a338689a3ffdaa3ea3b5b70d23",
+      "description": "Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on agreed seams, risk-proportionate validation and review, commit to the current branch. Invoke EXPLICITLY (writes code) — the final step after spec-interview/grill-with-docs/to-issues.",
+      "sha256": "c867e64ba696109d1407a3639f7d68c425fc71ce318fcc9ce316282f9e6d8582",
+      "content_sha256": "9f6f9f6173cfc438fc4f40b45a4fbcfe3fa8052334f4b89ca04452f820e75eca",
       "tags": [
         "workflow",
         "implementation",
@@ -2241,8 +2241,7 @@
         "review"
       ],
       "requires": [
-        "tdd-discipline",
-        "code-review"
+        "tdd-discipline"
       ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",

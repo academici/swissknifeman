@@ -246,7 +246,6 @@ flowchart LR
   grill_with_docs -->|requires| domain_modeling
   grill_with_docs -->|requires| spec_interview
   idea_audit -->|requires| idea_discovery
-  implement -->|requires| code_review
   implement -->|requires| tdd_discipline
   issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
@@ -390,7 +389,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 131 скиллов, 98 рёбер requires, 89 рёбер produces_for.
+**В графе:** 131 скиллов, 97 рёбер requires, 89 рёбер produces_for.
 
 ## Изолированные скиллы (101)
 

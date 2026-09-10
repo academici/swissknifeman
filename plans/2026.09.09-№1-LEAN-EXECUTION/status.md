@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: bd0dea1a0137cb578c0488a1e32ffb3e52406cfa3a5c45385c66e7ec4b0a38be
+inputs_sha256: 094e01f67834c004d20070840577e5c22e4cea72e40f7db4bac6f80602c18632
 generated_by: task plan-views status
 -->
 
@@ -163,6 +163,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:68 |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · local-repair · P3 product finding: audit continuation still has an unconditional command-name hard boundary; owning forward repair is P3.4. |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · local-repair · Forward correction: normalize the owning continuation to run-items; supersedes the semantic kind in journal:69. |
 
 ## Correction Routing
 

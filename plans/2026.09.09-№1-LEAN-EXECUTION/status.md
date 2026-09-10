@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: bc1754093bdbddfe35cfdec740258234996c293d379fff374f8b90d4a82a15f3
+inputs_sha256: d6453d987c3c3a5ffd2decc644c9a2537f7c405e6658f62e923a274bf4375575
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
 | P3 | Proportional phase assurance and evidence reuse | 3/3 | 🟢 Done |
-| P4 | Terminal delivery and provider boundary | 1/2 | 🟡 In progress |
+| P4 | Terminal delivery and provider boundary | 2/2 | 🟢 Done |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
 
@@ -59,7 +59,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P4.1 | Terminal admission, lease and transcript contract | 🟢 Done | 2026-09-10 |
-| P4.2 | Provider adapters and 40-boundary proof | ⬜ Not started | — |
+| P4.2 | Provider adapters and 40-boundary proof | 🟢 Done | 2026-09-10 |
 
 ## Phase P5
 
@@ -169,6 +169,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:72 |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P4.1 closed: terminal admission binds typed P1.3 continuity, stable run identity, a fresh receipt and the exact final fragment; leases remain hash-only and recoverable.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P4.2 resumes the B-P4-TERMINAL suffix after reconciling the omitted P4.1 batch receipt. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:76 |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P4.2 closure rebind: emit the required standalone write-site record without changing product bytes. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 closure rebind: provider Stop adapters, capability evidence and the forty-boundary proof remain green; product bytes are unchanged.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing

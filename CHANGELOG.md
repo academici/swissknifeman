@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-09-10
+
 - **`skiller`: lifecycle-aware Laravel parallel isolation.** `test-isolation-guard` now keeps
   canonical serial DB protection at app boot and requires the framework callback’s exact worker
   DB/token before migration; writable parallel disks are local, contained per-process roots and
